@@ -102,7 +102,15 @@ class VHR10(VisionDataset):
             the image
         """
         path = self.coco.loadImgs(id)[0]["file_name"]
-        return Image.open(os.path.join(self.root, path)).convert("RGB")
+        return Image.open(
+            os.path.join(
+                self.root,
+                self.base_folder,
+                "NWPU VHR-10 dataset",
+                "positive image set",
+                path,
+            )
+        ).convert("RGB")
 
     def _load_target(self, id: int) -> Any:
         """Load the annotations for a single image.
