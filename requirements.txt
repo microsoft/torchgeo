@@ -1,3 +1,7 @@
+black
+flake8
+flake8-import-order
+mypy
 pycocotools
 rarfile
 torchvision
