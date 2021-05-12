@@ -64,7 +64,7 @@ class VHR10(VisionDataset):
                 self.target_meta["filename"],
             )
         )
-        self.ids = list(sorted(self.coco.img.keys()))
+        self.ids = list(sorted(self.coco.imgs.keys()))
 
     def __getitem__(self, index: int) -> Tuple[Any, Any]:
         """Return an index within the dataset.
