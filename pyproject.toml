@@ -1,0 +1,19 @@
+[tool.black]
+target-version = ['py36', 'py37', 'py38']
+exclude = '''
+/(
+    # Data
+      data
+
+    # Spack
+    | \.spack-env
+
+    # Python
+    |  __pycache__
+    | \.pytest_cache
+    | \.mypy_cache
+
+    # Git
+    | \.git
+)/
+'''
