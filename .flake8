@@ -1,0 +1,18 @@
+[flake8]
+max-line-length = 88
+exclude =
+    # Data
+    data/,
+
+    # Spack
+    .spack-env/,
+
+    # Python
+    .cache/
+    .pytest_cache/,
+    __pycache__/,
+
+    # Git
+    .git/,
+application-import-names = torchsat
+import-order-style = google

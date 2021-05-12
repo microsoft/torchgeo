@@ -1,8 +1,8 @@
 import os
 
 import torch
-from torchvision.utils import download_file_from_google_drive, check_integrity
-from torchvision.vision import VisionDataset
+from torchvision.datasets.utils import download_file_from_google_drive, check_integrity
+from torchvision.datasets.vision import VisionDataset
 
 
 class VHR10(VisionDataset):
