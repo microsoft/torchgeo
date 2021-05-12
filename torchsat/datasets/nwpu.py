@@ -2,8 +2,8 @@ import os
 from typing import Any, Callable, Optional
 
 from torchvision.datasets.utils import (
-    download_and_extract_archive,
     download_file_from_google_drive,
+    download_url,
     check_integrity,
 )
 from torchvision.datasets.vision import VisionDataset
@@ -92,7 +92,7 @@ class VHR10(VisionDataset):
         ) as f:
             f.extractall(os.path.join(self.root, self.base_folder))
 
-        download_and_extract_archive(
+        download_url(
             self.target_meta["url"],
             os.path.join(self.root, self.base_folder, "NWPU VHR-10 dataset"),
             self.target_meta["filename"],
