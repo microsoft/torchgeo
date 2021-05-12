@@ -1,12 +1,13 @@
 import os
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Tuple
 
+from PIL import Image
 from torchvision.datasets.utils import (
     download_file_from_google_drive,
     download_url,
     check_integrity,
 )
-from torchvision.datasets.vision import VisionDataset
+from torchvision.datasets import VisionDataset
 
 
 class VHR10(VisionDataset):
@@ -28,7 +29,10 @@ class VHR10(VisionDataset):
     }
 
     def __init__(
-        self, root: str, transforms: Optional[Callable[[Any], Any]] = None, download: bool = False
+        self,
+        root: str,
+        transforms: Optional[Callable[[Any], Any]] = None,
+        download: bool = False,
     ) -> None:
         """Initialize a new VHR-10 dataset instance.
 
@@ -48,6 +52,68 @@ class VHR10(VisionDataset):
                 "Dataset not found or corrupted. "
                 + "You can use download=True to download it"
             )
+
+        # Must be installed to parse annotations file
+        from pycocotools.coco import COCO
+
+        self.coco = COCO(
+            os.path.join(
+                self.root,
+                self.base_folder,
+                "NWPU VHR-10 dataset",
+                self.target_meta["filename"],
+            )
+        )
+        self.ids = list(sorted(self.coco.img.keys()))
+
+    def __getitem__(self, index: int) -> Tuple[Any, Any]:
+        """Return an index within the dataset.
+
+        Parameters:
+            idx: index to return
+
+        Returns:
+            data and label at that index
+        """
+        id = self.ids[index]
+        image = self._load_image(id)
+        target = self._load_target(id)
+
+        if self.transforms is not None:
+            image, target = self.transforms(image, target)
+
+        return image, target
+
+    def __len__(self) -> int:
+        """Return the number of data points in the dataset.
+
+        Returns:
+            length of the dataset
+        """
+        return len(self.ids)
+
+    def _load_image(self, id: int) -> Image.Image:
+        """Load a single image.
+
+        Parameters:
+            id: unique ID of the image
+
+        Returns:
+            the image
+        """
+        path = self.coco.loadImgs(id)[0]["file_name"]
+        return Image.open(os.path.join(self.root, path)).convert("RGB")
+
+    def _load_target(self, id: int) -> Any:
+        """Load the annotations for a single image.
+
+        Parameters:
+            id: unique ID of the image
+
+        Returns:
+            the annotations
+        """
+        return self.coco.loadAnns(self.coco.getAnnIds(id))
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
