@@ -83,7 +83,9 @@ class VHR10(VisionDataset):
         """
         id = self.ids[index]
         image = self._load_image(id)
-        target = self._load_target(id)
+        annot = self._load_target(id)
+
+        target = dict(image_id=id, annotations=annot)
 
         if self.transforms is not None:
             image, target = self.transforms(image, target)
