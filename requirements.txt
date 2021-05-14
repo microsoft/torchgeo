@@ -5,4 +5,5 @@ mypy
 Pillow
 pycocotools
 rarfile
+torch
 torchvision
