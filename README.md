@@ -1,9 +1,9 @@
 # TorchGeo
 PyTorch data loaders for geospatial data
 
-[![flake8](https://github.com/microsoft/satellite/workflows/flake8/badge.svg)](https://github.com/microsoft/satellite/actions)
-[![black](https://github.com/microsoft/satellite/workflows/black/badge.svg)](https://github.com/microsoft/satellite/actions)
-[![mypy](https://github.com/microsoft/satellite/workflows/mypy/badge.svg)](https://github.com/microsoft/satellite/actions)
+[![flake8](https://github.com/microsoft/torchgeo/workflows/flake8/badge.svg)](https://github.com/microsoft/torchgeo/actions)
+[![black](https://github.com/microsoft/torchgeo/workflows/black/badge.svg)](https://github.com/microsoft/torchgeo/actions)
+[![mypy](https://github.com/microsoft/torchgeo/workflows/mypy/badge.svg)](https://github.com/microsoft/torchgeo/actions)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ## Contributing
