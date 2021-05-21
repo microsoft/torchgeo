@@ -1,0 +1,29 @@
+name: flake8
+on:
+  push:
+    paths:
+    - '**.py'
+    - '.flake8'
+    - '.github/workflows/flake8.yaml'
+  pull_request:
+    paths:
+    - '**.py'
+    - '.flake8'
+    - '.github/workflows/flake8.yaml'
+jobs:
+  black:
+    name: flake8
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone repo
+      uses: actions/checkout@v2
+    - name: Set up python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install flake8
+      run: |
+        pip3 install flake8
+        pip3 install flake8-import-order
+    - name: Run flake8 checks
+      run: flake8

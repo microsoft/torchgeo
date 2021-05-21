@@ -1,0 +1,27 @@
+name: black
+on:
+  push:
+    paths:
+    - '**.py'
+    - 'pyproject.toml'
+    - '.github/workflows/black.yaml'
+  pull_request:
+    paths:
+    - '**.py'
+    - 'pyproject.toml'
+    - '.github/workflows/black.yaml'
+jobs:
+  black:
+    name: black
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone repo
+      uses: actions/checkout@v2
+    - name: Set up python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install black
+      run: pip3 install black
+    - name: Run black checks
+      run: black --check .
