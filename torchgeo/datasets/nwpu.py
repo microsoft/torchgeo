@@ -2,12 +2,12 @@ import os
 from typing import Any, Callable, Optional, Tuple
 
 from PIL import Image
+from torchvision.datasets import VisionDataset
 from torchvision.datasets.utils import (
+    check_integrity,
     download_file_from_google_drive,
     download_url,
-    check_integrity,
 )
-from torchvision.datasets import VisionDataset
 
 
 class VHR10(VisionDataset):
