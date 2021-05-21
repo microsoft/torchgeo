@@ -1,0 +1,12 @@
+spack:
+  specs:
+  - py-black
+  - py-flake8
+  - py-flake8-import-order
+  - py-mypy
+  - py-pillow
+  - py-pycocotools
+  - py-rarfile
+  - py-torch
+  - py-torchvision
+  concretization: together
