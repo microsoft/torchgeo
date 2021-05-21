@@ -1,2 +1,2 @@
-# satellite
-PyTorch data loaders for satellite imagery
+# TorchGeo
+PyTorch data loaders for geospatial data
