@@ -1,5 +1,6 @@
 spack:
   specs:
+  - "python@3.5:"
   - py-black
   - py-flake8
   - py-flake8-import-order
