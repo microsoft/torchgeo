@@ -11,7 +11,16 @@ from torchvision.datasets.utils import (
 
 
 class VHR10(VisionDataset):
-    """`NWPU VHR-10 <https://doi.org/10.1016/j.isprsjprs.2014.10.002>`_ Dataset."""
+    """`NWPU VHR-10 <https://doi.org/10.1016/j.isprsjprs.2014.10.002>`_ Dataset.
+
+    Includes object detection bounding boxes from original paper and instance
+    segmentation masks from follow-up publications. If you use this dataset in your
+    research, please cite the following papers:
+
+    * https://doi.org/10.1016/j.isprsjprs.2014.10.002
+    * https://doi.org/10.1109/IGARSS.2019.8898573
+    * https://doi.org/10.3390/rs12060989
+    """
 
     base_folder = "vhr10"
     image_meta = {
