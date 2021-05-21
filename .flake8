@@ -14,5 +14,5 @@ exclude =
 
     # Git
     .git/,
-application-import-names = torchsat
+application-import-names = torchgeo
 import-order-style = google
