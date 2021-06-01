@@ -21,8 +21,8 @@ class VHR10(VisionDataset):
 
     The data set is divided into two sets:
 
-    1. Positive image set (650 images) which contains at least one target in an image
-    2. Negative image set (150 images) does not contain any targets
+    *. Positive image set (650 images) which contains at least one target in an image
+    *. Negative image set (150 images) does not contain any targets
 
     The positive image set consists of objects from ten classes:
 
@@ -44,6 +44,15 @@ class VHR10(VisionDataset):
     * https://doi.org/10.1016/j.isprsjprs.2014.10.002
     * https://doi.org/10.1109/IGARSS.2019.8898573
     * https://doi.org/10.3390/rs12060989
+
+    .. note::
+
+       This dataset requires the following additional libraries to be installed:
+
+       * `pycocotools <https://pypi.org/project/pycocotools/>`_ to load the
+         ``annotations.json`` file
+       * `rarfile <https://pypi.org/project/rarfile/>`_ to extract the dataset,
+         which is stored in a RAR file
     """
 
     base_folder = "vhr10"
