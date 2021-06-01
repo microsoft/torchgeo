@@ -11,7 +11,31 @@ from torchvision.datasets.utils import (
 
 
 class VHR10(VisionDataset):
-    """`NWPU VHR-10 <https://doi.org/10.1016/j.isprsjprs.2014.10.002>`_ Dataset.
+    """Northwestern Polytechnical University (NWPU) very-high-resolution ten-class
+    (VHR-10) remote sensing image dataset.
+
+    Consists of 800 VHR optical remote sensing images, where 715 color images were
+    acquired from Google Earth with the spatial resolution ranging from 0.5 to 2 m,
+    and 85 pansharpened color infrared (CIR) images were acquired from Vaihingen data
+    with a spatial resolution of 0.08 m.
+
+    The data set is divided into two sets:
+
+    1. Positive image set (650 images) which contains at least one target in an image
+    2. Negative image set (150 images) does not contain any targets
+
+    The positive image set consists of objects from ten classes:
+
+    1. Airplanes (757)
+    2. Ships (302)
+    3. Storage tanks (655)
+    4. Baseball diamonds (390)
+    5. Tennis courts (524)
+    6. Basketball courts (159)
+    7. Ground track fields (163)
+    8. Harbors (224)
+    9. Bridges (124)
+    10. Vehicles (477)
 
     Includes object detection bounding boxes from original paper and instance
     segmentation masks from follow-up publications. If you use this dataset in your
