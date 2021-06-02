@@ -2,6 +2,17 @@
 
 from .benin_cashews import BeninSmallHolderCashews
 from .cdl import CDL
+from .chesapeake import (
+    Chesapeake13,
+    Chesapeake7,
+    ChesapeakeDC,
+    ChesapeakeDE,
+    ChesapeakeMD,
+    ChesapeakeNY,
+    ChesapeakePA,
+    ChesapeakeVA,
+    ChesapeakeWV,
+)
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCycloneWindEstimation
@@ -31,6 +42,15 @@ __all__ = (
     "BoundingBox",
     "CDL",
     "collate_dict",
+    "Chesapeake13",
+    "Chesapeake7",
+    "ChesapeakeDC",
+    "ChesapeakeDE",
+    "ChesapeakeMD",
+    "ChesapeakeNY",
+    "ChesapeakePA",
+    "ChesapeakeVA",
+    "ChesapeakeWV",
     "COWC",
     "COWCCounting",
     "COWCDetection",
