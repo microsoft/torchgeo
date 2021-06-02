@@ -118,7 +118,7 @@ class VHR10(VisionDataset):
         """Return an index within the dataset.
 
         Parameters:
-            idx: index to return
+            index: index to return
 
         Returns:
             data and label at that index
