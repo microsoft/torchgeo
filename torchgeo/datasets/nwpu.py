@@ -123,11 +123,11 @@ class VHR10(VisionDataset):
         Returns:
             data and label at that index
         """
-        id = self.ids[index]
-        image = self._load_image(id)
-        annot = self._load_target(id)
+        id_ = self.ids[index]
+        image = self._load_image(id_)
+        annot = self._load_target(id_)
 
-        target = dict(image_id=id, annotations=annot)
+        target = dict(image_id=id_, annotations=annot)
 
         if self.transforms is not None:
             image, target = self.transforms(image, target)
@@ -142,16 +142,16 @@ class VHR10(VisionDataset):
         """
         return len(self.ids)
 
-    def _load_image(self, id: int) -> Image.Image:
+    def _load_image(self, id_: int) -> Image.Image:
         """Load a single image.
 
         Parameters:
-            id: unique ID of the image
+            id_: unique ID of the image
 
         Returns:
             the image
         """
-        path = self.coco.loadImgs(id)[0]["file_name"]
+        path = self.coco.loadImgs(id_)[0]["file_name"]
         return Image.open(
             os.path.join(
                 self.root,
@@ -162,16 +162,16 @@ class VHR10(VisionDataset):
             )
         ).convert("RGB")
 
-    def _load_target(self, id: int) -> Any:
+    def _load_target(self, id_: int) -> Any:
         """Load the annotations for a single image.
 
         Parameters:
-            id: unique ID of the image
+            id_: unique ID of the image
 
         Returns:
             the annotations
         """
-        return self.coco.loadAnns(self.coco.getAnnIds(id))
+        return self.coco.loadAnns(self.coco.getAnnIds(id_))
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
