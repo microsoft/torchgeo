@@ -1,5 +1,6 @@
 spack:
   specs:
+  - opencv+python3+imgcodecs+tiff+jpeg+png
   - "python@3.5:"
   - py-black
   - py-flake8
