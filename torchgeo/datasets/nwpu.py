@@ -72,7 +72,7 @@ class VHR10(VisionDataset):
 
     def __init__(
         self,
-        root: str,
+        root: str = "data",
         split: str = "positive",
         transform: Optional[Callable[[Image.Image], Any]] = None,
         target_transform: Optional[Callable[[Dict[str, Any]], Any]] = None,
