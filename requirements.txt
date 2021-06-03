@@ -2,6 +2,7 @@ black
 flake8
 flake8-import-order
 mypy
+opencv-python
 Pillow
 pycocotools
 rarfile
