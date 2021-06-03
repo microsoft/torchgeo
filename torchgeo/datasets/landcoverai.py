@@ -57,9 +57,9 @@ class LandCoverAI(VisionDataset):
         self,
         root: str,
         split: str = "train",
-        transform: Optional[Callable[[Any], Any]] = None,
-        target_transform: Optional[Callable[[Any], Any]] = None,
-        transforms: Optional[Callable[[Any], Any]] = None,
+        transform: Optional[Callable[[Image.Image], Any]] = None,
+        target_transform: Optional[Callable[[Image.Image], Any]] = None,
+        transforms: Optional[Callable[[Image.Image, Image.Image], Any]] = None,
         download: bool = False,
     ) -> None:
         """Initialize a new LandCover.ai dataset instance.
