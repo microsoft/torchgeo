@@ -55,7 +55,7 @@ class LandCoverAI(VisionDataset):
 
     def __init__(
         self,
-        root: str,
+        root: str = "data",
         split: str = "train",
         transform: Optional[Callable[[Image.Image], Any]] = None,
         target_transform: Optional[Callable[[Image.Image], Any]] = None,
