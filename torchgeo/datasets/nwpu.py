@@ -1,5 +1,5 @@
 import os
-from typing import Any, Callable, Optional, Tuple
+from typing import Any, Callable, Dict, Optional, Tuple
 
 from PIL import Image
 from torchvision.datasets import VisionDataset
@@ -50,7 +50,7 @@ class VHR10(VisionDataset):
        This dataset requires the following additional libraries to be installed:
 
        * `pycocotools <https://pypi.org/project/pycocotools/>`_ to load the
-         ``annotations.json`` file
+         ``annotations.json`` file for the "positive" image set
        * `rarfile <https://pypi.org/project/rarfile/>`_ to extract the dataset,
          which is stored in a RAR file
     """
@@ -73,15 +73,19 @@ class VHR10(VisionDataset):
     def __init__(
         self,
         root: str,
-        transform: Optional[Callable[[Any], Any]] = None,
-        target_transform: Optional[Callable[[Any], Any]] = None,
-        transforms: Optional[Callable[[Any], Any]] = None,
+        split: str = "positive",
+        transform: Optional[Callable[[Image.Image], Any]] = None,
+        target_transform: Optional[Callable[[Dict[str, Any]], Any]] = None,
+        transforms: Optional[
+            Callable[[Image.Image, Dict[str, Any]], Tuple[Any, Any]]
+        ] = None,
         download: bool = False,
     ) -> None:
         """Initialize a new VHR-10 dataset instance.
 
         Parameters:
             root: root directory where dataset can be found
+            split: one of "postive" or "negative"
             transform: a function/transform that takes in a PIL image and returns a
                 transformed version
             target_transform: a function/transform that takes in the target and
@@ -90,7 +94,10 @@ class VHR10(VisionDataset):
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
         """
+        assert split in ["positive", "negative"]
+
         super().__init__(root, transforms, transform, target_transform)
+        self.split = split
 
         if download:
             self.download()
@@ -101,18 +108,18 @@ class VHR10(VisionDataset):
                 + "You can use download=True to download it"
             )
 
-        # Must be installed to parse annotations file
-        from pycocotools.coco import COCO
+        if split == "positive":
+            # Must be installed to parse annotations file
+            from pycocotools.coco import COCO
 
-        self.coco = COCO(
-            os.path.join(
-                self.root,
-                self.base_folder,
-                "NWPU VHR-10 dataset",
-                self.target_meta["filename"],
+            self.coco = COCO(
+                os.path.join(
+                    self.root,
+                    self.base_folder,
+                    "NWPU VHR-10 dataset",
+                    self.target_meta["filename"],
+                )
             )
-        )
-        self.ids = list(sorted(self.coco.imgs.keys()))
 
     def __getitem__(self, index: int) -> Tuple[Any, Any]:
         """Return an index within the dataset.
@@ -123,11 +130,9 @@ class VHR10(VisionDataset):
         Returns:
             data and label at that index
         """
-        id_ = self.ids[index]
+        id_ = index % len(self) + 1
         image = self._load_image(id_)
-        annot = self._load_target(id_)
-
-        target = dict(image_id=id_, annotations=annot)
+        target = self._load_target(id_)
 
         if self.transforms is not None:
             image, target = self.transforms(image, target)
@@ -140,7 +145,10 @@ class VHR10(VisionDataset):
         Returns:
             length of the dataset
         """
-        return len(self.ids)
+        if self.split == "positive":
+            return 650
+        else:
+            return 150
 
     def _load_image(self, id_: int) -> Image.Image:
         """Load a single image.
@@ -151,18 +159,17 @@ class VHR10(VisionDataset):
         Returns:
             the image
         """
-        path = self.coco.loadImgs(id_)[0]["file_name"]
         return Image.open(
             os.path.join(
                 self.root,
                 self.base_folder,
                 "NWPU VHR-10 dataset",
-                "positive image set",
-                path,
+                self.split + " image set",
+                f"{id_:03d}.jpg",
             )
         ).convert("RGB")
 
-    def _load_target(self, id_: int) -> Any:
+    def _load_target(self, id_: int) -> Dict[str, Any]:
         """Load the annotations for a single image.
 
         Parameters:
@@ -171,7 +178,14 @@ class VHR10(VisionDataset):
         Returns:
             the annotations
         """
-        return self.coco.loadAnns(self.coco.getAnnIds(id_))
+        # Images in the "negative" image set have no annotations
+        annot = []
+        if self.split == "positive":
+            annot = self.coco.loadAnns(self.coco.getAnnIds(id_))
+
+        target = dict(image_id=id_, annotations=annot)
+
+        return target
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
@@ -183,15 +197,20 @@ class VHR10(VisionDataset):
             os.path.join(self.root, self.base_folder, self.image_meta["filename"]),
             self.image_meta["md5"],
         )
-        target: bool = check_integrity(
-            os.path.join(
-                self.root,
-                self.base_folder,
-                "NWPU VHR-10 dataset",
-                self.target_meta["filename"],
-            ),
-            self.target_meta["md5"],
-        )
+
+        # Annotations only needed for "positive" image set
+        target = True
+        if self.split == "positive":
+            target = check_integrity(
+                os.path.join(
+                    self.root,
+                    self.base_folder,
+                    "NWPU VHR-10 dataset",
+                    self.target_meta["filename"],
+                ),
+                self.target_meta["md5"],
+            )
+
         return image and target
 
     def download(self) -> None:
@@ -201,6 +220,7 @@ class VHR10(VisionDataset):
             print("Files already downloaded and verified")
             return
 
+        # Download images
         download_file_from_google_drive(
             self.image_meta["file_id"],
             os.path.join(self.root, self.base_folder),
@@ -216,9 +236,12 @@ class VHR10(VisionDataset):
         ) as f:
             f.extractall(os.path.join(self.root, self.base_folder))
 
-        download_url(
-            self.target_meta["url"],
-            os.path.join(self.root, self.base_folder, "NWPU VHR-10 dataset"),
-            self.target_meta["filename"],
-            self.target_meta["md5"],
-        )
+        # Annotations only needed for "positive" image set
+        if self.split == "positive":
+            # Download annotations
+            download_url(
+                self.target_meta["url"],
+                os.path.join(self.root, self.base_folder, "NWPU VHR-10 dataset"),
+                self.target_meta["filename"],
+                self.target_meta["md5"],
+            )
