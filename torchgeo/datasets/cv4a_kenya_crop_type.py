@@ -13,7 +13,8 @@ class CV4AKenyaCropType(VisionDataset):
     """CV4A Kenya Crop Type dataset.
 
     Used in a competition in the Computer Vision for Agriculture (CV4A) workshop in
-    ICLR 2020. See the competition website <https://zindi.africa/competitions/iclr-workshop-challenge-2-radiant-earth-computer-vision-for-crop-recognition>.
+    ICLR 2020.  See this website <https://registry.mlhub.earth/10.34911/rdnt.dw605x/>
+    for dataset details.
 
     Consists of 4 tiles of Sentinel 2 imagery from 13 different points in time.
 
@@ -102,7 +103,7 @@ class CV4AKenyaCropType(VisionDataset):
         transforms: Optional[Callable[[Image.Image, Image.Image], Any]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
-        verbose: bool = False
+        verbose: bool = False,
     ) -> None:
         """Initialize a new CV4A Kenya Crop Type Dataset instance.
 
@@ -177,7 +178,7 @@ class CV4AKenyaCropType(VisionDataset):
             "img": img,
             "labels": labels,
             "field_ids": field_ids,
-            "metadata": (tile_index, y, x)
+            "metadata": (tile_index, y, x),
         }
 
     def __len__(self) -> int:
@@ -190,7 +191,7 @@ class CV4AKenyaCropType(VisionDataset):
 
     @lru_cache
     def _load_label_tile(self, tile_name_: str) -> Tuple[np.ndarray, np.ndarray]:
-        """ Loads a single _tile_ of labels and field_ids"""
+        """Loads a single _tile_ of labels and field_ids"""
         assert tile_name_ in self.tile_names
 
         if self.verbose:
@@ -223,7 +224,7 @@ class CV4AKenyaCropType(VisionDataset):
         return (labels, field_ids)
 
     def _validate_bands(self, bands: Optional[Tuple[str]]) -> Tuple[str]:
-        """ Routine for validating a list of bands / filling in a default value """
+        """Routine for validating a list of bands / filling in a default value"""
 
         if bands is None:
             return self.band_names
@@ -237,7 +238,7 @@ class CV4AKenyaCropType(VisionDataset):
     def _load_all_image_tiles(
         self, tile_name_: str, bands: Optional[Tuple[str]] = None
     ) -> np.ndarray:
-        """ Load all the imagery (across time) for a single _tile_. Optionally allows
+        """Load all the imagery (across time) for a single _tile_. Optionally allows
         for subsetting of the bands that are loaded.
 
         Returns
@@ -264,7 +265,7 @@ class CV4AKenyaCropType(VisionDataset):
     def _load_single_image_tile(
         self, tile_name_: str, date_: str, bands: Optional[Tuple[str]] = None
     ) -> np.ndarray:
-        """ Loads the imagery for a single tile for a single date. Optionally allows
+        """Loads the imagery for a single tile for a single date. Optionally allows
         for subsetting of the bands that are loaded."""
         assert tile_name_ in self.tile_names
         assert date_ in self.dates
@@ -308,7 +309,7 @@ class CV4AKenyaCropType(VisionDataset):
         return images and targets
 
     def get_splits(self) -> Tuple[List[int], List[int]]:
-        """ Gets the field_ids for the train/test splits from the dataset directory
+        """Gets the field_ids for the train/test splits from the dataset directory
 
         Returns:
             list of training field_ids and list of testing field_ids
@@ -321,7 +322,7 @@ class CV4AKenyaCropType(VisionDataset):
             self.base_folder,
             "ref_african_crops_kenya_02_labels",
             "_common",
-            "field_train_test_ids.csv"
+            "field_train_test_ids.csv",
         )
 
         with open(splits_fn, "r") as f:
