@@ -93,6 +93,11 @@ class VHR10(VisionDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
+
+        Raises:
+            AssertionError: if ``split`` argument is invalid
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
         """
         assert split in ["positive", "negative"]
 
