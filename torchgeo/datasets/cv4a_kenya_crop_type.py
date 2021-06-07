@@ -13,7 +13,7 @@ class CV4AKenyaCropType(VisionDataset):
     """CV4A Kenya Crop Type dataset.
 
     Used in a competition in the Computer Vision for Agriculture (CV4A) workshop in
-    ICLR 2020.  See this website <https://registry.mlhub.earth/10.34911/rdnt.dw605x/>
+    ICLR 2020. See `this website <https://registry.mlhub.earth/10.34911/rdnt.dw605x/>`_
     for dataset details.
 
     Consists of 4 tiles of Sentinel 2 imagery from 13 different points in time.
@@ -39,7 +39,7 @@ class CV4AKenyaCropType(VisionDataset):
        This dataset requires the following additional library to be installed:
 
        * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-       imagery and labels from the Radiant Earth MLHub
+         imagery and labels from the Radiant Earth MLHub
     """
 
     base_folder = "ref_african_crops_kenya_02"
@@ -101,7 +101,9 @@ class CV4AKenyaCropType(VisionDataset):
         bands: Tuple[str, ...] = band_names,
         transform: Optional[Callable[[np.ndarray], Any]] = None,
         target_transform: Optional[Callable[[np.ndarray], Any]] = None,
-        transforms: Optional[Callable[[np.ndarray, np.ndarray], Any]] = None,
+        transforms: Optional[
+            Callable[[np.ndarray, np.ndarray], Tuple[Any, Any]]
+        ] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         verbose: bool = False,
@@ -200,7 +202,7 @@ class CV4AKenyaCropType(VisionDataset):
 
     @lru_cache
     def _load_label_tile(self, tile_name: str) -> Tuple[np.ndarray, np.ndarray]:
-        """Loads a single _tile_ of labels and field_ids.
+        """Load a single _tile_ of labels and field_ids.
 
         Parameters:
             tile_name: name of tile to load
@@ -350,7 +352,7 @@ class CV4AKenyaCropType(VisionDataset):
         return images and targets
 
     def get_splits(self) -> Tuple[List[int], List[int]]:
-        """Gets the field_ids for the train/test splits from the dataset directory
+        """Get the field_ids for the train/test splits from the dataset directory.
 
         Returns:
             list of training field_ids and list of testing field_ids
