@@ -1,11 +1,15 @@
 name: flake8
 on:
   push:
+    branches:
+    - main
     paths:
     - '**.py'
     - '.flake8'
     - '.github/workflows/flake8.yaml'
   pull_request:
+    branches:
+    - main
     paths:
     - '**.py'
     - '.flake8'
