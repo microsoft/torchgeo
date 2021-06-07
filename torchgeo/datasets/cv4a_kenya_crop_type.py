@@ -1,9 +1,8 @@
-import os
-from typing import Any, Callable, Dict, Optional, Tuple, List
 from functools import lru_cache
+import os
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
-
 from PIL import Image
 from torchvision.datasets import VisionDataset
 from torchvision.datasets.utils import check_integrity
@@ -170,9 +169,9 @@ class CV4AKenyaCropType(VisionDataset):
         img = self._load_all_image_tiles(tile_name, self.bands)
         labels, field_ids = self._load_label_tile(tile_name)
 
-        img = img[:, :, y : y + self.chip_size, x : x + self.chip_size]
-        labels = labels[y : y + self.chip_size, x : x + self.chip_size]
-        field_ids = field_ids[y : y + self.chip_size, x : x + self.chip_size]
+        img = img[:, :, y:y + self.chip_size, x:x + self.chip_size]
+        labels = labels[y:y + self.chip_size, x:x + self.chip_size]
+        field_ids = field_ids[y:y + self.chip_size, x:x + self.chip_size]
 
         return {
             "img": img,
