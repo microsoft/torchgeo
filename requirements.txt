@@ -5,6 +5,7 @@ mypy
 opencv-python
 Pillow
 pycocotools
+radiant-mlhub
 rarfile
 torch
 torchvision
