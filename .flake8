@@ -17,5 +17,5 @@ exclude =
 
     # Git
     .git/,
-application-import-names = torchgeo
+application-import-names = torchgeo,train
 import-order-style = google
