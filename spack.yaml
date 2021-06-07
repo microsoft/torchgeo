@@ -8,7 +8,7 @@ spack:
   - py-mypy
   - py-pillow-simd
   - py-pycocotools
-  - py-radiant-mlhub
+  - "py-radiant-mlhub@0.2.1:"
   - py-rarfile
   - py-torch
   - py-torchvision

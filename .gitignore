@@ -133,6 +133,3 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
-# Visual studio code
-.vscode/
