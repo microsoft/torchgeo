@@ -34,6 +34,10 @@ class CV4AKenyaCropType(VisionDataset):
 
     There are 3,286 fields in the train set and 1,402 fields in the test set.
 
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://doi.org/10.34911/RDNT.DW605X
+
     .. note::
 
        This dataset requires the following additional library to be installed:
