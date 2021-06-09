@@ -1,7 +1,7 @@
 spack:
   specs:
   - opencv+python3+imgcodecs+tiff+jpeg+png
-  - "python@3.5:"
+  - "python@3.5:+bz2"
   - py-black
   - py-flake8
   - py-flake8-import-order
