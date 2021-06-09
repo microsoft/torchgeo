@@ -186,10 +186,10 @@ class _COWC(VisionDataset, abc.ABC):
                 md5=md5,
             )
             if filename.endswith(".tbz"):
-                with tarfile.TarFile(
+                with tarfile.open(
                     os.path.join(self.root, self.base_folder, filename)
-                ) as f:
-                    f.extractall(os.path.join(self.root, self.base_folder))
+                ) as tar:
+                    tar.extractall(os.path.join(self.root, self.base_folder))
             elif filename.endswith(".bz2"):
                 filepath = os.path.join(self.root, self.base_folder, filename)
                 with bz2.BZ2File(filepath) as old_fh:
