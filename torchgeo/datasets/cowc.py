@@ -1,4 +1,5 @@
 import bz2
+import csv
 import os
 import tarfile
 from typing import Any, Callable, Dict, Optional, Tuple
@@ -99,6 +100,19 @@ class COWCDetection(VisionDataset):
                 + "You can use download=True to download it"
             )
 
+        self.images = []
+        self.targets = []
+        with open(
+            os.path.join(
+                self.root, self.base_folder, f"COWC_{split}_list_detection.txt"
+            ),
+            newline="",
+        ) as f:
+            reader = csv.reader(f, delimiter=" ")
+            for row in reader:
+                self.images.append(row[0])
+                self.targets.append(row[1])
+
     def __getitem__(self, index: int) -> Tuple[Any, Any]:
         """Return an index within the dataset.
 
@@ -108,9 +122,8 @@ class COWCDetection(VisionDataset):
         Returns:
             data and label at that index
         """
-        id_ = index % len(self) + 1
-        image = self._load_image(id_)
-        target = self._load_target(id_)
+        image = self._load_image(index)
+        target = self.targets[index]
 
         if self.transforms is not None:
             image, target = self.transforms(image, target)
@@ -123,16 +136,13 @@ class COWCDetection(VisionDataset):
         Returns:
             length of the dataset
         """
-        if self.split == "positive":
-            return 650
-        else:
-            return 150
+        return len(self.targets)
 
-    def _load_image(self, id_: int) -> Image.Image:
+    def _load_image(self, index: int) -> Image.Image:
         """Load a single image.
 
         Parameters:
-            id_: unique ID of the image
+            index: index to return
 
         Returns:
             the image
@@ -141,29 +151,9 @@ class COWCDetection(VisionDataset):
             os.path.join(
                 self.root,
                 self.base_folder,
-                "NWPU VHR-10 dataset",
-                self.split + " image set",
-                f"{id_:03d}.jpg",
+                self.images[index],
             )
         ).convert("RGB")
-
-    def _load_target(self, id_: int) -> Dict[str, Any]:
-        """Load the annotations for a single image.
-
-        Parameters:
-            id_: unique ID of the image
-
-        Returns:
-            the annotations
-        """
-        # Images in the "negative" image set have no annotations
-        annot = []
-        if self.split == "positive":
-            annot = self.coco.loadAnns(self.coco.getAnnIds(id_))
-
-        target = dict(image_id=id_, annotations=annot)
-
-        return target
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
@@ -192,11 +182,14 @@ class COWCDetection(VisionDataset):
                 filename=filename,
                 md5=md5,
             )
-            if filename.endswith('.tbz'):
+            if filename.endswith(".tbz"):
                 with tarfile.TarFile(
                     os.path.join(self.root, self.base_folder, filename)
                 ) as f:
                     f.extractall(os.path.join(self.root, self.base_folder))
-            elif filename.endswith('.bz2'):
-                with bz2.BZ2File(os.path.join(self.root, self.base_folder, filename)) as f:
-
+            elif filename.endswith(".bz2"):
+                filepath = os.path.join(self.root, self.base_folder, filename)
+                with bz2.BZ2File(filepath) as old_fh:
+                    data = old_fh.read()
+                    with open(filepath[:-4], "wb") as new_fh:
+                        new_fh.write(data)
