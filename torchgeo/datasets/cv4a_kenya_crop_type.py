@@ -5,11 +5,12 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 from PIL import Image
-from torchvision.datasets import VisionDataset
 from torchvision.datasets.utils import check_integrity, extract_archive
 
+from .geo import GeoDataset
 
-class CV4AKenyaCropType(VisionDataset):
+
+class CV4AKenyaCropType(GeoDataset):
     """CV4A Kenya Crop Type dataset.
 
     Used in a competition in the Computer Vision for Agriculture (CV4A) workshop in
@@ -103,8 +104,6 @@ class CV4AKenyaCropType(VisionDataset):
         chip_size: int = 256,
         stride: int = 128,
         bands: Tuple[str, ...] = band_names,
-        transform: Optional[Callable[[np.ndarray], Any]] = None,
-        target_transform: Optional[Callable[[np.ndarray], Any]] = None,
         transforms: Optional[
             Callable[[np.ndarray, np.ndarray], Tuple[Any, Any]]
         ] = None,
@@ -120,10 +119,6 @@ class CV4AKenyaCropType(VisionDataset):
             stride: spacing between chips, if less than chip_size, then there
                 will be overlap between chips
             bands: the subset of bands to load
-            transform: a function/transform that takes in a numpy array and returns a
-                transformed version
-            target_transform: a function/transform that takes in the target and
-                transforms it
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -136,7 +131,8 @@ class CV4AKenyaCropType(VisionDataset):
         """
         self._validate_bands(bands)
 
-        super().__init__(root, transforms, transform, target_transform)
+        self.root = root
+        self.transforms = transforms
         self.verbose = verbose
 
         if download:
