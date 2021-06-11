@@ -1,13 +1,14 @@
 import os
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, Optional
 
 from PIL import Image
-from torchvision.datasets import VisionDataset
 from torchvision.datasets.utils import (
     check_integrity,
     download_file_from_google_drive,
     download_url,
 )
+
+from .geo import VisionDataset
 
 
 class VHR10(VisionDataset):
@@ -74,11 +75,7 @@ class VHR10(VisionDataset):
         self,
         root: str = "data",
         split: str = "positive",
-        transform: Optional[Callable[[Image.Image], Any]] = None,
-        target_transform: Optional[Callable[[Dict[str, Any]], Any]] = None,
-        transforms: Optional[
-            Callable[[Image.Image, Dict[str, Any]], Tuple[Any, Any]]
-        ] = None,
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
     ) -> None:
         """Initialize a new VHR-10 dataset instance.
@@ -86,10 +83,6 @@ class VHR10(VisionDataset):
         Parameters:
             root: root directory where dataset can be found
             split: one of "postive" or "negative"
-            transform: a function/transform that takes in a PIL image and returns a
-                transformed version
-            target_transform: a function/transform that takes in the target and
-                transforms it
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -101,8 +94,9 @@ class VHR10(VisionDataset):
         """
         assert split in ["positive", "negative"]
 
-        super().__init__(root, transforms, transform, target_transform)
+        self.root = root
         self.split = split
+        self.transforms = transforms
 
         if download:
             self.download()
@@ -126,7 +120,7 @@ class VHR10(VisionDataset):
                 )
             )
 
-    def __getitem__(self, index: int) -> Tuple[Any, Any]:
+    def __getitem__(self, index: int) -> Dict[str, Any]:
         """Return an index within the dataset.
 
         Parameters:
@@ -136,13 +130,15 @@ class VHR10(VisionDataset):
             data and label at that index
         """
         id_ = index % len(self) + 1
-        image = self._load_image(id_)
-        target = self._load_target(id_)
+        sample = {
+            "image": self._load_image(id_),
+            "label": self._load_target(id_),
+        }
 
         if self.transforms is not None:
-            image, target = self.transforms(image, target)
+            sample = self.transforms(sample)
 
-        return image, target
+        return sample
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.

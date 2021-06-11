@@ -1,6 +1,6 @@
 from .cowc import COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
-from .geo import GeoDataset
+from .geo import GeoDataset, VisionDataset
 from .landcoverai import LandCoverAI
 from .nwpu import VHR10
 
@@ -11,4 +11,5 @@ __all__ = (
     "GeoDataset",
     "LandCoverAI",
     "VHR10",
+    "VisionDataset",
 )

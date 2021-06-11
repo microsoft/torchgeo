@@ -1,10 +1,10 @@
 import os
-from typing import Any, Callable, Optional, Tuple
+from typing import Any, Callable, Dict, Optional
 
 from PIL import Image
-from torchvision.datasets import VisionDataset
 from torchvision.datasets.utils import check_integrity, download_and_extract_archive
 
+from .geo import VisionDataset
 from .utils import working_dir
 
 
@@ -57,9 +57,7 @@ class LandCoverAI(VisionDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transform: Optional[Callable[[Image.Image], Any]] = None,
-        target_transform: Optional[Callable[[Image.Image], Any]] = None,
-        transforms: Optional[Callable[[Image.Image, Image.Image], Any]] = None,
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
     ) -> None:
         """Initialize a new LandCover.ai dataset instance.
@@ -67,10 +65,6 @@ class LandCoverAI(VisionDataset):
         Parameters:
             root: root directory where dataset can be found
             split: one of "train", "val", or "test"
-            transform: a function/transform that takes in a PIL image and returns a
-                transformed version
-            target_transform: a function/transform that takes in the target and
-                transforms it
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -82,7 +76,8 @@ class LandCoverAI(VisionDataset):
         """
         assert split in ["train", "val", "test"]
 
-        super().__init__(root, transforms, transform, target_transform)
+        self.root = root
+        self.transforms = transforms
 
         if download:
             self.download()
@@ -96,7 +91,7 @@ class LandCoverAI(VisionDataset):
         with open(os.path.join(self.root, self.base_folder, split + ".txt")) as f:
             self.ids = f.readlines()
 
-    def __getitem__(self, index: int) -> Tuple[Any, Any]:
+    def __getitem__(self, index: int) -> Dict[str, Any]:
         """Return an index within the dataset.
 
         Parameters:
@@ -106,13 +101,15 @@ class LandCoverAI(VisionDataset):
             data and label at that index
         """
         id_ = self.ids[index].rstrip()
-        image = self._load_image(id_)
-        target = self._load_target(id_)
+        sample = {
+            "image": self._load_image(id_),
+            "mask": self._load_target(id_),
+        }
 
         if self.transforms is not None:
-            image, target = self.transforms(image, target)
+            sample = self.transforms(sample)
 
-        return image, target
+        return sample
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.

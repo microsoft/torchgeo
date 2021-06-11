@@ -22,14 +22,15 @@ import bz2
 import csv
 import os
 import tarfile
-from typing import Any, Callable, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 from PIL import Image
-from torchvision.datasets import VisionDataset
 from torchvision.datasets.utils import (
     check_integrity,
     download_url,
 )
+
+from .geo import VisionDataset
 
 
 class _COWC(VisionDataset, abc.ABC):
@@ -69,9 +70,7 @@ class _COWC(VisionDataset, abc.ABC):
         self,
         root: str = "data",
         split: str = "train",
-        transform: Optional[Callable[[Image.Image], Any]] = None,
-        target_transform: Optional[Callable[[int], Any]] = None,
-        transforms: Optional[Callable[[Image.Image, int], Tuple[Any, Any]]] = None,
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
     ) -> None:
         """Initialize a new COWC dataset instance.
@@ -79,10 +78,6 @@ class _COWC(VisionDataset, abc.ABC):
         Parameters:
             root: root directory where dataset can be found
             split: one of "train" or "test"
-            transform: a function/transform that takes in a PIL image and returns a
-                transformed version
-            target_transform: a function/transform that takes in the target and
-                transforms it
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -94,7 +89,8 @@ class _COWC(VisionDataset, abc.ABC):
         """
         assert split in ["train", "test"]
 
-        super().__init__(root, transforms, transform, target_transform)
+        self.root = root
+        self.transforms = transforms
 
         if download:
             self.download()
@@ -116,7 +112,7 @@ class _COWC(VisionDataset, abc.ABC):
                 self.images.append(row[0])
                 self.targets.append(row[1])
 
-    def __getitem__(self, index: int) -> Tuple[Any, Any]:
+    def __getitem__(self, index: int) -> Dict[str, Any]:
         """Return an index within the dataset.
 
         Parameters:
@@ -125,13 +121,15 @@ class _COWC(VisionDataset, abc.ABC):
         Returns:
             data and label at that index
         """
-        image = self._load_image(index)
-        target = int(self.targets[index])
+        sample = {
+            "image": self._load_image(index),
+            "label": int(self.targets[index]),
+        }
 
         if self.transforms is not None:
-            image, target = self.transforms(image, target)
+            sample = self.transforms(sample)
 
-        return image, target
+        return sample
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.

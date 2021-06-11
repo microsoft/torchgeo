@@ -104,9 +104,7 @@ class CV4AKenyaCropType(GeoDataset):
         chip_size: int = 256,
         stride: int = 128,
         bands: Tuple[str, ...] = band_names,
-        transforms: Optional[
-            Callable[[np.ndarray, np.ndarray], Tuple[Any, Any]]
-        ] = None,
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         verbose: bool = False,
@@ -182,15 +180,17 @@ class CV4AKenyaCropType(GeoDataset):
         labels = labels[y : y + self.chip_size, x : x + self.chip_size]
         field_ids = field_ids[y : y + self.chip_size, x : x + self.chip_size]
 
-        if self.transforms is not None:
-            img, labels = self.transforms(img, labels)
-
-        return {
-            "img": img,
-            "labels": labels,
+        sample = {
+            "image": img,
+            "mask": labels,
             "field_ids": field_ids,
             "metadata": (tile_index, y, x),
         }
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
 
     def __len__(self) -> int:
         """Return the number of chips in the dataset.
