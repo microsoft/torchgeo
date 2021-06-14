@@ -145,17 +145,6 @@ class ZipDataset(GeoDataset):
         """
         return min(map(len, self.datasets))
 
-    def __add__(self, other: "GeoDataset") -> "ZipDataset":  # type: ignore[override]
-        """Merge two GeoDatasets.
-
-        Parameters:
-            other: another dataset
-
-        Returns:
-            a single dataset
-        """
-        return ZipDataset([*self.datasets, other])
-
     def __str__(self) -> str:
         """Return the informal string representation of the object.
 
