@@ -1,0 +1,33 @@
+name: sphinx
+on:
+  push:
+    branches:
+    - main
+    paths:
+    - 'docs/**'
+    - '**.py'
+    - 'requirements.txt'
+    - '.github/workflows/sphinx.yaml'
+  pull_request:
+    branches:
+    - main
+    paths:
+    - 'docs/**'
+    - '**.py'
+    - 'requirements.txt'
+    - '.github/workflows/sphinx.yaml'
+jobs:
+  sphinx:
+    name: sphinx
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone repo
+      uses: actions/checkout@v2
+    - name: Set up python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: pip3 install -r requirements.txt
+    - name: Run sphinx checks
+      run: cd docs && make html

@@ -8,8 +8,10 @@ spack:
   - py-mypy
   - py-pillow-simd
   - py-pycocotools
+  - py-pytorch-sphinx-theme
   - "py-radiant-mlhub@0.2.1:"
   - py-rarfile
+  - py-sphinx
   - py-torch
   - py-torchvision
   concretization: together

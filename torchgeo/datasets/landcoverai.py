@@ -13,8 +13,7 @@ class LandCoverAI(VisionDataset):
     dataset is a dataset for automatic mapping of buildings, woodlands, water and
     roads from aerial images.
 
-    Dataset features
-    ~~~~~~~~~~~~~~~~
+    Dataset features:
 
     * land cover from Poland, Central Europe
     * three spectral bands - RGB
@@ -22,14 +21,12 @@ class LandCoverAI(VisionDataset):
     * 8 orthophotos with 50 cm per pixel resolution (~4200x4700 px)
     * total area of 216.27 km:sup:`2`
 
-    Dataset format
-    ~~~~~~~~~~~~~~
+    Dataset format:
 
     * rasters are three-channel GeoTiffs with EPSG:2180 spatial reference system
     * masks are single-channel GeoTiffs with EPSG:2180 spatial reference system
 
-    Dataset classes
-    ~~~~~~~~~~~~~~~
+    Dataset classes:
 
     1. building (1.85 km:sup:`2`)
     2. woodland (72.02 km:sup:`2`)
