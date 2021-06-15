@@ -3,9 +3,11 @@ flake8
 flake8-import-order
 mypy
 opencv-python
-Pillow
+pillow
 pycocotools
+pytorch-sphinx-theme
 radiant-mlhub>=0.2.1
 rarfile
+sphinx
 torch
 torchvision

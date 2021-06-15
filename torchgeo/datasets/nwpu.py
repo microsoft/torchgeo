@@ -22,8 +22,8 @@ class VHR10(VisionDataset):
 
     The data set is divided into two sets:
 
-    *. Positive image set (650 images) which contains at least one target in an image
-    *. Negative image set (150 images) does not contain any targets
+    * Positive image set (650 images) which contains at least one target in an image
+    * Negative image set (150 images) does not contain any targets
 
     The positive image set consists of objects from ten classes:
 
