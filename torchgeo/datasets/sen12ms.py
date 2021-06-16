@@ -93,8 +93,7 @@ class SEN12MS(GeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            RuntimeError: if data is not found in ``root``
         """
         assert split in ["train", "test"]
 
