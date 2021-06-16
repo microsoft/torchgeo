@@ -1,7 +1,10 @@
 import os
 from typing import Any, Callable, Dict, Optional
 
+import numpy as np
 from PIL import Image
+import torch
+from torch import Tensor
 from torchvision.datasets.utils import (
     check_integrity,
     download_file_from_google_drive,
@@ -151,7 +154,7 @@ class VHR10(VisionDataset):
         else:
             return 150
 
-    def _load_image(self, id_: int) -> Image.Image:
+    def _load_image(self, id_: int) -> Tensor:
         """Load a single image.
 
         Parameters:
@@ -160,15 +163,19 @@ class VHR10(VisionDataset):
         Returns:
             the image
         """
-        return Image.open(
-            os.path.join(
-                self.root,
-                self.base_folder,
-                "NWPU VHR-10 dataset",
-                self.split + " image set",
-                f"{id_:03d}.jpg",
-            )
-        ).convert("RGB")
+        filename = os.path.join(
+            self.root,
+            self.base_folder,
+            "NWPU VHR-10 dataset",
+            self.split + " image set",
+            f"{id_:03d}.jpg",
+        )
+        with Image.open(filename) as img:
+            array = np.array(img)
+            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            # Convert from HxWxC to CxHxW
+            tensor = tensor.permute((2, 0, 1))
+            return tensor
 
     def _load_target(self, id_: int) -> Dict[str, Any]:
         """Load the annotations for a single image.
