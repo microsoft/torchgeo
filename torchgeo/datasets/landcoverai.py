@@ -1,7 +1,10 @@
 import os
-from typing import Any, Callable, Dict, Optional
+from typing import Callable, Dict, Optional
 
+import numpy as np
 from PIL import Image
+import torch
+from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_and_extract_archive
 
 from .geo import VisionDataset
@@ -54,7 +57,7 @@ class LandCoverAI(VisionDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
     ) -> None:
         """Initialize a new LandCover.ai dataset instance.
@@ -88,7 +91,7 @@ class LandCoverAI(VisionDataset):
         with open(os.path.join(self.root, self.base_folder, split + ".txt")) as f:
             self.ids = f.readlines()
 
-    def __getitem__(self, index: int) -> Dict[str, Any]:
+    def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
 
         Parameters:
@@ -116,7 +119,7 @@ class LandCoverAI(VisionDataset):
         """
         return len(self.ids)
 
-    def _load_image(self, id_: str) -> Image.Image:
+    def _load_image(self, id_: str) -> Tensor:
         """Load a single image.
 
         Parameters:
@@ -125,11 +128,15 @@ class LandCoverAI(VisionDataset):
         Returns:
             the image
         """
-        return Image.open(
-            os.path.join(self.root, self.base_folder, "output", id_ + ".jpg")
-        ).convert("RGB")
+        filename = os.path.join(self.root, self.base_folder, "output", id_ + ".jpg")
+        with Image.open(filename) as img:
+            array = np.array(img)
+            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            # Convert from HxWxC to CxHxW
+            tensor = tensor.permute((2, 0, 1))
+            return tensor
 
-    def _load_target(self, id_: str) -> Image.Image:
+    def _load_target(self, id_: str) -> Tensor:
         """Load the target mask for a single image.
 
         Parameters:
@@ -138,9 +145,11 @@ class LandCoverAI(VisionDataset):
         Returns:
             the target mask
         """
-        return Image.open(
-            os.path.join(self.root, self.base_folder, "output", id_ + "_m.png")
-        ).convert("L")
+        filename = os.path.join(self.root, self.base_folder, "output", id_ + "_m.png")
+        with Image.open(filename) as img:
+            array = np.array(img.convert("L"))
+            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            return tensor
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
