@@ -1,16 +1,18 @@
 import csv
 from functools import lru_cache
 import os
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 from PIL import Image
+import torch
+from torch import Tensor
 from torchvision.datasets.utils import check_integrity, extract_archive
 
-from .geo import GeoDataset
+from .geo import VisionDataset
 
 
-class CV4AKenyaCropType(GeoDataset):
+class CV4AKenyaCropType(VisionDataset):
     """CV4A Kenya Crop Type dataset.
 
     Used in a competition in the Computer Vision for Agriculture (CV4A) workshop in
@@ -104,7 +106,7 @@ class CV4AKenyaCropType(GeoDataset):
         chip_size: int = 256,
         stride: int = 128,
         bands: Tuple[str, ...] = band_names,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         verbose: bool = False,
@@ -161,7 +163,7 @@ class CV4AKenyaCropType(GeoDataset):
                 ]:
                     self.chips_metadata.append((tile_index, y, x))
 
-    def __getitem__(self, index: int) -> Dict[str, Any]:
+    def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
 
         Parameters:
@@ -184,7 +186,9 @@ class CV4AKenyaCropType(GeoDataset):
             "image": img,
             "mask": labels,
             "field_ids": field_ids,
-            "metadata": (tile_index, y, x),
+            "tile_index": torch.tensor(tile_index),  # type: ignore[attr-defined]
+            "x": torch.tensor(x),  # type: ignore[attr-defined]
+            "y": torch.tensor(y),  # type: ignore[attr-defined]
         }
 
         if self.transforms is not None:
@@ -201,7 +205,7 @@ class CV4AKenyaCropType(GeoDataset):
         return len(self.chips_metadata)
 
     @lru_cache
-    def _load_label_tile(self, tile_name: str) -> Tuple[np.ndarray, np.ndarray]:
+    def _load_label_tile(self, tile_name: str) -> Tuple[Tensor, Tensor]:
         """Load a single _tile_ of labels and field_ids.
 
         Parameters:
@@ -218,29 +222,20 @@ class CV4AKenyaCropType(GeoDataset):
         if self.verbose:
             print(f"Loading labels/field_ids for {tile_name}")
 
-        labels = np.array(
-            Image.open(
-                os.path.join(
-                    self.root,
-                    self.base_folder,
-                    "ref_african_crops_kenya_02_labels",
-                    tile_name + "_label",
-                    "labels.tif",
-                )
-            )
+        directory = os.path.join(
+            self.root,
+            self.base_folder,
+            "ref_african_crops_kenya_02_labels",
+            tile_name + "_label",
         )
 
-        field_ids = np.array(
-            Image.open(
-                os.path.join(
-                    self.root,
-                    self.base_folder,
-                    "ref_african_crops_kenya_02_labels",
-                    tile_name + "_label",
-                    "field_ids.tif",
-                )
-            )
-        )
+        with Image.open(os.path.join(directory, "labels.tif")) as img:
+            array = np.array(img)
+            labels: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+
+        with Image.open(os.path.join(directory, "field_ids.tif")) as img:
+            array = np.array(img)
+            field_ids: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
 
         return (labels, field_ids)
 
@@ -263,7 +258,7 @@ class CV4AKenyaCropType(GeoDataset):
     @lru_cache
     def _load_all_image_tiles(
         self, tile_name: str, bands: Tuple[str, ...] = band_names
-    ) -> np.ndarray:
+    ) -> Tensor:
         """Load all the imagery (across time) for a single _tile_. Optionally allows
         for subsetting of the bands that are loaded.
 
@@ -283,9 +278,12 @@ class CV4AKenyaCropType(GeoDataset):
         if self.verbose:
             print(f"Loading all imagery for {tile_name}")
 
-        img = np.zeros(
-            (len(self.dates), len(bands), self.tile_height, self.tile_width),
-            dtype=np.float32,
+        img: Tensor = torch.zeros(  # type: ignore[attr-defined]
+            len(self.dates),
+            len(bands),
+            self.tile_height,
+            self.tile_width,
+            dtype=torch.float32,  # type: ignore[attr-defined]
         )
 
         for date_index, date in enumerate(self.dates):
@@ -296,7 +294,7 @@ class CV4AKenyaCropType(GeoDataset):
     @lru_cache
     def _load_single_image_tile(
         self, tile_name: str, date: str, bands: Tuple[str, ...]
-    ) -> np.ndarray:
+    ) -> Tensor:
         """Load the imagery for a single tile for a single date. Optionally allows
         for subsetting of the bands that are loaded.
 
@@ -317,19 +315,20 @@ class CV4AKenyaCropType(GeoDataset):
         if self.verbose:
             print(f"Loading imagery for {tile_name} at {date}")
 
-        img = np.zeros(
-            (len(bands), self.tile_height, self.tile_width), dtype=np.float32
+        img: Tensor = torch.zeros(  # type: ignore[attr-defined]
+            len(bands), self.tile_height, self.tile_width, dtype=torch.float32
         )
         for band_index, band_name in enumerate(self.bands):
-            img_fn = os.path.join(
+            filepath = os.path.join(
                 self.root,
                 self.base_folder,
                 "ref_african_crops_kenya_02_source",
                 f"{tile_name}_{date}",
                 f"{band_name}.tif",
             )
-            band_img = np.array(Image.open(img_fn))
-            img[band_index] = band_img
+            with Image.open(filepath) as band_img:
+                array = np.array(band_img)
+                img[band_index] = torch.from_numpy(array)  # type: ignore[attr-defined]
 
         return img
 
