@@ -316,7 +316,10 @@ class CV4AKenyaCropType(VisionDataset):
             print(f"Loading imagery for {tile_name} at {date}")
 
         img: Tensor = torch.zeros(  # type: ignore[attr-defined]
-            len(bands), self.tile_height, self.tile_width, dtype=torch.float32
+            len(bands),
+            self.tile_height,
+            self.tile_width,
+            dtype=torch.float32  # type: ignore[attr-defined]
         )
         for band_index, band_name in enumerate(self.bands):
             filepath = os.path.join(
