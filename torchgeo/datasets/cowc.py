@@ -22,9 +22,12 @@ import bz2
 import csv
 import os
 import tarfile
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
+import numpy as np
 from PIL import Image
+import torch
+from torch import Tensor
 from torchvision.datasets.utils import (
     check_integrity,
     download_url,
@@ -70,7 +73,7 @@ class _COWC(VisionDataset, abc.ABC):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
     ) -> None:
         """Initialize a new COWC dataset instance.
@@ -112,7 +115,7 @@ class _COWC(VisionDataset, abc.ABC):
                 self.images.append(row[0])
                 self.targets.append(row[1])
 
-    def __getitem__(self, index: int) -> Dict[str, Any]:
+    def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
 
         Parameters:
@@ -123,7 +126,7 @@ class _COWC(VisionDataset, abc.ABC):
         """
         sample = {
             "image": self._load_image(index),
-            "label": int(self.targets[index]),
+            "label": self._load_target(index),
         }
 
         if self.transforms is not None:
@@ -139,7 +142,7 @@ class _COWC(VisionDataset, abc.ABC):
         """
         return len(self.targets)
 
-    def _load_image(self, index: int) -> Image.Image:
+    def _load_image(self, index: int) -> Tensor:
         """Load a single image.
 
         Parameters:
@@ -148,13 +151,26 @@ class _COWC(VisionDataset, abc.ABC):
         Returns:
             the image
         """
-        return Image.open(
-            os.path.join(
-                self.root,
-                self.base_folder,
-                self.images[index],
-            )
-        ).convert("RGB")
+        filename = os.path.join(self.root, self.base_folder, self.images[index])
+        with Image.open(filename) as img:
+            array = np.array(img)
+            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            # Convert from HxWxC to CxHxW
+            tensor = tensor.permute((2, 0, 1))
+            return tensor
+
+    def _load_target(self, index: int) -> Tensor:
+        """Load a single target.
+
+        Parameters:
+            index: index to return
+
+        Returns:
+            the target
+        """
+        target = int(self.targets[index])
+        tensor: Tensor = torch.tensor(target)  # type: ignore[attr-defined]
+        return tensor
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
@@ -163,9 +179,8 @@ class _COWC(VisionDataset, abc.ABC):
             True if dataset MD5s match, else False
         """
         for filename, md5 in zip(self.filenames, self.md5s):
-            if not check_integrity(
-                os.path.join(self.root, self.base_folder, filename), md5
-            ):
+            filepath = os.path.join(self.root, self.base_folder, filename)
+            if not check_integrity(filepath, md5):
                 return False
         return True
 
@@ -184,9 +199,8 @@ class _COWC(VisionDataset, abc.ABC):
                 md5=md5,
             )
             if filename.endswith(".tbz"):
-                with tarfile.open(
-                    os.path.join(self.root, self.base_folder, filename)
-                ) as tar:
+                filepath = os.path.join(self.root, self.base_folder, filename)
+                with tarfile.open(filepath) as tar:
                     tar.extractall(os.path.join(self.root, self.base_folder))
             elif filename.endswith(".bz2"):
                 filepath = os.path.join(self.root, self.base_folder, filename)
@@ -223,7 +237,7 @@ class COWCDetection(_COWC):
         "f40522dc97bea41b10117d4a5b946a6f",
         "195da7c9443a939a468c9f232fd86ee3",
     ]
-    filename = "COWC_{split}_list_detection.txt"
+    filename = "COWC_{}_list_detection.txt"
 
 
 class COWCCounting(_COWC):
@@ -253,7 +267,7 @@ class COWCCounting(_COWC):
         "daf8033c4e8ceebbf2c3cac3fabb8b10",
         "777ec107ed2a3d54597a739ce74f95ad",
     ]
-    filename = "COWC_{split}_list_64_class.txt"
+    filename = "COWC_{}_list_64_class.txt"
 
 
 # TODO: add COCW-M datasets:
