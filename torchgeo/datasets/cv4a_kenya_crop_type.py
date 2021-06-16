@@ -319,7 +319,7 @@ class CV4AKenyaCropType(VisionDataset):
             len(bands),
             self.tile_height,
             self.tile_width,
-            dtype=torch.float32  # type: ignore[attr-defined]
+            dtype=torch.float32,  # type: ignore[attr-defined]
         )
         for band_index, band_name in enumerate(self.bands):
             filepath = os.path.join(
