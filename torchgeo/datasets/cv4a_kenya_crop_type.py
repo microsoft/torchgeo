@@ -208,7 +208,7 @@ class CV4AKenyaCropType(VisionDataset):
         """
         return len(self.chips_metadata)
 
-    @lru_cache
+    @lru_cache(maxsize=128)
     def _load_label_tile(self, tile_name: str) -> Tuple[Tensor, Tensor]:
         """Load a single _tile_ of labels and field_ids.
 
@@ -259,7 +259,7 @@ class CV4AKenyaCropType(VisionDataset):
             if band not in self.band_names:
                 raise ValueError(f"'{band}' is an invalid band name.")
 
-    @lru_cache
+    @lru_cache(maxsize=128)
     def _load_all_image_tiles(
         self, tile_name: str, bands: Tuple[str, ...] = band_names
     ) -> Tensor:
@@ -295,7 +295,7 @@ class CV4AKenyaCropType(VisionDataset):
 
         return img
 
-    @lru_cache
+    @lru_cache(maxsize=128)
     def _load_single_image_tile(
         self, tile_name: str, date: str, bands: Tuple[str, ...]
     ) -> Tensor:
