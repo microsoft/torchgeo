@@ -80,6 +80,7 @@ class VHR10(VisionDataset):
         split: str = "positive",
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
+        checksum: bool = False,
     ) -> None:
         """Initialize a new VHR-10 dataset instance.
 
@@ -89,6 +90,7 @@ class VHR10(VisionDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if ``split`` argument is invalid
@@ -100,6 +102,7 @@ class VHR10(VisionDataset):
         self.root = root
         self.split = split
         self.transforms = transforms
+        self.checksum = checksum
 
         if download:
             self.download()
@@ -199,11 +202,11 @@ class VHR10(VisionDataset):
         """Check integrity of dataset.
 
         Returns:
-            True if dataset MD5s match, else False
+            True if dataset files are found and/or MD5s match, else False
         """
         image: bool = check_integrity(
             os.path.join(self.root, self.base_folder, self.image_meta["filename"]),
-            self.image_meta["md5"],
+            self.image_meta["md5"] if self.checksum else None,
         )
 
         # Annotations only needed for "positive" image set
@@ -216,7 +219,7 @@ class VHR10(VisionDataset):
                     "NWPU VHR-10 dataset",
                     self.target_meta["filename"],
                 ),
-                self.target_meta["md5"],
+                self.target_meta["md5"] if self.checksum else None,
             )
 
         return image and target
@@ -233,7 +236,7 @@ class VHR10(VisionDataset):
             self.image_meta["file_id"],
             os.path.join(self.root, self.base_folder),
             self.image_meta["filename"],
-            self.image_meta["md5"],
+            self.image_meta["md5"] if self.checksum else None,
         )
 
         # Must be installed to extract RAR file
@@ -251,5 +254,5 @@ class VHR10(VisionDataset):
                 self.target_meta["url"],
                 os.path.join(self.root, self.base_folder, "NWPU VHR-10 dataset"),
                 self.target_meta["filename"],
-                self.target_meta["md5"],
+                self.target_meta["md5"] if self.checksum else None,
             )
