@@ -1,7 +1,7 @@
 spack:
   specs:
   - opencv+python3+imgcodecs+tiff+jpeg+png
-  - "python@3.5:+bz2"
+  - "python@3.6:+bz2"
   - py-black
   - py-flake8
   - py-flake8-import-order
@@ -14,6 +14,7 @@ spack:
   - "py-radiant-mlhub@0.2.1:"
   - py-rarfile
   - py-rasterio
+  - "py-setuptools@42:"
   - py-sphinx
   - py-torch
   - py-torchvision
