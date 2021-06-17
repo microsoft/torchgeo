@@ -1,12 +1,13 @@
 spack:
   specs:
   - opencv+python3+imgcodecs+tiff+jpeg+png
+  - pil
   - "python@3.6:+bz2"
   - py-black
   - py-flake8
   - py-flake8-import-order
   - py-mypy
-  - py-pillow-simd
+  - py-numpy
   - py-pycocotools
   - py-pytest
   - py-pytest-cov
