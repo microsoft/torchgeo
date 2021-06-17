@@ -1,8 +1,9 @@
 black
-cython
 flake8
 flake8-import-order
 mypy
+numpy
+numpy<=1.19; python_version<3.7
 opencv-python
 pillow
 pycocotools
