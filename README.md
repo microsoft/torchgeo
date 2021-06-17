@@ -1,10 +1,11 @@
 # TorchGeo
 PyTorch data loaders for geospatial data
 
-[![flake8](https://github.com/microsoft/torchgeo/workflows/flake8/badge.svg)](https://github.com/microsoft/torchgeo/actions)
-[![black](https://github.com/microsoft/torchgeo/workflows/black/badge.svg)](https://github.com/microsoft/torchgeo/actions)
-[![mypy](https://github.com/microsoft/torchgeo/workflows/mypy/badge.svg)](https://github.com/microsoft/torchgeo/actions)
-[![sphinx](https://github.com/microsoft/torchgeo/workflows/sphinx/badge.svg)](https://github.com/microsoft/torchgeo/actions)
+[![flake8](https://github.com/microsoft/torchgeo/actions/workflows/flake8.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/flake8.yaml)
+[![black](https://github.com/microsoft/torchgeo/actions/workflows/black.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/black.yaml)
+[![mypy](https://github.com/microsoft/torchgeo/actions/workflows/mypy.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/mypy.yaml)
+[![pytest](https://github.com/microsoft/torchgeo/actions/workflows/pytest.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/pytest.yaml)
+[![sphinx](https://github.com/microsoft/torchgeo/actions/workflows/sphinx.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/sphinx.yaml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ## Contributing
