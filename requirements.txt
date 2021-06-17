@@ -11,6 +11,7 @@ pytorch-sphinx-theme
 radiant-mlhub>=0.2.1
 rarfile
 rasterio
+setuptools>=42
 sphinx
 torch
 torchvision
