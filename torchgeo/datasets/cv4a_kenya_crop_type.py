@@ -109,6 +109,7 @@ class CV4AKenyaCropType(VisionDataset):
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
+        checksum: bool = False,
         verbose: bool = False,
     ) -> None:
         """Initialize a new CV4A Kenya Crop Type Dataset instance.
@@ -123,16 +124,21 @@ class CV4AKenyaCropType(VisionDataset):
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
             verbose: if True, print messages when new tiles are loaded
 
         Raises:
-            RuntimeError: if download=True but api_key=None, or download=False but
-                dataset is missing or checksum fails
+            RuntimeError: if ``download=True`` but ``api_key=None``, or
+                ``download=False`` but dataset is missing or checksum fails
         """
         self._validate_bands(bands)
 
         self.root = root
+        self.chip_size = chip_size
+        self.stride = stride
+        self.bands = bands
         self.transforms = transforms
+        self.checksum = checksum
         self.verbose = verbose
 
         if download:
@@ -151,8 +157,6 @@ class CV4AKenyaCropType(VisionDataset):
             )
 
         # Calculate the indices that we will use over all tiles
-        self.bands = bands
-        self.chip_size = chip_size
         self.chips_metadata = []
         for tile_index in range(len(self.tile_names)):
             for y in list(range(0, self.tile_height - self.chip_size, stride)) + [
@@ -215,7 +219,7 @@ class CV4AKenyaCropType(VisionDataset):
             tuple of labels and field ids
 
         Raises:
-            AssertionError: if tile_name is invalid
+            AssertionError: if ``tile_name`` is invalid
         """
         assert tile_name in self.tile_names
 
@@ -246,7 +250,7 @@ class CV4AKenyaCropType(VisionDataset):
             bands: user-provided tuple of bands to load
 
         Raises:
-            AssertionError: if bands is not a tuple
+            AssertionError: if ``bands`` is not a tuple
             ValueError: if an invalid band name is provided
         """
 
@@ -271,7 +275,7 @@ class CV4AKenyaCropType(VisionDataset):
                 points in time, 3035 is the tile height, and 2016 is the tile width
 
         Raises:
-            AssertionError: if tile_name is invalid
+            AssertionError: if ``tile_name`` is invalid
         """
         assert tile_name in self.tile_names
 
@@ -307,7 +311,7 @@ class CV4AKenyaCropType(VisionDataset):
             array containing a single image tile
 
         Raises:
-            AssertionError: if tile_name or date is invalid
+            AssertionError: if ``tile_name`` or ``date`` is invalid
         """
         assert tile_name in self.tile_names
         assert date in self.dates
@@ -339,16 +343,16 @@ class CV4AKenyaCropType(VisionDataset):
         """Check integrity of dataset.
 
         Returns:
-            True if the MD5s of the dataset's archives match, else False
+            True if dataset files are found and/or MD5s match, else False
         """
         images: bool = check_integrity(
             os.path.join(self.root, self.base_folder, self.image_meta["filename"]),
-            self.image_meta["md5"],
+            self.image_meta["md5"] if self.checksum else None,
         )
 
         targets: bool = check_integrity(
             os.path.join(self.root, self.base_folder, self.target_meta["filename"]),
-            self.target_meta["md5"],
+            self.target_meta["md5"] if self.checksum else None,
         )
 
         return images and targets

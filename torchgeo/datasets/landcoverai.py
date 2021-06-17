@@ -59,6 +59,7 @@ class LandCoverAI(VisionDataset):
         split: str = "train",
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
+        checksum: bool = False,
     ) -> None:
         """Initialize a new LandCover.ai dataset instance.
 
@@ -68,6 +69,7 @@ class LandCoverAI(VisionDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if ``split`` argument is invalid
@@ -77,7 +79,9 @@ class LandCoverAI(VisionDataset):
         assert split in ["train", "val", "test"]
 
         self.root = root
+        self.split = split
         self.transforms = transforms
+        self.checksum = checksum
 
         if download:
             self.download()
@@ -155,11 +159,11 @@ class LandCoverAI(VisionDataset):
         """Check integrity of dataset.
 
         Returns:
-            True if dataset MD5s match, else False
+            True if dataset files are found and/or MD5s match, else False
         """
         integrity: bool = check_integrity(
             os.path.join(self.root, self.base_folder, self.filename),
-            self.md5,
+            self.md5 if self.checksum else None,
         )
 
         return integrity
@@ -175,7 +179,7 @@ class LandCoverAI(VisionDataset):
             self.url,
             os.path.join(self.root, self.base_folder),
             filename=self.filename,
-            md5=self.md5,
+            md5=self.md5 if self.checksum else None,
         )
 
         # Generate train/val/test splits

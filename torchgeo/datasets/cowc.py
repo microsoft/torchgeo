@@ -75,6 +75,7 @@ class _COWC(VisionDataset, abc.ABC):
         split: str = "train",
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
+        checksum: bool = False,
     ) -> None:
         """Initialize a new COWC dataset instance.
 
@@ -84,6 +85,7 @@ class _COWC(VisionDataset, abc.ABC):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if ``split`` argument is invalid
@@ -93,7 +95,9 @@ class _COWC(VisionDataset, abc.ABC):
         assert split in ["train", "test"]
 
         self.root = root
+        self.split = split
         self.transforms = transforms
+        self.checksum = checksum
 
         if download:
             self.download()
@@ -176,11 +180,11 @@ class _COWC(VisionDataset, abc.ABC):
         """Check integrity of dataset.
 
         Returns:
-            True if dataset MD5s match, else False
+            True if dataset files are found and/or MD5s match, else False
         """
         for filename, md5 in zip(self.filenames, self.md5s):
             filepath = os.path.join(self.root, self.base_folder, filename)
-            if not check_integrity(filepath, md5):
+            if not check_integrity(filepath, md5 if self.checksum else None):
                 return False
         return True
 
@@ -196,7 +200,7 @@ class _COWC(VisionDataset, abc.ABC):
                 self.base_url + filename,
                 os.path.join(self.root, self.base_folder),
                 filename=filename,
-                md5=md5,
+                md5=md5 if self.checksum else None,
             )
             if filename.endswith(".tbz"):
                 filepath = os.path.join(self.root, self.base_folder, filename)

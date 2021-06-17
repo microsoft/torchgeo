@@ -36,14 +36,11 @@ class SEN12MS(GeoDataset):
 
        .. code-block: bash
 
-          wget "ftp://m1474000:m1474000@dataserv.ub.tum.de/checksum.sha512"
-
           for season in 1158_spring 1868_summer 1970_fall 2017_winter
           do
               for source in lc s1 s2
               do
                   wget "ftp://m1474000:m1474000@dataserv.ub.tum.de/ROIs${season}_${source}.tar.gz"
-                  shasum -a 512 "ROIs${season}_${source}.tar.gz"
                   tar xvzf "ROIs${season}_${source}.tar.gz"
               done
           done
@@ -55,8 +52,7 @@ class SEN12MS(GeoDataset):
 
        or manually downloaded from https://dataserv.ub.tum.de/s/m1474000
        and https://github.com/schmitt-muc/SEN12MS/tree/master/splits.
-       This download will likely take several hours. The checksums.sha512
-       file should be used to confirm the integrity of the downloads.
+       This download will likely take several hours.
     """  # noqa: E501
 
     base_folder = "sen12ms"
@@ -76,12 +72,29 @@ class SEN12MS(GeoDataset):
         "train_list.txt",
         "test_list.txt",
     ]
+    md5s = [
+        "6e2e8fa8b8cba77ddab49fd20ff5c37b",
+        "fba019bb27a08c1db96b31f718c34d79",
+        "d58af2c15a16f376eb3308dc9b685af2",
+        "2c5bd80244440b6f9d54957c6b1f23d4",
+        "01044b7f58d33570c6b57fec28a3d449",
+        "4dbaf72ecb704a4794036fe691427ff3",
+        "9b126a68b0e3af260071b3139cb57cee",
+        "19132e0aab9d4d6862fd42e8e6760847",
+        "b8f117818878da86b5f5e06400eb1866",
+        "0fa0420ef7bcfe4387c7e6fe226dc728",
+        "bb8cbfc16b95a4f054a3d5380e0130ed",
+        "3807545661288dcca312c9c538537b63",
+        "0a68d4e1eb24f128fccdb930000b2546",
+        "c7faad064001e646445c4c634169484d",
+    ]
 
     def __init__(
         self,
         root: str = "data",
         split: str = "train",
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        checksum: bool = False,
     ) -> None:
         """Initialize a new SEN12MS dataset instance.
 
@@ -90,6 +103,7 @@ class SEN12MS(GeoDataset):
             split: one of "train" or "test"
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if ``split`` argument is invalid
@@ -98,7 +112,9 @@ class SEN12MS(GeoDataset):
         assert split in ["train", "test"]
 
         self.root = root
+        self.split = split
         self.transforms = transforms
+        self.checksum = checksum
 
         if not self._check_integrity():
             raise RuntimeError("Dataset not found.")
@@ -169,10 +185,10 @@ class SEN12MS(GeoDataset):
         """Check integrity of dataset.
 
         Returns:
-            True if files exist, else False
+            True if dataset files are found and/or MD5s match, else False
         """
-        # We could also check md5s, but it would take ~30 min to compute
-        for filename in self.filenames:
-            if not check_integrity(os.path.join(self.root, self.base_folder, filename)):
+        for filename, md5 in zip(self.filenames, self.md5s):
+            filepath = os.path.join(self.root, self.base_folder, filename)
+            if not check_integrity(filepath, md5 if self.checksum else None):
                 return False
         return True
