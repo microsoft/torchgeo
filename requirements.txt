@@ -5,6 +5,8 @@ mypy
 opencv-python
 pillow
 pycocotools
+pytest
+pytest-cov
 pytorch-sphinx-theme
 radiant-mlhub>=0.2.1
 rarfile
