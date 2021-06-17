@@ -26,8 +26,6 @@ jobs:
       with:
         python-version: 3.9
     - name: Install flake8
-      run: |
-        pip3 install flake8
-        pip3 install flake8-import-order
+      run: pip install flake8 flake8-import-order
     - name: Run flake8 checks
       run: flake8

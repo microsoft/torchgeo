@@ -26,6 +26,6 @@ jobs:
       with:
         python-version: 3.9
     - name: Install black
-      run: pip3 install black
+      run: pip install black
     - name: Run black checks
       run: black --check .
