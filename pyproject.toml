@@ -9,17 +9,22 @@ target-version = ["py36", "py37", "py38", "py39"]
 exclude = '''
 /(
     # Data
-      data
+    | data/
 
     # Spack
-    | \.spack-env
+    | \.spack-env/
 
     # Python
-    |  __pycache__
-    | \.pytest_cache
-    | \.mypy_cache
+    | build/
+    | dist/
+    | \.cache/
+    | \.mypy_cache/
+    | \.pytest_cache/
+    |  __pycache__/
+    | .*\.egg-info/
 
     # Git
-    | \.git
+    | \.git/
+    | \.github/
 )/
 '''

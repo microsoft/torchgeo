@@ -11,11 +11,16 @@ exclude =
     .spack-env/,
 
     # Python
-    .cache/
+    build/,
+    dist/,
+    .cache/,
+    .mypy_cache/,
     .pytest_cache/,
     __pycache__/,
+    *.egg-info/
 
     # Git
     .git/,
+    .github/,
 application-import-names = docs,tests,torchgeo
 import-order-style = google
