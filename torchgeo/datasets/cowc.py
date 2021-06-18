@@ -43,31 +43,26 @@ class _COWC(VisionDataset, abc.ABC):
     @abc.abstractmethod
     def base_folder(self) -> str:
         """Subdirectory to find/store dataset in."""
-        pass
 
     @property
     @abc.abstractmethod
     def base_url(self) -> str:
         """Base URL to download dataset from."""
-        pass
 
     @property
     @abc.abstractmethod
     def filenames(self) -> List[str]:
         """List of files to download."""
-        pass
 
     @property
     @abc.abstractmethod
     def md5s(self) -> List[str]:
         """List of MD5 checksums of files to download."""
-        pass
 
     @property
     @abc.abstractmethod
     def filename(self) -> str:
         """Filename containing train/test split and target labels."""
-        pass
 
     def __init__(
         self,
@@ -214,36 +209,6 @@ class _COWC(VisionDataset, abc.ABC):
                         new_fh.write(data)
 
 
-class COWCDetection(_COWC):
-    """COWC Dataset for car detection."""
-
-    base_folder = "cowc_detection"
-    base_url = (
-        "https://gdo152.llnl.gov/cowc/download/cowc/datasets/patch_sets/detection/"
-    )
-    filenames = [
-        "COWC_train_list_detection.txt.bz2",
-        "COWC_test_list_detection.txt.bz2",
-        "COWC_Detection_Toronto_ISPRS.tbz",
-        "COWC_Detection_Selwyn_LINZ.tbz",
-        "COWC_Detection_Potsdam_ISPRS.tbz",
-        "COWC_Detection_Vaihingen_ISPRS.tbz",
-        "COWC_Detection_Columbus_CSUAV_AFRL.tbz",
-        "COWC_Detection_Utah_AGRC.tbz",
-    ]
-    md5s = [
-        "c954a5a3dac08c220b10cfbeec83893c",
-        "c6c2d0a78f12a2ad88b286b724a57c1a",
-        "11af24f43b198b0f13c8e94814008a48",
-        "22fd37a86961010f5d519a7da0e1fc72",
-        "bf053545cc1915d8b6597415b746fe48",
-        "23945d5b22455450a938382ccc2a8b27",
-        "f40522dc97bea41b10117d4a5b946a6f",
-        "195da7c9443a939a468c9f232fd86ee3",
-    ]
-    filename = "COWC_{}_list_detection.txt"
-
-
 class COWCCounting(_COWC):
     """COWC Dataset for car counting."""
 
@@ -272,6 +237,36 @@ class COWCCounting(_COWC):
         "777ec107ed2a3d54597a739ce74f95ad",
     ]
     filename = "COWC_{}_list_64_class.txt"
+
+
+class COWCDetection(_COWC):
+    """COWC Dataset for car detection."""
+
+    base_folder = "cowc_detection"
+    base_url = (
+        "https://gdo152.llnl.gov/cowc/download/cowc/datasets/patch_sets/detection/"
+    )
+    filenames = [
+        "COWC_train_list_detection.txt.bz2",
+        "COWC_test_list_detection.txt.bz2",
+        "COWC_Detection_Toronto_ISPRS.tbz",
+        "COWC_Detection_Selwyn_LINZ.tbz",
+        "COWC_Detection_Potsdam_ISPRS.tbz",
+        "COWC_Detection_Vaihingen_ISPRS.tbz",
+        "COWC_Detection_Columbus_CSUAV_AFRL.tbz",
+        "COWC_Detection_Utah_AGRC.tbz",
+    ]
+    md5s = [
+        "c954a5a3dac08c220b10cfbeec83893c",
+        "c6c2d0a78f12a2ad88b286b724a57c1a",
+        "11af24f43b198b0f13c8e94814008a48",
+        "22fd37a86961010f5d519a7da0e1fc72",
+        "bf053545cc1915d8b6597415b746fe48",
+        "23945d5b22455450a938382ccc2a8b27",
+        "f40522dc97bea41b10117d4a5b946a6f",
+        "195da7c9443a939a468c9f232fd86ee3",
+    ]
+    filename = "COWC_{}_list_detection.txt"
 
 
 # TODO: add COCW-M datasets:
