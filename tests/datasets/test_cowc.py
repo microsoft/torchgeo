@@ -13,9 +13,9 @@ from torchgeo.transforms import Identity
 
 
 class TestCOWC:
-    def test_not_implemented(self):
+    def test_not_implemented(self) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            _COWC()
+            _COWC()  # type: ignore[abstract]
 
 
 class TestCOWCCounting:
@@ -57,7 +57,7 @@ class TestCOWCCounting:
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
-            COWCCounting(split='foo')
+            COWCCounting(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
@@ -103,7 +103,7 @@ class TestCOWCDetection:
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
-            COWCDetection(split='foo')
+            COWCDetection(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
