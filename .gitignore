@@ -1,4 +1,4 @@
-data/
+/data/
 
 # Spack
 .spack-env/

@@ -73,3 +73,18 @@ class RandomVerticalFlip(nn.Module):  # type: ignore[misc,name-defined]
                     sample["masks"] = sample["masks"].flip(-2)
 
         return sample
+
+
+class Identity(nn.Module):  # type: ignore[misc,name-defined]
+    """Identity function used for testing purposes."""
+
+    def forward(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Do nothing.
+
+        Parameters:
+            sample: the input
+
+        Returns:
+            the unchanged input
+        """
+        return sample

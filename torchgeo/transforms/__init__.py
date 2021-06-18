@@ -1,4 +1,4 @@
-from .transforms import RandomHorizontalFlip, RandomVerticalFlip
+from .transforms import Identity, RandomHorizontalFlip, RandomVerticalFlip
 
 
-__all__ = ("RandomHorizontalFlip", "RandomVerticalFlip")
+__all__ = ("Identity", "RandomHorizontalFlip", "RandomVerticalFlip")
