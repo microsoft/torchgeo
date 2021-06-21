@@ -32,7 +32,6 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         Returns:
             data and labels at that index
         """
-        pass
 
     @abc.abstractmethod
     def __len__(self) -> int:
@@ -41,7 +40,6 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         Returns:
             length of the dataset
         """
-        pass
 
     def __add__(self, other: "GeoDataset") -> "ZipDataset":  # type: ignore[override]
         """Merge two GeoDatasets.
@@ -82,7 +80,6 @@ class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):
         Returns:
             data and labels at that index
         """
-        pass
 
     @abc.abstractmethod
     def __len__(self) -> int:
@@ -91,7 +88,6 @@ class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):
         Returns:
             length of the dataset
         """
-        pass
 
     def __str__(self) -> str:
         """Return the informal string representation of the object.
