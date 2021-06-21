@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-import shutil
 from typing import Generator
 
 import pytest
@@ -9,10 +8,6 @@ import torch
 
 from torchgeo.datasets import SEN12MS, ZipDataset
 from torchgeo.transforms import Identity
-
-
-def download_url(url: str, root: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestSEN12MS:
