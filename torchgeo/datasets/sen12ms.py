@@ -107,7 +107,7 @@ class SEN12MS(GeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if data is not found in ``root``
+            RuntimeError: if data is not found in ``root``, or checksums don't match
         """
         assert split in ["train", "test"]
 
@@ -117,7 +117,7 @@ class SEN12MS(GeoDataset):
         self.checksum = checksum
 
         if not self._check_integrity():
-            raise RuntimeError("Dataset not found.")
+            raise RuntimeError("Dataset not found or corrupted.")
 
         with open(os.path.join(self.root, self.base_folder, split + "_list.txt")) as f:
             self.ids = f.readlines()
