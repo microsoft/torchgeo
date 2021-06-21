@@ -25,6 +25,16 @@ jobs:
     steps:
     - name: Clone repo
       uses: actions/checkout@v2
+    - name: Get pip cache directory
+      id: pip-cache
+      run: echo "::set-output name=dir::$(pip cache dir)"
+    - name: Cache dependencies
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/conda_pkgs_dir
+          ${{ steps.pip-cache.outputs.dir }}
+        key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
     - name: Set up python
       uses: actions/setup-python@v2
       with:

@@ -189,9 +189,10 @@ class SEN12MS(GeoDataset):
         """
         for filename, md5 in zip(self.filenames, self.md5s):
             filepath = os.path.join(self.root, self.base_folder, filename)
-            print('exists:', os.path.exists(filepath))
+            print("filename:", filename)
+            print("exists:", os.path.exists(filepath))
             if not check_integrity(filepath, md5 if self.checksum else None):
-                print('md5 bad')
+                print("md5 bad")
                 return False
-            print('md5 good')
+            print("md5 good")
         return True
