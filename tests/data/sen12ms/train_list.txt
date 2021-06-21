@@ -1,0 +1,8 @@
+ROIs1158_spring_s2_1_p1.tif
+ROIs1158_spring_s2_1_p2.tif
+ROIs1868_summer_s2_1_p1.tif
+ROIs1868_summer_s2_1_p2.tif
+ROIs1970_fall_s2_1_p1.tif
+ROIs1970_fall_s2_1_p2.tif
+ROIs2017_winter_s2_1_p1.tif
+ROIs2017_winter_s2_1_p2.tif
