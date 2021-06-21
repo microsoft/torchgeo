@@ -5,7 +5,7 @@ import numpy as np
 import rasterio
 import torch
 from torch import Tensor
-from torchvision.datasets.utils import check_integrity, calculate_md5
+from torchvision.datasets.utils import calculate_md5, check_integrity
 
 from .geo import GeoDataset
 
@@ -189,12 +189,18 @@ class SEN12MS(GeoDataset):
         """
         for filename, md5 in zip(self.filenames, self.md5s):
             filepath = os.path.join(self.root, self.base_folder, filename)
-            print("""
+            exists = os.path.exists(filepath)
+            actual_md5 = calculate_md5(filepath) if exists else None
+            print(
+                """
 Filepath: {0}
     exists: {1}
     expected md5: {2}
     actual md5: {3}
-""".format(filepath, os.path.exists(filepath), md5, calculate_md5(filepath)))
+""".format(
+                    filepath, exists, md5, actual_md5
+                )
+            )
             if not check_integrity(filepath, md5 if self.checksum else None):
                 return False
         return True
