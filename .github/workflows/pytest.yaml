@@ -41,6 +41,7 @@ jobs:
           ~/conda_pkgs_dir
           ${{ steps.pip-cache.outputs.dir }}
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
+        restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-
     - name: Install conda
       uses: conda-incubator/setup-miniconda@v2
       with:
