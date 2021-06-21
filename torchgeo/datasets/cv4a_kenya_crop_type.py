@@ -9,10 +9,11 @@ import torch
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, extract_archive
 
-from .geo import VisionDataset
+from .geo import GeoDataset
 
 
-class CV4AKenyaCropType(VisionDataset):
+# TODO: read geospatial information from stac.json files
+class CV4AKenyaCropType(GeoDataset):
     """CV4A Kenya Crop Type dataset.
 
     Used in a competition in the Computer Vision for Agriculture (CV4A) workshop in
