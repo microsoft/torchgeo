@@ -194,7 +194,7 @@ Filepath: {0}
     exists: {1}
     expected md5: {2}
     actual md5: {3}
-""".format(filepath, os.path.exists(filepath), md5, calculate_md5(filepath))
+""".format(filepath, os.path.exists(filepath), md5, calculate_md5(filepath)))
             if not check_integrity(filepath, md5 if self.checksum else None):
                 return False
         return True
