@@ -31,7 +31,7 @@ class TestSEN12MS:
         ]
 
         monkeypatch.setattr(SEN12MS, "md5s", md5s)  # type: ignore[attr-defined]
-        root = os.path.join(os.getcwd(), "tests", "data")
+        root = os.path.join("tests", "data")
         split = "train"
         transforms = Identity()
         return SEN12MS(root, split, transforms, checksum=True)
