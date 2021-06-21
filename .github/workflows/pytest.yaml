@@ -43,4 +43,4 @@ jobs:
         pip install cython numpy  # needed for pycocotools
         pip install -r requirements.txt
     - name: Run pytest checks
-      run: pytest --cov=. --cov-report=term-missing
+      run: pytest -s --cov=. --cov-report=term-missing
