@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import shutil
 from typing import Generator
 
 import pytest
@@ -7,9 +8,14 @@ from pytest import MonkeyPatch
 import torch
 from torch.utils.data import ConcatDataset
 
+import torchgeo
 from torchgeo.datasets import COWCCounting, COWCDetection
 from torchgeo.datasets.cowc import _COWC
 from torchgeo.transforms import Identity
+
+
+def download_url(url: str, root: str, **kwargs: str) -> None:
+    shutil.copy(url, root)
 
 
 class TestCOWC:
@@ -20,7 +26,16 @@ class TestCOWC:
 
 class TestCOWCCounting:
     @pytest.fixture
-    def dataset(self, monkeypatch: Generator[MonkeyPatch, None, None]) -> _COWC:
+    def dataset(
+        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+    ) -> _COWC:
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            torchgeo.datasets.cowc, "download_url", download_url
+        )
+        base_url = os.path.join("tests", "data", "cowc_counting") + os.sep
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            COWCCounting, "base_url", base_url
+        )
         md5s = [
             "fd44e49492d63e9050e80d2157813263",
             "c44f6d709076562116b1a445ea91a228",
@@ -32,7 +47,8 @@ class TestCOWCCounting:
             "ccc18c4ac29a13ad2bcb293ff6be69fe",
         ]
         monkeypatch.setattr(COWCCounting, "md5s", md5s)  # type: ignore[attr-defined]
-        root = os.path.join("tests", "data")
+        (tmp_path / "cowc_counting").mkdir()
+        root = str(tmp_path)
         split = "train"
         transforms = Identity()
         return COWCCounting(root, split, transforms, download=True, checksum=True)
@@ -51,6 +67,9 @@ class TestCOWCCounting:
         assert isinstance(ds, ConcatDataset)
         assert len(ds) == 24
 
+    def test_already_downloaded(self, dataset: _COWC) -> None:
+        COWCCounting(root=dataset.root, download=True)
+
     def test_out_of_bounds(self, dataset: _COWC) -> None:
         with pytest.raises(IndexError):
             dataset[12]
@@ -66,7 +85,16 @@ class TestCOWCCounting:
 
 class TestCOWCDetection:
     @pytest.fixture
-    def dataset(self, monkeypatch: Generator[MonkeyPatch, None, None]) -> _COWC:
+    def dataset(
+        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+    ) -> _COWC:
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            torchgeo.datasets.cowc, "download_url", download_url
+        )
+        base_url = os.path.join("tests", "data", "cowc_detection") + os.sep
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            COWCDetection, "base_url", base_url
+        )
         md5s = [
             "dd8725ab4dd13cf0cc674213bb09e068",
             "37619fce32dbca46d2fd96716cfb2d5e",
@@ -78,7 +106,8 @@ class TestCOWCDetection:
             "ccc18c4ac29a13ad2bcb293ff6be69fe",
         ]
         monkeypatch.setattr(COWCDetection, "md5s", md5s)  # type: ignore[attr-defined]
-        root = os.path.join("tests", "data")
+        (tmp_path / "cowc_detection").mkdir()
+        root = str(tmp_path)
         split = "train"
         transforms = Identity()
         return COWCDetection(root, split, transforms, download=True, checksum=True)
@@ -96,6 +125,9 @@ class TestCOWCDetection:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
         assert len(ds) == 24
+
+    def test_already_downloaded(self, dataset: _COWC) -> None:
+        COWCDetection(root=dataset.root, download=True)
 
     def test_out_of_bounds(self, dataset: _COWC) -> None:
         with pytest.raises(IndexError):
