@@ -8,8 +8,8 @@ from pytest import MonkeyPatch
 import torch
 from torch.utils.data import ConcatDataset
 
-import torchgeo
 from torchgeo.datasets import COWCCounting, COWCDetection
+import torchgeo.datasets.cowc
 from torchgeo.datasets.cowc import _COWC
 from torchgeo.transforms import Identity
 
