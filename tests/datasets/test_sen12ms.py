@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from typing import Generator
 
+from _pytest.fixtures import SubRequest
 import pytest
 from pytest import MonkeyPatch
 import torch
@@ -11,8 +12,8 @@ from torchgeo.transforms import Identity
 
 
 class TestSEN12MS:
-    @pytest.fixture
-    def dataset(self, monkeypatch: Generator[MonkeyPatch, None, None]) -> SEN12MS:
+    @pytest.fixture(params=["train", "test"])
+    def dataset(self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest) -> SEN12MS:
         md5s = [
             "3079d1c5038fa101ec2072657f2cb1ab",
             "f11487a4b2e641b64ed80a031c4d121d",
@@ -32,7 +33,7 @@ class TestSEN12MS:
 
         monkeypatch.setattr(SEN12MS, "md5s", md5s)  # type: ignore[attr-defined]
         root = os.path.join("tests", "data")
-        split = "train"
+        split = request.param
         transforms = Identity()
         return SEN12MS(root, split, transforms, checksum=True)
 
