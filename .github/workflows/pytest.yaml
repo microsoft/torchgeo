@@ -33,15 +33,24 @@ jobs:
       uses: actions/cache@v2
       with:
         path: |
+          # All OSes
           ~/conda_pkgs_dir
-          ~/.cache/pip  # Linux
-          ~/Library/Caches/pip  # macOS
-          ~\AppData\Local\pip\Cache  # Windows
+          # Linux
+          ~/.cache/pip
+          /var/cache/apt/archives
+          # macOS
+          ~/Library/Caches/pip
+          ~/Library/Caches/Homebrew
+          # Windows
+          ~\AppData\Local\pip\Cache
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
         restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-
     - name: Install apt dependencies
       run: sudo apt-get install unrar
       if: ${{ runner.os == 'Linux' }}
+    - name: Install brew dependencies
+      run: brew install rar
+      if: ${{ runner.os == 'macOS' }}
     - name: Install conda
       uses: conda-incubator/setup-miniconda@v2
       with:
