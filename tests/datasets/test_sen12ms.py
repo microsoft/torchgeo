@@ -13,7 +13,9 @@ from torchgeo.transforms import Identity
 
 class TestSEN12MS:
     @pytest.fixture(params=["train", "test"])
-    def dataset(self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest) -> SEN12MS:
+    def dataset(
+        self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
+    ) -> SEN12MS:
         md5s = [
             "3079d1c5038fa101ec2072657f2cb1ab",
             "f11487a4b2e641b64ed80a031c4d121d",
