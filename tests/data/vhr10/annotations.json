@@ -1,0 +1,134 @@
+{
+    "info": {
+        "description": null,
+        "url": null,
+        "version": null,
+        "year": 2021,
+        "contributor": null,
+        "date_created": "2021-01-01 00:00:00"
+    },
+    "licenses": [
+        {
+            "url": null,
+            "id": 0,
+            "name": null
+        }
+    ],
+    "images": [
+        {
+            "license": 0,
+            "url": null,
+            "file_name": "001.jpg",
+            "height": 1,
+            "width": 1,
+            "date_captured": null,
+            "id": 0
+        },
+        {
+            "license": 0,
+            "url": null,
+            "file_name": "002.jpg",
+            "height": 1,
+            "width": 1,
+            "date_captured": null,
+            "id": 1
+        }
+    ],
+    "type": "instances",
+    "annotations": [
+        {
+            "id": 0,
+            "image_id": 0,
+            "category_id": 1,
+            "segmentation": [
+                [
+                    1,
+                    2,
+                    3,
+                    4
+                ]
+            ],
+            "area": 1.0,
+            "bbox": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "iscrowd": 0
+        },
+        {
+            "id": 1,
+            "image_id": 1,
+            "category_id": 1,
+            "segmentation": [
+                [
+                    1,
+                    2,
+                    3,
+                    4
+                ]
+            ],
+            "area": 1.0,
+            "bbox": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "iscrowd": 0
+        }
+    ],
+    "categories": [
+        {
+            "supercategory": null,
+            "id": 1,
+            "name": "airplane"
+        },
+        {
+            "supercategory": null,
+            "id": 2,
+            "name": "ship"
+        },
+        {
+            "supercategory": null,
+            "id": 3,
+            "name": "storage_tank"
+        },
+        {
+            "supercategory": null,
+            "id": 4,
+            "name": "baseball_diamond"
+        },
+        {
+            "supercategory": null,
+            "id": 5,
+            "name": "tennis_court"
+        },
+        {
+            "supercategory": null,
+            "id": 6,
+            "name": "basketball_court"
+        },
+        {
+            "supercategory": null,
+            "id": 7,
+            "name": "ground_track_field"
+        },
+        {
+            "supercategory": null,
+            "id": 8,
+            "name": "harbor"
+        },
+        {
+            "supercategory": null,
+            "id": 9,
+            "name": "bridge"
+        },
+        {
+            "supercategory": null,
+            "id": 10,
+            "name": "vehicle"
+        }
+    ]
+}
