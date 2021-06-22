@@ -15,4 +15,4 @@ rasterio
 setuptools>=42
 sphinx
 torch
-torchvision
+torchvision<0.10
