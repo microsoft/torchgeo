@@ -3,6 +3,7 @@ from pathlib import Path
 import shutil
 from typing import Generator
 
+from _pytest.fixtures import SubRequest
 import pytest
 from pytest import MonkeyPatch
 import torch
@@ -25,9 +26,12 @@ class TestCOWC:
 
 
 class TestCOWCCounting:
-    @pytest.fixture
+    @pytest.fixture(params=["train", "test"])
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+        self,
+        monkeypatch: Generator[MonkeyPatch, None, None],
+        tmp_path: Path,
+        request: SubRequest,
     ) -> _COWC:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.cowc, "download_url", download_url
@@ -49,7 +53,7 @@ class TestCOWCCounting:
         monkeypatch.setattr(COWCCounting, "md5s", md5s)  # type: ignore[attr-defined]
         (tmp_path / "cowc_counting").mkdir()
         root = str(tmp_path)
-        split = "train"
+        split = request.param
         transforms = Identity()
         return COWCCounting(root, split, transforms, download=True, checksum=True)
 
