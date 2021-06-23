@@ -1,3 +1,4 @@
+import hashlib
 import os
 from typing import Callable, Dict, Optional
 
@@ -52,6 +53,7 @@ class LandCoverAI(VisionDataset):
     url = "https://landcover.ai/download/landcover.ai.v1.zip"
     filename = "landcover.ai.v1.zip"
     md5 = "3268c89070e8734b4e91d531c0617e03"
+    sha256 = "15ee4ca9e3fd187957addfa8f0d74ac31bc928a966f76926e11b3c33ea76daa1"
 
     def __init__(
         self,
@@ -169,7 +171,11 @@ class LandCoverAI(VisionDataset):
         return integrity
 
     def download(self) -> None:
-        """Download the dataset and extract it."""
+        """Download the dataset and extract it.
+
+        Raises:
+            AssertionError: if the checksum of split.py does not match
+        """
 
         if self._check_integrity():
             print("Files already downloaded and verified")
@@ -183,6 +189,10 @@ class LandCoverAI(VisionDataset):
         )
 
         # Generate train/val/test splits
+        # Always check the sha256 of this file before executing
+        # to avoid malicious code injection
         with working_dir(os.path.join(self.root, self.base_folder)):
             with open("split.py") as f:
-                exec(f.read())
+                split = f.read().encode('utf-8')
+                assert hashlib.sha256(split).hexdigest() == self.sha256
+                exec(split)
