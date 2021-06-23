@@ -193,6 +193,6 @@ class LandCoverAI(VisionDataset):
         # to avoid malicious code injection
         with working_dir(os.path.join(self.root, self.base_folder)):
             with open("split.py") as f:
-                split = f.read().encode('utf-8')
+                split = f.read().encode("utf-8")
                 assert hashlib.sha256(split).hexdigest() == self.sha256
                 exec(split)
