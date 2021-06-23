@@ -154,7 +154,7 @@ class BeninSmallHolderCashews(GeoDataset):
         3: "Non-planatation",
         4: "Residential",
         5: "Background",
-        6: "Uncertain"
+        6: "Uncertain",
     }
 
     # Same for all tiles
