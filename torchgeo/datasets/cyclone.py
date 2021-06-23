@@ -140,14 +140,13 @@ class TropicalCycloneWindEstimation(VisionDataset):
         Returns:
             the image
         """
-        print(directory)
         filename = os.path.join(directory.format("source"), "image.jpg")
         with Image.open(filename) as img:
             array = np.array(img)
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             return tensor
 
-    def _load_features(self, directory: str) -> Dict[str, str]:
+    def _load_features(self, directory: str) -> Dict[str, Any]:
         """Load features for a single image.
 
         Parameters:
@@ -158,11 +157,15 @@ class TropicalCycloneWindEstimation(VisionDataset):
         """
         filename = os.path.join(directory.format("source"), "features.json")
         with open(filename) as f:
-            features: Dict[str, str] = json.load(f)
+            features: Dict[str, Any] = json.load(f)
 
         filename = os.path.join(directory.format("labels"), "labels.json")
         with open(filename) as f:
             features.update(json.load(f))
+
+        features["relative_time"] = int(features["relative_time"])
+        features["ocean"] = int(features["ocean"])
+        features["wind_speed"] = int(features["wind_speed"])
 
         return features
 
