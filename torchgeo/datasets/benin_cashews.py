@@ -23,7 +23,7 @@ class BeninSmallHolderCashews(GeoDataset):
     Poorly-managed plantation, No plantation and other classes. The labels are
     generated using a combination of ground data collection with a handheld GPS device,
     and final corrections based on Airbus Pléiades imagery. See
-    `this website <https://doi.org/10.34911/rdnt.hfv20i/>`_ for dataset details.
+    `this website <https://doi.org/10.34911/rdnt.hfv20i/>`__ for dataset details.
 
     Specifically, the data consists of Sentinel 2 imagery from a 120km^2 area in the
     center of Benin over 71 points in time from 11/05/2019 to 10/30/2020
@@ -154,12 +154,13 @@ class BeninSmallHolderCashews(GeoDataset):
         3: "Non-planatation",
         4: "Residential",
         5: "Background",
-        6: "Uncertain",
+        6: "Uncertain"
     }
 
     # Same for all tiles
     tile_height = 1186
     tile_width = 1122
+
     # this is the transform used in all of the S2 tiles
     # it is hardcoded here to use in rasterizing the geojson labels
     tile_transform = affine.Affine(
