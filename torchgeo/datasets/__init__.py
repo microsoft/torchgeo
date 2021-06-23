@@ -1,5 +1,6 @@
 from .cowc import COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
+from .cyclone import TropicalCycloneWindEstimation
 from .geo import GeoDataset, VisionDataset, ZipDataset
 from .landcoverai import LandCoverAI
 from .nwpu import VHR10
@@ -12,6 +13,7 @@ __all__ = (
     "GeoDataset",
     "LandCoverAI",
     "SEN12MS",
+    "TropicalCycloneWindEstimation",
     "VHR10",
     "VisionDataset",
     "ZipDataset",
