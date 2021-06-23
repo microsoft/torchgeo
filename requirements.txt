@@ -14,5 +14,5 @@ rarfile
 rasterio
 setuptools>=42
 sphinx
-torch
+torch>=1.7
 torchvision<0.10
