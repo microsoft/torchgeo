@@ -1,13 +1,13 @@
 from functools import lru_cache
-import os
 import json
+import os
 from typing import Callable, Dict, Optional, Tuple
 
 import affine
 import numpy as np
+from PIL import Image
 import rasterio
 import rasterio.features
-from PIL import Image
 import torch
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, extract_archive
