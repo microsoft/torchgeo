@@ -33,6 +33,8 @@ class TestLandCoverAI:
         monkeypatch.setattr(LandCoverAI, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip")
         monkeypatch.setattr(LandCoverAI, "url", url)  # type: ignore[attr-defined]
+        sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        monkeypatch.setattr(LandCoverAI, "sha256", sha256)  # type: ignore[attr-defined]
         (tmp_path / "landcoverai").mkdir()
         root = str(tmp_path)
         split = request.param
