@@ -378,7 +378,7 @@ class BeninSmallHolderCashews(GeoDataset):
             for feature in geojson["features"]
         ]
 
-        mask = rasterio.features.rasterize(
+        mask_data = rasterio.features.rasterize(
             labels,
             out_shape=(self.tile_height, self.tile_width),
             fill=0,  # nodata value
@@ -387,7 +387,8 @@ class BeninSmallHolderCashews(GeoDataset):
             dtype=np.uint8,
         )
 
-        return torch.from_numpy(mask).long()
+        mask: Tensor = torch.from_numpy(mask_data).long()  # type: ignore[attr-defined]
+        return mask
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
