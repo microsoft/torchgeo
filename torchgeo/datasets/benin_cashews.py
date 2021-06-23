@@ -59,76 +59,76 @@ class BeninSmallHolderCashews(GeoDataset):
         "md5": "f9d3f0c671427d852fae9b52a0ae0051",
     }
     dates = (
-        '2019_11_05',
-        '2019_11_10',
-        '2019_11_15',
-        '2019_11_20',
-        '2019_11_30',
-        '2019_12_05',
-        '2019_12_10',
-        '2019_12_15',
-        '2019_12_20',
-        '2019_12_25',
-        '2019_12_30',
-        '2020_01_04',
-        '2020_01_09',
-        '2020_01_14',
-        '2020_01_19',
-        '2020_01_24',
-        '2020_01_29',
-        '2020_02_08',
-        '2020_02_13',
-        '2020_02_18',
-        '2020_02_23',
-        '2020_02_28',
-        '2020_03_04',
-        '2020_03_09',
-        '2020_03_14',
-        '2020_03_19',
-        '2020_03_24',
-        '2020_03_29',
-        '2020_04_03',
-        '2020_04_08',
-        '2020_04_13',
-        '2020_04_18',
-        '2020_04_23',
-        '2020_04_28',
-        '2020_05_03',
-        '2020_05_08',
-        '2020_05_13',
-        '2020_05_18',
-        '2020_05_23',
-        '2020_05_28',
-        '2020_06_02',
-        '2020_06_07',
-        '2020_06_12',
-        '2020_06_17',
-        '2020_06_22',
-        '2020_06_27',
-        '2020_07_02',
-        '2020_07_07',
-        '2020_07_12',
-        '2020_07_17',
-        '2020_07_22',
-        '2020_07_27',
-        '2020_08_01',
-        '2020_08_06',
-        '2020_08_11',
-        '2020_08_16',
-        '2020_08_21',
-        '2020_08_26',
-        '2020_08_31',
-        '2020_09_05',
-        '2020_09_10',
-        '2020_09_15',
-        '2020_09_20',
-        '2020_09_25',
-        '2020_09_30',
-        '2020_10_10',
-        '2020_10_15',
-        '2020_10_20',
-        '2020_10_25',
-        '2020_10_30'
+        "2019_11_05",
+        "2019_11_10",
+        "2019_11_15",
+        "2019_11_20",
+        "2019_11_30",
+        "2019_12_05",
+        "2019_12_10",
+        "2019_12_15",
+        "2019_12_20",
+        "2019_12_25",
+        "2019_12_30",
+        "2020_01_04",
+        "2020_01_09",
+        "2020_01_14",
+        "2020_01_19",
+        "2020_01_24",
+        "2020_01_29",
+        "2020_02_08",
+        "2020_02_13",
+        "2020_02_18",
+        "2020_02_23",
+        "2020_02_28",
+        "2020_03_04",
+        "2020_03_09",
+        "2020_03_14",
+        "2020_03_19",
+        "2020_03_24",
+        "2020_03_29",
+        "2020_04_03",
+        "2020_04_08",
+        "2020_04_13",
+        "2020_04_18",
+        "2020_04_23",
+        "2020_04_28",
+        "2020_05_03",
+        "2020_05_08",
+        "2020_05_13",
+        "2020_05_18",
+        "2020_05_23",
+        "2020_05_28",
+        "2020_06_02",
+        "2020_06_07",
+        "2020_06_12",
+        "2020_06_17",
+        "2020_06_22",
+        "2020_06_27",
+        "2020_07_02",
+        "2020_07_07",
+        "2020_07_12",
+        "2020_07_17",
+        "2020_07_22",
+        "2020_07_27",
+        "2020_08_01",
+        "2020_08_06",
+        "2020_08_11",
+        "2020_08_16",
+        "2020_08_21",
+        "2020_08_26",
+        "2020_08_31",
+        "2020_09_05",
+        "2020_09_10",
+        "2020_09_15",
+        "2020_09_20",
+        "2020_09_25",
+        "2020_09_30",
+        "2020_10_10",
+        "2020_10_15",
+        "2020_10_20",
+        "2020_10_25",
+        "2020_10_30",
     )
 
     band_names = (
@@ -148,13 +148,13 @@ class BeninSmallHolderCashews(GeoDataset):
     )
 
     class_names = {
-        0: 'No data',
-        1: 'Well-managed planatation',
-        2: 'Poorly-managed planatation',
-        3: 'Non-planatation',
-        4: 'Residential',
-        5: 'Background',
-        6: 'Uncertain'
+        0: "No data",
+        1: "Well-managed planatation",
+        2: "Poorly-managed planatation",
+        3: "Non-planatation",
+        4: "Residential",
+        5: "Background",
+        6: "Uncertain",
     }
 
     # Same for all tiles
@@ -168,7 +168,7 @@ class BeninSmallHolderCashews(GeoDataset):
         440853.29890114715,
         0.0,
         -9.99842989423825,
-        1012804.082877621
+        1012804.082877621,
     )
 
     def __init__(
@@ -291,9 +291,7 @@ class BeninSmallHolderCashews(GeoDataset):
                 raise ValueError(f"'{band}' is an invalid band name.")
 
     @lru_cache(maxsize=128)
-    def _load_all_imagery(
-        self, bands: Tuple[str, ...] = band_names
-    ) -> Tensor:
+    def _load_all_imagery(self, bands: Tuple[str, ...] = band_names) -> Tensor:
         """Load all the imagery (across time) for the dataset. Optionally allows
         for subsetting of the bands that are loaded.
 
@@ -321,9 +319,7 @@ class BeninSmallHolderCashews(GeoDataset):
         return img
 
     @lru_cache(maxsize=128)
-    def _load_single_scene(
-        self, date: str, bands: Tuple[str, ...]
-    ) -> Tensor:
+    def _load_single_scene(self, date: str, bands: Tuple[str, ...]) -> Tensor:
         """Load the imagery for a single date. Optionally allows
         for subsetting of the bands that are loaded.
 
@@ -364,8 +360,7 @@ class BeninSmallHolderCashews(GeoDataset):
 
     @lru_cache()
     def _load_mask(self) -> Tensor:
-        """Rasterizes the dataset's labels (in geojson format)
-        """
+        """Rasterizes the dataset's labels (in geojson format)"""
 
         # Create a mask layer out of the geojson
         mask_geojson_fn = os.path.join(
@@ -389,7 +384,7 @@ class BeninSmallHolderCashews(GeoDataset):
             fill=0,  # nodata value
             transform=self.tile_transform,
             all_touched=False,
-            dtype=np.uint8
+            dtype=np.uint8,
         )
 
         return torch.from_numpy(mask).long()
@@ -429,9 +424,7 @@ class BeninSmallHolderCashews(GeoDataset):
         # Must be installed to download from MLHub
         import radiant_mlhub
 
-        dataset = radiant_mlhub.Dataset.fetch(
-            self.dataset_id, api_key=api_key
-        )
+        dataset = radiant_mlhub.Dataset.fetch(self.dataset_id, api_key=api_key)
         dataset.download(
             output_dir=os.path.join(self.root, self.dataset_id), api_key=api_key
         )
