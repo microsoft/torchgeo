@@ -19,7 +19,8 @@ class Dataset:
         self.collection_id = collection_id
 
     def download(self, output_dir: str, **kwargs: str) -> None:
-        for tarball in glob.iglob(os.path.join("tests", "data", "cyclone", "*.tar.gz")):
+        fileglob = self.collection_id + "*.tar.gz"
+        for tarball in glob.iglob(os.path.join("tests", "data", "cyclone", fileglob)):
             shutil.copy(tarball, output_dir)
 
 
