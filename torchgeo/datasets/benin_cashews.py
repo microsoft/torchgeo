@@ -183,7 +183,7 @@ class BeninSmallHolderCashews(GeoDataset):
         checksum: bool = False,
         verbose: bool = False,
     ) -> None:
-        """Initialize a new Smallholder Cashew Plantations in Benin Dataset instance.
+        """Initialize a new Benin Smallholder Cashew Plantations Dataset instance.
 
         Parameters:
             root: root directory where dataset can be found
@@ -204,7 +204,7 @@ class BeninSmallHolderCashews(GeoDataset):
         """
         self._validate_bands(bands)
 
-        self.root = root
+        self.root = os.path.expanduser(root)
         self.chip_size = chip_size
         self.stride = stride
         self.bands = bands
@@ -324,15 +324,15 @@ class BeninSmallHolderCashews(GeoDataset):
     def _load_single_scene(
         self, date: str, bands: Tuple[str, ...]
     ) -> Tensor:
-        """Load the imagery for a single tile for a single date. Optionally allows
+        """Load the imagery for a single date. Optionally allows
         for subsetting of the bands that are loaded.
 
         Parameters:
-            date: date of tile to load
+            date: date of the imagery to load
             bands: bands to load
 
         Returns:
-            array containing a single image tile
+            tensor containing a single image tile
 
         Raises:
             AssertionError: if  ``date`` is invalid
