@@ -15,17 +15,13 @@ from torchgeo.transforms import Identity
 
 
 class Dataset:
-    def __init__(self, collection_id: str, **kwargs: str) -> None:
-        self.collection_id = collection_id
-
     def download(self, output_dir: str, **kwargs: str) -> None:
-        fileglob = self.collection_id + "*.tar.gz"
-        for tarball in glob.iglob(os.path.join("tests", "data", "cyclone", fileglob)):
+        for tarball in glob.iglob(os.path.join("tests", "data", "cyclone", "*.tar.gz")):
             shutil.copy(tarball, output_dir)
 
 
 def fetch(collection_id: str, **kwargs: str) -> Dataset:
-    return Dataset(collection_id)
+    return Dataset()
 
 
 class TestTropicalCycloneWindEstimation:
