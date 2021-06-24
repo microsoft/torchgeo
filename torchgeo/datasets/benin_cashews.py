@@ -15,27 +15,28 @@ from torchvision.datasets.utils import check_integrity, extract_archive
 from .geo import GeoDataset
 
 
+# TODO: read geospatial information from stac.json files
 class BeninSmallHolderCashews(GeoDataset):
     """Smallholder Cashew Plantations in Benin dataset.
 
-    This dataset contains labels for cashew plantations in a 120 km^2 area in the
-    center of Benin. Each pixel is classified for Well-managed plantation,
+    This dataset contains labels for cashew plantations in a 120 km\ :sup:`2`\ area
+    in the center of Benin. Each pixel is classified for Well-managed plantation,
     Poorly-managed plantation, No plantation and other classes. The labels are
     generated using a combination of ground data collection with a handheld GPS device,
     and final corrections based on Airbus Pléiades imagery. See
     `this website <https://doi.org/10.34911/rdnt.hfv20i/>`__ for dataset details.
 
-    Specifically, the data consists of Sentinel 2 imagery from a 120km^2 area in the
-    center of Benin over 71 points in time from 11/05/2019 to 10/30/2020
+    Specifically, the data consists of Sentinel 2 imagery from a 120 km\ :sup:`2`\ area
+    in the center of Benin over 71 points in time from 11/05/2019 to 10/30/2020
     and polygon labels for 6 classes:
 
-    * Background
-    * Non-plantation
-    * Poorly-managed plantation
-    * Residential
-    * Uncertain
-    * Well-managed plantation
-
+    0. No data
+    1. Well-managed plantation
+    2. Poorly-managed planatation
+    3. Non-plantation
+    4. Residential
+    5. Background
+    6. Uncertain
 
     If you use this dataset in your research, please cite the following:
 
@@ -161,8 +162,8 @@ class BeninSmallHolderCashews(GeoDataset):
     tile_height = 1186
     tile_width = 1122
 
-    # this is the transform used in all of the S2 tiles
-    # it is hardcoded here to use in rasterizing the geojson labels
+    # This is the transform used in all of the S2 tiles
+    # It is hardcoded here to use in rasterizing the geojson labels
     tile_transform = affine.Affine(
         10.002549584378608,
         0.0,
@@ -245,7 +246,7 @@ class BeninSmallHolderCashews(GeoDataset):
             index: index to return
 
         Returns:
-            data, labels, field ids, and metadata at that index
+            image, mask, and metadata at that index
         """
         y, x = self.chips_metadata[index]
 
