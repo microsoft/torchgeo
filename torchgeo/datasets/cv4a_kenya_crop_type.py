@@ -412,9 +412,6 @@ class CV4AKenyaCropType(GeoDataset):
             output_dir=os.path.join(self.root, self.base_folder), api_key=api_key
         )
 
-        if not self._check_integrity():
-            raise RuntimeError("Dataset files not found or corrupted.")
-
         image_archive_path = os.path.join(
             self.root, self.base_folder, self.image_meta["filename"]
         )
