@@ -8,6 +8,15 @@ PyTorch data loaders for geospatial data
 [![sphinx](https://github.com/microsoft/torchgeo/actions/workflows/sphinx.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/sphinx.yaml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
+## Project setup
+
+## Conda
+
+```bash
+conda env create --file environment.yml
+conda activate torchgeo
+```
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
