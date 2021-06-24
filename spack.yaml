@@ -17,6 +17,6 @@ spack:
   - py-rasterio
   - "py-setuptools@42:"
   - py-sphinx
-  - py-torch
+  - "py-torch@1.7:"
   - py-torchvision
   concretization: together
