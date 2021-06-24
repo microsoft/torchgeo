@@ -13,7 +13,7 @@ from .utils import working_dir
 
 
 class LandCoverAI(VisionDataset):
-    """The `LandCover.ai <https://landcover.ai/>`_ (Land Cover from Aerial Imagery)
+    r"""The `LandCover.ai <https://landcover.ai/>`_ (Land Cover from Aerial Imagery)
     dataset is a dataset for automatic mapping of buildings, woodlands, water and
     roads from aerial images.
 

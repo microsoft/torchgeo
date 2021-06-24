@@ -17,7 +17,7 @@ from .geo import GeoDataset
 
 # TODO: read geospatial information from stac.json files
 class BeninSmallHolderCashews(GeoDataset):
-    """Smallholder Cashew Plantations in Benin dataset.
+    r"""Smallholder Cashew Plantations in Benin dataset.
 
     This dataset contains labels for cashew plantations in a 120 km\ :sup:`2`\ area
     in the center of Benin. Each pixel is classified for Well-managed plantation,
