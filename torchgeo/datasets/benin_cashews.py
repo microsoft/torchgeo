@@ -432,9 +432,6 @@ class BeninSmallHolderCashews(GeoDataset):
             output_dir=os.path.join(self.root, self.dataset_id), api_key=api_key
         )
 
-        if not self._check_integrity():
-            raise RuntimeError("Dataset files not found or corrupted.")
-
         image_archive_path = os.path.join(
             self.root, self.dataset_id, self.image_meta["filename"]
         )
