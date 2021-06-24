@@ -62,9 +62,9 @@ class TestTropicalCycloneWindEstimation:
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["storm_id"], str)
-        assert isinstance(x["relative_time"], str)
-        assert isinstance(x["ocean"], str)
-        assert isinstance(x["wind_speed"], str)
+        assert isinstance(x["relative_time"], int)
+        assert isinstance(x["ocean"], int)
+        assert isinstance(x["wind_speed"], int)
 
     def test_len(self, dataset: TropicalCycloneWindEstimation) -> None:
         assert len(dataset) == 2
