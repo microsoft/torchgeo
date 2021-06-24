@@ -43,6 +43,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
             "labels": "d910c430f90153c1f78a99cbc08e7bd0",
         },
     }
+    size = 366
 
     def __init__(
         self,
@@ -142,8 +143,8 @@ class TropicalCycloneWindEstimation(VisionDataset):
         """
         filename = os.path.join(directory.format("source"), "image.jpg")
         with Image.open(filename) as img:
-            if img.height != 366 or img.width != 366:
-                img = img.resize(size=(366, 366), resample=1)
+            if img.height != self.size or img.width != self.size:
+                img = img.resize(size=(self.size, self.size), resample=Image.BILINEAR)
             array = np.array(img)
             if len(array.shape) == 3:
                 array = array[:, :, 0]

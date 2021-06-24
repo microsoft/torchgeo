@@ -38,16 +38,19 @@ class TestTropicalCycloneWindEstimation:
         )
         md5s = {
             "train": {
-                "source": "d90be51a42ebafe234eb2b3a653ff03d",
-                "labels": "2569bbe7d2b4702c3c9b6270f2bba900",
+                "source": "3c9041d3a6a8178e5ed37fff3ec131b0",
+                "labels": "d8cebe3d51ef7a5d4e992b75559a0348",
             },
             "test": {
-                "source": "b205da6e23dad1ffe74f5821c38f3b10",
-                "labels": "b90e0363f6a5f6b1138bc5d35711e6e9",
+                "source": "072c0e6e662f1f9658a47a3eee9218a1",
+                "labels": "b168c6cea0857ea41e65ebceadf7d85b",
             },
         }
         monkeypatch.setattr(  # type: ignore[attr-defined]
             TropicalCycloneWindEstimation, "md5s", md5s
+        )
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            TropicalCycloneWindEstimation, "size", 1
         )
         (tmp_path / "cyclone").mkdir()
         root = str(tmp_path)
@@ -57,14 +60,16 @@ class TestTropicalCycloneWindEstimation:
             root, split, transforms, download=True, api_key="", checksum=True
         )
 
-    def test_getitem(self, dataset: TropicalCycloneWindEstimation) -> None:
-        x = dataset[0]
+    @pytest.mark.parametrize("index", [0, 1])
+    def test_getitem(self, dataset: TropicalCycloneWindEstimation, index: int) -> None:
+        x = dataset[index]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["storm_id"], str)
         assert isinstance(x["relative_time"], int)
         assert isinstance(x["ocean"], int)
         assert isinstance(x["wind_speed"], int)
+        assert x["image"].shape == (dataset.size, dataset.size)
 
     def test_len(self, dataset: TropicalCycloneWindEstimation) -> None:
         assert len(dataset) == 2
