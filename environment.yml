@@ -1,16 +1,10 @@
-name: torchgeo2
+name: torchgeo
 
 dependencies:
   - rasterio
   - gdal
-  - black
-  - flake8
-  - flake8-import-order
-  - mypy
   - numpy
   - pillow
-  - pytest
-  - pytest-cov
   - setuptools>=42
   - sphinx
   - pytorch::pytorch>=1.7
@@ -18,6 +12,12 @@ dependencies:
   - python
   - pip
   - pip:
+    - flake8
+    - flake8-import-order
+    - mypy
+    - pytest
+    - pytest-cov
+    - black
     - opencv-python
     - pycocotools
     - pytorch-sphinx-theme
