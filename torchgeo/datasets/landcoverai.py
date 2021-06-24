@@ -13,7 +13,7 @@ from .utils import working_dir
 
 
 class LandCoverAI(VisionDataset):
-    """The `LandCover.ai <https://landcover.ai/>`_ (Land Cover from Aerial Imagery)
+    r"""The `LandCover.ai <https://landcover.ai/>`_ (Land Cover from Aerial Imagery)
     dataset is a dataset for automatic mapping of buildings, woodlands, water and
     roads from aerial images.
 
@@ -23,7 +23,7 @@ class LandCoverAI(VisionDataset):
     * three spectral bands - RGB
     * 33 orthophotos with 25 cm per pixel resolution (~9000x9500 px)
     * 8 orthophotos with 50 cm per pixel resolution (~4200x4700 px)
-    * total area of 216.27 km:sup:`2`
+    * total area of 216.27 km\ :sup:`2`
 
     Dataset format:
 
@@ -32,10 +32,10 @@ class LandCoverAI(VisionDataset):
 
     Dataset classes:
 
-    1. building (1.85 km:sup:`2`)
-    2. woodland (72.02 km:sup:`2`)
-    3. water (13.15 km:sup:`2`)
-    4. road (3.5 km:sup:`2`)
+    1. building (1.85 km\ :sup:`2`\ )
+    2. woodland (72.02 km\ :sup:`2`\ )
+    3. water (13.15 km\ :sup:`2`\ )
+    4. road (3.5 km\ :sup:`2`\ )
 
     If you use this dataset in your research, please cite the following paper:
 

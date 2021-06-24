@@ -28,3 +28,13 @@ exclude = '''
     | \.github/
 )/
 '''
+[tool.pytest.ini_options]
+norecursedirs = [
+    "*.egg*",
+    ".*",
+    "build",
+    "data",
+    "dist",
+    "docs",
+    "__pycache__",
+]
