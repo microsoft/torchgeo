@@ -2,7 +2,7 @@ import argparse
 import copy
 import os
 import time
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 from sklearn.metrics import mean_squared_error
@@ -167,6 +167,18 @@ def set_up_parser() -> argparse.ArgumentParser:
         default=False,
         help="Flag to enable verbose output",
     )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        required=True,
+        help="Directory to store output files",
+    )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        default=False,
+        help="Flag to enable overwriting existing output",
+    )
 
     return parser
 
@@ -221,6 +233,31 @@ def main(args: argparse.Namespace) -> None:
     )
 
     ######################################
+    # Setup output directory
+    ######################################
+    if os.path.isfile(args.output_dir):
+        print("A file was passed as `--output_dir`, please pass a directory!")
+        return
+
+    if os.path.exists(args.output_dir) and len(os.listdir(args.output_dir)):
+        if args.overwrite:
+            print(
+                f"WARNING! The output directory, {args.output_dir}, already exists, "
+                + "we might overwrite data in it!"
+            )
+        else:
+            print(
+                f"The output directory, {args.output_dir}, already exists and isn't "
+                + "empty. We don't want to overwrite and existing results, exiting..."
+            )
+            return
+    else:
+        print("The output directory doesn't exist or is empty.")
+        os.makedirs(args.output_dir, exist_ok=True)
+
+    # TODO: overwrite tensorboard output location too
+
+    ######################################
     # Setup datasets and dataloaders
     ######################################
     train_dataset, val_dataset, test_dataset = get_cyclone_datasets(ROOT_DIR, args.seed)
@@ -268,9 +305,10 @@ def main(args: argparse.Namespace) -> None:
     ######################################
     # Training loop
     ######################################
-    training_losses = []
-    validation_losses = []
-    model_checkpoints = []
+    metrics_per_epoch: Dict[str, List[float]] = {
+        "train_loss": [], "val_loss": [], "val_rmse": []
+    }
+    best_val: float = float("inf")
 
     for epoch in range(args.num_epochs):
 
@@ -289,8 +327,9 @@ def main(args: argparse.Namespace) -> None:
 
         scheduler.step(validation_loss)
 
-        training_losses.append(training_loss)
-        validation_losses.append(validation_loss)
+        metrics_per_epoch["train_loss"].append(training_loss)
+        metrics_per_epoch["val_loss"].append(validation_loss)
+        metrics_per_epoch["val_rmse"].append(validation_rmse)
 
         # Update tensorboard
         writer.add_scalar(  # type: ignore[no-untyped-call]
@@ -304,17 +343,30 @@ def main(args: argparse.Namespace) -> None:
         )
         writer.flush()  # type: ignore[no-untyped-call]
 
-        model_checkpoints.append(copy.deepcopy(model.state_dict()))
+        save_obj = {
+            "epoch": epoch,
+            "optimizer_checkpoint": copy.deepcopy(optimizer.state_dict()),
+            "model_checkpoint": copy.deepcopy(model.state_dict()),
+        }
+        torch.save(
+            save_obj, os.path.join(args.output_dir, "checkpoint_epoch_%d.pt" % (epoch))
+        )
+        if validation_rmse < best_val:
+            print(f"New best! Validation RMSE: {validation_rmse:0.4f}")
+            best_val = validation_rmse
+            torch.save(save_obj, os.path.join(args.output_dir, "checkpoint_best.pt"))
+
+        torch.save(
+            {"metrics_per_epoch": metrics_per_epoch, "args": args},
+            os.path.join(args.output_dir, "results.pt"),
+        )
+
     writer.close()  # type: ignore[no-untyped-call]
 
     # Evaluate model on the test dataset
     test_results = evaluate(model, device, test_dataloader, criterion, 0)
     print(test_results)
-
-    ######################################
-    # Write out results, tear down
-    ######################################
-    # TODO: fill out saving the best model etc.
+    # TODO: save test results ot args.output_dir
 
 
 if __name__ == "__main__":
