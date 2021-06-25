@@ -262,7 +262,7 @@ def main(args: argparse.Namespace) -> None:
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min", patience=4)
 
     writer = SummaryWriter(  # type: ignore[no-untyped-call]
-        log_dir=args.experiment_name
+        log_dir=os.path.join("logs/", args.experiment_name)
     )
 
     ######################################
