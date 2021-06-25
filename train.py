@@ -5,7 +5,6 @@ import time
 from typing import Any, Dict, Tuple
 
 import numpy as np
-import pandas as pd
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import GroupShuffleSplit
 import torch
@@ -14,7 +13,6 @@ from torch.nn.modules import Module
 import torch.optim as optim
 from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader, Subset
-from torch.utils.data.dataset import Dataset
 from torch.utils.tensorboard.writer import SummaryWriter
 import torchvision
 from tqdm import tqdm
@@ -32,7 +30,7 @@ def fit(
     criterion: Module,
     epoch: int,
     memo: str = "",
-) -> np.number[Any]:
+) -> float:
     model.train()
 
     losses = []
@@ -48,12 +46,14 @@ def fit(
         loss.backward()
         optimizer.step()
 
-    avg_loss = np.mean(losses)
+    # TODO: what is the correct way to return a numpy function result without
+    # making it a float?
+    avg_loss = float(np.mean(losses))
 
     elapsed_time = time.time() - tic
     print(
         f"[{memo}] Training Epoch: {epoch}\t Time elapsed: {elapsed_time:.2f} seconds"
-        + "\t Loss: {avg_loss:.2f}"
+        + f"\t Loss: {avg_loss:.2f}"
     )
 
     return avg_loss
@@ -62,19 +62,22 @@ def fit(
 def evaluate(
     model: Module,
     device: torch.device,  # type: ignore[name-defined]
-    data_loader: DataLoader[Any],
+    data_loader: DataLoader[Dict[str, Any]],
     criterion: Module,
     epoch: int,
     memo: str = "",
-) -> Dict[str, np.number[Any]]:
+) -> Dict[str, float]:
     model.eval()
 
     losses = []
 
     batch_size = data_loader.batch_size
+    # TODO: not sure how to convince mypy that data_loader.dataset will have __len__
+    dataset_size = len(data_loader.dataset)  # type: ignore[arg-type]
     assert batch_size is not None
-    all_predictions = np.zeros((len(data_loader),), dtype=np.float32)
-    all_targets = np.zeros((len(data_loader),), dtype=np.float32)
+    assert dataset_size is not None
+    all_predictions = np.zeros((dataset_size,), dtype=np.float32)
+    all_targets = np.zeros((dataset_size,), dtype=np.float32)
 
     tic = time.time()
     for batch_idx, batch in enumerate(tqdm(data_loader)):
@@ -85,21 +88,22 @@ def evaluate(
             outputs = model(images)
             loss = criterion(outputs, targets)
             losses.append(loss.item())
-
             predictions = outputs.argmax(axis=1).cpu().numpy()
 
         start_index = batch_idx * batch_size
-        end_index = (batch_idx * batch_size) + predictions.shape[0]
+        end_index = (batch_idx * batch_size) + batch_size
         all_predictions[start_index:end_index] = predictions
         all_targets[start_index:end_index] = batch["wind_speed"].numpy()
 
-    avg_loss = np.mean(losses)
-    val_rmse = np.sqrt(mean_squared_error(all_targets, all_predictions))
+    # TODO: what is the correct way to return a numpy function result without
+    # making it a float?
+    avg_loss = float(np.mean(losses))
+    val_rmse = float(np.sqrt(mean_squared_error(all_targets, all_predictions)))
 
     elapsed_time = time.time() - tic
     print(
         f"[{memo}] Validation Epoch: {epoch}\t Time elapsed: {elapsed_time:.2f} "
-        + "seconds\t Loss: {avg_loss:.2f}"
+        + f"seconds\t Loss: {avg_loss:.2f}"
     )
 
     return {"loss": avg_loss, "rmse": val_rmse}
@@ -126,6 +130,12 @@ def set_up_parser() -> argparse.ArgumentParser:
         type=int,
         default=32,
         help="Batch size to use in training",
+    )
+    parser.add_argument(
+        "--initial_lr",
+        type=float,
+        default=0.01,
+        help="Initial learning rate",
     )
     parser.add_argument(
         "--num_epochs",
@@ -174,30 +184,32 @@ def custom_transform(sample: Dict[str, Any]) -> Dict[str, Any]:
 
 def get_cyclone_datasets(
     root_dir: str, seed: int
-) -> Tuple[
-    Dataset[Any], Dataset[Any], Dataset[Any]
-]:  # returns Dataset[Any]'s to account for the Subsets
+) -> Tuple[Subset[Dict[str, Any]], Subset[Dict[str, Any]], Subset[Dict[str, Any]]]:
 
     # Create datasets
     all_train_dataset = TropicalCycloneWindEstimation(
         root_dir, split="train", transforms=custom_transform, download=False
     )
 
-    test_dataset = TropicalCycloneWindEstimation(
+    all_test_dataset = TropicalCycloneWindEstimation(
         root_dir, split="test", transforms=custom_transform, download=False
     )
 
-    df = pd.read_csv("cyclone.csv")
-    df = df[df["train"]]
+    # Extract the `storm_id`s from each sample in the training dataset
+    storm_ids = []
+    for item in all_train_dataset.collection:
+        storm_id = item["href"].split("/")[0].split("_")[-2]
+        storm_ids.append(storm_id)
 
     train_indices, val_indices = next(
         GroupShuffleSplit(test_size=0.2, n_splits=2, random_state=seed).split(
-            df, groups=df["storm_id"]
+            storm_ids, groups=storm_ids
         )
     )
 
     train_dataset = Subset(all_train_dataset, train_indices)
     val_dataset = Subset(all_train_dataset, val_indices)
+    test_dataset = Subset(all_test_dataset, range(len(all_test_dataset)))
 
     return train_dataset, val_dataset, test_dataset
 
@@ -237,12 +249,15 @@ def main(args: argparse.Namespace) -> None:
     ######################################
     # Setup model, optimizer, losses, etc.
     ######################################
+
+    # TODO: this is horrible
+    # 186 is the largest windspeed
     if args.model == "resnet18":
         model = torchvision.models.resnet18(pretrained=False, num_classes=186)
     elif args.model == "resnet50":
         model = torchvision.models.resnet50(pretrained=False, num_classes=186)
     model = model.to(device)
-    optimizer = optim.AdamW(model.parameters(), lr=0.001, amsgrad=True)
+    optimizer = optim.AdamW(model.parameters(), lr=args.initial_lr, amsgrad=True)
     criterion = nn.modules.loss.CrossEntropyLoss()
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min", patience=4)
 
@@ -297,9 +312,9 @@ def main(args: argparse.Namespace) -> None:
     print(test_results)
 
     ######################################
-    # TODO: Write out results, tear down
+    # Write out results, tear down
     ######################################
-    pass
+    # TODO: fill out saving the best model etc.
 
 
 if __name__ == "__main__":
