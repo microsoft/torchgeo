@@ -1,0 +1,26 @@
+name: torchgeo
+
+dependencies:
+  - rasterio
+  - gdal
+  - numpy
+  - pillow
+  - setuptools>=42
+  - sphinx
+  - pytorch::pytorch>=1.7
+  - pytorch::torchvision<0.10
+  - python
+  - pip
+  - pip:
+    - flake8
+    - flake8-import-order
+    - mypy
+    - pytest
+    - pytest-cov
+    - black
+    - opencv-python
+    - pycocotools
+    - pytorch-sphinx-theme
+    - radiant-mlhub>=0.2.1
+    - rarfile
+    - tensorboard

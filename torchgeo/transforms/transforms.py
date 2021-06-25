@@ -1,8 +1,8 @@
-from typing import Any, Dict
+from typing import Dict
 
 import torch
+from torch import Tensor
 import torch.nn as nn
-import torchvision.transforms.functional as F
 
 
 # TODO: figure out why mypy is angry:
@@ -19,7 +19,7 @@ class RandomHorizontalFlip(nn.Module):  # type: ignore[misc,name-defined]
         super().__init__()
         self.p = p
 
-    def forward(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
         """Randomly flip the image and target tensors.
 
         Parameters:
@@ -30,13 +30,14 @@ class RandomHorizontalFlip(nn.Module):  # type: ignore[misc,name-defined]
         """
         if torch.rand(1) < self.p:
             if "image" in sample:
-                sample["image"] = F.hflip(sample["image"])
-                width, height = F._get_image_size(sample["image"])
+                sample["image"] = sample["image"].flip(-1)
 
                 if "boxes" in sample:
+                    height, width = sample["image"].shape[-2:]
                     sample["boxes"][:, [0, 2]] = width - sample["boxes"][:, [2, 0]]
-                if "masks" in sample:
-                    sample["masks"] = sample["masks"].flip(-1)
+
+            if "masks" in sample:
+                sample["masks"] = sample["masks"].flip(-1)
 
         return sample
 
@@ -53,7 +54,7 @@ class RandomVerticalFlip(nn.Module):  # type: ignore[misc,name-defined]
         super().__init__()
         self.p = p
 
-    def forward(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
         """Randomly flip the image and target tensors.
 
         Parameters:
@@ -64,13 +65,14 @@ class RandomVerticalFlip(nn.Module):  # type: ignore[misc,name-defined]
         """
         if torch.rand(1) < self.p:
             if "image" in sample:
-                sample["image"] = F.vflip(sample["image"])
-                width, height = F._get_image_size(sample["image"])
+                sample["image"] = sample["image"].flip(-2)
 
                 if "boxes" in sample:
+                    height, width = sample["image"].shape[-2:]
                     sample["boxes"][:, [1, 3]] = height - sample["boxes"][:, [3, 1]]
-                if "masks" in sample:
-                    sample["masks"] = sample["masks"].flip(-2)
+
+            if "masks" in sample:
+                sample["masks"] = sample["masks"].flip(-2)
 
         return sample
 
@@ -78,7 +80,7 @@ class RandomVerticalFlip(nn.Module):  # type: ignore[misc,name-defined]
 class Identity(nn.Module):  # type: ignore[misc,name-defined]
     """Identity function used for testing purposes."""
 
-    def forward(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
         """Do nothing.
 
         Parameters:
