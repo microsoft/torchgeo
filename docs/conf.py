@@ -86,6 +86,8 @@ autodoc_default_options = {
     "show-inheritance": True,
 }
 
+autodoc_member_order = "bysource"
+
 autodoc_typehints = "description"
 
 intersphinx_mapping = {
