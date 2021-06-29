@@ -11,7 +11,7 @@ from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import COWCCounting, COWCDetection
 import torchgeo.datasets.cowc
-from torchgeo.datasets.cowc import _COWC
+from torchgeo.datasets.cowc import COWC
 from torchgeo.transforms import Identity
 
 
@@ -22,7 +22,7 @@ def download_url(url: str, root: str, **kwargs: str) -> None:
 class TestCOWC:
     def test_not_implemented(self) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            _COWC()  # type: ignore[abstract]
+            COWC()  # type: ignore[abstract]
 
 
 class TestCOWCCounting:
@@ -32,7 +32,7 @@ class TestCOWCCounting:
         monkeypatch: Generator[MonkeyPatch, None, None],
         tmp_path: Path,
         request: SubRequest,
-    ) -> _COWC:
+    ) -> COWC:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.cowc, "download_url", download_url
         )
@@ -57,24 +57,24 @@ class TestCOWCCounting:
         transforms = Identity()
         return COWCCounting(root, split, transforms, download=True, checksum=True)
 
-    def test_getitem(self, dataset: _COWC) -> None:
+    def test_getitem(self, dataset: COWC) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["label"], torch.Tensor)
 
-    def test_len(self, dataset: _COWC) -> None:
+    def test_len(self, dataset: COWC) -> None:
         assert len(dataset) == 12
 
-    def test_add(self, dataset: _COWC) -> None:
+    def test_add(self, dataset: COWC) -> None:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
         assert len(ds) == 24
 
-    def test_already_downloaded(self, dataset: _COWC) -> None:
+    def test_already_downloaded(self, dataset: COWC) -> None:
         COWCCounting(root=dataset.root, download=True)
 
-    def test_out_of_bounds(self, dataset: _COWC) -> None:
+    def test_out_of_bounds(self, dataset: COWC) -> None:
         with pytest.raises(IndexError):
             dataset[12]
 
@@ -91,7 +91,7 @@ class TestCOWCDetection:
     @pytest.fixture
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
-    ) -> _COWC:
+    ) -> COWC:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.cowc, "download_url", download_url
         )
@@ -116,24 +116,24 @@ class TestCOWCDetection:
         transforms = Identity()
         return COWCDetection(root, split, transforms, download=True, checksum=True)
 
-    def test_getitem(self, dataset: _COWC) -> None:
+    def test_getitem(self, dataset: COWC) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["label"], torch.Tensor)
 
-    def test_len(self, dataset: _COWC) -> None:
+    def test_len(self, dataset: COWC) -> None:
         assert len(dataset) == 12
 
-    def test_add(self, dataset: _COWC) -> None:
+    def test_add(self, dataset: COWC) -> None:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
         assert len(ds) == 24
 
-    def test_already_downloaded(self, dataset: _COWC) -> None:
+    def test_already_downloaded(self, dataset: COWC) -> None:
         COWCDetection(root=dataset.root, download=True)
 
-    def test_out_of_bounds(self, dataset: _COWC) -> None:
+    def test_out_of_bounds(self, dataset: COWC) -> None:
         with pytest.raises(IndexError):
             dataset[12]
 

@@ -13,7 +13,7 @@ from .geo import VisionDataset
 
 class TropicalCycloneWindEstimation(VisionDataset):
     """`Tropical Cyclone Wind Estimation Competition
-    <https://www.drivendata.org/competitions/72/predict-wind-speeds/>` Dataset.
+    <https://www.drivendata.org/competitions/72/predict-wind-speeds/>`_ Dataset.
 
     A collection of tropical storms in the Atlantic and East Pacific Oceans from 2000 to
     2019 with corresponding maximum sustained surface wind speed. This dataset is split

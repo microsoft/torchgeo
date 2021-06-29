@@ -2,7 +2,6 @@ torchgeo
 ========
 
 .. automodule:: torchgeo
-   :members:
 
 This library is part of the `PyTorch <http://pytorch.org/>`_ project.
 PyTorch is an open source machine learning framework.
@@ -14,8 +13,8 @@ architectures, and common image transformations for geospatial data.
    :maxdepth: 2
    :caption: Package Reference
 
-   torchgeo.datasets
-   torchgeo.transforms
+   datasets
+   transforms
 
 .. toctree::
    :maxdepth: 1

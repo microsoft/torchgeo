@@ -19,14 +19,14 @@ from .geo import GeoDataset
 class BeninSmallHolderCashews(GeoDataset):
     r"""Smallholder Cashew Plantations in Benin dataset.
 
-    This dataset contains labels for cashew plantations in a 120 km\ :sup:`2`\ area
+    This dataset contains labels for cashew plantations in a 120 km\ :sup:`2`\  area
     in the center of Benin. Each pixel is classified for Well-managed plantation,
     Poorly-managed plantation, No plantation and other classes. The labels are
     generated using a combination of ground data collection with a handheld GPS device,
     and final corrections based on Airbus Pléiades imagery. See
     `this website <https://doi.org/10.34911/rdnt.hfv20i/>`__ for dataset details.
 
-    Specifically, the data consists of Sentinel 2 imagery from a 120 km\ :sup:`2`\ area
+    Specifically, the data consists of Sentinel 2 imagery from a 120 km\ :sup:`2`\  area
     in the center of Benin over 71 points in time from 11/05/2019 to 10/30/2020
     and polygon labels for 6 classes:
 

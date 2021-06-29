@@ -51,6 +51,11 @@ nitpick_ignore = [
     ("py:class", ".."),
     ("py:class", "torch.utils.data.dataset.Dataset"),
     ("py:class", "torch.nn.modules.module.Module"),
+    # https://stackoverflow.com/questions/68186141
+    ("py:class", "torchgeo.datasets.cowc.COWC"),
+    ("py:class", "torchgeo.datasets.geo.GeoDataset"),
+    ("py:class", "torchgeo.datasets.geo.VisionDataset"),
+    ("py:class", "torchgeo.datasets.geo.ZipDataset"),
 ]
 
 
@@ -76,13 +81,10 @@ html_theme_options = {
 # -- Extension configuration -------------------------------------------------
 
 autodoc_default_options = {
-    "member-order": "bysource",
-    "undoc-members": False,
-    "private-members": True,
+    "members": True,
     "special-members": True,
+    "show-inheritance": True,
 }
-
-autodoc_member_order = "bysource"
 
 autodoc_typehints = "description"
 
