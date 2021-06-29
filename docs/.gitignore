@@ -1,0 +1,3 @@
+# API files are auto-generated
+*.rst
+!index.rst
