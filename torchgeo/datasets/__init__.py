@@ -1,5 +1,5 @@
 from .benin_cashews import BeninSmallHolderCashews
-from .cowc import COWCCounting, COWCDetection
+from .cowc import COWC, COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCycloneWindEstimation
 from .geo import GeoDataset, VisionDataset, ZipDataset
@@ -9,6 +9,7 @@ from .sen12ms import SEN12MS
 
 __all__ = (
     "BeninSmallHolderCashews",
+    "COWC",
     "COWCCounting",
     "COWCDetection",
     "CV4AKenyaCropType",
