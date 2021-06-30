@@ -22,6 +22,8 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     prohibits swapping image sources or target labels.
     """
 
+    __module__ = "torchgeo.datasets"
+
     @abc.abstractmethod
     def __getitem__(self, index: int) -> Dict[str, Any]:
         """Return an index within the dataset.
@@ -70,6 +72,8 @@ class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):
     This base class is designed for datasets with pre-defined image chips.
     """
 
+    __module__ = "torchgeo.datasets"
+
     @abc.abstractmethod
     def __getitem__(self, index: int) -> Dict[str, Any]:
         """Return an index within the dataset.
@@ -107,6 +111,8 @@ class ZipDataset(GeoDataset):
     For example, this allows you to combine an image source like Landsat8 with a target
     label like CDL.
     """
+
+    __module__ = "torchgeo.datasets"
 
     def __init__(self, datasets: Iterable[GeoDataset]) -> None:
         """Initialize a new Dataset instance.

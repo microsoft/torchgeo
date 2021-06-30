@@ -37,6 +37,8 @@ class COWC(VisionDataset, abc.ABC):
     * https://doi.org/10.1007/978-3-319-46487-9_48
     """
 
+    __module__ = "torchgeo.datasets"
+
     @property
     @abc.abstractmethod
     def base_folder(self) -> str:
