@@ -388,7 +388,7 @@ class CV4AKenyaCropType(GeoDataset):
 
         return train_field_ids, test_field_ids
 
-    def download(self, api_key: str) -> None:
+    def _download(self, api_key: str) -> None:
         """Download the dataset and extract it.
 
         Parameters:

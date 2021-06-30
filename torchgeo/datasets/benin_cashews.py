@@ -410,7 +410,7 @@ class BeninSmallHolderCashews(GeoDataset):
 
         return images and targets
 
-    def download(self, api_key: str) -> None:
+    def _download(self, api_key: str) -> None:
         """Download the dataset and extract it.
 
         Parameters:

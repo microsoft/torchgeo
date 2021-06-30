@@ -170,7 +170,7 @@ class LandCoverAI(VisionDataset):
 
         return integrity
 
-    def download(self) -> None:
+    def _download(self) -> None:
         """Download the dataset and extract it.
 
         Raises:
