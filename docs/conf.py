@@ -49,13 +49,9 @@ nitpicky = True
 nitpick_ignore = [
     # https://github.com/sphinx-doc/sphinx/issues/8127
     ("py:class", ".."),
+    # https://github.com/pytorch/pytorch/issues/60979
     ("py:class", "torch.utils.data.dataset.Dataset"),
     ("py:class", "torch.nn.modules.module.Module"),
-    # https://stackoverflow.com/questions/68186141
-    ("py:class", "torchgeo.datasets.cowc.COWC"),
-    ("py:class", "torchgeo.datasets.geo.GeoDataset"),
-    ("py:class", "torchgeo.datasets.geo.VisionDataset"),
-    ("py:class", "torchgeo.datasets.geo.ZipDataset"),
 ]
 
 
