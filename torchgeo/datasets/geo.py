@@ -4,6 +4,10 @@ from typing import Any, Dict, Iterable
 from torch.utils.data import Dataset
 
 
+# https://github.com/pytorch/pytorch/issues/60979
+Dataset.__module__ = "torch.utils.data"
+
+
 class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     """Abstract base class for datasets containing geospatial information.
 
