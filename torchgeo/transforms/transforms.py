@@ -2,12 +2,16 @@ from typing import Dict
 
 import torch
 from torch import Tensor
-import torch.nn as nn
+from torch.nn import Module
+
+
+# https://github.com/pytorch/pytorch/issues/60979
+Module.__module__ = "torch.nn"
 
 
 # TODO: figure out why mypy is angry:
 # https://discuss.pytorch.org/t/how-to-correctly-annotate-subclasses-of-nn-module/74317/2
-class RandomHorizontalFlip(nn.Module):  # type: ignore[misc,name-defined]
+class RandomHorizontalFlip(Module):  # type: ignore[misc,name-defined]
     """Horizontally flip the given sample randomly with a given probability."""
 
     def __init__(self, p: float = 0.5) -> None:
@@ -42,7 +46,7 @@ class RandomHorizontalFlip(nn.Module):  # type: ignore[misc,name-defined]
         return sample
 
 
-class RandomVerticalFlip(nn.Module):  # type: ignore[misc,name-defined]
+class RandomVerticalFlip(Module):  # type: ignore[misc,name-defined]
     """Vertically flip the given sample randomly with a given probability."""
 
     def __init__(self, p: float = 0.5) -> None:
@@ -77,7 +81,7 @@ class RandomVerticalFlip(nn.Module):  # type: ignore[misc,name-defined]
         return sample
 
 
-class Identity(nn.Module):  # type: ignore[misc,name-defined]
+class Identity(Module):  # type: ignore[misc,name-defined]
     """Identity function used for testing purposes."""
 
     def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
