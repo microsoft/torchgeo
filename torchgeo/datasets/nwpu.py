@@ -105,7 +105,7 @@ class VHR10(VisionDataset):
         self.checksum = checksum
 
         if download:
-            self.download()
+            self._download()
 
         if not self._check_integrity():
             raise RuntimeError(
