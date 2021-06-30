@@ -224,7 +224,7 @@ class VHR10(VisionDataset):
 
         return image and target
 
-    def download(self) -> None:
+    def _download(self) -> None:
         """Download the dataset and extract it."""
 
         if self._check_integrity():

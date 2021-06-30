@@ -183,7 +183,7 @@ class COWC(VisionDataset, abc.ABC):
                 return False
         return True
 
-    def download(self) -> None:
+    def _download(self) -> None:
         """Download the dataset and extract it."""
 
         if self._check_integrity():

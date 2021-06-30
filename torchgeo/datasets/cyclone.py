@@ -189,7 +189,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
                     return False
         return True
 
-    def download(self, api_key: str) -> None:
+    def _download(self, api_key: str) -> None:
         """Download the dataset and extract it.
 
         Parameters:
