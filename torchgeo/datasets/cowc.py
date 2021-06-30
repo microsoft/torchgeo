@@ -95,7 +95,7 @@ class COWC(VisionDataset, abc.ABC):
         self.checksum = checksum
 
         if download:
-            self.download()
+            self._download()
 
         if not self._check_integrity():
             raise RuntimeError(

@@ -84,7 +84,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
                     + "See https://www.mlhub.earth/ to register for API access."
                 )
             else:
-                self.download(api_key)
+                self._download(api_key)
 
         if not self._check_integrity():
             raise RuntimeError(
