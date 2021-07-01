@@ -38,19 +38,19 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
+    "sphinx.ext.viewcode",
 ]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = [
-    "_build",
-    "setup.rst",
-    "tests*.rst",
-    "torchgeo.rst",
-]
+exclude_patterns = ["_build"]
 
 nitpicky = True
+nitpick_ignore = [
+    # https://github.com/sphinx-doc/sphinx/issues/8127
+    ("py:class", ".."),
+]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -74,16 +74,16 @@ html_theme_options = {
 
 # -- Extension configuration -------------------------------------------------
 
+# sphinx.ext.autodoc
 autodoc_default_options = {
     "members": True,
     "special-members": True,
     "show-inheritance": True,
 }
-
 autodoc_member_order = "bysource"
-
 autodoc_typehints = "description"
 
+# sphinx.ext.intersphinx
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "torch": ("https://pytorch.org/docs/stable", None),
