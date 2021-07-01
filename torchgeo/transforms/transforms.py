@@ -7,7 +7,7 @@ from torch.nn import Module
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
-Module.__module__ = "torch.nn"
+Module.__module__ = "torch.nn"  # type: ignore[attr-defined]
 
 
 # TODO: figure out why mypy is angry:
