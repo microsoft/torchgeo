@@ -45,9 +45,9 @@ class GridGeoSampler(GeoSampler):
     computation by minimizing overlap between chips.
 
     Usually the stride should be slightly smaller than the chip size such that each chip
-    has some small overlap with surrounding chips. This is used to prevent `checkerboard
-    artifacts <https://distill.pub/2016/deconv-checkerboard/>`_ when combining each
-    prediction patch. The overlap between each chip (``chip_size - stride``) should be
-    approximately equal to the `receptive field
-    <https://distill.pub/2019/computing-receptive-fields/>`_ of the CNN.
+    has some small overlap with surrounding chips. This is used to prevent `stitching
+    artifacts <https://arxiv.org/abs/1805.12219>`_ when combining each prediction patch.
+    The overlap between each chip (``chip_size - stride``) should be approximately equal
+    to the `receptive field <https://distill.pub/2019/computing-receptive-fields/>`_ of
+    the CNN.
     """
