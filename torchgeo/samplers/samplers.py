@@ -25,7 +25,7 @@ class GeoSampler(Sampler[Tuple[Any, ...]], abc.ABC):
 
         Returns:
             tuple of latitude, longitude, height, width, projection, coordinate system,
-                and time
+            and time
         """
 
 
