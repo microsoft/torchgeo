@@ -18,6 +18,12 @@ architectures, and common image transformations for geospatial data.
    transforms
 
 .. toctree::
+   :maxdepth: 2
+   :caption: User Documentation
+
+   glossary
+
+.. toctree::
    :maxdepth: 1
    :caption: PyTorch Libraries
 
@@ -28,9 +34,3 @@ architectures, and common image transformations for geospatial data.
    TorchElastic <https://pytorch.org/elastic/>
    TorchServe <https://pytorch.org/serve>
    PyTorch on XLA Devices <http://pytorch.org/xla/>
-
-
-Indices
--------
-
-* :ref:`genindex`

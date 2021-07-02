@@ -33,7 +33,7 @@ class RandomGeoSampler(GeoSampler):
     """Samples elements from a region of interest randomly.
 
     This is particularly useful during training when you want to maximize the size of
-    the dataset and return as many random chips as possible.
+    the dataset and return as many random :term:`chips <chip>` as possible.
     """
 
 
@@ -42,7 +42,7 @@ class GridGeoSampler(GeoSampler):
 
     This is particularly useful during evaluation when you want to make predictions for
     an entire region of interest. You want to minimize the amount of redundant
-    computation by minimizing overlap between chips.
+    computation by minimizing overlap between :term:`chips <chip>`.
 
     Usually the stride should be slightly smaller than the chip size such that each chip
     has some small overlap with surrounding chips. This is used to prevent `stitching
