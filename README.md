@@ -1,16 +1,17 @@
 # TorchGeo
-PyTorch data loaders for geospatial data
 
-[![flake8](https://github.com/microsoft/torchgeo/actions/workflows/flake8.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/flake8.yaml)
+datasets, transforms, and models for geospatial data
+
 [![black](https://github.com/microsoft/torchgeo/actions/workflows/black.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/black.yaml)
+[![flake8](https://github.com/microsoft/torchgeo/actions/workflows/flake8.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/flake8.yaml)
+[![isort](https://github.com/microsoft/torchgeo/actions/workflows/isort.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/isort.yaml)
 [![mypy](https://github.com/microsoft/torchgeo/actions/workflows/mypy.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/mypy.yaml)
 [![pytest](https://github.com/microsoft/torchgeo/actions/workflows/pytest.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/pytest.yaml)
 [![sphinx](https://github.com/microsoft/torchgeo/actions/workflows/sphinx.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/sphinx.yaml)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ## Project setup
 
-## Conda
+### Conda
 
 ```bash
 conda env create --file environment.yml
