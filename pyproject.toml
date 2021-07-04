@@ -7,6 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.black]
 target-version = ["py36", "py37", "py38", "py39"]
+color = true
 exclude = '''
 /(
     # Data
@@ -29,6 +30,12 @@ exclude = '''
     | \.github/
 )/
 '''
+
+[tool.isort]
+profile = "black"
+known_first_party = ["docs", "tests", "torchgeo"]
+skip_gitignore = true
+color_output = true
 
 [tool.mypy]
 ignore_missing_imports = true
