@@ -26,6 +26,6 @@ jobs:
       with:
         python-version: 3.9
     - name: Install isort
-      run: pip install isort
+      run: pip install isort[colors]>=4.3.5
     - name: Run isort checks
       run: isort . --check --diff
