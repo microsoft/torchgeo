@@ -22,5 +22,3 @@ exclude =
     # Git
     .git/,
     .github/,
-application-import-names = docs,tests,torchgeo
-import-order-style = google
