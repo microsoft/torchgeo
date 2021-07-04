@@ -9,7 +9,7 @@ spack:
   - "py-mypy@0.900:"
   - py-numpy
   - py-pycocotools
-  - py-pytest
+  - "py-pytest@6.0:"
   - py-pytest-cov
   - py-pytorch-sphinx-theme
   - "py-radiant-mlhub@0.2.1:"

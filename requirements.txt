@@ -6,7 +6,7 @@ numpy
 opencv-python
 pillow
 pycocotools
-pytest
+pytest>=6.0
 pytest-cov
 pytorch-sphinx-theme
 radiant-mlhub>=0.2.1

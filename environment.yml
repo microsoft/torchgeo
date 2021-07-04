@@ -15,7 +15,7 @@ dependencies:
     - flake8
     - flake8-import-order
     - mypy>=0.900
-    - pytest
+    - pytest>=6.0
     - pytest-cov
     - black
     - opencv-python
