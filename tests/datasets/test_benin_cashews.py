@@ -1,12 +1,12 @@
 import glob
 import os
-from pathlib import Path
 import shutil
+from pathlib import Path
 from typing import Generator
 
 import pytest
-from pytest import MonkeyPatch
 import torch
+from pytest import MonkeyPatch
 
 from torchgeo.datasets import BeninSmallHolderCashews, ZipDataset
 from torchgeo.transforms import Identity

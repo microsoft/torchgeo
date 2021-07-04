@@ -6,13 +6,10 @@ import tarfile
 from typing import Callable, Dict, List, Optional
 
 import numpy as np
-from PIL import Image
 import torch
+from PIL import Image
 from torch import Tensor
-from torchvision.datasets.utils import (
-    check_integrity,
-    download_url,
-)
+from torchvision.datasets.utils import check_integrity, download_url
 
 from .geo import VisionDataset
 
