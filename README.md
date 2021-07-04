@@ -2,12 +2,9 @@
 
 datasets, transforms, and models for geospatial data
 
-[![black](https://github.com/microsoft/torchgeo/actions/workflows/black.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/black.yaml)
-[![flake8](https://github.com/microsoft/torchgeo/actions/workflows/flake8.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/flake8.yaml)
-[![isort](https://github.com/microsoft/torchgeo/actions/workflows/isort.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/isort.yaml)
-[![mypy](https://github.com/microsoft/torchgeo/actions/workflows/mypy.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/mypy.yaml)
-[![pytest](https://github.com/microsoft/torchgeo/actions/workflows/pytest.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/pytest.yaml)
-[![sphinx](https://github.com/microsoft/torchgeo/actions/workflows/sphinx.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/sphinx.yaml)
+[![docs](https://github.com/microsoft/torchgeo/actions/workflows/docs.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/docs.yaml)
+[![style](https://github.com/microsoft/torchgeo/actions/workflows/style.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/style.yaml)
+[![tests](https://github.com/microsoft/torchgeo/actions/workflows/tests.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/tests.yaml)
 
 ## Project setup
 
