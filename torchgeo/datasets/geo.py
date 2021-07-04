@@ -3,7 +3,6 @@ from typing import Any, Dict, Iterable
 
 from torch.utils.data import Dataset
 
-
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 Dataset.__module__ = "torch.utils.data"

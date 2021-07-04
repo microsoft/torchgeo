@@ -3,8 +3,8 @@ import os
 from typing import Callable, Dict, Optional
 
 import numpy as np
-from PIL import Image
 import torch
+from PIL import Image
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_and_extract_archive
 

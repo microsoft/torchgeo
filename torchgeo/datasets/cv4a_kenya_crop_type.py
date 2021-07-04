@@ -1,11 +1,11 @@
 import csv
-from functools import lru_cache
 import os
+from functools import lru_cache
 from typing import Callable, Dict, List, Optional, Tuple
 
 import numpy as np
-from PIL import Image
 import torch
+from PIL import Image
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, extract_archive
 
