@@ -3,7 +3,6 @@ from typing import Any, Iterator, Tuple
 
 from torch.utils.data import Sampler
 
-
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 Sampler.__module__ = "torch.utils.data"

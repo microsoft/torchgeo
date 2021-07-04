@@ -1,13 +1,13 @@
 import glob
 import os
-from pathlib import Path
 import shutil
+from pathlib import Path
 from typing import Generator
 
-from _pytest.fixtures import SubRequest
 import pytest
-from pytest import MonkeyPatch
 import torch
+from _pytest.fixtures import SubRequest
+from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import TropicalCycloneWindEstimation

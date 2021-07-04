@@ -2,8 +2,8 @@ import os
 from typing import Any, Callable, Dict, Optional
 
 import numpy as np
-from PIL import Image
 import torch
+from PIL import Image
 from torch import Tensor
 from torchvision.datasets.utils import (
     check_integrity,

@@ -7,7 +7,6 @@ from .landcoverai import LandCoverAI
 from .nwpu import VHR10
 from .sen12ms import SEN12MS
 
-
 # https://stackoverflow.com/questions/40018681
 BeninSmallHolderCashews.__module__ = "torchgeo.datasets"
 COWC.__module__ = "torchgeo.datasets"
