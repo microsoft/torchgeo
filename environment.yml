@@ -14,7 +14,7 @@ dependencies:
   - pip:
     - flake8
     - flake8-import-order
-    - mypy
+    - mypy>=0.900
     - pytest
     - pytest-cov
     - black
