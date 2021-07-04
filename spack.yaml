@@ -5,7 +5,7 @@ spack:
   - "python@3.6:+bz2"
   - py-black
   - py-flake8
-  - py-flake8-import-order
+  - "py-isort@4.3.5:+colors"
   - "py-mypy@0.900:"
   - py-numpy
   - py-pycocotools

@@ -13,7 +13,7 @@ dependencies:
   - pip
   - pip:
     - flake8
-    - flake8-import-order
+    - isort[colors]>=4.3.5
     - mypy>=0.900
     - pytest>=6.0
     - pytest-cov
