@@ -3,7 +3,7 @@ spack:
   - opencv+python3+imgcodecs+tiff+jpeg+png
   - pil
   - "python@3.6:+bz2"
-  - py-black
+  - "py-black@21:+colorama"
   - py-flake8
   - "py-isort@4.3.5:+colors"
   - "py-mypy@0.900:"
