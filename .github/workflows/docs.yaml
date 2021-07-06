@@ -7,7 +7,7 @@ on:
     - 'docs/**'
     - '**.py'
     - 'requirements.txt'
-    - '.github/workflows/sphinx.yaml'
+    - '.github/workflows/docs.yaml'
   pull_request:
     branches:
     - main
@@ -15,7 +15,7 @@ on:
     - 'docs/**'
     - '**.py'
     - 'requirements.txt'
-    - '.github/workflows/sphinx.yaml'
+    - '.github/workflows/docs.yaml'
 jobs:
   sphinx:
     name: sphinx

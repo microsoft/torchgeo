@@ -7,7 +7,7 @@ on:
     - '**.py'
     - 'pyproject.toml'
     - 'requirements.txt'
-    - '.github/workflows/mypy.yaml'
+    - '.github/workflows/tests.yaml'
   pull_request:
     branches:
     - main
@@ -15,7 +15,7 @@ on:
     - '**.py'
     - 'pyproject.toml'
     - 'requirements.txt'
-    - '.github/workflows/mypy.yaml'
+    - '.github/workflows/tests.yaml'
 jobs:
   mypy:
     name: mypy
