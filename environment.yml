@@ -17,7 +17,7 @@ dependencies:
     - mypy>=0.900
     - pytest>=6.0
     - pytest-cov
-    - black[colorama]>=21
+    - black>=21
     - opencv-python
     - pycocotools
     - pytorch-sphinx-theme
