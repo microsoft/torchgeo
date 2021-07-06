@@ -37,10 +37,10 @@ def fit(
     tic = time.time()
     for batch_idx, batch in enumerate(tqdm(data_loader)):
         images = batch["image"].to(device)
-        targets = batch["wind_speed"].to(device)
+        targets = batch["wind_speed"].float().to(device)
 
         optimizer.zero_grad()
-        outputs = model(images)
+        outputs = model(images).squeeze()
         loss = criterion(outputs, targets)
         losses.append(loss.item())
         loss.backward()
@@ -82,13 +82,14 @@ def evaluate(
     tic = time.time()
     for batch_idx, batch in enumerate(tqdm(data_loader)):
         images = batch["image"].to(device)
-        targets = batch["wind_speed"].to(device)
+        targets = batch["wind_speed"].float().to(device)
 
         with torch.no_grad():
-            outputs = model(images)
+            outputs = model(images).squeeze()
             loss = criterion(outputs, targets)
             losses.append(loss.item())
-            predictions = outputs.argmax(axis=1).cpu().numpy()
+            # predictions = outputs.argmax(axis=1).cpu().numpy()
+            predictions = outputs.cpu().numpy()
 
         start_index = batch_idx * batch_size
         end_index = (batch_idx * batch_size) + batch_size
@@ -124,6 +125,12 @@ def set_up_parser() -> argparse.ArgumentParser:
         required=True,
         choices=["resnet18", "resnet50"],
         help="Model to use",
+    )
+    parser.add_argument(
+        "--loss",
+        default="ce",
+        choices=["ce", "mse"],
+        help="Loss function to use",
     )
     parser.add_argument(
         "--batch_size",
@@ -189,7 +196,7 @@ def custom_transform(sample: Dict[str, Any]) -> Dict[str, Any]:
     sample["image"] = (
         sample["image"].unsqueeze(0).repeat(3, 1, 1)
     )  # convert to 3 channel
-    sample["wind_speed"] = sample["wind_speed"] // 5
+    sample["wind_speed"] = sample["wind_speed"]
 
     return sample
 
@@ -290,13 +297,16 @@ def main(args: argparse.Namespace) -> None:
     # TODO: this is horrible
     # 186 is the largest windspeed
     if args.model == "resnet18":
-        model = torchvision.models.resnet18(pretrained=False, num_classes=186)
+        model = torchvision.models.resnet18(pretrained=False, num_classes=1)
     elif args.model == "resnet50":
-        model = torchvision.models.resnet50(pretrained=False, num_classes=186)
+        model = torchvision.models.resnet50(pretrained=False, num_classes=1)
     model = model.to(device)
     optimizer = optim.AdamW(model.parameters(), lr=args.initial_lr, amsgrad=True)
-    criterion = nn.modules.loss.CrossEntropyLoss()
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min", patience=4)
+    # criterion = nn.modules.loss.CrossEntropyLoss()
+    criterion = nn.modules.loss.MSELoss()
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, "min", patience=4, verbose=True
+    )
 
     writer = SummaryWriter(  # type: ignore[no-untyped-call]
         log_dir=os.path.join("logs/", args.experiment_name)
@@ -306,7 +316,9 @@ def main(args: argparse.Namespace) -> None:
     # Training loop
     ######################################
     metrics_per_epoch: Dict[str, List[float]] = {
-        "train_loss": [], "val_loss": [], "val_rmse": []
+        "train_loss": [],
+        "val_loss": [],
+        "val_rmse": [],
     }
     best_val: float = float("inf")
 
