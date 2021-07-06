@@ -28,7 +28,7 @@ jobs:
       with:
         python-version: 3.9
     - name: Install black
-      run: pip install black[colorama]>=21
+      run: pip install 'black[colorama]>=21'
     - name: Run black checks
       run: black . --check --diff
   flake8:
@@ -56,6 +56,6 @@ jobs:
       with:
         python-version: 3.9
     - name: Install isort
-      run: pip install isort[colors]>=4.3.5
+      run: pip install 'isort[colors]>=4.3.5'
     - name: Run isort checks
       run: isort . --check --diff
