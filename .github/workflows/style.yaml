@@ -28,7 +28,7 @@ jobs:
       with:
         python-version: 3.9
     - name: Install black
-      run: pip install black
+      run: pip install black[colorama]>=21
     - name: Run black checks
       run: black . --check --diff
   flake8:
