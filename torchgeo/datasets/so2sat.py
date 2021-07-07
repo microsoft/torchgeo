@@ -85,6 +85,7 @@ class So2Sat(VisionDataset):
             RuntimeError: if data is not found in ``root``, or checksums don't match
         """
         import h5py
+
         assert split in ["train", "validation", "test"]
 
         self.root = root
