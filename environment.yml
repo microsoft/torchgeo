@@ -1,26 +1,26 @@
 name: torchgeo
 
 dependencies:
-  - rasterio
   - gdal
+  - h5py
   - numpy
   - pillow
-  - h5py
-  - setuptools>=42
-  - sphinx
+  - pip
+  - python
   - pytorch::pytorch>=1.7
   - pytorch::torchvision<0.10
-  - python
-  - pip
+  - setuptools>=42
+  - sphinx
+  - rasterio
   - pip:
+    - black[colorama]>=21
     - flake8
     - isort[colors]>=4.3.5
     - mypy>=0.900
-    - pytest>=6.0
-    - pytest-cov
-    - black[colorama]>=21
     - opencv-python
     - pycocotools
+    - pytest>=6.0
+    - pytest-cov
     - pytorch-sphinx-theme
     - radiant-mlhub>=0.2.1
     - rarfile
