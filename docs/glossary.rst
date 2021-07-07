@@ -6,6 +6,8 @@ A collection of common terms used in :mod:`torchgeo` that may be unfamiliar to e
 1. Deep learning researchers who don't know remote sensing
 2. Remote sensing researchers who don't know deep learning
 
+|
+
 .. todo:: We shouldn't need to bold these keys ourselves, opened an issue at https://github.com/pytorch/pytorch_sphinx_theme/issues/133
 
 .. glossary::
@@ -16,6 +18,9 @@ A collection of common terms used in :mod:`torchgeo` that may be unfamiliar to e
    **classification**
        A computer vision task that involves predicting the image class for an entire image or a specific bounding box.
 
+   **coordinate reference system (CRS)**
+       Synonym for :term:`spatial reference system (SRS)`. A system that defines how to locate geographic entities on a :term:`projected <projection>` surface.
+
    **instance segmentation**
        A computer vision task that involves predicting labels for each pixel in an image such that each object has a unique label.
 
@@ -25,11 +30,17 @@ A collection of common terms used in :mod:`torchgeo` that may be unfamiliar to e
    **patch**
        Synonym for :term:`chip`. A smaller image sampled from a larger :term:`tile`.
 
+   **projection**
+       A geometric transformation for portraying the surface of a 3D Earth onto a 2D planar image.
+
    **regression**
        A computer vision task that involves predicting a real valued number based on an image.
 
    **semantic segmentation**
        A computer vision task that involves predicting labels for each pixel in an image such that each class has a unique label.
+
+   **spatial reference system (SRS)**
+       Synonym for :term:`coordinate reference system (CRS)`. A system that defines how to locate geographic entities on a :term:`projected <projection>` surface.
 
    **swath**
        A set of :term:`tiles <tile>` along a satellite trajectory.
