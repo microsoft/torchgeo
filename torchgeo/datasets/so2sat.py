@@ -39,9 +39,10 @@ class So2Sat(GeoDataset):
 
        .. code-block: bash
 
-          wget ftp://m1483140:m1483140@dataserv.ub.tum.de/training.h5
-          wget ftp://m1483140:m1483140@dataserv.ub.tum.de/validation.h5
-          wget ftp://m1483140:m1483140@dataserv.ub.tum.de/testing.h5
+          for split in train validation testing
+          do
+              wget ftp://m1483140:m1483140@dataserv.ub.tum.de/$split.h5
+          done
 
        or manually downloaded from https://dataserv.ub.tum.de/index.php/s/m1483140
        This download will likely take several hours.
