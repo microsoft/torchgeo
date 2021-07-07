@@ -1,5 +1,6 @@
 black[colorama]>=21
 flake8
+h5py
 isort[colors]>=4.3.5
 mypy>=0.900
 numpy
@@ -16,4 +17,3 @@ setuptools>=42
 sphinx
 torch>=1.7
 torchvision<0.10
-h5py

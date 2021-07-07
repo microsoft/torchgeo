@@ -5,6 +5,7 @@ spack:
   - "python@3.6:+bz2"
   - "py-black@21:+colorama"
   - py-flake8
+  - py-h5py
   - "py-isort@4.3.5:+colors"
   - "py-mypy@0.900:"
   - py-numpy
@@ -19,5 +20,4 @@ spack:
   - py-sphinx
   - "py-torch@1.7:"
   - py-torchvision
-  - py-h5py
   concretization: together
