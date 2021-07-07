@@ -5,6 +5,7 @@ dependencies:
   - gdal
   - numpy
   - pillow
+  - h5py
   - setuptools>=42
   - sphinx
   - pytorch::pytorch>=1.7
