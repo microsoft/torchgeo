@@ -58,11 +58,6 @@ class So2Sat(VisionDataset):
         "validation": "71cfa6795de3e22207229d06d6f8775d",
         "test": "e81426102b488623a723beab52b31a8a",
     }
-    sha512s = {
-        "train": "7d3b4e7c89ba07e37eb8137aa365e82061c9467d3c1f66f57a9190c968d4ec4021952dd1508c7b98b2919291a3a5428315632565778cc81dd20fe43c74896311",  # noqa: E501
-        "validation": "b7d3fa5c35ed3f9b928909bed8be443bb0cfad59c630e509d8f17eb662ed3ec9b2f1cfdcb188a40b558be8a8896ef9779e99d30ed06c00303f26d3e97d865fcb",  # noqa: E501
-        "test": "ba4cfa96c46415f4de8c2ee94a0bea920db31093d78202fc97023c4b2c424637f98cd4a6f3df1964cedbea80b81c9732f09cab8e27f3463365d7f79c0f0edd26",  # noqa: E501
-    }
 
     def __init__(
         self,
@@ -115,7 +110,9 @@ class So2Sat(VisionDataset):
         with h5py.File(self.fn, "r") as f:
             s1 = f["sen1"][index].astype(np.float64)  # convert from <f8 to float64
             s2 = f["sen2"][index].astype(np.float64)  # convert from <f8 to float64
-            label = f["label"][index].argmax()  # convert one-hot encoding to int64
+            label = int(  # convert one-hot encoding to int64 then Python int
+                f["label"][index].argmax()
+            )
 
             s1 = np.rollaxis(s1, 2, 0)  # convert to CxHxW format
             s2 = np.rollaxis(s2, 2, 0)  # convert to CxHxW format
