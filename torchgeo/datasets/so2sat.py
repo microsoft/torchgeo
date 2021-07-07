@@ -1,16 +1,15 @@
 import os
 from typing import Callable, Dict, Optional
 
-import h5py
 import numpy as np
 import torch
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity
 
-from .geo import GeoDataset
+from .geo import VisionDataset
 
 
-class So2Sat(GeoDataset):
+class So2Sat(VisionDataset):
     """The `So2Sat <https://doi.org/10.1109/MGRS.2020.2964708>`_ dataset consists of
     corresponding synthetic aperture radar and multispectral optical image data
     acquired by the Sentinel-1 and Sentinel-2 remote sensing satellites, and a
@@ -85,6 +84,7 @@ class So2Sat(GeoDataset):
             AssertionError: if ``split`` argument is invalid
             RuntimeError: if data is not found in ``root``, or checksums don't match
         """
+        import h5py
         assert split in ["train", "validation", "test"]
 
         self.root = root
@@ -109,6 +109,8 @@ class So2Sat(GeoDataset):
         Returns:
             data and label at that index
         """
+        import h5py
+
         with h5py.File(self.fn, "r") as f:
             s1 = f["sen1"][index].astype(np.float64)  # convert from <f8 to float64
             s2 = f["sen2"][index].astype(np.float64)  # convert from <f8 to float64
