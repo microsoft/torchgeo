@@ -16,3 +16,4 @@ setuptools>=42
 sphinx
 torch>=1.7
 torchvision<0.10
+h5py
