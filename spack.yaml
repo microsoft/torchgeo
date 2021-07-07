@@ -19,4 +19,5 @@ spack:
   - py-sphinx
   - "py-torch@1.7:"
   - py-torchvision
+  - py-h5py
   concretization: together
