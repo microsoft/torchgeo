@@ -12,6 +12,9 @@ A collection of common terms used in :mod:`torchgeo` that may be unfamiliar to e
 
 .. glossary::
 
+   **area of interest (AOI)**
+       Synonym for :term`region of interest (ROI)`. A particular spatial area to focus on.
+
    **chip**
        Synonym for :term:`patch`. A smaller image sampled from a larger :term:`tile`.
 
@@ -32,6 +35,9 @@ A collection of common terms used in :mod:`torchgeo` that may be unfamiliar to e
 
    **projection**
        A geometric transformation for portraying the surface of a 3D Earth onto a 2D planar image.
+
+   **region of interest (ROI)**
+       Synonym for :term`area of interest (AOI)`. A particular spatial region to focus on.
 
    **regression**
        A computer vision task that involves predicting a real valued number based on an image.
