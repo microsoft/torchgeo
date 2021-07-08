@@ -86,5 +86,6 @@ autodoc_typehints = "description"
 # sphinx.ext.intersphinx
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
+    "shapely": ("https://shapely.readthedocs.io/en/stable", None),
     "torch": ("https://pytorch.org/docs/stable", None),
 }
