@@ -20,6 +20,11 @@ CV4A Kenya Crop Type Competition
 
 .. autoclass:: CV4AKenyaCropType
 
+LandCover.ai (Land Cover from Aerial Imagery)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: LandCoverAI
+
 SEN12MS
 ^^^^^^^
 
@@ -41,11 +46,6 @@ Tropical Cyclone Wind Estimation Competition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: TropicalCycloneWindEstimation
-
-LandCover.ai (Land Cover from Aerial Imagery)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: LandCoverAI
 
 NWPU VHR-10
 ^^^^^^^^^^^

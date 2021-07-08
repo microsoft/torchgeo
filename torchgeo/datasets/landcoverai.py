@@ -8,11 +8,11 @@ from PIL import Image
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_and_extract_archive
 
-from .geo import VisionDataset
+from .geo import GeoDataset
 from .utils import working_dir
 
 
-class LandCoverAI(VisionDataset):
+class LandCoverAI(GeoDataset):
     r"""The `LandCover.ai <https://landcover.ai/>`_ (Land Cover from Aerial Imagery)
     dataset is a dataset for automatic mapping of buildings, woodlands, water and
     roads from aerial images.

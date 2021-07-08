@@ -8,9 +8,8 @@ import torch
 import torchvision.datasets.utils
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
-from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import LandCoverAI
+from torchgeo.datasets import LandCoverAI, ZipDataset
 from torchgeo.transforms import Identity
 
 
@@ -52,8 +51,8 @@ class TestLandCoverAI:
 
     def test_add(self, dataset: LandCoverAI) -> None:
         ds = dataset + dataset
-        assert isinstance(ds, ConcatDataset)
-        assert len(ds) == 4
+        assert isinstance(ds, ZipDataset)
+        assert len(ds) == 2
 
     def test_already_downloaded(self, dataset: LandCoverAI) -> None:
         LandCoverAI(root=dataset.root, download=True)
