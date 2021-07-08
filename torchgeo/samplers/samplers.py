@@ -2,9 +2,10 @@ import abc
 from datetime import datetime
 from typing import Any, Iterator, Tuple
 
-from shapely.geometry import box
+from shapely.geometry import Polygon
 from torch.utils.data import Sampler
 
+Polygon.__module__ = ""
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 Sampler.__module__ = "torch.utils.data"
@@ -37,7 +38,7 @@ class RandomGeoSampler(GeoSampler):
     the dataset and return as many random :term:`chips <chip>` as possible.
     """
 
-    def __init__(self, roi: box, start_time: datetime, end_time: datetime) -> None:
+    def __init__(self, roi: Polygon, start_time: datetime, end_time: datetime) -> None:
         pass
 
 
