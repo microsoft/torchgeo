@@ -11,23 +11,23 @@ color = true
 exclude = '''
 /(
     # Data
-    | data/
+    | data
 
     # Spack
-    | \.spack-env/
+    | \.spack-env
 
     # Python
-    | build/
-    | dist/
-    | \.cache/
-    | \.mypy_cache/
-    | \.pytest_cache/
-    |  __pycache__/
-    | .*\.egg-info/
+    | build
+    | dist
+    | \.cache
+    | \.mypy_cache
+    | \.pytest_cache
+    |  __pycache__
+    | .*\.egg-info
 
     # Git
-    | \.git/
-    | \.github/
+    | \.git
+    | \.github
 )/
 '''
 
