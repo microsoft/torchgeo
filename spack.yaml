@@ -17,7 +17,8 @@ spack:
   - py-rarfile
   - py-rasterio
   - "py-setuptools@42:"
+  - "py-shapely@1.2.9:"
   - py-sphinx
   - "py-torch@1.7:"
-  - py-torchvision
+  - "py-torchvision@:0.9,0.10.1:"
   concretization: together

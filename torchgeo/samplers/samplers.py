@@ -1,6 +1,8 @@
 import abc
+from datetime import datetime
 from typing import Any, Iterator, Tuple
 
+from shapely.geometry import box
 from torch.utils.data import Sampler
 
 # https://github.com/pytorch/pytorch/issues/60979
@@ -34,6 +36,9 @@ class RandomGeoSampler(GeoSampler):
     This is particularly useful during training when you want to maximize the size of
     the dataset and return as many random :term:`chips <chip>` as possible.
     """
+
+    def __init__(self, roi: box, start_time: datetime, end_time: datetime) -> None:
+        pass
 
 
 class GridGeoSampler(GeoSampler):

@@ -8,8 +8,9 @@ dependencies:
   - pip
   - python
   - pytorch::pytorch>=1.7
-  - pytorch::torchvision<0.10
+  - pytorch::torchvision!=0.10.0
   - setuptools>=42
+  - shapely>=1.2.9
   - sphinx
   - rasterio
   - pip:
