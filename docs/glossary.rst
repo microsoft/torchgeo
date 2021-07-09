@@ -48,8 +48,14 @@ A collection of common terms used in :mod:`torchgeo` that may be unfamiliar to e
    **spatial reference system (SRS)**
        Synonym for :term:`coordinate reference system (CRS)`. A system that defines how to locate geographic entities on a :term:`projected <projection>` surface.
 
+   **stitching**
+       Combining a collection of :term:`patches <patch>` into a single image. This is the reverse operation of :term:`tiling`.
+
    **swath**
        A set of :term:`tiles <tile>` along a satellite trajectory.
 
    **tile**
        A single image file taken by a remote sensor like a satellite.
+
+   **tiling**
+       Splitting a :term:`tile` into :term:`patches <patch>`. This is the reverse operation of :term:`stitching`.
