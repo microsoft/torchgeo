@@ -4,9 +4,11 @@ from datetime import datetime
 from typing import Any, Callable, Dict, Optional
 
 import rasterio
+import torch
 from torchvision.datasets.utils import check_integrity, download_and_extract_archive
 
 from .geo import GeoDataset
+from .utils import BoundingBox
 
 
 class CDL(GeoDataset):

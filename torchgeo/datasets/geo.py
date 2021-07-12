@@ -1,8 +1,6 @@
 import abc
 from typing import Any, Dict, Iterable
 
-import rasterio
-import torch
 from rtree.index import Index, Property
 from torch.utils.data import Dataset
 
