@@ -6,8 +6,9 @@ import pytest
 import torch
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import SEN12MS, ZipDataset
+from torchgeo.datasets import SEN12MS
 from torchgeo.transforms import Identity
 
 
@@ -50,8 +51,8 @@ class TestSEN12MS:
 
     def test_add(self, dataset: SEN12MS) -> None:
         ds = dataset + dataset
-        assert isinstance(ds, ZipDataset)
-        assert len(ds) == 8
+        assert isinstance(ds, ConcatDataset)
+        assert len(ds) == 16
 
     def test_out_of_bounds(self, dataset: SEN12MS) -> None:
         with pytest.raises(IndexError):

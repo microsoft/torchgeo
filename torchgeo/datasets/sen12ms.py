@@ -7,10 +7,10 @@ import torch
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity
 
-from .geo import GeoDataset
+from .geo import VisionDataset
 
 
-class SEN12MS(GeoDataset):
+class SEN12MS(VisionDataset):
     """The `SEN12MS <https://doi.org/10.14459/2019mp1474000>`_ dataset contains
     180,662 patch triplets of corresponding Sentinel-1 dual-pol SAR data,
     Sentinel-2 multi-spectral images, and MODIS-derived land cover maps.
