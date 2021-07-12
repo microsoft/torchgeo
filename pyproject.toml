@@ -34,6 +34,7 @@ exclude = '''
 [tool.isort]
 profile = "black"
 known_first_party = ["docs", "tests", "torchgeo"]
+extend_skip = [".spack-env/"]
 skip_gitignore = true
 color_output = true
 

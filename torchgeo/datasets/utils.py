@@ -1,6 +1,17 @@
 import contextlib
 import os
-from typing import Iterator
+from typing import Iterator, NamedTuple, Union
+
+
+class BoundingBox(NamedTuple):
+    """Named tuple for indexing spatiotemporal data."""
+
+    minx: Union[int, float]
+    maxx: Union[int, float]
+    miny: Union[int, float]
+    maxy: Union[int, float]
+    mint: Union[int, float]
+    maxt: Union[int, float]
 
 
 @contextlib.contextmanager
