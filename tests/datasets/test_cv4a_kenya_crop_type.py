@@ -7,8 +7,9 @@ from typing import Generator
 import pytest
 import torch
 from pytest import MonkeyPatch
+from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import CV4AKenyaCropType, ZipDataset
+from torchgeo.datasets import CV4AKenyaCropType
 from torchgeo.transforms import Identity
 
 
@@ -75,8 +76,8 @@ class TestCV4AKenyaCropType:
 
     def test_add(self, dataset: CV4AKenyaCropType) -> None:
         ds = dataset + dataset
-        assert isinstance(ds, ZipDataset)
-        assert len(ds) == 345
+        assert isinstance(ds, ConcatDataset)
+        assert len(ds) == 690
 
     def test_get_splits(self, dataset: CV4AKenyaCropType) -> None:
         train_field_ids, test_field_ids = dataset.get_splits()

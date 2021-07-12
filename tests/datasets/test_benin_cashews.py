@@ -7,8 +7,9 @@ from typing import Generator
 import pytest
 import torch
 from pytest import MonkeyPatch
+from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import BeninSmallHolderCashews, ZipDataset
+from torchgeo.datasets import BeninSmallHolderCashews
 from torchgeo.transforms import Identity
 
 
@@ -70,8 +71,8 @@ class TestBeninSmallHolderCashews:
 
     def test_add(self, dataset: BeninSmallHolderCashews) -> None:
         ds = dataset + dataset
-        assert isinstance(ds, ZipDataset)
-        assert len(ds) == 72
+        assert isinstance(ds, ConcatDataset)
+        assert len(ds) == 144
 
     def test_already_downloaded(self, dataset: BeninSmallHolderCashews) -> None:
         BeninSmallHolderCashews(root=dataset.root, download=True, api_key="")
