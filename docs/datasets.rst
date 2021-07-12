@@ -15,6 +15,16 @@ Cropland Data Layer (CDL)
 
 .. autoclass:: CDL
 
+Landsat
+^^^^^^^
+
+.. autoclass:: Landsat
+.. autoclass:: Landsat8_9
+.. autoclass:: Landsat7
+.. autoclass:: Landsat4_5TM
+.. autoclass:: Landsat4_5MSS
+.. autoclass:: Landsat1_3
+
 Sentinel
 ^^^^^^^^
 
