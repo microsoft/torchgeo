@@ -81,3 +81,23 @@ class Sentinel2(Sentinel):
                 minx, miny, maxx, maxy = f.bounds
                 coords = (minx, maxx, miny, maxy, timestamp, timestamp)
                 self.index.insert(0, coords, filename)
+
+    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+        """Retrieve image and metadata indexed by query.
+
+        Parameters:
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+
+        Returns:
+            sample of data/labels and metadata at that index
+        """
+        bounds = rasterio.coords.BoundingBox(
+            query.minx, query.miny, query.maxx, query.maxy
+        )
+        hits = self.index.intersection(query, objects=True)
+        datasets = [hit.obj for hit in hits]
+        dest, out_transform = rasterio.merge.merge(datasets, bounds)
+        return {
+            "image": torch.tensor(dest),  # type: ignore[attr-defined]
+            "transform": out_transform,
+        }
