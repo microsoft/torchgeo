@@ -13,8 +13,8 @@ from .utils import BoundingBox
 Dataset.__module__ = "torch.utils.data"
 
 
-class GeoDataset(Dataset[Dict[str, Any]]):
-    """Base class for datasets containing geospatial information.
+class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
+    """Abstract base class for datasets containing geospatial information.
 
     Geospatial information includes things like:
 
@@ -35,6 +35,7 @@ class GeoDataset(Dataset[Dict[str, Any]]):
     #: order for the sampler to index it properly.
     index = Index(properties=Property(dimension=3, interleaved=False))
 
+    @abc.abstractmethod
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
 
@@ -44,16 +45,6 @@ class GeoDataset(Dataset[Dict[str, Any]]):
         Returns:
             sample of data/labels and metadata at that index
         """
-        bounds = rasterio.coords.BoundingBox(
-            query.minx, query.miny, query.maxx, query.maxy
-        )
-        hits = self.index.intersection(query, objects=True)
-        datasets = [hit.obj for hit in hits]
-        dest, out_transform = rasterio.merge.merge(datasets, bounds)
-        return {
-            "image": torch.tensor(dest),  # type: ignore[attr-defined]
-            "transform": out_transform,
-        }
 
     def __add__(self, other: "GeoDataset") -> "ZipDataset":  # type: ignore[override]
         """Merge two GeoDatasets.
