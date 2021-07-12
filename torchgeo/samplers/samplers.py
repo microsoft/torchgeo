@@ -1,11 +1,11 @@
 import abc
-from datetime import datetime
+import random
 from typing import Any, Iterator, Tuple
 
-from shapely.geometry import Polygon
 from torch.utils.data import Sampler
 
-Polygon.__module__ = ""
+from torchgeo.datasets import BoundingBox
+
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 Sampler.__module__ = "torch.utils.data"
@@ -21,12 +21,11 @@ class GeoSampler(Sampler[Tuple[Any, ...]], abc.ABC):
     """
 
     @abc.abstractmethod
-    def __iter__(self) -> Iterator[Tuple[Any, ...]]:
+    def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
 
         Returns:
-            tuple of latitude, longitude, height, width, projection, coordinate system,
-            and time
+            (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
 
 
@@ -37,8 +36,33 @@ class RandomGeoSampler(GeoSampler):
     the dataset and return as many random :term:`chips <chip>` as possible.
     """
 
-    def __init__(self, roi: Polygon, start_time: datetime, end_time: datetime) -> None:
-        pass
+    def __init__(self, roi: BoundingBox, size: int) -> None:
+        """Initialize a new RandomGeoSampler.
+
+        Parameters:
+            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+            size: dimensions of each :term:`patch` to return
+        """
+        self.roi = roi
+        self.size = size
+
+    def __iter__(self) -> Iterator[BoundingBox]:
+        """Return the index of a dataset.
+
+        Returns:
+            (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
+        """
+        minx = random.randint(self.roi.minx, self.roi.maxx - self.size)
+        maxx = minx + self.size
+
+        miny = random.randint(self.roi.miny, self.roi.maxy - self.size)
+        maxy = miny + self.size
+
+        # TODO: figure out how to handle time
+        mint = self.roi.mint
+        maxt = self.roi.maxt
+
+        return minx, maxx, miny, maxy, mint, maxt
 
 
 class GridGeoSampler(GeoSampler):

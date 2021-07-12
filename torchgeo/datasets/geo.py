@@ -66,6 +66,16 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     type: GeoDataset"""
 
 
+@property
+def bounds(self) -> BoundingBox:
+    """Bounds of the index.
+
+    Returns:
+        (minx, maxx, miny, maxy, mint, maxt) of the dataset
+    """
+    return self.index.bounds
+
+
 class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):
     """Abstract base class for datasets lacking geospatial information.
 
@@ -144,3 +154,20 @@ class ZipDataset(GeoDataset):
         return f"""\
 {self.__class__.__name__} Dataset
     type: ZipDataset"""
+
+    @property
+    def bounds(self) -> BoundingBox:
+        """Bounds of the index.
+
+        Returns:
+            (minx, maxx, miny, maxy, mint, maxt) of the dataset
+        """
+        # We want to compute the intersection of all dataset bounds, not the union
+        minx = max([ds.index.bounds[0] for ds in self.datasets])
+        maxx = min([ds.index.bounds[1] for ds in self.datasets])
+        miny = max([ds.index.bounds[2] for ds in self.datasets])
+        maxy = min([ds.index.bounds[3] for ds in self.datasets])
+        mint = max([ds.index.bounds[4] for ds in self.datasets])
+        maxt = min([ds.index.bounds[5] for ds in self.datasets])
+
+        return BoundingBox(minx, maxx, miny, maxy, mint, maxt)
