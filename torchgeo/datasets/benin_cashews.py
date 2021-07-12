@@ -12,11 +12,11 @@ from PIL import Image
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, extract_archive
 
-from .geo import GeoDataset
+from .geo import VisionDataset
 
 
 # TODO: read geospatial information from stac.json files
-class BeninSmallHolderCashews(GeoDataset):
+class BeninSmallHolderCashews(VisionDataset):
     r"""Smallholder Cashew Plantations in Benin dataset.
 
     This dataset contains labels for cashew plantations in a 120 km\ :sup:`2`\  area
