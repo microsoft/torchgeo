@@ -4,6 +4,11 @@
 .spack-env/
 spack.lock
 
+# Azure ML
+.ipynb_aml_checkpoints/
+.amlignore
+*.amltmp
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
