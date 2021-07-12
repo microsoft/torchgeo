@@ -3,15 +3,12 @@ from typing import Any, Dict
 import pytest
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import GeoDataset, VisionDataset, ZipDataset
+from torchgeo.datasets import BoundingBox, GeoDataset, VisionDataset, ZipDataset
 
 
 class CustomGeoDataset(GeoDataset):
-    def __getitem__(self, index: int) -> Dict[str, Any]:
-        return {"index": index}
-
-    def __len__(self) -> int:
-        return 2
+    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+        return {"index": query}
 
 
 class CustomVisionDataset(VisionDataset):
@@ -28,17 +25,14 @@ class TestGeoDataset:
         return CustomGeoDataset()
 
     def test_getitem(self, dataset: GeoDataset) -> None:
-        assert dataset[0] == {"index": 0}
-
-    def test_len(self, dataset: GeoDataset) -> None:
-        assert len(dataset) == 2
+        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        assert dataset[query] == {"index": query}
 
     def test_add_two(self) -> None:
         ds1 = CustomGeoDataset()
         ds2 = CustomGeoDataset()
         dataset = ds1 + ds2
         assert isinstance(dataset, ZipDataset)
-        assert len(dataset) == 2
 
     def test_add_three(self) -> None:
         ds1 = CustomGeoDataset()
@@ -46,7 +40,6 @@ class TestGeoDataset:
         ds3 = CustomGeoDataset()
         dataset = ds1 + ds2 + ds3
         assert isinstance(dataset, ZipDataset)
-        assert len(dataset) == 2
 
     def test_add_four(self) -> None:
         ds1 = CustomGeoDataset()
@@ -55,15 +48,9 @@ class TestGeoDataset:
         ds4 = CustomGeoDataset()
         dataset = (ds1 + ds2) + (ds3 + ds4)
         assert isinstance(dataset, ZipDataset)
-        assert len(dataset) == 2
 
     def test_str(self, dataset: GeoDataset) -> None:
         assert "type: GeoDataset" in str(dataset)
-        assert "size: 2" in str(dataset)
-
-    def test_abstract(self) -> None:
-        with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            GeoDataset()  # type: ignore[abstract]
 
     def test_add_vision(self, dataset: GeoDataset) -> None:
         ds2 = CustomVisionDataset()
@@ -125,14 +112,11 @@ class TestZipDataset:
         return ZipDataset([ds1, ds2])
 
     def test_getitem(self, dataset: ZipDataset) -> None:
-        assert dataset[0] == {"index": 0}
-
-    def test_len(self, dataset: ZipDataset) -> None:
-        assert len(dataset) == 2
+        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        assert dataset[query] == {"index": query}
 
     def test_str(self, dataset: ZipDataset) -> None:
         assert "type: ZipDataset" in str(dataset)
-        assert "size: 2" in str(dataset)
 
     def test_invalid_dataset(self) -> None:
         ds1 = CustomVisionDataset()

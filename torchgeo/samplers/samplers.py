@@ -12,13 +12,12 @@ Sampler.__module__ = "torch.utils.data"
 
 
 class GeoSampler(Sampler[Tuple[Any, ...]], abc.ABC):
-    """Abstract base class for sampling from :class:`GeoDataset
-    <torchgeo.datasets.GeoDataset>`.
+    """Abstract base class for sampling from :class:`~torchgeo.datasets.GeoDataset`.
 
-    Unlike PyTorch's :class:`Sampler <torch.utils.data.Sampler>`, :class:`GeoSampler`
-    returns enough geospatial information to uniquely index any :class:`GeoDataset
-    <torchgeo.datasets.GeoDataset>`. This includes things like latitude, longitude,
-    height, width, projection, coordinate system, and time.
+    Unlike PyTorch's :class:`~torch.utils.data.Sampler`, :class:`GeoSampler`
+    returns enough geospatial information to uniquely index any
+    :class:`~torchgeo.datasets.GeoDataset`. This includes things like latitude,
+    longitude, height, width, projection, coordinate system, and time.
     """
 
     @abc.abstractmethod
