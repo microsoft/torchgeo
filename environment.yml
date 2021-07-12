@@ -25,3 +25,4 @@ dependencies:
     - pytorch-sphinx-theme
     - radiant-mlhub>=0.2.1
     - rarfile
+    - rtree>=0.5.0
