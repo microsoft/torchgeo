@@ -77,11 +77,11 @@ class CDL(GeoDataset):
         fileglob = os.path.join(root, self.base_folder, "**_30m_cdls.img")
         for filename in glob.iglob(fileglob):
             year = int(os.path.basename(filename).split("_")[0])
-            time = datetime(year, 1, 1)
-            timestamp = time.timestamp()
+            mint = datetime(year, 1, 1, 0, 0, 0).timestamp()
+            maxt = datetime(year, 12, 31, 23, 59, 59).timestamp()
             with rasterio.open(filename) as f:
                 minx, miny, maxx, maxy = f.bounds
-                coords = (minx, maxx, miny, maxy, timestamp, timestamp)
+                coords = (minx, maxx, miny, maxy, mint, maxt)
                 self.index.insert(0, coords, filename)
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
