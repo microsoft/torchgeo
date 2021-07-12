@@ -13,6 +13,7 @@ pytorch-sphinx-theme
 radiant-mlhub>=0.2.1
 rarfile
 rasterio
+rtree>=0.5.0
 setuptools>=42
 shapely>=1.2.9
 sphinx
