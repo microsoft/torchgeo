@@ -10,10 +10,28 @@ Geospatial Datasets
 
 :class:`GeoDataset` is designed for datasets that contain geospatial information, like latitude, longitude, coordinate system, and projection. Datasets containing this kind of information can be combined using :class:`ZipDataset`.
 
+Sentinel
+^^^^^^^^
+
+.. autoclass:: Sentinel
+.. autoclass:: Sentinel2
+
+Non-geospatial Datasets
+-----------------------
+
+:class:`VisionDataset` is designed for datasets that lack geospatial information. These datasets can still be combined using :class:`ConcatDataset <torch.utils.data.ConcatDataset>`.
+
 Smallholder Cashew Plantations in Benin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: BeninSmallHolderCashews
+
+Cars Overhead With Context (COWC)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: COWC
+.. autoclass:: COWCCounting
+.. autoclass:: COWCDetection
 
 CV4A Kenya Crop Type Competition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -29,18 +47,6 @@ SEN12MS
 ^^^^^^^
 
 .. autoclass:: SEN12MS
-
-Non-geospatial Datasets
------------------------
-
-:class:`VisionDataset` is designed for datasets that lack geospatial information. These datasets can still be combined using :class:`ConcatDataset <torch.utils.data.ConcatDataset>`.
-
-Cars Overhead With Context (COWC)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: COWC
-.. autoclass:: COWCCounting
-.. autoclass:: COWCDetection
 
 Tropical Cyclone Wind Estimation Competition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -71,3 +77,8 @@ ZipDataset
 ^^^^^^^^^^
 
 .. autoclass:: ZipDataset
+
+Utilities
+---------
+
+.. autoclass:: BoundingBox
