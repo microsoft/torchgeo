@@ -1,25 +1,16 @@
 import abc
-from typing import Any, Dict, Iterable, NamedTuple, Union
+from typing import Any, Dict, Iterable
 
 import rasterio
 import torch
 from rtree.index import Index, Property
 from torch.utils.data import Dataset
 
+from .utils import BoundingBox
+
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 Dataset.__module__ = "torch.utils.data"
-
-
-class BoundingBox(NamedTuple):
-    """Named tuple for indexing spatiotemporal data."""
-
-    minx: Union[int, float]
-    maxx: Union[int, float]
-    miny: Union[int, float]
-    maxy: Union[int, float]
-    mint: Union[int, float]
-    maxt: Union[int, float]
 
 
 class GeoDataset(Dataset[Dict[str, Any]]):
