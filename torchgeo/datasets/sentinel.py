@@ -5,8 +5,10 @@ from datetime import datetime
 from typing import Any, Callable, Dict, Optional, Sequence
 
 import rasterio
+import torch
 
 from .geo import GeoDataset
+from .utils import BoundingBox
 
 
 class Sentinel(GeoDataset, abc.ABC):

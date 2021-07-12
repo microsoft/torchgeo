@@ -52,6 +52,10 @@ class TestGeoDataset:
     def test_str(self, dataset: GeoDataset) -> None:
         assert "type: GeoDataset" in str(dataset)
 
+    def test_abstract(self) -> None:
+        with pytest.raises(TypeError, match="Can't instantiate abstract class"):
+            GeoDataset()  # type: ignore[abstract]
+
     def test_add_vision(self, dataset: GeoDataset) -> None:
         ds2 = CustomVisionDataset()
         with pytest.raises(
