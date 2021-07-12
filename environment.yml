@@ -14,6 +14,7 @@ dependencies:
   - sphinx
   - rasterio
   - pip:
+    - affine
     - black[colorama]>=21
     - flake8
     - isort[colors]>=4.3.5

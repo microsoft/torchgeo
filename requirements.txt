@@ -1,3 +1,4 @@
+affine
 black[colorama]>=21
 flake8
 h5py
