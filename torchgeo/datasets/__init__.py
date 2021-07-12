@@ -1,4 +1,5 @@
 from .benin_cashews import BeninSmallHolderCashews
+from .cdl import CDL
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCycloneWindEstimation
@@ -13,6 +14,7 @@ from .utils import BoundingBox
 __all__ = (
     "BeninSmallHolderCashews",
     "BoundingBox",
+    "CDL",
     "COWC",
     "COWCCounting",
     "COWCDetection",
