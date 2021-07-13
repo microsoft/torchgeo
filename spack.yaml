@@ -16,7 +16,7 @@ spack:
   - py-pytorch-sphinx-theme
   - "py-radiant-mlhub@0.2.1:"
   - py-rarfile
-  - py-rasterio
+  - "py-rasterio@0.3:"
   - "py-rtree@0.5.0:"
   - "py-setuptools@42:"
   - "py-shapely@1.2.9:"

@@ -12,7 +12,7 @@ dependencies:
   - setuptools>=42
   - shapely>=1.2.9
   - sphinx
-  - rasterio
+  - rasterio>=0.3
   - pip:
     - affine
     - black[colorama]>=21
