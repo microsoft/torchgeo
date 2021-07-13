@@ -2,6 +2,7 @@ import abc
 from typing import Any, Dict, Iterable
 
 from torch.utils.data import Dataset
+from rtree.index import Index
 
 from .utils import BoundingBox
 
@@ -60,6 +61,13 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 {self.__class__.__name__} Dataset
     type: GeoDataset
     bbox: {self.bounds}"""
+
+    @property
+    @abc.abstractmethod
+    def index(self) -> Index:
+        """R-tree to index geospatial data. Subclasses must insert data into this index
+        in order for the sampler to index it properly.
+        """
 
     @property
     def bounds(self) -> BoundingBox:
