@@ -4,9 +4,10 @@ import os
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional, Sequence
 
+import numpy as np
 import rasterio
 import torch
-from rasterio.merge import merge
+from rasterio.windows import Window
 
 from .geo import GeoDataset
 from .utils import BoundingBox
@@ -94,13 +95,14 @@ class Sentinel2(Sentinel):
         Returns:
             sample of data/labels and metadata at that index
         """
-        bounds = rasterio.coords.BoundingBox(
-            query.minx, query.miny, query.maxx, query.maxy
+        window = Window(
+            query.minx, query.miny, query.maxx - query.minx, query.maxy - query.miny
         )
         hits = self.index.intersection(query, objects=True)
-        datasets = [hit.object for hit in hits]
-        dest, out_transform = merge(datasets, bounds)
+        filename = next(hits).object  # TODO: this assumes there is only a single hit
+        with rasterio.open(filename) as f:
+            image = f.read(1, window=window)
+        image = image.astype(np.int32)
         return {
-            "image": torch.tensor(dest),  # type: ignore[attr-defined]
-            "transform": out_transform,
+            "image": torch.tensor(image),  # type: ignore[attr-defined]
         }
