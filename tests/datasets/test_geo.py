@@ -55,6 +55,7 @@ class TestGeoDataset:
 
     def test_str(self, dataset: GeoDataset) -> None:
         assert "type: GeoDataset" in str(dataset)
+        assert "bbox: BoundingBox" in str(dataset)
 
     def test_abstract(self) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
@@ -125,6 +126,7 @@ class TestZipDataset:
 
     def test_str(self, dataset: ZipDataset) -> None:
         assert "type: ZipDataset" in str(dataset)
+        assert "bbox: BoundingBox" in str(dataset)
 
     def test_invalid_dataset(self) -> None:
         ds1 = CustomVisionDataset()
