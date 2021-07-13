@@ -65,7 +65,6 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 {self.__class__.__name__} Dataset
     type: GeoDataset"""
 
-
     @property
     def bounds(self) -> BoundingBox:
         """Bounds of the index.

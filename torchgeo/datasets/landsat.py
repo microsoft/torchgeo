@@ -4,8 +4,10 @@ import os
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional, Sequence
 
+import numpy as np
 import rasterio
 import torch
+from rasterio.merge import merge
 
 from .geo import GeoDataset
 from .utils import BoundingBox
@@ -76,8 +78,9 @@ class Landsat(GeoDataset, abc.ABC):
             query.minx, query.miny, query.maxx, query.maxy
         )
         hits = self.index.intersection(query, objects=True)
-        datasets = [hit.obj for hit in hits]
-        dest, out_transform = rasterio.merge.merge(datasets, bounds)
+        datasets = [hit.object for hit in hits]
+        dest, out_transform = merge(datasets, bounds)
+        dest = dest.astype(np.int32)
         return {
             "image": torch.tensor(dest),  # type: ignore[attr-defined]
             "transform": out_transform,

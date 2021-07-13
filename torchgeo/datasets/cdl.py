@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, Optional
 
 import rasterio
 import torch
+from rasterio.merge import merge
 from torchvision.datasets.utils import check_integrity, download_and_extract_archive
 
 from .geo import GeoDataset
@@ -97,8 +98,8 @@ class CDL(GeoDataset):
             query.minx, query.miny, query.maxx, query.maxy
         )
         hits = self.index.intersection(query, objects=True)
-        datasets = [hit.obj for hit in hits]
-        dest, out_transform = rasterio.merge.merge(datasets, bounds)
+        datasets = [hit.object for hit in hits]
+        dest, out_transform = merge(datasets, bounds)
         return {
             "masks": torch.tensor(dest),  # type: ignore[attr-defined]
             "transform": out_transform,
