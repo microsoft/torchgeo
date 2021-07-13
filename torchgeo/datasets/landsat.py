@@ -8,6 +8,7 @@ import numpy as np
 import rasterio
 import torch
 from rasterio.windows import Window
+from rtree.index import Index, Property
 
 from .geo import GeoDataset
 from .utils import BoundingBox
@@ -54,6 +55,8 @@ class Landsat(GeoDataset, abc.ABC):
         self.bands = bands if bands else self.band_names
         self.transforms = transforms
 
+        # Create an R-tree to index the dataset
+        self.index = Index(properties=Property(dimension=3, interleaved=False))
         fileglob = os.path.join(root, self.base_folder, f"**_{self.bands[0]}.TIF")
         for filename in glob.iglob(fileglob):
             # https://www.usgs.gov/faqs/what-naming-convention-landsat-collections-level-1-scenes
