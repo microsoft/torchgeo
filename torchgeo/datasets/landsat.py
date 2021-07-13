@@ -90,7 +90,7 @@ class Landsat(GeoDataset, abc.ABC):
         }
 
 
-class Landsat8_9(Landsat):
+class Landsat8(Landsat):
     """Landsat 8-9 Operational Land Imager (OLI) and Thermal Infrared Sensor (TIRS)."""
 
     base_folder = "landsat_8_9"
@@ -109,6 +109,9 @@ class Landsat8_9(Landsat):
     ]
 
 
+Landsat9 = Landsat8
+
+
 class Landsat7(Landsat):
     """Landsat 7 Enhanced Thematic Mapper Plus (ETM+)."""
 
@@ -125,7 +128,7 @@ class Landsat7(Landsat):
     ]
 
 
-class Landsat4_5TM(Landsat):
+class Landsat4TM(Landsat):
     """Landsat 4-5 Thematic Mapper (TM)."""
 
     base_folder = "landsat_4_5_tm"
@@ -140,7 +143,10 @@ class Landsat4_5TM(Landsat):
     ]
 
 
-class Landsat4_5MSS(Landsat):
+Landsat5TM = Landsat4TM
+
+
+class Landsat4MSS(Landsat):
     """Landsat 4-5 Multispectral Scanner (MSS)."""
 
     base_folder = "landsat_4_5_mss"
@@ -152,7 +158,10 @@ class Landsat4_5MSS(Landsat):
     ]
 
 
-class Landsat1_3(Landsat):
+Landsat5MSS = Landsat4MSS
+
+
+class Landsat1(Landsat):
     """Landsat 1-3 Multispectral Scanner (MSS)."""
 
     base_folder = "landsat_1_3"
@@ -162,3 +171,7 @@ class Landsat1_3(Landsat):
         "B6",
         "B7",
     ]
+
+
+Landsat2 = Landsat1
+Landsat3 = Landsat1

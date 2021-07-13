@@ -19,11 +19,16 @@ Landsat
 ^^^^^^^
 
 .. autoclass:: Landsat
-.. autoclass:: Landsat8_9
+.. autoclass:: Landsat9
+.. autoclass:: Landsat8
 .. autoclass:: Landsat7
-.. autoclass:: Landsat4_5TM
-.. autoclass:: Landsat4_5MSS
-.. autoclass:: Landsat1_3
+.. autoclass:: Landsat5TM
+.. autoclass:: Landsat5MSS
+.. autoclass:: Landsat4TM
+.. autoclass:: Landsat4MSS
+.. autoclass:: Landsat3
+.. autoclass:: Landsat2
+.. autoclass:: Landsat1
 
 Sentinel
 ^^^^^^^^
