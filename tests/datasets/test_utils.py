@@ -1,19 +1,30 @@
 from pathlib import Path
 
+import pytest
 import torch
 
 from torchgeo.datasets import BoundingBox, collate_dict
 from torchgeo.datasets.utils import working_dir
 
 
-def test_bounding_box() -> None:
-    bbox = BoundingBox(0, 1, 2, 3, 4, 5)
-    assert bbox.minx == 0
-    assert bbox.maxx == 1
-    assert bbox.miny == 2
-    assert bbox.maxy == 3
-    assert bbox.mint == 4
-    assert bbox.maxt == 5
+class TestBoundingBox:
+    def test_bounding_box(self) -> None:
+        bbox = BoundingBox(0, 1, 2, 3, 4, 5)
+        assert bbox.minx == 0
+        assert bbox.maxx == 1
+        assert bbox.miny == 2
+        assert bbox.maxy == 3
+        assert bbox.mint == 4
+        assert bbox.maxt == 5
+
+    @pytest.mark.xfail(reason="not yet implemented")
+    def test_invalid_box(self) -> None:
+        with pytest.raises(ValueError):
+            BoundingBox(1, 0, 2, 3, 4, 5)
+        with pytest.raises(ValueError):
+            BoundingBox(0, 1, 3, 2, 4, 5)
+        with pytest.raises(ValueError):
+            BoundingBox(0, 1, 2, 3, 5, 4)
 
 
 def test_collate_dict() -> None:
