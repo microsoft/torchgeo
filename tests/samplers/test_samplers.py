@@ -3,7 +3,7 @@ from typing import Iterator
 import pytest
 
 from torchgeo.datasets import BoundingBox
-from torchgeo.samplers import GeoSampler, GridGeoSampler, RandomGeoSampler
+from torchgeo.samplers import GeoSampler, RandomGeoSampler
 
 
 class CustomGeoSampler(GeoSampler):
@@ -36,11 +36,11 @@ class TestGeoSampler:
 
 class TestRandomGeoSampler:
     @pytest.fixture(scope="function")
-    def sampler(self) -> GeoSampler:
+    def sampler(self) -> RandomGeoSampler:
         roi = BoundingBox(0, 10, 20, 30, 40, 50)
         return RandomGeoSampler(roi, size=5, length=10)
 
-    def test_iter(self, sampler: GeoSampler) -> None:
+    def test_iter(self, sampler: RandomGeoSampler) -> None:
         query = next(iter(sampler))
 
         assert sampler.roi.minx <= query.minx <= sampler.roi.maxx
@@ -54,5 +54,5 @@ class TestRandomGeoSampler:
         assert query.maxy - query.miny == sampler.size
         assert query.maxt - query.mint == sampler.roi.maxt - sampler.roi.mint
 
-    def test_len(self, sampler: GeoSampler) -> None:
+    def test_len(self, sampler: RandomGeoSampler) -> None:
         assert len(sampler) == sampler.length
