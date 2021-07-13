@@ -17,12 +17,13 @@ from .nwpu import VHR10
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel2
 from .so2sat import So2Sat
-from .utils import BoundingBox
+from .utils import BoundingBox, collate_dict
 
 __all__ = (
     "BeninSmallHolderCashews",
     "BoundingBox",
     "CDL",
+    "collate_dict",
     "COWC",
     "COWCCounting",
     "COWCDetection",
