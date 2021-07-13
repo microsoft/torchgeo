@@ -7,6 +7,7 @@ import numpy as np
 import rasterio
 import torch
 from rasterio.windows import Window
+from rtree.index import Index, Property
 from torchvision.datasets.utils import check_integrity, download_and_extract_archive
 
 from .geo import GeoDataset
@@ -76,6 +77,8 @@ class CDL(GeoDataset):
                 + "You can use download=True to download it"
             )
 
+        # Create an R-tree to index the dataset
+        self.index = Index(properties=Property(dimension=3, interleaved=False))
         fileglob = os.path.join(root, self.base_folder, "**_30m_cdls.img")
         for filename in glob.iglob(fileglob):
             year = int(os.path.basename(filename).split("_")[0])

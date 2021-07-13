@@ -1,7 +1,6 @@
 import abc
 from typing import Any, Dict, Iterable
 
-from rtree.index import Index, Property
 from torch.utils.data import Dataset
 
 from .utils import BoundingBox
@@ -28,10 +27,6 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     This isn't true for :class:`VisionDataset`, where the lack of geospatial information
     prohibits swapping image sources or target labels.
     """
-
-    #: R-tree to index geospatial data. Subclasses must insert data into this index in
-    #: order for the sampler to index it properly.
-    index = Index(properties=Property(dimension=3, interleaved=False))
 
     @abc.abstractmethod
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
@@ -63,7 +58,8 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         """
         return f"""\
 {self.__class__.__name__} Dataset
-    type: GeoDataset"""
+    type: GeoDataset
+    bbox: {self.bounds}"""
 
     @property
     def bounds(self) -> BoundingBox:
@@ -152,7 +148,8 @@ class ZipDataset(GeoDataset):
         """
         return f"""\
 {self.__class__.__name__} Dataset
-    type: ZipDataset"""
+    type: ZipDataset
+    bbox: {self.bounds}"""
 
     @property
     def bounds(self) -> BoundingBox:

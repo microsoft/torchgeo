@@ -8,6 +8,7 @@ import numpy as np
 import rasterio
 import torch
 from rasterio.windows import Window
+from rtree.index import Index, Property
 
 from .geo import GeoDataset
 from .utils import BoundingBox
@@ -74,6 +75,8 @@ class Sentinel2(Sentinel):
         self.bands = bands
         self.transforms = transforms
 
+        # Create an R-tree to index the dataset
+        self.index = Index(properties=Property(dimension=3, interleaved=False))
         fileglob = os.path.join(root, self.base_folder, f"**_{bands[0]}_*.tif")
         for filename in glob.iglob(fileglob):
             # https://sentinel.esa.int/web/sentinel/user-guides/sentinel-2-msi/naming-convention
