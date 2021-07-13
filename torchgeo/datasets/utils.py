@@ -9,6 +9,11 @@ from torch import Tensor
 class BoundingBox(NamedTuple):
     """Named tuple for indexing spatiotemporal data."""
 
+    # TODO: is there a way we can ensure that the bounding box is valid?
+    #     i.e. maxx > minx, maxy > miny, maxt > mint
+    # NamedTuple doesn't seem to allow getters/setters to validate input.
+    # dataclasses may help, could we just subclass a normal tuple?
+
     minx: Union[int, float]
     maxx: Union[int, float]
     miny: Union[int, float]
