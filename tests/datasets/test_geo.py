@@ -1,12 +1,16 @@
 from typing import Any, Dict
 
 import pytest
+from rtree.index import Index, Property
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import BoundingBox, GeoDataset, VisionDataset, ZipDataset
 
 
 class CustomGeoDataset(GeoDataset):
+    def __init__(self) -> None:
+        self.index = Index(properties=Property(dimension=3, interleaved=False))
+
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         return {"index": query}
 
