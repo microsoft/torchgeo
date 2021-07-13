@@ -66,14 +66,14 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     type: GeoDataset"""
 
 
-@property
-def bounds(self) -> BoundingBox:
-    """Bounds of the index.
+    @property
+    def bounds(self) -> BoundingBox:
+        """Bounds of the index.
 
-    Returns:
-        (minx, maxx, miny, maxy, mint, maxt) of the dataset
-    """
-    return self.index.bounds
+        Returns:
+            (minx, maxx, miny, maxy, mint, maxt) of the dataset
+        """
+        return BoundingBox(*self.index.bounds)
 
 
 class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):

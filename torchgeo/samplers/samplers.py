@@ -28,6 +28,14 @@ class GeoSampler(Sampler[Tuple[Any, ...]], abc.ABC):
             (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
 
+    @abc.abstractmethod
+    def __len__(self) -> int:
+        """Return the number of samples in a single epoch.
+
+        Returns:
+            length of the epoch
+        """
+
 
 class RandomGeoSampler(GeoSampler):
     """Samples elements from a region of interest randomly.
@@ -36,15 +44,17 @@ class RandomGeoSampler(GeoSampler):
     the dataset and return as many random :term:`chips <chip>` as possible.
     """
 
-    def __init__(self, roi: BoundingBox, size: int) -> None:
+    def __init__(self, roi: BoundingBox, size: int, length: int) -> None:
         """Initialize a new RandomGeoSampler.
 
         Parameters:
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
             size: dimensions of each :term:`patch` to return
+            length: number of random samples to draw per epoch
         """
         self.roi = roi
         self.size = size
+        self.length = length
 
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
@@ -52,17 +62,26 @@ class RandomGeoSampler(GeoSampler):
         Returns:
             (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
-        minx = random.randint(self.roi.minx, self.roi.maxx - self.size)
-        maxx = minx + self.size
+        for _ in range(len(self)):
+            minx = random.randint(int(self.roi.minx), int(self.roi.maxx) - self.size)
+            maxx = minx + self.size
 
-        miny = random.randint(self.roi.miny, self.roi.maxy - self.size)
-        maxy = miny + self.size
+            miny = random.randint(int(self.roi.miny), int(self.roi.maxy) - self.size)
+            maxy = miny + self.size
 
-        # TODO: figure out how to handle time
-        mint = self.roi.mint
-        maxt = self.roi.maxt
+            # TODO: figure out how to handle time
+            mint = self.roi.mint
+            maxt = self.roi.maxt
 
-        return minx, maxx, miny, maxy, mint, maxt
+            yield BoundingBox(minx, maxx, miny, maxy, mint, maxt)
+
+    def __len__(self) -> int:
+        """Return the number of samples in a single epoch.
+
+        Returns:
+            length of the epoch
+        """
+        return self.length
 
 
 class GridGeoSampler(GeoSampler):
