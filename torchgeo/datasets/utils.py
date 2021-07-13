@@ -1,6 +1,9 @@
 import contextlib
 import os
-from typing import Iterator, NamedTuple, Union
+from typing import Dict, Iterator, List, NamedTuple, Union
+
+import torch
+from torch import Tensor
 
 
 class BoundingBox(NamedTuple):
@@ -32,3 +35,18 @@ def working_dir(dirname: str, create: bool = False) -> Iterator[None]:
         yield
     finally:
         os.chdir(cwd)
+
+
+def collate_dict(samples: List[Dict[str, Tensor]]) -> Dict[str, Tensor]:
+    """Merge a list of samples for form a mini-batch of Tensors.
+
+    Parameters:
+        samples: list of samples
+
+    Returns:
+        a single sample
+    """
+    collated = {}
+    for key in samples[0]:
+        collated[key] = torch.stack([sample[key] for sample in samples])
+    return collated
