@@ -8,8 +8,9 @@ from torchgeo.datasets import BoundingBox, GeoDataset, VisionDataset, ZipDataset
 
 
 class CustomGeoDataset(GeoDataset):
-    def __init__(self) -> None:
+    def __init__(self, bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5)) -> None:
         self.index = Index(properties=Property(dimension=3, interleaved=False))
+        self.index.insert(0, bounds)
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         return {"index": query}
@@ -63,9 +64,7 @@ class TestGeoDataset:
 
     def test_add_vision(self, dataset: GeoDataset) -> None:
         ds2 = CustomVisionDataset()
-        with pytest.raises(
-            AssertionError, match="ZipDataset only supports GeoDatasets"
-        ):
+        with pytest.raises(ValueError, match="ZipDataset only supports GeoDatasets"):
             dataset + ds2  # type: ignore[operator]
 
 
@@ -121,7 +120,7 @@ class TestZipDataset:
         return ZipDataset([ds1, ds2])
 
     def test_getitem(self, dataset: ZipDataset) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        query = BoundingBox(0, 1, 2, 3, 4, 5)
         assert dataset[query] == {"index": query}
 
     def test_str(self, dataset: ZipDataset) -> None:
@@ -131,7 +130,18 @@ class TestZipDataset:
     def test_invalid_dataset(self) -> None:
         ds1 = CustomVisionDataset()
         ds2 = CustomVisionDataset()
-        with pytest.raises(
-            AssertionError, match="ZipDataset only supports GeoDatasets"
-        ):
+        with pytest.raises(ValueError, match="ZipDataset only supports GeoDatasets"):
             ZipDataset([ds1, ds2])  # type: ignore[list-item]
+
+    def test_no_overlap(self) -> None:
+        ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
+        ds2 = CustomGeoDataset(BoundingBox(6, 7, 8, 9, 10, 11))
+        with pytest.raises(ValueError, match="Datasets have no overlap"):
+            ZipDataset([ds1, ds2])
+
+    def test_invalid_query(self, dataset: ZipDataset) -> None:
+        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        with pytest.raises(
+            IndexError, match="query: .* is not within bounds of the index:"
+        ):
+            dataset[query]

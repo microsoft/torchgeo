@@ -76,7 +76,15 @@ class Landsat(GeoDataset, abc.ABC):
 
         Returns:
             sample of data/labels and metadata at that index
+
+        Raises:
+            IndexError: if query is not within bounds of the index
         """
+        if not query.intersects(self.bounds):
+            raise IndexError(
+                f"query: {query} is not within bounds of the index: {self.bounds}"
+            )
+
         window = Window(
             query.minx, query.miny, query.maxx - query.minx, query.maxy - query.miny
         )
