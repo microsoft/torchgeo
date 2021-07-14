@@ -1,25 +1,111 @@
 import contextlib
 import os
-from typing import Dict, Iterator, List, NamedTuple, Union
+from typing import Dict, Iterator, List, Tuple, Union
 
 import torch
 from torch import Tensor
 
 
-class BoundingBox(NamedTuple):
-    """Named tuple for indexing spatiotemporal data."""
+class BoundingBox(Tuple[float, float, float, float, float, float]):
+    """Data class for indexing spatiotemporal data.
 
-    # TODO: is there a way we can ensure that the bounding box is valid?
-    #     i.e. maxx > minx, maxy > miny, maxt > mint
-    # NamedTuple doesn't seem to allow getters/setters to validate input.
-    # dataclasses may help, could we just subclass a normal tuple?
+    Attributes:
+        minx (float): western boundary
+        maxx (float): eastern boundary
+        miny (float): southern boundary
+        maxy (float): northern boundary
+        mint (float): earliest boundary
+        maxt (float): latest boundary
+    """
 
-    minx: Union[int, float]
-    maxx: Union[int, float]
-    miny: Union[int, float]
-    maxy: Union[int, float]
-    mint: Union[int, float]
-    maxt: Union[int, float]
+    def __new__(
+        cls,
+        minx: float,
+        maxx: float,
+        miny: float,
+        maxy: float,
+        mint: float,
+        maxt: float,
+    ) -> "BoundingBox":
+        """Create a new instance of BoundingBox.
+
+        Parameters:
+            minx: western boundary
+            maxx: eastern boundary
+            miny: southern boundary
+            maxy: northern boundary
+            mint: earliest boundary
+            maxt: latest boundary
+
+        Raises:
+            ValueError: if bounding box is invalid
+                (minx > maxx, miny > maxy, or mint > maxt)
+        """
+        if minx > maxx:
+            raise ValueError(f"Bounding box is invalid: 'minx={minx}' > 'maxx={maxx}'")
+        if miny > maxy:
+            raise ValueError(f"Bounding box is invalid: 'miny={miny}' > 'maxy={maxy}'")
+        if mint > maxt:
+            raise ValueError(f"Bounding box is invalid: 'mint={mint}' > 'maxt={maxt}'")
+
+        # Using super() doesn't work with mypy, see:
+        # https://stackoverflow.com/q/60611012/5828163
+        return tuple.__new__(cls, [minx, maxx, miny, maxy, mint, maxt])
+
+    def __init__(
+        self,
+        minx: float,
+        maxx: float,
+        miny: float,
+        maxy: float,
+        mint: float,
+        maxt: float,
+    ) -> None:
+        """Initialize a new instance of BoundingBox.
+
+        Parameters:
+            minx: western boundary
+            maxx: eastern boundary
+            miny: southern boundary
+            maxy: northern boundary
+            mint: earliest boundary
+            maxt: latest boundary
+        """
+        self.minx = minx
+        self.maxx = maxx
+        self.miny = miny
+        self.maxy = maxy
+        self.mint = mint
+        self.maxt = maxt
+
+    def __repr__(self) -> str:
+        """Return the formal string representation of the object.
+
+        Returns:
+            formal string representation
+        """
+        return (
+            f"{self.__class__.__name__}(minx={self.minx}, maxx={self.maxx}, "
+            f"miny={self.miny}, maxy={self.maxy}, mint={self.mint}, maxt={self.maxt})"
+        )
+
+    def intersects(self, other: "BoundingBox") -> bool:
+        """Whether or not two bounding boxes intersect.
+
+        Parameters:
+            other: another bounding box
+
+        Returns:
+            True if bounding boxes intersect, else False
+        """
+        return (
+            self.minx < other.maxx
+            and self.maxx > other.minx
+            and self.miny < other.maxy
+            and self.maxy > other.miny
+            and self.mint < other.maxt
+            and self.maxt > other.mint
+        )
 
 
 @contextlib.contextmanager

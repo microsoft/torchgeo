@@ -42,6 +42,9 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
         Returns:
             sample of data/labels and metadata at that index
+
+        Raises:
+            IndexError: if query is not within bounds of the index
         """
 
     def __add__(self, other: "GeoDataset") -> "ZipDataset":  # type: ignore[override]
@@ -52,6 +55,9 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
         Returns:
             a single dataset
+
+        Raises:
+            ValueError: if datasets have no overlap
         """
         return ZipDataset([self, other])
 
@@ -91,6 +97,9 @@ class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):
 
         Returns:
             data and labels at that index
+
+        Raises:
+            IndexError: if index is out of range of the dataset
         """
 
     @abc.abstractmethod
@@ -125,11 +134,22 @@ class ZipDataset(GeoDataset):
 
         Parameters:
             datasets: list of datasets to merge
+
+        Raises:
+            ValueError: if datasets contains non-GeoDatasets or
+                if datasets do not overlap
         """
         for ds in datasets:
-            assert isinstance(ds, GeoDataset), "ZipDataset only supports GeoDatasets"
+            if not isinstance(ds, GeoDataset):
+                raise ValueError("ZipDataset only supports GeoDatasets")
 
         self.datasets = datasets
+
+        # Make sure datasets have overlap
+        try:
+            self.bounds
+        except ValueError:
+            raise ValueError("Datasets have no overlap")
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
@@ -139,7 +159,15 @@ class ZipDataset(GeoDataset):
 
         Returns:
             sample of data/labels and metadata at that index
+
+        Raises:
+            IndexError: if query is not within bounds of the index
         """
+        if not query.intersects(self.bounds):
+            raise IndexError(
+                f"query: {query} is not within bounds of the index: {self.bounds}"
+            )
+
         sample = {}
         for ds in self.datasets:
             sample.update(ds[query])
@@ -164,11 +192,11 @@ class ZipDataset(GeoDataset):
             (minx, maxx, miny, maxy, mint, maxt) of the dataset
         """
         # We want to compute the intersection of all dataset bounds, not the union
-        minx = max([ds.index.bounds[0] for ds in self.datasets])
-        maxx = min([ds.index.bounds[1] for ds in self.datasets])
-        miny = max([ds.index.bounds[2] for ds in self.datasets])
-        maxy = min([ds.index.bounds[3] for ds in self.datasets])
-        mint = max([ds.index.bounds[4] for ds in self.datasets])
-        maxt = min([ds.index.bounds[5] for ds in self.datasets])
+        minx = max([ds.bounds[0] for ds in self.datasets])
+        maxx = min([ds.bounds[1] for ds in self.datasets])
+        miny = max([ds.bounds[2] for ds in self.datasets])
+        maxy = min([ds.bounds[3] for ds in self.datasets])
+        mint = max([ds.bounds[4] for ds in self.datasets])
+        maxt = min([ds.bounds[5] for ds in self.datasets])
 
         return BoundingBox(minx, maxx, miny, maxy, mint, maxt)
