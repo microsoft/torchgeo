@@ -3,20 +3,22 @@ spack:
   - opencv+python3+imgcodecs+tiff+jpeg+png
   - pil
   - "python@3.6:+bz2"
-  - py-black
+  - "py-black@21:+colorama"
   - py-flake8
-  - py-flake8-import-order
-  - py-mypy
+  - py-h5py
+  - "py-isort@4.3.5:+colors"
+  - "py-mypy@0.900:"
   - py-numpy
   - py-pycocotools
-  - py-pytest
+  - "py-pytest@6.0:"
   - py-pytest-cov
   - py-pytorch-sphinx-theme
   - "py-radiant-mlhub@0.2.1:"
   - py-rarfile
   - py-rasterio
   - "py-setuptools@42:"
+  - "py-shapely@1.2.9:"
   - py-sphinx
   - "py-torch@1.7:"
-  - py-torchvision
+  - "py-torchvision@:0.9,0.10.1:"
   concretization: together

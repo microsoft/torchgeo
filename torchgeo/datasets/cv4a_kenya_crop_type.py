@@ -1,11 +1,11 @@
 import csv
-from functools import lru_cache
 import os
+from functools import lru_cache
 from typing import Callable, Dict, List, Optional, Tuple
 
 import numpy as np
-from PIL import Image
 import torch
+from PIL import Image
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, extract_archive
 
@@ -149,7 +149,7 @@ class CV4AKenyaCropType(GeoDataset):
                     + "See https://www.mlhub.earth/ to register for API access."
                 )
             else:
-                self.download(api_key)
+                self._download(api_key)
 
         if not self._check_integrity():
             raise RuntimeError(
@@ -388,7 +388,7 @@ class CV4AKenyaCropType(GeoDataset):
 
         return train_field_ids, test_field_ids
 
-    def download(self, api_key: str) -> None:
+    def _download(self, api_key: str) -> None:
         """Download the dataset and extract it.
 
         Parameters:

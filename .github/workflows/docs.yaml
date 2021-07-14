@@ -1,4 +1,4 @@
-name: sphinx
+name: docs
 on:
   push:
     branches:
@@ -7,7 +7,7 @@ on:
     - 'docs/**'
     - '**.py'
     - 'requirements.txt'
-    - '.github/workflows/sphinx.yaml'
+    - '.github/workflows/docs.yaml'
   pull_request:
     branches:
     - main
@@ -15,7 +15,7 @@ on:
     - 'docs/**'
     - '**.py'
     - 'requirements.txt'
-    - '.github/workflows/sphinx.yaml'
+    - '.github/workflows/docs.yaml'
 jobs:
   sphinx:
     name: sphinx
@@ -31,6 +31,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install cython numpy  # needed for pycocotools
-        pip install -r requirements.txt
+        pip install --pre -r requirements.txt
     - name: Run sphinx checks
       run: cd docs && make html

@@ -1,7 +1,8 @@
 import distutils.sysconfig
-from pathlib import Path
+import os
 import subprocess
 import sys
+from pathlib import Path
 from typing import Generator
 
 from pytest import MonkeyPatch
@@ -12,7 +13,7 @@ def test_install(
 ) -> None:
     site_packages_dir = distutils.sysconfig.get_python_lib(prefix=str(tmp_path))
     monkeypatch.setenv(  # type: ignore[attr-defined]
-        "PYTHONPATH", site_packages_dir, prepend=True
+        "PYTHONPATH", site_packages_dir, prepend=os.pathsep
     )
     subprocess.run(
         [sys.executable, "setup.py", "install", "--prefix", str(tmp_path)], check=True

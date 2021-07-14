@@ -1,22 +1,3 @@
-"""The `Cars Overhead With Context (COWC) <https://gdo152.llnl.gov/cowc/>`_ data set
-is a large set of annotated cars from overhead. It is useful for training a device
-such as a deep neural network to learn to detect and/or count cars.
-
-The dataset has the following attributes:
-
-1. Data from overhead at 15 cm per pixel resolution at ground (all data is EO).
-2. Data from six distinct locations: Toronto, Canada; Selwyn, New Zealand;
-   Potsdam and Vaihingen, Germany; Columbus, Ohio and Utah, United States.
-3. 32,716 unique annotated cars. 58,247 unique negative examples.
-4. Intentional selection of hard negative examples.
-5. Established baseline for detection and counting tasks.
-6. Extra testing scenes for use after validation.
-
-If you use this dataset in your research, please cite the following paper:
-
-* https://doi.org/10.1007/978-3-319-46487-9_48
-"""
-
 import abc
 import bz2
 import csv
@@ -25,19 +6,33 @@ import tarfile
 from typing import Callable, Dict, List, Optional
 
 import numpy as np
-from PIL import Image
 import torch
+from PIL import Image
 from torch import Tensor
-from torchvision.datasets.utils import (
-    check_integrity,
-    download_url,
-)
+from torchvision.datasets.utils import check_integrity, download_url
 
 from .geo import VisionDataset
 
 
-class _COWC(VisionDataset, abc.ABC):
-    """Abstract base class for all COWC datasets."""
+class COWC(VisionDataset, abc.ABC):
+    """The `Cars Overhead With Context (COWC) <https://gdo152.llnl.gov/cowc/>`_ data set
+    is a large set of annotated cars from overhead. It is useful for training a device
+    such as a deep neural network to learn to detect and/or count cars.
+
+    The dataset has the following attributes:
+
+    1. Data from overhead at 15 cm per pixel resolution at ground (all data is EO).
+    2. Data from six distinct locations: Toronto, Canada; Selwyn, New Zealand;
+       Potsdam and Vaihingen, Germany; Columbus, Ohio and Utah, United States.
+    3. 32,716 unique annotated cars. 58,247 unique negative examples.
+    4. Intentional selection of hard negative examples.
+    5. Established baseline for detection and counting tasks.
+    6. Extra testing scenes for use after validation.
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://doi.org/10.1007/978-3-319-46487-9_48
+    """
 
     @property
     @abc.abstractmethod
@@ -95,7 +90,7 @@ class _COWC(VisionDataset, abc.ABC):
         self.checksum = checksum
 
         if download:
-            self.download()
+            self._download()
 
         if not self._check_integrity():
             raise RuntimeError(
@@ -183,7 +178,7 @@ class _COWC(VisionDataset, abc.ABC):
                 return False
         return True
 
-    def download(self) -> None:
+    def _download(self) -> None:
         """Download the dataset and extract it."""
 
         if self._check_integrity():
@@ -209,7 +204,7 @@ class _COWC(VisionDataset, abc.ABC):
                         new_fh.write(data)
 
 
-class COWCCounting(_COWC):
+class COWCCounting(COWC):
     """COWC Dataset for car counting."""
 
     base_folder = "cowc_counting"
@@ -239,7 +234,7 @@ class COWCCounting(_COWC):
     filename = "COWC_{}_list_64_class.txt"
 
 
-class COWCDetection(_COWC):
+class COWCDetection(COWC):
     """COWC Dataset for car detection."""
 
     base_folder = "cowc_detection"

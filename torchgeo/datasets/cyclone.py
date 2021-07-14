@@ -3,8 +3,8 @@ import os
 from typing import Any, Callable, Dict, Optional
 
 import numpy as np
-from PIL import Image
 import torch
+from PIL import Image
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, extract_archive
 
@@ -13,7 +13,7 @@ from .geo import VisionDataset
 
 class TropicalCycloneWindEstimation(VisionDataset):
     """`Tropical Cyclone Wind Estimation Competition
-    <https://www.drivendata.org/competitions/72/predict-wind-speeds/>` Dataset.
+    <https://www.drivendata.org/competitions/72/predict-wind-speeds/>`_ Dataset.
 
     A collection of tropical storms in the Atlantic and East Pacific Oceans from 2000 to
     2019 with corresponding maximum sustained surface wind speed. This dataset is split
@@ -84,7 +84,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
                     + "See https://www.mlhub.earth/ to register for API access."
                 )
             else:
-                self.download(api_key)
+                self._download(api_key)
 
         if not self._check_integrity():
             raise RuntimeError(
@@ -189,7 +189,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
                     return False
         return True
 
-    def download(self, api_key: str) -> None:
+    def _download(self, api_key: str) -> None:
         """Download the dataset and extract it.
 
         Parameters:

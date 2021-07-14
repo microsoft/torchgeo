@@ -3,16 +3,16 @@ import os
 from typing import Callable, Dict, Optional
 
 import numpy as np
-from PIL import Image
 import torch
+from PIL import Image
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_and_extract_archive
 
-from .geo import VisionDataset
+from .geo import GeoDataset
 from .utils import working_dir
 
 
-class LandCoverAI(VisionDataset):
+class LandCoverAI(GeoDataset):
     r"""The `LandCover.ai <https://landcover.ai/>`_ (Land Cover from Aerial Imagery)
     dataset is a dataset for automatic mapping of buildings, woodlands, water and
     roads from aerial images.
@@ -86,7 +86,7 @@ class LandCoverAI(VisionDataset):
         self.checksum = checksum
 
         if download:
-            self.download()
+            self._download()
 
         if not self._check_integrity():
             raise RuntimeError(
@@ -170,7 +170,7 @@ class LandCoverAI(VisionDataset):
 
         return integrity
 
-    def download(self) -> None:
+    def _download(self) -> None:
         """Download the dataset and extract it.
 
         Raises:

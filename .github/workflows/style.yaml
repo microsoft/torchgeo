@@ -1,0 +1,61 @@
+name: style
+on:
+  push:
+    branches:
+    - main
+    paths:
+    - '**.py'
+    - '.flake8'
+    - 'pyproject.toml'
+    - '.github/workflows/style.yaml'
+  pull_request:
+    branches:
+    - main
+    paths:
+    - '**.py'
+    - '.flake8'
+    - 'pyproject.toml'
+    - '.github/workflows/style.yaml'
+jobs:
+  black:
+    name: black
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone repo
+      uses: actions/checkout@v2
+    - name: Set up python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install black
+      run: pip install --pre 'black[colorama]>=21'
+    - name: Run black checks
+      run: black . --check --diff
+  flake8:
+    name: flake8
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone repo
+      uses: actions/checkout@v2
+    - name: Set up python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install flake8
+      run: pip install flake8
+    - name: Run flake8 checks
+      run: flake8
+  isort:
+    name: isort
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone repo
+      uses: actions/checkout@v2
+    - name: Set up python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install isort
+      run: pip install 'isort[colors]>=4.3.5'
+    - name: Run isort checks
+      run: isort . --check --diff

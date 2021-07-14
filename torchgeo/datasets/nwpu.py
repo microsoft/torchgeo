@@ -2,8 +2,8 @@ import os
 from typing import Any, Callable, Dict, Optional
 
 import numpy as np
-from PIL import Image
 import torch
+from PIL import Image
 from torch import Tensor
 from torchvision.datasets.utils import (
     check_integrity,
@@ -105,7 +105,7 @@ class VHR10(VisionDataset):
         self.checksum = checksum
 
         if download:
-            self.download()
+            self._download()
 
         if not self._check_integrity():
             raise RuntimeError(
@@ -224,7 +224,7 @@ class VHR10(VisionDataset):
 
         return image and target
 
-    def download(self) -> None:
+    def _download(self) -> None:
         """Download the dataset and extract it."""
 
         if self._check_integrity():
