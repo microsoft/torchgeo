@@ -1,6 +1,6 @@
 import contextlib
 import os
-from typing import Dict, Iterator, List, Tuple, Union
+from typing import Dict, Iterator, List, Tuple
 
 import torch
 from torch import Tensor
