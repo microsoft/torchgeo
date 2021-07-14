@@ -18,11 +18,17 @@ class TestBoundingBox:
         assert bbox.maxt == 5
 
     @pytest.mark.xfail(reason="not yet implemented")
-    def test_invalid_box(self) -> None:
+    def test_invalid_x(self) -> None:
         with pytest.raises(ValueError):
             BoundingBox(1, 0, 2, 3, 4, 5)
+
+    @pytest.mark.xfail(reason="not yet implemented")
+    def test_invalid_y(self) -> None:
         with pytest.raises(ValueError):
             BoundingBox(0, 1, 3, 2, 4, 5)
+
+    @pytest.mark.xfail(reason="not yet implemented")
+    def test_invalid_t(self) -> None:
         with pytest.raises(ValueError):
             BoundingBox(0, 1, 2, 3, 5, 4)
 
