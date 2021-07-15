@@ -6,14 +6,25 @@ import torch.nn.functional as F
 from sklearn.model_selection import GroupShuffleSplit
 from torch import Tensor
 from torch.nn.modules import Module
-from torch.optim.optimizer import Optimizer
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader, Subset
 
 from ..datasets import TropicalCycloneWindEstimation
 
 
 class CycloneSimpleRegressionTask(pl.LightningModule):
+    """This is a LightningModule for training models on the NASA Cyclone Dataset using
+    a mean squared error loss. This does not take into account other per-sample features
+    available in this dataset.
+    """
+
     def __init__(self, model: Module, **kwargs: Dict[str, Any]) -> None:
+        """Initializes a new LightningModule for training simple regression models with
+        a mean squared error loss.
+
+        Parameters:
+            model: A model (specifically, a ``nn.Module``) instance to be trained.
+        """
         super().__init__()
         self.save_hyperparameters()  # creates `self.hparams` from kwargs
         self.model = model
@@ -22,7 +33,7 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
         y = self.model(x)
         return y
 
-    # See https://github.com/PyTorchLightning/pytorch-lightning/issues/5023 for
+    # NOTE: See https://github.com/PyTorchLightning/pytorch-lightning/issues/5023 for
     # why we need to tell mypy to ignore a bunch of things
     def training_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
@@ -69,23 +80,56 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
         rmse = torch.sqrt(loss)  # type: ignore[attr-defined]
         self.log("test_rmse", rmse)
 
-    def configure_optimizers(self) -> Optimizer:
+    def configure_optimizers(self) -> Dict[str, Any]:
+        """Initializes the optimizer and learning rate scheduler."""
         optimizer = torch.optim.Adam(
             self.model.parameters(),
-            lr=self.hparams.learning_rate,  # type: ignore[union-attr]
+            lr=self.hparams["learning_rate"],  # type: ignore[index]
         )
-        return optimizer
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": ReduceLROnPlateau(
+                    optimizer,
+                    patience=self.hparams["learning_rate_schedule_patience"],  # type: ignore[index]
+                ),
+                "monitor": "val_loss",
+            },
+        }
 
 
 class CycloneDataModule(pl.LightningDataModule):
+    """LightningDataModule implementation for the NASA Cyclone dataset. Implements
+    80/20 train/val splits based on hurricane storm ids. See ``setup(...)`` for more
+    details.
+    """
+
     def __init__(
-        self, root_dir: str, seed: int, batch_size: int = 64, num_workers: int = 4
+        self,
+        root_dir: str,
+        seed: int,
+        batch_size: int = 64,
+        num_workers: int = 4,
+        api_key: Optional[str] = None,
     ) -> None:
+        """Initializes a LightningDataModule for returning NASA Cyclone based
+        DataLoaders for use in training models.
+
+        Parameters:
+            root_dir: The ``root_dir`` arugment to pass to the
+                TropicalCycloneWindEstimation Datasets classes
+            seed: The seed value to use when doing the sklearn based GroupShuffleSplit
+            batch_size: The batch size to use in all created DataLoaders
+            num_workers: The number of workers to use in all created DataLoaders
+            api_key: The RadiantEarth MLHub API key to use if the dataset needs to be
+                downloaded
+        """
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
         self.seed = seed
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.api_key = api_key
 
     # TODO: This needs to be converted to actual transforms instead of hacked
     def custom_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
@@ -100,33 +144,43 @@ class CycloneDataModule(pl.LightningDataModule):
 
         return sample
 
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Create the train/val/test splits based on the original Dataset objects.
-        The splits should be done here vs. in `__init__(...)` per the docs: https://pytorch-lightning.readthedocs.io/en/latest/extensions/datamodules.html#setup.
-
-        We split samples between train/val by the `storm_id` property. I.e. all samples
-        with the same `storm_id` value will be either in the train or the val split.
-        This is important to test one type of generalizability -- given a new storm, can
-        we predict its windspeed. The test set, however, contains _some_ storms from the
-        training set (specifically, the latter parts of the storms) as well as some
-        novel storms.
+    def prepare_data(self) -> None:
+        """Initializes the main ``Dataset`` objects for use in ``setup(...)``, including
+        optionally downloading the dataset. This is done once per node, while
+        ``setup(...)`` is done once per GPU.
         """
-        all_train_dataset = TropicalCycloneWindEstimation(
+        do_download = self.api_key is not None
+        self.all_train_dataset = TropicalCycloneWindEstimation(
             self.root_dir,
             split="train",
             transforms=self.custom_transform,
-            download=False,
+            download=do_download,
+            api_key=self.api_key,
         )
 
-        all_test_dataset = TropicalCycloneWindEstimation(
+        self.all_test_dataset = TropicalCycloneWindEstimation(
             self.root_dir,
             split="test",
             transforms=self.custom_transform,
-            download=False,
+            download=do_download,
+            api_key=self.api_key,
         )
 
+    def setup(self, stage: Optional[str] = None) -> None:
+        """Create the train/val/test splits based on the original Dataset objects.
+        The splits should be done here vs. in ``__init__(...)`` per the docs:
+        https://pytorch-lightning.readthedocs.io/en/latest/extensions/datamodules.html#setup.
+
+        We split samples between train/val by the ``storm_id`` property. I.e. all
+        samples with the same ``storm_id`` value will be either in the train or the val
+        split. This is important to test one type of generalizability -- given a new
+        storm, can we predict its windspeed. The test set, however, contains *some*
+        storms from the training set (specifically, the latter parts of the storms) as
+        well as some novel storms.
+        """
+
         storm_ids = []
-        for item in all_train_dataset.collection:
+        for item in self.all_train_dataset.collection:
             storm_id = item["href"].split("/")[0].split("_")[-2]
             storm_ids.append(storm_id)
 
@@ -136,9 +190,11 @@ class CycloneDataModule(pl.LightningDataModule):
             )
         )
 
-        self.train_dataset = Subset(all_train_dataset, train_indices)
-        self.val_dataset = Subset(all_train_dataset, val_indices)
-        self.test_dataset = Subset(all_test_dataset, range(len(all_test_dataset)))
+        self.train_dataset = Subset(self.all_train_dataset, train_indices)
+        self.val_dataset = Subset(self.all_train_dataset, val_indices)
+        self.test_dataset = Subset(
+            self.all_test_dataset, range(len(self.all_test_dataset))
+        )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Returns a DataLoader for training"""

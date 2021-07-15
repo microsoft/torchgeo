@@ -8,9 +8,6 @@ from torchvision import models
 
 from torchgeo.trainers import CycloneDataModule, CycloneSimpleRegressionTask
 
-DATA_ROOT_DIR = os.path.expanduser("~/mount/data/")
-LOG_DIR_NAME = "logs/"
-
 
 def set_up_parser() -> argparse.ArgumentParser:
     """Set up the argument parser with program level arguments
@@ -18,7 +15,7 @@ def set_up_parser() -> argparse.ArgumentParser:
     Returns:
         the argument parser
     """
-    parser = argparse.ArgumentParser(description="TorchGeo model training script")
+    parser = argparse.ArgumentParser(description="torchgeo model training script")
 
     ######################################
     parser.add_argument(
@@ -49,10 +46,22 @@ def set_up_parser() -> argparse.ArgumentParser:
         + "name to save results)",
     )
     parser.add_argument(
-        "--root_output_dir",
+        "--output_dir",
         type=str,
         default="output/",
         help="Directory to store experiment results",
+    )
+    parser.add_argument(
+        "--data_dir",
+        type=str,
+        default="data/",
+        help="Directory where datasets are/will be stored",
+    )
+    parser.add_argument(
+        "--log_dir",
+        type=str,
+        default="logs/",
+        help="Directory where logs will be stored.",
     )
     parser.add_argument(
         "--overwrite",
@@ -70,14 +79,13 @@ def main(args: argparse.Namespace) -> None:
     # Setup output directory
     ######################################
 
-    experiment_dir = os.path.join(args.root_output_dir, args.experiment_name)
-    log_dir = os.path.join(args.root_output_dir, LOG_DIR_NAME)
+    experiment_dir = os.path.join(args.output_dir, args.experiment_name)
 
     if os.path.isfile(experiment_dir):
-        print("A file was passed as `--root_output_dir`, please pass a directory!")
+        print("A file was passed as `--output_dir`, please pass a directory!")
         return
-    if not os.path.exists(args.root_output_dir):
-        os.makedirs(args.root_output_dir)
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
 
     if os.path.exists(experiment_dir) and len(os.listdir(experiment_dir)) > 0:
         if args.overwrite:
@@ -101,7 +109,7 @@ def main(args: argparse.Namespace) -> None:
 
     model = models.resnet18(pretrained=False, num_classes=1)
     datamodule = CycloneDataModule(
-        DATA_ROOT_DIR,
+        args.data_dir,
         seed=args.seed,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
@@ -115,7 +123,7 @@ def main(args: argparse.Namespace) -> None:
     ######################################
     # Setup trainer
     ######################################
-    tb_logger = pl_loggers.TensorBoardLogger(log_dir, name=args.experiment_name)
+    tb_logger = pl_loggers.TensorBoardLogger(args.log_dir, name=args.experiment_name)
 
     checkpoint_callback = ModelCheckpoint(
         monitor="val_loss",
@@ -126,7 +134,7 @@ def main(args: argparse.Namespace) -> None:
     early_stopping_callback = EarlyStopping(
         monitor="val_loss",
         min_delta=0.00,
-        patience=5,
+        patience=10,
     )
 
     trainer = pl.Trainer.from_argparse_args(
@@ -155,6 +163,12 @@ if __name__ == "__main__":
         type=float,
         default=1e-3,
         help="Learning rate",
+    )
+    parser.add_argument(
+        "--learning_rate_schedule_patience",
+        type=int,
+        default=2,
+        help="Patience factor for the ReduceLROnPlateau schedule",
     )
 
     args = parser.parse_args()
