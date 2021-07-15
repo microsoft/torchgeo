@@ -138,14 +138,16 @@ class CDL(GeoDataset):
                 f"query: {query} is not within bounds of the index: {self.bounds}"
             )
 
-        window = Window(
-            query.minx, query.miny, query.maxx - query.minx, query.maxy - query.miny
-        )
         hits = self.index.intersection(query, objects=True)
         filename = next(hits).object  # TODO: this assumes there is only a single hit
         with rasterio.open(filename) as src:
             with WarpedVRT(src, crs=self.crs) as vrt:
-                masks = vrt.read(1, window=window)
+                col_off = (query.minx - vrt.bounds.left) // vrt.res[0]
+                row_off = (query.miny - vrt.bounds.bottom) // vrt.res[1]
+                width = query.maxx - query.minx
+                height = query.maxy - query.miny
+                window = Window(col_off, row_off, width, height)
+                masks = vrt.read(window=window)
         masks = masks.astype(np.int32)
         return {
             "masks": torch.tensor(masks),  # type: ignore[attr-defined]
