@@ -91,14 +91,23 @@ class Landsat(GeoDataset, abc.ABC):
                 f"query: {query} is not within bounds of the index: {self.bounds}"
             )
 
-        window = Window(
-            query.minx, query.miny, query.maxx - query.minx, query.maxy - query.miny
-        )
         hits = self.index.intersection(query, objects=True)
         filename = next(hits).object  # TODO: this assumes there is only a single hit
-        with rasterio.open(filename) as src:
-            with WarpedVRT(src, crs=self.crs) as vrt:
-                image = vrt.read(1, window=window)
+        data_list = []
+        for band in self.bands:
+            tokens = filename.split("_")
+            tokens[-1] = band + ".TIF"
+            filename = "_".join(tokens)
+            with rasterio.open(filename) as src:
+                with WarpedVRT(src, crs=self.crs) as vrt:
+                    col_off = (query.minx - vrt.bounds.left) // vrt.res[0]
+                    row_off = (query.miny - vrt.bounds.bottom) // vrt.res[1]
+                    width = query.maxx - query.minx
+                    height = query.maxy - query.miny
+                    window = Window(col_off, row_off, width, height)
+                    image = vrt.read(window=window)
+            data_list.append(image)
+        image = np.concatenate(data_list)
         image = image.astype(np.int32)
         return {
             "image": torch.tensor(image),  # type: ignore[attr-defined]
