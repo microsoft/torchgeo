@@ -16,7 +16,6 @@ rarfile
 rasterio>=0.3
 rtree>=0.5.0
 setuptools>=42
-shapely>=1.2.9
 sphinx
 torch>=1.7
 torchvision!=0.10.0
