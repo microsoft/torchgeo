@@ -96,7 +96,7 @@ def main(args: argparse.Namespace) -> None:
         else:
             print(
                 f"The experiment directory, {experiment_dir}, already exists and isn't "
-                + "empty. We don't want to overwrite and existing results, exiting..."
+                + "empty. We don't want to overwrite any existing results, exiting..."
             )
             return
     else:
