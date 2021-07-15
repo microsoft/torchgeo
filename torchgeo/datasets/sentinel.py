@@ -132,4 +132,5 @@ class Sentinel2(Sentinel):
         image = image.astype(np.int32)
         return {
             "image": torch.tensor(image),  # type: ignore[attr-defined]
+            "crs": self.crs,
         }

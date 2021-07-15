@@ -151,6 +151,7 @@ class CDL(GeoDataset):
         masks = masks.astype(np.int32)
         return {
             "masks": torch.tensor(masks),  # type: ignore[attr-defined]
+            "crs": self.crs,
         }
 
     def _check_integrity(self) -> bool:
