@@ -8,9 +8,8 @@ from torchvision import models
 
 from torchgeo.trainers import CycloneDataModule, CycloneSimpleRegressionTask
 
-
 DATA_ROOT_DIR = os.path.expanduser("~/mount/data/")
-LOG_DIR = "logs/"
+LOG_DIR_NAME = "logs/"
 
 
 def set_up_parser() -> argparse.ArgumentParser:
@@ -46,13 +45,14 @@ def set_up_parser() -> argparse.ArgumentParser:
         "--experiment_name",
         type=str,
         required=True,
-        help="Name of this experiment in TensorBoard",
+        help="Name of this experiment (used in TensorBoard and as the subdirectory "
+        + "name to save results)",
     )
     parser.add_argument(
-        "--output_dir",
+        "--root_output_dir",
         type=str,
-        required=True,
-        help="Directory to store output files",
+        default="output/",
+        help="Directory to store experiment results",
     )
     parser.add_argument(
         "--overwrite",
@@ -69,25 +69,30 @@ def main(args: argparse.Namespace) -> None:
     ######################################
     # Setup output directory
     ######################################
-    if os.path.isfile(args.output_dir):
-        print("A file was passed as `--output_dir`, please pass a directory!")
-        return
 
-    if os.path.exists(args.output_dir) and len(os.listdir(args.output_dir)) > 0:
+    experiment_dir = os.path.join(args.root_output_dir, args.experiment_name)
+    log_dir = os.path.join(args.root_output_dir, LOG_DIR_NAME)
+
+    if os.path.isfile(experiment_dir):
+        print("A file was passed as `--root_output_dir`, please pass a directory!")
+        return
+    if not os.path.exists(args.root_output_dir):
+        os.makedirs(args.root_output_dir)
+
+    if os.path.exists(experiment_dir) and len(os.listdir(experiment_dir)) > 0:
         if args.overwrite:
             print(
-                f"WARNING! The output directory, {args.output_dir}, already exists, "
+                f"WARNING! The experiment directory, {experiment_dir}, already exists, "
                 + "we might overwrite data in it!"
             )
         else:
             print(
-                f"The output directory, {args.output_dir}, already exists and isn't "
+                f"The experiment directory, {experiment_dir}, already exists and isn't "
                 + "empty. We don't want to overwrite and existing results, exiting..."
             )
             return
     else:
-        print("The output directory doesn't exist or is empty.")
-        os.makedirs(args.output_dir, exist_ok=True)
+        os.makedirs(experiment_dir, exist_ok=True)
 
     ######################################
     # Choose task to run based on arguments or configuration
@@ -110,9 +115,9 @@ def main(args: argparse.Namespace) -> None:
     ######################################
     # Setup trainer
     ######################################
-    tb_logger = pl_loggers.TensorBoardLogger(LOG_DIR, name=args.experiment_name)
+    tb_logger = pl_loggers.TensorBoardLogger(log_dir, name=args.experiment_name)
     checkpoint_callback = ModelCheckpoint(
-        dirpath=os.path.join(args.output_dir, args.experiment_name),
+        dirpath=experiment_dir,
         monitor="val_loss",
         save_top_k=3,
         save_last=True,
