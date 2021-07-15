@@ -1,6 +1,7 @@
 from typing import Any, Dict
 
 import pytest
+from rasterio.crs import CRS
 from rtree.index import Index, Property
 from torch.utils.data import ConcatDataset
 
@@ -11,6 +12,7 @@ class CustomGeoDataset(GeoDataset):
     def __init__(self, bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5)) -> None:
         self.index = Index(properties=Property(dimension=3, interleaved=False))
         self.index.insert(0, bounds)
+        self.crs = CRS.from_epsg(3005)
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         return {"index": query}

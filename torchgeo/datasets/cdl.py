@@ -6,12 +6,40 @@ from typing import Any, Callable, Dict, Optional
 import numpy as np
 import rasterio
 import torch
+from rasterio.crs import CRS
+from rasterio.vrt import WarpedVRT
 from rasterio.windows import Window
 from rtree.index import Index, Property
 from torchvision.datasets.utils import check_integrity, download_and_extract_archive
 
 from .geo import GeoDataset
 from .utils import BoundingBox
+
+crs = CRS.from_wkt(
+    """
+PROJCS["Albers Conical Equal Area",
+    GEOGCS["NAD83",
+        DATUM["North_American_Datum_1983",
+            SPHEROID["GRS 1980",6378137,298.257222101,
+                AUTHORITY["EPSG","7019"]],
+            AUTHORITY["EPSG","6269"]],
+        PRIMEM["Greenwich",0,
+            AUTHORITY["EPSG","8901"]],
+        UNIT["degree",0.0174532925199433,
+            AUTHORITY["EPSG","9122"]],
+        AUTHORITY["EPSG","4269"]],
+    PROJECTION["Albers_Conic_Equal_Area"],
+    PARAMETER["latitude_of_center",23],
+    PARAMETER["longitude_of_center",-96],
+    PARAMETER["standard_parallel_1",29.5],
+    PARAMETER["standard_parallel_2",45.5],
+    PARAMETER["false_easting",0],
+    PARAMETER["false_northing",0],
+    UNIT["meters",1],
+    AXIS["Easting",EAST],
+    AXIS["Northing",NORTH]]
+"""
+)
 
 
 class CDL(GeoDataset):
@@ -51,6 +79,7 @@ class CDL(GeoDataset):
     def __init__(
         self,
         root: str = "data",
+        crs: CRS = crs,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -59,12 +88,14 @@ class CDL(GeoDataset):
 
         Parameters:
             root: root directory where dataset can be found
+            crs: :term:`coordinate reference system (CRS)` to project to
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
         self.root = root
+        self.crs = crs
         self.transforms = transforms
         self.checksum = checksum
 
@@ -84,10 +115,11 @@ class CDL(GeoDataset):
             year = int(os.path.basename(filename).split("_")[0])
             mint = datetime(year, 1, 1, 0, 0, 0).timestamp()
             maxt = datetime(year, 12, 31, 23, 59, 59).timestamp()
-            with rasterio.open(filename) as f:
-                minx, miny, maxx, maxy = f.bounds
-                coords = (minx, maxx, miny, maxy, mint, maxt)
-                self.index.insert(0, coords, filename)
+            with rasterio.open(filename) as src:
+                with WarpedVRT(src, crs=self.crs) as vrt:
+                    minx, miny, maxx, maxy = vrt.bounds
+            coords = (minx, maxx, miny, maxy, mint, maxt)
+            self.index.insert(0, coords, filename)
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
@@ -111,8 +143,9 @@ class CDL(GeoDataset):
         )
         hits = self.index.intersection(query, objects=True)
         filename = next(hits).object  # TODO: this assumes there is only a single hit
-        with rasterio.open(filename) as f:
-            masks = f.read(1, window=window)
+        with rasterio.open(filename) as src:
+            with WarpedVRT(src, crs=self.crs) as vrt:
+                masks = vrt.read(1, window=window)
         masks = masks.astype(np.int32)
         return {
             "masks": torch.tensor(masks),  # type: ignore[attr-defined]

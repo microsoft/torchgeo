@@ -7,6 +7,8 @@ from typing import Any, Callable, Dict, Optional, Sequence
 import numpy as np
 import rasterio
 import torch
+from rasterio.crs import CRS
+from rasterio.vrt import WarpedVRT
 from rasterio.windows import Window
 from rtree.index import Index, Property
 
@@ -24,9 +26,9 @@ class Landsat(GeoDataset, abc.ABC):
     """
 
     @property
-    @abc.abstractmethod
     def base_folder(self) -> str:
         """Subdirectory to find/store dataset in."""
+        return self.__class__.__name__.lower()
 
     @property
     @abc.abstractmethod
@@ -40,6 +42,7 @@ class Landsat(GeoDataset, abc.ABC):
     def __init__(
         self,
         root: str = "data",
+        crs: CRS = CRS.from_epsg(32616),
         bands: Sequence[str] = [],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
     ) -> None:
@@ -47,11 +50,13 @@ class Landsat(GeoDataset, abc.ABC):
 
         Parameters:
             root: root directory where dataset can be found
+            crs: :term:`coordinate reference system (CRS)` to project to
             bands: bands to return (defaults to all bands)
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
         """
         self.root = root
+        self.crs = crs
         self.bands = bands if bands else self.band_names
         self.transforms = transforms
 
@@ -63,10 +68,11 @@ class Landsat(GeoDataset, abc.ABC):
             # https://www.usgs.gov/faqs/what-naming-convention-landsat-collection-2-level-1-and-level-2-scenes
             time = datetime.strptime(os.path.basename(filename).split("_")[3], "%Y%m%d")
             timestamp = time.timestamp()
-            with rasterio.open(filename) as f:
-                minx, miny, maxx, maxy = f.bounds
-                coords = (minx, maxx, miny, maxy, timestamp, timestamp)
-                self.index.insert(0, coords, filename)
+            with rasterio.open(filename) as src:
+                with WarpedVRT(src, crs=self.crs) as vrt:
+                    minx, miny, maxx, maxy = vrt.bounds
+            coords = (minx, maxx, miny, maxy, timestamp, timestamp)
+            self.index.insert(0, coords, filename)
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
@@ -90,8 +96,9 @@ class Landsat(GeoDataset, abc.ABC):
         )
         hits = self.index.intersection(query, objects=True)
         filename = next(hits).object  # TODO: this assumes there is only a single hit
-        with rasterio.open(filename) as f:
-            image = f.read(1, window=window)
+        with rasterio.open(filename) as src:
+            with WarpedVRT(src, crs=self.crs) as vrt:
+                image = vrt.read(1, window=window)
         image = image.astype(np.int32)
         return {
             "image": torch.tensor(image),  # type: ignore[attr-defined]
@@ -101,7 +108,6 @@ class Landsat(GeoDataset, abc.ABC):
 class Landsat8(Landsat):
     """Landsat 8-9 Operational Land Imager (OLI) and Thermal Infrared Sensor (TIRS)."""
 
-    base_folder = "landsat_8_9"
     band_names = [
         "B1",
         "B2",
@@ -123,7 +129,6 @@ Landsat9 = Landsat8
 class Landsat7(Landsat):
     """Landsat 7 Enhanced Thematic Mapper Plus (ETM+)."""
 
-    base_folder = "landsat_7"
     band_names = [
         "B1",
         "B2",
@@ -139,7 +144,6 @@ class Landsat7(Landsat):
 class Landsat4TM(Landsat):
     """Landsat 4-5 Thematic Mapper (TM)."""
 
-    base_folder = "landsat_4_5_tm"
     band_names = [
         "B1",
         "B2",
@@ -157,7 +161,6 @@ Landsat5TM = Landsat4TM
 class Landsat4MSS(Landsat):
     """Landsat 4-5 Multispectral Scanner (MSS)."""
 
-    base_folder = "landsat_4_5_mss"
     band_names = [
         "B1",
         "B2",
@@ -172,7 +175,6 @@ Landsat5MSS = Landsat4MSS
 class Landsat1(Landsat):
     """Landsat 1-3 Multispectral Scanner (MSS)."""
 
-    base_folder = "landsat_1_3"
     band_names = [
         "B4",
         "B5",
