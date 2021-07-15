@@ -7,6 +7,8 @@ from typing import Any, Callable, Dict, Optional, Sequence
 import numpy as np
 import rasterio
 import torch
+from rasterio.crs import CRS
+from rasterio.vrt import WarpedVRT
 from rasterio.windows import Window
 from rtree.index import Index, Property
 
@@ -60,6 +62,7 @@ class Sentinel2(Sentinel):
     def __init__(
         self,
         root: str = "data",
+        crs: CRS = CRS.from_epsg(32641),
         bands: Sequence[str] = band_names,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
     ) -> None:
@@ -67,11 +70,13 @@ class Sentinel2(Sentinel):
 
         Parameters:
             root: root directory where dataset can be found
+            crs: :term:`coordinate reference system (CRS)` to project to
             bands: bands to return
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
         """
         self.root = root
+        self.crs = crs
         self.bands = bands
         self.transforms = transforms
 
@@ -84,10 +89,11 @@ class Sentinel2(Sentinel):
                 os.path.basename(filename).split("_")[1], "%Y%m%dT%H%M%S"
             )
             timestamp = time.timestamp()
-            with rasterio.open(filename) as f:
-                minx, miny, maxx, maxy = f.bounds
-                coords = (minx, maxx, miny, maxy, timestamp, timestamp)
-                self.index.insert(0, coords, filename)
+            with rasterio.open(filename) as src:
+                with WarpedVRT(src, crs=self.crs) as vrt:
+                    minx, miny, maxx, maxy = vrt.bounds
+            coords = (minx, maxx, miny, maxy, timestamp, timestamp)
+            self.index.insert(0, coords, filename)
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
@@ -111,8 +117,9 @@ class Sentinel2(Sentinel):
         )
         hits = self.index.intersection(query, objects=True)
         filename = next(hits).object  # TODO: this assumes there is only a single hit
-        with rasterio.open(filename) as f:
-            image = f.read(1, window=window)
+        with rasterio.open(filename) as src:
+            with WarpedVRT(src, crs=self.crs) as vrt:
+                image = vrt.read(1, window=window)
         image = image.astype(np.int32)
         return {
             "image": torch.tensor(image),  # type: ignore[attr-defined]

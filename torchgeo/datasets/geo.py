@@ -1,6 +1,7 @@
 import abc
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Sequence
 
+from rasterio.crs import CRS
 from rtree.index import Index
 from torch.utils.data import Dataset
 
@@ -33,6 +34,9 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     #: this index in order for the sampler to index it properly.
     index: Index
 
+    #: :term:`coordinate reference system (CRS)` for the dataset.
+    crs: CRS
+
     @abc.abstractmethod
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
@@ -57,7 +61,9 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
             a single dataset
 
         Raises:
-            ValueError: if datasets have no overlap
+            ValueError: if other is not a GeoDataset, or if datasets do not overlap,
+                or if datasets do not have the same
+                :term:`coordinate reference system (CRS)`
         """
         return ZipDataset([self, other])
 
@@ -129,21 +135,27 @@ class ZipDataset(GeoDataset):
     label like CDL.
     """
 
-    def __init__(self, datasets: Iterable[GeoDataset]) -> None:
+    def __init__(self, datasets: Sequence[GeoDataset]) -> None:
         """Initialize a new Dataset instance.
 
         Parameters:
             datasets: list of datasets to merge
 
         Raises:
-            ValueError: if datasets contains non-GeoDatasets or
-                if datasets do not overlap
+            ValueError: if datasets contains non-GeoDatasets, do not overlap, or are not
+                in the same :term:`coordinate reference system (CRS)`
         """
         for ds in datasets:
             if not isinstance(ds, GeoDataset):
                 raise ValueError("ZipDataset only supports GeoDatasets")
 
+        crs = datasets[0].crs
+        for ds in datasets:
+            if ds.crs != crs:
+                raise ValueError("Datasets must be in the same CRS")
+
         self.datasets = datasets
+        self.crs = crs
 
         # Make sure datasets have overlap
         try:
