@@ -61,9 +61,9 @@ class Landsat(GeoDataset, abc.ABC):
         self.transforms = transforms
 
         # Create an R-tree to index the dataset
-        self.index = Index(properties=Property(dimension=3, interleaved=False))
+        self.index = Index(interleaved=False, properties=Property(dimension=3))
         fileglob = os.path.join(root, self.base_folder, f"**_{self.bands[0]}.TIF")
-        for filename in glob.iglob(fileglob):
+        for i, filename in enumerate(glob.iglob(fileglob)):
             # https://www.usgs.gov/faqs/what-naming-convention-landsat-collections-level-1-scenes
             # https://www.usgs.gov/faqs/what-naming-convention-landsat-collection-2-level-1-and-level-2-scenes
             time = datetime.strptime(os.path.basename(filename).split("_")[3], "%Y%m%d")
@@ -72,7 +72,7 @@ class Landsat(GeoDataset, abc.ABC):
                 with WarpedVRT(src, crs=self.crs) as vrt:
                     minx, miny, maxx, maxy = vrt.bounds
             coords = (minx, maxx, miny, maxy, timestamp, timestamp)
-            self.index.insert(0, coords, filename)
+            self.index.insert(i, coords, filename)
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.

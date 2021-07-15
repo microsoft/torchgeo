@@ -109,9 +109,9 @@ class CDL(GeoDataset):
             )
 
         # Create an R-tree to index the dataset
-        self.index = Index(properties=Property(dimension=3, interleaved=False))
+        self.index = Index(interleaved=False, properties=Property(dimension=3))
         fileglob = os.path.join(root, self.base_folder, "**_30m_cdls.img")
-        for filename in glob.iglob(fileglob):
+        for i, filename in enumerate(glob.iglob(fileglob)):
             year = int(os.path.basename(filename).split("_")[0])
             mint = datetime(year, 1, 1, 0, 0, 0).timestamp()
             maxt = datetime(year, 12, 31, 23, 59, 59).timestamp()
@@ -119,7 +119,7 @@ class CDL(GeoDataset):
                 with WarpedVRT(src, crs=self.crs) as vrt:
                     minx, miny, maxx, maxy = vrt.bounds
             coords = (minx, maxx, miny, maxy, mint, maxt)
-            self.index.insert(0, coords, filename)
+            self.index.insert(i, coords, filename)
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
