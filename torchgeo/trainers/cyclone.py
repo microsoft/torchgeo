@@ -27,6 +27,7 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
     def training_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> Tensor:
+        """Training step with an MSE loss. Reports MSE and RMSE."""
         x = batch["image"]
         y = batch["wind_speed"].view(-1, 1)
         y_hat = self.forward(x)
@@ -43,6 +44,7 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
     def validation_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
+        """Validation step - reports MSE and RMSE."""
         x = batch["image"]
         y = batch["wind_speed"].view(-1, 1)
         y_hat = self.forward(x)
@@ -56,6 +58,7 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
     def test_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
+        """Test step identical to the validation step. Reports MSE and RMSE."""
         x = batch["image"]
         y = batch["wind_speed"].view(-1, 1)
         y_hat = self.forward(x)
@@ -84,6 +87,7 @@ class CycloneDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
 
+    # TODO: This needs to be converted to actual transforms instead of hacked
     def custom_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transforms a single sample from the Dataset"""
         sample["image"] = sample["image"] / 255.0  # scale to [0,1]
@@ -97,7 +101,16 @@ class CycloneDataModule(pl.LightningDataModule):
         return sample
 
     def setup(self, stage: Optional[str] = None) -> None:
+        """Create the train/val/test splits based on the original Dataset objects.
+        The splits should be done here vs. in `__init__(...)` per the docs: https://pytorch-lightning.readthedocs.io/en/latest/extensions/datamodules.html#setup.
 
+        We split samples between train/val by the `storm_id` property. I.e. all samples
+        with the same `storm_id` value will be either in the train or the val split.
+        This is important to test one type of generalizability -- given a new storm, can
+        we predict its windspeed. The test set, however, contains _some_ storms from the
+        training set (specifically, the latter parts of the storms) as well as some
+        novel storms.
+        """
         all_train_dataset = TropicalCycloneWindEstimation(
             self.root_dir,
             split="train",
@@ -128,6 +141,7 @@ class CycloneDataModule(pl.LightningDataModule):
         self.test_dataset = Subset(all_test_dataset, range(len(all_test_dataset)))
 
     def train_dataloader(self) -> DataLoader[Any]:
+        """Returns a DataLoader for training"""
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,
@@ -137,6 +151,7 @@ class CycloneDataModule(pl.LightningDataModule):
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
+        """Returns a DataLoader for validation"""
         return DataLoader(
             self.val_dataset,
             batch_size=self.batch_size,
@@ -146,6 +161,7 @@ class CycloneDataModule(pl.LightningDataModule):
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
+        """Returns a DataLoader for testing"""
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,

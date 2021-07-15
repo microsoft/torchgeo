@@ -14,6 +14,7 @@ spack:
   - "py-pydocstyle@6.1:+toml"
   - "py-pytest@6.0:"
   - py-pytest-cov
+  - py-pytorch-lightning
   - py-pytorch-sphinx-theme
   - "py-radiant-mlhub@0.2.1:"
   - py-rarfile

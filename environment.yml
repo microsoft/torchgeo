@@ -23,6 +23,7 @@ dependencies:
     - pydocstyle[toml]>=6.1
     - pytest>=6.0
     - pytest-cov
+    - pytorch-lightning
     - pytorch-sphinx-theme
     - radiant-mlhub>=0.2.1
     - rarfile

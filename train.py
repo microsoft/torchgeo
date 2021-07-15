@@ -3,7 +3,7 @@ import os
 
 import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from torchvision import models
 
 from torchgeo.trainers import CycloneDataModule, CycloneSimpleRegressionTask
@@ -116,15 +116,21 @@ def main(args: argparse.Namespace) -> None:
     # Setup trainer
     ######################################
     tb_logger = pl_loggers.TensorBoardLogger(log_dir, name=args.experiment_name)
+
     checkpoint_callback = ModelCheckpoint(
-        dirpath=experiment_dir,
         monitor="val_loss",
+        dirpath=experiment_dir,
         save_top_k=3,
         save_last=True,
     )
+    early_stopping_callback = EarlyStopping(
+        monitor="val_loss",
+        min_delta=0.00,
+        patience=5,
+    )
 
     trainer = pl.Trainer.from_argparse_args(
-        args, logger=tb_logger, callbacks=[checkpoint_callback]
+        args, logger=tb_logger, callbacks=[checkpoint_callback, early_stopping_callback]
     )
 
     ######################################
