@@ -30,8 +30,7 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
         self.model = model
 
     def forward(self, x: Tensor) -> Any:  # type: ignore[override]
-        y = self.model(x)
-        return y
+        return self.model(x)
 
     # NOTE: See https://github.com/PyTorchLightning/pytorch-lightning/issues/5023 for
     # why we need to tell mypy to ignore a bunch of things
@@ -45,7 +44,7 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
 
         loss = F.mse_loss(y_hat, y)
 
-        self.log("train_loss", loss)  # Logging to TensorBoard
+        self.log("train_loss", loss)  # logging to TensorBoard
 
         rmse = torch.sqrt(loss)  # type: ignore[attr-defined]
         self.log("train_rmse", rmse)
@@ -91,7 +90,9 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
                     optimizer,
-                    patience=self.hparams["learning_rate_schedule_patience"],  # type: ignore[index]
+                    patience=self.hparams[
+                        "learning_rate_schedule_patience"
+                    ],  # type: ignore[index]
                 ),
                 "monitor": "val_loss",
             },
@@ -100,7 +101,7 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
 
 class CycloneDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the NASA Cyclone dataset. Implements
-    80/20 train/val splits based on hurricane storm ids. See ``setup(...)`` for more
+    80/20 train/val splits based on hurricane storm ids. See :func:`setup` for more
     details.
     """
 
@@ -116,7 +117,7 @@ class CycloneDataModule(pl.LightningDataModule):
         DataLoaders for use in training models.
 
         Parameters:
-            root_dir: The ``root_dir`` arugment to pass to the
+            root_dir: The ``root`` arugment to pass to the
                 TropicalCycloneWindEstimation Datasets classes
             seed: The seed value to use when doing the sklearn based GroupShuffleSplit
             batch_size: The batch size to use in all created DataLoaders
@@ -145,9 +146,9 @@ class CycloneDataModule(pl.LightningDataModule):
         return sample
 
     def prepare_data(self) -> None:
-        """Initializes the main ``Dataset`` objects for use in ``setup(...)``, including
+        """Initializes the main ``Dataset`` objects for use in :func:`setup`, including
         optionally downloading the dataset. This is done once per node, while
-        ``setup(...)`` is done once per GPU.
+        :func:`setup` is done once per GPU.
         """
         do_download = self.api_key is not None
         self.all_train_dataset = TropicalCycloneWindEstimation(
@@ -168,7 +169,7 @@ class CycloneDataModule(pl.LightningDataModule):
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Create the train/val/test splits based on the original Dataset objects.
-        The splits should be done here vs. in ``__init__(...)`` per the docs:
+        The splits should be done here vs. in :func:`__init__` per the docs:
         https://pytorch-lightning.readthedocs.io/en/latest/extensions/datamodules.html#setup.
 
         We split samples between train/val by the ``storm_id`` property. I.e. all

@@ -115,9 +115,8 @@ def main(args: argparse.Namespace) -> None:
         num_workers=args.num_workers,
     )
 
-    dict_args = vars(
-        args
-    )  # convert the argparse Namespace into a dictionary so that we can pass as kwargs
+    # Convert the argparse Namespace into a dictionary so that we can pass as kwargs
+    dict_args = vars(args)
     task = CycloneSimpleRegressionTask(model, **dict_args)
 
     ######################################
