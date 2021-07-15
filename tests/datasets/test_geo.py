@@ -10,7 +10,7 @@ from torchgeo.datasets import BoundingBox, GeoDataset, VisionDataset, ZipDataset
 
 class CustomGeoDataset(GeoDataset):
     def __init__(self, bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5)) -> None:
-        self.index = Index(properties=Property(dimension=3, interleaved=False))
+        self.index = Index(interleaved=False, properties=Property(dimension=3))
         self.index.insert(0, bounds)
         self.crs = CRS.from_epsg(3005)
 

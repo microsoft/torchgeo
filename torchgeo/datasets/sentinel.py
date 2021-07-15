@@ -81,9 +81,9 @@ class Sentinel2(Sentinel):
         self.transforms = transforms
 
         # Create an R-tree to index the dataset
-        self.index = Index(properties=Property(dimension=3, interleaved=False))
+        self.index = Index(interleaved=False, properties=Property(dimension=3))
         fileglob = os.path.join(root, self.base_folder, f"**_{bands[0]}_*.tif")
-        for filename in glob.iglob(fileglob):
+        for i, filename in enumerate(glob.iglob(fileglob)):
             # https://sentinel.esa.int/web/sentinel/user-guides/sentinel-2-msi/naming-convention
             time = datetime.strptime(
                 os.path.basename(filename).split("_")[1], "%Y%m%dT%H%M%S"
@@ -93,7 +93,7 @@ class Sentinel2(Sentinel):
                 with WarpedVRT(src, crs=self.crs) as vrt:
                     minx, miny, maxx, maxy = vrt.bounds
             coords = (minx, maxx, miny, maxy, timestamp, timestamp)
-            self.index.insert(0, coords, filename)
+            self.index.insert(i, coords, filename)
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
