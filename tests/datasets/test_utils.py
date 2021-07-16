@@ -33,6 +33,9 @@ class TestBoundingBox:
     @pytest.mark.parametrize(
         "test_input,expected",
         [
+            # Same box
+            ((0, 1, 0, 1, 0, 1), True),
+            ((0.0, 1.0, 0.0, 1.0, 0.0, 1.0), True),
             # bbox1 strictly within bbox2
             ((-1, 2, -1, 2, -1, 2), True),
             # bbox2 strictly within bbox1
