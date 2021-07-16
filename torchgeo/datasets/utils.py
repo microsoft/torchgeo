@@ -102,12 +102,12 @@ class BoundingBox(Tuple[float, float, float, float, float, float]):
             True if bounding boxes intersect, else False
         """
         return (
-            self.minx < other.maxx
-            and self.maxx > other.minx
-            and self.miny < other.maxy
-            and self.maxy > other.miny
-            and self.mint < other.maxt
-            and self.maxt > other.mint
+            self.minx <= other.maxx
+            and self.maxx >= other.minx
+            and self.miny <= other.maxy
+            and self.maxy >= other.miny
+            and self.mint <= other.maxt
+            and self.maxt >= other.mint
         )
 
 
