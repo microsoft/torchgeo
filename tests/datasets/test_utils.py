@@ -4,6 +4,7 @@ from typing import Tuple
 import pytest
 import torch
 
+from rasterio.crs import CRS
 from torchgeo.datasets import BoundingBox, collate_dict
 from torchgeo.datasets.utils import working_dir
 
@@ -85,10 +86,12 @@ def test_collate_dict() -> None:
         {
             "foo": torch.tensor(1),  # type: ignore[attr-defined]
             "bar": torch.tensor(2),  # type: ignore[attr-defined]
+            "crs": CRS.from_epsg(3005),
         },
         {
             "foo": torch.tensor(3),  # type: ignore[attr-defined]
             "bar": torch.tensor(4),  # type: ignore[attr-defined]
+            "crs": CRS.from_epsg(3005),
         },
     ]
     sample = collate_dict(samples)
