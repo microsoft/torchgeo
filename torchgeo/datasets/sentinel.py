@@ -30,9 +30,10 @@ class Sentinel(GeoDataset, abc.ABC):
     * https://asf.alaska.edu/data-sets/sar-data-sets/sentinel-1/sentinel-1-how-to-cite/
     """
 
-    # TODO: is this ABC actually needed?
-    # Do these datasets actually share anything in common?
-    # Could still keep it just to document what Sentinel is and how to cite it...
+    @property
+    def base_folder(self) -> str:
+        """Subdirectory to find/store dataset in."""
+        return self.__class__.__name__.lower()
 
 
 class Sentinel2(Sentinel):
@@ -48,7 +49,6 @@ class Sentinel2(Sentinel):
     Earth's surface changes.
     """
 
-    base_folder = "sentinel"
     band_names = [
         "B01",
         "B02",
@@ -80,6 +80,9 @@ class Sentinel2(Sentinel):
             bands: bands to return
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
+
+        Raises:
+            FileNotFoundError: if no files are found in ``root``
         """
         self.root = root
         self.crs = crs
@@ -88,7 +91,8 @@ class Sentinel2(Sentinel):
 
         # Create an R-tree to index the dataset
         self.index = Index(interleaved=False, properties=Property(dimension=3))
-        fileglob = os.path.join(root, self.base_folder, f"**_{bands[0]}_*.tif")
+        path = os.path.join(root, self.base_folder)
+        fileglob = os.path.join(path, f"**_{bands[0]}_*.tif")
         for i, filename in enumerate(glob.iglob(fileglob)):
             # https://sentinel.esa.int/web/sentinel/user-guides/sentinel-2-msi/naming-convention
             time = datetime.strptime(
@@ -100,6 +104,9 @@ class Sentinel2(Sentinel):
                     minx, miny, maxx, maxy = vrt.bounds
             coords = (minx, maxx, miny, maxy, timestamp, timestamp)
             self.index.insert(i, coords, filename)
+
+        if "filename" not in locals():
+            raise FileNotFoundError(f"No Sentinel data was found in '{path}'")
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
@@ -134,9 +141,15 @@ class Sentinel2(Sentinel):
                     window = Window(col_off, row_off, width, height)
                     image = vrt.read(window=window)
             data_list.append(image)
+        # FIXME: different bands have different resolution, won't be able to concatenate
         image = np.concatenate(data_list)  # type: ignore[no-untyped-call]
         image = image.astype(np.int32)
-        return {
+        sample = {
             "image": torch.tensor(image),  # type: ignore[attr-defined]
             "crs": self.crs,
         }
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
