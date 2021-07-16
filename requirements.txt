@@ -17,6 +17,7 @@ radiant-mlhub>=0.2.1
 rarfile
 rasterio>=0.3
 rtree>=0.5.0
+scikit-learn
 setuptools>=42
 sphinx
 torch>=1.7

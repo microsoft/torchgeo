@@ -14,7 +14,7 @@ dependencies:
   - rasterio>=0.3
   - pip:
     - affine
-    - black[colorama]>=21
+    - black[colorama] #>=21
     - flake8
     - isort[colors]>=4.3.5
     - mypy>=0.900
@@ -28,3 +28,4 @@ dependencies:
     - radiant-mlhub>=0.2.1
     - rarfile
     - rtree>=0.5.0
+    - scikit-learn
