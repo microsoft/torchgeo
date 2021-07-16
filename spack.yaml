@@ -11,6 +11,7 @@ spack:
   - "py-mypy@0.900:"
   - py-numpy
   - py-pycocotools
+  - "py-pydocstyle@6.1:+toml"
   - "py-pytest@6.0:"
   - py-pytest-cov
   - py-pytorch-sphinx-theme
