@@ -1,3 +1,5 @@
+"""NASA Cyclone dataset trainer."""
+
 from typing import Any, Dict, Optional
 
 import pytorch_lightning as pl
@@ -13,16 +15,15 @@ from ..datasets import TropicalCycloneWindEstimation
 
 
 class CycloneSimpleRegressionTask(pl.LightningModule):
-    """This is a LightningModule for training models on the NASA Cyclone Dataset using
-    a mean squared error loss. This does not take into account other per-sample features
-    available in this dataset.
+    """LightningModule for training models on the NASA Cyclone Dataset using MSE loss.
+
+    This does not take into account other per-sample features available in this dataset.
     """
 
     def __init__(self, model: Module, **kwargs: Dict[str, Any]) -> None:
-        """Initializes a new LightningModule for training simple regression models with
-        a mean squared error loss.
+        """Initialize a new LightningModule for training simple regression models.
 
-        Parameters:
+        Args:
             model: A model (specifically, a ``nn.Module``) instance to be trained.
         """
         super().__init__()
@@ -30,6 +31,7 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
         self.model = model
 
     def forward(self, x: Tensor) -> Any:  # type: ignore[override]
+        """Forward pass of the model."""
         return self.model(x)
 
     # NOTE: See https://github.com/PyTorchLightning/pytorch-lightning/issues/5023 for
@@ -80,7 +82,7 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
         self.log("test_rmse", rmse)
 
     def configure_optimizers(self) -> Dict[str, Any]:
-        """Initializes the optimizer and learning rate scheduler."""
+        """Initialize the optimizer and learning rate scheduler."""
         optimizer = torch.optim.Adam(
             self.model.parameters(),
             lr=self.hparams["learning_rate"],  # type: ignore[index]
@@ -100,9 +102,10 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
 
 
 class CycloneDataModule(pl.LightningDataModule):
-    """LightningDataModule implementation for the NASA Cyclone dataset. Implements
-    80/20 train/val splits based on hurricane storm ids. See :func:`setup` for more
-    details.
+    """LightningDataModule implementation for the NASA Cyclone dataset.
+
+    Implements 80/20 train/val splits based on hurricane storm ids.
+    See :func:`setup` for more details.
     """
 
     def __init__(
@@ -113,10 +116,9 @@ class CycloneDataModule(pl.LightningDataModule):
         num_workers: int = 4,
         api_key: Optional[str] = None,
     ) -> None:
-        """Initializes a LightningDataModule for returning NASA Cyclone based
-        DataLoaders for use in training models.
+        """Initialize a LightningDataModule for NASA Cyclone based DataLoaders.
 
-        Parameters:
+        Args:
             root_dir: The ``root`` arugment to pass to the
                 TropicalCycloneWindEstimation Datasets classes
             seed: The seed value to use when doing the sklearn based GroupShuffleSplit
@@ -134,7 +136,7 @@ class CycloneDataModule(pl.LightningDataModule):
 
     # TODO: This needs to be converted to actual transforms instead of hacked
     def custom_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transforms a single sample from the Dataset"""
+        """Transform a single sample from the Dataset."""
         sample["image"] = sample["image"] / 255.0  # scale to [0,1]
         sample["image"] = (
             sample["image"].unsqueeze(0).repeat(3, 1, 1)
@@ -146,9 +148,10 @@ class CycloneDataModule(pl.LightningDataModule):
         return sample
 
     def prepare_data(self) -> None:
-        """Initializes the main ``Dataset`` objects for use in :func:`setup`, including
-        optionally downloading the dataset. This is done once per node, while
-        :func:`setup` is done once per GPU.
+        """Initialize the main ``Dataset`` objects for use in :func:`setup`.
+
+        This includes optionally downloading the dataset. This is done once per node,
+        while :func:`setup` is done once per GPU.
         """
         do_download = self.api_key is not None
         self.all_train_dataset = TropicalCycloneWindEstimation(
@@ -169,6 +172,7 @@ class CycloneDataModule(pl.LightningDataModule):
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Create the train/val/test splits based on the original Dataset objects.
+
         The splits should be done here vs. in :func:`__init__` per the docs:
         https://pytorch-lightning.readthedocs.io/en/latest/extensions/datamodules.html#setup.
 
@@ -179,7 +183,6 @@ class CycloneDataModule(pl.LightningDataModule):
         storms from the training set (specifically, the latter parts of the storms) as
         well as some novel storms.
         """
-
         storm_ids = []
         for item in self.all_train_dataset.collection:
             storm_id = item["href"].split("/")[0].split("_")[-2]
@@ -198,7 +201,7 @@ class CycloneDataModule(pl.LightningDataModule):
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
-        """Returns a DataLoader for training"""
+        """Return a DataLoader for training."""
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,
@@ -208,7 +211,7 @@ class CycloneDataModule(pl.LightningDataModule):
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
-        """Returns a DataLoader for validation"""
+        """Return a DataLoader for validation."""
         return DataLoader(
             self.val_dataset,
             batch_size=self.batch_size,
@@ -218,7 +221,7 @@ class CycloneDataModule(pl.LightningDataModule):
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
-        """Returns a DataLoader for testing"""
+        """Return a DataLoader for testing."""
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,

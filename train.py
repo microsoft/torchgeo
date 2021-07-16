@@ -1,3 +1,5 @@
+"""torchgeo model training script."""
+
 import argparse
 import os
 
@@ -10,12 +12,14 @@ from torchgeo.trainers import CycloneDataModule, CycloneSimpleRegressionTask
 
 
 def set_up_parser() -> argparse.ArgumentParser:
-    """Set up the argument parser with program level arguments
+    """Set up the argument parser with program level arguments.
 
     Returns:
         the argument parser
     """
-    parser = argparse.ArgumentParser(description="torchgeo model training script")
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
 
     ######################################
     parser.add_argument(
@@ -48,19 +52,19 @@ def set_up_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output_dir",
         type=str,
-        default="output/",
+        default="output",
         help="Directory to store experiment results",
     )
     parser.add_argument(
         "--data_dir",
         type=str,
-        default="data/",
+        default="data",
         help="Directory where datasets are/will be stored",
     )
     parser.add_argument(
         "--log_dir",
         type=str,
-        default="logs/",
+        default="logs",
         help="Directory where logs will be stored.",
     )
     parser.add_argument(
@@ -74,7 +78,7 @@ def set_up_parser() -> argparse.ArgumentParser:
 
 
 def main(args: argparse.Namespace) -> None:
-
+    """Main training loop."""
     ######################################
     # Setup output directory
     ######################################

@@ -1,3 +1,5 @@
+"""TorchGeo trainers."""
+
 from .cyclone import CycloneDataModule, CycloneSimpleRegressionTask
 
 __all__ = ("CycloneDataModule", "CycloneSimpleRegressionTask")
