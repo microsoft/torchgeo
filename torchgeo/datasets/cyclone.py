@@ -1,3 +1,5 @@
+"""Tropical Cyclone Wind Estimation Competition dataset."""
+
 import json
 import os
 from typing import Any, Callable, Dict, Optional
@@ -12,12 +14,14 @@ from .geo import VisionDataset
 
 
 class TropicalCycloneWindEstimation(VisionDataset):
-    """`Tropical Cyclone Wind Estimation Competition
-    <https://www.drivendata.org/competitions/72/predict-wind-speeds/>`_ Dataset.
+    """Tropical Cyclone Wind Estimation Competition dataset.
 
     A collection of tropical storms in the Atlantic and East Pacific Oceans from 2000 to
     2019 with corresponding maximum sustained surface wind speed. This dataset is split
     into training and test categories for the purpose of a competition.
+
+    See https://www.drivendata.org/competitions/72/predict-wind-speeds/ for more
+    information about the competition.
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -56,7 +60,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
     ) -> None:
         """Initialize a new Tropical Cyclone Wind Estimation Competition Dataset.
 
-        Parameters:
+        Args:
             root: root directory where dataset can be found
             split: one of "train" or "test"
             transforms: a function/transform that takes input sample and its target as
@@ -100,7 +104,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
     def __getitem__(self, index: int) -> Dict[str, Any]:
         """Return an index within the dataset.
 
-        Parameters:
+        Args:
             index: index to return
 
         Returns:
@@ -135,7 +139,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
     def _load_image(self, directory: str) -> Tensor:
         """Load a single image.
 
-        Parameters:
+        Args:
             directory: directory containing image
 
         Returns:
@@ -154,7 +158,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
     def _load_features(self, directory: str) -> Dict[str, Any]:
         """Load features for a single image.
 
-        Parameters:
+        Args:
             directory: directory containing image
 
         Returns:
@@ -192,7 +196,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
     def _download(self, api_key: str) -> None:
         """Download the dataset and extract it.
 
-        Parameters:
+        Args:
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
 
         Raises:

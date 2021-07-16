@@ -1,3 +1,5 @@
+"""Smallholder Cashew Plantations in Benin dataset."""
+
 import json
 import os
 from functools import lru_cache
@@ -187,7 +189,7 @@ class BeninSmallHolderCashews(VisionDataset):
     ) -> None:
         """Initialize a new Benin Smallholder Cashew Plantations Dataset instance.
 
-        Parameters:
+        Args:
             root: root directory where dataset can be found
             chip_size: size of chips
             stride: spacing between chips, if less than chip_size, then there
@@ -242,7 +244,7 @@ class BeninSmallHolderCashews(VisionDataset):
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
 
-        Parameters:
+        Args:
             index: index to return
 
         Returns:
@@ -279,14 +281,13 @@ class BeninSmallHolderCashews(VisionDataset):
     def _validate_bands(self, bands: Tuple[str, ...]) -> None:
         """Validate list of bands.
 
-        Parameters:
+        Args:
             bands: user-provided tuple of bands to load
 
         Raises:
             AssertionError: if ``bands`` is not a tuple
             ValueError: if an invalid band name is provided
         """
-
         assert isinstance(bands, tuple), "The list of bands must be a tuple"
         for band in bands:
             if band not in self.band_names:
@@ -294,10 +295,11 @@ class BeninSmallHolderCashews(VisionDataset):
 
     @lru_cache(maxsize=128)
     def _load_all_imagery(self, bands: Tuple[str, ...] = band_names) -> Tensor:
-        """Load all the imagery (across time) for the dataset. Optionally allows
-        for subsetting of the bands that are loaded.
+        """Load all the imagery (across time) for the dataset.
 
-        Parameters:
+        Optionally allows for subsetting of the bands that are loaded.
+
+        Args:
             bands: tuple of bands to load
 
         Returns
@@ -322,10 +324,11 @@ class BeninSmallHolderCashews(VisionDataset):
 
     @lru_cache(maxsize=128)
     def _load_single_scene(self, date: str, bands: Tuple[str, ...]) -> Tensor:
-        """Load the imagery for a single date. Optionally allows
-        for subsetting of the bands that are loaded.
+        """Load the imagery for a single date.
 
-        Parameters:
+        Optionally allows for subsetting of the bands that are loaded.
+
+        Args:
             date: date of the imagery to load
             bands: bands to load
 
@@ -362,8 +365,7 @@ class BeninSmallHolderCashews(VisionDataset):
 
     @lru_cache()
     def _load_mask(self) -> Tensor:
-        """Rasterizes the dataset's labels (in geojson format)"""
-
+        """Rasterizes the dataset's labels (in geojson format)."""
         # Create a mask layer out of the geojson
         mask_geojson_fn = os.path.join(
             self.root,
@@ -413,13 +415,12 @@ class BeninSmallHolderCashews(VisionDataset):
     def _download(self, api_key: str) -> None:
         """Download the dataset and extract it.
 
-        Parameters:
+        Args:
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
 
         Raises:
             RuntimeError: if download doesn't work correctly or checksums don't match
         """
-
         if self._check_integrity():
             print("Files already downloaded and verified")
             return

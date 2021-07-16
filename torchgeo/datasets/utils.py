@@ -1,3 +1,5 @@
+"""Common dataset utilities."""
+
 import contextlib
 import os
 from typing import Dict, Iterator, List, Tuple, Union
@@ -30,7 +32,7 @@ class BoundingBox(Tuple[float, float, float, float, float, float]):
     ) -> "BoundingBox":
         """Create a new instance of BoundingBox.
 
-        Parameters:
+        Args:
             minx: western boundary
             maxx: eastern boundary
             miny: southern boundary
@@ -64,7 +66,7 @@ class BoundingBox(Tuple[float, float, float, float, float, float]):
     ) -> None:
         """Initialize a new instance of BoundingBox.
 
-        Parameters:
+        Args:
             minx: western boundary
             maxx: eastern boundary
             miny: southern boundary
@@ -93,7 +95,7 @@ class BoundingBox(Tuple[float, float, float, float, float, float]):
     def intersects(self, other: "BoundingBox") -> bool:
         """Whether or not two bounding boxes intersect.
 
-        Parameters:
+        Args:
             other: another bounding box
 
         Returns:
@@ -113,7 +115,7 @@ class BoundingBox(Tuple[float, float, float, float, float, float]):
 def working_dir(dirname: str, create: bool = False) -> Iterator[None]:
     """Context manager for changing directories.
 
-    Parameters:
+    Args:
         dirname: directory to temporarily change to
         create: if True, create the destination directory
     """
@@ -134,7 +136,7 @@ def collate_dict(
 ) -> Dict[str, Union[Tensor, CRS]]:
     """Merge a list of samples for form a mini-batch of Tensors.
 
-    Parameters:
+    Args:
         samples: list of samples
 
     Returns:

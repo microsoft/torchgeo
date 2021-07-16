@@ -1,3 +1,5 @@
+"""TorchGeo samplers."""
+
 import abc
 import random
 from typing import Any, Iterator, Tuple
@@ -47,7 +49,7 @@ class RandomGeoSampler(GeoSampler):
     def __init__(self, roi: BoundingBox, size: int, length: int) -> None:
         """Initialize a new RandomGeoSampler.
 
-        Parameters:
+        Args:
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
             size: dimensions of each :term:`patch` to return
             length: number of random samples to draw per epoch

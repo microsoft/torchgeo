@@ -1,3 +1,5 @@
+"""Landsat datasets."""
+
 import abc
 import glob
 import os
@@ -17,7 +19,9 @@ from .utils import BoundingBox
 
 
 class Landsat(GeoDataset, abc.ABC):
-    """`Landsat <https://landsat.gsfc.nasa.gov/>`_ is a joint NASA/USGS program,
+    """Abstract base class for all Landsat datasets.
+
+    `Landsat <https://landsat.gsfc.nasa.gov/>`_ is a joint NASA/USGS program,
     providing the longest continuous space-based record of Earth's land in existence.
 
     If you use this dataset in your research, please cite it using the following format:
@@ -48,7 +52,7 @@ class Landsat(GeoDataset, abc.ABC):
     ) -> None:
         """Initialize a new Landsat Dataset.
 
-        Parameters:
+        Args:
             root: root directory where dataset can be found
             crs: :term:`coordinate reference system (CRS)` to project to
             bands: bands to return (defaults to all bands)
@@ -77,7 +81,7 @@ class Landsat(GeoDataset, abc.ABC):
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
 
-        Parameters:
+        Args:
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:

@@ -1,3 +1,5 @@
+"""NWPU VHR-10 dataset."""
+
 import os
 from typing import Any, Callable, Dict, Optional
 
@@ -15,8 +17,10 @@ from .geo import VisionDataset
 
 
 class VHR10(VisionDataset):
-    """Northwestern Polytechnical University (NWPU) very-high-resolution ten-class
-    (VHR-10) remote sensing image dataset.
+    """NWPU VHR-10 dataset.
+
+    Northwestern Polytechnical University (NWPU) very-high-resolution ten-class (VHR-10)
+    remote sensing image dataset.
 
     Consists of 800 VHR optical remote sensing images, where 715 color images were
     acquired from Google Earth with the spatial resolution ranging from 0.5 to 2 m,
@@ -84,7 +88,7 @@ class VHR10(VisionDataset):
     ) -> None:
         """Initialize a new VHR-10 dataset instance.
 
-        Parameters:
+        Args:
             root: root directory where dataset can be found
             split: one of "postive" or "negative"
             transforms: a function/transform that takes input sample and its target as
@@ -129,7 +133,7 @@ class VHR10(VisionDataset):
     def __getitem__(self, index: int) -> Dict[str, Any]:
         """Return an index within the dataset.
 
-        Parameters:
+        Args:
             index: index to return
 
         Returns:
@@ -160,7 +164,7 @@ class VHR10(VisionDataset):
     def _load_image(self, id_: int) -> Tensor:
         """Load a single image.
 
-        Parameters:
+        Args:
             id_: unique ID of the image
 
         Returns:
@@ -183,7 +187,7 @@ class VHR10(VisionDataset):
     def _load_target(self, id_: int) -> Dict[str, Any]:
         """Load the annotations for a single image.
 
-        Parameters:
+        Args:
             id_: unique ID of the image
 
         Returns:
@@ -226,7 +230,6 @@ class VHR10(VisionDataset):
 
     def _download(self) -> None:
         """Download the dataset and extract it."""
-
         if self._check_integrity():
             print("Files already downloaded and verified")
             return

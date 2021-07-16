@@ -1,3 +1,5 @@
+"""TorchGeo transforms."""
+
 from typing import Dict
 
 import torch
@@ -17,7 +19,7 @@ class RandomHorizontalFlip(Module):  # type: ignore[misc,name-defined]
     def __init__(self, p: float = 0.5) -> None:
         """Initialize a new transform instance.
 
-        Parameters:
+        Args:
             p: probability of the sample being flipped
         """
         super().__init__()
@@ -26,7 +28,7 @@ class RandomHorizontalFlip(Module):  # type: ignore[misc,name-defined]
     def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
         """Randomly flip the image and target tensors.
 
-        Parameters:
+        Args:
             sample: a single data sample
 
         Returns:
@@ -52,7 +54,7 @@ class RandomVerticalFlip(Module):  # type: ignore[misc,name-defined]
     def __init__(self, p: float = 0.5) -> None:
         """Initialize a new transform instance.
 
-        Parameters:
+        Args:
             p: probability of the sample being flipped
         """
         super().__init__()
@@ -61,7 +63,7 @@ class RandomVerticalFlip(Module):  # type: ignore[misc,name-defined]
     def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
         """Randomly flip the image and target tensors.
 
-        Parameters:
+        Args:
             sample: a single data sample
 
         Returns:
@@ -87,7 +89,7 @@ class Identity(Module):  # type: ignore[misc,name-defined]
     def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
         """Do nothing.
 
-        Parameters:
+        Args:
             sample: the input
 
         Returns:

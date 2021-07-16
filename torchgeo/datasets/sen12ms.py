@@ -1,3 +1,5 @@
+"""SEN12MS dataset."""
+
 import os
 from typing import Callable, Dict, Optional
 
@@ -11,7 +13,9 @@ from .geo import VisionDataset
 
 
 class SEN12MS(VisionDataset):
-    """The `SEN12MS <https://doi.org/10.14459/2019mp1474000>`_ dataset contains
+    """SEN12MS dataset.
+
+    The `SEN12MS <https://doi.org/10.14459/2019mp1474000>`_ dataset contains
     180,662 patch triplets of corresponding Sentinel-1 dual-pol SAR data,
     Sentinel-2 multi-spectral images, and MODIS-derived land cover maps.
     The patches are distributed across the land masses of the Earth and
@@ -98,7 +102,7 @@ class SEN12MS(VisionDataset):
     ) -> None:
         """Initialize a new SEN12MS dataset instance.
 
-        Parameters:
+        Args:
             root: root directory where dataset can be found
             split: one of "train" or "test"
             transforms: a function/transform that takes input sample and its target as
@@ -125,7 +129,7 @@ class SEN12MS(VisionDataset):
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
 
-        Parameters:
+        Args:
             index: index to return
 
         Returns:
@@ -158,7 +162,7 @@ class SEN12MS(VisionDataset):
     def _load_raster(self, filename: str, source: str) -> Tensor:
         """Load a single raster image or target.
 
-        Parameters:
+        Args:
             filename: name of the file to load
             source: one of "lc", "s1", or "s2"
 
