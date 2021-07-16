@@ -3,8 +3,8 @@ from typing import Tuple
 
 import pytest
 import torch
-
 from rasterio.crs import CRS
+
 from torchgeo.datasets import BoundingBox, collate_dict
 from torchgeo.datasets.utils import working_dir
 

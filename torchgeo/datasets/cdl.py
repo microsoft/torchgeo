@@ -153,10 +153,15 @@ class CDL(GeoDataset):
                 window = Window(col_off, row_off, width, height)
                 masks = vrt.read(window=window)
         masks = masks.astype(np.int32)
-        return {
+        sample = {
             "masks": torch.tensor(masks),  # type: ignore[attr-defined]
             "crs": self.crs,
         }
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
