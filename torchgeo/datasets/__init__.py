@@ -1,3 +1,5 @@
+"""TorchGeo datasets."""
+
 from .benin_cashews import BeninSmallHolderCashews
 from .cdl import CDL
 from .cowc import COWC, COWCCounting, COWCDetection

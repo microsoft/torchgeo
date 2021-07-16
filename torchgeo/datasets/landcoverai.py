@@ -1,3 +1,5 @@
+"""LandCover.ai dataset."""
+
 import hashlib
 import os
 from typing import Callable, Dict, Optional
@@ -13,7 +15,9 @@ from .utils import working_dir
 
 
 class LandCoverAI(VisionDataset):
-    r"""The `LandCover.ai <https://landcover.ai/>`_ (Land Cover from Aerial Imagery)
+    r"""LandCover.ai dataset.
+
+    The `LandCover.ai <https://landcover.ai/>`_ (Land Cover from Aerial Imagery)
     dataset is a dataset for automatic mapping of buildings, woodlands, water and
     roads from aerial images.
 
@@ -65,7 +69,7 @@ class LandCoverAI(VisionDataset):
     ) -> None:
         """Initialize a new LandCover.ai dataset instance.
 
-        Parameters:
+        Args:
             root: root directory where dataset can be found
             split: one of "train", "val", or "test"
             transforms: a function/transform that takes input sample and its target as
@@ -100,7 +104,7 @@ class LandCoverAI(VisionDataset):
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
 
-        Parameters:
+        Args:
             index: index to return
 
         Returns:
@@ -128,7 +132,7 @@ class LandCoverAI(VisionDataset):
     def _load_image(self, id_: str) -> Tensor:
         """Load a single image.
 
-        Parameters:
+        Args:
             id_: unique ID of the image
 
         Returns:
@@ -145,7 +149,7 @@ class LandCoverAI(VisionDataset):
     def _load_target(self, id_: str) -> Tensor:
         """Load the target mask for a single image.
 
-        Parameters:
+        Args:
             id_: unique ID of the image
 
         Returns:
@@ -176,7 +180,6 @@ class LandCoverAI(VisionDataset):
         Raises:
             AssertionError: if the checksum of split.py does not match
         """
-
         if self._check_integrity():
             print("Files already downloaded and verified")
             return

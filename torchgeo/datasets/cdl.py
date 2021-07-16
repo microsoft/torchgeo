@@ -1,3 +1,5 @@
+"""CDL dataset."""
+
 import glob
 import os
 from datetime import datetime
@@ -43,7 +45,9 @@ PROJCS["Albers Conical Equal Area",
 
 
 class CDL(GeoDataset):
-    """The `Cropland Data Layer (CDL)
+    """Cropland Data Layer (CDL) dataset.
+
+    The `Cropland Data Layer (CDL)
     <https://data.nal.usda.gov/dataset/cropscape-cropland-data-layer>`_, hosted on
     `CropScape <https://nassgeodata.gmu.edu/CropScape/>`, provides a raster,
     geo-referenced, crop-specific land cover map for the continental United States. The
@@ -86,7 +90,7 @@ class CDL(GeoDataset):
     ) -> None:
         """Initialize a new CDL Dataset.
 
-        Parameters:
+        Args:
             root: root directory where dataset can be found
             crs: :term:`coordinate reference system (CRS)` to project to
             transforms: a function/transform that takes input sample and its target as
@@ -124,7 +128,7 @@ class CDL(GeoDataset):
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
 
-        Parameters:
+        Args:
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
@@ -170,7 +174,6 @@ class CDL(GeoDataset):
 
     def _download(self) -> None:
         """Download the dataset and extract it."""
-
         if self._check_integrity():
             print("Files already downloaded and verified")
             return

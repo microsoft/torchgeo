@@ -1,3 +1,5 @@
+"""TorchGeo samplers."""
+
 from .samplers import GeoSampler, GridGeoSampler, RandomGeoSampler
 
 __all__ = ("GeoSampler", "GridGeoSampler", "RandomGeoSampler")

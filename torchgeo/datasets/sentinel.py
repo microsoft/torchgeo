@@ -1,3 +1,5 @@
+"""Sentinel datasets."""
+
 import abc
 import glob
 import os
@@ -17,7 +19,9 @@ from .utils import BoundingBox
 
 
 class Sentinel(GeoDataset, abc.ABC):
-    """`Sentinel <https://sentinel.esa.int/web/sentinel/home>`_ is a family of
+    """Abstract base class for all Sentinel datasets.
+
+    `Sentinel <https://sentinel.esa.int/web/sentinel/home>`_ is a family of
     satellites launched by the `European Space Agency (ESA) <https://www.esa.int/>`_
     under the `Copernicus Programme <https://www.copernicus.eu/en>`_.
 
@@ -32,7 +36,9 @@ class Sentinel(GeoDataset, abc.ABC):
 
 
 class Sentinel2(Sentinel):
-    """The `Copernicus Sentinel-2 mission
+    """Sentinel-2 dataset.
+
+    The `Copernicus Sentinel-2 mission
     <https://sentinel.esa.int/web/sentinel/missions/sentinel-2>`_ comprises a
     constellation of two polar-orbiting satellites placed in the same sun-synchronous
     orbit, phased at 180° to each other. It aims at monitoring variability in land
@@ -68,7 +74,7 @@ class Sentinel2(Sentinel):
     ) -> None:
         """Initialize a new Sentinel-2 Dataset.
 
-        Parameters:
+        Args:
             root: root directory where dataset can be found
             crs: :term:`coordinate reference system (CRS)` to project to
             bands: bands to return
@@ -98,7 +104,7 @@ class Sentinel2(Sentinel):
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
 
-        Parameters:
+        Args:
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:

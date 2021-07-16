@@ -1,3 +1,5 @@
+"""CV4A Kenya Crop Type dataset."""
+
 import csv
 import os
 from functools import lru_cache
@@ -115,7 +117,7 @@ class CV4AKenyaCropType(VisionDataset):
     ) -> None:
         """Initialize a new CV4A Kenya Crop Type Dataset instance.
 
-        Parameters:
+        Args:
             root: root directory where dataset can be found
             chip_size: size of chips
             stride: spacing between chips, if less than chip_size, then there
@@ -171,7 +173,7 @@ class CV4AKenyaCropType(VisionDataset):
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
 
-        Parameters:
+        Args:
             index: index to return
 
         Returns:
@@ -213,7 +215,7 @@ class CV4AKenyaCropType(VisionDataset):
     def _load_label_tile(self, tile_name: str) -> Tuple[Tensor, Tensor]:
         """Load a single _tile_ of labels and field_ids.
 
-        Parameters:
+        Args:
             tile_name: name of tile to load
 
         Returns:
@@ -247,14 +249,13 @@ class CV4AKenyaCropType(VisionDataset):
     def _validate_bands(self, bands: Tuple[str, ...]) -> None:
         """Validate list of bands.
 
-        Parameters:
+        Args:
             bands: user-provided tuple of bands to load
 
         Raises:
             AssertionError: if ``bands`` is not a tuple
             ValueError: if an invalid band name is provided
         """
-
         assert isinstance(bands, tuple), "The list of bands must be a tuple"
         for band in bands:
             if band not in self.band_names:
@@ -264,10 +265,11 @@ class CV4AKenyaCropType(VisionDataset):
     def _load_all_image_tiles(
         self, tile_name: str, bands: Tuple[str, ...] = band_names
     ) -> Tensor:
-        """Load all the imagery (across time) for a single _tile_. Optionally allows
-        for subsetting of the bands that are loaded.
+        """Load all the imagery (across time) for a single _tile_.
 
-        Parameters:
+        Optionally allows for subsetting of the bands that are loaded.
+
+        Args:
             tile_name: name of tile to load
             bands: tuple of bands to load
 
@@ -300,10 +302,11 @@ class CV4AKenyaCropType(VisionDataset):
     def _load_single_image_tile(
         self, tile_name: str, date: str, bands: Tuple[str, ...]
     ) -> Tensor:
-        """Load the imagery for a single tile for a single date. Optionally allows
-        for subsetting of the bands that are loaded.
+        """Load the imagery for a single tile for a single date.
 
-        Parameters:
+        Optionally allows for subsetting of the bands that are loaded.
+
+        Args:
             tile_name: name of tile to load
             date: date of tile to load
             bands: bands to load
@@ -364,7 +367,6 @@ class CV4AKenyaCropType(VisionDataset):
         Returns:
             list of training field_ids and list of testing field_ids
         """
-
         train_field_ids = []
         test_field_ids = []
         splits_fn = os.path.join(
@@ -391,13 +393,12 @@ class CV4AKenyaCropType(VisionDataset):
     def _download(self, api_key: str) -> None:
         """Download the dataset and extract it.
 
-        Parameters:
+        Args:
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
 
         Raises:
             RuntimeError: if download doesn't work correctly or checksums don't match
         """
-
         if self._check_integrity():
             print("Files already downloaded and verified")
             return

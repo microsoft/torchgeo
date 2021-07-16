@@ -1,3 +1,5 @@
+"""Base classes for all :mod:`torchgeo` datasets."""
+
 import abc
 from typing import Any, Dict, Sequence
 
@@ -41,7 +43,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
 
-        Parameters:
+        Args:
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
@@ -54,7 +56,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     def __add__(self, other: "GeoDataset") -> "ZipDataset":  # type: ignore[override]
         """Merge two GeoDatasets.
 
-        Parameters:
+        Args:
             other: another dataset
 
         Returns:
@@ -98,7 +100,7 @@ class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):
     def __getitem__(self, index: int) -> Dict[str, Any]:
         """Return an index within the dataset.
 
-        Parameters:
+        Args:
             index: index to return
 
         Returns:
@@ -138,7 +140,7 @@ class ZipDataset(GeoDataset):
     def __init__(self, datasets: Sequence[GeoDataset]) -> None:
         """Initialize a new Dataset instance.
 
-        Parameters:
+        Args:
             datasets: list of datasets to merge
 
         Raises:
@@ -166,7 +168,7 @@ class ZipDataset(GeoDataset):
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
 
-        Parameters:
+        Args:
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:

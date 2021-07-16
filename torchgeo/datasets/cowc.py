@@ -1,3 +1,5 @@
+"""COWC datasets."""
+
 import abc
 import bz2
 import csv
@@ -15,7 +17,9 @@ from .geo import VisionDataset
 
 
 class COWC(VisionDataset, abc.ABC):
-    """The `Cars Overhead With Context (COWC) <https://gdo152.llnl.gov/cowc/>`_ data set
+    """Abstract base class for the COWC dataset.
+
+    The `Cars Overhead With Context (COWC) <https://gdo152.llnl.gov/cowc/>`_ data set
     is a large set of annotated cars from overhead. It is useful for training a device
     such as a deep neural network to learn to detect and/or count cars.
 
@@ -69,7 +73,7 @@ class COWC(VisionDataset, abc.ABC):
     ) -> None:
         """Initialize a new COWC dataset instance.
 
-        Parameters:
+        Args:
             root: root directory where dataset can be found
             split: one of "train" or "test"
             transforms: a function/transform that takes input sample and its target as
@@ -112,7 +116,7 @@ class COWC(VisionDataset, abc.ABC):
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
 
-        Parameters:
+        Args:
             index: index to return
 
         Returns:
@@ -139,7 +143,7 @@ class COWC(VisionDataset, abc.ABC):
     def _load_image(self, index: int) -> Tensor:
         """Load a single image.
 
-        Parameters:
+        Args:
             index: index to return
 
         Returns:
@@ -156,7 +160,7 @@ class COWC(VisionDataset, abc.ABC):
     def _load_target(self, index: int) -> Tensor:
         """Load a single target.
 
-        Parameters:
+        Args:
             index: index to return
 
         Returns:
@@ -180,7 +184,6 @@ class COWC(VisionDataset, abc.ABC):
 
     def _download(self) -> None:
         """Download the dataset and extract it."""
-
         if self._check_integrity():
             print("Files already downloaded and verified")
             return

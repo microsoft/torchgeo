@@ -1,3 +1,5 @@
+"""So2Sat dataset."""
+
 import os
 from typing import Callable, Dict, Optional
 
@@ -10,7 +12,9 @@ from .geo import VisionDataset
 
 
 class So2Sat(VisionDataset):
-    """The `So2Sat <https://doi.org/10.1109/MGRS.2020.2964708>`_ dataset consists of
+    """So2Sat dataset.
+
+    The `So2Sat <https://doi.org/10.1109/MGRS.2020.2964708>`_ dataset consists of
     corresponding synthetic aperture radar and multispectral optical image data
     acquired by the Sentinel-1 and Sentinel-2 remote sensing satellites, and a
     corresponding local climate zones (LCZ) label. The dataset is distributed over
@@ -68,7 +72,7 @@ class So2Sat(VisionDataset):
     ) -> None:
         """Initialize a new So2Sat dataset instance.
 
-        Parameters:
+        Args:
             root: root directory where dataset can be found
             split: one of "train", "validation", or "test"
             transforms: a function/transform that takes input sample and its target as
@@ -99,7 +103,7 @@ class So2Sat(VisionDataset):
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
 
-        Parameters:
+        Args:
             index: index to return
 
         Returns:
