@@ -58,6 +58,9 @@ class Landsat(GeoDataset, abc.ABC):
             bands: bands to return (defaults to all bands)
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
+
+        Raises:
+            FileNotFoundError: if no files are found in ``root``
         """
         self.root = root
         self.crs = crs
@@ -66,7 +69,8 @@ class Landsat(GeoDataset, abc.ABC):
 
         # Create an R-tree to index the dataset
         self.index = Index(interleaved=False, properties=Property(dimension=3))
-        fileglob = os.path.join(root, self.base_folder, f"**_{self.bands[0]}.TIF")
+        path = os.path.join(root, self.base_folder)
+        fileglob = os.path.join(path, f"**_{self.bands[0]}.TIF")
         for i, filename in enumerate(glob.iglob(fileglob)):
             # https://www.usgs.gov/faqs/what-naming-convention-landsat-collections-level-1-scenes
             # https://www.usgs.gov/faqs/what-naming-convention-landsat-collection-2-level-1-and-level-2-scenes
@@ -77,6 +81,9 @@ class Landsat(GeoDataset, abc.ABC):
                     minx, miny, maxx, maxy = vrt.bounds
             coords = (minx, maxx, miny, maxy, timestamp, timestamp)
             self.index.insert(i, coords, filename)
+
+        if "filename" not in locals():
+            raise FileNotFoundError(f"No Landsat data was found in '{path}'")
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
@@ -113,10 +120,15 @@ class Landsat(GeoDataset, abc.ABC):
             data_list.append(image)
         image = np.concatenate(data_list)  # type: ignore[no-untyped-call]
         image = image.astype(np.int32)
-        return {
+        sample = {
             "image": torch.tensor(image),  # type: ignore[attr-defined]
             "crs": self.crs,
         }
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
 
 
 class Landsat8(Landsat):
