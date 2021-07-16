@@ -9,10 +9,14 @@ from torchgeo.datasets import BoundingBox, GeoDataset, VisionDataset, ZipDataset
 
 
 class CustomGeoDataset(GeoDataset):
-    def __init__(self, bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5)) -> None:
+    def __init__(
+        self,
+        bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5),
+        crs: CRS = CRS.from_epsg(3005),
+    ) -> None:
         self.index = Index(interleaved=False, properties=Property(dimension=3))
         self.index.insert(0, bounds)
-        self.crs = CRS.from_epsg(3005)
+        self.crs = crs
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         return {"index": query}
@@ -134,6 +138,12 @@ class TestZipDataset:
         ds2 = CustomVisionDataset()
         with pytest.raises(ValueError, match="ZipDataset only supports GeoDatasets"):
             ZipDataset([ds1, ds2])  # type: ignore[list-item]
+
+    def test_different_crs(self) -> None:
+        ds1 = CustomGeoDataset(crs=CRS.from_epsg(3005))
+        ds2 = CustomGeoDataset(crs=CRS.from_epsg(32616))
+        with pytest.raises(ValueError, match="Datasets must be in the same CRS"):
+            ZipDataset([ds1, ds2])
 
     def test_no_overlap(self) -> None:
         ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
