@@ -128,7 +128,7 @@ class Sentinel2(Sentinel):
                     window = Window(col_off, row_off, width, height)
                     image = vrt.read(window=window)
             data_list.append(image)
-        image = np.concatenate(data_list)
+        image = np.concatenate(data_list)  # type: ignore[no-untyped-call]
         image = image.astype(np.int32)
         return {
             "image": torch.tensor(image),  # type: ignore[attr-defined]
