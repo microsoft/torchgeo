@@ -85,26 +85,25 @@ def main(args: argparse.Namespace) -> None:
     # Setup output directory
     ######################################
 
-    experiment_dir = os.path.join(args.output_dir, args.experiment_name)
-
-    if os.path.isfile(experiment_dir):
-        print("A file was passed as `--output_dir`, please pass a directory!")
-        return
-    if not os.path.exists(args.output_dir):
+    if os.path.isfile(args.output_dir):
+        raise NotADirectoryError("`--output_dir` must be a directory")
+    elif not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
+
+    experiment_dir = os.path.join(args.output_dir, args.experiment_name)
 
     if os.path.exists(experiment_dir) and len(os.listdir(experiment_dir)) > 0:
         if args.overwrite:
+            # TODO: convert this to logging.WARNING
             print(
                 f"WARNING! The experiment directory, {experiment_dir}, already exists, "
                 + "we might overwrite data in it!"
             )
         else:
-            print(
+            raise FileExistsError(
                 f"The experiment directory, {experiment_dir}, already exists and isn't "
                 + "empty. We don't want to overwrite any existing results, exiting..."
             )
-            return
     else:
         os.makedirs(experiment_dir, exist_ok=True)
 
