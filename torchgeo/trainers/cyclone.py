@@ -13,6 +13,11 @@ from torch.utils.data import DataLoader, Subset
 
 from ..datasets import TropicalCycloneWindEstimation
 
+# https://github.com/pytorch/pytorch/issues/60979
+# https://github.com/pytorch/pytorch/pull/61045
+DataLoader.__module__ = "torch.utils.data"
+Module.__module__ = "torch.nn"
+
 
 class CycloneSimpleRegressionTask(pl.LightningModule):
     """LightningModule for training models on the NASA Cyclone Dataset using MSE loss.

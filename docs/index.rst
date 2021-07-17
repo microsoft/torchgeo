@@ -15,6 +15,7 @@ architectures, and common image transformations for geospatial data.
 
    datasets
    samplers
+   trainers
    transforms
 
 .. toctree::
