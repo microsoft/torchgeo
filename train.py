@@ -23,7 +23,7 @@ def set_up_parser() -> argparse.ArgumentParser:
         description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
-    ######################################
+    # Add _program_ level arguments to the parser
     parser.add_argument(
         "--batch_size",
         type=int,
@@ -36,8 +36,6 @@ def set_up_parser() -> argparse.ArgumentParser:
         default=4,
         help="Number of workers to use in the Dataloaders",
     )
-
-    ######################################
     parser.add_argument(
         "--seed",
         type=int,
@@ -76,6 +74,27 @@ def set_up_parser() -> argparse.ArgumentParser:
         help="Flag to enable overwriting existing output",
     )
 
+    # TODO: may want to eventually switch to an OmegaConf based configuration system
+    # See https://pytorch-lightning.readthedocs.io/en/latest/common/hyperparameters.html
+    # for best practices here
+
+    # Add _trainer_ level arguments to the parser
+    parser = pl.Trainer.add_argparse_args(parser)
+
+    # TODO: Add _task_ level arguments to the parser for each _task_ we have implemented
+    parser.add_argument(
+        "--learning_rate",
+        type=float,
+        default=1e-3,
+        help="Learning rate",
+    )
+    parser.add_argument(
+        "--learning_rate_schedule_patience",
+        type=int,
+        default=2,
+        help="Patience factor for the ReduceLROnPlateau schedule",
+    )
+
     return parser
 
 
@@ -87,12 +106,12 @@ def main(args: argparse.Namespace) -> None:
 
     if os.path.isfile(args.output_dir):
         raise NotADirectoryError("`--output_dir` must be a directory")
-    elif not os.path.exists(args.output_dir):
-        os.makedirs(args.output_dir)
+    os.makedirs(args.output_dir, exist_ok=True)
 
     experiment_dir = os.path.join(args.output_dir, args.experiment_name)
+    os.makedirs(experiment_dir, exist_ok=True)
 
-    if os.path.exists(experiment_dir) and len(os.listdir(experiment_dir)) > 0:
+    if len(os.listdir(experiment_dir)) > 0:
         if args.overwrite:
             # TODO: convert this to logging.WARNING
             print(
@@ -104,8 +123,6 @@ def main(args: argparse.Namespace) -> None:
                 f"The experiment directory, {experiment_dir}, already exists and isn't "
                 + "empty. We don't want to overwrite any existing results, exiting..."
             )
-    else:
-        os.makedirs(experiment_dir, exist_ok=True)
 
     ######################################
     # Choose task to run based on arguments or configuration
@@ -153,28 +170,7 @@ def main(args: argparse.Namespace) -> None:
 
 
 if __name__ == "__main__":
-    # TODO: may want to eventually switch to an OmegaConf based configuration system
-    # See https://pytorch-lightning.readthedocs.io/en/latest/common/hyperparameters.html
-    # for best practices here
-    parser = set_up_parser()  # Add _program_ level arguments to the parser
-    parser = pl.Trainer.add_argparse_args(
-        parser
-    )  # Add _trainer_ level arguments to the parser
-
-    # TODO: Add _task_ level arguments to the parser for each _task_ we have implemented
-    parser.add_argument(
-        "--learning_rate",
-        type=float,
-        default=1e-3,
-        help="Learning rate",
-    )
-    parser.add_argument(
-        "--learning_rate_schedule_patience",
-        type=int,
-        default=2,
-        help="Patience factor for the ReduceLROnPlateau schedule",
-    )
-
+    parser = set_up_parser()
     args = parser.parse_args()
 
     # Set random seed for reproducibility
