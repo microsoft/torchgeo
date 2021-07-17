@@ -12,7 +12,7 @@ def test_help() -> None:
 
 def test_required_args() -> None:
     args = [sys.executable, "train.py"]
-    ps = subprocess.run(args, capture_output=True)
+    ps = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert ps.returncode != 0
     assert b"error: the following arguments are required:" in ps.stderr
 
@@ -28,7 +28,7 @@ def test_output_file(tmp_path: Path) -> None:
         "--output_dir",
         str(output_file),
     ]
-    ps = subprocess.run(args, capture_output=True)
+    ps = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert ps.returncode != 0
     assert b"NotADirectoryError" in ps.stderr
 
@@ -47,7 +47,7 @@ def test_experiment_dir_not_empty(tmp_path: Path) -> None:
         "--output_dir",
         str(output_dir),
     ]
-    ps = subprocess.run(args, capture_output=True)
+    ps = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert ps.returncode != 0
     assert b"FileExistsError" in ps.stderr
 
@@ -75,7 +75,9 @@ def test_overwrite_experiment_dir(tmp_path: Path) -> None:
         "--overwrite",
         "--fast_dev_run",
     ]
-    ps = subprocess.run(args, capture_output=True, check=True)
+    ps = subprocess.run(
+        args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True
+    )
     assert re.search(
         b"The experiment directory, .*, already exists, we might overwrite data in it!",
         ps.stdout,
