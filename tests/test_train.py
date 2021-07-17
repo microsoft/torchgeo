@@ -74,6 +74,7 @@ def test_overwrite_experiment_dir(tmp_path: Path) -> None:
         str(log_dir),
         "--overwrite",
         "--fast_dev_run",
+        "1",
     ]
     ps = subprocess.run(
         args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True
