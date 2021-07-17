@@ -10,8 +10,10 @@ target-version = ["py36", "py37", "py38", "py39"]
 color = true
 exclude = '''
 /(
-    # Data
+    # TorchGeo
     | data
+    | logs
+    | output
 
     # Spack
     | \.spack-env
@@ -34,14 +36,14 @@ exclude = '''
 [tool.isort]
 profile = "black"
 known_first_party = ["docs", "tests", "torchgeo"]
-extend_skip = [".spack-env/"]
+extend_skip = [".spack-env/", "data", "logs", "output"]
 skip_gitignore = true
 color_output = true
 
 [tool.mypy]
 ignore_missing_imports = true
 show_error_codes = true
-exclude = "(data|build|dist)/"
+exclude = "(build|data|dist|logs|output)/"
 
 # Strict
 warn_unused_configs = true
@@ -72,5 +74,7 @@ norecursedirs = [
     "data",
     "dist",
     "docs",
+    "logs",
+    "output",
     "__pycache__",
 ]

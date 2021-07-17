@@ -14,13 +14,15 @@ spack:
   - "py-pydocstyle@6.1:+toml"
   - "py-pytest@6.0:"
   - py-pytest-cov
+  - py-pytorch-lightning
   - py-pytorch-sphinx-theme
   - "py-radiant-mlhub@0.2.1:"
   - py-rarfile
   - "py-rasterio@0.3:"
   - "py-rtree@0.5.0:"
+  - py-scikit-learn
   - "py-setuptools@42:"
   - py-sphinx
   - "py-torch@1.7:"
-  - "py-torchvision@:0.9,0.10.1:"
+  - "py-torchvision@0.3:0.9,0.10.1:"
   concretization: together

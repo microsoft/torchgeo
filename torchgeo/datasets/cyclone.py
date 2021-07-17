@@ -2,6 +2,7 @@
 
 import json
 import os
+from functools import lru_cache
 from typing import Any, Callable, Dict, Optional
 
 import numpy as np
@@ -136,6 +137,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
         """
         return len(self.collection)
 
+    @lru_cache()
     def _load_image(self, directory: str) -> Tensor:
         """Load a single image.
 
