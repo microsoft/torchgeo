@@ -38,12 +38,12 @@ class TestTropicalCycloneWindEstimation:
         )
         md5s = {
             "train": {
-                "source": "3c9041d3a6a8178e5ed37fff3ec131b0",
-                "labels": "d8cebe3d51ef7a5d4e992b75559a0348",
+                "source": "2b818e0a0873728dabf52c7054a0ce4c",
+                "labels": "c3c2b6d02c469c5519f4add4f9132712",
             },
             "test": {
-                "source": "072c0e6e662f1f9658a47a3eee9218a1",
-                "labels": "b168c6cea0857ea41e65ebceadf7d85b",
+                "source": "bc07c519ddf3ce88857435ddddf98a16",
+                "labels": "3ca4243eff39b87c73e05ec8db1824bf",
             },
         }
         monkeypatch.setattr(  # type: ignore[attr-defined]
@@ -72,12 +72,12 @@ class TestTropicalCycloneWindEstimation:
         assert x["image"].shape == (dataset.size, dataset.size)
 
     def test_len(self, dataset: TropicalCycloneWindEstimation) -> None:
-        assert len(dataset) == 2
+        assert len(dataset) == 5
 
     def test_add(self, dataset: TropicalCycloneWindEstimation) -> None:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
-        assert len(ds) == 4
+        assert len(ds) == 10
 
     def test_already_downloaded(self, dataset: TropicalCycloneWindEstimation) -> None:
         TropicalCycloneWindEstimation(root=dataset.root, download=True, api_key="")

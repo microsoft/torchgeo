@@ -1,4 +1,7 @@
+# TorchGeo
 /data/
+/logs/
+/output/
 
 # Spack
 .spack-env/
