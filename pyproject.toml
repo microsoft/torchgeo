@@ -63,8 +63,7 @@ strict_equality = true
 
 [tool.pydocstyle]
 convention = "google"
-match = '(?!setup).*\.py'
-match_dir = '(datasets|samplers|torchgeo|trainers|transforms)'
+match_dir = "(datasets|samplers|torchgeo|trainers|transforms)"
 
 [tool.pytest.ini_options]
 norecursedirs = [
