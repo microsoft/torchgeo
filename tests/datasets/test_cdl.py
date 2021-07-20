@@ -30,8 +30,8 @@ class TestCDL:
             torchvision.datasets.utils, "download_url", download_url
         )
         md5s = [
-            (2021, "f86f6931c9146f140c306a3529260047"),
-            (2020, "8bc282d7a0a99e397b3d53097f820189"),
+            (2021, "0693f0bb10deb79c69bcafe4aa1635b7"),
+            (2020, "7695292902a8672d16ac034d4d560d84"),
         ]
         monkeypatch.setattr(CDL, "md5s", md5s)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "cdl", "{}_30m_cdls.zip")
