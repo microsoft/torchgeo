@@ -6,12 +6,12 @@ import os
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional, Sequence
 
-import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
-from rasterio.crs import CRS
+from cartopy.crs import CRS as CCRS
+from rasterio.crs import CRS as RCRS
 from rasterio.vrt import WarpedVRT
 from rtree.index import Index, Property
 from torch import Tensor
@@ -48,7 +48,7 @@ class Landsat(GeoDataset, abc.ABC):
     def __init__(
         self,
         root: str = "data",
-        crs: CRS = CRS.from_epsg(32616),
+        crs: RCRS = RCRS.from_epsg(32616),
         bands: Sequence[str] = [],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
     ) -> None:
@@ -139,8 +139,8 @@ class Landsat(GeoDataset, abc.ABC):
         self,
         image: Tensor,
         bbox: BoundingBox,
-        projection: ccrs.CRS,
-        transform: ccrs.CRS,
+        projection: CCRS,
+        transform: CCRS,
     ) -> None:
         """Plot an image on a map.
 
@@ -155,8 +155,8 @@ class Landsat(GeoDataset, abc.ABC):
         array = image.numpy()
 
         # Stretch to the range of 2nd to 98th percentile
-        per98 = np.percentile(array, 98)
-        per02 = np.percentile(array, 2)
+        per98 = np.percentile(array, 98)  # type: ignore[no-untyped-call]
+        per02 = np.percentile(array, 2)  # type: ignore[no-untyped-call]
         array = (array - per02) / (per98 - per02)
         array = np.clip(array, 0, 1)
 

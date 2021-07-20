@@ -51,6 +51,7 @@ nitpick_ignore = [
     # https://github.com/sphinx-doc/sphinx/issues/8127
     ("py:class", ".."),
     # TODO: can't figure out why this isn't found
+    ("py:class", "cartopy._crs.CRS"),
     ("py:class", "LightningDataModule"),
 ]
 
