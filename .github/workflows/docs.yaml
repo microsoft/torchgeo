@@ -43,7 +43,8 @@ jobs:
         python-version: 3.9
     - name: Install dependencies
       run: |
-        pip install sphinx
-        pip install git+https://github.com/pytorch/pytorch_sphinx_theme
+        sudo apt-get install proj-bin  # needed for cartopy
+        pip install cython numpy  # needed for pycocotools
+        pip install --pre -r requirements.txt
     - name: Run sphinx checks
       run: cd docs && make html
