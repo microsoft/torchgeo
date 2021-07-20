@@ -29,7 +29,7 @@ jobs:
         python-version: 3.9
     - name: Install dependencies
       run: |
-        sudo apt-get install proj-bin  # needed for cartopy
+        sudo apt-get install libgeos-dev # needed for cartopy
         pip install cython numpy  # needed for pycocotools
         pip install --pre -r requirements.txt
     - name: Run mypy checks
@@ -65,7 +65,7 @@ jobs:
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
         restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-
     - name: Install apt dependencies
-      run: sudo apt-get install proj-bin unrar
+      run: sudo apt-get install unrar
       if: ${{ runner.os == 'Linux' }}
     - name: Install brew dependencies
       run: brew install proj rar
