@@ -29,6 +29,7 @@ jobs:
         python-version: 3.9
     - name: Install dependencies
       run: |
+        sudo apt-get install proj  # needed for cartopy
         python -m pip install --upgrade pip
         pip install cython numpy  # needed for pycocotools
         pip install --pre -r requirements.txt
