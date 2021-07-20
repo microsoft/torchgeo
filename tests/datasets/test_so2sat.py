@@ -38,7 +38,9 @@ class TestSo2Sat:
         assert len(dataset) == 10
 
     def test_out_of_bounds(self, dataset: So2Sat) -> None:
-        with pytest.raises(IndexError):
+        # h5py at version 2.10.0 raises a ValueError instead of an IndexError so we
+        # check for both here
+        with pytest.raises((IndexError, ValueError)):
             dataset[10]
 
     def test_invalid_split(self) -> None:
