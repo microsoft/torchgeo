@@ -6,6 +6,8 @@ import os
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional, Sequence
 
+import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
@@ -137,8 +139,8 @@ class Landsat(GeoDataset, abc.ABC):
         self,
         image: Tensor,
         bbox: BoundingBox,
-        projection: "cartopy.crs.CRS",  # noqa: F821, type: ignore[name-defined]
-        transform: "cartopy.crs.CRS",  # noqa: F821, type: ignore[name-defined]
+        projection: ccrs.CRS,
+        transform: ccrs.CRS,
     ) -> None:
         """Plot an image on a map.
 
@@ -148,8 +150,6 @@ class Landsat(GeoDataset, abc.ABC):
             projection: :term:`projection` of map
             transform: :term:`coordinate reference system (CRS)` of data
         """
-        import matplotlib.pyplot as plt
-
         # Convert from CxHxW to HxWxC
         image = image.permute((1, 2, 0))
         array = image.numpy()
