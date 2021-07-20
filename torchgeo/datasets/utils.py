@@ -2,10 +2,9 @@
 
 import contextlib
 import os
-from typing import Dict, Iterator, List, Tuple, Union
+from typing import Any, Dict, Iterator, List, Tuple
 
 import torch
-from rasterio.crs import CRS
 from torch import Tensor
 
 
@@ -131,9 +130,7 @@ def working_dir(dirname: str, create: bool = False) -> Iterator[None]:
         os.chdir(cwd)
 
 
-def collate_dict(
-    samples: List[Dict[str, Union[Tensor, CRS]]]
-) -> Dict[str, Union[Tensor, CRS]]:
+def collate_dict(samples: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Merge a list of samples for form a mini-batch of Tensors.
 
     Args:
@@ -144,8 +141,10 @@ def collate_dict(
     """
     collated = {}
     for key, value in samples[0].items():
-        if isinstance(value, CRS):
-            collated[key] = value
-        elif isinstance(value, Tensor):
+        if isinstance(value, Tensor):
             collated[key] = torch.stack([sample[key] for sample in samples])
+        else:
+            collated[key] = [
+                sample[key] for sample in samples
+            ]  # type: ignore[assignment]
     return collated

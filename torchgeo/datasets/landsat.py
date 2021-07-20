@@ -11,8 +11,8 @@ import rasterio
 import torch
 from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
-from rasterio.windows import Window
 from rtree.index import Index, Property
+from torch import Tensor
 
 from .geo import GeoDataset
 from .utils import BoundingBox
@@ -92,7 +92,7 @@ class Landsat(GeoDataset, abc.ABC):
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
-            sample of data/labels and metadata at that index
+            sample of data and metadata at that index
 
         Raises:
             IndexError: if query is not within bounds of the index
@@ -111,11 +111,13 @@ class Landsat(GeoDataset, abc.ABC):
             filename = "_".join(tokens)
             with rasterio.open(filename) as src:
                 with WarpedVRT(src, crs=self.crs) as vrt:
-                    col_off = (query.minx - vrt.bounds.left) // vrt.res[0]
-                    row_off = (query.miny - vrt.bounds.bottom) // vrt.res[1]
-                    width = query.maxx - query.minx
-                    height = query.maxy - query.miny
-                    window = Window(col_off, row_off, width, height)
+                    window = rasterio.windows.from_bounds(
+                        query.minx,
+                        query.miny,
+                        query.maxx,
+                        query.maxy,
+                        transform=vrt.transform,
+                    )
                     image = vrt.read(window=window)
             data_list.append(image)
         image = np.concatenate(data_list)  # type: ignore[no-untyped-call]
@@ -123,12 +125,45 @@ class Landsat(GeoDataset, abc.ABC):
         sample = {
             "image": torch.tensor(image),  # type: ignore[attr-defined]
             "crs": self.crs,
+            "bbox": query,
         }
 
         if self.transforms is not None:
             sample = self.transforms(sample)
 
         return sample
+
+    def plot(
+        self,
+        image: Tensor,
+        bbox: BoundingBox,
+        projection: "cartopy.crs.CRS",  # noqa: F821, type: ignore[name-defined]
+        transform: "cartopy.crs.CRS",  # noqa: F821, type: ignore[name-defined]
+    ) -> None:
+        """Plot an image on a map.
+
+        Args:
+            image: the image to plot
+            bbox: the bounding box of the image
+            projection: :term:`projection` of map
+            transform: :term:`coordinate reference system (CRS)` of data
+        """
+        import matplotlib.pyplot as plt
+
+        # Convert from CxHxW to HxWxC
+        image = image.permute((1, 2, 0))
+        array = image.numpy()
+
+        # Stretch to the range of 2nd to 98th percentile
+        per98 = np.percentile(array, 98)
+        per02 = np.percentile(array, 2)
+        array = (array - per02) / (per98 - per02)
+        array = np.clip(array, 0, 1)
+
+        # Plot the image
+        ax = plt.axes(projection=projection)
+        ax.imshow(array, origin="lower", extent=bbox[:4], transform=transform)
+        plt.show()
 
 
 class Landsat8(Landsat):

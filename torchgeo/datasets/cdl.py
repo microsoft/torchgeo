@@ -10,14 +10,14 @@ import rasterio
 import torch
 from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
-from rasterio.windows import Window
 from rtree.index import Index, Property
+from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_and_extract_archive
 
 from .geo import GeoDataset
 from .utils import BoundingBox
 
-crs = CRS.from_wkt(
+_crs = CRS.from_wkt(
     """
 PROJCS["Albers Conical Equal Area",
     GEOGCS["NAD83",
@@ -83,7 +83,7 @@ class CDL(GeoDataset):
     def __init__(
         self,
         root: str = "data",
-        crs: CRS = crs,
+        crs: CRS = _crs,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -120,10 +120,12 @@ class CDL(GeoDataset):
             mint = datetime(year, 1, 1, 0, 0, 0).timestamp()
             maxt = datetime(year, 12, 31, 23, 59, 59).timestamp()
             with rasterio.open(filename) as src:
+                cmap = src.colormap(1)
                 with WarpedVRT(src, crs=self.crs) as vrt:
                     minx, miny, maxx, maxy = vrt.bounds
             coords = (minx, maxx, miny, maxy, mint, maxt)
             self.index.insert(i, coords, filename)
+        self.cmap = np.array([cmap[i] for i in range(256)])
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
@@ -132,7 +134,7 @@ class CDL(GeoDataset):
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
-            sample of data/labels and metadata at that index
+            sample of labels and metadata at that index
 
         Raises:
             IndexError: if query is not within bounds of the index
@@ -146,16 +148,19 @@ class CDL(GeoDataset):
         filename = next(hits).object  # TODO: this assumes there is only a single hit
         with rasterio.open(filename) as src:
             with WarpedVRT(src, crs=self.crs) as vrt:
-                col_off = (query.minx - vrt.bounds.left) // vrt.res[0]
-                row_off = (query.miny - vrt.bounds.bottom) // vrt.res[1]
-                width = query.maxx - query.minx
-                height = query.maxy - query.miny
-                window = Window(col_off, row_off, width, height)
+                window = rasterio.windows.from_bounds(
+                    query.minx,
+                    query.miny,
+                    query.maxx,
+                    query.maxy,
+                    transform=vrt.transform,
+                )
                 masks = vrt.read(window=window)
         masks = masks.astype(np.int32)
         sample = {
             "masks": torch.tensor(masks),  # type: ignore[attr-defined]
             "crs": self.crs,
+            "bbox": query,
         }
 
         if self.transforms is not None:
@@ -189,3 +194,29 @@ class CDL(GeoDataset):
                 os.path.join(self.root, self.base_folder),
                 md5=md5 if self.checksum else None,
             )
+
+    def plot(
+        self,
+        image: Tensor,
+        bbox: BoundingBox,
+        projection: "cartopy.crs.CRS",  # noqa: F821, type: ignore[name-defined]
+        transform: "cartopy.crs.CRS",  # noqa: F821, type: ignore[name-defined]
+    ) -> None:
+        """Plot an image on a map.
+
+        Args:
+            image: the image to plot
+            bbox: the bounding box of the image
+            projection: :term:`projection` of map
+            transform: :term:`coordinate reference system (CRS)` of data
+        """
+        import matplotlib.pyplot as plt
+
+        # Convert from class labels to RGBA values
+        array = image.squeeze().numpy()
+        array = self.cmap[array]
+
+        # Plot the image
+        ax = plt.axes(projection=projection)
+        ax.imshow(array, origin="lower", extent=bbox[:4], transform=transform)
+        plt.show()
