@@ -5,6 +5,8 @@ import os
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional
 
+import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
@@ -199,8 +201,8 @@ class CDL(GeoDataset):
         self,
         image: Tensor,
         bbox: BoundingBox,
-        projection: "cartopy.crs.CRS",  # noqa: F821, type: ignore[name-defined]
-        transform: "cartopy.crs.CRS",  # noqa: F821, type: ignore[name-defined]
+        projection: ccrs.CRS,
+        transform: ccrs.CRS,
     ) -> None:
         """Plot an image on a map.
 
@@ -210,8 +212,6 @@ class CDL(GeoDataset):
             projection: :term:`projection` of map
             transform: :term:`coordinate reference system (CRS)` of data
         """
-        import matplotlib.pyplot as plt
-
         # Convert from class labels to RGBA values
         array = image.squeeze().numpy()
         array = self.cmap[array]
