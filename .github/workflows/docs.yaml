@@ -43,8 +43,7 @@ jobs:
         python-version: 3.9
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install cython numpy  # needed for pycocotools
-        pip install --pre -r requirements.txt
+        pip install sphinx
+        pip install git+https://github.com/pytorch/pytorch_sphinx_theme
     - name: Run sphinx checks
       run: cd docs && make html
