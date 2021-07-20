@@ -76,6 +76,14 @@ class SEN12MS(VisionDataset):
         "train_list.txt",
         "test_list.txt",
     ]
+    light_filenames = [
+        "ROIs1158_spring/",
+        "ROIs1868_summer/",
+        "ROIs1970_fall/",
+        "ROIs2017_winter/",
+        "train_list.txt",
+        "test_list.txt",
+    ]
     md5s = [
         "6e2e8fa8b8cba77ddab49fd20ff5c37b",
         "fba019bb27a08c1db96b31f718c34d79",
@@ -120,8 +128,12 @@ class SEN12MS(VisionDataset):
         self.transforms = transforms
         self.checksum = checksum
 
-        if not self._check_integrity():
-            raise RuntimeError("Dataset not found or corrupted.")
+        if checksum:
+            if not self._check_integrity():
+                raise RuntimeError("Dataset not found or corrupted.")
+        else:
+            if not self._check_integrity_light():
+                raise RuntimeError("Dataset not found or corrupted.")
 
         with open(os.path.join(self.root, self.base_folder, split + "_list.txt")) as f:
             self.ids = f.readlines()
@@ -184,6 +196,18 @@ class SEN12MS(VisionDataset):
             array = f.read().astype(np.int32)
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             return tensor
+
+    def _check_integrity_light(self) -> bool:
+        """Checks the integrity of the dataset structure.
+
+        Returns:
+            True if the dataset directories and split files are found, else False
+        """
+        for filename in self.light_filenames:
+            filepath = os.path.join(self.root, self.base_folder, filename)
+            if not os.path.exists(filepath):
+                return False
+        return True
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
