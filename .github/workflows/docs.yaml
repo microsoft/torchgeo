@@ -43,7 +43,7 @@ jobs:
         python-version: 3.9
     - name: Install dependencies
       run: |
-        sudo apt-get install proj-bin  # needed for cartopy
+        sudo apt-get install libgeos-dev  # needed for cartopy
         pip install cython numpy  # needed for pycocotools
         pip install --pre -r requirements.txt
     - name: Run sphinx checks
