@@ -1,33 +1,11 @@
 name: torchgeo
-channels:
-  - anaconda
-  - conda-forge
-  - pytorch
 dependencies:
-  - affine
+  - cudatoolkit=11.1
   - h5py
   - numpy
-  - opencv
-  - pillow
   - pip
+  - conda-forge:pycocotools
   - python
-  - pycocotools
-  - pytorch>=1.7
-  - pytorch-lightning
-  - radiant-mlhub>=0.2.1
-  - rarfile
-  - rasterio>=0.3
-  - rtree>=0.5.0
-  - scikit-learn
-  - torchvision>=0.3,!=0.10.0
-  - pip:
-    - black[colorama]>=21
-    - flake8
-    - isort[colors]>=4.3.5
-    - mypy>=0.900
-    - pydocstyle[toml]>=6.1
-    - pytest>=6.0
-    - pytest-cov
-    - setuptools>=42
-    - sphinx
-    - git+https://github.com/pytorch/pytorch_sphinx_theme
+  - pytorch::pytorch>=1.7
+  - conda-forge::rarfile
+  - pytorch::torchvision>=0.3,!=0.10.0

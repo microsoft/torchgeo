@@ -1,5 +1,5 @@
 affine
-black[colorama]>=21
+black[colorama]>=21b
 flake8
 h5py
 isort[colors]>=4.3.5
@@ -12,10 +12,10 @@ pydocstyle[toml]>=6.1
 pytest>=6.0
 pytest-cov
 pytorch-lightning
-pytorch-sphinx-theme
+git+https://github.com/pytorch/pytorch_sphinx_theme
 radiant-mlhub>=0.2.1
 rarfile
-rasterio>=0.3
+rasterio>=1.0
 rtree>=0.5.0
 scikit-learn
 setuptools>=42
