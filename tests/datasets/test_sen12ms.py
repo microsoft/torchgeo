@@ -65,3 +65,8 @@ class TestSEN12MS:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             SEN12MS(str(tmp_path))
+
+    def test_check_integrity_light(self) -> None:
+        root = os.path.join("tests", "data")
+        ds = SEN12MS(root, checksum=False)
+        assert isinstance(ds, SEN12MS)
