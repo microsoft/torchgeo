@@ -68,7 +68,7 @@ jobs:
       run: sudo apt-get install libgeos-dev libproj-dev unrar
       if: ${{ runner.os == 'Linux' }}
     - name: Install brew dependencies
-      run: brew install geos proj rar
+      run: brew install geos pkg-config proj rar
       if: ${{ runner.os == 'macOS' }}
     - name: Install conda
       uses: conda-incubator/setup-miniconda@v2
