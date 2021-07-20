@@ -11,7 +11,6 @@ import rasterio
 import torch
 from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
-from rasterio.windows import Window
 from rtree.index import Index, Property
 
 from .geo import GeoDataset
@@ -115,7 +114,7 @@ class Sentinel2(Sentinel):
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
-            sample of data/labels and metadata at that index
+            sample of data and metadata at that index
 
         Raises:
             IndexError: if query is not within bounds of the index
@@ -134,11 +133,13 @@ class Sentinel2(Sentinel):
             filename = "_".join(tokens)
             with rasterio.open(filename) as src:
                 with WarpedVRT(src, crs=self.crs) as vrt:
-                    col_off = (query.minx - vrt.bounds.left) // vrt.res[0]
-                    row_off = (query.miny - vrt.bounds.bottom) // vrt.res[1]
-                    width = query.maxx - query.minx
-                    height = query.maxy - query.miny
-                    window = Window(col_off, row_off, width, height)
+                    window = rasterio.windows.from_bounds(
+                        query.minx,
+                        query.miny,
+                        query.maxx,
+                        query.maxy,
+                        transform=vrt.transform,
+                    )
                     image = vrt.read(window=window)
             data_list.append(image)
         # FIXME: different bands have different resolution, won't be able to concatenate
@@ -147,6 +148,7 @@ class Sentinel2(Sentinel):
         sample = {
             "image": torch.tensor(image),  # type: ignore[attr-defined]
             "crs": self.crs,
+            "bbox": query,
         }
 
         if self.transforms is not None:
