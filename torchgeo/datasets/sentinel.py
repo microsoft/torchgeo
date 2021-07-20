@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, Optional, Sequence
 import numpy as np
 import rasterio
 import torch
-from rasterio.crs import CRS
+from rasterio.crs import CRS as RCRS
 from rasterio.vrt import WarpedVRT
 from rtree.index import Index, Property
 
@@ -67,7 +67,7 @@ class Sentinel2(Sentinel):
     def __init__(
         self,
         root: str = "data",
-        crs: CRS = CRS.from_epsg(32641),
+        crs: RCRS = RCRS.from_epsg(32641),
         bands: Sequence[str] = band_names,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
     ) -> None:
