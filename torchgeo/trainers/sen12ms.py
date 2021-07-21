@@ -31,6 +31,8 @@ class SEN12MSSegmentationTask(pl.LightningModule):
 
         Args:
             model: A model (specifically, a ``nn.Module``) instance to be trained.
+            loss: A semantic segmentation loss function to use (e.g. pixel-wise
+                crossentropy)
         """
         super().__init__()
         self.save_hyperparameters()  # creates `self.hparams` from kwargs
@@ -131,12 +133,7 @@ class SEN12MSDataModule(pl.LightningDataModule):
     )
 
     def __init__(
-        self,
-        root_dir: str,
-        seed: int,
-        batch_size: int = 64,
-        num_workers: int = 4,
-        api_key: Optional[str] = None,
+        self, root_dir: str, seed: int, batch_size: int = 64, num_workers: int = 4
     ) -> None:
         """Initialize a LightningDataModule for SEN12MS based DataLoaders.
 
@@ -155,7 +152,6 @@ class SEN12MSDataModule(pl.LightningDataModule):
     # TODO: This needs to be converted to actual transforms instead of hacked
     def custom_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
-
         sample["image"] = sample["image"].float()
 
         # scale to [0,1] separately for the S1 channels and the S2 channels
