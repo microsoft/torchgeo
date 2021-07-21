@@ -6,6 +6,7 @@ import os
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional, Sequence
 
+import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
@@ -18,6 +19,10 @@ from torch import Tensor
 
 from .geo import GeoDataset
 from .utils import BoundingBox
+
+
+_ccrs = ccrs.UTM(16)
+_rcrs = RCRS.from_epsg(32616)
 
 
 class Landsat(GeoDataset, abc.ABC):
@@ -48,7 +53,7 @@ class Landsat(GeoDataset, abc.ABC):
     def __init__(
         self,
         root: str = "data",
-        crs: RCRS = RCRS.from_epsg(32616),
+        crs: RCRS = _rcrs,
         bands: Sequence[str] = [],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
     ) -> None:
@@ -139,8 +144,8 @@ class Landsat(GeoDataset, abc.ABC):
         self,
         image: Tensor,
         bbox: BoundingBox,
-        projection: CCRS,
-        transform: CCRS,
+        projection: CCRS = _ccrs,
+        transform: CCRS = _ccrs,
     ) -> None:
         """Plot an image on a map.
 
