@@ -20,7 +20,6 @@ from torch import Tensor
 from .geo import GeoDataset
 from .utils import BoundingBox
 
-
 _ccrs = ccrs.UTM(16)
 _rcrs = RCRS.from_epsg(32616)
 
