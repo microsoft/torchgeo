@@ -180,8 +180,6 @@ def main(args: argparse.Namespace) -> None:
         )
         loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
         task = SEN12MSSegmentationTask(model, loss, **dict_args)
-    else:
-        raise ValueError(f"Task {args.task} is not recognized as a valid task.")
 
     ######################################
     # Setup trainer
