@@ -18,6 +18,7 @@ rarfile
 rasterio>=1.0
 rtree>=0.5.0
 scikit-learn
+segmentation-models-pytorch
 setuptools>=42
 sphinx
 torch>=1.7
