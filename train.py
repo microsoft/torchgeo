@@ -8,9 +8,12 @@ import os
 import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+from pytorch_lightning.core.datamodule import LightningDataModule
+from pytorch_lightning.core.lightning import LightningModule
 from torchvision import models
 
 from torchgeo.trainers import CycloneDataModule, CycloneSimpleRegressionTask
+from torchgeo.trainers import SEN12MSDataModule, SEN12MSSegmentationTask
 
 
 def set_up_parser() -> argparse.ArgumentParser:
@@ -23,7 +26,9 @@ def set_up_parser() -> argparse.ArgumentParser:
         description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
+    ###########################
     # Add _program_ level arguments to the parser
+    ###########################
     parser.add_argument(
         "--batch_size",
         type=int,
@@ -78,10 +83,24 @@ def set_up_parser() -> argparse.ArgumentParser:
     # See https://pytorch-lightning.readthedocs.io/en/latest/common/hyperparameters.html
     # for best practices here
 
+    ###########################
     # Add _trainer_ level arguments to the parser
+    ###########################
     parser = pl.Trainer.add_argparse_args(parser)
 
+    ###########################
     # TODO: Add _task_ level arguments to the parser for each _task_ we have implemented
+    ###########################
+    parser.add_argument(
+        "--task",
+        choices=[
+            "cyclone",
+            "sen12ms"
+        ],
+        type=str,
+        default="cyclone",
+        help="Task to perform",
+    )
     parser.add_argument(
         "--learning_rate",
         type=float,
@@ -127,19 +146,36 @@ def main(args: argparse.Namespace) -> None:
     ######################################
     # Choose task to run based on arguments or configuration
     ######################################
-    # TODO: Logic to switch between tasks
-
-    model = models.resnet18(pretrained=False, num_classes=1)
-    datamodule = CycloneDataModule(
-        args.data_dir,
-        seed=args.seed,
-        batch_size=args.batch_size,
-        num_workers=args.num_workers,
-    )
-
     # Convert the argparse Namespace into a dictionary so that we can pass as kwargs
     dict_args = vars(args)
-    task = CycloneSimpleRegressionTask(model, **dict_args)
+
+    datamodule: LightningDataModule = None
+    task: LightningModule = None
+    if args.task == "cyclone":
+        datamodule = CycloneDataModule(
+            args.data_dir,
+            seed=args.seed,
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+        )
+        model = models.resnet18(pretrained=False, num_classes=1)
+        task = CycloneSimpleRegressionTask(model, **dict_args)
+    elif args.task == "sen12ms":
+        import segmentation_models_pytorch as smp
+
+        datamodule = SEN12MSDataModule(
+            args.data_dir,
+            seed=args.seed,
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+        )
+        model = smp.Unet(
+            encoder_name="resnet18",
+            encoder_weights=None,
+            in_channels=15,
+            classes=11,
+        )
+        task = SEN12MSSegmentationTask(model, None, **dict_args)
 
     ######################################
     # Setup trainer
