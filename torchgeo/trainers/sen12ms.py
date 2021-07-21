@@ -1,6 +1,7 @@
 """SEN12MS trainer."""
 
 from typing import Any, Dict, Optional
+
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
@@ -106,26 +107,28 @@ class SEN12MSDataModule(pl.LightningDataModule):
 
     # Mapping from the IGBP class definitions to the DFC2020, taken from the dataloader
     # here https://github.com/lukasliebel/dfc2020_baseline.
-    DFC2020_CLASS_MAPPING = torch.tensor([
-        0,  # maps 0s to 0
-        1,  # maps 1s to 1
-        1,  # maps 2s to 1
-        1,  # ...
-        1,
-        1,
-        2,
-        2,
-        3,
-        3,
-        4,
-        5,
-        6,
-        7,
-        6,
-        8,
-        9,
-        10
-    ])
+    DFC2020_CLASS_MAPPING = torch.tensor(
+        [
+            0,  # maps 0s to 0
+            1,  # maps 1s to 1
+            1,  # maps 2s to 1
+            1,  # ...
+            1,
+            1,
+            2,
+            2,
+            3,
+            3,
+            4,
+            5,
+            6,
+            7,
+            6,
+            8,
+            9,
+            10,
+        ]
+    )
 
     def __init__(
         self,
@@ -174,14 +177,14 @@ class SEN12MSDataModule(pl.LightningDataModule):
             self.root_dir,
             split="train",
             transforms=self.custom_transform,
-            checksum=False
+            checksum=False,
         )
 
         self.all_test_dataset = SEN12MS(
             self.root_dir,
             split="test",
             transforms=self.custom_transform,
-            checksum=False
+            checksum=False,
         )
 
     def setup(self, stage: Optional[str] = None) -> None:

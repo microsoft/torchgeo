@@ -136,10 +136,7 @@ class SEN12MS(VisionDataset):
                 raise RuntimeError("Dataset not found or corrupted.")
 
         with open(os.path.join(self.root, self.base_folder, split + "_list.txt")) as f:
-            self.ids = [
-                line.rstrip()
-                for line in f.readlines()
-            ]
+            self.ids = [line.rstrip() for line in f.readlines()]
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.

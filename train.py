@@ -12,8 +12,12 @@ from pytorch_lightning.core.datamodule import LightningDataModule
 from pytorch_lightning.core.lightning import LightningModule
 from torchvision import models
 
-from torchgeo.trainers import CycloneDataModule, CycloneSimpleRegressionTask
-from torchgeo.trainers import SEN12MSDataModule, SEN12MSSegmentationTask
+from torchgeo.trainers import (
+    CycloneDataModule,
+    CycloneSimpleRegressionTask,
+    SEN12MSDataModule,
+    SEN12MSSegmentationTask,
+)
 
 
 def set_up_parser() -> argparse.ArgumentParser:
@@ -93,10 +97,7 @@ def set_up_parser() -> argparse.ArgumentParser:
     ###########################
     parser.add_argument(
         "--task",
-        choices=[
-            "cyclone",
-            "sen12ms"
-        ],
+        choices=["cyclone", "sen12ms"],
         type=str,
         default="cyclone",
         help="Task to perform",
