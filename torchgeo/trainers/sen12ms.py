@@ -1,7 +1,6 @@
 """SEN12MS trainer."""
 
 from typing import Any, Dict, Optional
-
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
@@ -11,7 +10,7 @@ from torch.nn.modules import Module
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader, Subset
 
-from ..datasets import TropicalCycloneWindEstimation
+from ..datasets import SEN12MS
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -26,8 +25,8 @@ class SEN12MSSegmentationTask(pl.LightningModule):
     package.
     """
 
-    def __init__(self, model: Module, **kwargs: Dict[str, Any]) -> None:
-        """Initialize the LightningModule and sets up model and loss.
+    def __init__(self, model: Module, loss: Module, **kwargs: Dict[str, Any]) -> None:
+        """Initialize the LightningModule with a model and loss function.
 
         Args:
             model: A model (specifically, a ``nn.Module``) instance to be trained.
@@ -45,15 +44,11 @@ class SEN12MSSegmentationTask(pl.LightningModule):
     ) -> Tensor:
         """Training step with an MSE loss. Reports MSE and RMSE."""
         x = batch["image"]
-        y = batch["wind_speed"].view(-1, 1)
+        y = batch["mask"]
         y_hat = self.forward(x)
 
-        loss = F.mse_loss(y_hat, y)
-
+        loss = F.cross_entropy(y_hat, y)
         self.log("train_loss", loss)  # logging to TensorBoard
-
-        rmse = torch.sqrt(loss)  # type: ignore[attr-defined]
-        self.log("train_rmse", rmse)
 
         return loss
 
@@ -62,28 +57,22 @@ class SEN12MSSegmentationTask(pl.LightningModule):
     ) -> None:
         """Validation step - reports MSE and RMSE."""
         x = batch["image"]
-        y = batch["wind_speed"].view(-1, 1)
+        y = batch["mask"]
         y_hat = self.forward(x)
 
-        loss = F.mse_loss(y_hat, y)
+        loss = F.cross_entropy(y_hat, y)
         self.log("val_loss", loss)
-
-        rmse = torch.sqrt(loss)  # type: ignore[attr-defined]
-        self.log("val_rmse", rmse)
 
     def test_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
-        """Test step identical to the validation step. Reports MSE and RMSE."""
+        """Test step identical to the validation step."""
         x = batch["image"]
-        y = batch["wind_speed"].view(-1, 1)
+        y = batch["mask"]
         y_hat = self.forward(x)
 
-        loss = F.mse_loss(y_hat, y)
+        loss = F.cross_entropy(y_hat, y)
         self.log("test_loss", loss)
-
-        rmse = torch.sqrt(loss)  # type: ignore[attr-defined]
-        self.log("test_rmse", rmse)
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler."""
@@ -108,13 +97,40 @@ class SEN12MSSegmentationTask(pl.LightningModule):
 class SEN12MSDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the SEN12MS dataset.
 
-    Implements 80/20 random train/val splits and uses the test split from the dataset.
-    See :func:`setup` for more details.
+    Implements 80/20 geographic train/val splits and uses the test split from the
+    classification dataset definitions. See :func:`setup` for more details.
+
+    Uses the Simplified IGBP scheme defined in the 2020 Data Fusion Competition. See
+    https://arxiv.org/abs/2002.08254.
     """
+
+    # Mapping from the IGBP class definitions to the DFC2020, taken from the dataloader
+    # here https://github.com/lukasliebel/dfc2020_baseline.
+    DFC2020_CLASS_MAPPING = torch.tensor([
+        0,  # maps 0s to 0
+        1,  # maps 1s to 1
+        1,  # maps 2s to 1
+        1,  # ...
+        1,
+        1,
+        2,
+        2,
+        3,
+        3,
+        4,
+        5,
+        6,
+        7,
+        6,
+        8,
+        9,
+        10
+    ])
 
     def __init__(
         self,
         root_dir: str,
+        seed: int,
         batch_size: int = 64,
         num_workers: int = 4,
         api_key: Optional[str] = None,
@@ -123,28 +139,28 @@ class SEN12MSDataModule(pl.LightningDataModule):
 
         Args:
             root_dir: The ``root`` arugment to pass to the SEN12MS Dataset classes
+            seed: The seed value to use when doing the sklearn based ShuffleSplit
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
-            api_key: The RadiantEarth MLHub API key to use if the dataset needs to be
-                downloaded
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
         self.seed = seed
         self.batch_size = batch_size
         self.num_workers = num_workers
-        self.api_key = api_key
 
     # TODO: This needs to be converted to actual transforms instead of hacked
     def custom_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
-        sample["image"] = sample["image"] / 255.0  # scale to [0,1]
-        sample["image"] = (
-            sample["image"].unsqueeze(0).repeat(3, 1, 1)
-        )  # convert to 3 channel
-        sample["wind_speed"] = torch.as_tensor(  # type: ignore[attr-defined]
-            sample["wind_speed"]
-        ).float()
+
+        sample["image"] = sample["image"].float()
+
+        # scale to [0,1] separately for the S1 channels and the S2 channels
+        sample["image"][:2] = sample["image"][:2].clip(-25, 0) / -25
+        sample["image"][2:] = sample["image"][2:].clip(0, 10000) / 10000
+
+        sample["mask"] = sample["mask"][0, :, :].long()
+        sample["mask"] = torch.take(self.DFC2020_CLASS_MAPPING, sample["mask"])
 
         return sample
 
@@ -154,21 +170,18 @@ class SEN12MSDataModule(pl.LightningDataModule):
         This includes optionally downloading the dataset. This is done once per node,
         while :func:`setup` is done once per GPU.
         """
-        do_download = self.api_key is not None
-        self.all_train_dataset = TropicalCycloneWindEstimation(
+        self.all_train_dataset = SEN12MS(
             self.root_dir,
             split="train",
             transforms=self.custom_transform,
-            download=do_download,
-            api_key=self.api_key,
+            checksum=False
         )
 
-        self.all_test_dataset = TropicalCycloneWindEstimation(
+        self.all_test_dataset = SEN12MS(
             self.root_dir,
             split="test",
             transforms=self.custom_transform,
-            download=do_download,
-            api_key=self.api_key,
+            checksum=False
         )
 
     def setup(self, stage: Optional[str] = None) -> None:
@@ -177,21 +190,31 @@ class SEN12MSDataModule(pl.LightningDataModule):
         The splits should be done here vs. in :func:`__init__` per the docs:
         https://pytorch-lightning.readthedocs.io/en/latest/extensions/datamodules.html#setup.
 
-        We split samples between train/val by the ``storm_id`` property. I.e. all
-        samples with the same ``storm_id`` value will be either in the train or the val
-        split. This is important to test one type of generalizability -- given a new
-        storm, can we predict its windspeed. The test set, however, contains *some*
-        storms from the training set (specifically, the latter parts of the storms) as
-        well as some novel storms.
+        We split samples between train and val geographically with proportions of 80/20.
+        This mimics the geographic test set split.
         """
-        storm_ids = []
-        for item in self.all_train_dataset.collection:
-            storm_id = item["href"].split("/")[0].split("_")[-2]
-            storm_ids.append(storm_id)
+        season_to_int = {
+            "winter": 0,
+            "spring": 1000,
+            "summer": 2000,
+            "fall": 3000,
+        }
+
+        # A patch is a filename like: "ROIs{num}_{season}_s2_{scene_id}_p{patch_id}.tif"
+        # This patch will belong to the scene that is uniquelly identified by its
+        # (season, scene_id) tuple. Because the largest scene_id is 149, we can simply
+        # give each season a large number and representing a `unique_scene_id` as
+        # `season_id + scene_id`.
+        scenes = []
+        for scene_fn in self.all_train_dataset.ids:
+            parts = scene_fn.split("_")
+            season_id = season_to_int[parts[1]]
+            scene_id = int(parts[3])
+            scenes.append(season_id + scene_id)
 
         train_indices, val_indices = next(
             GroupShuffleSplit(test_size=0.2, n_splits=2, random_state=self.seed).split(
-                storm_ids, groups=storm_ids
+                scenes, groups=scenes
             )
         )
 
