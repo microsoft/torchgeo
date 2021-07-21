@@ -4,8 +4,10 @@
 
 import argparse
 import os
+from typing import Optional
 
 import pytorch_lightning as pl
+import torch.nn as nn
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.core.datamodule import LightningDataModule
@@ -150,8 +152,8 @@ def main(args: argparse.Namespace) -> None:
     # Convert the argparse Namespace into a dictionary so that we can pass as kwargs
     dict_args = vars(args)
 
-    datamodule: LightningDataModule = None
-    task: LightningModule = None
+    datamodule: Optional[LightningDataModule] = None
+    task: Optional[LightningModule] = None
     if args.task == "cyclone":
         datamodule = CycloneDataModule(
             args.data_dir,
@@ -176,7 +178,10 @@ def main(args: argparse.Namespace) -> None:
             in_channels=15,
             classes=11,
         )
-        task = SEN12MSSegmentationTask(model, None, **dict_args)
+        loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
+        task = SEN12MSSegmentationTask(model, loss, **dict_args)
+    else:
+        raise ValueError(f"Task {args.task} is not recognized as a valid task.")
 
     ######################################
     # Setup trainer
