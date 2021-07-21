@@ -1,6 +1,6 @@
 """SEN12MS trainer."""
 
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, List, Optional, cast
 
 import pytorch_lightning as pl
 import torch
@@ -136,20 +136,38 @@ class SEN12MSDataModule(pl.LightningDataModule):
         ]
     )
 
+    BAND_SETS: Dict[str, List[int]] = {
+        "all": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+        "s1": [0, 1],
+        "s2-all": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+        "s2-reduced": [3, 4, 5, 9, 12, 13],
+    }
+
     def __init__(
-        self, root_dir: str, seed: int, batch_size: int = 64, num_workers: int = 4
+        self,
+        root_dir: str,
+        seed: int,
+        band_set: str = "all",
+        batch_size: int = 64,
+        num_workers: int = 4,
     ) -> None:
         """Initialize a LightningDataModule for SEN12MS based DataLoaders.
 
         Args:
             root_dir: The ``root`` arugment to pass to the SEN12MS Dataset classes
             seed: The seed value to use when doing the sklearn based ShuffleSplit
+            band_set: The subset of S1/S2 bands to use. Options are: "all",
+                "s1", "s2-all", and "s2-reduced" where the "s2-reduced" set includes:
+                B2, B3, B4, B8, B11, and B12.
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
         """
         super().__init__()  # type: ignore[no-untyped-call]
+        assert band_set in ["all", "s1", "s2-all", "s2-reduced"]  # BAND_SETS.keys()
+
         self.root_dir = root_dir
         self.seed = seed
+        self.band_set = band_set
         self.batch_size = batch_size
         self.num_workers = num_workers
 
@@ -161,6 +179,9 @@ class SEN12MSDataModule(pl.LightningDataModule):
         # scale to [0,1] separately for the S1 channels and the S2 channels
         sample["image"][:2] = sample["image"][:2].clip(-25, 0) / -25
         sample["image"][2:] = sample["image"][2:].clip(0, 10000) / 10000
+
+        band_indices = self.BAND_SETS[self.band_set]
+        sample["image"] = sample["image"][band_indices, :, :]
 
         sample["mask"] = sample["mask"][0, :, :].long()
         sample["mask"] = torch.take(  # type: ignore[attr-defined]
