@@ -3,6 +3,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torchvision.datasets.utils
@@ -36,6 +37,9 @@ class TestCDL:
         monkeypatch.setattr(CDL, "md5s", md5s)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "cdl", "{}_30m_cdls.zip")
         monkeypatch.setattr(CDL, "url", url)  # type: ignore[attr-defined]
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            plt, "show", lambda *args: None
+        )
         (tmp_path / "cdl").mkdir()
         root = str(tmp_path)
         transforms = Identity()

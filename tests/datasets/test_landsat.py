@@ -1,8 +1,11 @@
 import os
 from pathlib import Path
+from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
+from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import BoundingBox, Landsat8, ZipDataset
@@ -11,7 +14,10 @@ from torchgeo.transforms import Identity
 
 class TestLandsat8:
     @pytest.fixture
-    def dataset(self) -> Landsat8:
+    def dataset(self, monkeypatch: Generator[MonkeyPatch, None, None]) -> Landsat8:
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            plt, "show", lambda *args: None
+        )
         root = os.path.join("tests", "data")
         bands = ["B4", "B3", "B2"]
         transforms = Identity()
