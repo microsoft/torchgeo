@@ -77,10 +77,10 @@ class SEN12MS(VisionDataset):
         "test_list.txt",
     ]
     light_filenames = [
-        "ROIs1158_spring/",
-        "ROIs1868_summer/",
-        "ROIs1970_fall/",
-        "ROIs2017_winter/",
+        "ROIs1158_spring",
+        "ROIs1868_summer",
+        "ROIs1970_fall",
+        "ROIs2017_winter",
         "train_list.txt",
         "test_list.txt",
     ]
