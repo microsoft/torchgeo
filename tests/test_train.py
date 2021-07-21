@@ -4,6 +4,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 
 def test_help() -> None:
     args = [sys.executable, "train.py", "--help"]
@@ -83,3 +85,28 @@ def test_overwrite_experiment_dir(tmp_path: Path) -> None:
         b"The experiment directory, .*, already exists, we might overwrite data in it!",
         ps.stdout,
     )
+
+
+@pytest.mark.parametrize("task", ["cyclone", "sen12ms"])
+def test_tasks(task: str, tmp_path: Path) -> None:
+    experiment_name = "test"
+    output_dir = tmp_path / "output"
+    data_dir = os.path.join("tests", "data")
+    log_dir = tmp_path / "logs"
+    args = [
+        sys.executable,
+        "train.py",
+        "--experiment_name",
+        experiment_name,
+        "--output_dir",
+        str(output_dir),
+        "--data_dir",
+        data_dir,
+        "--log_dir",
+        str(log_dir),
+        "--fast_dev_run",
+        "1",
+        "--task",
+        task,
+    ]
+    subprocess.run(args, check=True)
