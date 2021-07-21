@@ -28,6 +28,11 @@ class TestLandsat8:
         ds = dataset + dataset
         assert isinstance(ds, ZipDataset)
 
+    def test_plot(self, dataset: Landsat8) -> None:
+        query = dataset.bounds
+        x = dataset[query]
+        dataset.plot(x["image"], query)
+
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="No Landsat data was found in "):
             Landsat8(str(tmp_path))
