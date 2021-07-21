@@ -54,6 +54,11 @@ class TestCDL:
     def test_already_downloaded(self, dataset: CDL) -> None:
         CDL(root=dataset.root, download=True)
 
+    def test_plot(self, dataset: CDL) -> None:
+        query = dataset.bounds
+        x = dataset[query]
+        dataset.plot(x["masks"], query)
+
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             CDL(str(tmp_path))

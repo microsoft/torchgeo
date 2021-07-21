@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional
 
+import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
@@ -19,7 +20,8 @@ from torchvision.datasets.utils import check_integrity, download_and_extract_arc
 from .geo import GeoDataset
 from .utils import BoundingBox
 
-_crs = RCRS.from_wkt(
+_ccrs = ccrs.AlbersEqualArea(-96, 23, 0, 0, (29.5, 45.5))
+_rcrs = RCRS.from_wkt(
     """
 PROJCS["Albers Conical Equal Area",
     GEOGCS["NAD83",
@@ -85,7 +87,7 @@ class CDL(GeoDataset):
     def __init__(
         self,
         root: str = "data",
-        crs: RCRS = _crs,
+        crs: RCRS = _rcrs,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -201,8 +203,8 @@ class CDL(GeoDataset):
         self,
         image: Tensor,
         bbox: BoundingBox,
-        projection: CCRS,
-        transform: CCRS,
+        projection: CCRS = _ccrs,
+        transform: CCRS = _ccrs,
     ) -> None:
         """Plot an image on a map.
 
