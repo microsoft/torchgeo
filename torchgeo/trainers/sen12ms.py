@@ -1,10 +1,10 @@
 """SEN12MS trainer."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 import pytorch_lightning as pl
 import torch
-import torch.nn.functional as F
+import torch.nn as nn
 from sklearn.model_selection import GroupShuffleSplit
 from torch import Tensor
 from torch.nn.modules import Module
@@ -26,7 +26,12 @@ class SEN12MSSegmentationTask(pl.LightningModule):
     package.
     """
 
-    def __init__(self, model: Module, loss: Module, **kwargs: Dict[str, Any]) -> None:
+    def __init__(
+        self,
+        model: Module,
+        loss: Module = nn.CrossEntropyLoss(),  # type: ignore[attr-defined]
+        **kwargs: Dict[str, Any],
+    ) -> None:
         """Initialize the LightningModule with a model and loss function.
 
         Args:
@@ -37,6 +42,7 @@ class SEN12MSSegmentationTask(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()  # creates `self.hparams` from kwargs
         self.model = model
+        self.loss = loss
 
     def forward(self, x: Tensor) -> Any:  # type: ignore[override]
         """Forward pass of the model."""
@@ -50,10 +56,10 @@ class SEN12MSSegmentationTask(pl.LightningModule):
         y = batch["mask"]
         y_hat = self.forward(x)
 
-        loss = F.cross_entropy(y_hat, y)
+        loss = self.loss(y_hat, y)
         self.log("train_loss", loss)  # logging to TensorBoard
 
-        return loss
+        return cast(Tensor, loss)
 
     def validation_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
@@ -63,7 +69,7 @@ class SEN12MSSegmentationTask(pl.LightningModule):
         y = batch["mask"]
         y_hat = self.forward(x)
 
-        loss = F.cross_entropy(y_hat, y)
+        loss = self.loss(y_hat, y)
         self.log("val_loss", loss)
 
     def test_step(  # type: ignore[override]
@@ -74,7 +80,7 @@ class SEN12MSSegmentationTask(pl.LightningModule):
         y = batch["mask"]
         y_hat = self.forward(x)
 
-        loss = F.cross_entropy(y_hat, y)
+        loss = self.loss(y_hat, y)
         self.log("test_loss", loss)
 
     def configure_optimizers(self) -> Dict[str, Any]:
@@ -109,7 +115,7 @@ class SEN12MSDataModule(pl.LightningDataModule):
 
     # Mapping from the IGBP class definitions to the DFC2020, taken from the dataloader
     # here https://github.com/lukasliebel/dfc2020_baseline.
-    DFC2020_CLASS_MAPPING = torch.tensor(
+    DFC2020_CLASS_MAPPING = torch.tensor(  # type: ignore[attr-defined]
         [
             0,  # maps 0s to 0
             1,  # maps 1s to 1
@@ -159,7 +165,9 @@ class SEN12MSDataModule(pl.LightningDataModule):
         sample["image"][2:] = sample["image"][2:].clip(0, 10000) / 10000
 
         sample["mask"] = sample["mask"][0, :, :].long()
-        sample["mask"] = torch.take(self.DFC2020_CLASS_MAPPING, sample["mask"])
+        sample["mask"] = torch.take(  # type: ignore[attr-defined]
+            self.DFC2020_CLASS_MAPPING, sample["mask"]
+        )
 
         return sample
 
