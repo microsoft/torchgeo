@@ -4,7 +4,6 @@
 
 import argparse
 import os
-from typing import Optional
 
 import pytorch_lightning as pl
 import torch.nn as nn
@@ -152,8 +151,8 @@ def main(args: argparse.Namespace) -> None:
     # Convert the argparse Namespace into a dictionary so that we can pass as kwargs
     dict_args = vars(args)
 
-    datamodule: Optional[LightningDataModule] = None
-    task: Optional[LightningModule] = None
+    datamodule: LightningDataModule
+    task: LightningModule
     if args.task == "cyclone":
         datamodule = CycloneDataModule(
             args.data_dir,
