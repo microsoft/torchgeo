@@ -7,7 +7,7 @@ __all__ = (
     "CycloneDataModule",
     "CycloneSimpleRegressionTask",
     "SEN12MSDataModule",
-    "SEN12MSSegmentationTask"
+    "SEN12MSSegmentationTask",
 )
 
 # https://stackoverflow.com/questions/40018681
