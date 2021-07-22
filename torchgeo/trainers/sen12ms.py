@@ -1,8 +1,8 @@
 """SEN12MS trainer."""
 
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, cast
 
-from dataclasses import dataclass
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
@@ -11,6 +11,7 @@ from torch import Tensor
 from torch.nn.modules import Module
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader, Subset
+from torchmetrics import Accuracy  # type: ignore[attr-defined]
 
 from ..datasets import SEN12MS
 
@@ -30,6 +31,7 @@ class SEN12MSSegmentationTask(pl.LightningModule):
     @dataclass
     class Args:
         """Task specific arguments."""
+
         # Name of this task
         name: str = "sen12ms"
 
@@ -57,6 +59,10 @@ class SEN12MSSegmentationTask(pl.LightningModule):
         self.model = model
         self.loss = loss
 
+        self.train_accuracy = Accuracy()
+        self.val_accuracy = Accuracy()
+        self.test_accuracy = Accuracy()
+
     def forward(self, x: Tensor) -> Any:  # type: ignore[override]
         """Forward pass of the model."""
         return self.model(x)
@@ -68,11 +74,18 @@ class SEN12MSSegmentationTask(pl.LightningModule):
         x = batch["image"]
         y = batch["mask"]
         y_hat = self.forward(x)
+        y_hat_hard = y_hat.argmax(dim=1)
 
         loss = self.loss(y_hat, y)
+
         self.log("train_loss", loss)  # logging to TensorBoard
+        self.log("train_acc_step", self.train_accuracy(y_hat_hard, y))
 
         return cast(Tensor, loss)
+
+    def training_epoch_end(self, outputs: Any) -> None:
+        """Logs epoch level training metrics."""
+        self.log("train_acc_epoch", self.train_accuracy.compute())
 
     def validation_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
@@ -81,9 +94,16 @@ class SEN12MSSegmentationTask(pl.LightningModule):
         x = batch["image"]
         y = batch["mask"]
         y_hat = self.forward(x)
+        y_hat_hard = y_hat.argmax(dim=1)
 
         loss = self.loss(y_hat, y)
+
         self.log("val_loss", loss)
+        self.log("val_acc_step", self.val_accuracy(y_hat_hard, y))
+
+    def validation_epoch_end(self, outputs: Any) -> None:
+        """Logs epoch level validation metrics."""
+        self.log("val_acc_epoch", self.val_accuracy.compute())
 
     def test_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
@@ -92,9 +112,15 @@ class SEN12MSSegmentationTask(pl.LightningModule):
         x = batch["image"]
         y = batch["mask"]
         y_hat = self.forward(x)
+        y_hat_hard = y_hat.argmax(dim=1)
 
         loss = self.loss(y_hat, y)
         self.log("test_loss", loss)
+        self.log("test_acc_step", self.test_accuracy(y_hat_hard, y))
+
+    def test_epoch_end(self, outputs: Any) -> None:
+        """Logs epoch level test metrics."""
+        self.log("test_acc_epoch", self.test_accuracy.compute())
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler."""
