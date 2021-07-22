@@ -1,6 +1,5 @@
 """NASA Cyclone dataset trainer."""
 
-from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 import pytorch_lightning as pl
@@ -25,19 +24,6 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
 
     This does not take into account other per-sample features available in this dataset.
     """
-
-    @dataclass
-    class Args:
-        """Task specific arguments."""
-
-        # Name of this task
-        name: str = "cyclone"
-
-        # Learning rate
-        learning_rate: float = 1e-3
-
-        # Patience factor for the ReduceLROnPlateau schedule
-        learning_rate_schedule_patience: int = 2
 
     def __init__(self, model: Module, **kwargs: Dict[str, Any]) -> None:
         """Initialize a new LightningModule for training simple regression models.

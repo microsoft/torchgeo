@@ -1,6 +1,5 @@
 """SEN12MS trainer."""
 
-from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, cast
 
 import pytorch_lightning as pl
@@ -27,19 +26,6 @@ class SEN12MSSegmentationTask(pl.LightningModule):
     This allows using arbitrary models and losses from the
     ``pytorch_segmentation_models`` package.
     """
-
-    @dataclass
-    class Args:
-        """Task specific arguments."""
-
-        # Name of this task
-        name: str = "sen12ms"
-
-        # Learning rate
-        learning_rate: float = 1e-3
-
-        # Patience factor for the ReduceLROnPlateau schedule
-        learning_rate_schedule_patience: int = 2
 
     def __init__(
         self,
