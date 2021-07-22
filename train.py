@@ -3,10 +3,11 @@
 """torchgeo model training script."""
 
 import os
-from typing import Any, cast, Dict
-from omegaconf import OmegaConf, DictConfig
+from typing import Any, Dict, cast
+
 import pytorch_lightning as pl
 import torch.nn as nn
+from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.core.datamodule import LightningDataModule
@@ -62,9 +63,7 @@ def set_up_omegaconf() -> DictConfig:
     elif conf.task.name == "sen12ms":
         task_conf = OmegaConf.structured(SEN12MSSegmentationTask.Args)
     else:
-        raise ValueError(
-            f"task.name={conf.task.name} is not recognized as a validtask"
-        )
+        raise ValueError(f"task.name={conf.task.name} is not recognized as a validtask")
 
     conf.task = OmegaConf.merge(task_conf, conf.task)
     conf = cast(DictConfig, conf)  # convince mypy that everything is alright
@@ -101,9 +100,9 @@ def main(conf: DictConfig) -> None:
     ######################################
     # Choose task to run based on arguments or configuration
     ######################################
-    # Convert the argparse Namespace into a dictionary so that we can pass as kwargs
+    # Convert the DictConfig into a dictionary so that we can pass as kwargs. We use
+    # var() to convert the @dataclass from to_object() to a dictionary and to help mypy
     task_args = vars(OmegaConf.to_object(conf.task))
-    task_args = cast(Dict[Any, Any], task_args)
 
     datamodule: LightningDataModule
     task: LightningModule
@@ -154,11 +153,11 @@ def main(conf: DictConfig) -> None:
     )
 
     trainer_args = OmegaConf.to_object(conf.trainer)
-    trainer_args = cast(Dict[Any, Any], trainer_args)
+    trainer_args = cast(Dict[str, Any], trainer_args)
 
     trainer_args["callbacks"] = [checkpoint_callback, early_stopping_callback]
     trainer_args["logger"] = tb_logger
-    trainer = pl.Trainer(**trainer_args)  # type: ignore[arg-type]
+    trainer = pl.Trainer(**trainer_args)
 
     ######################################
     # Run experiment
