@@ -90,16 +90,14 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
         """Initialize the optimizer and learning rate scheduler."""
         optimizer = torch.optim.Adam(
             self.model.parameters(),
-            lr=self.hparams["learning_rate"],  # type: ignore[index]
+            lr=self.hparams["learning_rate"],
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
                     optimizer,
-                    patience=self.hparams[  # type: ignore[index]
-                        "learning_rate_schedule_patience"
-                    ],
+                    patience=self.hparams["learning_rate_schedule_patience"],
                 ),
                 "monitor": "val_loss",
             },
