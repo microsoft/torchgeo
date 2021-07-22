@@ -2,9 +2,9 @@
 
 """torchgeo model training script."""
 
-import argparse
 import os
-
+from typing import Any, cast, Dict
+from omegaconf import OmegaConf, DictConfig
 import pytorch_lightning as pl
 import torch.nn as nn
 from pytorch_lightning import loggers as pl_loggers
@@ -21,119 +21,72 @@ from torchgeo.trainers import (
 )
 
 
-def set_up_parser() -> argparse.ArgumentParser:
-    """Set up the argument parser with program level arguments.
+def set_up_omegaconf() -> DictConfig:
+    """Loads program arguments from either YAML config files or command line arguments.
+
+    This method loads defaults/a schema from "conf/defaults.yaml" as well as potential
+    arguments from the command line. If one of the command line arguments is
+    "config_file", then we additionally read arguments from that YAML file. One of the
+    config file based arguments or command line arguments must specify task.name. The
+    task.name value is used to grab a task specific defaults from its respective
+    trainer. The final configuration is given as merge(task_defaults, defaults,
+    config file, command line). The merge() works from the first argument to the last,
+    replacing existing values with newer values. Additionally, if any values are
+    merged into task_defaults without matching types, then there will be a runtime
+    error.
 
     Returns:
-        the argument parser
+        an OmegaConf DictConfig containing all the validated program arguments
+
+    # TODO: Raises
     """
-    parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    conf = OmegaConf.load("conf/defaults.yaml")
+    command_line_conf = OmegaConf.from_cli()
+
+    if "config_file" in command_line_conf:
+        config_fn = command_line_conf.config_file
+        if os.path.isfile(config_fn):
+            user_conf = OmegaConf.load(config_fn)
+            conf = OmegaConf.merge(conf, user_conf)
+        else:
+            raise IOError(f"config_file={config_fn} is not a valid file")
+
+    conf = OmegaConf.merge(  # Merge in any arguments passed via the command line
+        conf, command_line_conf
     )
 
-    ###########################
-    # Add _program_ level arguments to the parser
-    ###########################
-    parser.add_argument(
-        "--batch_size",
-        type=int,
-        default=32,
-        help="Batch size to use in training",
-    )
-    parser.add_argument(
-        "--num_workers",
-        type=int,
-        default=4,
-        help="Number of workers to use in the Dataloaders",
-    )
-    parser.add_argument(
-        "--seed",
-        type=int,
-        default=1337,
-        help="Random number generator seed for numpy and torch",
-    )
-    parser.add_argument(
-        "--experiment_name",
-        type=str,
-        required=True,
-        help="Name of this experiment (used in TensorBoard and as the subdirectory "
-        + "name to save results)",
-    )
-    parser.add_argument(
-        "--output_dir",
-        type=str,
-        default="output",
-        help="Directory to store experiment results",
-    )
-    parser.add_argument(
-        "--data_dir",
-        type=str,
-        default="data",
-        help="Directory where datasets are/will be stored",
-    )
-    parser.add_argument(
-        "--log_dir",
-        type=str,
-        default="logs",
-        help="Directory where logs will be stored.",
-    )
-    parser.add_argument(
-        "--overwrite",
-        action="store_true",
-        default=False,
-        help="Flag to enable overwriting existing output",
-    )
+    # These OmegaConf structured configs enforce a schema at runtime, see:
+    # https://omegaconf.readthedocs.io/en/2.0_branch/structured_config.html#merging-with-other-configs
+    if conf.task.name == "cyclone":
+        task_conf = OmegaConf.structured(CycloneSimpleRegressionTask.Args)
+    elif conf.task.name == "sen12ms":
+        task_conf = OmegaConf.structured(SEN12MSSegmentationTask.Args)
+    else:
+        raise ValueError(
+            f"task.name={conf.task.name} is not recognized as a validtask"
+        )
 
-    # TODO: may want to eventually switch to an OmegaConf based configuration system
-    # See https://pytorch-lightning.readthedocs.io/en/latest/common/hyperparameters.html
-    # for best practices here
+    conf.task = OmegaConf.merge(task_conf, conf.task)
+    conf = cast(DictConfig, conf)  # convince mypy that everything is alright
 
-    ###########################
-    # Add _trainer_ level arguments to the parser
-    ###########################
-    parser = pl.Trainer.add_argparse_args(parser)
-
-    ###########################
-    # TODO: Add _task_ level arguments to the parser for each _task_ we have implemented
-    ###########################
-    parser.add_argument(
-        "--task",
-        choices=["cyclone", "sen12ms"],
-        type=str,
-        default="cyclone",
-        help="Task to perform",
-    )
-    parser.add_argument(
-        "--learning_rate",
-        type=float,
-        default=1e-3,
-        help="Learning rate",
-    )
-    parser.add_argument(
-        "--learning_rate_schedule_patience",
-        type=int,
-        default=2,
-        help="Patience factor for the ReduceLROnPlateau schedule",
-    )
-
-    return parser
+    return conf
 
 
-def main(args: argparse.Namespace) -> None:
+def main(conf: DictConfig) -> None:
     """Main training loop."""
     ######################################
     # Setup output directory
     ######################################
 
-    if os.path.isfile(args.output_dir):
+    if os.path.isfile(conf.program.output_dir):
         raise NotADirectoryError("`--output_dir` must be a directory")
-    os.makedirs(args.output_dir, exist_ok=True)
+    os.makedirs(conf.program.output_dir, exist_ok=True)
 
-    experiment_dir = os.path.join(args.output_dir, args.experiment_name)
+    experiment_dir = os.path.join(conf.program.output_dir, conf.program.experiment_name)
     os.makedirs(experiment_dir, exist_ok=True)
 
     if len(os.listdir(experiment_dir)) > 0:
-        if args.overwrite:
+        if conf.program.overwrite:
             # TODO: convert this to logging.WARNING
             print(
                 f"WARNING! The experiment directory, {experiment_dir}, already exists, "
@@ -149,27 +102,28 @@ def main(args: argparse.Namespace) -> None:
     # Choose task to run based on arguments or configuration
     ######################################
     # Convert the argparse Namespace into a dictionary so that we can pass as kwargs
-    dict_args = vars(args)
+    task_args = vars(OmegaConf.to_object(conf.task))
+    task_args = cast(Dict[Any, Any], task_args)
 
     datamodule: LightningDataModule
     task: LightningModule
-    if args.task == "cyclone":
+    if conf.task.name == "cyclone":
         datamodule = CycloneDataModule(
-            args.data_dir,
-            seed=args.seed,
-            batch_size=args.batch_size,
-            num_workers=args.num_workers,
+            conf.program.data_dir,
+            seed=conf.program.seed,
+            batch_size=conf.program.batch_size,
+            num_workers=conf.program.num_workers,
         )
         model = models.resnet18(pretrained=False, num_classes=1)
-        task = CycloneSimpleRegressionTask(model, **dict_args)
-    elif args.task == "sen12ms":
+        task = CycloneSimpleRegressionTask(model, **task_args)
+    elif conf.task.name == "sen12ms":
         import segmentation_models_pytorch as smp
 
         datamodule = SEN12MSDataModule(
-            args.data_dir,
-            seed=args.seed,
-            batch_size=args.batch_size,
-            num_workers=args.num_workers,
+            conf.program.data_dir,
+            seed=conf.program.seed,
+            batch_size=conf.program.batch_size,
+            num_workers=conf.program.num_workers,
         )
         model = smp.Unet(
             encoder_name="resnet18",
@@ -178,12 +132,14 @@ def main(args: argparse.Namespace) -> None:
             classes=11,
         )
         loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
-        task = SEN12MSSegmentationTask(model, loss, **dict_args)
+        task = SEN12MSSegmentationTask(model, loss, **task_args)
 
     ######################################
     # Setup trainer
     ######################################
-    tb_logger = pl_loggers.TensorBoardLogger(args.log_dir, name=args.experiment_name)
+    tb_logger = pl_loggers.TensorBoardLogger(
+        conf.program.log_dir, name=conf.program.experiment_name
+    )
 
     checkpoint_callback = ModelCheckpoint(
         monitor="val_loss",
@@ -197,9 +153,12 @@ def main(args: argparse.Namespace) -> None:
         patience=10,
     )
 
-    trainer = pl.Trainer.from_argparse_args(
-        args, logger=tb_logger, callbacks=[checkpoint_callback, early_stopping_callback]
-    )
+    trainer_args = OmegaConf.to_object(conf.trainer)
+    trainer_args = cast(Dict[Any, Any], trainer_args)
+
+    trainer_args["callbacks"] = [checkpoint_callback, early_stopping_callback]
+    trainer_args["logger"] = tb_logger
+    trainer = pl.Trainer(**trainer_args)  # type: ignore[arg-type]
 
     ######################################
     # Run experiment
@@ -209,12 +168,11 @@ def main(args: argparse.Namespace) -> None:
 
 
 if __name__ == "__main__":
-    parser = set_up_parser()
-    args = parser.parse_args()
+    conf = set_up_omegaconf()
 
     # Set random seed for reproducibility
     # https://pytorch-lightning.readthedocs.io/en/latest/api/pytorch_lightning.utilities.seed.html#pytorch_lightning.utilities.seed.seed_everything
-    pl.seed_everything(args.seed)
+    pl.seed_everything(conf.program.seed)
 
     # Main training procedure
-    main(args)
+    main(conf)
