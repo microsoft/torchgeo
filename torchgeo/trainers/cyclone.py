@@ -1,8 +1,8 @@
 """NASA Cyclone dataset trainer."""
 
+from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-from dataclasses import dataclass
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
@@ -29,6 +29,7 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
     @dataclass
     class Args:
         """Task specific arguments."""
+
         # Name of this task
         name: str = "cyclone"
 
