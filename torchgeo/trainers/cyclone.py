@@ -2,6 +2,7 @@
 
 from typing import Any, Dict, Optional
 
+from dataclasses import dataclass
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
@@ -24,6 +25,18 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
 
     This does not take into account other per-sample features available in this dataset.
     """
+
+    @dataclass
+    class Args:
+        """Task specific arguments."""
+        # Name of this task
+        name: str = "cyclone"
+
+        # Learning rate
+        learning_rate: float = 1e-3
+
+        # Patience factor for the ReduceLROnPlateau schedule
+        learning_rate_schedule_patience: int = 2
 
     def __init__(self, model: Module, **kwargs: Dict[str, Any]) -> None:
         """Initialize a new LightningModule for training simple regression models.
@@ -90,14 +103,16 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
         """Initialize the optimizer and learning rate scheduler."""
         optimizer = torch.optim.Adam(
             self.model.parameters(),
-            lr=self.hparams["learning_rate"],
+            lr=self.hparams["learning_rate"],  # type: ignore[index]
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
                     optimizer,
-                    patience=self.hparams["learning_rate_schedule_patience"],
+                    patience=self.hparams[  # type: ignore[index]
+                        "learning_rate_schedule_patience"
+                    ],
                 ),
                 "monitor": "val_loss",
             },

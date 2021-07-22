@@ -2,6 +2,7 @@
 
 from typing import Any, Dict, List, Optional, cast
 
+from dataclasses import dataclass
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
@@ -22,9 +23,21 @@ Module.__module__ = "torch.nn"
 class SEN12MSSegmentationTask(pl.LightningModule):
     """LightningModule for training models on the SEN12MS Dataset.
 
-    This allows using arbitrary models and losses from the pytorch_segmentation_models
-    package.
+    This allows using arbitrary models and losses from the
+    ``pytorch_segmentation_models`` package.
     """
+
+    @dataclass
+    class Args:
+        """Task specific arguments."""
+        # Name of this task
+        name: str = "sen12ms"
+
+        # Learning rate
+        learning_rate: float = 1e-3
+
+        # Patience factor for the ReduceLROnPlateau schedule
+        learning_rate_schedule_patience: int = 2
 
     def __init__(
         self,
@@ -51,7 +64,7 @@ class SEN12MSSegmentationTask(pl.LightningModule):
     def training_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> Tensor:
-        """Training step with an MSE loss. Reports MSE and RMSE."""
+        """Training step - reports average accuracy and average IoU."""
         x = batch["image"]
         y = batch["mask"]
         y_hat = self.forward(x)
@@ -64,7 +77,7 @@ class SEN12MSSegmentationTask(pl.LightningModule):
     def validation_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
-        """Validation step - reports MSE and RMSE."""
+        """Validation step - reports average accuracy and average IoU."""
         x = batch["image"]
         y = batch["mask"]
         y_hat = self.forward(x)
@@ -87,14 +100,16 @@ class SEN12MSSegmentationTask(pl.LightningModule):
         """Initialize the optimizer and learning rate scheduler."""
         optimizer = torch.optim.Adam(
             self.model.parameters(),
-            lr=self.hparams["learning_rate"],
+            lr=self.hparams["learning_rate"],  # type: ignore[index]
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
                     optimizer,
-                    patience=self.hparams["learning_rate_schedule_patience"],
+                    patience=self.hparams[  # type: ignore[index]
+                        "learning_rate_schedule_patience"
+                    ],
                 ),
                 "monitor": "val_loss",
             },
