@@ -62,6 +62,8 @@ def set_up_omegaconf() -> DictConfig:
         task_conf = OmegaConf.load("conf/task_defaults/cyclone.yaml")
     elif conf.task.name == "sen12ms":
         task_conf = OmegaConf.load("conf/task_defaults/sen12ms.yaml")
+    elif conf.task.name == "test":
+        task_conf = OmegaConf.create()
     else:
         raise ValueError(f"task.name={conf.task.name} is not recognized as a validtask")
 
