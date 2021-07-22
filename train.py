@@ -59,13 +59,13 @@ def set_up_omegaconf() -> DictConfig:
     # These OmegaConf structured configs enforce a schema at runtime, see:
     # https://omegaconf.readthedocs.io/en/2.0_branch/structured_config.html#merging-with-other-configs
     if conf.task.name == "cyclone":
-        task_conf = OmegaConf.structured(CycloneSimpleRegressionTask.Args)
+        task_conf = OmegaConf.load("conf/task_defaults/cyclone.yaml")
     elif conf.task.name == "sen12ms":
-        task_conf = OmegaConf.structured(SEN12MSSegmentationTask.Args)
+        task_conf = OmegaConf.load("conf/task_defaults/sen12ms.yaml")
     else:
         raise ValueError(f"task.name={conf.task.name} is not recognized as a validtask")
 
-    conf.task = OmegaConf.merge(task_conf, conf.task)
+    conf = OmegaConf.merge(task_conf, conf)
     conf = cast(DictConfig, conf)  # convince mypy that everything is alright
 
     return conf
@@ -102,7 +102,8 @@ def main(conf: DictConfig) -> None:
     ######################################
     # Convert the DictConfig into a dictionary so that we can pass as kwargs. We use
     # var() to convert the @dataclass from to_object() to a dictionary and to help mypy
-    task_args = vars(OmegaConf.to_object(conf.task))
+    task_args = OmegaConf.to_object(conf.task)
+    task_args = cast(Dict[str, Any], task_args)
 
     datamodule: LightningDataModule
     task: LightningModule
