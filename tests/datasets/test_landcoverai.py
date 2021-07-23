@@ -5,11 +5,11 @@ from typing import Generator
 
 import pytest
 import torch
-import torchvision.datasets.utils
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
+import torchgeo.datasets.utils
 from torchgeo.datasets import LandCoverAI
 from torchgeo.transforms import Identity
 
@@ -27,7 +27,7 @@ class TestLandCoverAI:
         request: SubRequest,
     ) -> LandCoverAI:
         monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchvision.datasets.utils, "download_url", download_url
+            torchgeo.datasets.utils, "download_url", download_url
         )
         md5 = "8a84857267619c8cf22730193b3b1ada"
         monkeypatch.setattr(LandCoverAI, "md5", md5)  # type: ignore[attr-defined]
