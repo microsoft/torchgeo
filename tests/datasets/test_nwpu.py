@@ -10,7 +10,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.nwpu
+import torchvision.datasets.utils
 from torchgeo.datasets import VHR10
 from torchgeo.transforms import Identity
 
@@ -37,7 +37,7 @@ class TestVHR10:
         request: SubRequest,
     ) -> VHR10:
         monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.nwpu,
+            torchvision.datasets.utils,
             "download_file_from_google_drive",
             download_file_from_google_drive,
         )
