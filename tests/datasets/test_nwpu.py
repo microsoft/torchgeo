@@ -6,12 +6,11 @@ from typing import Generator
 
 import pytest
 import torch
-import torchvision.datasets.utils
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.nwpu
+import torchgeo.datasets.utils
 from torchgeo.datasets import VHR10
 from torchgeo.transforms import Identity
 
@@ -34,12 +33,10 @@ class TestVHR10:
         request: SubRequest,
     ) -> VHR10:
         monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.nwpu, "download_url", download_url
+            torchgeo.datasets.utils, "download_url", download_url
         )
         url = os.path.join("tests", "data", "vhr10", "NWPU VHR-10 dataset.rar")
-        monkeypatch.setitem(  # type: ignore[attr-defined]
-            VHR10.image_meta, "url", url
-        )
+        monkeypatch.setitem(VHR10.image_meta, "url", url)  # type: ignore[attr-defined]
         md5 = "e5c38351bd948479fe35a71136aedbc4"
         monkeypatch.setitem(VHR10.image_meta, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "vhr10", "annotations.json")
