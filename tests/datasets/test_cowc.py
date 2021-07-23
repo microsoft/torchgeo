@@ -15,7 +15,7 @@ from torchgeo.datasets.cowc import COWC
 from torchgeo.transforms import Identity
 
 
-def download_url(url: str, root: str, **kwargs: str) -> None:
+def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
