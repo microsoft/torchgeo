@@ -6,11 +6,12 @@ from typing import Generator
 
 import pytest
 import torch
+import torchvision.datasets.utils
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchvision.datasets.utils
+import torchgeo.datasets.nwpu
 from torchgeo.datasets import VHR10
 from torchgeo.transforms import Identity
 
