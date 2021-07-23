@@ -13,7 +13,6 @@ import torch
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_url
 
-
 __all__ = (
     "check_integrity",
     "download_url",
