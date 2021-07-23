@@ -36,13 +36,14 @@ class TestSEN12MS:
         root = os.path.join("tests", "data")
         split = request.param
         transforms = Identity()
-        return SEN12MS(root, split, transforms, checksum=True)
+        return SEN12MS(root, split, transforms=transforms, checksum=True)
 
     def test_getitem(self, dataset: SEN12MS) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
+        assert x["image"].shape[0] == 15
 
     def test_len(self, dataset: SEN12MS) -> None:
         assert len(dataset) == 8
@@ -71,3 +72,10 @@ class TestSEN12MS:
         root = os.path.join("tests", "data")
         ds = SEN12MS(root, checksum=False)
         assert isinstance(ds, SEN12MS)
+
+    def test_band_subsets(self) -> None:
+        root = os.path.join("tests", "data")
+        for bands in SEN12MS.BAND_SETS.values():
+            ds = SEN12MS(root, bands=bands, checksum=False)
+            x = ds[0]["image"]
+            assert x.shape[0] == len(bands)
