@@ -6,9 +6,9 @@ from typing import Callable, Dict, Optional
 import numpy as np
 import torch
 from torch import Tensor
-from torchvision.datasets.utils import check_integrity
 
 from .geo import VisionDataset
+from .utils import check_integrity
 
 
 class So2Sat(VisionDataset):

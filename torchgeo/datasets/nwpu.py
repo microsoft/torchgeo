@@ -7,13 +7,9 @@ import numpy as np
 import torch
 from PIL import Image
 from torch import Tensor
-from torchvision.datasets.utils import (
-    check_integrity,
-    download_file_from_google_drive,
-    download_url,
-)
 
 from .geo import VisionDataset
+from .utils import check_integrity, download_and_extract_archive, download_url
 
 
 class VHR10(VisionDataset):
@@ -65,7 +61,7 @@ class VHR10(VisionDataset):
 
     base_folder = "vhr10"
     image_meta = {
-        "file_id": "1--foZ3dV5OCsqXQXT84UeKtrAqc5CkAE",
+        "url": "https://drive.google.com/file/d/1--foZ3dV5OCsqXQXT84UeKtrAqc5CkAE",
         "filename": "NWPU VHR-10 dataset.rar",
         "md5": "d30a7ff99d92123ebb0b3a14d9102081",
     }
@@ -235,20 +231,12 @@ class VHR10(VisionDataset):
             return
 
         # Download images
-        download_file_from_google_drive(
-            self.image_meta["file_id"],
+        download_and_extract_archive(
+            self.image_meta["url"],
             os.path.join(self.root, self.base_folder),
             self.image_meta["filename"],
             self.image_meta["md5"] if self.checksum else None,
         )
-
-        # Must be installed to extract RAR file
-        import rarfile
-
-        with rarfile.RarFile(
-            os.path.join(self.root, self.base_folder, self.image_meta["filename"])
-        ) as f:
-            f.extractall(os.path.join(self.root, self.base_folder))
 
         # Annotations only needed for "positive" image set
         if self.split == "positive":
