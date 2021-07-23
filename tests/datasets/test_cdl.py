@@ -6,11 +6,11 @@ from typing import Generator
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torchvision.datasets.utils
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
+import torchgeo.datasets.utils
 from torchgeo.datasets import CDL, BoundingBox, ZipDataset
 from torchgeo.transforms import Identity
 
@@ -28,7 +28,7 @@ class TestCDL:
         request: SubRequest,
     ) -> CDL:
         monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchvision.datasets.utils, "download_url", download_url
+            torchgeo.datasets.utils, "download_url", download_url
         )
         md5s = [
             (2021, "0693f0bb10deb79c69bcafe4aa1635b7"),
