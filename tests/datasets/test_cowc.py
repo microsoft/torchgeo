@@ -9,7 +9,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.cowc
+import torchgeo.datasets.utils
 from torchgeo.datasets import COWCCounting, COWCDetection
 from torchgeo.datasets.cowc import COWC
 from torchgeo.transforms import Identity
@@ -34,7 +34,7 @@ class TestCOWCCounting:
         request: SubRequest,
     ) -> COWC:
         monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.cowc, "download_url", download_url
+            torchgeo.datasets.utils, "download_url", download_url
         )
         base_url = os.path.join("tests", "data", "cowc_counting") + os.sep
         monkeypatch.setattr(  # type: ignore[attr-defined]
