@@ -77,11 +77,6 @@ class TestBeninSmallHolderCashews:
     def test_already_downloaded(self, dataset: BeninSmallHolderCashews) -> None:
         BeninSmallHolderCashews(root=dataset.root, download=True, api_key="")
 
-    def test_missing_api_key(self) -> None:
-        match = "You must pass an MLHub API key if download=True."
-        with pytest.raises(RuntimeError, match=match):
-            BeninSmallHolderCashews(download=True)
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             BeninSmallHolderCashews(str(tmp_path))

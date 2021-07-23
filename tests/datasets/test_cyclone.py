@@ -86,11 +86,6 @@ class TestTropicalCycloneWindEstimation:
         with pytest.raises(AssertionError):
             TropicalCycloneWindEstimation(split="foo")
 
-    def test_missing_api_key(self) -> None:
-        match = "You must pass an MLHub API key if download=True."
-        with pytest.raises(RuntimeError, match=match):
-            TropicalCycloneWindEstimation(download=True)
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             TropicalCycloneWindEstimation(str(tmp_path))
