@@ -28,5 +28,6 @@ spack:
   - "py-setuptools@42:"
   - py-sphinx
   - "py-torch@1.7:"
+  - py-torchmetrics
   - "py-torchvision@0.3:"
   concretization: together
