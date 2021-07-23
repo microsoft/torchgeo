@@ -10,4 +10,4 @@ dependencies:
   - python
   - pytorch::pytorch>=1.7
   - conda-forge::rarfile
-  - pytorch::torchvision>=0.3,!=0.10.0
+  - pytorch::torchvision>=0.3
