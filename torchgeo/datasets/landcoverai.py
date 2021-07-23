@@ -8,10 +8,9 @@ import numpy as np
 import torch
 from PIL import Image
 from torch import Tensor
-from torchvision.datasets.utils import check_integrity, download_and_extract_archive
 
 from .geo import VisionDataset
-from .utils import working_dir
+from .utils import check_integrity, download_and_extract_archive, working_dir
 
 
 class LandCoverAI(VisionDataset):

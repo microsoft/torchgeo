@@ -9,9 +9,9 @@ import numpy as np
 import torch
 from PIL import Image
 from torch import Tensor
-from torchvision.datasets.utils import check_integrity, extract_archive
 
 from .geo import VisionDataset
+from .utils import check_integrity, download_radiant_mlhub, extract_archive
 
 
 class TropicalCycloneWindEstimation(VisionDataset):
@@ -72,8 +72,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if ``download=True`` but ``api_key=None``, or
-                ``download=False`` but dataset is missing or checksum fails
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         assert split in self.md5s
 
@@ -83,13 +82,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
         self.checksum = checksum
 
         if download:
-            if api_key is None:
-                raise RuntimeError(
-                    "You must pass an MLHub API key if download=True. "
-                    + "See https://www.mlhub.earth/ to register for API access."
-                )
-            else:
-                self._download(api_key)
+            self._download(api_key)
 
         if not self._check_integrity():
             raise RuntimeError(
@@ -195,7 +188,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
                     return False
         return True
 
-    def _download(self, api_key: str) -> None:
+    def _download(self, api_key: Optional[str] = None) -> None:
         """Download the dataset and extract it.
 
         Args:
@@ -208,12 +201,8 @@ class TropicalCycloneWindEstimation(VisionDataset):
             print("Files already downloaded and verified")
             return
 
-        # Must be installed to download from MLHub
-        import radiant_mlhub
-
         output_dir = os.path.join(self.root, self.base_folder)
-        dataset = radiant_mlhub.Dataset.fetch(self.collection_id, api_key=api_key)
-        dataset.download(output_dir, api_key=api_key)
+        download_radiant_mlhub(self.collection_id, output_dir, api_key)
 
         for split, resources in self.md5s.items():
             for resource_type in resources:

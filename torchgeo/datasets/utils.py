@@ -1,11 +1,136 @@
 """Common dataset utilities."""
 
+import bz2
 import contextlib
+import gzip
+import lzma
 import os
-from typing import Any, Dict, Iterator, List, Tuple
+import tarfile
+import zipfile
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 import torch
 from torch import Tensor
+from torchvision.datasets.utils import check_integrity, download_url
+
+
+__all__ = (
+    "check_integrity",
+    "download_url",
+    "download_and_extract_archive",
+    "extract_archive",
+    "BoundingBox",
+    "working_dir",
+    "collate_dict",
+)
+
+
+class _rarfile:
+    class RarFile:
+        def __enter__(self, *args: Any, **kwargs: Any) -> Any:
+            try:
+                import rarfile
+            except ImportError:
+                raise ImportError(
+                    "rarfile is not installed and is required to extract this dataset"
+                )
+
+            # TODO: catch exception for when rarfile is installed but not
+            # unrar/unar/bsdtar
+            return rarfile.RarFile(*args, **kwargs)
+
+
+def extract_archive(src: str, dst: Optional[str] = None) -> None:
+    """Extract an archive.
+
+    Args:
+        src: file to be extracted
+        dst: directory to extract to (defaults to dirname of ``src``)
+    """
+    if dst is None:
+        dst = os.path.dirname(src)
+
+    suffix_and_extractor: List[Tuple[Union[str, Tuple[str, ...]], Any]] = [
+        (".rar", _rarfile.RarFile),
+        (
+            (".tar", ".tar.gz", ".tar.bz2", ".tar.xz", ".tgz", ".tbz2", ".tbz", ".txz"),
+            tarfile.open,
+        ),
+        (".zip", zipfile.ZipFile),
+    ]
+
+    for suffix, extractor in suffix_and_extractor:
+        if src.endswith(suffix):
+            with extractor(src, "r") as f:
+                f.extractall(dst)
+            return
+
+    suffix_and_decompressor: List[Tuple[str, Any]] = [
+        (".bz2", bz2.open),
+        (".gz", gzip.open),
+        (".xz", lzma.open),
+    ]
+
+    for suffix, decompressor in suffix_and_decompressor:
+        if src.endswith(suffix):
+            dst = os.path.join(dst, os.path.basename(src).replace(suffix, ""))
+            with decompressor(src, "rb") as sf, open(dst, "wb") as df:
+                df.write(sf.read())
+            return
+
+    raise RuntimeError("src file has unknown archival/compression scheme")
+
+
+def download_and_extract_archive(
+    url: str,
+    download_root: str,
+    extract_root: Optional[str] = None,
+    filename: Optional[str] = None,
+    md5: Optional[str] = None,
+) -> None:
+    """Download and extract an archive.
+
+    Args:
+        url: URL to download
+        download_root: directory to download to
+        extract_root: directory to extract to (defaults to ``download_root``)
+        filename: download filename (defaults to basename of ``url``)
+        md5: checksum for download verification
+    """
+    download_root = os.path.expanduser(download_root)
+    if extract_root is None:
+        extract_root = download_root
+    if not filename:
+        filename = os.path.basename(url)
+
+    download_url(url, download_root, filename, md5)
+
+    archive = os.path.join(download_root, filename)
+    print("Extracting {} to {}".format(archive, extract_root))
+    extract_archive(archive, extract_root)
+
+
+def download_radiant_mlhub(
+    dataset_id: str, download_root: str, api_key: Optional[str] = None
+) -> None:
+    """Download a dataset from Radiant Earth.
+
+    Args:
+        dataset_id: the ID of the dataset to fetch
+        download_root: directory to download to
+        api_key: the API key to use for all requests from the session. Can also be
+            passed in via the ``MLHUB_API_KEY`` environment variable, or configured in
+            ``~/.mlhub/profiles``.
+    """
+    try:
+        import radiant_mlhub
+    except ImportError:
+        raise ImportError(
+            "radiant_mlhub is not installed and is required to download this dataset"
+        )
+
+    dataset = radiant_mlhub.Dataset.fetch(dataset_id, api_key=api_key)
+    dataset.download(output_dir=download_root, api_key=api_key)
 
 
 class BoundingBox(Tuple[float, float, float, float, float, float]):

@@ -9,9 +9,9 @@ import numpy as np
 import torch
 from PIL import Image
 from torch import Tensor
-from torchvision.datasets.utils import check_integrity, extract_archive
 
 from .geo import VisionDataset
+from .utils import check_integrity, download_radiant_mlhub, extract_archive
 
 
 # TODO: read geospatial information from stac.json files
@@ -131,8 +131,7 @@ class CV4AKenyaCropType(VisionDataset):
             verbose: if True, print messages when new tiles are loaded
 
         Raises:
-            RuntimeError: if ``download=True`` but ``api_key=None``, or
-                ``download=False`` but dataset is missing or checksum fails
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         self._validate_bands(bands)
 
@@ -145,13 +144,7 @@ class CV4AKenyaCropType(VisionDataset):
         self.verbose = verbose
 
         if download:
-            if api_key is None:
-                raise RuntimeError(
-                    "You must pass an MLHub API key if download=True. "
-                    + "See https://www.mlhub.earth/ to register for API access."
-                )
-            else:
-                self._download(api_key)
+            self._download(api_key)
 
         if not self._check_integrity():
             raise RuntimeError(
@@ -390,7 +383,7 @@ class CV4AKenyaCropType(VisionDataset):
 
         return train_field_ids, test_field_ids
 
-    def _download(self, api_key: str) -> None:
+    def _download(self, api_key: Optional[str] = None) -> None:
         """Download the dataset and extract it.
 
         Args:
@@ -403,14 +396,8 @@ class CV4AKenyaCropType(VisionDataset):
             print("Files already downloaded and verified")
             return
 
-        # Must be installed to download from MLHub
-        import radiant_mlhub
-
-        dataset = radiant_mlhub.Dataset.fetch(
-            "ref_african_crops_kenya_02", api_key=api_key
-        )
-        dataset.download(
-            output_dir=os.path.join(self.root, self.base_folder), api_key=api_key
+        download_radiant_mlhub(
+            self.base_folder, os.path.join(self.root, self.base_folder), api_key
         )
 
         image_archive_path = os.path.join(
