@@ -12,6 +12,7 @@ spack:
   - py-matplotlib
   - "py-mypy@0.900:"
   - py-numpy
+  - py-omegaconf
   - py-pycocotools
   - "py-pydocstyle@6.1:+toml"
   - "py-pytest@6.0:"
