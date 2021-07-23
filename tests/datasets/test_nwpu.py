@@ -33,6 +33,9 @@ class TestVHR10:
         request: SubRequest,
     ) -> VHR10:
         monkeypatch.setattr(  # type: ignore[attr-defined]
+            torchgeo.datasets.nwpu, "download_url", download_url
+        )
+        monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.utils, "download_url", download_url
         )
         url = os.path.join("tests", "data", "vhr10", "NWPU VHR-10 dataset.rar")
