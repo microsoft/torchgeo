@@ -26,7 +26,11 @@ __all__ = (
 
 class _rarfile:
     class RarFile:
-        def __enter__(self, *args: Any, **kwargs: Any) -> Any:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            self.args = args
+            self.kwargs = kwargs
+
+        def __enter__(self) -> Any:
             try:
                 import rarfile
             except ImportError:
@@ -36,7 +40,7 @@ class _rarfile:
 
             # TODO: catch exception for when rarfile is installed but not
             # unrar/unar/bsdtar
-            return rarfile.RarFile(*args, **kwargs)
+            return rarfile.RarFile(*self.args, **self.kwargs)
 
 
 def extract_archive(src: str, dst: Optional[str] = None) -> None:
