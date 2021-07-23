@@ -24,4 +24,4 @@ segmentation-models-pytorch
 setuptools>=42
 sphinx
 torch>=1.7
-torchvision>=0.3,!=0.10.0
+torchvision>=0.3

@@ -19,10 +19,6 @@ pytest.importorskip("rarfile")
 pytest.importorskip("pycocotools")
 
 
-def download_file_from_google_drive(file_id: str, root: str, *args: str) -> None:
-    shutil.copy(file_id, root)
-
-
 def download_url(url: str, root: str, *args: str) -> None:
     shutil.copy(url, root)
 
@@ -38,16 +34,11 @@ class TestVHR10:
         request: SubRequest,
     ) -> VHR10:
         monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchvision.datasets.utils,
-            "download_file_from_google_drive",
-            download_file_from_google_drive,
-        )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.nwpu, "download_url", download_url
         )
-        file_id = os.path.join("tests", "data", "vhr10", "NWPU VHR-10 dataset.rar")
+        url = os.path.join("tests", "data", "vhr10", "NWPU VHR-10 dataset.rar")
         monkeypatch.setitem(  # type: ignore[attr-defined]
-            VHR10.image_meta, "file_id", file_id
+            VHR10.image_meta, "url", url
         )
         md5 = "e5c38351bd948479fe35a71136aedbc4"
         monkeypatch.setitem(VHR10.image_meta, "md5", md5)  # type: ignore[attr-defined]
