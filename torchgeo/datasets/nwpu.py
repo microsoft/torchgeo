@@ -234,8 +234,8 @@ class VHR10(VisionDataset):
         download_and_extract_archive(
             self.image_meta["url"],
             os.path.join(self.root, self.base_folder),
-            self.image_meta["filename"],
-            self.image_meta["md5"] if self.checksum else None,
+            filename=self.image_meta["filename"],
+            md5=self.image_meta["md5"] if self.checksum else None,
         )
 
         # Annotations only needed for "positive" image set
