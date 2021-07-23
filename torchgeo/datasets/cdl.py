@@ -15,10 +15,9 @@ from rasterio.crs import CRS as RCRS
 from rasterio.vrt import WarpedVRT
 from rtree.index import Index, Property
 from torch import Tensor
-from torchvision.datasets.utils import check_integrity, download_and_extract_archive
 
 from .geo import GeoDataset
-from .utils import BoundingBox
+from .utils import BoundingBox, check_integrity, download_and_extract_archive
 
 _ccrs = ccrs.AlbersEqualArea(-96, 23, 0, 0, (29.5, 45.5))
 _rcrs = RCRS.from_wkt(

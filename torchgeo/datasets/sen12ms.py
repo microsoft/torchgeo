@@ -7,9 +7,9 @@ import numpy as np
 import rasterio
 import torch
 from torch import Tensor
-from torchvision.datasets.utils import check_integrity
 
 from .geo import VisionDataset
+from .utils import check_integrity
 
 
 class SEN12MS(VisionDataset):

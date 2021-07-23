@@ -1,19 +1,17 @@
 """COWC datasets."""
 
 import abc
-import bz2
 import csv
 import os
-import tarfile
 from typing import Callable, Dict, List, Optional
 
 import numpy as np
 import torch
 from PIL import Image
 from torch import Tensor
-from torchvision.datasets.utils import check_integrity, download_url
 
 from .geo import VisionDataset
+from .utils import check_integrity, download_and_extract_archive
 
 
 class COWC(VisionDataset, abc.ABC):
@@ -189,22 +187,12 @@ class COWC(VisionDataset, abc.ABC):
             return
 
         for filename, md5 in zip(self.filenames, self.md5s):
-            download_url(
+            download_and_extract_archive(
                 self.base_url + filename,
                 os.path.join(self.root, self.base_folder),
                 filename=filename,
                 md5=md5 if self.checksum else None,
             )
-            if filename.endswith(".tbz"):
-                filepath = os.path.join(self.root, self.base_folder, filename)
-                with tarfile.open(filepath) as tar:
-                    tar.extractall(os.path.join(self.root, self.base_folder))
-            elif filename.endswith(".bz2"):
-                filepath = os.path.join(self.root, self.base_folder, filename)
-                with bz2.BZ2File(filepath) as old_fh:
-                    data = old_fh.read()
-                    with open(filepath[:-4], "wb") as new_fh:
-                        new_fh.write(data)
 
 
 class COWCCounting(COWC):
