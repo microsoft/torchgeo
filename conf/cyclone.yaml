@@ -1,7 +1,5 @@
 program:  # These are experiment level arguments
   experiment_name: cyclone_test
-  output_dir: output/
-  log_dir: output/logs/
   overwrite: True
 
 trainer:  # These are all the arguments that will be passed to the pl.Trainer
