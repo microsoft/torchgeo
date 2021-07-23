@@ -1,6 +1,6 @@
 """SEN12MS trainer."""
 
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, Optional, cast
 
 import pytorch_lightning as pl
 import torch
@@ -161,13 +161,6 @@ class SEN12MSDataModule(pl.LightningDataModule):
         ]
     )
 
-    BAND_SETS: Dict[str, List[int]] = {
-        "all": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
-        "s1": [0, 1],
-        "s2-all": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
-        "s2-reduced": [3, 4, 5, 9, 12, 13],
-    }
-
     def __init__(
         self,
         root_dir: str,
@@ -188,11 +181,12 @@ class SEN12MSDataModule(pl.LightningDataModule):
             num_workers: The number of workers to use in all created DataLoaders
         """
         super().__init__()  # type: ignore[no-untyped-call]
-        assert band_set in ["all", "s1", "s2-all", "s2-reduced"]  # BAND_SETS.keys()
+        assert band_set in SEN12MS.BAND_SETS.keys()
 
         self.root_dir = root_dir
         self.seed = seed
         self.band_set = band_set
+        self.band_indices = SEN12MS.BAND_SETS[band_set]
         self.batch_size = batch_size
         self.num_workers = num_workers
 
@@ -201,12 +195,13 @@ class SEN12MSDataModule(pl.LightningDataModule):
         """Transform a single sample from the Dataset."""
         sample["image"] = sample["image"].float()
 
-        # scale to [0,1] separately for the S1 channels and the S2 channels
-        sample["image"][:2] = sample["image"][:2].clip(-25, 0) / -25
-        sample["image"][2:] = sample["image"][2:].clip(0, 10000) / 10000
-
-        band_indices = self.BAND_SETS[self.band_set]
-        sample["image"] = sample["image"][band_indices, :, :]
+        if self.band_set == "all":
+            sample["image"][:2] = sample["image"][:2].clip(-25, 0) / -25
+            sample["image"][2:] = sample["image"][2:].clip(0, 10000) / 10000
+        elif self.band_set == "s1":
+            sample["image"][:2] = sample["image"][:2].clip(-25, 0) / -25
+        else:
+            sample["image"][:] = sample["image"][:].clip(0, 10000) / 10000
 
         sample["mask"] = sample["mask"][0, :, :].long()
         sample["mask"] = torch.take(  # type: ignore[attr-defined]
@@ -224,6 +219,7 @@ class SEN12MSDataModule(pl.LightningDataModule):
         self.all_train_dataset = SEN12MS(
             self.root_dir,
             split="train",
+            bands=self.band_indices,
             transforms=self.custom_transform,
             checksum=False,
         )
@@ -231,6 +227,7 @@ class SEN12MSDataModule(pl.LightningDataModule):
         self.all_test_dataset = SEN12MS(
             self.root_dir,
             split="test",
+            bands=self.band_indices,
             transforms=self.custom_transform,
             checksum=False,
         )
