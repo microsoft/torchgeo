@@ -1,7 +1,7 @@
 """SEN12MS dataset."""
 
 import os
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, List, Optional
 
 import numpy as np
 import rasterio
@@ -59,6 +59,13 @@ class SEN12MS(VisionDataset):
        This download will likely take several hours.
     """  # noqa: E501
 
+    BAND_SETS: Dict[str, List[int]] = {
+        "all": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+        "s1": [0, 1],
+        "s2-all": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+        "s2-reduced": [3, 4, 5, 9, 12, 13],
+    }
+
     base_folder = "sen12ms"
     filenames = [
         "ROIs1158_spring_lc.tar.gz",
@@ -105,14 +112,22 @@ class SEN12MS(VisionDataset):
         self,
         root: str = "data",
         split: str = "train",
+        bands: List[int] = BAND_SETS["all"],
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SEN12MS dataset instance.
 
+        The ``bands`` argument allows for the subsetting of bands returned by the
+        dataset. Integers in ``bands`` index into a stack of Sentinel 1 and Sentinel 2
+        imagery. Indices 0 and 1 correspond to the Sentinel 1 imagery where indices 2
+        through 14 correspond to the Sentinel 2 imagery.
+
         Args:
             root: root directory where dataset can be found
             split: one of "train" or "test"
+            bands: a list of band indices to use where the indices correspond to the
+                array index of combined Sentinel 1 and Sentinel 2
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             checksum: if True, check the MD5 of the downloaded files (may be slow)
@@ -125,6 +140,7 @@ class SEN12MS(VisionDataset):
 
         self.root = root
         self.split = split
+        self.bands = torch.tensor(bands).long()  # type: ignore[attr-defined]
         self.transforms = transforms
         self.checksum = checksum
 
@@ -153,8 +169,13 @@ class SEN12MS(VisionDataset):
         s1 = self._load_raster(filename, "s1")
         s2 = self._load_raster(filename, "s2")
 
-        sample = {
-            "image": torch.cat([s1, s2]),  # type: ignore[attr-defined]
+        image = torch.cat(tensors=[s1, s2], dim=0)  # type: ignore[attr-defined]
+        image = torch.index_select(  # type: ignore[attr-defined]
+            image, dim=0, index=self.bands
+        )
+
+        sample: Dict[str, Tensor] = {
+            "image": image,
             "mask": lc,
         }
 
