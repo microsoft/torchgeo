@@ -42,6 +42,9 @@ class _rarfile:
             # unrar/unar/bsdtar
             return rarfile.RarFile(*self.args, **self.kwargs)
 
+        def __exit__(self, exc_type: None, exc_value: None, traceback: None) -> None:
+            pass
+
 
 def extract_archive(src: str, dst: Optional[str] = None) -> None:
     """Extract an archive.
