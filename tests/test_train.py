@@ -108,7 +108,8 @@ def test_config_file(tmp_path: Path) -> None:
     data_dir = os.path.join("tests", "data")
     log_dir = tmp_path / "logs"
     config_file = tmp_path / "config.yaml"
-    config_file.write_text(f"""
+    config_file.write_text(
+        f"""
 program:
   experiment_name: test
   output_dir: {output_dir}
@@ -118,13 +119,14 @@ task:
   name: cyclone
 trainer:
   fast_dev_run: true
-""")
+"""
+    )
     args = [
         sys.executable,
         "train.py",
         "config_file=" + str(config_file),
     ]
-    ps = subprocess.run(args, check=True)
+    subprocess.run(args, check=True)
 
 
 @pytest.mark.parametrize("task", ["cyclone", "sen12ms"])
