@@ -39,7 +39,9 @@ def set_up_omegaconf() -> DictConfig:
     Returns:
         an OmegaConf DictConfig containing all the validated program arguments
 
-    # TODO: Raises
+    Raises:
+        FileNotFoundError: when ``config_file`` does not exist
+        ValueError: when ``task.name`` is not a valid task
     """
     conf = OmegaConf.load("conf/defaults.yaml")
     command_line_conf = OmegaConf.from_cli()
@@ -50,7 +52,7 @@ def set_up_omegaconf() -> DictConfig:
             user_conf = OmegaConf.load(config_fn)
             conf = OmegaConf.merge(conf, user_conf)
         else:
-            raise IOError(f"config_file={config_fn} is not a valid file")
+            raise FileNotFoundError(f"config_file={config_fn} is not a valid file")
 
     conf = OmegaConf.merge(  # Merge in any arguments passed via the command line
         conf, command_line_conf
@@ -65,7 +67,7 @@ def set_up_omegaconf() -> DictConfig:
     elif conf.task.name == "test":
         task_conf = OmegaConf.create()
     else:
-        raise ValueError(f"task.name={conf.task.name} is not recognized as a validtask")
+        raise ValueError(f"task.name={conf.task.name} is not recognized as a valid task")
 
     conf = OmegaConf.merge(task_conf, conf)
     conf = cast(DictConfig, conf)  # convince mypy that everything is alright
@@ -80,7 +82,7 @@ def main(conf: DictConfig) -> None:
     ######################################
 
     if os.path.isfile(conf.program.output_dir):
-        raise NotADirectoryError("`--output_dir` must be a directory")
+        raise NotADirectoryError("`program.output_dir` must be a directory")
     os.makedirs(conf.program.output_dir, exist_ok=True)
 
     experiment_dir = os.path.join(conf.program.output_dir, conf.program.experiment_name)
@@ -135,6 +137,8 @@ def main(conf: DictConfig) -> None:
         )
         loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
         task = SEN12MSSegmentationTask(model, loss, **task_args)
+    else:
+        raise ValueError(f"task.name={conf.task.name} is not recognized as a valid task")
 
     ######################################
     # Setup trainer
