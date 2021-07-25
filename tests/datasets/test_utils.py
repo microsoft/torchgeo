@@ -1,12 +1,124 @@
+import builtins
+import glob
+import os
+import shutil
+import sys
 from pathlib import Path
-from typing import Tuple
+from typing import Any, Generator, Tuple
 
 import pytest
 import torch
+from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-from torchgeo.datasets import BoundingBox, collate_dict
-from torchgeo.datasets.utils import working_dir
+import torchgeo.datasets.utils
+from torchgeo.datasets.utils import (
+    BoundingBox,
+    collate_dict,
+    download_and_extract_archive,
+    download_radiant_mlhub,
+    extract_archive,
+    working_dir,
+)
+
+
+@pytest.fixture
+def mock_missing_module(monkeypatch: Generator[MonkeyPatch, None, None]) -> None:
+    import_orig = builtins.__import__
+
+    def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
+        if name in ["rarfile", "radiant_mlhub"]:
+            raise ImportError()
+        return import_orig(name, *args, **kwargs)
+
+    monkeypatch.setattr(  # type: ignore[attr-defined]
+        builtins, "__import__", mocked_import
+    )
+
+
+class Dataset:
+    def download(self, output_dir: str, **kwargs: str) -> None:
+        glob_path = os.path.join(
+            "tests", "data", "ref_african_crops_kenya_02", "*.tar.gz"
+        )
+        for tarball in glob.iglob(glob_path):
+            shutil.copy(tarball, output_dir)
+
+
+def fetch(collection_id: str, **kwargs: str) -> Dataset:
+    return Dataset()
+
+
+def download_url(url: str, root: str, *args: str) -> None:
+    shutil.copy(url, root)
+
+
+def test_mock_missing_module(mock_missing_module: None) -> None:
+    import sys  # noqa: F401
+
+
+# TODO: figure out how to install unrar on Windows in GitHub Actions
+@pytest.mark.skipif(sys.platform == "win32", reason="requires unrar executable")
+@pytest.mark.parametrize(
+    "src",
+    [
+        os.path.join("cowc_detection", "COWC_Detection_Columbus_CSUAV_AFRL.tbz"),
+        os.path.join("cowc_detection", "COWC_test_list_detection.txt.bz2"),
+        os.path.join("vhr10", "NWPU VHR-10 dataset.rar"),
+        os.path.join("landcoverai", "landcover.ai.v1.zip"),
+        os.path.join("sen12ms", "ROIs1158_spring_lc.tar.gz"),
+    ],
+)
+def test_extract_archive(src: str, tmp_path: Path) -> None:
+    pytest.importorskip("rarfile")
+    extract_archive(os.path.join("tests", "data", src), str(tmp_path))
+
+
+def test_missing_rarfile(mock_missing_module: None) -> None:
+    with pytest.raises(
+        ImportError,
+        match="rarfile is not installed and is required to extract this dataset",
+    ):
+        extract_archive(
+            os.path.join("tests", "data", "vhr10", "NWPU VHR-10 dataset.rar")
+        )
+
+
+def test_unsupported_scheme() -> None:
+    with pytest.raises(
+        RuntimeError, match="src file has unknown archival/compression scheme"
+    ):
+        extract_archive("foo.bar")
+
+
+def test_download_and_extract_archive(
+    tmp_path: Path, monkeypatch: Generator[MonkeyPatch, None, None]
+) -> None:
+    monkeypatch.setattr(  # type: ignore[attr-defined]
+        torchgeo.datasets.utils, "download_url", download_url
+    )
+    download_and_extract_archive(
+        os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip"),
+        str(tmp_path),
+    )
+
+
+def test_download_radiant_mlhub(
+    tmp_path: Path, monkeypatch: Generator[MonkeyPatch, None, None]
+) -> None:
+    radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+    monkeypatch.setattr(  # type: ignore[attr-defined]
+        radiant_mlhub.Dataset, "fetch", fetch
+    )
+    download_radiant_mlhub("", str(tmp_path))
+
+
+def test_missing_radiant_mlhub(mock_missing_module: None) -> None:
+    with pytest.raises(
+        ImportError,
+        match="radiant_mlhub is not installed and is required to download this dataset",
+    ):
+        download_radiant_mlhub("", "")
 
 
 class TestBoundingBox:

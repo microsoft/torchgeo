@@ -52,6 +52,9 @@ def extract_archive(src: str, dst: Optional[str] = None) -> None:
     Args:
         src: file to be extracted
         dst: directory to extract to (defaults to dirname of ``src``)
+
+    Raises:
+        RuntimeError: if src file has unknown archival/compression scheme
     """
     if dst is None:
         dst = os.path.dirname(src)
