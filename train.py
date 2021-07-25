@@ -67,7 +67,9 @@ def set_up_omegaconf() -> DictConfig:
     elif conf.task.name == "test":
         task_conf = OmegaConf.create()
     else:
-        raise ValueError(f"task.name={conf.task.name} is not recognized as a valid task")
+        raise ValueError(
+            f"task.name={conf.task.name} is not recognized as a valid task"
+        )
 
     conf = OmegaConf.merge(task_conf, conf)
     conf = cast(DictConfig, conf)  # convince mypy that everything is alright
@@ -138,7 +140,9 @@ def main(conf: DictConfig) -> None:
         loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
         task = SEN12MSSegmentationTask(model, loss, **task_args)
     else:
-        raise ValueError(f"task.name={conf.task.name} is not recognized as a valid task")
+        raise ValueError(
+            f"task.name={conf.task.name} is not recognized as a valid task"
+        )
 
     ######################################
     # Setup trainer
