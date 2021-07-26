@@ -212,24 +212,18 @@ class LandcoverAIDataModule(pl.LightningDataModule):
             self.root_dir,
             split="train",
             transforms=self.custom_transform,
-            download=True,
-            checksum=True,
         )
 
         self.val_dataset = LandCoverAI(
             self.root_dir,
             split="val",
             transforms=self.custom_transform,
-            download=True,
-            checksum=True,
         )
 
         self.test_dataset = LandCoverAI(
             self.root_dir,
             split="test",
             transforms=self.custom_transform,
-            download=True,
-            checksum=True,
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
