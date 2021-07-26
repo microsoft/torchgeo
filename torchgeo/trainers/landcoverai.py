@@ -207,7 +207,9 @@ class LandcoverAIDataModule(pl.LightningDataModule):
         return sample
 
     def prepare_data(self) -> None:
-        """Initialize the main ``Dataset`` objects for use in :func:`setup`."""
+        """Initialize the main ``Dataset`` objects. No splits need to be defined
+        at runtime.
+        """
         self.train_dataset = LandCoverAI(
             self.root_dir,
             split="train",
