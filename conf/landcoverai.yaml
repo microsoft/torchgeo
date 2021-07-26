@@ -1,14 +1,10 @@
 program:  # These are experiment level arguments
   experiment_name: landcoverai_test
   overwrite: True
-  data_dir: /home/caleb/mount/data
-  output_dir: output/
-  log_dir: output/logs/
 
 trainer:  # These are all the arguments that will be passed to the pl.Trainer
   gpus: 1
   min_epochs: 15
-  benchmark: True
 
 task:  # These are all the arguments that will be used to create an appropriate task
   name: landcoverai
