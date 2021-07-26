@@ -3,6 +3,7 @@
 from typing import Any, Dict, Optional, cast
 
 import pytorch_lightning as pl
+import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 from sklearn.model_selection import GroupShuffleSplit
@@ -27,23 +28,44 @@ class SEN12MSSegmentationTask(pl.LightningModule):
     ``pytorch_segmentation_models`` package.
     """
 
+    def config_task(self, kwargs: Dict[str, Any]) -> None:
+        """Configures the task based on kwargs parameters."""
+        if kwargs["segmentation_model"] == "unet":
+            self.model = smp.Unet(
+                encoder_name=kwargs["encoder_name"],
+                encoder_weights=kwargs["encoder_weights"],
+                in_channels=15,  # TODO: set number of input channels based on task
+                classes=11,
+            )
+        else:
+            raise ValueError(
+                f"Model type '{kwargs['segmentation_model']}' is not valid."
+            )
+
+        if kwargs["loss"] == "ce":
+            self.loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
+        elif kwargs["loss"] == "jaccard":
+            self.loss = smp.losses.JaccardLoss(mode="multiclass")
+        else:
+            raise ValueError(f"Loss type '{kwargs['loss']}' is not valid.")
+
     def __init__(
         self,
-        model: Module,
-        loss: Module = nn.CrossEntropyLoss(),  # type: ignore[attr-defined]
         **kwargs: Dict[str, Any],
     ) -> None:
         """Initialize the LightningModule with a model and loss function.
 
-        Args:
-            model: A model (specifically, a ``nn.Module``) instance to be trained.
-            loss: A semantic segmentation loss function to use (e.g. pixel-wise
-                crossentropy)
+        Keyword Args:
+            segmentation_model: Name of the segmentation model type to use
+            encoder_name: Name of the encoder model backbone to use
+            encoder_weights: None or "imagenet" to use imagenet pretrained weights in
+                the encoder model
+            loss: Name of the loss function
         """
         super().__init__()
         self.save_hyperparameters()  # creates `self.hparams` from kwargs
-        self.model = model
-        self.loss = loss
+
+        self.config_task(kwargs)
 
         self.train_accuracy = Accuracy()
         self.val_accuracy = Accuracy()
@@ -122,6 +144,7 @@ class SEN12MSSegmentationTask(pl.LightningModule):
                     patience=self.hparams["learning_rate_schedule_patience"],
                 ),
                 "monitor": "val_loss",
+                "verbose": True,
             },
         }
 
