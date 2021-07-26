@@ -17,6 +17,8 @@ from torchvision import models
 from torchgeo.trainers import (
     CycloneDataModule,
     CycloneSimpleRegressionTask,
+    LandcoverAIDataModule,
+    LandcoverAISegmentationTask,
     SEN12MSDataModule,
     SEN12MSSegmentationTask,
 )
@@ -62,6 +64,8 @@ def set_up_omegaconf() -> DictConfig:
     # https://omegaconf.readthedocs.io/en/2.0_branch/structured_config.html#merging-with-other-configs
     if conf.task.name == "cyclone":
         task_conf = OmegaConf.load("conf/task_defaults/cyclone.yaml")
+    elif conf.task.name == "landcoverai":
+        task_conf = OmegaConf.load("conf/task_defaults/landcoverai.yaml")
     elif conf.task.name == "sen12ms":
         task_conf = OmegaConf.load("conf/task_defaults/sen12ms.yaml")
     elif conf.task.name == "test":
@@ -122,6 +126,22 @@ def main(conf: DictConfig) -> None:
         )
         model = models.resnet18(pretrained=False, num_classes=1)
         task = CycloneSimpleRegressionTask(model, **task_args)
+    elif conf.task.name == "landcoverai":
+        import segmentation_models_pytorch as smp
+
+        datamodule = LandcoverAIDataModule(
+            conf.program.data_dir,
+            batch_size=conf.program.batch_size,
+            num_workers=conf.program.num_workers,
+        )
+        model = smp.Unet(
+            encoder_name="resnet18",
+            encoder_weights=None,
+            in_channels=3,
+            classes=5,
+        )
+        loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
+        task = LandcoverAISegmentationTask(model, loss, **task_args)
     elif conf.task.name == "sen12ms":
         import segmentation_models_pytorch as smp
 
