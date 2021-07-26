@@ -29,7 +29,7 @@ class TestLandCoverAI:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.utils, "download_url", download_url
         )
-        md5 = "8a84857267619c8cf22730193b3b1ada"
+        md5 = "5bf4d2770deb41eb5c38784ab2c8a691"
         monkeypatch.setattr(LandCoverAI, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip")
         monkeypatch.setattr(LandCoverAI, "url", url)  # type: ignore[attr-defined]
