@@ -2,6 +2,7 @@
 
 import hashlib
 import os
+from functools import lru_cache
 from typing import Callable, Dict, Optional
 
 import numpy as np
@@ -18,7 +19,8 @@ class LandCoverAI(VisionDataset):
 
     The `LandCover.ai <https://landcover.ai/>`_ (Land Cover from Aerial Imagery)
     dataset is a dataset for automatic mapping of buildings, woodlands, water and
-    roads from aerial images.
+    roads from aerial images. This implementation is specifically for Version 1 of
+    Landcover.ai.
 
     Dataset features:
 
@@ -128,6 +130,7 @@ class LandCoverAI(VisionDataset):
         """
         return len(self.ids)
 
+    @lru_cache()
     def _load_image(self, id_: str) -> Tensor:
         """Load a single image.
 
@@ -145,6 +148,7 @@ class LandCoverAI(VisionDataset):
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
+    @lru_cache()
     def _load_target(self, id_: str) -> Tensor:
         """Load the target mask for a single image.
 
