@@ -129,7 +129,7 @@ trainer:
     subprocess.run(args, check=True)
 
 
-@pytest.mark.parametrize("task", ["cyclone", "sen12ms"])
+@pytest.mark.parametrize("task", ["cyclone", "sen12ms", "landcoverai"])
 def test_tasks(task: str, tmp_path: Path) -> None:
     output_dir = tmp_path / "output"
     data_dir = os.path.join("tests", "data")
