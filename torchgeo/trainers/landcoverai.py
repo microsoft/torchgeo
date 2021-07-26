@@ -116,7 +116,6 @@ class LandcoverAISegmentationTask(pl.LightningModule):
             axs[1].axis("off")
             axs[2].imshow(pred, vmin=0, vmax=4)
             axs[2].axis("off")
-            plt.show()
 
             # the SummaryWriter is a tensorboard object, see:
             # https://pytorch.org/docs/stable/tensorboard.html#
