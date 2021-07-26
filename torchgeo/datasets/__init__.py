@@ -3,8 +3,9 @@
 from .benin_cashews import BeninSmallHolderCashews
 from .cdl import CDL
 from .chesapeake import (
-    Chesapeake13,
+    Chesapeake,
     Chesapeake7,
+    Chesapeake13,
     ChesapeakeDC,
     ChesapeakeDE,
     ChesapeakeMD,
@@ -42,8 +43,9 @@ __all__ = (
     "BoundingBox",
     "CDL",
     "collate_dict",
-    "Chesapeake13",
+    "Chesapeake",
     "Chesapeake7",
+    "Chesapeake13",
     "ChesapeakeDC",
     "ChesapeakeDE",
     "ChesapeakeMD",
