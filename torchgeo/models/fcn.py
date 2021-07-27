@@ -1,8 +1,9 @@
 """Simple fully convolutional neural network (FCN) implementations."""
 
-from torch import Tensor
+from typing import OrderedDict
+
 import torch.nn as nn
-import torch.nn.functional as F
+from torch import Tensor
 
 
 class FCN(nn.modules.Module):
@@ -18,31 +19,45 @@ class FCN(nn.modules.Module):
         """
         super(FCN, self).__init__()  # type: ignore[no-untyped-call]
 
-        self.conv1 = nn.modules.Conv2d(
+        conv1 = nn.modules.Conv2d(
             in_channels, num_filters, kernel_size=3, stride=1, padding=1
         )
-        self.conv2 = nn.modules.Conv2d(
+        conv2 = nn.modules.Conv2d(
             num_filters, num_filters, kernel_size=3, stride=1, padding=1
         )
-        self.conv3 = nn.modules.Conv2d(
+        conv3 = nn.modules.Conv2d(
             num_filters, num_filters, kernel_size=3, stride=1, padding=1
         )
-        self.conv4 = nn.modules.Conv2d(
+        conv4 = nn.modules.Conv2d(
             num_filters, num_filters, kernel_size=3, stride=1, padding=1
         )
-        self.conv5 = nn.modules.Conv2d(
+        conv5 = nn.modules.Conv2d(
             num_filters, num_filters, kernel_size=3, stride=1, padding=1
         )
+
+        self.layers = OrderedDict(
+            [
+                ("conv1", conv1),
+                ("relu1", nn.modules.LeakyReLU(inplace=True)),
+                ("conv2", conv2),
+                ("relu2", nn.modules.LeakyReLU(inplace=True)),
+                ("conv3", conv3),
+                ("relu3", nn.modules.LeakyReLU(inplace=True)),
+                ("conv4", conv4),
+                ("relu4", nn.modules.LeakyReLU(inplace=True)),
+                ("conv5", conv5),
+                ("relu5", nn.modules.LeakyReLU(inplace=True)),
+            ]
+        )
+
+        self.backbone = nn.modules.Sequential(self.layers)
+
         self.last = nn.modules.Conv2d(
             num_filters, classes, kernel_size=1, stride=1, padding=0
         )
 
-    def forward(self, inputs: Tensor) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model."""
-        x = F.leaky_relu(self.conv1(inputs), 0.1)
-        x = F.leaky_relu(self.conv2(x), 0.1)
-        x = F.leaky_relu(self.conv3(x), 0.1)
-        x = F.leaky_relu(self.conv4(x), 0.1)
-        x = F.leaky_relu(self.conv5(x), 0.1)
+        x = self.backbone(x)
         x = self.last(x)
         return x

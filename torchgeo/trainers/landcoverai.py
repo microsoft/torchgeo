@@ -16,6 +16,7 @@ from torch.utils.tensorboard import SummaryWriter  # type: ignore[attr-defined]
 from torchmetrics import Accuracy, IoU  # type: ignore[attr-defined]
 
 from ..datasets import LandCoverAI
+from ..models import FCN
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -47,6 +48,8 @@ class LandcoverAISegmentationTask(pl.LightningModule):
                 in_channels=3,
                 classes=5,
             )
+        elif kwargs["segmentation_model"] == "fcn":
+            self.model = FCN(3, 5, 64)
         else:
             raise ValueError(
                 f"Model type '{kwargs['segmentation_model']}' is not valid."
@@ -187,7 +190,7 @@ class LandcoverAISegmentationTask(pl.LightningModule):
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler."""
-        optimizer = torch.optim.Adam(
+        optimizer = torch.optim.AdamW(
             self.model.parameters(),
             lr=self.hparams["learning_rate"],
         )
