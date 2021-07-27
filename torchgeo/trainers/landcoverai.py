@@ -33,7 +33,7 @@ class LandcoverAISegmentationTask(pl.LightningModule):
     def config_task(self, kwargs: Dict[str, Any]) -> None:
         """Configures the task based on kwargs parameters."""
         if kwargs["segmentation_model"] == "unet":
-            self.model = smp.UNet(
+            self.model = smp.Unet(
                 encoder_name=kwargs["encoder_name"],
                 encoder_weights=kwargs["encoder_weights"],
                 in_channels=3,

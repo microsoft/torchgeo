@@ -31,9 +31,7 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
         if kwargs["model"] == "resnet18":
             self.model = models.resnet18(pretrained=False, num_classes=1)
         else:
-            raise ValueError(
-                f"Model type '{kwargs['model']}' is not valid."
-            )
+            raise ValueError(f"Model type '{kwargs['model']}' is not valid.")
 
     def __init__(self, **kwargs: Dict[str, Any]) -> None:
         """Initialize a new LightningModule for training simple regression models.
