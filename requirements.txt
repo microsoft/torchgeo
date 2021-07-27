@@ -1,6 +1,5 @@
 affine
 black[colorama]>=21b
-cartopy
 flake8
 h5py
 isort[colors]>=4.3.5

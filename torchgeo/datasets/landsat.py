@@ -6,13 +6,11 @@ import os
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional, Sequence
 
-import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
-from cartopy.crs import CRS as CCRS
-from rasterio.crs import CRS as RCRS
+from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
 from rtree.index import Index, Property
 from torch import Tensor
@@ -20,8 +18,7 @@ from torch import Tensor
 from .geo import GeoDataset
 from .utils import BoundingBox
 
-_ccrs = ccrs.UTM(16)
-_rcrs = RCRS.from_epsg(32616)
+_crs = CRS.from_epsg(32616)
 
 
 class Landsat(GeoDataset, abc.ABC):
@@ -52,7 +49,7 @@ class Landsat(GeoDataset, abc.ABC):
     def __init__(
         self,
         root: str = "data",
-        crs: RCRS = _rcrs,
+        crs: CRS = _crs,
         bands: Sequence[str] = [],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
     ) -> None:
@@ -139,20 +136,11 @@ class Landsat(GeoDataset, abc.ABC):
 
         return sample
 
-    def plot(
-        self,
-        image: Tensor,
-        bbox: BoundingBox,
-        projection: CCRS = _ccrs,
-        transform: CCRS = _ccrs,
-    ) -> None:
+    def plot(self, image: Tensor) -> None:
         """Plot an image on a map.
 
         Args:
             image: the image to plot
-            bbox: the bounding box of the image
-            projection: :term:`projection` of map
-            transform: :term:`coordinate reference system (CRS)` of data
         """
         # Convert from CxHxW to HxWxC
         image = image.permute((1, 2, 0))
@@ -165,8 +153,9 @@ class Landsat(GeoDataset, abc.ABC):
         array = np.clip(array, 0, 1)
 
         # Plot the image
-        ax = plt.axes(projection=projection)
-        ax.imshow(array, origin="lower", extent=bbox[:4], transform=transform)
+        ax = plt.axes()
+        ax.imshow(array, origin="lower")
+        ax.axis("off")
         plt.show()
 
 
