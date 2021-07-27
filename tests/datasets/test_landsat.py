@@ -37,7 +37,7 @@ class TestLandsat8:
     def test_plot(self, dataset: Landsat8) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x["image"], query)
+        dataset.plot(x["image"])
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="No Landsat data was found in "):

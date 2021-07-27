@@ -61,7 +61,7 @@ class TestCDL:
     def test_plot(self, dataset: CDL) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x["masks"], query)
+        dataset.plot(x["masks"])
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
