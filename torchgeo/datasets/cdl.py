@@ -50,9 +50,9 @@ PROJCS["Albers Conical Equal Area",
 class CDL(GeoDataset):
     """Cropland Data Layer (CDL) dataset.
 
-    The `Cropland Data Layer (CDL)
+    The `Cropland Data Layer
     <https://data.nal.usda.gov/dataset/cropscape-cropland-data-layer>`_, hosted on
-    `CropScape <https://nassgeodata.gmu.edu/CropScape/>`, provides a raster,
+    `CropScape <https://nassgeodata.gmu.edu/CropScape/>`_, provides a raster,
     geo-referenced, crop-specific land cover map for the continental United States. The
     CDL also includes a crop mask layer and planting frequency layers, as well as
     boundary, water and road layers. The Boundary Layer options provided are County,
