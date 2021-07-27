@@ -2,10 +2,46 @@
 
 import abc
 import os
-from typing import Any, Callable, Optional
+from datetime import datetime
+from typing import Any, Callable, Dict, Optional
+
+import matplotlib.pyplot as plt
+import numpy as np
+import rasterio
+import torch
+from rasterio.crs import CRS as RCRS
+from rasterio.vrt import WarpedVRT
+from rtree.index import Index, Property
+from torch import Tensor
 
 from .geo import GeoDataset
-from .utils import check_integrity, download_and_extract_archive
+from .utils import BoundingBox, check_integrity, download_and_extract_archive
+
+_rcrs = RCRS.from_wkt(
+    """
+PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",
+    GEOGCS["NAD83",
+        DATUM["North_American_Datum_1983",
+            SPHEROID["GRS 1980",6378137,298.257222101004,
+                AUTHORITY["EPSG","7019"]],
+            AUTHORITY["EPSG","6269"]],
+        PRIMEM["Greenwich",0],
+        UNIT["degree",0.0174532925199433,
+            AUTHORITY["EPSG","9122"]],
+        AUTHORITY["EPSG","4269"]],
+    PROJECTION["Albers_Conic_Equal_Area"],
+    PARAMETER["latitude_of_center",23],
+    PARAMETER["longitude_of_center",-96],
+    PARAMETER["standard_parallel_1",29.5],
+    PARAMETER["standard_parallel_2",45.5],
+    PARAMETER["false_easting",0],
+    PARAMETER["false_northing",0],
+    UNIT["metre",1,
+        AUTHORITY["EPSG","9001"]],
+    AXIS["Easting",EAST],
+    AXIS["Northing",NORTH]]
+"""
+)
 
 
 class Chesapeake(GeoDataset, abc.ABC):
@@ -64,6 +100,7 @@ class Chesapeake(GeoDataset, abc.ABC):
     def __init__(
         self,
         root: str,
+        crs: RCRS = _rcrs,
         transforms: Optional[Callable[[Any], Any]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -72,12 +109,14 @@ class Chesapeake(GeoDataset, abc.ABC):
 
         Args:
             root: root directory where dataset can be found
+            crs: :term:`coordinate reference system (CRS)` to project to
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
         self.root = os.path.join(root, "chesapeake", self.base_folder)
+        self.crs = crs
         self.transforms = transforms
         self.checksum = checksum
 
@@ -89,6 +128,61 @@ class Chesapeake(GeoDataset, abc.ABC):
                 "Dataset not found or corrupted. "
                 + "You can use download=True to download it"
             )
+
+        # Create an R-tree to index the dataset
+        self.index = Index(interleaved=False, properties=Property(dimension=3))
+        filename = os.path.join(self.root, self.filename)
+        with rasterio.open(filename) as src:
+            with rasterio.open(filename) as src:
+                cmap = src.colormap(1)
+                with WarpedVRT(src, crs=self.crs) as vrt:
+                    minx, miny, maxx, maxy = vrt.bounds
+        mint = datetime.min
+        maxt = datetime.max
+        coords = (minx, maxx, miny, maxy, mint, maxt)
+        self.index.insert(0, coords, filename)
+        self.cmap = np.array([cmap[i] for i in range(len(cmap))])
+
+    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+        """Retrieve labels and metadata indexed by query.
+
+        Args:
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+
+        Returns:
+            sample of labels and metadata at that index
+
+        Raises:
+            IndexError: if query is not within bounds of the index
+        """
+        if not query.intersects(self.bounds):
+            raise IndexError(
+                f"query: {query} is not within bounds of the index: {self.bounds}"
+            )
+
+        hits = self.index.intersection(query, objects=True)
+        filename = next(hits).object
+        with rasterio.open(filename) as src:
+            with WarpedVRT(src, crs=self.crs) as vrt:
+                window = rasterio.windows.from_bounds(
+                    query.minx,
+                    query.miny,
+                    query.maxx,
+                    query.maxy,
+                    transform=vrt.transform,
+                )
+                masks = vrt.read(window=window)
+        # masks = masks.astype(np.uint8)
+        sample = {
+            "masks": torch.tensor(masks),  # type: ignore[attr-defined]
+            "crs": self.crs,
+            "bbox": query,
+        }
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
@@ -114,6 +208,26 @@ class Chesapeake(GeoDataset, abc.ABC):
             filename=self.filename,
             md5=self.md5,
         )
+
+    def plot(
+        self,
+        image: Tensor,
+        bbox: BoundingBox,
+    ) -> None:
+        """Plot an image on a map.
+
+        Args:
+            image: the image to plot
+            bbox: the bounding box of the image
+        """
+        # Convert from class labels to RGBA values
+        array = image.squeeze().numpy()
+        array = self.cmap[array]
+
+        # Plot the image
+        ax = plt.axes()
+        ax.imshow(array, origin="lower", extent=bbox[:4])
+        plt.show()
 
 
 class Chesapeake7(Chesapeake):
