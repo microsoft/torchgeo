@@ -1,6 +1,5 @@
 name: torchgeo
 dependencies:
-  - cartopy
   - cudatoolkit=11.1
   - h5py
   - matplotlib

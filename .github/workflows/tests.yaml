@@ -29,7 +29,6 @@ jobs:
         python-version: 3.9
     - name: Install dependencies
       run: |
-        sudo apt-get install libgeos-dev libproj-dev # needed for cartopy
         pip install cython numpy  # needed for pycocotools
         pip install --pre -r requirements.txt
     - name: Run mypy checks
@@ -37,8 +36,6 @@ jobs:
   pytest:
     name: pytest
     runs-on: ${{ matrix.os }}
-    env:
-      PKG_CONFIG_PATH: /usr/local/opt/proj@7/lib/pkgconfig
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
@@ -67,10 +64,10 @@ jobs:
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
         restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-
     - name: Install apt dependencies
-      run: sudo apt-get install libgeos-dev libproj-dev unrar
+      run: sudo apt-get install unrar
       if: ${{ runner.os == 'Linux' }}
     - name: Install brew dependencies
-      run: brew install geos proj@7 rar
+      run: brew install rar
       if: ${{ runner.os == 'macOS' }}
     - name: Install conda
       uses: conda-incubator/setup-miniconda@v2
@@ -78,7 +75,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
       if: ${{ runner.os == 'Windows' }}
     - name: Install conda dependencies
-      run: conda install -c conda-forge cartopy h5py 'rasterio>=1.0'
+      run: conda install -c conda-forge h5py 'rasterio>=1.0'
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies
       run: |

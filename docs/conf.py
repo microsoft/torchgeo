@@ -51,7 +51,6 @@ nitpick_ignore = [
     # https://github.com/sphinx-doc/sphinx/issues/8127
     ("py:class", ".."),
     # TODO: can't figure out why this isn't found
-    ("py:class", "cartopy._crs.CRS"),
     ("py:class", "LightningDataModule"),
 ]
 
@@ -88,7 +87,6 @@ autodoc_typehints = "description"
 
 # sphinx.ext.intersphinx
 intersphinx_mapping = {
-    "cartopy": ("https://scitools.org.uk/cartopy/docs/latest/", None),
     "python": ("https://docs.python.org/3", None),
     "pytorch-lightning": ("https://pytorch-lightning.readthedocs.io/en/latest/", None),
     "rasterio": ("https://rasterio.readthedocs.io/en/latest/", None),

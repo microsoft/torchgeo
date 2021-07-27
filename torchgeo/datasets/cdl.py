@@ -5,13 +5,11 @@ import os
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional
 
-import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
-from cartopy.crs import CRS as CCRS
-from rasterio.crs import CRS as RCRS
+from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
 from rtree.index import Index, Property
 from torch import Tensor
@@ -19,8 +17,7 @@ from torch import Tensor
 from .geo import GeoDataset
 from .utils import BoundingBox, check_integrity, download_and_extract_archive
 
-_ccrs = ccrs.AlbersEqualArea(-96, 23, 0, 0, (29.5, 45.5))
-_rcrs = RCRS.from_wkt(
+_crs = CRS.from_wkt(
     """
 PROJCS["Albers Conical Equal Area",
     GEOGCS["NAD83",
@@ -86,7 +83,7 @@ class CDL(GeoDataset):
     def __init__(
         self,
         root: str = "data",
-        crs: RCRS = _rcrs,
+        crs: CRS = _crs,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -202,22 +199,18 @@ class CDL(GeoDataset):
         self,
         image: Tensor,
         bbox: BoundingBox,
-        projection: CCRS = _ccrs,
-        transform: CCRS = _ccrs,
     ) -> None:
         """Plot an image on a map.
 
         Args:
             image: the image to plot
             bbox: the bounding box of the image
-            projection: :term:`projection` of map
-            transform: :term:`coordinate reference system (CRS)` of data
         """
         # Convert from class labels to RGBA values
         array = image.squeeze().numpy()
         array = self.cmap[array]
 
         # Plot the image
-        ax = plt.axes(projection=projection)
-        ax.imshow(array, origin="lower", extent=bbox[:4], transform=transform)
+        ax = plt.axes()
+        ax.imshow(array, origin="lower", extent=bbox[:4])
         plt.show()
