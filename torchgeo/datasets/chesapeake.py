@@ -2,7 +2,7 @@
 
 import abc
 import os
-from datetime import datetime
+import sys
 from typing import Any, Callable, Dict, Optional
 
 import matplotlib.pyplot as plt
@@ -138,7 +138,7 @@ class Chesapeake(GeoDataset, abc.ABC):
                 with WarpedVRT(src, crs=self.crs) as vrt:
                     minx, miny, maxx, maxy = vrt.bounds
         mint = 0
-        maxt = datetime.max.timestamp()
+        maxt = sys.maxsize
         coords = (minx, maxx, miny, maxy, mint, maxt)
         self.index.insert(0, coords, filename)
         self.cmap = np.array([cmap[i] for i in range(len(cmap))])
