@@ -245,7 +245,7 @@ class Chesapeake7(Chesapeake):
     base_folder = "BAYWIDE"
     filename = "Baywide_7Class_20132014.tif"
     zipfile = "Baywide_7Class_20132014.zip"
-    md5 = ""
+    md5 = "61a4e948fb2551840b6557ef195c2084"
 
 
 class Chesapeake13(Chesapeake):
@@ -317,7 +317,7 @@ class ChesapeakePA(Chesapeake):
     base_folder = "PA"
     filename = "PA_STATEWIDE.tif"
     zipfile = "_PA_STATEWIDE.zip"
-    md5 = ""
+    md5 = "20a2a857c527a4dbadd6beed8b47e5ab"
 
 
 class ChesapeakeVA(Chesapeake):
