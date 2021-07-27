@@ -60,7 +60,7 @@ class TestChesapeake13:
     def test_plot(self, dataset: Chesapeake13) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x["masks"], query)
+        dataset.plot(x["masks"])
 
     def test_url(self) -> None:
         ds = Chesapeake13(os.path.join("tests", "data"))

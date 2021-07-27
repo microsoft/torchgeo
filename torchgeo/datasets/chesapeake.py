@@ -208,16 +208,11 @@ class Chesapeake(GeoDataset, abc.ABC):
             md5=self.md5,
         )
 
-    def plot(
-        self,
-        image: Tensor,
-        bbox: BoundingBox,
-    ) -> None:
+    def plot(self, image: Tensor) -> None:
         """Plot an image on a map.
 
         Args:
             image: the image to plot
-            bbox: the bounding box of the image
         """
         # Convert from class labels to RGBA values
         array = image.squeeze().numpy()
@@ -225,7 +220,8 @@ class Chesapeake(GeoDataset, abc.ABC):
 
         # Plot the image
         ax = plt.axes()
-        ax.imshow(array, origin="lower", extent=bbox[:4])
+        ax.imshow(array, origin="lower")
+        ax.axis("off")
         plt.show()
 
 
