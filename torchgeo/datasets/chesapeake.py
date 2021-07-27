@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
-from rasterio.crs import CRS as RCRS
+from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
 from rtree.index import Index, Property
 from torch import Tensor
@@ -17,7 +17,7 @@ from torch import Tensor
 from .geo import GeoDataset
 from .utils import BoundingBox, check_integrity, download_and_extract_archive
 
-_rcrs = RCRS.from_wkt(
+_crs = CRS.from_wkt(
     """
 PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",
     GEOGCS["NAD83",
@@ -100,7 +100,7 @@ class Chesapeake(GeoDataset, abc.ABC):
     def __init__(
         self,
         root: str,
-        crs: RCRS = _rcrs,
+        crs: CRS = _crs,
         transforms: Optional[Callable[[Any], Any]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -137,8 +137,8 @@ class Chesapeake(GeoDataset, abc.ABC):
                 cmap = src.colormap(1)
                 with WarpedVRT(src, crs=self.crs) as vrt:
                     minx, miny, maxx, maxy = vrt.bounds
-        mint = datetime.min
-        maxt = datetime.max
+        mint = 0
+        maxt = datetime.max.timestamp()
         coords = (minx, maxx, miny, maxy, mint, maxt)
         self.index.insert(0, coords, filename)
         self.cmap = np.array([cmap[i] for i in range(len(cmap))])
@@ -172,7 +172,6 @@ class Chesapeake(GeoDataset, abc.ABC):
                     transform=vrt.transform,
                 )
                 masks = vrt.read(window=window)
-        # masks = masks.astype(np.uint8)
         sample = {
             "masks": torch.tensor(masks),  # type: ignore[attr-defined]
             "crs": self.crs,
@@ -191,7 +190,7 @@ class Chesapeake(GeoDataset, abc.ABC):
             True if dataset MD5s match, else False
         """
         integrity: bool = check_integrity(
-            os.path.join(self.root, self.filename),
+            os.path.join(self.root, self.zipfile),
             self.md5 if self.checksum else None,
         )
         return integrity
@@ -205,7 +204,7 @@ class Chesapeake(GeoDataset, abc.ABC):
         download_and_extract_archive(
             self.url,
             self.root,
-            filename=self.filename,
+            filename=self.zipfile,
             md5=self.md5,
         )
 
