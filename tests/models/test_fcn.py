@@ -1,22 +1,23 @@
 import pytest
 import torch
+
 from torchgeo.models import FCN
 
-class TestFCN:
 
+class TestFCN:
     def test_in_channels(self) -> None:
         model = FCN(in_channels=5, classes=4, num_filters=10)
-        x = torch.randn(2,5,64,64)
-        y = model(x)
+        x = torch.randn(2, 5, 64, 64)
+        model(x)
 
         model = FCN(in_channels=3, classes=4, num_filters=10)
         with pytest.raises(RuntimeError) as e:
-            y = model(x)
+            model(x)
             assert "to have 3 channels, but got 5 channels instead" in str(e.value)
 
     def test_classes(self) -> None:
         model = FCN(in_channels=5, classes=4, num_filters=10)
-        x = torch.randn(2,5,64,64)
+        x = torch.randn(2, 5, 64, 64)
         y = model(x)
 
         assert y.shape[1] == 4
@@ -35,7 +36,7 @@ class TestFCN:
             model.backbone[2],
             model.backbone[4],
             model.backbone[6],
-            model.backbone[8]
+            model.backbone[8],
         ]
         for conv_layer in conv_layers:
             assert conv_layer.out_channels == 10
