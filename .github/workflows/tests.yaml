@@ -80,7 +80,7 @@ jobs:
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies
       run: |
-        pip install cython numpy  # needed for pycocotools
-        pip install --pre -r requirements.txt
+        python -m pip install cython numpy  # needed for pycocotools
+        python -m pip install --pre -r requirements.txt
     - name: Run pytest checks
       run: pytest --cov=. --cov-report=term-missing
