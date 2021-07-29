@@ -201,7 +201,7 @@ class LandcoverAISegmentationTask(pl.LightningModule):
                 self.model.parameters(),
                 lr=self.hparams["learning_rate"],
                 momentum=0.9,
-                weight_decay=1e-2
+                weight_decay=1e-2,
             )
         else:
             raise ValueError(
