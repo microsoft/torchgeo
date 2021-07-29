@@ -70,9 +70,10 @@ jobs:
       run: brew install rar
       if: ${{ runner.os == 'macOS' }}
     - name: Install conda
-      uses: conda-incubator/setup-miniconda@v2
+      uses: conda-incubator/setup-conda@v1
       with:
         python-version: ${{ matrix.python-version }}
+        conda-channels: conda-forge
       if: ${{ runner.os == 'Windows' }}
     - name: Install conda dependencies
       run: conda install h5py 'rasterio>=1.0'
