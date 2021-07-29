@@ -12,7 +12,7 @@ class TestFCN:
 
         model = FCN(in_channels=3, classes=4, num_filters=10)
         match = "to have 3 channels, but got 5 channels instead"
-        with pytest.raises(RuntimeError, match=match) as e:
+        with pytest.raises(RuntimeError, match=match):
             model(x)
 
     def test_classes(self) -> None:
