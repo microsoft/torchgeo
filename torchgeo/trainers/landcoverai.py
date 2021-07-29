@@ -190,10 +190,24 @@ class LandcoverAISegmentationTask(pl.LightningModule):
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler."""
-        optimizer = torch.optim.AdamW(
-            self.model.parameters(),
-            lr=self.hparams["learning_rate"],
-        )
+        optimizer: torch.optim.optimizer.Optimizer
+        if self.hparams["optimizer"] == "adamw":
+            optimizer = torch.optim.AdamW(
+                self.model.parameters(),
+                lr=self.hparams["learning_rate"],
+            )
+        elif self.hparams["optimizer"] == "sgd":
+            optimizer = torch.optim.SGD(
+                self.model.parameters(),
+                lr=self.hparams["learning_rate"],
+                momentum=0.9,
+                weight_decay=1e-2
+            )
+        else:
+            raise ValueError(
+                f"Optimizer choice '{self.hparams['optimizer']}' is not valid."
+            )
+
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
