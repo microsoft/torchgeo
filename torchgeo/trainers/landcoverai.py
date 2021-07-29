@@ -1,6 +1,6 @@
 """Landcover.ai trainer."""
 
-from typing import Any, Dict, cast
+from typing import Any, Dict, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -255,7 +255,21 @@ class LandcoverAIDataModule(pl.LightningDataModule):
         return sample
 
     def prepare_data(self) -> None:
-        """Initialize the main ``Dataset`` objects."""
+        """Make sure that the dataset is downloaded.
+
+        This method is only called once per run.
+        """
+        _ = LandCoverAI(
+            self.root_dir,
+            download=True,
+            checksum=False,
+        )
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        """Initialize the main ``Dataset`` objects.
+
+        This method is called once per GPU per run.
+        """
         self.train_dataset = LandCoverAI(
             self.root_dir,
             split="train",
