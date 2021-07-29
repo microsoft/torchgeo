@@ -75,7 +75,10 @@ jobs:
         python-version: ${{ matrix.python-version }}
       if: ${{ runner.os == 'Windows' }}
     - name: Install conda dependencies
-      run: conda install -c conda-forge h5py proj 'rasterio>=1.0'
+      run: |
+        conda install -c conda-forge h5py 'rasterio>=1.0'
+        conda list
+        conda info
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies
       run: |
