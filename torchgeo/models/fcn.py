@@ -2,9 +2,14 @@
 
 import torch.nn as nn
 from torch import Tensor
+from torch.nn import Module
+
+# https://github.com/pytorch/pytorch/issues/60979
+# https://github.com/pytorch/pytorch/pull/61045
+Module.__module__ = "torch.nn"
 
 
-class FCN(nn.modules.Module):
+class FCN(Module):
     """A simple 5 layer FCN with leaky relus and 'same' padding."""
 
     def __init__(self, in_channels: int, classes: int, num_filters: int = 64) -> None:
