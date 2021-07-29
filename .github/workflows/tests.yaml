@@ -77,7 +77,8 @@ jobs:
       if: ${{ runner.os == 'Windows' }}
     - name: Install conda dependencies
       run: |
-        conda install h5py 'rasterio>=1.0'
+        conda create -n torchgeo h5py 'rasterio>=1.0'
+        activate torchgeo
         conda list
         conda info
       if: ${{ runner.os == 'Windows' }}
