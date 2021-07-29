@@ -158,6 +158,8 @@ class LandcoverAISegmentationTask(pl.LightningModule):
                 f"image/{batch_idx}", fig, global_step=self.global_step
             )
 
+            plt.close()
+
     def validation_epoch_end(self, outputs: Any) -> None:
         """Logs epoch level validation metrics."""
         self.log("val_acc", self.val_accuracy.compute())
