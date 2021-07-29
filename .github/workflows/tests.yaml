@@ -75,7 +75,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
       if: ${{ runner.os == 'Windows' }}
     - name: Install conda dependencies
-      run: conda install -c conda-forge h5py 'rasterio>=1.0'
+      run: conda install h5py 'rasterio>=1.0'
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies
       run: |
@@ -83,9 +83,3 @@ jobs:
         pip install --pre -r requirements.txt
     - name: Run pytest checks
       run: pytest --cov=. --cov-report=term-missing
-      if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
-    - name: Run pytest checks
-      run: pytest --cov=. --cov-report=term-missing
-      env:
-        PROJ_LIB: $CONDA/Library/share/proj
-      if: ${{ runner.os == 'Windows' }}
