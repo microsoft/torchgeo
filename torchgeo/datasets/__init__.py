@@ -32,6 +32,7 @@ from .landsat import (
     Landsat8,
     Landsat9,
 )
+from .naip import NAIP
 from .nwpu import VHR10
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel2
@@ -70,6 +71,7 @@ __all__ = (
     "Landsat7",
     "Landsat8",
     "Landsat9",
+    "NAIP",
     "SEN12MS",
     "Sentinel",
     "Sentinel2",

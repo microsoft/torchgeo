@@ -44,6 +44,11 @@ Landsat
 .. autoclass:: Landsat2
 .. autoclass:: Landsat1
 
+National Agriculture Imagery Program (NAIP)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: NAIP
+
 Sentinel
 ^^^^^^^^
 
