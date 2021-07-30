@@ -2,7 +2,7 @@ spack:
   specs:
   - opencv+python3+imgcodecs+tiff+jpeg+png
   - pil
-  - "python@3.6:+bz2"
+  - "python@3.7:+bz2"
   - py-affine
   - "py-black@21:+colorama"
   - py-flake8

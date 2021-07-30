@@ -39,7 +39,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        #python-version: [3.6, 3.7, 3.8, 3.9]
         python-version: [3.7, 3.8, 3.9]
     steps:
     - name: Clone repo
@@ -71,5 +70,6 @@ jobs:
       run: |
         pip install cython numpy  # needed for pycocotools
         pip install --pre -r requirements.txt
+        pip list
     - name: Run pytest checks
       run: pytest --cov=. --cov-report=term-missing
