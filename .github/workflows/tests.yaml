@@ -60,10 +60,7 @@ jobs:
         channels: conda-forge
       if: ${{ runner.os == 'Windows' }}
     - name: Install conda dependencies (Windows)
-      run: |
-        conda install h5py 'rasterio>=1.0'
-        conda list
-        conda info
+      run: conda install h5py conda-forge::proj 'rasterio>=1.0'
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies
       run: |
