@@ -12,11 +12,17 @@ import rasterio
 
 ROOT = "/mnt/blobfuse/adam-scratch/landsat8"
 FILENAME = "LC08_L2SP_023032_20210622_20210629_02_T1_SR_B1.TIF"
-Z = np.array([[0, 0], [0, 0]], dtype=np.uint16)
 
 src = rasterio.open(os.path.join(ROOT, FILENAME))
-dst = rasterio.open(FILENAME, "w", driver=src.driver, height=Z.shape[0], width=Z.shape[1], count=1, dtype=Z.dtype, crs=src.crs, transform=src.transform)
-dst.write(Z, 1)
+Z = np.array([[1, 2], [3, 4]], dtype=src.read().dtype)
+dst = rasterio.open(FILENAME, "w", driver=src.driver, height=Z.shape[0], width=Z.shape[1], count=src.count, dtype=Z.dtype, crs=src.crs, transform=src.transform)
+for i in range(dst.count):
+    dst.write(Z, i)
+```
+Optionally, if the dataset has a colormap, this can be copied like so:
+```python
+cmap = src.colormap(1)
+dst.write_colormap(1, cmap)
 ```
 
 If the dataset expects multiple files, you can simply copy and rename the file you created.
