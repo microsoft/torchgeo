@@ -6,7 +6,7 @@ dependencies:
   - numpy
   - pip
   - conda-forge:pycocotools
-  - python
+  - python>=3.7
   - pytorch::pytorch>=1.7
   - conda-forge::rarfile
   - pytorch::torchvision>=0.3
