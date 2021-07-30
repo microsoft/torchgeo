@@ -14,9 +14,9 @@ ROOT = "/mnt/blobfuse/adam-scratch/landsat8"
 FILENAME = "LC08_L2SP_023032_20210622_20210629_02_T1_SR_B1.TIF"
 
 src = rasterio.open(os.path.join(ROOT, FILENAME))
-Z = np.array([[1, 2], [3, 4]], dtype=src.read().dtype)
+Z = np.arange(4, dtype=src.read().dtype).reshape(2, 2)
 dst = rasterio.open(FILENAME, "w", driver=src.driver, height=Z.shape[0], width=Z.shape[1], count=src.count, dtype=Z.dtype, crs=src.crs, transform=src.transform)
-for i in range(dst.count):
+for i in range(1, dst.count + 1):
     dst.write(Z, i)
 ```
 Optionally, if the dataset has a colormap, this can be copied like so:
