@@ -115,7 +115,7 @@ class CDL(GeoDataset):
         # Create an R-tree to index the dataset
         self.index = Index(interleaved=False, properties=Property(dimension=3))
         fileglob = os.path.join(root, self.base_folder, "**_30m_cdls.img")
-        for i, filename in enumerate(glob.iglob(fileglob)):
+        for i, filename in enumerate(glob.iglob(fileglob), recursive=True):
             year = int(os.path.basename(filename).split("_")[0])
             mint = datetime(year, 1, 1, 0, 0, 0).timestamp()
             maxt = datetime(year, 12, 31, 23, 59, 59).timestamp()

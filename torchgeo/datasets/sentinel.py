@@ -92,7 +92,7 @@ class Sentinel2(Sentinel):
         self.index = Index(interleaved=False, properties=Property(dimension=3))
         path = os.path.join(root, self.base_folder)
         fileglob = os.path.join(path, f"**_{bands[0]}_*.tif")
-        for i, filename in enumerate(glob.iglob(fileglob)):
+        for i, filename in enumerate(glob.iglob(fileglob), recursive=True):
             # https://sentinel.esa.int/web/sentinel/user-guides/sentinel-2-msi/naming-convention
             time = datetime.strptime(
                 os.path.basename(filename).split("_")[1], "%Y%m%dT%H%M%S"
