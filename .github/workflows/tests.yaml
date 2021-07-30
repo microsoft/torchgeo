@@ -57,10 +57,13 @@ jobs:
       uses: conda-incubator/setup-miniconda@v2
       with:
         python-version: ${{ matrix.python-version }}
-        channels: conda-forge,defaults
+        channels: conda-forge
       if: ${{ runner.os == 'Windows' }}
     - name: Install conda dependencies (Windows)
-      run: conda install 'rasterio>=1.0' h5py
+      run: |
+        conda install h5py 'rasterio>=1.0'
+        conda list
+        conda info
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies
       run: |
