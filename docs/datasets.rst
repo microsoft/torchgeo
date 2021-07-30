@@ -10,6 +10,20 @@ Geospatial Datasets
 
 :class:`GeoDataset` is designed for datasets that contain geospatial information, like latitude, longitude, coordinate system, and projection. Datasets containing this kind of information can be combined using :class:`ZipDataset`.
 
+Chesapeake Bay High-Resolution Land Cover Project
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: Chesapeake
+.. autoclass:: Chesapeake7
+.. autoclass:: Chesapeake13
+.. autoclass:: ChesapeakeDC
+.. autoclass:: ChesapeakeDE
+.. autoclass:: ChesapeakeMD
+.. autoclass:: ChesapeakeNY
+.. autoclass:: ChesapeakePA
+.. autoclass:: ChesapeakeVA
+.. autoclass:: ChesapeakeWV
+
 Cropland Data Layer (CDL)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -67,6 +81,11 @@ SEN12MS
 ^^^^^^^
 
 .. autoclass:: SEN12MS
+
+So2Sat
+^^^^^^
+
+.. autoclass:: So2Sat
 
 Tropical Cyclone Wind Estimation Competition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
