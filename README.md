@@ -22,9 +22,6 @@ python -c "import torch; print(torch.cuda.is_available())"
 ## Example training run
 
 ```bash
-# make sure that the Landcover.AI dataset is downloaded
-python -c "from torchgeo.datasets import LandCoverAI; ds = LandCoverAI(download=True)" 
-
 # run the training script with a config file
 python train.py config_file=conf/landcoverai.yaml
 ```
