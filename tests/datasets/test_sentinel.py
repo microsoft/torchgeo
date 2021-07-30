@@ -18,7 +18,6 @@ class TestSentinel2:
         return Sentinel2(root, bands=bands, transforms=transforms)
 
     def test_getitem(self, dataset: Sentinel2) -> None:
-        print(dataset.bounds.intersects(dataset.bounds))
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
