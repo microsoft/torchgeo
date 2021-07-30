@@ -74,7 +74,7 @@ class Landsat(GeoDataset, abc.ABC):
         self.index = Index(interleaved=False, properties=Property(dimension=3))
         path = os.path.join(root, self.base_folder)
         fileglob = os.path.join(path, f"**_{self.bands[0]}.TIF")
-        for i, filename in enumerate(glob.iglob(fileglob)):
+        for i, filename in enumerate(glob.iglob(fileglob), recursive=True):
             # https://www.usgs.gov/faqs/what-naming-convention-landsat-collections-level-1-scenes
             # https://www.usgs.gov/faqs/what-naming-convention-landsat-collection-2-level-1-and-level-2-scenes
             time = datetime.strptime(os.path.basename(filename).split("_")[3], "%Y%m%d")
