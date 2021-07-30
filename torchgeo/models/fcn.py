@@ -2,7 +2,7 @@
 
 import torch.nn as nn
 from torch import Tensor
-from torch.nn import Module
+from torch.nn.modules import Module
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
