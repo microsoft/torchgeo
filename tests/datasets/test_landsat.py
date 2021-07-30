@@ -24,7 +24,6 @@ class TestLandsat8:
         return Landsat8(root, bands=bands, transforms=transforms)
 
     def test_getitem(self, dataset: Landsat8) -> None:
-        print(dataset.bounds.intersects(dataset.bounds))
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
