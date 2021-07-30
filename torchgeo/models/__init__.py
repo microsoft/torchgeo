@@ -1,4 +1,4 @@
-"""TorchGeo specific models."""
+"""TorchGeo models."""
 
 from .fcn import FCN
 
