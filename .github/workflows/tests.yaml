@@ -70,15 +70,14 @@ jobs:
       run: brew install rar
       if: ${{ runner.os == 'macOS' }}
     - name: Install conda
-      uses: s-weigand/setup-conda@v1
+      uses: conda-incubator/setup-miniconda@v2
       with:
         python-version: ${{ matrix.python-version }}
-        conda-channels: conda-forge
+        channels: conda-forge
       if: ${{ runner.os == 'Windows' }}
     - name: Install conda dependencies
       run: |
-        conda create -n torchgeo h5py 'rasterio>=1.0'
-        source activate torchgeo
+        conda install h5py 'rasterio>=1.0'
         conda list
         conda info
       if: ${{ runner.os == 'Windows' }}
