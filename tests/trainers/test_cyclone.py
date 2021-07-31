@@ -1,8 +1,8 @@
 from typing import Any, Dict, cast
 
 import pytest
-from torchvision import models
 from omegaconf import OmegaConf
+from torchvision import models
 
 from torchgeo.trainers import CycloneSimpleRegressionTask
 
