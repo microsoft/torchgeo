@@ -10,6 +10,7 @@ from torch import Tensor
 from torch.nn.modules import Module
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader, Subset
+from torchvision import models
 
 from ..datasets import TropicalCycloneWindEstimation
 
@@ -25,15 +26,23 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
     This does not take into account other per-sample features available in this dataset.
     """
 
-    def __init__(self, model: Module, **kwargs: Dict[str, Any]) -> None:
+    def config_task(self, kwargs: Dict[str, Any]) -> None:
+        """Configures the task based on kwargs parameters."""
+        if kwargs["model"] == "resnet18":
+            self.model = models.resnet18(pretrained=False, num_classes=1)
+        else:
+            raise ValueError(f"Model type '{kwargs['model']}' is not valid.")
+
+    def __init__(self, **kwargs: Dict[str, Any]) -> None:
         """Initialize a new LightningModule for training simple regression models.
 
-        Args:
-            model: A model (specifically, a ``nn.Module``) instance to be trained.
+        Keyword Args:
+            model: Name of the model to use.
         """
         super().__init__()
         self.save_hyperparameters()  # creates `self.hparams` from kwargs
-        self.model = model
+
+        self.config_task(kwargs)
 
     def forward(self, x: Tensor) -> Any:  # type: ignore[override]
         """Forward pass of the model."""
@@ -100,6 +109,7 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
                     patience=self.hparams["learning_rate_schedule_patience"],
                 ),
                 "monitor": "val_loss",
+                "verbose": True,
             },
         }
 

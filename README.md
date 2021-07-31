@@ -11,8 +11,25 @@ Datasets, transforms, and models for geospatial data.
 ### Conda
 
 ```bash
+conda config --set channel_priority false
 conda env create --file environment.yml
 conda activate torchgeo
+
+# verify that the PyTorch can use the GPU
+python -c "import torch; print(torch.cuda.is_available())"
+```
+
+## Example training run
+
+```bash
+# run the training script with a config file
+python train.py config_file=conf/landcoverai.yaml
+```
+
+## Developing
+
+```
+make tests
 ```
 
 ## Datasets

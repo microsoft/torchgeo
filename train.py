@@ -6,13 +6,11 @@ import os
 from typing import Any, Dict, cast
 
 import pytorch_lightning as pl
-import torch.nn as nn
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.core.datamodule import LightningDataModule
 from pytorch_lightning.core.lightning import LightningModule
-from torchvision import models
 
 from torchgeo.trainers import (
     CycloneDataModule,
@@ -124,41 +122,22 @@ def main(conf: DictConfig) -> None:
             batch_size=conf.program.batch_size,
             num_workers=conf.program.num_workers,
         )
-        model = models.resnet18(pretrained=False, num_classes=1)
-        task = CycloneSimpleRegressionTask(model, **task_args)
+        task = CycloneSimpleRegressionTask(**task_args)
     elif conf.task.name == "landcoverai":
-        import segmentation_models_pytorch as smp
-
         datamodule = LandcoverAIDataModule(
             conf.program.data_dir,
             batch_size=conf.program.batch_size,
             num_workers=conf.program.num_workers,
         )
-        model = smp.Unet(
-            encoder_name="resnet18",
-            encoder_weights=None,
-            in_channels=3,
-            classes=5,
-        )
-        loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
-        task = LandcoverAISegmentationTask(model, loss, **task_args)
+        task = LandcoverAISegmentationTask(**task_args)
     elif conf.task.name == "sen12ms":
-        import segmentation_models_pytorch as smp
-
         datamodule = SEN12MSDataModule(
             conf.program.data_dir,
             seed=conf.program.seed,
             batch_size=conf.program.batch_size,
             num_workers=conf.program.num_workers,
         )
-        model = smp.Unet(
-            encoder_name="resnet18",
-            encoder_weights=None,
-            in_channels=15,
-            classes=11,
-        )
-        loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
-        task = SEN12MSSegmentationTask(model, loss, **task_args)
+        task = SEN12MSSegmentationTask(**task_args)
     else:
         raise ValueError(
             f"task.name={conf.task.name} is not recognized as a valid task"

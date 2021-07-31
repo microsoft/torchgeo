@@ -1,10 +1,11 @@
 """Landcover.ai trainer."""
 
-from typing import Any, Dict, cast
+from typing import Any, Dict, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
+import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 from torch import Tensor
@@ -15,6 +16,7 @@ from torch.utils.tensorboard import SummaryWriter  # type: ignore[attr-defined]
 from torchmetrics import Accuracy, IoU  # type: ignore[attr-defined]
 
 from ..datasets import LandCoverAI
+from ..models import FCN
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -29,23 +31,55 @@ class LandcoverAISegmentationTask(pl.LightningModule):
     ``pytorch_segmentation_models`` package.
     """
 
+    def config_task(self, kwargs: Dict[str, Any]) -> None:
+        """Configures the task based on kwargs parameters."""
+        if kwargs["segmentation_model"] == "unet":
+            self.model = smp.Unet(
+                encoder_name=kwargs["encoder_name"],
+                encoder_weights=kwargs["encoder_weights"],
+                in_channels=3,
+                classes=5,
+            )
+        elif kwargs["segmentation_model"] == "deeplabv3+":
+            self.model = smp.DeepLabV3Plus(
+                encoder_name=kwargs["encoder_name"],
+                encoder_weights=kwargs["encoder_weights"],
+                encoder_output_stride=kwargs["encoder_output_stride"],
+                in_channels=3,
+                classes=5,
+            )
+        elif kwargs["segmentation_model"] == "fcn":
+            self.model = FCN(3, 5, 64)
+        else:
+            raise ValueError(
+                f"Model type '{kwargs['segmentation_model']}' is not valid."
+            )
+
+        if kwargs["loss"] == "ce":
+            self.loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
+        elif kwargs["loss"] == "jaccard":
+            self.loss = smp.losses.JaccardLoss(mode="multiclass")
+        else:
+            raise ValueError(f"Loss type '{kwargs['loss']}' is not valid.")
+
     def __init__(
         self,
-        model: Module,
-        loss: Module = nn.CrossEntropyLoss(),  # type: ignore[attr-defined]
         **kwargs: Dict[str, Any],
     ) -> None:
         """Initialize the LightningModule with a model and loss function.
 
-        Args:
-            model: A model (specifically, a ``nn.Module``) instance to be trained.
-            loss: A semantic segmentation loss function to use (e.g. pixel-wise
-                crossentropy)
+        Keyword Args:
+            segmentation_model: Name of the segmentation model type to use
+            encoder_name: Name of the encoder model backbone to use
+            encoder_weights: None or "imagenet" to use imagenet pretrained weights in
+                the encoder model
+            encoder_output_stride: The output stride parameter in DeepLabV3+ models
+            loss: Name of the loss function
         """
         super().__init__()
         self.save_hyperparameters()  # creates `self.hparams` from kwargs
-        self.model = model
-        self.loss = loss
+
+        self.config_task(kwargs)
 
         self.train_accuracy = Accuracy()
         self.val_accuracy = Accuracy()
@@ -124,6 +158,8 @@ class LandcoverAISegmentationTask(pl.LightningModule):
                 f"image/{batch_idx}", fig, global_step=self.global_step
             )
 
+            plt.close()
+
     def validation_epoch_end(self, outputs: Any) -> None:
         """Logs epoch level validation metrics."""
         self.log("val_acc", self.val_accuracy.compute())
@@ -156,10 +192,24 @@ class LandcoverAISegmentationTask(pl.LightningModule):
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler."""
-        optimizer = torch.optim.Adam(
-            self.model.parameters(),
-            lr=self.hparams["learning_rate"],
-        )
+        optimizer: torch.optim.optimizer.Optimizer
+        if self.hparams["optimizer"] == "adamw":
+            optimizer = torch.optim.AdamW(
+                self.model.parameters(),
+                lr=self.hparams["learning_rate"],
+            )
+        elif self.hparams["optimizer"] == "sgd":
+            optimizer = torch.optim.SGD(
+                self.model.parameters(),
+                lr=self.hparams["learning_rate"],
+                momentum=0.9,
+                weight_decay=1e-2,
+            )
+        else:
+            raise ValueError(
+                f"Optimizer choice '{self.hparams['optimizer']}' is not valid."
+            )
+
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
@@ -168,6 +218,7 @@ class LandcoverAISegmentationTask(pl.LightningModule):
                     patience=self.hparams["learning_rate_schedule_patience"],
                 ),
                 "monitor": "val_loss",
+                "verbose": True,
             },
         }
 
@@ -206,7 +257,21 @@ class LandcoverAIDataModule(pl.LightningDataModule):
         return sample
 
     def prepare_data(self) -> None:
-        """Initialize the main ``Dataset`` objects."""
+        """Make sure that the dataset is downloaded.
+
+        This method is only called once per run.
+        """
+        _ = LandCoverAI(
+            self.root_dir,
+            download=True,
+            checksum=False,
+        )
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        """Initialize the main ``Dataset`` objects.
+
+        This method is called once per GPU per run.
+        """
         self.train_dataset = LandCoverAI(
             self.root_dir,
             split="train",
