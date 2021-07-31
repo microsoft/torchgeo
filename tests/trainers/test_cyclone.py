@@ -1,14 +1,27 @@
-from typing import Any, Dict
+from typing import Any, Dict, cast
 
 import pytest
+from torchvision import models
+from omegaconf import OmegaConf
 
 from torchgeo.trainers import CycloneSimpleRegressionTask
 
 
-def test_cyclone_args() -> None:
+class TestCycloneTrainer:
+    @pytest.fixture
+    def default_config(self) -> Dict[str, Any]:
+        task_conf = OmegaConf.load("conf/task_defaults/cyclone.yaml")
+        task_args = OmegaConf.to_object(task_conf.task)
+        task_args = cast(Dict[str, Any], task_args)
+        return task_args
 
-    invalid_model = "fakemodel"
-    error_message = f"Model type '{invalid_model}' is not valid."
-    kwargs: Dict[str, Any] = {"model": invalid_model}
-    with pytest.raises(ValueError, match=error_message):
-        CycloneSimpleRegressionTask(**kwargs)
+    def test_resnet18(self, default_config: Dict[str, Any]) -> None:
+        default_config["model"] = "resnet18"
+        task = CycloneSimpleRegressionTask(**default_config)
+        assert isinstance(task.model, models.resnet.ResNet)
+
+    def test_invalid_model(self, default_config: Dict[str, Any]) -> None:
+        default_config["model"] = "invalid_model"
+        error_message = "Model type 'invalid_model' is not valid."
+        with pytest.raises(ValueError, match=error_message):
+            CycloneSimpleRegressionTask(**default_config)
