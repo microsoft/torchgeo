@@ -14,6 +14,7 @@ architectures, and common image transformations for geospatial data.
    :caption: Package Reference
 
    datasets
+   models
    samplers
    trainers
    transforms
