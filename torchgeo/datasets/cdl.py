@@ -207,6 +207,6 @@ class CDL(GeoDataset):
 
         # Plot the image
         ax = plt.axes()
-        ax.imshow(array, origin="lower")
+        ax.imshow(array)
         ax.axis("off")
         plt.show()
