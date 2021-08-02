@@ -241,6 +241,7 @@ class Chesapeake(GeoDataset, abc.ABC):
         ax.imshow(array)
         ax.axis("off")
         plt.show()
+        plt.close()
 
 
 class Chesapeake7(Chesapeake):
