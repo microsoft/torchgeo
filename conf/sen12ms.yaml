@@ -3,7 +3,6 @@ program:  # These are experiment level arguments
   overwrite: True
 
 trainer:  # These are all the arguments that will be passed to the pl.Trainer
-  gpus: 1
   min_epochs: 15
 
 task:  # These are all the arguments that will be used to create an appropriate task
