@@ -97,6 +97,25 @@ class Chesapeake(GeoDataset, abc.ABC):
         url += f"/{self.base_folder}/{self.zipfile}"
         return url
 
+    cmap = {
+        0: (0, 0, 0, 0),
+        1: (0, 197, 255, 255),
+        2: (0, 168, 132, 255),
+        3: (38, 115, 0, 255),
+        4: (76, 230, 0, 255),
+        5: (163, 255, 115, 255),
+        6: (255, 170, 0, 255),
+        7: (255, 0, 0, 255),
+        8: (156, 156, 156, 255),
+        9: (0, 0, 0, 255),
+        10: (115, 115, 0, 255),
+        11: (230, 230, 0, 255),
+        12: (255, 255, 115, 255),
+        13: (197, 0, 255, 255),
+        14: (0, 0, 0, 255),
+        15: (0, 0, 0, 255),
+    }
+
     def __init__(
         self,
         root: str,
@@ -134,14 +153,12 @@ class Chesapeake(GeoDataset, abc.ABC):
         filename = os.path.join(self.root, self.filename)
         with rasterio.open(filename) as src:
             with rasterio.open(filename) as src:
-                cmap = src.colormap(1)
                 with WarpedVRT(src, crs=self.crs) as vrt:
                     minx, miny, maxx, maxy = vrt.bounds
         mint = 0
         maxt = sys.maxsize
         coords = (minx, maxx, miny, maxy, mint, maxt)
         self.index.insert(0, coords, filename)
-        self.cmap = np.array([cmap[i] for i in range(len(cmap))])
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve labels and metadata indexed by query.
@@ -215,8 +232,9 @@ class Chesapeake(GeoDataset, abc.ABC):
             image: the image to plot
         """
         # Convert from class labels to RGBA values
+        cmap = np.array([self.cmap[i] for i in range(len(self.cmap))])
         array = image.squeeze().numpy()
-        array = self.cmap[array]
+        array = cmap[array]
 
         # Plot the image
         ax = plt.axes()
@@ -231,21 +249,30 @@ class Chesapeake7(Chesapeake):
     This version of the dataset is composed of 7 classes:
 
     0. No Data: Background values
-    1. Barren: Areas devoid of vegetation consisting of natural earthen material
-    2. Impervious Roads: Impervious surfaces that are used for transportation
-    3. Impervious Surfaces: Human-constructed surfaces less than 2 meters in height
-    4. Low Vegetation: Plant material less than 2 meters in height including lawns
-    5. Tree Canopy: Deciduous and evergreen woody vegetation over 3-5 meters in height
-    6. Tree Canopy over Impervious Surfaces: Tree cover overlapping impervious surfaces
-    7. Water: All areas of open water including ponds, rivers, and lakes
+    1. Water: All areas of open water including ponds, rivers, and lakes
+    2. Tree Canopy and Shrubs: All woody vegetation including trees and shrubs
+    3. Low Vegetation: Plant material less than 2 meters in height including lawns
+    4. Barren: Areas devoid of vegetation consisting of natural earthen material
+    5. Impervious Surfaces: Human-constructed surfaces less than 2 meters in height
+    6. Impervious Roads: Impervious surfaces that are used for transportation
+    7. Aberdeen Proving Ground: U.S. Army facility with no labels
     """
-
-    # TODO: make sure these class numbers are correct
 
     base_folder = "BAYWIDE"
     filename = "Baywide_7class_20132014.tif"
     zipfile = "Baywide_7Class_20132014.zip"
     md5 = "61a4e948fb2551840b6557ef195c2084"
+
+    cmap = {
+        0: (0, 0, 0, 0),
+        1: (0, 197, 255, 255),
+        2: (38, 115, 0, 255),
+        3: (163, 255, 115, 255),
+        4: (255, 170, 0, 255),
+        5: (156, 156, 156, 255),
+        6: (0, 0, 0, 255),
+        7: (197, 0, 255, 255),
+    }
 
 
 class Chesapeake13(Chesapeake):
