@@ -1,8 +1,6 @@
 name: torchgeo
 channels:
-  - pytorch
   - conda-forge
-  - anaconda
 dependencies:
   - cudatoolkit
   - h5py
@@ -10,10 +8,10 @@ dependencies:
   - pip
   - pycocotools
   - python
-  - pytorch>=1.8.1
+  - pytorch-gpu>=1.7
   - rarfile
   - rasterio>=1.0
-  - torchvision>=0.9.1
+  - torchvision>=0.3
   - pip:
     - affine
     - black[colorama]>=21b

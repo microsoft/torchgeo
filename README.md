@@ -11,7 +11,7 @@ Datasets, transforms, and models for geospatial data.
 ### Conda
 
 ```bash
-conda config --set channel_priority false
+conda config --set channel_priority strict
 conda env create --file environment.yml
 conda activate torchgeo
 
