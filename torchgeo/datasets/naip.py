@@ -2,11 +2,11 @@
 
 import glob
 import os
+import re
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional
 
 import matplotlib.pyplot as plt
-import numpy as np
 import rasterio
 import torch
 from rasterio.crs import CRS
@@ -39,6 +39,24 @@ class NAIP(GeoDataset):
     * https://www.fisheries.noaa.gov/inport/item/49508/citation
     """
 
+    # https://www.nrcs.usda.gov/Internet/FSE_DOCUMENTS/nrcs141p2_015644.pdf
+    # https://planetarycomputer.microsoft.com/dataset/naip#Storage-Documentation
+    filename_glob = "m_*.tif"
+    filename_regex = re.compile(
+        r"""
+        ^m
+        _(?P<quadrangle>\d+)
+        _(?P<quarter_quad>[a-z]+)
+        _(?P<utm_zone>\d+)
+        _(?P<resolution>\d+)
+        _(?P<acquisition_date>\d+)
+        (?:_(?P<processing_date>\d+))?
+        .tif$
+    """,
+        re.VERBOSE,
+    )
+    date_format = "%Y%m%d"
+
     def __init__(
         self,
         root: str,
@@ -62,17 +80,18 @@ class NAIP(GeoDataset):
 
         # Create an R-tree to index the dataset
         self.index = Index(interleaved=False, properties=Property(dimension=3))
-        fileglob = os.path.join(root, "**.tif")
+        fileglob = os.path.join(root, "**", self.filename_glob)
         for i, filename in enumerate(glob.iglob(fileglob, recursive=True)):
-            with rasterio.open(filename) as src:
-                with WarpedVRT(src, crs=self.crs) as vrt:
-                    minx, miny, maxx, maxy = vrt.bounds
-            # https://www.nrcs.usda.gov/Internet/FSE_DOCUMENTS/nrcs141p2_015644.pdf
-            date = filename.split("_")[-1].replace(".tif", "")
-            time = datetime.strptime(date, "%Y%m%d")
-            timestamp = time.timestamp()
-            coords = (minx, maxx, miny, maxy, timestamp, timestamp)
-            self.index.insert(i, coords, filename)
+            match = re.match(self.filename_regex, os.path.basename(filename))
+            if match is not None:
+                with rasterio.open(filename) as src:
+                    with WarpedVRT(src, crs=self.crs) as vrt:
+                        minx, miny, maxx, maxy = vrt.bounds
+                date = match.group("acquisition_date")
+                time = datetime.strptime(date, self.date_format)
+                timestamp = time.timestamp()
+                coords = (minx, maxx, miny, maxy, timestamp, timestamp)
+                self.index.insert(i, coords, filename)
 
         if "filename" not in locals():
             raise FileNotFoundError(f"No NAIP data was found in '{root}'")
@@ -97,7 +116,7 @@ class NAIP(GeoDataset):
         hits = self.index.intersection(query, objects=True)
         filename = next(hits).object
         with rasterio.open(filename) as src:
-            with WarpedVRT(src, crs=self.crs) as vrt:
+            with WarpedVRT(src, crs=self.crs, nodata=0) as vrt:
                 window = rasterio.windows.from_bounds(
                     query.minx,
                     query.miny,
@@ -124,15 +143,12 @@ class NAIP(GeoDataset):
         Args:
             image: the image to plot
         """
+        # Drop NIR channel
+        image = image[:3]
+
         # Convert from CxHxW to HxWxC
         image = image.permute((1, 2, 0))
         array = image.numpy()
-
-        # Stretch to the range of 2nd to 98th percentile
-        per98 = np.percentile(array, 98)  # type: ignore[no-untyped-call]
-        per02 = np.percentile(array, 2)  # type: ignore[no-untyped-call]
-        array = (array - per02) / (per98 - per02)
-        array = np.clip(array, 0, 1)
 
         # Plot the image
         ax = plt.axes()
