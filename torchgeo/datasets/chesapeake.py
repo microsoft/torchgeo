@@ -243,7 +243,7 @@ class Chesapeake7(Chesapeake):
     # TODO: make sure these class numbers are correct
 
     base_folder = "BAYWIDE"
-    filename = "Baywide_7Class_20132014.tif"
+    filename = "Baywide_7class_20132014.tif"
     zipfile = "Baywide_7Class_20132014.zip"
     md5 = "61a4e948fb2551840b6557ef195c2084"
 
