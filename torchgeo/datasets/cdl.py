@@ -210,3 +210,4 @@ class CDL(GeoDataset):
         ax.imshow(array)
         ax.axis("off")
         plt.show()
+        plt.close()
