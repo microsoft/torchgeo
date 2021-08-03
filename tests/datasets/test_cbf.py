@@ -11,7 +11,7 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import CanadianBuildingFootprints, BoundingBox, ZipDataset
+from torchgeo.datasets import BoundingBox, CanadianBuildingFootprints, ZipDataset
 from torchgeo.transforms import Identity
 
 
