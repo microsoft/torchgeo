@@ -1,5 +1,6 @@
 affine
 black[colorama]>=21b
+fiona
 flake8
 h5py
 isort[colors]>=4.3.5
