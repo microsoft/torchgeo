@@ -4,6 +4,7 @@ fiona
 flake8
 h5py
 isort[colors]>=4.3.5
+jupyterlab
 matplotlib
 mypy>=0.900
 numpy

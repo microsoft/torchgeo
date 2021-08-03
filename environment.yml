@@ -18,6 +18,7 @@ dependencies:
     - black[colorama]>=21b
     - flake8
     - isort[colors]>=4.3.5
+    - jupyterlab
     - mypy>=0.900
     - omegaconf
     - opencv-python
