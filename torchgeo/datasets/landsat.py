@@ -157,6 +157,7 @@ class Landsat(GeoDataset, abc.ABC):
         ax.imshow(array)
         ax.axis("off")
         plt.show()
+        plt.close()
 
 
 class Landsat8(Landsat):
