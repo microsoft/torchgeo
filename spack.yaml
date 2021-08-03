@@ -9,6 +9,7 @@ spack:
   - py-flake8
   - py-h5py
   - "py-isort@4.3.5:+colors"
+  - py-jupyterlab
   - py-matplotlib
   - "py-mypy@0.900:"
   - py-numpy
