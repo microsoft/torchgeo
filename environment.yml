@@ -3,6 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - cudatoolkit
+  - fiona
   - h5py
   - numpy
   - pip
@@ -15,7 +16,6 @@ dependencies:
   - pip:
     - affine
     - black[colorama]>=21b
-    - fiona
     - flake8
     - isort[colors]>=4.3.5
     - mypy>=0.900
