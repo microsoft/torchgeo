@@ -6,6 +6,7 @@ import sys
 from typing import Any, Callable, Dict, Optional
 
 import fiona
+import fiona.transform
 import matplotlib.pyplot as plt
 import rasterio
 import torch
