@@ -1,8 +1,10 @@
-This directory contains fake data used to test torchgeo. Depending on the type of dataset, fake data can be created in one of two ways:
+This directory contains fake data used to test torchgeo. Depending on the type of dataset, fake data can be created in multiple ways:
 
 ## GeoDataset
 
 GeoDataset data can be created like so. We first open an existing data example and use it to copy the driver/CRS/transform to the fake data.
+
+### Raster data
 
 ```python
 import os
@@ -25,7 +27,21 @@ cmap = src.colormap(1)
 dst.write_colormap(1, cmap)
 ```
 
-If the dataset expects multiple files, you can simply copy and rename the file you created.
+### Vector data
+
+```python
+import os
+
+import fiona
+
+ROOT = "/mnt/blobfuse/adam-scratch/cbf"
+FILENAME = "Ontario.geojson"
+
+src = fiona.open(os.path.join(ROOT, FILENAME))
+dst = fiona.open(FILENAME, "w", **src.meta)
+rec = next(iter(src))
+dst.write(rec)
+```
 
 ## VisionDataset
 
