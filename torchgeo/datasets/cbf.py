@@ -68,7 +68,7 @@ class CanadianBuildingFootprints(GeoDataset):
         self,
         root: str = "data",
         crs: CRS = _crs,
-        res: float = 1,
+        res: float = 0.00001,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -147,7 +147,7 @@ class CanadianBuildingFootprints(GeoDataset):
             )
 
             # Filter geometries to those that intersect with the bounding box
-            for feature in src.filter((minx, miny, maxx, maxy)):
+            for feature in src.filter(bbox=(minx, miny, maxx, maxy)):
                 # Warp geometries to requested CRS
                 shape = fiona.transform.transform_geom(
                     src.crs, self.crs.to_dict(), feature["geometry"]
@@ -160,13 +160,9 @@ class CanadianBuildingFootprints(GeoDataset):
         transform = rasterio.transform.from_bounds(
             query.minx, query.miny, query.maxx, query.maxy, width, height
         )
-        masks = rasterio.features.rasterize(shapes, transform=transform)
-
-        # Clip to bounding box
-        rows, cols = rasterio.transform.rowcol(
-            transform, [query.minx, query.maxx], [query.miny, query.maxy]
+        masks = rasterio.features.rasterize(
+            shapes, out_shape=(int(height), int(width)), transform=transform
         )
-        masks = masks[rows[0] : rows[1], cols[0] : cols[1]]
 
         sample = {
             "masks": torch.tensor(masks),  # type: ignore[attr-defined]
