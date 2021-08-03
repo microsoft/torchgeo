@@ -62,7 +62,7 @@ jobs:
       if: ${{ runner.os == 'Windows' }}
     - name: Install conda dependencies (Windows)
       run: |
-        conda install h5py 'rasterio>=1.0'
+        conda install fiona h5py 'rasterio>=1.0'
         conda list
         conda info
       if: ${{ runner.os == 'Windows' }}
