@@ -1,6 +1,7 @@
 """TorchGeo datasets."""
 
 from .benin_cashews import BeninSmallHolderCashews
+from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
 from .chesapeake import (
     Chesapeake,
@@ -42,6 +43,7 @@ from .utils import BoundingBox, collate_dict
 __all__ = (
     "BeninSmallHolderCashews",
     "BoundingBox",
+    "CanadianBuildingFootprints",
     "CDL",
     "collate_dict",
     "Chesapeake",

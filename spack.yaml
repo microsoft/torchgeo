@@ -5,6 +5,7 @@ spack:
   - "python@3.7:+bz2"
   - py-affine
   - "py-black@21:+colorama"
+  - py-fiona
   - py-flake8
   - py-h5py
   - "py-isort@4.3.5:+colors"
