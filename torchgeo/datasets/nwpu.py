@@ -59,7 +59,6 @@ class VHR10(VisionDataset):
          which is stored in a RAR file
     """
 
-    base_folder = "vhr10"
     image_meta = {
         "url": "https://drive.google.com/file/d/1--foZ3dV5OCsqXQXT84UeKtrAqc5CkAE",
         "filename": "NWPU VHR-10 dataset.rar",
@@ -120,7 +119,6 @@ class VHR10(VisionDataset):
             self.coco = COCO(
                 os.path.join(
                     self.root,
-                    self.base_folder,
                     "NWPU VHR-10 dataset",
                     self.target_meta["filename"],
                 )
@@ -168,7 +166,6 @@ class VHR10(VisionDataset):
         """
         filename = os.path.join(
             self.root,
-            self.base_folder,
             "NWPU VHR-10 dataset",
             self.split + " image set",
             f"{id_:03d}.jpg",
@@ -205,7 +202,7 @@ class VHR10(VisionDataset):
             True if dataset files are found and/or MD5s match, else False
         """
         image: bool = check_integrity(
-            os.path.join(self.root, self.base_folder, self.image_meta["filename"]),
+            os.path.join(self.root, self.image_meta["filename"]),
             self.image_meta["md5"] if self.checksum else None,
         )
 
@@ -215,7 +212,6 @@ class VHR10(VisionDataset):
             target = check_integrity(
                 os.path.join(
                     self.root,
-                    self.base_folder,
                     "NWPU VHR-10 dataset",
                     self.target_meta["filename"],
                 ),
@@ -233,7 +229,7 @@ class VHR10(VisionDataset):
         # Download images
         download_and_extract_archive(
             self.image_meta["url"],
-            os.path.join(self.root, self.base_folder),
+            self.root,
             filename=self.image_meta["filename"],
             md5=self.image_meta["md5"] if self.checksum else None,
         )
@@ -243,7 +239,7 @@ class VHR10(VisionDataset):
             # Download annotations
             download_url(
                 self.target_meta["url"],
-                os.path.join(self.root, self.base_folder, "NWPU VHR-10 dataset"),
+                os.path.join(self.root, "NWPU VHR-10 dataset"),
                 self.target_meta["filename"],
                 self.target_meta["md5"] if self.checksum else None,
             )

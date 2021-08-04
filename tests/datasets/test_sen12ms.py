@@ -33,7 +33,7 @@ class TestSEN12MS:
         ]
 
         monkeypatch.setattr(SEN12MS, "md5s", md5s)  # type: ignore[attr-defined]
-        root = os.path.join("tests", "data")
+        root = os.path.join("tests", "data", "sen12ms")
         split = request.param
         transforms = Identity()
         return SEN12MS(root, split, transforms=transforms, checksum=True)
@@ -69,12 +69,12 @@ class TestSEN12MS:
             SEN12MS(str(tmp_path), checksum=False)
 
     def test_check_integrity_light(self) -> None:
-        root = os.path.join("tests", "data")
+        root = os.path.join("tests", "data", "sen12ms")
         ds = SEN12MS(root, checksum=False)
         assert isinstance(ds, SEN12MS)
 
     def test_band_subsets(self) -> None:
-        root = os.path.join("tests", "data")
+        root = os.path.join("tests", "data", "sen12ms")
         for bands in SEN12MS.BAND_SETS.values():
             ds = SEN12MS(root, bands=bands, checksum=False)
             x = ds[0]["image"]

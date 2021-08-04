@@ -51,7 +51,6 @@ class So2Sat(VisionDataset):
        This download will likely take several hours.
     """
 
-    base_folder = "so2sat"
     filenames = {
         "train": "training.h5",
         "validation": "validation.h5",
@@ -95,7 +94,7 @@ class So2Sat(VisionDataset):
         if not self._check_integrity():
             raise RuntimeError("Dataset not found or corrupted.")
 
-        self.fn = os.path.join(self.root, self.base_folder, self.filenames[split])
+        self.fn = os.path.join(self.root, self.filenames[split])
 
         with h5py.File(self.fn, "r") as f:
             self.size = int(f["label"].shape[0])
@@ -149,7 +148,7 @@ class So2Sat(VisionDataset):
             True if dataset files are found and/or MD5s match, else False
         """
         for split_name, filename in self.filenames.items():
-            filepath = os.path.join(self.root, self.base_folder, filename)
+            filepath = os.path.join(self.root, filename)
             md5 = self.md5s[split_name]
             if not check_integrity(filepath, md5 if self.checksum else None):
                 return False

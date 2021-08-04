@@ -46,7 +46,6 @@ class TestBeninSmallHolderCashews:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             BeninSmallHolderCashews, "dates", ("2019_11_05",)
         )
-        (tmp_path / "ts_cashew_benin").mkdir()
         root = str(tmp_path)
         transforms = Identity()
         return BeninSmallHolderCashews(

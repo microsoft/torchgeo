@@ -62,7 +62,6 @@ class CDL(GeoDataset):
     * https://www.nass.usda.gov/Research_and_Science/Cropland/sarsfaqs2.php#Section1_14.0
     """  # noqa: E501
 
-    base_folder = "cdl"
     url = "https://www.nass.usda.gov/Research_and_Science/Cropland/Release/datasets/{}_30m_cdls.zip"  # noqa: E501
     md5s = [
         (2020, "97b3b5fd62177c9ed857010bca146f36"),
@@ -114,7 +113,7 @@ class CDL(GeoDataset):
 
         # Create an R-tree to index the dataset
         self.index = Index(interleaved=False, properties=Property(dimension=3))
-        fileglob = os.path.join(root, self.base_folder, "**_30m_cdls.img")
+        fileglob = os.path.join(root, "**_30m_cdls.img")
         for i, filename in enumerate(glob.iglob(fileglob, recursive=True)):
             year = int(os.path.basename(filename).split("_")[0])
             mint = datetime(year, 1, 1, 0, 0, 0).timestamp()
@@ -175,9 +174,7 @@ class CDL(GeoDataset):
             True if dataset files are found and/or MD5s match, else False
         """
         for year, md5 in self.md5s:
-            filepath = os.path.join(
-                self.root, self.base_folder, "{}_30m_cdls.zip".format(year)
-            )
+            filepath = os.path.join(self.root, "{}_30m_cdls.zip".format(year))
             if not check_integrity(filepath, md5 if self.checksum else None):
                 return False
         return True
@@ -191,7 +188,7 @@ class CDL(GeoDataset):
         for year, md5 in self.md5s:
             download_and_extract_archive(
                 self.url.format(year),
-                os.path.join(self.root, self.base_folder),
+                self.root,
                 md5=md5 if self.checksum else None,
             )
 

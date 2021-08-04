@@ -51,7 +51,6 @@ class TestCV4AKenyaCropType:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             CV4AKenyaCropType, "dates", ["20190606"]
         )
-        (tmp_path / "ref_african_crops_kenya_02").mkdir()
         root = str(tmp_path)
         transforms = Identity()
         return CV4AKenyaCropType(

@@ -18,7 +18,7 @@ class TestLandsat8:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             plt, "show", lambda *args: None
         )
-        root = os.path.join("tests", "data")
+        root = os.path.join("tests", "data", "landsat8")
         bands = ["B4", "B3", "B2"]
         transforms = Identity()
         return Landsat8(root, bands=bands, transforms=transforms)

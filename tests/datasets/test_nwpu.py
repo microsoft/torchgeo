@@ -46,7 +46,6 @@ class TestVHR10:
         monkeypatch.setitem(VHR10.target_meta, "url", url)  # type: ignore[attr-defined]
         md5 = "16fc6aa597a19179dad84151cc221873"
         monkeypatch.setitem(VHR10.target_meta, "md5", md5)  # type: ignore[attr-defined]
-        (tmp_path / "vhr10").mkdir()
         root = str(tmp_path)
         split = request.param
         transforms = Identity()

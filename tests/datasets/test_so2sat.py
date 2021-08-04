@@ -23,7 +23,7 @@ class TestSo2Sat:
         }
 
         monkeypatch.setattr(So2Sat, "md5s", md5s)  # type: ignore[attr-defined]
-        root = os.path.join("tests", "data")
+        root = os.path.join("tests", "data", "so2sat")
         split = request.param
         transforms = Identity()
         return So2Sat(root, split, transforms, checksum=True)

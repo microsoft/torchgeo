@@ -36,7 +36,6 @@ class TropicalCycloneWindEstimation(VisionDataset):
          imagery and labels from the Radiant Earth MLHub
     """
 
-    base_folder = "cyclone"
     collection_id = "nasa_tropical_storm_competition"
     md5s = {
         "train": {
@@ -91,7 +90,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
             )
 
         output_dir = "_".join([self.collection_id, split, "source"])
-        filename = os.path.join(root, self.base_folder, output_dir, "collection.json")
+        filename = os.path.join(root, output_dir, "collection.json")
         with open(filename) as f:
             self.collection = json.load(f)["links"]
 
@@ -107,7 +106,6 @@ class TropicalCycloneWindEstimation(VisionDataset):
         source_id = os.path.split(self.collection[index]["href"])[0]
         directory = os.path.join(
             self.root,
-            self.base_folder,
             "_".join([self.collection_id, self.split, "{0}"]),
             source_id.replace("source", "{0}"),
         )
@@ -179,11 +177,10 @@ class TropicalCycloneWindEstimation(VisionDataset):
         Returns:
             True if dataset files are found and/or MD5s match, else False
         """
-        output_dir = os.path.join(self.root, self.base_folder)
         for split, resources in self.md5s.items():
             for resource_type, md5 in resources.items():
                 filename = "_".join([self.collection_id, split, resource_type])
-                filename = os.path.join(output_dir, filename + ".tar.gz")
+                filename = os.path.join(self.root, filename + ".tar.gz")
                 if not check_integrity(filename, md5 if self.checksum else None):
                     return False
         return True
@@ -201,11 +198,10 @@ class TropicalCycloneWindEstimation(VisionDataset):
             print("Files already downloaded and verified")
             return
 
-        output_dir = os.path.join(self.root, self.base_folder)
-        download_radiant_mlhub(self.collection_id, output_dir, api_key)
+        download_radiant_mlhub(self.collection_id, self.root, api_key)
 
         for split, resources in self.md5s.items():
             for resource_type in resources:
                 filename = "_".join([self.collection_id, split, resource_type])
-                filename = os.path.join(output_dir, filename) + ".tar.gz"
-                extract_archive(filename, output_dir)
+                filename = os.path.join(self.root, filename) + ".tar.gz"
+                extract_archive(filename, self.root)
