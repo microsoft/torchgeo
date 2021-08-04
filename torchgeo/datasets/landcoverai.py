@@ -54,7 +54,6 @@ class LandCoverAI(VisionDataset):
          the train/val/test split
     """
 
-    base_folder = "landcoverai"
     url = "https://landcover.ai/download/landcover.ai.v1.zip"
     filename = "landcover.ai.v1.zip"
     md5 = "3268c89070e8734b4e91d531c0617e03"
@@ -99,7 +98,7 @@ class LandCoverAI(VisionDataset):
                 + "You can use download=True to download it"
             )
 
-        with open(os.path.join(self.root, self.base_folder, split + ".txt")) as f:
+        with open(os.path.join(self.root, split + ".txt")) as f:
             self.ids = f.readlines()
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
@@ -140,7 +139,7 @@ class LandCoverAI(VisionDataset):
         Returns:
             the image
         """
-        filename = os.path.join(self.root, self.base_folder, "output", id_ + ".jpg")
+        filename = os.path.join(self.root, "output", id_ + ".jpg")
         with Image.open(filename) as img:
             array = np.array(img)
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
@@ -158,7 +157,7 @@ class LandCoverAI(VisionDataset):
         Returns:
             the target mask
         """
-        filename = os.path.join(self.root, self.base_folder, "output", id_ + "_m.png")
+        filename = os.path.join(self.root, "output", id_ + "_m.png")
         with Image.open(filename) as img:
             array = np.array(img.convert("L"))
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
@@ -171,7 +170,7 @@ class LandCoverAI(VisionDataset):
             True if dataset files are found and/or MD5s match, else False
         """
         integrity: bool = check_integrity(
-            os.path.join(self.root, self.base_folder, self.filename),
+            os.path.join(self.root, self.filename),
             self.md5 if self.checksum else None,
         )
 
@@ -189,7 +188,7 @@ class LandCoverAI(VisionDataset):
 
         download_and_extract_archive(
             self.url,
-            os.path.join(self.root, self.base_folder),
+            self.root,
             filename=self.filename,
             md5=self.md5 if self.checksum else None,
         )
@@ -197,7 +196,7 @@ class LandCoverAI(VisionDataset):
         # Generate train/val/test splits
         # Always check the sha256 of this file before executing
         # to avoid malicious code injection
-        with working_dir(os.path.join(self.root, self.base_folder)):
+        with working_dir(self.root):
             with open("split.py") as f:
                 split = f.read().encode("utf-8")
                 assert hashlib.sha256(split).hexdigest() == self.sha256

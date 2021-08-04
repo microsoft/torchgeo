@@ -40,7 +40,6 @@ class TestCDL:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             plt, "show", lambda *args: None
         )
-        (tmp_path / "cdl").mkdir()
         root = str(tmp_path)
         transforms = Identity()
         return CDL(root, transforms=transforms, download=True, checksum=True)

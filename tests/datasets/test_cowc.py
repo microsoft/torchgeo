@@ -51,7 +51,6 @@ class TestCOWCCounting:
             "ccc18c4ac29a13ad2bcb293ff6be69fe",
         ]
         monkeypatch.setattr(COWCCounting, "md5s", md5s)  # type: ignore[attr-defined]
-        (tmp_path / "cowc_counting").mkdir()
         root = str(tmp_path)
         split = request.param
         transforms = Identity()
@@ -110,7 +109,6 @@ class TestCOWCDetection:
             "ccc18c4ac29a13ad2bcb293ff6be69fe",
         ]
         monkeypatch.setattr(COWCDetection, "md5s", md5s)  # type: ignore[attr-defined]
-        (tmp_path / "cowc_detection").mkdir()
         root = str(tmp_path)
         split = "train"
         transforms = Identity()

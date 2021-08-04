@@ -52,7 +52,7 @@ class CV4AKenyaCropType(VisionDataset):
          imagery and labels from the Radiant Earth MLHub
     """
 
-    base_folder = "ref_african_crops_kenya_02"
+    dataset_id = "ref_african_crops_kenya_02"
     image_meta = {
         "filename": "ref_african_crops_kenya_02_source.tar.gz",
         "md5": "9c2004782f6dc83abb1bf45ba4d0da46",
@@ -224,7 +224,6 @@ class CV4AKenyaCropType(VisionDataset):
 
         directory = os.path.join(
             self.root,
-            self.base_folder,
             "ref_african_crops_kenya_02_labels",
             tile_name + "_label",
         )
@@ -325,7 +324,6 @@ class CV4AKenyaCropType(VisionDataset):
         for band_index, band_name in enumerate(self.bands):
             filepath = os.path.join(
                 self.root,
-                self.base_folder,
                 "ref_african_crops_kenya_02_source",
                 f"{tile_name}_{date}",
                 f"{band_name}.tif",
@@ -343,12 +341,12 @@ class CV4AKenyaCropType(VisionDataset):
             True if dataset files are found and/or MD5s match, else False
         """
         images: bool = check_integrity(
-            os.path.join(self.root, self.base_folder, self.image_meta["filename"]),
+            os.path.join(self.root, self.image_meta["filename"]),
             self.image_meta["md5"] if self.checksum else None,
         )
 
         targets: bool = check_integrity(
-            os.path.join(self.root, self.base_folder, self.target_meta["filename"]),
+            os.path.join(self.root, self.target_meta["filename"]),
             self.target_meta["md5"] if self.checksum else None,
         )
 
@@ -364,7 +362,6 @@ class CV4AKenyaCropType(VisionDataset):
         test_field_ids = []
         splits_fn = os.path.join(
             self.root,
-            self.base_folder,
             "ref_african_crops_kenya_02_labels",
             "_common",
             "field_train_test_ids.csv",
@@ -396,15 +393,9 @@ class CV4AKenyaCropType(VisionDataset):
             print("Files already downloaded and verified")
             return
 
-        download_radiant_mlhub(
-            self.base_folder, os.path.join(self.root, self.base_folder), api_key
-        )
+        download_radiant_mlhub(self.dataset_id, self.root, api_key)
 
-        image_archive_path = os.path.join(
-            self.root, self.base_folder, self.image_meta["filename"]
-        )
-        target_archive_path = os.path.join(
-            self.root, self.base_folder, self.target_meta["filename"]
-        )
+        image_archive_path = os.path.join(self.root, self.image_meta["filename"])
+        target_archive_path = os.path.join(self.root, self.target_meta["filename"])
         for fn in [image_archive_path, target_archive_path]:
-            extract_archive(fn, os.path.join(self.root, self.base_folder))
+            extract_archive(fn, self.root)

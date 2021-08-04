@@ -35,7 +35,6 @@ class TestLandCoverAI:
         monkeypatch.setattr(LandCoverAI, "url", url)  # type: ignore[attr-defined]
         sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         monkeypatch.setattr(LandCoverAI, "sha256", sha256)  # type: ignore[attr-defined]
-        (tmp_path / "landcoverai").mkdir()
         root = str(tmp_path)
         split = request.param
         transforms = Identity()

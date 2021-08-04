@@ -66,7 +66,6 @@ class SEN12MS(VisionDataset):
         "s2-reduced": [3, 4, 5, 9, 12, 13],
     }
 
-    base_folder = "sen12ms"
     filenames = [
         "ROIs1158_spring_lc.tar.gz",
         "ROIs1158_spring_s1.tar.gz",
@@ -151,7 +150,7 @@ class SEN12MS(VisionDataset):
             if not self._check_integrity_light():
                 raise RuntimeError("Dataset not found or corrupted.")
 
-        with open(os.path.join(self.root, self.base_folder, split + "_list.txt")) as f:
+        with open(os.path.join(self.root, split + "_list.txt")) as f:
             self.ids = [line.rstrip() for line in f.readlines()]
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
@@ -208,7 +207,6 @@ class SEN12MS(VisionDataset):
         with rasterio.open(
             os.path.join(
                 self.root,
-                self.base_folder,
                 "{0}_{1}".format(*parts),
                 "{2}_{3}".format(*parts),
                 "{0}_{1}_{2}_{3}_{4}".format(*parts),
@@ -225,7 +223,7 @@ class SEN12MS(VisionDataset):
             True if the dataset directories and split files are found, else False
         """
         for filename in self.light_filenames:
-            filepath = os.path.join(self.root, self.base_folder, filename)
+            filepath = os.path.join(self.root, filename)
             if not os.path.exists(filepath):
                 return False
         return True
@@ -237,7 +235,7 @@ class SEN12MS(VisionDataset):
             True if dataset files are found and/or MD5s match, else False
         """
         for filename, md5 in zip(self.filenames, self.md5s):
-            filepath = os.path.join(self.root, self.base_folder, filename)
+            filepath = os.path.join(self.root, filename)
             if not check_integrity(filepath, md5 if self.checksum else None):
                 return False
         return True

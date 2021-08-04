@@ -50,7 +50,7 @@ def test_experiment_dir_not_empty(tmp_path: Path) -> None:
 def test_overwrite_experiment_dir(tmp_path: Path) -> None:
     experiment_name = "test"
     output_dir = tmp_path / "output"
-    data_dir = os.path.join("tests", "data")
+    data_dir = os.path.join("tests", "data", "cyclone")
     log_dir = tmp_path / "logs"
     experiment_dir = output_dir / experiment_name
     experiment_dir.mkdir(parents=True)
@@ -105,7 +105,7 @@ def test_missing_config_file(tmp_path: Path) -> None:
 
 def test_config_file(tmp_path: Path) -> None:
     output_dir = tmp_path / "output"
-    data_dir = os.path.join("tests", "data")
+    data_dir = os.path.join("tests", "data", "cyclone")
     log_dir = tmp_path / "logs"
     config_file = tmp_path / "config.yaml"
     config_file.write_text(
@@ -132,7 +132,7 @@ trainer:
 @pytest.mark.parametrize("task", ["cyclone", "sen12ms", "landcoverai"])
 def test_tasks(task: str, tmp_path: Path) -> None:
     output_dir = tmp_path / "output"
-    data_dir = os.path.join("tests", "data")
+    data_dir = os.path.join("tests", "data", task)
     log_dir = tmp_path / "logs"
     args = [
         sys.executable,
