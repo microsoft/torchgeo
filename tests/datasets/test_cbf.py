@@ -55,7 +55,6 @@ class TestCanadianBuildingFootprints:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             plt, "show", lambda *args: None
         )
-        (tmp_path / "cbf").mkdir()
         root = str(tmp_path)
         transforms = Identity()
         return CanadianBuildingFootprints(

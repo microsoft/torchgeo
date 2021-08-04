@@ -33,11 +33,6 @@ class Landsat(GeoDataset, abc.ABC):
     """
 
     @property
-    def base_folder(self) -> str:
-        """Subdirectory to find/store dataset in."""
-        return self.__class__.__name__.lower()
-
-    @property
     @abc.abstractmethod
     def band_names(self) -> Sequence[str]:
         """Spectral bands provided by a satellite.
@@ -72,8 +67,7 @@ class Landsat(GeoDataset, abc.ABC):
 
         # Create an R-tree to index the dataset
         self.index = Index(interleaved=False, properties=Property(dimension=3))
-        path = os.path.join(root, self.base_folder)
-        fileglob = os.path.join(path, f"**_{self.bands[0]}.TIF")
+        fileglob = os.path.join(root, f"**_{self.bands[0]}.TIF")
         for i, filename in enumerate(glob.iglob(fileglob, recursive=True)):
             # https://www.usgs.gov/faqs/what-naming-convention-landsat-collections-level-1-scenes
             # https://www.usgs.gov/faqs/what-naming-convention-landsat-collection-2-level-1-and-level-2-scenes
@@ -86,7 +80,7 @@ class Landsat(GeoDataset, abc.ABC):
             self.index.insert(i, coords, filename)
 
         if "filename" not in locals():
-            raise FileNotFoundError(f"No Landsat data was found in '{path}'")
+            raise FileNotFoundError(f"No Landsat data was found in '{root}'")
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.

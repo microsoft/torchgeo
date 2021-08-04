@@ -52,7 +52,6 @@ class TestTropicalCycloneWindEstimation:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             TropicalCycloneWindEstimation, "size", 1
         )
-        (tmp_path / "cyclone").mkdir()
         root = str(tmp_path)
         split = request.param
         transforms = Identity()

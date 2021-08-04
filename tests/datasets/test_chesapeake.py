@@ -39,7 +39,6 @@ class TestChesapeake13:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             plt, "show", lambda *args: None
         )
-        (tmp_path / "chesapeake" / "BAYWIDE").mkdir(parents=True)
         root = str(tmp_path)
         transforms = Identity()
         return Chesapeake13(root, transforms=transforms, download=True, checksum=True)
@@ -55,7 +54,7 @@ class TestChesapeake13:
         assert isinstance(ds, ZipDataset)
 
     def test_already_downloaded(self, dataset: Chesapeake13) -> None:
-        Chesapeake13(root=os.path.dirname(os.path.dirname(dataset.root)), download=True)
+        Chesapeake13(root=dataset.root, download=True)
 
     def test_plot(self, dataset: Chesapeake13) -> None:
         query = dataset.bounds
@@ -63,7 +62,7 @@ class TestChesapeake13:
         dataset.plot(x["masks"])
 
     def test_url(self) -> None:
-        ds = Chesapeake13(os.path.join("tests", "data"))
+        ds = Chesapeake13(os.path.join("tests", "data", "chesapeake", "BAYWIDE"))
         assert "cicwebresources.blob.core.windows.net" in ds.url
 
     def test_not_downloaded(self, tmp_path: Path) -> None:

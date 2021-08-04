@@ -29,11 +29,6 @@ class Sentinel(GeoDataset, abc.ABC):
     * https://asf.alaska.edu/data-sets/sar-data-sets/sentinel-1/sentinel-1-how-to-cite/
     """
 
-    @property
-    def base_folder(self) -> str:
-        """Subdirectory to find/store dataset in."""
-        return self.__class__.__name__.lower()
-
 
 class Sentinel2(Sentinel):
     """Sentinel-2 dataset.
@@ -90,8 +85,7 @@ class Sentinel2(Sentinel):
 
         # Create an R-tree to index the dataset
         self.index = Index(interleaved=False, properties=Property(dimension=3))
-        path = os.path.join(root, self.base_folder)
-        fileglob = os.path.join(path, f"**_{bands[0]}_*.tif")
+        fileglob = os.path.join(root, f"**_{bands[0]}_*.tif")
         for i, filename in enumerate(glob.iglob(fileglob, recursive=True)):
             # https://sentinel.esa.int/web/sentinel/user-guides/sentinel-2-msi/naming-convention
             time = datetime.strptime(
@@ -105,7 +99,7 @@ class Sentinel2(Sentinel):
             self.index.insert(i, coords, filename)
 
         if "filename" not in locals():
-            raise FileNotFoundError(f"No Sentinel data was found in '{path}'")
+            raise FileNotFoundError(f"No Sentinel data was found in '{root}'")
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.

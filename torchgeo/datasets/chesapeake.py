@@ -73,7 +73,7 @@ class Chesapeake(GeoDataset, abc.ABC):
     @property
     @abc.abstractmethod
     def base_folder(self) -> str:
-        """Subdirectory to find/store dataset in."""
+        """Parent directory of dataset in URL."""
 
     @property
     @abc.abstractmethod
@@ -134,7 +134,7 @@ class Chesapeake(GeoDataset, abc.ABC):
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
-        self.root = os.path.join(root, "chesapeake", self.base_folder)
+        self.root = root
         self.crs = crs
         self.transforms = transforms
         self.checksum = checksum

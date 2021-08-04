@@ -38,11 +38,6 @@ class COWC(VisionDataset, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def base_folder(self) -> str:
-        """Subdirectory to find/store dataset in."""
-
-    @property
-    @abc.abstractmethod
     def base_url(self) -> str:
         """Base URL to download dataset from."""
 
@@ -103,8 +98,7 @@ class COWC(VisionDataset, abc.ABC):
         self.images = []
         self.targets = []
         with open(
-            os.path.join(self.root, self.base_folder, self.filename.format(split)),
-            newline="",
+            os.path.join(self.root, self.filename.format(split)), newline=""
         ) as f:
             reader = csv.reader(f, delimiter=" ")
             for row in reader:
@@ -147,7 +141,7 @@ class COWC(VisionDataset, abc.ABC):
         Returns:
             the image
         """
-        filename = os.path.join(self.root, self.base_folder, self.images[index])
+        filename = os.path.join(self.root, self.images[index])
         with Image.open(filename) as img:
             array = np.array(img)
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
@@ -175,7 +169,7 @@ class COWC(VisionDataset, abc.ABC):
             True if dataset files are found and/or MD5s match, else False
         """
         for filename, md5 in zip(self.filenames, self.md5s):
-            filepath = os.path.join(self.root, self.base_folder, filename)
+            filepath = os.path.join(self.root, filename)
             if not check_integrity(filepath, md5 if self.checksum else None):
                 return False
         return True
@@ -189,7 +183,7 @@ class COWC(VisionDataset, abc.ABC):
         for filename, md5 in zip(self.filenames, self.md5s):
             download_and_extract_archive(
                 self.base_url + filename,
-                os.path.join(self.root, self.base_folder),
+                self.root,
                 filename=filename,
                 md5=md5 if self.checksum else None,
             )
@@ -198,7 +192,6 @@ class COWC(VisionDataset, abc.ABC):
 class COWCCounting(COWC):
     """COWC Dataset for car counting."""
 
-    base_folder = "cowc_counting"
     base_url = (
         "https://gdo152.llnl.gov/cowc/download/cowc/datasets/patch_sets/counting/"
     )
@@ -228,7 +221,6 @@ class COWCCounting(COWC):
 class COWCDetection(COWC):
     """COWC Dataset for car detection."""
 
-    base_folder = "cowc_detection"
     base_url = (
         "https://gdo152.llnl.gov/cowc/download/cowc/datasets/patch_sets/detection/"
     )

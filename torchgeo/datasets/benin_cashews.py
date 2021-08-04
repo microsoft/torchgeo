@@ -345,7 +345,6 @@ class BeninSmallHolderCashews(VisionDataset):
         for band_index, band_name in enumerate(self.bands):
             filepath = os.path.join(
                 self.root,
-                self.dataset_id,
                 "ts_cashew_benin_source",
                 f"ts_cashew_benin_source_00_{date}",
                 f"{band_name}.tif",
@@ -362,7 +361,6 @@ class BeninSmallHolderCashews(VisionDataset):
         # Create a mask layer out of the geojson
         mask_geojson_fn = os.path.join(
             self.root,
-            self.dataset_id,
             "ts_cashew_benin_labels",
             "_common",
             "labels.geojson",
@@ -394,12 +392,12 @@ class BeninSmallHolderCashews(VisionDataset):
             True if dataset files are found and/or MD5s match, else False
         """
         images: bool = check_integrity(
-            os.path.join(self.root, self.dataset_id, self.image_meta["filename"]),
+            os.path.join(self.root, self.image_meta["filename"]),
             self.image_meta["md5"] if self.checksum else None,
         )
 
         targets: bool = check_integrity(
-            os.path.join(self.root, self.dataset_id, self.target_meta["filename"]),
+            os.path.join(self.root, self.target_meta["filename"]),
             self.target_meta["md5"] if self.checksum else None,
         )
 
@@ -418,15 +416,9 @@ class BeninSmallHolderCashews(VisionDataset):
             print("Files already downloaded and verified")
             return
 
-        download_radiant_mlhub(
-            self.dataset_id, os.path.join(self.root, self.dataset_id), api_key
-        )
+        download_radiant_mlhub(self.dataset_id, self.root, api_key)
 
-        image_archive_path = os.path.join(
-            self.root, self.dataset_id, self.image_meta["filename"]
-        )
-        target_archive_path = os.path.join(
-            self.root, self.dataset_id, self.target_meta["filename"]
-        )
+        image_archive_path = os.path.join(self.root, self.image_meta["filename"])
+        target_archive_path = os.path.join(self.root, self.target_meta["filename"])
         for fn in [image_archive_path, target_archive_path]:
-            extract_archive(fn, os.path.join(self.root, self.dataset_id))
+            extract_archive(fn, self.root)
