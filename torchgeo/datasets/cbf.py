@@ -1,26 +1,15 @@
 """Canadian Building Footprints dataset."""
 
-import glob
 import os
-import sys
 from typing import Any, Callable, Dict, Optional
 
-import fiona
-import fiona.transform
-import matplotlib.pyplot as plt
-import rasterio
-import torch
 from rasterio.crs import CRS
-from rtree.index import Index, Property
-from torch import Tensor
 
-from .geo import GeoDataset
-from .utils import BoundingBox, check_integrity, download_and_extract_archive
-
-_crs = CRS.from_epsg(4326)
+from .geo import VectorDataset
+from .utils import check_integrity, download_and_extract_archive
 
 
-class CanadianBuildingFootprints(GeoDataset):
+class CanadianBuildingFootprints(VectorDataset):
     """Canadian Building Footprints dataset.
 
     The `Canadian Building Footprints
@@ -67,17 +56,18 @@ class CanadianBuildingFootprints(GeoDataset):
     def __init__(
         self,
         root: str = "data",
-        crs: CRS = _crs,
+        crs: Optional[CRS] = None,
         res: float = 0.00001,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new Canadian Building Footprints dataset.
+        """Initialize a new Dataset instance.
 
         Args:
             root: root directory where dataset can be found
-            crs: :term:`coordinate reference system (CRS)` to project to
+            crs: :term:`coordinate reference system (CRS)` to project to. Uses the CRS
+                of the files by default
             res: resolution to use when rasterizing features
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
@@ -89,9 +79,6 @@ class CanadianBuildingFootprints(GeoDataset):
                 ``checksum=True`` and checksums don't match
         """
         self.root = root
-        self.crs = crs
-        self.res = res
-        self.transforms = transforms
         self.checksum = checksum
 
         if download:
@@ -103,77 +90,7 @@ class CanadianBuildingFootprints(GeoDataset):
                 + "You can use download=True to download it"
             )
 
-        # Create an R-tree to index the dataset
-        self.index = Index(interleaved=False, properties=Property(dimension=3))
-        fileglob = os.path.join(root, "**.geojson")
-        for i, filename in enumerate(glob.iglob(fileglob, recursive=True)):
-            with fiona.open(filename) as src:
-                minx, miny, maxx, maxy = src.bounds
-                (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                    src.crs, crs.to_dict(), [minx, maxx], [miny, maxy]
-                )
-            mint = 0
-            maxt = sys.maxsize
-            coords = (minx, maxx, miny, maxy, mint, maxt)
-            self.index.insert(i, coords, filename)
-
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
-        """Retrieve image and metadata indexed by query.
-
-        Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
-
-        Returns:
-            sample of labels and metadata at that index
-
-        Raises:
-            IndexError: if query is not within bounds of the index
-        """
-        if not query.intersects(self.bounds):
-            raise IndexError(
-                f"query: {query} is not within bounds of the index: {self.bounds}"
-            )
-
-        hits = self.index.intersection(query, objects=True)
-        filename = next(hits).object  # TODO: this assumes there is only a single hit
-        shapes = []
-        with fiona.open(filename) as src:
-            # We need to know the bounding box of the query in the source CRS
-            (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                self.crs.to_dict(),
-                src.crs,
-                [query.minx, query.maxx],
-                [query.miny, query.maxy],
-            )
-
-            # Filter geometries to those that intersect with the bounding box
-            for feature in src.filter(bbox=(minx, miny, maxx, maxy)):
-                # Warp geometries to requested CRS
-                shape = fiona.transform.transform_geom(
-                    src.crs, self.crs.to_dict(), feature["geometry"]
-                )
-                shapes.append(shape)
-
-        # Rasterize geometries
-        width = (query.maxx - query.minx) / self.res
-        height = (query.maxy - query.miny) / self.res
-        transform = rasterio.transform.from_bounds(
-            query.minx, query.miny, query.maxx, query.maxy, width, height
-        )
-        masks = rasterio.features.rasterize(
-            shapes, out_shape=(int(height), int(width)), transform=transform
-        )
-
-        sample = {
-            "masks": torch.tensor(masks),  # type: ignore[attr-defined]
-            "crs": self.crs,
-            "bbox": query,
-        }
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
+        super().__init__(root, crs, res, transforms)
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
@@ -199,18 +116,3 @@ class CanadianBuildingFootprints(GeoDataset):
                 self.root,
                 md5=md5 if self.checksum else None,
             )
-
-    def plot(self, image: Tensor) -> None:
-        """Plot an image on a map.
-
-        Args:
-            image: the image to plot
-        """
-        array = image.squeeze().numpy()
-
-        # Plot the image
-        ax = plt.axes()
-        ax.imshow(array)
-        ax.axis("off")
-        plt.show()
-        plt.close()
