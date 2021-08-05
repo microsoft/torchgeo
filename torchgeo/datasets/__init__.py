@@ -41,11 +41,9 @@ from .so2sat import So2Sat
 from .utils import BoundingBox, collate_dict
 
 __all__ = (
-    "BeninSmallHolderCashews",
-    "BoundingBox",
+    # GeoDataset
     "CanadianBuildingFootprints",
     "CDL",
-    "collate_dict",
     "Chesapeake",
     "Chesapeake7",
     "Chesapeake13",
@@ -56,12 +54,6 @@ __all__ = (
     "ChesapeakePA",
     "ChesapeakeVA",
     "ChesapeakeWV",
-    "COWC",
-    "COWCCounting",
-    "COWCDetection",
-    "CV4AKenyaCropType",
-    "GeoDataset",
-    "LandCoverAI",
     "Landsat",
     "Landsat1",
     "Landsat2",
@@ -74,14 +66,26 @@ __all__ = (
     "Landsat8",
     "Landsat9",
     "NAIP",
-    "SEN12MS",
     "Sentinel",
     "Sentinel2",
+    # VisionDataset
+    "BeninSmallHolderCashews",
+    "COWC",
+    "COWCCounting",
+    "COWCDetection",
+    "CV4AKenyaCropType",
+    "LandCoverAI",
+    "SEN12MS",
     "So2Sat",
     "TropicalCycloneWindEstimation",
     "VHR10",
+    # Base classes
+    "GeoDataset",
     "VisionDataset",
     "ZipDataset",
+    # Utilities
+    "BoundingBox",
+    "collate_dict",
 )
 
 # https://stackoverflow.com/questions/40018681
