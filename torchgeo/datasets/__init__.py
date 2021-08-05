@@ -18,7 +18,7 @@ from .chesapeake import (
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCycloneWindEstimation
-from .geo import GeoDataset, VisionDataset, ZipDataset
+from .geo import GeoDataset, RasterDataset, VectorDataset, VisionDataset, ZipDataset
 from .landcoverai import LandCoverAI
 from .landsat import (
     Landsat,
@@ -81,6 +81,8 @@ __all__ = (
     "VHR10",
     # Base classes
     "GeoDataset",
+    "RasterDataset",
+    "VectorDataset",
     "VisionDataset",
     "ZipDataset",
     # Utilities

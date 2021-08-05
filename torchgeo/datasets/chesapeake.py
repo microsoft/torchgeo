@@ -2,49 +2,15 @@
 
 import abc
 import os
-import sys
 from typing import Any, Callable, Dict, Optional
 
-import matplotlib.pyplot as plt
-import numpy as np
-import rasterio
-import torch
 from rasterio.crs import CRS
-from rasterio.vrt import WarpedVRT
-from rtree.index import Index, Property
-from torch import Tensor
 
-from .geo import GeoDataset
-from .utils import BoundingBox, check_integrity, download_and_extract_archive
-
-_crs = CRS.from_wkt(
-    """
-PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",
-    GEOGCS["NAD83",
-        DATUM["North_American_Datum_1983",
-            SPHEROID["GRS 1980",6378137,298.257222101004,
-                AUTHORITY["EPSG","7019"]],
-            AUTHORITY["EPSG","6269"]],
-        PRIMEM["Greenwich",0],
-        UNIT["degree",0.0174532925199433,
-            AUTHORITY["EPSG","9122"]],
-        AUTHORITY["EPSG","4269"]],
-    PROJECTION["Albers_Conic_Equal_Area"],
-    PARAMETER["latitude_of_center",23],
-    PARAMETER["longitude_of_center",-96],
-    PARAMETER["standard_parallel_1",29.5],
-    PARAMETER["standard_parallel_2",45.5],
-    PARAMETER["false_easting",0],
-    PARAMETER["false_northing",0],
-    UNIT["metre",1,
-        AUTHORITY["EPSG","9001"]],
-    AXIS["Easting",EAST],
-    AXIS["Northing",NORTH]]
-"""
-)
+from .geo import RasterDataset
+from .utils import check_integrity, download_and_extract_archive
 
 
-class Chesapeake(GeoDataset, abc.ABC):
+class Chesapeake(RasterDataset, abc.ABC):
     """Abstract base class for all Chesapeake datasets.
 
     `Chesapeake Bay High-Resolution Land Cover Project
@@ -69,6 +35,8 @@ class Chesapeake(GeoDataset, abc.ABC):
 
     * https://doi.org/10.1109/cvpr.2019.01301
     """
+
+    is_image = False
 
     @property
     @abc.abstractmethod
@@ -97,46 +65,29 @@ class Chesapeake(GeoDataset, abc.ABC):
         url += f"/{self.base_folder}/{self.zipfile}"
         return url
 
-    cmap = {
-        0: (0, 0, 0, 0),
-        1: (0, 197, 255, 255),
-        2: (0, 168, 132, 255),
-        3: (38, 115, 0, 255),
-        4: (76, 230, 0, 255),
-        5: (163, 255, 115, 255),
-        6: (255, 170, 0, 255),
-        7: (255, 0, 0, 255),
-        8: (156, 156, 156, 255),
-        9: (0, 0, 0, 255),
-        10: (115, 115, 0, 255),
-        11: (230, 230, 0, 255),
-        12: (255, 255, 115, 255),
-        13: (197, 0, 255, 255),
-        14: (0, 0, 0, 0),
-        15: (0, 0, 0, 0),
-    }
-
     def __init__(
         self,
-        root: str,
-        crs: CRS = _crs,
-        transforms: Optional[Callable[[Any], Any]] = None,
+        root: str = "data",
+        crs: Optional[CRS] = None,
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new Chesapeake dataset instance.
+        """Initialize a new Dataset instance.
 
         Args:
             root: root directory where dataset can be found
-            crs: :term:`coordinate reference system (CRS)` to project to
+            crs: :term:`coordinate reference system (CRS)` to project to. Uses the CRS
+                of the files by default
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         self.root = root
-        self.crs = crs
-        self.transforms = transforms
         self.checksum = checksum
 
         if download:
@@ -148,57 +99,7 @@ class Chesapeake(GeoDataset, abc.ABC):
                 + "You can use download=True to download it"
             )
 
-        # Create an R-tree to index the dataset
-        self.index = Index(interleaved=False, properties=Property(dimension=3))
-        filename = os.path.join(self.root, self.filename)
-        with rasterio.open(filename) as src:
-            with rasterio.open(filename) as src:
-                with WarpedVRT(src, crs=self.crs) as vrt:
-                    minx, miny, maxx, maxy = vrt.bounds
-        mint = 0
-        maxt = sys.maxsize
-        coords = (minx, maxx, miny, maxy, mint, maxt)
-        self.index.insert(0, coords, filename)
-
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
-        """Retrieve labels and metadata indexed by query.
-
-        Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
-
-        Returns:
-            sample of labels and metadata at that index
-
-        Raises:
-            IndexError: if query is not within bounds of the index
-        """
-        if not query.intersects(self.bounds):
-            raise IndexError(
-                f"query: {query} is not within bounds of the index: {self.bounds}"
-            )
-
-        hits = self.index.intersection(query, objects=True)
-        filename = next(hits).object
-        with rasterio.open(filename) as src:
-            with WarpedVRT(src, crs=self.crs) as vrt:
-                window = rasterio.windows.from_bounds(
-                    query.minx,
-                    query.miny,
-                    query.maxx,
-                    query.maxy,
-                    transform=vrt.transform,
-                )
-                masks = vrt.read(window=window)
-        sample = {
-            "masks": torch.tensor(masks),  # type: ignore[attr-defined]
-            "crs": self.crs,
-            "bbox": query,
-        }
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
+        super().__init__(root, crs, transforms)
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
@@ -224,24 +125,6 @@ class Chesapeake(GeoDataset, abc.ABC):
             filename=self.zipfile,
             md5=self.md5,
         )
-
-    def plot(self, image: Tensor) -> None:
-        """Plot an image on a map.
-
-        Args:
-            image: the image to plot
-        """
-        # Convert from class labels to RGBA values
-        cmap = np.array([self.cmap[i] for i in range(len(self.cmap))])
-        array = image.squeeze().numpy()
-        array = cmap[array]
-
-        # Plot the image
-        ax = plt.axes()
-        ax.imshow(array)
-        ax.axis("off")
-        plt.show()
-        plt.close()
 
 
 class Chesapeake7(Chesapeake):
