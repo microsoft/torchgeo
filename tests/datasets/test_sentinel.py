@@ -28,7 +28,7 @@ class TestSentinel2:
         assert isinstance(ds, ZipDataset)
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="No Sentinel data was found in "):
+        with pytest.raises(FileNotFoundError, match="No Sentinel2 data was found in "):
             Sentinel2(str(tmp_path))
 
     def test_invalid_query(self, dataset: Sentinel2) -> None:
