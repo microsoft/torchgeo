@@ -131,3 +131,4 @@ Utilities
 ---------
 
 .. autoclass:: BoundingBox
+.. autofunction:: collate_dict
