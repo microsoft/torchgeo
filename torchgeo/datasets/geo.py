@@ -8,6 +8,8 @@ import sys
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
+import fiona
+import fiona.transform
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
@@ -326,7 +328,142 @@ class RasterDataset(GeoDataset):
 
 
 class VectorDataset(GeoDataset):
-    pass
+    """Abstract base class for :class:`GeoDataset`s stored as vector files."""
+
+    #: Glob expression used to search for files.
+    #:
+    #: This expression should be specific enough that it will not pick up files from
+    #: other datasets. It should not include a file extension, as the dataset may be in
+    #: a different file format than what it was originally downloaded as.
+    filename_glob = "*"
+
+    def __init__(
+        self,
+        root: str = "data",
+        crs: Optional[CRS] = None,
+        res: float = 0.00001,
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+    ) -> None:
+        """Initialize a new Dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            crs: :term:`coordinate reference system (CRS)` to project to. Uses the CRS
+                of the files by default
+            res: resolution to use when rasterizing features
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+
+        Raises:
+            RuntimeError: if ``download=False`` and data is not found, or
+                ``checksum=True`` and checksums don't match
+        """
+        self.root = root
+        self.crs = crs
+        self.res = res
+        self.transforms = transforms
+
+        # Create an R-tree to index the dataset
+        self.index = Index(interleaved=False, properties=Property(dimension=3))
+        i = 0
+        pathname = os.path.join(root, "**", self.filename_glob)
+        for filepath in glob.iglob(pathname, recursive=True):
+            try:
+                with fiona.open(filepath) as src:
+                    if self.crs is None:
+                        self.crs = CRS.from_dict(src.crs)
+
+                    minx, miny, maxx, maxy = src.bounds
+                    (minx, maxx), (miny, maxy) = fiona.transform.transform(
+                        src.crs, self.crs.to_dict(), [minx, maxx], [miny, maxy]
+                    )
+            except fiona.errors.DriverError:
+                # Skip files that fiona is unable to read
+                continue
+            else:
+                mint = 0
+                maxt = sys.maxsize
+                coords = (minx, maxx, miny, maxy, mint, maxt)
+                self.index.insert(i, coords, filepath)
+                i += 1
+
+        if i == 0:
+            raise FileNotFoundError(
+                f"No {self.__class__.__name__} data was found in '{root}'"
+            )
+
+    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+        """Retrieve image and metadata indexed by query.
+
+        Args:
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+
+        Returns:
+            sample of labels and metadata at that index
+
+        Raises:
+            IndexError: if query is not within bounds of the index
+        """
+        if not query.intersects(self.bounds):
+            raise IndexError(
+                f"query: {query} is not within bounds of the index: {self.bounds}"
+            )
+
+        hits = self.index.intersection(query, objects=True)
+        filename = next(hits).object  # TODO: this assumes there is only a single hit
+        shapes = []
+        with fiona.open(filename) as src:
+            # We need to know the bounding box of the query in the source CRS
+            (minx, maxx), (miny, maxy) = fiona.transform.transform(
+                self.crs.to_dict(),
+                src.crs,
+                [query.minx, query.maxx],
+                [query.miny, query.maxy],
+            )
+
+            # Filter geometries to those that intersect with the bounding box
+            for feature in src.filter(bbox=(minx, miny, maxx, maxy)):
+                # Warp geometries to requested CRS
+                shape = fiona.transform.transform_geom(
+                    src.crs, self.crs.to_dict(), feature["geometry"]
+                )
+                shapes.append(shape)
+
+        # Rasterize geometries
+        width = (query.maxx - query.minx) / self.res
+        height = (query.maxy - query.miny) / self.res
+        transform = rasterio.transform.from_bounds(
+            query.minx, query.miny, query.maxx, query.maxy, width, height
+        )
+        masks = rasterio.features.rasterize(
+            shapes, out_shape=(int(height), int(width)), transform=transform
+        )
+
+        sample = {
+            "masks": torch.tensor(masks),  # type: ignore[attr-defined]
+            "crs": self.crs,
+            "bbox": query,
+        }
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+    def plot(self, data: Tensor) -> None:
+        """Plot a data sample.
+
+        Args:
+            data: the data to plot
+        """
+        array = data.squeeze().numpy()
+
+        # Plot the image
+        ax = plt.axes()
+        ax.imshow(array)
+        ax.axis("off")
+        plt.show()
+        plt.close()
 
 
 class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):
