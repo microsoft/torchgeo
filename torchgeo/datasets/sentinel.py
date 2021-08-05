@@ -99,7 +99,7 @@ class Sentinel2(Sentinel):
             self.index.insert(i, coords, filename)
 
         if "filename" not in locals():
-            raise FileNotFoundError(f"No Sentinel data was found in '{root}'")
+            raise FileNotFoundError(f"No Sentinel2 data was found in '{root}'")
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.

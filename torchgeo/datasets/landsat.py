@@ -80,7 +80,9 @@ class Landsat(GeoDataset, abc.ABC):
             self.index.insert(i, coords, filename)
 
         if "filename" not in locals():
-            raise FileNotFoundError(f"No Landsat data was found in '{root}'")
+            raise FileNotFoundError(
+                f"No {self.__class__.__name__} data was found in '{root}'"
+            )
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
