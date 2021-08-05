@@ -75,6 +75,7 @@ class CanadianBuildingFootprints(VectorDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
+            FileNotFoundError: if no files are found in ``root``
             RuntimeError: if ``download=False`` and data is not found, or
                 ``checksum=True`` and checksums don't match
         """
