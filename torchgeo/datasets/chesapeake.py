@@ -85,6 +85,7 @@ class Chesapeake(RasterDataset, abc.ABC):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
+            FileNotFoundError: if no files are found in ``root``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         self.root = root

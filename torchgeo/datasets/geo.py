@@ -39,7 +39,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     These kind of datasets are special because they can be combined. For example:
 
     * Combine Landsat8 and CDL to train a model for crop classification
-    * Combine Sentinel2 and Chesapeake to train a model for land cover mapping
+    * Combine NAIP and Chesapeake to train a model for land cover mapping
 
     This isn't true for :class:`VisionDataset`, where the lack of geospatial information
     prohibits swapping image sources or target labels.
@@ -54,16 +54,16 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
     @abc.abstractmethod
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
-        """Retrieve image and metadata indexed by query.
+        """Retrieve image/mask and metadata indexed by query.
 
         Args:
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
-            sample of data/labels and metadata at that index
+            sample of image/mask and metadata at that index
 
         Raises:
-            IndexError: if query is not within bounds of the index
+            IndexError: if query is not found in the index
         """
 
     def __add__(self, other: "GeoDataset") -> "ZipDataset":  # type: ignore[override]
@@ -355,8 +355,7 @@ class VectorDataset(GeoDataset):
                 entry and returns a transformed version
 
         Raises:
-            RuntimeError: if ``download=False`` and data is not found, or
-                ``checksum=True`` and checksums don't match
+            FileNotFoundError: if no files are found in ``root``
         """
         self.root = root
         self.crs = crs
@@ -393,16 +392,16 @@ class VectorDataset(GeoDataset):
             )
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
-        """Retrieve image and metadata indexed by query.
+        """Retrieve image/mask and metadata indexed by query.
 
         Args:
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
-            sample of labels and metadata at that index
+            sample of image/mask and metadata at that index
 
         Raises:
-            IndexError: if query is not within bounds of the index
+            IndexError: if query is not found in the index
         """
         if not query.intersects(self.bounds):
             raise IndexError(
