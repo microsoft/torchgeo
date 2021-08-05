@@ -104,7 +104,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
 
 class RasterDataset(GeoDataset):
-    """Abstract base class for :class:`GeoDataset`s stored as raster files."""
+    """Abstract base class for :class:`GeoDataset` stored as raster files."""
 
     #: Glob expression used to search for files.
     #:
@@ -328,7 +328,7 @@ class RasterDataset(GeoDataset):
 
 
 class VectorDataset(GeoDataset):
-    """Abstract base class for :class:`GeoDataset`s stored as vector files."""
+    """Abstract base class for :class:`GeoDataset` stored as vector files."""
 
     #: Glob expression used to search for files.
     #:
