@@ -117,6 +117,16 @@ GeoDataset
 
 .. autoclass:: GeoDataset
 
+RasterDataset
+^^^^^^^^^^^^^
+
+.. autoclass:: RasterDataset
+
+VectorDataset
+^^^^^^^^^^^^^
+
+.. autoclass:: VectorDataset
+
 VisionDataset
 ^^^^^^^^^^^^^
 

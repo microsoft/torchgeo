@@ -1,50 +1,15 @@
 """CDL dataset."""
 
-import glob
 import os
-from datetime import datetime
 from typing import Any, Callable, Dict, Optional
 
-import matplotlib.pyplot as plt
-import numpy as np
-import rasterio
-import torch
 from rasterio.crs import CRS
-from rasterio.vrt import WarpedVRT
-from rtree.index import Index, Property
-from torch import Tensor
 
-from .geo import GeoDataset
-from .utils import BoundingBox, check_integrity, download_and_extract_archive
-
-_crs = CRS.from_wkt(
-    """
-PROJCS["Albers Conical Equal Area",
-    GEOGCS["NAD83",
-        DATUM["North_American_Datum_1983",
-            SPHEROID["GRS 1980",6378137,298.257222101,
-                AUTHORITY["EPSG","7019"]],
-            AUTHORITY["EPSG","6269"]],
-        PRIMEM["Greenwich",0,
-            AUTHORITY["EPSG","8901"]],
-        UNIT["degree",0.0174532925199433,
-            AUTHORITY["EPSG","9122"]],
-        AUTHORITY["EPSG","4269"]],
-    PROJECTION["Albers_Conic_Equal_Area"],
-    PARAMETER["latitude_of_center",23],
-    PARAMETER["longitude_of_center",-96],
-    PARAMETER["standard_parallel_1",29.5],
-    PARAMETER["standard_parallel_2",45.5],
-    PARAMETER["false_easting",0],
-    PARAMETER["false_northing",0],
-    UNIT["meters",1],
-    AXIS["Easting",EAST],
-    AXIS["Northing",NORTH]]
-"""
-)
+from .geo import RasterDataset
+from .utils import check_integrity, download_and_extract_archive
 
 
-class CDL(GeoDataset):
+class CDL(RasterDataset):
     """Cropland Data Layer (CDL) dataset.
 
     The `Cropland Data Layer
@@ -61,6 +26,14 @@ class CDL(GeoDataset):
 
     * https://www.nass.usda.gov/Research_and_Science/Cropland/sarsfaqs2.php#Section1_14.0
     """  # noqa: E501
+
+    filename_glob = "*_30m_cdls.*"
+    filename_regex = r"""
+        ^(?P<date>\d+)
+        _30m_cdls\..*$
+    """
+    date_format = "%Y"
+    is_image = False
 
     url = "https://www.nass.usda.gov/Research_and_Science/Cropland/Release/datasets/{}_30m_cdls.zip"  # noqa: E501
     md5s = [
@@ -82,24 +55,27 @@ class CDL(GeoDataset):
     def __init__(
         self,
         root: str = "data",
-        crs: CRS = _crs,
+        crs: Optional[CRS] = None,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new CDL Dataset.
+        """Initialize a new Dataset instance.
 
         Args:
             root: root directory where dataset can be found
-            crs: :term:`coordinate reference system (CRS)` to project to
+            crs: :term:`coordinate reference system (CRS)` to project to. Uses the CRS
+                of the files by default
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            FileNotFoundError: if no files are found in ``root``
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         self.root = root
-        self.crs = crs
-        self.transforms = transforms
         self.checksum = checksum
 
         if download:
@@ -111,61 +87,7 @@ class CDL(GeoDataset):
                 + "You can use download=True to download it"
             )
 
-        # Create an R-tree to index the dataset
-        self.index = Index(interleaved=False, properties=Property(dimension=3))
-        fileglob = os.path.join(root, "**_30m_cdls.img")
-        for i, filename in enumerate(glob.iglob(fileglob, recursive=True)):
-            year = int(os.path.basename(filename).split("_")[0])
-            mint = datetime(year, 1, 1, 0, 0, 0).timestamp()
-            maxt = datetime(year, 12, 31, 23, 59, 59).timestamp()
-            with rasterio.open(filename) as src:
-                cmap = src.colormap(1)
-                with WarpedVRT(src, crs=self.crs) as vrt:
-                    minx, miny, maxx, maxy = vrt.bounds
-            coords = (minx, maxx, miny, maxy, mint, maxt)
-            self.index.insert(i, coords, filename)
-        self.cmap = np.array([cmap[i] for i in range(256)])
-
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
-        """Retrieve image and metadata indexed by query.
-
-        Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
-
-        Returns:
-            sample of labels and metadata at that index
-
-        Raises:
-            IndexError: if query is not within bounds of the index
-        """
-        if not query.intersects(self.bounds):
-            raise IndexError(
-                f"query: {query} is not within bounds of the index: {self.bounds}"
-            )
-
-        hits = self.index.intersection(query, objects=True)
-        filename = next(hits).object  # TODO: this assumes there is only a single hit
-        with rasterio.open(filename) as src:
-            with WarpedVRT(src, crs=self.crs) as vrt:
-                window = rasterio.windows.from_bounds(
-                    query.minx,
-                    query.miny,
-                    query.maxx,
-                    query.maxy,
-                    transform=vrt.transform,
-                )
-                masks = vrt.read(window=window)
-        masks = masks.astype(np.int32)
-        sample = {
-            "masks": torch.tensor(masks),  # type: ignore[attr-defined]
-            "crs": self.crs,
-            "bbox": query,
-        }
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
+        super().__init__(root, crs, transforms)
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
@@ -191,20 +113,3 @@ class CDL(GeoDataset):
                 self.root,
                 md5=md5 if self.checksum else None,
             )
-
-    def plot(self, image: Tensor) -> None:
-        """Plot an image on a map.
-
-        Args:
-            image: the image to plot
-        """
-        # Convert from class labels to RGBA values
-        array = image.squeeze().numpy()
-        array = self.cmap[array]
-
-        # Plot the image
-        ax = plt.axes()
-        ax.imshow(array)
-        ax.axis("off")
-        plt.show()
-        plt.close()

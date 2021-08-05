@@ -1,23 +1,13 @@
 """Sentinel datasets."""
 
-import abc
-import glob
-import os
-from datetime import datetime
 from typing import Any, Callable, Dict, Optional, Sequence
 
-import numpy as np
-import rasterio
-import torch
-from rasterio.crs import CRS as RCRS
-from rasterio.vrt import WarpedVRT
-from rtree.index import Index, Property
+from rasterio.crs import CRS
 
-from .geo import GeoDataset
-from .utils import BoundingBox
+from .geo import RasterDataset
 
 
-class Sentinel(GeoDataset, abc.ABC):
+class Sentinel(RasterDataset):
     """Abstract base class for all Sentinel datasets.
 
     `Sentinel <https://sentinel.esa.int/web/sentinel/home>`_ is a family of
@@ -43,7 +33,22 @@ class Sentinel2(Sentinel):
     Earth's surface changes.
     """
 
-    band_names = [
+    # TODO: files downloaded from USGS Earth Explorer seem to have a different
+    # filename format than the official documentation
+    # https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-2-msi/naming-convention
+    # https://sentinel.esa.int/documents/247904/685211/Sentinel-2-MSI-L2A-Product-Format-Specifications.pdf
+    filename_glob = "T*_*_B*_*m.*"
+    filename_regex = r"""
+        ^T(?P<tile>\d{2}[A-Z]{3})
+        _(?P<date>\d{8}T\d{6})
+        _(?P<band>B\d{2})
+        _(?P<resolution>\d{2}m)
+        \..*$
+    """
+    date_format = "%Y%m%dT%H%M%S"
+
+    # https://gisgeography.com/sentinel-2-bands-combinations/
+    all_bands = [
         "B01",
         "B02",
         "B03",
@@ -58,94 +63,30 @@ class Sentinel2(Sentinel):
         "B11",
         "B12",
     ]
+    rgb_bands = ["B04", "B03", "B02"]
+
+    separate_files = True
 
     def __init__(
         self,
         root: str = "data",
-        crs: RCRS = RCRS.from_epsg(32641),
-        bands: Sequence[str] = band_names,
+        crs: Optional[CRS] = None,
+        bands: Sequence[str] = [],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
     ) -> None:
-        """Initialize a new Sentinel-2 Dataset.
+        """Initialize a new Dataset instance.
 
         Args:
             root: root directory where dataset can be found
-            crs: :term:`coordinate reference system (CRS)` to project to
-            bands: bands to return
+            crs: :term:`coordinate reference system (CRS)` to project to. Uses the CRS
+                of the files by default
+            bands: bands to return (defaults to all bands)
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
         """
-        self.root = root
-        self.crs = crs
-        self.bands = bands
-        self.transforms = transforms
+        self.bands = bands if bands else self.all_bands
 
-        # Create an R-tree to index the dataset
-        self.index = Index(interleaved=False, properties=Property(dimension=3))
-        fileglob = os.path.join(root, f"**_{bands[0]}_*.tif")
-        for i, filename in enumerate(glob.iglob(fileglob, recursive=True)):
-            # https://sentinel.esa.int/web/sentinel/user-guides/sentinel-2-msi/naming-convention
-            time = datetime.strptime(
-                os.path.basename(filename).split("_")[1], "%Y%m%dT%H%M%S"
-            )
-            timestamp = time.timestamp()
-            with rasterio.open(filename) as src:
-                with WarpedVRT(src, crs=self.crs) as vrt:
-                    minx, miny, maxx, maxy = vrt.bounds
-            coords = (minx, maxx, miny, maxy, timestamp, timestamp)
-            self.index.insert(i, coords, filename)
-
-        if "filename" not in locals():
-            raise FileNotFoundError(f"No Sentinel2 data was found in '{root}'")
-
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
-        """Retrieve image and metadata indexed by query.
-
-        Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
-
-        Returns:
-            sample of data and metadata at that index
-
-        Raises:
-            IndexError: if query is not within bounds of the index
-        """
-        if not query.intersects(self.bounds):
-            raise IndexError(
-                f"query: {query} is not within bounds of the index: {self.bounds}"
-            )
-
-        hits = self.index.intersection(query, objects=True)
-        filename = next(hits).object  # TODO: this assumes there is only a single hit
-        data_list = []
-        for band in self.bands:
-            tokens = filename.split("_")
-            tokens[2] = band
-            filename = "_".join(tokens)
-            with rasterio.open(filename) as src:
-                with WarpedVRT(src, crs=self.crs) as vrt:
-                    window = rasterio.windows.from_bounds(
-                        query.minx,
-                        query.miny,
-                        query.maxx,
-                        query.maxy,
-                        transform=vrt.transform,
-                    )
-                    image = vrt.read(window=window)
-            data_list.append(image)
-        # FIXME: different bands have different resolution, won't be able to concatenate
-        image = np.concatenate(data_list)  # type: ignore[no-untyped-call]
-        image = image.astype(np.int32)
-        sample = {
-            "image": torch.tensor(image),  # type: ignore[attr-defined]
-            "crs": self.crs,
-            "bbox": query,
-        }
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
+        super().__init__(root, crs, transforms)
