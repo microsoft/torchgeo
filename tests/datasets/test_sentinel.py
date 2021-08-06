@@ -13,9 +13,11 @@ class TestSentinel2:
     @pytest.fixture
     def dataset(self) -> Sentinel2:
         root = os.path.join("tests", "data", "sentinel2")
-        bands = ["B04", "B03", "B02"]
         transforms = Identity()
-        return Sentinel2(root, bands=bands, transforms=transforms)
+        return Sentinel2(root, transforms=transforms)
+
+    def test_separate_files(self, dataset: Sentinel2) -> None:
+        assert dataset.index.count(dataset.index.bounds) == 1
 
     def test_getitem(self, dataset: Sentinel2) -> None:
         x = dataset[dataset.bounds]

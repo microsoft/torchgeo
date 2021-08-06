@@ -37,7 +37,7 @@ class Sentinel2(Sentinel):
     # filename format than the official documentation
     # https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-2-msi/naming-convention
     # https://sentinel.esa.int/documents/247904/685211/Sentinel-2-MSI-L2A-Product-Format-Specifications.pdf
-    filename_glob = "T*_*_B*_*m.*"
+    filename_glob = "T*_*_B02_*m.*"
     filename_regex = r"""
         ^T(?P<tile>\d{2}[A-Z]{3})
         _(?P<date>\d{8}T\d{6})
@@ -71,6 +71,7 @@ class Sentinel2(Sentinel):
         self,
         root: str = "data",
         crs: Optional[CRS] = None,
+        res: Optional[float] = None,
         bands: Sequence[str] = [],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
     ) -> None:
@@ -78,15 +79,17 @@ class Sentinel2(Sentinel):
 
         Args:
             root: root directory where dataset can be found
-            crs: :term:`coordinate reference system (CRS)` to project to. Uses the CRS
-                of the files by default
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
+            res: resolution of the dataset in units of CRS
+                (defaults to the resolution of the first file found)
             bands: bands to return (defaults to all bands)
-            transforms: a function/transform that takes input sample and its target as
-                entry and returns a transformed version
+            transforms: a function/transform that takes an input sample
+                and returns a transformed version
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
         """
         self.bands = bands if bands else self.all_bands
 
-        super().__init__(root, crs, transforms)
+        super().__init__(root, crs, res, transforms)
