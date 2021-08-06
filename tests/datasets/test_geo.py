@@ -17,6 +17,7 @@ class CustomGeoDataset(GeoDataset):
         self.index = Index(interleaved=False, properties=Property(dimension=3))
         self.index.insert(0, bounds)
         self.crs = crs
+        self.res = 1
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         return {"index": query}
