@@ -86,6 +86,6 @@ class TestCanadianBuildingFootprints:
     def test_invalid_query(self, dataset: CanadianBuildingFootprints) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
-            IndexError, match="query: .* is not within bounds of the index:"
+            IndexError, match="query: .* not found in index with bounds:"
         ):
             dataset[query]
