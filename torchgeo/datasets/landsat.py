@@ -34,7 +34,7 @@ class Landsat(RasterDataset, abc.ABC):
         _(?P<collection_number>\d{2})
         _(?P<collection_category>[A-Z0-9]{2})
         _SR
-        _(?P<band>[A-Z0-9]{2})
+        _(?P<band>B\d+)
         \..*$
     """
 
@@ -49,6 +49,7 @@ class Landsat(RasterDataset, abc.ABC):
         self,
         root: str = "data",
         crs: Optional[CRS] = None,
+        res: Optional[float] = None,
         bands: Sequence[str] = [],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
     ) -> None:
@@ -56,24 +57,26 @@ class Landsat(RasterDataset, abc.ABC):
 
         Args:
             root: root directory where dataset can be found
-            crs: :term:`coordinate reference system (CRS)` to project to. Uses the CRS
-                of the files by default
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
+            res: resolution of the dataset in units of CRS
+                (defaults to the resolution of the first file found)
             bands: bands to return (defaults to all bands)
-            transforms: a function/transform that takes input sample and its target as
-                entry and returns a transformed version
+            transforms: a function/transform that takes an input sample
+                and returns a transformed version
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
         """
         self.bands = bands if bands else self.all_bands
 
-        super().__init__(root, crs, transforms)
+        super().__init__(root, crs, res, transforms)
 
 
 class Landsat1(Landsat):
     """Landsat 1 Multispectral Scanner (MSS)."""
 
-    filename_glob = "LM01_*.*"
+    filename_glob = "LM01_*_SR_B4.*"
 
     all_bands = [
         "B4",
@@ -87,19 +90,19 @@ class Landsat1(Landsat):
 class Landsat2(Landsat1):
     """Landsat 2 Multispectral Scanner (MSS)."""
 
-    filename_glob = "LM02_*.*"
+    filename_glob = "LM02_*_SR_B4.*"
 
 
 class Landsat3(Landsat1):
     """Landsat 3 Multispectral Scanner (MSS)."""
 
-    filename_glob = "LM03_*.*"
+    filename_glob = "LM03_*_SR_B4.*"
 
 
 class Landsat4MSS(Landsat):
     """Landsat 4 Multispectral Scanner (MSS)."""
 
-    filename_glob = "LM04_*.*"
+    filename_glob = "LM04_*_SR_B1.*"
 
     all_bands = [
         "B1",
@@ -113,7 +116,7 @@ class Landsat4MSS(Landsat):
 class Landsat4TM(Landsat):
     """Landsat 4 Thematic Mapper (TM)."""
 
-    filename_glob = "LT04_*.*"
+    filename_glob = "LT04_*_SR_B1.*"
 
     all_bands = [
         "B1",
@@ -130,19 +133,19 @@ class Landsat4TM(Landsat):
 class Landsat5MSS(Landsat4MSS):
     """Landsat 4 Multispectral Scanner (MSS)."""
 
-    filename_glob = "LM04_*.*"
+    filename_glob = "LM04_*_SR_B1.*"
 
 
 class Landsat5TM(Landsat4TM):
     """Landsat 5 Thematic Mapper (TM)."""
 
-    filename_glob = "LT05_*.*"
+    filename_glob = "LT05_*_SR_B1.*"
 
 
 class Landsat7(Landsat):
     """Landsat 7 Enhanced Thematic Mapper Plus (ETM+)."""
 
-    filename_glob = "LE07_*.*"
+    filename_glob = "LE07_*_SR_B1.*"
 
     all_bands = [
         "B1",
@@ -160,7 +163,7 @@ class Landsat7(Landsat):
 class Landsat8(Landsat):
     """Landsat 8 Operational Land Imager (OLI) and Thermal Infrared Sensor (TIRS)."""
 
-    filename_glob = "LC08_*.*"
+    filename_glob = "LC08_*_SR_B2.*"
 
     all_bands = [
         "B1",
@@ -181,4 +184,4 @@ class Landsat8(Landsat):
 class Landsat9(Landsat8):
     """Landsat 9 Operational Land Imager (OLI) and Thermal Infrared Sensor (TIRS)."""
 
-    filename_glob = "LC09_*.*"
+    filename_glob = "LC09_*_SR_B2.*"
