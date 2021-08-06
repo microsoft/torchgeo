@@ -227,7 +227,7 @@ class RasterDataset(GeoDataset):
             hit = next(hits)  # TODO: this assumes there is only a single hit
         except StopIteration:
             raise IndexError(
-                f"query: {query} is not within bounds of the index: {self.bounds}"
+                f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
         filepath = hit.object
@@ -405,7 +405,7 @@ class VectorDataset(GeoDataset):
         """
         if not query.intersects(self.bounds):
             raise IndexError(
-                f"query: {query} is not within bounds of the index: {self.bounds}"
+                f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
         hits = self.index.intersection(query, objects=True)
