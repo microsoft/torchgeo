@@ -2,6 +2,7 @@
 
 import abc
 import glob
+import math
 import os
 import re
 import sys
@@ -122,7 +123,12 @@ class RasterDataset(GeoDataset):
     #: groups. The following groups are specifically searched for by the base class:
     #:
     #: * ``date``: used to calculate ``mint`` and ``maxt`` for ``index`` insertion
-    #: * ``band``: used when :attr:`separate_files` is True
+    #:
+    #: When :attr:`separate_files`` is True, the following additional groups are
+    #: searched for to find other files:
+    #:
+    #: * ``band``: replaced with requested band name
+    #: * ``resolution``: replaced with a glob character
     filename_regex = ".*"
 
     #: Date format string used to parse date from filename.
@@ -231,16 +237,15 @@ class RasterDataset(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(query, objects=True)
+        filepaths = [hit.object for hit in hits]
 
-        try:
-            hit = next(hits)  # TODO: this assumes there is only a single hit
-        except StopIteration:
+        if not filepaths:
             raise IndexError(
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
-        filepath = hit.object
         if self.separate_files:
+            # TODO: change this
             data_list = []
             filename_regex = re.compile(self.filename_regex, re.VERBOSE)
             for band in getattr(self, "bands", self.all_bands):
@@ -251,11 +256,11 @@ class RasterDataset(GeoDataset):
                     start, end = match.start("band"), match.end("band")
                     filename = filename[:start] + band + filename[end:]
                     data_list.append(
-                        self._load_file(os.path.join(directory, filename), query)
+                        self._merge_files(os.path.join(directory, filename), query)
                     )
             data = torch.stack(data_list)
         else:
-            data = self._load_file(filepath, query)
+            data = self._merge_files(filepaths, query)
 
         key = "image" if self.is_image else "masks"
         sample = {
@@ -269,28 +274,32 @@ class RasterDataset(GeoDataset):
 
         return sample
 
-    def _load_file(self, filepath: str, query: BoundingBox) -> Tensor:
-        """Load a single raster file.
+    def _merge_files(self, filepaths: Sequence[str], query: BoundingBox) -> Tensor:
+        """Load and merge one or more files.
 
         Args:
-            filepath: path to file to open
+            filepaths: one or more files to load and merge
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
             image/mask at that index
         """
-        with rasterio.open(filepath) as src:
-            with WarpedVRT(src, crs=self.crs, nodata=0) as vrt:
-                window = rasterio.windows.from_bounds(
-                    query.minx,
-                    query.miny,
-                    query.maxx,
-                    query.maxy,
-                    transform=vrt.transform,
-                )
-                array = vrt.read(window=window).astype(np.int32)
-                tensor: Tensor = torch.tensor(array)  # type: ignore[attr-defined]
-                return tensor
+        # Open files
+        src_fhs = [rasterio.open(fn) for fn in filepaths]
+
+        # Warp to a possibly new CRS
+        vrt_fhs = [WarpedVRT(src, crs=self.crs, nodata=0) for src in src_fhs]
+
+        # Merge files
+        bounds = (query.minx, query.miny, query.maxx, query.maxy)
+        dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res, nodata=0)
+
+        # Close file handles
+        [fh.close() for fh in src_fhs]
+        [fh.close() for fh in vrt_fhs]
+
+        tensor = torch.tensor(dest)  # type: ignore[attr-defined]
+        return tensor
 
     def plot(self, data: Tensor) -> None:
         """Plot a data sample.
@@ -357,9 +366,9 @@ class VectorDataset(GeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            crs: :term:`coordinate reference system (CRS)` to project to. Uses the CRS
-                of the files by default
-            res: resolution to use when rasterizing features
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
+            res: resolution of the dataset in units of CRS
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
 
@@ -541,7 +550,7 @@ class ZipDataset(GeoDataset):
         for ds in datasets:
             if ds.crs != crs:
                 raise ValueError("Datasets must be in the same CRS")
-            if ds.res != res:
+            if not math.isclose(ds.res, res):
                 # TODO: relax this constraint someday
                 raise ValueError("Datasets must have the same resolution")
 
@@ -572,6 +581,9 @@ class ZipDataset(GeoDataset):
                 f"query: {query} is not within bounds of the index: {self.bounds}"
             )
 
+        # TODO: use collate_dict here to concatenate instead of replace.
+        # For example, if using Landsat + Sentinel + CDL, don't want to remove Landsat
+        # images and replace with Sentinel images.
         sample = {}
         for ds in self.datasets:
             sample.update(ds[query])
