@@ -56,6 +56,7 @@ class CDL(RasterDataset):
         self,
         root: str = "data",
         crs: Optional[CRS] = None,
+        res: Optional[float] = None,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -64,10 +65,12 @@ class CDL(RasterDataset):
 
         Args:
             root: root directory where dataset can be found
-            crs: :term:`coordinate reference system (CRS)` to project to. Uses the CRS
-                of the files by default
-            transforms: a function/transform that takes input sample and its target as
-                entry and returns a transformed version
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
+            res: resolution of the dataset in units of CRS
+                (defaults to the resolution of the first file found)
+            transforms: a function/transform that takes an input sample
+                and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
@@ -87,7 +90,7 @@ class CDL(RasterDataset):
                 + "You can use download=True to download it"
             )
 
-        super().__init__(root, crs, transforms)
+        super().__init__(root, crs, res, transforms)
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.

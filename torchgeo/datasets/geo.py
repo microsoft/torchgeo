@@ -52,6 +52,9 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     #: :term:`coordinate reference system (CRS)` for the dataset.
     crs: CRS
 
+    #: Resolution of the dataset.
+    res: float
+
     @abc.abstractmethod
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
@@ -150,22 +153,26 @@ class RasterDataset(GeoDataset):
         self,
         root: str,
         crs: Optional[CRS] = None,
+        res: Optional[float] = None,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
     ) -> None:
         """Initialize a new Dataset instance.
 
         Args:
             root: root directory where dataset can be found
-            crs: :term:`coordinate reference system (CRS)` to project to. Uses the CRS
-                of the files by default
-            transforms: a function/transform that takes input sample and its target as
-                entry and returns a transformed version
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
+            res: resolution of the dataset in units of CRS
+                (defaults to the resolution of the first file found)
+            transforms: a function/transform that takes an input sample
+                and returns a transformed version
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
         """
         self.root = root
         self.crs = crs
+        self.res = res
         self.transforms = transforms
 
         # Create an R-tree to index the dataset
@@ -186,6 +193,8 @@ class RasterDataset(GeoDataset):
 
                         if self.crs is None:
                             self.crs = src.crs
+                        if self.res is None:
+                            self.res = src.res
 
                         with WarpedVRT(src, crs=self.crs) as vrt:
                             minx, miny, maxx, maxy = vrt.bounds
@@ -341,7 +350,7 @@ class VectorDataset(GeoDataset):
         self,
         root: str = "data",
         crs: Optional[CRS] = None,
-        res: float = 0.00001,
+        res: float = 0.0001,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -519,20 +528,26 @@ class ZipDataset(GeoDataset):
             datasets: list of datasets to merge
 
         Raises:
-            ValueError: if datasets contains non-GeoDatasets, do not overlap, or are not
-                in the same :term:`coordinate reference system (CRS)`
+            ValueError: if datasets contains non-GeoDatasets, do not overlap, are not in
+                the same :term:`coordinate reference system (CRS)`, or do not have the
+                same resolution
         """
         for ds in datasets:
             if not isinstance(ds, GeoDataset):
                 raise ValueError("ZipDataset only supports GeoDatasets")
 
         crs = datasets[0].crs
+        res = datasets[0].res
         for ds in datasets:
             if ds.crs != crs:
                 raise ValueError("Datasets must be in the same CRS")
+            if ds.res != res:
+                # TODO: relax this constraint someday
+                raise ValueError("Datasets must have the same resolution")
 
         self.datasets = datasets
         self.crs = crs
+        self.res = res
 
         # Make sure datasets have overlap
         try:
