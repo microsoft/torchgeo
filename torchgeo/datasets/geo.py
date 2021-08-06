@@ -7,13 +7,14 @@ import os
 import re
 import sys
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
 
 import fiona
 import fiona.transform
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
+import rasterio.merge
 import torch
 from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
@@ -53,7 +54,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     #: :term:`coordinate reference system (CRS)` for the dataset.
     crs: CRS
 
-    #: Resolution of the dataset.
+    #: Resolution of the dataset in units for CRS.
     res: float
 
     @abc.abstractmethod
@@ -177,8 +178,6 @@ class RasterDataset(GeoDataset):
             FileNotFoundError: if no files are found in ``root``
         """
         self.root = root
-        self.crs = crs
-        self.res = res
         self.transforms = transforms
 
         # Create an R-tree to index the dataset
@@ -197,12 +196,12 @@ class RasterDataset(GeoDataset):
                         except ValueError:
                             pass
 
-                        if self.crs is None:
-                            self.crs = src.crs
-                        if self.res is None:
-                            self.res = src.res
+                        if crs is None:
+                            crs = src.crs
+                        if res is None:
+                            res = src.res[0]
 
-                        with WarpedVRT(src, crs=self.crs) as vrt:
+                        with WarpedVRT(src, crs=crs) as vrt:
                             minx, miny, maxx, maxy = vrt.bounds
                 except rasterio.errors.RasterioIOError:
                     # Skip files that rasterio is unable to read
@@ -223,6 +222,9 @@ class RasterDataset(GeoDataset):
             raise FileNotFoundError(
                 f"No {self.__class__.__name__} data was found in '{root}'"
             )
+
+        self.crs = cast(CRS, crs)
+        self.res = cast(float, res)
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
@@ -245,19 +247,26 @@ class RasterDataset(GeoDataset):
             )
 
         if self.separate_files:
-            # TODO: change this
-            data_list = []
+            data_list: List[Tensor] = []
             filename_regex = re.compile(self.filename_regex, re.VERBOSE)
             for band in getattr(self, "bands", self.all_bands):
-                filename = os.path.basename(filepath)
-                directory = os.path.dirname(filepath)
-                match = re.match(filename_regex, filename)
-                if match:
-                    start, end = match.start("band"), match.end("band")
-                    filename = filename[:start] + band + filename[end:]
-                    data_list.append(
-                        self._merge_files(os.path.join(directory, filename), query)
-                    )
+                band_filepaths = []
+                for filepath in filepaths:
+                    filename = os.path.basename(filepath)
+                    directory = os.path.dirname(filepath)
+                    match = re.match(filename_regex, filename)
+                    if match:
+                        if "date" in match.groupdict():
+                            start = match.start("band")
+                            end = match.end("band")
+                            filename = filename[:start] + band + filename[end:]
+                        if "resolution" in match.groupdict():
+                            start = match.start("resolution")
+                            end = match.end("resolution")
+                            filename = filename[:start] + "*" + filename[end:]
+                    filepath = glob.glob(os.path.join(directory, filename))[0]
+                    band_filepaths.append(filepath)
+                data_list.append(self._merge_files(band_filepaths, query))
             data = torch.stack(data_list)
         else:
             data = self._merge_files(filepaths, query)
@@ -293,12 +302,13 @@ class RasterDataset(GeoDataset):
         # Merge files
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
         dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res, nodata=0)
+        dest = dest.astype(np.int32)
 
         # Close file handles
         [fh.close() for fh in src_fhs]
         [fh.close() for fh in vrt_fhs]
 
-        tensor = torch.tensor(dest)  # type: ignore[attr-defined]
+        tensor: Tensor = torch.tensor(dest)  # type: ignore[attr-defined]
         return tensor
 
     def plot(self, data: Tensor) -> None:
