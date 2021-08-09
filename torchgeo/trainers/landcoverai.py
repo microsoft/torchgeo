@@ -13,7 +13,7 @@ from torch.nn.modules import Module
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter  # type: ignore[attr-defined]
-from torchmetrics import Accuracy, IoU  # type: ignore[attr-defined]
+from torchmetrics import Accuracy, IoU
 
 from ..datasets import LandCoverAI
 from ..models import FCN
