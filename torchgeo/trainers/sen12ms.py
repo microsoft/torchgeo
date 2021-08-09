@@ -11,7 +11,7 @@ from torch import Tensor
 from torch.nn.modules import Module
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader, Subset
-from torchmetrics import Accuracy  # type: ignore[attr-defined]
+from torchmetrics import Accuracy
 
 from ..datasets import SEN12MS
 
