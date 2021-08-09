@@ -6,7 +6,6 @@ from typing import Generator
 import matplotlib.pyplot as plt
 import pytest
 import torch
-from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
@@ -25,7 +24,6 @@ class TestCDL:
         self,
         monkeypatch: Generator[MonkeyPatch, None, None],
         tmp_path: Path,
-        request: SubRequest,
     ) -> CDL:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.utils, "download_url", download_url
