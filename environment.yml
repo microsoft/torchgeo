@@ -14,7 +14,6 @@ dependencies:
   - rasterio>=1.0
   - torchvision>=0.3
   - pip:
-    - affine
     - black[colorama]>=21b
     - flake8
     - isort[colors]>=4.3.5
