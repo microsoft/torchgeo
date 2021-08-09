@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Dict
 
 import pytest
@@ -28,14 +29,6 @@ class CustomGeoDataset(GeoDataset):
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         return {"index": query}
-
-
-class CustomRasterDataset(RasterDataset):
-    pass
-
-
-class CustomVectorDataset(VectorDataset):
-    pass
 
 
 class CustomVisionDataset(VisionDataset):
@@ -91,11 +84,15 @@ class TestGeoDataset:
 
 
 class TestRasterDataset:
-    pass
+    def test_no_data(self, tmp_path: Path) -> None:
+        with pytest.raises(FileNotFoundError, match="No RasterDataset data was found"):
+            RasterDataset(str(tmp_path))
 
 
 class TestVectorDataset:
-    pass
+    def test_no_data(self, tmp_path: Path) -> None:
+        with pytest.raises(FileNotFoundError, match="No VectorDataset data was found"):
+            VectorDataset(str(tmp_path))
 
 
 class TestVisionDataset:
