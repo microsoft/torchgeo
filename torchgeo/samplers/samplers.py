@@ -2,7 +2,7 @@
 
 import abc
 import random
-from typing import Any, Iterator, Tuple
+from typing import Any, Iterator, Tuple, Union
 
 from torch.utils.data import Sampler
 
@@ -11,6 +11,21 @@ from torchgeo.datasets import BoundingBox
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 Sampler.__module__ = "torch.utils.data"
+
+
+def _to_tuple(value: Union[Tuple[Any, Any], Any]) -> Tuple[Any, Any]:
+    """Convert value to a tuple if it is not already a tuple.
+
+    Args:
+        value: input value
+
+    Returns:
+        value if value is a tuple, else (value, value)
+    """
+    if isinstance(value, (float, int)):
+        return (value, value)
+    else:
+        return value
 
 
 class GeoSampler(Sampler[Tuple[Any, ...]], abc.ABC):
@@ -46,16 +61,25 @@ class RandomGeoSampler(GeoSampler):
     the dataset and return as many random :term:`chips <chip>` as possible.
     """
 
-    def __init__(self, roi: BoundingBox, size: int, length: int) -> None:
+    def __init__(
+        self, roi: BoundingBox, size: Union[Tuple[float, float], float], length: int
+    ) -> None:
         """Initialize a new RandomGeoSampler.
+
+        The ``size`` argument can either be:
+
+        * a single ``float`` - in which case the same value is used for the height and
+          width dimension
+        * a ``tuple`` of two floats - in which case, the first *float* is used for the
+          height dimension, and the second *float* for the width dimension
 
         Args:
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
-            size: dimensions of each :term:`patch` to return
+            size: dimensions of each :term:`patch` in units of CRS
             length: number of random samples to draw per epoch
         """
         self.roi = roi
-        self.size = size
+        self.size = _to_tuple(size)
         self.length = length
 
     def __iter__(self) -> Iterator[BoundingBox]:
@@ -65,11 +89,11 @@ class RandomGeoSampler(GeoSampler):
             (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
         for _ in range(len(self)):
-            minx = random.randint(int(self.roi.minx), int(self.roi.maxx) - self.size)
-            maxx = minx + self.size
+            minx = random.uniform(self.roi.minx, self.roi.maxx - self.size[1])
+            maxx = minx + self.size[1]
 
-            miny = random.randint(int(self.roi.miny), int(self.roi.maxy) - self.size)
-            maxy = miny + self.size
+            miny = random.uniform(self.roi.miny, self.roi.maxy - self.size[0])
+            maxy = miny + self.size[0]
 
             # TODO: figure out how to handle time
             mint = self.roi.mint
@@ -100,3 +124,56 @@ class GridGeoSampler(GeoSampler):
     to the `receptive field <https://distill.pub/2019/computing-receptive-fields/>`_ of
     the CNN.
     """
+
+    def __init__(
+        self,
+        roi: BoundingBox,
+        size: Union[Tuple[float, float], float],
+        stride: Union[Tuple[float, float], float],
+    ) -> None:
+        """Initialize a new RandomGeoSampler.
+
+        The ``size`` and ``stride`` arguments can either be:
+
+        * a single ``float`` - in which case the same value is used for the height and
+          width dimension
+        * a ``tuple`` of two floats - in which case, the first *float* is used for the
+          height dimension, and the second *float* for the width dimension
+
+        Args:
+            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+            size: dimensions of each :term:`patch` in units of CRS
+            stride: distance to skip between each patch
+        """
+        self.roi = roi
+        self.size = _to_tuple(size)
+        self.stride = _to_tuple(stride)
+        self.rows = int((roi.maxy - roi.miny - self.size[0]) // self.stride[0]) + 1
+        self.cols = int((roi.maxx - roi.minx - self.size[1]) // self.stride[1]) + 1
+
+    def __iter__(self) -> Iterator[BoundingBox]:
+        """Return the index of a dataset.
+
+        Returns:
+            (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
+        """
+        for i in range(self.rows):
+            miny = self.roi.miny + i * self.stride[0]
+            maxy = miny + self.size[0]
+            for j in range(self.cols):
+                minx = self.roi.minx + j * self.stride[1]
+                maxx = minx + self.size[1]
+
+                # TODO: figure out how to handle time
+                mint = self.roi.mint
+                maxt = self.roi.maxt
+
+                yield BoundingBox(minx, maxx, miny, maxy, mint, maxt)
+
+    def __len__(self) -> int:
+        """Return the number of samples in a single epoch.
+
+        Returns:
+            length of the epoch
+        """
+        return self.rows * self.cols
