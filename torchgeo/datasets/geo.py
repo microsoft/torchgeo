@@ -34,9 +34,9 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
     Geospatial information includes things like:
 
-    * latitude, longitude
-    * time
+    * coordinates (latitude, longitude)
     * :term:`coordinate reference system (CRS)`
+    * resolution
 
     These kind of datasets are special because they can be combined. For example:
 
@@ -47,15 +47,26 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     prohibits swapping image sources or target labels.
     """
 
-    #: R-tree to index geospatial data. Subclasses must instantiate and insert data into
-    #: this index in order for the sampler to index it properly.
-    index: Index
-
     #: :term:`coordinate reference system (CRS)` for the dataset.
     crs: CRS
 
-    #: Resolution of the dataset in units for CRS.
+    #: Resolution of the dataset in units of CRS.
     res: float
+
+    def __init__(
+        self,
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+    ) -> None:
+        """Initialize a new Dataset instance.
+
+        Args:
+            transforms: a function/transform that takes an input sample
+                and returns a transformed version
+        """
+        self.transforms = transforms
+
+        # Create an R-tree to index the dataset
+        self.index = Index(interleaved=False, properties=Property(dimension=3))
 
     @abc.abstractmethod
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
@@ -177,11 +188,11 @@ class RasterDataset(GeoDataset):
         Raises:
             FileNotFoundError: if no files are found in ``root``
         """
-        self.root = root
-        self.transforms = transforms
+        super().__init__(transforms)
 
-        # Create an R-tree to index the dataset
-        self.index = Index(interleaved=False, properties=Property(dimension=3))
+        self.root = root
+
+        # Populate the dataset index
         i = 0
         pathname = os.path.join(root, "**", self.filename_glob)
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
@@ -385,13 +396,13 @@ class VectorDataset(GeoDataset):
         Raises:
             FileNotFoundError: if no files are found in ``root``
         """
+        super().__init__(transforms)
+
         self.root = root
         self.crs = crs
         self.res = res
-        self.transforms = transforms
 
-        # Create an R-tree to index the dataset
-        self.index = Index(interleaved=False, properties=Property(dimension=3))
+        # Populate the dataset index
         i = 0
         pathname = os.path.join(root, "**", self.filename_glob)
         for filepath in glob.iglob(pathname, recursive=True):
@@ -590,7 +601,7 @@ class ZipDataset(GeoDataset):
         """
         if not query.intersects(self.bounds):
             raise IndexError(
-                f"query: {query} is not within bounds of the index: {self.bounds}"
+                f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
         # TODO: use collate_dict here to concatenate instead of replace.
