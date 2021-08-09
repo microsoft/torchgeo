@@ -265,7 +265,7 @@ def working_dir(dirname: str, create: bool = False) -> Iterator[None]:
 
 
 def collate_dict(samples: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Merge a list of samples for form a mini-batch of Tensors.
+    """Merge a list of samples to form a mini-batch of Tensors.
 
     Args:
         samples: list of samples
