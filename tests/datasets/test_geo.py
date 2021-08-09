@@ -2,10 +2,16 @@ from typing import Any, Dict
 
 import pytest
 from rasterio.crs import CRS
-from rtree.index import Index, Property
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import BoundingBox, GeoDataset, VisionDataset, ZipDataset
+from torchgeo.datasets import (
+    BoundingBox,
+    GeoDataset,
+    RasterDataset,
+    VectorDataset,
+    VisionDataset,
+    ZipDataset,
+)
 
 
 class CustomGeoDataset(GeoDataset):
@@ -13,14 +19,23 @@ class CustomGeoDataset(GeoDataset):
         self,
         bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5),
         crs: CRS = CRS.from_epsg(3005),
+        res: float = 1,
     ) -> None:
-        self.index = Index(interleaved=False, properties=Property(dimension=3))
+        super().__init__()
         self.index.insert(0, bounds)
         self.crs = crs
-        self.res = 1
+        self.res = res
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         return {"index": query}
+
+
+class CustomRasterDataset(RasterDataset):
+    pass
+
+
+class CustomVectorDataset(VectorDataset):
+    pass
 
 
 class CustomVisionDataset(VisionDataset):
@@ -73,6 +88,14 @@ class TestGeoDataset:
         ds2 = CustomVisionDataset()
         with pytest.raises(ValueError, match="ZipDataset only supports GeoDatasets"):
             dataset + ds2  # type: ignore[operator]
+
+
+class TestRasterDataset:
+    pass
+
+
+class TestVectorDataset:
+    pass
 
 
 class TestVisionDataset:
@@ -134,7 +157,7 @@ class TestZipDataset:
         assert "type: ZipDataset" in str(dataset)
         assert "bbox: BoundingBox" in str(dataset)
 
-    def test_invalid_dataset(self) -> None:
+    def test_vision_dataset(self) -> None:
         ds1 = CustomVisionDataset()
         ds2 = CustomVisionDataset()
         with pytest.raises(ValueError, match="ZipDataset only supports GeoDatasets"):
@@ -146,6 +169,12 @@ class TestZipDataset:
         with pytest.raises(ValueError, match="Datasets must be in the same CRS"):
             ZipDataset([ds1, ds2])
 
+    def test_different_res(self) -> None:
+        ds1 = CustomGeoDataset(res=1)
+        ds2 = CustomGeoDataset(res=2)
+        with pytest.raises(ValueError, match="Datasets must have the same resolution"):
+            ZipDataset([ds1, ds2])
+
     def test_no_overlap(self) -> None:
         ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
         ds2 = CustomGeoDataset(BoundingBox(6, 7, 8, 9, 10, 11))
@@ -155,6 +184,6 @@ class TestZipDataset:
     def test_invalid_query(self, dataset: ZipDataset) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
-            IndexError, match="query: .* is not within bounds of the index:"
+            IndexError, match="query: .* not found in index with bounds:"
         ):
             dataset[query]
