@@ -431,30 +431,32 @@ class VectorDataset(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        if not query.intersects(self.bounds):
+        hits = self.index.intersection(query, objects=True)
+        filepaths = [hit.object for hit in hits]
+
+        if not filepaths:
             raise IndexError(
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
-        hits = self.index.intersection(query, objects=True)
-        filename = next(hits).object  # TODO: this assumes there is only a single hit
         shapes = []
-        with fiona.open(filename) as src:
-            # We need to know the bounding box of the query in the source CRS
-            (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                self.crs.to_dict(),
-                src.crs,
-                [query.minx, query.maxx],
-                [query.miny, query.maxy],
-            )
-
-            # Filter geometries to those that intersect with the bounding box
-            for feature in src.filter(bbox=(minx, miny, maxx, maxy)):
-                # Warp geometries to requested CRS
-                shape = fiona.transform.transform_geom(
-                    src.crs, self.crs.to_dict(), feature["geometry"]
+        for filepath in filepaths:
+            with fiona.open(filepath) as src:
+                # We need to know the bounding box of the query in the source CRS
+                (minx, maxx), (miny, maxy) = fiona.transform.transform(
+                    self.crs.to_dict(),
+                    src.crs,
+                    [query.minx, query.maxx],
+                    [query.miny, query.maxy],
                 )
-                shapes.append(shape)
+
+                # Filter geometries to those that intersect with the bounding box
+                for feature in src.filter(bbox=(minx, miny, maxx, maxy)):
+                    # Warp geometries to requested CRS
+                    shape = fiona.transform.transform_geom(
+                        src.crs, self.crs.to_dict(), feature["geometry"]
+                    )
+                    shapes.append(shape)
 
         # Rasterize geometries
         width = (query.maxx - query.minx) / self.res
