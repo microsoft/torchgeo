@@ -1,9 +1,11 @@
+import math
 from typing import Iterator
 
 import pytest
+from _pytest.fixtures import SubRequest
 
 from torchgeo.datasets import BoundingBox
-from torchgeo.samplers import GeoSampler, RandomGeoSampler
+from torchgeo.samplers import GeoSampler, GridGeoSampler, RandomGeoSampler
 
 
 class CustomGeoSampler(GeoSampler):
@@ -35,24 +37,56 @@ class TestGeoSampler:
 
 
 class TestRandomGeoSampler:
-    @pytest.fixture(scope="function")
-    def sampler(self) -> RandomGeoSampler:
+    @pytest.fixture(scope="function", params=[3, 4.5, (2, 2), (3, 4.5), (4.5, 3)])
+    def sampler(self, request: SubRequest) -> RandomGeoSampler:
         roi = BoundingBox(0, 10, 20, 30, 40, 50)
-        return RandomGeoSampler(roi, size=5, length=10)
+        size = request.param
+        return RandomGeoSampler(roi, size, length=10)
 
     def test_iter(self, sampler: RandomGeoSampler) -> None:
-        query = next(iter(sampler))
+        for query in sampler:
+            assert sampler.roi.minx <= query.minx <= query.maxx <= sampler.roi.maxx
+            assert sampler.roi.miny <= query.miny <= query.miny <= sampler.roi.maxy
+            assert sampler.roi.mint <= query.mint <= query.maxt <= sampler.roi.maxt
 
-        assert sampler.roi.minx <= query.minx <= sampler.roi.maxx
-        assert sampler.roi.minx <= query.maxx <= sampler.roi.maxx
-        assert sampler.roi.miny <= query.miny <= sampler.roi.maxy
-        assert sampler.roi.miny <= query.maxy <= sampler.roi.maxy
-        assert sampler.roi.mint <= query.mint <= sampler.roi.maxt
-        assert sampler.roi.mint <= query.maxt <= sampler.roi.maxt
-
-        assert query.maxx - query.minx == sampler.size
-        assert query.maxy - query.miny == sampler.size
-        assert query.maxt - query.mint == sampler.roi.maxt - sampler.roi.mint
+            assert math.isclose(query.maxx - query.minx, sampler.size[1])
+            assert math.isclose(query.maxy - query.miny, sampler.size[0])
+            assert math.isclose(
+                query.maxt - query.mint, sampler.roi.maxt - sampler.roi.mint
+            )
 
     def test_len(self, sampler: RandomGeoSampler) -> None:
         assert len(sampler) == sampler.length
+
+
+class TestGridGeoSampler:
+    @pytest.fixture(
+        scope="function",
+        params=[
+            (8, 1),
+            (6, 2),
+            (4, 3),
+            (2.5, 3),
+            ((8, 6), (1, 2)),
+            ((6, 4), (2, 3)),
+        ],
+    )
+    def sampler(self, request: SubRequest) -> GridGeoSampler:
+        roi = BoundingBox(0, 10, 20, 30, 40, 50)
+        size, stride = request.param
+        return GridGeoSampler(roi, size, stride)
+
+    def test_iter(self, sampler: GridGeoSampler) -> None:
+        for query in sampler:
+            assert sampler.roi.minx <= query.minx <= query.maxx <= sampler.roi.maxx
+            assert sampler.roi.miny <= query.miny <= query.miny <= sampler.roi.maxy
+            assert sampler.roi.mint <= query.mint <= query.maxt <= sampler.roi.maxt
+
+            assert math.isclose(query.maxx - query.minx, sampler.size[1])
+            assert math.isclose(query.maxy - query.miny, sampler.size[0])
+            assert math.isclose(
+                query.maxt - query.mint, sampler.roi.maxt - sampler.roi.mint
+            )
+
+    def test_len(self, sampler: RandomGeoSampler) -> None:
+        assert len(sampler) == 9
