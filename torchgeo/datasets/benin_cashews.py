@@ -5,12 +5,10 @@ import os
 from functools import lru_cache
 from typing import Callable, Dict, Optional, Tuple
 
-import affine
 import numpy as np
 import rasterio
 import rasterio.features
 import torch
-from PIL import Image
 from torch import Tensor
 
 from .geo import VisionDataset
@@ -163,17 +161,6 @@ class BeninSmallHolderCashews(VisionDataset):
     # Same for all tiles
     tile_height = 1186
     tile_width = 1122
-
-    # This is the transform used in all of the S2 tiles
-    # It is hardcoded here to use in rasterizing the geojson labels
-    tile_transform = affine.Affine(
-        10.002549584378608,
-        0.0,
-        440853.29890114715,
-        0.0,
-        -9.99842989423825,
-        1012804.082877621,
-    )
 
     def __init__(
         self,
@@ -349,8 +336,9 @@ class BeninSmallHolderCashews(VisionDataset):
                 f"ts_cashew_benin_source_00_{date}",
                 f"{band_name}.tif",
             )
-            with Image.open(filepath) as band_img:
-                array = np.array(band_img).astype(np.float32)
+            with rasterio.open(filepath) as src:
+                self.tile_transform = src.transform
+                array = src.read().astype(np.float32)
                 img[band_index] = torch.from_numpy(array)  # type: ignore[attr-defined]
 
         return img
