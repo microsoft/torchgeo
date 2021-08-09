@@ -308,7 +308,7 @@ class RasterDataset(GeoDataset):
         src_fhs = [rasterio.open(fn) for fn in filepaths]
 
         # Warp to a possibly new CRS
-        vrt_fhs = [WarpedVRT(src, crs=self.crs, nodata=0) for src in src_fhs]
+        vrt_fhs = [WarpedVRT(src, crs=self.crs) for src in src_fhs]
 
         # Merge files
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
