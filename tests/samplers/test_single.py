@@ -3,6 +3,7 @@ from typing import Iterator
 
 import pytest
 from _pytest.fixtures import SubRequest
+from rtree.index import Index, Property
 
 from torchgeo.datasets import BoundingBox
 from torchgeo.samplers import GeoSampler, GridGeoSampler, RandomGeoSampler
@@ -22,13 +23,13 @@ class CustomGeoSampler(GeoSampler):
 
 class TestGeoSampler:
     @pytest.fixture(scope="function")
-    def sampler(self) -> GeoSampler:
+    def sampler(self) -> CustomGeoSampler:
         return CustomGeoSampler()
 
-    def test_iter(self, sampler: GeoSampler) -> None:
+    def test_iter(self, sampler: CustomGeoSampler) -> None:
         assert next(iter(sampler)) == BoundingBox(0, 0, 0, 0, 0, 0)
 
-    def test_len(self, sampler: GeoSampler) -> None:
+    def test_len(self, sampler: CustomGeoSampler) -> None:
         assert len(sampler) == 2
 
     def test_abstract(self) -> None:
@@ -39,9 +40,11 @@ class TestGeoSampler:
 class TestRandomGeoSampler:
     @pytest.fixture(scope="function", params=[3, 4.5, (2, 2), (3, 4.5), (4.5, 3)])
     def sampler(self, request: SubRequest) -> RandomGeoSampler:
-        roi = BoundingBox(0, 10, 20, 30, 40, 50)
+        index = Index(interleaved=False, properties=Property(dimension=3))
+        index.insert(0, (0, 10, 20, 30, 40, 50))
+        index.insert(1, (0, 10, 20, 30, 40, 50))
         size = request.param
-        return RandomGeoSampler(roi, size, length=10)
+        return RandomGeoSampler(index, size, length=10)
 
     def test_iter(self, sampler: RandomGeoSampler) -> None:
         for query in sampler:
@@ -72,9 +75,11 @@ class TestGridGeoSampler:
         ],
     )
     def sampler(self, request: SubRequest) -> GridGeoSampler:
-        roi = BoundingBox(0, 10, 20, 30, 40, 50)
+        index = Index(interleaved=False, properties=Property(dimension=3))
+        index.insert(0, (0, 10, 20, 30, 40, 50))
+        index.insert(1, (0, 10, 20, 30, 40, 50))
         size, stride = request.param
-        return GridGeoSampler(roi, size, stride)
+        return GridGeoSampler(index, size, stride)
 
     def test_iter(self, sampler: GridGeoSampler) -> None:
         for query in sampler:
@@ -87,6 +92,3 @@ class TestGridGeoSampler:
             assert math.isclose(
                 query.maxt - query.mint, sampler.roi.maxt - sampler.roi.mint
             )
-
-    def test_len(self, sampler: RandomGeoSampler) -> None:
-        assert len(sampler) == 9
