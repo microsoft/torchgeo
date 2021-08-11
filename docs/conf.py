@@ -94,5 +94,6 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "pytorch-lightning": ("https://pytorch-lightning.readthedocs.io/en/latest/", None),
     "rasterio": ("https://rasterio.readthedocs.io/en/latest/", None),
+    "rtree": ("https://rtree.readthedocs.io/en/latest/", None),
     "torch": ("https://pytorch.org/docs/stable", None),
 }

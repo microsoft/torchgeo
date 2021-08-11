@@ -1,8 +1,18 @@
 """TorchGeo samplers."""
 
-from .samplers import GeoSampler, GridGeoSampler, RandomGeoSampler
+from .batch import BatchGeoSampler, RandomBatchGeoSampler
+from .single import GeoSampler, GridGeoSampler, RandomGeoSampler
 
-__all__ = ("GeoSampler", "GridGeoSampler", "RandomGeoSampler")
+__all__ = (
+    # Samplers
+    "GridGeoSampler",
+    "RandomGeoSampler",
+    # Batch samplers
+    "RandomBatchGeoSampler",
+    # Base classes
+    "GeoSampler",
+    "BatchGeoSampler",
+)
 
 # https://stackoverflow.com/questions/40018681
 for module in __all__:

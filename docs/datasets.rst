@@ -3,7 +3,7 @@ torchgeo.datasets
 
 .. module:: torchgeo.datasets
 
-In :mod:`torchgeo`, we define two types of datasets: :ref:`Geospatial Datasets` and :ref:`Non-geospatial Datasets`. These abstract base classes are documented in more detail in :ref:`Base Classes`.
+In :mod:`torchgeo`, we define two types of datasets: :ref:`Geospatial Datasets` and :ref:`Non-geospatial Datasets`. These abstract base classes are documented in more detail in :ref:`Dataset Base Classes`.
 
 Geospatial Datasets
 -------------------
@@ -107,8 +107,8 @@ NWPU VHR-10
 
 .. autoclass:: VHR10
 
-Base Classes
-------------
+Dataset Base Classes
+--------------------
 
 If you want to write your own custom dataset, you can extend one of these abstract base classes.
 
