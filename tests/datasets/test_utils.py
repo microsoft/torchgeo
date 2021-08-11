@@ -8,7 +8,7 @@ from typing import Any, Generator, Tuple
 
 import pytest
 import torch
-from pytest import MonkeyPatch
+from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
