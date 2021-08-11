@@ -5,7 +5,7 @@ from typing import Generator
 import pytest
 import torch
 from _pytest.fixtures import SubRequest
-from pytest import MonkeyPatch
+from _pytest.monkeypatch import MonkeyPatch
 
 from torchgeo.datasets import So2Sat
 from torchgeo.transforms import Identity

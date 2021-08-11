@@ -6,7 +6,7 @@ from typing import Generator
 import pytest
 import torch
 from _pytest.fixtures import SubRequest
-from pytest import MonkeyPatch
+from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils

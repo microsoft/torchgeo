@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from typing import Generator
 
-from pytest import MonkeyPatch
+from _pytest.monkeypatch import MonkeyPatch
 
 
 def test_install(
