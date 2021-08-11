@@ -46,6 +46,10 @@ extensions = [
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build"]
 
+# Sphinx 3.0+ required for:
+# autodoc_typehints = "description"
+needs_sphinx = "3.0"
+
 nitpicky = True
 nitpick_ignore = [
     # https://github.com/sphinx-doc/sphinx/issues/8127

@@ -39,7 +39,10 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.6, 3.7, 3.8, 3.9]
+        exclude:
+        - os: windows-latest
+          python-version: 3.6
     steps:
     - name: Clone repo
       uses: actions/checkout@v2
@@ -62,7 +65,7 @@ jobs:
       if: ${{ runner.os == 'Windows' }}
     - name: Install conda dependencies (Windows)
       run: |
-        conda install fiona h5py 'rasterio>=1.0'
+        conda install 'fiona>=1.5' h5py 'rasterio>=1.0.16'
         conda list
         conda info
       if: ${{ runner.os == 'Windows' }}
