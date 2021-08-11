@@ -1,33 +1,33 @@
 spack:
   specs:
-  - opencv+python3+imgcodecs+tiff+jpeg+png
-  - pil
-  - "python@3.7:+bz2"
-  - "py-black@21:+colorama"
-  - py-fiona
-  - py-flake8
-  - py-h5py
-  - "py-isort@4.3.5:+colors"
-  - py-jupyterlab
-  - py-matplotlib
+  - "opencv+python3+imgcodecs+tiff+jpeg+png"
+  - "pil@2.9:"
+  - "python@3.6:+bz2"
+  - "py-black@21:"
+  - "py-fiona@1.5:"
+  - "py-flake8@3.8:"
+  - "py-h5py"
+  - "py-isort@5.8:+colors"
+  - "py-jupyterlab"
+  - "py-matplotlib"
   - "py-mypy@0.900:"
-  - py-numpy
-  - py-omegaconf
-  - py-pycocotools
+  - "py-numpy"
+  - "py-omegaconf@2.1:"
+  - "py-pycocotools"
   - "py-pydocstyle@6.1:+toml"
-  - "py-pytest@6.0:"
-  - py-pytest-cov
-  - py-pytorch-lightning
-  - py-pytorch-sphinx-theme
+  - "py-pytest@6:"
+  - "py-pytest-cov@2.4:"
+  - "py-pytorch-lightning@1.3:"
+  - "py-pytorch-sphinx-theme"
   - "py-radiant-mlhub@0.2.1:"
-  - py-rarfile
-  - "py-rasterio@1.0:"
-  - "py-rtree@0.5.0:"
-  - py-scikit-learn
-  - py-segmentation-models-pytorch
-  - "py-setuptools@42:"
-  - py-sphinx
+  - "py-rarfile@3:"
+  - "py-rasterio@1.0.16:"
+  - "py-rtree@0.5:"
+  - "py-scikit-learn@0.18:"
+  - "py-segmentation-models-pytorch@0.2:"
+  - "py-setuptools@30.4:"
+  - "py-sphinx@3:"
   - "py-torch@1.7:"
-  - py-torchmetrics
+  - "py-torchmetrics"
   - "py-torchvision@0.3:"
   concretization: together
