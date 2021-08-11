@@ -415,7 +415,7 @@ class VectorDataset(GeoDataset):
                     (minx, maxx), (miny, maxy) = fiona.transform.transform(
                         src.crs, self.crs.to_dict(), [minx, maxx], [miny, maxy]
                     )
-            except fiona.errors.DriverError:
+            except (fiona.errors.DriverError, fiona.errors.FionaValueError):
                 # Skip files that fiona is unable to read
                 continue
             else:
