@@ -312,7 +312,7 @@ class RasterDataset(GeoDataset):
 
         # Merge files
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
-        dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res, nodata=0)
+        dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res)
         dest = dest.astype(np.int32)
 
         # Close file handles
@@ -399,7 +399,6 @@ class VectorDataset(GeoDataset):
         super().__init__(transforms)
 
         self.root = root
-        self.crs = crs
         self.res = res
 
         # Populate the dataset index
@@ -408,12 +407,12 @@ class VectorDataset(GeoDataset):
         for filepath in glob.iglob(pathname, recursive=True):
             try:
                 with fiona.open(filepath) as src:
-                    if self.crs is None:
-                        self.crs = CRS.from_dict(src.crs)
+                    if crs is None:
+                        crs = CRS.from_dict(src.crs)
 
                     minx, miny, maxx, maxy = src.bounds
                     (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                        src.crs, self.crs.to_dict(), [minx, maxx], [miny, maxy]
+                        src.crs, crs.to_dict(), [minx, maxx], [miny, maxy]
                     )
             except (fiona.errors.DriverError, fiona.errors.FionaValueError):
                 # Skip files that fiona is unable to read
@@ -429,6 +428,8 @@ class VectorDataset(GeoDataset):
             raise FileNotFoundError(
                 f"No {self.__class__.__name__} data was found in '{root}'"
             )
+
+        self.crs = crs
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
