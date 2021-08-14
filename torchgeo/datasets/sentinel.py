@@ -74,6 +74,7 @@ class Sentinel2(Sentinel):
         res: Optional[float] = None,
         bands: Sequence[str] = [],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -86,10 +87,11 @@ class Sentinel2(Sentinel):
             bands: bands to return (defaults to all bands)
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
+            cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
         """
         self.bands = bands if bands else self.all_bands
 
-        super().__init__(root, crs, res, transforms)
+        super().__init__(root, crs, res, transforms, cache)
