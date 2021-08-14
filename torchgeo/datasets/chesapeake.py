@@ -71,6 +71,7 @@ class Chesapeake(RasterDataset, abc.ABC):
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        cache: bool = True,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -84,6 +85,7 @@ class Chesapeake(RasterDataset, abc.ABC):
                 (defaults to the resolution of the first file found)
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
+            cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
@@ -103,7 +105,7 @@ class Chesapeake(RasterDataset, abc.ABC):
                 + "You can use download=True to download it"
             )
 
-        super().__init__(root, crs, res, transforms)
+        super().__init__(root, crs, res, transforms, cache)
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.

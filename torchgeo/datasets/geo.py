@@ -1,6 +1,7 @@
 """Base classes for all :mod:`torchgeo` datasets."""
 
 import abc
+import functools
 import glob
 import math
 import os
@@ -17,6 +18,7 @@ import rasterio
 import rasterio.merge
 import torch
 from rasterio.crs import CRS
+from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
 from rtree.index import Index, Property
 from torch import Tensor
@@ -173,6 +175,7 @@ class RasterDataset(GeoDataset):
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -184,6 +187,7 @@ class RasterDataset(GeoDataset):
                 (defaults to the resolution of the first file found)
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
+            cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
@@ -191,6 +195,7 @@ class RasterDataset(GeoDataset):
         super().__init__(transforms)
 
         self.root = root
+        self.cache = cache
 
         # Populate the dataset index
         i = 0
@@ -304,23 +309,48 @@ class RasterDataset(GeoDataset):
         Returns:
             image/mask at that index
         """
-        # Open files
-        src_fhs = [rasterio.open(fn) for fn in filepaths]
+        if self.cache:
+            vrt_fhs = [self._cached_load_warp_file(fp) for fp in filepaths]
+        else:
+            vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
-        # Warp to a possibly new CRS
-        vrt_fhs = [WarpedVRT(src, crs=self.crs) for src in src_fhs]
-
-        # Merge files
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
         dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res)
         dest = dest.astype(np.int32)
 
-        # Close file handles
-        [fh.close() for fh in src_fhs]
-        [fh.close() for fh in vrt_fhs]
-
         tensor: Tensor = torch.tensor(dest)  # type: ignore[attr-defined]
         return tensor
+
+    @functools.lru_cache(maxsize=128)
+    def _cached_load_warp_file(self, filepath: str) -> DatasetReader:
+        """Cached version of :meth:`_load_warp_file`.
+
+        Args:
+            filepath: file to load and warp
+
+        Returns:
+            file handle of warped VRT
+        """
+        return self._load_warp_file(filepath)
+
+    def _load_warp_file(self, filepath: str) -> DatasetReader:
+        """Load and warp a file to the correct CRS and resolution.
+
+        Args:
+            filepath: file to load and warp
+
+        Returns:
+            file handle of warped VRT
+        """
+        src = rasterio.open(filepath)
+
+        # Only warp if necessary
+        if src.crs != self.crs:
+            vrt = WarpedVRT(src, crs=self.crs)
+            src.close()
+            return vrt
+        else:
+            return src
 
     def plot(self, data: Tensor) -> None:
         """Plot a data sample.
