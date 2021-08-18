@@ -78,10 +78,12 @@ def test_overwrite_experiment_dir(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("task", ["test", "foo"])
 def test_invalid_task(task: str, tmp_path: Path) -> None:
+    output_dir = tmp_path / "output"
     args = [
         sys.executable,
         "train.py",
         "program.experiment_name=test",
+        "program.output_dir=" + str(output_dir),
         "task.name=" + task,
     ]
     ps = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -90,11 +92,13 @@ def test_invalid_task(task: str, tmp_path: Path) -> None:
 
 
 def test_missing_config_file(tmp_path: Path) -> None:
+    output_dir = tmp_path / "output"
     config_file = tmp_path / "config.yaml"
     args = [
         sys.executable,
         "train.py",
         "program.experiment_name=test",
+        "program.output_dir=" + str(output_dir),
         "task.name=test",
         "config_file=" + str(config_file),
     ]
