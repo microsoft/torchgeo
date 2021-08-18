@@ -1,6 +1,7 @@
 import builtins
 import glob
 import os
+import pickle
 import shutil
 import sys
 from pathlib import Path
@@ -176,6 +177,12 @@ class TestBoundingBox:
         bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
         bbox2 = BoundingBox(*test_input)
         assert bbox1.intersects(bbox2) == bbox2.intersects(bbox1) == expected
+
+    def test_picklable(self) -> None:
+        bbox = BoundingBox(0, 1, 2, 3, 4, 5)
+        x = pickle.dumps(bbox)
+        y = pickle.loads(x)
+        assert bbox == y
 
     def test_invalid_x(self) -> None:
         with pytest.raises(

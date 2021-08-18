@@ -1,11 +1,13 @@
 import math
-from typing import Iterator, List
+from typing import Dict, Iterator, List
 
 import pytest
 from _pytest.fixtures import SubRequest
+from rasterio.crs import CRS
 from rtree.index import Index, Property
+from torch.utils.data import DataLoader
 
-from torchgeo.datasets import BoundingBox
+from torchgeo.datasets import BoundingBox, GeoDataset
 from torchgeo.samplers import BatchGeoSampler, RandomBatchGeoSampler
 
 
@@ -21,6 +23,22 @@ class CustomBatchGeoSampler(BatchGeoSampler):
         return 2
 
 
+class CustomGeoDataset(GeoDataset):
+    def __init__(
+        self,
+        bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5),
+        crs: CRS = CRS.from_epsg(3005),
+        res: float = 1,
+    ) -> None:
+        super().__init__()
+        self.index.insert(0, bounds)
+        self.crs = crs
+        self.res = res
+
+    def __getitem__(self, query: BoundingBox) -> Dict[str, BoundingBox]:
+        return {"index": query}
+
+
 class TestBatchGeoSampler:
     @pytest.fixture(scope="function")
     def sampler(self) -> CustomBatchGeoSampler:
@@ -32,6 +50,15 @@ class TestBatchGeoSampler:
 
     def test_len(self, sampler: CustomBatchGeoSampler) -> None:
         assert len(sampler) == 2
+
+    @pytest.mark.parametrize("num_workers", [0, 1, 2])
+    def test_dataloader(self, sampler: CustomBatchGeoSampler, num_workers: int) -> None:
+        ds = CustomGeoDataset()
+        dl = DataLoader(
+            ds, batch_sampler=sampler, num_workers=num_workers  # type: ignore[arg-type]
+        )
+        for _ in dl:
+            continue
 
     def test_abstract(self) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
@@ -62,3 +89,12 @@ class TestRandomBatchGeoSampler:
 
     def test_len(self, sampler: RandomBatchGeoSampler) -> None:
         assert len(sampler) == sampler.length // sampler.batch_size
+
+    @pytest.mark.parametrize("num_workers", [0, 1, 2])
+    def test_dataloader(self, sampler: RandomBatchGeoSampler, num_workers: int) -> None:
+        ds = CustomGeoDataset()
+        dl = DataLoader(
+            ds, batch_sampler=sampler, num_workers=num_workers  # type: ignore[arg-type]
+        )
+        for _ in dl:
+            continue
