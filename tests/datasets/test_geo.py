@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict
+from typing import Dict
 
 import pytest
 from rasterio.crs import CRS
@@ -27,12 +27,12 @@ class CustomGeoDataset(GeoDataset):
         self.crs = crs
         self.res = res
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Dict[str, BoundingBox]:
         return {"index": query}
 
 
 class CustomVisionDataset(VisionDataset):
-    def __getitem__(self, index: int) -> Dict[str, Any]:
+    def __getitem__(self, index: int) -> Dict[str, int]:
         return {"index": index}
 
     def __len__(self) -> int:
