@@ -36,6 +36,8 @@ class Chesapeake(RasterDataset, abc.ABC):
     * https://doi.org/10.1109/cvpr.2019.01301
     """
 
+    # TODO: this shouldn't be needed, but .tif.ovr file is getting picked up
+    filename_glob = "*.tif"
     is_image = False
 
     @property
