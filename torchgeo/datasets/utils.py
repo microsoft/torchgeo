@@ -214,6 +214,14 @@ class BoundingBox(Tuple[float, float, float, float, float, float]):
         self.mint = mint
         self.maxt = maxt
 
+    def __getnewargs__(self) -> Tuple[float, float, float, float, float, float]:
+        """Values passed to the ``__new__()`` method upon unpickling.
+
+        Returns:
+            tuple of bounds
+        """
+        return self.minx, self.maxx, self.miny, self.maxy, self.mint, self.maxt
+
     def __repr__(self) -> str:
         """Return the formal string representation of the object.
 
