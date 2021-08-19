@@ -13,17 +13,32 @@ architectures, and common image transformations for geospatial data.
    :maxdepth: 2
    :caption: Package Reference
 
-   datasets
-   models
-   samplers
-   trainers
-   transforms
+   api/datasets
+   api/models
+   api/samplers
+   api/trainers
+   api/transforms
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Tutorials
+
+   tutorials/GeoDataset
+   tutorials/Benin Smallholder Cashew Plantations Dataset
+   tutorials/SEN12MS Dataset
+   tutorials/Canadian Building Footprints Dataset
+   tutorials/Landcover.ai Dataset
+   tutorials/So2Sat Dataset
+   tutorials/Chesapeake Dataset
+   tutorials/NAIP Dataset
+   tutorials/CV4A Kenya Crop Type Dataset
+   tutorials/NASA Cyclone Dataset
 
 .. toctree::
    :maxdepth: 2
    :caption: User Documentation
 
-   glossary
+   user/glossary
 
 .. toctree::
    :maxdepth: 1
