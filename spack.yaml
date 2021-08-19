@@ -11,6 +11,7 @@ spack:
   - "py-jupyterlab"
   - "py-matplotlib"
   - "py-mypy@0.900:"
+  - "py-nbsphinx@0.8.5:"
   - "py-numpy"
   - "py-omegaconf@2.1:"
   - "py-pycocotools"
