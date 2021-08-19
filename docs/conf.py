@@ -34,11 +34,11 @@ release = torchgeo.__version__
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.autosectionlabel",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
+    "nbsphinx",
 ]
 
 # List of patterns, relative to source directory, that match files and
@@ -97,3 +97,16 @@ intersphinx_mapping = {
     "rtree": ("https://rtree.readthedocs.io/en/latest/", None),
     "torch": ("https://pytorch.org/docs/stable", None),
 }
+
+# nbsphinx
+# TODO: branch/tag should change depending on which version of docs you look at
+# TODO: :width: may be broken
+nbsphinx_prolog = """
+{% set colab = "https://colab.research.google.com" %}
+{% set repo = "microsoft/torchgeo" %}
+{% set branch = "main" %}
+
+.. image:: {{ colab }}/assets/colab-badge.svg
+    :alt: Open in Colab
+    :target: {{ colab }}/github/{{ repo }}/blob/{{ branch }}/docs/{{ env.docname }}
+"""

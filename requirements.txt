@@ -12,6 +12,8 @@ jupyterlab
 matplotlib
 # mypy 0.900+ required for pyproject.toml support
 mypy>=0.900
+# nbsphinx 0.8.5 fixes bug with nbformat attributes
+nbsphinx>=0.8.5
 numpy
 # omegaconf 2.1+ required for to_object method
 omegaconf>=2.1

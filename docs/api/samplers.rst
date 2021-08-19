@@ -52,8 +52,8 @@ Random Batch Geo Sampler
 
 .. autoclass:: RandomBatchGeoSampler
 
-Sampler Base Classes
---------------------
+Base Classes
+------------
 
 If you want to write your own custom sampler, you can extend one of these abstract base classes.
 
