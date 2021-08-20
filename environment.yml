@@ -16,6 +16,7 @@ dependencies:
   - pip:
     - black>=21.4b0
     - flake8>=3.8
+    - ipywidgets>=7
     - isort[colors]>=5.8
     - jupyterlab
     - mypy>=0.900
