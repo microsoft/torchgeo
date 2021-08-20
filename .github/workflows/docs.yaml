@@ -41,7 +41,9 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.9
-    - name: Install dependencies
+    - name: Install apt dependencies
+      run: sudo apt-get install pandoc
+    - name: Install pip dependencies
       run: |
         pip install cython numpy  # needed for pycocotools
         pip install --pre -r requirements.txt
