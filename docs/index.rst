@@ -23,16 +23,8 @@ architectures, and common image transformations for geospatial data.
    :maxdepth: 2
    :caption: Tutorials
 
-   tutorials/GeoDataset
-   tutorials/Benin Smallholder Cashew Plantations Dataset
-   tutorials/SEN12MS Dataset
-   tutorials/Canadian Building Footprints Dataset
-   tutorials/Landcover.ai Dataset
-   tutorials/So2Sat Dataset
-   tutorials/Chesapeake Dataset
-   tutorials/NAIP Dataset
-   tutorials/CV4A Kenya Crop Type Dataset
-   tutorials/NASA Cyclone Dataset
+   tutorials/getting_started
+   tutorials/benchmarking
 
 .. toctree::
    :maxdepth: 2

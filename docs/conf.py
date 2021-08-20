@@ -99,6 +99,7 @@ intersphinx_mapping = {
 }
 
 # nbsphinx
+nbsphinx_execute = "never"
 # TODO: branch/tag should change depending on which version of docs you look at
 # TODO: :width: may be broken
 nbsphinx_prolog = """
