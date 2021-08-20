@@ -75,4 +75,4 @@ jobs:
         pip install --pre -r requirements.txt
         pip list
     - name: Run pytest checks
-      run: pytest --cov=. --cov-report=term-missing
+      run: pytest --cov=torchgeo --cov-report=term-missing

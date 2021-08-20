@@ -7,6 +7,9 @@ from pathlib import Path
 import pytest
 
 
+pytestmark = pytest.mark.slow
+
+
 def test_required_args() -> None:
     args = [sys.executable, "train.py"]
     ps = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
