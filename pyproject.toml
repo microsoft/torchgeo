@@ -66,17 +66,8 @@ convention = "google"
 match_dir = "(datasets|samplers|torchgeo|trainers|transforms)"
 
 [tool.pytest.ini_options]
-norecursedirs = [
-    "*.egg*",
-    ".*",
-    "build",
-    "data",
-    "dist",
-    "docs",
-    "logs",
-    "output",
-    "__pycache__",
-]
+# Skip slow tests by default
+addopts = "-m 'not slow'"
 filterwarnings = [
     "ignore:.*Create unlinked descriptors is going to go away.*:DeprecationWarning",
     # https://github.com/tensorflow/tensorboard/pull/5138
@@ -85,4 +76,11 @@ filterwarnings = [
 markers = [
     "slow: marks tests as slow",
 ]
-addopts = "-m 'not slow'"
+norecursedirs = [
+    "data",
+    "__pycache__",
+]
+testpaths = [
+    "tests",
+    "docs/tutorials",
+]
