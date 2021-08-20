@@ -7,6 +7,7 @@ spack:
   - "py-fiona@1.5:"
   - "py-flake8@3.8:"
   - "py-h5py"
+  - "py-ipywidgets@7:"
   - "py-isort@5.8:+colors"
   - "py-jupyterlab"
   - "py-matplotlib"

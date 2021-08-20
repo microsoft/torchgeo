@@ -6,6 +6,8 @@ fiona>=1.5
 # https://github.com/PyCQA/pyflakes/pull/455
 flake8>=3.8
 h5py
+# ipywidgets 7+ required for nbsphinx
+ipywidgets>=7
 # isort 5.8+ required for extend_skip option
 isort[colors]>=5.8
 jupyterlab
