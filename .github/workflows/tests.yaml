@@ -30,7 +30,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install cython numpy  # needed for pycocotools
-        pip install --pre -r requirements.txt
+        pip install -r requirements.txt
     - name: Run mypy checks
       run: mypy .
   pytest:
@@ -72,7 +72,7 @@ jobs:
     - name: Install pip dependencies
       run: |
         pip install cython numpy  # needed for pycocotools
-        pip install --pre -r requirements.txt
+        pip install -r requirements.txt
         pip list
     - name: Run pytest checks
       run: pytest --cov=torchgeo --cov-report=term-missing

@@ -1,5 +1,5 @@
 # black 21+ required for Python 3.9 support
-black>=21
+black>=21.4b0
 # fiona 1.5+ required for fiona.transform module
 fiona>=1.5
 # flake8 3.8+ depends on pyflakes 2.2+, which fixes a bug with mypy error code ignores:
