@@ -20,7 +20,8 @@ dependencies:
     - isort[colors]>=5.8
     - jupyterlab
     - mypy>=0.900
-    - npsphinx>=0.8.5
+    - nbmake>=0.1
+    - nbsphinx>=0.8.5
     - omegaconf>=2.1
     - opencv-python
     - pillow>=2.9
