@@ -12,6 +12,7 @@ exclude = '''
 /(
     # TorchGeo
     | data
+    | logo
     | logs
     | output
 
@@ -43,7 +44,7 @@ color_output = true
 [tool.mypy]
 ignore_missing_imports = true
 show_error_codes = true
-exclude = "(build|data|dist|logs|output)/"
+exclude = "(build|data|dist|logo|logs|output)/"
 
 # Strict
 warn_unused_configs = true

@@ -6,6 +6,7 @@ extend-ignore =
 exclude =
     # TorchGeo
     data/,
+    logo/,
     logs/,
     output/,
 
