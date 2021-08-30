@@ -1,4 +1,4 @@
-<img src="logo/logo-color.svg" width="200" alt="TorchGeo"/>
+<img src="logo/logo-color.svg" width="400" alt="TorchGeo"/>
 
 Datasets, transforms, and models for geospatial data.
 
