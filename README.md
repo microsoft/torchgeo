@@ -1,4 +1,4 @@
-# TorchGeo
+![TorchGeo](logo/logo-color.svg)
 
 Datasets, transforms, and models for geospatial data.
 
