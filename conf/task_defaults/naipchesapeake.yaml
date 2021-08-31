@@ -1,0 +1,10 @@
+task:
+  name: "naipchesapeake"
+  optimizer: "adamw"
+  learning_rate: 1e-3
+  learning_rate_schedule_patience: 2
+  loss: "ce"
+  segmentation_model: "deeplabv3+"
+  encoder_name: "resnet34"
+  encoder_weights: "imagenet"
+  encoder_output_stride: 16
