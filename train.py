@@ -97,7 +97,6 @@ def main(conf: DictConfig) -> None:
 
     if len(os.listdir(experiment_dir)) > 0:
         if conf.program.overwrite:
-            # TODO: convert this to logging.WARNING
             print(
                 f"WARNING! The experiment directory, {experiment_dir}, already exists, "
                 + "we might overwrite data in it!"
