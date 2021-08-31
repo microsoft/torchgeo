@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 """NASA Cyclone dataset trainer."""
 
 from typing import Any, Dict, Optional

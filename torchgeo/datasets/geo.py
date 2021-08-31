@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 """Base classes for all :mod:`torchgeo` datasets."""
 
 import abc

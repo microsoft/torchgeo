@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 program:  # These are experiment level arguments
   experiment_name: landcoverai_test
   overwrite: True
