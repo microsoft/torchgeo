@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 # black 21+ required for Python 3.9 support
 black>=21.4b0
 # fiona 1.5+ required for fiona.transform module

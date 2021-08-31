@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 """Sentinel datasets."""
 
 from typing import Any, Callable, Dict, Optional, Sequence
