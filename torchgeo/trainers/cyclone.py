@@ -150,7 +150,6 @@ class CycloneDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.api_key = api_key
 
-    # TODO: This needs to be converted to actual transforms instead of hacked
     def custom_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         sample["image"] = sample["image"] / 255.0  # scale to [0,1]

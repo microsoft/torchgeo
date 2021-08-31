@@ -14,8 +14,6 @@ from torch.nn import Module  # type: ignore[attr-defined]
 Module.__module__ = "torch.nn"
 
 
-# TODO: figure out why mypy is angry:
-# https://discuss.pytorch.org/t/how-to-correctly-annotate-subclasses-of-nn-module/74317/2
 class RandomHorizontalFlip(Module):  # type: ignore[misc,name-defined]
     """Horizontally flip the given sample randomly with a given probability."""
 
