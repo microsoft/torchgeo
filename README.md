@@ -53,6 +53,9 @@ The following sections give basic examples of what you can do with torchgeo. For
 
 ### Train and test models using our PyTorch Lightning based training script
 
+We provide a script, `train.py` for training models using a subset of the datasets. We do this with the PyTorch Lightning `LightningModule`s and `LightningDataModule`s implemented under the `torchgeo.trainders` namespace.
+The `train.py` script is configurable via the command line and/or via YAML configuration files. See the [conf/](conf/) directory for example configuration files that can be customized for different training runs.
+
 ```bash
 # run the training script with a config file
 python train.py config_file=conf/landcoverai.yaml
@@ -60,10 +63,16 @@ python train.py config_file=conf/landcoverai.yaml
 
 ### Download and use the Tropical Cyclone Wind Estimation Competition dataset
 
+This dataset is from a competition hosted by [Driven Data](https://www.drivendata.org/) in collaboration with [Radiant Earth](https://www.radiant.earth/). See [here](https://www.drivendata.org/competitions/72/predict-wind-speeds/) for more information.
+
+Using this dataset in torchgeo is as simple as importing and instantiating the appropriate class.
+
 ```python
-import torchgeo
+import torchgeo.datasets
 
-
+dataset = torchgeo.datasets.TropicalCycloneWindEstimation(split="train", download=True)
+print(dataset[0]["image"].shape)
+print(dataset[0]["wind_speed"])
 ```
 
 
