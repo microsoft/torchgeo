@@ -1,0 +1,13 @@
+program:  # These are experiment level arguments
+  experiment_name: naip_chesapeake_test
+  overwrite: True
+  naip_data_dir: data/naip
+  chesapeake_data_dir: data/chesapeake
+
+trainer:  # These are all the arguments that will be passed to the pl.Trainer
+  min_epochs: 15
+
+task:  # These are all the arguments that will be used to create an appropriate task
+  name: naipchesapeake
+  learning_rate: 1e-3
+  learning_rate_schedule_patience: 2
