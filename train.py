@@ -20,6 +20,8 @@ from torchgeo.trainers import (
     CycloneSimpleRegressionTask,
     LandcoverAIDataModule,
     LandcoverAISegmentationTask,
+    NAIPChesapeakeDataModule,
+    NAIPChesapeakeSegmentationTask,
     SEN12MSDataModule,
     SEN12MSSegmentationTask,
 )
@@ -132,6 +134,14 @@ def main(conf: DictConfig) -> None:
             num_workers=conf.program.num_workers,
         )
         task = LandcoverAISegmentationTask(**task_args)
+    elif conf.task.name == "naipchesapeake":
+        datamodule = NAIPChesapeakeDataModule(
+            conf.program.naip_data_dir,
+            conf.program.chesapeake_data_dir,
+            batch_size=conf.program.batch_size,
+            num_workers=conf.program.num_workers,
+        )
+        task = NAIPChesapeakeSegmentationTask(**task_args)
     elif conf.task.name == "sen12ms":
         datamodule = SEN12MSDataModule(
             conf.program.data_dir,
