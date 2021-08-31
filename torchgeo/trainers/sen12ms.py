@@ -216,7 +216,6 @@ class SEN12MSDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
 
-    # TODO: This needs to be converted to actual transforms instead of hacked
     def custom_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         sample["image"] = sample["image"].float()
