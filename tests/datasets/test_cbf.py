@@ -29,19 +29,19 @@ class TestCanadianBuildingFootprints:
             torchgeo.datasets.utils, "download_url", download_url
         )
         md5s = [
-            "aef9a3deb3297f225d6cdb221cb48527",
-            "2b7872c4121116fda8f96490daf89d29",
-            "c71ded923e22569b62b00da2d2a61076",
-            "75a8f652531790c3c3aefc0655400d6d",
-            "89ff9c6257efa99365a8b709dde9579b",
-            "d4d6a36ed834df5cbf5254effca78a4d",
-            "cce85f6183427e3034704cf35919c985",
-            "0149c7ec5101c0309c79b7e695dcb394",
-            "b05216155725f48937804371b945f8ae",
-            "72d0e6d7196345ca520c825697cc4947",
-            "77e1c6c71ff0efbdd221b7e7d4a5f2df",
-            "86e32374f068c7bbb76aa81af0736733",
-            "5e453a3426b0bb986b2837b85e8b8850",
+            "8a4a0a57367f67c69608d1452e30df13",
+            "1829f4054a9a81bb23871ca797a3895c",
+            "4358a0076fd43e9a2f436e74348813b0",
+            "ae3726b1263727d72565ecacfed56fb8",
+            "6861876d3a3ca7e79b28c61ab5906de4",
+            "d289c9ea49801bb287ddbde1ea5f31ef",
+            "3a940288297631b4e6a365266bfb949a",
+            "6b43b3632b165ff79c1ca0c693a61398",
+            "36283e0b29088ec281e77c989cbee100",
+            "773da9d33e3766b7237a1d7db0811832",
+            "cc833a65137c8a046c8f45bb695092b1",
+            "067664d066c4152fb96a5c129cbabadf",
+            "474bc084bc41b124aa4919e7a37a9648",
         ]
         monkeypatch.setattr(  # type: ignore[attr-defined]
             CanadianBuildingFootprints, "md5s", md5s
@@ -56,7 +56,7 @@ class TestCanadianBuildingFootprints:
         root = str(tmp_path)
         transforms = Identity()
         return CanadianBuildingFootprints(
-            root, transforms=transforms, download=True, checksum=True
+            root, res=0.1, transforms=transforms, download=True, checksum=True
         )
 
     def test_getitem(self, dataset: CanadianBuildingFootprints) -> None:
@@ -82,7 +82,7 @@ class TestCanadianBuildingFootprints:
             CanadianBuildingFootprints(str(tmp_path))
 
     def test_invalid_query(self, dataset: CanadianBuildingFootprints) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        query = BoundingBox(2, 2, 2, 2, 2, 2)
         with pytest.raises(
             IndexError, match="query: .* not found in index with bounds:"
         ):

@@ -12,7 +12,7 @@ import os
 import numpy as np
 import rasterio
 
-ROOT = "/mnt/blobfuse/adam-scratch/landsat8"
+ROOT = "data/landsat8"
 FILENAME = "LC08_L2SP_023032_20210622_20210629_02_T1_SR_B1.TIF"
 
 src = rasterio.open(os.path.join(ROOT, FILENAME))
@@ -31,15 +31,16 @@ dst.write_colormap(1, cmap)
 
 ```python
 import os
+from collections import OrderedDict
 
 import fiona
 
-ROOT = "/mnt/blobfuse/adam-scratch/cbf"
+ROOT = "data/cbf"
 FILENAME = "Ontario.geojson"
 
 src = fiona.open(os.path.join(ROOT, FILENAME))
 dst = fiona.open(FILENAME, "w", **src.meta)
-rec = next(iter(src))
+rec = {"type": "Feature", "id": "0", "properties": OrderedDict(), "geometry": {"type": "Polygon", "coordinates": [[(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)]]}}
 dst.write(rec)
 ```
 
