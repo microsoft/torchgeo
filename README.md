@@ -1,14 +1,23 @@
 <img src="logo/logo-color.svg" width="400" alt="TorchGeo"/>
 
-Datasets, transforms, and models for geospatial data.
+Torchgeo is a PyTorch based library, similar to torchvision, that provides datasets, transforms, samplers, and pre-trained models specifically for geospatial data.
+
+Our goals for this library are to make it simple 1.) for machine learning experts to use geospatial data in their workflows, and 2.) for remote sensing experts to use their data in machine learning workflows.
+
+See our [installation instructions](#installation-instructions), [documentation](#documentation), and [examples](#example-usage) to learn how to use torchgeo.
 
 [![docs](https://github.com/microsoft/torchgeo/actions/workflows/docs.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/docs.yaml)
 [![style](https://github.com/microsoft/torchgeo/actions/workflows/style.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/style.yaml)
 [![tests](https://github.com/microsoft/torchgeo/actions/workflows/tests.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/tests.yaml)
 
-## Project setup
+
+## Installation instructions
+
+Until the first release, you can install an environment compatible with torchgeo with `conda`, `pip`, or `spack` as shown below.
 
 ### Conda
+
+**Note**: we assume you have access to a GPU and include the `pytorch-gpu` package from the conda-forge channel in "environment.yml".
 
 ```bash
 conda config --set channel_priority strict
@@ -19,31 +28,43 @@ conda activate torchgeo
 python -c "import torch; print(torch.cuda.is_available())"
 ```
 
-## Example training run
+### Pip
+
+With Python 3.6 or later:
+
+```bash
+pip install -r requirements.txt
+```
+
+### Spack
+
+```bash
+TODO
+```
+
+## Documentation
+
+You can find the documentation for torchgeo on ReadTheDocs [TODO](TODO).
+
+
+## Example usage
+
+The following sections give basic examples of what you can do with torchgeo. For more examples, check out our documentation [TODO](TODO).
+
+### Train and test models using our PyTorch Lightning based training script
 
 ```bash
 # run the training script with a config file
 python train.py config_file=conf/landcoverai.yaml
 ```
 
-## Developing
+### Download and use the Tropical Cyclone Wind Estimation Competition dataset
+
+```python
+import torchgeo
+
 
 ```
-make tests
-```
-
-## Datasets
-
-|                 Dataset                 	|                Imagery Type                	|       Label Type      	|  Dataset Type 	|                     External Link                    	|
-|:---------------------------------------:	|:------------------------------------------:	|:---------------------:	|:-------------:	|:----------------------------------------------------:	|
-| Smallholder Cashew Plantations in Benin 	| Sentinel-2 (71 scene time series)          	| Semantic segmentation 	| GeoDataset    	| https://registry.mlhub.earth/10.34911/rdnt.hfv20i/   	|
-| Cars Overhead With Context (COWC)       	| 0.15m/px overhead imagery                  	| Object detection      	| VisionDataset 	| https://gdo152.llnl.gov/cowc/                        	|
-| CV4A Kenya Crop Type                    	| Sentinel-2 (13 scene time series)          	| Semantic segmentation 	| GeoDataset    	| https://registry.mlhub.earth/10.34911/rdnt.dw605x/   	|
-| Tropical Cyclone Wind Estimation        	| GOES single band imagery                   	| Regression            	| VisionDataset 	| http://registry.mlhub.earth/10.34911/rdnt.xs53up/    	|
-| Landcover.ai                            	| RGB aerial imagery at 0.5m/px and 0.25m/px 	| Semantic segmentation 	| GeoDataset    	| https://landcover.ai/                                	|
-| NWPU VHR-10                             	| Google Earth RGB and Vaihingen CIR         	| Object detection      	| VisionDataset 	| https://github.com/chaozhong2010/VHR-10_dataset_coco 	|
-| SEN12MS                                 	| Sentinel-1 and Sentinel-2                  	| Semantic segmentation 	| GeoDataset    	| https://github.com/schmitt-muc/SEN12MS               	|
-| So2Sat                                  	| Sentinel-1 and Sentinel-2                  	| Classification        	| VisionDataset 	| https://github.com/zhu-xlab/So2Sat-LCZ42             	|
 
 
 ## Contributing
