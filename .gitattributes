@@ -1,2 +1,5 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 # Do not change line endings on test data, it will change the MD5
 /tests/data/*/** binary

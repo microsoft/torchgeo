@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 """Chesapeake Bay High-Resolution Land Cover Project dataset."""
 
 import abc
