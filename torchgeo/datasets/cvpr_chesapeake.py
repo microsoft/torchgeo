@@ -3,20 +3,20 @@
 
 """CVPR 2019 Chesapeake Land Cover dataset."""
 
-import sys
 import os
+import sys
 from typing import Any, Callable, Dict, Optional
 
-import shapely.geometry
-import shapely.ops
+import fiona
+import pyproj
 import rasterio
 import rasterio.mask
+import shapely.geometry
+import shapely.ops
 from rasterio.crs import CRS
-import pyproj
-import fiona
 
 from .geo import GeoDataset
-from .utils import check_integrity, download_and_extract_archive, BoundingBox
+from .utils import BoundingBox, check_integrity, download_and_extract_archive
 
 
 class CVPRChesapeake(GeoDataset):
@@ -42,33 +42,21 @@ class CVPRChesapeake(GeoDataset):
     crs = CRS.from_epsg(3857)
     res = 1
 
-    states = [
-        "de",
-        "md",
-        "va",
-        "wv",
-        "pa",
-        "ny"
-    ]
-    splits = [
-        f"{state}-train"
-        for state in states
-    ] + [
-        f"{state}-val"
-        for state in states
-    ] + [
-        f"{state}-test"
-        for state in states
-    ]
+    states = ["de", "md", "va", "wv", "pa", "ny"]
+    splits = (
+        [f"{state}-train" for state in states]
+        + [f"{state}-val" for state in states]
+        + [f"{state}-test" for state in states]
+    )
 
     p_src_crs = pyproj.CRS("epsg:3857")
     p_transformers = {
-        'epsg:26917': pyproj.Transformer.from_crs(
+        "epsg:26917": pyproj.Transformer.from_crs(
             p_src_crs, pyproj.CRS("epsg:26917"), always_xy=True
         ).transform,
-        'epsg:26918': pyproj.Transformer.from_crs(
+        "epsg:26918": pyproj.Transformer.from_crs(
             p_src_crs, pyproj.CRS("epsg:26918"), always_xy=True
-        ).transform
+        ).transform,
     }
 
     def __init__(
@@ -120,15 +108,19 @@ class CVPRChesapeake(GeoDataset):
                     box = shapely.geometry.shape(row["geometry"])
                     minx, miny, maxx, maxy = box.bounds
                     coords = (minx, maxx, miny, maxy, mint, maxt)
-                    self.index.insert(i, coords, {
-                        "naip-new": row["properties"]["naip-new"],
-                        "naip-old": row["properties"]["naip-old"],
-                        "landsat-leaf-on": row["properties"]["landsat-leaf-on"],
-                        "landsat-leaf-off": row["properties"]["landsat-leaf-off"],
-                        "lc": row["properties"]["lc"],
-                        "nlcd": row["properties"]["nlcd"],
-                        "buildings": row["properties"]["buildings"]
-                    })
+                    self.index.insert(
+                        i,
+                        coords,
+                        {
+                            "naip-new": row["properties"]["naip-new"],
+                            "naip-old": row["properties"]["naip-old"],
+                            "landsat-leaf-on": row["properties"]["landsat-leaf-on"],
+                            "landsat-leaf-off": row["properties"]["landsat-leaf-off"],
+                            "lc": row["properties"]["lc"],
+                            "nlcd": row["properties"]["nlcd"],
+                            "buildings": row["properties"]["buildings"],
+                        },
+                    )
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
@@ -173,9 +165,7 @@ class CVPRChesapeake(GeoDataset):
                 )
 
         else:
-            raise IndexError(
-                f"query: {query} spans multiple tiles which is not valid"
-            )
+            raise IndexError(f"query: {query} spans multiple tiles which is not valid")
 
         sample = {
             "image": naip_data,
