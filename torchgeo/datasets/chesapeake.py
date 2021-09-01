@@ -33,10 +33,6 @@ class Chesapeake(RasterDataset, abc.ABC):
       <https://chesapeakeconservancy.org/wp-content/uploads/2020/03/LC_Class_Descriptions.pdf>`_
     * `Accuracy Assessment
       <https://chesapeakeconservancy.org/wp-content/uploads/2017/01/Chesapeake_Conservancy_Accuracy_Assessment_Methodology.pdf>`_
-
-    If you use this dataset in your research, please cite the following paper:
-
-    * https://doi.org/10.1109/cvpr.2019.01301
     """
 
     # TODO: this shouldn't be needed, but .tif.ovr file is getting picked up
