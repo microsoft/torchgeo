@@ -1,8 +1,11 @@
 <img src="logo/logo-color.svg" width="400" alt="TorchGeo"/>
 
-Torchgeo is a PyTorch based library, similar to torchvision, that provides datasets, transforms, samplers, and pre-trained models specifically for geospatial data.
+TorchGeo is a [PyTorch](https://pytorch.org/) domain library, similar to [torchvision](https://pytorch.org/vision), that provides datasets, transforms, samplers, and pre-trained models specific to geospatial data.
 
-Our goals for this library are to make it simple 1.) for machine learning experts to use geospatial data in their workflows, and 2.) for remote sensing experts to use their data in machine learning workflows.
+The goal of this library is to make it simple:
+
+1. for machine learning experts to use geospatial data in their workflows, and
+2. for remote sensing experts to use their data in machine learning workflows.
 
 See our [installation instructions](#installation-instructions), [documentation](#documentation), and [examples](#example-usage) to learn how to use torchgeo.
 
@@ -10,55 +13,51 @@ See our [installation instructions](#installation-instructions), [documentation]
 [![style](https://github.com/microsoft/torchgeo/actions/workflows/style.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/style.yaml)
 [![tests](https://github.com/microsoft/torchgeo/actions/workflows/tests.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/tests.yaml)
 
-
 ## Installation instructions
 
 Until the first release, you can install an environment compatible with torchgeo with `conda`, `pip`, or `spack` as shown below.
 
 ### Conda
 
-**Note**: we assume you have access to a GPU and include the `pytorch-gpu` package from the conda-forge channel in "environment.yml".
+**Note**: if you do not have access to a GPU or are running on macOS, replace `pytorch-gpu` with `pytorch-cpu` in the `environment.yml` file.
 
-```bash
-conda config --set channel_priority strict
-conda env create --file environment.yml
-conda activate torchgeo
-
-# verify that the PyTorch can use the GPU
-python -c "import torch; print(torch.cuda.is_available())"
+```console
+$ conda config --set channel_priority strict
+$ conda env create --file environment.yml
+$ conda activate torchgeo
 ```
 
 ### Pip
 
 With Python 3.6 or later:
 
-```bash
-pip install -r requirements.txt
+```console
+$ pip install -r requirements.txt
 ```
 
 ### Spack
 
-```bash
-TODO
+```console
+$ spack env activate .
+$ spack install
 ```
 
 ## Documentation
 
-You can find the documentation for torchgeo on ReadTheDocs [TODO](TODO).
+You can find the documentation for torchgeo on ReadTheDocs (coming soon).
 
 
 ## Example usage
 
-The following sections give basic examples of what you can do with torchgeo. For more examples, check out our documentation [TODO](TODO).
+The following sections give basic examples of what you can do with torchgeo. For more examples, check out our documentation (coming soon).
 
 ### Train and test models using our PyTorch Lightning based training script
 
 We provide a script, `train.py` for training models using a subset of the datasets. We do this with the PyTorch Lightning `LightningModule`s and `LightningDataModule`s implemented under the `torchgeo.trainders` namespace.
 The `train.py` script is configurable via the command line and/or via YAML configuration files. See the [conf/](conf/) directory for example configuration files that can be customized for different training runs.
 
-```bash
-# run the training script with a config file
-python train.py config_file=conf/landcoverai.yaml
+```console
+$ python train.py config_file=conf/landcoverai.yaml
 ```
 
 ### Download and use the Tropical Cyclone Wind Estimation Competition dataset
