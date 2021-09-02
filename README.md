@@ -9,6 +9,10 @@ The goal of this library is to make it simple:
 
 See our [installation instructions](#installation-instructions), [documentation](#documentation), and [examples](#example-usage) to learn how to use torchgeo.
 
+External links:
+[![docs](https://readthedocs.org/projects/torchgeo/badge/?version=latest)](https://torchgeo.readthedocs.io/en/latest/?badge=latest)
+
+Tests:
 [![docs](https://github.com/microsoft/torchgeo/actions/workflows/docs.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/docs.yaml)
 [![style](https://github.com/microsoft/torchgeo/actions/workflows/style.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/style.yaml)
 [![tests](https://github.com/microsoft/torchgeo/actions/workflows/tests.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/tests.yaml)
@@ -44,12 +48,11 @@ $ spack install
 
 ## Documentation
 
-You can find the documentation for torchgeo on ReadTheDocs (coming soon).
-
+You can find the documentation for torchgeo on [ReadTheDocs](https://torchgeo.readthedocs.io).
 
 ## Example usage
 
-The following sections give basic examples of what you can do with torchgeo. For more examples, check out our documentation (coming soon).
+The following sections give basic examples of what you can do with torchgeo. For more examples, check out our [tutorials](https://torchgeo.readthedocs.io/en/latest/tutorials/getting_started.html).
 
 ### Train and test models using our PyTorch Lightning based training script
 
