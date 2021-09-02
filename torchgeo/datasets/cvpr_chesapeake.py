@@ -5,7 +5,7 @@
 
 import os
 import sys
-from typing import Any, Callable, Dict, Optional, List
+from typing import Any, Callable, Dict, List, Optional
 
 import fiona
 import pyproj
@@ -49,7 +49,7 @@ class CVPRChesapeake(GeoDataset):
         "landsat-leaf-off",
         "nlcd",
         "lc",
-        "buildings"
+        "buildings",
     ]
     states = ["de", "md", "va", "wv", "pa", "ny"]
     splits = (
