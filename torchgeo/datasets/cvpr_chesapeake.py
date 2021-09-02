@@ -35,9 +35,9 @@ class CVPRChesapeake(GeoDataset):
     * https://doi.org/10.1109/cvpr.2019.01301
     """
 
-    url = "TODO"
-    filename = "TODO"
-    md5 = "TODO"
+    url = "https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip"  # noqa: E501
+    filename = "cvpr_chesapeake_landcover.zip"
+    md5 = "0ea5e7cb861be3fb8a06fedaaaf91af9"
 
     crs = CRS.from_epsg(3857)
     res = 1
@@ -201,16 +201,14 @@ class CVPRChesapeake(GeoDataset):
         """Check integrity of dataset.
 
         Returns:
-            True if dataset MD5s match, else False
+            True if dataset files are found and/or MD5s match, else False
         """
-        if self.checksum:
-            integrity: bool = check_integrity(
-                os.path.join(self.root, self.filename),
-                self.md5,
-            )
-            return integrity
-        else:
-            return True
+        integrity: bool = check_integrity(
+            os.path.join(self.root, self.filename),
+            self.md5 if self.checksum else None,
+        )
+
+        return integrity
 
     def _download(self) -> None:
         """Download the dataset and extract it."""
