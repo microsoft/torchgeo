@@ -13,6 +13,7 @@ dependencies:
   - pytorch-gpu>=1.7
   - rarfile>=3
   - rasterio>=1.0.16
+  - shapely
   - torchvision>=0.3
   - pip:
     - black>=21.4b0
