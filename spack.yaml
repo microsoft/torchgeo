@@ -30,6 +30,7 @@ spack:
   - "py-scikit-learn@0.18:"
   - "py-segmentation-models-pytorch@0.2:"
   - "py-setuptools@30.4:"
+  - "py-shapely"
   - "py-sphinx@3:"
   - "py-torch@1.7:"
   - "py-torchmetrics"
