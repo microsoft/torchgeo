@@ -27,6 +27,8 @@ pillow>=2.9
 pycocotools
 # pydocstyle 6.1+ required for pyproject.toml support
 pydocstyle[toml]>=6.1
+# pyproj required for fast CRS conversion
+pyproj>=3.0
 # pytest 6+ required for pyproject.toml support
 pytest>=6
 # pytest-cov 2.4+ required for pytest --cov flags

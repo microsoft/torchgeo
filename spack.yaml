@@ -18,6 +18,7 @@ spack:
   - "py-omegaconf@2.1:"
   - "py-pycocotools"
   - "py-pydocstyle@6.1:+toml"
+  - "py-pyproj@3.0:"
   - "py-pytest@6:"
   - "py-pytest-cov@2.4:"
   - "py-pytorch-lightning@1.3:"
