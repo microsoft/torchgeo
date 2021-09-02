@@ -84,6 +84,9 @@ class CVPRChesapeake(GeoDataset):
             root: root directory where dataset can be found
             split: a string in the format "{state}-{train,val,test}" indicating the
                 subset of data to use
+            layers: a list containing a subset of "naip-new", "naip-old", "lc", "nlcd",
+                "landsat-leaf-on", "landsat-leaf-off", "buildings" indicating which
+                layers to load
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
