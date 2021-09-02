@@ -27,8 +27,8 @@ pillow>=2.9
 pycocotools
 # pydocstyle 6.1+ required for pyproject.toml support
 pydocstyle[toml]>=6.1
-# pyproj required for fast CRS conversion
-pyproj>=3.0
+# pyproj 3.1+ required as it contains threadsafe Transformer and CRS implementations
+pyproj>=3.1
 # pytest 6+ required for pyproject.toml support
 pytest>=6
 # pytest-cov 2.4+ required for pytest --cov flags
@@ -52,8 +52,8 @@ scikit-learn>=0.18
 segmentation-models-pytorch>=0.2
 # setuptools 30.4+ required for options.packages.find section in setup.cfg
 setuptools>=30.4
-# shapely is required for manipulating and warping geometries
-shapely
+# shapely 1.7.0 and up is required as that is the earliest version we tested
+shapely>=1.7.0
 # sphinx 3+ required for autodoc_typehints = description
 sphinx>=3
 # torch 1.7+ required for typing
