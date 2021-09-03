@@ -3,12 +3,6 @@ torchgeo
 
 .. automodule:: torchgeo
 
-This library is part of the `PyTorch <http://pytorch.org/>`_ project.
-PyTorch is an open source machine learning framework.
-
-The :mod:`torchgeo` package consists of popular datasets, model
-architectures, and common image transformations for geospatial data.
-
 .. toctree::
    :maxdepth: 2
    :caption: Package Reference
