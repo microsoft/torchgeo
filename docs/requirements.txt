@@ -51,7 +51,7 @@ segmentation-models-pytorch>=0.2
 # setuptools 30.4+ required for options.packages.find section in setup.cfg
 setuptools>=30.4
 # sphinx 3+ required for autodoc_typehints = description
-sphinx>=3
+sphinx>=3,!=4.1.2
 # torch 1.7+ required for typing
 torch>=1.7
 torchmetrics
