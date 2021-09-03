@@ -6,10 +6,9 @@ import math
 import pyproj
 import shapely.ops
 
-import pytest
 
 def test_crs_with_pyproj() -> None:
-    src_crs = pyproj.CRS('epsg:4326')
+    src_crs = pyproj.CRS("epsg:4326")
     dst_crs = pyproj.CRS(src_crs)
 
     project = pyproj.Transformer.from_crs(src_crs, dst_crs, always_xy=True).transform
@@ -22,9 +21,9 @@ def test_crs_with_pyproj() -> None:
                 [-116.56494140625001, 45.920587344733654],
                 [-116.56494140625001, 49.095452162534826],
                 [-125.068359375, 49.095452162534826],
-                [-125.068359375, 45.920587344733654]
+                [-125.068359375, 45.920587344733654],
             ]
-        ]
+        ],
     }
     geom_transformed = shapely.ops.transform(project, shapely.geometry.shape(geom))
 
@@ -33,7 +32,7 @@ def test_crs_with_pyproj() -> None:
         -125.068359375,
         45.920587344733654,
         -116.56494140625001,
-        49.095452162534826
+        49.095452162534826,
     )
 
     for i in range(4):
