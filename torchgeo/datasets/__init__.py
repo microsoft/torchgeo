@@ -10,6 +10,7 @@ from .chesapeake import (
     Chesapeake,
     Chesapeake7,
     Chesapeake13,
+    ChesapeakeCVPR,
     ChesapeakeDC,
     ChesapeakeDE,
     ChesapeakeMD,
@@ -20,7 +21,6 @@ from .chesapeake import (
 )
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
-from .cvpr_chesapeake import CVPRChesapeake
 from .cyclone import TropicalCycloneWindEstimation
 from .geo import GeoDataset, RasterDataset, VectorDataset, VisionDataset, ZipDataset
 from .landcoverai import LandCoverAI
@@ -58,7 +58,7 @@ __all__ = (
     "ChesapeakePA",
     "ChesapeakeVA",
     "ChesapeakeWV",
-    "CVPRChesapeake",
+    "ChesapeakeCVPR",
     "Landsat",
     "Landsat1",
     "Landsat2",
