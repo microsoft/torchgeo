@@ -104,13 +104,14 @@ intersphinx_mapping = {
 # nbsphinx
 nbsphinx_execute = "never"
 # TODO: branch/tag should change depending on which version of docs you look at
-# TODO: :width: may be broken
+# TODO: rst image:: :width: is broken, use pure HTML instead, see:
+# https://github.com/pytorch/pytorch_sphinx_theme/issues/140
 nbsphinx_prolog = """
 {% set colab = "https://colab.research.google.com" %}
 {% set repo = "microsoft/torchgeo" %}
 {% set branch = "main" %}
 
-.. image:: {{ colab }}/assets/colab-badge.svg
-    :alt: Open in Colab
-    :target: {{ colab }}/github/{{ repo }}/blob/{{ branch }}/docs/{{ env.docname }}
+<a href="{{ colab }}/github/{{ repo }}/blob/{{ branch }}/docs/{{ env.docname }}">
+    <img src="{{ colab }}/assets/colab-badge.svg" alt="Open in Colab" width="200">
+</a>
 """
