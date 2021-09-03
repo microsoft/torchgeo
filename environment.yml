@@ -8,7 +8,7 @@ dependencies:
   - numpy
   - pip
   - pycocotools
-  - pyproj>=3.1
+  - pyproj>=3.0
   - python>=3.6
   - pytorch-gpu>=1.7
   - rarfile>=3
