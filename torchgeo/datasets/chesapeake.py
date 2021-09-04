@@ -362,11 +362,12 @@ class ChesapeakeCVPR(GeoDataset):
         if download:
             self._download()
 
-        if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+        if checksum:
+            if not self._check_integrity():
+                raise RuntimeError(
+                    "Dataset not found or corrupted. "
+                    + "You can use download=True to download it"
+                )
 
         # Add all tiles into the index in epsg:3857 based on the included geojson
         mint: float = 0
