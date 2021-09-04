@@ -1,21 +1,27 @@
-config_file: null  # The user can pass a filename here on the command line
+config_file: null  # This lets the user pass a config filename to load other arguments from
 
-program:  # These are the default arguments
-  batch_size: 32
-  num_workers: 4
+program:  # These are the arguments that define how the train.py script works
   seed: 1337
-  experiment_name: ???  # This is OmegaConf syntax that makes this a required field
   output_dir: output
   data_dir: data
   log_dir: logs
   overwrite: False
 
-task:
-  name: ???  # this must be defined so we can get the task specific arguments
+experiment: # These are arugments specific to the experiment we are running
+  name: ???  # this is the name given to this experiment run
+  task: ???  # this is the type of task to use for this experiement (e.g. "landcoverai")
+  module: # these will be passed as kwargs to the LightningModule assosciated with the task
+    learning_rate: 1e-3
+  datamodule: # these will be passed as kwargs to the LightningDataModule assosciated with the task
+    root_dir: ${program.data_dir}
+    seed: ${program.seed}
+    batch_size: 32
+    num_workers: 4
 
-# Taken from https://pytorch-lightning.readthedocs.io/en/1.3.8/common/trainer.html#init
+
+# The values here are taken from the defaults here https://pytorch-lightning.readthedocs.io/en/1.3.8/common/trainer.html#init
 # this probably should be made into a schema, e.g. as shown https://omegaconf.readthedocs.io/en/2.0_branch/structured_config.html#merging-with-other-configs
-trainer:
+trainer: # These are the parameters passed to the pytorch lightning Trainer object
   logger: True
   checkpoint_callback: True
   callbacks: null

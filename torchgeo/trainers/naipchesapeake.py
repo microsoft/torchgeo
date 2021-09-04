@@ -73,7 +73,7 @@ class NAIPChesapeakeSegmentationTask(pl.LightningModule):
 
     def __init__(
         self,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initialize the LightningModule with a model and loss function.
 
@@ -249,6 +249,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         chesapeake_root_dir: str,
         batch_size: int = 64,
         num_workers: int = 4,
+        **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for NAIP and Chesapeake based DataLoaders.
 

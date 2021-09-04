@@ -1,5 +1,9 @@
-task:
-  name: "cyclone"
-  learning_rate: 1e-3
-  learning_rate_schedule_patience: 2
-  model: "resnet18"
+experiment:
+  task: "cyclone"
+  module:
+    model: "resnet18"
+    learning_rate: 1e-3
+    learning_rate_schedule_patience: 2
+  datamodule:
+    batch_size: 32
+    num_workers: 4

@@ -25,9 +25,9 @@ def test_output_file(tmp_path: Path) -> None:
     args = [
         sys.executable,
         "train.py",
-        "program.experiment_name=test",
+        "experiment.name=test",
         "program.output_dir=" + str(output_file),
-        "task.name=test",
+        "experiment.task=test",
     ]
     ps = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert ps.returncode != 0
@@ -43,9 +43,9 @@ def test_experiment_dir_not_empty(tmp_path: Path) -> None:
     args = [
         sys.executable,
         "train.py",
-        "program.experiment_name=test",
+        "experiment.name=test",
         "program.output_dir=" + str(output_dir),
-        "task.name=test",
+        "experiment.task=test",
     ]
     ps = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert ps.returncode != 0
@@ -64,11 +64,11 @@ def test_overwrite_experiment_dir(tmp_path: Path) -> None:
     args = [
         sys.executable,
         "train.py",
-        "program.experiment_name=test",
+        "experiment.name=test",
         "program.output_dir=" + str(output_dir),
         "program.data_dir=" + data_dir,
         "program.log_dir=" + str(log_dir),
-        "task.name=cyclone",
+        "experiment.task=cyclone",
         "program.overwrite=True",
         "trainer.fast_dev_run=1",
     ]
@@ -87,9 +87,9 @@ def test_invalid_task(task: str, tmp_path: Path) -> None:
     args = [
         sys.executable,
         "train.py",
-        "program.experiment_name=test",
+        "experiment.name=test",
         "program.output_dir=" + str(output_dir),
-        "task.name=" + task,
+        "experiment.task=" + task,
     ]
     ps = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert ps.returncode != 0
@@ -102,9 +102,9 @@ def test_missing_config_file(tmp_path: Path) -> None:
     args = [
         sys.executable,
         "train.py",
-        "program.experiment_name=test",
+        "experiment.name=test",
         "program.output_dir=" + str(output_dir),
-        "task.name=test",
+        "experiment.task=test",
         "config_file=" + str(config_file),
     ]
     ps = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -120,12 +120,12 @@ def test_config_file(tmp_path: Path) -> None:
     config_file.write_text(
         f"""
 program:
-  experiment_name: test
   output_dir: {output_dir}
   data_dir: {data_dir}
   log_dir: {log_dir}
-task:
-  name: cyclone
+experiment:
+  name: test
+  task: cyclone
 trainer:
   fast_dev_run: true
 """
@@ -146,12 +146,12 @@ def test_tasks(task: str, tmp_path: Path) -> None:
     args = [
         sys.executable,
         "train.py",
-        "program.experiment_name=test",
+        "experiment.name=test",
         "program.output_dir=" + str(output_dir),
         "program.data_dir=" + data_dir,
         "program.log_dir=" + str(log_dir),
         "trainer.fast_dev_run=1",
-        "task.name=" + task,
+        "experiment.task=" + task,
         "program.overwrite=True",
     ]
     subprocess.run(args, check=True)
