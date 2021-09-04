@@ -47,7 +47,14 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
                 encoder_name=kwargs["encoder_name"],
                 encoder_weights=kwargs["encoder_weights"],
                 in_channels=4,
-                classes=6,
+                classes=7,
+            )
+        elif kwargs["segmentation_model"] == "deeplabv3+":
+            self.model = smp.DeepLabV3Plus(
+                encoder_name=kwargs["encoder_name"],
+                encoder_weights=kwargs["encoder_weights"],
+                in_channels=4,
+                classes=7,
             )
         else:
             raise ValueError(
@@ -56,7 +63,7 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
 
         if kwargs["loss"] == "ce":
             self.loss = nn.CrossEntropyLoss(  # type: ignore[attr-defined]
-                ignore_index=15  # TODO: double check that this is the only nodata val
+                ignore_index=7
             )
         elif kwargs["loss"] == "jaccard":
             self.loss = smp.losses.JaccardLoss(mode="multiclass")
@@ -85,9 +92,9 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
         self.val_accuracy = Accuracy()
         self.test_accuracy = Accuracy()
 
-        self.train_iou = IoU(num_classes=6)
-        self.val_iou = IoU(num_classes=6)
-        self.test_iou = IoU(num_classes=6)
+        self.train_iou = IoU(num_classes=7)
+        self.val_iou = IoU(num_classes=7)
+        self.test_iou = IoU(num_classes=7)
 
     def forward(self, x: Tensor) -> Any:  # type: ignore[override]
         """Forward pass of the model."""
@@ -242,6 +249,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         self.train_state = train_state
         self.layers = ["naip-new", "lc"]
         self.patches_per_tile = patches_per_tile
+        self.original_patch_size = 500
         self.batch_size = batch_size
         self.num_workers = num_workers
 
@@ -250,8 +258,23 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
     ) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         # Center crop
-        _, height, width = sample["image"].shape
-        assert height >= patch_size and width >= patch_size
+        num_image_channels, height, width = sample["image"].shape
+        num_mask_channels = sample["mask"].shape[0]
+
+        # If we somehow sample a patch that is smaller than the `patch_size` we want to
+        # sample, then we create a nodata patch instead
+        if height < patch_size or width < patch_size:
+            height, width = patch_size, patch_size
+            sample["image"] = torch.zeros(  # type: ignore[attr-defined]
+                (num_image_channels, patch_size, patch_size)
+            )
+            sample["mask"] = (
+                torch.zeros(  # type: ignore[attr-defined]
+                    (num_mask_channels, patch_size, patch_size)
+                )
+                + 7
+            )
+
         y1 = (height - patch_size) // 2
         x1 = (width - patch_size) // 2
         sample["image"] = sample["image"][:, y1 : y1 + patch_size, x1 : x1 + patch_size]
@@ -310,7 +333,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         """Return a DataLoader for training."""
         sampler = RandomBatchGeoSampler(
             self.train_dataset.index,
-            size=432,
+            size=self.original_patch_size,
             batch_size=self.batch_size,
             length=self.patches_per_tile * 100,
         )
@@ -325,7 +348,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         """Return a DataLoader for validation."""
         sampler = RandomBatchGeoSampler(
             self.val_dataset.index,
-            size=432,
+            size=self.original_patch_size,
             batch_size=self.batch_size,
             length=self.patches_per_tile * 5,
         )
@@ -340,7 +363,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         """Return a DataLoader for testing."""
         sampler = RandomBatchGeoSampler(
             self.test_dataset.index,
-            size=432,
+            size=self.original_patch_size,
             batch_size=self.batch_size,
             length=self.patches_per_tile * 20,
         )
