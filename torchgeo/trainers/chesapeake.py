@@ -5,6 +5,9 @@
 
 from typing import Any, Dict, Optional, cast
 
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
@@ -14,15 +17,21 @@ from torch import Tensor
 from torch.nn.modules import Module
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
-from torchmetrics import Accuracy
+from torch.utils.tensorboard import SummaryWriter  # type: ignore[attr-defined]
+from torchmetrics import Accuracy, IoU
 
-from ..datasets import ChesapeakeCVPR
+from ..datasets import ChesapeakeCVPR, Chesapeake7
 from ..samplers import RandomBatchGeoSampler
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 DataLoader.__module__ = "torch.utils.data"
 Module.__module__ = "torch.nn"
+
+CMAP = matplotlib.colors.ListedColormap([
+    np.array(Chesapeake7.cmap[i+1]) / 255.0
+    for i in range(6)
+])
 
 
 class ChesapeakeCVPRSegmentationTask(LightningModule):
@@ -39,7 +48,7 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
                 encoder_name=kwargs["encoder_name"],
                 encoder_weights=kwargs["encoder_weights"],
                 in_channels=4,
-                classes=7,
+                classes=6,
             )
         else:
             raise ValueError(
@@ -77,6 +86,10 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
         self.val_accuracy = Accuracy()
         self.test_accuracy = Accuracy()
 
+        self.train_iou = IoU(num_classes=6)
+        self.val_iou = IoU(num_classes=6)
+        self.test_iou = IoU(num_classes=6)
+
     def forward(self, x: Tensor) -> Any:  # type: ignore[override]
         """Forward pass of the model."""
         return self.model(x)
@@ -92,14 +105,20 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
 
         loss = self.loss(y_hat, y)
 
-        self.log("train_loss", loss)  # logging to TensorBoard
-        self.log("train_acc_step", self.train_accuracy(y_hat_hard, y))
+        # by default, the train step logs every `log_every_n_steps` steps where
+        # `log_every_n_steps` is a parameter to the `Trainer` object
+        self.log("train_loss", loss, on_step=True, on_epoch=False)
+        self.train_accuracy(y_hat_hard, y)
+        self.train_iou(y_hat_hard, y)
 
         return cast(Tensor, loss)
 
     def training_epoch_end(self, outputs: Any) -> None:
         """Logs epoch level training metrics."""
-        self.log("train_acc_epoch", self.train_accuracy.compute())
+        self.log("train_acc", self.train_accuracy.compute())
+        self.log("train_iou", self.train_iou.compute())
+        self.train_accuracy.reset()
+        self.train_iou.reset()
 
     def validation_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
@@ -112,12 +131,42 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
 
         loss = self.loss(y_hat, y)
 
+        # by default, the test and validation steps only log per *epoch*
         self.log("val_loss", loss)
-        self.log("val_acc_step", self.val_accuracy(y_hat_hard, y))
+        self.val_accuracy(y_hat_hard, y)
+        self.val_iou(y_hat_hard, y)
+
+        if batch_idx < 10:
+            # Render the image, ground truth mask, and predicted mask for the first
+            # image in the batch
+            img = np.rollaxis(  # convert image to channels last format
+                batch["image"][0].cpu().numpy(), 0, 3
+            )
+            mask = batch["mask"][0].cpu().numpy()
+            pred = y_hat_hard[0].cpu().numpy()
+            fig, axs = plt.subplots(1, 3, figsize=(12, 4))
+            axs[0].imshow(img[:, :, :3])
+            axs[0].axis("off")
+            axs[1].imshow(mask, vmin=0, vmax=6, cmap=CMAP, interpolation="none")
+            axs[1].axis("off")
+            axs[2].imshow(pred, vmin=0, vmax=6, cmap=CMAP, interpolation="none")
+            axs[2].axis("off")
+
+            # the SummaryWriter is a tensorboard object, see:
+            # https://pytorch.org/docs/stable/tensorboard.html#
+            summary_writer: SummaryWriter = self.logger.experiment
+            summary_writer.add_figure(
+                f"image/{batch_idx}", fig, global_step=self.global_step
+            )
+
+            plt.close()
 
     def validation_epoch_end(self, outputs: Any) -> None:
         """Logs epoch level validation metrics."""
-        self.log("val_acc_epoch", self.val_accuracy.compute())
+        self.log("val_acc", self.val_accuracy.compute())
+        self.log("val_iou", self.val_iou.compute())
+        self.val_accuracy.reset()
+        self.val_iou.reset()
 
     def test_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
@@ -129,12 +178,18 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
         y_hat_hard = y_hat.argmax(dim=1)
 
         loss = self.loss(y_hat, y)
+
+        # by default, the test and validation steps only log per *epoch*
         self.log("test_loss", loss)
-        self.log("test_acc_step", self.test_accuracy(y_hat_hard, y))
+        self.test_accuracy(y_hat_hard, y)
+        self.test_iou(y_hat_hard, y)
 
     def test_epoch_end(self, outputs: Any) -> None:
         """Logs epoch level test metrics."""
-        self.log("test_acc_epoch", self.test_accuracy.compute())
+        self.log("test_acc", self.test_accuracy.compute())
+        self.log("test_iou", self.test_iou.compute())
+        self.test_accuracy.reset()
+        self.test_iou.reset()
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler."""
@@ -205,6 +260,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         sample["mask"] = sample["mask"].squeeze()
 
         sample["image"] = sample["image"] / 255.0
+        sample["mask"] = sample["mask"] - 1
 
         sample["image"] = sample["image"].float()
         sample["mask"] = sample["mask"].long()
@@ -269,7 +325,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
     def val_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for validation."""
         sampler = RandomBatchGeoSampler(
-            self.train_dataset.index,
+            self.val_dataset.index,
             size=432,
             batch_size=self.batch_size,
             length=self.patches_per_tile * 5,
@@ -284,7 +340,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing."""
         sampler = RandomBatchGeoSampler(
-            self.train_dataset.index,
+            self.test_dataset.index,
             size=432,
             batch_size=self.batch_size,
             length=self.patches_per_tile * 20,
