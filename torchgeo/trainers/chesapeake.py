@@ -20,7 +20,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter  # type: ignore[attr-defined]
 from torchmetrics import Accuracy, IoU
 
-from ..datasets import ChesapeakeCVPR, Chesapeake7
+from ..datasets import Chesapeake7, ChesapeakeCVPR
 from ..samplers import RandomBatchGeoSampler
 
 # https://github.com/pytorch/pytorch/issues/60979
@@ -28,10 +28,9 @@ from ..samplers import RandomBatchGeoSampler
 DataLoader.__module__ = "torch.utils.data"
 Module.__module__ = "torch.nn"
 
-CMAP = matplotlib.colors.ListedColormap([
-    np.array(Chesapeake7.cmap[i+1]) / 255.0
-    for i in range(6)
-])
+CMAP = matplotlib.colors.ListedColormap(
+    [np.array(Chesapeake7.cmap[i + 1]) / 255.0 for i in range(6)]
+)
 
 
 class ChesapeakeCVPRSegmentationTask(LightningModule):
