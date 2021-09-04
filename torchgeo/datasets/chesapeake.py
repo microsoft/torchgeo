@@ -9,6 +9,7 @@ import sys
 from typing import Any, Callable, Dict, List, Optional
 
 import fiona
+import numpy as np
 import pyproj
 import rasterio
 import rasterio.mask
@@ -291,6 +292,9 @@ class ChesapeakeCVPR(GeoDataset):
     filename = "cvpr_chesapeake_landcover.zip"
     md5 = "0ea5e7cb861be3fb8a06fedaaaf91af9"
 
+    crs = CRS.from_epsg(3857)
+    res = 1
+
     valid_layers = [
         "naip-new",
         "naip-old",
@@ -402,6 +406,8 @@ class ChesapeakeCVPR(GeoDataset):
         filepaths = [hit.object for hit in hits]
 
         sample = {
+            "image": [],
+            "mask": [],
             "crs": self.crs,
             "bbox": query,
         }
@@ -436,10 +442,24 @@ class ChesapeakeCVPR(GeoDataset):
                         f, [query_geom_transformed], crop=True, all_touched=True
                     )
 
-                sample[layer] = data.squeeze()
-
+                if layer in [
+                    "naip-new",
+                    "naip-old",
+                    "landsat-leaf-on",
+                    "landsat-leaf-off",
+                ]:
+                    sample["image"].append(data)
+                elif layer in ["lc", "nlcd", "buildings"]:
+                    sample["mask"].append(data)
         else:
             raise IndexError(f"query: {query} spans multiple tiles which is not valid")
+
+        sample["image"] = np.concatenate(  # type: ignore[no-untyped-call]
+            sample["image"], axis=0
+        )
+        sample["mask"] = np.concatenate(  # type: ignore[no-untyped-call]
+            sample["mask"], axis=0
+        )
 
         if self.transforms is not None:
             sample = self.transforms(sample)
