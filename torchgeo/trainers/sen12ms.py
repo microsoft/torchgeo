@@ -54,7 +54,7 @@ class SEN12MSSegmentationTask(pl.LightningModule):
 
     def __init__(
         self,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initialize the LightningModule with a model and loss function.
 
@@ -194,6 +194,7 @@ class SEN12MSDataModule(pl.LightningDataModule):
         band_set: str = "all",
         batch_size: int = 64,
         num_workers: int = 4,
+        **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for SEN12MS based DataLoaders.
 

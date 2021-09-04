@@ -36,7 +36,7 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
         else:
             raise ValueError(f"Model type '{kwargs['model']}' is not valid.")
 
-    def __init__(self, **kwargs: Dict[str, Any]) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize a new LightningModule for training simple regression models.
 
         Keyword Args:
@@ -131,6 +131,7 @@ class CycloneDataModule(pl.LightningDataModule):
         batch_size: int = 64,
         num_workers: int = 4,
         api_key: Optional[str] = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for NASA Cyclone based DataLoaders.
 

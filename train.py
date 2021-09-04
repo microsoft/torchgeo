@@ -6,16 +6,16 @@
 """torchgeo model training script."""
 
 import os
-from typing import Any, Dict, cast
+from typing import Any, Dict, Tuple, Type, cast
 
 import pytorch_lightning as pl
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
-from pytorch_lightning.core.datamodule import LightningDataModule
-from pytorch_lightning.core.lightning import LightningModule
 
 from torchgeo.trainers import (
+    ChesapeakeCVPRDataModule,
+    ChesapeakeCVPRSegmentationTask,
     CycloneDataModule,
     CycloneSimpleRegressionTask,
     LandcoverAIDataModule,
@@ -25,6 +25,16 @@ from torchgeo.trainers import (
     SEN12MSDataModule,
     SEN12MSSegmentationTask,
 )
+
+TASK_TO_MODULES_MAPPING: Dict[
+    str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
+] = {
+    "chesapeake_cvpr": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
+    "cyclone": (CycloneSimpleRegressionTask, CycloneDataModule),
+    "landcoverai": (LandcoverAISegmentationTask, LandcoverAIDataModule),
+    "naipchesapeake": (NAIPChesapeakeSegmentationTask, NAIPChesapeakeDataModule),
+    "sen12ms": (SEN12MSSegmentationTask, SEN12MSDataModule),
+}
 
 
 def set_up_omegaconf() -> DictConfig:
@@ -65,17 +75,15 @@ def set_up_omegaconf() -> DictConfig:
 
     # These OmegaConf structured configs enforce a schema at runtime, see:
     # https://omegaconf.readthedocs.io/en/2.0_branch/structured_config.html#merging-with-other-configs
-    if conf.task.name == "cyclone":
-        task_conf = OmegaConf.load("conf/task_defaults/cyclone.yaml")
-    elif conf.task.name == "landcoverai":
-        task_conf = OmegaConf.load("conf/task_defaults/landcoverai.yaml")
-    elif conf.task.name == "sen12ms":
-        task_conf = OmegaConf.load("conf/task_defaults/sen12ms.yaml")
-    elif conf.task.name == "test":
+    task_name = conf.experiment.task
+    task_config_fn = os.path.join("conf", "task_defaults", f"{task_name}.yaml")
+    if task_name == "test":
         task_conf = OmegaConf.create()
+    elif os.path.exists(task_config_fn):
+        task_conf = cast(DictConfig, OmegaConf.load(task_config_fn))
     else:
         raise ValueError(
-            f"task.name={conf.task.name} is not recognized as a valid task"
+            f"experiment.task={task_name} is not recognized as a valid task"
         )
 
     conf = OmegaConf.merge(task_conf, conf)
@@ -90,11 +98,13 @@ def main(conf: DictConfig) -> None:
     # Setup output directory
     ######################################
 
+    experiment_name = conf.experiment.name
+    task_name = conf.experiment.task
     if os.path.isfile(conf.program.output_dir):
         raise NotADirectoryError("`program.output_dir` must be a directory")
     os.makedirs(conf.program.output_dir, exist_ok=True)
 
-    experiment_dir = os.path.join(conf.program.output_dir, conf.program.experiment_name)
+    experiment_dir = os.path.join(conf.program.output_dir, experiment_name)
     os.makedirs(experiment_dir, exist_ok=True)
 
     if len(os.listdir(experiment_dir)) > 0:
@@ -109,58 +119,33 @@ def main(conf: DictConfig) -> None:
                 + "empty. We don't want to overwrite any existing results, exiting..."
             )
 
+    with open(os.path.join(experiment_dir, "experiment_config.yaml"), "w") as f:
+        OmegaConf.save(config=conf, f=f)
+
     ######################################
     # Choose task to run based on arguments or configuration
     ######################################
-    # Convert the DictConfig into a dictionary so that we can pass as kwargs. We use
-    # var() to convert the @dataclass from to_object() to a dictionary and to help mypy
-    task_args = OmegaConf.to_object(conf.task)
-    task_args = cast(Dict[str, Any], task_args)
+    # Convert the DictConfig into a dictionary so that we can pass as kwargs.
+    task_args = cast(Dict[str, Any], OmegaConf.to_object(conf.experiment.module))
+    datamodule_args = cast(
+        Dict[str, Any], OmegaConf.to_object(conf.experiment.datamodule)
+    )
 
-    datamodule: LightningDataModule
-    task: LightningModule
-    if conf.task.name == "cyclone":
-        datamodule = CycloneDataModule(
-            conf.program.data_dir,
-            seed=conf.program.seed,
-            batch_size=conf.program.batch_size,
-            num_workers=conf.program.num_workers,
-        )
-        task = CycloneSimpleRegressionTask(**task_args)
-    elif conf.task.name == "landcoverai":
-        datamodule = LandcoverAIDataModule(
-            conf.program.data_dir,
-            batch_size=conf.program.batch_size,
-            num_workers=conf.program.num_workers,
-        )
-        task = LandcoverAISegmentationTask(**task_args)
-    elif conf.task.name == "naipchesapeake":
-        datamodule = NAIPChesapeakeDataModule(
-            conf.program.naip_data_dir,
-            conf.program.chesapeake_data_dir,
-            batch_size=conf.program.batch_size,
-            num_workers=conf.program.num_workers,
-        )
-        task = NAIPChesapeakeSegmentationTask(**task_args)
-    elif conf.task.name == "sen12ms":
-        datamodule = SEN12MSDataModule(
-            conf.program.data_dir,
-            seed=conf.program.seed,
-            batch_size=conf.program.batch_size,
-            num_workers=conf.program.num_workers,
-        )
-        task = SEN12MSSegmentationTask(**task_args)
+    datamodule: pl.LightningDataModule
+    task: pl.LightningModule
+    if task_name in TASK_TO_MODULES_MAPPING:
+        task_class, datamodule_class = TASK_TO_MODULES_MAPPING[task_name]
+        task = task_class(**task_args)
+        datamodule = datamodule_class(**datamodule_args)
     else:
         raise ValueError(
-            f"task.name={conf.task.name} is not recognized as a valid task"
+            f"experiment.task={task_name} is not recognized as a valid task"
         )
 
     ######################################
     # Setup trainer
     ######################################
-    tb_logger = pl_loggers.TensorBoardLogger(
-        conf.program.log_dir, name=conf.program.experiment_name
-    )
+    tb_logger = pl_loggers.TensorBoardLogger(conf.program.log_dir, name=experiment_name)
 
     checkpoint_callback = ModelCheckpoint(
         monitor="val_loss",
@@ -174,8 +159,7 @@ def main(conf: DictConfig) -> None:
         patience=10,
     )
 
-    trainer_args = OmegaConf.to_object(conf.trainer)
-    trainer_args = cast(Dict[str, Any], trainer_args)
+    trainer_args = cast(Dict[str, Any], OmegaConf.to_object(conf.trainer))
 
     trainer_args["callbacks"] = [checkpoint_callback, early_stopping_callback]
     trainer_args["logger"] = tb_logger
