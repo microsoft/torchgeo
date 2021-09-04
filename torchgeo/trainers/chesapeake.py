@@ -150,6 +150,7 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
             axs[1].axis("off")
             axs[2].imshow(pred, vmin=0, vmax=6, cmap=CMAP, interpolation="none")
             axs[2].axis("off")
+            plt.tight_layout()
 
             # the SummaryWriter is a tensorboard object, see:
             # https://pytorch.org/docs/stable/tensorboard.html#
@@ -157,7 +158,6 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
             summary_writer.add_figure(
                 f"image/{batch_idx}", fig, global_step=self.global_step
             )
-
             plt.close()
 
     def validation_epoch_end(self, outputs: Any) -> None:
