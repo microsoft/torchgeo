@@ -37,6 +37,7 @@ from .landsat import (
     Landsat8,
     Landsat9,
 )
+from .levircd import LEVIRCDPlus
 from .naip import NAIP
 from .nwpu import VHR10
 from .sen12ms import SEN12MS
@@ -80,6 +81,7 @@ __all__ = (
     "COWCDetection",
     "CV4AKenyaCropType",
     "LandCoverAI",
+    "LEVIRCDPlus",
     "SEN12MS",
     "So2Sat",
     "TropicalCycloneWindEstimation",
