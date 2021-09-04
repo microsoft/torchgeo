@@ -1,8 +1,13 @@
-task:
-  name: "sen12ms"
-  learning_rate: 1e-3
-  learning_rate_schedule_patience: 2
-  loss: "ce"
-  segmentation_model: "unet"
-  encoder_name: "resnet18"
-  encoder_weights: "imagenet"
+experiment:
+  task: "sen12ms"
+  module:
+    loss: "ce"
+    segmentation_model: "unet"
+    encoder_name: "resnet18"
+    encoder_weights: "imagenet"
+    encoder_output_stride: 16
+    learning_rate: 1e-3
+    learning_rate_schedule_patience: 2
+  datamodule:
+    batch_size: 32
+    num_workers: 4
