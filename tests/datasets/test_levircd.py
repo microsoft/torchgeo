@@ -10,7 +10,6 @@ import pytest
 import torch
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
-from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import LEVIRCDPlus
@@ -32,7 +31,7 @@ class TestLEVIRCDPlus:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.utils, "download_url", download_url
         )
-        md5 = "5bf4d2770deb41eb5c38784ab2c8a691"
+        md5 = "b61c300e9fd7146eb2c8e2512c0e9d39"
         monkeypatch.setattr(LEVIRCDPlus, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "levircd", "LEVIR-CD+.zip")
         monkeypatch.setattr(LEVIRCDPlus, "url", url)  # type: ignore[attr-defined]
@@ -46,8 +45,6 @@ class TestLEVIRCDPlus:
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
-        assert x["image"].shape == (6, 1024, 1024)
-        assert x["mask"].shape == (1024, 1024)
 
     def test_len(self, dataset: LEVIRCDPlus) -> None:
         assert len(dataset) == 2
