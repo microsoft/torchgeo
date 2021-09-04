@@ -30,6 +30,7 @@ Chesapeake Bay High-Resolution Land Cover Project
 .. autoclass:: ChesapeakePA
 .. autoclass:: ChesapeakeVA
 .. autoclass:: ChesapeakeWV
+.. autoclass:: ChesapeakeCVPR
 
 Cropland Data Layer (CDL)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
