@@ -13,7 +13,7 @@ from pytorch_lightning.core.lightning import LightningModule
 from torch import Tensor
 from torch.nn.modules import Module
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import DataLoader
 from torchmetrics import Accuracy
 
 from ..datasets import ChesapeakeCVPR
@@ -215,7 +215,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         ChesapeakeCVPR(
             self.root_dir,
             split="train",
-            bands=self.band_indices,
             transforms=self.custom_transform,
             download=True,
             checksum=False,
@@ -224,7 +223,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         ChesapeakeCVPR(
             self.root_dir,
             split="test",
-            bands=self.band_indices,
             transforms=self.custom_transform,
             download=True,
             checksum=False,
@@ -239,7 +237,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         self.train_dataset = ChesapeakeCVPR(
             self.root_dir,
             split="train",
-            bands=self.band_indices,
             transforms=self.custom_transform,
             download=True,
             checksum=False,
@@ -247,7 +244,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         self.val_dataset = ChesapeakeCVPR(
             self.root_dir,
             split="train",
-            bands=self.band_indices,
             transforms=self.custom_transform,
             download=True,
             checksum=False,
@@ -255,7 +251,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         self.test_dataset = ChesapeakeCVPR(
             self.root_dir,
             split="train",
-            bands=self.band_indices,
             transforms=self.custom_transform,
             download=True,
             checksum=False,
@@ -268,7 +263,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=True,
-            pin_memory=True,
+            pin_memory=False,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -278,7 +273,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=False,
-            pin_memory=True,
+            pin_memory=False,
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
@@ -288,5 +283,5 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=False,
-            pin_memory=True,
+            pin_memory=False,
         )
