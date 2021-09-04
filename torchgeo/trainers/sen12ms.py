@@ -305,7 +305,7 @@ class SEN12MSDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=True,
-            pin_memory=True,
+            pin_memory=False,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -315,7 +315,7 @@ class SEN12MSDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=False,
-            pin_memory=True,
+            pin_memory=False,
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
@@ -325,5 +325,5 @@ class SEN12MSDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=False,
-            pin_memory=True,
+            pin_memory=False,
         )
