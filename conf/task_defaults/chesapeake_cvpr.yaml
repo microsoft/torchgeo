@@ -11,3 +11,4 @@ experiment:
   datamodule:
     batch_size: 32
     num_workers: 4
+    train_state: "de"
