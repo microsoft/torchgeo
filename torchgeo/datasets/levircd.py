@@ -3,8 +3,8 @@
 
 """LEVIR-CD+ dataset."""
 
-import os
 import glob
+import os
 from typing import Callable, Dict, Optional
 
 import numpy as np
@@ -13,7 +13,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import VisionDataset
-from .utils import check_integrity, download_and_extract_archive
+from .utils import download_and_extract_archive
 
 
 class LEVIRCDPlus(VisionDataset):
@@ -23,7 +23,7 @@ class LEVIRCDPlus(VisionDataset):
 
     Dataset features:
     * image pairs of 20 different urban regions across Texas between 2002-2020
-    * binary change masks representing building change 
+    * binary change masks representing building change
     * three spectral bands - RGB
     * 985 image pairs with 50 cm per pixel resolution (~1024x1024 px)
 
@@ -100,10 +100,7 @@ class LEVIRCDPlus(VisionDataset):
         mask = self._load_target(files["mask"])
 
         image = torch.cat(tensors=[image1, image2], dim=0)  # type: ignore[attr-defined]
-        sample = {
-            "image": image,
-            "mask": mask
-        }
+        sample = {"image": image, "mask": mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
