@@ -17,7 +17,7 @@ class TestLandCoverAITrainer:
     @pytest.fixture
     def default_config(self) -> Dict[str, Any]:
         task_conf = OmegaConf.load("conf/task_defaults/landcoverai.yaml")
-        task_args = OmegaConf.to_object(task_conf.task)
+        task_args = OmegaConf.to_object(task_conf.experiment.module)
         task_args = cast(Dict[str, Any], task_args)
         return task_args
 
