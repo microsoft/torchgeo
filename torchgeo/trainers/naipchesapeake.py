@@ -327,7 +327,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             self.dataset,
             batch_sampler=self.train_sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
-            pin_memory=True,
+            pin_memory=False,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -337,7 +337,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             sampler=self.val_sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
-            pin_memory=True,
+            pin_memory=False,
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
@@ -347,5 +347,5 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             sampler=self.test_sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
-            pin_memory=True,
+            pin_memory=False,
         )
