@@ -15,6 +15,7 @@ import rasterio
 import rasterio.mask
 import shapely.geometry
 import shapely.ops
+import torch
 from rasterio.crs import CRS
 
 from .geo import GeoDataset, RasterDataset
@@ -460,6 +461,11 @@ class ChesapeakeCVPR(GeoDataset):
         sample["mask"] = np.concatenate(  # type: ignore[no-untyped-call]
             sample["mask"], axis=0
         )
+
+        sample["image"] = torch.from_numpy(  # type: ignore[attr-defined]
+            sample["image"]
+        )
+        sample["mask"] = torch.from_numpy(sample["mask"])  # type: ignore[attr-defined]
 
         if self.transforms is not None:
             sample = self.transforms(sample)
