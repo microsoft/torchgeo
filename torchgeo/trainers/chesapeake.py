@@ -17,6 +17,7 @@ from torch.utils.data import DataLoader
 from torchmetrics import Accuracy
 
 from ..datasets import ChesapeakeCVPR
+from ..samplers import RandomBatchGeoSampler
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -25,7 +26,7 @@ Module.__module__ = "torch.nn"
 
 
 class ChesapeakeCVPRSegmentationTask(LightningModule):
-    """LightningModule for training models on the Chesapeake CVPR Land Cover Dataset.
+    """LightningModule for training models on the Chesapeake CVPR Land Cover dataset.
 
     This allows using arbitrary models and losses from the
     ``pytorch_segmentation_models`` package.
@@ -38,7 +39,7 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
                 encoder_name=kwargs["encoder_name"],
                 encoder_weights=kwargs["encoder_weights"],
                 in_channels=4,
-                classes=6,
+                classes=7,
             )
         else:
             raise ValueError(
@@ -46,7 +47,9 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
             )
 
         if kwargs["loss"] == "ce":
-            self.loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
+            self.loss = nn.CrossEntropyLoss(  # type: ignore[attr-defined]
+                ignore_index=15  # TODO: double check that this is the only nodata val
+            )
         elif kwargs["loss"] == "jaccard":
             self.loss = smp.losses.JaccardLoss(mode="multiclass")
         else:
@@ -153,56 +156,58 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
 
 
 class ChesapeakeCVPRDataModule(LightningDataModule):
-    """LightningDataModule implementation for the CVPR Chesapeake Land Cover dataset.
+    """LightningDataModule implementation for the Chesapeake CVPR Land Cover dataset.
 
-    Uses the random spatial split defined per state to partition tiles into train, val,
+    Uses the random splits defined per state to partition tiles into train, val,
     and test sets.
     """
 
     def __init__(
         self,
         root_dir: str,
-        seed: int,
-        band_set: str = "all",
+        train_state: str,
+        patches_per_tile: int = 200,
         batch_size: int = 64,
         num_workers: int = 4,
         **kwargs: Any,
     ) -> None:
-        """Initialize a LightningDataModule for SEN12MS based DataLoaders.
+        """Initialize a LightningDataModule for Chesapeake CVPR based DataLoaders.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the SEN12MS Dataset classes
-            seed: The seed value to use when doing the sklearn based ShuffleSplit
-            band_set: The subset of S1/S2 bands to use. Options are: "all",
-                "s1", "s2-all", and "s2-reduced" where the "s2-reduced" set includes:
-                B2, B3, B4, B8, B11, and B12.
+            root_dir: The ``root`` arugment to pass to the ChesapeakeCVPR Dataset
+                classes
+            train_state: The state code to use to train the model, e.g. "ny"
+            patches_per_tile: The number of patches per tile to sample
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
         """
         super().__init__()  # type: ignore[no-untyped-call]
+        assert train_state in ["md", "de", "ny", "pa", "va", "wv"]
 
         self.root_dir = root_dir
-        self.seed = seed
-        self.band_set = band_set
+        self.train_state = train_state
+        self.layers = ["naip-new", "lc"]
+        self.patches_per_tile = patches_per_tile
         self.batch_size = batch_size
         self.num_workers = num_workers
 
-    def custom_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def custom_transform(
+        self, sample: Dict[str, Any], patch_size: int = 256
+    ) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
+        # Center crop
+        _, height, width = sample["image"].shape
+        assert height >= patch_size and width >= patch_size
+        y1 = (height - patch_size) // 2
+        x1 = (width - patch_size) // 2
+        sample["image"] = sample["image"][:, y1 : y1 + patch_size, x1 : x1 + patch_size]
+        sample["mask"] = sample["mask"][:, y1 : y1 + patch_size, x1 : x1 + patch_size]
+        sample["mask"] = sample["mask"].squeeze()
+
+        sample["image"] = sample["image"] / 255.0
+
         sample["image"] = sample["image"].float()
-
-        if self.band_set == "all":
-            sample["image"][:2] = sample["image"][:2].clip(-25, 0) / -25
-            sample["image"][2:] = sample["image"][2:].clip(0, 10000) / 10000
-        elif self.band_set == "s1":
-            sample["image"][:2] = sample["image"][:2].clip(-25, 0) / -25
-        else:
-            sample["image"][:] = sample["image"][:].clip(0, 10000) / 10000
-
-        sample["mask"] = sample["mask"][0, :, :].long()
-        sample["mask"] = torch.take(  # type: ignore[attr-defined]
-            self.DFC2020_CLASS_MAPPING, sample["mask"]
-        )
+        sample["mask"] = sample["mask"].long()
 
         return sample
 
@@ -212,21 +217,8 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         This includes optionally downloading the dataset. This is done once per node,
         while :func:`setup` is done once per GPU.
         """
-        ChesapeakeCVPR(
-            self.root_dir,
-            split="train",
-            transforms=self.custom_transform,
-            download=True,
-            checksum=False,
-        )
-
-        ChesapeakeCVPR(
-            self.root_dir,
-            split="test",
-            transforms=self.custom_transform,
-            download=True,
-            checksum=False,
-        )
+        pass  # TODO: do a light check to see if the dataset exists and download it if
+        # it doesn't exist
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Create the train/val/test splits based on the original Dataset objects.
@@ -236,52 +228,70 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         """
         self.train_dataset = ChesapeakeCVPR(
             self.root_dir,
-            split="train",
+            split=f"{self.train_state}-train",
+            layers=self.layers,
             transforms=self.custom_transform,
-            download=True,
+            download=False,
             checksum=False,
         )
         self.val_dataset = ChesapeakeCVPR(
             self.root_dir,
-            split="train",
+            split=f"{self.train_state}-val",
+            layers=self.layers,
             transforms=self.custom_transform,
-            download=True,
+            download=False,
             checksum=False,
         )
         self.test_dataset = ChesapeakeCVPR(
             self.root_dir,
-            split="train",
+            split=f"{self.train_state}-test",
+            layers=self.layers,
             transforms=self.custom_transform,
-            download=True,
+            download=False,
             checksum=False,
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""
+        sampler = RandomBatchGeoSampler(
+            self.train_dataset.index,
+            size=432,
+            batch_size=self.batch_size,
+            length=self.patches_per_tile * 100,
+        )
         return DataLoader(
             self.train_dataset,
-            batch_size=self.batch_size,
+            batch_sampler=sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
-            shuffle=True,
             pin_memory=False,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for validation."""
+        sampler = RandomBatchGeoSampler(
+            self.train_dataset.index,
+            size=432,
+            batch_size=self.batch_size,
+            length=self.patches_per_tile * 5,
+        )
         return DataLoader(
             self.val_dataset,
-            batch_size=self.batch_size,
+            batch_sampler=sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
-            shuffle=False,
             pin_memory=False,
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing."""
+        sampler = RandomBatchGeoSampler(
+            self.train_dataset.index,
+            size=432,
+            batch_size=self.batch_size,
+            length=self.patches_per_tile * 20,
+        )
         return DataLoader(
             self.test_dataset,
-            batch_size=self.batch_size,
+            batch_sampler=sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
-            shuffle=False,
             pin_memory=False,
         )
