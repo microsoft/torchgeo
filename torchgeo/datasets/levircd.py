@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, List, Optional
 
 import numpy as np
 import torch
@@ -18,6 +18,7 @@ from .utils import download_and_extract_archive
 
 class LEVIRCDPlus(VisionDataset):
     """LEVIR-CD+ dataset.
+
     The `LEVIR-CD+ <https://github.com/S2Looking/Dataset>`_
     dataset is a dataset for building change detection.
 
@@ -37,12 +38,12 @@ class LEVIRCDPlus(VisionDataset):
 
     If you use this dataset in your research, please cite the following paper:
     * https://arxiv.org/abs/2107.09244
-    """  # noqa: E501
+    """
 
-    url = "https://drive.google.com/file/d/1JamSsxiytXdzAIk6VDVWfc-OsX-81U81/view?usp=sharing"
+    url = "https://drive.google.com/file/d/1JamSsxiytXdzAIk6VDVWfc-OsX-81U81"
     md5 = "1adf156f628aa32fb2e8fe6cada16c04"
     filename = "LEVIR-CD+.zip"
-    filenames = ["train", "test"]
+    splits = ["train", "test"]
 
     def __init__(
         self,
@@ -56,7 +57,7 @@ class LEVIRCDPlus(VisionDataset):
 
         Args:
             root: root directory where dataset can be found
-            split: one of "train", "val", or "test"
+            split: one of "train" or "test"
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -67,7 +68,7 @@ class LEVIRCDPlus(VisionDataset):
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
-        assert split in ["train", "test"]
+        assert split in self.splits
 
         self.root = root
         self.split = split
@@ -115,7 +116,16 @@ class LEVIRCDPlus(VisionDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str, split: str) -> Dict[str, str]:
+    def _load_files(self, root: str, split: str) -> List[Dict[str, str]]:
+        """Return the paths of the files in the dataset.
+
+        Args:
+            root: root dir of dataset
+            split: subset of dataset, one of [train, test]
+
+        Returns:
+            list of dicts containing paths for each pair of image1, image2, mask
+        """
         files = []
         images = glob.glob(os.path.join(root, split, "A", "*.png"))
         images = sorted([os.path.basename(image) for image in images])
@@ -156,8 +166,8 @@ class LEVIRCDPlus(VisionDataset):
         with Image.open(filename) as img:
             array = np.array(img.convert("L"))
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
-            tensor = torch.clip(tensor, min=0, max=1)
-            tensor = tensor.to(torch.long)
+            tensor = torch.clip(tensor, min=0, max=1)  # type: ignore[attr-defined]
+            tensor = tensor.to(torch.long)  # type: ignore[attr-defined]
             return tensor
 
     def _check_integrity(self) -> bool:
@@ -166,7 +176,7 @@ class LEVIRCDPlus(VisionDataset):
         Returns:
             True if the dataset directories and split files are found, else False
         """
-        for filename in self.filenames:
+        for filename in self.splits:
             filepath = os.path.join(self.root, filename)
             if not os.path.exists(filepath):
                 return False
