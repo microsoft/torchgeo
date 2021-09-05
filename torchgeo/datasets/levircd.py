@@ -100,7 +100,7 @@ class LEVIRCDPlus(VisionDataset):
         image2 = self._load_image(files["image2"])
         mask = self._load_target(files["mask"])
 
-        image = torch.cat(tensors=[image1, image2], dim=0)  # type: ignore[attr-defined]
+        image = torch.stack(tensors=[image1, image2], dim=0)
         sample = {"image": image, "mask": mask}
 
         if self.transforms is not None:
