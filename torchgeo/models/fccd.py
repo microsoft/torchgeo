@@ -152,11 +152,11 @@ class Encoder(ModuleList):
 class Decoder(ModuleList):
     """4-layer convolutional decoder."""
 
-    def __init__(self, num_classes: int = 2) -> None:
+    def __init__(self, classes: int = 2) -> None:
         """Initializes the decoder.
 
         Args:
-            num_classes: number of output segmentation classes
+            classes: number of output segmentation classes
                 (default=2 for binary segmentation)
         """
         super().__init__(
@@ -164,7 +164,7 @@ class Decoder(ModuleList):
                 DeConvBlock([256, 128, 128, 64]),
                 DeConvBlock([128, 64, 64, 32]),
                 DeConvBlock([64, 32, 16]),
-                DeConvBlock([32, 16, num_classes]),
+                DeConvBlock([32, 16, classes]),
             ]
         )
 
@@ -172,12 +172,12 @@ class Decoder(ModuleList):
 class ConcatDecoder(ModuleList):
     """4-layer convolutional decoder supporting concatenated inputs from encoder."""
 
-    def __init__(self, t: int = 2, num_classes: int = 2) -> None:
+    def __init__(self, t: int = 2, classes: int = 2) -> None:
         """Initializes the decoder.
 
         Args:
             t: number of input images being compared for change
-            num_classes: number of output segmentation classes
+            classes: number of output segmentation classes
                 (default=2 for binary segmentation)
         """
         scale = 0.5 * (t + 1)
@@ -186,7 +186,7 @@ class ConcatDecoder(ModuleList):
                 DeConvBlock([int(256 * scale), 128, 128, 64]),
                 DeConvBlock([int(128 * scale), 64, 64, 32]),
                 DeConvBlock([int(64 * scale), 32, 16]),
-                DeConvBlock([int(32 * scale), 16, num_classes]),
+                DeConvBlock([int(32 * scale), 16, classes]),
             ]
         )
 
@@ -216,18 +216,18 @@ class FCEF(Module):
     * https://arxiv.org/abs/1810.08462
     """
 
-    def __init__(self, channels: int = 3, t: int = 2, num_classes: int = 2) -> None:
+    def __init__(self, in_channels: int = 3, t: int = 2, classes: int = 2) -> None:
         """Initializes the FCEF module.
 
         Args:
-            channels: number of channels per input image
+            in_channels: number of channels per input image
             t: number of input images being compared for change
-            num_classes: number of output segmentation classes
+            classes: number of output segmentation classes
                 (default=2 for binary segmentation)
         """
         super().__init__()  # type: ignore[no-untyped-call]
-        self.encoder = Encoder(channels * t, pool=True)
-        self.decoder = Decoder(num_classes)
+        self.encoder = Encoder(in_channels * t, pool=True)
+        self.decoder = Decoder(classes)
         self.upsample = Upsample()
 
     def forward(self, x: Tensor) -> Tensor:
@@ -258,18 +258,18 @@ class FCSiamConc(Module):
     * https://arxiv.org/abs/1810.08462
     """
 
-    def __init__(self, channels: int = 3, t: int = 2, num_classes: int = 2):
+    def __init__(self, in_channels: int = 3, t: int = 2, classes: int = 2):
         """Initializes the FCSiamConc module.
 
         Args:
-            channels: number of channels per input image
+            in_channels: number of channels per input image
             t: number of input images being compared for change
-            num_classes: number of output segmentation classes
+            classes: number of output segmentation classes
                 (default=2 for binary segmentation)
         """
         super().__init__()  # type: ignore[no-untyped-call]
-        self.encoder = Encoder(channels, pool=False)
-        self.decoder = ConcatDecoder(t, num_classes)
+        self.encoder = Encoder(in_channels, pool=False)
+        self.decoder = ConcatDecoder(t, classes)
         self.upsample = Upsample()
         self.pool = nn.modules.MaxPool2d(kernel_size=2)
 
@@ -309,18 +309,18 @@ class FCSiamDiff(nn.modules.Module):
     * https://arxiv.org/abs/1810.08462
     """
 
-    def __init__(self, channels: int = 3, t: int = 2, num_classes: int = 2) -> None:
+    def __init__(self, in_channels: int = 3, t: int = 2, classes: int = 2) -> None:
         """Initializes the FCSiamDiff module.
 
         Args:
-            channels: number of channels per input image
+            in_channels: number of channels per input image
             t: number of input images being compared for change
-            num_classes: number of output segmentation classes
+            classes: number of output segmentation classes
                 (default=2 for binary segmentation)
         """
         super().__init__()  # type: ignore[no-untyped-call]
-        self.encoder = Encoder(channels, pool=False)
-        self.decoder = Decoder(num_classes)
+        self.encoder = Encoder(in_channels, pool=False)
+        self.decoder = Decoder(classes)
         self.upsample = Upsample()
         self.pool = nn.modules.MaxPool2d(kernel_size=2)
 
@@ -341,8 +341,9 @@ class FCSiamDiff(nn.modules.Module):
             diff, xt = skip[:, 0, ...], skip[:, 1:, ...]
             for i in range(t - 1):
                 diff = torch.abs(diff - xt[:, i, ...])  # type: ignore[attr-defined]
-                diffs.append(diff)
+            diffs.append(diff)
 
+        print(len(diffs), len(skips))
         # Only first input encoding is passed directly to decoder
         x = rearrange(x, "(b t) c h w -> b t c h w", t=t)
         x = x[:, 0, ...]
