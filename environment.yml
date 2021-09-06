@@ -3,6 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - cudatoolkit
+  - einops
   - fiona>=1.5
   - h5py
   - numpy
