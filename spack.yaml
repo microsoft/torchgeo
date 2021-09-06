@@ -4,6 +4,7 @@ spack:
   - "pil@2.9:"
   - "python@3.6:+bz2"
   - "py-black@21:"
+  - "py-einops"
   - "py-fiona@1.5:"
   - "py-flake8@3.8:"
   - "py-h5py"
