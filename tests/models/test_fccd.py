@@ -15,7 +15,7 @@ T = [2, 3]
 
 
 class TestFCEF:
-    @torch.no_grad  # type: ignore[misc]
+    @torch.no_grad()  # type: ignore[misc]
     @pytest.mark.parametrize("b, c", list(itertools.product(BATCH_SIZE, CHANNELS)))
     def test_in_channels(self, b: int, c: int) -> None:
         classes = 2
@@ -25,7 +25,7 @@ class TestFCEF:
         y = model(x)
         assert y.shape == (b, classes, h, w)
 
-    @torch.no_grad  # type: ignore[misc]
+    @torch.no_grad()  # type: ignore[misc]
     @pytest.mark.parametrize("b, classes", list(itertools.product(BATCH_SIZE, CLASSES)))
     def test_classes(self, b: int, classes: int) -> None:
         t, c, h, w = 2, 3, 64, 64
@@ -34,7 +34,7 @@ class TestFCEF:
         y = model(x)
         assert y.shape == (b, classes, h, w)
 
-    @torch.no_grad  # type: ignore[misc]
+    @torch.no_grad()  # type: ignore[misc]
     @pytest.mark.parametrize("b, t", list(itertools.product(BATCH_SIZE, T)))
     def test_t(self, b: int, t: int) -> None:
         classes = 2
@@ -46,7 +46,7 @@ class TestFCEF:
 
 
 class TestFCSiamConc:
-    @torch.no_grad  # type: ignore[misc]
+    @torch.no_grad()  # type: ignore[misc]
     @pytest.mark.parametrize("b, c", list(itertools.product(BATCH_SIZE, CHANNELS)))
     def test_in_channels(self, b: int, c: int) -> None:
         classes = 2
@@ -56,7 +56,7 @@ class TestFCSiamConc:
         y = model(x)
         assert y.shape == (b, classes, h, w)
 
-    @torch.no_grad  # type: ignore[misc]
+    @torch.no_grad()  # type: ignore[misc]
     @pytest.mark.parametrize("b, classes", list(itertools.product(BATCH_SIZE, CLASSES)))
     def test_classes(self, b: int, classes: int) -> None:
         t, c, h, w = 2, 3, 64, 64
@@ -65,7 +65,7 @@ class TestFCSiamConc:
         y = model(x)
         assert y.shape == (b, classes, h, w)
 
-    @torch.no_grad  # type: ignore[misc]
+    @torch.no_grad()  # type: ignore[misc]
     @pytest.mark.parametrize("b, t", list(itertools.product(BATCH_SIZE, T)))
     def test_t(self, b: int, t: int) -> None:
         classes = 2
@@ -77,7 +77,7 @@ class TestFCSiamConc:
 
 
 class TestFCSiamDiff:
-    @torch.no_grad  # type: ignore[misc]
+    @torch.no_grad()  # type: ignore[misc]
     @pytest.mark.parametrize("b, c", list(itertools.product(BATCH_SIZE, CHANNELS)))
     def test_in_channels(self, b: int, c: int) -> None:
         classes = 2
@@ -87,7 +87,7 @@ class TestFCSiamDiff:
         y = model(x)
         assert y.shape == (b, classes, h, w)
 
-    @torch.no_grad  # type: ignore[misc]
+    @torch.no_grad()  # type: ignore[misc]
     @pytest.mark.parametrize("b, classes", list(itertools.product(BATCH_SIZE, CLASSES)))
     def test_classes(self, b: int, classes: int) -> None:
         t, c, h, w = 2, 3, 64, 64
@@ -96,7 +96,7 @@ class TestFCSiamDiff:
         y = model(x)
         assert y.shape == (b, classes, h, w)
 
-    @torch.no_grad  # type: ignore[misc]
+    @torch.no_grad()  # type: ignore[misc]
     @pytest.mark.parametrize("b, t", list(itertools.product(BATCH_SIZE, T)))
     def test_t(self, b: int, t: int) -> None:
         classes = 2
