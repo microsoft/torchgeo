@@ -343,7 +343,6 @@ class FCSiamDiff(nn.modules.Module):
                 diff = torch.abs(diff - xt[:, i, ...])  # type: ignore[attr-defined]
             diffs.append(diff)
 
-        print(len(diffs), len(skips))
         # Only first input encoding is passed directly to decoder
         x = rearrange(x, "(b t) c h w -> b t c h w", t=t)
         x = x[:, 0, ...]
