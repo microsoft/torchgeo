@@ -72,6 +72,7 @@ class PatternNet(VisionDataset, ImageFolder):  # type: ignore[misc]
     If you use this dataset in your research, please cite the following paper:
     * https://www.sciencedirect.com/science/article/abs/pii/S0924271618300042
     """
+
     url = "https://drive.google.com/file/d/127lxXYqzO6Bd0yZhvEbgIfz95HaEnr9K"
     md5 = "96d54b3224c5350a98d55d5a7e6984ad"
     filename = "PatternNet.zip"
