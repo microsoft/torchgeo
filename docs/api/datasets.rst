@@ -93,9 +93,14 @@ LandCover.ai (Land Cover from Aerial Imagery)
 .. autoclass:: LandCoverAI
 
 LEVIR-CD+ (LEVIR Change Detection +)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: LEVIRCDPlus
+
+PatternNet
+^^^^^^^^^^
+
+.. autoclass:: PatternNet
 
 SEN12MS
 ^^^^^^^
