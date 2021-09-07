@@ -37,7 +37,7 @@ class SEN12MS(VisionDataset):
 
     * https://doi.org/10.5194/isprs-annals-IV-2-W7-153-2019
 
-    .. note:
+    .. note::
 
        This dataset can be automatically downloaded using the following bash script:
 
