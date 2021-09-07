@@ -43,7 +43,7 @@ class So2Sat(VisionDataset):
 
        This dataset can be automatically downloaded using the following bash script:
 
-       .. code-block: bash
+       .. code-block:: bash
 
           for split in train validation testing
           do
