@@ -76,7 +76,7 @@ class PatternNet(VisionDataset, ImageFolder):  # type: ignore[misc]
     url = "https://drive.google.com/file/d/127lxXYqzO6Bd0yZhvEbgIfz95HaEnr9K"
     md5 = "96d54b3224c5350a98d55d5a7e6984ad"
     filename = "PatternNet.zip"
-    files = ["images"]
+    directory = "images"
 
     def __init__(
         self,
@@ -150,11 +150,10 @@ class PatternNet(VisionDataset, ImageFolder):  # type: ignore[misc]
         Returns:
             True if the dataset directories and split files are found, else False
         """
-        for filename in self.files:
-            filepath = os.path.join(self.root, filename)
-            if not os.path.exists(filepath):
-                return False
-        return True
+        filepath = os.path.join(self.root, self.directory)
+        if not os.path.exists(filepath):
+            return False
+    return True
 
     def _download(self) -> None:
         """Download the dataset and extract it.
