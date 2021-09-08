@@ -37,11 +37,11 @@ class SEN12MS(VisionDataset):
 
     * https://doi.org/10.5194/isprs-annals-IV-2-W7-153-2019
 
-    .. note:
+    .. note::
 
        This dataset can be automatically downloaded using the following bash script:
 
-       .. code-block: bash
+       .. code-block:: bash
 
           for season in 1158_spring 1868_summer 1970_fall 2017_winter
           do

@@ -39,11 +39,11 @@ class So2Sat(VisionDataset):
 
     * https://doi.org/10.1109/MGRS.2020.2964708
 
-    .. note:
+    .. note::
 
        This dataset can be automatically downloaded using the following bash script:
 
-       .. code-block: bash
+       .. code-block:: bash
 
           for split in train validation testing
           do
