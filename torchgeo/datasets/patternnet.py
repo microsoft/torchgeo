@@ -4,12 +4,12 @@
 """PatternNet dataset."""
 
 import os
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, Optional, Tuple
 
+import numpy as np
 import torch
 from torch import Tensor
 from torchvision.datasets import ImageFolder
-from torchvision.transforms import PILToTensor
 
 from .geo import VisionDataset
 from .utils import download_and_extract_archive
@@ -81,7 +81,7 @@ class PatternNet(VisionDataset, ImageFolder):  # type: ignore[misc]
     def __init__(
         self,
         root: str = "data",
-        transforms: Optional[Callable[[Tensor], Tensor]] = None,
+        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -110,10 +110,10 @@ class PatternNet(VisionDataset, ImageFolder):  # type: ignore[misc]
                 + "You can use download=True to download it"
             )
 
+        # When transform & target_transform are None, ImageFolder.__getitem__[index]
+        # returns a PIL.Image and int for image and label, respectively
         super().__init__(
-            root=os.path.join(root, "images"),
-            transform=PILToTensor(),
-            target_transform=torch.tensor,  # type: ignore[attr-defined]
+            root=os.path.join(root, "images"), transform=None, target_transform=None
         )
 
         # Must be set after calling super().__init__()
@@ -128,12 +128,12 @@ class PatternNet(VisionDataset, ImageFolder):  # type: ignore[misc]
         Returns:
             data and label at that index
         """
-        image, label = ImageFolder.__getitem__(self, index)
+        image, label = self._load_image(index)
+        sample = {"image": image, "label": label}
 
         if self.transforms is not None:
-            image = self.transforms(image)
+            sample = self.transforms(sample)
 
-        sample = {"image": image, "label": label}
         return sample
 
     def __len__(self) -> int:
@@ -144,6 +144,24 @@ class PatternNet(VisionDataset, ImageFolder):  # type: ignore[misc]
         """
         return len(self.imgs)
 
+    def _load_image(self, index: int) -> Tuple[Tensor, Tensor]:
+        """Load a single image and it's class label.
+
+        Args:
+            index: index to return
+
+        Returns:
+            the image
+            the image class label
+        """
+        img, label = ImageFolder.__getitem__(self, index)
+        array = np.array(img)
+        tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+        # Convert from HxWxC to CxHxW
+        tensor = tensor.permute((2, 0, 1))
+        label = torch.tensor(label)  # type: ignore[attr-defined]
+        return tensor, label
+
     def _check_integrity(self) -> bool:
         """Checks the integrity of the dataset structure.
 
@@ -153,7 +171,8 @@ class PatternNet(VisionDataset, ImageFolder):  # type: ignore[misc]
         filepath = os.path.join(self.root, self.directory)
         if not os.path.exists(filepath):
             return False
-    return True
+
+        return True
 
     def _download(self) -> None:
         """Download the dataset and extract it.
