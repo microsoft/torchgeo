@@ -124,20 +124,20 @@ class ExtractPatches(Module):  # type: ignore[misc,name-defined]
         if "image" in sample:
             sample["image"] = rearrange(
                 sample["image"],
-                "b c (h ph) (w pw) -> b (h w) c ph pw",
+                "b c (h ph) (w pw) -> (b h w) c ph pw",
                 ph=self.ph, pw=self.pw
             )
         if "mask" in sample:
             if sample["mask"].ndim == 4:
                 sample["mask"] = rearrange(
                     sample["mask"],
-                    "b c (h ph) (w pw) -> b (h w) c ph pw",
+                    "b c (h ph) (w pw) -> (b h w) c ph pw",
                     ph=self.ph, pw=self.pw
                 )
             elif sample["mask"].ndim == 3:
                 sample["mask"] = rearrange(
                     sample["mask"],
-                    "b (h ph) (w pw) -> b (h w) ph pw",
+                    "b (h ph) (w pw) -> (b h w) ph pw",
                     ph=self.ph, pw=self.pw
                 )
             else:
