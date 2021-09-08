@@ -5,12 +5,19 @@
 
 from .transforms import (
     CombinePatches,
+    ExtractPatches,
     Identity,
     RandomHorizontalFlip,
     RandomVerticalFlip,
 )
 
-__all__ = ("Identity", "RandomHorizontalFlip", "RandomVerticalFlip", "CombinePatches")
+__all__ = (
+    "Identity",
+    "RandomHorizontalFlip",
+    "RandomVerticalFlip",
+    "ExtractPatches",
+    "CombinePatches",
+)
 
 # https://stackoverflow.com/questions/40018681
 for module in __all__:
