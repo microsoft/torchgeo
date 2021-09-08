@@ -81,6 +81,8 @@ html_theme_options = {
     "analytics_id": "UA-117752657-2",
 }
 
+html_favicon = os.path.join("..", "logo", "favicon.ico")
+
 # -- Extension configuration -------------------------------------------------
 
 # sphinx.ext.autodoc
