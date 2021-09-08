@@ -70,7 +70,7 @@ class PatternNet(VisionDataset, ImageFolder):  # type: ignore[misc]
     37. wastewater_treatment_plant
 
     If you use this dataset in your research, please cite the following paper:
-    * https://www.sciencedirect.com/science/article/abs/pii/S0924271618300042
+    * https://doi.org/10.1016/j.isprsjprs.2018.01.004
     """
 
     url = "https://drive.google.com/file/d/127lxXYqzO6Bd0yZhvEbgIfz95HaEnr9K"
