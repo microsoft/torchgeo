@@ -31,7 +31,7 @@ class SEN12MSSegmentationTask(pl.LightningModule):
     ``pytorch_segmentation_models`` package.
     """
 
-    def config_task(self, kwargs: Dict[str, Any]) -> None:
+    def config_task(self, kwargs: Any) -> None:
         """Configures the task based on kwargs parameters."""
         if kwargs["segmentation_model"] == "unet":
             self.model = smp.Unet(
@@ -305,7 +305,6 @@ class SEN12MSDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=True,
-            pin_memory=False,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -315,7 +314,6 @@ class SEN12MSDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=False,
-            pin_memory=False,
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
@@ -325,5 +323,4 @@ class SEN12MSDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=False,
-            pin_memory=False,
         )
