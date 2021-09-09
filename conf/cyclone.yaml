@@ -1,8 +1,5 @@
 program:  # These are the arguments that define how the train.py script works
   seed: 1337
-  data_dir: /home/caleb/mount/data/cyclone
-  output_dir: output/
-  log_dir: output/logs/
   overwrite: True
 
 experiment:
