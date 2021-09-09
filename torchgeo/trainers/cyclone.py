@@ -170,7 +170,7 @@ class CycloneDataModule(pl.LightningDataModule):
         while :func:`setup` is done once per GPU.
         """
         do_download = self.api_key is not None
-        self.all_train_dataset = TropicalCycloneWindEstimation(
+        _ = TropicalCycloneWindEstimation(
             self.root_dir,
             split="train",
             transforms=self.custom_transform,
@@ -178,7 +178,7 @@ class CycloneDataModule(pl.LightningDataModule):
             api_key=self.api_key,
         )
 
-        self.all_test_dataset = TropicalCycloneWindEstimation(
+        _ = TropicalCycloneWindEstimation(
             self.root_dir,
             split="test",
             transforms=self.custom_transform,
@@ -199,6 +199,20 @@ class CycloneDataModule(pl.LightningDataModule):
         storms from the training set (specifically, the latter parts of the storms) as
         well as some novel storms.
         """
+        self.all_train_dataset = TropicalCycloneWindEstimation(
+            self.root_dir,
+            split="train",
+            transforms=self.custom_transform,
+            download=False,
+        )
+
+        self.all_test_dataset = TropicalCycloneWindEstimation(
+            self.root_dir,
+            split="test",
+            transforms=self.custom_transform,
+            download=False,
+        )
+
         storm_ids = []
         for item in self.all_train_dataset.collection:
             storm_id = item["href"].split("/")[0].split("_")[-2]
