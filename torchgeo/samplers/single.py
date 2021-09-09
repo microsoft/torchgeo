@@ -156,7 +156,15 @@ class GridGeoSampler(GeoSampler):
         if roi is None:
             roi = BoundingBox(*index.bounds)
         self.roi = roi
-        self.hits = index.intersection(roi, objects=True)
+        self.hits = list(index.intersection(roi, objects=True))
+
+        self.length: int = 0
+        for hit in self.hits:
+            bounds = BoundingBox(*hit.bounds)
+
+            rows = int((bounds.maxy - bounds.miny - self.size[0]) // self.stride[0]) + 1
+            cols = int((bounds.maxx - bounds.minx - self.size[1]) // self.stride[1]) + 1
+            self.length += rows * cols
 
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
@@ -185,3 +193,11 @@ class GridGeoSampler(GeoSampler):
                     maxx = minx + self.size[1]
 
                     yield BoundingBox(minx, maxx, miny, maxy, mint, maxt)
+
+    def __len__(self) -> int:
+        """Return the number of samples over the ROI.
+
+        Returns:
+            number of patches that will be sampled
+        """
+        return self.length
