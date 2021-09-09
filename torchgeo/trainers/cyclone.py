@@ -29,7 +29,7 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
     This does not take into account other per-sample features available in this dataset.
     """
 
-    def config_task(self, kwargs: Dict[str, Any]) -> None:
+    def config_task(self, kwargs: Any) -> None:
         """Configures the task based on kwargs parameters."""
         if kwargs["model"] == "resnet18":
             self.model = models.resnet18(pretrained=False, num_classes=1)
@@ -237,7 +237,6 @@ class CycloneDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=True,
-            pin_memory=False,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -247,7 +246,6 @@ class CycloneDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=False,
-            pin_memory=False,
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
@@ -257,5 +255,4 @@ class CycloneDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=False,
-            pin_memory=False,
         )

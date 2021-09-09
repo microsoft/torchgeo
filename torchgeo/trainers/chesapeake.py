@@ -40,7 +40,7 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
     ``pytorch_segmentation_models`` package.
     """
 
-    def config_task(self, kwargs: Dict[str, Any]) -> None:
+    def config_task(self, kwargs: Any) -> None:
         """Configures the task based on kwargs parameters."""
         if kwargs["segmentation_model"] == "unet":
             self.model = smp.Unet(
@@ -341,7 +341,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             self.train_dataset,
             batch_sampler=sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
-            pin_memory=False,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -356,7 +355,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             self.val_dataset,
             batch_sampler=sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
-            pin_memory=False,
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
@@ -371,5 +369,4 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             self.test_dataset,
             batch_sampler=sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
-            pin_memory=False,
         )

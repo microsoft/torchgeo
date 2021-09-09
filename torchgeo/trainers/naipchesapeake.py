@@ -40,7 +40,7 @@ class NAIPChesapeakeSegmentationTask(pl.LightningModule):
     # TODO: tune this hyperparam
     num_filters = 64
 
-    def config_task(self, kwargs: Dict[str, Any]) -> None:
+    def config_task(self, kwargs: Any) -> None:
         """Configures the task based on kwargs parameters."""
         if kwargs["segmentation_model"] == "unet":
             self.model = smp.Unet(
@@ -327,7 +327,6 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             self.dataset,
             batch_sampler=self.train_sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
-            pin_memory=False,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -337,7 +336,6 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             sampler=self.val_sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
-            pin_memory=False,
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
@@ -347,5 +345,4 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             sampler=self.test_sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
-            pin_memory=False,
         )
