@@ -1,11 +1,21 @@
-program:  # These are experiment level arguments
-  experiment_name: cyclone_test
+program:  # These are the arguments that define how the train.py script works
+  seed: 1337
+  data_dir: /home/caleb/mount/data/cyclone
+  output_dir: output/
+  log_dir: output/logs/
   overwrite: True
 
-trainer:  # These are all the arguments that will be passed to the pl.Trainer
-  min_epochs: 15
+experiment:
+  task: "cyclone"
+  name: cyclone_test
+  module:
+    model: "resnet18"
+    learning_rate: 1e-3
+    learning_rate_schedule_patience: 2
+  datamodule:
+    batch_size: 32
+    num_workers: 4
 
-task:  # These are all the arguments that will be used to create an appropriate task
-  name: cyclone
-  learning_rate: 1e-3
-  learning_rate_schedule_patience: 2
+trainer:
+  min_epochs: 15
+  gpus: 1
