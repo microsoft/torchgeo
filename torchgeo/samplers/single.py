@@ -146,9 +146,9 @@ class GridGeoSampler(GeoSampler):
 
         Args:
             index: index of a :class:`~torchgeo.datasets.GeoDataset`
-            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
             size: dimensions of each :term:`patch` in units of CRS
             stride: distance to skip between each patch
+            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
         """
         self.index = index
         self.size = _to_tuple(size)
