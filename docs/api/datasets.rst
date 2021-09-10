@@ -92,6 +92,11 @@ ETCI2021 Flood Detection
 
 .. autoclass:: ETCI2021
 
+GID-15 (Gaofen Image Dataset)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: GID15
+
 LandCover.ai (Land Cover from Aerial Imagery)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
