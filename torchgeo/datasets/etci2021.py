@@ -44,7 +44,7 @@ class ETCI2021(VisionDataset):
     2. flood/water
 
     If you use this dataset in your research, please add the following to your
-    acknowledgements section:
+    acknowledgements section::
 
         The authors would like to thank the NASA Earth Science Data Systems Program,
         NASA Digital Transformation AI/ML thrust, and IEEE GRSS for organizing
