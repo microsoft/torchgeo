@@ -87,6 +87,11 @@ CV4A Kenya Crop Type Competition
 
 .. autoclass:: CV4AKenyaCropType
 
+GID-15 (Gaofen Image Dataset)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: GID15
+
 LandCover.ai (Land Cover from Aerial Imagery)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
