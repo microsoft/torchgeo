@@ -87,6 +87,11 @@ CV4A Kenya Crop Type Competition
 
 .. autoclass:: CV4AKenyaCropType
 
+ETCI2021 Flood Detection
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: ETCI2021
+
 LandCover.ai (Land Cover from Aerial Imagery)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
