@@ -48,22 +48,29 @@ class ETCI2021(VisionDataset):
     NASA Digital Transformation AI/ML thrust, and IEEE GRSS for organizing the ETCI competition'.
     """  # noqa: E501
 
-    urls = [
-        "https://drive.google.com/file/d/14HqNW5uWLS92n7KrxKgDwUTsSEST6LCr",
-        "https://drive.google.com/file/d/19sriKPHCZLfJn_Jmk3Z_0b3VaCBVRVyn",
-        "https://drive.google.com/file/d/1rpMVluASnSHBfm2FhpPDio0GyCPOqg7E",
-    ]
-    md5s = [
-        "1e95792fe0f6e3c9000abdeab2a8ab0f",
-        "fd18cecb318efc69f8319f90c3771bdf",
-        "da9fa69e1498bd49d5c766338c6dac3d",
-    ]
-    filenames = ["train.zip", "val_with_ref_labels.zip", "test_without_ref_labels.zip"]
-    directories = ["train", "test", "test_internal"]
     splits = ["train", "val", "test"]
     bands = ["VV", "VH"]
     masks = ["flood", "water_body"]
-    split_to_folder = dict(train="train", val="test", test="test_internal")
+    metadata = {
+        "train": {
+            "filename": "train.zip",
+            "md5": "1e95792fe0f6e3c9000abdeab2a8ab0f",
+            "directory": "train",
+            "url": "https://drive.google.com/file/d/14HqNW5uWLS92n7KrxKgDwUTsSEST6LCr",
+        },
+        "val": {
+            "filename": "val_with_ref_labels.zip",
+            "md5": "fd18cecb318efc69f8319f90c3771bdf",
+            "directory": "test",
+            "url": "https://drive.google.com/file/d/19sriKPHCZLfJn_Jmk3Z_0b3VaCBVRVyn",
+        },
+        "test": {
+            "filename": "test_without_ref_labels.zip",
+            "md5": "da9fa69e1498bd49d5c766338c6dac3d",
+            "directory": "test_internal",
+            "url": "https://drive.google.com/file/d/1rpMVluASnSHBfm2FhpPDio0GyCPOqg7E",
+        },
+    }
 
     def __init__(
         self,
@@ -124,7 +131,7 @@ class ETCI2021(VisionDataset):
             flood_mask = self._load_target(files["flood_mask"])
             mask = torch.stack(tensors=[water_mask, flood_mask], dim=0)
         else:
-            mask = water_mask
+            mask = water_mask.unsqueeze(0)
 
         image = torch.cat(tensors=[vv, vh], dim=0)  # type: ignore[attr-defined]
         sample = {"image": image, "mask": mask}
@@ -154,7 +161,7 @@ class ETCI2021(VisionDataset):
             water body mask, flood mask (train/val only)
         """
         files = []
-        directory = self.split_to_folder[split]
+        directory = self.metadata[split]["directory"]
         folders = sorted(glob.glob(os.path.join(root, directory, "*")))
         folders = [os.path.join(folder, "tiles") for folder in folders]
         for folder in folders:
@@ -215,10 +222,10 @@ class ETCI2021(VisionDataset):
         Returns:
             True if the dataset directories and split files are found, else False
         """
-        for directory in self.directories:
-            dirpath = os.path.join(self.root, directory)
-            if not os.path.exists(dirpath):
-                return False
+        directory = self.metadata[self.split]["directory"]
+        dirpath = os.path.join(self.root, directory)
+        if not os.path.exists(dirpath):
+            return False
         return True
 
     def _download(self) -> None:
@@ -231,13 +238,12 @@ class ETCI2021(VisionDataset):
             print("Files already downloaded and verified")
             return
 
-        for url, filename, md5 in zip(self.urls, self.filenames, self.md5s):
-            download_and_extract_archive(
-                url,
-                self.root,
-                filename=filename,
-                md5=md5 if self.checksum else None,
-            )
+        download_and_extract_archive(
+            self.metadata[self.split]["url"],
+            self.root,
+            filename=self.metadata[self.split]["filename"],
+            md5=self.metadata[self.split]["md5"] if self.checksum else None,
+        )
 
         if os.path.exists(os.path.join(self.root, "__MACOSX")):
             shutil.rmtree(os.path.join(self.root, "__MACOSX"))
