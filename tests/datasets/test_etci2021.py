@@ -31,19 +31,28 @@ class TestETCI2021:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.utils, "download_url", download_url
         )
-        md5s = [
-            "50c10eb07d6db9aee3ba36401e4a2c45",
-            "3e8b5a3cb95e6029e0e2c2d4b4ec6fba",
-            "c8ee1e5d3e478761cd00ebc6f28b0ae7",
-        ]
         data_dir = os.path.join("tests", "data", "etci2021")
-        urls = [
-            os.path.join(data_dir, "train.zip"),
-            os.path.join(data_dir, "val_with_ref_labels.zip"),
-            os.path.join(data_dir, "test_without_ref_labels.zip"),
-        ]
-        monkeypatch.setattr(ETCI2021, "md5s", md5s)  # type: ignore[attr-defined]
-        monkeypatch.setattr(ETCI2021, "urls", urls)  # type: ignore[attr-defined]
+        metadata = {
+            "train": {
+                "filename": "train.zip",
+                "md5": "50c10eb07d6db9aee3ba36401e4a2c45",
+                "directory": "train",
+                "url": os.path.join(data_dir, "train.zip"),
+            },
+            "val": {
+                "filename": "val_with_ref_labels.zip",
+                "md5": "3e8b5a3cb95e6029e0e2c2d4b4ec6fba",
+                "directory": "test",
+                "url": os.path.join(data_dir, "val_with_ref_labels.zip"),
+            },
+            "test": {
+                "filename": "test_without_ref_labels.zip",
+                "md5": "c8ee1e5d3e478761cd00ebc6f28b0ae7",
+                "directory": "test_internal",
+                "url": os.path.join(data_dir, "test_without_ref_labels.zip"),
+            },
+        }
+        monkeypatch.setattr(ETCI2021, "metadata", metadata)  # type: ignore[attr-defined]   # noqa: E501
         root = str(tmp_path)
         split = request.param
         transforms = Identity()
@@ -58,9 +67,9 @@ class TestETCI2021:
         assert x["image"].shape[-2:] == x["mask"].shape[-2:]
 
         if dataset.split != "test":
-            assert x["mask"].ndim == 3
+            assert x["mask"].shape[0] == 2
         else:
-            assert x["mask"].ndim == 2
+            assert x["mask"].shape[0] == 1
 
     def test_len(self, dataset: ETCI2021) -> None:
         assert len(dataset) == 2
