@@ -34,22 +34,22 @@ class GID15(VisionDataset):
     * colormapped masks are 3 channel tifs
 
     Dataset classes:
-        1. background
-        2. industrial_land
-        3. urban_residential
-        4. rural_residential
-        5. traffic_land
-        6. paddy_field
-        7. irrigated_land
-        8. dry_cropland
-        9. garden_plot
-        10. arbor_woodland
-        11. shrub_land
-        12. natural_grassland
-        13. artificial_grassland
-        14. river
-        15. lake
-        16. pond
+    1. background
+    2. industrial_land
+    3. urban_residential
+    4. rural_residential
+    5. traffic_land
+    6. paddy_field
+    7. irrigated_land
+    8. dry_cropland
+    9. garden_plot
+    10. arbor_woodland
+    11. shrub_land
+    12. natural_grassland
+    13. artificial_grassland
+    14. river
+    15. lake
+    16. pond
 
     If you use this dataset in your research, please cite the following paper:
     * https://arxiv.org/abs/1807.05713
@@ -159,7 +159,7 @@ class GID15(VisionDataset):
             split: subset of dataset, one of [train, val, test]
 
         Returns:
-            list of dicts containing paths for each pair of image1, image2, mask
+            list of dicts containing paths for each pair of image, mask
         """
         image_root = os.path.join(root, "GID", "img_dir")
         images = glob.glob(os.path.join(image_root, split, "*.tif"))
@@ -169,10 +169,10 @@ class GID15(VisionDataset):
                 image.replace("img_dir", "ann_dir").replace(".tif", "_15label.png")
                 for image in images
             ]
+            files = [dict(image=image, mask=mask) for image, mask in zip(images, masks)]
         else:
-            masks = [""] * len(images)
+            files = [dict(image=image) for image in images]
 
-        files = [dict(image=image, mask=mask) for image, mask in zip(images, masks)]
         return files
 
     def _load_image(self, path: str) -> Tensor:
