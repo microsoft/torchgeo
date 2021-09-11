@@ -56,7 +56,7 @@ class GID15(VisionDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/1807.05713
+    * https://doi.org/10.1016/j.rse.2019.111322
     """
 
     url = "https://drive.google.com/file/d/1zbkCEXPEKEV6gq19OKmIbaT8bXXfWW6u"
