@@ -107,6 +107,11 @@ PatternNet
 
 .. autoclass:: PatternNet
 
+RESISC45 (Remote Sensing Image Scene Classification)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: RESISC45
+
 SEN12MS
 ^^^^^^^
 
