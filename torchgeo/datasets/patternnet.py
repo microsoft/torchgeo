@@ -22,14 +22,17 @@ class PatternNet(VisionDataset, ImageFolder):  # type: ignore[misc]
     dataset is a dataset for remote sensing scene classification and image retrieval.
 
     Dataset features:
+
     * 30,400 images with 6-50 cm per pixel resolution (256x256 px)
     * three spectral bands - RGB
     * 38 scene classes, 800 images per class
 
     Dataset format:
+
     * images are three-channel jpgs
 
     Dataset classes:
+
     0. airplane
     1. baseball_field
     2. basketball_court
@@ -70,6 +73,7 @@ class PatternNet(VisionDataset, ImageFolder):  # type: ignore[misc]
     37. wastewater_treatment_plant
 
     If you use this dataset in your research, please cite the following paper:
+
     * https://doi.org/10.1016/j.isprsjprs.2018.01.004
     """
 
