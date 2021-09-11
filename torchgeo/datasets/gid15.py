@@ -23,17 +23,20 @@ class GID15(VisionDataset):
     dataset is a dataset for semantic segmentation.
 
     Dataset features:
+
     * images taken by the Gaofen-2 (GF-2) satellite over 60 cities in China
     * masks representing 15 semantic categories
     * three spectral bands - RGB
     * 150 with 3 m per pixel resolution (6800x7200 px)
 
     Dataset format:
+
     * images are three-channel pngs
     * masks are single-channel pngs
     * colormapped masks are 3 channel tifs
 
     Dataset classes:
+
     1. background
     2. industrial_land
     3. urban_residential
@@ -52,7 +55,8 @@ class GID15(VisionDataset):
     16. pond
 
     If you use this dataset in your research, please cite the following paper:
-    * https://arxiv.org/abs/1807.05713
+
+    * https://doi.org/10.1016/j.rse.2019.111322
     """
 
     url = "https://drive.google.com/file/d/1zbkCEXPEKEV6gq19OKmIbaT8bXXfWW6u"
