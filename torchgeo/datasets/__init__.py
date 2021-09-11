@@ -42,6 +42,7 @@ from .levircd import LEVIRCDPlus
 from .naip import NAIP
 from .nwpu import VHR10
 from .patternnet import PatternNet
+from .resisc45 import RESISC45
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel2
 from .so2sat import So2Sat
@@ -86,6 +87,7 @@ __all__ = (
     "LandCoverAI",
     "LEVIRCDPlus",
     "PatternNet",
+    "RESISC45",
     "SEN12MS",
     "So2Sat",
     "TropicalCycloneWindEstimation",
