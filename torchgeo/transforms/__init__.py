@@ -3,8 +3,8 @@
 
 """TorchGeo transforms."""
 
-from .transforms import Identity, RandomHorizontalFlip, RandomVerticalFlip
 from .indices import NDVI
+from .transforms import Identity, RandomHorizontalFlip, RandomVerticalFlip
 
 __all__ = ("Identity", "RandomHorizontalFlip", "RandomVerticalFlip", "NDVI")
 
