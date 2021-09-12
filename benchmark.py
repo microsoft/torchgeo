@@ -3,6 +3,7 @@
 """dataset and sampler benchmarking script."""
 
 import argparse
+import csv
 import os
 import random
 import time
@@ -94,6 +95,18 @@ def set_up_parser() -> argparse.ArgumentParser:
         type=int,
         help="random seed for reproducibility",
     )
+    parser.add_argument(
+        "--output-fn",
+        default="benchmark-results.csv",
+        type=str,
+        help="path to the CSV file to write results",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="prints results to stdout",
+    )
 
     return parser
 
@@ -149,8 +162,11 @@ def main(args: argparse.Namespace) -> None:
             length=num_total_patches,
         ),
     ]
+
+    results_rows = []
     for sampler in samplers:
-        print(f"\n{sampler.__class__.__name__}:")
+        if args.verbose:
+            print(f"\n{sampler.__class__.__name__}:")
 
         if isinstance(sampler, RandomBatchGeoSampler):
             dataloader = DataLoader(
@@ -172,11 +188,43 @@ def main(args: argparse.Namespace) -> None:
             if i == num_batches:
                 break
         toc = time.time()
-
         duration = toc - tic
-        print(f"  duration: {duration:.3f} s")
-        print(f"  count: {num_total_patches}")
-        print(f"  rate: {num_total_patches / duration} patches/sec")
+
+        if args.verbose:
+            print(f"  duration: {duration:.3f} s")
+            print(f"  count: {num_total_patches}")
+            print(f"  rate: {num_total_patches / duration} patches/sec")
+
+        results_rows.append(
+            {
+                "cached": args.cache,
+                "seed": args.seed,
+                "duration": duration,
+                "count": num_total_patches,
+                "rate": num_total_patches / duration,
+                "sampler": sampler.__class__.__name__,
+                "batch_size": args.batch_size,
+                "num_workers": args.num_workers,
+            }
+        )
+
+    fieldnames = [
+        "cached",
+        "seed",
+        "duration",
+        "count",
+        "rate",
+        "sampler",
+        "batch_size",
+        "num_workers",
+    ]
+    if not os.path.exists(args.output_fn):
+        with open(args.output_fn, "w") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+    with open(args.output_fn, "a") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writerows(results_rows)
 
 
 if __name__ == "__main__":
