@@ -3,9 +3,9 @@
 
 """TorchGeo transforms."""
 
-from .transforms import Identity, RandomHorizontalFlip, RandomVerticalFlip
+from .transforms import Identity, PadTo, RandomHorizontalFlip, RandomVerticalFlip
 
-__all__ = ("Identity", "RandomHorizontalFlip", "RandomVerticalFlip")
+__all__ = ("Identity", "PadTo", "RandomHorizontalFlip", "RandomVerticalFlip")
 
 # https://stackoverflow.com/questions/40018681
 for module in __all__:

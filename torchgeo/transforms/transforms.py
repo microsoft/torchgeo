@@ -3,11 +3,12 @@
 
 """TorchGeo transforms."""
 
-from typing import Dict
+from typing import Dict, Tuple, Union
 
 import torch
 from torch import Tensor
 from torch.nn import Module  # type: ignore[attr-defined]
+from torch.nn.functional import pad
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -96,4 +97,66 @@ class Identity(Module):  # type: ignore[misc,name-defined]
         Returns:
             the unchanged input
         """
+        return sample
+
+
+class PadTo(Module):  # type: ignore[misc,name-defined]
+    """Pads the given sample to a specified size with a constant value."""
+
+    def __init__(self, size: Tuple[int, int], value: Union[int, float]) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            size: a tuple of ints in the format (height, width) that give the spatial
+                dimensions to pad inputs to
+            value : the constant value to fill with
+        """
+        super().__init__()
+        self.size = size
+        self.value = value
+
+    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+        """Pad the inputs to a desired size with a constant value.
+
+        The input will be padded along the bottom of the height dimension and along the
+        right of the width dimension.
+
+        Args:
+            sample: a single data sample
+
+        Returns:
+            a sample where the spatial dimensions are padded to the desired sizes
+        """
+        if "image" in sample:
+            _, height, width = sample["image"].shape
+
+            height_pad = self.size[0] - height
+            width_pad = self.size[1] - width
+
+            # See https://pytorch.org/docs/stable/generated/torch.nn.functional.pad.html
+            # for a description of the format of the padding tuple
+            sample["image"] = pad(
+                sample["image"],
+                (0, width_pad, 0, height_pad),
+                mode="constant",
+                value=self.value,
+            )
+
+        if "masks" in sample:
+            height, width = sample["masks"].shape
+
+            height_pad = self.size[0] - height
+            width_pad = self.size[1] - width
+
+            # See https://pytorch.org/docs/stable/generated/torch.nn.functional.pad.html
+            # for a description of the format of the padding tuple
+            sample["masks"] = pad(
+                sample["masks"],
+                (0, width_pad, 0, height_pad),
+                mode="constant",
+                value=self.value,
+            )
+
+            sample["masks"] = sample["masks"]
+
         return sample

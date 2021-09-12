@@ -68,3 +68,20 @@ def test_identity(sample: Dict[str, Tensor]) -> None:
     tr = transforms.Identity()
     output = tr(sample)
     assert_matching(output, sample)
+
+
+def test_pad(sample: Dict[str, Tensor]) -> None:
+    tr = transforms.PadTo(size=(4, 5), value=1)
+    output = tr(sample)
+    expected = {
+        "image": torch.tensor(  # type: ignore[attr-defined]
+            [[[1, 2, 3, 1, 1], [4, 5, 6, 1, 1], [7, 8, 9, 1, 1], [1, 1, 1, 1, 1]]]
+        ),
+        "masks": torch.tensor(  # type: ignore[attr-defined]
+            [[0, 0, 1, 1, 1], [0, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]]
+        ),
+        "boxes": torch.tensor(  # type: ignore[attr-defined]
+            [[0, 0, 2, 2], [1, 1, 3, 3]]
+        ),
+    }
+    assert_matching(output, expected)
