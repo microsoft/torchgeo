@@ -34,7 +34,7 @@ class TestSpacenet1:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             radiant_mlhub.Dataset, "fetch", fetch
         )
-        test_md5 = "15169671a2554c7e6c778cf48f3a9384"
+        test_md5 = "829652022c2df4511ee4ae05bc290250"
         monkeypatch.setattr(Spacenet1, "md5", test_md5)  # type: ignore[attr-defined]
         root = str(tmp_path)
         transforms = Identity()
