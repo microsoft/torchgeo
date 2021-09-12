@@ -312,6 +312,28 @@ class ChesapeakeCVPR(GeoDataset):
         + [f"{state}-test" for state in states]
     )
 
+    files = [
+        "de_1m_2013_extended-debuffered-test_tiles",
+        "de_1m_2013_extended-debuffered-train_tiles",
+        "de_1m_2013_extended-debuffered-val_tiles",
+        "md_1m_2013_extended-debuffered-test_tiles",
+        "md_1m_2013_extended-debuffered-train_tiles",
+        "md_1m_2013_extended-debuffered-val_tiles",
+        "ny_1m_2013_extended-debuffered-test_tiles",
+        "ny_1m_2013_extended-debuffered-train_tiles",
+        "ny_1m_2013_extended-debuffered-val_tiles",
+        "pa_1m_2013_extended-debuffered-test_tiles",
+        "pa_1m_2013_extended-debuffered-train_tiles",
+        "pa_1m_2013_extended-debuffered-val_tiles",
+        "va_1m_2014_extended-debuffered-test_tiles",
+        "va_1m_2014_extended-debuffered-train_tiles",
+        "va_1m_2014_extended-debuffered-val_tiles",
+        "wv_1m_2014_extended-debuffered-test_tiles",
+        "wv_1m_2014_extended-debuffered-train_tiles",
+        "wv_1m_2014_extended-debuffered-val_tiles",
+        "spatial_index.geojson",
+    ]
+
     p_src_crs = pyproj.CRS("epsg:3857")
     p_transformers = {
         "epsg:26917": pyproj.Transformer.from_crs(
@@ -359,7 +381,7 @@ class ChesapeakeCVPR(GeoDataset):
         self.cache = cache
         self.checksum = checksum
 
-        if download:
+        if download and not self._check_structure():
             self._download()
 
         if checksum:
@@ -474,10 +496,10 @@ class ChesapeakeCVPR(GeoDataset):
         return sample
 
     def _check_integrity(self) -> bool:
-        """Check integrity of dataset.
+        """Check integrity of the dataset archive.
 
         Returns:
-            True if dataset files are found and/or MD5s match, else False
+            True if dataset archive is found and/or MD5s match, else False
         """
         integrity: bool = check_integrity(
             os.path.join(self.root, self.filename),
@@ -485,6 +507,18 @@ class ChesapeakeCVPR(GeoDataset):
         )
 
         return integrity
+
+    def _check_structure(self) -> bool:
+        """Checks to see if the dataset files exist in the root directory.
+
+        Returns:
+            True if the dataset files are found, else False
+        """
+        dataset_files = os.listdir(self.root)
+        for file in self.files:
+            if file not in dataset_files:
+                return False
+        return True
 
     def _download(self) -> None:
         """Download the dataset and extract it."""
