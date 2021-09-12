@@ -101,22 +101,37 @@ class Identity(Module):  # type: ignore[misc,name-defined]
 
 
 class PadTo(Module):  # type: ignore[misc,name-defined]
-    """Pads the given sample to a specified size with a constant value."""
+    """Pads the given sample to a specified size."""
 
-    def __init__(self, size: Tuple[int, int], value: Union[int, float]) -> None:
+    def __init__(
+        self,
+        size: Tuple[int, int],
+        image_mode: str = "constant",
+        image_value: Union[int, float] = 0,
+        mask_mode: str = "constant",
+        mask_value: Union[int, float] = 0,
+    ) -> None:
         """Initialize a new transform instance.
 
         Args:
             size: a tuple of ints in the format (height, width) that give the spatial
                 dimensions to pad inputs to
-            value : the constant value to fill with
+            image_mode: the type of padding to perform on the image (valid values
+                are those accepted by torch.nn.functional.pad)
+            image_value: fill value for 'constant' padding applied to the image
+            mask_mode: the type of padding to perform on the mask (valid values
+                are those accepted by torch.nn.functional.pad)
+            mask_value: fill value for 'constant' padding applied to the mask
         """
         super().__init__()
         self.size = size
-        self.value = value
+        self.image_mode = image_mode
+        self.image_value = image_value
+        self.mask_mode = mask_mode
+        self.mask_value = mask_value
 
     def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        """Pad the inputs to a desired size with a constant value.
+        """Pad the inputs to a specifized size.
 
         The input will be padded along the bottom of the height dimension and along the
         right of the width dimension.
@@ -138,8 +153,8 @@ class PadTo(Module):  # type: ignore[misc,name-defined]
             sample["image"] = pad(
                 sample["image"],
                 (0, width_pad, 0, height_pad),
-                mode="constant",
-                value=self.value,
+                mode=self.image_mode,
+                value=self.image_value,
             )
 
         if "masks" in sample:
@@ -153,8 +168,8 @@ class PadTo(Module):  # type: ignore[misc,name-defined]
             sample["masks"] = pad(
                 sample["masks"],
                 (0, width_pad, 0, height_pad),
-                mode="constant",
-                value=self.value,
+                mode=self.mask_mode,
+                value=self.mask_value,
             )
 
             sample["masks"] = sample["masks"]

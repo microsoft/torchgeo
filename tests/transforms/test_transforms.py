@@ -71,14 +71,14 @@ def test_identity(sample: Dict[str, Tensor]) -> None:
 
 
 def test_pad(sample: Dict[str, Tensor]) -> None:
-    tr = transforms.PadTo(size=(4, 5), value=1)
+    tr = transforms.PadTo(size=(4, 5), image_value=1, mask_value=2)
     output = tr(sample)
     expected = {
         "image": torch.tensor(  # type: ignore[attr-defined]
             [[[1, 2, 3, 1, 1], [4, 5, 6, 1, 1], [7, 8, 9, 1, 1], [1, 1, 1, 1, 1]]]
         ),
         "masks": torch.tensor(  # type: ignore[attr-defined]
-            [[0, 0, 1, 1, 1], [0, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]]
+            [[0, 0, 1, 2, 2], [0, 1, 1, 2, 2], [1, 1, 1, 2, 2], [2, 2, 2, 2, 2]]
         ),
         "boxes": torch.tensor(  # type: ignore[attr-defined]
             [[0, 0, 2, 2], [1, 1, 3, 3]]
