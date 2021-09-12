@@ -63,6 +63,11 @@ Sentinel
 .. autoclass:: Sentinel
 .. autoclass:: Sentinel2
 
+Spacenet 1: Building Detection v1
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: Spacenet1
+
 .. _Non-geospatial Datasets:
 
 Non-geospatial Datasets
