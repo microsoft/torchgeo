@@ -12,7 +12,7 @@ from torch.utils.data import Sampler
 
 from torchgeo.datasets import BoundingBox
 
-from .utils import _to_tuple
+from .utils import _to_tuple, get_random_bounding_box
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -90,16 +90,9 @@ class RandomGeoSampler(GeoSampler):
             bounds = BoundingBox(*hit.bounds)
 
             # Choose a random index within that tile
-            minx = random.uniform(bounds.minx, bounds.maxx - self.size[1])
-            maxx = minx + self.size[1]
+            bounding_box = get_random_bounding_box(bounds, self.size)
 
-            miny = random.uniform(bounds.miny, bounds.maxy - self.size[0])
-            maxy = miny + self.size[0]
-
-            mint = bounds.mint
-            maxt = bounds.maxt
-
-            yield BoundingBox(minx, maxx, miny, maxy, mint, maxt)
+            yield bounding_box
 
     def __len__(self) -> int:
         """Return the number of samples in a single epoch.
@@ -156,7 +149,15 @@ class GridGeoSampler(GeoSampler):
         if roi is None:
             roi = BoundingBox(*index.bounds)
         self.roi = roi
-        self.hits = index.intersection(roi, objects=True)
+        self.hits = list(index.intersection(roi, objects=True))
+
+        self.length: int = 0
+        for hit in self.hits:
+            bounds = BoundingBox(*hit.bounds)
+
+            rows = int((bounds.maxy - bounds.miny - self.size[0]) // self.stride[0]) + 1
+            cols = int((bounds.maxx - bounds.minx - self.size[1]) // self.stride[1]) + 1
+            self.length += rows * cols
 
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
@@ -185,3 +186,11 @@ class GridGeoSampler(GeoSampler):
                     maxx = minx + self.size[1]
 
                     yield BoundingBox(minx, maxx, miny, maxy, mint, maxt)
+
+    def __len__(self) -> int:
+        """Return the number of samples over the ROI.
+
+        Returns:
+            number of patches that will be sampled
+        """
+        return self.length
