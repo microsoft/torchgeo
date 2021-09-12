@@ -29,6 +29,13 @@ def get_random_bounding_box(
 ) -> BoundingBox:
     """Returns a random bounding box within a given bounding box.
 
+    The ``size`` argument can either be:
+
+        * a single ``float`` - in which case the same value is used for the height and
+          width dimension
+        * a ``tuple`` of two floats - in which case, the first *float* is used for the
+          height dimension, and the second *float* for the width dimension
+
     Args:
         bounds: the larger bounding box to sample from
         size: the size of the bounding box to sample
