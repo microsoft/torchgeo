@@ -22,6 +22,7 @@ from .chesapeake import (
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCycloneWindEstimation
+from .etci2021 import ETCI2021
 from .geo import GeoDataset, RasterDataset, VectorDataset, VisionDataset, ZipDataset
 from .gid15 import GID15
 from .landcoverai import LandCoverAI
@@ -82,6 +83,7 @@ __all__ = (
     "COWCCounting",
     "COWCDetection",
     "CV4AKenyaCropType",
+    "ETCI2021",
     "GID15",
     "LandCoverAI",
     "LEVIRCDPlus",
