@@ -3,6 +3,7 @@
 
 import os
 import shutil
+import sys
 from pathlib import Path
 from typing import Generator
 
@@ -14,11 +15,14 @@ from _pytest.monkeypatch import MonkeyPatch
 import torchgeo.datasets.utils
 from torchgeo.datasets import RESISC45
 
+pytest.importorskip("rarfile")
+
 
 def download_url(url: str, root: str, *args: str) -> None:
     shutil.copy(url, root)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="requires unrar executable")
 class TestRESISC45:
     @pytest.fixture(params=["train", "test"])
     def dataset(
