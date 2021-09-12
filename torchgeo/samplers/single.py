@@ -71,7 +71,7 @@ class RandomGeoSampler(GeoSampler):
                 (defaults to the bounds of ``index``)
         """
         self.index = index
-        self.size = size
+        self.size = _to_tuple(size)
         self.length = length
         if roi is None:
             roi = BoundingBox(*index.bounds)
