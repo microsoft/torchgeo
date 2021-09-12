@@ -3,7 +3,7 @@
 
 """Trainers for the Chesapeake datasets."""
 
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, Optional, cast, Callable
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -11,6 +11,7 @@ import numpy as np
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from pytorch_lightning.core.datamodule import LightningDataModule
 from pytorch_lightning.core.lightning import LightningModule
 from torch import Tensor
@@ -19,9 +20,10 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter  # type: ignore[attr-defined]
 from torchmetrics import Accuracy, IoU
+from torchvision.transforms import Compose
 
 from ..datasets import Chesapeake7, ChesapeakeCVPR
-from ..samplers import RandomBatchGeoSampler
+from ..samplers import RandomBatchGeoSampler, GridGeoSampler
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -275,6 +277,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         root_dir: str,
         train_state: str,
         patches_per_tile: int = 200,
+        patch_size: int = 256,
         batch_size: int = 64,
         num_workers: int = 4,
         **kwargs: Any,
@@ -286,6 +289,8 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
                 classes
             train_state: The state code to use to train the model, e.g. "ny"
             patches_per_tile: The number of patches per tile to sample
+            patch_size: The size of each patch in pixels (test patches will be 1.5 times
+                this size)
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
         """
@@ -296,46 +301,65 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         self.train_state = train_state
         self.layers = ["naip-new", "lc"]
         self.patches_per_tile = patches_per_tile
-        self.original_patch_size = 500
+        self.patch_size = patch_size
+        # This is a rough estimate of how large of a patch we will need to sample in
+        # EPSG:3857 in order to garuntee a large enough patch in the local CRS.
+        self.original_patch_size = int(patch_size * 1.5)
         self.batch_size = batch_size
         self.num_workers = num_workers
 
-    def custom_transform(
-        self, sample: Dict[str, Any], patch_size: int = 256
+    def pad_to(
+        self, size: int = 512, image_value: int = 0, mask_value: int = 0
+    ) -> Callable[[Dict[str, Tensor]], Dict[str, Tensor]]:
+        """Returns a function to perform a padding transform on a single sample."""
+
+        def pad_inner(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+            _, height, width = sample["image"].shape
+            assert height <= size and width <= size
+
+            height_pad = size - height
+            width_pad = size - width
+
+            # See https://pytorch.org/docs/stable/generated/torch.nn.functional.pad.html
+            # for a description of the format of the padding tuple
+            sample["image"] = F.pad(
+                sample["image"],
+                (0, width_pad, 0, height_pad),
+                mode="constant",
+                value=image_value,
+            )
+            sample["mask"] = F.pad(
+                sample["mask"],
+                (0, width_pad, 0, height_pad),
+                mode="constant",
+                value=mask_value,
+            )
+            return sample
+        return pad_inner
+
+    def center_crop(
+        self, size: int = 512
+    ) -> Callable[[Dict[str, Tensor]], Dict[str, Tensor]]:
+        """Returns a function to perform a center crop transform on a single sample."""
+
+        def center_crop_inner(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+            _, height, width = sample["image"].shape
+            assert height >= size and width >= size
+
+            _, height, width = sample["image"].shape
+
+            y1 = (height - size) // 2
+            x1 = (width - size) // 2
+            sample["image"] = sample["image"][:, y1 : y1 + size, x1 : x1 + size]
+            sample["mask"] = sample["mask"][:, y1 : y1 + size, x1 : x1 + size]
+
+            return sample
+        return center_crop_inner
+
+    def preprocess(
+        self, sample: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
-
-        Args:
-            sample: a single sample from the Dataset
-            patch_size: size of center cropped patch to return
-
-        Returns:
-            a transformed sample
-        """
-        # Center crop
-        num_image_channels, height, width = sample["image"].shape
-        num_mask_channels = sample["mask"].shape[0]
-
-        # If we somehow sample a patch that is smaller than the `patch_size` we want to
-        # sample, then we create a nodata patch instead
-        if height < patch_size or width < patch_size:
-            height, width = patch_size, patch_size
-            sample["image"] = torch.zeros(  # type: ignore[attr-defined]
-                (num_image_channels, patch_size, patch_size)
-            )
-            sample["mask"] = (
-                torch.zeros(  # type: ignore[attr-defined]
-                    (num_mask_channels, patch_size, patch_size)
-                )
-                + 7
-            )
-
-        y1 = (height - patch_size) // 2
-        x1 = (width - patch_size) // 2
-        sample["image"] = sample["image"][:, y1 : y1 + patch_size, x1 : x1 + patch_size]
-        sample["mask"] = sample["mask"][:, y1 : y1 + patch_size, x1 : x1 + patch_size]
-        sample["mask"] = sample["mask"].squeeze()
-
+        """Preprocesses a single sample."""
         sample["image"] = sample["image"] / 255.0
         sample["mask"] = sample["mask"] - 1
 
@@ -345,13 +369,18 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         return sample
 
     def prepare_data(self) -> None:
-        """Initialize the main ``Dataset`` objects for use in :func:`setup`.
+        """Confirms that the dataset is downloaded on the local node.
 
-        This includes optionally downloading the dataset. This is done once per node,
-        while :func:`setup` is done once per GPU.
+        This method is called once per node, while :func:`setup` is called once per GPU.
         """
-        pass  # TODO: do a light check to see if the dataset exists and download it if
-        # it doesn't exist
+        ChesapeakeCVPR(
+            self.root_dir,
+            split=f"{self.train_state}-train",
+            layers=self.layers,
+            transforms=None,
+            download=True,
+            checksum=False,
+        )
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Create the train/val/test splits based on the original Dataset objects.
@@ -359,11 +388,24 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         The splits should be done here vs. in :func:`__init__` per the docs:
         https://pytorch-lightning.readthedocs.io/en/latest/extensions/datamodules.html#setup.
         """
+        train_transforms = Compose([
+            self.center_crop(self.patch_size),
+            self.preprocess
+        ])
+        val_transforms = Compose([
+            self.center_crop(self.patch_size),
+            self.preprocess
+        ])
+        test_transforms = Compose([
+            self.pad_to(self.original_patch_size, image_value=0, mask_value=7),
+            self.preprocess
+        ])
+
         self.train_dataset = ChesapeakeCVPR(
             self.root_dir,
             split=f"{self.train_state}-train",
             layers=self.layers,
-            transforms=self.custom_transform,
+            transforms=train_transforms,
             download=False,
             checksum=False,
         )
@@ -371,7 +413,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             self.root_dir,
             split=f"{self.train_state}-val",
             layers=self.layers,
-            transforms=self.custom_transform,
+            transforms=val_transforms,
             download=False,
             checksum=False,
         )
@@ -379,7 +421,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             self.root_dir,
             split=f"{self.train_state}-test",
             layers=self.layers,
-            transforms=self.custom_transform,
+            transforms=test_transforms,
             download=False,
             checksum=False,
         )
@@ -390,7 +432,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             self.train_dataset.index,
             size=self.original_patch_size,
             batch_size=self.batch_size,
-            length=self.patches_per_tile * 100,
+            length=self.patches_per_tile * self.train_dataset.index.get_size(),
         )
         return DataLoader(
             self.train_dataset,
@@ -404,7 +446,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             self.val_dataset.index,
             size=self.original_patch_size,
             batch_size=self.batch_size,
-            length=self.patches_per_tile * 5,
+            length=self.patches_per_tile * self.val_dataset.index.get_size(),
         )
         return DataLoader(
             self.val_dataset,
@@ -414,14 +456,14 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
 
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing."""
-        sampler = RandomBatchGeoSampler(
+        sampler = GridGeoSampler(
             self.test_dataset.index,
             size=self.original_patch_size,
-            batch_size=self.batch_size,
-            length=self.patches_per_tile * 20,
+            stride=self.original_patch_size,
         )
         return DataLoader(
             self.test_dataset,
-            batch_sampler=sampler,  # type: ignore[arg-type]
-            num_workers=self.num_workers,
+            batch_size=self.batch_size,
+            sampler=sampler,   # type: ignore[arg-type]
+            num_workers=self.num_workers
         )
