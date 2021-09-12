@@ -50,12 +50,19 @@ def set_up_parser() -> argparse.ArgumentParser:
         help="number of samples in each mini-batch",
         metavar="SIZE",
     )
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "-n",
+        "--num-batches",
+        type=int,
+        help="number of batches to load",
+        metavar="SIZE",
+    )
+    group.add_argument(
         "-e",
         "--epoch-size",
-        default=2 ** 10,
         type=int,
-        help="number of samples in each epoch",
+        help="number of samples to load, should be evenly divisible by batch size",
         metavar="SIZE",
     )
     parser.add_argument(
@@ -102,23 +109,44 @@ def main(args: argparse.Namespace) -> None:
     # Initialize datasets
     crs = CRS.from_epsg(32610)  # UTM, Zone 10
     res = 15
-    landsat = Landsat8(args.landsat_root, crs, res, cache=args.cache)
+    landsat = Landsat8(
+        args.landsat_root,
+        crs,
+        res,
+        cache=args.cache,
+        bands=[
+            "B1",
+            "B2",
+            "B3",
+            "B4",
+            "B5",
+            "B6",
+            "B7",
+        ],
+    )
     cdl = CDL(args.cdl_root, crs, res, cache=args.cache)
     dataset = landsat + cdl
 
     # Initialize samplers
+    if args.epoch_size:
+        num_total_patches = args.epoch_size
+        num_batches = args.epoch_size // args.batch_size
+    elif args.num_batches:
+        num_total_patches = args.num_batches * args.batch_size
+        num_batches = args.num_batches
+
     samplers = [
         RandomGeoSampler(
             landsat.index,
             size=args.patch_size,
-            length=args.epoch_size // args.batch_size,
+            length=num_total_patches,
         ),
         GridGeoSampler(landsat.index, size=args.patch_size, stride=args.stride),
         RandomBatchGeoSampler(
             landsat.index,
             size=args.patch_size,
             batch_size=args.batch_size,
-            length=args.epoch_size // args.batch_size,
+            length=num_total_patches,
         ),
     ]
     for sampler in samplers:
@@ -139,19 +167,24 @@ def main(args: argparse.Namespace) -> None:
             )
 
         tic = time.time()
-        patches = 0
-        for batch in dataloader:
-            patches += len(batch)
+        for i, batch in enumerate(dataloader):
+            # this is to stop the GridGeoSampler from enumerating everything
+            if i == num_batches:
+                break
         toc = time.time()
+
         duration = toc - tic
         print(f"  duration: {duration:.3f} s")
-        print(f"  count: {patches}")
-        print(f"  rate: {patches / duration} patches/sec")
+        print(f"  count: {num_total_patches}")
+        print(f"  rate: {num_total_patches / duration} patches/sec")
 
 
 if __name__ == "__main__":
     parser = set_up_parser()
     args = parser.parse_args()
+
+    if args.epoch_size:
+        assert args.epoch_size % args.batch_size == 0
 
     random.seed(args.seed)
 
