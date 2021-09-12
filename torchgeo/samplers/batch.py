@@ -12,7 +12,7 @@ from torch.utils.data import Sampler
 
 from torchgeo.datasets import BoundingBox
 
-from .utils import _to_tuple
+from .utils import _to_tuple, get_random_bounding_box
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -95,16 +95,9 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             # Choose random indices within that tile
             batch = []
             for _ in range(self.batch_size):
-                minx = random.uniform(bounds.minx, bounds.maxx - self.size[1])
-                maxx = minx + self.size[1]
 
-                miny = random.uniform(bounds.miny, bounds.maxy - self.size[0])
-                maxy = miny + self.size[0]
-
-                mint = bounds.mint
-                maxt = bounds.maxt
-
-                batch.append(BoundingBox(minx, maxx, miny, maxy, mint, maxt))
+                bounding_box = get_random_bounding_box(bounds, self.size)
+                batch.append(bounding_box)
 
             yield batch
 
