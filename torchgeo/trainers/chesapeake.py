@@ -3,7 +3,7 @@
 
 """Trainers for the Chesapeake datasets."""
 
-from typing import Any, Dict, Optional, cast, Callable
+from typing import Any, Callable, Dict, Optional, cast
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -23,7 +23,8 @@ from torchmetrics import Accuracy, IoU
 from torchvision.transforms import Compose
 
 from ..datasets import Chesapeake7, ChesapeakeCVPR
-from ..samplers import RandomBatchGeoSampler, GridGeoSampler
+from ..samplers import GridGeoSampler, RandomBatchGeoSampler
+from ..transforms import RandomHorizontalFlip, RandomVerticalFlip
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -335,6 +336,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
                 value=mask_value,
             )
             return sample
+
         return pad_inner
 
     def center_crop(
@@ -354,11 +356,10 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             sample["mask"] = sample["mask"][:, y1 : y1 + size, x1 : x1 + size]
 
             return sample
+
         return center_crop_inner
 
-    def preprocess(
-        self, sample: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Preprocesses a single sample."""
         sample["image"] = sample["image"] / 255.0
         sample["mask"] = sample["mask"] - 1
@@ -388,18 +389,28 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         The splits should be done here vs. in :func:`__init__` per the docs:
         https://pytorch-lightning.readthedocs.io/en/latest/extensions/datamodules.html#setup.
         """
-        train_transforms = Compose([
-            self.center_crop(self.patch_size),
-            self.preprocess
-        ])
-        val_transforms = Compose([
-            self.center_crop(self.patch_size),
-            self.preprocess
-        ])
-        test_transforms = Compose([
-            self.pad_to(self.original_patch_size, image_value=0, mask_value=7),
-            self.preprocess
-        ])
+        train_transforms = Compose(
+            [
+                self.center_crop(self.patch_size),
+                RandomHorizontalFlip(p=0.5),
+                RandomVerticalFlip(p=0.5),
+                self.preprocess,
+            ]
+        )
+        val_transforms = Compose(
+            [
+                self.center_crop(self.patch_size),
+                RandomHorizontalFlip(p=0.5),
+                RandomVerticalFlip(p=0.5),
+                self.preprocess,
+            ]
+        )
+        test_transforms = Compose(
+            [
+                self.pad_to(self.original_patch_size, image_value=0, mask_value=7),
+                self.preprocess,
+            ]
+        )
 
         self.train_dataset = ChesapeakeCVPR(
             self.root_dir,
@@ -464,6 +475,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
-            sampler=sampler,   # type: ignore[arg-type]
-            num_workers=self.num_workers
+            sampler=sampler,  # type: ignore[arg-type]
+            num_workers=self.num_workers,
         )
