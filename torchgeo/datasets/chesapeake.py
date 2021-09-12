@@ -291,7 +291,7 @@ class ChesapeakeCVPR(GeoDataset):
 
     url = "https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip"  # noqa: E501
     filename = "cvpr_chesapeake_landcover.zip"
-    md5 = "0ea5e7cb861be3fb8a06fedaaaf91af9"
+    md5 = "54222dde0b911464db19c83b266e473c"
 
     crs = CRS.from_epsg(3857)
     res = 1
