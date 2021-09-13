@@ -10,6 +10,7 @@ import lzma
 import os
 import tarfile
 import zipfile
+from calendar import monthrange
 from datetime import datetime
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
@@ -276,28 +277,29 @@ def disambiguate_timestamp(date_str: str, format: str) -> Tuple[float, float]:
 
     # TODO: This is really tedious, is there a better way to do this?
 
-    if not any([f"{c}%" in format for c in "yYcxG"]):
+    if not any([f"%{c}" in format for c in "yYcxG"]):
         # No temporal info
-        mint = datetime.min
+        mint = datetime(1970, 1, 1)
         maxt = datetime.max
-    elif not any([f"{c}%" in format for c in "bBmjUWcxV"]):
+    elif not any([f"%{c}" in format for c in "bBmjUWcxV"]):
         # Year resolution
         maxt = datetime(mint.year, 12, 31, 23, 59, 59, 999999)
-    elif not any([f"{c}%" in format for c in "djcx"]):
+    elif not any([f"%{c}" in format for c in "djcx"]):
         # Month resolution
-        maxt = datetime(mint.year, mint.month, 31, 23, 59, 59, 999999)
-    elif not any([f"{c}%" in format for c in "HIcX"]):
+        maxday = monthrange(mint.year, mint.month)[1]
+        maxt = datetime(mint.year, mint.month, maxday, 23, 59, 59, 999999)
+    elif not any([f"%{c}" in format for c in "HIcX"]):
         # Day resolution
         maxt = datetime(mint.year, mint.month, mint.day, 23, 59, 59, 999999)
-    elif not any([f"{c}%" in format for c in "McX"]):
+    elif not any([f"%{c}" in format for c in "McX"]):
         # Hour resolution
         maxt = datetime(mint.year, mint.month, mint.day, mint.hour, 59, 59, 999999)
-    elif not any([f"{c}%" in format for c in "ScX"]):
+    elif not any([f"%{c}" in format for c in "ScX"]):
         # Minute resolution
         maxt = datetime(
             mint.year, mint.month, mint.day, mint.hour, mint.minute, 59, 999999
         )
-    elif not any([f"{c}%" in format for c in "f"]):
+    elif not any([f"%{c}" in format for c in "f"]):
         # Second resolution
         maxt = datetime(
             mint.year, mint.month, mint.day, mint.hour, mint.minute, mint.second, 999999
