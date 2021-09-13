@@ -55,6 +55,7 @@ def set_up_parser() -> argparse.ArgumentParser:
     group.add_argument(
         "-n",
         "--num-batches",
+        default=2 ** 7,
         type=int,
         help="number of batches to load",
         metavar="SIZE",
@@ -100,12 +101,13 @@ def set_up_parser() -> argparse.ArgumentParser:
         default="benchmark-results.csv",
         type=str,
         help="path to the CSV file to write results",
+        metavar="FILE",
     )
     parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
-        help="prints results to stdout",
+        help="print results to stdout",
     )
 
     return parser
@@ -184,7 +186,7 @@ def main(args: argparse.Namespace) -> None:
 
         tic = time.time()
         for i, batch in enumerate(dataloader):
-            # this is to stop the GridGeoSampler from enumerating everything
+            # This is to stop the GridGeoSampler from enumerating everything
             if i == num_batches:
                 break
         toc = time.time()
