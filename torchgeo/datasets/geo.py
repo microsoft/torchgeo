@@ -9,7 +9,6 @@ import glob
 import math
 import os
 import re
-import sys
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
 
@@ -27,7 +26,7 @@ from rtree.index import Index, Property
 from torch import Tensor
 from torch.utils.data import Dataset
 
-from .utils import BoundingBox
+from .utils import BoundingBox, disambiguate_timestamp
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -226,20 +225,11 @@ class RasterDataset(GeoDataset):
                     # Skip files that rasterio is unable to read
                     continue
                 else:
-                    mint: float = 0
-                    maxt: float = sys.maxsize
+                    mint: float = datetime.min.timestamp()
+                    maxt: float = datetime.max.timestamp()
                     if "date" in match.groupdict():
                         date = match.group("date")
-                        time = datetime.strptime(date, self.date_format)
-                        mint = time.timestamp()
-
-                        # If filename only contains the year (e.g. CDL),
-                        # assume that this data point spans the entire year
-                        if self.date_format in ["%Y", "%y"]:
-                            time = datetime(time.year, 12, 31, 23, 59, 59)
-                            maxt = time.timestamp()
-                        else:
-                            maxt = mint
+                        mint, maxt = disambiguate_timestamp(date, self.date_format)
 
                     coords = (minx, maxx, miny, maxy, mint, maxt)
                     self.index.insert(i, coords, filepath)
@@ -459,8 +449,8 @@ class VectorDataset(GeoDataset):
                 # Skip files that fiona is unable to read
                 continue
             else:
-                mint = 0
-                maxt = sys.maxsize
+                mint = datetime.min.timestamp()
+                maxt = datetime.max.timestamp()
                 coords = (minx, maxx, miny, maxy, mint, maxt)
                 self.index.insert(i, coords, filepath)
                 i += 1

@@ -10,6 +10,7 @@ import lzma
 import os
 import tarfile
 import zipfile
+from datetime import datetime
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 import torch
@@ -22,6 +23,7 @@ __all__ = (
     "download_and_extract_archive",
     "extract_archive",
     "BoundingBox",
+    "disambiguate_timestamp",
     "working_dir",
     "collate_dict",
 )
@@ -253,6 +255,58 @@ class BoundingBox(Tuple[float, float, float, float, float, float]):
             and self.mint <= other.maxt
             and self.maxt >= other.mint
         )
+
+
+def disambiguate_timestamp(date_str: str, format: str) -> Tuple[float, float]:
+    """Disambiguate partial timestamps.
+
+    Args:
+        date_str: string representing date and time of a data point
+        format: format codes accepted by :meth:`datetime.datetime.strptime`
+
+    Returns:
+        (mint, maxt) tuple for indexing
+    """
+    mint = datetime.strptime(date_str, format)
+
+    # TODO: I don't know how to handle weeks, as the min and max values
+    # for weeks can't go into `datetime` directly
+
+    # TODO: This doesn't correctly handle literal `%%` characters in format
+
+    # TODO: This is really tedious, is there a better way to do this?
+
+    if not any([f"{c}%" in format for c in "yYcxG"]):
+        # No temporal info
+        mint = datetime.min
+        maxt = datetime.max
+    elif not any([f"{c}%" in format for c in "bBmjUWcxV"]):
+        # Year resolution
+        maxt = datetime(mint.year, 12, 31, 23, 59, 59, 999999)
+    elif not any([f"{c}%" in format for c in "djcx"]):
+        # Month resolution
+        maxt = datetime(mint.year, mint.month, 31, 23, 59, 59, 999999)
+    elif not any([f"{c}%" in format for c in "HIcX"]):
+        # Day resolution
+        maxt = datetime(mint.year, mint.month, mint.day, 23, 59, 59, 999999)
+    elif not any([f"{c}%" in format for c in "McX"]):
+        # Hour resolution
+        maxt = datetime(mint.year, mint.month, mint.day, mint.hour, 59, 59, 999999)
+    elif not any([f"{c}%" in format for c in "ScX"]):
+        # Minute resolution
+        maxt = datetime(
+            mint.year, mint.month, mint.day, mint.hour, mint.minute, 59, 999999
+        )
+    elif not any([f"{c}%" in format for c in "f"]):
+        # Second resolution
+        maxt = datetime(
+            mint.year, mint.month, mint.day, mint.hour, mint.minute, mint.second, 999999
+        )
+    else:
+        # Microsecond resolution
+        maxt = mint
+
+    return mint.timestamp(), maxt.timestamp()
 
 
 @contextlib.contextmanager
