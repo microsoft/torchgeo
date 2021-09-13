@@ -94,10 +94,12 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
 
         self.config_task()
 
-        self.train_metrics = MetricCollection([
-            Accuracy(num_classes=7, ignore_index=6),
-            IoU(num_classes=7, ignore_index=6)
-        ])
+        self.train_metrics = MetricCollection(
+            [
+                Accuracy(num_classes=7, ignore_index=6),
+                IoU(num_classes=7, ignore_index=6),
+            ]
+        )
         self.val_metrics = self.train_metrics.clone(prefix="val_")
         self.test_metrics = self.train_metrics.clone(prefix="test_")
 
