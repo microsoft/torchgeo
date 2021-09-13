@@ -46,8 +46,8 @@ from .patternnet import PatternNet
 from .resisc45 import RESISC45
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel2
-from .spacenet1 import Spacenet1
 from .so2sat import So2Sat
+from .spacenet1 import Spacenet1
 from .utils import BoundingBox, collate_dict
 
 __all__ = (
@@ -79,6 +79,7 @@ __all__ = (
     "NAIP",
     "Sentinel",
     "Sentinel2",
+    "Spacenet1",
     # VisionDataset
     "BeninSmallHolderCashews",
     "COWC",
@@ -93,7 +94,6 @@ __all__ = (
     "RESISC45",
     "SEN12MS",
     "So2Sat",
-    "Spacenet1",
     "TropicalCycloneWindEstimation",
     "VHR10",
     # Base classes
