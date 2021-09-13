@@ -19,7 +19,7 @@ from torch.nn.modules import Module
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter  # type: ignore[attr-defined]
-from torchmetrics import Accuracy, IoU
+from torchmetrics import Accuracy, IoU, MetricCollection
 from torchvision.transforms import Compose
 
 from ..datasets import Chesapeake7, ChesapeakeCVPR
@@ -94,13 +94,12 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
 
         self.config_task()
 
-        self.train_accuracy = Accuracy()
-        self.val_accuracy = Accuracy()
-        self.test_accuracy = Accuracy()
-
-        self.train_iou = IoU(num_classes=7)
-        self.val_iou = IoU(num_classes=7)
-        self.test_iou = IoU(num_classes=7)
+        self.train_metrics = MetricCollection([
+            Accuracy(num_classes=7, ignore_index=6),
+            IoU(num_classes=7, ignore_index=6)
+        ])
+        self.val_metrics = self.train_metrics.clone(prefix="val_")
+        self.test_metrics = self.train_metrics.clone(prefix="test_")
 
     def forward(self, x: Tensor) -> Any:  # type: ignore[override]
         """Forward pass of the model.
@@ -135,8 +134,7 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
         # by default, the train step logs every `log_every_n_steps` steps where
         # `log_every_n_steps` is a parameter to the `Trainer` object
         self.log("train_loss", loss, on_step=True, on_epoch=False)
-        self.train_accuracy(y_hat_hard, y)
-        self.train_iou(y_hat_hard, y)
+        self.train_metrics(y_hat_hard, y)
 
         return cast(Tensor, loss)
 
@@ -146,10 +144,8 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
         Args:
             outputs: list of items returned by training_step
         """
-        self.log("train_acc", self.train_accuracy.compute())
-        self.log("train_iou", self.train_iou.compute())
-        self.train_accuracy.reset()
-        self.train_iou.reset()
+        self.log_dict(self.train_metrics.compute())
+        self.train_metrics.reset()
 
     def validation_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
@@ -170,10 +166,8 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
 
         loss = self.loss(y_hat, y)
 
-        # by default, the test and validation steps only log per *epoch*
-        self.log("val_loss", loss)
-        self.val_accuracy(y_hat_hard, y)
-        self.val_iou(y_hat_hard, y)
+        self.log("val_loss", loss, on_step=True, on_epoch=False)
+        self.val_metrics(y_hat_hard, y)
 
         if batch_idx < 10:
             # Render the image, ground truth mask, and predicted mask for the first
@@ -206,10 +200,8 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
         Args:
             outputs: list of items returned by validation_step
         """
-        self.log("val_acc", self.val_accuracy.compute())
-        self.log("val_iou", self.val_iou.compute())
-        self.val_accuracy.reset()
-        self.val_iou.reset()
+        self.log_dict(self.val_metrics.compute())
+        self.val_metrics.reset()
 
     def test_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
@@ -229,8 +221,7 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
 
         # by default, the test and validation steps only log per *epoch*
         self.log("test_loss", loss)
-        self.test_accuracy(y_hat_hard, y)
-        self.test_iou(y_hat_hard, y)
+        self.test_metrics(y_hat_hard, y)
 
     def test_epoch_end(self, outputs: Any) -> None:
         """Logs epoch level test metrics.
@@ -238,10 +229,8 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
         Args:
             outputs: list of items returned by test_step
         """
-        self.log("test_acc", self.test_accuracy.compute())
-        self.log("test_iou", self.test_iou.compute())
-        self.test_accuracy.reset()
-        self.test_iou.reset()
+        self.log_dict(self.test_metrics.compute())
+        self.test_metrics.reset()
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
