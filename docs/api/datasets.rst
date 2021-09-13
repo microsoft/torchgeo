@@ -70,6 +70,11 @@ Non-geospatial Datasets
 
 :class:`VisionDataset` is designed for datasets that lack geospatial information. These datasets can still be combined using :class:`ConcatDataset <torch.utils.data.ConcatDataset>`.
 
+ADVANCE (AuDio Visual Aerial sceNe reCognition datasEt)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: ADVANCE
+
 Smallholder Cashew Plantations in Benin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
