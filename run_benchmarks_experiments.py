@@ -4,7 +4,7 @@ import subprocess
 import time
 from typing import List
 
-EPOCH_SIZE = str(2 ** 16)  # 65536 total patches will be loaded
+NUM_BATCHES = 100
 
 SEED_OPTIONS = [0, 1, 2]
 CACHE_OPTIONS = [True, False]
@@ -31,10 +31,11 @@ if __name__ == "__main__":
             "6",
             "--batch-size",
             str(batch_size),
-            "--epoch-size",
-            EPOCH_SIZE,
+            "--num-batches",
+            str(NUM_BATCHES),
             "--seed",
             str(seed),
+            "--verbose",
         ]
 
         if cache:
