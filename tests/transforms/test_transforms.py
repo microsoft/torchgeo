@@ -16,7 +16,7 @@ def sample() -> Dict[str, Tensor]:
         "image": torch.tensor(  # type: ignore[attr-defined]
             [[[1, 2, 3], [4, 5, 6], [7, 8, 9]]]
         ),
-        "masks": torch.tensor(  # type: ignore[attr-defined]
+        "mask": torch.tensor(  # type: ignore[attr-defined]
             [[0, 0, 1], [0, 1, 1], [1, 1, 1]]
         ),
         "boxes": torch.tensor(  # type: ignore[attr-defined]
@@ -37,7 +37,7 @@ def test_random_horizontal_flip(sample: Dict[str, Tensor]) -> None:
         "image": torch.tensor(  # type: ignore[attr-defined]
             [[[3, 2, 1], [6, 5, 4], [9, 8, 7]]]
         ),
-        "masks": torch.tensor(  # type: ignore[attr-defined]
+        "mask": torch.tensor(  # type: ignore[attr-defined]
             [[1, 0, 0], [1, 1, 0], [1, 1, 1]]
         ),
         "boxes": torch.tensor(  # type: ignore[attr-defined]
@@ -54,7 +54,7 @@ def test_random_vertical_flip(sample: Dict[str, Tensor]) -> None:
         "image": torch.tensor(  # type: ignore[attr-defined]
             [[[7, 8, 9], [4, 5, 6], [1, 2, 3]]]
         ),
-        "masks": torch.tensor(  # type: ignore[attr-defined]
+        "mask": torch.tensor(  # type: ignore[attr-defined]
             [[1, 1, 1], [0, 1, 1], [0, 0, 1]]
         ),
         "boxes": torch.tensor(  # type: ignore[attr-defined]
