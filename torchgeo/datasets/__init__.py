@@ -3,6 +3,7 @@
 
 """TorchGeo datasets."""
 
+from .advance import ADVANCE
 from .benin_cashews import BeninSmallHolderCashews
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
@@ -80,6 +81,7 @@ __all__ = (
     "Sentinel",
     "Sentinel2",
     # VisionDataset
+    "ADVANCE",
     "BeninSmallHolderCashews",
     "COWC",
     "COWCCounting",
