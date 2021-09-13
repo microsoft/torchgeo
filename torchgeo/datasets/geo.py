@@ -231,7 +231,15 @@ class RasterDataset(GeoDataset):
                     if "date" in match.groupdict():
                         date = match.group("date")
                         time = datetime.strptime(date, self.date_format)
-                        mint = maxt = time.timestamp()
+                        mint = time.timestamp()
+
+                        # If filename only contains the year (e.g. CDL),
+                        # assume that this data point spans the entire year
+                        if self.date_format in ["%Y", "%y"]:
+                            time = datetime(time.year, 12, 31, 23, 59, 59)
+                            maxt = time.timestamp()
+                        else:
+                            maxt = mint
 
                     coords = (minx, maxx, miny, maxy, mint, maxt)
                     self.index.insert(i, coords, filepath)

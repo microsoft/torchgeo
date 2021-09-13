@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from datetime import datetime
 from pathlib import Path
 from typing import Generator
 
@@ -54,6 +55,12 @@ class TestCDL:
     def test_add(self, dataset: CDL) -> None:
         ds = dataset + dataset
         assert isinstance(ds, ZipDataset)
+
+    def test_full_year(self, dataset: CDL) -> None:
+        bbox = dataset.bounds
+        time = datetime(2021, 6, 1).timestamp()
+        query = BoundingBox(bbox.minx, bbox.maxx, bbox.miny, bbox.maxy, time, time)
+        next(dataset.index.intersection(query))
 
     def test_already_downloaded(self, dataset: CDL) -> None:
         CDL(root=dataset.root, download=True)
