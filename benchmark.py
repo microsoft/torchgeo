@@ -5,9 +5,9 @@
 import argparse
 import csv
 import os
-import random
 import time
 
+import pytorch_lightning as pl
 from rasterio.crs import CRS
 from torch.utils.data import DataLoader
 
@@ -234,6 +234,6 @@ if __name__ == "__main__":
     if args.epoch_size:
         assert args.epoch_size % args.batch_size == 0
 
-    random.seed(args.seed)
+    pl.seed_everything(args.seed)
 
     main(args)
