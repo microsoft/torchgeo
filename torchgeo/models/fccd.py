@@ -249,7 +249,7 @@ class FCEF(Module):
 
 
 class FCSiamConc(Module):
-    """Fully-convolutional Siamese Concatenation (FC-Siam-conc)
+    """Fully-convolutional Siamese Concatenation (FC-Siam-conc).
 
     'Fully Convolutional Siamese Networks for Change Detection', Daudt et al. (2018)
 
@@ -300,7 +300,7 @@ class FCSiamConc(Module):
 
 
 class FCSiamDiff(nn.modules.Module):
-    """Fully-convolutional Siamese Difference (FC-Siam-diff)
+    """Fully-convolutional Siamese Difference (FC-Siam-diff).
 
     'Fully Convolutional Siamese Networks for Change Detection', Daudt et al. (2018)
 
