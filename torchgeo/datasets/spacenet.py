@@ -1,4 +1,4 @@
-"""Spacenet1 dataset."""
+"""Spacenet datasets."""
 
 import glob
 import os

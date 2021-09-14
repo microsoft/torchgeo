@@ -11,16 +11,21 @@ from _pytest.monkeypatch import MonkeyPatch
 from torchgeo.datasets import Spacenet1
 from torchgeo.transforms import Identity
 
+TEST_DATA_DIR = "tests/data/spacenet"
+
 
 class Dataset:
+    def __init__(self, collection_id: str) -> None:
+        self.collection_id = collection_id
+
     def download(self, output_dir: str, **kwargs: str) -> None:
-        glob_path = os.path.join("tests", "data", "spacenet1", "*.tar.gz")
+        glob_path = os.path.join(TEST_DATA_DIR, self.collection_id, "*.tar.gz")
         for tarball in glob.iglob(glob_path):
             shutil.copy(tarball, output_dir)
 
 
 def fetch(collection_id: str, **kwargs: str) -> Dataset:
-    return Dataset()
+    return Dataset(collection_id)
 
 
 class TestSpacenet1:
