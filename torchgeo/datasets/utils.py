@@ -279,8 +279,7 @@ def disambiguate_timestamp(date_str: str, format: str) -> Tuple[float, float]:
 
     if not any([f"%{c}" in format for c in "yYcxG"]):
         # No temporal info
-        mint = datetime(1970, 1, 1)
-        maxt = datetime.max
+        return 0, datetime.max.timestamp()
     elif not any([f"%{c}" in format for c in "bBmjUWcxV"]):
         # Year resolution
         maxt = datetime(mint.year, 12, 31, 23, 59, 59, 999999)

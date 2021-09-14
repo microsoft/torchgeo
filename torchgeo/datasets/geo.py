@@ -225,7 +225,7 @@ class RasterDataset(GeoDataset):
                     # Skip files that rasterio is unable to read
                     continue
                 else:
-                    mint = datetime(1970, 1, 1).timestamp()
+                    mint = 0.0
                     maxt = datetime.max.timestamp()
                     if "date" in match.groupdict():
                         date = match.group("date")
@@ -449,7 +449,7 @@ class VectorDataset(GeoDataset):
                 # Skip files that fiona is unable to read
                 continue
             else:
-                mint = datetime(1970, 1, 1).timestamp()
+                mint = 0
                 maxt = datetime.max.timestamp()
                 coords = (minx, maxx, miny, maxy, mint, maxt)
                 self.index.insert(i, coords, filepath)
