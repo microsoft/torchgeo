@@ -127,8 +127,8 @@ So2Sat
 
 .. autoclass:: So2Sat
 
-Spacenet 1: Building Detection v1
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Spacenet
+^^^^^^^^
 
 .. autoclass:: Spacenet1
 

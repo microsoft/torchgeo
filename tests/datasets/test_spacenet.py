@@ -9,6 +9,7 @@ from typing import Generator
 
 import pytest
 import torch
+from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 
 from torchgeo.datasets import Spacenet1
@@ -32,9 +33,10 @@ def fetch(collection_id: str, **kwargs: str) -> Dataset:
 
 
 class TestSpacenet1:
-    @pytest.fixture
+    @pytest.fixture(params=["rgb", "8band"])
     def dataset(
         self,
+        request: SubRequest,
         monkeypatch: Generator[MonkeyPatch, None, None],
         tmp_path: Path,
     ) -> Spacenet1:
@@ -48,7 +50,7 @@ class TestSpacenet1:
         transforms = Identity()
         return Spacenet1(
             root,
-            image="8band",
+            image=request.param,
             transforms=transforms,
             download=True,
             api_key="",
@@ -59,7 +61,10 @@ class TestSpacenet1:
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
-        assert x["image"].shape[0] == 8
+        if dataset.image == "rgb":
+            assert x["image"].shape[0] == 3
+        else:
+            assert x["image"].shape[0] == 8
 
     def test_len(self, dataset: Spacenet1) -> None:
         assert len(dataset) == 2

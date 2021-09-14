@@ -82,6 +82,7 @@ class Spacenet1(VisionDataset):
             RuntimeError: if ``download=False`` but dataset is missing
         """
         self.root = root
+        self.image = image  # For testing
         self.filename = self.imagery[image]
         self.transforms = transforms
         self.checksum = checksum
