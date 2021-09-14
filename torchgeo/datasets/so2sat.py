@@ -33,7 +33,7 @@ class So2Sat(VisionDataset):
 
     * Training: 42 cities around the world
     * Validation: western half of 10 other cities covering 10 cultural zones
-    * Testing: eastern half of the 10 other citie
+    * Testing: eastern half of the 10 other cities
 
     If you use this dataset in your research, please cite the following paper:
 
