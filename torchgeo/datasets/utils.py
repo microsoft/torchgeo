@@ -11,8 +11,7 @@ import os
 import sys
 import tarfile
 import zipfile
-from calendar import monthrange
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 import torch
@@ -271,9 +270,6 @@ def disambiguate_timestamp(date_str: str, format: str) -> Tuple[float, float]:
     """
     mint = datetime.strptime(date_str, format)
 
-    # TODO: I don't know how to handle weeks, as the min and max values
-    # for weeks can't go into `datetime` directly
-
     # TODO: This doesn't correctly handle literal `%%` characters in format
 
     # TODO: This is really tedious, is there a better way to do this?
@@ -283,27 +279,22 @@ def disambiguate_timestamp(date_str: str, format: str) -> Tuple[float, float]:
         return 0, sys.maxsize
     elif not any([f"%{c}" in format for c in "bBmjUWcxV"]):
         # Year resolution
-        maxt = datetime(mint.year, 12, 31, 23, 59, 59, 999999)
-    elif not any([f"%{c}" in format for c in "djcx"]):
+        maxt = datetime(mint.year + 1, 1, 1) - timedelta(microseconds=1)
+    elif not any([f"%{c}" in format for c in "aAwdjcxV"]):
         # Month resolution
-        maxday = monthrange(mint.year, mint.month)[1]
-        maxt = datetime(mint.year, mint.month, maxday, 23, 59, 59, 999999)
+        maxt = datetime(mint.year, mint.month + 1, 1) - timedelta(microseconds=1)
     elif not any([f"%{c}" in format for c in "HIcX"]):
         # Day resolution
-        maxt = datetime(mint.year, mint.month, mint.day, 23, 59, 59, 999999)
+        maxt = mint + timedelta(days=1) - timedelta(microseconds=1)
     elif not any([f"%{c}" in format for c in "McX"]):
         # Hour resolution
-        maxt = datetime(mint.year, mint.month, mint.day, mint.hour, 59, 59, 999999)
+        maxt = mint + timedelta(hours=1) - timedelta(microseconds=1)
     elif not any([f"%{c}" in format for c in "ScX"]):
         # Minute resolution
-        maxt = datetime(
-            mint.year, mint.month, mint.day, mint.hour, mint.minute, 59, 999999
-        )
+        maxt = mint + timedelta(minutes=1) - timedelta(microseconds=1)
     elif not any([f"%{c}" in format for c in "f"]):
         # Second resolution
-        maxt = datetime(
-            mint.year, mint.month, mint.day, mint.hour, mint.minute, mint.second, 999999
-        )
+        maxt = mint + timedelta(seconds=1) - timedelta(microseconds=1)
     else:
         # Microsecond resolution
         maxt = mint
