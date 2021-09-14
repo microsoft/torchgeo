@@ -212,7 +212,7 @@ class TestBoundingBox:
 @pytest.mark.parametrize(
     "date_string,format,min_datetime,max_datetime",
     [
-        ("", "", 0, datetime.max.timestamp()),
+        ("", "", 0, sys.maxsize),
         (
             "2021",
             "%Y",

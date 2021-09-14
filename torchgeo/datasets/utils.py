@@ -8,6 +8,7 @@ import contextlib
 import gzip
 import lzma
 import os
+import sys
 import tarfile
 import zipfile
 from calendar import monthrange
@@ -279,7 +280,7 @@ def disambiguate_timestamp(date_str: str, format: str) -> Tuple[float, float]:
 
     if not any([f"%{c}" in format for c in "yYcxG"]):
         # No temporal info
-        return 0, datetime.max.timestamp()
+        return 0, sys.maxsize
     elif not any([f"%{c}" in format for c in "bBmjUWcxV"]):
         # Year resolution
         maxt = datetime(mint.year, 12, 31, 23, 59, 59, 999999)

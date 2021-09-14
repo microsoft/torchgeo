@@ -9,7 +9,7 @@ import glob
 import math
 import os
 import re
-from datetime import datetime
+import sys
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
 
 import fiona
@@ -226,7 +226,7 @@ class RasterDataset(GeoDataset):
                     continue
                 else:
                     mint = 0.0
-                    maxt = datetime.max.timestamp()
+                    maxt = sys.maxsize
                     if "date" in match.groupdict():
                         date = match.group("date")
                         mint, maxt = disambiguate_timestamp(date, self.date_format)
@@ -450,7 +450,7 @@ class VectorDataset(GeoDataset):
                 continue
             else:
                 mint = 0
-                maxt = datetime.max.timestamp()
+                maxt = sys.maxsize
                 coords = (minx, maxx, miny, maxy, mint, maxt)
                 self.index.insert(i, coords, filepath)
                 i += 1
