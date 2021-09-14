@@ -52,25 +52,24 @@ class Spacenet1(VisionDataset):
 
     dataset_id = "spacenet1"
     md5 = "e6ea35331636fa0c036c04b3d1cbf226"
-    filename_glob = "RGB.tif"  # To prevent reading .tif.aux.xml
-    raw_8band_glob = "8Band.tif"
+    imagery = {"rgb": "RGB.tif", "8band": "8Band.tif"}
     label_glob = "labels.geojson"
     foldername = "sn1_AOI_1_RIO"
 
     def __init__(
         self,
         root: str,
+        image: str = "rgb",
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
     ) -> None:
-        """Initialise a new Spacenet 1 Dataset instance
+        """Initialise a new Spacenet 1 Dataset instance.
 
         Args:
             root: root directory where dataset can be found
-            crs (Optional[CRS], optional): [description]. Defaults to None.
-            res (float, optional): [description]. Defaults to None.
+            image: image selection which must be "rgb" or "8band"
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version.
             download: if True, download dataset and store it in the root directory.
@@ -79,8 +78,8 @@ class Spacenet1(VisionDataset):
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing
         """
-
         self.root = root
+        self.filename = self.imagery[image]
         self.transforms = transforms
         self.checksum = checksum
 
@@ -105,14 +104,13 @@ class Spacenet1(VisionDataset):
             8band and label
         """
         files = []
-        images = glob.glob(os.path.join(root, "*", self.filename_glob))
+        images = glob.glob(os.path.join(root, "*", self.filename))
         images = sorted(images)
         for imgpath in images:
-            rawpath = imgpath.replace("RGB.tif", "8Band.tif")
             lbl_path = os.path.join(
-                os.path.dirname(rawpath) + "-labels", "labels.geojson"
+                os.path.dirname(imgpath) + "-labels", "labels.geojson"
             )
-            files.append({"rgb": imgpath, "8band": rawpath, "label": lbl_path})
+            files.append({"image_path": imgpath, "label_path": lbl_path})
         return files
 
     def _load_image(self, path: str) -> Tuple[Tensor, Affine]:
@@ -130,7 +128,7 @@ class Spacenet1(VisionDataset):
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             return tensor, img.transform
 
-    def _load_label(self, path: str, tfm: Affine, shape: Tuple[int, int]) -> Tensor:
+    def _load_mask(self, path: str, tfm: Affine, shape: Tuple[int, int]) -> Tensor:
         """Rasterizes the dataset's labels (in geojson format).
 
         Args:
@@ -141,7 +139,6 @@ class Spacenet1(VisionDataset):
         Returns:
             Tensor: label tensor
         """
-
         with fiona.open(path) as src:
             labels = [feature["geometry"] for feature in src]
 
@@ -179,12 +176,11 @@ class Spacenet1(VisionDataset):
             data and label at that index
         """
         files = self.files[index]
-        rgb, tfm = self._load_image(files["rgb"])
-        raw, _ = self._load_image(files["8band"])
-        h, w = rgb.shape[1:]
-        label = self._load_label(files["label"], tfm, (h, w))
+        img, tfm = self._load_image(files["image_path"])
+        h, w = img.shape[1:]
+        mask = self._load_mask(files["label_path"], tfm, (h, w))
 
-        sample = {"rgb": rgb, "8band": raw, "label": label}
+        sample = {"image": img, "mask": mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -193,6 +189,7 @@ class Spacenet1(VisionDataset):
 
     def _check_integrity(self) -> bool:
         """Checks the integrity of the dataset structure.
+
         Returns:
             True if the dataset directories are found, else False
         """
@@ -222,7 +219,6 @@ class Spacenet1(VisionDataset):
         Raises:
             RuntimeError: if download doesn't work correctly or checksums don't match
         """
-
         if self._check_integrity():
             print("Files already downloaded")
             return

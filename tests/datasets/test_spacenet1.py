@@ -40,6 +40,7 @@ class TestSpacenet1:
         transforms = Identity()
         return Spacenet1(
             root,
+            image="8band",
             transforms=transforms,
             download=True,
             api_key="",
@@ -48,11 +49,9 @@ class TestSpacenet1:
     def test_getitem(self, dataset: Spacenet1) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x["rgb"], torch.Tensor)
-        assert isinstance(x["8band"], torch.Tensor)
-        assert isinstance(x["label"], torch.Tensor)
-        assert x["rgb"].shape[0] == 3
-        assert x["8band"].shape[0] == 8
+        assert isinstance(x["image"], torch.Tensor)
+        assert isinstance(x["mask"], torch.Tensor)
+        assert x["image"].shape[0] == 8
 
     def test_len(self, dataset: Spacenet1) -> None:
         assert len(dataset) == 2
