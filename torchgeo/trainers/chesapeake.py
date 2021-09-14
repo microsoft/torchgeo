@@ -66,7 +66,7 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
 
         if self.hparams["loss"] == "ce":
             self.loss = nn.CrossEntropyLoss(  # type: ignore[attr-defined]
-                ignore_index=7
+                ignore_index=6
             )
         elif self.hparams["loss"] == "jaccard":
             self.loss = smp.losses.JaccardLoss(mode="multiclass")
@@ -98,7 +98,8 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
             [
                 Accuracy(num_classes=7, ignore_index=6),
                 IoU(num_classes=7, ignore_index=6),
-            ]
+            ],
+            prefix="train_",
         )
         self.val_metrics = self.train_metrics.clone(prefix="val_")
         self.test_metrics = self.train_metrics.clone(prefix="test_")
@@ -168,7 +169,7 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
 
         loss = self.loss(y_hat, y)
 
-        self.log("val_loss", loss, on_step=True, on_epoch=False)
+        self.log("val_loss", loss, on_step=False, on_epoch=True)
         self.val_metrics(y_hat_hard, y)
 
         if batch_idx < 10:
@@ -222,7 +223,7 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
         loss = self.loss(y_hat, y)
 
         # by default, the test and validation steps only log per *epoch*
-        self.log("test_loss", loss)
+        self.log("test_loss", loss, on_step=False, on_epoch=True)
         self.test_metrics(y_hat_hard, y)
 
     def test_epoch_end(self, outputs: Any) -> None:
@@ -296,7 +297,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         self.patch_size = patch_size
         # This is a rough estimate of how large of a patch we will need to sample in
         # EPSG:3857 in order to garuntee a large enough patch in the local CRS.
-        self.original_patch_size = int(patch_size * 1.5)
+        self.original_patch_size = int(patch_size * 2.0)
         self.batch_size = batch_size
         self.num_workers = num_workers
 
@@ -354,6 +355,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         """Preprocesses a single sample."""
         sample["image"] = sample["image"] / 255.0
         sample["mask"] = sample["mask"] - 1
+        sample["mask"] = sample["mask"].squeeze()
 
         sample["image"] = sample["image"].float()
         sample["mask"] = sample["mask"].long()
