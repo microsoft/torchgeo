@@ -9,11 +9,10 @@ import numpy as np
 import rasterio as rio
 import torch
 from affine import Affine
-from rasterio.crs import CRS
 from rasterio.features import rasterize
 from torch import Tensor
 
-from torchgeo.datasets.geo import RasterDataset
+from torchgeo.datasets.geo import VisionDataset
 from torchgeo.datasets.utils import (
     check_integrity,
     download_radiant_mlhub,
@@ -21,7 +20,7 @@ from torchgeo.datasets.utils import (
 )
 
 
-class Spacenet1(RasterDataset):
+class Spacenet1(VisionDataset):
     """Spacenet 1: Building Detection v1 Dataset.
 
     `Spacenet 1 <https://spacenet.ai/spacenet-buildings-dataset-v1/>`_
@@ -61,8 +60,6 @@ class Spacenet1(RasterDataset):
     def __init__(
         self,
         root: str,
-        crs: Optional[CRS] = None,
-        res: Optional[float] = None,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
@@ -95,12 +92,6 @@ class Spacenet1(RasterDataset):
                     "Dataset not found. You can use download=True to download it."
                 )
 
-        super().__init__(
-            root=os.path.join(root, self.foldername),
-            crs=crs,
-            res=res,
-            transforms=transforms,
-        )
         self.files = self._load_files(os.path.join(root, self.foldername))
 
     def _load_files(self, root: str) -> List[Dict[str, str]]:
@@ -206,15 +197,21 @@ class Spacenet1(RasterDataset):
             True if the dataset directories are found, else False
         """
         stacpath = os.path.join(self.root, self.foldername, "collection.json")
+
+        if os.path.exists(stacpath):
+            return True
+
         # If dataset folder does not exist, check for uncorrupted archive
-        if not os.path.exists(stacpath):
-            archive_path = os.path.join(self.root, self.foldername + ".tar.gz")
-            if os.path.exists(archive_path):
-                print("Archive found")
-                if self.checksum and not check_integrity(archive_path, self.md5):
-                    return False
-                print("Extracting...")
-                extract_archive(archive_path)
+        archive_path = os.path.join(self.root, self.foldername + ".tar.gz")
+        if not os.path.exists(archive_path):
+            return False
+        print("Archive found")
+        if self.checksum and not check_integrity(archive_path, self.md5):
+            print("Dataset corrupted")
+            return False
+        print("Extracting...")
+        extract_archive(archive_path)
+        return True
 
     def _download(self, api_key: Optional[str] = None) -> None:
         """Download the dataset and extract it.
