@@ -127,6 +127,11 @@ So2Sat
 
 .. autoclass:: So2Sat
 
+SpaceNet
+^^^^^^^^
+
+.. autoclass:: SpaceNet1
+
 Tropical Cyclone Wind Estimation Competition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
