@@ -99,7 +99,6 @@ class CDL(RasterDataset):
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-
         # Check if the extracted files already exist
         pathname = os.path.join(self.root, "**", self.filename_glob)
         for fname in glob.iglob(pathname, recursive=True):
@@ -126,7 +125,6 @@ class CDL(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-
         for year, md5 in self.md5s:
             download_url(
                 self.url.format(year),
@@ -136,7 +134,6 @@ class CDL(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-
         pathname = os.path.join(self.root, self.zipfile_glob)
         for zipfile in glob.iglob(pathname):
             extract_archive(zipfile)
