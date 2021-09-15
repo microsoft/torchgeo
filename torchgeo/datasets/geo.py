@@ -290,7 +290,7 @@ class RasterDataset(GeoDataset):
         else:
             data = self._merge_files(filepaths, query)
 
-        key = "image" if self.is_image else "masks"
+        key = "image" if self.is_image else "mask"
         sample = {
             key: data,
             "crs": self.crs,
@@ -514,7 +514,7 @@ class VectorDataset(GeoDataset):
         )
 
         sample = {
-            "masks": torch.tensor(masks),  # type: ignore[attr-defined]
+            "mask": torch.tensor(masks),  # type: ignore[attr-defined]
             "crs": self.crs,
             "bbox": query,
         }

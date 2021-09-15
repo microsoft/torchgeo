@@ -66,7 +66,7 @@ class TestCanadianBuildingFootprints:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
-        assert isinstance(x["masks"], torch.Tensor)
+        assert isinstance(x["mask"], torch.Tensor)
 
     def test_add(self, dataset: CanadianBuildingFootprints) -> None:
         ds = dataset + dataset
@@ -78,7 +78,7 @@ class TestCanadianBuildingFootprints:
     def test_plot(self, dataset: CanadianBuildingFootprints) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x["masks"])
+        dataset.plot(x["mask"])
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):

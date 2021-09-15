@@ -43,8 +43,8 @@ class RandomHorizontalFlip(Module):  # type: ignore[misc,name-defined]
                     height, width = sample["image"].shape[-2:]
                     sample["boxes"][:, [0, 2]] = width - sample["boxes"][:, [2, 0]]
 
-            if "masks" in sample:
-                sample["masks"] = sample["masks"].flip(-1)
+            if "mask" in sample:
+                sample["mask"] = sample["mask"].flip(-1)
 
         return sample
 
@@ -78,8 +78,8 @@ class RandomVerticalFlip(Module):  # type: ignore[misc,name-defined]
                     height, width = sample["image"].shape[-2:]
                     sample["boxes"][:, [1, 3]] = height - sample["boxes"][:, [3, 1]]
 
-            if "masks" in sample:
-                sample["masks"] = sample["masks"].flip(-2)
+            if "mask" in sample:
+                sample["mask"] = sample["mask"].flip(-2)
 
         return sample
 
