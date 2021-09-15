@@ -1,9 +1,9 @@
 repos:
-    -  repo: https://github.com/pycqa/isort
-       rev: 5.8.0
-       hooks:
-       -    id: isort
-            additional_dependencies: ["colorama>=^0.4.3"]
+    -   repo: https://github.com/pycqa/isort
+        rev: 5.8.0
+        hooks:
+        -    id: isort
+             additional_dependencies: ["colorama>=^0.4.3"]
 
     -   repo: https://github.com/psf/black
         rev: 21.4b0
