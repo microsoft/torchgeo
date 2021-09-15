@@ -26,7 +26,6 @@ from torchgeo.trainers import (
     SEN12MSSegmentationTask,
 )
 
-
 TASK_TO_MODULES_MAPPING: Dict[
     str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
 ] = {
