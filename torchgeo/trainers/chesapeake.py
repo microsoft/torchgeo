@@ -340,8 +340,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             _, height, width = sample["image"].shape
             assert height >= size and width >= size
 
-            _, height, width = sample["image"].shape
-
             y1 = (height - size) // 2
             x1 = (width - size) // 2
             sample["image"] = sample["image"][:, y1 : y1 + size, x1 : x1 + size]
