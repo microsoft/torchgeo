@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Spacenet datasets."""
+"""SpaceNet datasets."""
 
 import glob
 import os
@@ -23,10 +23,10 @@ from torchgeo.datasets.utils import (
 )
 
 
-class Spacenet1(VisionDataset):
-    """Spacenet 1: Building Detection v1 Dataset.
+class SpaceNet1(VisionDataset):
+    """SpaceNet 1: Building Detection v1 Dataset.
 
-    `Spacenet 1 <https://spacenet.ai/spacenet-buildings-dataset-v1/>`_
+    `SpaceNet 1 <https://spacenet.ai/spacenet-buildings-dataset-v1/>`_
     is a dataset of building footprints over the city of Rio de Janeiro.
 
     Dataset features:
@@ -68,7 +68,7 @@ class Spacenet1(VisionDataset):
         api_key: Optional[str] = None,
         checksum: bool = False,
     ) -> None:
-        """Initialise a new Spacenet 1 Dataset instance.
+        """Initialise a new SpaceNet 1 Dataset instance.
 
         Args:
             root: root directory where dataset can be found

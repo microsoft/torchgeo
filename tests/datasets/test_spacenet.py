@@ -12,7 +12,7 @@ import torch
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 
-from torchgeo.datasets import Spacenet1
+from torchgeo.datasets import SpaceNet1
 from torchgeo.transforms import Identity
 
 TEST_DATA_DIR = "tests/data/spacenet"
@@ -32,23 +32,23 @@ def fetch(collection_id: str, **kwargs: str) -> Dataset:
     return Dataset(collection_id)
 
 
-class TestSpacenet1:
+class TestSpaceNet1:
     @pytest.fixture(params=["rgb", "8band"])
     def dataset(
         self,
         request: SubRequest,
         monkeypatch: Generator[MonkeyPatch, None, None],
         tmp_path: Path,
-    ) -> Spacenet1:
+    ) -> SpaceNet1:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(  # type: ignore[attr-defined]
             radiant_mlhub.Dataset, "fetch", fetch
         )
         test_md5 = "829652022c2df4511ee4ae05bc290250"
-        monkeypatch.setattr(Spacenet1, "md5", test_md5)  # type: ignore[attr-defined]
+        monkeypatch.setattr(SpaceNet1, "md5", test_md5)  # type: ignore[attr-defined]
         root = str(tmp_path)
         transforms = Identity()
-        return Spacenet1(
+        return SpaceNet1(
             root,
             image=request.param,
             transforms=transforms,
@@ -56,7 +56,7 @@ class TestSpacenet1:
             api_key="",
         )
 
-    def test_getitem(self, dataset: Spacenet1) -> None:
+    def test_getitem(self, dataset: SpaceNet1) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
@@ -66,12 +66,12 @@ class TestSpacenet1:
         else:
             assert x["image"].shape[0] == 8
 
-    def test_len(self, dataset: Spacenet1) -> None:
+    def test_len(self, dataset: SpaceNet1) -> None:
         assert len(dataset) == 2
 
-    def test_already_downloaded(self, dataset: Spacenet1) -> None:
-        Spacenet1(root=dataset.root, download=True)
+    def test_already_downloaded(self, dataset: SpaceNet1) -> None:
+        SpaceNet1(root=dataset.root, download=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):
-            Spacenet1(str(tmp_path))
+            SpaceNet1(str(tmp_path))
