@@ -48,7 +48,7 @@ class TestChesapeake13:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
-        assert isinstance(x["masks"], torch.Tensor)
+        assert isinstance(x["mask"], torch.Tensor)
 
     def test_add(self, dataset: Chesapeake13) -> None:
         ds = dataset + dataset
@@ -60,7 +60,7 @@ class TestChesapeake13:
     def test_plot(self, dataset: Chesapeake13) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x["masks"])
+        dataset.plot(x["mask"])
 
     def test_url(self) -> None:
         ds = Chesapeake13(os.path.join("tests", "data", "chesapeake", "BAYWIDE"))

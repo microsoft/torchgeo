@@ -173,6 +173,16 @@ def main(conf: DictConfig) -> None:
 
 
 if __name__ == "__main__":
+    # Taken from https://github.com/pangeo-data/cog-best-practices
+    _rasterio_best_practices = {
+        "GDAL_DISABLE_READDIR_ON_OPEN": "EMPTY_DIR",
+        "AWS_NO_SIGN_REQUEST": "YES",
+        "GDAL_MAX_RAW_BLOCK_CACHE_SIZE": "200000000",
+        "GDAL_SWATH_SIZE": "200000000",
+        "VSI_CURL_CACHE_SIZE": "200000000",
+    }
+    os.environ.update(_rasterio_best_practices)
+
     conf = set_up_omegaconf()
 
     # Set random seed for reproducibility
