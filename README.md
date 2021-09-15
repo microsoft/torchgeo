@@ -74,6 +74,51 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
+### Guide for new contributors
+
+To make a contribution to torchgeo follow these steps:
+
+- Fork and clone the repo
+- Setup a development environment as shown [above](#installation-instructions)
+- Make a great contribution
+  - If you are contributing new code, try to also add unit tests (see `tests/` for examples) that check the correctness of your contribution
+  - Make sure your contribution passes the [linters](#linters)
+- Commit/push your code to your fork of the repo
+- Open a pull request
+  - Describe your contribution in the description 
+  - If you are a new contributor you will be prompted by the CLA bot as described above 
+  - Our continuous integration setup (through GitHub actions) will run various linters described below and let you know if there are any problems
+  - We'll review and discuss your contribution, hopefully merge it into torchgeo, and thank you for your help in building a library for combining deep learing and geospatial imagery!
+
+If you have questions, feel free to open an Issue or Discussion within the repo and we'll get to it as soon as we can!
+
+### Linters
+
+We use [black](https://github.com/psf/black), [flake8](https://github.com/PyCQA/flake8), and [isort](https://github.com/PyCQA/isort) for style checks, [mypy](https://github.com/python/mypy) for static type analysis, and [pytest](https://github.com/pytest-dev/pytest) for unit tests.
+Further, we use [pydocstyle](https://github.com/PyCQA/pydocstyle) and [sphinx](https://github.com/sphinx-doc/sphinx) for documentation. These tools can be daunting to use if you are new to Python software development, but are helpful for maintaining a high quality codebase. The following is a brief tutorial for running these against the torchgeo codebase:
+
+**Option 1** - Run the commands manually
+
+If you setup your development environment as described in the [installation instructions](#installation-instructions), then you can run the following commands in the terminal:
+```bash
+black --check .
+isort . --check --diff
+flake8 .
+pydocstyle .
+mypy .
+pytest --cov=. --cov-report=term-missing
+```
+
+If any of these fail, then the linters are *not* passing. For example, if `black` is complaining, then running `black .` from the root torchgeo directory will auto format all python files to fix formatting problems. Similarly, `isort .` will reorder all of the `import` statements in an opnionated way.
+
+**Option 2** - Run the commands using [pre-commit](https://pre-commit.com/)
+
+TODO
+
+**Option 3** - Let our CI setup run these checks for you
+
+Whenever you push to an existing open pull request then the continuous integration workflows will be run against your commit. These run `black`, `isort`, etc. in a containerized environment and will report any problems that they encounter. 
+
 ## Trademarks
 
 This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft
