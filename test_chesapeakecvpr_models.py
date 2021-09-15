@@ -61,7 +61,7 @@ def main(args: argparse.Namespace) -> None:
         print(f"The output file {args.output_fn} already exists, exiting...")
         return
 
-    # Setup the result file
+    # Set up the result file
     fieldnames = [
         "train-state",
         "model",
