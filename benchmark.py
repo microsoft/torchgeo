@@ -55,7 +55,6 @@ def set_up_parser() -> argparse.ArgumentParser:
     group.add_argument(
         "-n",
         "--num-batches",
-        default=2 ** 7,
         type=int,
         help="number of batches to load",
         metavar="SIZE",
