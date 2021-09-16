@@ -3,10 +3,12 @@
 
 import builtins
 import glob
+import math
 import os
 import pickle
 import shutil
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Generator, Tuple
 
@@ -19,6 +21,7 @@ import torchgeo.datasets.utils
 from torchgeo.datasets.utils import (
     BoundingBox,
     collate_dict,
+    disambiguate_timestamp,
     download_and_extract_archive,
     download_radiant_mlhub,
     extract_archive,
@@ -204,6 +207,62 @@ class TestBoundingBox:
             ValueError, match="Bounding box is invalid: 'mint=5' > 'maxt=4'"
         ):
             BoundingBox(0, 1, 2, 3, 5, 4)
+
+
+@pytest.mark.parametrize(
+    "date_string,format,min_datetime,max_datetime",
+    [
+        ("", "", 0, sys.maxsize),
+        (
+            "2021",
+            "%Y",
+            datetime(2021, 1, 1, 0, 0, 0, 0).timestamp(),
+            datetime(2021, 12, 31, 23, 59, 59, 999999).timestamp(),
+        ),
+        (
+            "2021-09",
+            "%Y-%m",
+            datetime(2021, 9, 1, 0, 0, 0, 0).timestamp(),
+            datetime(2021, 9, 30, 23, 59, 59, 999999).timestamp(),
+        ),
+        (
+            "2021-09-13",
+            "%Y-%m-%d",
+            datetime(2021, 9, 13, 0, 0, 0, 0).timestamp(),
+            datetime(2021, 9, 13, 23, 59, 59, 999999).timestamp(),
+        ),
+        (
+            "2021-09-13 17",
+            "%Y-%m-%d %H",
+            datetime(2021, 9, 13, 17, 0, 0, 0).timestamp(),
+            datetime(2021, 9, 13, 17, 59, 59, 999999).timestamp(),
+        ),
+        (
+            "2021-09-13 17:21",
+            "%Y-%m-%d %H:%M",
+            datetime(2021, 9, 13, 17, 21, 0, 0).timestamp(),
+            datetime(2021, 9, 13, 17, 21, 59, 999999).timestamp(),
+        ),
+        (
+            "2021-09-13 17:21:53",
+            "%Y-%m-%d %H:%M:%S",
+            datetime(2021, 9, 13, 17, 21, 53, 0).timestamp(),
+            datetime(2021, 9, 13, 17, 21, 53, 999999).timestamp(),
+        ),
+        (
+            "2021-09-13 17:21:53:000123",
+            "%Y-%m-%d %H:%M:%S:%f",
+            datetime(2021, 9, 13, 17, 21, 53, 123).timestamp(),
+            datetime(2021, 9, 13, 17, 21, 53, 123).timestamp(),
+        ),
+    ],
+)
+def test_disambiguate_timestamp(
+    date_string: str, format: str, min_datetime: float, max_datetime: float
+) -> None:
+    mint, maxt = disambiguate_timestamp(date_string, format)
+    assert math.isclose(mint, min_datetime)
+    assert math.isclose(maxt, max_datetime)
 
 
 def test_collate_dict() -> None:
