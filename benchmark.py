@@ -192,9 +192,9 @@ def main(args: argparse.Namespace) -> None:
         duration = toc - tic
 
         if args.verbose:
-            print(f"  duration: {duration:.3f} s")
-            print(f"  count: {num_total_patches}")
-            print(f"  rate: {num_total_patches / duration} patches/sec")
+            print(f"  duration: {duration:.3f} sec")
+            print(f"  count: {num_total_patches} patches")
+            print(f"  rate: {num_total_patches / duration:.3f} patches/sec")
 
         results_rows.append(
             {
