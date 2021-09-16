@@ -78,5 +78,3 @@ jobs:
       run: pytest --cov=torchgeo --cov-report=xml
     - name: Report coverage
       uses: codecov/codecov-action@v2
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
