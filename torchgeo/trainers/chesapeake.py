@@ -411,8 +411,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         val_transforms = Compose(
             [
                 self.center_crop(self.patch_size),
-                RandomHorizontalFlip(p=0.5),
-                RandomVerticalFlip(p=0.5),
                 self.nodata_check(self.patch_size),
                 self.preprocess,
             ]
@@ -465,15 +463,15 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
 
     def val_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for validation."""
-        sampler = RandomBatchGeoSampler(
+        sampler = GridGeoSampler(
             self.val_dataset.index,
             size=self.original_patch_size,
-            batch_size=self.batch_size,
-            length=self.patches_per_tile * self.val_dataset.index.get_size(),
+            stride=self.original_patch_size,
         )
         return DataLoader(
             self.val_dataset,
-            batch_sampler=sampler,  # type: ignore[arg-type]
+            batch_size=self.batch_size,
+            sampler=sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
         )
 
