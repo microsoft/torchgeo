@@ -69,7 +69,11 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
                 ignore_index=6
             )
         elif self.hparams["loss"] == "jaccard":
-            self.loss = smp.losses.JaccardLoss(mode="multiclass", ignore_index=6)
+            self.loss = smp.losses.JaccardLoss(
+                mode="multiclass", classes=[0, 1, 2, 3, 4, 5], normalized=True
+            )
+        elif self.hparams["loss"] == "focal":
+            self.loss = smp.losses.FocalLoss("multiclass", ignore_index=6)
         else:
             raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
 
