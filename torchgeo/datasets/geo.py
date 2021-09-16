@@ -10,7 +10,6 @@ import math
 import os
 import re
 import sys
-from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
 
 import fiona
@@ -27,7 +26,7 @@ from rtree.index import Index, Property
 from torch import Tensor
 from torch.utils.data import Dataset
 
-from .utils import BoundingBox
+from .utils import BoundingBox, disambiguate_timestamp
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -230,8 +229,7 @@ class RasterDataset(GeoDataset):
                     maxt: float = sys.maxsize
                     if "date" in match.groupdict():
                         date = match.group("date")
-                        time = datetime.strptime(date, self.date_format)
-                        mint = maxt = time.timestamp()
+                        mint, maxt = disambiguate_timestamp(date, self.date_format)
 
                     coords = (minx, maxx, miny, maxy, mint, maxt)
                     self.index.insert(i, coords, filepath)
