@@ -113,7 +113,13 @@ If any of these fail, then the linters are *not* passing. For example, if `black
 
 **Option 2** - Run the commands using [pre-commit](https://pre-commit.com/)
 
-TODO
+`pre-commit` is a tool that automatically runs linters locally, so that you don't have to remember to run them manually and get your code flagged by CI. You can setup `pre-commit` with:
+```
+pip install pre-commit
+pre-commit install
+```
+
+This will install the hooks listed in [.pre-commit-config.yaml](.pre-commit-config.yaml) to run whenever you commit code. If these pass then your code should be ready (style-wise) for a PR.
 
 **Option 3** - Let our CI setup run these checks for you
 
