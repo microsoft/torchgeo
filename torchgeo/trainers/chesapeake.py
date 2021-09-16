@@ -69,7 +69,7 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
                 ignore_index=6
             )
         elif self.hparams["loss"] == "jaccard":
-            self.loss = smp.losses.JaccardLoss(mode="multiclass")
+            self.loss = smp.losses.JaccardLoss(mode="multiclass", ignore_index=6)
         else:
             raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
 
@@ -338,7 +338,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
 
         def center_crop_inner(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
             _, height, width = sample["image"].shape
-            assert height >= size and width >= size
 
             y1 = (height - size) // 2
             x1 = (width - size) // 2
@@ -359,6 +358,26 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         sample["mask"] = sample["mask"].long()
 
         return sample
+
+    def nodata_check(
+        self, size: int = 512
+    ) -> Callable[[Dict[str, Tensor]], Dict[str, Tensor]]:
+        """Returns a function to check for nodata or missized input."""
+
+        def nodata_check_inner(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+            num_channels, height, width = sample["image"].shape
+
+            if height < size or width < size:
+                sample["image"] = torch.zeros(  # type: ignore[attr-defined]
+                    (num_channels, size, size)
+                )
+                sample["mask"] = (
+                    torch.zeros((size, size)) + 7  # type: ignore[attr-defined]
+                )
+
+            return sample
+
+        return nodata_check_inner
 
     def prepare_data(self) -> None:
         """Confirms that the dataset is downloaded on the local node.
@@ -385,6 +404,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
                 self.center_crop(self.patch_size),
                 RandomHorizontalFlip(p=0.5),
                 RandomVerticalFlip(p=0.5),
+                self.nodata_check(self.patch_size),
                 self.preprocess,
             ]
         )
@@ -393,6 +413,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
                 self.center_crop(self.patch_size),
                 RandomHorizontalFlip(p=0.5),
                 RandomVerticalFlip(p=0.5),
+                self.nodata_check(self.patch_size),
                 self.preprocess,
             ]
         )
