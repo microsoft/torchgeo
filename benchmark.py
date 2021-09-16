@@ -143,24 +143,24 @@ def main(args: argparse.Namespace) -> None:
 
     # Initialize samplers
     if args.epoch_size:
-        num_total_patches = args.epoch_size
+        length = args.epoch_size
         num_batches = args.epoch_size // args.batch_size
     elif args.num_batches:
-        num_total_patches = args.num_batches * args.batch_size
+        length = args.num_batches * args.batch_size
         num_batches = args.num_batches
 
     samplers = [
         RandomGeoSampler(
             landsat.index,
             size=args.patch_size,
-            length=num_total_patches,
+            length=length,
         ),
         GridGeoSampler(landsat.index, size=args.patch_size, stride=args.stride),
         RandomBatchGeoSampler(
             landsat.index,
             size=args.patch_size,
             batch_size=args.batch_size,
-            length=num_total_patches,
+            length=length,
         ),
     ]
 
@@ -184,9 +184,11 @@ def main(args: argparse.Namespace) -> None:
             )
 
         tic = time.time()
+        num_total_patches = 0
         for i, batch in enumerate(dataloader):
+            num_total_patches += args.batch_size
             # This is to stop the GridGeoSampler from enumerating everything
-            if i == num_batches:
+            if i == num_batches - 1:
                 break
         toc = time.time()
         duration = toc - tic
