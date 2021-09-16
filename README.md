@@ -113,13 +113,14 @@ If any of these fail, then the linters are *not* passing. For example, if `black
 
 **Option 2** - Run the commands using [pre-commit](https://pre-commit.com/)
 
-`pre-commit` is a tool that automatically runs linters locally, so that you don't have to remember to run them manually and get your code flagged by CI. You can setup `pre-commit` with:
+`pre-commit` is a tool that automatically runs linters locally, so that you don't have to remember to run them manually and then have your code flagged by CI. You can setup `pre-commit` with:
 ```
-pip install pre-commit
-pre-commit install
+pip install pre-commit  # install the pre-commit package
+pre-commit install  # installs pre-commit hooks in the local repo
+pre-commit run --all-files  # runs pre-commit against all files in the repo (and sets up the environment)
 ```
 
-This will install the hooks listed in [.pre-commit-config.yaml](.pre-commit-config.yaml) to run whenever you commit code. If these pass then your code should be ready (style-wise) for a PR.
+Now, every time you run `git commit`, then `pre-commit` will run and let you know if any of the files that you *changed* fail the linters. If `pre-commit` passes then your code should be ready (style-wise) for a pull request. Note that you will need to run `pre-commit run --all-files` if any of the hooks in [.pre-commit-config.yaml](.pre-commit-config.yaml) change, see [here](https://pre-commit.com/#4-optional-run-against-all-the-files).
 
 **Option 3** - Let our CI setup run these checks for you
 
