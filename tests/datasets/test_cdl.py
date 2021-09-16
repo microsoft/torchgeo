@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import glob
 import os
 import shutil
 from datetime import datetime
@@ -18,7 +19,7 @@ from torchgeo.datasets import CDL, BoundingBox, ZipDataset
 from torchgeo.transforms import Identity
 
 
-def download_url(url: str, root: str, *args: str) -> None:
+def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -30,7 +31,7 @@ class TestCDL:
         tmp_path: Path,
     ) -> CDL:
         monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.utils, "download_url", download_url
+            torchgeo.datasets.cdl, "download_url", download_url
         )
         md5s = [
             (2021, "0693f0bb10deb79c69bcafe4aa1635b7"),
@@ -62,8 +63,15 @@ class TestCDL:
         query = BoundingBox(bbox.minx, bbox.maxx, bbox.miny, bbox.maxy, time, time)
         next(dataset.index.intersection(query))
 
-    def test_already_downloaded(self, dataset: CDL) -> None:
+    def test_already_extracted(self, dataset: CDL) -> None:
         CDL(root=dataset.root, download=True)
+
+    def test_already_downloaded(self, tmp_path: Path) -> None:
+        pathname = os.path.join("tests", "data", "cdl", "*_30m_cdls.zip")
+        root = str(tmp_path)
+        for zipfile in glob.iglob(pathname):
+            shutil.copy(zipfile, root)
+        CDL(root)
 
     def test_plot(self, dataset: CDL) -> None:
         query = dataset.bounds
@@ -71,7 +79,7 @@ class TestCDL:
         dataset.plot(x["mask"])
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(RuntimeError, match="Dataset not found"):
             CDL(str(tmp_path))
 
     def test_invalid_query(self, dataset: CDL) -> None:

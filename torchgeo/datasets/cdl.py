@@ -3,13 +3,14 @@
 
 """CDL dataset."""
 
+import glob
 import os
 from typing import Any, Callable, Dict, Optional
 
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import check_integrity, download_and_extract_archive
+from .utils import download_url, extract_archive
 
 
 class CDL(RasterDataset):
@@ -35,6 +36,7 @@ class CDL(RasterDataset):
         ^(?P<date>\d+)
         _30m_cdls\..*$
     """
+    zipfile_glob = "*_30m_cdls.zip"
     date_format = "%Y"
     is_image = False
 
@@ -77,47 +79,61 @@ class CDL(RasterDataset):
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, check the MD5 after downloading files (may be slow)
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         self.root = root
+        self.download = download
         self.checksum = checksum
 
-        if download:
-            self._download()
-
-        if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+        self._verify()
 
         super().__init__(root, crs, res, transforms, cache)
 
-    def _check_integrity(self) -> bool:
-        """Check integrity of dataset.
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
 
-        Returns:
-            True if dataset files are found and/or MD5s match, else False
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        for year, md5 in self.md5s:
-            filepath = os.path.join(self.root, "{}_30m_cdls.zip".format(year))
-            if not check_integrity(filepath, md5 if self.checksum else None):
-                return False
-        return True
+        # Check if the extracted files already exist
+        pathname = os.path.join(self.root, "**", self.filename_glob)
+        for fname in glob.iglob(pathname, recursive=True):
+            if not fname.endswith(".zip"):
+                return
 
-    def _download(self) -> None:
-        """Download the dataset and extract it."""
-        if self._check_integrity():
-            print("Files already downloaded and verified")
+        # Check if the zip files have already been downloaded
+        pathname = os.path.join(self.root, self.zipfile_glob)
+        if glob.glob(pathname):
+            self._extract()
             return
 
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automaticaly download the dataset."
+            )
+
+        # Download the dataset
+        self._download()
+        self._extract()
+
+    def _download(self) -> None:
+        """Download the dataset."""
         for year, md5 in self.md5s:
-            download_and_extract_archive(
+            download_url(
                 self.url.format(year),
                 self.root,
                 md5=md5 if self.checksum else None,
             )
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        pathname = os.path.join(self.root, self.zipfile_glob)
+        for zipfile in glob.iglob(pathname):
+            extract_archive(zipfile)
