@@ -3,19 +3,9 @@ on:
   push:
     branches:
     - main
-    paths:
-    - '**.py'
-    - '.flake8'
-    - 'pyproject.toml'
-    - '.github/workflows/style.yaml'
   pull_request:
     branches:
     - main
-    paths:
-    - '**.py'
-    - '.flake8'
-    - 'pyproject.toml'
-    - '.github/workflows/style.yaml'
 jobs:
   black:
     name: black

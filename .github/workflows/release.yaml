@@ -3,19 +3,9 @@ on:
   push:
     branches:
     - release**
-    paths:
-    - '**.py'
-    - 'pyproject.toml'
-    - 'requirements.txt'
-    - '.github/workflows/release.yaml'
   pull_request:
     branches:
     - release**
-    paths:
-    - '**.py'
-    - 'pyproject.toml'
-    - 'requirements.txt'
-    - '.github/workflows/release.yaml'
 jobs:
   notebooks:
     name: notebooks
