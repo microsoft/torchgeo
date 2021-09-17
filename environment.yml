@@ -1,7 +1,6 @@
 name: torchgeo
 channels:
   - conda-forge
-  - pytorch
 dependencies:
   - cudatoolkit
   - einops
@@ -17,7 +16,6 @@ dependencies:
   - rasterio>=1.0.16
   - shapely>=1.3.0
   - torchvision>=0.3
-  - torchaudio
   - pip:
     - black>=21.4b0
     - flake8>=3.8
