@@ -778,3 +778,118 @@ class ZipDataset(GeoDataset):
         maxt = min([ds.bounds[5] for ds in self.datasets])
 
         return BoundingBox(minx, maxx, miny, maxy, mint, maxt)
+
+
+class UnionDataset(GeoDataset):
+    """Dataset for merging two or more GeoDatasets via a union of their scenes.
+
+    For example, this allows you to combine two spatially disparate datasets.
+    """
+
+    def __init__(self, datasets: Sequence[GeoDataset]) -> None:
+        """Initialize a new Dataset instance.
+
+        Args:
+            datasets: list of datasets to merge
+
+        Raises:
+            ValueError: if datasets contains non-GeoDatasets, are not in
+                the same :term:`coordinate reference system (CRS)`, or do not have the
+                same resolution
+        """
+        for ds in datasets:
+            if not isinstance(ds, GeoDataset):
+                raise ValueError("ZipDataset only supports GeoDatasets")
+
+        crs = datasets[0].crs
+        res = datasets[0].res
+        for ds in datasets:
+            if ds.crs != crs:
+                raise ValueError("Datasets must be in the same CRS")
+            if not math.isclose(ds.res, res):
+                # TODO: relax this constraint someday
+                raise ValueError("Datasets must have the same resolution")
+
+        self.datasets = datasets
+        self.crs = crs
+        self.res = res
+        self.index = self._mege_dataset_indexes(datasets)
+
+        # Make sure datasets have overlap
+        try:
+            self.bounds
+        except ValueError:
+            raise ValueError("Datasets have no overlap")
+
+    def _mege_dataset_indexes(self, datasets: Sequence[GeoDataset]) -> Index:
+        """Creates a new R-tree out of the individual indexes from a list of datasets.
+
+        Args:
+            dataset: a list of datasets
+
+        Returns:
+            an R-tree containing entries from all the component datasets
+        """
+        merged_index = Index(interleaved=False, properties=Property(dimension=3))
+        i = 0
+        for j, ds in enumerate(datasets):
+            hits = list(ds.index.intersection(ds.bounds, objects=True))
+            for hit in hits:
+                merged_index.insert(i, hit.bounds, j)
+                i += 1
+        return merged_index
+
+    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+        """Retrieve image and metadata indexed by query.
+
+        Args:
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+
+        Returns:
+            sample of data/labels and metadata at that index
+
+        Raises:
+            IndexError: if query is not within bounds of the index
+        """
+        if not query.intersects(self.bounds):
+            raise IndexError(
+                f"query: {query} not found in index with bounds: {self.bounds}"
+            )
+
+        # TODO: use collate_dict here to concatenate instead of replace.
+        # For example, if using Landsat + Sentinel + CDL, don't want to remove Landsat
+        # images and replace with Sentinel images.
+        sample = {}
+        for ds in self.datasets:
+            if query.intersects(ds.bounds):
+                sample.update(ds[query])
+
+        return sample
+
+    def __str__(self) -> str:
+        """Return the informal string representation of the object.
+
+        Returns:
+            informal string representation
+        """
+        return f"""\
+{self.__class__.__name__} Dataset
+    type: ZipDataset
+    bbox: {self.bounds}"""
+
+    @property
+    def bounds(self) -> BoundingBox:
+        """Bounds of the index.
+
+        Returns:
+            (minx, maxx, miny, maxy, mint, maxt) of the dataset
+        """
+        # We want to compute the union of all dataset bounds, not the intersection
+        minx = min([ds.bounds[0] for ds in self.datasets])
+        maxx = max([ds.bounds[1] for ds in self.datasets])
+        miny = min([ds.bounds[2] for ds in self.datasets])
+        maxy = max([ds.bounds[3] for ds in self.datasets])
+        mint = min([ds.bounds[4] for ds in self.datasets])
+        maxt = max([ds.bounds[5] for ds in self.datasets])
+
+        return BoundingBox(minx, maxx, miny, maxy, mint, maxt)
