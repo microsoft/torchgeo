@@ -23,6 +23,7 @@ from torchmetrics import Accuracy, IoU, MetricCollection
 from torchvision.transforms import Compose
 
 from ..datasets import Chesapeake7, ChesapeakeCVPR
+from ..models import FCN
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from ..transforms import RandomHorizontalFlip, RandomVerticalFlip
 
@@ -59,6 +60,8 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
                 in_channels=4,
                 classes=7,
             )
+        elif self.hparams["segmentation_model"] == "fcn":
+            self.model = FCN(in_channels=4, classes=7, num_filters=256)
         else:
             raise ValueError(
                 f"Model type '{self.hparams['segmentation_model']}' is not valid."
