@@ -9,8 +9,8 @@ from typing import Callable, Dict, List, Optional
 
 import numpy as np
 import torch
-import torchaudio
 from PIL import Image
+from scipy.io import wavfile
 from torch import Tensor
 
 from .geo import VisionDataset
@@ -53,13 +53,6 @@ class ADVANCE(VisionDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1007/978-3-030-58586-0_5
-
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `torchaudio <https://pypi.org/project/torchaudio/>`_ to load the
-         audio files to tensors
     """
 
     urls = [
@@ -102,7 +95,6 @@ class ADVANCE(VisionDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            AssertionError: if ``split`` argument is invalid
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
@@ -195,8 +187,10 @@ class ADVANCE(VisionDataset):
         Returns:
             the target audio
         """
-        audio: Tensor = torchaudio.load(path)[0]
-        return audio
+        array = wavfile.read(path)[1]
+        tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+        tensor = tensor.unsqueeze(0)
+        return tensor
 
     def _check_integrity(self) -> bool:
         """Checks the integrity of the dataset structure.
