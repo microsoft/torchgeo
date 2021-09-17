@@ -201,11 +201,10 @@ def main(args: argparse.Namespace) -> None:
         if args.cache:
             if args.verbose:
                 print(landsat._cached_load_warp_file.cache_info())
-                print(cdl._cached_load_warp_file.cache_info())
 
             # Clear cache for fair comparison between samplers
+            # Both `landsat` and `cdl` share the same cache
             landsat._cached_load_warp_file.cache_clear()
-            cdl._cached_load_warp_file.cache_clear()
 
         results_rows.append(
             {
