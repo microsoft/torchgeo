@@ -240,6 +240,8 @@ def main(args: argparse.Namespace) -> None:
 
 
 if __name__ == "__main__":
+    os.environ["GDAL_CACHEMAX"] = "50%"
+
     parser = set_up_parser()
     args = parser.parse_args()
 
