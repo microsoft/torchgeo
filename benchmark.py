@@ -198,6 +198,15 @@ def main(args: argparse.Namespace) -> None:
             print(f"  count: {num_total_patches} patches")
             print(f"  rate: {num_total_patches / duration:.3f} patches/sec")
 
+        if args.cache:
+            if args.verbose:
+                print(landsat._cached_load_warp_file.cache_info())
+                print(cdl._cached_load_warp_file.cache_info())
+
+            # Clear cache for fair comparison between samplers
+            landsat._cached_load_warp_file.cache_clear()
+            cdl._cached_load_warp_file.cache_clear()
+
         results_rows.append(
             {
                 "cached": args.cache,
