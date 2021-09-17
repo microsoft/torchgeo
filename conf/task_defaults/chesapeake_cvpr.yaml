@@ -8,7 +8,7 @@ experiment:
     encoder_output_stride: 16
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
-    class_set: 7  # can be 4 or 6
+    class_set: 7
   datamodule:
     train_state: "de"
     patches_per_tile: 200
