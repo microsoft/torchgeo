@@ -32,6 +32,7 @@ from ..transforms import RandomHorizontalFlip, RandomVerticalFlip
 DataLoader.__module__ = "torch.utils.data"
 Module.__module__ = "torch.nn"
 
+# TODO: move the color maps to a dataset object
 CMAP_7 = matplotlib.colors.ListedColormap(
     [np.array(Chesapeake7.cmap[i]) / 255.0 for i in range(7)]
 )
@@ -58,14 +59,10 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
-        if self.hparams["class_set"] == 5:
-            num_classes = 5
-            classes = [1, 2, 3, 4]
-        elif self.hparams["class_set"] == 7:
-            num_classes = 7
-            classes = [1, 2, 3, 4, 5, 6]
-        else:
+        if self.hparams["class_set"] not in [5, 7]:
             raise ValueError("'class_set' must be either 5 or 7")
+        num_classes = self.hparams["class_set"]
+        classes = range(1, self.hparams["class_set"])
 
         if self.hparams["segmentation_model"] == "unet":
             self.model = smp.Unet(
