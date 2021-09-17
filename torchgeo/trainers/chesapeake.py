@@ -23,6 +23,7 @@ from torchmetrics import Accuracy, IoU, MetricCollection
 from torchvision.transforms import Compose
 
 from ..datasets import Chesapeake7, ChesapeakeCVPR
+from ..models import FCN
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from ..transforms import RandomHorizontalFlip, RandomVerticalFlip
 
@@ -31,8 +32,21 @@ from ..transforms import RandomHorizontalFlip, RandomVerticalFlip
 DataLoader.__module__ = "torch.utils.data"
 Module.__module__ = "torch.nn"
 
-CMAP = matplotlib.colors.ListedColormap(
-    [np.array(Chesapeake7.cmap[i + 1]) / 255.0 for i in range(6)]
+# TODO: move the color maps to a dataset object
+CMAP_7 = matplotlib.colors.ListedColormap(
+    [np.array(Chesapeake7.cmap[i]) / 255.0 for i in range(7)]
+)
+CMAP_5 = matplotlib.colors.ListedColormap(
+    np.array(
+        [
+            (0, 0, 0, 0),
+            (0, 197, 255, 255),
+            (38, 115, 0, 255),
+            (163, 255, 115, 255),
+            (156, 156, 156, 255),
+        ]
+    )
+    / 255.0
 )
 
 
@@ -45,20 +59,27 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
+        if self.hparams["class_set"] not in [5, 7]:
+            raise ValueError("'class_set' must be either 5 or 7")
+        num_classes = self.hparams["class_set"]
+        classes = range(1, self.hparams["class_set"])
+
         if self.hparams["segmentation_model"] == "unet":
             self.model = smp.Unet(
                 encoder_name=self.hparams["encoder_name"],
                 encoder_weights=self.hparams["encoder_weights"],
                 in_channels=4,
-                classes=7,
+                classes=num_classes,
             )
         elif self.hparams["segmentation_model"] == "deeplabv3+":
             self.model = smp.DeepLabV3Plus(
                 encoder_name=self.hparams["encoder_name"],
                 encoder_weights=self.hparams["encoder_weights"],
                 in_channels=4,
-                classes=7,
+                classes=num_classes,
             )
+        elif self.hparams["segmentation_model"] == "fcn":
+            self.model = FCN(in_channels=4, classes=num_classes, num_filters=256)
         else:
             raise ValueError(
                 f"Model type '{self.hparams['segmentation_model']}' is not valid."
@@ -66,10 +87,14 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
 
         if self.hparams["loss"] == "ce":
             self.loss = nn.CrossEntropyLoss(  # type: ignore[attr-defined]
-                ignore_index=6
+                ignore_index=0
             )
         elif self.hparams["loss"] == "jaccard":
-            self.loss = smp.losses.JaccardLoss(mode="multiclass")
+            self.loss = smp.losses.JaccardLoss(mode="multiclass", classes=classes)
+        elif self.hparams["loss"] == "focal":
+            self.loss = smp.losses.FocalLoss(
+                "multiclass", ignore_index=0, normalized=True
+            )
         else:
             raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
 
@@ -96,8 +121,8 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
 
         self.train_metrics = MetricCollection(
             [
-                Accuracy(num_classes=7, ignore_index=6),
-                IoU(num_classes=7, ignore_index=6),
+                Accuracy(num_classes=self.hparams["class_set"], ignore_index=0),
+                IoU(num_classes=self.hparams["class_set"], ignore_index=0),
             ],
             prefix="train_",
         )
@@ -173,6 +198,11 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
         self.val_metrics(y_hat_hard, y)
 
         if batch_idx < 10:
+            cmap = None
+            if self.hparams["class_set"] == 5:
+                cmap = CMAP_5
+            else:
+                cmap = CMAP_7
             # Render the image, ground truth mask, and predicted mask for the first
             # image in the batch
             img = np.rollaxis(  # convert image to channels last format
@@ -183,9 +213,21 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
             fig, axs = plt.subplots(1, 3, figsize=(12, 4))
             axs[0].imshow(img[:, :, :3])
             axs[0].axis("off")
-            axs[1].imshow(mask, vmin=0, vmax=6, cmap=CMAP, interpolation="none")
+            axs[1].imshow(
+                mask,
+                vmin=0,
+                vmax=self.hparams["class_set"] - 1,
+                cmap=cmap,
+                interpolation="none",
+            )
             axs[1].axis("off")
-            axs[2].imshow(pred, vmin=0, vmax=6, cmap=CMAP, interpolation="none")
+            axs[2].imshow(
+                pred,
+                vmin=0,
+                vmax=self.hparams["class_set"] - 1,
+                cmap=cmap,
+                interpolation="none",
+            )
             axs[2].axis("off")
             plt.tight_layout()
 
@@ -273,6 +315,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         patch_size: int = 256,
         batch_size: int = 64,
         num_workers: int = 4,
+        class_set: int = 7,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for Chesapeake CVPR based DataLoaders.
@@ -286,9 +329,11 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
                 this size)
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
+            class_set: The high-resolution land cover class set to use - 5 or 7
         """
         super().__init__()  # type: ignore[no-untyped-call]
         assert train_state in ["md", "de", "ny", "pa", "va", "wv"]
+        assert class_set in [5, 7]
 
         self.root_dir = root_dir
         self.train_state = train_state
@@ -300,6 +345,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         self.original_patch_size = int(patch_size * 2.0)
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.class_set = class_set
 
     def pad_to(
         self, size: int = 512, image_value: int = 0, mask_value: int = 0
@@ -338,7 +384,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
 
         def center_crop_inner(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
             _, height, width = sample["image"].shape
-            assert height >= size and width >= size
 
             y1 = (height - size) // 2
             x1 = (width - size) // 2
@@ -352,13 +397,35 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Preprocesses a single sample."""
         sample["image"] = sample["image"] / 255.0
-        sample["mask"] = sample["mask"] - 1
+        sample["mask"] = sample["mask"]
         sample["mask"] = sample["mask"].squeeze()
+
+        if self.class_set == 5:
+            sample["mask"][sample["mask"] == 5] = 4
+            sample["mask"][sample["mask"] == 6] = 4
 
         sample["image"] = sample["image"].float()
         sample["mask"] = sample["mask"].long()
 
         return sample
+
+    def nodata_check(
+        self, size: int = 512
+    ) -> Callable[[Dict[str, Tensor]], Dict[str, Tensor]]:
+        """Returns a function to check for nodata or missized input."""
+
+        def nodata_check_inner(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+            num_channels, height, width = sample["image"].shape
+
+            if height < size or width < size:
+                sample["image"] = torch.zeros(  # type: ignore[attr-defined]
+                    (num_channels, size, size)
+                )
+                sample["mask"] = torch.zeros((size, size))  # type: ignore[attr-defined]
+
+            return sample
+
+        return nodata_check_inner
 
     def prepare_data(self) -> None:
         """Confirms that the dataset is downloaded on the local node.
@@ -385,20 +452,20 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
                 self.center_crop(self.patch_size),
                 RandomHorizontalFlip(p=0.5),
                 RandomVerticalFlip(p=0.5),
+                self.nodata_check(self.patch_size),
                 self.preprocess,
             ]
         )
         val_transforms = Compose(
             [
                 self.center_crop(self.patch_size),
-                RandomHorizontalFlip(p=0.5),
-                RandomVerticalFlip(p=0.5),
+                self.nodata_check(self.patch_size),
                 self.preprocess,
             ]
         )
         test_transforms = Compose(
             [
-                self.pad_to(self.original_patch_size, image_value=0, mask_value=7),
+                self.pad_to(self.original_patch_size, image_value=0, mask_value=0),
                 self.preprocess,
             ]
         )
@@ -444,15 +511,15 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
 
     def val_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for validation."""
-        sampler = RandomBatchGeoSampler(
+        sampler = GridGeoSampler(
             self.val_dataset.index,
             size=self.original_patch_size,
-            batch_size=self.batch_size,
-            length=self.patches_per_tile * self.val_dataset.index.get_size(),
+            stride=self.original_patch_size,
         )
         return DataLoader(
             self.val_dataset,
-            batch_sampler=sampler,  # type: ignore[arg-type]
+            batch_size=self.batch_size,
+            sampler=sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
         )
 

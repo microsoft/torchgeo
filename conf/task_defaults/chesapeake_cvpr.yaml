@@ -7,8 +7,12 @@ experiment:
     encoder_weights: "imagenet"
     encoder_output_stride: 16
     learning_rate: 1e-3
-    learning_rate_schedule_patience: 2
+    learning_rate_schedule_patience: 6
+    class_set: 7
   datamodule:
-    batch_size: 32
-    num_workers: 4
     train_state: "de"
+    patches_per_tile: 200
+    patch_size: 256
+    batch_size: 64
+    num_workers: 4
+    class_set: ${experiment.module.class_set}
