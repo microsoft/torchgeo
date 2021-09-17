@@ -293,6 +293,24 @@ class BoundingBox(Tuple[float, float, float, float, float, float]):
             and self.maxt >= other.mint
         )
 
+    def contains(self, other: "BoundingBox") -> bool:
+        """Whether this bounding box contains the other.
+
+        Args:
+            other: another bounding box
+
+        Returns:
+            True if this bounding box contains the other, else False
+        """
+        return (
+            (self.minx <= other.minx <= self.maxx)
+            and (self.minx <= other.maxx <= self.maxx)
+            and (self.miny <= other.miny <= self.maxy)
+            and (self.miny <= other.maxy <= self.maxy)
+            and (self.mint <= other.mint <= self.maxt)
+            and (self.mint <= other.maxt <= self.maxt)
+        )
+
 
 def disambiguate_timestamp(date_str: str, format: str) -> Tuple[float, float]:
     """Disambiguate partial timestamps.
