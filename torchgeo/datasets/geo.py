@@ -862,8 +862,12 @@ class UnionDataset(GeoDataset):
         sample = {}
         for ds in self.datasets:
             if query.intersects(ds.bounds):
-                sample.update(ds[query])
-
+                try:
+                    sample.update(ds[query])
+                except IndexError:
+                    pass
+        if not sample:
+            raise IndexError(f"query: {query} not found in merged index")
         return sample
 
     def __str__(self) -> str:
@@ -874,7 +878,7 @@ class UnionDataset(GeoDataset):
         """
         return f"""\
 {self.__class__.__name__} Dataset
-    type: ZipDataset
+    type: UnionDataset
     bbox: {self.bounds}"""
 
     @property
