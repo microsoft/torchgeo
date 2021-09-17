@@ -15,8 +15,9 @@ experiment:
     encoder_output_stride: 16
     optimizer: "adamw"
     learning_rate: 1e-2
-    learning_rate_schedule_patience: 2
+    learning_rate_schedule_patience: 6
+    class_set: 5
   datamodule:
-    batch_size: 32
-    num_workers: 4
+    batch_size: 64
+    num_workers: 6
     train_state: "de" # train/val/test in Delaware
