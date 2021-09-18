@@ -13,7 +13,6 @@ experiment:
     encoder_name: "resnet18"
     encoder_weights: null  # use ImageNet weight initialization
     encoder_output_stride: 16
-    optimizer: "adamw"
     learning_rate: 1e-2
     learning_rate_schedule_patience: 6
     class_set: 5
