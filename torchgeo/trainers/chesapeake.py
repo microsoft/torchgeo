@@ -295,7 +295,6 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
                     patience=self.hparams["learning_rate_schedule_patience"],
                 ),
                 "monitor": "val_loss",
-                "verbose": True,
             },
         }
 
