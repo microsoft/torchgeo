@@ -13,7 +13,12 @@ import pytorch_lightning as pl
 
 from torchgeo.trainers import ChesapeakeCVPRDataModule, ChesapeakeCVPRSegmentationTask
 
-STATES = ["de", "md", "va", "wv", "pa", "ny"]
+ALL_TEST_SPLITS = [
+    ["de-val"],
+    ["pa-test"],
+    ["ny-test"],
+    ["pa-test", "ny-test"],
+]
 
 
 def set_up_parser() -> argparse.ArgumentParser:
@@ -92,20 +97,19 @@ def main(args: argparse.Namespace) -> None:
     )
 
     for experiment_dir in os.listdir(args.input_dir):
-        experiment_dir = os.path.join(args.input_dir, experiment_dir)
 
         checkpoint_fn = None
-        for fn in os.listdir(experiment_dir):
+        for fn in os.listdir(os.path.join(args.input_dir, experiment_dir)):
             if fn.startswith("epoch") and fn.endswith(".ckpt"):
                 checkpoint_fn = fn
                 break
         if checkpoint_fn is None:
             print(
-                f"Skipping {experiment_dir} as we are not able to find a checkpoint"
-                + " file"
+                f"Skipping {os.path.join(args.input_dir, experiment_dir)} as we are not"
+                + " able to find a checkpoint file"
             )
             continue
-        checkpoint_fn = os.path.join(experiment_dir, checkpoint_fn)
+        checkpoint_fn = os.path.join(args.input_dir, experiment_dir, checkpoint_fn)
 
         try:
 
@@ -134,19 +138,19 @@ def main(args: argparse.Namespace) -> None:
             continue
 
         # Test the loaded model against the test set from all states
-        for state in STATES:
+        for test_splits in ALL_TEST_SPLITS:
 
             dm = ChesapeakeCVPRDataModule(
                 args.chesapeakecvpr_root,
-                train_splits=[f"{state}-train"],
-                val_splits=[f"{state}-val"],
-                test_splits=[f"{state}-test"],
+                train_splits=["de-train"],
+                val_splits=["de-val"],
+                test_splits=test_splits,
                 batch_size=32,
                 num_workers=8,
                 class_set=5,
             )
             results = trainer.test(model=model, datamodule=dm, verbose=False)
-            print(experiment_dir, state, results[0])
+            print(experiment_dir, test_splits, results[0])
 
             row = {
                 "train-state": train_state,
@@ -154,7 +158,7 @@ def main(args: argparse.Namespace) -> None:
                 "learning-rate": learning_rate,
                 "initialization": initialization,
                 "loss": loss,
-                "test-state": state,
+                "test-state": "_".join(test_splits),
                 "acc": results[0]["test_Accuracy"],
                 "iou": results[0]["test_IoU"],
             }
