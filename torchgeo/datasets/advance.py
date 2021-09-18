@@ -10,7 +10,6 @@ from typing import Callable, Dict, List, Optional
 import numpy as np
 import torch
 from PIL import Image
-from scipy.io import wavfile
 from torch import Tensor
 
 from .geo import VisionDataset
@@ -53,6 +52,11 @@ class ADVANCE(VisionDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1007/978-3-030-58586-0_5
+
+    .. note::
+        This dataset requires the following additional library to be installed:
+
+        * `scipy <https://pypi.org/project/scipy/>`_ to load the audio files to tensors
     """
 
     urls = [
@@ -187,6 +191,13 @@ class ADVANCE(VisionDataset):
         Returns:
             the target audio
         """
+        try:
+            from scipy.io import wavfile
+        except ImportError:
+            raise ImportError(
+                "scipy is not installed and is required to download this dataset"
+            )
+
         array = wavfile.read(path)[1]
         tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
         tensor = tensor.unsqueeze(0)
