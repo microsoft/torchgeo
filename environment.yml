@@ -36,6 +36,7 @@ dependencies:
     - radiant-mlhub>=0.2.1
     - rtree>=0.5
     - scikit-learn>=0.18
+    - scipy>=1.6.0
     - segmentation-models-pytorch>=0.2
     - setuptools>=30.4
     - sphinx>=3
