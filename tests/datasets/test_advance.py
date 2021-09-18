@@ -20,12 +20,13 @@ def download_url(url: str, root: str, *args: str) -> None:
 
 
 class TestADVANCE:
-    @pytest.fixture(params=["train", "test"])
+    @pytest.fixture
     def dataset(
         self,
         monkeypatch: Generator[MonkeyPatch, None, None],
         tmp_path: Path,
     ) -> ADVANCE:
+        _ = pytest.importorskip("scipy", minversion="1.6.0")
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.utils, "download_url", download_url
         )
