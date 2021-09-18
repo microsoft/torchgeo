@@ -47,6 +47,13 @@ def set_up_parser() -> argparse.ArgumentParser:
         help="path to the CSV file to write results",
         metavar="FILE",
     )
+    parser.add_argument(
+        "--gpu",
+        required=True,
+        type=int,
+        help="Id of the GPU to use",
+        metavar="ID",
+    )
 
     return parser
 
@@ -67,6 +74,7 @@ def main(args: argparse.Namespace) -> None:
         "model",
         "learning-rate",
         "initialization",
+        "loss",
         "test-state",
         "acc",
         "iou",
@@ -77,12 +85,28 @@ def main(args: argparse.Namespace) -> None:
 
     # Test loop
     trainer = pl.Trainer(
-        gpus=1, logger=False, progress_bar_refresh_rate=0, checkpoint_callback=False
+        gpus=[args.gpu],
+        logger=False,
+        progress_bar_refresh_rate=0,
+        checkpoint_callback=False,
     )
 
     for experiment_dir in os.listdir(args.input_dir):
+        experiment_dir = os.path.join(args.input_dir, experiment_dir)
 
-        checkpoint_fn = os.path.join(args.input_dir, experiment_dir, "last.ckpt")
+        checkpoint_fn = None
+        for fn in os.listdir(experiment_dir):
+            if fn.startswith("epoch") and fn.endswith(".ckpt"):
+                checkpoint_fn = fn
+                break
+        if checkpoint_fn is None:
+            print(
+                f"Skipping {experiment_dir} as we are not able to find a checkpoint"
+                + " file"
+            )
+            continue
+        checkpoint_fn = os.path.join(experiment_dir, checkpoint_fn)
+
         try:
 
             model = ChesapeakeCVPRSegmentationTask.load_from_checkpoint(checkpoint_fn)
@@ -100,7 +124,8 @@ def main(args: argparse.Namespace) -> None:
             train_state = experiment_dir_parts[0]
             model_name = experiment_dir_parts[1]
             learning_rate = experiment_dir_parts[2]
-            initialization = "random" if len(experiment_dir_parts) == 4 else "imagenet"
+            loss = experiment_dir_parts[3]
+            initialization = "random" if len(experiment_dir_parts) == 5 else "imagenet"
         except IndexError:
             print(
                 f"Skipping {experiment_dir} as the directory name is not in the"
@@ -113,9 +138,12 @@ def main(args: argparse.Namespace) -> None:
 
             dm = ChesapeakeCVPRDataModule(
                 args.chesapeakecvpr_root,
-                train_state=f"{state}",
+                train_splits=[f"{state}-train"],
+                val_splits=[f"{state}-val"],
+                test_splits=[f"{state}-test"],
                 batch_size=32,
                 num_workers=8,
+                class_set=5,
             )
             results = trainer.test(model=model, datamodule=dm, verbose=False)
             print(experiment_dir, state, results[0])
@@ -125,6 +153,7 @@ def main(args: argparse.Namespace) -> None:
                 "model": model_name,
                 "learning-rate": learning_rate,
                 "initialization": initialization,
+                "loss": loss,
                 "test-state": state,
                 "acc": results[0]["test_Accuracy"],
                 "iou": results[0]["test_IoU"],
