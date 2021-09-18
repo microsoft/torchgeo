@@ -65,9 +65,7 @@ class LandcoverAISegmentationTask(pl.LightningModule):
         elif self.hparams["loss"] == "jaccard":
             self.loss = smp.losses.JaccardLoss(mode="multiclass")
         elif self.hparams["loss"] == "focal":
-            self.loss = smp.losses.FocalLoss(
-                "multiclass", normalized=True
-            )
+            self.loss = smp.losses.FocalLoss("multiclass", normalized=True)
         else:
             raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
 
@@ -295,11 +293,13 @@ class LandcoverAIDataModule(pl.LightningDataModule):
 
         This method is called once per GPU per run.
         """
-        train_transforms = Compose([
-            RandomHorizontalFlip(p=0.5),
-            RandomVerticalFlip(p=0.5),
-            self.preprocess,
-        ])
+        train_transforms = Compose(
+            [
+                RandomHorizontalFlip(p=0.5),
+                RandomVerticalFlip(p=0.5),
+                self.preprocess,
+            ]
+        )
         val_test_transforms = self.preprocess
 
         self.train_dataset = LandCoverAI(
