@@ -49,8 +49,8 @@ rasterio>=1.0.16
 rtree>=0.5
 # scikit-learn 0.18+ required for sklearn.model_selection module
 scikit-learn>=0.18
-# scipy 1.6.0+ required for scipy.io.wavfile.read
-scipy>=1.6.0
+# scipy 1.5.4+ required for scipy.io.wavfile.read
+scipy>=1.5.4
 # segmentation-models-pytorch 0.2+ required for smp.losses module
 segmentation-models-pytorch>=0.2
 # setuptools 30.4+ required for options.packages.find section in setup.cfg

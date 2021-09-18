@@ -26,7 +26,7 @@ class TestADVANCE:
         monkeypatch: Generator[MonkeyPatch, None, None],
         tmp_path: Path,
     ) -> ADVANCE:
-        _ = pytest.importorskip("scipy", minversion="1.6.0")
+        _ = pytest.importorskip("scipy", minversion="1.5.4")
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.utils, "download_url", download_url
         )
