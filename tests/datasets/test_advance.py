@@ -1,10 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import builtins
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
+from typing import Any, Generator
 
 import pytest
 import torch
@@ -26,7 +27,7 @@ class TestADVANCE:
         monkeypatch: Generator[MonkeyPatch, None, None],
         tmp_path: Path,
     ) -> ADVANCE:
-        pytest.importorskip("scipy", minversion="1.5.4")
+        pytest.importorskip("scipy", minversion="0.9.0")
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.utils, "download_url", download_url
         )
@@ -41,6 +42,19 @@ class TestADVANCE:
         root = str(tmp_path)
         transforms = Identity()
         return ADVANCE(root, transforms, download=True, checksum=True)
+
+    @pytest.fixture
+    def mock_missing_module(self, monkeypatch: Generator[MonkeyPatch, None, None]) -> None:
+        import_orig = builtins.__import__
+
+        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
+            if name == "scipy":
+                raise ImportError()
+            return import_orig(name, *args, **kwargs)
+
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            builtins, "__import__", mocked_import
+        )
 
     def test_getitem(self, dataset: ADVANCE) -> None:
         x = dataset[0]
@@ -63,3 +77,6 @@ class TestADVANCE:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             ADVANCE(str(tmp_path))
+
+    def test_mock_missing_module(self) -> None:
+        import h5py  # noqa: F401
