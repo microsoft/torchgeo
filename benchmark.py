@@ -14,7 +14,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision.models import resnet18
 
-from torchgeo.datasets import CDL, Landsat8
+from torchgeo.datasets import BoundingBox, CDL, Landsat8
 from torchgeo.samplers import GridGeoSampler, RandomBatchGeoSampler, RandomGeoSampler
 
 
@@ -142,18 +142,26 @@ def main(args: argparse.Namespace) -> None:
         length = args.num_batches * args.batch_size
         num_batches = args.num_batches
 
+    # Workaround for https://github.com/microsoft/torchgeo/issues/149
+    roi = BoundingBox(
+        -2000000, 2200000, 280000, 3170000, dataset.bounds.mint, dataset.bounds.maxt
+    )
     samplers = [
         RandomGeoSampler(
             landsat.index,
             size=args.patch_size,
             length=length,
+            roi=roi,
         ),
-        GridGeoSampler(landsat.index, size=args.patch_size, stride=args.stride),
+        GridGeoSampler(
+            landsat.index, size=args.patch_size, stride=args.stride, roi=roi
+        ),
         RandomBatchGeoSampler(
             landsat.index,
             size=args.patch_size,
             batch_size=args.batch_size,
             length=length,
+            roi=roi,
         ),
     ]
 
