@@ -42,7 +42,7 @@ class LandcoverAISegmentationTask(pl.LightningModule):
                 encoder_name=self.hparams["encoder_name"],
                 encoder_weights=self.hparams["encoder_weights"],
                 in_channels=3,
-                classes=5,
+                classes=6,
             )
         elif self.hparams["segmentation_model"] == "deeplabv3+":
             self.model = smp.DeepLabV3Plus(
@@ -50,21 +50,25 @@ class LandcoverAISegmentationTask(pl.LightningModule):
                 encoder_weights=self.hparams["encoder_weights"],
                 encoder_output_stride=self.hparams["encoder_output_stride"],
                 in_channels=3,
-                classes=5,
+                classes=6,
             )
         elif self.hparams["segmentation_model"] == "fcn":
-            self.model = FCN(in_channels=3, classes=5, num_filters=256)
+            self.model = FCN(in_channels=3, classes=6, num_filters=256)
         else:
             raise ValueError(
                 f"Model type '{self.hparams['segmentation_model']}' is not valid."
             )
 
         if self.hparams["loss"] == "ce":
-            self.loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
+            self.loss = nn.CrossEntropyLoss(  # type: ignore[attr-defined]
+                ignore_index=0
+            )
         elif self.hparams["loss"] == "jaccard":
-            self.loss = smp.losses.JaccardLoss(mode="multiclass")
+            self.loss = smp.losses.JaccardLoss(mode="multiclass", classes=range(1, 6))
         elif self.hparams["loss"] == "focal":
-            self.loss = smp.losses.FocalLoss("multiclass", normalized=True)
+            self.loss = smp.losses.FocalLoss(
+                "multiclass", ignore_index=0, normalized=True
+            )
         else:
             raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
 
@@ -88,6 +92,7 @@ class LandcoverAISegmentationTask(pl.LightningModule):
         self.config_task()
 
         self.train_augmentations = K.AugmentationSequential(
+            K.RandomRotation(p=0.5, degrees=90),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             K.RandomSharpness(p=0.5),
@@ -97,8 +102,8 @@ class LandcoverAISegmentationTask(pl.LightningModule):
 
         self.train_metrics = MetricCollection(
             [
-                Accuracy(num_classes=5),
-                IoU(num_classes=5),
+                Accuracy(num_classes=6, ignore_index=0),
+                IoU(num_classes=6, ignore_index=0),
             ],
             prefix="train_",
         )
@@ -123,7 +128,8 @@ class LandcoverAISegmentationTask(pl.LightningModule):
         """
         x = batch["image"]
         y = batch["mask"]
-        x, y = self.train_augmentations(x, y)
+        with torch.no_grad():
+            x, y = self.train_augmentations(x, y)
         y = y.long().squeeze()
 
         y_hat = self.forward(x)
@@ -180,9 +186,9 @@ class LandcoverAISegmentationTask(pl.LightningModule):
             fig, axs = plt.subplots(1, 3, figsize=(12, 4))
             axs[0].imshow(img)
             axs[0].axis("off")
-            axs[1].imshow(mask, vmin=0, vmax=4)
+            axs[1].imshow(mask, vmin=0, vmax=5)
             axs[1].axis("off")
-            axs[2].imshow(pred, vmin=0, vmax=4)
+            axs[2].imshow(pred, vmin=0, vmax=5)
             axs[2].axis("off")
 
             # the SummaryWriter is a tensorboard object, see:
@@ -284,7 +290,7 @@ class LandcoverAIDataModule(pl.LightningDataModule):
         sample["image"] = sample["image"] / 255.0
 
         sample["image"] = sample["image"].float()
-        sample["mask"] = sample["mask"].float().unsqueeze(0)
+        sample["mask"] = sample["mask"].float().unsqueeze(0) + 1
 
         return sample
 
