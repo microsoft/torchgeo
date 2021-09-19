@@ -50,7 +50,7 @@ class TestADVANCE:
         import_orig = builtins.__import__
 
         def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name == "scipy":
+            if name == "scipy.io":
                 raise ImportError()
             return import_orig(name, *args, **kwargs)
 
@@ -80,5 +80,11 @@ class TestADVANCE:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             ADVANCE(str(tmp_path))
 
-    def test_mock_missing_module(self) -> None:
-        import h5py  # noqa: F401
+    def test_mock_missing_module(
+        self, dataset: ADVANCE, mock_missing_module: None
+    ) -> None:
+        with pytest.raises(
+            ImportError,
+            match="scipy is not installed and is required to use this dataset",
+        ):
+            _ = dataset[0]
