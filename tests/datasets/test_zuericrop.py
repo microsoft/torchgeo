@@ -1,10 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import builtins
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
+from typing import Any, Generator
 
 import pytest
 import torch
@@ -13,6 +14,8 @@ from _pytest.monkeypatch import MonkeyPatch
 import torchgeo.datasets.utils
 from torchgeo.datasets import ZueriCrop
 from torchgeo.transforms import Identity
+
+pytest.importorskip("h5py")
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -40,6 +43,21 @@ class TestZueriCrop:
         root = str(tmp_path)
         transforms = Identity()
         return ZueriCrop(root, transforms, download=True, checksum=True)
+
+    @pytest.fixture
+    def mock_missing_module(
+        self, monkeypatch: Generator[MonkeyPatch, None, None]
+    ) -> None:
+        import_orig = builtins.__import__
+
+        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
+            if name == "h5py":
+                raise ImportError()
+            return import_orig(name, *args, **kwargs)
+
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            builtins, "__import__", mocked_import
+        )
 
     def test_getitem(self, dataset: ZueriCrop) -> None:
         x = dataset[0]
@@ -75,3 +93,12 @@ class TestZueriCrop:
         "to automaticaly download the dataset."
         with pytest.raises(RuntimeError, match=err):
             ZueriCrop(str(tmp_path))
+
+    def test_mock_missing_module(
+        self, dataset: ZueriCrop, tmp_path: Path, mock_missing_module: None
+    ) -> None:
+        with pytest.raises(
+            ImportError,
+            match="h5py is not installed and is required to use this dataset",
+        ):
+            ZueriCrop(dataset.root, download=True, checksum=True)

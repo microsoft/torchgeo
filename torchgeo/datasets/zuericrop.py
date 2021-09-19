@@ -85,13 +85,11 @@ class ZueriCrop(VisionDataset):
         self._verify()
 
         try:
-            import h5py
+            import h5py  # noqa: F401
         except ImportError:
             raise ImportError(
                 "h5py is not installed and is required to use this dataset"
             )
-        with h5py.File(self.filepath, "r") as f:
-            self.size: int = f["data"].shape[0]
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
@@ -100,7 +98,7 @@ class ZueriCrop(VisionDataset):
             index: index to return
 
         Returns:
-            data and label at that index
+            sample containing image, mask, bounding boxes, and target label
         """
         image = self._load_image(index)
         mask, boxes, label = self._load_target(index)
@@ -118,7 +116,11 @@ class ZueriCrop(VisionDataset):
         Returns:
             length of the dataset
         """
-        return self.size
+        import h5py
+
+        with h5py.File(self.filepath, "r") as f:
+            length: int = f["data"].shape[0]
+        return length
 
     def _load_image(self, index: int) -> Tensor:
         """Load a single image.
