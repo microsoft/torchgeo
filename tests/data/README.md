@@ -65,3 +65,13 @@ from PIL import Image
 img = Image.new("L", (1, 1))
 img.save("02.jpg")
 ```
+
+### Audio wav files
+
+```python
+import numpy as np
+from scipy.io import wavfile
+
+audio = np.random.randn(1).astype(np.float32)
+wavfile.write("01.wav", rate=22050, data=audio)
+```
