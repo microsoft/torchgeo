@@ -11,7 +11,6 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from rasterio.crs import CRS
 from torch.utils.data import DataLoader
 from torchvision.models import resnet18
 
@@ -129,10 +128,10 @@ def main(args: argparse.Namespace) -> None:
     # Benchmark samplers
 
     # Initialize datasets
-    crs = CRS.from_epsg(32610)  # UTM, Zone 10
-    res = 15
-    landsat = Landsat8(args.landsat_root, crs, res, cache=args.cache, bands=bands)
-    cdl = CDL(args.cdl_root, crs, res, cache=args.cache)
+    cdl = CDL(args.cdl_root, cache=args.cache)
+    landsat = Landsat8(
+        args.landsat_root, crs=cdl.crs, res=cdl.res, cache=args.cache, bands=bands
+    )
     dataset = landsat + cdl
 
     # Initialize samplers
