@@ -75,3 +75,18 @@ from scipy.io import wavfile
 audio = np.random.randn(1).astype(np.float32)
 wavfile.write("01.wav", rate=22050, data=audio)
 ```
+
+### HDF5 datasets
+
+```python
+import h5py
+import numpy as np
+
+f = h5py.File("data.hdf5", "w")
+
+num_classes = 10
+images = np.random.randint(low=0, high=255, size=(1, 1, 3)).astype(np.uint8)
+masks = np.random.randint(low=0, high=num_classes, size=(1, 1)).astype(np.uint8)
+f.create_dataset("images", data=images)
+f.create_dataset("masks", data=masks)
+f.close()
