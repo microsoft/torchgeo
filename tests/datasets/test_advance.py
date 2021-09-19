@@ -44,7 +44,9 @@ class TestADVANCE:
         return ADVANCE(root, transforms, download=True, checksum=True)
 
     @pytest.fixture
-    def mock_missing_module(self, monkeypatch: Generator[MonkeyPatch, None, None]) -> None:
+    def mock_missing_module(
+        self, monkeypatch: Generator[MonkeyPatch, None, None]
+    ) -> None:
         import_orig = builtins.__import__
 
         def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
