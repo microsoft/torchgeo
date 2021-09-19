@@ -147,6 +147,11 @@ NWPU VHR-10
 
 .. autoclass:: VHR10
 
+ZueriCrop
+^^^^^^^^^
+
+.. autoclass:: ZueriCrop
+
 .. _Base Classes:
 
 Base Classes
