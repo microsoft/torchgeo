@@ -87,4 +87,4 @@ class TestADVANCE:
             ImportError,
             match="scipy is not installed and is required to use this dataset",
         ):
-            _ = dataset[0]
+            dataset[0]
