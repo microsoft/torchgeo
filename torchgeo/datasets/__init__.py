@@ -50,6 +50,7 @@ from .sentinel import Sentinel, Sentinel2
 from .so2sat import So2Sat
 from .spacenet import SpaceNet1
 from .utils import BoundingBox, collate_dict
+from .zuericrop import ZueriCrop
 
 __all__ = (
     # GeoDataset
@@ -98,6 +99,7 @@ __all__ = (
     "SpaceNet1",
     "TropicalCycloneWindEstimation",
     "VHR10",
+    "ZueriCrop",
     # Base classes
     "GeoDataset",
     "RasterDataset",
