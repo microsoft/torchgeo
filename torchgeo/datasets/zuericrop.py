@@ -207,7 +207,6 @@ class ZueriCrop(VisionDataset):
 
         for e, filename in zip(exists, self.filenames):
             filepath = os.path.join(self.root, filename)
-            print(e, filepath)
 
         if all(exists):
             return
