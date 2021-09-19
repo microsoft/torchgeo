@@ -72,6 +72,6 @@ img.save("02.jpg")
 import numpy as np
 from scipy.io import wavfile
 
-audio = np.random.randn(1,).astype(np.float32)
+audio = np.random.randn(1).astype(np.float32)
 wavfile.write("01.wav", rate=22050, data=audio)
 ```
