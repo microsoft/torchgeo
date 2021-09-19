@@ -195,7 +195,7 @@ class ADVANCE(VisionDataset):
             from scipy.io import wavfile
         except ImportError:
             raise ImportError(
-                "scipy is not installed and is required to download this dataset"
+                "scipy is not installed and is required to use this dataset"
             )
 
         array = wavfile.read(path)[1]
