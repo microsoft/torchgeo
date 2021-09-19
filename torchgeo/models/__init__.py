@@ -5,8 +5,9 @@
 
 from .fccd import FCEF, FCSiamConc, FCSiamDiff
 from .fcn import FCN
+from .farseg import FarSeg
 
-__all__ = ("FCN", "FCEF", "FCSiamConc", "FCSiamDiff")
+__all__ = ("FCN", "FCEF", "FCSiamConc", "FCSiamDiff", "FarSeg")
 
 # https://stackoverflow.com/questions/40018681
 for module in __all__:
