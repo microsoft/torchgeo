@@ -24,6 +24,7 @@ from torchgeo.datasets.utils import (
     disambiguate_timestamp,
     download_and_extract_archive,
     download_radiant_mlhub,
+    download_radiant_mlhub_collection,
     extract_archive,
     working_dir,
 )
@@ -52,8 +53,21 @@ class Dataset:
             shutil.copy(tarball, output_dir)
 
 
-def fetch(collection_id: str, **kwargs: str) -> Dataset:
+class Collection:
+    def download(self, output_dir: str, **kwargs: str) -> None:
+        glob_path = os.path.join(
+            "tests", "data", "ref_african_crops_kenya_02", "*.tar.gz"
+        )
+        for tarball in glob.iglob(glob_path):
+            shutil.copy(tarball, output_dir)
+
+
+def fetch_dataset(dataset_id: str, **kwargs: str) -> Dataset:
     return Dataset()
+
+
+def fetch_collection(collection_id: str, **kwargs: str) -> Collection:
+    return Collection()
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -115,9 +129,19 @@ def test_download_radiant_mlhub(
 ) -> None:
     radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
     monkeypatch.setattr(  # type: ignore[attr-defined]
-        radiant_mlhub.Dataset, "fetch", fetch
+        radiant_mlhub.Dataset, "fetch", fetch_dataset
     )
     download_radiant_mlhub("", str(tmp_path))
+
+
+def test_download_radiant_mlhub_collection(
+    tmp_path: Path, monkeypatch: Generator[MonkeyPatch, None, None]
+) -> None:
+    radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+    monkeypatch.setattr(  # type: ignore[attr-defined]
+        radiant_mlhub.Collection, "fetch", fetch_collection
+    )
+    download_radiant_mlhub_collection("", str(tmp_path))
 
 
 def test_missing_radiant_mlhub(mock_missing_module: None) -> None:
