@@ -11,7 +11,7 @@ import torch
 from torch import Tensor
 
 from .geo import VisionDataset
-from .utils import download_and_extract_archive
+from .utils import download_url
 
 
 class ZueriCrop(VisionDataset):
@@ -908,17 +908,11 @@ class ZueriCrop(VisionDataset):
         """
         self.root = root
         self.transforms = transforms
+        self.download = download
         self.checksum = checksum
         self.filepath = os.path.join(root, self.filename)
 
-        if download:
-            self._download()
-
-        if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+        self._verify()
 
         try:
             import h5py
@@ -1027,27 +1021,30 @@ class ZueriCrop(VisionDataset):
 
         return masks, boxes, labels
 
-    def _check_integrity(self) -> bool:
-        """Checks the integrity of the dataset structure.
-
-        Returns:
-            True if the dataset directories and split files are found, else False
-        """
-        if not os.path.exists(self.filepath):
-            return False
-        return True
-
-    def _download(self) -> None:
-        """Download the dataset and extract it.
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
 
         Raises:
-            AssertionError: if the checksum of split.py does not match
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        if self._check_integrity():
-            print("Files already downloaded and verified")
+        # Check if the file already exists
+        if os.path.exists(self.filepath):
             return
 
-        download_and_extract_archive(
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automaticaly download the dataset."
+            )
+
+        # Download the dataset
+        self._download()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        download_url(
             self.url,
             self.root,
             filename=self.filename,
