@@ -182,7 +182,7 @@ class AppendNDVI(Module):  # type: ignore[misc,name-defined]
         if "image" in sample:
             index = ndvi(
                 red=sample["image"][:, self.index_red],
-                nir=sample["image"][:, self.index_nir]
+                nir=sample["image"][:, self.index_nir],
             )
             index = index.unsqueeze(self.dim)
             sample["image"] = torch.cat([sample["image"], index], dim=self.dim)  # type: ignore[attr-defined]  # noqa: E501
