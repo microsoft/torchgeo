@@ -5,6 +5,7 @@
 
 from typing import Any, Dict, Optional, cast
 
+import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
@@ -17,11 +18,9 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter  # type: ignore[attr-defined]
 from torchmetrics import Accuracy, IoU, MetricCollection
-from torchvision.transforms import Compose
 
 from ..datasets import LandCoverAI
 from ..models import FCN
-from ..transforms import RandomHorizontalFlip, RandomVerticalFlip
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -43,7 +42,7 @@ class LandcoverAISegmentationTask(pl.LightningModule):
                 encoder_name=self.hparams["encoder_name"],
                 encoder_weights=self.hparams["encoder_weights"],
                 in_channels=3,
-                classes=5,
+                classes=6,
             )
         elif self.hparams["segmentation_model"] == "deeplabv3+":
             self.model = smp.DeepLabV3Plus(
@@ -51,21 +50,25 @@ class LandcoverAISegmentationTask(pl.LightningModule):
                 encoder_weights=self.hparams["encoder_weights"],
                 encoder_output_stride=self.hparams["encoder_output_stride"],
                 in_channels=3,
-                classes=5,
+                classes=6,
             )
         elif self.hparams["segmentation_model"] == "fcn":
-            self.model = FCN(in_channels=3, classes=5, num_filters=256)
+            self.model = FCN(in_channels=3, classes=6, num_filters=256)
         else:
             raise ValueError(
                 f"Model type '{self.hparams['segmentation_model']}' is not valid."
             )
 
         if self.hparams["loss"] == "ce":
-            self.loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
+            self.loss = nn.CrossEntropyLoss(  # type: ignore[attr-defined]
+                ignore_index=0
+            )
         elif self.hparams["loss"] == "jaccard":
-            self.loss = smp.losses.JaccardLoss(mode="multiclass")
+            self.loss = smp.losses.JaccardLoss(mode="multiclass", classes=range(1, 6))
         elif self.hparams["loss"] == "focal":
-            self.loss = smp.losses.FocalLoss("multiclass", normalized=True)
+            self.loss = smp.losses.FocalLoss(
+                "multiclass", ignore_index=0, normalized=True
+            )
         else:
             raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
 
@@ -88,10 +91,19 @@ class LandcoverAISegmentationTask(pl.LightningModule):
 
         self.config_task()
 
+        self.train_augmentations = K.AugmentationSequential(
+            K.RandomRotation(p=0.5, degrees=90),
+            K.RandomHorizontalFlip(p=0.5),
+            K.RandomVerticalFlip(p=0.5),
+            K.RandomSharpness(p=0.5),
+            K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
+            data_keys=["input", "mask"],
+        )
+
         self.train_metrics = MetricCollection(
             [
-                Accuracy(num_classes=5),
-                IoU(num_classes=5),
+                Accuracy(num_classes=6, ignore_index=0),
+                IoU(num_classes=6, ignore_index=0),
             ],
             prefix="train_",
         )
@@ -116,6 +128,10 @@ class LandcoverAISegmentationTask(pl.LightningModule):
         """
         x = batch["image"]
         y = batch["mask"]
+        with torch.no_grad():
+            x, y = self.train_augmentations(x, y)
+        y = y.long().squeeze()
+
         y_hat = self.forward(x)
         y_hat_hard = y_hat.argmax(dim=1)
 
@@ -150,7 +166,7 @@ class LandcoverAISegmentationTask(pl.LightningModule):
             batch_idx: Index of current batch
         """
         x = batch["image"]
-        y = batch["mask"]
+        y = batch["mask"].long().squeeze()
         y_hat = self.forward(x)
         y_hat_hard = y_hat.argmax(dim=1)
 
@@ -163,16 +179,16 @@ class LandcoverAISegmentationTask(pl.LightningModule):
             # Render the image, ground truth mask, and predicted mask for the first
             # image in the batch
             img = np.rollaxis(  # convert image to channels last format
-                batch["image"][0].cpu().numpy(), 0, 3
+                x[0].cpu().numpy(), 0, 3
             )
-            mask = batch["mask"][0].cpu().numpy()
+            mask = y[0].cpu().numpy()
             pred = y_hat_hard[0].cpu().numpy()
             fig, axs = plt.subplots(1, 3, figsize=(12, 4))
             axs[0].imshow(img)
             axs[0].axis("off")
-            axs[1].imshow(mask, vmin=0, vmax=4)
+            axs[1].imshow(mask, vmin=0, vmax=5)
             axs[1].axis("off")
-            axs[2].imshow(pred, vmin=0, vmax=4)
+            axs[2].imshow(pred, vmin=0, vmax=5)
             axs[2].axis("off")
 
             # the SummaryWriter is a tensorboard object, see:
@@ -203,7 +219,7 @@ class LandcoverAISegmentationTask(pl.LightningModule):
             batch_idx: Index of current batch
         """
         x = batch["image"]
-        y = batch["mask"]
+        y = batch["mask"].long().squeeze()
         y_hat = self.forward(x)
         y_hat_hard = y_hat.argmax(dim=1)
 
@@ -272,8 +288,9 @@ class LandcoverAIDataModule(pl.LightningDataModule):
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         sample["image"] = sample["image"] / 255.0
+
         sample["image"] = sample["image"].float()
-        sample["mask"] = sample["mask"].long()
+        sample["mask"] = sample["mask"].float().unsqueeze(0) + 1
 
         return sample
 
@@ -293,13 +310,7 @@ class LandcoverAIDataModule(pl.LightningDataModule):
 
         This method is called once per GPU per run.
         """
-        train_transforms = Compose(
-            [
-                RandomHorizontalFlip(p=0.5),
-                RandomVerticalFlip(p=0.5),
-                self.preprocess,
-            ]
-        )
+        train_transforms = self.preprocess
         val_test_transforms = self.preprocess
 
         self.train_dataset = LandCoverAI(
