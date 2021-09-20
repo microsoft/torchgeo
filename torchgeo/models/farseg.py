@@ -6,10 +6,19 @@ import math
 from collections import OrderedDict
 from typing import List, cast
 
-import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
-from torch.nn.modules import Module, ModuleList, Sequential
+from torch.nn.modules import (
+    BatchNorm2d,
+    Conv2d,
+    Identity,
+    Module,
+    ModuleList,
+    ReLU,
+    Sequential,
+    Sigmoid,
+    UpsamplingBilinear2d,
+)
 from torchvision.models import resnet
 from torchvision.ops import FeaturePyramidNetwork as FPN
 
@@ -18,6 +27,12 @@ from torchvision.ops import FeaturePyramidNetwork as FPN
 Module.__module__ = "torch.nn"
 ModuleList.__module__ = "nn.ModuleList"
 Sequential.__module__ = "nn.Sequential"
+Conv2d.__module__ = "nn.Conv2d"
+BatchNorm2d.__module__ = "nn.BatchNorm2d"
+ReLU.__module__ = "nn.ReLU"
+UpsamplingBilinear2d.__module__ = "nn.UpsamplingBilinear2d"
+Sigmoid.__module__ = "nn.Sigmoid"
+Identity.__module__ = "nn.Identity"
 
 
 class FarSeg(Module):
@@ -126,39 +141,43 @@ class FSRelation(Module):
             self.scene_encoder = ModuleList(
                 [
                     Sequential(
-                        nn.modules.Conv2d(scene_embedding_channels, out_channels, 1),
-                        nn.modules.ReLU(True),
-                        nn.modules.Conv2d(out_channels, out_channels, 1),
+                        Conv2d(scene_embedding_channels, out_channels, 1),
+                        ReLU(True),
+                        Conv2d(out_channels, out_channels, 1),
                     )
                     for _ in range(len(in_channels_list))
                 ]
             )
         else:
             # 2mlp
-            self.scene_encoder = Sequential(
-                nn.modules.Conv2d(scene_embedding_channels, out_channels, 1),
-                nn.modules.ReLU(True),
-                nn.modules.Conv2d(out_channels, out_channels, 1),
+            self.scene_encoder = ModuleList(
+                [
+                    Sequential(
+                        Conv2d(scene_embedding_channels, out_channels, 1),
+                        ReLU(True),
+                        Conv2d(out_channels, out_channels, 1),
+                    )
+                ]
             )
         self.content_encoders = ModuleList()
         self.feature_reencoders = ModuleList()
         for c in in_channels_list:
             self.content_encoders.append(
                 Sequential(
-                    nn.modules.Conv2d(c, out_channels, 1),
-                    nn.modules.BatchNorm2d(out_channels),
-                    nn.modules.ReLU(True),
+                    Conv2d(c, out_channels, 1),
+                    BatchNorm2d(out_channels),  # type: ignore[no-untyped-call]
+                    ReLU(True),
                 )
             )
             self.feature_reencoders.append(
                 Sequential(
-                    nn.modules.Conv2d(c, out_channels, 1),
-                    nn.modules.BatchNorm2d(out_channels),
-                    nn.modules.ReLU(True),
+                    Conv2d(c, out_channels, 1),
+                    BatchNorm2d(out_channels),  # type: ignore[no-untyped-call]
+                    ReLU(True),
                 )
             )
 
-        self.normalizer = nn.modules.Sigmoid()
+        self.normalizer = Sigmoid()  # type: ignore[no-untyped-call]
 
     def forward(self, scene_feature: Tensor, features: List[Tensor]) -> List[Tensor]:
         """Forward pass of the model."""
@@ -174,7 +193,7 @@ class FSRelation(Module):
             ]
         else:
             # [N, C, 1, 1]
-            scene_feat = self.scene_encoder(scene_feature)
+            scene_feat = self.scene_encoder[0](scene_feature)
             relations = [
                 self.normalizer((scene_feat * cf).sum(dim=1, keepdim=True))
                 for cf in content_feats
@@ -221,7 +240,7 @@ class LightWeightDecoder(Module):
                 Sequential(
                     *[
                         Sequential(
-                            nn.modules.Conv2d(
+                            Conv2d(
                                 in_channels if idx == 0 else out_channels,
                                 out_channels,
                                 3,
@@ -229,11 +248,11 @@ class LightWeightDecoder(Module):
                                 1,
                                 bias=False,
                             ),
-                            nn.modules.BatchNorm2d(out_channels),
-                            nn.modules.ReLU(inplace=True),
-                            nn.modules.UpsamplingBilinear2d(scale_factor=2)
+                            BatchNorm2d(out_channels),  # type: ignore[no-untyped-call]
+                            ReLU(inplace=True),
+                            UpsamplingBilinear2d(scale_factor=2)
                             if num_upsample != 0
-                            else nn.modules.Identity(),
+                            else Identity(),  # type: ignore[no-untyped-call]
                         )
                         for idx in range(num_layers)
                     ]
@@ -241,8 +260,8 @@ class LightWeightDecoder(Module):
             )
 
         self.classifier = Sequential(
-            nn.modules.Conv2d(out_channels, num_classes, 3, 1, 1),
-            nn.modules.UpsamplingBilinear2d(scale_factor=4),
+            Conv2d(out_channels, num_classes, 3, 1, 1),
+            UpsamplingBilinear2d(scale_factor=4),
         )
 
     def forward(self, features: List[Tensor]) -> Tensor:
