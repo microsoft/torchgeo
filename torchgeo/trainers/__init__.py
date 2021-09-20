@@ -8,7 +8,7 @@ from .cyclone import CycloneDataModule, CycloneSimpleRegressionTask
 from .landcoverai import LandcoverAIDataModule, LandcoverAISegmentationTask
 from .naipchesapeake import NAIPChesapeakeDataModule, NAIPChesapeakeSegmentationTask
 from .sen12ms import SEN12MSDataModule, SEN12MSSegmentationTask
-from .so2sat import So2SatDataModule, So2SatClassificationTask
+from .so2sat import So2SatClassificationTask, So2SatDataModule
 
 __all__ = (
     "ChesapeakeCVPRSegmentationTask",

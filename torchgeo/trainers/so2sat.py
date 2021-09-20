@@ -5,18 +5,18 @@
 
 from typing import Any, Dict, Optional, cast
 
+import kornia.augmentation as K
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torchvision.models
+from segmentation_models_pytorch.losses import FocalLoss
 from torch import Tensor
 from torch.nn.modules import Module
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torchmetrics import Accuracy, IoU, MetricCollection
 from torchvision.transforms import Compose
-import kornia.augmentation as K
-from segmentation_models_pytorch.losses import FocalLoss
 
 from ..datasets import So2Sat
 
@@ -308,12 +308,7 @@ class So2SatDataModule(pl.LightningDataModule):
 
         This method is called once per GPU per run.
         """
-        train_transforms = Compose(
-            [
-                self.preprocess,
-                self.kornia_pipeline
-            ]
-        )
+        train_transforms = Compose([self.preprocess, self.kornia_pipeline])
         val_test_transforms = self.preprocess
 
         self.train_dataset = So2Sat(
