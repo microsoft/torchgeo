@@ -14,6 +14,32 @@ from torch.nn import Module  # type: ignore[attr-defined]
 Module.__module__ = "torch.nn"
 
 
+def ndbi(swir: Tensor, nir: Tensor) -> Tensor:
+    """Compute Normalized Different Built-up Index (NDBI).
+
+    Args:
+        swir: tensor containing swir band
+        nir: tensor containing nir band
+
+    Returns:
+        tensor containing computed NDBI values
+    """
+    return (swir - nir) / (swir + nir)
+
+
+def ndsi(green: Tensor, swir: Tensor) -> Tensor:
+    """Compute Normalized Different Snow Index (NDSI).
+
+    Args:
+        green: tensor containing green band
+        swir: tensor containing swir band
+
+    Returns:
+        tensor containing computed NDSI values
+    """
+    return (green - swir) / (green + swir)
+
+
 def ndvi(red: Tensor, nir: Tensor) -> Tensor:
     """Compute Normalized Different Vegetation Index (NDVI).
 
@@ -27,22 +53,120 @@ def ndvi(red: Tensor, nir: Tensor) -> Tensor:
     return (nir - red) / (nir + red)
 
 
-class NDVI(Module):  # type: ignore[misc,name-defined]
+def ndwi(green: Tensor, nir: Tensor) -> Tensor:
+    """Compute Normalized Different Water Index (NDWI).
+
+    Args:
+        green: tensor containing green band
+        nir: tensor containing nir band
+
+    Returns:
+        tensor containing computed NDWI values
+    """
+    return (green - nir) / (green + nir)
+
+
+class AppendNDBI(Module):  # type: ignore[misc,name-defined]
+    """Normalized Difference Built-up Index (NDBI).
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://doi.org/10.1080/01431160304987
+    """
+
+    def __init__(self, index_swir: int, index_nir: int, dim: int = 1) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_swir: index of the Short-wave Infrared (SWIR) band in the image
+            index_nir: index of the Near Infrared (NIR) band in the image
+
+            dim: dimension of channels in the input tensors (default: 1)
+        """
+        super().__init__()
+        self.dim = dim
+        self.index_nir = index_nir
+        self.index_swir = index_swir
+
+    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+        """Create a band for NDBI and append to image channels.
+
+        Args:
+            sample: a single data sample
+
+        Returns:
+            a sample where the image has an additional channel representing NDBI
+        """
+        if "image" in sample:
+            index = ndsi(
+                swir=sample["image"][self.index_swir],
+                nir=sample["image"][self.index_nir],
+            )
+            index = index.unsqueeze(0)
+            sample["image"] = torch.cat([sample["image"], index], dim=self.dim)  # type: ignore[attr-defined]  # noqa: E501
+
+        return sample
+
+
+class AppendNDSI(Module):  # type: ignore[misc,name-defined]
+    """Normalized Difference Snow Index (NDSI).
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://doi.org/10.1109/IGARSS.1994.399618
+    """
+
+    def __init__(self, index_green: int, index_swir: int, dim: int = 1) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_green: index of the Green band in the image
+            index_swir: index of the Short-wave Infrared (SWIR) band in the image
+            dim: dimension of channels in the input tensors (default: 1)
+        """
+        super().__init__()
+        self.dim = dim
+        self.index_green = index_green
+        self.index_swir = index_swir
+
+    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+        """Create a band for NDSI and append to image channels.
+
+        Args:
+            sample: a single data sample
+
+        Returns:
+            a sample where the image has an additional channel representing NDSI
+        """
+        if "image" in sample:
+            index = ndsi(
+                green=sample["image"][self.index_green],
+                swir=sample["image"][self.index_swir],
+            )
+            index = index.unsqueeze(0)
+            sample["image"] = torch.cat([sample["image"], index], dim=self.dim)  # type: ignore[attr-defined]  # noqa: E501
+
+        return sample
+
+
+class AppendNDVI(Module):  # type: ignore[misc,name-defined]
     """Normalized Difference Vegetation Index (NDVI).
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/1807.05713
+    * https://doi.org/10.1016/0034-4257(79)90013-0
     """
 
-    def __init__(self, index_red: int, index_nir: int) -> None:
+    def __init__(self, index_red: int, index_nir: int, dim: int = 1) -> None:
         """Initialize a new transform instance.
 
         Args:
             index_red: index of the Red band in the image
             index_nir: index of the Near Infrared (NIR) band in the image
+            dim: dimension of channels in the input tensors (default: 1)
         """
         super().__init__()
+        self.dim = dim
         self.index_red = index_red
         self.index_nir = index_nir
 
@@ -60,6 +184,47 @@ class NDVI(Module):  # type: ignore[misc,name-defined]
                 red=sample["image"][self.index_red], nir=sample["image"][self.index_nir]
             )
             index = index.unsqueeze(0)
-            sample["image"] = torch.cat([sample["image"], index], dim=0)  # type: ignore[attr-defined]  # noqa: E501
+            sample["image"] = torch.cat([sample["image"], index], dim=self.dim)  # type: ignore[attr-defined]  # noqa: E501
+
+        return sample
+
+
+class AppendNDWI(Module):  # type: ignore[misc,name-defined]
+    """Normalized Difference Water Index (NDWI).
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://doi.org/10.1080/01431169608948714
+    """
+
+    def __init__(self, index_green: int, index_nir: int, dim: int = 1) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_green: index of the Green band in the image
+            index_nir: index of the Near Infrared (NIR) band in the image
+            dim: dimension of channels in the input tensors (default: 1)
+        """
+        super().__init__()
+        self.dim = dim
+        self.index_green = index_green
+        self.index_nir = index_nir
+
+    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+        """Create a band for NDWI and append to image channels.
+
+        Args:
+            sample: a single data sample
+
+        Returns:
+            a sample where the image has an additional channel representing NDWI
+        """
+        if "image" in sample:
+            index = ndwi(
+                green=sample["image"][self.index_green],
+                nir=sample["image"][self.index_nir],
+            )
+            index = index.unsqueeze(0)
+            sample["image"] = torch.cat([sample["image"], index], dim=self.dim)  # type: ignore[attr-defined]  # noqa: E501
 
         return sample

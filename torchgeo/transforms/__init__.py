@@ -3,10 +3,24 @@
 
 """TorchGeo transforms."""
 
-from .indices import NDVI
-from .transforms import Identity, RandomHorizontalFlip, RandomVerticalFlip
+from .indices import AppendNDBI, AppendNDSI, AppendNDVI, AppendNDWI
+from .transforms import (
+    AugmentationSequential,
+    Identity,
+    RandomHorizontalFlip,
+    RandomVerticalFlip,
+)
 
-__all__ = ("Identity", "RandomHorizontalFlip", "RandomVerticalFlip", "NDVI")
+__all__ = (
+    "AppendNDBI",
+    "AppendNDSI",
+    "AppendNDVI",
+    "AppendNDWI",
+    "AugmentationSequential",
+    "Identity",
+    "RandomHorizontalFlip",
+    "RandomVerticalFlip",
+)
 
 # https://stackoverflow.com/questions/40018681
 for module in __all__:
