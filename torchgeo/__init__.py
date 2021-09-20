@@ -10,4 +10,5 @@ The :mod:`torchgeo` package consists of popular datasets, model architectures, a
 common image transformations for geospatial data.
 """
 
-__version__ = "0.1.0-dev"
+__author__ = "Adam J. Stewart"
+__version__ = "0.1.0.dev0"
