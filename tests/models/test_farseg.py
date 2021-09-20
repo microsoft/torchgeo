@@ -15,8 +15,10 @@ class TestFarSeg:
         x = torch.randn(2, 3, 128, 128)
         model(x)
 
-        match = "Unsupported in_channels = 5 for the pretrained model, " \
-                "only in_channels = 3 can be used currently"
+        match = (
+            "Unsupported in_channels = 5 for the pretrained model, "
+            "only in_channels = 3 can be used currently"
+        )
         with pytest.raises(ValueError, match=match):
             model = FarSeg(
                 in_channels=5, classes=4, backbone="resnet50", backbone_pretrained=False
