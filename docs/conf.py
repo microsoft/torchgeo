@@ -25,7 +25,7 @@ import torchgeo  # noqa: E402
 
 project = "torchgeo"
 copyright = "2021, Microsoft Corporation"
-author = "Adam J. Stewart"
+author = torchgeo.__author__
 version = ".".join(torchgeo.__version__.split(".")[:2])
 release = torchgeo.__version__
 
