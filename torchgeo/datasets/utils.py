@@ -125,7 +125,7 @@ def download_and_extract_archive(
     extract_archive(archive, extract_root)
 
 
-def download_radiant_mlhub(
+def download_radiant_mlhub_dataset(
     dataset_id: str, download_root: str, api_key: Optional[str] = None
 ) -> None:
     """Download a dataset from Radiant Earth.

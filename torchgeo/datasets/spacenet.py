@@ -18,7 +18,7 @@ from torch import Tensor
 from torchgeo.datasets.geo import VisionDataset
 from torchgeo.datasets.utils import (
     check_integrity,
-    download_radiant_mlhub,
+    download_radiant_mlhub_dataset,
     extract_archive,
 )
 
@@ -227,7 +227,7 @@ class SpaceNet1(VisionDataset):
             print("Files already downloaded")
             return
 
-        download_radiant_mlhub(self.dataset_id, self.root, api_key)
+        download_radiant_mlhub_dataset(self.dataset_id, self.root, api_key)
         archive_path = os.path.join(self.root, self.foldername + ".tar.gz")
         if (
             self.checksum

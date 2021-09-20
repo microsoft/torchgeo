@@ -14,7 +14,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import VisionDataset
-from .utils import check_integrity, download_radiant_mlhub, extract_archive
+from .utils import check_integrity, download_radiant_mlhub_dataset, extract_archive
 
 
 class TropicalCycloneWindEstimation(VisionDataset):
@@ -201,7 +201,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
             print("Files already downloaded and verified")
             return
 
-        download_radiant_mlhub(self.collection_id, self.root, api_key)
+        download_radiant_mlhub_dataset(self.collection_id, self.root, api_key)
 
         for split, resources in self.md5s.items():
             for resource_type in resources:

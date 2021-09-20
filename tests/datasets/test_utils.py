@@ -23,8 +23,8 @@ from torchgeo.datasets.utils import (
     collate_dict,
     disambiguate_timestamp,
     download_and_extract_archive,
-    download_radiant_mlhub,
     download_radiant_mlhub_collection,
+    download_radiant_mlhub_dataset,
     extract_archive,
     working_dir,
 )
@@ -124,14 +124,14 @@ def test_download_and_extract_archive(
     )
 
 
-def test_download_radiant_mlhub(
+def test_download_radiant_mlhub_dataset(
     tmp_path: Path, monkeypatch: Generator[MonkeyPatch, None, None]
 ) -> None:
     radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
     monkeypatch.setattr(  # type: ignore[attr-defined]
         radiant_mlhub.Dataset, "fetch", fetch_dataset
     )
-    download_radiant_mlhub("", str(tmp_path))
+    download_radiant_mlhub_dataset("", str(tmp_path))
 
 
 def test_download_radiant_mlhub_collection(
@@ -149,7 +149,7 @@ def test_missing_radiant_mlhub(mock_missing_module: None) -> None:
         ImportError,
         match="radiant_mlhub is not installed and is required to download this dataset",
     ):
-        download_radiant_mlhub("", "")
+        download_radiant_mlhub_dataset("", "")
 
 
 class TestBoundingBox:
