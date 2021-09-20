@@ -15,9 +15,10 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torchmetrics import Accuracy, IoU, MetricCollection
 from torchvision.transforms import Compose
+import kornia.augmentation as K
+from segmentation_models_pytorch.losses import FocalLoss
 
 from ..datasets import So2Sat
-from ..transforms import RandomHorizontalFlip, RandomVerticalFlip
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -39,7 +40,7 @@ class So2SatClassificationTask(pl.LightningModule):
             )
             self.model.conv1 = nn.Conv2d(  # type: ignore[attr-defined]
                 IN_CHANNELS,
-                self.model.inplanes,
+                64,
                 kernel_size=3,
                 stride=1,
                 padding=1,
@@ -52,6 +53,8 @@ class So2SatClassificationTask(pl.LightningModule):
 
         if self.hparams["loss"] == "ce":
             self.loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
+        elif self.hparams["loss"] == "focal":
+            self.loss = FocalLoss(mode="multiclass", normalized=True)
         else:
             raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
 
@@ -225,7 +228,7 @@ class So2SatDataModule(pl.LightningDataModule):
             0.15428468872076637,
             0.10905050699570007,
         ]
-    )
+    ).reshape(18, 1, 1)
 
     band_stds = torch.tensor(  # type: ignore[attr-defined]
         [
@@ -248,7 +251,7 @@ class So2SatDataModule(pl.LightningDataModule):
             0.09991773043519253,
             0.08780632509122865,
         ]
-    )
+    ).reshape(18, 1, 1)
 
     def __init__(
         self,
@@ -269,11 +272,24 @@ class So2SatDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
 
+        self.transforms = K.AugmentationSequential(
+            K.RandomErasing(),
+            K.RandomAffine(degrees=30),
+            K.RandomHorizontalFlip(),
+            K.RandomVerticalFlip(),
+            data_keys=["input"],
+        )
+
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         sample["image"] = (sample["image"] - self.band_means) / self.band_stds
         sample["image"] = sample["image"].float()
-        sample["label"] = sample["label"].long()
+
+        return sample
+
+    def kornia_pipeline(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Transform a single sample from the Dataset with Kornia."""
+        sample["image"] = self.transforms(sample["image"]).squeeze()
 
         return sample
 
@@ -294,9 +310,8 @@ class So2SatDataModule(pl.LightningDataModule):
         """
         train_transforms = Compose(
             [
-                RandomHorizontalFlip(p=0.5),
-                RandomVerticalFlip(p=0.5),
                 self.preprocess,
+                self.kornia_pipeline
             ]
         )
         val_test_transforms = self.preprocess
@@ -309,7 +324,7 @@ class So2SatDataModule(pl.LightningDataModule):
 
         self.val_dataset = So2Sat(
             self.root_dir,
-            split="val",
+            split="validation",
             transforms=val_test_transforms,
         )
 
