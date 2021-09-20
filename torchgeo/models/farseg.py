@@ -38,9 +38,8 @@ Identity.__module__ = "nn.Identity"
 class FarSeg(Module):
     """Foreground-Aware Relation Network (FarSeg).
 
-    'Foreground-Aware Relation Network for Geospatial Object Segmentation',
-    Zheng et al. (2020)
-    If you use this model in your research, please cite the following paper:
+    If you use this model in your research, please cite 'Foreground-Aware Relation
+    Network for Geospatial Object Segmentation', Zheng et al. (2020):
 
     * https://arxiv.org/pdf/2011.09766.pdf
     """
@@ -65,7 +64,7 @@ class FarSeg(Module):
                 (default=True)
         """
         super(FarSeg, self).__init__()  # type: ignore[no-untyped-call]
-        if in_channels != 3 and backbone_pretrained:
+        if in_channels != 3:
             raise ValueError(
                 f"Unsupported in_channels = {in_channels} for the pretrained model, "
                 f"only in_channels = 3 can be used currently"
