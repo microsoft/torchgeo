@@ -110,6 +110,7 @@ class AugmentationSequential(Module):
             *args: Sequence of kornia augmentations
             data_keys: List of inputs to augment (e.g. ["image", "mask", "boxes"])
         """
+        super().__init__()
         self.data_keys = data_keys
         self.augs = K.AugmentationSequential(
             *args, data_keys=["input" if k == "image" else k for k in data_keys]

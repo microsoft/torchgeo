@@ -98,11 +98,11 @@ class AppendNDBI(Module):  # type: ignore[misc,name-defined]
             a sample where the image has an additional channel representing NDBI
         """
         if "image" in sample:
-            index = ndsi(
-                swir=sample["image"][self.index_swir],
-                nir=sample["image"][self.index_nir],
+            index = ndbi(
+                swir=sample["image"][:, self.index_swir],
+                nir=sample["image"][:, self.index_nir],
             )
-            index = index.unsqueeze(0)
+            index = index.unsqueeze(self.dim)
             sample["image"] = torch.cat([sample["image"], index], dim=self.dim)  # type: ignore[attr-defined]  # noqa: E501
 
         return sample
@@ -140,10 +140,10 @@ class AppendNDSI(Module):  # type: ignore[misc,name-defined]
         """
         if "image" in sample:
             index = ndsi(
-                green=sample["image"][self.index_green],
-                swir=sample["image"][self.index_swir],
+                green=sample["image"][:, self.index_green],
+                swir=sample["image"][:, self.index_swir],
             )
-            index = index.unsqueeze(0)
+            index = index.unsqueeze(self.dim)
             sample["image"] = torch.cat([sample["image"], index], dim=self.dim)  # type: ignore[attr-defined]  # noqa: E501
 
         return sample
@@ -181,9 +181,10 @@ class AppendNDVI(Module):  # type: ignore[misc,name-defined]
         """
         if "image" in sample:
             index = ndvi(
-                red=sample["image"][self.index_red], nir=sample["image"][self.index_nir]
+                red=sample["image"][:, self.index_red],
+                nir=sample["image"][:, self.index_nir]
             )
-            index = index.unsqueeze(0)
+            index = index.unsqueeze(self.dim)
             sample["image"] = torch.cat([sample["image"], index], dim=self.dim)  # type: ignore[attr-defined]  # noqa: E501
 
         return sample
@@ -221,10 +222,10 @@ class AppendNDWI(Module):  # type: ignore[misc,name-defined]
         """
         if "image" in sample:
             index = ndwi(
-                green=sample["image"][self.index_green],
-                nir=sample["image"][self.index_nir],
+                green=sample["image"][:, self.index_green],
+                nir=sample["image"][:, self.index_nir],
             )
-            index = index.unsqueeze(0)
+            index = index.unsqueeze(self.dim)
             sample["image"] = torch.cat([sample["image"], index], dim=self.dim)  # type: ignore[attr-defined]  # noqa: E501
 
         return sample
