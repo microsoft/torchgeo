@@ -3,8 +3,9 @@
 
 """TorchGeo transforms."""
 
-from typing import Dict
+from typing import Dict, List
 
+import kornia.augmentation as K
 import torch
 from torch import Tensor
 from torch.nn import Module  # type: ignore[attr-defined]
@@ -96,4 +97,35 @@ class Identity(Module):  # type: ignore[misc,name-defined]
         Returns:
             the unchanged input
         """
+        return sample
+
+
+class AugmentationSequential(Module):
+    """Wrapper around kornia AugmentationSequential to handle input dicts."""
+
+    def __init__(self, *args: Module, data_keys: List[str]) -> None:
+        """Initialize a new augmentation sequential instance.
+
+        Args:
+            *args: Sequence of kornia augmentations
+            data_keys: List of inputs to augment (e.g. ["image", "mask", "boxes"])
+        """
+        self.data_keys = data_keys
+        self.augs = K.AugmentationSequential(
+            *args, data_keys=["input" if k == "image" else k for k in data_keys]
+        )
+
+    def forward(self, sample: Dict[str, Tensor]):
+        """Perform augmentations and update data dict.
+
+        Args:
+            sample: the input
+
+        Returns:
+            the augmented input
+        """
+        inputs = [sample[k] for k in self.data_keys]
+        outputs: List[Tensor] = self.augs(*inputs)
+        outputs: Dict[str, Tensor] = {k: v for k, v in zip(self.data_keys, outputs)}
+        sample.update(outputs)
         return sample
