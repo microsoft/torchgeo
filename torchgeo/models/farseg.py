@@ -65,11 +65,12 @@ class FarSeg(Module):
                 (default=True)
         """
         super(FarSeg, self).__init__()  # type: ignore[no-untyped-call]
-        if in_channels != 3:
+        if in_channels != 3 and backbone_pretrained:
             raise ValueError(
                 f"Unsupported in_channels = {in_channels} for the pretrained model, "
                 f"only in_channels = 3 can be used currently"
             )
+
         if backbone in ["resnet18", "resnet34"]:
             max_channels = 512
         elif backbone in ["resnet50", "resnet101"]:
