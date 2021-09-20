@@ -24,6 +24,8 @@ from torchgeo.trainers import (
     NAIPChesapeakeSegmentationTask,
     SEN12MSDataModule,
     SEN12MSSegmentationTask,
+    So2SatDataModule,
+    So2SatClassificationTask,
 )
 
 TASK_TO_MODULES_MAPPING: Dict[
@@ -34,6 +36,7 @@ TASK_TO_MODULES_MAPPING: Dict[
     "landcoverai": (LandcoverAISegmentationTask, LandcoverAIDataModule),
     "naipchesapeake": (NAIPChesapeakeSegmentationTask, NAIPChesapeakeDataModule),
     "sen12ms": (SEN12MSSegmentationTask, SEN12MSDataModule),
+    "so2sat": (So2SatClassificationTask, So2SatDataModule),
 }
 
 
