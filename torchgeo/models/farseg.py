@@ -150,10 +150,14 @@ class FSRelation(Module):
             )
         else:
             # 2mlp
-            self.scene_encoder = Sequential(
-                Conv2d(scene_embedding_channels, out_channels, 1),
-                ReLU(True),
-                Conv2d(out_channels, out_channels, 1),
+            self.scene_encoder = ModuleList(
+                [
+                    Sequential(
+                        Conv2d(scene_embedding_channels, out_channels, 1),
+                        ReLU(True),
+                        Conv2d(out_channels, out_channels, 1),
+                    )
+                ]
             )
         self.content_encoders = ModuleList()
         self.feature_reencoders = ModuleList()
@@ -161,19 +165,19 @@ class FSRelation(Module):
             self.content_encoders.append(
                 Sequential(
                     Conv2d(c, out_channels, 1),
-                    BatchNorm2d(out_channels),
+                    BatchNorm2d(out_channels),  # type: ignore[no-untyped-call]
                     ReLU(True),
                 )
             )
             self.feature_reencoders.append(
                 Sequential(
                     Conv2d(c, out_channels, 1),
-                    BatchNorm2d(out_channels),
+                    BatchNorm2d(out_channels),  # type: ignore[no-untyped-call]
                     ReLU(True),
                 )
             )
 
-        self.normalizer = Sigmoid()
+        self.normalizer = Sigmoid()  # type: ignore[no-untyped-call]
 
     def forward(self, scene_feature: Tensor, features: List[Tensor]) -> List[Tensor]:
         """Forward pass of the model."""
@@ -189,7 +193,7 @@ class FSRelation(Module):
             ]
         else:
             # [N, C, 1, 1]
-            scene_feat = self.scene_encoder(scene_feature)
+            scene_feat = self.scene_encoder[0](scene_feature)
             relations = [
                 self.normalizer((scene_feat * cf).sum(dim=1, keepdim=True))
                 for cf in content_feats
@@ -244,11 +248,11 @@ class LightWeightDecoder(Module):
                                 1,
                                 bias=False,
                             ),
-                            BatchNorm2d(out_channels),
+                            BatchNorm2d(out_channels),  # type: ignore[no-untyped-call]
                             ReLU(inplace=True),
                             UpsamplingBilinear2d(scale_factor=2)
                             if num_upsample != 0
-                            else Identity(),
+                            else Identity(),  # type: ignore[no-untyped-call]
                         )
                         for idx in range(num_layers)
                     ]
