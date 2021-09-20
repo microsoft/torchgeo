@@ -43,7 +43,7 @@ class So2SatClassificationTask(pl.LightningModule):
                 kernel_size=3,
                 stride=1,
                 padding=1,
-                bias=False
+                bias=False,
             )
         else:
             raise ValueError(
