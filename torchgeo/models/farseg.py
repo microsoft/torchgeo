@@ -94,9 +94,8 @@ class FarSeg(Module):
         features = self.fsr(scene_embedding, features)
 
         logit = self.decoder(features)
-        logit = cast(Tensor, logit)
 
-        return logit
+        return cast(Tensor, logit)
 
 
 class FSRelation(Module):
@@ -194,7 +193,7 @@ class LightWeightDecoder(Module):
         in_channels: int,
         out_channels: int,
         num_classes: int,
-        in_feature_output_strides: List[int] = (4, 8, 16, 32),
+        in_feature_output_strides: List[int] = [4, 8, 16, 32],
         out_feature_output_stride: int = 4,
     ) -> None:
         """Initializes the LightWeightDecoder module.
@@ -253,4 +252,5 @@ class LightWeightDecoder(Module):
 
         out_feat = sum(inner_feat_list) / len(inner_feat_list)
         out_feat = self.classifier(out_feat)
-        return out_feat
+
+        return cast(Tensor, out_feat)
