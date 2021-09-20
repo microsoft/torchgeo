@@ -150,10 +150,10 @@ def test_missing_radiant_mlhub(mock_missing_module: None) -> None:
         match="radiant_mlhub is not installed and is required to download this dataset",
     ):
         download_radiant_mlhub_dataset("", "")
-        
+
     with pytest.raises(
         ImportError,
-        match="radiant_mlhub is not installed and is required to download this dataset",
+        match="radiant_mlhub is not installed and is required to download this collection",
     ):
         download_radiant_mlhub_collection("", "")
 
