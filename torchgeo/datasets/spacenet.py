@@ -113,8 +113,7 @@ class SpaceNet1(VisionDataset):
             root: root dir of dataset
 
         Returns:
-            list of dicts containing paths for each triple of rgb,
-            8band and label
+            list of dicts containing paths for each pair of image and label
         """
         files = []
         images = glob.glob(os.path.join(root, "*", self.filename))
@@ -267,7 +266,7 @@ class SpaceNet2(VisionDataset):
     +------------+---------------------+------------+------------+
     | Shanghai   |    1000             |   9164     |  92,015    |
     +------------+---------------------+------------+------------+
-    | Khartoum   |    765              |   2024     |  35,503    |
+    | Khartoum   |    765              |   1012     |  35,503    |
     +------------+---------------------+------------+------------+
 
     - *Imagery features*
@@ -366,21 +365,22 @@ class SpaceNet2(VisionDataset):
             collections = []
 
         self.collections = (
-            collections if not collections else list(self.collection_md5_dict.keys())
+            collections if collections else list(self.collection_md5_dict.keys())
         )
         self.filename = self.imagery[image]
         self.transforms = transforms
         self.checksum = checksum
 
         to_be_downloaded = self._check_integrity()
-        if download and to_be_downloaded:
-            self._download(to_be_downloaded, api_key)
-        else:
-            raise RuntimeError(
-                "Dataset not found. You can use download=True to download it."
-            )
 
-        # TODO: load_files and getitem need to be modified
+        if to_be_downloaded:
+            if not download:
+                raise RuntimeError(
+                    "Dataset not found. You can use download=True to download it."
+                )
+            else:
+                self._download(to_be_downloaded, api_key)
+
         self.files = self._load_files(root)
 
     def _load_files(self, root: str) -> List[Dict[str, str]]:
@@ -390,15 +390,14 @@ class SpaceNet2(VisionDataset):
             root: root dir of dataset
 
         Returns:
-            list of dicts containing paths for each triple of rgb,
-            8band and label
+            list of dicts containing paths for each pair of image and label
         """
         files = []
-        images = glob.glob(os.path.join(root, "*", self.filename))
+        images = glob.glob(os.path.join(root, "*/*", self.filename))
         images = sorted(images)
         for imgpath in images:
             lbl_path = os.path.join(
-                os.path.dirname(imgpath) + "-labels", "labels.geojson"
+                os.path.dirname(imgpath) + "-labels", "label.geojson"
             )
             files.append({"image_path": imgpath, "label_path": lbl_path})
         return files
@@ -481,7 +480,7 @@ class SpaceNet2(VisionDataset):
         """Checks the integrity of the dataset structure.
 
         Returns:
-            True if the dataset directories are found, else False
+            List of collections be downloaded
         """
         # Check if collections exist
         missing_collections = []
@@ -498,7 +497,7 @@ class SpaceNet2(VisionDataset):
         for collection in missing_collections:
             archive_path = os.path.join(self.root, collection + ".tar.gz")
             if os.path.exists(archive_path):
-                # print(f"Found {m} archive")
+                print(f"Found {collection} archive")
                 if (
                     self.checksum
                     and check_integrity(
@@ -527,21 +526,18 @@ class SpaceNet2(VisionDataset):
         Raises:
             RuntimeError: if download doesn't work correctly or checksums don't match
         """
-        if bool(self._check_integrity()):
-            print("Files already downloaded")
-            return
-
         for collection in collections:
-            download_radiant_mlhub_collection(self.dataset_id, self.root, api_key)
+            download_radiant_mlhub_collection(collection, self.root, api_key)
             archive_path = os.path.join(self.root, collection + ".tar.gz")
             if (
                 self.checksum
                 and check_integrity(archive_path, self.collection_md5_dict[collection])
                 or not self.checksum
             ):
+                print("Extracting...")
                 extract_archive(archive_path)
             else:
-                raise RuntimeError("Dataset corrupted")
+                raise RuntimeError(f"Collection {collection} corrupted")
 
 
 if __name__ == "__main__":
@@ -552,3 +548,5 @@ if __name__ == "__main__":
         download=False,
         checksum=False,
     )
+
+    print(f"Length = {len(sn2)}")
