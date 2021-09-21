@@ -120,7 +120,7 @@ class SpaceNet1(VisionDataset):
         images = sorted(images)
         for imgpath in images:
             lbl_path = os.path.join(
-                os.path.dirname(imgpath) + "-labels", "labels.geojson"
+                os.path.dirname(imgpath) + "-labels", self.label_glob
             )
             files.append({"image_path": imgpath, "label_path": lbl_path})
         return files
@@ -260,11 +260,11 @@ class SpaceNet2(VisionDataset):
     +------------+---------------------+------------+------------+
     |    AOI     | Area (km\ :sup:`2`\)| # Images   | # Buildings|
     +============+=====================+============+============+
-    | Las Vegas  |    216              |   7700     |  151,367   |
+    | Las Vegas  |    216              |   3850     |  151,367   |
     +------------+---------------------+------------+------------+
-    | Paris      |    1030             |   2296     |  23,816    |
+    | Paris      |    1030             |   1148     |  23,816    |
     +------------+---------------------+------------+------------+
-    | Shanghai   |    1000             |   9164     |  92,015    |
+    | Shanghai   |    1000             |   4582     |  92,015    |
     +------------+---------------------+------------+------------+
     | Khartoum   |    765              |   1012     |  35,503    |
     +------------+---------------------+------------+------------+
@@ -333,7 +333,7 @@ class SpaceNet2(VisionDataset):
         "PS-MS": "PS-MS.tif",
         "PS-RGB": "PS-RGB.tif",
     }
-    label_glob = "labels.geojson"
+    label_glob = "label.geojson"
 
     def __init__(
         self,
@@ -364,9 +364,7 @@ class SpaceNet2(VisionDataset):
         if collections is None:
             collections = []
 
-        self.collections = (
-            collections if collections else list(self.collection_md5_dict.keys())
-        )
+        self.collections = collections or list(self.collection_md5_dict.keys())
         self.filename = self.imagery[image]
         self.transforms = transforms
         self.checksum = checksum
@@ -397,7 +395,7 @@ class SpaceNet2(VisionDataset):
         images = sorted(images)
         for imgpath in images:
             lbl_path = os.path.join(
-                os.path.dirname(imgpath) + "-labels", "label.geojson"
+                os.path.dirname(imgpath) + "-labels", self.label_glob
             )
             files.append({"image_path": imgpath, "label_path": lbl_path})
         return files
