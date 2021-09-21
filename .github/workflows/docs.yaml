@@ -37,7 +37,7 @@ jobs:
       run: sudo apt-get install pandoc
     - name: Install pip dependencies
       run: |
-        pip install .
+        pip install .[trainers]
         pip install -r docs/requirements.txt
     - name: Run sphinx checks
       run: cd docs && make html
