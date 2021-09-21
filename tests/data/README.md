@@ -39,6 +39,7 @@ ROOT = "data/cbf"
 FILENAME = "Ontario.geojson"
 
 src = fiona.open(os.path.join(ROOT, FILENAME))
+src.meta["schema"]["properties"] = OrderedDict()
 dst = fiona.open(FILENAME, "w", **src.meta)
 rec = {"type": "Feature", "id": "0", "properties": OrderedDict(), "geometry": {"type": "Polygon", "coordinates": [[(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)]]}}
 dst.write(rec)
