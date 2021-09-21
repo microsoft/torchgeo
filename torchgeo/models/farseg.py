@@ -83,21 +83,8 @@ class FarSeg(Module):
         self.fsr = FSRelation(max_channels, [256] * 4, 256)
         self.decoder = LightWeightDecoder(256, 128, classes)
 
-    def backbone_forward(self, x: Tensor) -> List[Tensor]:
-        """Forward pass of the backbone.
-
-        Args:
-            x: input tensor of shape [batch_size, 3, Height, Width]
-
-        Returns:
-            features: a list of tensor of shapes
-            [
-                [batch_size, 256, Height//4, Width//4],
-                [batch_size, 512, Height//8, Width//8],
-                [batch_size, 1024, Height//16, Width//16],
-                [batch_size, 2048, Height//32, Width//32],
-            ]
-        """
+    def forward(self, x: Tensor) -> Tensor:
+        """Forward pass of the model."""
         x = self.backbone.conv1(x)
         x = self.backbone.bn1(x)
         x = self.backbone.relu(x)
@@ -108,11 +95,6 @@ class FarSeg(Module):
         c4 = self.backbone.layer3(c3)
         c5 = self.backbone.layer4(c4)
         features = [c2, c3, c4, c5]
-        return features
-
-    def forward(self, x: Tensor) -> Tensor:
-        """Forward pass of the model."""
-        features = self.backbone_forward(x)
 
         coarsest_features = features[-1]
         scene_embedding = F.adaptive_avg_pool2d(coarsest_features, 1)
