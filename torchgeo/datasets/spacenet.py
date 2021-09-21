@@ -323,6 +323,7 @@ class SpaceNet1(SpaceNet):
                 entry and returns a transformed version.
             download: if True, download dataset and store it in the root directory.
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing
@@ -436,13 +437,14 @@ class SpaceNet2(SpaceNet):
         Args:
             root: root directory where dataset can be found
             image: image selection which must be in ["MS", "PAN", "PS-MS", "PS-RGB"]
-            collections: collection selection which must be in
-                ["sn2_AOI_2_Vegas", "sn2_AOI_3_Paris", "sn2_AOI_4_Shanghai",
-                 "sn2_AOI_5_Khartoum"]
+            collections: collection selection which must be a subset of:
+                         [sn2_AOI_2_Vegas, sn2_AOI_3_Paris, sn2_AOI_4_Shanghai,
+                         sn2_AOI_5_Khartoum]
             transforms: a function/transform that takes input sample and its target as
-                entry and returns a transformed version.
+                entry and returns a transformed version
             download: if True, download dataset and store it in the root directory.
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing
