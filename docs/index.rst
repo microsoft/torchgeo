@@ -8,6 +8,7 @@ torchgeo
    :caption: User Documentation
 
    user/installation
+   user/contributing
    user/glossary
 
 .. toctree::
