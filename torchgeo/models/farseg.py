@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 """Foreground-Aware Relation Network (FarSeg) implementations."""
 
 import math
@@ -38,14 +39,12 @@ Identity.__module__ = "nn.Identity"
 class FarSeg(Module):
     """Foreground-Aware Relation Network (FarSeg).
 
-    'Foreground-Aware Relation Network for Geospatial Object Segmentation',
-    Zheng et al. (2020)
-    This model can be used in binary/multi-class object segmentation, such as building,
-    road, ship, airplane segmentation.
-    It can be also extended as a change detection model.
-    It features a foreground-scene relation module to modeling the relation between
-    scene embedding, object context, and object feature, thus improving the
-    discrimination of object feature presentation.
+    This model can be used for binary- or multi-class object segmentation, such as
+    building, road, ship, and airplane segmentation. It can be also extended as a change
+    detection model. It features a foreground-scene relation module to model the
+    relation between scene embedding, object context, and object feature, thus improving
+    the discrimination of object feature presentation.
+
     If you use this model in your research, please cite the following paper:
 
     * https://arxiv.org/pdf/2011.09766.pdf
@@ -60,14 +59,12 @@ class FarSeg(Module):
         """Initialize a new FarSeg model.
 
         Args:
-            backbone: name of ResNet backbone
-                (default='resnet50')
+            backbone: name of ResNet backbone, one of ["resnet18", "resnet34",
+                "resnet50", "resnet101"]
             classes: number of output segmentation classes
-                (default=16 for multi-class segmentation)
             backbone_pretrained: whether to use pretrained weight for backbone
-                (default=True)
         """
-        super(FarSeg, self).__init__()  # type: ignore[no-untyped-call]
+        super().__init__()  # type: ignore[no-untyped-call]
         if backbone in ["resnet18", "resnet34"]:
             max_channels = 512
         elif backbone in ["resnet50", "resnet101"]:
@@ -80,11 +77,18 @@ class FarSeg(Module):
             in_channels_list=[max_channels // (2 ** (3 - i)) for i in range(4)],
             out_channels=256,
         )
-        self.fsr = FSRelation(max_channels, [256] * 4, 256)
-        self.decoder = LightWeightDecoder(256, 128, classes)
+        self.fsr = _FSRelation(max_channels, [256] * 4, 256)
+        self.decoder = _LightWeightDecoder(256, 128, classes)
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward pass of the model."""
+        """Forward pass of the model.
+
+        Args:
+            x: input image
+
+        Returns:
+            output prediction
+        """
         x = self.backbone.conv1(x)
         x = self.backbone.bn1(x)
         x = self.backbone.relu(x)
@@ -109,7 +113,7 @@ class FarSeg(Module):
         return cast(Tensor, logit)
 
 
-class FSRelation(Module):
+class _FSRelation(Module):
     """F-S Relation module."""
 
     def __init__(
@@ -118,16 +122,14 @@ class FSRelation(Module):
         in_channels_list: List[int],
         out_channels: int,
     ) -> None:
-        """Initializes the FSRelation module.
+        """Initialize the _FSRelation module.
 
         Args:
             scene_embedding_channels: number of scene embedding channels
             in_channels_list: a list of input channels
             out_channels: number of output channels
-            scale_aware_proj: whether to use scale aware projection
-                (default=True)
         """
-        super(FSRelation, self).__init__()  # type: ignore[no-untyped-call]
+        super().__init__()  # type: ignore[no-untyped-call]
 
         self.scene_encoder = ModuleList(
             [
@@ -179,7 +181,7 @@ class FSRelation(Module):
         return refined_feats
 
 
-class LightWeightDecoder(Module):
+class _LightWeightDecoder(Module):
     """Light Weight Decoder."""
 
     def __init__(
@@ -190,18 +192,17 @@ class LightWeightDecoder(Module):
         in_feature_output_strides: List[int] = [4, 8, 16, 32],
         out_feature_output_stride: int = 4,
     ) -> None:
-        """Initializes the LightWeightDecoder module.
+        """Initialize the _LightWeightDecoder module.
 
         Args:
             in_channels: number of channels of input feature maps
             out_channels: number of channels of output feature maps
             num_classes: number of output segmentation classes
             in_feature_output_strides: output stride of input feature maps at different
-                levels(default=(4, 8, 16, 32))
+                levels
             out_feature_output_stride: output stride of output feature maps
-                (default=4)
         """
-        super(LightWeightDecoder, self).__init__()  # type: ignore[no-untyped-call]
+        super().__init__()  # type: ignore[no-untyped-call]
 
         self.blocks = ModuleList()
         for in_feat_os in in_feature_output_strides:
