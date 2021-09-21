@@ -17,10 +17,8 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.9
-    - name: Install dependencies
-      run: |
-        pip install cython numpy  # needed for pycocotools
-        pip install -r requirements.txt
+    - name: Install pip dependencies
+      run: pip install .[datasets,tests,train]
     - name: Run mypy checks
       run: mypy .
   pytest:
@@ -60,10 +58,7 @@ jobs:
         conda info
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies
-      run: |
-        pip install cython numpy  # needed for pycocotools
-        pip install -r requirements.txt
-        pip list
+      run: pip install .[datasets,tests,train]
     - name: Run pytest checks
       run: pytest --cov=torchgeo --cov-report=xml
     - name: Report coverage
