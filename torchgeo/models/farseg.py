@@ -40,6 +40,12 @@ class FarSeg(Module):
 
     'Foreground-Aware Relation Network for Geospatial Object Segmentation',
     Zheng et al. (2020)
+    This model can be used in binary/multi-class object segmentation, such as building,
+    road, ship, airplane segmentation.
+    It can be also extended as a change detection model.
+    It features a foreground-scene relation module to modeling the relation between
+    scene embedding, object context, and object feature, thus improving the
+    discrimination of object feature presentation.
     If you use this model in your research, please cite the following paper:
 
     * https://arxiv.org/pdf/2011.09766.pdf
@@ -47,7 +53,6 @@ class FarSeg(Module):
 
     def __init__(
         self,
-        in_channels: int = 3,
         backbone: str = "resnet50",
         classes: int = 16,
         backbone_pretrained: bool = True,
@@ -55,8 +60,6 @@ class FarSeg(Module):
         """Initialize a new FarSeg model.
 
         Args:
-            in_channels: number of channels per input image
-                (default=3 for RGB image)
             backbone: name of ResNet backbone
                 (default='resnet50')
             classes: number of output segmentation classes
@@ -65,11 +68,6 @@ class FarSeg(Module):
                 (default=True)
         """
         super(FarSeg, self).__init__()  # type: ignore[no-untyped-call]
-        if in_channels != 3:
-            raise ValueError(
-                f"Unsupported in_channels = {in_channels} for the pretrained model, "
-                f"only in_channels = 3 can be used currently"
-            )
         if backbone in ["resnet18", "resnet34"]:
             max_channels = 512
         elif backbone in ["resnet50", "resnet101"]:
@@ -82,11 +80,24 @@ class FarSeg(Module):
             in_channels_list=[max_channels // (2 ** (3 - i)) for i in range(4)],
             out_channels=256,
         )
-        self.fsr = FSRelation(max_channels, [256] * 4, 256, True)
+        self.fsr = FSRelation(max_channels, [256] * 4, 256)
         self.decoder = LightWeightDecoder(256, 128, classes)
 
     def backbone_forward(self, x: Tensor) -> List[Tensor]:
-        """Forward pass of the backbone."""
+        """Forward pass of the backbone.
+
+        Args:
+            x: input tensor of shape [batch_size, 3, Height, Width]
+
+        Returns:
+            features: a list of tensor of shapes
+            [
+                [batch_size, 256, Height//4, Width//4],
+                [batch_size, 512, Height//8, Width//8],
+                [batch_size, 1024, Height//16, Width//16],
+                [batch_size, 2048, Height//32, Width//32],
+            ]
+        """
         x = self.backbone.conv1(x)
         x = self.backbone.bn1(x)
         x = self.backbone.relu(x)
@@ -96,7 +107,8 @@ class FarSeg(Module):
         c3 = self.backbone.layer2(c2)
         c4 = self.backbone.layer3(c3)
         c5 = self.backbone.layer4(c4)
-        return [c2, c3, c4, c5]
+        features = [c2, c3, c4, c5]
+        return features
 
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model."""
@@ -123,7 +135,6 @@ class FSRelation(Module):
         scene_embedding_channels: int,
         in_channels_list: List[int],
         out_channels: int,
-        scale_aware_proj: bool = True,
     ) -> None:
         """Initializes the FSRelation module.
 
@@ -135,30 +146,18 @@ class FSRelation(Module):
                 (default=True)
         """
         super(FSRelation, self).__init__()  # type: ignore[no-untyped-call]
-        self.scale_aware_proj = scale_aware_proj
 
-        if scale_aware_proj:
-            self.scene_encoder = ModuleList(
-                [
-                    Sequential(
-                        Conv2d(scene_embedding_channels, out_channels, 1),
-                        ReLU(True),
-                        Conv2d(out_channels, out_channels, 1),
-                    )
-                    for _ in range(len(in_channels_list))
-                ]
-            )
-        else:
-            # 2mlp
-            self.scene_encoder = ModuleList(
-                [
-                    Sequential(
-                        Conv2d(scene_embedding_channels, out_channels, 1),
-                        ReLU(True),
-                        Conv2d(out_channels, out_channels, 1),
-                    )
-                ]
-            )
+        self.scene_encoder = ModuleList(
+            [
+                Sequential(
+                    Conv2d(scene_embedding_channels, out_channels, 1),
+                    ReLU(True),
+                    Conv2d(out_channels, out_channels, 1),
+                )
+                for _ in range(len(in_channels_list))
+            ]
+        )
+
         self.content_encoders = ModuleList()
         self.feature_reencoders = ModuleList()
         for c in in_channels_list:
@@ -185,19 +184,11 @@ class FSRelation(Module):
         content_feats = [
             c_en(p_feat) for c_en, p_feat in zip(self.content_encoders, features)
         ]
-        if self.scale_aware_proj:
-            scene_feats = [op(scene_feature) for op in self.scene_encoder]
-            relations = [
-                self.normalizer((sf * cf).sum(dim=1, keepdim=True))
-                for sf, cf in zip(scene_feats, content_feats)
-            ]
-        else:
-            # [N, C, 1, 1]
-            scene_feat = self.scene_encoder[0](scene_feature)
-            relations = [
-                self.normalizer((scene_feat * cf).sum(dim=1, keepdim=True))
-                for cf in content_feats
-            ]
+        scene_feats = [op(scene_feature) for op in self.scene_encoder]
+        relations = [
+            self.normalizer((sf * cf).sum(dim=1, keepdim=True))
+            for sf, cf in zip(scene_feats, content_feats)
+        ]
 
         p_feats = [op(p_feat) for op, p_feat in zip(self.feature_reencoders, features)]
 
