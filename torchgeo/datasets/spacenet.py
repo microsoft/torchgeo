@@ -3,6 +3,7 @@
 
 """SpaceNet datasets."""
 
+import abc
 import glob
 import os
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -23,13 +24,28 @@ from torchgeo.datasets.utils import (
 )
 
 
-class SpaceNet(VisionDataset):
-    """SpaceNet MetaClass."""
+class SpaceNet(VisionDataset, abc.ABC):
+    """Abstract base class for SpaceNet datasets."""
 
-    dataset_id: str
-    imagery: Dict[str, str]
-    label_glob: str
-    collection_md5_dict: Dict[str, str]
+    @property
+    @abc.abstractmethod
+    def dataset_id(self) -> str:
+        """Dataset ID."""
+
+    @property
+    @abc.abstractmethod
+    def imagery(self) -> Dict[str, str]:
+        """Mapping of image identifier and filename."""
+
+    @property
+    @abc.abstractmethod
+    def label_glob(self) -> str:
+        """Label filename."""
+
+    @property
+    @abc.abstractmethod
+    def collection_md5_dict(self) -> Dict[str, str]:
+        """Mapping of collection id and md5 checksum."""
 
     def __init__(
         self,
@@ -60,8 +76,10 @@ class SpaceNet(VisionDataset):
 
         if collections is None:
             collections = []
-        # TODO: Raise error if specfied collection is not part of the dataset
-        # Example: Specifying sn2_AOI_2_Vegas for Spacenet 1
+        else:
+            for collection in collections:
+                assert collection in self.collection_md5_dict
+
         self.collections = collections or list(self.collection_md5_dict.keys())
         self.filename = self.imagery[image]
         self.transforms = transforms
@@ -226,14 +244,15 @@ class SpaceNet(VisionDataset):
             download_radiant_mlhub_collection(collection, self.root, api_key)
             archive_path = os.path.join(self.root, collection + ".tar.gz")
             if (
-                self.checksum
-                and check_integrity(archive_path, self.collection_md5_dict[collection])
-                or not self.checksum
-            ):
-                print("Extracting...")
-                extract_archive(archive_path)
-            else:
+                not self.checksum
+                or not check_integrity(
+                    archive_path, self.collection_md5_dict[collection]
+                )
+            ) and self.checksum:
                 raise RuntimeError(f"Collection {collection} corrupted")
+
+            print("Extracting...")
+            extract_archive(archive_path)
 
 
 class SpaceNet1(SpaceNet):
