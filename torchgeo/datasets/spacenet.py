@@ -27,7 +27,7 @@ from torchgeo.datasets.utils import (
 class SpaceNet(VisionDataset, abc.ABC):
     """Abstract base class for the SpaceNet datasets.
 
-    The `SpaceNet <https://spacenet.ai/datasets/>` datasets are a set of
+    The `SpaceNet <https://spacenet.ai/datasets/>`_ datasets are a set of
     datasets that all together contain >11M building footprints and ~20,000 km
     of road labels mapped over high-resolution satellite imagery obtained from
     Worldview-2 and Worldview-3 sensors.
@@ -73,6 +73,7 @@ class SpaceNet(VisionDataset, abc.ABC):
                 entry and returns a transformed version.
             download: if True, download dataset and store it in the root directory.
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing

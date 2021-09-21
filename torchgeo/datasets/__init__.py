@@ -56,7 +56,7 @@ from .resisc45 import RESISC45
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel2
 from .so2sat import So2Sat
-from .spacenet import SpaceNet1, SpaceNet2
+from .spacenet import SpaceNet, SpaceNet1, SpaceNet2
 from .ucmerced import UCMerced
 from .utils import BoundingBox, collate_dict
 from .zuericrop import ZueriCrop
@@ -106,6 +106,7 @@ __all__ = (
     "RESISC45",
     "SEN12MS",
     "So2Sat",
+    "SpaceNet",
     "SpaceNet1",
     "SpaceNet2",
     "TropicalCycloneWindEstimation",
