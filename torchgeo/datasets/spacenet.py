@@ -25,7 +25,13 @@ from torchgeo.datasets.utils import (
 
 
 class SpaceNet(VisionDataset, abc.ABC):
-    """Abstract base class for SpaceNet datasets."""
+    """Abstract base class for the SpaceNet datasets.
+
+    The `SpaceNet <https://spacenet.ai/datasets/>` datasets are a set of
+    datasets that all together contain >11M building footprints and ~20,000 km
+    of road labels mapped over high-resolution satellite imagery obtained from
+    Worldview-2 and Worldview-3 sensors.
+    """
 
     @property
     @abc.abstractmethod
