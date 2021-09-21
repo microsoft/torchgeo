@@ -107,13 +107,14 @@ class SpaceNet(VisionDataset, abc.ABC):
             list of dicts containing paths for each pair of image and label
         """
         files = []
-        images = glob.glob(os.path.join(root, "*/*", self.filename))
-        images = sorted(images)
-        for imgpath in images:
-            lbl_path = os.path.join(
-                os.path.dirname(imgpath) + "-labels", self.label_glob
-            )
-            files.append({"image_path": imgpath, "label_path": lbl_path})
+        for collection in self.collections:
+            images = glob.glob(os.path.join(root, collection, "*", self.filename))
+            images = sorted(images)
+            for imgpath in images:
+                lbl_path = os.path.join(
+                    os.path.dirname(imgpath) + "-labels", self.label_glob
+                )
+                files.append({"image_path": imgpath, "label_path": lbl_path})
         return files
 
     def _load_image(self, path: str) -> Tuple[Tensor, Affine]:
