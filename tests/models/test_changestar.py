@@ -5,25 +5,14 @@ import itertools
 
 import pytest
 import torch
-from torch.nn.modules import (
-    BatchNorm2d,
-    Conv2d,
-    MaxPool2d,
-    Module,
-    ReLU,
-    Sequential,
-    UpsamplingBilinear2d,
-)
+import torch.nn as nn
+from torch.nn.modules import Module
 
 from torchgeo.models import ChangeMixin, ChangeStar, ChangeStarFarSeg
 
+# https://github.com/pytorch/pytorch/issues/60979
+# https://github.com/pytorch/pytorch/pull/61045
 Module.__module__ = "torch.nn"
-Sequential.__module__ = "nn.Sequential"
-Conv2d.__module__ = "nn.Conv2d"
-BatchNorm2d.__module__ = "nn.BatchNorm2d"
-ReLU.__module__ = "nn.ReLU"
-UpsamplingBilinear2d.__module__ = "nn.UpsamplingBilinear2d"
-MaxPool2d.__module__ = "nn.MaxPool2d"
 
 BACKBONE = ["resnet18", "resnet34", "resnet50", "resnet101"]
 IN_CHANNELS = [64, 128]
@@ -90,15 +79,16 @@ class TestChangeStar:
 
     @torch.no_grad()  # type: ignore[misc]
     def test_changestar(self) -> None:
-        dense_feature_extractor = Sequential(
-            Conv2d(3, 32, 3, 1, 1),
-            BatchNorm2d(32),
-            ReLU(),
-            MaxPool2d(3, 2, 1),
+        dense_feature_extractor = nn.modules.Sequential(
+            nn.modules.Conv2d(3, 32, 3, 1, 1),
+            nn.modules.BatchNorm2d(32),
+            nn.modules.ReLU(),
+            nn.modules.MaxPool2d(3, 2, 1),
         )
 
-        seg_classifier = Sequential(
-            Conv2d(32, 2, 3, 1, 1), UpsamplingBilinear2d(scale_factor=2.0)
+        seg_classifier = nn.modules.Sequential(
+            nn.modules.Conv2d(32, 2, 3, 1, 1),
+            nn.modules.UpsamplingBilinear2d(scale_factor=2.0),
         )
 
         m = ChangeStar(

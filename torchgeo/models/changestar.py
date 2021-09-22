@@ -79,12 +79,12 @@ class ChangeMixin(Module):
             a list of bidirected output predictions
         """
         batch_size = bi_feature.size(0)
-        t1t2 = torch.cat(
+        t1t2 = torch.cat(  # type: ignore[attr-defined]
             [bi_feature[:, 0, :, :, :], bi_feature[:, 1, :, :, :]], dim=1
-        )  # type: ignore[attr-defined]
-        t2t1 = torch.cat(
+        )
+        t2t1 = torch.cat(  # type: ignore[attr-defined]
             [bi_feature[:, 1, :, :, :], bi_feature[:, 0, :, :, :]], dim=1
-        )  # type: ignore[attr-defined]
+        )
 
         c1221 = self.convs(torch.cat([t1t2, t2t1], dim=0))  # type: ignore[attr-defined]
         c12, c21 = torch.split(
@@ -97,8 +97,10 @@ class ChangeStar(Module):
     """The base class of the network architecture of ChangeStar.
 
     ChangeStar is composited of an any segmentation model and a ChangeMixin module.
-    'Change is Everywhere: Single-Temporal Supervised Object Change Detection',
-    Zheng et al. (2020)
+    This model is mainly used for binary/multi-class change detection under bitemporal
+    supervision and single-temporal supervision. It features the property of
+    segmentation architecture reusing, which is helpful to integrate advanced dense
+    prediction (e.g., semantic segmentation) network architecture into change detection.
 
     If you use this model in your research, please cite the following paper:
 
@@ -161,7 +163,7 @@ class ChangeStar(Module):
         # change detection
         c12, c21 = self.changemixin(bi_feature)
 
-        results = {}
+        results: Dict[str, Any] = {}
         if not self.training:
             results.update({"bi_seg_logit": bi_seg_logit})
             if self.inference_mode == "t1t2":
@@ -186,8 +188,6 @@ class ChangeStarFarSeg(ChangeStar):
     """The network architecture of ChangeStar(FarSeg).
 
     ChangeStar(FarSeg) is composited of a FarSeg model and a ChangeMixin module.
-    'Change is Everywhere: Single-Temporal Supervised Object Change Detection',
-    Zheng et al. (2020)
 
     If you use this model in your research, please cite the following paper:
 
@@ -214,7 +214,7 @@ class ChangeStarFarSeg(ChangeStar):
             backbone=backbone, classes=classes, backbone_pretrained=backbone_pretrained
         )
         seg_classifier: Any = model.decoder.classifier
-        model.decoder.classifier: Any = Identity()
+        model.decoder.classifier: Module = Identity()  # type: ignore[no-untyped-call]
 
         super(ChangeStarFarSeg, self).__init__(
             dense_feature_extractor=model,
