@@ -2,6 +2,7 @@
 /data/
 /logs/
 /output/
+*.csv
 
 # Spack
 .spack-env/
