@@ -28,7 +28,7 @@ From there, you can make any changes you want. Once you are satisfied with your 
    $ git push
 
 
-For changes to Python code, you'll need to ensure that your code is `well-tested <Tests>`_ and all `linters <Linters>`_ pass. When you're ready, you can `open a pull request on GitHub <https://github.com/microsoft/torchgeo/compare>`_. All pull requests should be made against the ``main`` branch. If it's a bug fix, we will backport it to a release branch for you.
+For changes to Python code, you'll need to ensure that your code is :ref:`well-tested <tests>` and all :ref:`linters <linters>` pass. When you're ready, you can `open a pull request on GitHub <https://github.com/microsoft/torchgeo/compare>`_. All pull requests should be made against the ``main`` branch. If it's a bug fix, we will backport it to a release branch for you.
 
 Licensing
 ---------
@@ -44,6 +44,8 @@ If your pull request adds any new files containing code, including ``*.py`` and 
    # Copyright (c) Microsoft Corporation. All rights reserved.
    # Licensed under the MIT License.
 
+
+.. _tests:
 
 Tests
 -----
@@ -81,6 +83,7 @@ These tests require `pytest <https://docs.pytest.org/>`_ and `pytest-cov <https:
 
 .. note:: If you add a new dataset, the tests will require some form of data to run. This data should be stored in ``tests/data/<dataset>``. Please don't include real data, as this may violate the license the data is distributed under, and can involve very large file sizes. Instead, create fake data examples using the instructions found `here <https://github.com/microsoft/torchgeo/blob/main/tests/data/README.md>`__.
 
+.. _linters:
 
 Linters
 -------
