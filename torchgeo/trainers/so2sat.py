@@ -10,7 +10,7 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torchvision.models
-from segmentation_models_pytorch.losses import FocalLoss
+from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torch.nn.modules import Module
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -53,6 +53,8 @@ class So2SatClassificationTask(pl.LightningModule):
 
         if self.hparams["loss"] == "ce":
             self.loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
+        elif self.hparams["loss"] == "jaccard":
+            self.loss = JaccardLoss(mode="multiclass")
         elif self.hparams["loss"] == "focal":
             self.loss = FocalLoss(mode="multiclass", normalized=True)
         else:
