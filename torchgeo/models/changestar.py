@@ -6,24 +6,14 @@
 from typing import Any, Dict, List
 
 import torch
+import torch.nn as nn
 from einops import rearrange
 from torch import Tensor
-from torch.nn.modules import (
-    BatchNorm2d,
-    Conv2d,
-    Identity,
-    Module,
-    ReLU,
-    Sequential,
-    UpsamplingBilinear2d,
-)
 
 from .farseg import FarSeg
 
-Identity.__module__ = "nn.Identity"
 
-
-class ChangeMixin(Module):
+class ChangeMixin(nn.Module):
     """This module enables any segmentation model to detect binary change.
 
     The common usage is to attach this module on a segmentation model without the
@@ -50,28 +40,28 @@ class ChangeMixin(Module):
             scale_factor: number of upsampling factor
         """
         super().__init__()  # type: ignore[no-untyped-call]
-        layers: List[Module] = [
-            Sequential(
-                Conv2d(in_channels, inner_channels, 3, 1, 1),
-                BatchNorm2d(inner_channels),  # type: ignore[no-untyped-call]
-                ReLU(True),
+        layers: List[nn.Module] = [
+            nn.Sequential(
+                nn.Conv2d(in_channels, inner_channels, 3, 1, 1),
+                nn.BatchNorm2d(inner_channels),  # type: ignore[no-untyped-call]
+                nn.ReLU(True),
             )
         ]
         layers += [
-            Sequential(
-                Conv2d(inner_channels, inner_channels, 3, 1, 1),
-                BatchNorm2d(inner_channels),  # type: ignore[no-untyped-call]
-                ReLU(True),
+            nn.Sequential(
+                nn.Conv2d(inner_channels, inner_channels, 3, 1, 1),
+                nn.BatchNorm2d(inner_channels),  # type: ignore[no-untyped-call]
+                nn.ReLU(True),
             )
             for _ in range(num_convs - 1)
         ]
 
-        cls_layer = Conv2d(inner_channels, 1, 3, 1, 1)
+        cls_layer = nn.Conv2d(inner_channels, 1, 3, 1, 1)
 
         layers.append(cls_layer)
-        layers.append(UpsamplingBilinear2d(scale_factor=scale_factor))
+        layers.append(nn.UpsamplingBilinear2d(scale_factor=scale_factor))
 
-        self.convs = Sequential(*layers)
+        self.convs = nn.Sequential(*layers)
 
     def forward(self, bi_feature: Tensor) -> List[Tensor]:
         """Forward pass of the model.
@@ -97,7 +87,7 @@ class ChangeMixin(Module):
         return [c12, c21]
 
 
-class ChangeStar(Module):
+class ChangeStar(nn.Module):
     """The base class of the network architecture of ChangeStar.
 
     ChangeStar is composed of an any segmentation model and a ChangeMixin module.
@@ -113,8 +103,8 @@ class ChangeStar(Module):
 
     def __init__(
         self,
-        dense_feature_extractor: Module,
-        seg_classifier: Module,
+        dense_feature_extractor: nn.Module,
+        seg_classifier: nn.Module,
         changemixin: ChangeMixin,
         inference_mode: str = "t1t2",
     ) -> None:
@@ -215,9 +205,9 @@ class ChangeStarFarSeg(ChangeStar):
         model = FarSeg(
             backbone=backbone, classes=classes, backbone_pretrained=backbone_pretrained
         )
-        seg_classifier: Module = model.decoder.classifier
+        seg_classifier: nn.Module = model.decoder.classifier
         model.decoder.classifier = (
-            Identity()  # type: ignore[no-untyped-call, assignment]
+            nn.Identity()  # type: ignore[no-untyped-call, assignment]
         )
 
         super().__init__(
