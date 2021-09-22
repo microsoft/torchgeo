@@ -3,6 +3,7 @@
 
 """TorchGeo datasets."""
 
+from .advance import ADVANCE
 from .benin_cashews import BeninSmallHolderCashews
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
@@ -49,6 +50,7 @@ from .sentinel import Sentinel, Sentinel2
 from .so2sat import So2Sat
 from .spacenet import SpaceNet1
 from .utils import BoundingBox, collate_dict
+from .zuericrop import ZueriCrop
 
 __all__ = (
     # GeoDataset
@@ -80,6 +82,7 @@ __all__ = (
     "Sentinel",
     "Sentinel2",
     # VisionDataset
+    "ADVANCE",
     "BeninSmallHolderCashews",
     "COWC",
     "COWCCounting",
@@ -96,6 +99,7 @@ __all__ = (
     "SpaceNet1",
     "TropicalCycloneWindEstimation",
     "VHR10",
+    "ZueriCrop",
     # Base classes
     "GeoDataset",
     "RasterDataset",
