@@ -53,7 +53,7 @@ class ChangeMixin(Module):
             )
         ]
         layers += [
-            nn.Sequential(
+            nn.modules.Sequential(
                 nn.modules.Conv2d(inner_channels, inner_channels, 3, 1, 1),
                 nn.modules.BatchNorm2d(inner_channels),  # type: ignore[no-untyped-call]
                 nn.modules.ReLU(True),
