@@ -218,7 +218,7 @@ class ChangeStarFarSeg(ChangeStar):
             Identity()  # type: ignore[no-untyped-call, assignment]
         )
 
-        super(ChangeStarFarSeg, self).__init__(
+        super().__init__(
             dense_feature_extractor=model,
             seg_classifier=seg_classifier,
             changemixin=ChangeMixin(
