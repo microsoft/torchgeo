@@ -41,6 +41,9 @@ def set_up_parser() -> argparse.ArgumentParser:
         metavar="ROOT",
     )
     parser.add_argument(
+        "-d", "--device", default=0, type=int, help="CPU/GPU ID to use", metavar="ID"
+    )
+    parser.add_argument(
         "-c",
         "--cache",
         action="store_true",
@@ -232,7 +235,7 @@ def main(args: argparse.Namespace) -> None:
     optimizer = optim.SGD(params, lr=0.0001)
 
     device = torch.device(  # type: ignore[attr-defined]
-        "cuda" if torch.cuda.is_available() else "cpu"
+        "cuda" if torch.cuda.is_available() else "cpu", args.device
     )
     model = model.to(device)
 
