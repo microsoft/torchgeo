@@ -9,11 +9,16 @@ import torch
 import torch.nn as nn
 from einops import rearrange
 from torch import Tensor
+from torch.nn.modules import Module
+
+# https://github.com/pytorch/pytorch/issues/60979
+# https://github.com/pytorch/pytorch/pull/61045
+Module.__module__ = "torch.nn"
 
 from .farseg import FarSeg
 
 
-class ChangeMixin(nn.Module):
+class ChangeMixin(Module):
     """This module enables any segmentation model to detect binary change.
 
     The common usage is to attach this module on a segmentation model without the
@@ -40,28 +45,28 @@ class ChangeMixin(nn.Module):
             scale_factor: number of upsampling factor
         """
         super().__init__()  # type: ignore[no-untyped-call]
-        layers: List[nn.Module] = [
-            nn.Sequential(
-                nn.Conv2d(in_channels, inner_channels, 3, 1, 1),
-                nn.BatchNorm2d(inner_channels),  # type: ignore[no-untyped-call]
-                nn.ReLU(True),
+        layers: List[Module] = [
+            nn.modules.Sequential(
+                nn.modules.Conv2d(in_channels, inner_channels, 3, 1, 1),
+                nn.modules.BatchNorm2d(inner_channels),  # type: ignore[no-untyped-call]
+                nn.modules.ReLU(True),
             )
         ]
         layers += [
             nn.Sequential(
-                nn.Conv2d(inner_channels, inner_channels, 3, 1, 1),
-                nn.BatchNorm2d(inner_channels),  # type: ignore[no-untyped-call]
-                nn.ReLU(True),
+                nn.modules.Conv2d(inner_channels, inner_channels, 3, 1, 1),
+                nn.modules.BatchNorm2d(inner_channels),  # type: ignore[no-untyped-call]
+                nn.modules.ReLU(True),
             )
             for _ in range(num_convs - 1)
         ]
 
-        cls_layer = nn.Conv2d(inner_channels, 1, 3, 1, 1)
+        cls_layer = nn.modules.Conv2d(inner_channels, 1, 3, 1, 1)
 
         layers.append(cls_layer)
-        layers.append(nn.UpsamplingBilinear2d(scale_factor=scale_factor))
+        layers.append(nn.modules.UpsamplingBilinear2d(scale_factor=scale_factor))
 
-        self.convs = nn.Sequential(*layers)
+        self.convs = nn.modules.Sequential(*layers)
 
     def forward(self, bi_feature: Tensor) -> List[Tensor]:
         """Forward pass of the model.
@@ -87,7 +92,7 @@ class ChangeMixin(nn.Module):
         return [c12, c21]
 
 
-class ChangeStar(nn.Module):
+class ChangeStar(Module):
     """The base class of the network architecture of ChangeStar.
 
     ChangeStar is composed of an any segmentation model and a ChangeMixin module.
@@ -103,8 +108,8 @@ class ChangeStar(nn.Module):
 
     def __init__(
         self,
-        dense_feature_extractor: nn.Module,
-        seg_classifier: nn.Module,
+        dense_feature_extractor: Module,
+        seg_classifier: Module,
         changemixin: ChangeMixin,
         inference_mode: str = "t1t2",
     ) -> None:
@@ -205,9 +210,9 @@ class ChangeStarFarSeg(ChangeStar):
         model = FarSeg(
             backbone=backbone, classes=classes, backbone_pretrained=backbone_pretrained
         )
-        seg_classifier: nn.Module = model.decoder.classifier
+        seg_classifier: Module = model.decoder.classifier
         model.decoder.classifier = (
-            nn.Identity()  # type: ignore[no-untyped-call, assignment]
+            nn.modules.Identity()  # type: ignore[no-untyped-call, assignment]
         )
 
         super().__init__(
