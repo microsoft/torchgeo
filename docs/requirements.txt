@@ -1,66 +1,8 @@
-# black 21+ required for Python 3.9 support
-black>=21.4b0
-einops
-# fiona 1.5+ required for fiona.transform module
-fiona>=1.5
-# flake8 3.8+ depends on pyflakes 2.2+, which fixes a bug with mypy error code ignores:
-# https://github.com/PyCQA/pyflakes/pull/455
-flake8>=3.8
-h5py
 # ipywidgets 7+ required for nbsphinx
 ipywidgets>=7
-# isort 5.8+ required for extend_skip option
-isort[colors]>=5.8
-jupyterlab
-matplotlib
-# mypy 0.900+ required for pyproject.toml support
-mypy>=0.900
-# nbmake 0.1+ required to fix path_source bug
-nbmake>=0.1
 # nbsphinx 0.8.5 fixes bug with nbformat attributes
 nbsphinx>=0.8.5
-numpy
-# omegaconf 2.1+ required for to_object method
-omegaconf>=2.1
-opencv-python
-# pillow 2.9+ required for height attribute
-pillow>=2.9
-pycocotools
-# pydocstyle 6.1+ required for pyproject.toml support
-pydocstyle[toml]>=6.1
-# pyproj 2.2.0+ required for CRS object, note: pyproj 3.1+ contains threadsafe Transformer and CRS implementations
-pyproj>=2.2.0
-# pytest 6+ required for pyproject.toml support
-pytest>=6
-# pytest-cov 2.4+ required for pytest --cov flags
-pytest-cov>=2.4
-# pytorch-lightning 1.3+ required for gradient_clip_algorithm argument to Trainer
-pytorch-lightning>=1.3
 # release versions missing files, must install from master
--e git+https://github.com/pytorch/pytorch_sphinx_theme#egg=pytorch_sphinx_theme
-# radiant-mlhub 0.2.1+ required for api_key bugfix:
-# https://github.com/radiantearth/radiant-mlhub/pull/48
-radiant-mlhub>=0.2.1
-# rarfile 3+ required for correct Rar file detection
-rarfile>=3
-# rasterio 1.0.16+ required for CRS support
-rasterio>=1.0.16
-# rtree 0.5+ required for 3D index support
-rtree>=0.5
-# scikit-learn 0.18+ required for sklearn.model_selection module
-scikit-learn>=0.18
-# scipy 0.9.0+ required for scipy.io.wavfile.read
-scipy>=0.9.0
-# segmentation-models-pytorch 0.2+ required for smp.losses module
-segmentation-models-pytorch>=0.2
-# setuptools 30.4+ required for options.packages.find section in setup.cfg
-setuptools>=30.4
-# shapely 1.3.0+ is required for Python 3.x
-shapely>=1.3.0
+-e git+https://github.com/pytorch/pytorch_sphinx_theme.git#egg=pytorch_sphinx_theme
 # sphinx 3+ required for autodoc_typehints = description
-sphinx>=3,!=4.1.2
-# torch 1.7+ required for typing
-torch>=1.7
-torchmetrics
-# torchvision 0.3+ required for download_file_from_google_drive
-torchvision>=0.3
+sphinx>=3
