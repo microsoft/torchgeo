@@ -3,7 +3,7 @@
 
 """ChangeStar implementations."""
 
-from typing import Any, Dict, List
+from typing import Dict, List
 
 import torch
 from einops import rearrange
