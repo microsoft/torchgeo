@@ -51,7 +51,6 @@ class ChangeMixin(Module):
                 (default=4.0)
         """
         super(ChangeMixin, self).__init__()
-        torch.nn.CrossEntropyLoss
         layers = [
             Sequential(
                 Conv2d(in_channels, inner_channels, 3, 1, 1),
@@ -76,7 +75,14 @@ class ChangeMixin(Module):
         self.convs = Sequential(*layers)
 
     def forward(self, bi_feature: Tensor) -> List[Tensor]:
-        """Forward pass of the model."""
+        """Forward pass of the model.
+
+        Args:
+            x: input bitemporal feature maps of shape [b, t, c, h, w]
+
+        Returns:
+            a list of bidirected output predictions
+        """
         batch_size = bi_feature.size(0)
         t1t2 = torch.cat([bi_feature[:, 0, :, :, :], bi_feature[:, 1, :, :, :]], dim=1)
         t2t1 = torch.cat([bi_feature[:, 1, :, :, :], bi_feature[:, 0, :, :, :]], dim=1)
