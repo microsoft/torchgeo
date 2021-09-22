@@ -1,3 +1,5 @@
+# TODO: it should be possible to test documentation builds directly on Read the Docs:
+# https://docs.readthedocs.io/en/stable/pull-requests.html
 name: docs
 on:
   push:
@@ -17,8 +19,8 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.9
-    - name: Install pydocstyle
-      run: pip install 'pydocstyle[toml]>=6.1'
+    - name: Install pip dependencies
+      run: pip install .[style]
     - name: Run pydocstyle checks
       run: pydocstyle
   sphinx:
@@ -35,7 +37,7 @@ jobs:
       run: sudo apt-get install pandoc
     - name: Install pip dependencies
       run: |
-        pip install cython numpy  # needed for pycocotools
-        pip install -r requirements.txt
+        pip install .[train]
+        pip install -r docs/requirements.txt
     - name: Run sphinx checks
       run: cd docs && make html
