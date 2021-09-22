@@ -26,6 +26,9 @@ Identity.__module__ = "nn.Identity"
 class ChangeMixin(Module):
     """This module enables any segmentation model to detect binary change.
 
+    The common usage is to attach this module on a segmentation model without the
+    classification head.
+
     If you use this model in your research, please cite the following paper:
 
     * https://arxiv.org/abs/2108.07002
@@ -97,7 +100,7 @@ class ChangeMixin(Module):
 class ChangeStar(Module):
     """The base class of the network architecture of ChangeStar.
 
-    ChangeStar is composited of an any segmentation model and a ChangeMixin module.
+    ChangeStar is composed of an any segmentation model and a ChangeMixin module.
     This model is mainly used for binary/multi-class change detection under bitemporal
     supervision and single-temporal supervision. It features the property of
     segmentation architecture reusing, which is helpful to integrate advanced dense
@@ -137,14 +140,14 @@ class ChangeStar(Module):
             raise ValueError(f"Unknown inference_mode: {inference_mode}")
         self.inference_mode = inference_mode
 
-    def forward(self, x: Tensor) -> Dict[str, Any]:
+    def forward(self, x: Tensor) -> Dict[str, Tensor]:
         """Forward pass of the model.
 
         Args:
             x: a bitemporal input tensor of shape [B, T, C, H, W]
 
         Returns:
-            a directory containing
+            a dictionary containing
                 if training stage, returning
                     bi_seg_logit: bitemporal semantic segmentation logit
                     bi_change_logit: bidirected binary change detection logit
@@ -164,7 +167,7 @@ class ChangeStar(Module):
         # change detection
         c12, c21 = self.changemixin(bi_feature)
 
-        results: Dict[str, Any] = {}
+        results: Dict[str, Tensor] = {}
         if not self.training:
             results.update({"bi_seg_logit": bi_seg_logit})
             if self.inference_mode == "t1t2":
@@ -180,14 +183,16 @@ class ChangeStar(Module):
                     }
                 )
         else:
-           results.update({"bi_seg_logit": bi_seg_logit, "bi_change_logit": [c12, c21]})
+            results.update(
+                {"bi_seg_logit": bi_seg_logit, "bi_change_logit": [c12, c21]}
+            )
         return results
 
 
 class ChangeStarFarSeg(ChangeStar):
     """The network architecture of ChangeStar(FarSeg).
 
-    ChangeStar(FarSeg) is composited of a FarSeg model and a ChangeMixin module.
+    ChangeStar(FarSeg) is composed of a FarSeg model and a ChangeMixin module.
 
     If you use this model in your research, please cite the following paper:
 
@@ -204,16 +209,13 @@ class ChangeStarFarSeg(ChangeStar):
 
         Args:
             backbone: name of ResNet backbone
-                (default='resnet50')
             classes: number of output segmentation classes
-                (default=1 for binary segmentation)
             backbone_pretrained: whether to use pretrained weight for backbone
-                (default=True)
         """
         model = FarSeg(
             backbone=backbone, classes=classes, backbone_pretrained=backbone_pretrained
         )
-        seg_classifier: Any = model.decoder.classifier
+        seg_classifier: Module = model.decoder.classifier
         model.decoder.classifier = (
             Identity()  # type: ignore[no-untyped-call, assignment]
         )
