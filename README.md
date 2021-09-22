@@ -20,32 +20,13 @@ Tests:
 
 ## Installation instructions
 
-Until the first release, you can install an environment compatible with torchgeo with `conda`, `pip`, or `spack` as shown below.
-
-### Conda
-
-**Note**: if you do not have access to a GPU or are running on macOS, replace `pytorch-gpu` with `pytorch-cpu` in the `environment.yml` file.
+The recommended way to install TorchGeo is with [pip](https://pip.pypa.io/):
 
 ```console
-$ conda config --set channel_priority strict
-$ conda env create --file environment.yml
-$ conda activate torchgeo
+$ pip install git+https://github.com/microsoft/torchgeo.git
 ```
 
-### Pip
-
-With Python 3.6 or later:
-
-```console
-$ pip install -r requirements.txt
-```
-
-### Spack
-
-```console
-$ spack env activate .
-$ spack install
-```
+For [conda](https://docs.conda.io/) and [spack](https://spack.io/) installation instructions, see the [documentation](https://torchgeo.readthedocs.io/en/latest/user/installation.html).
 
 ## Documentation
 
