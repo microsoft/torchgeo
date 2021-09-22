@@ -499,7 +499,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             checksum=False,
         )
 
-    def train_dataloader(self) -> DataLoader[Any]:
+    def train_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
         """Return a DataLoader for training."""
         sampler = RandomBatchGeoSampler(
             self.train_dataset.index,
@@ -509,11 +509,11 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         )
         return DataLoader(
             self.train_dataset,
-            batch_sampler=sampler,  # type: ignore[arg-type]
+            batch_sampler=sampler,
             num_workers=self.num_workers,
         )
 
-    def val_dataloader(self) -> DataLoader[Any]:
+    def val_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
         """Return a DataLoader for validation."""
         sampler = GridGeoSampler(
             self.val_dataset.index,
@@ -523,11 +523,11 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         return DataLoader(
             self.val_dataset,
             batch_size=self.batch_size,
-            sampler=sampler,  # type: ignore[arg-type]
+            sampler=sampler,
             num_workers=self.num_workers,
         )
 
-    def test_dataloader(self) -> DataLoader[Any]:
+    def test_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
         """Return a DataLoader for testing."""
         sampler = GridGeoSampler(
             self.test_dataset.index,
@@ -537,6 +537,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
-            sampler=sampler,  # type: ignore[arg-type]
+            sampler=sampler,
             num_workers=self.num_workers,
         )

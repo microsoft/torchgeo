@@ -332,7 +332,7 @@ class LandcoverAIDataModule(pl.LightningDataModule):
             transforms=val_test_transforms,
         )
 
-    def train_dataloader(self) -> DataLoader[Any]:
+    def train_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
         """Return a DataLoader for training."""
         return DataLoader(
             self.train_dataset,
@@ -341,7 +341,7 @@ class LandcoverAIDataModule(pl.LightningDataModule):
             shuffle=True,
         )
 
-    def val_dataloader(self) -> DataLoader[Any]:
+    def val_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
         """Return a DataLoader for validation."""
         return DataLoader(
             self.val_dataset,
@@ -350,7 +350,7 @@ class LandcoverAIDataModule(pl.LightningDataModule):
             shuffle=False,
         )
 
-    def test_dataloader(self) -> DataLoader[Any]:
+    def test_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
         """Return a DataLoader for testing."""
         return DataLoader(
             self.test_dataset,

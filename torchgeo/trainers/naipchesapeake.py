@@ -321,28 +321,28 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             naip.index, self.patch_size, self.stride, test_roi
         )
 
-    def train_dataloader(self) -> DataLoader[Any]:
+    def train_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
         """Return a DataLoader for training."""
         return DataLoader(
             self.dataset,
-            batch_sampler=self.train_sampler,  # type: ignore[arg-type]
+            batch_sampler=self.train_sampler,
             num_workers=self.num_workers,
         )
 
-    def val_dataloader(self) -> DataLoader[Any]:
+    def val_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
         """Return a DataLoader for validation."""
         return DataLoader(
             self.dataset,
             batch_size=self.batch_size,
-            sampler=self.val_sampler,  # type: ignore[arg-type]
+            sampler=self.val_sampler,
             num_workers=self.num_workers,
         )
 
-    def test_dataloader(self) -> DataLoader[Any]:
+    def test_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
         """Return a DataLoader for testing."""
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
-            sampler=self.test_sampler,  # type: ignore[arg-type]
+            sampler=self.test_sampler,
             num_workers=self.num_workers,
         )

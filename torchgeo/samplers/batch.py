@@ -19,7 +19,7 @@ from .utils import _to_tuple, get_random_bounding_box
 Sampler.__module__ = "torch.utils.data"
 
 
-class BatchGeoSampler(Sampler[List[BoundingBox]], abc.ABC):
+class BatchGeoSampler(Sampler, abc.ABC):  # type: ignore[type-arg]
     """Abstract base class for sampling from :class:`~torchgeo.datasets.GeoDataset`.
 
     Unlike PyTorch's :class:`~torch.utils.data.BatchSampler`, :class:`BatchGeoSampler`

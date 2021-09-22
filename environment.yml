@@ -11,7 +11,7 @@ dependencies:
   - pycocotools
   - pyproj>=2.2
   - python>=3.6
-  - pytorch-gpu>=1.7
+  - pytorch-gpu>=1.4
   - rarfile>=3
   - rasterio>=1.0.16
   - shapely>=1.3

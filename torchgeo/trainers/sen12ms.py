@@ -222,12 +222,12 @@ class SEN12MSDataModule(pl.LightningDataModule):
         sample["image"] = sample["image"].float()
 
         if self.band_set == "all":
-            sample["image"][:2] = sample["image"][:2].clip(-25, 0) / -25
-            sample["image"][2:] = sample["image"][2:].clip(0, 10000) / 10000
+            sample["image"][:2] = sample["image"][:2].clamp(-25, 0) / -25
+            sample["image"][2:] = sample["image"][2:].clamp(0, 10000) / 10000
         elif self.band_set == "s1":
-            sample["image"][:2] = sample["image"][:2].clip(-25, 0) / -25
+            sample["image"][:2] = sample["image"][:2].clamp(-25, 0) / -25
         else:
-            sample["image"][:] = sample["image"][:].clip(0, 10000) / 10000
+            sample["image"][:] = sample["image"][:].clamp(0, 10000) / 10000
 
         sample["mask"] = sample["mask"][0, :, :].long()
         sample["mask"] = torch.take(  # type: ignore[attr-defined]
@@ -292,7 +292,7 @@ class SEN12MSDataModule(pl.LightningDataModule):
             self.all_test_dataset, range(len(self.all_test_dataset))
         )
 
-    def train_dataloader(self) -> DataLoader[Any]:
+    def train_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
         """Return a DataLoader for training."""
         return DataLoader(
             self.train_dataset,
@@ -301,7 +301,7 @@ class SEN12MSDataModule(pl.LightningDataModule):
             shuffle=True,
         )
 
-    def val_dataloader(self) -> DataLoader[Any]:
+    def val_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
         """Return a DataLoader for validation."""
         return DataLoader(
             self.val_dataset,
@@ -310,7 +310,7 @@ class SEN12MSDataModule(pl.LightningDataModule):
             shuffle=False,
         )
 
-    def test_dataloader(self) -> DataLoader[Any]:
+    def test_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
         """Return a DataLoader for testing."""
         return DataLoader(
             self.test_dataset,

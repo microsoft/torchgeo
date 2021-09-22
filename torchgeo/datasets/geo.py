@@ -35,7 +35,7 @@ from .utils import BoundingBox, disambiguate_timestamp
 Dataset.__module__ = "torch.utils.data"
 
 
-class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
+class GeoDataset(Dataset, abc.ABC):  # type: ignore[type-arg]
     """Abstract base class for datasets containing geospatial information.
 
     Geospatial information includes things like:
@@ -550,7 +550,7 @@ class VectorDataset(GeoDataset):
         plt.close()
 
 
-class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):
+class VisionDataset(Dataset, abc.ABC):  # type: ignore[type-arg]
     """Abstract base class for datasets lacking geospatial information.
 
     This base class is designed for datasets with pre-defined image chips.
