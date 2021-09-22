@@ -136,7 +136,7 @@ class ChangeStar(Module):
             raise ValueError(f"Unknown inference_mode: {inference_mode}")
         self.inference_mode = inference_mode
 
-    def forward(self, x) -> Dict[str, Any]:
+    def forward(self, x: Tensor) -> Dict[str, Any]:
         """Forward pass of the model.
 
         Args:
@@ -214,7 +214,7 @@ class ChangeStarFarSeg(ChangeStar):
             backbone=backbone, classes=classes, backbone_pretrained=backbone_pretrained
         )
         seg_classifier: Any = model.decoder.classifier
-        model.decoder.classifier: Module = Identity()  # type: ignore[no-untyped-call]
+        model.decoder.classifier = Identity()  # type: ignore[assignment]
 
         super(ChangeStarFarSeg, self).__init__(
             dense_feature_extractor=model,
