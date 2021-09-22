@@ -216,8 +216,8 @@ class ChangeStarFarSeg(ChangeStar):
         )
         seg_classifier: Any = model.decoder.classifier
         model.decoder.classifier = (
-            Identity()
-        )  # type: ignore[assignment, no-untyped-call]
+            Identity()  # type: ignore[no-untyped-call, assignment]
+        )
 
         super(ChangeStarFarSeg, self).__init__(
             dense_feature_extractor=model,
