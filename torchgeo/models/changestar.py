@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 """ChangeStar implementations."""
 
 from typing import Any, Dict, List
@@ -125,7 +126,7 @@ class ChangeStar(Module):
             inference_mode: name of inference mode ``'t1t2'`` | ``'t2t1'`` | ``'mean'``.
                 ``'t1t2'``: concatenate bitemporal features in the order of t1->t2;
                 ``'t2t1'``: concatenate bitemporal features in the order of t2->t1;
-                ``'mean'``: the weighted mean of the output of ``'t1t2'`` and ``'t1t2'`
+                ``'mean'``: the weighted mean of the output of ``'t1t2'`` and ``'t1t2'``
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.dense_feature_extractor = dense_feature_extractor
@@ -214,7 +215,9 @@ class ChangeStarFarSeg(ChangeStar):
             backbone=backbone, classes=classes, backbone_pretrained=backbone_pretrained
         )
         seg_classifier: Any = model.decoder.classifier
-        model.decoder.classifier = Identity()  # type: ignore[assignment]
+        model.decoder.classifier = (
+            Identity()
+        )  # type: ignore[assignment, no-untyped-call]
 
         super(ChangeStarFarSeg, self).__init__(
             dense_feature_extractor=model,
