@@ -179,9 +179,8 @@ class ChangeStar(Module):
                         .mean(dim=0)
                     }
                 )
-            return results
-
-        results.update({"bi_seg_logit": bi_seg_logit, "bi_change_logit": [c12, c21]})
+        else:
+           results.update({"bi_seg_logit": bi_seg_logit, "bi_change_logit": [c12, c21]})
         return results
 
 
