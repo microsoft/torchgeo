@@ -126,18 +126,18 @@ Now, every time you run ``git commit``, pre-commit will run and let you know if 
 Documentation
 -------------
 
-All of our documentation is hosted on `Read the Docs <https://readthedocs.org/>`_. If you make non-trivial changes to the documentation, it helps to build the documentation yourself locally. To do this, make sure the following dependencies are installed:
-
-   * `ipywidgets <https://ipywidgets.readthedocs.io/>`_ needed for nbsphinx
-   * `nbsphinx <https://nbsphinx.readthedocs.io/>`_ to render Jupyter notebooks
-   * `sphinx <https://www.sphinx-doc.org/>`_ to build the documentation
-   * `pytorch-sphinx-theme <https://github.com/pytorch/pytorch_sphinx_theme>`_ for the Sphinx theme
-
-Once these dependencies are installed, run the following commands:
+All of our documentation is hosted on `Read the Docs <https://readthedocs.org/>`_. If you make non-trivial changes to the documentation, it helps to build the documentation yourself locally. To do this, make sure the dependencies are installed:
 
 .. code-block:: console
 
    $ cd docs
+   $ pip install -r requirements.txt
+
+
+Then run the following commands:
+
+.. code-block:: console
+
    $ make clean
    $ make html
 
