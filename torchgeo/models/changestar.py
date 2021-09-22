@@ -101,6 +101,10 @@ class ChangeStar(Module):
     segmentation architecture reusing, which is helpful to integrate advanced dense
     prediction (e.g., semantic segmentation) network architecture into change detection.
 
+    For multi-class change detection, semantic change prediction can be inferred by a
+    binary change prediction from the ChangeMixin module and two semantic predictions
+    from the Segmentation model.
+
     If you use this model in your research, please cite the following paper:
 
     * https://arxiv.org/abs/2108.07002
