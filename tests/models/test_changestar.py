@@ -5,9 +5,31 @@ import itertools
 
 import pytest
 import torch
-import torch.nn as nn
+from torch.nn.modules import (
+    BatchNorm2d,
+    Conv2d,
+    Identity,
+    MaxPool2d,
+    Module,
+    ModuleList,
+    ReLU,
+    Sequential,
+    Sigmoid,
+    UpsamplingBilinear2d,
+)
 
 from torchgeo.models import ChangeMixin, ChangeStar, ChangeStarFarSeg
+
+Module.__module__ = "torch.nn"
+ModuleList.__module__ = "nn.ModuleList"
+Sequential.__module__ = "nn.Sequential"
+Conv2d.__module__ = "nn.Conv2d"
+BatchNorm2d.__module__ = "nn.BatchNorm2d"
+ReLU.__module__ = "nn.ReLU"
+UpsamplingBilinear2d.__module__ = "nn.UpsamplingBilinear2d"
+Sigmoid.__module__ = "nn.Sigmoid"
+Identity.__module__ = "nn.Identity"
+MaxPool2d.__module__ = "nn.MaxPool2d"
 
 BACKBONE = ["resnet18", "resnet34", "resnet50", "resnet101", "anynet"]
 IN_CHANNELS = [64, 128]
@@ -64,7 +86,9 @@ class TestChangeStar:
     @pytest.mark.parametrize(
         "inc,innerc,nc,sf", list(itertools.product(IN_CHANNELS, INNNR_CHANNELS, NC, SF))
     )
-    def test_changemixin_output_size(self, inc: int, innerc: int, nc: int, sf: float):
+    def test_changemixin_output_size(
+        self, inc: int, innerc: int, nc: int, sf: float
+    ) -> None:
         m = ChangeMixin(
             in_channels=inc, inner_channels=innerc, num_convs=nc, scale_factor=sf
         )
@@ -74,16 +98,16 @@ class TestChangeStar:
         assert y[0].shape == (3, 1, int(32 * sf), int(32 * sf))
 
     @torch.no_grad()  # type: ignore[misc]
-    def test_changestar(self):
-        dense_feature_extractor = nn.Sequential(
-            nn.Conv2d(3, 32, 3, 1, 1),
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-            nn.MaxPool2d(3, 2, 1),
+    def test_changestar(self) -> None:
+        dense_feature_extractor = Sequential(
+            Conv2d(3, 32, 3, 1, 1),
+            BatchNorm2d(32),
+            ReLU(),
+            MaxPool2d(3, 2, 1),
         )
 
-        seg_classifier = nn.Sequential(
-            nn.Conv2d(32, 2, 3, 1, 1), nn.UpsamplingBilinear2d(scale_factor=2.0)
+        seg_classifier = Sequential(
+            Conv2d(32, 2, 3, 1, 1), UpsamplingBilinear2d(scale_factor=2.0)
         )
 
         m = ChangeStar(
@@ -96,5 +120,5 @@ class TestChangeStar:
         m.eval()
 
         y = m(torch.rand(3, 2, 3, 64, 64))
-        assert y["bi_seg_logit"].shape == (3, 2, 3, 64, 64)
+        assert y["bi_seg_logit"].shape == (3, 2, 2, 64, 64)
         assert y["change_prob"].shape == (3, 1, 64, 64)

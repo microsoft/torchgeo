@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 """ChangeStar implementations."""
 
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import torch
 from einops import rearrange
@@ -18,6 +18,8 @@ from torch.nn.modules import (
 )
 
 from .farseg import FarSeg
+
+Identity.__module__ = "nn.Identity"
 
 
 class ChangeMixin(Module):
@@ -50,19 +52,19 @@ class ChangeMixin(Module):
             scale_factor: number of upsampling  factor
                 (default=4.0)
         """
-        super(ChangeMixin, self).__init__()
-        layers = [
+        super(ChangeMixin, self).__init__()  # type: ignore[no-untyped-call]
+        layers: List[Module] = [
             Sequential(
                 Conv2d(in_channels, inner_channels, 3, 1, 1),
+                BatchNorm2d(inner_channels),  # type: ignore[no-untyped-call]
                 ReLU(True),
-                BatchNorm2d(inner_channels),
             )
         ]
         layers += [
             Sequential(
                 Conv2d(inner_channels, inner_channels, 3, 1, 1),
+                BatchNorm2d(inner_channels),  # type: ignore[no-untyped-call]
                 ReLU(True),
-                BatchNorm2d(inner_channels),
             )
             for _ in range(num_convs - 1)
         ]
@@ -84,11 +86,17 @@ class ChangeMixin(Module):
             a list of bidirected output predictions
         """
         batch_size = bi_feature.size(0)
-        t1t2 = torch.cat([bi_feature[:, 0, :, :, :], bi_feature[:, 1, :, :, :]], dim=1)
-        t2t1 = torch.cat([bi_feature[:, 1, :, :, :], bi_feature[:, 0, :, :, :]], dim=1)
+        t1t2 = torch.cat(
+            [bi_feature[:, 0, :, :, :], bi_feature[:, 1, :, :, :]], dim=1
+        )  # type: ignore[attr-defined]
+        t2t1 = torch.cat(
+            [bi_feature[:, 1, :, :, :], bi_feature[:, 0, :, :, :]], dim=1
+        )  # type: ignore[attr-defined]
 
-        c1221 = self.convs(torch.cat([t1t2, t2t1], dim=0))
-        c12, c21 = torch.split(c1221, batch_size, dim=0)
+        c1221 = self.convs(torch.cat([t1t2, t2t1], dim=0))  # type: ignore[attr-defined]
+        c12, c21 = torch.split(
+            c1221, batch_size, dim=0
+        )  # type: ignore[no-untyped-call]
         return [c12, c21]
 
 
@@ -134,14 +142,14 @@ class ChangeStar(Module):
             raise ValueError(f"Unknown inference_mode: {inference_mode}")
         self.inference_mode = inference_mode
 
-    def forward(self, x) -> Dict[str, Tensor]:
+    def forward(self, x) -> Dict[str, Any]:
         """Forward pass of the model.
 
         Args:
             x: a bitemporal input tensor of shape [B, T, C, H, W]
 
         Returns:
-            results: a directory containing:
+            a directory containing:
                 if training stage, returning
                     bi_seg_logit: bitemporal semantic segmentation logit
                     bi_change_logit: bidirected binary change detection logit
@@ -213,8 +221,8 @@ class ChangeStarFarSeg(ChangeStar):
         model = FarSeg(
             backbone=backbone, classes=classes, backbone_pretrained=backbone_pretrained
         )
-        seg_classifier = model.decoder.classifier
-        model.decoder.classifier = Identity()
+        seg_classifier: Any = model.decoder.classifier
+        model.decoder.classifier: Any = Identity()
 
         super(ChangeStarFarSeg, self).__init__(
             dense_feature_extractor=model,
@@ -223,4 +231,4 @@ class ChangeStarFarSeg(ChangeStar):
                 in_channels=128 * 2, inner_channels=16, num_convs=4, scale_factor=4.0
             ),
             inference_mode="t1t2",
-        )  # type: ignore[no-untyped-call]
+        )
