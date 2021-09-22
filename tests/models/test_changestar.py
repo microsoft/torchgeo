@@ -8,30 +8,24 @@ import torch
 from torch.nn.modules import (
     BatchNorm2d,
     Conv2d,
-    Identity,
     MaxPool2d,
     Module,
-    ModuleList,
     ReLU,
     Sequential,
-    Sigmoid,
     UpsamplingBilinear2d,
 )
 
 from torchgeo.models import ChangeMixin, ChangeStar, ChangeStarFarSeg
 
 Module.__module__ = "torch.nn"
-ModuleList.__module__ = "nn.ModuleList"
 Sequential.__module__ = "nn.Sequential"
 Conv2d.__module__ = "nn.Conv2d"
 BatchNorm2d.__module__ = "nn.BatchNorm2d"
 ReLU.__module__ = "nn.ReLU"
 UpsamplingBilinear2d.__module__ = "nn.UpsamplingBilinear2d"
-Sigmoid.__module__ = "nn.Sigmoid"
-Identity.__module__ = "nn.Identity"
 MaxPool2d.__module__ = "nn.MaxPool2d"
 
-BACKBONE = ["resnet18", "resnet34", "resnet50", "resnet101", "anynet"]
+BACKBONE = ["resnet18", "resnet34", "resnet50", "resnet101"]
 IN_CHANNELS = [64, 128]
 INNNR_CHANNELS = [16, 32, 64]
 NC = [1, 2, 4]
@@ -70,17 +64,14 @@ class TestChangeStar:
         assert y["bi_change_logit"][1].shape[2] == 128
         assert y["bi_change_logit"][1].shape[3] == 128
 
-    @torch.no_grad()  # type: ignore[misc]
     @pytest.mark.parametrize("backbone", BACKBONE)
-    def test_changestar_farseg_backbone(self, backbone: str) -> None:
-        if backbone == "anynet":
-            match = "unknown backbone: anynet."
-            with pytest.raises(ValueError, match=match):
-                ChangeStarFarSeg(
-                    classes=4, backbone="anynet", backbone_pretrained=False
-                )
-        else:
-            ChangeStarFarSeg(classes=4, backbone=backbone, backbone_pretrained=False)
+    def test_valid_changestar_farseg_backbone(self, backbone: str) -> None:
+        ChangeStarFarSeg(classes=4, backbone=backbone, backbone_pretrained=False)
+
+    def test_invalid_changestar_farseg_backbone(self) -> None:
+        match = "unknown backbone: anynet."
+        with pytest.raises(ValueError, match=match):
+            ChangeStarFarSeg(classes=4, backbone="anynet", backbone_pretrained=False)
 
     @torch.no_grad()  # type: ignore[misc]
     @pytest.mark.parametrize(

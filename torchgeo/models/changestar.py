@@ -25,9 +25,6 @@ Identity.__module__ = "nn.Identity"
 class ChangeMixin(Module):
     """This module enables any segmentation model to detect binary change.
 
-    'Change is Everywhere: Single-Temporal Supervised Object Change Detection',
-    Zheng et al. (2020)
-
     If you use this model in your research, please cite the following paper:
 
     * https://arxiv.org/abs/2108.07002
@@ -44,15 +41,11 @@ class ChangeMixin(Module):
 
         Args:
             in_channels: sum of channels of bitemporal feature maps
-                (default=256)
             inner_channels: number of channels of inner feature maps
-                (default=16)
             num_convs: number of convolution blocks
-                (default=4)
-            scale_factor: number of upsampling  factor
-                (default=4.0)
+            scale_factor: number of upsampling factor
         """
-        super(ChangeMixin, self).__init__()  # type: ignore[no-untyped-call]
+        super().__init__()  # type: ignore[no-untyped-call]
         layers: List[Module] = [
             Sequential(
                 Conv2d(in_channels, inner_channels, 3, 1, 1),
@@ -131,9 +124,8 @@ class ChangeStar(Module):
                 ``'t1t2'``: concatenate bitemporal features in the order of t1->t2;
                 ``'t2t1'``: concatenate bitemporal features in the order of t2->t1;
                 ``'mean'``: the weighted mean of the output of ``'t1t2'`` and ``'t1t2'`
-                (default='t1t2')
         """
-        super(ChangeStar, self).__init__()  # type: ignore[no-untyped-call]
+        super().__init__()  # type: ignore[no-untyped-call]
         self.dense_feature_extractor = dense_feature_extractor
         self.seg_classifier = seg_classifier
         self.changemixin = changemixin
@@ -149,7 +141,7 @@ class ChangeStar(Module):
             x: a bitemporal input tensor of shape [B, T, C, H, W]
 
         Returns:
-            a directory containing:
+            a directory containing
                 if training stage, returning
                     bi_seg_logit: bitemporal semantic segmentation logit
                     bi_change_logit: bidirected binary change detection logit
