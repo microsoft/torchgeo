@@ -103,3 +103,59 @@ class TestChangeStar:
         y = m(torch.rand(3, 2, 3, 64, 64))
         assert y["bi_seg_logit"].shape == (3, 2, 2, 64, 64)
         assert y["change_prob"].shape == (3, 1, 64, 64)
+
+    @torch.no_grad()  # type: ignore[misc]
+    def test_changestar_invalid_inference_mode(self) -> None:
+        dense_feature_extractor = nn.modules.Sequential(
+            nn.modules.Conv2d(3, 32, 3, 1, 1),
+            nn.modules.BatchNorm2d(32),  # type: ignore[no-untyped-call]
+            nn.modules.ReLU(),
+            nn.modules.MaxPool2d(3, 2, 1),
+        )
+
+        seg_classifier = nn.modules.Sequential(
+            nn.modules.Conv2d(32, 2, 3, 1, 1),
+            nn.modules.UpsamplingBilinear2d(scale_factor=2.0),
+        )
+
+        match = "Unknown inference_mode: random"
+        with pytest.raises(ValueError, match=match):
+            ChangeStar(
+                dense_feature_extractor,
+                seg_classifier,
+                ChangeMixin(
+                    in_channels=32 * 2, inner_channels=16, num_convs=4, scale_factor=2.0
+                ),
+                inference_mode="random",
+            )
+
+    @torch.no_grad()  # type: ignore[misc]
+    @pytest.mark.parametrize("inference_mode", ["t1t2", "t2t1", "mean"])
+    def test_changestar_inference_output_size(self, inference_mode: str) -> None:
+        dense_feature_extractor = nn.modules.Sequential(
+            nn.modules.Conv2d(3, 32, 3, 1, 1),
+            nn.modules.BatchNorm2d(32),  # type: ignore[no-untyped-call]
+            nn.modules.ReLU(),
+            nn.modules.MaxPool2d(3, 2, 1),
+        )
+        CLASSES = 2
+        seg_classifier = nn.modules.Sequential(
+            nn.modules.Conv2d(32, CLASSES, 3, 1, 1),
+            nn.modules.UpsamplingBilinear2d(scale_factor=2.0),
+        )
+
+        m = ChangeStar(
+            dense_feature_extractor,
+            seg_classifier,
+            ChangeMixin(
+                in_channels=32 * 2, inner_channels=16, num_convs=4, scale_factor=2.0
+            ),
+            inference_mode=inference_mode,
+        )
+        m.eval()
+
+        x = torch.randn(2, 2, 3, 128, 128)
+        y = m(x)
+
+        assert y["bi_seg_logit"].shape == (2, 2, CLASSES, 128, 128)
+        assert y["change_prob"].shape == (2, 1, 128, 128)
