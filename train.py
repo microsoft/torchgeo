@@ -14,6 +14,8 @@ from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 
 from torchgeo.trainers import (
+    BYOL,
+    ChesapeakeBYOLDataModule,
     ChesapeakeCVPRDataModule,
     ChesapeakeCVPRSegmentationTask,
     CycloneDataModule,
@@ -31,6 +33,7 @@ from torchgeo.trainers import (
 TASK_TO_MODULES_MAPPING: Dict[
     str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
 ] = {
+    "byol": (ChesapeakeBYOLDataModule, BYOL),
     "chesapeake_cvpr": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
     "cyclone": (CycloneSimpleRegressionTask, CycloneDataModule),
     "landcoverai": (LandcoverAISegmentationTask, LandcoverAIDataModule),
