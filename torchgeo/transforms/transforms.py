@@ -112,9 +112,17 @@ class AugmentationSequential(Module):
         """
         super().__init__()
         self.data_keys = data_keys
-        self.augs = K.AugmentationSequential(
-            *args, data_keys=["input" if k == "image" else k for k in data_keys]
-        )
+
+        keys = []
+        for key in data_keys:
+            if key == "image":
+                keys.append("input")
+            elif key == "boxes":
+                keys.append("bbox")
+            else:
+                keys.append(key)
+
+        self.augs = K.AugmentationSequential(*args, data_keys=keys)
 
     def forward(self, sample: Dict[str, Tensor]):
         """Perform augmentations and update data dict.
@@ -125,8 +133,17 @@ class AugmentationSequential(Module):
         Returns:
             the augmented input
         """
+        # Kornia augmentations require masks to be float
+        if "mask" in sample:
+            sample["mask"] = sample["mask"].to(torch.float)
+
         inputs = [sample[k] for k in self.data_keys]
         outputs: List[Tensor] = self.augs(*inputs)
         outputs: Dict[str, Tensor] = {k: v for k, v in zip(self.data_keys, outputs)}
         sample.update(outputs)
+
+        # Convert masks to int
+        if "mask" in sample:
+            sample["mask"] = sample["mask"].to(torch.long)
+
         return sample
