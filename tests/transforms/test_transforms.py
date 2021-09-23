@@ -3,6 +3,7 @@
 
 from typing import Dict
 
+import kornia.augmentation as K
 import pytest
 import torch
 from torch import Tensor
@@ -22,6 +23,19 @@ def sample() -> Dict[str, Tensor]:
         "boxes": torch.tensor(  # type: ignore[attr-defined]
             [[0, 0, 2, 2], [1, 1, 3, 3]]
         ),
+    }
+
+
+@pytest.fixture
+def batch() -> Dict[str, Tensor]:
+    return {
+        "image": torch.tensor(  # type: ignore[attr-defined]
+            [[[[1, 2, 3], [4, 5, 6], [7, 8, 9]]]]
+        ).to(torch.float),
+        "mask": torch.tensor(  # type: ignore[attr-defined]
+            [[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]]
+        ).to(torch.long),
+        "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
     }
 
 
@@ -68,3 +82,21 @@ def test_identity(sample: Dict[str, Tensor]) -> None:
     tr = transforms.Identity()
     output = tr(sample)
     assert_matching(output, sample)
+
+
+def test_augmentation_sequential(batch: Dict[str, Tensor]) -> None:
+    expected = {
+        "image": torch.tensor(  # type: ignore[attr-defined]
+            [[[[3, 2, 1], [6, 5, 4], [9, 8, 7]]]]
+        ).to(torch.float),
+        "mask": torch.tensor(  # type: ignore[attr-defined]
+            [[[[1, 0, 0], [1, 1, 0], [1, 1, 1]]]]
+        ).to(torch.long),
+        "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
+    }
+    augs = transforms.AugmentationSequential(
+        K.RandomHorizontalFlip(p=1.0),
+        data_keys=["image", "mask"],
+    )
+    output = augs(batch)
+    assert_matching(output, expected)
