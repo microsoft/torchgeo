@@ -255,6 +255,28 @@ class So2SatDataModule(pl.LightningDataModule):
         ]
     ).reshape(18, 1, 1)
 
+    # this reorders the bands to put S2 RGB first, then remainder of S2, then S1
+    reindex_to_rgb_first = [
+        10,
+        9,
+        8,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+    ]
+
     def __init__(
         self,
         root_dir: str,
@@ -286,6 +308,7 @@ class So2SatDataModule(pl.LightningDataModule):
         """Transform a single sample from the Dataset."""
         sample["image"] = (sample["image"] - self.band_means) / self.band_stds
         sample["image"] = sample["image"].float()
+        sample["image"] = sample["image"][self.reindex_to_rgb_first, :, :]
 
         return sample
 
