@@ -54,7 +54,7 @@ def set_up_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--gpu",
-        required=True,
+        default=0,
         type=int,
         help="Id of the GPU to use",
         metavar="ID",
