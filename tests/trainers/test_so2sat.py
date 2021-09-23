@@ -6,9 +6,9 @@ from typing import Any, Dict, cast
 import pytest
 import segmentation_models_pytorch as smp
 import torch.nn as nn
+import torchvision
 from omegaconf import OmegaConf
 
-import torchvision
 from torchgeo.trainers import So2SatClassificationTask
 
 
