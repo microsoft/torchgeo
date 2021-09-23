@@ -40,7 +40,9 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
         """Initialize a new LightningModule for training simple regression models.
 
         Keyword Args:
-            model: Name of the model to use.
+            model: Name of the model to use
+            learning_rate: Initial learning rate to use in the optimizer
+            learning_rate_schedule_patience: Patience parameter for the LR scheduler
         """
         super().__init__()
         self.save_hyperparameters()  # creates `self.hparams` from kwargs
@@ -112,7 +114,6 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
                     patience=self.hparams["learning_rate_schedule_patience"],
                 ),
                 "monitor": "val_loss",
-                "verbose": True,
             },
         }
 
