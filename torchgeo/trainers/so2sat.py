@@ -48,7 +48,7 @@ class So2SatClassificationTask(pl.LightningModule):
             )
         else:
             raise ValueError(
-                f"Model type '{self.hparams['segmentation_model']}' is not valid."
+                f"Model type '{self.hparams['classification_model']}' is not valid."
             )
 
         if self.hparams["loss"] == "ce":
