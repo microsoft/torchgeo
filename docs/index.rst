@@ -27,7 +27,7 @@ torchgeo
 
    tutorials/getting_started
    tutorials/benchmarking
-   tutorials/trainer_tutorial
+   tutorials/trainer
 
 .. toctree::
    :maxdepth: 1
