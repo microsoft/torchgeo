@@ -43,7 +43,7 @@ class FarSeg(Module):
     building, road, ship, and airplane segmentation. It can be also extended as a change
     detection model. It features a foreground-scene relation module to model the
     relation between scene embedding, object context, and object feature, thus improving
-    the discrimination of object feature presentation.
+    the discrimination of object feature representation.
 
     If you use this model in your research, please cite the following paper:
 

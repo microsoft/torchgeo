@@ -3,11 +3,21 @@
 
 """TorchGeo models."""
 
+from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
 from .farseg import FarSeg
 from .fccd import FCEF, FCSiamConc, FCSiamDiff
 from .fcn import FCN
 
-__all__ = ("FarSeg", "FCN", "FCEF", "FCSiamConc", "FCSiamDiff")
+__all__ = (
+    "ChangeMixin",
+    "ChangeStar",
+    "ChangeStarFarSeg",
+    "FarSeg",
+    "FCN",
+    "FCEF",
+    "FCSiamConc",
+    "FCSiamDiff",
+)
 
 # https://stackoverflow.com/questions/40018681
 for module in __all__:
