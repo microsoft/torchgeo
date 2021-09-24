@@ -45,7 +45,7 @@ class So2Sat(VisionDataset):
 
        .. code-block:: bash
 
-          for split in train validation testing
+          for split in training validation testing
           do
               wget ftp://m1483140:m1483140@dataserv.ub.tum.de/$split.h5
           done

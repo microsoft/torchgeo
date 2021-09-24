@@ -12,7 +12,7 @@ import torch.nn as nn
 import torchvision.models
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
-from torch.nn.modules import Module
+from torch.nn.modules import Conv2d, Linear, Module
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torchmetrics import Accuracy, IoU, MetricCollection
@@ -24,6 +24,8 @@ from ..datasets import So2Sat
 # https://github.com/pytorch/pytorch/pull/61045
 DataLoader.__module__ = "torch.utils.data"
 Module.__module__ = "torch.nn"
+Conv2d.__module__ = "nn.Conv2d"
+Linear.__module__ = "nn.Linear"
 
 IN_CHANNELS = 18
 NUM_CLASSES = 17
@@ -34,18 +36,60 @@ class So2SatClassificationTask(pl.LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
+        pretrained = "imagenet" in self.hparams["weight_config"]
+
         if self.hparams["classification_model"] == "resnet18":
-            self.model = torchvision.models.resnet18(
-                pretrained=False, num_classes=NUM_CLASSES
-            )
-            self.model.conv1 = nn.Conv2d(  # type: ignore[attr-defined]
-                IN_CHANNELS,
-                64,
-                kernel_size=3,
-                stride=1,
-                padding=1,
-                bias=False,
-            )
+            self.model = torchvision.models.resnet18(pretrained=pretrained)
+            # replace the final layer to match the number of classes we want
+            self.model.fc = Linear(512, out_features=NUM_CLASSES)
+
+            if self.hparams["weights"] == "imagenet_only":
+                pass
+            elif self.hparams["weights"] == "imagenet_and_random":
+                # save the initial imagenet weights
+                w_old = torch.clone(  # type: ignore[attr-defined]
+                    self.model.conv1.weight
+                ).detach()
+
+                # replace the first conv layer (with random weights)
+                self.model.conv1 = Conv2d(
+                    IN_CHANNELS,
+                    64,
+                    kernel_size=7,
+                    stride=1,
+                    padding=2,
+                    bias=False,
+                )
+                nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
+                    self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
+                )
+
+                w_new = torch.clone(  # type: ignore[attr-defined]
+                    self.model.conv1.weight
+                ).detach()
+                # graft the imagenet weights into the first 3 channels
+                w_new[:, :3, :, :] = w_old
+
+                self.model.conv1.weight = nn.Parameter(  # type: ignore[attr-defined]
+                    w_new
+                )
+
+            elif self.hparams["weights"] == "random":
+                self.model.conv1 = Conv2d(
+                    IN_CHANNELS,
+                    64,
+                    kernel_size=7,
+                    stride=1,
+                    padding=2,
+                    bias=False,
+                )
+                nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
+                    self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
+                )
+            else:
+                raise ValueError(
+                    f"Weight type '{self.hparams['weight_config']}' is not valid."
+                )
         else:
             raise ValueError(
                 f"Model type '{self.hparams['classification_model']}' is not valid."
@@ -69,6 +113,7 @@ class So2SatClassificationTask(pl.LightningModule):
         Keyword Args:
             classification_model: Name of the classification model use
             loss: Name of the loss function
+            weights: Either "random", "imagenet_only", or "imagenet_random"
         """
         super().__init__()
         self.save_hyperparameters()  # creates `self.hparams` from kwargs
@@ -282,6 +327,7 @@ class So2SatDataModule(pl.LightningDataModule):
         root_dir: str,
         batch_size: int = 64,
         num_workers: int = 4,
+        weights: str = "random",
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for So2Sat based DataLoaders.
@@ -290,14 +336,15 @@ class So2SatDataModule(pl.LightningDataModule):
             root_dir: The ``root`` arugment to pass to the So2Sat Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
+            weights: Either "random", "imagenet_only", or "imagenet_random"
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.weights = weights
 
         self.transforms = K.AugmentationSequential(
-            K.RandomErasing(),
             K.RandomAffine(degrees=30),
             K.RandomHorizontalFlip(),
             K.RandomVerticalFlip(),
@@ -309,6 +356,9 @@ class So2SatDataModule(pl.LightningDataModule):
         sample["image"] = (sample["image"] - self.band_means) / self.band_stds
         sample["image"] = sample["image"].float()
         sample["image"] = sample["image"][self.reindex_to_rgb_first, :, :]
+
+        if self.weights == "imagenet_only":
+            sample["image"] = sample["image"][:3, :, :]
 
         return sample
 
