@@ -9,8 +9,8 @@ import argparse
 import csv
 import os
 
-import torch
 import pytorch_lightning as pl
+import torch
 
 from torchgeo.trainers import ChesapeakeCVPRDataModule, ChesapeakeCVPRSegmentationTask
 
