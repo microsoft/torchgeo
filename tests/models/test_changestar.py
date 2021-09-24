@@ -48,10 +48,8 @@ class TestChangeStar:
         y = model(x)
 
         assert y["bi_seg_logit"].shape[3] == 128 and y["bi_seg_logit"].shape[4] == 128
-        assert y["bi_change_logit"][0].shape[2] == 128
-        assert y["bi_change_logit"][0].shape[3] == 128
-        assert y["bi_change_logit"][1].shape[2] == 128
-        assert y["bi_change_logit"][1].shape[3] == 128
+        assert y["bi_change_logit"].shape[3] == 128
+        assert y["bi_change_logit"].shape[4] == 128
 
     @pytest.mark.parametrize("backbone", BACKBONE)
     def test_valid_changestar_farseg_backbone(self, backbone: str) -> None:

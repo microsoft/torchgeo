@@ -3,7 +3,7 @@
 
 """ChangeStar implementations."""
 
-from typing import Any, Dict, List
+from typing import Dict, List
 
 import torch
 import torch.nn as nn
@@ -139,7 +139,7 @@ class ChangeStar(Module):
             raise ValueError(f"Unknown inference_mode: {inference_mode}")
         self.inference_mode = inference_mode
 
-    def forward(self, x: Tensor) -> Dict[str, Any]:
+    def forward(self, x: Tensor) -> Dict[str, Tensor]:
         """Forward pass of the model.
 
         Args:
@@ -166,7 +166,7 @@ class ChangeStar(Module):
         # change detection
         c12, c21 = self.changemixin(bi_feature)
 
-        results: Dict[str, Any] = {}
+        results: Dict[str, Tensor] = {}
         if not self.training:
             results.update({"bi_seg_logit": bi_seg_logit})
             if self.inference_mode == "t1t2":
@@ -183,7 +183,10 @@ class ChangeStar(Module):
                 )
         else:
             results.update(
-                {"bi_seg_logit": bi_seg_logit, "bi_change_logit": [c12, c21]}
+                {
+                    "bi_seg_logit": bi_seg_logit,
+                    "bi_change_logit": torch.stack([c12, c21], dim=1),
+                }
             )
         return results
 
