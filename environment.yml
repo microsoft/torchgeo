@@ -22,7 +22,7 @@ dependencies:
     - ipywidgets>=7
     - isort[colors]>=5.8
     - jupyterlab
-    - kornia>=0.5.4
+    - git+https://github.com/kornia/kornia@master
     - mypy>=0.900
     - nbmake>=0.1
     - nbsphinx>=0.8.5
