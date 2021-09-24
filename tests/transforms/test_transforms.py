@@ -104,3 +104,23 @@ def test_augmentation_sequential(batch: Dict[str, Tensor]) -> None:
     )
     output = augs(batch)
     assert_matching(output, expected)
+
+
+def test_augmentation_sequential_image_only(batch: Dict[str, Tensor]) -> None:
+    expected = {
+        "image": torch.tensor(  # type: ignore[attr-defined]
+            [[[[3, 2, 1], [6, 5, 4], [9, 8, 7]]]],
+            dtype=torch.float,  # type: ignore[attr-defined]
+        ),
+        "mask": torch.tensor(  # type: ignore[attr-defined]
+            [[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]],
+            dtype=torch.long,  # type: ignore[attr-defined]
+        ),
+        "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
+    }
+    augs = transforms.AugmentationSequential(
+        K.RandomHorizontalFlip(p=1.0),
+        data_keys=["image"],
+    )
+    output = augs(batch)
+    assert_matching(output, expected)
