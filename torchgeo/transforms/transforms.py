@@ -139,7 +139,9 @@ class AugmentationSequential(Module):  # type: ignore[misc]
 
         inputs = [sample[k] for k in self.data_keys]
         outputs_list: Union[Tensor, List[Tensor]] = self.augs(*inputs)
-        outputs_list = outputs_list if isinstance(outputs_list, list) else [outputs_list]
+        outputs_list = (
+            outputs_list if isinstance(outputs_list, list) else [outputs_list]
+        )
         outputs: Dict[str, Tensor] = {
             k: v for k, v in zip(self.data_keys, outputs_list)
         }
