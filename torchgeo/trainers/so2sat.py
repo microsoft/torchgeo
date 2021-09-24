@@ -36,7 +36,7 @@ class So2SatClassificationTask(pl.LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
-        pretrained = "imagenet" in self.hparams["weight_config"]
+        pretrained = "imagenet" in self.hparams["weights"]
 
         if self.hparams["classification_model"] == "resnet18":
             self.model = torchvision.models.resnet18(pretrained=pretrained)
@@ -86,9 +86,21 @@ class So2SatClassificationTask(pl.LightningModule):
                 nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
                     self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
                 )
+            elif self.hparams["weights"] == "random_rgb":
+                self.model.conv1 = Conv2d(
+                    3,
+                    64,
+                    kernel_size=7,
+                    stride=1,
+                    padding=2,
+                    bias=False,
+                )
+                nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
+                    self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
+                )
             else:
                 raise ValueError(
-                    f"Weight type '{self.hparams['weight_config']}' is not valid."
+                    f"Weight type '{self.hparams['weights']}' is not valid."
                 )
         else:
             raise ValueError(
@@ -113,7 +125,8 @@ class So2SatClassificationTask(pl.LightningModule):
         Keyword Args:
             classification_model: Name of the classification model use
             loss: Name of the loss function
-            weights: Either "random", "imagenet_only", or "imagenet_random"
+            weights: Either "random", "imagenet_only", "imagenet_random", or
+                "random_rgb"
         """
         super().__init__()
         self.save_hyperparameters()  # creates `self.hparams` from kwargs
@@ -336,7 +349,8 @@ class So2SatDataModule(pl.LightningDataModule):
             root_dir: The ``root`` arugment to pass to the So2Sat Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
-            weights: Either "random", "imagenet_only", or "imagenet_random"
+            weights: Either "random", "imagenet_only", "imagenet_random", or
+                "random_rgb"
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
@@ -357,7 +371,7 @@ class So2SatDataModule(pl.LightningDataModule):
         sample["image"] = sample["image"].float()
         sample["image"] = sample["image"][self.reindex_to_rgb_first, :, :]
 
-        if self.weights == "imagenet_only":
+        if self.weights == "imagenet_only" or self.weights == "random_rgb":
             sample["image"] = sample["image"][:3, :, :]
 
         return sample
@@ -383,7 +397,7 @@ class So2SatDataModule(pl.LightningDataModule):
 
         This method is called once per GPU per run.
         """
-        train_transforms = Compose([self.preprocess, self.kornia_pipeline])
+        train_transforms = Compose([self.preprocess])
         val_test_transforms = self.preprocess
 
         self.train_dataset = So2Sat(
