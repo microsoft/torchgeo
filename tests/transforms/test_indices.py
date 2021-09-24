@@ -14,10 +14,12 @@ from torchgeo.transforms import indices
 def sample() -> Dict[str, Tensor]:
     return {
         "image": torch.tensor(  # type: ignore[attr-defined]
-            [[[1, 2, 3], [4, 5, 6], [7, 8, 9]]]
-        ).to(torch.float),
+            [[[1, 2, 3], [4, 5, 6], [7, 8, 9]]],
+            dtype=torch.float,  # type: ignore[attr-defined]
+        ),
         "mask": torch.tensor(  # type: ignore[attr-defined]
-            [[0, 0, 1], [0, 1, 1], [1, 1, 1]]
+            [[0, 0, 1], [0, 1, 1], [1, 1, 1]],
+            dtype=torch.long,  # type: ignore[attr-defined]
         ),
     }
 
@@ -26,11 +28,13 @@ def sample() -> Dict[str, Tensor]:
 def batch() -> Dict[str, Tensor]:
     return {
         "image": torch.tensor(  # type: ignore[attr-defined]
-            [[[[1, 2, 3], [4, 5, 6], [7, 8, 9]]]]
-        ).to(torch.float),
+            [[[[1, 2, 3], [4, 5, 6], [7, 8, 9]]]],
+            dtype=torch.float,  # type: ignore[attr-defined]
+        ),
         "mask": torch.tensor(  # type: ignore[attr-defined]
-            [[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]]
-        ).to(torch.long),
+            [[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]],
+            dtype=torch.long,  # type: ignore[attr-defined]
+        ),
         "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
     }
 

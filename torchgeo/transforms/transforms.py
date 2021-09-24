@@ -100,7 +100,7 @@ class Identity(Module):  # type: ignore[misc,name-defined]
         return sample
 
 
-class AugmentationSequential(Module):
+class AugmentationSequential(Module):  # type: ignore[misc]
     """Wrapper around kornia AugmentationSequential to handle input dicts."""
 
     def __init__(self, *args: Module, data_keys: List[str]) -> None:
@@ -124,7 +124,7 @@ class AugmentationSequential(Module):
 
         self.augs = K.AugmentationSequential(*args, data_keys=keys)
 
-    def forward(self, sample: Dict[str, Tensor]):
+    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
         """Perform augmentations and update data dict.
 
         Args:
@@ -135,15 +135,17 @@ class AugmentationSequential(Module):
         """
         # Kornia augmentations require masks to be float
         if "mask" in sample:
-            sample["mask"] = sample["mask"].to(torch.float)
+            sample["mask"] = sample["mask"].to(torch.float)  # type:ignore[attr-defined]
 
         inputs = [sample[k] for k in self.data_keys]
-        outputs: List[Tensor] = self.augs(*inputs)
-        outputs: Dict[str, Tensor] = {k: v for k, v in zip(self.data_keys, outputs)}
+        outputs_list: List[Tensor] = self.augs(*inputs)
+        outputs: Dict[str, Tensor] = {
+            k: v for k, v in zip(self.data_keys, outputs_list)
+        }
         sample.update(outputs)
 
         # Convert masks to int
         if "mask" in sample:
-            sample["mask"] = sample["mask"].to(torch.long)
+            sample["mask"] = sample["mask"].to(torch.long)  # type: ignore[attr-defined]
 
         return sample
