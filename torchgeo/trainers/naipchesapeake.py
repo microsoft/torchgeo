@@ -3,7 +3,7 @@
 
 """NAIP + Chesapeake trainer."""
 
-from typing import Any, Dict, Optional, cast
+from typing import TYPE_CHECKING, Any, Dict, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,6 +26,13 @@ from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 # https://github.com/pytorch/pytorch/pull/61045
 DataLoader.__module__ = "torch.utils.data"
 Module.__module__ = "torch.nn"
+
+
+# https://mypy.readthedocs.io/en/stable/runtime_troubles.html#using-classes-that-are-generic-in-stubs-but-not-at-runtime
+if TYPE_CHECKING:
+    _base = DataLoader[Any]
+else:
+    _base = DataLoader
 
 
 class NAIPChesapeakeSegmentationTask(pl.LightningModule):
@@ -321,28 +328,28 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             naip.index, self.patch_size, self.stride, test_roi
         )
 
-    def train_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
+    def train_dataloader(self) -> _base:
         """Return a DataLoader for training."""
         return DataLoader(
             self.dataset,
-            batch_sampler=self.train_sampler,
+            batch_sampler=self.train_sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
         )
 
-    def val_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
+    def val_dataloader(self) -> _base:
         """Return a DataLoader for validation."""
         return DataLoader(
             self.dataset,
             batch_size=self.batch_size,
-            sampler=self.val_sampler,
+            sampler=self.val_sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
         )
 
-    def test_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
+    def test_dataloader(self) -> _base:
         """Return a DataLoader for testing."""
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
-            sampler=self.test_sampler,
+            sampler=self.test_sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
         )

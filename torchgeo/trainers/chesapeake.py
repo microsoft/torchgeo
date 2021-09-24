@@ -3,7 +3,7 @@
 
 """Trainers for the Chesapeake datasets."""
 
-from typing import Any, Callable, Dict, List, Optional, cast
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, cast
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -47,6 +47,13 @@ CMAP_5 = matplotlib.colors.ListedColormap(
     )
     / 255.0
 )
+
+
+# https://mypy.readthedocs.io/en/stable/runtime_troubles.html#using-classes-that-are-generic-in-stubs-but-not-at-runtime
+if TYPE_CHECKING:
+    _base = DataLoader[Any]
+else:
+    _base = DataLoader
 
 
 class ChesapeakeCVPRSegmentationTask(LightningModule):
@@ -499,7 +506,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             checksum=False,
         )
 
-    def train_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
+    def train_dataloader(self) -> _base:
         """Return a DataLoader for training."""
         sampler = RandomBatchGeoSampler(
             self.train_dataset.index,
@@ -509,11 +516,11 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         )
         return DataLoader(
             self.train_dataset,
-            batch_sampler=sampler,
+            batch_sampler=sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
         )
 
-    def val_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
+    def val_dataloader(self) -> _base:
         """Return a DataLoader for validation."""
         sampler = GridGeoSampler(
             self.val_dataset.index,
@@ -523,11 +530,11 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         return DataLoader(
             self.val_dataset,
             batch_size=self.batch_size,
-            sampler=sampler,
+            sampler=sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
         )
 
-    def test_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
+    def test_dataloader(self) -> _base:
         """Return a DataLoader for testing."""
         sampler = GridGeoSampler(
             self.test_dataset.index,
@@ -537,6 +544,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
-            sampler=sampler,
+            sampler=sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
         )

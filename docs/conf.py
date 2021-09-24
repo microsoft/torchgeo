@@ -59,12 +59,6 @@ nitpick_ignore = [
     ("py:class", ".."),
     # TODO: can't figure out why this isn't found
     ("py:class", "LightningDataModule"),
-    # Nasty combination of:
-    # https://github.com/sphinx-doc/sphinx/issues/9607
-    # https://github.com/pytorch/pytorch/issues/60979
-    # Should be fixed when either of these issues is resolved
-    ("py:obj", "torch.utils.data.dataset.T_co"),
-    ("py:obj", "torch.utils.data.sampler.T_co"),
 ]
 
 

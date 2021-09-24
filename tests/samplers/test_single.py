@@ -56,7 +56,9 @@ class TestGeoSampler:
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(self, sampler: CustomGeoSampler, num_workers: int) -> None:
         ds = CustomGeoDataset()
-        dl = DataLoader(ds, sampler=sampler, num_workers=num_workers)
+        dl = DataLoader(
+            ds, sampler=sampler, num_workers=num_workers  # type: ignore[arg-type]
+        )
         for _ in dl:
             continue
 
@@ -92,7 +94,9 @@ class TestRandomGeoSampler:
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(self, sampler: RandomGeoSampler, num_workers: int) -> None:
         ds = CustomGeoDataset()
-        dl = DataLoader(ds, sampler=sampler, num_workers=num_workers)
+        dl = DataLoader(
+            ds, sampler=sampler, num_workers=num_workers  # type: ignore[arg-type]
+        )
         for _ in dl:
             continue
 
@@ -131,7 +135,9 @@ class TestGridGeoSampler:
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(self, sampler: GridGeoSampler, num_workers: int) -> None:
         ds = CustomGeoDataset()
-        dl = DataLoader(ds, sampler=sampler, num_workers=num_workers)
+        dl = DataLoader(
+            ds, sampler=sampler, num_workers=num_workers  # type: ignore[arg-type]
+        )
         for _ in dl:
             continue
 

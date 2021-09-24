@@ -3,6 +3,8 @@
 
 """Base classes for all :mod:`torchgeo` datasets."""
 
+from __future__ import annotations
+
 import abc
 import functools
 import glob
@@ -10,7 +12,17 @@ import math
 import os
 import re
 import sys
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    cast,
+)
 
 import fiona
 import fiona.transform
@@ -35,7 +47,14 @@ from .utils import BoundingBox, disambiguate_timestamp
 Dataset.__module__ = "torch.utils.data"
 
 
-class GeoDataset(Dataset, abc.ABC):  # type: ignore[type-arg]
+# https://mypy.readthedocs.io/en/stable/runtime_troubles.html#using-classes-that-are-generic-in-stubs-but-not-at-runtime
+if TYPE_CHECKING:
+    _base = Dataset[Dict[str, Any]]
+else:
+    _base = Dataset
+
+
+class GeoDataset(_base, abc.ABC):
     """Abstract base class for datasets containing geospatial information.
 
     Geospatial information includes things like:
@@ -550,7 +569,7 @@ class VectorDataset(GeoDataset):
         plt.close()
 
 
-class VisionDataset(Dataset, abc.ABC):  # type: ignore[type-arg]
+class VisionDataset(_base, abc.ABC):
     """Abstract base class for datasets lacking geospatial information.
 
     This base class is designed for datasets with pre-defined image chips.

@@ -3,7 +3,7 @@
 
 """Landcover.ai trainer."""
 
-from typing import Any, Dict, Optional, cast
+from typing import TYPE_CHECKING, Any, Dict, Optional, cast
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
@@ -26,6 +26,13 @@ from ..models import FCN
 # https://github.com/pytorch/pytorch/pull/61045
 DataLoader.__module__ = "torch.utils.data"
 Module.__module__ = "torch.nn"
+
+
+# https://mypy.readthedocs.io/en/stable/runtime_troubles.html#using-classes-that-are-generic-in-stubs-but-not-at-runtime
+if TYPE_CHECKING:
+    _base = DataLoader[Any]
+else:
+    _base = DataLoader
 
 
 class LandcoverAISegmentationTask(pl.LightningModule):
@@ -332,7 +339,7 @@ class LandcoverAIDataModule(pl.LightningDataModule):
             transforms=val_test_transforms,
         )
 
-    def train_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
+    def train_dataloader(self) -> _base:
         """Return a DataLoader for training."""
         return DataLoader(
             self.train_dataset,
@@ -341,7 +348,7 @@ class LandcoverAIDataModule(pl.LightningDataModule):
             shuffle=True,
         )
 
-    def val_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
+    def val_dataloader(self) -> _base:
         """Return a DataLoader for validation."""
         return DataLoader(
             self.val_dataset,
@@ -350,7 +357,7 @@ class LandcoverAIDataModule(pl.LightningDataModule):
             shuffle=False,
         )
 
-    def test_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
+    def test_dataloader(self) -> _base:
         """Return a DataLoader for testing."""
         return DataLoader(
             self.test_dataset,

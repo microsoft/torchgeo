@@ -165,14 +165,14 @@ def main(args: argparse.Namespace) -> None:
         if isinstance(sampler, RandomBatchGeoSampler):
             dataloader = DataLoader(
                 dataset,
-                batch_sampler=sampler,
+                batch_sampler=sampler,  # type: ignore[arg-type]
                 num_workers=args.num_workers,
             )
         else:
             dataloader = DataLoader(
                 dataset,
                 batch_size=args.batch_size,
-                sampler=sampler,
+                sampler=sampler,  # type: ignore[arg-type]
                 num_workers=args.num_workers,
             )
 

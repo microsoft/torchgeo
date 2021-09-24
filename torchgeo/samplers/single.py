@@ -5,7 +5,7 @@
 
 import abc
 import random
-from typing import Iterator, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 
 from rtree.index import Index
 from torch.utils.data import Sampler
@@ -19,7 +19,14 @@ from .utils import _to_tuple, get_random_bounding_box
 Sampler.__module__ = "torch.utils.data"
 
 
-class GeoSampler(Sampler, abc.ABC):  # type: ignore[type-arg]
+# https://mypy.readthedocs.io/en/stable/runtime_troubles.html#using-classes-that-are-generic-in-stubs-but-not-at-runtime
+if TYPE_CHECKING:
+    _base = Sampler[BoundingBox]
+else:
+    _base = Sampler
+
+
+class GeoSampler(_base, abc.ABC):
     """Abstract base class for sampling from :class:`~torchgeo.datasets.GeoDataset`.
 
     Unlike PyTorch's :class:`~torch.utils.data.Sampler`, :class:`GeoSampler`

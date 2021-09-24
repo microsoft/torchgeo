@@ -3,7 +3,7 @@
 
 """NASA Cyclone dataset trainer."""
 
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import pytorch_lightning as pl
 import torch
@@ -21,6 +21,13 @@ from ..datasets import TropicalCycloneWindEstimation
 # https://github.com/pytorch/pytorch/pull/61045
 DataLoader.__module__ = "torch.utils.data"
 Module.__module__ = "torch.nn"
+
+
+# https://mypy.readthedocs.io/en/stable/runtime_troubles.html#using-classes-that-are-generic-in-stubs-but-not-at-runtime
+if TYPE_CHECKING:
+    _base = DataLoader[Any]
+else:
+    _base = DataLoader
 
 
 class CycloneSimpleRegressionTask(pl.LightningModule):
@@ -231,7 +238,7 @@ class CycloneDataModule(pl.LightningDataModule):
             self.all_test_dataset, range(len(self.all_test_dataset))
         )
 
-    def train_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
+    def train_dataloader(self) -> _base:
         """Return a DataLoader for training."""
         return DataLoader(
             self.train_dataset,
@@ -240,7 +247,7 @@ class CycloneDataModule(pl.LightningDataModule):
             shuffle=True,
         )
 
-    def val_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
+    def val_dataloader(self) -> _base:
         """Return a DataLoader for validation."""
         return DataLoader(
             self.val_dataset,
@@ -249,7 +256,7 @@ class CycloneDataModule(pl.LightningDataModule):
             shuffle=False,
         )
 
-    def test_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
+    def test_dataloader(self) -> _base:
         """Return a DataLoader for testing."""
         return DataLoader(
             self.test_dataset,
