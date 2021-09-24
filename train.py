@@ -166,7 +166,11 @@ def main(conf: DictConfig) -> None:
 
     trainer_args["callbacks"] = [checkpoint_callback, early_stopping_callback]
     trainer_args["logger"] = tb_logger
+    trainer_args["default_root_dir"] = experiment_dir
     trainer = pl.Trainer(**trainer_args)
+
+    if trainer_args["auto_lr_find"]:
+        trainer.tune(model=task, datamodule=datamodule)
 
     ######################################
     # Run experiment
