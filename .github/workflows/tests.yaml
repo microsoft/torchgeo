@@ -21,6 +21,7 @@ jobs:
       run: |
         pip install cython numpy  # needed for pycocotools
         pip install .[datasets,tests,train]
+        pip install git+https://github.com/kornia/kornia@master # required for mypy fixes
     - name: Run mypy checks
       run: mypy .
   pytest:
