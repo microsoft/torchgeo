@@ -8,12 +8,12 @@ import subprocess
 from multiprocessing import Process, Queue
 
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
-GPUS = [0]
-TEST_MODE = True  # if False then print out the commands to be run, if True then run
+GPUS = [0, 1, 2, 3, 4, 6]
+TEST_MODE = False  # if False then print out the commands to be run, if True then run
 
 # Hyperparameter options
-model_options = ["resnet18"]
-lr_options = [1e-2, 1e-3, 1e-4]
+model_options = ["resnet18", "resnet152"]
+# lr_options = [1e-2, 1e-3, 1e-4]
 loss_options = ["ce"]
 weight_options = ["imagenet_only", "random", "imagenet_and_random", "random_rgb"]
 
@@ -33,14 +33,15 @@ def main() -> None:
     """Main."""
     work: Queue[str] = Queue()
 
-    for (weights, model, lr, loss,) in itertools.product(
-        weight_options,
+    for (model, loss, weights) in itertools.product(
         model_options,
-        lr_options,
+        # lr_options,
         loss_options,
+        weight_options,
     ):
 
-        experiment_name = f"{model}_{lr}_{loss}_{weights.replace('_','-')}"
+        # experiment_name = f"{model}_{lr}_{loss}_{weights.replace('_','-')}_randomerasing"
+        experiment_name = f"{model}_autolr_{loss}_{weights.replace('_','-')}"
 
         output_dir = "output/so2sat_experiments/"
 
@@ -51,13 +52,14 @@ def main() -> None:
                 + " config_file=conf/so2sat.yaml"
                 + f" experiment.name={experiment_name}"
                 + f" experiment.module.classification_model={model}"
-                + f" experiment.module.learning_rate={lr}"
+                # + f" experiment.module.learning_rate={lr}"
+                + " trainer.auto_lr_find=True"
                 + f" experiment.module.loss={loss}"
                 + f" experiment.module.weights={weights}"
                 + f" experiment.datamodule.weights={weights}"
                 + f" program.output_dir={output_dir}"
                 + f" program.log_dir={output_dir}/logs"
-                + " program.data_dir=/home/caleb/mount/data/so2sat"
+                + " program.data_dir=/home/calebrobinson/ssdprivate/data/so2sat"
                 + " trainer.gpus=[GPU]"
             )
             command = command.strip()

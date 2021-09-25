@@ -40,72 +40,73 @@ class So2SatClassificationTask(pl.LightningModule):
 
         if self.hparams["classification_model"] == "resnet18":
             self.model = torchvision.models.resnet18(pretrained=pretrained)
-            # replace the final layer to match the number of classes we want
             self.model.fc = Linear(512, out_features=NUM_CLASSES)
-
-            if self.hparams["weights"] == "imagenet_only":
-                pass
-            elif self.hparams["weights"] == "imagenet_and_random":
-                # save the initial imagenet weights
-                w_old = torch.clone(  # type: ignore[attr-defined]
-                    self.model.conv1.weight
-                ).detach()
-
-                # replace the first conv layer (with random weights)
-                self.model.conv1 = Conv2d(
-                    IN_CHANNELS,
-                    64,
-                    kernel_size=7,
-                    stride=1,
-                    padding=2,
-                    bias=False,
-                )
-                nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
-                    self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
-                )
-
-                w_new = torch.clone(  # type: ignore[attr-defined]
-                    self.model.conv1.weight
-                ).detach()
-                # graft the imagenet weights into the first 3 channels
-                w_new[:, :3, :, :] = w_old
-
-                self.model.conv1.weight = nn.Parameter(  # type: ignore[attr-defined]
-                    w_new
-                )
-
-            elif self.hparams["weights"] == "random":
-                self.model.conv1 = Conv2d(
-                    IN_CHANNELS,
-                    64,
-                    kernel_size=7,
-                    stride=1,
-                    padding=2,
-                    bias=False,
-                )
-                nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
-                    self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
-                )
-            elif self.hparams["weights"] == "random_rgb":
-                self.model.conv1 = Conv2d(
-                    3,
-                    64,
-                    kernel_size=7,
-                    stride=1,
-                    padding=2,
-                    bias=False,
-                )
-                nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
-                    self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
-                )
-            else:
-                raise ValueError(
-                    f"Weight type '{self.hparams['weights']}' is not valid."
-                )
+        elif self.hparams["classification_model"] == "resnet50":
+            self.model = torchvision.models.resnet50(pretrained=pretrained)
+            self.model.fc = Linear(2048, out_features=NUM_CLASSES)
+        elif self.hparams["classification_model"] == "resnet152":
+            self.model = torchvision.models.resnet152(pretrained=pretrained)
+            self.model.fc = Linear(2048, out_features=NUM_CLASSES)
         else:
             raise ValueError(
                 f"Model type '{self.hparams['classification_model']}' is not valid."
             )
+
+        if self.hparams["weights"] == "imagenet_only":
+            pass
+        elif self.hparams["weights"] == "imagenet_and_random":
+            # save the initial imagenet weights
+            w_old = torch.clone(  # type: ignore[attr-defined]
+                self.model.conv1.weight
+            ).detach()
+
+            # replace the first conv layer (with random weights)
+            self.model.conv1 = Conv2d(
+                IN_CHANNELS,
+                64,
+                kernel_size=7,
+                stride=1,
+                padding=2,
+                bias=False,
+            )
+            nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
+                self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
+            )
+
+            w_new = torch.clone(  # type: ignore[attr-defined]
+                self.model.conv1.weight
+            ).detach()
+            # graft the imagenet weights into the first 3 channels
+            w_new[:, :3, :, :] = w_old
+
+            self.model.conv1.weight = nn.Parameter(w_new)  # type: ignore[attr-defined]
+
+        elif self.hparams["weights"] == "random":
+            self.model.conv1 = Conv2d(
+                IN_CHANNELS,
+                64,
+                kernel_size=7,
+                stride=1,
+                padding=2,
+                bias=False,
+            )
+            nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
+                self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
+            )
+        elif self.hparams["weights"] == "random_rgb":
+            self.model.conv1 = Conv2d(
+                3,
+                64,
+                kernel_size=7,
+                stride=1,
+                padding=2,
+                bias=False,
+            )
+            nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
+                self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
+            )
+        else:
+            raise ValueError(f"Weight type '{self.hparams['weights']}' is not valid.")
 
         if self.hparams["loss"] == "ce":
             self.loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
@@ -125,7 +126,7 @@ class So2SatClassificationTask(pl.LightningModule):
         Keyword Args:
             classification_model: Name of the classification model use
             loss: Name of the loss function
-            weights: Either "random", "imagenet_only", "imagenet_random", or
+            weights: Either "random", "imagenet_only", "imagenet_and_random", or
                 "random_rgb"
         """
         super().__init__()
@@ -349,7 +350,7 @@ class So2SatDataModule(pl.LightningDataModule):
             root_dir: The ``root`` arugment to pass to the So2Sat Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
-            weights: Either "random", "imagenet_only", "imagenet_random", or
+            weights: Either "random", "imagenet_only", "imagenet_and_random", or
                 "random_rgb"
         """
         super().__init__()  # type: ignore[no-untyped-call]
@@ -397,7 +398,7 @@ class So2SatDataModule(pl.LightningDataModule):
 
         This method is called once per GPU per run.
         """
-        train_transforms = Compose([self.preprocess])
+        train_transforms = Compose([self.preprocess, self.kornia_pipeline])
         val_test_transforms = self.preprocess
 
         self.train_dataset = So2Sat(
