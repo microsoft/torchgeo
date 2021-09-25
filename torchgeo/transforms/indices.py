@@ -1,7 +1,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""TorchGeo indices transforms."""
+"""TorchGeo indices transforms.
+
+For more information about indices see the following references:
+- https://www.indexdatabase.de/db/i.php
+- https://github.com/davemlz/awesome-spectral-indices
+"""
 
 from typing import Dict
 
@@ -14,7 +19,7 @@ from torch.nn import Module  # type: ignore[attr-defined]
 Module.__module__ = "torch.nn"
 
 
-epsilon = 1e-10
+_EPSILON = 1e-10
 
 
 def ndbi(swir: Tensor, nir: Tensor) -> Tensor:
@@ -27,7 +32,7 @@ def ndbi(swir: Tensor, nir: Tensor) -> Tensor:
     Returns:
         tensor containing computed NDBI values
     """
-    return (swir - nir) / ((swir + nir) + epsilon)
+    return (swir - nir) / ((swir + nir) + _EPSILON)
 
 
 def ndsi(green: Tensor, swir: Tensor) -> Tensor:
@@ -40,7 +45,7 @@ def ndsi(green: Tensor, swir: Tensor) -> Tensor:
     Returns:
         tensor containing computed NDSI values
     """
-    return (green - swir) / ((green + swir) + epsilon)
+    return (green - swir) / ((green + swir) + _EPSILON)
 
 
 def ndvi(red: Tensor, nir: Tensor) -> Tensor:
@@ -53,7 +58,7 @@ def ndvi(red: Tensor, nir: Tensor) -> Tensor:
     Returns:
         tensor containing computed NDVI values
     """
-    return (nir - red) / ((nir + red) + epsilon)
+    return (nir - red) / ((nir + red) + _EPSILON)
 
 
 def ndwi(green: Tensor, nir: Tensor) -> Tensor:
@@ -66,7 +71,7 @@ def ndwi(green: Tensor, nir: Tensor) -> Tensor:
     Returns:
         tensor containing computed NDWI values
     """
-    return (green - nir) / ((green + nir) + epsilon)
+    return (green - nir) / ((green + nir) + _EPSILON)
 
 
 class AppendNDBI(Module):  # type: ignore[misc,name-defined]
@@ -77,17 +82,15 @@ class AppendNDBI(Module):  # type: ignore[misc,name-defined]
     * https://doi.org/10.1080/01431160304987
     """
 
-    def __init__(self, index_swir: int, index_nir: int, dim: int = 1) -> None:
+    def __init__(self, index_swir: int, index_nir: int) -> None:
         """Initialize a new transform instance.
 
         Args:
             index_swir: index of the Short-wave Infrared (SWIR) band in the image
             index_nir: index of the Near Infrared (NIR) band in the image
-
-            dim: dimension of channels in the input tensors (default: 1)
         """
         super().__init__()
-        self.dim = dim
+        self.dim = dim = -3
         self.index_nir = index_nir
         self.index_swir = index_swir
 
@@ -106,7 +109,9 @@ class AppendNDBI(Module):  # type: ignore[misc,name-defined]
                 nir=sample["image"][:, self.index_nir],
             )
             index = index.unsqueeze(self.dim)
-            sample["image"] = torch.cat([sample["image"], index], dim=self.dim)  # type: ignore[attr-defined]  # noqa: E501
+            sample["image"] = torch.cat(  # type: ignore[attr-defined]
+                [sample["image"], index], dim=self.dim
+            )
 
         return sample
 
@@ -119,16 +124,15 @@ class AppendNDSI(Module):  # type: ignore[misc,name-defined]
     * https://doi.org/10.1109/IGARSS.1994.399618
     """
 
-    def __init__(self, index_green: int, index_swir: int, dim: int = 1) -> None:
+    def __init__(self, index_green: int, index_swir: int) -> None:
         """Initialize a new transform instance.
 
         Args:
             index_green: index of the Green band in the image
             index_swir: index of the Short-wave Infrared (SWIR) band in the image
-            dim: dimension of channels in the input tensors (default: 1)
         """
         super().__init__()
-        self.dim = dim
+        self.dim = -3
         self.index_green = index_green
         self.index_swir = index_swir
 
@@ -147,7 +151,9 @@ class AppendNDSI(Module):  # type: ignore[misc,name-defined]
                 swir=sample["image"][:, self.index_swir],
             )
             index = index.unsqueeze(self.dim)
-            sample["image"] = torch.cat([sample["image"], index], dim=self.dim)  # type: ignore[attr-defined]  # noqa: E501
+            sample["image"] = torch.cat(  # type: ignore[attr-defined]
+                [sample["image"], index], dim=self.dim
+            )
 
         return sample
 
@@ -160,16 +166,15 @@ class AppendNDVI(Module):  # type: ignore[misc,name-defined]
     * https://doi.org/10.1016/0034-4257(79)90013-0
     """
 
-    def __init__(self, index_red: int, index_nir: int, dim: int = 1) -> None:
+    def __init__(self, index_red: int, index_nir: int) -> None:
         """Initialize a new transform instance.
 
         Args:
             index_red: index of the Red band in the image
             index_nir: index of the Near Infrared (NIR) band in the image
-            dim: dimension of channels in the input tensors (default: 1)
         """
         super().__init__()
-        self.dim = dim
+        self.dim = -3
         self.index_red = index_red
         self.index_nir = index_nir
 
@@ -188,7 +193,9 @@ class AppendNDVI(Module):  # type: ignore[misc,name-defined]
                 nir=sample["image"][:, self.index_nir],
             )
             index = index.unsqueeze(self.dim)
-            sample["image"] = torch.cat([sample["image"], index], dim=self.dim)  # type: ignore[attr-defined]  # noqa: E501
+            sample["image"] = torch.cat(  # type: ignore[attr-defined]
+                [sample["image"], index], dim=self.dim
+            )
 
         return sample
 
@@ -201,16 +208,15 @@ class AppendNDWI(Module):  # type: ignore[misc,name-defined]
     * https://doi.org/10.1080/01431169608948714
     """
 
-    def __init__(self, index_green: int, index_nir: int, dim: int = 1) -> None:
+    def __init__(self, index_green: int, index_nir: int) -> None:
         """Initialize a new transform instance.
 
         Args:
             index_green: index of the Green band in the image
             index_nir: index of the Near Infrared (NIR) band in the image
-            dim: dimension of channels in the input tensors (default: 1)
         """
         super().__init__()
-        self.dim = dim
+        self.dim = -3
         self.index_green = index_green
         self.index_nir = index_nir
 
@@ -229,6 +235,8 @@ class AppendNDWI(Module):  # type: ignore[misc,name-defined]
                 nir=sample["image"][:, self.index_nir],
             )
             index = index.unsqueeze(self.dim)
-            sample["image"] = torch.cat([sample["image"], index], dim=self.dim)  # type: ignore[attr-defined]  # noqa: E501
+            sample["image"] = torch.cat(  # type: ignore[attr-defined]
+                [sample["image"], index], dim=self.dim
+            )
 
         return sample
