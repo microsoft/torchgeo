@@ -17,7 +17,7 @@ from .utils import check_integrity, download_and_extract_archive
 
 
 class EuroSat(VisionDataset):
-    r"""EuroSat dataset.
+    """EuroSat dataset.
 
     The `EuroSat <https://github.com/phelber/EuroSAT>`_ dataset is based on Sentinel-2
     satellite images covering 13 spectral bands and consists of 10 target classes with
@@ -52,7 +52,9 @@ class EuroSat(VisionDataset):
     md5 = "5ac12b3b2557aa56e1826e981e8e200e"
 
     # for some reason the class directories are acutally nested in this directory
-    base_dir = "ds/images/remote_sensing/otherDatasets/sentinel_2/tif"
+    base_dir = os.path.join(
+        "ds", "images", "remote_sensing", "otherDatasets", "sentinel_2", "tif"
+    )
     class_counts = {
         "AnnualCrop": 3000,
         "Forest": 3000,
