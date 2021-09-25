@@ -25,8 +25,8 @@ from torchgeo.trainers import (
     NAIPChesapeakeSegmentationTask,
     SEN12MSDataModule,
     SEN12MSSegmentationTask,
-    So2SatDataModule,
     So2SatClassificationTask,
+    So2SatDataModule,
 )
 
 TASK_TO_MODULES_MAPPING: Dict[

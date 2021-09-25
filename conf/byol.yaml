@@ -14,6 +14,7 @@ experiment:
   module:
     model: "byol"
     encoder: "resnet18"
+    n_input_channel: 4
   datamodule:
     batch_size: 64
     num_workers: 6
