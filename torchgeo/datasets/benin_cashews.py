@@ -15,7 +15,7 @@ import torch
 from torch import Tensor
 
 from .geo import VisionDataset
-from .utils import check_integrity, download_radiant_mlhub, extract_archive
+from .utils import check_integrity, download_radiant_mlhub_dataset, extract_archive
 
 
 # TODO: read geospatial information from stac.json files
@@ -407,7 +407,7 @@ class BeninSmallHolderCashews(VisionDataset):
             print("Files already downloaded and verified")
             return
 
-        download_radiant_mlhub(self.dataset_id, self.root, api_key)
+        download_radiant_mlhub_dataset(self.dataset_id, self.root, api_key)
 
         image_archive_path = os.path.join(self.root, self.image_meta["filename"])
         target_archive_path = os.path.join(self.root, self.target_meta["filename"])

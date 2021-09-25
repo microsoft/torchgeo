@@ -20,32 +20,13 @@ Tests:
 
 ## Installation instructions
 
-Until the first release, you can install an environment compatible with torchgeo with `conda`, `pip`, or `spack` as shown below.
-
-### Conda
-
-**Note**: if you do not have access to a GPU or are running on macOS, replace `pytorch-gpu` with `pytorch-cpu` in the `environment.yml` file.
+The recommended way to install TorchGeo is with [pip](https://pip.pypa.io/):
 
 ```console
-$ conda config --set channel_priority strict
-$ conda env create --file environment.yml
-$ conda activate torchgeo
+$ pip install git+https://github.com/microsoft/torchgeo.git
 ```
 
-### Pip
-
-With Python 3.6 or later:
-
-```console
-$ pip install -r requirements.txt
-```
-
-### Spack
-
-```console
-$ spack env activate .
-$ spack install
-```
+For [conda](https://docs.conda.io/) and [spack](https://spack.io/) installation instructions, see the [documentation](https://torchgeo.readthedocs.io/en/latest/user/installation.html).
 
 ## Documentation
 
@@ -78,25 +59,10 @@ print(dataset[0]["image"].shape)
 print(dataset[0]["wind_speed"])
 ```
 
-
 ## Contributing
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
-
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
+This project welcomes contributions and suggestions. If you would like to submit a pull request, see our [Contribution Guide](https://torchgeo.readthedocs.io/en/latest/user/contributing.html) for more information.
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
-
-## Trademarks
-
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft
-trademarks or logos is subject to and must follow
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
-Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
-Any use of third-party trademarks or logos are subject to those third-party's policies.

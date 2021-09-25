@@ -39,6 +39,7 @@ ROOT = "data/cbf"
 FILENAME = "Ontario.geojson"
 
 src = fiona.open(os.path.join(ROOT, FILENAME))
+src.meta["schema"]["properties"] = OrderedDict()
 dst = fiona.open(FILENAME, "w", **src.meta)
 rec = {"type": "Feature", "id": "0", "properties": OrderedDict(), "geometry": {"type": "Polygon", "coordinates": [[(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)]]}}
 dst.write(rec)
@@ -65,3 +66,28 @@ from PIL import Image
 img = Image.new("L", (1, 1))
 img.save("02.jpg")
 ```
+
+### Audio wav files
+
+```python
+import numpy as np
+from scipy.io import wavfile
+
+audio = np.random.randn(1).astype(np.float32)
+wavfile.write("01.wav", rate=22050, data=audio)
+```
+
+### HDF5 datasets
+
+```python
+import h5py
+import numpy as np
+
+f = h5py.File("data.hdf5", "w")
+
+num_classes = 10
+images = np.random.randint(low=0, high=255, size=(1, 1, 3)).astype(np.uint8)
+masks = np.random.randint(low=0, high=num_classes, size=(1, 1)).astype(np.uint8)
+f.create_dataset("images", data=images)
+f.create_dataset("masks", data=masks)
+f.close()

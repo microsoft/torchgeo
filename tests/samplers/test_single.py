@@ -115,8 +115,8 @@ class TestGridGeoSampler:
     )
     def sampler(self, request: SubRequest) -> GridGeoSampler:
         index = Index(interleaved=False, properties=Property(dimension=3))
-        index.insert(0, (0, 10, 20, 30, 40, 50))
-        index.insert(1, (0, 10, 20, 30, 40, 50))
+        index.insert(0, (0, 20, 0, 10, 40, 50))
+        index.insert(1, (0, 20, 0, 10, 40, 50))
         size, stride = request.param
         return GridGeoSampler(index, size, stride)
 
@@ -140,3 +140,9 @@ class TestGridGeoSampler:
         )
         for _ in dl:
             continue
+
+    def test_len(self, sampler: GridGeoSampler) -> None:
+        rows = int((10 - sampler.size[0]) // sampler.stride[0]) + 1
+        cols = int((20 - sampler.size[1]) // sampler.stride[1]) + 1
+        length = rows * cols * 2
+        assert len(sampler) == length

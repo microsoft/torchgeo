@@ -5,6 +5,14 @@ torchgeo
 
 .. toctree::
    :maxdepth: 2
+   :caption: User Documentation
+
+   user/installation
+   user/contributing
+   user/glossary
+
+.. toctree::
+   :maxdepth: 2
    :caption: Package Reference
 
    api/datasets
@@ -19,12 +27,6 @@ torchgeo
 
    tutorials/getting_started
    tutorials/benchmarking
-
-.. toctree::
-   :maxdepth: 2
-   :caption: User Documentation
-
-   user/glossary
 
 .. toctree::
    :maxdepth: 1

@@ -10,6 +10,7 @@ import csv
 import os
 
 import pytorch_lightning as pl
+import torch
 
 from torchgeo.trainers import ChesapeakeCVPRDataModule, ChesapeakeCVPRSegmentationTask
 
@@ -53,10 +54,11 @@ def set_up_parser() -> argparse.ArgumentParser:
         metavar="FILE",
     )
     parser.add_argument(
-        "--gpu",
-        required=True,
+        "-d",
+        "--device",
+        default=0,
         type=int,
-        help="Id of the GPU to use",
+        help="GPU ID to use, ignored if no GPUs are available",
         metavar="ID",
     )
 
@@ -90,7 +92,7 @@ def main(args: argparse.Namespace) -> None:
 
     # Test loop
     trainer = pl.Trainer(
-        gpus=[args.gpu],
+        gpus=[args.device] if torch.cuda.is_available() else None,
         logger=False,
         progress_bar_refresh_rate=0,
         checkpoint_callback=False,

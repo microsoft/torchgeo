@@ -25,7 +25,7 @@ class Dataset:
             shutil.copy(tarball, output_dir)
 
 
-def fetch(collection_id: str, **kwargs: str) -> Dataset:
+def fetch(dataset_id: str, **kwargs: str) -> Dataset:
     return Dataset()
 
 

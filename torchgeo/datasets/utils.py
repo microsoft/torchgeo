@@ -125,7 +125,7 @@ def download_and_extract_archive(
     extract_archive(archive, extract_root)
 
 
-def download_radiant_mlhub(
+def download_radiant_mlhub_dataset(
     dataset_id: str, download_root: str, api_key: Optional[str] = None
 ) -> None:
     """Download a dataset from Radiant Earth.
@@ -146,6 +146,29 @@ def download_radiant_mlhub(
 
     dataset = radiant_mlhub.Dataset.fetch(dataset_id, api_key=api_key)
     dataset.download(output_dir=download_root, api_key=api_key)
+
+
+def download_radiant_mlhub_collection(
+    collection_id: str, download_root: str, api_key: Optional[str] = None
+) -> None:
+    """Download a collection from Radiant Earth.
+
+    Args:
+        collection_id: the ID of the collection to fetch
+        download_root: directory to download to
+        api_key: the API key to use for all requests from the session. Can also be
+            passed in via the ``MLHUB_API_KEY`` environment variable, or configured in
+            ``~/.mlhub/profiles``.
+    """
+    try:
+        import radiant_mlhub
+    except ImportError:
+        raise ImportError(
+            "radiant_mlhub is not installed and is required to download this collection"
+        )
+
+    collection = radiant_mlhub.Collection.fetch(collection_id, api_key=api_key)
+    collection.download(output_dir=download_root, api_key=api_key)
 
 
 class BoundingBox(Tuple[float, float, float, float, float, float]):
