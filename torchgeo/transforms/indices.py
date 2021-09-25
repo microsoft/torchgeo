@@ -14,6 +14,9 @@ from torch.nn import Module  # type: ignore[attr-defined]
 Module.__module__ = "torch.nn"
 
 
+epsilon = 1e-10
+
+
 def ndbi(swir: Tensor, nir: Tensor) -> Tensor:
     """Compute Normalized Different Built-up Index (NDBI).
 
@@ -24,7 +27,7 @@ def ndbi(swir: Tensor, nir: Tensor) -> Tensor:
     Returns:
         tensor containing computed NDBI values
     """
-    return (swir - nir) / (swir + nir)
+    return (swir - nir) / ((swir + nir) + epsilon)
 
 
 def ndsi(green: Tensor, swir: Tensor) -> Tensor:
@@ -37,7 +40,7 @@ def ndsi(green: Tensor, swir: Tensor) -> Tensor:
     Returns:
         tensor containing computed NDSI values
     """
-    return (green - swir) / (green + swir)
+    return (green - swir) / ((green + swir) + epsilon)
 
 
 def ndvi(red: Tensor, nir: Tensor) -> Tensor:
@@ -50,7 +53,7 @@ def ndvi(red: Tensor, nir: Tensor) -> Tensor:
     Returns:
         tensor containing computed NDVI values
     """
-    return (nir - red) / (nir + red)
+    return (nir - red) / ((nir + red) + epsilon)
 
 
 def ndwi(green: Tensor, nir: Tensor) -> Tensor:
@@ -63,7 +66,7 @@ def ndwi(green: Tensor, nir: Tensor) -> Tensor:
     Returns:
         tensor containing computed NDWI values
     """
-    return (green - nir) / (green + nir)
+    return (green - nir) / ((green + nir) + epsilon)
 
 
 class AppendNDBI(Module):  # type: ignore[misc,name-defined]
