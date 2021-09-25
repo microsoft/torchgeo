@@ -83,6 +83,9 @@ html_theme_options = {
 
 html_favicon = os.path.join("..", "logo", "favicon.ico")
 
+html_static_path = ['_static']
+html_css_files = ['workaround.css']
+
 # -- Extension configuration -------------------------------------------------
 
 # sphinx.ext.autodoc
@@ -114,7 +117,7 @@ nbsphinx_prolog = """
 {% set branch = "main" %}
 
 .. image:: {{ colab }}/assets/colab-badge.svg
+   :class: colabbadge
    :alt: Open in Colab
    :target: {{ colab }}/github/{{ repo }}/blob/{{ branch }}/docs/{{ env.docname }}
-   :width: 200
 """
