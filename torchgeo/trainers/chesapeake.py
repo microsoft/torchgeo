@@ -25,7 +25,6 @@ from torchvision.transforms import Compose
 from ..datasets import Chesapeake7, ChesapeakeCVPR
 from ..models import FCN
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
-from ..transforms import RandomHorizontalFlip, RandomVerticalFlip
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045

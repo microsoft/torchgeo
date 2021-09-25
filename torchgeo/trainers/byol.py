@@ -32,8 +32,8 @@ def simCLR_default_augmentation(image_size: Tuple[int, int] = (256, 256)) -> nn.
     return nn.Sequential(
         KorniaTransform.Resize(size=image_size),
         # Not suitable for multispectral adapt
-        # RandomApply(K.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.8), 
-        # K.RandomGrayscale(p=0.2), 
+        # RandomApply(K.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.8),
+        # K.RandomGrayscale(p=0.2),
         K.RandomHorizontalFlip(),
         RandomApply(filters.GaussianBlur2d((3, 3), (1.5, 1.5)), p=0.1),
         K.RandomResizedCrop(size=image_size),
@@ -82,7 +82,6 @@ class RandomApply(nn.Module):
         super().__init__()
         self.augm = augm
         self.p = p
-        
 
     def forward(self, x: Tensor) -> Tensor:
         """Randomapply forward method."""
@@ -91,6 +90,7 @@ class RandomApply(nn.Module):
 
 class EncoderWrapper(nn.Module):
     """Encoder wrapper joining model and projection head."""
+
     def __init__(
         self,
         model: nn.Module,
@@ -107,7 +107,7 @@ class EncoderWrapper(nn.Module):
             layer: Layer from model to project
         """
         super().__init__()
-        
+
         self.model = model
         self.projection_size = projection_size
         self.hidden_size = hidden_size
@@ -117,7 +117,6 @@ class EncoderWrapper(nn.Module):
         self._projector_dim = None
         self._encoded = torch.empty(0)
         self._register_hook()
-    
 
     @property
     def projector(self):
@@ -157,14 +156,14 @@ class EncoderWrapper(nn.Module):
 
 class BYOL(LightningModule):
     """BYOL implementation.
-    
-    BYOL contains two identical Encoder networks. The first is trained 
-    as usual, and its weights are updated with each training batch. The 
+
+    BYOL contains two identical Encoder networks. The first is trained
+    as usual, and its weights are updated with each training batch. The
     second (referred to as the “target” network) is updated using a running
     average of the first Encoder’s weights.
-    Citation: Grill JB, Strub F, Altché F, Tallec C, Richemond PH, Buchatskaya E, 
-    Doersch C, Pires BA, Guo ZD, Azar MG, Piot B. Bootstrap your own latent: A 
-    new approach to self-supervised learning. arXiv preprint arXiv:2006.07733. 
+    Citation: Grill JB, Strub F, Altché F, Tallec C, Richemond PH, Buchatskaya E,
+    Doersch C, Pires BA, Guo ZD, Azar MG, Piot B. Bootstrap your own latent: A
+    new approach to self-supervised learning. arXiv preprint arXiv:2006.07733.
     2020 Jun 13.
     """
 
@@ -247,7 +246,7 @@ class BYOLTask(LightningModule):
         if self.hparams["encoder"] == "resnet18":
             encoder = resnet18(pretrained=True)
             layer = encoder.conv1
-    
+
             # Creating new Conv2d layer
             new_layer = nn.Conv2d(
                 in_channels=n_input_channel,
@@ -258,12 +257,12 @@ class BYOLTask(LightningModule):
                 bias=layer.bias,
             ).requires_grad_()
             # initialize the weights from new channel with the red channel weights
-            copy_weights = 0  
+            copy_weights = 0
             # Copying the weights from the old to the new layer
             new_layer.weight[:, : layer.in_channels, :, :].data[...] = Variable(
                 layer.weight.clone(), requires_grad=True
             )
-            # Copying the weights of the old layer to the extra channels 
+            # Copying the weights of the old layer to the extra channels
             for i in range(n_input_channel - layer.in_channels):
                 channel = layer.in_channels + i
                 new_layer.weight[:, channel : channel + 1, :, :].data[...] = Variable(

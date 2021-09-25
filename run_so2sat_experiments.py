@@ -40,8 +40,7 @@ def main() -> None:
         weight_options,
     ):
 
-        # experiment_name = f"{model}_{lr}_{loss}_{weights.replace('_','-')}_randomerasing"
-        experiment_name = f"{model}_autolr_{loss}_{weights.replace('_','-')}"
+        experiment_name = f"{model}_{lr}_{loss}_{weights.replace('_','-')}_randomerasing"
 
         output_dir = "output/so2sat_experiments/"
 
