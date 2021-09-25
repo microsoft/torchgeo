@@ -148,8 +148,8 @@ class AugmentationSequential(Module):  # type: ignore[misc]
         }
         sample.update(outputs)
 
-        # Convert masks to int
+        # Convert masks to previous dtype
         if "mask" in sample:
-            sample["mask"] = sample["mask"].to(mask_dtype)  # type: ignore[attr-defined]
+            sample["mask"] = sample["mask"].to(mask_dtype)
 
         return sample
