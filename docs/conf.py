@@ -83,8 +83,8 @@ html_theme_options = {
 
 html_favicon = os.path.join("..", "logo", "favicon.ico")
 
-html_static_path = ['_static']
-html_css_files = ['workaround.css']
+html_static_path = ["_static"]
+html_css_files = ["workaround.css"]
 
 # -- Extension configuration -------------------------------------------------
 
