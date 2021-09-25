@@ -133,10 +133,15 @@ class AugmentationSequential(Module):  # type: ignore[misc]
         Returns:
             the augmented input
         """
-        # Kornia augmentations require masks to be float
-        if "mask" in sample:
+        # Kornia augmentations require masks & boxes to be float
+        if "mask" in self.data_keys:
             mask_dtype = sample["mask"].dtype
             sample["mask"] = sample["mask"].to(torch.float)  # type:ignore[attr-defined]
+        if "boxes" in self.data_keys:
+            boxes_dtype = sample["boxes"].dtype
+            sample["boxes"] = sample["boxes"].to(
+                torch.float
+            )  # type:ignore[attr-defined]
 
         inputs = [sample[k] for k in self.data_keys]
         outputs_list: Union[Tensor, List[Tensor]] = self.augs(*inputs)
@@ -148,8 +153,10 @@ class AugmentationSequential(Module):  # type: ignore[misc]
         }
         sample.update(outputs)
 
-        # Convert masks to previous dtype
-        if "mask" in sample:
+        # Convert masks & boxes to previous dtype
+        if "mask" in self.data_keys:
             sample["mask"] = sample["mask"].to(mask_dtype)
+        if "boxes" in self.data_keys:
+            sample["boxes"] = sample["boxes"].to(boxes_dtype)
 
         return sample
