@@ -135,6 +135,7 @@ class AugmentationSequential(Module):  # type: ignore[misc]
         """
         # Kornia augmentations require masks to be float
         if "mask" in sample:
+            mask_dtype = sample["mask"].dtype
             sample["mask"] = sample["mask"].to(torch.float)  # type:ignore[attr-defined]
 
         inputs = [sample[k] for k in self.data_keys]
@@ -149,6 +150,6 @@ class AugmentationSequential(Module):  # type: ignore[misc]
 
         # Convert masks to int
         if "mask" in sample:
-            sample["mask"] = sample["mask"].to(torch.long)  # type: ignore[attr-defined]
+            sample["mask"] = sample["mask"].to(mask_dtype)  # type: ignore[attr-defined]
 
         return sample

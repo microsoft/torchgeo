@@ -35,7 +35,7 @@ def batch() -> Dict[str, Tensor]:
         ),
         "mask": torch.tensor(  # type: ignore[attr-defined]
             [[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]],
-            dtype=torch.float,  # type: ignore[attr-defined]
+            dtype=torch.long,  # type: ignore[attr-defined]
         ),
         "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
     }
