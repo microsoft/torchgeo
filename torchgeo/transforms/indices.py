@@ -90,7 +90,7 @@ class AppendNDBI(Module):  # type: ignore[misc,name-defined]
             index_nir: index of the Near Infrared (NIR) band in the image
         """
         super().__init__()
-        self.dim = dim = -3
+        self.dim = -3
         self.index_nir = index_nir
         self.index_swir = index_swir
 
