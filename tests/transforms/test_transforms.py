@@ -8,7 +8,7 @@ import pytest
 import torch
 from torch import Tensor
 
-from torchgeo.transforms import transforms
+from torchgeo.transforms import transforms, indices
 
 
 @pytest.fixture
@@ -27,7 +27,7 @@ def sample() -> Dict[str, Tensor]:
 
 
 @pytest.fixture
-def batch() -> Dict[str, Tensor]:
+def batch_gray() -> Dict[str, Tensor]:
     return {
         "image": torch.tensor(  # type: ignore[attr-defined]
             [[[[1, 2, 3], [4, 5, 6], [7, 8, 9]]]],
@@ -36,6 +36,59 @@ def batch() -> Dict[str, Tensor]:
         "mask": torch.tensor(  # type: ignore[attr-defined]
             [[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]],
             dtype=torch.long,  # type: ignore[attr-defined]
+        ),
+        "boxes": torch.tensor(  # type: ignore[attr-defined]
+            [[0, 0, 2, 2], [1, 1, 3, 3]]
+        ),
+        "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
+    }
+
+
+@pytest.fixture
+def batch_rgb() -> Dict[str, Tensor]:
+    return {
+        "image": torch.tensor(  # type: ignore[attr-defined]
+            [
+                [
+                    [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                    [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                    [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                ]
+            ],
+            dtype=torch.float,  # type: ignore[attr-defined]
+        ),
+        "mask": torch.tensor(  # type: ignore[attr-defined]
+            [[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]],
+            dtype=torch.long,  # type: ignore[attr-defined]
+        ),
+        "boxes": torch.tensor(  # type: ignore[attr-defined]
+            [[0, 0, 2, 2], [1, 1, 3, 3]]
+        ),
+        "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
+    }
+
+
+@pytest.fixture
+def batch_multispectral() -> Dict[str, Tensor]:
+    return {
+        "image": torch.tensor(  # type: ignore[attr-defined]
+            [
+                [
+                    [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                    [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                    [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                    [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                    [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                ]
+            ],
+            dtype=torch.float,  # type: ignore[attr-defined]
+        ),
+        "mask": torch.tensor(  # type: ignore[attr-defined]
+            [[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]],
+            dtype=torch.long,  # type: ignore[attr-defined]
+        ),
+        "boxes": torch.tensor(  # type: ignore[attr-defined]
+            [[0, 0, 2, 2], [1, 1, 3, 3]]
         ),
         "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
     }
@@ -86,7 +139,7 @@ def test_identity(sample: Dict[str, Tensor]) -> None:
     assert_matching(output, sample)
 
 
-def test_augmentation_sequential(batch: Dict[str, Tensor]) -> None:
+def test_augmentation_sequential_gray(batch_gray: Dict[str, Tensor]) -> None:
     expected = {
         "image": torch.tensor(  # type: ignore[attr-defined]
             [[[[3, 2, 1], [6, 5, 4], [9, 8, 7]]]],
@@ -102,14 +155,76 @@ def test_augmentation_sequential(batch: Dict[str, Tensor]) -> None:
         K.RandomHorizontalFlip(p=1.0),
         data_keys=["image", "mask"],
     )
-    output = augs(batch)
+    output = augs(batch_gray)
     assert_matching(output, expected)
 
 
-def test_augmentation_sequential_image_only(batch: Dict[str, Tensor]) -> None:
+def test_augmentation_sequential_rgb(batch_rgb: Dict[str, Tensor]) -> None:
     expected = {
         "image": torch.tensor(  # type: ignore[attr-defined]
-            [[[[3, 2, 1], [6, 5, 4], [9, 8, 7]]]],
+            [
+                [
+                    [[3, 2, 1], [6, 5, 4], [9, 8, 7]],
+                    [[3, 2, 1], [6, 5, 4], [9, 8, 7]],
+                    [[3, 2, 1], [6, 5, 4], [9, 8, 7]],
+                ]
+            ],
+            dtype=torch.float,  # type: ignore[attr-defined]
+        ),
+        "mask": torch.tensor(  # type: ignore[attr-defined]
+            [[[[1, 0, 0], [1, 1, 0], [1, 1, 1]]]],
+            dtype=torch.long,  # type: ignore[attr-defined]
+        ),
+        "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
+    }
+    augs = transforms.AugmentationSequential(
+        K.RandomHorizontalFlip(p=1.0),
+        data_keys=["image", "mask"],
+    )
+    output = augs(batch_rgb)
+    assert_matching(output, expected)
+
+
+def test_augmentation_sequential_multispectral(batch_multispectral: Dict[str, Tensor]) -> None:
+    expected = {
+        "image": torch.tensor(  # type: ignore[attr-defined]
+            [
+                [
+                    [[3, 2, 1], [6, 5, 4], [9, 8, 7]],
+                    [[3, 2, 1], [6, 5, 4], [9, 8, 7]],
+                    [[3, 2, 1], [6, 5, 4], [9, 8, 7]],
+                    [[3, 2, 1], [6, 5, 4], [9, 8, 7]],
+                    [[3, 2, 1], [6, 5, 4], [9, 8, 7]],
+                ]
+            ],
+            dtype=torch.float,  # type: ignore[attr-defined]
+        ),
+        "mask": torch.tensor(  # type: ignore[attr-defined]
+            [[[[1, 0, 0], [1, 1, 0], [1, 1, 1]]]],
+            dtype=torch.long,  # type: ignore[attr-defined]
+        ),
+        "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
+    }
+    augs = transforms.AugmentationSequential(
+        K.RandomHorizontalFlip(p=1.0),
+        data_keys=["image", "mask"],
+    )
+    output = augs(batch_multispectral)
+    assert_matching(output, expected)
+
+
+def test_augmentation_sequential_image_only(batch_multispectral: Dict[str, Tensor]) -> None:
+    expected = {
+        "image": torch.tensor(  # type: ignore[attr-defined]
+            [
+                [
+                    [[3, 2, 1], [6, 5, 4], [9, 8, 7]],
+                    [[3, 2, 1], [6, 5, 4], [9, 8, 7]],
+                    [[3, 2, 1], [6, 5, 4], [9, 8, 7]],
+                    [[3, 2, 1], [6, 5, 4], [9, 8, 7]],
+                    [[3, 2, 1], [6, 5, 4], [9, 8, 7]],
+                ]
+            ],
             dtype=torch.float,  # type: ignore[attr-defined]
         ),
         "mask": torch.tensor(  # type: ignore[attr-defined]
@@ -122,5 +237,5 @@ def test_augmentation_sequential_image_only(batch: Dict[str, Tensor]) -> None:
         K.RandomHorizontalFlip(p=1.0),
         data_keys=["image"],
     )
-    output = augs(batch)
+    output = augs(batch_multispectral)
     assert_matching(output, expected)
