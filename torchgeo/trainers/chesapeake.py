@@ -456,8 +456,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         train_transforms = Compose(
             [
                 self.center_crop(self.patch_size),
-                RandomHorizontalFlip(p=0.5),
-                RandomVerticalFlip(p=0.5),
                 self.nodata_check(self.patch_size),
                 self.preprocess,
             ]
