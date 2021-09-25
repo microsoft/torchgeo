@@ -6,6 +6,7 @@
 import abc
 import glob
 import os
+import re
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import fiona
@@ -453,3 +454,32 @@ class SpaceNet2(SpaceNet):
         super().__init__(
             root, image, collections, transforms, download, api_key, checksum
         )
+
+    # TODO: Remove this once radiantearth/radiant-mlhub#65 is fixed
+    def _load_files(self, root: str) -> List[Dict[str, str]]:
+        """Return the paths of the files in the dataset.
+
+        Args:
+            root: root dir of dataset
+
+        Returns:
+            list of dicts containing paths for each pair of image and label
+        """
+        files = []
+        for collection in self.collections:
+            images = glob.glob(os.path.join(root, collection, "*", self.filename))
+            images = sorted(images)
+            for imgpath in images:
+                pat = re.compile("img1/")
+                if collection == "sn2_AOI_2_Vegas" and pat.search(imgpath):
+                    lbl_path = os.path.join(
+                        os.path.dirname(os.path.dirname(imgpath)),
+                        "_common",
+                        "labels.geojson",
+                    )
+                else:
+                    lbl_path = os.path.join(
+                        os.path.dirname(imgpath) + "-labels", self.label_glob
+                    )
+                files.append({"image_path": imgpath, "label_path": lbl_path})
+        return files
