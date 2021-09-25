@@ -119,5 +119,5 @@ nbsphinx_prolog = """
 .. image:: {{ colab }}/assets/colab-badge.svg
    :class: colabbadge
    :alt: Open in Colab
-   :target: {{ colab }}/github/{{ repo }}/blob/{{ branch }}/docs/{{ env.docname }}
+   :target: {{ colab }}/github/{{ repo }}/blob/{{ branch }}/docs/{{ env.docname }}.ipynb
 """
