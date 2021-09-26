@@ -147,6 +147,11 @@ NWPU VHR-10
 
 .. autoclass:: VHR10
 
+UC Merced
+^^^^^^^^^
+
+.. autoclass:: UCMerced
+
 ZueriCrop
 ^^^^^^^^^
 

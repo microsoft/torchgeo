@@ -21,7 +21,7 @@ class UCMerced(VisionDataset):
     """UC Merced dataset.
 
     The `UC Merced <http://weegee.vision.ucmerced.edu/datasets/landuse.html>`_
-    dataset s a land use classification dataset of 2.1k 256x256 1ft resolution RGB
+    dataset is a land use classification dataset of 2.1k 256x256 1ft resolution RGB
     images of urban locations around the U.S. extracted from the USGS National Map Urban
     Area Imagery collection with 21 land use classes (100 images per class).
 
@@ -30,6 +30,30 @@ class UCMerced(VisionDataset):
     * land use class labels from around the U.S.
     * three spectral bands - RGB
     * 21 classes
+
+    Dataset classes:
+
+    * agricultural
+    * airplane
+    * baseballdiamond
+    * beach
+    * buildings
+    * chaparral
+    * denseresidential
+    * forest
+    * freeway
+    * golfcourse
+    * harbor
+    * intersection
+    * mediumresidential
+    * mobilehomepark
+    * overpass
+    * parkinglot
+    * river
+    * runway
+    * sparseresidential
+    * storagetanks
+    * tenniscourt
 
     If you use this dataset in your research, please cite the following paper:
 
