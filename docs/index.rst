@@ -28,6 +28,7 @@ torchgeo
    tutorials/getting_started
    tutorials/trainers
    tutorials/benchmarking
+   tutorials/transforms
    tutorials/indices
 
 .. toctree::
