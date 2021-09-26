@@ -4,18 +4,15 @@
 """RESISC45 dataset."""
 
 import os
-from typing import Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, Optional
 
-import numpy as np
-import torch
 from torch import Tensor
-from torchvision.datasets import ImageFolder
 
-from .geo import VisionDataset
+from .geo import VisionClassificationDataset
 from .utils import download_and_extract_archive
 
 
-class RESISC45(VisionDataset, ImageFolder):  # type: ignore[misc]
+class RESISC45(VisionClassificationDataset):
     """RESISC45 dataset.
 
     The `RESISC45 <http://www.escience.cn/people/JunweiHan/NWPU-RESISC45.html>`_
@@ -96,6 +93,7 @@ class RESISC45(VisionDataset, ImageFolder):  # type: ignore[misc]
         self,
         root: str = "data",
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        loader: Optional[Callable[[str], Any]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -105,6 +103,8 @@ class RESISC45(VisionDataset, ImageFolder):  # type: ignore[misc]
             root: root directory where dataset can be found
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
+            loader: a callable function which takes as input a path to an image and
+                returns a PIL Image or numpy array (default=None returns PIL Image)
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
@@ -124,59 +124,11 @@ class RESISC45(VisionDataset, ImageFolder):  # type: ignore[misc]
                 + "You can use download=True to download it"
             )
 
-        # When transform & target_transform are None, ImageFolder.__getitem__[index]
-        # returns a PIL.Image and int for image and label, respectively
         super().__init__(
             root=os.path.join(root, self.directory),
-            transform=None,
-            target_transform=None,
+            transforms=transforms,
+            loader=loader,
         )
-
-        # Must be set after calling super().__init__()
-        self.transforms = transforms
-
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
-        """Return an index within the dataset.
-
-        Args:
-            index: index to return
-
-        Returns:
-            data and label at that index
-        """
-        image, label = self._load_image(index)
-        sample = {"image": image, "label": label}
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
-
-    def __len__(self) -> int:
-        """Return the number of data points in the dataset.
-
-        Returns:
-            length of the dataset
-        """
-        return len(self.imgs)
-
-    def _load_image(self, index: int) -> Tuple[Tensor, Tensor]:
-        """Load a single image and it's class label.
-
-        Args:
-            index: index to return
-
-        Returns:
-            the image
-            the image class label
-        """
-        img, label = ImageFolder.__getitem__(self, index)
-        array = np.array(img)
-        tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
-        # Convert from HxWxC to CxHxW
-        tensor = tensor.permute((2, 0, 1))
-        label = torch.tensor(label)  # type: ignore[attr-defined]
-        return tensor, label
 
     def _check_integrity(self) -> bool:
         """Checks the integrity of the dataset structure.
