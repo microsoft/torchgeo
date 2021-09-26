@@ -140,8 +140,8 @@ class AugmentationSequential(Module):  # type: ignore[misc]
         if "boxes" in self.data_keys:
             boxes_dtype = sample["boxes"].dtype
             sample["boxes"] = sample["boxes"].to(
-                torch.float
-            )  # type:ignore[attr-defined]
+                torch.float  # type:ignore[attr-defined]
+            )
 
         inputs = [sample[k] for k in self.data_keys]
         outputs_list: Union[Tensor, List[Tensor]] = self.augs(*inputs)
