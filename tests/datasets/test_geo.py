@@ -17,6 +17,7 @@ from torchgeo.datasets import (
     Landsat8,
     RasterDataset,
     VectorDataset,
+    VisionClassificationDataset,
     VisionDataset,
     ZipDataset,
 )
@@ -160,6 +161,56 @@ class TestVisionDataset:
     def test_abstract(self) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
             VisionDataset()  # type: ignore[abstract]
+
+
+class TestVisionClassificationDataset:
+    @pytest.fixture(scope="class")
+    def dataset(self) -> VisionClassificationDataset:
+        root = os.path.join("tests", "data", "visionclassificationdataset")
+        return VisionClassificationDataset(root)
+
+    @pytest.fixture(scope="class")
+    def root(self) -> str:
+        root = os.path.join("tests", "data", "visionclassificationdataset")
+        return root
+
+    def test_getitem(self, dataset: VisionClassificationDataset) -> None:
+        x = dataset[0]
+        assert isinstance(x, dict)
+        assert isinstance(x["image"], torch.Tensor)
+        assert isinstance(x["label"], torch.Tensor)
+        assert x["image"].shape[0] == 3
+
+    def test_len(self, dataset: VisionClassificationDataset) -> None:
+        assert len(dataset) == 2
+
+    def test_add_two(self, root: str) -> None:
+        ds1 = VisionClassificationDataset(root)
+        ds2 = VisionClassificationDataset(root)
+        dataset = ds1 + ds2
+        assert isinstance(dataset, ConcatDataset)
+        assert len(dataset) == 4
+
+    def test_add_three(self, root: str) -> None:
+        ds1 = VisionClassificationDataset(root)
+        ds2 = VisionClassificationDataset(root)
+        ds3 = VisionClassificationDataset(root)
+        dataset = ds1 + ds2 + ds3
+        assert isinstance(dataset, ConcatDataset)
+        assert len(dataset) == 6
+
+    def test_add_four(self, root: str) -> None:
+        ds1 = VisionClassificationDataset(root)
+        ds2 = VisionClassificationDataset(root)
+        ds3 = VisionClassificationDataset(root)
+        ds4 = VisionClassificationDataset(root)
+        dataset = (ds1 + ds2) + (ds3 + ds4)
+        assert isinstance(dataset, ConcatDataset)
+        assert len(dataset) == 8
+
+    def test_str(self, dataset: VisionClassificationDataset) -> None:
+        assert "type: VisionClassificationDataset" in str(dataset)
+        assert "size: 2" in str(dataset)
 
 
 class TestZipDataset:
