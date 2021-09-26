@@ -121,3 +121,8 @@ nbsphinx_prolog = """
    :alt: Open in Colab
    :target: {{ colab }}/github/{{ repo }}/blob/{{ branch }}/docs/{{ env.docname }}.ipynb
 """
+
+# disable requirejs in nbsphinx to enable compatibility with the pytorch_sphinx_theme -- https://github.com/spatialaudio/nbsphinx/issues/599
+# NOTE: This will likely break nbsphinx widgets
+nbsphinx_requirejs_path = ""
+
