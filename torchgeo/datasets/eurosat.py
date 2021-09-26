@@ -30,16 +30,16 @@ class EuroSAT(VisionDataset):
 
     Dataset classes:
 
-    1. Industrial Buildings
-    2. Residential Buildings
-    3. Annual Crop
-    4. Permanent Crop
-    5. River
-    6. Sea and Lake
-    7. Herbaceous Vegetation
-    8. Highway
-    9. Pasture
-    10. Forest
+    * Industrial Buildings
+    * Residential Buildings
+    * Annual Crop
+    * Permanent Crop
+    * River
+    * Sea and Lake
+    * Herbaceous Vegetation
+    * Highway
+    * Pasture
+    * Forest
 
     If you use this dataset in your research, please cite the following papers:
 
