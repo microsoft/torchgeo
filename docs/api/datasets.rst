@@ -189,6 +189,11 @@ VisionDataset
 
 .. autoclass:: VisionDataset
 
+VisionClassificationDataset
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: VisionClassificationDataset
+
 ZipDataset
 ^^^^^^^^^^
 
