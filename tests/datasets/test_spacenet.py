@@ -126,8 +126,9 @@ class TestSpaceNet2:
         else:
             assert x["image"].shape[0] == 1
 
+    # TODO: Change len to 4 when radiantearth/radiant-mlhub#65 is fixed
     def test_len(self, dataset: SpaceNet2) -> None:
-        assert len(dataset) == 4
+        assert len(dataset) == 5
 
     def test_already_downloaded(self, dataset: SpaceNet2) -> None:
         SpaceNet2(root=dataset.root, download=True)
@@ -135,3 +136,8 @@ class TestSpaceNet2:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):
             SpaceNet2(str(tmp_path))
+
+    def test_collection_checksum(self, dataset: SpaceNet2) -> None:
+        dataset.collection_md5_dict["sn2_AOI_2_Vegas"] = "randommd5hash123"
+        with pytest.raises(RuntimeError, match="Collection sn2_AOI_2_Vegas corrupted"):
+            SpaceNet2(root=dataset.root, download=True, checksum=True)
