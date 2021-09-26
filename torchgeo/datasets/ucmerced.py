@@ -18,7 +18,7 @@ from .utils import check_integrity, download_and_extract_archive
 
 
 class UCMerced(VisionDataset):
-    r"""UC Merced dataset.
+    """UC Merced dataset.
 
     The `UC Merced <http://weegee.vision.ucmerced.edu/datasets/landuse.html>`_
     dataset s a land use classification dataset of 2.1k 256x256 1ft resolution RGB
