@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""EuroSat dataset."""
+"""EuroSAT dataset."""
 
 import os
 from functools import lru_cache
@@ -16,10 +16,10 @@ from .geo import VisionDataset
 from .utils import check_integrity, download_and_extract_archive
 
 
-class EuroSat(VisionDataset):
-    """EuroSat dataset.
+class EuroSAT(VisionDataset):
+    """EuroSAT dataset.
 
-    The `EuroSat <https://github.com/phelber/EuroSAT>`_ dataset is based on Sentinel-2
+    The `EuroSAT <https://github.com/phelber/EuroSAT>`_ dataset is based on Sentinel-2
     satellite images covering 13 spectral bands and consists of 10 target classes with
     a total of 27,000 labeled and geo-referenced images.
 
@@ -87,7 +87,7 @@ class EuroSat(VisionDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new EuroSat dataset instance.
+        """Initialize a new EuroSAT dataset instance.
 
         Args:
             root: root directory where dataset can be found
