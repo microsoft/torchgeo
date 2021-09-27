@@ -209,7 +209,7 @@ class TestVisionClassificationDataset:
         assert len(dataset) == 8
 
     def test_str(self, dataset: VisionClassificationDataset) -> None:
-        assert "type: VisionClassificationDataset" in str(dataset)
+        assert "type: VisionDataset" in str(dataset)
         assert "size: 2" in str(dataset)
 
 
