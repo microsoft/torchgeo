@@ -1,7 +1,7 @@
 trainer:
   gpus: 1  # single GPU training
-  min_epochs: 20
-  max_epochs: 100
+  min_epochs: 10
+  max_epochs: 40
   benchmark: True
 
 experiment:
