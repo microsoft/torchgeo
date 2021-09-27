@@ -15,7 +15,7 @@ import torchgeo.datasets.utils
 from torchgeo.datasets import PatternNet
 
 
-def download_url(url: str, root: str, *args: str) -> None:
+def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -25,7 +25,7 @@ class TestPatternNet:
         self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> PatternNet:
         monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.utils, "download_url", download_url
+            torchgeo.datasets.patternnet, "download_url", download_url
         )
         md5 = "5649754c78219a2c19074ff93666cc61"
         monkeypatch.setattr(PatternNet, "md5", md5)  # type: ignore[attr-defined]
@@ -45,9 +45,19 @@ class TestPatternNet:
     def test_len(self, dataset: PatternNet) -> None:
         assert len(dataset) == 2
 
-    def test_already_downloaded(self, dataset: PatternNet) -> None:
-        PatternNet(root=dataset.root, download=True)
+    def test_already_downloaded(self, dataset: PatternNet, tmp_path: Path) -> None:
+        PatternNet(root=str(tmp_path), download=True)
+
+    def test_already_downloaded_not_extracted(
+        self, dataset: PatternNet, tmp_path: Path
+    ) -> None:
+        shutil.rmtree(dataset.root)
+        download_url(dataset.url, root=str(tmp_path))
+        PatternNet(root=str(tmp_path), download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        err = "Dataset not found in `root` directory and `download=False`, "
+        "either specify a different `root` directory or use `download=True` "
+        "to automaticaly download the dataset."
+        with pytest.raises(RuntimeError, match=err):
             PatternNet(str(tmp_path))

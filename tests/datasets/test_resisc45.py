@@ -18,7 +18,7 @@ from torchgeo.datasets import RESISC45
 pytest.importorskip("rarfile")
 
 
-def download_url(url: str, root: str, *args: str) -> None:
+def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -29,7 +29,7 @@ class TestRESISC45:
         self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> RESISC45:
         monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.utils, "download_url", download_url
+            torchgeo.datasets.resisc45, "download_url", download_url
         )
         md5 = "9c221122164d17b8118d2b6527ee5e9c"
         monkeypatch.setattr(RESISC45, "md5", md5)  # type: ignore[attr-defined]
@@ -49,9 +49,19 @@ class TestRESISC45:
     def test_len(self, dataset: RESISC45) -> None:
         assert len(dataset) == 2
 
-    def test_already_downloaded(self, dataset: RESISC45) -> None:
-        RESISC45(root=dataset.root, download=True)
+    def test_already_downloaded(self, dataset: RESISC45, tmp_path: Path) -> None:
+        RESISC45(root=str(tmp_path), download=True)
+
+    def test_already_downloaded_not_extracted(
+        self, dataset: RESISC45, tmp_path: Path
+    ) -> None:
+        shutil.rmtree(dataset.root)
+        download_url(dataset.url, root=str(tmp_path))
+        RESISC45(root=str(tmp_path), download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        err = "Dataset not found in `root` directory and `download=False`, "
+        "either specify a different `root` directory or use `download=True` "
+        "to automaticaly download the dataset."
+        with pytest.raises(RuntimeError, match=err):
             RESISC45(str(tmp_path))

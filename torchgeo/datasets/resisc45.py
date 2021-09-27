@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, Optional
 from torch import Tensor
 
 from .geo import VisionClassificationDataset
-from .utils import download_and_extract_archive
+from .utils import download_url, extract_archive
 
 
 class RESISC45(VisionClassificationDataset):
@@ -107,54 +107,56 @@ class RESISC45(VisionClassificationDataset):
                 returns a PIL Image or numpy array (default=None returns PIL Image)
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
-
-        Raises:
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
         """
         self.root = root
+        self.download = download
         self.checksum = checksum
-
-        if download:
-            self._download()
-
-        if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
-
+        self._verify()
         super().__init__(
             root=os.path.join(root, self.directory),
             transforms=transforms,
             loader=loader,
         )
 
-    def _check_integrity(self) -> bool:
-        """Checks the integrity of the dataset structure.
-
-        Returns:
-            True if the dataset directories and split files are found, else False
-        """
-        filepath = os.path.join(self.root, self.directory)
-        if not os.path.exists(filepath):
-            return False
-
-        return True
-
-    def _download(self) -> None:
-        """Download the dataset and extract it.
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
 
         Raises:
-            AssertionError: if the checksum of split.py does not match
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        if self._check_integrity():
-            print("Files already downloaded and verified")
+        # Check if the files already exist
+        filepath = os.path.join(self.root, self.directory)
+        if os.path.exists(filepath):
             return
 
-        download_and_extract_archive(
+        # Check if zip file already exists (if so then extract)
+        filepath = os.path.join(self.root, self.filename)
+        if os.path.exists(filepath):
+            self._extract()
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise RuntimeError(
+                "Dataset not found in `root` directory and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automaticaly download the dataset."
+            )
+
+        # Download and extract the dataset
+        self._download()
+        self._extract()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        download_url(
             self.url,
             self.root,
             filename=self.filename,
             md5=self.md5 if self.checksum else None,
         )
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        filepath = os.path.join(self.root, self.filename)
+        extract_archive(filepath)
