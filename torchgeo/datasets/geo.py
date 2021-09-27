@@ -590,7 +590,7 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
         self,
         root: str,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
-        loader: Optional[Callable[[str], Any]] = None,
+        loader: Optional[Callable[[str], Any]] = default_loader,
     ) -> None:
         """Initialize a new VisionClassificationDataset instance.
 
@@ -607,7 +607,7 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
             root=root,
             transform=None,
             target_transform=None,
-            loader=default_loader if loader is None else loader,
+            loader=loader
         )
 
         # Must be set after calling super().__init__()
