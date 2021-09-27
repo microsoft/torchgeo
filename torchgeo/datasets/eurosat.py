@@ -4,7 +4,6 @@
 """EuroSAT dataset."""
 
 import os
-from functools import lru_cache
 from typing import Callable, Dict, Optional
 
 import numpy as np
@@ -151,7 +150,6 @@ class EuroSAT(VisionDataset):
         """
         return len(self.labels)
 
-    @lru_cache()
     def _load_image(self, index: int) -> Tensor:
         """Load a single image.
 
