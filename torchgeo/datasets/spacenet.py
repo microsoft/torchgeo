@@ -470,7 +470,7 @@ class SpaceNet2(SpaceNet):
             images = glob.glob(os.path.join(root, collection, "*", self.filename))
             images = sorted(images)
             for imgpath in images:
-                pat = re.compile(f"img1{os.sep}")
+                pat = re.compile(r"img1(\\|\/)")
                 if collection == "sn2_AOI_2_Vegas" and pat.search(imgpath):
                     lbl_path = os.path.join(
                         os.path.dirname(os.path.dirname(imgpath)),
