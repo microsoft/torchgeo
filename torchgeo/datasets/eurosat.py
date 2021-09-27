@@ -51,7 +51,7 @@ class EuroSAT(VisionDataset):
     filename = "EuroSATallBands.zip"
     md5 = "5ac12b3b2557aa56e1826e981e8e200e"
 
-    # for some reason the class directories are acutally nested in this directory
+    # For some reason the class directories are actually nested in this directory
     base_dir = os.path.join(
         "ds", "images", "remote_sensing", "otherDatasets", "sentinel_2", "tif"
     )
