@@ -4,7 +4,7 @@
 """RESISC45 dataset."""
 
 import os
-from typing import Any, Callable, Dict, Optional
+from typing import Callable, Dict, Optional
 
 from torch import Tensor
 
@@ -93,7 +93,6 @@ class RESISC45(VisionClassificationDataset):
         self,
         root: str = "data",
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
-        loader: Optional[Callable[[str], Any]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -115,7 +114,6 @@ class RESISC45(VisionClassificationDataset):
         super().__init__(
             root=os.path.join(root, self.directory),
             transforms=transforms,
-            loader=loader,
         )
 
     def _verify(self) -> None:
