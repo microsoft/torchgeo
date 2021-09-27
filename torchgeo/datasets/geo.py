@@ -604,10 +604,7 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
         # When transform & target_transform are None, ImageFolder.__getitem__[index]
         # returns a PIL.Image and int for image and label, respectively
         super().__init__(
-            root=root,
-            transform=None,
-            target_transform=None,
-            loader=loader
+            root=root, transform=None, target_transform=None, loader=loader
         )
 
         # Must be set after calling super().__init__()
