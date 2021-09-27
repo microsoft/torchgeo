@@ -58,13 +58,13 @@ class SpaceNet(VisionDataset, abc.ABC):
         self,
         root: str,
         image: str,
-        collections: Optional[List[str]] = None,
+        collections: List[str] = [],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
     ) -> None:
-        """Initialise a new SpaceNet Dataset instance.
+        """Initialize a new SpaceNet Dataset instance.
 
         Args:
             root: root directory where dataset can be found
@@ -82,9 +82,7 @@ class SpaceNet(VisionDataset, abc.ABC):
         self.root = root
         self.image = image  # For testing
 
-        if collections is None:
-            collections = []
-        else:
+        if not collections:
             for collection in collections:
                 assert collection in self.collection_md5_dict
 
@@ -203,7 +201,7 @@ class SpaceNet(VisionDataset, abc.ABC):
         """Checks the integrity of the dataset structure.
 
         Returns:
-            List of collections be downloaded
+            List of collections to be downloaded
         """
         # Check if collections exist
         missing_collections = []
@@ -284,10 +282,10 @@ class SpaceNet1(SpaceNet):
     * *Dataset format*:
 
         * Imagery - Worldview-2 GeoTIFFs
-                * 8Band.tif (Multispectral)
-                * RGB.tif (Pansharpened RGB)
+            * 8Band.tif (Multispectral)
+            * RGB.tif (Pansharpened RGB)
         * Labels - GeoJSON
-                * labels.geojson
+            * labels.geojson
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -316,7 +314,7 @@ class SpaceNet1(SpaceNet):
         api_key: Optional[str] = None,
         checksum: bool = False,
     ) -> None:
-        """Initialise a new SpaceNet 1 Dataset instance.
+        """Initialize a new SpaceNet 1 Dataset instance.
 
         Args:
             root: root directory where dataset can be found
@@ -331,6 +329,7 @@ class SpaceNet1(SpaceNet):
             RuntimeError: if ``download=False`` but dataset is missing
         """
         collections = ["sn1_AOI_1_RIO"]
+        assert image in ["rgb", "8band"]
         super().__init__(
             root, image, collections, transforms, download, api_key, checksum
         )
@@ -428,13 +427,13 @@ class SpaceNet2(SpaceNet):
         self,
         root: str,
         image: str = "PS-RGB",
-        collections: Optional[List[str]] = None,
+        collections: List[str] = [],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
     ) -> None:
-        """Initialise a new SpaceNet 2 Dataset instance.
+        """Initialize a new SpaceNet 2 Dataset instance.
 
         Args:
             root: root directory where dataset can be found
@@ -451,6 +450,7 @@ class SpaceNet2(SpaceNet):
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing
         """
+        assert image in ["MS", "PAN", "PS-MS", "PS-RGB"]
         super().__init__(
             root, image, collections, transforms, download, api_key, checksum
         )
@@ -466,11 +466,11 @@ class SpaceNet2(SpaceNet):
             list of dicts containing paths for each pair of image and label
         """
         files = []
+        pat = re.compile("img1" + re.escape(os.sep))
         for collection in self.collections:
             images = glob.glob(os.path.join(root, collection, "*", self.filename))
             images = sorted(images)
             for imgpath in images:
-                pat = re.compile(r"img1(\\|\/)")
                 if collection == "sn2_AOI_2_Vegas" and pat.search(imgpath):
                     lbl_path = os.path.join(
                         os.path.dirname(os.path.dirname(imgpath)),
