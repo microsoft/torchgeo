@@ -387,12 +387,12 @@ class SpaceNet2(SpaceNet):
     - *Dataset format*
 
         * Imagery - Worldview-3 GeoTIFFs
-                * PAN.tif (Panchromatic)
-                * MS.tif (Multispectral)
-                * PS-MS (Pansharpened Multispectral)
-                * PS-RGB (Pansharpened RGB)
+            * PAN.tif (Panchromatic)
+            * MS.tif (Multispectral)
+            * PS-MS (Pansharpened Multispectral)
+            * PS-RGB (Pansharpened RGB)
         * Labels - GeoJSON
-                * label.geojson
+            * label.geojson
 
     If you use this dataset in your research, please cite the following paper:
 
