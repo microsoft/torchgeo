@@ -8,15 +8,16 @@ import subprocess
 from multiprocessing import Process, Queue
 
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
-GPUS = [0, 1, 2, 3, 4, 5, 6, 7]
+GPUS = [0, 0, 0, 0]
 TEST_MODE = False  # if False then print out the commands to be run, if True then run
 
 # Hyperparameter options
-model_options = ["unet"]
-encoder_options = ["resnet18", "resnet50"]
-lr_options = [1e-2, 1e-3, 1e-4]
-loss_options = ["ce", "jaccard"]
-weight_init_options = ["null", "imagenet"]
+model_options = ["resnet18"]
+lr_options = [1e-3]
+loss_options = ["ce"]
+weight_options = ["random"]
+
+seeds = list(range(30))
 
 
 def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
@@ -34,28 +35,33 @@ def main() -> None:
     """Main."""
     work: Queue[str] = Queue()
 
-    for (model, encoder, lr, loss, weight_init) in itertools.product(
-        model_options, encoder_options, lr_options, loss_options, weight_init_options
+    for (model, lr, loss, weights, seed) in itertools.product(
+        model_options,
+        lr_options,
+        loss_options,
+        weight_options,
+        seeds,
     ):
 
-        experiment_name = f"{model}_{encoder}_{lr}_{loss}_{weight_init}"
+        experiment_name = f"{model}_{lr}_{loss}_{weights.replace('_','-')}_{seed}"
 
-        output_dir = "output/landcoverai_experiments/"
+        output_dir = "output/so2sat_seed_experiments/"
 
         if not os.path.exists(os.path.join(output_dir, experiment_name)):
 
             command = (
                 "python train.py"
-                + " config_file=conf/landcoverai.yaml"
+                + " config_file=conf/so2sat.yaml"
                 + f" experiment.name={experiment_name}"
-                + f" experiment.module.segmentation_model={model}"
+                + f" experiment.module.classification_model={model}"
                 + f" experiment.module.learning_rate={lr}"
                 + f" experiment.module.loss={loss}"
-                + f" experiment.module.encoder_name={encoder}"
-                + f" experiment.module.encoder_weights={weight_init}"
+                + f" experiment.module.weights={weights}"
+                + f" experiment.datamodule.weights={weights}"
                 + f" program.output_dir={output_dir}"
                 + f" program.log_dir={output_dir}/logs"
-                + " program.data_dir=/home/calebrobinson/ssdprivate/data/landcoverai/"
+                + " program.data_dir=/home/caleb/mount/data/so2sat"
+                + f" program.seed={seed}"
                 + " trainer.gpus=[GPU]"
             )
             command = command.strip()

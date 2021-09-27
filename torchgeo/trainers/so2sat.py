@@ -8,7 +8,6 @@ from typing import Any, Dict, Optional, cast
 import kornia.augmentation as K
 import pytorch_lightning as pl
 import torch
-from torch._C import Value
 import torch.nn as nn
 import torchvision.models
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
@@ -20,7 +19,6 @@ from torchmetrics import Accuracy, IoU, MetricCollection
 from torchvision.transforms import Compose
 
 from ..datasets import So2Sat
-from ..models import ConvClassifier
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -31,7 +29,6 @@ Linear.__module__ = "nn.Linear"
 
 IN_CHANNELS = 10
 NUM_CLASSES = 17
-
 
 
 class So2SatClassificationTask(pl.LightningModule):
@@ -50,19 +47,6 @@ class So2SatClassificationTask(pl.LightningModule):
         elif self.hparams["classification_model"] == "resnet152":
             self.model = torchvision.models.resnet152(pretrained=pretrained)
             self.model.fc = Linear(2048, out_features=NUM_CLASSES)
-        elif self.hparams["classification_model"] == "conv_classifier":
-
-            in_channels = IN_CHANNELS
-            if self.hparams["weights"] == "imagenet_only" or self.hparams["weights"] == "imagenet_and_random":
-                raise ValueError(f"'{self.hparams['weights']}' is not a valid option for weights with the 'conv_classifier' model type")
-            elif self.hparams["weights"] == "random":
-                in_channels = IN_CHANNELS
-            elif self.hparams["weights"] == "random_rgb":
-                in_channels = 3
-            else:
-                raise ValueError(f"Weight type '{self.hparams['weights']}' is not valid.")
-
-            self.model = ConvClassifier(classes=NUM_CLASSES, in_channels=in_channels, num_filters=256)
         else:
             raise ValueError(
                 f"Model type '{self.hparams['classification_model']}' is not valid."
@@ -97,7 +81,9 @@ class So2SatClassificationTask(pl.LightningModule):
                 # graft the imagenet weights into the first 3 channels
                 w_new[:, :3, :, :] = w_old
 
-                self.model.conv1.weight = nn.Parameter(w_new)  # type: ignore[attr-defined]
+                self.model.conv1.weight = nn.Parameter(  # type: ignore[attr-defined]
+                    w_new
+                )
 
             elif self.hparams["weights"] == "random":
                 self.model.conv1 = Conv2d(
@@ -124,7 +110,11 @@ class So2SatClassificationTask(pl.LightningModule):
                     self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
                 )
             else:
-                raise ValueError(f"Weight type '{self.hparams['weights']}' is not valid.")
+                raise ValueError(
+                    f"Weight type '{self.hparams['weights']}' is not valid."
+                )
+        else:
+            pass  # stub for initializing the weights of other models
 
         if self.hparams["loss"] == "ce":
             self.loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
@@ -464,9 +454,9 @@ class So2SatDataModule(pl.LightningDataModule):
                 transforms=train_transforms,
             )
 
-            self.train_dataset = temp_train + self.val_dataset + self.test_dataset
-
-
+            self.train_dataset = cast(
+                So2Sat, temp_train + self.val_dataset + self.test_dataset
+            )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""
