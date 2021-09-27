@@ -165,8 +165,7 @@ class TestVisionDataset:
 
 class TestVisionClassificationDataset:
     @pytest.fixture(scope="class")
-    def dataset(self) -> VisionClassificationDataset:
-        root = os.path.join("tests", "data", "visionclassificationdataset")
+    def dataset(self, root: str) -> VisionClassificationDataset:
         return VisionClassificationDataset(root)
 
     @pytest.fixture(scope="class")
