@@ -4,13 +4,11 @@
 """UC Merced dataset."""
 
 import os
-import warnings
-from functools import lru_cache
 from typing import Callable, Dict, Optional
 
-import rasterio
+import numpy as np
 import torch
-from rasterio.errors import NotGeoreferencedWarning
+from PIL import Image
 from torch import Tensor
 
 from .geo import VisionDataset
@@ -163,7 +161,6 @@ class UCMerced(VisionDataset):
         """
         return len(self.labels)
 
-    @lru_cache()
     def _load_image(self, index: int) -> Tensor:
         """Load a single image.
 
@@ -174,11 +171,10 @@ class UCMerced(VisionDataset):
             the image
         """
         filename = self.fns[index]
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=NotGeoreferencedWarning)
-            with rasterio.open(filename) as f:
-                array = f.read()
-                tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+
+        array = np.array(Image.open(filename))
+        tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+        tensor = tensor.permute((2, 0, 1))
         return tensor
 
     def _check_integrity(self) -> bool:
