@@ -637,17 +637,6 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
         """
         return len(self.imgs)
 
-    def __str__(self) -> str:
-        """Return the informal string representation of the object.
-
-        Returns:
-            informal string representation
-        """
-        return f"""\
-{self.__class__.__name__} Dataset
-    type: VisionClassificationDataset
-    size: {len(self)}"""
-
     def _load_image(self, index: int) -> Tuple[Tensor, Tensor]:
         """Load a single image and it's class label.
 
