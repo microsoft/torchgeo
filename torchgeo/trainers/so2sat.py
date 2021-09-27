@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional, cast
 import kornia.augmentation as K
 import pytorch_lightning as pl
 import torch
+from torch._C import Value
 import torch.nn as nn
 import torchvision.models
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
@@ -19,6 +20,7 @@ from torchmetrics import Accuracy, IoU, MetricCollection
 from torchvision.transforms import Compose
 
 from ..datasets import So2Sat
+from ..models import ConvClassifier
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -27,8 +29,9 @@ Module.__module__ = "torch.nn"
 Conv2d.__module__ = "nn.Conv2d"
 Linear.__module__ = "nn.Linear"
 
-IN_CHANNELS = 18
+IN_CHANNELS = 10
 NUM_CLASSES = 17
+
 
 
 class So2SatClassificationTask(pl.LightningModule):
@@ -47,66 +50,81 @@ class So2SatClassificationTask(pl.LightningModule):
         elif self.hparams["classification_model"] == "resnet152":
             self.model = torchvision.models.resnet152(pretrained=pretrained)
             self.model.fc = Linear(2048, out_features=NUM_CLASSES)
+        elif self.hparams["classification_model"] == "conv_classifier":
+
+            in_channels = IN_CHANNELS
+            if self.hparams["weights"] == "imagenet_only" or self.hparams["weights"] == "imagenet_and_random":
+                raise ValueError(f"'{self.hparams['weights']}' is not a valid option for weights with the 'conv_classifier' model type")
+            elif self.hparams["weights"] == "random":
+                in_channels = IN_CHANNELS
+            elif self.hparams["weights"] == "random_rgb":
+                in_channels = 3
+            else:
+                raise ValueError(f"Weight type '{self.hparams['weights']}' is not valid.")
+
+            self.model = ConvClassifier(classes=NUM_CLASSES, in_channels=in_channels, num_filters=256)
         else:
             raise ValueError(
                 f"Model type '{self.hparams['classification_model']}' is not valid."
             )
 
-        if self.hparams["weights"] == "imagenet_only":
-            pass
-        elif self.hparams["weights"] == "imagenet_and_random":
-            # save the initial imagenet weights
-            w_old = torch.clone(  # type: ignore[attr-defined]
-                self.model.conv1.weight
-            ).detach()
+        if "resnet" in self.hparams["classification_model"]:
 
-            # replace the first conv layer (with random weights)
-            self.model.conv1 = Conv2d(
-                IN_CHANNELS,
-                64,
-                kernel_size=7,
-                stride=1,
-                padding=2,
-                bias=False,
-            )
-            nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
-                self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
-            )
+            if self.hparams["weights"] == "imagenet_only":
+                pass
+            elif self.hparams["weights"] == "imagenet_and_random":
+                # save the initial imagenet weights
+                w_old = torch.clone(  # type: ignore[attr-defined]
+                    self.model.conv1.weight
+                ).detach()
 
-            w_new = torch.clone(  # type: ignore[attr-defined]
-                self.model.conv1.weight
-            ).detach()
-            # graft the imagenet weights into the first 3 channels
-            w_new[:, :3, :, :] = w_old
+                # replace the first conv layer (with random weights)
+                self.model.conv1 = Conv2d(
+                    IN_CHANNELS,
+                    64,
+                    kernel_size=7,
+                    stride=1,
+                    padding=2,
+                    bias=False,
+                )
+                nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
+                    self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
+                )
 
-            self.model.conv1.weight = nn.Parameter(w_new)  # type: ignore[attr-defined]
+                w_new = torch.clone(  # type: ignore[attr-defined]
+                    self.model.conv1.weight
+                ).detach()
+                # graft the imagenet weights into the first 3 channels
+                w_new[:, :3, :, :] = w_old
 
-        elif self.hparams["weights"] == "random":
-            self.model.conv1 = Conv2d(
-                IN_CHANNELS,
-                64,
-                kernel_size=7,
-                stride=1,
-                padding=2,
-                bias=False,
-            )
-            nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
-                self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
-            )
-        elif self.hparams["weights"] == "random_rgb":
-            self.model.conv1 = Conv2d(
-                3,
-                64,
-                kernel_size=7,
-                stride=1,
-                padding=2,
-                bias=False,
-            )
-            nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
-                self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
-            )
-        else:
-            raise ValueError(f"Weight type '{self.hparams['weights']}' is not valid.")
+                self.model.conv1.weight = nn.Parameter(w_new)  # type: ignore[attr-defined]
+
+            elif self.hparams["weights"] == "random":
+                self.model.conv1 = Conv2d(
+                    IN_CHANNELS,
+                    64,
+                    kernel_size=7,
+                    stride=1,
+                    padding=2,
+                    bias=False,
+                )
+                nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
+                    self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
+                )
+            elif self.hparams["weights"] == "random_rgb":
+                self.model.conv1 = Conv2d(
+                    3,
+                    64,
+                    kernel_size=7,
+                    stride=1,
+                    padding=2,
+                    bias=False,
+                )
+                nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
+                    self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
+                )
+            else:
+                raise ValueError(f"Weight type '{self.hparams['weights']}' is not valid.")
 
         if self.hparams["loss"] == "ce":
             self.loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
@@ -135,10 +153,11 @@ class So2SatClassificationTask(pl.LightningModule):
         self.config_task()
 
         self.train_metrics = MetricCollection(
-            [
-                Accuracy(num_classes=NUM_CLASSES),
-                IoU(num_classes=NUM_CLASSES),
-            ],
+            {
+                "OverallAccuracy": Accuracy(num_classes=NUM_CLASSES, average="micro"),
+                "AverageAccuracy": Accuracy(num_classes=NUM_CLASSES, average="macro"),
+                "IoU": IoU(num_classes=NUM_CLASSES),
+            },
             prefix="train_",
         )
         self.val_metrics = self.train_metrics.clone(prefix="val_")
@@ -326,14 +345,14 @@ class So2SatDataModule(pl.LightningDataModule):
         15,
         16,
         17,
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
+        # 0,
+        # 1,
+        # 2,
+        # 3,
+        # 4,
+        # 5,
+        # 6,
+        # 7,
     ]
 
     def __init__(
@@ -342,6 +361,7 @@ class So2SatDataModule(pl.LightningDataModule):
         batch_size: int = 64,
         num_workers: int = 4,
         weights: str = "random",
+        unsupervised_mode: bool = False,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for So2Sat based DataLoaders.
@@ -352,12 +372,15 @@ class So2SatDataModule(pl.LightningDataModule):
             num_workers: The number of workers to use in all created DataLoaders
             weights: Either "random", "imagenet_only", "imagenet_and_random", or
                 "random_rgb"
+            unsupervised_mode: Makes the train dataloader return imagery from the train,
+                val, and test sets
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.weights = weights
+        self.unsupervised_mode = unsupervised_mode
 
         self.transforms = K.AugmentationSequential(
             K.RandomAffine(degrees=30),
@@ -366,9 +389,9 @@ class So2SatDataModule(pl.LightningDataModule):
             data_keys=["input"],
         )
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess1(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
-        sample["image"] = (sample["image"] - self.band_means) / self.band_stds
+        # sample["image"] = (sample["image"] - self.band_means) / self.band_stds
         sample["image"] = sample["image"].float()
         sample["image"] = sample["image"][self.reindex_to_rgb_first, :, :]
 
@@ -398,26 +421,52 @@ class So2SatDataModule(pl.LightningDataModule):
 
         This method is called once per GPU per run.
         """
-        train_transforms = Compose([self.preprocess, self.kornia_pipeline])
-        val_test_transforms = self.preprocess
+        train_transforms = Compose([self.preprocess1])
+        val_test_transforms = self.preprocess1
 
-        self.train_dataset = So2Sat(
-            self.root_dir,
-            split="train",
-            transforms=train_transforms,
-        )
+        if not self.unsupervised_mode:
 
-        self.val_dataset = So2Sat(
-            self.root_dir,
-            split="validation",
-            transforms=val_test_transforms,
-        )
+            self.train_dataset = So2Sat(
+                self.root_dir,
+                split="train",
+                transforms=train_transforms,
+            )
 
-        self.test_dataset = So2Sat(
-            self.root_dir,
-            split="test",
-            transforms=val_test_transforms,
-        )
+            self.val_dataset = So2Sat(
+                self.root_dir,
+                split="validation",
+                transforms=val_test_transforms,
+            )
+
+            self.test_dataset = So2Sat(
+                self.root_dir,
+                split="test",
+                transforms=val_test_transforms,
+            )
+
+        else:
+
+            temp_train = So2Sat(
+                self.root_dir,
+                split="train",
+                transforms=train_transforms,
+            )
+
+            self.val_dataset = So2Sat(
+                self.root_dir,
+                split="validation",
+                transforms=train_transforms,
+            )
+
+            self.test_dataset = So2Sat(
+                self.root_dir,
+                split="test",
+                transforms=train_transforms,
+            )
+
+            self.train_dataset = temp_train + self.val_dataset + self.test_dataset
+
+
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""
