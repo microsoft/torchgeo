@@ -268,18 +268,18 @@ class SpaceNet1(SpaceNet):
     `SpaceNet 1 <https://spacenet.ai/spacenet-buildings-dataset-v1/>`_
     is a dataset of building footprints over the city of Rio de Janeiro.
 
-    *Dataset features*:
+    Dataset features:
 
-        * No. of images: 6940 (8 Band) + 6940 (RGB)
-        * No. of polygons: 382,534 building labels
-        * Area Coverage: 2544 sq km
-        * GSD: 1 m (8 band),  50 cm (rgb)
-        * Chip size: 102 x 110 (8 band), 407 x 439 (rgb)
+    * No. of images: 6940 (8 Band) + 6940 (RGB)
+    * No. of polygons: 382,534 building labels
+    * Area Coverage: 2544 sq km
+    * GSD: 1 m (8 band),  50 cm (rgb)
+    * Chip size: 102 x 110 (8 band), 407 x 439 (rgb)
 
     .. note::
        Chip size of both imagery can have 1 pixel difference
 
-    *Dataset format*:
+    Dataset format:
 
     * Imagery - Worldview-2 GeoTIFFs
         * 8Band.tif (Multispectral)
@@ -329,7 +329,7 @@ class SpaceNet1(SpaceNet):
             RuntimeError: if ``download=False`` but dataset is missing
         """
         collections = ["sn1_AOI_1_RIO"]
-        assert image in ["rgb", "8band"]
+        assert image in {"rgb", "8band"}
         super().__init__(
             root, image, collections, transforms, download, api_key, checksum
         )
@@ -342,7 +342,7 @@ class SpaceNet2(SpaceNet):
     is a dataset of building footprints over the cities of Las Vegas,
     Paris, Shanghai and Khartoum.
 
-    *Collection features*
+    Collection features
 
 
     +------------+---------------------+------------+------------+
@@ -357,7 +357,7 @@ class SpaceNet2(SpaceNet):
     | Khartoum   |    765              |   1012     |  35,503    |
     +------------+---------------------+------------+------------+
 
-    *Imagery features*
+    Imagery features
 
     .. list-table::
         :widths: 10 10 10 10 10
@@ -384,7 +384,7 @@ class SpaceNet2(SpaceNet):
        Chip size of MS images can have 1 pixel difference
 
 
-    *Dataset format*
+    Dataset format
 
     * Imagery - Worldview-3 GeoTIFFs
         * PAN.tif (Panchromatic)
@@ -450,7 +450,7 @@ class SpaceNet2(SpaceNet):
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing
         """
-        assert image in ["MS", "PAN", "PS-MS", "PS-RGB"]
+        assert image in {"MS", "PAN", "PS-MS", "PS-RGB"}
         super().__init__(
             root, image, collections, transforms, download, api_key, checksum
         )
