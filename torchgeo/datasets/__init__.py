@@ -25,7 +25,14 @@ from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCycloneWindEstimation
 from .etci2021 import ETCI2021
 from .eurosat import EuroSAT
-from .geo import GeoDataset, RasterDataset, VectorDataset, VisionDataset, ZipDataset
+from .geo import (
+    GeoDataset,
+    RasterDataset,
+    VectorDataset,
+    VisionClassificationDataset,
+    VisionDataset,
+    ZipDataset,
+)
 from .gid15 import GID15
 from .landcoverai import LandCoverAI
 from .landsat import (
@@ -109,6 +116,7 @@ __all__ = (
     "RasterDataset",
     "VectorDataset",
     "VisionDataset",
+    "VisionClassificationDataset",
     "ZipDataset",
     # Utilities
     "BoundingBox",

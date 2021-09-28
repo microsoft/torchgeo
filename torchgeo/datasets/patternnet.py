@@ -4,18 +4,15 @@
 """PatternNet dataset."""
 
 import os
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, Optional
 
-import numpy as np
-import torch
 from torch import Tensor
-from torchvision.datasets import ImageFolder
 
-from .geo import VisionDataset
-from .utils import download_and_extract_archive
+from .geo import VisionClassificationDataset
+from .utils import download_url, extract_archive
 
 
-class PatternNet(VisionDataset, ImageFolder):  # type: ignore[misc]
+class PatternNet(VisionClassificationDataset):
     """PatternNet dataset.
 
     The `PatternNet <https://sites.google.com/view/zhouwx/dataset>`_
@@ -97,100 +94,55 @@ class PatternNet(VisionDataset, ImageFolder):  # type: ignore[misc]
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
-
-        Raises:
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
         """
         self.root = root
+        self.download = download
         self.checksum = checksum
-
-        if download:
-            self._download()
-
-        if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
-
-        # When transform & target_transform are None, ImageFolder.__getitem__[index]
-        # returns a PIL.Image and int for image and label, respectively
+        self._verify()
         super().__init__(
-            root=os.path.join(root, "images"), transform=None, target_transform=None
+            root=os.path.join(root, self.directory),
+            transforms=transforms,
         )
 
-        # Must be set after calling super().__init__()
-        self.transforms = transforms
-
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
-        """Return an index within the dataset.
-
-        Args:
-            index: index to return
-
-        Returns:
-            data and label at that index
-        """
-        image, label = self._load_image(index)
-        sample = {"image": image, "label": label}
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
-
-    def __len__(self) -> int:
-        """Return the number of data points in the dataset.
-
-        Returns:
-            length of the dataset
-        """
-        return len(self.imgs)
-
-    def _load_image(self, index: int) -> Tuple[Tensor, Tensor]:
-        """Load a single image and it's class label.
-
-        Args:
-            index: index to return
-
-        Returns:
-            the image
-            the image class label
-        """
-        img, label = ImageFolder.__getitem__(self, index)
-        array = np.array(img)
-        tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
-        # Convert from HxWxC to CxHxW
-        tensor = tensor.permute((2, 0, 1))
-        label = torch.tensor(label)  # type: ignore[attr-defined]
-        return tensor, label
-
-    def _check_integrity(self) -> bool:
-        """Checks the integrity of the dataset structure.
-
-        Returns:
-            True if the dataset directories and split files are found, else False
-        """
-        filepath = os.path.join(self.root, self.directory)
-        if not os.path.exists(filepath):
-            return False
-
-        return True
-
-    def _download(self) -> None:
-        """Download the dataset and extract it.
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
 
         Raises:
-            AssertionError: if the checksum of split.py does not match
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        if self._check_integrity():
-            print("Files already downloaded and verified")
+        # Check if the files already exist
+        filepath = os.path.join(self.root, self.directory)
+        if os.path.exists(filepath):
             return
 
-        download_and_extract_archive(
+        # Check if zip file already exists (if so then extract)
+        filepath = os.path.join(self.root, self.filename)
+        if os.path.exists(filepath):
+            self._extract()
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise RuntimeError(
+                "Dataset not found in `root` directory and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automaticaly download the dataset."
+            )
+
+        # Download and extract the dataset
+        self._download()
+        self._extract()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        download_url(
             self.url,
             self.root,
             filename=self.filename,
             md5=self.md5 if self.checksum else None,
         )
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        filepath = os.path.join(self.root, self.filename)
+        extract_archive(filepath)
