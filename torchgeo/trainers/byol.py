@@ -256,8 +256,8 @@ class BYOLTask(LightningModule):
             else:
                 encoder = resnet50()
         else:
-            raise ValueError(f"Encoder model type '{self.hparams['encoder']}' is not valid.")
-            
+            raise ValueError(f"Encoder type '{self.hparams['encoder']}' is not valid.")
+
         layer = encoder.conv1
         # Creating new Conv2d layer
         new_layer = nn.Conv2d(
@@ -269,12 +269,12 @@ class BYOLTask(LightningModule):
             bias=layer.bias,
         ).requires_grad_()
         # initialize the weights from new channel with the red channel weights
-        copy_weights = 0  
+        copy_weights = 0
         # Copying the weights from the old to the new layer
         new_layer.weight[:, : layer.in_channels, :, :].data[...] = Variable(
             layer.weight.clone(), requires_grad=True
         )
-        # Copying the weights of the old layer to the extra channels 
+        # Copying the weights of the old layer to the extra channels
         for i in range(in_channels - layer.in_channels):
             channel = layer.in_channels + i
             new_layer.weight[:, channel : channel + 1, :, :].data[...] = Variable(
@@ -283,8 +283,6 @@ class BYOLTask(LightningModule):
             )
 
         encoder.conv1 = new_layer
-        
-
         if self.hparams["model"] == "byol":
             self.model = BYOL(encoder, image_size=(256, 256))
         else:
