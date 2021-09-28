@@ -12,10 +12,10 @@ from kornia import augmentation as K
 from kornia import filters
 from kornia.geometry import transform as KorniaTransform
 from pytorch_lightning.core.lightning import LightningModule
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch import Tensor, optim
 from torch.autograd import Variable
-from torch.nn.modules import BatchNorm1d, Linear, Module, ReLU, Sequential, Conv2d
+from torch.nn.modules import BatchNorm1d, Conv2d, Linear, Module, ReLU, Sequential
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torchvision.models import resnet18
 from torchvision.models.resnet import resnet50
@@ -283,17 +283,17 @@ class BYOLTask(LightningModule):
         # initialize the weights from new channel with the red channel weights
         copy_weights = 0
         # Copying the weights from the old to the new layer
-        new_layer.weight[
-            :, : layer.in_channels, :, :
-        ].data[...] = Variable(  # type: ignore[index]
+        new_layer.weight[:, : layer.in_channels, :, :].data[
+            ...  # type: ignore[index]
+        ] = Variable(
             layer.weight.clone(), requires_grad=True
         )
         # Copying the weights of the old layer to the extra channels
         for i in range(in_channels - layer.in_channels):
             channel = layer.in_channels + i
-            new_layer.weight[
-                :, channel : channel + 1, :, :
-            ].data[...] = Variable(  # type: ignore[index]
+            new_layer.weight[:, channel : channel + 1, :, :].data[
+                ...  # type: ignore[index]
+            ] = Variable(
                 layer.weight[:, copy_weights : copy_weights + 1, ::].clone(),
                 requires_grad=True,
             )
