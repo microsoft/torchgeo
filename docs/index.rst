@@ -26,6 +26,8 @@ torchgeo
    :caption: Tutorials
 
    tutorials/getting_started
+   tutorials/transforms
+   tutorials/indices
    tutorials/trainers
    tutorials/benchmarking
 
