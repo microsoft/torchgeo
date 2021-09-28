@@ -4,7 +4,7 @@
 """Trainers for the Chesapeake datasets."""
 import random
 from copy import deepcopy
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
 
 import torch
 import torch.nn as nn
@@ -15,23 +15,27 @@ from kornia.geometry import transform as KorniaTransform
 from pytorch_lightning.core.lightning import LightningModule
 from torch import Tensor, optim
 from torch.autograd import Variable
-from torch.nn.modules import Module
+from torch.nn.modules import BatchNorm1d, Linear, Module, ReLU, Sequential
 from torch.utils.data import DataLoader
 from torchvision.models import resnet18
 from torchvision.models.resnet import resnet50
 
 DataLoader.__module__ = "torch.utils.data"
 Module.__module__ = "torch.nn"
+Sequential.__module__ = "torch.nn"
+Linear.__module__ = "torch.nn"
+ReLU.__module__ = "torch.nn"
+BatchNorm1d.__module__ = "torch.nn"
 
 
-def simCLR_default_augmentation(image_size: Tuple[int, int] = (256, 256)) -> nn.Module:
+def simCLR_default_augmentation(image_size: Tuple[int, int] = (256, 256)) -> Module:
     """Applies default augmentation from simCLR.
 
     Args:
         image_size: Tuple of integers defining the image size
     """
-    return nn.Sequential(
-        KorniaTransform.Resize(size=image_size),
+    return Sequential(
+        KorniaTransform.Resize(size=image_size),  # type: ignore[attr-defined]
         # Not suitable for multispectral adapt
         # RandomApply(K.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.8),
         # K.RandomGrayscale(p=0.2),
@@ -50,10 +54,11 @@ def normalized_mse(x: Tensor, y: Tensor) -> Tensor:
     """
     x = F.normalize(x, dim=-1)
     y = F.normalize(y, dim=-1)
-    return torch.mean(2 - 2 * (x * y).sum(dim=-1))
+    mse = torch.mean(2 - 2 * (x * y).sum(dim=-1))  # type: ignore[attr-defined]
+    return cast(Tensor, mse)
 
 
-def mlp(dim: int, projection_size: int = 256, hidden_size: int = 4096) -> nn.Module:
+def mlp(dim: int, projection_size: int = 256, hidden_size: int = 4096) -> Module:
     """MLP used in the projection head.
 
     Args:
@@ -61,15 +66,15 @@ def mlp(dim: int, projection_size: int = 256, hidden_size: int = 4096) -> nn.Mod
         projection_size: First layer MLP projection size
         hidden_size: Size of MLP hidden layer
     """
-    return nn.Sequential(
-        nn.Linear(dim, hidden_size),
-        nn.BatchNorm1d(hidden_size),
-        nn.ReLU(inplace=True),
-        nn.Linear(hidden_size, projection_size),
+    return Sequential(  # type: ignore[attr-defined]
+        Linear(dim, hidden_size),  # type: ignore[attr-defined]
+        BatchNorm1d(hidden_size),  # type: ignore[attr-defined]
+        ReLU(inplace=True),  # type: ignore[attr-defined]
+        Linear(hidden_size, projection_size),
     )
 
 
-class RandomApply(nn.Module):
+class RandomApply(Module):
     """Applies augmentation function (augm) with probability p."""
 
     def __init__(self, augm: Callable, p: float):
@@ -89,12 +94,12 @@ class RandomApply(nn.Module):
         return x if random.random() > self.p else self.augm(x)
 
 
-class EncoderWrapper(nn.Module):
+class EncoderWrapper(Module):
     """Encoder wrapper joining model and projection head."""
 
     def __init__(
         self,
-        model: nn.Module,
+        model: Module,
         projection_size: int = 256,
         hidden_size: int = 4096,
         layer: Union[str, int] = -2,
@@ -114,14 +119,14 @@ class EncoderWrapper(nn.Module):
         self.hidden_size = hidden_size
         self.layer = layer
 
-        self._projector = None
-        self._projector_dim = None
-        self._encoded = torch.empty(0)
+        self._projector: Optional[Module] = None
+        self._projector_dim = 256
+        self._encoded = torch.empty(0)  # type: ignore[attr-defined]
         self._register_hook()
 
     @property
-    def projector(self):
-        """Wrapper of projector head!"""
+    def projector(self) -> Module:
+        """Wrapper of projector head."""
         if self._projector is None:
             self._projector = mlp(
                 self._projector_dim, self.projection_size, self.hidden_size
@@ -130,7 +135,7 @@ class EncoderWrapper(nn.Module):
 
     # See: https://towardsdatascience.com/how-to-use-pytorch-hooks-5041d777f904
 
-    def _hook(self, _, __, output):
+    def _hook(self, _, __, output: Tensor) -> None:
         """Projection hook!"""
         output = output.flatten(start_dim=1)
         if self._projector_dim is None:
@@ -140,7 +145,7 @@ class EncoderWrapper(nn.Module):
         # Project the output to get encodings
         self._encoded = self.projector(output)
 
-    def _register_hook(self):
+    def _register_hook(self) -> None:
         """Register hook for forward."""
         if isinstance(self.layer, str):
             layer = dict([*self.model.named_modules()])[self.layer]
@@ -170,7 +175,7 @@ class BYOL(LightningModule):
 
     def __init__(
         self,
-        model: nn.Module,
+        model: Module,
         image_size: Tuple[int, int] = (256, 256),
         hidden_layer: Union[str, int] = -2,
         n_input_channel: int = 4,
@@ -212,7 +217,9 @@ class BYOL(LightningModule):
         self._target = None
 
         # Perform a single forward pass, it initializes the 'projector' of the wrapper
-        self.encoder(torch.zeros(2, self.n_input_channel, *image_size))
+        self.encoder(
+            torch.zeros(2, self.n_input_channel, *image_size)
+        )  # type: ignore[attr-defined]
 
     def forward(self, x: Tensor) -> Tensor:  # type: ignore[override]
         """Forward pass of the model.
@@ -358,12 +365,12 @@ class BYOLTask(LightningModule):
         x1, x2 = self.model.augment(x), self.model.augment(x)
         pred1, pred2 = self.forward(x1), self.forward(x2)
         targ1, targ2 = self.model.target(x1), self.model.target(x2)
-        loss = torch.mean(normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1))
+        loss = torch.mean(normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1))  # type: ignore[attr-defined]
 
         return {"loss": loss}
 
     @torch.no_grad()
-    def validation_epoch_end(self, outputs: List[Dict]) -> Dict:
+    def validation_epoch_end(self, outputs: List[Dict[str, Tensor]]) -> None:
         """Logs epoch level validation loss."""
-        val_loss = sum(x["loss"] for x in outputs) / len(outputs)
-        self.log("val_loss", val_loss.item())
+        val_loss = sum(x["loss"].item() for x in outputs) / len(outputs)
+        self.log("val_loss", val_loss)
