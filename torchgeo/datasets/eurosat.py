@@ -6,29 +6,10 @@
 import os
 from typing import Callable, Dict, Optional
 
-import numpy as np
-import rasterio
-from numpy.typing import NDArray
 from torch import Tensor
 
 from .geo import VisionClassificationDataset
-from .utils import check_integrity, download_url, extract_archive
-
-
-def rasterio_loader(path: str) -> NDArray[np.int32]:
-    """Load an image file using rasterio.
-
-    Args:
-        path: path to the image to be loaded
-
-    Returns:
-        the image
-    """
-    with rasterio.open(path) as f:
-        array: NDArray[np.int32] = f.read().astype(np.int32)
-        # VisionClassificationDataset expects images returned with channels last (HWC)
-        array = array.transpose(1, 2, 0)
-    return array
+from .utils import check_integrity, download_url, extract_archive, rasterio_loader
 
 
 class EuroSAT(VisionClassificationDataset):
