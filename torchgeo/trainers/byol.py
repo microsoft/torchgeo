@@ -252,9 +252,9 @@ class BYOLTask(LightningModule):
                 encoder = resnet18()
         elif self.hparams["encoder"] == "resnet50":
             if self.hparams["imagenet_pretraining"]:
-                encoder = resnet18(pretrained=True)
+                encoder = resnet50(pretrained=True)
             else:
-                encoder = resnet18()
+                encoder = resnet50()
         else:
             raise ValueError(f"Encoder model type '{self.hparams['encoder']}' is not valid.")
             
