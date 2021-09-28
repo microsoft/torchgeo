@@ -380,7 +380,7 @@ def collate_dict(samples: List[Dict[str, Any]]) -> Dict[str, Any]:
     return collated
 
 
-def rasterio_loader(path: str) -> np.ndarray[Any, np.dtype[np.int32]]:
+def rasterio_loader(path: str) -> np.ndarray:  # type: ignore[type-arg]
     """Load an image file using rasterio.
 
     Args:
@@ -390,7 +390,7 @@ def rasterio_loader(path: str) -> np.ndarray[Any, np.dtype[np.int32]]:
         the image
     """
     with rasterio.open(path) as f:
-        array: np.ndarray[Any, np.dtype[np.int32]] = f.read().astype(np.int32)
+        array: np.ndarray = f.read().astype(np.int32)  # type: ignore[type-arg]
         # VisionClassificationDataset expects images returned with channels last (HWC)
         array = array.transpose(1, 2, 0)
     return array
