@@ -18,6 +18,7 @@ from torch.autograd import Variable
 from torch.nn.modules import Module
 from torch.utils.data import DataLoader
 from torchvision.models import resnet18
+from torchvision.models.resnet import resnet50
 
 DataLoader.__module__ = "torch.utils.data"
 Module.__module__ = "torch.nn"
@@ -242,37 +243,47 @@ class BYOLTask(LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
-        n_input_channel = self.hparams["n_input_channel"]
+        in_channels = self.hparams["in_channels"]
+        encoder = None
         if self.hparams["encoder"] == "resnet18":
-            encoder = resnet18(pretrained=True)
-            layer = encoder.conv1
-
-            # Creating new Conv2d layer
-            new_layer = nn.Conv2d(
-                in_channels=n_input_channel,
-                out_channels=layer.out_channels,
-                kernel_size=layer.kernel_size,
-                stride=layer.stride,
-                padding=layer.padding,
-                bias=layer.bias,
-            ).requires_grad_()
-            # initialize the weights from new channel with the red channel weights
-            copy_weights = 0
-            # Copying the weights from the old to the new layer
-            new_layer.weight[:, : layer.in_channels, :, :].data[...] = Variable(
-                layer.weight.clone(), requires_grad=True
-            )
-            # Copying the weights of the old layer to the extra channels
-            for i in range(n_input_channel - layer.in_channels):
-                channel = layer.in_channels + i
-                new_layer.weight[:, channel : channel + 1, :, :].data[...] = Variable(
-                    layer.weight[:, copy_weights : copy_weights + 1, ::].clone(),
-                    requires_grad=True,
-                )
-
-            encoder.conv1 = new_layer
+            if self.hparams["imagenet_pretraining"]:
+                encoder = resnet18(pretrained=True)
+            else:
+                encoder = resnet18()
+        elif self.hparams["encoder"] == "resnet50":
+            if self.hparams["imagenet_pretraining"]:
+                encoder = resnet18(pretrained=True)
+            else:
+                encoder = resnet18()
         else:
-            raise ValueError(f"Model type '{self.hparams['encoder']}' is not valid.")
+            raise ValueError(f"Encoder model type '{self.hparams['encoder']}' is not valid.")
+            
+        layer = encoder.conv1
+        # Creating new Conv2d layer
+        new_layer = nn.Conv2d(
+            in_channels=in_channels,
+            out_channels=layer.out_channels,
+            kernel_size=layer.kernel_size,
+            stride=layer.stride,
+            padding=layer.padding,
+            bias=layer.bias,
+        ).requires_grad_()
+        # initialize the weights from new channel with the red channel weights
+        copy_weights = 0  
+        # Copying the weights from the old to the new layer
+        new_layer.weight[:, : layer.in_channels, :, :].data[...] = Variable(
+            layer.weight.clone(), requires_grad=True
+        )
+        # Copying the weights of the old layer to the extra channels 
+        for i in range(in_channels - layer.in_channels):
+            channel = layer.in_channels + i
+            new_layer.weight[:, channel : channel + 1, :, :].data[...] = Variable(
+                layer.weight[:, copy_weights : copy_weights + 1, ::].clone(),
+                requires_grad=True,
+            )
+
+        encoder.conv1 = new_layer
+        
 
         if self.hparams["model"] == "byol":
             self.model = BYOL(encoder, image_size=(256, 256))
@@ -287,11 +298,7 @@ class BYOLTask(LightningModule):
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
-            segmentation_model: Name of the segmentation model type to use
-            encoder_name: Name of the encoder model backbone to use
-            encoder_weights: None or "imagenet" to use imagenet pretrained weights in
-                the encoder model
-            loss: Name of the loss function
+            in_channels: Number of channels on the input imagery
 
         Raises:
             ValueError: if kwargs arguments are invalid
