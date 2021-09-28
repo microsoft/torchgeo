@@ -268,7 +268,7 @@ class SpaceNet1(SpaceNet):
     `SpaceNet 1 <https://spacenet.ai/spacenet-buildings-dataset-v1/>`_
     is a dataset of building footprints over the city of Rio de Janeiro.
 
-    * *Dataset features*:
+    *Dataset features*:
 
         * No. of images: 6940 (8 Band) + 6940 (RGB)
         * No. of polygons: 382,534 building labels
@@ -279,13 +279,13 @@ class SpaceNet1(SpaceNet):
     .. note::
        Chip size of both imagery can have 1 pixel difference
 
-    * *Dataset format*:
+    *Dataset format*:
 
-        * Imagery - Worldview-2 GeoTIFFs
-            * 8Band.tif (Multispectral)
-            * RGB.tif (Pansharpened RGB)
-        * Labels - GeoJSON
-            * labels.geojson
+    * Imagery - Worldview-2 GeoTIFFs
+        * 8Band.tif (Multispectral)
+        * RGB.tif (Pansharpened RGB)
+    * Labels - GeoJSON
+        * labels.geojson
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -342,7 +342,7 @@ class SpaceNet2(SpaceNet):
     is a dataset of building footprints over the cities of Las Vegas,
     Paris, Shanghai and Khartoum.
 
-    - *Collection features*
+    *Collection features*
 
 
     +------------+---------------------+------------+------------+
@@ -357,7 +357,7 @@ class SpaceNet2(SpaceNet):
     | Khartoum   |    765              |   1012     |  35,503    |
     +------------+---------------------+------------+------------+
 
-    - *Imagery features*
+    *Imagery features*
 
     .. list-table::
         :widths: 10 10 10 10 10
@@ -384,15 +384,15 @@ class SpaceNet2(SpaceNet):
        Chip size of MS images can have 1 pixel difference
 
 
-    - *Dataset format*
+    *Dataset format*
 
-        * Imagery - Worldview-3 GeoTIFFs
-            * PAN.tif (Panchromatic)
-            * MS.tif (Multispectral)
-            * PS-MS (Pansharpened Multispectral)
-            * PS-RGB (Pansharpened RGB)
-        * Labels - GeoJSON
-            * label.geojson
+    * Imagery - Worldview-3 GeoTIFFs
+        * PAN.tif (Panchromatic)
+        * MS.tif (Multispectral)
+        * PS-MS (Pansharpened Multispectral)
+        * PS-RGB (Pansharpened RGB)
+    * Labels - GeoJSON
+        * label.geojson
 
     If you use this dataset in your research, please cite the following paper:
 
