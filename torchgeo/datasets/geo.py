@@ -25,6 +25,7 @@ from rasterio.vrt import WarpedVRT
 from rtree.index import Index, Property
 from torch import Tensor
 from torch.utils.data import Dataset
+from torchvision.datasets.folder import ImageFolder, default_loader
 
 from .utils import BoundingBox, disambiguate_timestamp
 
@@ -576,6 +577,79 @@ class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):
 {self.__class__.__name__} Dataset
     type: VisionDataset
     size: {len(self)}"""
+
+
+class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[misc]
+    """Abstract base class for classification datasets lacking geospatial information.
+
+    This base class is designed for datasets with pre-defined image chips which
+    are separated into separate folders per class.
+    """
+
+    def __init__(
+        self,
+        root: str,
+        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        loader: Optional[Callable[[str], Any]] = default_loader,
+    ) -> None:
+        """Initialize a new VisionClassificationDataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            loader: a callable function which takes as input a path to an image and
+                returns a PIL Image or numpy array
+        """
+        # When transform & target_transform are None, ImageFolder.__getitem__(index)
+        # returns a PIL.Image and int for image and label, respectively
+        super().__init__(
+            root=root, transform=None, target_transform=None, loader=loader
+        )
+
+        # Must be set after calling super().__init__()
+        self.transforms = transforms
+
+    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+        """Return an index within the dataset.
+
+        Args:
+            index: index to return
+        Returns:
+            data and label at that index
+        """
+        image, label = self._load_image(index)
+        sample = {"image": image, "label": label}
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+    def __len__(self) -> int:
+        """Return the number of data points in the dataset.
+
+        Returns:
+            length of the dataset
+        """
+        return len(self.imgs)
+
+    def _load_image(self, index: int) -> Tuple[Tensor, Tensor]:
+        """Load a single image and it's class label.
+
+        Args:
+            index: index to return
+        Returns:
+            the image
+            the image class label
+        """
+        img, label = ImageFolder.__getitem__(self, index)
+        array = np.array(img)
+        tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+        # Convert from HxWxC to CxHxW
+        tensor = tensor.permute((2, 0, 1))
+        label = torch.tensor(label)  # type: ignore[attr-defined]
+        return tensor, label
 
 
 class ZipDataset(GeoDataset):
