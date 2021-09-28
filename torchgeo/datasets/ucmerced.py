@@ -100,6 +100,10 @@ class UCMerced(VisionClassificationDataset):
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
         """
         self.root = root
         self.transforms = transforms
