@@ -6,16 +6,13 @@
 import os
 from typing import Callable, Dict, Optional
 
-import numpy as np
-import torch
-from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
-from .utils import check_integrity, download_and_extract_archive
+from .geo import VisionClassificationDataset
+from .utils import check_integrity, download_url, extract_archive
 
 
-class UCMerced(VisionDataset):
+class UCMerced(VisionClassificationDataset):
     """UC Merced dataset.
 
     The `UC Merced <http://weegee.vision.ucmerced.edu/datasets/landuse.html>`_
@@ -86,9 +83,7 @@ class UCMerced(VisionDataset):
         "storagetanks",
         "tenniscourt",
     ]
-
     class_counts = {class_name: 100 for class_name in classes}
-    class_name_to_label_idx = {class_name: i for i, class_name in enumerate(classes)}
 
     def __init__(
         self,
@@ -105,77 +100,16 @@ class UCMerced(VisionDataset):
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
-
-        Raises:
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
         """
         self.root = root
         self.transforms = transforms
+        self.download = download
         self.checksum = checksum
-
-        if download:
-            self._download()
-
-        if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
-
-        self.fns = []
-        self.labels = []
-        for class_name, class_count in self.class_counts.items():
-            for i in range(0, class_count):
-                self.fns.append(
-                    os.path.join(
-                        self.root, self.base_dir, class_name, f"{class_name}{i:02d}.tif"
-                    )
-                )
-                self.labels.append(self.class_name_to_label_idx[class_name])
-
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
-        """Return an index within the dataset.
-
-        Args:
-            index: index to return
-
-        Returns:
-            data and label at that index
-        """
-        sample: Dict[str, Tensor] = {
-            "image": self._load_image(index),
-            "label": torch.tensor(self.labels[index]),  # type: ignore[attr-defined]
-        }
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
-
-    def __len__(self) -> int:
-        """Return the number of data points in the dataset.
-
-        Returns:
-            length of the dataset
-        """
-        return len(self.labels)
-
-    def _load_image(self, index: int) -> Tensor:
-        """Load a single image.
-
-        Args:
-            index: unique ID of the image
-
-        Returns:
-            the image
-        """
-        filename = self.fns[index]
-
-        array = np.array(Image.open(filename))
-        tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
-        tensor = tensor.permute((2, 0, 1))
-        return tensor
+        self._verify()
+        super().__init__(
+            root=os.path.join(root, self.base_dir),
+            transforms=transforms,
+        )
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
@@ -187,22 +121,46 @@ class UCMerced(VisionDataset):
             os.path.join(self.root, self.filename),
             self.md5 if self.checksum else None,
         )
-
         return integrity
 
-    def _download(self) -> None:
-        """Download the dataset and extract it.
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
 
         Raises:
-            AssertionError: if the checksum of split.py does not match
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        if self._check_integrity():
-            print("Files already downloaded and verified")
+        # Check if the files already exist
+        filepath = os.path.join(self.root, self.base_dir)
+        if os.path.exists(filepath):
             return
 
-        download_and_extract_archive(
+        # Check if zip file already exists (if so then extract)
+        if self._check_integrity():
+            self._extract()
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise RuntimeError(
+                "Dataset not found in `root` directory and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automaticaly download the dataset."
+            )
+
+        # Download and extract the dataset
+        self._download()
+        self._extract()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        download_url(
             self.url,
             self.root,
             filename=self.filename,
             md5=self.md5 if self.checksum else None,
         )
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        filepath = os.path.join(self.root, self.filename)
+        extract_archive(filepath)
