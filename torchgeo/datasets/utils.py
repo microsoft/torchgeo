@@ -14,6 +14,8 @@ import zipfile
 from datetime import datetime, timedelta
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
+import numpy as np
+import rasterio
 import torch
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_url
@@ -27,6 +29,7 @@ __all__ = (
     "disambiguate_timestamp",
     "working_dir",
     "collate_dict",
+    "rasterio_loader",
 )
 
 
@@ -375,3 +378,19 @@ def collate_dict(samples: List[Dict[str, Any]]) -> Dict[str, Any]:
                 sample[key] for sample in samples
             ]  # type: ignore[assignment]
     return collated
+
+
+def rasterio_loader(path: str) -> np.ndarray[Any, np.dtype[np.int32]]:
+    """Load an image file using rasterio.
+
+    Args:
+        path: path to the image to be loaded
+
+    Returns:
+        the image
+    """
+    with rasterio.open(path) as f:
+        array: np.ndarray[Any, np.dtype[np.int32]] = f.read().astype(np.int32)
+        # VisionClassificationDataset expects images returned with channels last (HWC)
+        array = array.transpose(1, 2, 0)
+    return array
