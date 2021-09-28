@@ -50,6 +50,7 @@ from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel2
 from .so2sat import So2Sat
 from .spacenet import SpaceNet1
+from .ucmerced import UCMerced
 from .utils import BoundingBox, collate_dict
 from .zuericrop import ZueriCrop
 
@@ -100,6 +101,7 @@ __all__ = (
     "So2Sat",
     "SpaceNet1",
     "TropicalCycloneWindEstimation",
+    "UCMerced",
     "VHR10",
     "ZueriCrop",
     # Base classes
