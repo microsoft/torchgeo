@@ -285,9 +285,7 @@ class BYOLTask(LightningModule):
         # Copying the weights from the old to the new layer
         new_layer.weight[:, : layer.in_channels, :, :].data[
             ...  # type: ignore[index]
-        ] = Variable(
-            layer.weight.clone(), requires_grad=True
-        )
+        ] = Variable(layer.weight.clone(), requires_grad=True)
         # Copying the weights of the old layer to the extra channels
         for i in range(in_channels - layer.in_channels):
             channel = layer.in_channels + i
