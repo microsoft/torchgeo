@@ -102,8 +102,6 @@ class RESISC45(VisionClassificationDataset):
             root: root directory where dataset can be found
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
-            loader: a callable function which takes as input a path to an image and
-                returns a PIL Image or numpy array (default=None returns PIL Image)
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """

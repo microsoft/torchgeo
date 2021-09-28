@@ -601,7 +601,7 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
             loader: a callable function which takes as input a path to an image and
                 returns a PIL Image or numpy array
         """
-        # When transform & target_transform are None, ImageFolder.__getitem__[index]
+        # When transform & target_transform are None, ImageFolder.__getitem__(index)
         # returns a PIL.Image and int for image and label, respectively
         super().__init__(
             root=root, transform=None, target_transform=None, loader=loader
