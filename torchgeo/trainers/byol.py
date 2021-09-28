@@ -187,7 +187,7 @@ class BYOL(LightningModule):
         beta: float = 0.99,
         **kwargs: Any,
     ) -> None:
-        """Initialize BYOL with the tretraining model and projection heads parameters.
+        """Initialize BYOL with the pre-training model and projection heads parameters.
 
         Keyword Args:
             model: Model to pretrain using BYOL
@@ -251,7 +251,7 @@ class BYOL(LightningModule):
 
 
 class BYOLTask(LightningModule):
-    """LightningModule for training models using BYOL!"""
+    """Class for pre-training any PyTorch model using BYOL."""
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
@@ -333,7 +333,7 @@ class BYOLTask(LightningModule):
         return self.model(x)
 
     def configure_optimizers(self) -> Dict[str, Any]:
-        """Define optimizers for lighting."""
+        """Define optimizers for lightning."""
         optimizer_class = getattr(optim, self.hparams.get("optimizer", "Adam"))
         lr = self.hparams.get("lr", 1e-4)
         weight_decay = self.hparams.get("weight_decay", 1e-6)
