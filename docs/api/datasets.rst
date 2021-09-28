@@ -97,6 +97,11 @@ ETCI2021 Flood Detection
 
 .. autoclass:: ETCI2021
 
+EuroSAT
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: EuroSAT
+
 GID-15 (Gaofen Image Dataset)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
