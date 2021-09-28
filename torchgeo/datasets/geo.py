@@ -25,7 +25,8 @@ from rasterio.vrt import WarpedVRT
 from rtree.index import Index, Property
 from torch import Tensor
 from torch.utils.data import Dataset
-from torchvision.datasets.folder import ImageFolder, default_loader
+from torchvision.datasets.folder import ImageFolder
+from torchvision.datasets.folder import default_loader as pil_loader
 
 from .utils import BoundingBox, disambiguate_timestamp
 
@@ -590,7 +591,7 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
         self,
         root: str,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
-        loader: Optional[Callable[[str], Any]] = default_loader,
+        loader: Optional[Callable[[str], Any]] = pil_loader,
     ) -> None:
         """Initialize a new VisionClassificationDataset instance.
 
