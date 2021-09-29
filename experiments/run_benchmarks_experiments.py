@@ -15,10 +15,10 @@ CACHE_OPTIONS = [True, False]
 BATCH_SIZE_OPTIONS = [16, 32, 64, 128, 256, 512]
 
 # path to a directory containing Landsat 8 GeoTIFFs
-LANDSAT_DATA_ROOT = "/datadrive/adam/landsat/original"
+LANDSAT_DATA_ROOT = ""
 
 # path to a directory containing CDL GeoTIFF(s)
-CDL_DATA_ROOT = "/datadrive/adam/cdl/original"
+CDL_DATA_ROOT = ""
 
 total_num_experiments = len(SEED_OPTIONS) * len(CACHE_OPTIONS) * len(BATCH_SIZE_OPTIONS)
 
