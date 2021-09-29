@@ -8,17 +8,17 @@ import subprocess
 from multiprocessing import Process, Queue
 
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
-GPUS = [0, 1, 2, 3, 4, 5, 6, 7]
+GPUS = [3, 4, 5, 6, 7]
 TEST_MODE = False  # if False then print out the commands to be run, if True then run
 
 # Hyperparameter options
-training_set_options = ["de"]
 model_options = ["unet"]
-encoder_options = ["resnet18", "resnet50"]
-lr_options = [1e-2, 1e-3, 1e-4]
-loss_options = ["ce", "jaccard"]
-weight_init_options = ["null", "imagenet"]
+encoder_options = ["resnet50"]
+lr_options = [1e-4]
+loss_options = ["ce"]
+weight_init_options = ["imagenet"]
 
+seeds = list(range(15))
 
 def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
     """Process for each ID in GPUS."""
@@ -35,33 +35,29 @@ def main() -> None:
     """Main."""
     work: Queue[str] = Queue()
 
-    for (train_state, model, encoder, lr, loss, weight_init) in itertools.product(
-        training_set_options, model_options, encoder_options, lr_options, loss_options,
-        weight_init_options
+    for (model, encoder, lr, loss, weight_init, seed) in itertools.product(
+        model_options, encoder_options, lr_options, loss_options, weight_init_options, seeds
     ):
 
-        experiment_name = f"{train_state}_{model}_{encoder}_{lr}_{loss}_{weight_init}"
+        experiment_name = f"{model}_{encoder}_{lr}_{loss}_{weight_init}_{seed}"
 
-        output_dir = "output/chesapeake-cvpr_experiments/"
+        output_dir = "output/landcoverai_seed_experiments/"
 
         if not os.path.exists(os.path.join(output_dir, experiment_name)):
 
             command = (
                 "python train.py"
-                + " config_file=conf/chesapeake_cvpr.yaml"
+                + " config_file=conf/landcoverai.yaml"
                 + f" experiment.name={experiment_name}"
                 + f" experiment.module.segmentation_model={model}"
-                + f" experiment.module.encoder_name={encoder}"
-                + f" experiment.module.encoder_weights={weight_init}"
                 + f" experiment.module.learning_rate={lr}"
                 + f" experiment.module.loss={loss}"
-                + " experiment.module.class_set=7"
-                + f" experiment.datamodule.train_splits=['{train_state}-train']"
-                + f" experiment.datamodule.val_splits=['{train_state}-val']"
-                + f" experiment.datamodule.test_splits=['{train_state}-test']"
+                + f" experiment.module.encoder_name={encoder}"
+                + f" experiment.module.encoder_weights={weight_init}"
                 + f" program.output_dir={output_dir}"
+                + f" program.seed={seed}"
                 + f" program.log_dir={output_dir}/logs"
-                + " program.data_dir=/home/calebrobinson/ssdprivate/data/cvpr_chesapeake_landcover"
+                + " program.data_dir=/home/calebrobinson/ssdprivate/data/landcoverai/"
                 + " trainer.gpus=[GPU]"
             )
             command = command.strip()
