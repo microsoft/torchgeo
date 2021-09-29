@@ -84,7 +84,7 @@ class RandomApply(Module):
         """Initialize RandomApply.
 
         Keyword Args:
-            augm: Augmentation finction to aply
+            augm: Augmentation function to apply
             p: Probability with wich the augmentation (augm) fn is applied
         """
         super().__init__()  # type: ignore[no-untyped-call]
