@@ -47,7 +47,8 @@ if __name__ == "__main__":
 
             command = (
                 "python train.py"
-                + " config_file=" + os.path.join("conf", "landcoverai.yaml")
+                + " config_file="
+                + os.path.join("conf", "landcoverai.yaml")
                 + f" experiment.name={experiment_name}"
                 + f" experiment.module.segmentation_model={model}"
                 + f" experiment.module.learning_rate={lr}"
@@ -55,7 +56,8 @@ if __name__ == "__main__":
                 + f" experiment.module.encoder_name={encoder}"
                 + f" experiment.module.encoder_weights={weight_init}"
                 + f" program.output_dir={output_dir}"
-                + " program.log_dir=" + os.path.join(output_dir, "logs")
+                + " program.log_dir="
+                + os.path.join(output_dir, "logs")
                 + f" program.data_dir={DATA_DIR}"
                 + " trainer.gpus=[GPU]"
             )
