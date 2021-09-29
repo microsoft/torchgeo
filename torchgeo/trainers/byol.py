@@ -151,6 +151,7 @@ class EncoderWrapper(Module):
     """Encoder wrapper for joining a model and a projection head.
 
     When we call .forward() on this module the following steps happen:
+
     * The input is passed through the base model
     * When the encoding layer is reached a hook is called
     * The output of the encoding layer is passed through the projection head
@@ -243,7 +244,8 @@ class BYOL(Module):
     weights are updated with each training batch. The second, "target" network, is
     updated using a running average of the first encoder's weights.
 
-    See https://arxiv.org/abs/2006.07733 for more details.
+    See https://arxiv.org/abs/2006.07733 for more details (and please cite it if you
+    use it in your own work).
     """
 
     def __init__(
