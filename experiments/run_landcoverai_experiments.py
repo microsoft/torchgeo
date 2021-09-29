@@ -55,7 +55,7 @@ if __name__ == "__main__":
                 + f" experiment.module.encoder_name={encoder}"
                 + f" experiment.module.encoder_weights={weight_init}"
                 + f" program.output_dir={output_dir}"
-                + f" program.log_dir={output_dir}/logs"
+                + " program.log_dir=" + os.path.join(output_dir, "logs")
                 + f" program.data_dir={DATA_DIR}"
                 + " trainer.gpus=[GPU]"
             )
