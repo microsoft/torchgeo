@@ -104,13 +104,14 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         """
         return ZipDataset([self, other])
 
-    def __len__(self) -> str:
+    def __len__(self) -> int:
         """Return the number of files in the dataset.
 
         Returns:
             length of the dataset
         """
-        return self.index.count(self.index.bounds)
+        count: int = self.index.count(self.index.bounds)
+        return count
 
     def __str__(self) -> str:
         """Return the informal string representation of the object.
@@ -728,7 +729,7 @@ class ZipDataset(GeoDataset):
             sample.update(ds[query])
         return sample
 
-    def __len__(self) -> str:
+    def __len__(self) -> int:
         """Return the number of files in the dataset.
 
         Returns:
