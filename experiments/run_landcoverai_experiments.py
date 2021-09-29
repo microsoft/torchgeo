@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
             command = (
                 "python train.py"
-                + " config_file=conf/landcoverai.yaml"
+                + " config_file=" + os.path.join("conf", "landcoverai.yaml")
                 + f" experiment.name={experiment_name}"
                 + f" experiment.module.segmentation_model={model}"
                 + f" experiment.module.learning_rate={lr}"
