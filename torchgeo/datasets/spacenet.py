@@ -54,6 +54,11 @@ class SpaceNet(VisionDataset, abc.ABC):
     def collection_md5_dict(self) -> Dict[str, str]:
         """Mapping of collection id and md5 checksum."""
 
+    @property
+    @abc.abstractmethod
+    def chip_size(self) -> Dict[str, Tuple[int, int]]:
+        """Mapping of images and their chip size."""
+
     def __init__(
         self,
         root: str,
@@ -82,7 +87,7 @@ class SpaceNet(VisionDataset, abc.ABC):
         self.root = root
         self.image = image  # For testing
 
-        if not collections:
+        if collections:
             for collection in collections:
                 assert collection in self.collection_md5_dict
 
@@ -190,7 +195,8 @@ class SpaceNet(VisionDataset, abc.ABC):
         h, w = img.shape[1:]
         mask = self._load_mask(files["label_path"], tfm, (h, w))
 
-        sample = {"image": img, "mask": mask}
+        ch, cw = self.chip_size[self.image]
+        sample = {"image": img[:, :ch, :cw], "mask": mask[:ch, :cw]}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -274,10 +280,7 @@ class SpaceNet1(SpaceNet):
     * No. of polygons: 382,534 building labels
     * Area Coverage: 2544 sq km
     * GSD: 1 m (8 band),  50 cm (rgb)
-    * Chip size: 102 x 110 (8 band), 407 x 439 (rgb)
-
-    .. note::
-       Chip size of both imagery can have 1 pixel difference
+    * Chip size: 101 x 110 (8 band), 406 x 438 (rgb)
 
     Dataset format:
 
@@ -302,6 +305,7 @@ class SpaceNet1(SpaceNet):
 
     dataset_id = "spacenet1"
     imagery = {"rgb": "RGB.tif", "8band": "8Band.tif"}
+    chip_size = {"rgb": (406, 438), "8band": (101, 110)}
     label_glob = "labels.geojson"
     collection_md5_dict = {"sn1_AOI_1_RIO": "e6ea35331636fa0c036c04b3d1cbf226"}
 
@@ -380,9 +384,6 @@ class SpaceNet2(SpaceNet):
             - 650 x 650
             - 650 x 650
 
-    .. note::
-       Chip size of MS images can have 1 pixel difference
-
 
     Dataset format
 
@@ -420,6 +421,12 @@ class SpaceNet2(SpaceNet):
         "PAN": "PAN.tif",
         "PS-MS": "PS-MS.tif",
         "PS-RGB": "PS-RGB.tif",
+    }
+    chip_size = {
+        "MS": (162, 162),
+        "PAN": (650, 650),
+        "PS-MS": (650, 650),
+        "PS-RGB": (650, 650),
     }
     label_glob = "label.geojson"
 
