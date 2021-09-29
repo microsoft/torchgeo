@@ -239,7 +239,7 @@ class BYOL(LightningModule):
 
     @property
     def target(self) -> Module:
-        """Build target model by copying the encoder!"""
+        """Build target model by copying the encoder."""
         if self._target is None:
             self._target = deepcopy(self.encoder)
         return self._target
