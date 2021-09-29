@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
@@ -9,7 +10,7 @@ from multiprocessing import Process, Queue
 
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
 GPUS = [0, 1, 2, 3, 4, 5, 6, 7]
-TEST_MODE = False  # if False then print out the commands to be run, if True then run
+DRY_RUN = False  # if False then print out the commands to be run, if True then run
 DATA_DIR = ""
 
 # Hyperparameter options
@@ -25,13 +26,13 @@ def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
         experiment = work.get()
         experiment = experiment.replace("GPU", str(gpu_idx))
         print(experiment)
-        if not TEST_MODE:
+        if not DRY_RUN:
             subprocess.call(experiment.split(" "))
     return True
 
 
 if __name__ == "__main__":
-    work: Queue[str] = Queue()
+    work: "Queue[str]" = Queue()
 
     for (model, lr, loss, weights) in itertools.product(
         model_options,
