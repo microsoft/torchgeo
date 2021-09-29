@@ -104,6 +104,14 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         """
         return ZipDataset([self, other])
 
+    def __len__(self) -> str:
+        """Return the number of files in the dataset.
+
+        Returns:
+            length of the dataset
+        """
+        return self.index.count(self.index.bounds)
+
     def __str__(self) -> str:
         """Return the informal string representation of the object.
 
@@ -113,7 +121,8 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         return f"""\
 {self.__class__.__name__} Dataset
     type: GeoDataset
-    bbox: {self.bounds}"""
+    bbox: {self.bounds}
+    size: {len(self)}"""
 
     @property
     def bounds(self) -> BoundingBox:
@@ -719,6 +728,14 @@ class ZipDataset(GeoDataset):
             sample.update(ds[query])
         return sample
 
+    def __len__(self) -> str:
+        """Return the number of files in the dataset.
+
+        Returns:
+            length of the dataset
+        """
+        return sum(map(len, self.datasets))
+
     def __str__(self) -> str:
         """Return the informal string representation of the object.
 
@@ -728,7 +745,8 @@ class ZipDataset(GeoDataset):
         return f"""\
 {self.__class__.__name__} Dataset
     type: ZipDataset
-    bbox: {self.bounds}"""
+    bbox: {self.bounds}
+    size: {len(self)}"""
 
     @property
     def bounds(self) -> BoundingBox:
