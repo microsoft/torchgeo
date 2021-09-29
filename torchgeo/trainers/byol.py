@@ -263,7 +263,7 @@ class BYOL(Module):
         Args:
             model: the model to pretrain using BYOL
             image_size: the size of the training images
-            hidden_layer: the hidden layer in `model` to attach the projection
+            hidden_layer: the hidden layer in ``model`` to attach the projection
                 head to, can be the name of the layer or index of the layer
             input_channels: number of input channels to the model
             projection_size: size of first layer of the projection MLP
