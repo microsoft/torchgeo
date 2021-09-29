@@ -17,7 +17,7 @@ lr_options = [1e-3]
 loss_options = ["ce"]
 weight_options = ["random"]
 
-seeds = list(range(30))
+seeds = list(range(32))
 
 
 def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
