@@ -1,13 +1,3 @@
-program:  # These are experiment level arguments
-  overwrite: True
-  data_dir: /datadrive/cvpr_chesapeake_landcover
-  output_dir: output/
-  log_dir: logs/
-trainer:
-  gpus: 1
-  min_epochs: 20
-  max_epochs: 100
-  benchmark: True
 experiment:
   task: "ssl"
   name: "test_byol"
