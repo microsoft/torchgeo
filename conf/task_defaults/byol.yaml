@@ -6,7 +6,7 @@ experiment:
     encoder: "resnet18"
     input_channels: 4
     imagenet_pretraining: True
-    learning_rate: 1e-3
+    learning_rate: 1e-4
     learning_rate_schedule_patience: 6
   datamodule:
     batch_size: 64

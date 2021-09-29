@@ -34,7 +34,7 @@ from torchgeo.trainers import (
 TASK_TO_MODULES_MAPPING: Dict[
     str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
 ] = {
-    "byol": (BYOLTask, ChesapeakeCVPRDataModule),
+    "byol": (BYOLTask, So2SatDataModule),
     "chesapeake_cvpr": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
     "cyclone": (CycloneSimpleRegressionTask, CycloneDataModule),
     "landcoverai": (LandcoverAISegmentationTask, LandcoverAIDataModule),
