@@ -184,7 +184,7 @@ class So2SatClassificationTask(pl.LightningModule):
         return cast(Tensor, loss)
 
     def training_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level training metrics.
+        """Logs epoch-level training metrics.
 
         Args:
             outputs: list of items returned by training_step
