@@ -365,7 +365,7 @@ class BYOLTask(LightningModule):
             )
 
         encoder.conv1 = new_layer
-        self.model = BYOL(encoder, image_size=(256, 256))
+        self.model = BYOL(encoder, image_size=(256, 256),  input_channels=input_channels)
 
     def __init__(
         self,
