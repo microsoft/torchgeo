@@ -84,8 +84,8 @@ class RandomApply(Module):
         """Initialize RandomApply.
 
         Keyword Args:
-            augm: Augmentation finction to aply
-            p: Probability with wich the augmentation (augm) fn is applied
+            augm: Augmentation function to apply
+            p: Probability with which the augmentation function is applied
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.augm = augm
@@ -110,7 +110,7 @@ class EncoderWrapper(Module):
 
         Keyword Args:
             model: Model to encode
-            projection_size: Size of fist layer of projector MLP
+            projection_size: Size of first layer of projector MLP
             hidden_size: Size of hidden layer of projector
             layer: Layer from model to project
         """
@@ -157,7 +157,7 @@ class EncoderWrapper(Module):
         layer.register_forward_hook(self._hook)
 
     def forward(self, x: Tensor) -> Tensor:
-        """Pass through the model, and collect 'encodings' from our forward hook!"""
+        """Pass through the model, and collect 'encodings' from our forward hook."""
         _ = self.model(x)
         return cast(Tensor, self._encoded)
 
@@ -191,11 +191,11 @@ class BYOL(LightningModule):
 
         Keyword Args:
             model: Model to pretrain using BYOL
-            image_size: Tuple defining the saize of the training images
+            image_size: Tuple defining the size of the training images
             hidden_layer: Defines the layer projected
             input_channels: Number of input channels to the model
             projection_size: Size of first layer of projection MLP
-            hidden_size: Size if the hidden layer of the projection MLP
+            hidden_size: Size of the hidden layer of the projection MLP
             augment_fn: param for augmentation
             beta: Beta parameter on BYOL, dictates speed at which the target encoder
                     is updated using the main encoder
@@ -239,13 +239,13 @@ class BYOL(LightningModule):
 
     @property
     def target(self) -> Module:
-        """Build target model by copying the encoder!"""
+        """Build target model by copying the encoder."""
         if self._target is None:
             self._target = deepcopy(self.encoder)
         return self._target
 
     def update_target(self) -> None:
-        """Funtion to update the target model."""
+        """Function to update the target model."""
         for p, pt in zip(self.encoder.parameters(), self.target.parameters()):
             pt.data = self.beta * pt.data + (1 - self.beta) * p.data
 
