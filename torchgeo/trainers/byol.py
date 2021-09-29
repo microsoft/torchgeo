@@ -110,7 +110,7 @@ class EncoderWrapper(Module):
 
         Keyword Args:
             model: Model to encode
-            projection_size: Size of fist layer of projector MLP
+            projection_size: Size of first layer of projector MLP
             hidden_size: Size of hidden layer of projector
             layer: Layer from model to project
         """
