@@ -402,10 +402,7 @@ class So2SatDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        _ = So2Sat(
-            self.root_dir,
-            checksum=False,
-        )
+        So2Sat(self.root_dir, checksum=False)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
