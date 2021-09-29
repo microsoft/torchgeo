@@ -29,29 +29,15 @@ BatchNorm1d.__module__ = "torch.nn"
 Conv2d.__module__ = "torch.nn"
 
 
-def simCLR_default_augmentation(image_size: Tuple[int, int] = (256, 256)) -> Module:
-    """Applies default augmentation from simCLR.
-
-    Args:
-        image_size: Tuple of integers defining the image size
-    """
-    return Sequential(
-        KorniaTransform.Resize(size=image_size),  # type: ignore[attr-defined]
-        # Not suitable for multispectral adapt
-        # RandomApply(K.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.8),
-        # K.RandomGrayscale(p=0.2),
-        K.RandomHorizontalFlip(),
-        RandomApply(filters.GaussianBlur2d((3, 3), (1.5, 1.5)), p=0.1),
-        K.RandomResizedCrop(size=image_size),
-    )
-
-
 def normalized_mse(x: Tensor, y: Tensor) -> Tensor:
-    """Computes the normalized mean square error between x and y.
+    """Computes the normalized mean squared error between x and y.
 
     Args:
-        x: Tensor x
-        y: Tensor y
+        x: tensor x
+        y: tensor y
+
+    Returns:
+        the normalized MSE between x and y
     """
     x = F.normalize(x, dim=-1)
     y = F.normalize(y, dim=-1)
@@ -59,45 +45,118 @@ def normalized_mse(x: Tensor, y: Tensor) -> Tensor:
     return cast(Tensor, mse)
 
 
-def mlp(dim: int, projection_size: int = 256, hidden_size: int = 4096) -> Module:
-    """MLP used in the projection head.
-
-    Args:
-        dim: size of layer to project
-        projection_size: First layer MLP projection size
-        hidden_size: Size of MLP hidden layer
-    """
-    return Sequential(
-        Linear(dim, hidden_size),
-        BatchNorm1d(hidden_size),  # type: ignore[no-untyped-call]
-        ReLU(inplace=True),
-        Linear(hidden_size, projection_size),
-    )
-
-
+# TODO: Move this to transforms
 class RandomApply(Module):
     """Applies augmentation function (augm) with probability p."""
 
     def __init__(
-        self, augm: Callable[[Dict[str, Tensor]], Dict[str, Tensor]], p: float
+        self, augm: Callable[[Tensor], Tensor], p: float
     ) -> None:
         """Initialize RandomApply.
 
-        Keyword Args:
-            augm: Augmentation function to apply
-            p: Probability with which the augmentation function is applied
+        Args:
+            augm: augmentation function to apply
+            p: probability with which the augmentation function is applied
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.augm = augm
         self.p = p
 
-    def forward(self, x: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        """Randomapply forward method."""
+    def forward(self, x: Tensor) -> Tensor:
+        """Applies an augmentation to the input with some probability.
+
+        Args:
+            x: a batch of imagery
+
+        Returns
+            augmented version of `x` with probability `p` else an un-augmented version
+        """
         return x if random.random() > self.p else self.augm(x)
 
 
+# TODO: This isn't _really_ applying the augmentations from SimCLR as we have
+# multispectral imagery and thus can't naively apply color jittering or grayscale
+# conversions. We should think more about what makes sense here.
+class SimCLRAugmentation(Module):
+    """A module for applying SimCLR augmentations.
+
+    SimCLR was one of the first papers to show the effectiveness of random data
+    augmentation in self-supervised-learning setups. See
+    https://arxiv.org/pdf/2002.05709.pdf for more details.
+    """
+
+    def __init__(self, image_size: Tuple[int, int] = (256, 256)) -> None:
+        """Initialize a module for applying SimCLR augmentations.
+
+        Args:
+            image_size: Tuple of integers defining the image size
+        """
+        super().__init__()  # type: ignore[no-untyped-call]
+        self.size = image_size
+
+        self.augmentation = Sequential(
+            KorniaTransform.Resize(size=image_size),  # type: ignore[attr-defined]
+            # Not suitable for multispectral adapt
+            # RandomApply(K.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.8),
+            # K.RandomGrayscale(p=0.2),
+            K.RandomHorizontalFlip(),
+            RandomApply(filters.GaussianBlur2d((3, 3), (1.5, 1.5)), p=0.1),
+            K.RandomResizedCrop(size=image_size),
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        """Applys SimCLR augmentations to the input tensor.
+
+        Args:
+            x: a batch of imagery
+
+        Returns:
+            an augmented batch of imagery
+        """
+        return cast(Tensor, self.augmentation(x))
+
+
+class MLP(Module):
+    """MLP used in the BYOL projection head."""
+
+    def __init__(
+        self, dim: int, projection_size: int = 256, hidden_size: int = 4096
+    ) -> None:
+        """Initializes the MLP projection head.
+
+        Args:
+            dim: size of layer to project
+            projection_size: size of the output layer
+            hidden_size: size of the hidden layer
+        """
+        self.mlp = Sequential(
+            Linear(dim, hidden_size),
+            BatchNorm1d(hidden_size),  # type: ignore[no-untyped-call]
+            ReLU(inplace=True),
+            Linear(hidden_size, projection_size),
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        """Forward pass of the MLP model.
+
+        Args:
+            x: batch of imagery
+
+        Returns:
+            embedded version of the input
+        """
+        return cast(Tensor, self.mlp(x))
+
+
 class EncoderWrapper(Module):
-    """Encoder wrapper joining model and projection head."""
+    """Encoder wrapper for joining a model and a projection head.
+
+    When we call .forward() on this module the following steps happen:
+    * The input is passed through the base model
+    * When the encoding layer is reached a hook is called
+    * The output of the encoding layer is passed through the projection head
+    * The forward call returns the output of the projection head
+    """
 
     def __init__(
         self,
@@ -108,11 +167,11 @@ class EncoderWrapper(Module):
     ) -> None:
         """Initializes EncoderWrapper.
 
-        Keyword Args:
-            model: Model to encode
-            projection_size: Size of first layer of projector MLP
-            hidden_size: Size of hidden layer of projector
-            layer: Layer from model to project
+        Args:
+            model: model to encode
+            projection_size: size of the ouput layer of the projector MLP
+            hidden_size: size of hidden layer of the projector MLP
+            layer: layer from model to project
         """
         super().__init__()  # type: ignore[no-untyped-call]
 
@@ -122,33 +181,42 @@ class EncoderWrapper(Module):
         self.layer = layer
 
         self._projector: Optional[Module] = None
-        self._projector_dim = 256
+        self._projector_dim: Optional[int] = None
         self._encoded = torch.empty(0)  # type: ignore[attr-defined]
         self._register_hook()
 
     @property
     def projector(self) -> Module:
-        """Wrapper of projector head."""
+        """Wrapper module for the projector head."""
+        assert self._projector_dim is not None
         if self._projector is None:
-            self._projector = mlp(
+            self._projector = MLP(
                 self._projector_dim, self.projection_size, self.hidden_size
             )
         return self._projector
 
-    # See: https://towardsdatascience.com/how-to-use-pytorch-hooks-5041d777f904
+    def _hook(self, module: Any, input: Any, output: Tensor) -> None:
+        """Hook to record the activations at the projection layer.
 
-    def _hook(self, _: Any, __: Any, output: Tensor) -> None:
-        """Projection hook."""
+        See the following docs page for more details on hooks:
+        https://pytorch.org/docs/stable/generated/torch.nn.modules.module.register_module_forward_hook.html
+
+        Args:
+            module: the calling module
+            input: input to the module this hook was registered to
+            output: output from the module this hook was registered to
+        """
         output = output.flatten(start_dim=1)
         if self._projector_dim is None:
             # If we haven't already, measure the output size
             self._projector_dim = output.shape[-1]
 
-        # Project the output to get encodings
+        # Project the output to get encodings, the projector model is created the first
+        # time this is called
         self._encoded = self.projector(output)
 
     def _register_hook(self) -> None:
-        """Register hook for forward."""
+        """Register a hook for layer that we will extract features from."""
         if isinstance(self.layer, str):
             layer = dict([*self.model.named_modules()])[self.layer]
         else:
@@ -157,22 +225,26 @@ class EncoderWrapper(Module):
         layer.register_forward_hook(self._hook)
 
     def forward(self, x: Tensor) -> Tensor:
-        """Pass through the model, and collect 'encodings' from our forward hook."""
+        """Pass through the model, and collect the representation from our forward hook.
+
+        Args:
+            x: tensor of data to run through the model
+
+        Returns:
+            output from the model
+        """
         _ = self.model(x)
         return cast(Tensor, self._encoded)
 
 
-class BYOL(LightningModule):
+class BYOL(Module):
     """BYOL implementation.
 
-    BYOL contains two identical Encoder networks. The first is trained
-    as usual, and its weights are updated with each training batch. The
-    second (referred to as the “target” network) is updated using a running
-    average of the first Encoder’s weights.
-    Citation: Grill JB, Strub F, Altché F, Tallec C, Richemond PH, Buchatskaya E,
-    Doersch C, Pires BA, Guo ZD, Azar MG, Piot B. Bootstrap your own latent: A
-    new approach to self-supervised learning. arXiv preprint arXiv:2006.07733.
-    2020 Jun 13.
+    BYOL contains two identical encoder networks. The first is trained as usual, and its
+    weights are updated with each training batch. The second, "target" network, is
+    updated using a running average of the first encoder's weights.
+
+    See https://arxiv.org/abs/2006.07733 for more details.
     """
 
     def __init__(
@@ -187,45 +259,44 @@ class BYOL(LightningModule):
         beta: float = 0.99,
         **kwargs: Any,
     ) -> None:
-        """Initialize BYOL with the pre-training model and projection heads parameters.
+        """Sets up BYOL with a model for pre-training and projection heads.
 
-        Keyword Args:
-            model: Model to pretrain using BYOL
-            image_size: Tuple defining the size of the training images
-            hidden_layer: Defines the layer projected
-            input_channels: Number of input channels to the model
-            projection_size: Size of first layer of projection MLP
-            hidden_size: Size of the hidden layer of the projection MLP
-            augment_fn: param for augmentation
-            beta: Beta parameter on BYOL, dictates speed at which the target encoder
-                    is updated using the main encoder
-
-        Raises:
-            ValueError: if kwargs arguments are invalid
+        Args:
+            model: the model to pretrain using BYOL
+            image_size: the size of the training images
+            hidden_layer: the hidden layer in `model` to attach the projection
+                head to, can be the name of the layer or index of the layer
+            input_channels: number of input channels to the model
+            projection_size: size of first layer of the projection MLP
+            hidden_size: size of the hidden layer of the projection MLP
+            augment_fn: an instance of a module that performs data augmentation
+            beta: the speed at which the target encoder is updated using the main
+                encoder
         """
-        super().__init__()
-        self.augment: Module = (
-            simCLR_default_augmentation(image_size)
-            if augment_fn is None
-            else augment_fn
-        )
+        super().__init__()  # type: ignore[no-untyped-call]
+
+        self.augment: Module
+        if augment_fn is None:
+            self.augment = SimCLRAugmentation(image_size)
+        else:
+            self.augment = augment_fn
+
         self.beta = beta
         self.input_channels = input_channels
         self.encoder = EncoderWrapper(
             model, projection_size, hidden_size, layer=hidden_layer
         )
-        self.predictor = Linear(projection_size, hidden_size)
-        self.save_hyperparameters()  # creates `self.hparams` from kwargs
+        self.predictor = MLP(projection_size, projection_size, hidden_size)
         self._target: Optional[Module] = None
 
-        # Perform a single forward pass, it initializes the 'projector' of the wrapper
+        # Perform a single forward pass to initialize the wrapper correctly
         self.encoder(
             torch.zeros(  # type: ignore[attr-defined]
                 2, self.input_channels, *image_size
             )
         )
 
-    def forward(self, x: Tensor) -> Tensor:  # type: ignore[override]
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model.
 
         Args:
@@ -234,18 +305,17 @@ class BYOL(LightningModule):
         Returns:
             output from the model
         """
-        x = self.predictor(self.encoder(x))
-        return x
+        return cast(Tensor, self.predictor(self.encoder(x)))
 
     @property
     def target(self) -> Module:
-        """Build target model by copying the encoder."""
+        """The "target" model."""
         if self._target is None:
             self._target = deepcopy(self.encoder)
         return self._target
 
     def update_target(self) -> None:
-        """Function to update the target model."""
+        """Method to update the "target" model weights."""
         for p, pt in zip(self.encoder.parameters(), self.target.parameters()):
             pt.data = self.beta * pt.data + (1 - self.beta) * p.data
 
@@ -256,17 +326,13 @@ class BYOLTask(LightningModule):
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
         in_channels = self.hparams["in_channels"]
+        pretrained = self.hparams["imagenet_pretraining"]
         encoder = None
+
         if self.hparams["encoder"] == "resnet18":
-            if self.hparams["imagenet_pretraining"]:
-                encoder = resnet18(pretrained=True)
-            else:
-                encoder = resnet18()
+            encoder = resnet18(pretrained=pretrained)
         elif self.hparams["encoder"] == "resnet50":
-            if self.hparams["imagenet_pretraining"]:
-                encoder = resnet50(pretrained=True)
-            else:
-                encoder = resnet50()
+            encoder = resnet50(pretrained=pretrained)
         else:
             raise ValueError(f"Encoder type '{self.hparams['encoder']}' is not valid.")
 
@@ -297,26 +363,24 @@ class BYOLTask(LightningModule):
             )
 
         encoder.conv1 = new_layer
-        if self.hparams["model"] == "byol":
-            self.model = BYOL(encoder, image_size=(256, 256))
-        else:
-            raise ValueError(f"Model type '{self.hparams['model']}' is not valid.")
+        self.model = BYOL(encoder, image_size=(256, 256))
 
     def __init__(
         self,
-        input_channels: int = 4,
         **kwargs: Any,
     ) -> None:
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
-            in_channels: Number of channels on the input imagery
+            input_channels: Number of channels on the input imagery
+            encoder: either "resnet18" or "resnet50"
+            imagenet_pretraining: bool indicating whether to use imagenet pretrained
+                weights
 
         Raises:
             ValueError: if kwargs arguments are invalid
         """
         super().__init__()
-        self.input_channels = input_channels
         self.save_hyperparameters()  # creates `self.hparams` from kwargs
 
         self.config_task()
@@ -333,7 +397,12 @@ class BYOLTask(LightningModule):
         return self.model(x)
 
     def configure_optimizers(self) -> Dict[str, Any]:
-        """Define optimizers for lightning."""
+        """Initialize the optimizer and learning rate scheduler.
+
+        Returns:
+            a "lr dict" according to the pytorch lightning documentation --
+            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+        """
         optimizer_class = getattr(optim, self.hparams.get("optimizer", "Adam"))
         lr = self.hparams.get("lr", 1e-4)
         weight_decay = self.hparams.get("weight_decay", 1e-6)
@@ -381,7 +450,12 @@ class BYOLTask(LightningModule):
     def validation_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
-        """Logs iteration level validation loss."""
+        """Logs iteration level validation loss.
+
+        Args:
+            batch: Current batch
+            batch_idx: Index of current batch
+        """
         x = batch["image"]
         x1, x2 = self.model.augment(x), self.model.augment(x)
         pred1, pred2 = self.forward(x1), self.forward(x2)
