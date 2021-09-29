@@ -245,7 +245,7 @@ class BYOL(LightningModule):
         return self._target
 
     def update_target(self) -> None:
-        """Funtion to update the target model."""
+        """Function to update the target model."""
         for p, pt in zip(self.encoder.parameters(), self.target.parameters()):
             pt.data = self.beta * pt.data + (1 - self.beta) * p.data
 
