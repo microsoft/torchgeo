@@ -11,7 +11,7 @@ DATA_DIR = ""  # path to the So2Sat data directory
 
 # Hyperparameter options
 encoder_options = ["resnet18", "resnet50"]
-lr_options = [1e-2, 1e-3, 1e-4]
+lr_options = [.2, 1e-2, 1e-3]
 imagenet_pretraining_options = [True, False]
 
 
