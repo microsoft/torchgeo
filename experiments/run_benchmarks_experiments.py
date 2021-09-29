@@ -14,6 +14,9 @@ SEED_OPTIONS = [0, 1, 2]
 CACHE_OPTIONS = [True, False]
 BATCH_SIZE_OPTIONS = [16, 32, 64, 128, 256, 512]
 
+LANDSAT_DATA_ROOT = ""  # path to a directory containing Landsat 8 GeoTIFFs
+CDL_DATA_ROOT = ""  # path to a directory containing CDL GeoTIFF(s)
+
 total_num_experiments = len(SEED_OPTIONS) * len(CACHE_OPTIONS) * len(BATCH_SIZE_OPTIONS)
 
 if __name__ == "__main__":
@@ -27,10 +30,10 @@ if __name__ == "__main__":
             "python",
             "benchmark.py",
             "--landsat-root",
-            "/datadrive/landsat",
+            LANDSAT_DATA_ROOT,
             "--cdl-root",
-            "/datadrive/cdl",
-            "-w",
+            CDL_DATA_ROOT,
+            "--num-workers",
             "6",
             "--batch-size",
             str(batch_size),

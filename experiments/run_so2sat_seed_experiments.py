@@ -9,16 +9,15 @@ import subprocess
 from multiprocessing import Process, Queue
 
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
-GPUS = [0, 0, 0, 0]
+GPUS = [0]
 DRY_RUN = False  # if False then print out the commands to be run, if True then run
-DATA_DIR = ""
+DATA_DIR = ""  # path to the So2Sat data directory
 
 # Hyperparameter options
 model_options = ["resnet18"]
 lr_options = [1e-3]
 loss_options = ["ce"]
 weight_options = ["random"]
-
 seeds = list(range(32))
 
 
@@ -46,13 +45,15 @@ if __name__ == "__main__":
 
         experiment_name = f"{model}_{lr}_{loss}_{weights.replace('_','-')}_{seed}"
 
-        output_dir = "output/so2sat_seed_experiments/"
+        output_dir = os.path.join("output", "so2sat_seed_experiments")
+        log_dir = os.path.join(output_dir, "logs")
+        config_file = os.path.join("conf", "so2sat.yaml")
 
         if not os.path.exists(os.path.join(output_dir, experiment_name)):
 
             command = (
                 "python train.py"
-                + " config_file=conf/so2sat.yaml"
+                + f" config_file={config_file}"
                 + f" experiment.name={experiment_name}"
                 + f" experiment.module.classification_model={model}"
                 + f" experiment.module.learning_rate={lr}"
@@ -60,7 +61,7 @@ if __name__ == "__main__":
                 + f" experiment.module.weights={weights}"
                 + f" experiment.datamodule.weights={weights}"
                 + f" program.output_dir={output_dir}"
-                + f" program.log_dir={output_dir}/logs"
+                + f" program.log_dir={log_dir}"
                 + f" program.data_dir={DATA_DIR}"
                 + f" program.seed={seed}"
                 + " trainer.gpus=[GPU]"
