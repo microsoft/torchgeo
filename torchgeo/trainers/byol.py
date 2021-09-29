@@ -127,6 +127,7 @@ class MLP(Module):
             projection_size: size of the output layer
             hidden_size: size of the hidden layer
         """
+        super().__init__()  # type: ignore[no-untyped-call]
         self.mlp = Sequential(
             Linear(dim, hidden_size),
             BatchNorm1d(hidden_size),  # type: ignore[no-untyped-call]
