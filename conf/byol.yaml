@@ -10,6 +10,7 @@ experiment:
   module:
     model: "byol"
     encoder: "resnet18"
+    learning_rate: 1e-4
     input_channels: 4
     imagenet_pretraining: True
   datamodule:
