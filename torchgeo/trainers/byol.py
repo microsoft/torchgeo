@@ -191,7 +191,7 @@ class BYOL(LightningModule):
 
         Keyword Args:
             model: Model to pretrain using BYOL
-            image_size: Tuple defining the saize of the training images
+            image_size: Tuple defining the size of the training images
             hidden_layer: Defines the layer projected
             input_channels: Number of input channels to the model
             projection_size: Size of first layer of projection MLP
