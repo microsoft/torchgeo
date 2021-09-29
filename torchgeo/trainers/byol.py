@@ -85,7 +85,7 @@ class RandomApply(Module):
 
         Keyword Args:
             augm: Augmentation function to apply
-            p: Probability with wich the augmentation (augm) fn is applied
+            p: Probability with which the augmentation function is applied
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.augm = augm
