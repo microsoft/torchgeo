@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
         experiment_name = f"{model}_{encoder}_{lr}_{loss}_{weight_init}"
 
-        output_dir = "output/landcoverai_experiments/"
+        output_dir = os.path.join("output", "landcoverai_experiments")
 
         if not os.path.exists(os.path.join(output_dir, experiment_name)):
 
