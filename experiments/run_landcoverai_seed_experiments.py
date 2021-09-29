@@ -10,6 +10,7 @@ from multiprocessing import Process, Queue
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
 GPUS = [3, 4, 5, 6, 7]
 TEST_MODE = False  # if False then print out the commands to be run, if True then run
+DATA_DIR = ""
 
 # Hyperparameter options
 model_options = ["unet"]
@@ -19,6 +20,7 @@ loss_options = ["ce"]
 weight_init_options = ["imagenet"]
 
 seeds = list(range(15))
+
 
 def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
     """Process for each ID in GPUS."""
@@ -31,12 +33,12 @@ def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
     return True
 
 
-def main() -> None:
-    """Main."""
+if __name__ == "__main__":
     work: Queue[str] = Queue()
 
     for (model, encoder, lr, loss, weight_init, seed) in itertools.product(
-        model_options, encoder_options, lr_options, loss_options, weight_init_options, seeds
+        model_options, encoder_options, lr_options, loss_options, weight_init_options,
+        seeds
     ):
 
         experiment_name = f"{model}_{encoder}_{lr}_{loss}_{weight_init}_{seed}"
@@ -57,7 +59,7 @@ def main() -> None:
                 + f" program.output_dir={output_dir}"
                 + f" program.seed={seed}"
                 + f" program.log_dir={output_dir}/logs"
-                + " program.data_dir=/home/calebrobinson/ssdprivate/data/landcoverai/"
+                + f" program.data_dir={DATA_DIR}"
                 + " trainer.gpus=[GPU]"
             )
             command = command.strip()
@@ -77,7 +79,3 @@ def main() -> None:
         p.start()
     for p in processes:
         p.join()
-
-
-if __name__ == "__main__":
-    main()

@@ -16,7 +16,6 @@ BATCH_SIZE_OPTIONS = [16, 32, 64, 128, 256, 512]
 total_num_experiments = len(SEED_OPTIONS) * len(CACHE_OPTIONS) * len(BATCH_SIZE_OPTIONS)
 
 if __name__ == "__main__":
-
     tic = time.time()
     for i, (cache, batch_size, seed) in enumerate(
         itertools.product(CACHE_OPTIONS, BATCH_SIZE_OPTIONS, SEED_OPTIONS)

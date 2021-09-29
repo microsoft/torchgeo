@@ -10,6 +10,7 @@ from multiprocessing import Process, Queue
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
 GPUS = [0, 0, 0, 0]
 TEST_MODE = False  # if False then print out the commands to be run, if True then run
+DATA_DIR = ""
 
 # Hyperparameter options
 model_options = ["resnet18"]
@@ -31,8 +32,7 @@ def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
     return True
 
 
-def main() -> None:
-    """Main."""
+if __name__ == "__main__":
     work: Queue[str] = Queue()
 
     for (model, lr, loss, weights, seed) in itertools.product(
@@ -60,7 +60,7 @@ def main() -> None:
                 + f" experiment.datamodule.weights={weights}"
                 + f" program.output_dir={output_dir}"
                 + f" program.log_dir={output_dir}/logs"
-                + " program.data_dir=/home/caleb/mount/data/so2sat"
+                + f" program.data_dir={DATA_DIR}"
                 + f" program.seed={seed}"
                 + " trainer.gpus=[GPU]"
             )
@@ -81,7 +81,3 @@ def main() -> None:
         p.start()
     for p in processes:
         p.join()
-
-
-if __name__ == "__main__":
-    main()
