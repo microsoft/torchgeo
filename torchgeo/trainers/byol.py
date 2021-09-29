@@ -157,7 +157,7 @@ class EncoderWrapper(Module):
         layer.register_forward_hook(self._hook)
 
     def forward(self, x: Tensor) -> Tensor:
-        """Pass through the model, and collect 'encodings' from our forward hook!"""
+        """Pass through the model, and collect 'encodings' from our forward hook."""
         _ = self.model(x)
         return cast(Tensor, self._encoded)
 
