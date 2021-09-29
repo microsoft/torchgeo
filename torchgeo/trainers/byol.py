@@ -324,7 +324,7 @@ class BYOLTask(LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
-        in_channels = self.hparams["in_channels"]
+        input_channels = self.hparams["input_channels"]
         pretrained = self.hparams["imagenet_pretraining"]
         encoder = None
 
@@ -338,7 +338,7 @@ class BYOLTask(LightningModule):
         layer = encoder.conv1
         # Creating new Conv2d layer
         new_layer = Conv2d(
-            in_channels=in_channels,
+            in_channels=input_channels,
             out_channels=layer.out_channels,
             kernel_size=layer.kernel_size,
             stride=layer.stride,
@@ -352,7 +352,7 @@ class BYOLTask(LightningModule):
             ...  # type: ignore[index]
         ] = Variable(layer.weight.clone(), requires_grad=True)
         # Copying the weights of the old layer to the extra channels
-        for i in range(in_channels - layer.in_channels):
+        for i in range(input_channels - layer.in_channels):
             channel = layer.in_channels + i
             new_layer.weight[:, channel : channel + 1, :, :].data[
                 ...  # type: ignore[index]

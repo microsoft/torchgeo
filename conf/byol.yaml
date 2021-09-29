@@ -10,7 +10,7 @@ experiment:
   module:
     model: "byol"
     encoder: "resnet18"
-    in_channels: 4
+    input_channels: 4
     imagenet_pretraining: True
   datamodule:
     batch_size: 64
