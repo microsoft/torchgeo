@@ -67,7 +67,8 @@ class RandomApply(Module):
             x: a batch of imagery
 
         Returns
-            augmented version of `x` with probability `p` else an un-augmented version
+            augmented version of ``x`` with probability ``self.p`` else an un-augmented
+                version
         """
         return x if random.random() > self.p else self.augm(x)
 
