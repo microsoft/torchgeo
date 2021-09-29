@@ -49,9 +49,7 @@ def normalized_mse(x: Tensor, y: Tensor) -> Tensor:
 class RandomApply(Module):
     """Applies augmentation function (augm) with probability p."""
 
-    def __init__(
-        self, augm: Callable[[Tensor], Tensor], p: float
-    ) -> None:
+    def __init__(self, augm: Callable[[Tensor], Tensor], p: float) -> None:
         """Initialize RandomApply.
 
         Args:
