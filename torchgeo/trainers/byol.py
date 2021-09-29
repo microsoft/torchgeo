@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Trainers for the Chesapeake datasets."""
+"""Trainer task for BYOL."""
 import random
 from copy import deepcopy
 from typing import Any, Callable, Dict, Optional, Tuple, Union, cast
