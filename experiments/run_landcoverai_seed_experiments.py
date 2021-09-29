@@ -37,8 +37,12 @@ if __name__ == "__main__":
     work: Queue[str] = Queue()
 
     for (model, encoder, lr, loss, weight_init, seed) in itertools.product(
-        model_options, encoder_options, lr_options, loss_options, weight_init_options,
-        seeds
+        model_options,
+        encoder_options,
+        lr_options,
+        loss_options,
+        weight_init_options,
+        seeds,
     ):
 
         experiment_name = f"{model}_{encoder}_{lr}_{loss}_{weight_init}_{seed}"
