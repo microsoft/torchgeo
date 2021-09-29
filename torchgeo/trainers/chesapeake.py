@@ -3,7 +3,7 @@
 
 """Trainers for the Chesapeake datasets."""
 
-from typing import Any, Callable, Dict, Optional, cast
+from typing import Any, Callable, Dict, List, Optional, cast
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -25,7 +25,6 @@ from torchvision.transforms import Compose
 from ..datasets import Chesapeake7, ChesapeakeCVPR
 from ..models import FCN
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
-from ..transforms import RandomHorizontalFlip, RandomVerticalFlip
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -281,7 +280,8 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
-            a "lr dict" according to the pytorch lightning documentation
+            a "lr dict" according to the pytorch lightning documentation --
+            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         optimizer = torch.optim.Adam(
             self.model.parameters(),
@@ -295,7 +295,6 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
                     patience=self.hparams["learning_rate_schedule_patience"],
                 ),
                 "monitor": "val_loss",
-                "verbose": True,
             },
         }
 
@@ -310,7 +309,9 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
     def __init__(
         self,
         root_dir: str,
-        train_state: str,
+        train_splits: List[str],
+        val_splits: List[str],
+        test_splits: List[str],
         patches_per_tile: int = 200,
         patch_size: int = 256,
         batch_size: int = 64,
@@ -323,7 +324,9 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         Args:
             root_dir: The ``root`` arugment to pass to the ChesapeakeCVPR Dataset
                 classes
-            train_state: The state code to use to train the model, e.g. "ny"
+            train_splits: The splits used to train the model, e.g. ["ny-train"]
+            val_splits: The splits used to validate the model, e.g. ["ny-val"]
+            test_splits: The splits used to test the model, e.g. ["ny-test"]
             patches_per_tile: The number of patches per tile to sample
             patch_size: The size of each patch in pixels (test patches will be 1.5 times
                 this size)
@@ -332,11 +335,14 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             class_set: The high-resolution land cover class set to use - 5 or 7
         """
         super().__init__()  # type: ignore[no-untyped-call]
-        assert train_state in ["md", "de", "ny", "pa", "va", "wv"]
+        for state in train_splits + val_splits + test_splits:
+            assert state in ChesapeakeCVPR.splits
         assert class_set in [5, 7]
 
         self.root_dir = root_dir
-        self.train_state = train_state
+        self.train_splits = train_splits
+        self.val_splits = val_splits
+        self.test_splits = test_splits
         self.layers = ["naip-new", "lc"]
         self.patches_per_tile = patches_per_tile
         self.patch_size = patch_size
@@ -434,7 +440,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         """
         ChesapeakeCVPR(
             self.root_dir,
-            split=f"{self.train_state}-train",
+            splits=self.train_splits,
             layers=self.layers,
             transforms=None,
             download=True,
@@ -450,8 +456,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         train_transforms = Compose(
             [
                 self.center_crop(self.patch_size),
-                RandomHorizontalFlip(p=0.5),
-                RandomVerticalFlip(p=0.5),
                 self.nodata_check(self.patch_size),
                 self.preprocess,
             ]
@@ -472,7 +476,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
 
         self.train_dataset = ChesapeakeCVPR(
             self.root_dir,
-            split=f"{self.train_state}-train",
+            splits=self.train_splits,
             layers=self.layers,
             transforms=train_transforms,
             download=False,
@@ -480,7 +484,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         )
         self.val_dataset = ChesapeakeCVPR(
             self.root_dir,
-            split=f"{self.train_state}-val",
+            splits=self.val_splits,
             layers=self.layers,
             transforms=val_transforms,
             download=False,
@@ -488,7 +492,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         )
         self.test_dataset = ChesapeakeCVPR(
             self.root_dir,
-            split=f"{self.train_state}-test",
+            splits=self.test_splits,
             layers=self.layers,
             transforms=test_transforms,
             download=False,

@@ -236,28 +236,6 @@ class SEN12MSDataModule(pl.LightningDataModule):
 
         return sample
 
-    def prepare_data(self) -> None:
-        """Initialize the main ``Dataset`` objects for use in :func:`setup`.
-
-        This includes optionally downloading the dataset. This is done once per node,
-        while :func:`setup` is done once per GPU.
-        """
-        self.all_train_dataset = SEN12MS(
-            self.root_dir,
-            split="train",
-            bands=self.band_indices,
-            transforms=self.custom_transform,
-            checksum=False,
-        )
-
-        self.all_test_dataset = SEN12MS(
-            self.root_dir,
-            split="test",
-            bands=self.band_indices,
-            transforms=self.custom_transform,
-            checksum=False,
-        )
-
     def setup(self, stage: Optional[str] = None) -> None:
         """Create the train/val/test splits based on the original Dataset objects.
 
@@ -273,6 +251,22 @@ class SEN12MSDataModule(pl.LightningDataModule):
             "summer": 2000,
             "fall": 3000,
         }
+
+        self.all_train_dataset = SEN12MS(
+            self.root_dir,
+            split="train",
+            bands=self.band_indices,
+            transforms=self.custom_transform,
+            checksum=False,
+        )
+
+        self.all_test_dataset = SEN12MS(
+            self.root_dir,
+            split="test",
+            bands=self.band_indices,
+            transforms=self.custom_transform,
+            checksum=False,
+        )
 
         # A patch is a filename like: "ROIs{num}_{season}_s2_{scene_id}_p{patch_id}.tif"
         # This patch will belong to the scene that is uniquelly identified by its

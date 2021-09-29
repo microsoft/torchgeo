@@ -1,0 +1,23 @@
+trainer:
+  gpus: 1
+  min_epochs: 20
+  max_epochs: 100
+  benchmark: True
+
+experiment:
+  task: "ssl"
+  name: "test_byol"
+  module:
+    model: "byol"
+    encoder: "resnet18"
+    input_channels: 4
+    imagenet_pretraining: True
+  datamodule:
+    batch_size: 64
+    num_workers: 6
+    train_splits:
+      - "de-train"
+    val_splits:
+      - "de-val"
+    test_splits:
+      - "de-test"

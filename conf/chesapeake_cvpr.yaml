@@ -13,11 +13,15 @@ experiment:
     encoder_name: "resnet18"
     encoder_weights: null  # use ImageNet weight initialization
     encoder_output_stride: 16
-    optimizer: "adamw"
     learning_rate: 1e-2
     learning_rate_schedule_patience: 6
-    class_set: 5
+    class_set: 7
   datamodule:
     batch_size: 64
     num_workers: 6
-    train_state: "de" # train/val/test in Delaware
+    train_splits:
+      - "de-train"
+    val_splits:
+      - "de-val"
+    test_splits:
+      - "de-test"

@@ -14,6 +14,7 @@ from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 
 from torchgeo.trainers import (
+    BYOLTask,
     ChesapeakeCVPRDataModule,
     ChesapeakeCVPRSegmentationTask,
     CycloneDataModule,
@@ -24,16 +25,20 @@ from torchgeo.trainers import (
     NAIPChesapeakeSegmentationTask,
     SEN12MSDataModule,
     SEN12MSSegmentationTask,
+    So2SatClassificationTask,
+    So2SatDataModule,
 )
 
 TASK_TO_MODULES_MAPPING: Dict[
     str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
 ] = {
+    "byol": (BYOLTask, ChesapeakeCVPRDataModule),
     "chesapeake_cvpr": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
     "cyclone": (CycloneSimpleRegressionTask, CycloneDataModule),
     "landcoverai": (LandcoverAISegmentationTask, LandcoverAIDataModule),
     "naipchesapeake": (NAIPChesapeakeSegmentationTask, NAIPChesapeakeDataModule),
     "sen12ms": (SEN12MSSegmentationTask, SEN12MSDataModule),
+    "so2sat": (So2SatClassificationTask, So2SatDataModule),
 }
 
 
@@ -150,20 +155,24 @@ def main(conf: DictConfig) -> None:
     checkpoint_callback = ModelCheckpoint(
         monitor="val_loss",
         dirpath=experiment_dir,
-        save_top_k=3,
+        save_top_k=1,
         save_last=True,
     )
     early_stopping_callback = EarlyStopping(
         monitor="val_loss",
         min_delta=0.00,
-        patience=10,
+        patience=18,
     )
 
     trainer_args = cast(Dict[str, Any], OmegaConf.to_object(conf.trainer))
 
     trainer_args["callbacks"] = [checkpoint_callback, early_stopping_callback]
     trainer_args["logger"] = tb_logger
+    trainer_args["default_root_dir"] = experiment_dir
     trainer = pl.Trainer(**trainer_args)
+
+    if trainer_args["auto_lr_find"]:
+        trainer.tune(model=task, datamodule=datamodule)
 
     ######################################
     # Run experiment

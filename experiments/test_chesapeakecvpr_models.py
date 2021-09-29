@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
@@ -10,10 +9,16 @@ import csv
 import os
 
 import pytorch_lightning as pl
+import torch
 
 from torchgeo.trainers import ChesapeakeCVPRDataModule, ChesapeakeCVPRSegmentationTask
 
-STATES = ["de", "md", "va", "wv", "pa", "ny"]
+ALL_TEST_SPLITS = [
+    ["de-val"],
+    ["pa-test"],
+    ["ny-test"],
+    ["pa-test", "ny-test"],
+]
 
 
 def set_up_parser() -> argparse.ArgumentParser:
@@ -47,6 +52,14 @@ def set_up_parser() -> argparse.ArgumentParser:
         help="path to the CSV file to write results",
         metavar="FILE",
     )
+    parser.add_argument(
+        "-d",
+        "--device",
+        default=0,
+        type=int,
+        help="GPU ID to use, ignored if no GPUs are available",
+        metavar="ID",
+    )
 
     return parser
 
@@ -67,6 +80,7 @@ def main(args: argparse.Namespace) -> None:
         "model",
         "learning-rate",
         "initialization",
+        "loss",
         "test-state",
         "acc",
         "iou",
@@ -77,12 +91,27 @@ def main(args: argparse.Namespace) -> None:
 
     # Test loop
     trainer = pl.Trainer(
-        gpus=1, logger=False, progress_bar_refresh_rate=0, checkpoint_callback=False
+        gpus=[args.device] if torch.cuda.is_available() else None,
+        logger=False,
+        progress_bar_refresh_rate=0,
+        checkpoint_callback=False,
     )
 
     for experiment_dir in os.listdir(args.input_dir):
 
-        checkpoint_fn = os.path.join(args.input_dir, experiment_dir, "last.ckpt")
+        checkpoint_fn = None
+        for fn in os.listdir(os.path.join(args.input_dir, experiment_dir)):
+            if fn.startswith("epoch") and fn.endswith(".ckpt"):
+                checkpoint_fn = fn
+                break
+        if checkpoint_fn is None:
+            print(
+                f"Skipping {os.path.join(args.input_dir, experiment_dir)} as we are not"
+                + " able to find a checkpoint file"
+            )
+            continue
+        checkpoint_fn = os.path.join(args.input_dir, experiment_dir, checkpoint_fn)
+
         try:
 
             model = ChesapeakeCVPRSegmentationTask.load_from_checkpoint(checkpoint_fn)
@@ -100,7 +129,8 @@ def main(args: argparse.Namespace) -> None:
             train_state = experiment_dir_parts[0]
             model_name = experiment_dir_parts[1]
             learning_rate = experiment_dir_parts[2]
-            initialization = "random" if len(experiment_dir_parts) == 4 else "imagenet"
+            loss = experiment_dir_parts[3]
+            initialization = "random" if len(experiment_dir_parts) == 5 else "imagenet"
         except IndexError:
             print(
                 f"Skipping {experiment_dir} as the directory name is not in the"
@@ -109,23 +139,27 @@ def main(args: argparse.Namespace) -> None:
             continue
 
         # Test the loaded model against the test set from all states
-        for state in STATES:
+        for test_splits in ALL_TEST_SPLITS:
 
             dm = ChesapeakeCVPRDataModule(
                 args.chesapeakecvpr_root,
-                train_state=f"{state}",
+                train_splits=["de-train"],
+                val_splits=["de-val"],
+                test_splits=test_splits,
                 batch_size=32,
                 num_workers=8,
+                class_set=5,
             )
             results = trainer.test(model=model, datamodule=dm, verbose=False)
-            print(experiment_dir, state, results[0])
+            print(experiment_dir, test_splits, results[0])
 
             row = {
                 "train-state": train_state,
                 "model": model_name,
                 "learning-rate": learning_rate,
                 "initialization": initialization,
-                "test-state": state,
+                "loss": loss,
+                "test-state": "_".join(test_splits),
                 "acc": results[0]["test_Accuracy"],
                 "iou": results[0]["test_IoU"],
             }
