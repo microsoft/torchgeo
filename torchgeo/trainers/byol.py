@@ -257,7 +257,7 @@ class BYOL(Module):
         beta: float = 0.99,
         **kwargs: Any,
     ) -> None:
-        """Sets up BYOL with a model for pre-training and projection heads.
+        """Sets up a model for pre-training with BYOL using projection heads.
 
         Args:
             model: the model to pretrain using BYOL
@@ -295,7 +295,7 @@ class BYOL(Module):
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward pass of the model.
+        """Forward pass of the encoder model through the MLP and prediction head.
 
         Args:
             x: tensor of data to run through the model
@@ -367,10 +367,10 @@ class BYOLTask(LightningModule):
         self,
         **kwargs: Any,
     ) -> None:
-        """Initialize the LightningModule with a model and loss function.
+        """Initialize a LightningModule for pre-training a model with BYOL.
 
         Keyword Args:
-            input_channels: Number of channels on the input imagery
+            input_channels: number of channels on the input imagery
             encoder: either "resnet18" or "resnet50"
             imagenet_pretraining: bool indicating whether to use imagenet pretrained
                 weights
@@ -423,8 +423,8 @@ class BYOLTask(LightningModule):
         """Training step - reports BYOL loss.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: current batch
+            batch_idx: index of current batch
 
         Returns:
             training loss
@@ -451,8 +451,8 @@ class BYOLTask(LightningModule):
         """Logs iteration level validation loss.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: current batch
+            batch_idx: index of current batch
         """
         x = batch["image"]
         x1, x2 = self.model.augment(x), self.model.augment(x)
