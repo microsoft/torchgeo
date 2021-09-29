@@ -195,7 +195,7 @@ class BYOL(LightningModule):
             hidden_layer: Defines the layer projected
             input_channels: Number of input channels to the model
             projection_size: Size of first layer of projection MLP
-            hidden_size: Size if the hidden layer of the projection MLP
+            hidden_size: Size of the hidden layer of the projection MLP
             augment_fn: param for augmentation
             beta: Beta parameter on BYOL, dictates speed at which the target encoder
                     is updated using the main encoder
