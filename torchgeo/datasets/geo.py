@@ -286,7 +286,7 @@ class RasterDataset(GeoDataset):
                     filepath = glob.glob(os.path.join(directory, filename))[0]
                     band_filepaths.append(filepath)
                 data_list.append(self._merge_files(band_filepaths, query))
-            data = torch.cat(data_list)
+            data = torch.cat(data_list)  # type: ignore[attr-defined]
         else:
             data = self._merge_files(filepaths, query)
 
