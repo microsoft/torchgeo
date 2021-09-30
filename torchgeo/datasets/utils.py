@@ -18,6 +18,7 @@ import numpy as np
 import rasterio
 import torch
 from torch import Tensor
+from torch.utils.data import Dataset, Subset, random_split
 from torchvision.datasets.utils import check_integrity, download_url
 
 __all__ = (
@@ -30,6 +31,7 @@ __all__ = (
     "working_dir",
     "collate_dict",
     "rasterio_loader",
+    "dataset_split",
 )
 
 
@@ -394,3 +396,26 @@ def rasterio_loader(path: str) -> np.ndarray:  # type: ignore[type-arg]
         # VisionClassificationDataset expects images returned with channels last (HWC)
         array = array.transpose(1, 2, 0)
     return array
+
+
+def dataset_split(
+    dataset: Dataset[Any], val_pct: float, test_pct: Optional[float] = None
+) -> List[Subset[Any]]:
+    """Split a torch Dataset into train/val/test sets.
+
+    Args:
+        dataset: dataset to be split into train/val or train/val/test subsets
+        val_pct: percentage of samples to be in validation set
+        test_pct: (Optional) percentage of samples to be in test set
+    Returns:
+        a list of the subset datasets. Either [train, val] or [train, val, test]
+    """
+    if test_pct is None:
+        val_length = int(len(dataset) * val_pct)  # type: ignore[arg-type]
+        train_length = len(dataset) - val_length  # type: ignore[arg-type]
+        return random_split(dataset, [train_length, val_length])
+    else:
+        val_length = int(len(dataset) * val_pct)  # type: ignore[arg-type]
+        test_length = int(len(dataset) * test_pct)  # type: ignore[arg-type]
+        train_length = len(dataset) - (val_length + test_length)  # type: ignore[arg-type]
+        return random_split(dataset, [train_length, val_length, test_length])
