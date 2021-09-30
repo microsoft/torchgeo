@@ -15,10 +15,10 @@ from torch.nn.modules import Conv2d, Linear, Module
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torchmetrics import Accuracy, MetricCollection
-from torchvision.transforms import Compose
+from torchvision.transforms import Compose, Normalize
 
-from ..datasets.utils import dataset_split
 from ..datasets import RESISC45
+from ..datasets.utils import dataset_split
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -38,9 +38,9 @@ class RESISC45ClassificationTask(pl.LightningModule):
         """Configures the task based on kwargs parameters passed to the constructor."""
         pretrained = "imagenet" in self.hparams["weights"]
 
-        if "resnet" in self.hparams["classification_models"]:
+        if "resnet" in self.hparams["classification_model"]:
             self.model = getattr(
-                torchvision.models.resnet, self.hparams["classification_models"]
+                torchvision.models.resnet, self.hparams["classification_model"]
             )(pretrained=pretrained)
             in_features = self.model.fc.in_features
             self.model.fc = Linear(in_features, out_features=NUM_CLASSES)
@@ -51,7 +51,7 @@ class RESISC45ClassificationTask(pl.LightningModule):
 
         if "resnet" in self.hparams["classification_model"]:
 
-            if self.hparams["weights"] == "imagenet_only":
+            if self.hparams["weights"] in ["imagenet_only", "random"]:
                 pass
             else:
                 raise ValueError(
@@ -218,20 +218,12 @@ class RESISC45DataModule(pl.LightningDataModule):
     """
 
     band_means = torch.tensor(  # type: ignore[attr-defined]
-        [
-            -3.591224256609313e-05,
-            -7.658561276843396e-06,
-            5.9373857475971184e-05,
-        ]
-    ).reshape(18, 1, 1)
+        [0.36801773, 0.38097873, 0.343583]
+    )
 
     band_stds = torch.tensor(  # type: ignore[attr-defined]
-        [
-            0.17555201137417686,
-            0.17556463274968204,
-            0.45998793417834255,
-        ]
-    ).reshape(18, 1, 1)
+        [0.14540215, 0.13558227, 0.13203649]
+    )
 
     def __init__(
         self,
@@ -260,6 +252,7 @@ class RESISC45DataModule(pl.LightningDataModule):
         self.weights = weights
         self.unsupervised_mode = unsupervised_mode
 
+        self.norm = Normalize(self.band_means, self.band_stds)
         self.transforms = K.AugmentationSequential(
             K.RandomAffine(degrees=30),
             K.RandomHorizontalFlip(),
@@ -267,16 +260,16 @@ class RESISC45DataModule(pl.LightningDataModule):
             data_keys=["input"],
         )
 
-    def preprocess1(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         sample["image"] = sample["image"].float()
         sample["image"] /= 255.0
+        sample["image"] = self.norm(sample["image"])
         return sample
 
     def kornia_pipeline(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset with Kornia."""
         sample["image"] = self.transforms(sample["image"]).squeeze()
-
         return sample
 
     def prepare_data(self) -> None:
@@ -291,7 +284,7 @@ class RESISC45DataModule(pl.LightningDataModule):
 
         This method is called once per GPU per run.
         """
-        transforms = Compose([self.preprocess1])
+        transforms = Compose([self.preprocess])
 
         if not self.unsupervised_mode:
 

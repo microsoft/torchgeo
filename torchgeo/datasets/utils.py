@@ -417,5 +417,5 @@ def dataset_split(
     else:
         val_length = int(len(dataset) * val_pct)  # type: ignore[arg-type]
         test_length = int(len(dataset) * test_pct)  # type: ignore[arg-type]
-        train_length = len(dataset) - (val_length + test_length)  # type: ignore[arg-type]
+        train_length = len(dataset) - (val_length + test_length)  # type: ignore[arg-type] # noqa: E501
         return random_split(dataset, [train_length, val_length, test_length])
