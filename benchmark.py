@@ -14,7 +14,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision.models import resnet18
 
-from torchgeo.datasets import CDL, BoundingBox, Landsat8
+from torchgeo.datasets import CDL, Landsat8
 from torchgeo.samplers import GridGeoSampler, RandomBatchGeoSampler, RandomGeoSampler
 
 
