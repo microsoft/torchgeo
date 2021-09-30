@@ -8,7 +8,7 @@ import subprocess
 import time
 from typing import List
 
-NUM_BATCHES = 100
+EPOCH_SIZE = 2048
 
 SEED_OPTIONS = [0, 1, 2]
 CACHE_OPTIONS = [True, False]
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     for i, (cache, batch_size, seed) in enumerate(
         itertools.product(CACHE_OPTIONS, BATCH_SIZE_OPTIONS, SEED_OPTIONS)
     ):
-        print(f"{i}/{total_num_experiments} -- {time.time() - tic}")
+        print(f"\n{i}/{total_num_experiments} -- {time.time() - tic}")
         tic = time.time()
         command: List[str] = [
             "python",
@@ -40,8 +40,8 @@ if __name__ == "__main__":
             "8",
             "--batch-size",
             str(batch_size),
-            "--num-batches",
-            str(NUM_BATCHES),
+            "--epoch-size",
+            str(EPOCH_SIZE),
             "--seed",
             str(seed),
             "--verbose",
