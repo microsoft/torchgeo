@@ -7,10 +7,9 @@ import abc
 import random
 from typing import Iterator, Optional, Tuple, Union
 
-from rtree.index import Index
 from torch.utils.data import Sampler
 
-from torchgeo.datasets import BoundingBox
+from torchgeo.datasets import BoundingBox, GeoDataset
 
 from .utils import _to_tuple, get_random_bounding_box
 
@@ -49,7 +48,7 @@ class RandomGeoSampler(GeoSampler):
 
     def __init__(
         self,
-        index: Index,
+        dataset: GeoDataset,
         size: Union[Tuple[float, float], float],
         length: int,
         roi: Optional[BoundingBox] = None,
@@ -70,13 +69,14 @@ class RandomGeoSampler(GeoSampler):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``index``)
         """
-        self.index = index
+        self.index = dataset.index
+        self.res = dataset.res
         self.size = _to_tuple(size)
         self.length = length
         if roi is None:
-            roi = BoundingBox(*index.bounds)
+            roi = BoundingBox(*self.index.bounds)
         self.roi = roi
-        self.hits = list(index.intersection(roi, objects=True))
+        self.hits = list(self.index.intersection(roi, objects=True))
 
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
@@ -90,7 +90,7 @@ class RandomGeoSampler(GeoSampler):
             bounds = BoundingBox(*hit.bounds)
 
             # Choose a random index within that tile
-            bounding_box = get_random_bounding_box(bounds, self.size)
+            bounding_box = get_random_bounding_box(bounds, self.size, self.res)
 
             yield bounding_box
 
@@ -123,7 +123,7 @@ class GridGeoSampler(GeoSampler):
 
     def __init__(
         self,
-        index: Index,
+        dataset: GeoDataset,
         size: Union[Tuple[float, float], float],
         stride: Union[Tuple[float, float], float],
         roi: Optional[BoundingBox] = None,
@@ -143,13 +143,13 @@ class GridGeoSampler(GeoSampler):
             stride: distance to skip between each patch
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
         """
-        self.index = index
+        self.index = dataset.index
         self.size = _to_tuple(size)
         self.stride = _to_tuple(stride)
         if roi is None:
-            roi = BoundingBox(*index.bounds)
+            roi = BoundingBox(*self.index.bounds)
         self.roi = roi
-        self.hits = list(index.intersection(roi, objects=True))
+        self.hits = list(self.index.intersection(roi, objects=True))
 
         self.length: int = 0
         for hit in self.hits:
