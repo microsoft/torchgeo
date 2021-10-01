@@ -8,7 +8,6 @@ from collections import OrderedDict
 from typing import Tuple
 
 import torch
-import torch.nn as nn
 from torch import Tensor
 from torch.nn.modules import Module
 
@@ -58,7 +57,7 @@ def extract_encoder(path: str) -> Tuple[str, OrderedDict[str, Tensor]]:
 
 
 def load_state_dict(model: Module, state_dict: OrderedDict[str, Tensor]) -> Module:
-    """Load pretrained model weights to a model.
+    """Load pretrained resnet weights to a model.
 
     Args:
         model: model to load the pretrained weights to
@@ -68,28 +67,28 @@ def load_state_dict(model: Module, state_dict: OrderedDict[str, Tensor]) -> Modu
         the model with pretrained weights
 
     Raises:
+        Warning: if input channels in model != pretrained model input channels
         Warning: if num output classes in model != pretrained model num classes
     """
-    in_channels = state_dict["conv1.weight"].shape[1]
-    model.conv1 = nn.modules.Conv2d(
-        in_channels,
-        64,
-        kernel_size=7,
-        stride=1,
-        padding=2,
-        bias=False,
-    )
+    in_channels = model.conv1.in_channels  # type: ignore[union-attr]
+    expected_in_channels = state_dict["conv1.weight"].shape[1]
     num_classes = model.fc.out_features  # type: ignore[union-attr]
     expected_num_classes = state_dict["fc.weight"].shape[0]
 
-    if num_classes == expected_num_classes:
-        model.load_state_dict(state_dict)
-    else:
+    if in_channels != expected_in_channels:
+        warnings.warn(
+            f"""input channels {in_channels} != input channels in pretrained"""
+            """model {expected_in_channels}. Overriding with new input channels"""
+        )
+        del state_dict["conv1.weight"]
+
+    if num_classes != expected_num_classes:
         warnings.warn(
             f"""num classes {num_classes} != num classes in pretrained model"""
             """{expected_num_classes}. Overriding with new num classes"""
         )
         del state_dict["fc.weight"], state_dict["fc.bias"]
-        _ = model.load_state_dict(state_dict, strict=False)
+
+    _ = model.load_state_dict(state_dict, strict=False)
 
     return model
