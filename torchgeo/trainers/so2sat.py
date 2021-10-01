@@ -3,6 +3,7 @@
 
 """So2Sat trainer."""
 
+import os
 from typing import Any, Dict, Optional, cast
 
 import kornia.augmentation as K
@@ -19,6 +20,7 @@ from torchmetrics import Accuracy, IoU, MetricCollection
 from torchvision.transforms import Compose
 
 from ..datasets import So2Sat
+from . import utils
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -39,14 +41,11 @@ class So2SatClassificationTask(pl.LightningModule):
         pretrained = "imagenet" in self.hparams["weights"]
 
         if self.hparams["classification_model"] == "resnet18":
-            self.model = torchvision.models.resnet18(pretrained=pretrained)
-            self.model.fc = Linear(512, out_features=NUM_CLASSES)
-        elif self.hparams["classification_model"] == "resnet50":
-            self.model = torchvision.models.resnet50(pretrained=pretrained)
-            self.model.fc = Linear(2048, out_features=NUM_CLASSES)
-        elif self.hparams["classification_model"] == "resnet152":
-            self.model = torchvision.models.resnet152(pretrained=pretrained)
-            self.model.fc = Linear(2048, out_features=NUM_CLASSES)
+            self.model = getattr(
+                torchvision.models.resnet, self.hparams["classification_model"]
+            )(pretrained=pretrained)
+            in_features = self.model.fc.in_features
+            self.model.fc = Linear(in_features, out_features=NUM_CLASSES)
         else:
             raise ValueError(
                 f"Model type '{self.hparams['classification_model']}' is not valid."
@@ -54,7 +53,18 @@ class So2SatClassificationTask(pl.LightningModule):
 
         if "resnet" in self.hparams["classification_model"]:
 
-            if self.hparams["weights"] == "imagenet_only":
+            if os.path.exists(self.hparams["weights"]):
+                name, state_dict = utils.extract_encoder(self.hparams["weights"])
+
+                if self.hparams["classification_model"] != name:
+                    raise ValueError(
+                        f"""Trying to load {name} weights into a"""
+                        f"""{self.hparams['classification_model']}"""
+                    )
+
+                self.model = utils.load_state_dict(self.model, state_dict)
+
+            elif self.hparams["weights"] == "imagenet_only":
                 pass
             elif self.hparams["weights"] == "imagenet_and_random":
                 # save the initial imagenet weights
