@@ -57,11 +57,15 @@ class TestGeoDataset:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
         assert dataset[query] == {"index": query}
 
+    def test_len(self, dataset: GeoDataset) -> None:
+        assert len(dataset) == 1
+
     def test_add_two(self) -> None:
         ds1 = CustomGeoDataset()
         ds2 = CustomGeoDataset()
         dataset = ds1 + ds2
         assert isinstance(dataset, ZipDataset)
+        assert len(dataset) == 2
 
     def test_add_three(self) -> None:
         ds1 = CustomGeoDataset()
@@ -69,6 +73,7 @@ class TestGeoDataset:
         ds3 = CustomGeoDataset()
         dataset = ds1 + ds2 + ds3
         assert isinstance(dataset, ZipDataset)
+        assert len(dataset) == 3
 
     def test_add_four(self) -> None:
         ds1 = CustomGeoDataset()
@@ -77,10 +82,13 @@ class TestGeoDataset:
         ds4 = CustomGeoDataset()
         dataset = (ds1 + ds2) + (ds3 + ds4)
         assert isinstance(dataset, ZipDataset)
+        assert len(dataset) == 4
 
     def test_str(self, dataset: GeoDataset) -> None:
-        assert "type: GeoDataset" in str(dataset)
-        assert "bbox: BoundingBox" in str(dataset)
+        out = str(dataset)
+        assert "type: GeoDataset" in out
+        assert "bbox: BoundingBox" in out
+        assert "size: 1" in out
 
     def test_abstract(self) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
@@ -223,9 +231,14 @@ class TestZipDataset:
         query = BoundingBox(0, 1, 2, 3, 4, 5)
         assert dataset[query] == {"index": query}
 
+    def test_len(self, dataset: ZipDataset) -> None:
+        assert len(dataset) == 2
+
     def test_str(self, dataset: ZipDataset) -> None:
-        assert "type: ZipDataset" in str(dataset)
-        assert "bbox: BoundingBox" in str(dataset)
+        out = str(dataset)
+        assert "type: ZipDataset" in out
+        assert "bbox: BoundingBox" in out
+        assert "size: 2" in out
 
     def test_vision_dataset(self) -> None:
         ds1 = CustomVisionDataset()
