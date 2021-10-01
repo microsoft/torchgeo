@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import rasterio.merge
+import shapely.geometry
 import torch
 from rasterio.crs import CRS
 from rasterio.io import DatasetReader
@@ -765,3 +766,98 @@ class ZipDataset(GeoDataset):
         maxt = min([ds.bounds[5] for ds in self.datasets])
 
         return BoundingBox(minx, maxx, miny, maxy, mint, maxt)
+
+
+class RasterListDataset(GeoDataset):
+    """A dataset for a collection of rasters in the same coordinate system."""
+
+    def __init__(
+        self,
+        paths: Sequence[str],
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        cache: bool = True,
+        sample_key: str = "image",
+    ) -> None:
+        """Initialize a new RasterListDataset instance.
+
+        Args:
+            paths: list of paths to raster files that can be read by rasterio
+            transforms: a function/transform that takes an input sample
+                and returns a transformed version
+            cache: if True, cache file handle to speed up repeated sampling
+            sample_key: either "image" or "mask" indicating what type of data the
+                input rasters hold
+        Raises:
+            RasterioIOError: if any resource in ``paths`` is not found
+            ValueError: if all resources don't share the same CRS
+        """
+        super().__init__(transforms)
+        assert sample_key in ["image", "mask"]
+        self.cache = cache
+        self.sample_key = sample_key
+
+        mint: float = 0
+        maxt: float = sys.maxsize
+
+        self.crs: Optional[CRS] = None
+        for i, fn in enumerate(paths):
+            with rasterio.open(fn) as f:
+                if self.crs is None:
+                    self.crs = f.crs
+                else:
+                    if f.crs != self.crs:
+                        raise ValueError("All files are expected to have the same CRS")
+
+                minx, miny, maxx, maxy = f.bounds
+                coords = (minx, maxx, miny, maxy, mint, maxt)
+                self.index.insert(i, coords, obj=fn)
+
+    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+        """Retrieve image/mask and metadata indexed by query.
+
+        Args:
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+
+        Returns:
+            sample of image/mask and metadata at that index
+
+        Raises:
+            IndexError: if query is not found in the index
+        """
+        hits = self.index.intersection(query, objects=True)
+        paths = [hit.object for hit in hits]
+
+        sample: Dict[str, Any] = {
+            self.sample_key: None,
+            "crs": self.crs,
+            "bbox": query,
+        }
+
+        if len(paths) == 0:
+            raise IndexError(
+                f"query: {query} not found in index with bounds: {self.bounds}"
+            )
+        elif len(paths) == 1:
+            path = paths[0]
+
+            minx, maxx, miny, maxy, mint, maxt = query
+            box = shapely.geometry.mapping(shapely.geometry.box(minx, miny, maxx, maxy))
+
+            with rasterio.open(path) as f:
+                data, _ = rasterio.mask.mask(f, [box], crop=True, all_touched=True)
+
+            if data.dtype == np.uint16:
+                data = data.astype(np.int32)
+
+            sample[self.sample_key] = data
+        else:
+            raise IndexError(f"query: {query} spans multiple tiles which is not valid")
+
+        sample[self.sample_key] = torch.from_numpy(  # type: ignore[attr-defined]
+            sample[self.sample_key]
+        )
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample

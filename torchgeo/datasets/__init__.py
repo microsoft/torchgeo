@@ -28,6 +28,7 @@ from .eurosat import EuroSAT
 from .geo import (
     GeoDataset,
     RasterDataset,
+    RasterListDataset,
     VectorDataset,
     VisionClassificationDataset,
     VisionDataset,
@@ -88,6 +89,7 @@ __all__ = (
     "Landsat8",
     "Landsat9",
     "NAIP",
+    "RasterListDataset",
     "Sentinel",
     "Sentinel2",
     # VisionDataset
