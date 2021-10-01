@@ -22,21 +22,38 @@ def extract_encoder(path: str) -> Tuple[str, OrderedDict[str, Tensor]]:
 
     Args:
         path: path to checkpoint file (.ckpt)
-        output_path: output path to save encoder state dict (.pt)
+
+    Raises:
+        ValueError: if 'classification_model' or 'encoder' not in
+        checkpoint['hyper_parameters']
     """
     checkpoint = torch.load(  # type: ignore[no-untyped-call]
         path, map_location=torch.device("cpu")  # type: ignore[attr-defined]
     )
-    _ = checkpoint["hyper_parameters"]["model"]
-    name = checkpoint["hyper_parameters"]["encoder"]
 
-    state_dict = checkpoint["state_dict"]
-    state_dict = OrderedDict(
-        {k: v for k, v in state_dict.items() if "model.encoder.model" in k}
-    )
-    state_dict = OrderedDict(
-        {k.replace("model.encoder.model.", ""): v for k, v in state_dict.items()}
-    )
+    if "classification_model" in checkpoint["hyper_parameters"]:
+        name = checkpoint["hyper_parameters"]["classification_model"]
+        state_dict = checkpoint["state_dict"]
+        state_dict = OrderedDict({k: v for k, v in state_dict.items() if "model." in k})
+        state_dict = OrderedDict(
+            {k.replace("model.", ""): v for k, v in state_dict.items()}
+        )
+    elif "encoder" in checkpoint["hyper_parameters"]:
+        name = checkpoint["hyper_parameters"]["encoder"]
+        state_dict = checkpoint["state_dict"]
+        state_dict = OrderedDict(
+            {k: v for k, v in state_dict.items() if "model.encoder.model" in k}
+        )
+        state_dict = OrderedDict(
+            {k.replace("model.encoder.model.", ""): v for k, v in state_dict.items()}
+        )
+    else:
+        raise ValueError(
+            """Unknown checkpoint task. Only encoder or classification_model"""
+            """extraction is supported"""
+        )
+    _ = checkpoint["hyper_parameters"]["model"]
+
     return name, state_dict
 
 
