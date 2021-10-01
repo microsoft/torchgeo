@@ -304,6 +304,7 @@ class RESISC45DataModule(pl.LightningDataModule):
                 self.root_dir,
                 transforms=transforms,
             )
+            self.val_dataset, self.test_dataset = None, None
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""
@@ -316,18 +317,24 @@ class RESISC45DataModule(pl.LightningDataModule):
 
     def val_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for validation."""
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
+        if self.val_dataset is None or len(self.val_dataset) == 0:
+            return self.train_dataloader()
+        else:
+            return DataLoader(
+                self.val_dataset,
+                batch_size=self.batch_size,
+                num_workers=self.num_workers,
+                shuffle=False,
+            )
 
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing."""
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
+        if self.test_dataset is None or len(self.test_dataset) == 0:
+            return self.train_dataloader()
+        else:
+            return DataLoader(
+                self.test_dataset,
+                batch_size=self.batch_size,
+                num_workers=self.num_workers,
+                shuffle=False,
+            )
