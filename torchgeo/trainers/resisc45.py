@@ -252,6 +252,9 @@ class RESISC45DataModule(pl.LightningDataModule):
         self.weights = weights
         self.unsupervised_mode = unsupervised_mode
 
+        self.val_split_pct = kwargs["val_split_pct"]
+        self.test_split_pct = kwargs["test_split_pct"]
+
         self.norm = Normalize(self.band_means, self.band_stds)
         self.transforms = K.AugmentationSequential(
             K.RandomAffine(degrees=30),
@@ -293,7 +296,7 @@ class RESISC45DataModule(pl.LightningDataModule):
                 transforms=transforms,
             )
             self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-                dataset, val_pct=0.2, test_pct=0.2
+                dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
             )
         else:
 
