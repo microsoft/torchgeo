@@ -272,6 +272,7 @@ class LandcoverAIDataModule(pl.LightningDataModule):
         root_dir: str,
         batch_size: int = 64,
         num_workers: int = 4,
+        unsupervised_mode: bool = False,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for Landcover.AI based DataLoaders.
@@ -280,11 +281,14 @@ class LandcoverAIDataModule(pl.LightningDataModule):
             root_dir: The ``root`` arugment to pass to the Landcover.AI Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
+            unsupervised_mode: Makes the train dataloader return imagery from the train,
+                val, and test sets
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.unsupervised_mode = unsupervised_mode
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
@@ -314,23 +318,50 @@ class LandcoverAIDataModule(pl.LightningDataModule):
         train_transforms = self.preprocess
         val_test_transforms = self.preprocess
 
-        self.train_dataset = LandCoverAI(
-            self.root_dir,
-            split="train",
-            transforms=train_transforms,
-        )
+        if not self.unsupervised_mode:
 
-        self.val_dataset = LandCoverAI(
-            self.root_dir,
-            split="val",
-            transforms=val_test_transforms,
-        )
+            self.train_dataset = LandCoverAI(
+                self.root_dir,
+                split="train",
+                transforms=train_transforms,
+            )
 
-        self.test_dataset = LandCoverAI(
-            self.root_dir,
-            split="test",
-            transforms=val_test_transforms,
-        )
+            self.val_dataset = LandCoverAI(
+                self.root_dir,
+                split="val",
+                transforms=val_test_transforms,
+            )
+
+            self.test_dataset = LandCoverAI(
+                self.root_dir,
+                split="test",
+                transforms=val_test_transforms,
+            )
+
+        else:
+            temp_train_dataset = LandCoverAI(
+                self.root_dir,
+                split="train",
+                transforms=train_transforms,
+            )
+
+            self.val_dataset = LandCoverAI(
+                self.root_dir,
+                split="val",
+                transforms=val_test_transforms,
+            )
+
+            self.test_dataset = LandCoverAI(
+                self.root_dir,
+                split="test",
+                transforms=val_test_transforms,
+            )
+
+            self.train_dataset = cast(
+                LandCoverAI, temp_train_dataset + self.val_dataset + self.test_dataset
+            )
+
+
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""

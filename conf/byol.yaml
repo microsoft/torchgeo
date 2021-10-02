@@ -5,7 +5,7 @@ trainer:
   benchmark: True
 
 experiment:
-  task: "ssl"
+  task: "byol"
   name: "test_byol"
   module:
     model: "byol"
@@ -16,9 +16,3 @@ experiment:
   datamodule:
     batch_size: 64
     num_workers: 6
-    train_splits:
-      - "de-train"
-    val_splits:
-      - "de-val"
-    test_splits:
-      - "de-test"
