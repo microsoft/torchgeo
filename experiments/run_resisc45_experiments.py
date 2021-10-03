@@ -9,17 +9,16 @@ import subprocess
 from multiprocessing import Process, Queue
 
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
-GPUS = [1,2,3]
+GPUS = [0]
 DRY_RUN = False  # if False then print out the commands to be run, if True then run
-DATA_DIR = "/home/calebrobinson/ssdprivate/data/resisc45"  # path to the RESISC45 data directory
+DATA_DIR = ""  # path to the RESISC45 data directory
 
 # Hyperparameter options
-model_options = ["resnet18"]
-lr_options = [1e-3]
+model_options = ["resnet18", "resnet50"]
+lr_options = [1e-2, 1e-3, 1e-4]
 loss_options = ["ce"]
-weight_options = ["random"]
+weight_options = ["imagenet_only", "random"]
 
-seeds = list(range(12))
 
 def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
     """Process for each ID in GPUS."""
@@ -35,17 +34,16 @@ def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
 if __name__ == "__main__":
     work: "Queue[str]" = Queue()
 
-    for (model, lr, loss, weights, seed) in itertools.product(
+    for (model, lr, loss, weights) in itertools.product(
         model_options,
         lr_options,
         loss_options,
         weight_options,
-        seeds
     ):
 
-        experiment_name = f"{model}_{lr}_{loss}_{weights.replace('_','-')}_{seed}"
+        experiment_name = f"{model}_{lr}_{loss}_{weights.replace('_','-')}"
 
-        output_dir = os.path.join("output", "resisc45_seed_experiments_20val_20test")
+        output_dir = os.path.join("output", "resisc45_experiments")
         log_dir = os.path.join(output_dir, "logs")
         config_file = os.path.join("conf", "resisc45.yaml")
 
@@ -63,7 +61,6 @@ if __name__ == "__main__":
                 + f" program.output_dir={output_dir}"
                 + f" program.log_dir={log_dir}"
                 + f" program.data_dir={DATA_DIR}"
-                + f" program.seed={seed}"
                 + " trainer.gpus=[GPU]"
             )
             command = command.strip()
