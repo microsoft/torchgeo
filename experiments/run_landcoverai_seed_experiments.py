@@ -9,17 +9,17 @@ import subprocess
 from multiprocessing import Process, Queue
 
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
-GPUS = [0]
+GPUS = [1,2,3]
 DRY_RUN = False  # if False then print out the commands to be run, if True then run
-DATA_DIR = ""  # path to the LandcoverAI data directory
+DATA_DIR = "/home/calebrobinson/ssdprivate/data/landcoverai/"  # path to the LandcoverAI data directory
 
 # Hyperparameter options
 model_options = ["unet"]
 encoder_options = ["resnet50"]
 lr_options = [1e-4]
-loss_options = ["ce"]
-weight_init_options = ["imagenet"]
-seeds = list(range(15))
+loss_options = ["jaccard"]
+weight_init_options = ["null"]
+seeds = list(range(10))
 
 
 def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
@@ -66,6 +66,7 @@ if __name__ == "__main__":
                 + f" program.seed={seed}"
                 + f" program.log_dir={log_dir}"
                 + f" program.data_dir={DATA_DIR}"
+                + " experiment.datamodule.batch_size=16"
                 + " trainer.gpus=[GPU]"
             )
             command = command.strip()

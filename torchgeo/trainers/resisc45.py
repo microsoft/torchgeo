@@ -14,7 +14,7 @@ from torch import Tensor
 from torch.nn.modules import Conv2d, Linear, Module
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
-from torchmetrics import Accuracy, MetricCollection
+from torchmetrics import Accuracy, MetricCollection, IoU
 from torchvision.transforms import Compose, Normalize
 
 from ..datasets import RESISC45
@@ -86,6 +86,7 @@ class RESISC45ClassificationTask(pl.LightningModule):
             {
                 "OverallAccuracy": Accuracy(num_classes=NUM_CLASSES, average="micro"),
                 "AverageAccuracy": Accuracy(num_classes=NUM_CLASSES, average="macro"),
+                "IoU": IoU(num_classes=NUM_CLASSES),
             },
             prefix="train_",
         )
