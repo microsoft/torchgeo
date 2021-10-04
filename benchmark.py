@@ -75,7 +75,7 @@ def set_up_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-p",
         "--patch-size",
-        default=240,
+        default=224,
         type=int,
         help="height/width of each patch",
         metavar="SIZE",
@@ -83,7 +83,7 @@ def set_up_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-s",
         "--stride",
-        default=120,
+        default=112,
         type=int,
         help="sampling stride for GridGeoSampler",
     )
