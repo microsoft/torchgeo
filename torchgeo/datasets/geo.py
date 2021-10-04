@@ -22,7 +22,6 @@ import torch
 from rasterio.crs import CRS
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
-from rasterio.windows import from_bounds
 from rtree.index import Index, Property
 from torch import Tensor
 from torch.utils.data import Dataset
@@ -329,14 +328,7 @@ class RasterDataset(GeoDataset):
             vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
-        if len(vrt_fhs) == 1:
-            src = vrt_fhs[0]
-            out_width = int(round((query.maxx - query.minx) / self.res))
-            out_height = int(round((query.maxy - query.miny) / self.res))
-            out_shape = (src.count, out_height, out_width)
-            dest = src.read(out_shape=out_shape, window=from_bounds(*bounds, src.transform))
-        else:
-            dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res)
+        dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res)
         dest = dest.astype(np.int32)
 
         tensor: Tensor = torch.tensor(dest)  # type: ignore[attr-defined]
