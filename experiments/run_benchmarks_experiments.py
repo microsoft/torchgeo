@@ -37,7 +37,7 @@ if __name__ == "__main__":
             "--cdl-root",
             CDL_DATA_ROOT,
             "--num-workers",
-            "8",
+            "6",
             "--batch-size",
             str(batch_size),
             "--epoch-size",

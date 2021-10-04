@@ -331,7 +331,10 @@ class RasterDataset(GeoDataset):
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
         if len(vrt_fhs) == 1:
             src = vrt_fhs[0]
-            dest = src.read(1, window=from_bounds(*bounds, src.transform))
+            out_width = int(round((query.maxx - query.minx) / self.res))
+            out_height = int(round((query.maxy - query.miny) / self.res))
+            out_shape = (src.count, out_height, out_width)
+            dest = src.read(out_shape=out_shape, window=from_bounds(*bounds, src.transform))
         else:
             dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res)
         dest = dest.astype(np.int32)
