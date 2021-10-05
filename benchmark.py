@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from torchvision.models import resnet18
+from torchvision.models import resnet50
 
 from torchgeo.datasets import CDL, Landsat8
 from torchgeo.samplers import GridGeoSampler, RandomBatchGeoSampler, RandomGeoSampler
@@ -167,7 +167,7 @@ def main(args: argparse.Namespace) -> None:
                 dataset,
                 batch_sampler=sampler,  # type: ignore[arg-type]
                 num_workers=args.num_workers,
-                persistent_workers=True,
+                persistent_workers=args.num_workers > 0,
             )
         else:
             dataloader = DataLoader(
@@ -175,7 +175,7 @@ def main(args: argparse.Namespace) -> None:
                 batch_size=args.batch_size,
                 sampler=sampler,  # type: ignore[arg-type]
                 num_workers=args.num_workers,
-                persistent_workers=True,
+                persistent_workers=args.num_workers > 0,
             )
 
         tic = time.time()
@@ -215,7 +215,7 @@ def main(args: argparse.Namespace) -> None:
         )
 
     # Benchmark model
-    model = resnet18()
+    model = resnet50()
     # Change number of input channels to match Landsat
     model.conv1 = nn.Conv2d(  # type: ignore[attr-defined]
         len(bands), 64, kernel_size=7, stride=2, padding=3, bias=False
@@ -288,8 +288,6 @@ def main(args: argparse.Namespace) -> None:
 
 
 if __name__ == "__main__":
-    os.environ["GDAL_CACHEMAX"] = "50%"
-
     parser = set_up_parser()
     args = parser.parse_args()
 

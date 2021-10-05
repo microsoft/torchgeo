@@ -23,6 +23,9 @@ CDL_DATA_ROOT = ""
 total_num_experiments = len(SEED_OPTIONS) * len(CACHE_OPTIONS) * len(BATCH_SIZE_OPTIONS)
 
 if __name__ == "__main__":
+    # With 6 workers, this will use ~60% of available RAM
+    os.environ["GDAL_CACHEMAX"] = "10%"
+
     tic = time.time()
     for i, (cache, batch_size, seed) in enumerate(
         itertools.product(CACHE_OPTIONS, BATCH_SIZE_OPTIONS, SEED_OPTIONS)
