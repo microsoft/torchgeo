@@ -3,12 +3,14 @@
 # Licensed under the MIT License.
 
 """Script for running the benchmark script over a sweep of different options."""
+
 import itertools
+import os
 import subprocess
 import time
 from typing import List
 
-EPOCH_SIZE = 8192
+EPOCH_SIZE = 4096
 
 SEED_OPTIONS = [0, 1, 2]
 CACHE_OPTIONS = [True, False]

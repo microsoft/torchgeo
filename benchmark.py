@@ -250,7 +250,7 @@ def main(args: argparse.Namespace) -> None:
     duration = toc - tic
 
     if args.verbose:
-        print("\nResNet-18:")
+        print("\nResNet-34:")
         print(f"  duration: {duration:.3f} sec")
         print(f"  count: {num_total_patches} patches")
         print(f"  rate: {num_total_patches / duration:.3f} patches/sec")
@@ -262,7 +262,7 @@ def main(args: argparse.Namespace) -> None:
             "duration": duration,
             "count": num_total_patches,
             "rate": num_total_patches / duration,
-            "sampler": "resnet18",
+            "sampler": "ResNet-34",
             "batch_size": args.batch_size,
             "num_workers": args.num_workers,
         }
