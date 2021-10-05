@@ -167,6 +167,7 @@ def main(args: argparse.Namespace) -> None:
                 dataset,
                 batch_sampler=sampler,  # type: ignore[arg-type]
                 num_workers=args.num_workers,
+                persistent_workers=True,
             )
         else:
             dataloader = DataLoader(
@@ -174,6 +175,7 @@ def main(args: argparse.Namespace) -> None:
                 batch_size=args.batch_size,
                 sampler=sampler,  # type: ignore[arg-type]
                 num_workers=args.num_workers,
+                persistent_workers=True,
             )
 
         tic = time.time()
