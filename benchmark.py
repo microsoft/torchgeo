@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from torchvision.models import resnet50
+from torchvision.models import resnet34
 
 from torchgeo.datasets import CDL, Landsat8
 from torchgeo.samplers import GridGeoSampler, RandomBatchGeoSampler, RandomGeoSampler
@@ -215,7 +215,7 @@ def main(args: argparse.Namespace) -> None:
         )
 
     # Benchmark model
-    model = resnet50()
+    model = resnet34()
     # Change number of input channels to match Landsat
     model.conv1 = nn.Conv2d(  # type: ignore[attr-defined]
         len(bands), 64, kernel_size=7, stride=2, padding=3, bias=False

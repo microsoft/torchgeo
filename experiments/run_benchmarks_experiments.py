@@ -8,7 +8,7 @@ import subprocess
 import time
 from typing import List
 
-EPOCH_SIZE = 2048
+EPOCH_SIZE = 8192
 
 SEED_OPTIONS = [0, 1, 2]
 CACHE_OPTIONS = [True, False]
