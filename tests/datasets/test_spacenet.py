@@ -12,7 +12,7 @@ import torch
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 
-from torchgeo.datasets import SpaceNet1, SpaceNet2
+from torchgeo.datasets import SpaceNet1, SpaceNet2, SpaceNet4
 from torchgeo.transforms import Identity
 
 TEST_DATA_DIR = "tests/data/spacenet"
@@ -141,3 +141,62 @@ class TestSpaceNet2:
         dataset.collection_md5_dict["sn2_AOI_2_Vegas"] = "randommd5hash123"
         with pytest.raises(RuntimeError, match="Collection sn2_AOI_2_Vegas corrupted"):
             SpaceNet2(root=dataset.root, download=True, checksum=True)
+
+
+class TestSpaceNet4:
+    @pytest.fixture(params=["PAN", "MS", "PS-RGBNIR"])
+    def dataset(
+        self,
+        request: SubRequest,
+        monkeypatch: Generator[MonkeyPatch, None, None],
+        tmp_path: Path,
+    ) -> SpaceNet4:
+        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            radiant_mlhub.Collection, "fetch", fetch_collection
+        )
+        test_md5 = {
+            "sn4_AOI_6_Atlanta": "ea37c2d87e2c3a1d8b2a7c2230080d46",
+        }
+
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            SpaceNet4, "collection_md5_dict", test_md5
+        )
+        root = str(tmp_path)
+        transforms = Identity()
+        return SpaceNet4(
+            root,
+            image=request.param,
+            transforms=transforms,
+            download=True,
+            api_key="",
+        )
+
+    def test_getitem(self, dataset: SpaceNet4) -> None:
+        x = dataset[0]
+        assert isinstance(x, dict)
+        assert isinstance(x["image"], torch.Tensor)
+        assert isinstance(x["mask"], torch.Tensor)
+        if dataset.image == "PS-RGBNIR":
+            assert x["image"].shape[0] == 4
+        elif dataset.image == "MS":
+            assert x["image"].shape[0] == 8
+        else:
+            assert x["image"].shape[0] == 1
+
+    def test_len(self, dataset: SpaceNet4) -> None:
+        assert len(dataset) == 4
+
+    def test_already_downloaded(self, dataset: SpaceNet4) -> None:
+        SpaceNet4(root=dataset.root, download=True)
+
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(RuntimeError, match="Dataset not found"):
+            SpaceNet4(str(tmp_path))
+
+    def test_collection_checksum(self, dataset: SpaceNet4) -> None:
+        dataset.collection_md5_dict["sn4_AOI_6_Atlanta"] = "randommd5hash123"
+        with pytest.raises(
+            RuntimeError, match="Collection sn4_AOI_6_Atlanta corrupted"
+        ):
+            SpaceNet4(root=dataset.root, download=True, checksum=True)
