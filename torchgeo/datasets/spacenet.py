@@ -499,21 +499,21 @@ class SpaceNet4(SpaceNet):
     """SpaceNet 4: Off-Nadir Buildings Dataset.
 
     `SpaceNet 4 <https://spacenet.ai/off-nadir-building-detection/>`_ is a
-    dataset of 27 WV2 imagery captured at varying off-nadir angles and
-    associated building footprints over the city of Atlanta. The off-nadir angle
-    ranges from 7 degrees to 54 degrees.
+    dataset of 27 WV2 imagery captured at varying off-nadir angles and 120,000
+    building footprints over 665 sq km of Atlanta. The off-nadir angle ranges
+    from 7 degrees to 54 degrees.
 
 
     Dataset features
 
-    28728 chipped images
+    * 28728 chipped images & 1064 labels
 
     Dataset format
 
-    * Imagery - Worldview-3 GeoTIFFs
+    * Imagery - Worldview-2 GeoTIFFs
         * PAN.tif (Panchromatic)
         * MS.tif (Multispectral)
-        * PS-RGBNIR (Pansharpened RGBNIR)
+        * PS-RGBNIR.tif (Pansharpened RGBNIR)
     * Labels - GeoJSON
         * labels.geojson
 
@@ -560,7 +560,7 @@ class SpaceNet4(SpaceNet):
 
         Args:
             root: root directory where dataset can be found
-            image: image selection which must be in ["MS", "PAN", "PS-MS", "PS-RGB"]
+            image: image selection which must be in ["MS", "PAN", "PS-RGBNIR"]
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory.
