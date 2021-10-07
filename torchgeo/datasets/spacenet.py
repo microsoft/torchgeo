@@ -154,8 +154,11 @@ class SpaceNet(VisionDataset, abc.ABC):
         Returns:
             Tensor: label tensor
         """
-        with fiona.open(path) as src:
-            labels = [feature["geometry"] for feature in src]
+        try:
+            with fiona.open(path) as src:
+                labels = [feature["geometry"] for feature in src]
+        except Exception:
+            labels = None  # type: ignore[assignment]
 
         if not labels:
             mask_data = np.zeros(shape=shape)
@@ -489,4 +492,111 @@ class SpaceNet2(SpaceNet):
                         os.path.dirname(imgpath) + "-labels", self.label_glob
                     )
                 files.append({"image_path": imgpath, "label_path": lbl_path})
+        return files
+
+
+class SpaceNet4(SpaceNet):
+    """SpaceNet 4: Off-Nadir Buildings Dataset.
+
+    `SpaceNet 4 <https://spacenet.ai/off-nadir-building-detection/>`_ is a
+    dataset of 27 WV2 imagery captured at varying off-nadir angles and
+    associated building footprints over the city of Atlanta. The off-nadir angle
+    ranges from 7 degrees to 54 degrees.
+
+
+    Dataset features
+
+    28728 chipped images
+
+    Dataset format
+
+    * Imagery - Worldview-3 GeoTIFFs
+        * PAN.tif (Panchromatic)
+        * MS.tif (Multispectral)
+        * PS-RGBNIR (Pansharpened RGBNIR)
+    * Labels - GeoJSON
+        * labels.geojson
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/1903.12239
+
+    .. note::
+
+       This dataset requires the following additional library to be installed:
+
+       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
+         imagery and labels from the Radiant Earth MLHub
+
+    """
+
+    dataset_id = "spacenet4"
+    collection_md5_dict = {
+        "sn4_AOI_6_Atlanta": "c597d639cba5257927a97e3eff07b753",
+    }
+
+    imagery = {
+        "MS": "MS.tif",
+        "PAN": "PAN.tif",
+        "PS-RGBNIR": "PS-RGBNIR.tif",
+    }
+    chip_size = {
+        "MS": (225, 225),
+        "PAN": (900, 900),
+        "PS-RGBNIR": (900, 900),
+    }
+    label_glob = "labels.geojson"
+
+    def __init__(
+        self,
+        root: str,
+        image: str = "PS-RGBNIR",
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        download: bool = False,
+        api_key: Optional[str] = None,
+        checksum: bool = False,
+    ) -> None:
+        """Initialize a new SpaceNet 4 Dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            image: image selection which must be in ["MS", "PAN", "PS-MS", "PS-RGB"]
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            download: if True, download dataset and store it in the root directory.
+            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing
+        """
+        collections = ["sn4_AOI_6_Atlanta"]
+        assert image in {"MS", "PAN", "PS-RGBNIR"}
+        super().__init__(
+            root, image, collections, transforms, download, api_key, checksum
+        )
+
+    def _load_files(self, root: str) -> List[Dict[str, str]]:
+        """Return the paths of the files in the dataset.
+
+        Args:
+            root: root dir of dataset
+
+        Returns:
+            list of dicts containing paths for each pair of image and label
+        """
+        files = []
+        images = glob.glob(os.path.join(root, self.collections[0], "*", self.filename))
+        images = sorted(images)
+
+        for imgpath in images:
+            # To classify whether it's nadir/off-nadir/very off-nadir
+            # Extract catalog id and maintain mapping
+            # catalog_id = re.search(r"\d+$", imgdir).group()
+
+            lbl_dir = os.path.dirname(imgpath).split("-nadir")[0]
+
+            lbl_path = os.path.join(lbl_dir + "-labels", self.label_glob)
+            assert os.path.exists(lbl_path)
+            files.append({"image_path": imgpath, "label_path": lbl_path})
         return files
