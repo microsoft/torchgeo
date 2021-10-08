@@ -4,22 +4,22 @@
 import pytest
 import torch
 
-from torchgeo.models import RandomConvolutionalFeatures
+from torchgeo.models import RCF
 
 
 class TestRandomConvolutionalFeatures:
     def test_in_channels(self) -> None:
-        model = RandomConvolutionalFeatures(in_channels=5, features=4, kernel_size=3)
+        model = RCF(in_channels=5, features=4, kernel_size=3)
         x = torch.randn(2, 5, 64, 64)
         model(x)
 
-        model = RandomConvolutionalFeatures(in_channels=3, features=4, kernel_size=3)
+        model = RCF(in_channels=3, features=4, kernel_size=3)
         match = "to have 3 channels, but got 5 channels instead"
         with pytest.raises(RuntimeError, match=match):
             model(x)
 
     def test_num_features(self) -> None:
-        model = RandomConvolutionalFeatures(in_channels=5, features=4, kernel_size=3)
+        model = RCF(in_channels=5, features=4, kernel_size=3)
         x = torch.randn(2, 5, 64, 64)
         y = model(x)
         assert y.shape[1] == 4
@@ -29,9 +29,9 @@ class TestRandomConvolutionalFeatures:
         assert y.shape[0] == 4
 
     def test_untrainable(self) -> None:
-        model = RandomConvolutionalFeatures(in_channels=5, features=4, kernel_size=3)
+        model = RCF(in_channels=5, features=4, kernel_size=3)
         assert len(list(model.parameters())) == 0
 
     def test_biases(self) -> None:
-        model = RandomConvolutionalFeatures(features=24, bias=10)
+        model = RCF(features=24, bias=10)
         assert torch.all(model.biases == 10)  # type: ignore[attr-defined]

@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Implementation of a random convolutional feature model."""
+"""Implementation of a random convolutional feature projection model."""
 
 from typing import cast
 
@@ -14,7 +14,7 @@ Module.__module__ = "torch.nn"
 Conv2d.__module__ = "torch.nn"
 
 
-class RandomConvolutionalFeatures(Module):
+class RCF(Module):
     """This model extracts random convolutional features (RCFs) from its input.
 
     RCFs are used in Multi-task Observation using Satellite Imagery & Kitchen Sinks
