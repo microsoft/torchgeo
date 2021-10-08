@@ -7,7 +7,7 @@ import torch
 from torchgeo.models import RCF
 
 
-class TestRandomConvolutionalFeatures:
+class TestRCF:
     def test_in_channels(self) -> None:
         model = RCF(in_channels=5, features=4, kernel_size=3)
         x = torch.randn(2, 5, 64, 64)
