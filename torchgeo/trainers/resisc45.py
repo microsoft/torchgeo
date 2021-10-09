@@ -14,7 +14,7 @@ from torch import Tensor
 from torch.nn.modules import Conv2d, Linear, Module
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
-from torchmetrics import Accuracy, MetricCollection, IoU
+from torchmetrics import Accuracy, IoU, MetricCollection
 from torchvision.transforms import Compose, Normalize
 
 from ..datasets import RESISC45
@@ -305,7 +305,7 @@ class RESISC45DataModule(pl.LightningDataModule):
                 self.root_dir,
                 transforms=transforms,
             )
-            self.val_dataset, self.test_dataset = None, None
+            self.val_dataset, self.test_dataset = None, None  # type: ignore[assignment]
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""
