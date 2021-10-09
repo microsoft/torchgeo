@@ -46,11 +46,11 @@ def get_random_bounding_box(
     t_size: Tuple[float, float] = _to_tuple(size)
 
     width = (bounds.maxx - bounds.minx - t_size[1]) // res
-    minx = random.randrange(width) * res + bounds.minx
+    minx = random.randrange(int(width)) * res + bounds.minx
     maxx = minx + t_size[1]
 
     height = (bounds.maxy - bounds.miny - t_size[0]) // res
-    miny = random.randrange(height) * res + bounds.miny
+    miny = random.randrange(int(height)) * res + bounds.miny
     maxy = miny + t_size[0]
 
     mint = bounds.mint

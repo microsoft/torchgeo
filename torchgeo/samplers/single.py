@@ -63,11 +63,11 @@ class RandomGeoSampler(GeoSampler):
           height dimension, and the second *float* for the width dimension
 
         Args:
-            index: index of a :class:`~torchgeo.datasets.GeoDataset`
+            dataset: dataset to index from
             size: dimensions of each :term:`patch` in units of CRS
             length: number of random samples to draw per epoch
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
-                (defaults to the bounds of ``index``)
+                (defaults to the bounds of ``dataset.index``)
         """
         self.index = dataset.index
         self.res = dataset.res
@@ -117,8 +117,8 @@ class GridGeoSampler(GeoSampler):
     to the `receptive field <https://distill.pub/2019/computing-receptive-fields/>`_ of
     the CNN.
 
-    When sampling from :class:`~torchgeo.datasets.ZipDataset`, the ``index`` should come
-    from a non-tile-based dataset if possible.
+    When sampling from :class:`~torchgeo.datasets.ZipDataset`, the ``dataset`` should be
+    a non-tile-based dataset if possible.
     """
 
     def __init__(
@@ -138,10 +138,11 @@ class GridGeoSampler(GeoSampler):
           height dimension, and the second *float* for the width dimension
 
         Args:
-            index: index of a :class:`~torchgeo.datasets.GeoDataset`
+            dataset: dataset to index from
             size: dimensions of each :term:`patch` in units of CRS
             stride: distance to skip between each patch
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+                (defaults to the bounds of ``dataset.index``)
         """
         self.index = dataset.index
         self.size = _to_tuple(size)

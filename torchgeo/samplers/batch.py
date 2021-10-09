@@ -42,8 +42,8 @@ class RandomBatchGeoSampler(BatchGeoSampler):
     This is particularly useful during training when you want to maximize the size of
     the dataset and return as many random :term:`chips <chip>` as possible.
 
-    When sampling from :class:`~torchgeo.datasets.ZipDataset`, the ``index`` should come
-    from a tile-based dataset if possible.
+    When sampling from :class:`~torchgeo.datasets.ZipDataset`, the ``dataset`` should be
+    a tile-based dataset if possible.
     """
 
     def __init__(
@@ -64,12 +64,12 @@ class RandomBatchGeoSampler(BatchGeoSampler):
           height dimension, and the second *float* for the width dimension
 
         Args:
-            index: index of a :class:`~torchgeo.datasets.GeoDataset`
+            dataset: dataset to index from
             size: dimensions of each :term:`patch` in units of CRS
             batch_size: number of samples per batch
             length: number of samples per epoch
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
-                (defaults to the bounds of ``index``)
+                (defaults to the bounds of ``dataset.index``)
         """
         self.index = dataset.index
         self.res = dataset.res

@@ -16,7 +16,7 @@ Samplers are used to index a dataset, retrieving a single query at a time. For :
    from torchgeo.samplers import RandomGeoSampler
 
    dataset = Landsat(...)
-   sampler = RandomGeoSampler(dataset.index, size=1000, length=100)
+   sampler = RandomGeoSampler(dataset, size=1000, length=100)
    dataloader = DataLoader(dataset, sampler=sampler)
 
 
@@ -43,7 +43,7 @@ When working with large tile-based datasets, randomly sampling patches from each
    from torchgeo.samplers import RandomBatchGeoSampler
 
    dataset = Landsat(...)
-   sampler = RandomBatchGeoSampler(dataset.index, size=1000, batch_size=10, length=100)
+   sampler = RandomBatchGeoSampler(dataset, size=1000, batch_size=10, length=100)
    dataloader = DataLoader(dataset, batch_sampler=sampler)
 
 
