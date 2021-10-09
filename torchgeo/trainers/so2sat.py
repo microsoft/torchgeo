@@ -37,7 +37,9 @@ class So2SatClassificationTask(pl.LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
-        pretrained = ("imagenet" in self.hparams["weights"]) and not os.path.exists(self.hparams["weights"])
+        pretrained = ("imagenet" in self.hparams["weights"]) and not os.path.exists(
+            self.hparams["weights"]
+        )
         in_channels = self.hparams["in_channels"]
 
         # Create the model
@@ -54,7 +56,12 @@ class So2SatClassificationTask(pl.LightningModule):
                 ).detach()
             # Create the new layer
             self.model.conv1 = Conv2d(
-                in_channels, 64, kernel_size=7, stride=1, padding=2, bias=False,
+                in_channels,
+                64,
+                kernel_size=7,
+                stride=1,
+                padding=2,
+                bias=False,
             )
             nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
                 self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
@@ -76,8 +83,6 @@ class So2SatClassificationTask(pl.LightningModule):
             raise ValueError(
                 f"Model type '{self.hparams['classification_model']}' is not valid."
             )
-
-
 
         if "resnet" in self.hparams["classification_model"]:
             if os.path.exists(self.hparams["weights"]):

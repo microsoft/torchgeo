@@ -3,6 +3,7 @@
 
 """Common trainer utilities."""
 
+import typing
 import warnings
 from collections import OrderedDict
 from typing import Tuple
@@ -16,7 +17,7 @@ from torch.nn.modules import Module
 Module.__module__ = "nn.Module"
 
 
-def extract_encoder(path: str) -> Tuple[str, OrderedDict[str, Tensor]]:
+def extract_encoder(path: str) -> Tuple[str, typing.OrderedDict[str, Tensor]]:
     """Extracts an encoder from a pytorch lightning checkpoint file.
 
     Args:
@@ -56,7 +57,9 @@ def extract_encoder(path: str) -> Tuple[str, OrderedDict[str, Tensor]]:
     return name, state_dict
 
 
-def load_state_dict(model: Module, state_dict: OrderedDict[str, Tensor]) -> Module:
+def load_state_dict(
+    model: Module, state_dict: typing.OrderedDict[str, Tensor]
+) -> Module:
     """Load pretrained resnet weights to a model.
 
     Args:
