@@ -21,14 +21,10 @@ cached2 = (
     df2[(df2["cached"]) & (df2["sampler"] != "resnet18")].groupby("sampler").mean()
 )
 not_cached1 = (
-    df1[(~df1["cached"]) & (df1["sampler"] != "resnet18")]
-    .groupby("sampler")
-    .mean()
+    df1[(~df1["cached"]) & (df1["sampler"] != "resnet18")].groupby("sampler").mean()
 )
 not_cached2 = (
-    df2[(~df2["cached"]) & (df2["sampler"] != "resnet18")]
-    .groupby("sampler")
-    .mean()
+    df2[(~df2["cached"]) & (df2["sampler"] != "resnet18")].groupby("sampler").mean()
 )
 
 print("cached, original\n", cached1)
