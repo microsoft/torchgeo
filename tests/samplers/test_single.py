@@ -53,6 +53,7 @@ class TestGeoSampler:
     def test_len(self, sampler: CustomGeoSampler) -> None:
         assert len(sampler) == 2
 
+    @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(self, sampler: CustomGeoSampler, num_workers: int) -> None:
         ds = CustomGeoDataset()
@@ -91,6 +92,7 @@ class TestRandomGeoSampler:
     def test_len(self, sampler: RandomGeoSampler) -> None:
         assert len(sampler) == sampler.length
 
+    @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(self, sampler: RandomGeoSampler, num_workers: int) -> None:
         ds = CustomGeoDataset()
@@ -132,6 +134,7 @@ class TestGridGeoSampler:
                 query.maxt - query.mint, sampler.roi.maxt - sampler.roi.mint
             )
 
+    @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(self, sampler: GridGeoSampler, num_workers: int) -> None:
         ds = CustomGeoDataset()
