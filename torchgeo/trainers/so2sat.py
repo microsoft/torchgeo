@@ -3,7 +3,7 @@
 
 """So2Sat trainer."""
 
-from typing import Any, Dict, Optional, cast
+from typing import TYPE_CHECKING, Any, Dict, Optional, cast
 
 import kornia.augmentation as K
 import pytorch_lightning as pl
@@ -29,6 +29,13 @@ Linear.__module__ = "nn.Linear"
 
 IN_CHANNELS = 10
 NUM_CLASSES = 17
+
+
+# https://mypy.readthedocs.io/en/stable/runtime_troubles.html#using-classes-that-are-generic-in-stubs-but-not-at-runtime
+if TYPE_CHECKING:
+    _base = DataLoader[Any]
+else:
+    _base = DataLoader
 
 
 class So2SatClassificationTask(pl.LightningModule):
@@ -456,7 +463,7 @@ class So2SatDataModule(pl.LightningDataModule):
                 So2Sat, temp_train + self.val_dataset + self.test_dataset
             )
 
-    def train_dataloader(self) -> DataLoader[Any]:
+    def train_dataloader(self) -> _base:
         """Return a DataLoader for training."""
         return DataLoader(
             self.train_dataset,
@@ -465,7 +472,7 @@ class So2SatDataModule(pl.LightningDataModule):
             shuffle=True,
         )
 
-    def val_dataloader(self) -> DataLoader[Any]:
+    def val_dataloader(self) -> _base:
         """Return a DataLoader for validation."""
         return DataLoader(
             self.val_dataset,
@@ -474,7 +481,7 @@ class So2SatDataModule(pl.LightningDataModule):
             shuffle=False,
         )
 
-    def test_dataloader(self) -> DataLoader[Any]:
+    def test_dataloader(self) -> _base:
         """Return a DataLoader for testing."""
         return DataLoader(
             self.test_dataset,

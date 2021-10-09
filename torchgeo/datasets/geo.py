@@ -416,7 +416,7 @@ class RasterDataset(GeoDataset):
             per02 = np.percentile(array, 2)  # type: ignore[no-untyped-call]
             per98 = np.percentile(array, 98)  # type: ignore[no-untyped-call]
             array = (array - per02) / (per98 - per02)
-            array = np.clip(array, 0, 1)
+            array = np.clamp(array, 0, 1)
 
         # Plot the data
         ax = plt.axes()
