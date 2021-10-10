@@ -22,9 +22,13 @@ def extract_encoder(path: str) -> Tuple[str, Dict[str, Tensor]]:
     Args:
         path: path to checkpoint file (.ckpt)
 
+    Returns:
+        name: str representing model name (generally a torchvision resnet model)
+        state_dict: dict of layer names and weight tensors
+
     Raises:
         ValueError: if 'classification_model' or 'encoder' not in
-        checkpoint['hyper_parameters']
+            checkpoint['hyper_parameters']
     """
     checkpoint = torch.load(  # type: ignore[no-untyped-call]
         path, map_location=torch.device("cpu")  # type: ignore[attr-defined]
@@ -51,7 +55,6 @@ def extract_encoder(path: str) -> Tuple[str, Dict[str, Tensor]]:
             """Unknown checkpoint task. Only encoder or classification_model"""
             """extraction is supported"""
         )
-    _ = checkpoint["hyper_parameters"]["model"]
 
     return name, state_dict
 
@@ -66,9 +69,9 @@ def load_state_dict(model: Module, state_dict: Dict[str, Tensor]) -> Module:
     Returns:
         the model with pretrained weights
 
-    Raises:
-        Warning: if input channels in model != pretrained model input channels
-        Warning: if num output classes in model != pretrained model num classes
+    Warns:
+        If input channels in model != pretrained model input channels
+        If num output classes in model != pretrained model num classes
     """
     in_channels = model.conv1.in_channels  # type: ignore[union-attr]
     expected_in_channels = state_dict["conv1.weight"].shape[1]
@@ -89,6 +92,6 @@ def load_state_dict(model: Module, state_dict: Dict[str, Tensor]) -> Module:
         )
         del state_dict["fc.weight"], state_dict["fc.bias"]
 
-    _ = model.load_state_dict(state_dict, strict=False)  # type: ignore[arg-type]
+    model.load_state_dict(state_dict, strict=False)  # type: ignore[arg-type]
 
     return model
