@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
 
 """Script for comparing execute time cpu/gpu transforms+augmentations."""
 import argparse
 import csv
 import os
+import statistics
 import time
 
 import kornia.augmentation as K
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
+from tqdm import tqdm
 
 from torchgeo.transforms import AugmentationSequential, indices
 
@@ -32,10 +36,17 @@ def set_up_parser() -> argparse.ArgumentParser:
         help="CPU or GPU",
     )
     parser.add_argument(
+        "-i",
+        "--iters",
+        type=int,
+        default=5,
+        help="number of runs to perform for averaging",
+    )
+    parser.add_argument(
         "-c",
         "--channels",
         type=int,
-        default=24,
+        default=12,
         help="number of channels in the image",
     )
     parser.add_argument(
@@ -80,13 +91,16 @@ def set_up_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(args: argparse.Namespace) -> None:
-    """High-level pipeline.
+def run(args: argparse.Namespace) -> float:
+    """Run pipeline once.
 
-    Benchmarks execution time of CPU/GPU transforms & augmentations
+    Benchmarks execution time of CPU/GPU transforms & augmentations once
     ​
     Args:
         args: command-line arguments
+
+    Returns:
+        the execution time of a single run
     """
     device = torch.device(args.device)  # type: ignore[attr-defined]
     image = torch.randn(args.batch_size, args.channels, *(args.shape, args.shape))
@@ -119,12 +133,27 @@ def main(args: argparse.Namespace) -> None:
     ).to(device)
 
     tic = time.time()
-    _ = transforms(batch)
-    toc = tic = time.time()
+    transforms(batch)
+    toc = time.time()
     duration = toc - tic
+    return duration
+
+
+def main(args: argparse.Namespace) -> None:
+    """High-level pipeline.
+
+    Benchmarks execution time of CPU/GPU transforms & augmentations
+    ​
+    Args:
+        args: command-line arguments
+    """
+    durations = []
+    for _ in tqdm(range(args.iters)):
+        durations.append(run(args))
+    duration = statistics.mean(durations)
 
     if args.verbose:
-        print(f"  duration: {duration:.3f} sec")
+        print(f"  durations averaged over {args.iters} runs: {duration:.3f} sec")
 
     fieldnames = [
         "device",
