@@ -251,6 +251,3 @@ class ETCI2021(VisionDataset):
             filename=self.metadata[self.split]["filename"],
             md5=self.metadata[self.split]["md5"] if self.checksum else None,
         )
-
-        if os.path.exists(os.path.join(self.root, "__MACOSX")):
-            shutil.rmtree(os.path.join(self.root, "__MACOSX"))
