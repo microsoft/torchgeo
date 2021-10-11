@@ -403,6 +403,8 @@ def dataset_split(
 ) -> List[Subset[Any]]:
     """Split a torch Dataset into train/val/test sets.
 
+    If ``test_pct`` is not set then only train and validation splits are returned.
+
     Args:
         dataset: dataset to be split into train/val or train/val/test subsets
         val_pct: percentage of samples to be in validation set
