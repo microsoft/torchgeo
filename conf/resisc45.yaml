@@ -1,0 +1,18 @@
+trainer:
+  gpus: 1  # single GPU training
+  min_epochs: 10
+  max_epochs: 40
+  benchmark: True
+
+experiment:
+  task: "resisc45"
+  module:
+    loss: "ce"
+    classification_model: "resnet18"
+    learning_rate: 1e-3
+    learning_rate_schedule_patience: 6
+  datamodule:
+    batch_size: 128
+    num_workers: 6
+    val_split_pct: 0.2
+    test_split_pct: 0.2
