@@ -159,6 +159,8 @@ class TestSpaceNet4:
             "sn4_AOI_6_Atlanta": "ea37c2d87e2c3a1d8b2a7c2230080d46",
         }
 
+        test_angles = ["nadir", "off-nadir", "very-off-nadir"]
+
         monkeypatch.setattr(  # type: ignore[attr-defined]
             SpaceNet4, "collection_md5_dict", test_md5
         )
@@ -167,6 +169,7 @@ class TestSpaceNet4:
         return SpaceNet4(
             root,
             image=request.param,
+            angles=test_angles,
             transforms=transforms,
             download=True,
             api_key="",

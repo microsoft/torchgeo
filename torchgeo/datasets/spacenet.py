@@ -158,7 +158,7 @@ class SpaceNet(VisionDataset, abc.ABC):
             with fiona.open(path) as src:
                 labels = [feature["geometry"] for feature in src]
         except Exception:
-            labels = None  # type: ignore[assignment]
+            labels = []
 
         if not labels:
             mask_data = np.zeros(shape=shape)
@@ -499,21 +499,21 @@ class SpaceNet4(SpaceNet):
     """SpaceNet 4: Off-Nadir Buildings Dataset.
 
     `SpaceNet 4 <https://spacenet.ai/off-nadir-building-detection/>`_ is a
-    dataset of 27 WV2 imagery captured at varying off-nadir angles and 120,000
-    building footprints over 665 sq km of Atlanta. The off-nadir angle ranges
-    from 7 degrees to 54 degrees.
+    dataset of 27 WV2 imagery captured at varying off-nadir angles and
+    associated building footprints over the city of Atlanta. The off-nadir angle
+    ranges from 7 degrees to 54 degrees.
 
 
     Dataset features
 
-    * 28728 chipped images & 1064 labels
+    28728 chipped images and 1064 labels
 
     Dataset format
 
-    * Imagery - Worldview-2 GeoTIFFs
+    * Imagery - Worldview-3 GeoTIFFs
         * PAN.tif (Panchromatic)
         * MS.tif (Multispectral)
-        * PS-RGBNIR.tif (Pansharpened RGBNIR)
+        * PS-RGBNIR (Pansharpened RGBNIR)
     * Labels - GeoJSON
         * labels.geojson
 
@@ -547,10 +547,47 @@ class SpaceNet4(SpaceNet):
     }
     label_glob = "labels.geojson"
 
+    angle_catalog_map = {
+        "nadir": [
+            "1030010003D22F00",
+            "10300100023BC100",
+            "1030010003993E00",
+            "1030010003CAF100",
+            "1030010002B7D800",
+            "10300100039AB000",
+            "1030010002649200",
+            "1030010003C92000",
+            "1030010003127500",
+            "103001000352C200",
+            "103001000307D800",
+        ],
+        "off-nadir": [
+            "1030010003472200",
+            "1030010003315300",
+            "10300100036D5200",
+            "103001000392F600",
+            "1030010003697400",
+            "1030010003895500",
+            "1030010003832800",
+        ],
+        "very-off-nadir": [
+            "10300100035D1B00",
+            "1030010003CCD700",
+            "1030010003713C00",
+            "10300100033C5200",
+            "1030010003492700",
+            "10300100039E6200",
+            "1030010003BDDC00",
+            "1030010003CD4300",
+            "1030010003193D00",
+        ],
+    }
+
     def __init__(
         self,
         root: str,
         image: str = "PS-RGBNIR",
+        angles: List[str] = [],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
@@ -561,6 +598,8 @@ class SpaceNet4(SpaceNet):
         Args:
             root: root directory where dataset can be found
             image: image selection which must be in ["MS", "PAN", "PS-RGBNIR"]
+            angles: angle selection which must be in ["nadir", "off-nadir",
+            "very-off-nadir"]
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory.
@@ -572,6 +611,10 @@ class SpaceNet4(SpaceNet):
         """
         collections = ["sn4_AOI_6_Atlanta"]
         assert image in {"MS", "PAN", "PS-RGBNIR"}
+        self.angles = angles
+        if self.angles:
+            for angle in self.angles:
+                assert angle in self.angle_catalog_map.keys()
         super().__init__(
             root, image, collections, transforms, download, api_key, checksum
         )
@@ -586,17 +629,55 @@ class SpaceNet4(SpaceNet):
             list of dicts containing paths for each pair of image and label
         """
         files = []
+        nadir = []
+        offnadir = []
+        veryoffnadir = []
         images = glob.glob(os.path.join(root, self.collections[0], "*", self.filename))
         images = sorted(images)
 
         for imgpath in images:
-            # To classify whether it's nadir/off-nadir/very off-nadir
-            # Extract catalog id and maintain mapping
-            # catalog_id = re.search(r"\d+$", imgdir).group()
+            imgdir = os.path.basename(os.path.dirname(imgpath))
+            match = re.search(r"(_[A-Z0-9])\w+$", imgdir)
+            assert match is not None, "Invalid image directory"
+            catalog_id = match.group()[1:]
 
             lbl_dir = os.path.dirname(imgpath).split("-nadir")[0]
 
             lbl_path = os.path.join(lbl_dir + "-labels", self.label_glob)
             assert os.path.exists(lbl_path)
-            files.append({"image_path": imgpath, "label_path": lbl_path})
+
+            _file = {"image_path": imgpath, "label_path": lbl_path}
+            if catalog_id in self.angle_catalog_map["very-off-nadir"]:
+                veryoffnadir.append(_file)
+            elif catalog_id in self.angle_catalog_map["off-nadir"]:
+                offnadir.append(_file)
+            elif catalog_id in self.angle_catalog_map["nadir"]:
+                nadir.append(_file)
+            else:
+                raise AssertionError(f"{catalog_id} is an invalid catalog id")
+
+        angle_file_map = {
+            "nadir": nadir,
+            "off-nadir": offnadir,
+            "very-off-nadir": veryoffnadir,
+        }
+
+        if not self.angles:
+            files.extend(nadir + offnadir + veryoffnadir)
+        else:
+            for angle in self.angles:
+                files.extend(angle_file_map[angle])
         return files
+
+
+# if __name__ == "__main__":
+#     sn4 = SpaceNet4(
+#         root="/home/an1/torchgeo/data/spacenet4",
+#         image="PS-RGBNIR",
+#         angles=["nadir"],
+#         download=False,
+#         checksum=False,
+#     )
+#     x = sn4[0]
+#     print(x.keys())
+#     print(f"Length = {len(sn4)}")
