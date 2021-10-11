@@ -257,6 +257,12 @@ class TestBoundingBox:
             datetime(2021, 9, 30, 23, 59, 59, 999999).timestamp(),
         ),
         (
+            "Dec 21",
+            "%b %y",
+            datetime(2021, 12, 1, 0, 0, 0, 0).timestamp(),
+            datetime(2021, 12, 31, 23, 59, 59, 999999).timestamp(),
+        ),
+        (
             "2021-09-13",
             "%Y-%m-%d",
             datetime(2021, 9, 13, 0, 0, 0, 0).timestamp(),
