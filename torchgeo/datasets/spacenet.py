@@ -506,7 +506,11 @@ class SpaceNet4(SpaceNet):
 
     Dataset features
 
-    28728 chipped images and 1064 labels
+    * No. of chipped images: 28728 (PAN/MS/PS-RGBNIR)
+    * No. of label files: 1064
+    * No. of building footprints: >120000
+    * Area Coverage: 665 sq km
+    * Chip size: 225 x 225 (MS), 900 x 900 (PAN/PS-RGBNIR)
 
     Dataset format
 
@@ -653,8 +657,6 @@ class SpaceNet4(SpaceNet):
                 offnadir.append(_file)
             elif catalog_id in self.angle_catalog_map["nadir"]:
                 nadir.append(_file)
-            else:
-                raise AssertionError(f"{catalog_id} is an invalid catalog id")
 
         angle_file_map = {
             "nadir": nadir,
@@ -668,16 +670,3 @@ class SpaceNet4(SpaceNet):
             for angle in self.angles:
                 files.extend(angle_file_map[angle])
         return files
-
-
-# if __name__ == "__main__":
-#     sn4 = SpaceNet4(
-#         root="/home/an1/torchgeo/data/spacenet4",
-#         image="PS-RGBNIR",
-#         angles=["nadir"],
-#         download=False,
-#         checksum=False,
-#     )
-#     x = sn4[0]
-#     print(x.keys())
-#     print(f"Length = {len(sn4)}")
