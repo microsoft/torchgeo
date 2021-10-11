@@ -90,8 +90,8 @@ class So2SatClassificationTask(pl.LightningModule):
 
                 if self.hparams["classification_model"] != name:
                     raise ValueError(
-                        f"""Trying to load {name} weights into a"""
-                        f"""{self.hparams['classification_model']}"""
+                        f"Trying to load {name} weights into a "
+                        f"{self.hparams['classification_model']}"
                     )
 
                 self.model = utils.load_state_dict(self.model, state_dict)
