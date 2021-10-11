@@ -3,11 +3,11 @@
 # Licensed under the MIT License.
 
 """Runs the train script with a grid of hyperparameters."""
-from typing import List
 import itertools
 import os
 import subprocess
 from multiprocessing import Process, Queue
+from typing import List
 
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
 GPUS = [0, 1, 2, 3, 3]
