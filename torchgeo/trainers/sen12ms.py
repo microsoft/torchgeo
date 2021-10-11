@@ -222,12 +222,12 @@ class SEN12MSDataModule(pl.LightningDataModule):
         sample["image"] = sample["image"].float()
 
         if self.band_set == "all":
-            sample["image"][:2] = sample["image"][:2].clip(-25, 0) / -25
-            sample["image"][2:] = sample["image"][2:].clip(0, 10000) / 10000
+            sample["image"][:2] = sample["image"][:2].clamp(-25, 0) / -25
+            sample["image"][2:] = sample["image"][2:].clamp(0, 10000) / 10000
         elif self.band_set == "s1":
-            sample["image"][:2] = sample["image"][:2].clip(-25, 0) / -25
+            sample["image"][:2] = sample["image"][:2].clamp(-25, 0) / -25
         else:
-            sample["image"][:] = sample["image"][:].clip(0, 10000) / 10000
+            sample["image"][:] = sample["image"][:].clamp(0, 10000) / 10000
 
         sample["mask"] = sample["mask"][0, :, :].long()
         sample["mask"] = torch.take(  # type: ignore[attr-defined]
