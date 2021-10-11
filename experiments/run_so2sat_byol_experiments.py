@@ -3,6 +3,7 @@
 # Licensed under the MIT License.
 
 """Runs the train script with a grid of hyperparameters."""
+from typing import List
 import itertools
 import os
 import subprocess
@@ -17,7 +18,7 @@ DATA_DIR = ""  # path to the So2Sat data directory
 model_options = ["resnet50"]
 lr_options = [1e-4]
 loss_options = ["ce"]
-weight_options = []  # set paths to checkpoint files
+weight_options: List[str] = []  # set paths to checkpoint files
 bands_options = ["s2"]
 
 
