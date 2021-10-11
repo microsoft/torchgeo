@@ -11,21 +11,13 @@ from multiprocessing import Process, Queue
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
 GPUS = [0, 1, 2, 3, 3]
 DRY_RUN = False  # if False then print out the commands to be run, if True then run
-DATA_DIR = (
-    "/home/calebrobinson/ssdprivate/data/so2sat/"  # path to the So2Sat data directory
-)
+DATA_DIR = ""  # path to the So2Sat data directory
 
 # Hyperparameter options
 model_options = ["resnet50"]
 lr_options = [1e-4]
 loss_options = ["ce"]
-weight_options = [
-    "/home/calebrobinson/ssdshared/experiments/byol_so2sat_experiments_resnet50/resnet50_0.001_True/epoch=16-step=70957.ckpt",  # noqa: E501
-    "/home/calebrobinson/ssdshared/experiments/byol_so2sat_experiments_resnet50/resnet50_0.01_False/epoch=43-step=183655.ckpt",  # noqa: E501
-    "/home/calebrobinson/ssdshared/experiments/byol_so2sat_experiments_resnet50/resnet50_0.01_True/epoch=43-step=183655.ckpt",  # noqa: E501
-    "/home/calebrobinson/ssdshared/experiments/byol_so2sat_experiments_resnet50/resnet50_0.2_False/epoch=29-step=125219.ckpt",  # noqa: E501
-    "/home/calebrobinson/ssdshared/experiments/byol_so2sat_experiments_resnet50/resnet50_0.2_True/epoch=7-step=33391.ckpt",  # noqa: E501
-]
+weight_options = []  # set paths to checkpoint files
 bands_options = ["s2"]
 
 
