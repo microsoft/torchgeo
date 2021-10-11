@@ -170,7 +170,7 @@ class LEVIRCDPlus(VisionDataset):
         with Image.open(filename) as img:
             array = np.array(img.convert("L"))
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
-            tensor = torch.clip(tensor, min=0, max=1)  # type: ignore[attr-defined]
+            tensor = torch.clamp(tensor, min=0, max=1)  # type: ignore[attr-defined]
             tensor = tensor.to(torch.long)  # type: ignore[attr-defined]
             return tensor
 
