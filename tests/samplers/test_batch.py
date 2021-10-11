@@ -54,6 +54,7 @@ class TestBatchGeoSampler:
     def test_len(self, sampler: CustomBatchGeoSampler) -> None:
         assert len(sampler) == 2
 
+    @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(self, sampler: CustomBatchGeoSampler, num_workers: int) -> None:
         ds = CustomGeoDataset()
@@ -93,6 +94,7 @@ class TestRandomBatchGeoSampler:
     def test_len(self, sampler: RandomBatchGeoSampler) -> None:
         assert len(sampler) == sampler.length // sampler.batch_size
 
+    @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(self, sampler: RandomBatchGeoSampler, num_workers: int) -> None:
         ds = CustomGeoDataset()
