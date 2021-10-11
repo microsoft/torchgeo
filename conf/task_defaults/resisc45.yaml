@@ -1,0 +1,14 @@
+experiment:
+  task: "resisc45"
+  module:
+    loss: "ce"
+    classification_model: "resnet18"
+    learning_rate: 1e-3
+    learning_rate_schedule_patience: 6
+    weights: "random"
+  datamodule:
+    batch_size: 128
+    num_workers: 6
+    weights: ${experiment.module.weights}
+    val_split_pct: 0.2
+    test_split_pct: 0.2
