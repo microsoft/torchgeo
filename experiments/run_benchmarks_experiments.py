@@ -3,12 +3,14 @@
 # Licensed under the MIT License.
 
 """Script for running the benchmark script over a sweep of different options."""
+
 import itertools
+import os
 import subprocess
 import time
 from typing import List
 
-EPOCH_SIZE = 2048
+EPOCH_SIZE = 4096
 
 SEED_OPTIONS = [0, 1, 2]
 CACHE_OPTIONS = [True, False]
@@ -23,6 +25,9 @@ CDL_DATA_ROOT = ""
 total_num_experiments = len(SEED_OPTIONS) * len(CACHE_OPTIONS) * len(BATCH_SIZE_OPTIONS)
 
 if __name__ == "__main__":
+    # With 6 workers, this will use ~60% of available RAM
+    os.environ["GDAL_CACHEMAX"] = "10%"
+
     tic = time.time()
     for i, (cache, batch_size, seed) in enumerate(
         itertools.product(CACHE_OPTIONS, BATCH_SIZE_OPTIONS, SEED_OPTIONS)
@@ -37,7 +42,7 @@ if __name__ == "__main__":
             "--cdl-root",
             CDL_DATA_ROOT,
             "--num-workers",
-            "8",
+            "6",
             "--batch-size",
             str(batch_size),
             "--epoch-size",

@@ -25,7 +25,7 @@ def _to_tuple(value: Union[Tuple[float, float], float]) -> Tuple[float, float]:
 
 
 def get_random_bounding_box(
-    bounds: BoundingBox, size: Union[Tuple[float, float], float]
+    bounds: BoundingBox, size: Union[Tuple[float, float], float], res: float
 ) -> BoundingBox:
     """Returns a random bounding box within a given bounding box.
 
@@ -45,13 +45,16 @@ def get_random_bounding_box(
     """
     t_size: Tuple[float, float] = _to_tuple(size)
 
-    minx = random.uniform(bounds.minx, bounds.maxx - t_size[1])
+    width = (bounds.maxx - bounds.minx - t_size[1]) // res
+    minx = random.randrange(int(width)) * res + bounds.minx
     maxx = minx + t_size[1]
 
-    miny = random.uniform(bounds.miny, bounds.maxy - t_size[0])
+    height = (bounds.maxy - bounds.miny - t_size[0]) // res
+    miny = random.randrange(int(height)) * res + bounds.miny
     maxy = miny + t_size[0]
 
     mint = bounds.mint
     maxt = bounds.maxt
 
-    return BoundingBox(minx, maxx, miny, maxy, mint, maxt)
+    query = BoundingBox(minx, maxx, miny, maxy, mint, maxt)
+    return query

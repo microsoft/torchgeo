@@ -7,10 +7,9 @@ import abc
 import random
 from typing import Iterator, Optional, Tuple, Union
 
-from rtree.index import Index
 from torch.utils.data import Sampler
 
-from torchgeo.datasets import BoundingBox
+from torchgeo.datasets import BoundingBox, GeoDataset
 
 from .utils import _to_tuple, get_random_bounding_box
 
@@ -49,7 +48,7 @@ class RandomGeoSampler(GeoSampler):
 
     def __init__(
         self,
-        index: Index,
+        dataset: GeoDataset,
         size: Union[Tuple[float, float], float],
         length: int,
         roi: Optional[BoundingBox] = None,
@@ -64,19 +63,20 @@ class RandomGeoSampler(GeoSampler):
           height dimension, and the second *float* for the width dimension
 
         Args:
-            index: index of a :class:`~torchgeo.datasets.GeoDataset`
+            dataset: dataset to index from
             size: dimensions of each :term:`patch` in units of CRS
             length: number of random samples to draw per epoch
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
-                (defaults to the bounds of ``index``)
+                (defaults to the bounds of ``dataset.index``)
         """
-        self.index = index
+        self.index = dataset.index
+        self.res = dataset.res
         self.size = _to_tuple(size)
         self.length = length
         if roi is None:
-            roi = BoundingBox(*index.bounds)
+            roi = BoundingBox(*self.index.bounds)
         self.roi = roi
-        self.hits = list(index.intersection(roi, objects=True))
+        self.hits = list(self.index.intersection(roi, objects=True))
 
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
@@ -90,7 +90,7 @@ class RandomGeoSampler(GeoSampler):
             bounds = BoundingBox(*hit.bounds)
 
             # Choose a random index within that tile
-            bounding_box = get_random_bounding_box(bounds, self.size)
+            bounding_box = get_random_bounding_box(bounds, self.size, self.res)
 
             yield bounding_box
 
@@ -117,13 +117,13 @@ class GridGeoSampler(GeoSampler):
     to the `receptive field <https://distill.pub/2019/computing-receptive-fields/>`_ of
     the CNN.
 
-    When sampling from :class:`~torchgeo.datasets.ZipDataset`, the ``index`` should come
-    from a non-tile-based dataset if possible.
+    When sampling from :class:`~torchgeo.datasets.ZipDataset`, the ``dataset`` should be
+    a non-tile-based dataset if possible.
     """
 
     def __init__(
         self,
-        index: Index,
+        dataset: GeoDataset,
         size: Union[Tuple[float, float], float],
         stride: Union[Tuple[float, float], float],
         roi: Optional[BoundingBox] = None,
@@ -138,18 +138,19 @@ class GridGeoSampler(GeoSampler):
           height dimension, and the second *float* for the width dimension
 
         Args:
-            index: index of a :class:`~torchgeo.datasets.GeoDataset`
+            dataset: dataset to index from
             size: dimensions of each :term:`patch` in units of CRS
             stride: distance to skip between each patch
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+                (defaults to the bounds of ``dataset.index``)
         """
-        self.index = index
+        self.index = dataset.index
         self.size = _to_tuple(size)
         self.stride = _to_tuple(stride)
         if roi is None:
-            roi = BoundingBox(*index.bounds)
+            roi = BoundingBox(*self.index.bounds)
         self.roi = roi
-        self.hits = list(index.intersection(roi, objects=True))
+        self.hits = list(self.index.intersection(roi, objects=True))
 
         self.length: int = 0
         for hit in self.hits:
