@@ -14,7 +14,7 @@ import numpy as np
 import rasterio as rio
 import torch
 from affine import Affine
-from fiona.errors import DriverError
+from fiona.errors import FionaValueError
 from rasterio.features import rasterize
 from torch import Tensor
 
@@ -158,7 +158,7 @@ class SpaceNet(VisionDataset, abc.ABC):
         try:
             with fiona.open(path) as src:
                 labels = [feature["geometry"] for feature in src]
-        except DriverError:
+        except FionaValueError:
             labels = []
 
         if not labels:
@@ -507,9 +507,9 @@ class SpaceNet4(SpaceNet):
 
     Dataset features
 
-    * No. of chipped images: 28728 (PAN/MS/PS-RGBNIR)
+    * No. of chipped images: 28,728 (PAN/MS/PS-RGBNIR)
     * No. of label files: 1064
-    * No. of building footprints: >120000
+    * No. of building footprints: >120,000
     * Area Coverage: 665 sq km
     * Chip size: 225 x 225 (MS), 900 x 900 (PAN/PS-RGBNIR)
 
@@ -640,9 +640,10 @@ class SpaceNet4(SpaceNet):
         images = glob.glob(os.path.join(root, self.collections[0], "*", self.filename))
         images = sorted(images)
 
+        catalog_id_pattern = re.compile(r"(_[A-Z0-9])\w+$")
         for imgpath in images:
             imgdir = os.path.basename(os.path.dirname(imgpath))
-            match = re.search(r"(_[A-Z0-9])\w+$", imgdir)
+            match = catalog_id_pattern.search(imgdir)
             assert match is not None, "Invalid image directory"
             catalog_id = match.group()[1:]
 
