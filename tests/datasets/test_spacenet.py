@@ -176,7 +176,9 @@ class TestSpaceNet4:
         )
 
     def test_getitem(self, dataset: SpaceNet4) -> None:
-        x = dataset[0]
+        # Get image-label pair with empty label to
+        # enusre coverage
+        x = dataset[2]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)

@@ -14,6 +14,7 @@ import numpy as np
 import rasterio as rio
 import torch
 from affine import Affine
+from fiona.errors import DriverError
 from rasterio.features import rasterize
 from torch import Tensor
 
@@ -157,7 +158,7 @@ class SpaceNet(VisionDataset, abc.ABC):
         try:
             with fiona.open(path) as src:
                 labels = [feature["geometry"] for feature in src]
-        except Exception:
+        except DriverError:
             labels = []
 
         if not labels:
