@@ -143,6 +143,7 @@ SpaceNet
 .. autoclass:: SpaceNet
 .. autoclass:: SpaceNet1
 .. autoclass:: SpaceNet2
+.. autoclass:: SpaceNet4
 
 Tropical Cyclone Wind Estimation Competition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
