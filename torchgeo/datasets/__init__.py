@@ -5,6 +5,7 @@
 
 from .advance import ADVANCE
 from .benin_cashews import BeninSmallHolderCashews
+from .bigearthnet import BigEarthNet
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
 from .chesapeake import (
@@ -93,6 +94,7 @@ __all__ = (
     # VisionDataset
     "ADVANCE",
     "BeninSmallHolderCashews",
+    "BigEarthNet",
     "COWC",
     "COWCCounting",
     "COWCDetection",
