@@ -19,7 +19,13 @@ import torch
 from rasterio.crs import CRS
 
 from .geo import GeoDataset, RasterDataset
-from .utils import BoundingBox, check_integrity, download_and_extract_archive
+from .utils import (
+    BoundingBox,
+    check_integrity,
+    download_and_extract_archive,
+    download_url,
+    extract_archive,
+)
 
 
 class Chesapeake(RasterDataset, abc.ABC):
@@ -376,21 +382,15 @@ class ChesapeakeCVPR(GeoDataset):
         for split in splits:
             assert split in self.splits
         assert all([layer in self.valid_layers for layer in layers])
-        super().__init__(transforms)  # creates self.index and self.transform
         self.root = root
         self.layers = layers
         self.cache = cache
+        self.download = download
         self.checksum = checksum
 
-        if download and not self._check_structure():
-            self._download()
+        self._verify()
 
-        if checksum:
-            if not self._check_integrity():
-                raise RuntimeError(
-                    "Dataset not found or corrupted. "
-                    + "You can use download=True to download it"
-                )
+        super().__init__(transforms)
 
         # Add all tiles into the index in epsg:3857 based on the included geojson
         mint: float = 0
@@ -496,40 +496,45 @@ class ChesapeakeCVPR(GeoDataset):
 
         return sample
 
-    def _check_integrity(self) -> bool:
-        """Check integrity of the dataset archive.
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
 
-        Returns:
-            True if dataset archive is found and/or MD5s match, else False
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        integrity: bool = check_integrity(
-            os.path.join(self.root, self.filename),
-            self.md5 if self.checksum else None,
-        )
+        # Check if the extracted files already exist
+        def exists(filename: str) -> bool:
+            return os.path.exists(os.path.join(self.root, filename))
 
-        return integrity
-
-    def _check_structure(self) -> bool:
-        """Checks to see if the dataset files exist in the root directory.
-
-        Returns:
-            True if the dataset files are found, else False
-        """
-        dataset_files = os.listdir(self.root)
-        for file in self.files:
-            if file not in dataset_files:
-                return False
-        return True
-
-    def _download(self) -> None:
-        """Download the dataset and extract it."""
-        if self._check_integrity():
-            print("Files already downloaded and verified")
+        if all(map(exists, self.files)):
             return
 
-        download_and_extract_archive(
+        # Check if the zip files have already been downloaded
+        if os.path.exists(os.path.join(self.root, self.filename)):
+            self._extract()
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automaticaly download the dataset."
+            )
+
+        # Download the dataset
+        self._download()
+        self._extract()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        download_url(
             self.url,
             self.root,
             filename=self.filename,
             md5=self.md5,
         )
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        extract_archive(os.path.join(self.root, self.filename))
