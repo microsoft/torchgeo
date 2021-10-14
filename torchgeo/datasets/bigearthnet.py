@@ -18,7 +18,7 @@ from .geo import VisionDataset
 from .utils import download_url, extract_archive
 
 
-def sort_bands(x):
+def sort_bands(x: str) -> str:
     """Sort Sentinel-2 band files in the correct order."""
     x = os.path.basename(x).split("_")[-1]
     x = os.path.splitext(x)[0]
@@ -36,7 +36,7 @@ class BigEarthNet(VisionDataset):
     Dataset features:
 
     * 590,326 patches from 125 Sentinel-2 tiles in Europe between Jun 2017 - May 2018
-    * 13 spectral bands with 10-60 m per pixel resolution (base 120x120 px)
+    * 12 spectral bands with 10-60 m per pixel resolution (base 120x120 px)
     * 43 scene classes from the 2018 CORINE Land Cover database (CLC 2018)
 
     Dataset format:
@@ -221,7 +221,7 @@ class BigEarthNet(VisionDataset):
             # Resample to (120, 120)
             with rasterio.open(path) as dataset:
                 array = dataset.read(
-                    indexes=dataset.count,
+                    indexes=1,
                     out_shape=self.image_size,
                     out_dtype="int32",
                     resampling=Resampling.bilinear,
