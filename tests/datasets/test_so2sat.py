@@ -7,11 +7,11 @@ from typing import Generator
 
 import pytest
 import torch
+import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 
 from torchgeo.datasets import So2Sat
-from torchgeo.transforms import Identity
 
 
 class TestSo2Sat:
@@ -28,7 +28,7 @@ class TestSo2Sat:
         monkeypatch.setattr(So2Sat, "md5s", md5s)  # type: ignore[attr-defined]
         root = os.path.join("tests", "data", "so2sat")
         split = request.param
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return So2Sat(root, split, transforms, checksum=True)
 
     def test_getitem(self, dataset: So2Sat) -> None:

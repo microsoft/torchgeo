@@ -9,11 +9,11 @@ from typing import Generator
 
 import pytest
 import torch
+import torch.nn as nn
 from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import BeninSmallHolderCashews
-from torchgeo.transforms import Identity
 
 
 class Dataset:
@@ -50,7 +50,7 @@ class TestBeninSmallHolderCashews:
             BeninSmallHolderCashews, "dates", ("2019_11_05",)
         )
         root = str(tmp_path)
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return BeninSmallHolderCashews(
             root,
             transforms=transforms,

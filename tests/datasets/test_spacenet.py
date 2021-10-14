@@ -9,11 +9,11 @@ from typing import Generator
 
 import pytest
 import torch
+import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 
 from torchgeo.datasets import SpaceNet1, SpaceNet2, SpaceNet4
-from torchgeo.transforms import Identity
 
 TEST_DATA_DIR = "tests/data/spacenet"
 
@@ -51,7 +51,7 @@ class TestSpaceNet1:
             SpaceNet1, "collection_md5_dict", test_md5
         )
         root = str(tmp_path)
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return SpaceNet1(
             root,
             image=request.param,
@@ -104,7 +104,7 @@ class TestSpaceNet2:
             SpaceNet2, "collection_md5_dict", test_md5
         )
         root = str(tmp_path)
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return SpaceNet2(
             root,
             image=request.param,
@@ -165,7 +165,7 @@ class TestSpaceNet4:
             SpaceNet4, "collection_md5_dict", test_md5
         )
         root = str(tmp_path)
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return SpaceNet4(
             root,
             image=request.param,

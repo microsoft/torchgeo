@@ -9,13 +9,13 @@ from typing import Generator
 import matplotlib.pyplot as plt
 import pytest
 import torch
+import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import BoundingBox, Chesapeake13, ChesapeakeCVPR, ZipDataset
-from torchgeo.transforms import Identity
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -42,7 +42,7 @@ class TestChesapeake13:
             plt, "show", lambda *args: None
         )
         root = str(tmp_path)
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return Chesapeake13(root, transforms=transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: Chesapeake13) -> None:
@@ -108,7 +108,7 @@ class TestChesapeakeCVPR:
             ["de_1m_2013_extended-debuffered-test_tiles", "spatial_index.geojson"],
         )
         root = str(tmp_path)
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return ChesapeakeCVPR(
             root,
             splits=["de-test"],

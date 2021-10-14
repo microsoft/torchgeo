@@ -8,12 +8,12 @@ from typing import Generator
 
 import pytest
 import torch
+import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import GID15
-from torchgeo.transforms import Identity
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -37,7 +37,7 @@ class TestGID15:
         monkeypatch.setattr(GID15, "url", url)  # type: ignore[attr-defined]
         root = str(tmp_path)
         split = request.param
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return GID15(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: GID15) -> None:

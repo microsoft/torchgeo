@@ -7,6 +7,7 @@ from typing import Dict
 
 import pytest
 import torch
+import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from rasterio.crs import CRS
 from torch.utils.data import ConcatDataset
@@ -21,7 +22,6 @@ from torchgeo.datasets import (
     VisionDataset,
     ZipDataset,
 )
-from torchgeo.transforms import Identity
 
 
 class CustomGeoDataset(GeoDataset):
@@ -106,7 +106,7 @@ class TestRasterDataset:
         root = os.path.join("tests", "data", "landsat8")
         bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7"]
         crs = CRS.from_epsg(3005)
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         cache = request.param
         return Landsat8(root, bands=bands, crs=crs, transforms=transforms, cache=cache)
 
