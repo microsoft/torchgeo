@@ -9,12 +9,12 @@ from typing import Generator
 import matplotlib.pyplot as plt
 import pytest
 import torch
+import torch.nn as nn
 from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import BoundingBox, CanadianBuildingFootprints, ZipDataset
-from torchgeo.transforms import Identity
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -57,7 +57,7 @@ class TestCanadianBuildingFootprints:
             plt, "show", lambda *args: None
         )
         root = str(tmp_path)
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return CanadianBuildingFootprints(
             root, res=0.1, transforms=transforms, download=True, checksum=True
         )

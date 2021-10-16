@@ -7,12 +7,12 @@ from typing import Generator
 
 import pytest
 import torch
+import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import SEN12MS
-from torchgeo.transforms import Identity
 
 
 class TestSEN12MS:
@@ -38,7 +38,7 @@ class TestSEN12MS:
         monkeypatch.setattr(SEN12MS, "md5s", md5s)  # type: ignore[attr-defined]
         root = os.path.join("tests", "data", "sen12ms")
         split = request.param
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return SEN12MS(root, split, transforms=transforms, checksum=True)
 
     def test_getitem(self, dataset: SEN12MS) -> None:

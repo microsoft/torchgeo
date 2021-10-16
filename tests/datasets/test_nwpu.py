@@ -9,13 +9,13 @@ from typing import Generator
 
 import pytest
 import torch
+import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import VHR10
-from torchgeo.transforms import Identity
 
 pytest.importorskip("rarfile")
 pytest.importorskip("pycocotools")
@@ -51,7 +51,7 @@ class TestVHR10:
         monkeypatch.setitem(VHR10.target_meta, "md5", md5)  # type: ignore[attr-defined]
         root = str(tmp_path)
         split = request.param
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return VHR10(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: VHR10) -> None:
