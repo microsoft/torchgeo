@@ -8,11 +8,11 @@ from typing import Generator
 import matplotlib.pyplot as plt
 import pytest
 import torch
+import torch.nn as nn
 from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import NAIP, BoundingBox, ZipDataset
-from torchgeo.transforms import Identity
 
 
 class TestNAIP:
@@ -22,7 +22,7 @@ class TestNAIP:
             plt, "show", lambda *args: None
         )
         root = os.path.join("tests", "data", "naip")
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return NAIP(root, transforms=transforms)
 
     def test_getitem(self, dataset: NAIP) -> None:

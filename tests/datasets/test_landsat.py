@@ -8,11 +8,11 @@ from typing import Generator
 import matplotlib.pyplot as plt
 import pytest
 import torch
+import torch.nn as nn
 from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import BoundingBox, Landsat8, ZipDataset
-from torchgeo.transforms import Identity
 
 
 class TestLandsat8:
@@ -23,7 +23,7 @@ class TestLandsat8:
         )
         root = os.path.join("tests", "data", "landsat8")
         bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7"]
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return Landsat8(root, bands=bands, transforms=transforms)
 
     def test_separate_files(self, dataset: Landsat8) -> None:

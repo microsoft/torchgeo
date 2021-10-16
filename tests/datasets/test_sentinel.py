@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pytest
 import torch
+import torch.nn as nn
 from rasterio.crs import CRS
 
 from torchgeo.datasets import BoundingBox, Sentinel2, ZipDataset
-from torchgeo.transforms import Identity
 
 
 class TestSentinel2:
@@ -17,7 +17,7 @@ class TestSentinel2:
     def dataset(self) -> Sentinel2:
         root = os.path.join("tests", "data", "sentinel2")
         bands = ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B11"]
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return Sentinel2(root, bands=bands, transforms=transforms)
 
     def test_separate_files(self, dataset: Sentinel2) -> None:

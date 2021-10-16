@@ -8,12 +8,12 @@ from typing import Generator
 
 import pytest
 import torch
+import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import ETCI2021
-from torchgeo.transforms import Identity
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -55,7 +55,7 @@ class TestETCI2021:
         monkeypatch.setattr(ETCI2021, "metadata", metadata)  # type: ignore[attr-defined]   # noqa: E501
         root = str(tmp_path)
         split = request.param
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return ETCI2021(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: ETCI2021) -> None:

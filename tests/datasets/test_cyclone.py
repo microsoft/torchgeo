@@ -9,12 +9,12 @@ from typing import Generator
 
 import pytest
 import torch
+import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import TropicalCycloneWindEstimation
-from torchgeo.transforms import Identity
 
 
 class Dataset:
@@ -57,7 +57,7 @@ class TestTropicalCycloneWindEstimation:
         )
         root = str(tmp_path)
         split = request.param
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return TropicalCycloneWindEstimation(
             root, split, transforms, download=True, api_key="", checksum=True
         )
