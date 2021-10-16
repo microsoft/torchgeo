@@ -35,14 +35,17 @@ class BigEarthNet(VisionDataset):
 
     Dataset features:
 
-    * 590,326 patches from 125 Sentinel-2 tiles in Europe between Jun 2017 - May 2018
+    * 590,326 patches from 125 Sentinel-1 and Sentinel-2 tiles
+    * Imagery from tiles in Europe between Jun 2017 - May 2018
     * 12 spectral bands with 10-60 m per pixel resolution (base 120x120 px)
+    * 2 synthetic aperture radar bands (120x120 px)
     * 43 scene classes from the 2018 CORINE Land Cover database (CLC 2018)
 
     Dataset format:
 
     * images are composed of multiple single channel geotiffs
     * labels are multiclass, stored in a single json file per image
+    * mapping of Sentinel-1 to Sentinel-2 patches are within Sentinel-1 json files
 
     Dataset classes:
 
@@ -66,8 +69,8 @@ class BigEarthNet(VisionDataset):
     17. Industrial or commercial units
     18. Inland marshes
     19. Intertidal flats
-    20. Land principally occupied by agriculture, with significant areas of natural vege
-    tation
+    20. Land principally occupied by agriculture, with
+        significant areas of natural vegetation
     21. Mineral extraction sites
     22. Mixed forest
     23. Moors and heathland
@@ -186,7 +189,7 @@ class BigEarthNet(VisionDataset):
 
         Args:
             root: root directory where dataset can be found
-            bands: load s1, s2, or s1+s2 bands. one of {s1, s2, all}
+            bands: load Sentinel-1 bands, Sentinel-2, or both. one of {s1, s2, all}
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory

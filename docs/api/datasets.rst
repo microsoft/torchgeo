@@ -80,6 +80,11 @@ Smallholder Cashew Plantations in Benin
 
 .. autoclass:: BeninSmallHolderCashews
 
+BigEarthNet
+^^^^^^^^^^^
+
+.. autoclass:: BigEarthNet
+
 Cars Overhead With Context (COWC)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
