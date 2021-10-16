@@ -6,7 +6,7 @@
 import glob
 import json
 import os
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, List, Optional
 
 import numpy as np
 import rasterio
@@ -143,15 +143,41 @@ class BigEarthNet(VisionDataset):
         "Water bodies",
         "Water courses",
     ]
-    url = "http://bigearth.net/downloads/BigEarthNet-S2-v1.0.tar.gz"
-    md5 = "5a64e9ce38deb036a435a7b59494924c"
-    filename = "BigEarthNet-S2-v1.0.tar.gz"
-    directory = "BigEarthNet-v1.0"
+    metadata = {
+        "s1": {
+            "url": "http://bigearth.net/downloads/BigEarthNet-S1-v1.0.tar.gz",
+            "md5": "5a64e9ce38deb036a435a7b59494924c",
+            "filename": "BigEarthNet-S1-v1.0.tar.gz",
+            "directory": "BigEarthNet-S1-v1.0",
+            "bands": ["VH", "VV"],
+        },
+        "s2": {
+            "url": "http://bigearth.net/downloads/BigEarthNet-S2-v1.0.tar.gz",
+            "md5": "5a64e9ce38deb036a435a7b59494924c",
+            "filename": "BigEarthNet-S2-v1.0.tar.gz",
+            "directory": "BigEarthNet-v1.0",
+            "bands": [
+                "B01",
+                "B02",
+                "B03",
+                "B04",
+                "B05",
+                "B06",
+                "B07",
+                "B08",
+                "B8A",
+                "B09",
+                "B11",
+                "B12",
+            ],
+        },
+    }
     image_size = (120, 120)
 
     def __init__(
         self,
         root: str = "data",
+        bands: str = "all",
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -160,19 +186,30 @@ class BigEarthNet(VisionDataset):
 
         Args:
             root: root directory where dataset can be found
+            bands: load s1, s2, or s1+s2 bands. one of {s1, s2, all}
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
+        assert bands in ["s1", "s2", "all"]
         self.root = root
+        self.bands = bands
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
         self.class2idx = {c: i for i, c in enumerate(self.classes)}
         self.num_classes = len(self.classes)
         self._verify()
-        self.files = glob.glob(os.path.join(self.root, self.directory, "*"))
+
+        if bands == "s2":
+            self.files = glob.glob(
+                os.path.join(self.root, self.metadata["s2"]["directory"], "*")
+            )
+        else:
+            self.files = glob.glob(
+                os.path.join(self.root, self.metadata["s1"]["directory"], "*")
+            )
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
@@ -203,6 +240,37 @@ class BigEarthNet(VisionDataset):
         """
         return len(self.files)
 
+    def _load_paths(self, index: int) -> List[str]:
+        """Load paths to band files.
+
+        Args:
+            index: index to return
+
+        Returns:
+            list of file paths
+        """
+        folder = self.files[index]
+        paths = glob.glob(os.path.join(folder, "*.tif"))
+        # S1->S2 patch mapping is in S1 patch metadata json file
+        if self.bands == "all":
+            paths = sorted(paths)
+
+            metadata_path = glob.glob(os.path.join(folder, "*.json"))[0]
+            with open(metadata_path, "r") as f:
+                name_s2 = json.load(f)["corresponding_s2_patch"]
+
+            folder_s2 = os.path.join(
+                self.root, self.metadata["s2"]["directory"], name_s2
+            )
+            paths_s2 = glob.glob(os.path.join(folder_s2, "*.tif"))
+            paths_s2 = sorted(paths_s2, key=sort_bands)
+            paths.extend(paths_s2)
+        elif self.bands == "s1":
+            paths = sorted(paths)
+        else:
+            paths = sorted(paths, key=sort_bands)
+        return paths
+
     def _load_image(self, index: int) -> Tensor:
         """Load a single image.
 
@@ -212,9 +280,7 @@ class BigEarthNet(VisionDataset):
         Returns:
             the raster image or target
         """
-        folder = self.files[index]
-        paths = glob.glob(os.path.join(folder, "*.tif"))
-        paths = sorted(paths, key=sort_bands)
+        paths = self._load_paths(index)
         images = []
         for path in paths:
             # Images are of different spatial resolutions
@@ -257,15 +323,31 @@ class BigEarthNet(VisionDataset):
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
+        keys = ["s1", "s2"] if self.bands == "all" else [self.bands]
+        urls = [self.metadata[k]["url"] for k in keys]
+        md5s = [self.metadata[k]["md5"] for k in keys]
+        filenames = [self.metadata[k]["filename"] for k in keys]
+        directories = [self.metadata[k]["directory"] for k in keys]
+
         # Check if the files already exist
-        filepath = os.path.join(self.root, self.directory)
-        if os.path.exists(filepath):
+        exists = [
+            os.path.exists(os.path.join(self.root, directory))
+            for directory in directories
+        ]
+        if all(exists):
             return
 
         # Check if zip file already exists (if so then extract)
-        filepath = os.path.join(self.root, self.filename)
-        if os.path.exists(filepath):
-            self._extract()
+        exists = []
+        for filename in filenames:
+            filepath = os.path.join(self.root, filename)
+            if os.path.exists(filepath):
+                exists.append(True)
+                self._extract(filepath)
+            else:
+                exists.append(False)
+
+        if all(exists):
             return
 
         # Check if the user requested to download the dataset
@@ -277,19 +359,30 @@ class BigEarthNet(VisionDataset):
             )
 
         # Download and extract the dataset
-        self._download()
-        self._extract()
+        for url, filename, md5 in zip(urls, filenames, md5s):
+            self._download(url, filename, md5)
+            filepath = os.path.join(self.root, filename)
+            self._extract(filepath)
 
-    def _download(self) -> None:
-        """Download the dataset."""
+    def _download(self, url: str, filename: str, md5: str) -> None:
+        """Download the dataset.
+
+        Args:
+            url: url to download file
+            filename: output filename to write downloaded file
+            md5: md5 of downloaded file
+        """
         download_url(
-            self.url,
+            url,
             self.root,
-            filename=self.filename,
-            md5=self.md5 if self.checksum else None,
+            filename=filename,
+            md5=md5 if self.checksum else None,
         )
 
-    def _extract(self) -> None:
-        """Extract the dataset."""
-        filepath = os.path.join(self.root, self.filename)
+    def _extract(self, filepath: str) -> None:
+        """Extract the dataset.
+
+        Args:
+            filepath: path to file to be extracted
+        """
         extract_archive(filepath)
