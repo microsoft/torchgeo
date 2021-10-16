@@ -46,6 +46,9 @@ class BigEarthNet(VisionDataset):
     * images are composed of multiple single channel geotiffs
     * labels are multiclass, stored in a single json file per image
     * mapping of Sentinel-1 to Sentinel-2 patches are within Sentinel-1 json files
+    * Sentinel-1 bands: (VV, VH)
+    * Sentinel-2 bands: (B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B11, B12)
+    * All bands: (VV, VH, B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B11, B12)
 
     Dataset classes:
 
@@ -152,27 +155,12 @@ class BigEarthNet(VisionDataset):
             "md5": "5a64e9ce38deb036a435a7b59494924c",
             "filename": "BigEarthNet-S1-v1.0.tar.gz",
             "directory": "BigEarthNet-S1-v1.0",
-            "bands": ["VH", "VV"],
         },
         "s2": {
             "url": "http://bigearth.net/downloads/BigEarthNet-S2-v1.0.tar.gz",
             "md5": "5a64e9ce38deb036a435a7b59494924c",
             "filename": "BigEarthNet-S2-v1.0.tar.gz",
             "directory": "BigEarthNet-v1.0",
-            "bands": [
-                "B01",
-                "B02",
-                "B03",
-                "B04",
-                "B05",
-                "B06",
-                "B07",
-                "B08",
-                "B8A",
-                "B09",
-                "B11",
-                "B12",
-            ],
         },
     }
     image_size = (120, 120)
