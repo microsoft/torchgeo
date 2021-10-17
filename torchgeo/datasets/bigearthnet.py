@@ -49,6 +49,7 @@ class BigEarthNet(VisionDataset):
     * Sentinel-1 bands: (VV, VH)
     * Sentinel-2 bands: (B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B11, B12)
     * All bands: (VV, VH, B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B11, B12)
+    * Sentinel-2 bands are of different spatial resolutions and upsampled to 10m
 
     Dataset classes:
 
@@ -274,7 +275,7 @@ class BigEarthNet(VisionDataset):
         paths = self._load_paths(index)
         images = []
         for path in paths:
-            # Images are of different spatial resolutions
+            # Bands are of different spatial resolutions
             # Resample to (120, 120)
             with rasterio.open(path) as dataset:
                 array = dataset.read(
