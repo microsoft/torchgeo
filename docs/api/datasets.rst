@@ -118,6 +118,11 @@ GID-15 (Gaofen Image Dataset)
 
 .. autoclass:: GID15
 
+IDTReeS
+^^^^^^^
+
+.. autoclass:: IDTReeS
+
 LandCover.ai (Land Cover from Aerial Imagery)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
