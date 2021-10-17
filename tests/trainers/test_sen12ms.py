@@ -2,16 +2,21 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, cast
+from typing import Any, Dict, Generator, Tuple, cast
 
 import pytest
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
+from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 
 from torchgeo.trainers import SEN12MSDataModule, SEN12MSSegmentationTask
+
+
+def mocked_log(*args: Any, **kwargs: Any) -> None:
+    pass
 
 
 class TestSEN12MSSegmentationTask:
@@ -23,7 +28,7 @@ class TestSEN12MSSegmentationTask:
         return task_args
 
     @pytest.fixture
-    def datamodule(self) -> None:
+    def datamodule(self) -> SEN12MSDataModule:
         root = os.path.join("tests", "data", "sen12ms")
         seed = 0
         band_set = "all"
@@ -34,20 +39,27 @@ class TestSEN12MSSegmentationTask:
         dm.setup()
         return dm
 
-    def test_unet_ce(self, default_config: Dict[str, Any]) -> None:
-        default_config["segmentation_model"] = "unet"
-        default_config["loss"] = "ce"
-        default_config["optimizer"] = "adamw"
+    @pytest.mark.parametrize("segmentation_model", [("unet", smp.Unet)])
+    def test_segmentation_model(
+        self, default_config: Dict[str, Any], segmentation_model: Tuple[str, Any]
+    ) -> None:
+        config_string, config_class = segmentation_model
+        default_config["segmentation_model"] = config_string
         task = SEN12MSSegmentationTask(**default_config)
-        assert isinstance(task.model, smp.Unet)
-        assert isinstance(task.loss, nn.CrossEntropyLoss)  # type: ignore[attr-defined]
+        assert isinstance(task.model, config_class)
 
-    def test_unet_jaccard(self, default_config: Dict[str, Any]) -> None:
-        default_config["segmentation_model"] = "unet"
-        default_config["loss"] = "jaccard"
+    @pytest.mark.parametrize(
+        "loss",
+        [
+            ("ce", nn.CrossEntropyLoss),  # type: ignore[attr-defined]
+            ("jaccard", smp.losses.JaccardLoss),
+        ],
+    )
+    def test_loss(self, default_config: Dict[str, Any], loss: Tuple[str, Any]) -> None:
+        config_string, config_class = loss
+        default_config["loss"] = config_string
         task = SEN12MSSegmentationTask(**default_config)
-        assert isinstance(task.model, smp.Unet)
-        assert isinstance(task.loss, smp.losses.JaccardLoss)
+        assert isinstance(task.loss, config_class)
 
     def test_configure_optimizers(self, default_config: Dict[str, Any]) -> None:
         task = SEN12MSSegmentationTask(**default_config)
@@ -56,30 +68,42 @@ class TestSEN12MSSegmentationTask:
         assert "lr_scheduler" in out
 
     def test_training(
-        self, default_config: Dict[str, Any], datamodule: SEN12MSDataModule
+        self,
+        default_config: Dict[str, Any],
+        datamodule: SEN12MSDataModule,
+        monkeypatch: Generator[MonkeyPatch, None, None],
     ) -> None:
         task = SEN12MSSegmentationTask(**default_config)
         batch = next(iter(datamodule.train_dataloader()))
+        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
         out = task.training_step(batch, 0)
         assert isinstance(out, torch.Tensor)
         task.training_epoch_end(0)
 
     def test_validation(
-        self, default_config: Dict[str, Any], datamodule: SEN12MSDataModule
+        self,
+        default_config: Dict[str, Any],
+        datamodule: SEN12MSDataModule,
+        monkeypatch: Generator[MonkeyPatch, None, None],
     ) -> None:
         task = SEN12MSSegmentationTask(**default_config)
         batch = next(iter(datamodule.val_dataloader()))
-        out = task.validation_step(batch, 0)
-        assert isinstance(out, torch.Tensor)
+        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
+
+        task.validation_step(batch, 0)
         task.validation_epoch_end(0)
 
     def test_test(
-        self, default_config: Dict[str, Any], datamodule: SEN12MSDataModule
+        self,
+        default_config: Dict[str, Any],
+        datamodule: SEN12MSDataModule,
+        monkeypatch: Generator[MonkeyPatch, None, None],
     ) -> None:
         task = SEN12MSSegmentationTask(**default_config)
         batch = next(iter(datamodule.test_dataloader()))
-        out = task.test_step(batch, 0)
-        assert isinstance(out, torch.Tensor)
+        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
+
+        task.test_step(batch, 0)
         task.test_epoch_end(0)
 
     def test_invalid_model(self, default_config: Dict[str, Any]) -> None:
@@ -97,7 +121,7 @@ class TestSEN12MSSegmentationTask:
 
 class TestSEN12MSDataModule:
     @pytest.fixture(params=["all", "s1", "s2-all", "s2-reduced"])
-    def datamodule(self, request: SubRequest) -> None:
+    def datamodule(self, request: SubRequest) -> SEN12MSDataModule:
         root = os.path.join("tests", "data", "sen12ms")
         seed = 0
         band_set = request.param
