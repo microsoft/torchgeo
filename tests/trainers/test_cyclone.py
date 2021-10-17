@@ -2,14 +2,15 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, cast, Generator, Tuple
+from typing import Any, Dict, Generator, Tuple, cast
 
 import pytest
+import torch
+from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from torchvision import models
-from _pytest.monkeypatch import MonkeyPatch
-from torchgeo.trainers import CycloneSimpleRegressionTask, CycloneDataModule
-import torch
+
+from torchgeo.trainers import CycloneDataModule, CycloneSimpleRegressionTask
 
 
 def mocked_log(*args: Any, **kwargs: Any) -> None:
