@@ -5,7 +5,6 @@
 
 from typing import Any, Dict, Optional, cast
 
-import kornia.augmentation as K
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
@@ -196,7 +195,7 @@ class RESISC45ClassificationTask(pl.LightningModule):
             a "lr dict" according to the pytorch lightning documentation --
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
-        optimizer = torch.optim.Adam(
+        optimizer = torch.optim.AdamW(
             self.model.parameters(),
             lr=self.hparams["learning_rate"],
         )
@@ -233,6 +232,8 @@ class RESISC45DataModule(pl.LightningDataModule):
         num_workers: int = 4,
         weights: str = "random",
         unsupervised_mode: bool = False,
+        val_split_pct: float = 0.2,
+        test_split_pct: float = 0.2,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for RESISC45 based DataLoaders.
@@ -245,6 +246,8 @@ class RESISC45DataModule(pl.LightningDataModule):
                 "random_rgb"
             unsupervised_mode: Makes the train dataloader return imagery from the train,
                 val, and test sets
+            val_split_pct: What percentage of the dataset to use as a validation set
+            test_split_pct: What percentage of the dataset to use as a test set
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
@@ -253,27 +256,16 @@ class RESISC45DataModule(pl.LightningDataModule):
         self.weights = weights
         self.unsupervised_mode = unsupervised_mode
 
-        self.val_split_pct = kwargs["val_split_pct"]
-        self.test_split_pct = kwargs["test_split_pct"]
+        self.val_split_pct = val_split_pct
+        self.test_split_pct = test_split_pct
 
         self.norm = Normalize(self.band_means, self.band_stds)
-        self.transforms = K.AugmentationSequential(
-            K.RandomAffine(degrees=30),
-            K.RandomHorizontalFlip(),
-            K.RandomVerticalFlip(),
-            data_keys=["input"],
-        )
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         sample["image"] = sample["image"].float()
         sample["image"] /= 255.0
         sample["image"] = self.norm(sample["image"])
-        return sample
-
-    def kornia_pipeline(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset with Kornia."""
-        sample["image"] = self.transforms(sample["image"]).squeeze()
         return sample
 
     def prepare_data(self) -> None:
@@ -318,7 +310,7 @@ class RESISC45DataModule(pl.LightningDataModule):
 
     def val_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for validation."""
-        if self.val_dataset is None or len(self.val_dataset) == 0:
+        if self.unsupervised_mode or self.val_split_pct == 0:
             return self.train_dataloader()
         else:
             return DataLoader(
@@ -330,7 +322,7 @@ class RESISC45DataModule(pl.LightningDataModule):
 
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing."""
-        if self.test_dataset is None or len(self.test_dataset) == 0:
+        if self.unsupervised_mode or self.test_split_pct == 0:
             return self.train_dataloader()
         else:
             return DataLoader(
