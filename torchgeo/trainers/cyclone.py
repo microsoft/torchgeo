@@ -29,12 +29,12 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
     This does not take into account other per-sample features available in this dataset.
     """
 
-    def config_task(self, kwargs: Any) -> None:
+    def config_task(self) -> None:
         """Configures the task based on kwargs parameters."""
-        if kwargs["model"] == "resnet18":
+        if self.hparams["model"] == "resnet18":
             self.model = models.resnet18(pretrained=False, num_classes=1)
         else:
-            raise ValueError(f"Model type '{kwargs['model']}' is not valid.")
+            raise ValueError(f"Model type '{self.hparams['model']}' is not valid.")
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize a new LightningModule for training simple regression models.
@@ -47,18 +47,24 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()  # creates `self.hparams` from kwargs
 
-        self.config_task(kwargs)
+        self.config_task()
 
     def forward(self, x: Tensor) -> Any:  # type: ignore[override]
         """Forward pass of the model."""
         return self.model(x)
 
-    # NOTE: See https://github.com/PyTorchLightning/pytorch-lightning/issues/5023 for
-    # why we need to tell mypy to ignore a bunch of things
     def training_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> Tensor:
-        """Training step with an MSE loss. Reports MSE and RMSE."""
+        """Training step with an MSE loss.
+
+        Args:
+            batch: Current batch
+            batch_idx: Index of current batch
+
+        Returns:
+            training loss
+        """
         x = batch["image"]
         y = batch["wind_speed"].view(-1, 1)
         y_hat = self.forward(x)
@@ -75,7 +81,12 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
     def validation_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
-        """Validation step - reports MSE and RMSE."""
+        """Validation step.
+
+        Args:
+            batch: Current batch
+            batch_idx: Index of current batch
+        """
         x = batch["image"]
         y = batch["wind_speed"].view(-1, 1)
         y_hat = self.forward(x)
@@ -89,7 +100,12 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
     def test_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
-        """Test step identical to the validation step. Reports MSE and RMSE."""
+        """Test step.
+
+        Args:
+            batch: Current batch
+            batch_idx: Index of current batch
+        """
         x = batch["image"]
         y = batch["wind_speed"].view(-1, 1)
         y_hat = self.forward(x)
@@ -101,8 +117,13 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
         self.log("test_rmse", rmse)
 
     def configure_optimizers(self) -> Dict[str, Any]:
-        """Initialize the optimizer and learning rate scheduler."""
-        optimizer = torch.optim.Adam(
+        """Initialize the optimizer and learning rate scheduler.
+
+        Returns:
+            a "lr dict" according to the pytorch lightning documentation --
+            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+        """
+        optimizer = torch.optim.AdamW(
             self.model.parameters(),
             lr=self.hparams["learning_rate"],
         )
@@ -170,20 +191,11 @@ class CycloneDataModule(pl.LightningDataModule):
         This includes optionally downloading the dataset. This is done once per node,
         while :func:`setup` is done once per GPU.
         """
-        do_download = self.api_key is not None
-        _ = TropicalCycloneWindEstimation(
+        TropicalCycloneWindEstimation(
             self.root_dir,
             split="train",
             transforms=self.custom_transform,
-            download=do_download,
-            api_key=self.api_key,
-        )
-
-        _ = TropicalCycloneWindEstimation(
-            self.root_dir,
-            split="test",
-            transforms=self.custom_transform,
-            download=do_download,
+            download=self.api_key is not None,
             api_key=self.api_key,
         )
 
