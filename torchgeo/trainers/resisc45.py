@@ -99,7 +99,7 @@ class RESISC45ClassificationTask(pl.LightningModule):
     def training_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> Tensor:
-        """Training step - reports average accuracy and average IoU.
+        """Training step.
 
         Args:
             batch: Current batch
@@ -134,7 +134,7 @@ class RESISC45ClassificationTask(pl.LightningModule):
     def validation_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
-        """Validation step - reports average accuracy and average IoU.
+        """Validation step.
 
         Args:
             batch: Current batch
@@ -162,7 +162,7 @@ class RESISC45ClassificationTask(pl.LightningModule):
     def test_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
-        """Test step identical to the validation step.
+        """Test step.
 
         Args:
             batch: Current batch
