@@ -14,9 +14,7 @@ from omegaconf import OmegaConf
 
 from torchgeo.trainers import SEN12MSDataModule, SEN12MSSegmentationTask
 
-
-def mocked_log(*args: Any, **kwargs: Any) -> None:
-    pass
+from .test_utils import mocked_log
 
 
 class TestSEN12MSSegmentationTask:

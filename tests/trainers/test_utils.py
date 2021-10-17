@@ -4,7 +4,7 @@
 import os
 from collections import OrderedDict
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Any
 
 import pytest
 import torch
@@ -19,6 +19,10 @@ from torchgeo.trainers.utils import extract_encoder, load_state_dict
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 Module.__module__ = "nn.Module"
+
+
+def mocked_log(*args: Any, **kwargs: Any) -> None:
+    pass
 
 
 @pytest.fixture

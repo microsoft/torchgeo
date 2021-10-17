@@ -12,9 +12,7 @@ from torchvision import models
 
 from torchgeo.trainers import CycloneDataModule, CycloneSimpleRegressionTask
 
-
-def mocked_log(*args: Any, **kwargs: Any) -> None:
-    pass
+from .test_utils import mocked_log
 
 
 class TestCycloneSimpleRegressionTask:

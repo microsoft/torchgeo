@@ -14,9 +14,7 @@ from omegaconf import OmegaConf
 from torchgeo.models.fcn import FCN
 from torchgeo.trainers import LandcoverAIDataModule, LandcoverAISegmentationTask
 
-
-def mocked_log(*args: Any, **kwargs: Any) -> None:
-    pass
+from .test_utils import mocked_log
 
 
 class TestLandcoverAISegmentationTask:
