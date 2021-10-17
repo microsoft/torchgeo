@@ -6,7 +6,6 @@
 import os
 from typing import Any, Dict, Optional, cast
 
-import kornia.augmentation as K
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
@@ -37,10 +36,18 @@ class So2SatClassificationTask(pl.LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
-        pretrained = ("imagenet" in self.hparams["weights"]) and not os.path.exists(
-            self.hparams["weights"]
-        )
         in_channels = self.hparams["in_channels"]
+
+        pretrained = False
+        if not os.path.exists(self.hparams["weights"]):
+            if self.hparams["weights"] == "imagenet":
+                pretrained = True
+            elif self.hparams["weights"] == "random":
+                pretrained = False
+            else:
+                raise ValueError(
+                    f"Weight type '{self.hparams['weights']}' is not valid."
+                )
 
         # Create the model
         if "resnet" in self.hparams["classification_model"]:
@@ -67,6 +74,7 @@ class So2SatClassificationTask(pl.LightningModule):
                 self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
             )
 
+            # We copy over the pretrained RGB weights
             if pretrained:
                 w_new = torch.clone(  # type: ignore[attr-defined]
                     self.model.conv1.weight
@@ -117,8 +125,7 @@ class So2SatClassificationTask(pl.LightningModule):
         Keyword Args:
             classification_model: Name of the classification model use
             loss: Name of the loss function
-            weights: Either "random", "imagenet_only", "imagenet_and_random", or
-                "random_rgb"
+            weights: Either "random", "imagenet", or the path to a checkpoint file
         """
         super().__init__()
         self.save_hyperparameters()  # creates `self.hparams` from kwargs
@@ -143,7 +150,7 @@ class So2SatClassificationTask(pl.LightningModule):
     def training_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> Tensor:
-        """Training step - reports average accuracy and average IoU.
+        """Training step.
 
         Args:
             batch: Current batch
@@ -178,7 +185,7 @@ class So2SatClassificationTask(pl.LightningModule):
     def validation_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
-        """Validation step - reports average accuracy and average IoU.
+        """Validation step.
 
         Args:
             batch: Current batch
@@ -206,7 +213,7 @@ class So2SatClassificationTask(pl.LightningModule):
     def test_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
-        """Test step identical to the validation step.
+        """Test step.
 
         Args:
             batch: Current batch
@@ -239,7 +246,7 @@ class So2SatClassificationTask(pl.LightningModule):
             a "lr dict" according to the pytorch lightning documentation --
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
-        optimizer = torch.optim.Adam(
+        optimizer = torch.optim.AdamW(
             self.model.parameters(),
             lr=self.hparams["learning_rate"],
         )
@@ -355,14 +362,7 @@ class So2SatDataModule(pl.LightningDataModule):
         self.bands = bands
         self.unsupervised_mode = unsupervised_mode
 
-        self.transforms = K.AugmentationSequential(
-            K.RandomAffine(degrees=30),
-            K.RandomHorizontalFlip(),
-            K.RandomVerticalFlip(),
-            data_keys=["input"],
-        )
-
-    def preprocess1(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         # sample["image"] = (sample["image"] - self.band_means) / self.band_stds
         sample["image"] = sample["image"].float()
@@ -370,12 +370,6 @@ class So2SatDataModule(pl.LightningDataModule):
 
         if self.bands == "rgb":
             sample["image"] = sample["image"][:3, :, :]
-
-        return sample
-
-    def kornia_pipeline(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset with Kornia."""
-        sample["image"] = self.transforms(sample["image"]).squeeze()
 
         return sample
 
@@ -391,8 +385,8 @@ class So2SatDataModule(pl.LightningDataModule):
 
         This method is called once per GPU per run.
         """
-        train_transforms = Compose([self.preprocess1])
-        val_test_transforms = self.preprocess1
+        train_transforms = Compose([self.preprocess])
+        val_test_transforms = self.preprocess
 
         if not self.unsupervised_mode:
 
