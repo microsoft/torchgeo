@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+import sys
 from typing import Any, Dict, Generator, Tuple, cast
 
 import pytest
@@ -17,6 +18,7 @@ from torchgeo.trainers import RESISC45ClassificationTask, RESISC45DataModule
 from .test_utils import mocked_log
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="requires unrar executable")
 class TestRESISC45ClassificationTask:
     @pytest.fixture
     def default_config(self) -> Dict[str, Any]:
@@ -133,6 +135,7 @@ class TestRESISC45ClassificationTask:
         assert "lr_scheduler" in out
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="requires unrar executable")
 class TestRESISC45DataModule:
     @pytest.fixture(params=[True, False])  # Fixture for unsupervised mode
     def datamodule(self, request: SubRequest) -> RESISC45DataModule:
