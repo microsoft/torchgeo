@@ -48,7 +48,6 @@ class LandcoverAISegmentationTask(pl.LightningModule):
             self.model = smp.DeepLabV3Plus(
                 encoder_name=self.hparams["encoder_name"],
                 encoder_weights=self.hparams["encoder_weights"],
-                encoder_output_stride=self.hparams["encoder_output_stride"],
                 in_channels=3,
                 classes=6,
             )
@@ -175,7 +174,7 @@ class LandcoverAISegmentationTask(pl.LightningModule):
         self.log("val_loss", loss, on_step=False, on_epoch=True)
         self.val_metrics(y_hat_hard, y)
 
-        if batch_idx < 10:
+        if batch_idx < 10 and self.hparams["verbose"]:
             # Render the image, ground truth mask, and predicted mask for the first
             # image in the batch
             img = np.rollaxis(  # convert image to channels last format
