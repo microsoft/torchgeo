@@ -538,10 +538,10 @@ class ChesapeakeCVPR(GeoDataset):
     def _extract(self) -> None:
         """Extract the dataset."""
         extract_archive(os.path.join(self.root, self.filename))
-        
-        
+
+
 class ChesapeakeCVPRPrior(GeoDataset):
-    """CVPR 2019 Chesapeake Land Cover dataset. With priors from NLCD, buildings, and OSM
+    """CVPR 2019 Chesapeake Land Cover dataset. With priors from NLCD, buildings, and OSM.
 
     The `CVPR 2019 Chesapeake Land Cover
     <https://lila.science/datasets/chesapeakelandcover>`_ dataset contains two layers of
@@ -571,7 +571,7 @@ class ChesapeakeCVPRPrior(GeoDataset):
         "nlcd",
         "lc",
         "buildings",
-        'prior_from_cooccurrences_101_31_no_osm_no_buildings',
+        "prior_from_cooccurrences_101_31_no_osm_no_buildings",
     ]
     states = ["de", "md", "va", "wv", "pa", "ny"]
     splits = (
@@ -657,7 +657,12 @@ class ChesapeakeCVPRPrior(GeoDataset):
                             "lc": row["properties"]["lc"],
                             "nlcd": row["properties"]["nlcd"],
                             "buildings": row["properties"]["buildings"],
-                            "prior_from_cooccurrences_101_31_no_osm_no_buildings": row["properties"]["lc"].replace('lc','prior_from_cooccurrences_101_31_no_osm_no_buildings')
+                            "prior_from_cooccurrences_101_31_no_osm_no_buildings": row[
+                                "properties"
+                            ]["lc"].replace(
+                                "lc",
+                                "prior_from_cooccurrences_101_31_no_osm_no_buildings",
+                            ),
                         },
                     )
 
@@ -720,11 +725,12 @@ class ChesapeakeCVPRPrior(GeoDataset):
                     "landsat-leaf-off",
                 ]:
                     sample["image"].append(data)
-                elif layer in ["lc", 
-                               "nlcd", 
-                               "buildings", 
-                               'prior_from_cooccurrences_101_31_no_osm_no_buildings'
-                              ]:
+                elif layer in [
+                    "lc",
+                    "nlcd",
+                    "buildings",
+                    "prior_from_cooccurrences_101_31_no_osm_no_buildings",
+                ]:
                     sample["mask"].append(data)
         else:
             raise IndexError(f"query: {query} spans multiple tiles which is not valid")

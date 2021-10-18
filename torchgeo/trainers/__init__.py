@@ -5,7 +5,10 @@
 
 from .byol import BYOLTask
 from .chesapeake import ChesapeakeCVPRDataModule, ChesapeakeCVPRSegmentationTask
-from .chesapeake_learn_on_prior import ChesapeakeCVPRPriorDataModule, ChesapeakeCVPRPriorSegmentationTask
+from .chesapeake_learn_on_prior import (
+    ChesapeakeCVPRPriorDataModule,
+    ChesapeakeCVPRPriorSegmentationTask,
+)
 from .cyclone import CycloneDataModule, CycloneSimpleRegressionTask
 from .landcoverai import LandcoverAIDataModule, LandcoverAISegmentationTask
 from .naipchesapeake import NAIPChesapeakeDataModule, NAIPChesapeakeSegmentationTask
