@@ -591,7 +591,7 @@ class ChesapeakeCVPRPriorDataModule(LightningDataModule):
         print('train set of size ',  self.train_dataset.index.get_size())
         print('original patch size',  self.original_patch_size)
         sampler = RandomBatchGeoSampler(
-            self.train_dataset.index,
+            self.train_dataset,
             size=self.original_patch_size,
             batch_size=self.batch_size,
             length=self.patches_per_tile * self.train_dataset.index.get_size() 
@@ -606,7 +606,7 @@ class ChesapeakeCVPRPriorDataModule(LightningDataModule):
         """Return a DataLoader for validation."""
         print('original patch size',  self.original_patch_size)
         sampler = RandomBatchGeoSampler(
-                self.val_dataset.index,
+                self.val_dataset,
                 size=self.original_patch_size,
                 batch_size=self.batch_size,
                 length=self.patches_per_tile * self.val_dataset.index.get_size() // 2,
@@ -620,7 +620,7 @@ class ChesapeakeCVPRPriorDataModule(LightningDataModule):
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing."""
         sampler = GridGeoSampler(
-            self.test_dataset.index,
+            self.test_dataset,
             size=self.original_patch_size,
             stride=self.original_patch_size,
         )

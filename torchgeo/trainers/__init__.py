@@ -23,7 +23,7 @@ __all__ = (
     "ChesapeakeCVPRSegmentationTask",
     "ChesapeakeCVPRDataModule",
     "ChesapeakeCVPRPriorSegmentationTask",
-    "ChesapeakeCVPRPriorDataModule"
+    "ChesapeakeCVPRPriorDataModule",
     "CycloneDataModule",
     "CycloneSimpleRegressionTask",
     "LandcoverAIDataModule",
