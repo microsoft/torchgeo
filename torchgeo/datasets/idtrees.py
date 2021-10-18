@@ -313,9 +313,7 @@ class IDTReeS(VisionDataset):
     def _load_images(self, directory: str) -> List[str]:
         return glob.glob(os.path.join(directory, "RemoteSensing", "RGB", "*.tif"))
 
-    def _load(
-        self, root: str
-    ) -> Tuple[List[str], Dict[int, Dict[str, Any]], Any]:
+    def _load(self, root: str) -> Tuple[List[str], Dict[int, Dict[str, Any]], Any]:
         """Load a files, geometries, and labels.
 
         Args:
