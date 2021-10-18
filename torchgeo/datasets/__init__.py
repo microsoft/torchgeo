@@ -78,6 +78,7 @@ __all__ = (
     "ChesapeakeVA",
     "ChesapeakeWV",
     "ChesapeakeCVPR",
+    "ChesapeakeCVPRPrior",
     "Landsat",
     "Landsat1",
     "Landsat2",
