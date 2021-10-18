@@ -9,7 +9,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import fiona
 import numpy as np
-import pandas as pd
 import rasterio
 import torch
 from torch import Tensor
@@ -283,7 +282,7 @@ class IDTReeS(VisionDataset):
         tensor: Tensor = torch.tensor(labels)  # type: ignore[attr-defined]
         return tensor
 
-    def _load_labels(self, directory: str) -> pd.DataFrame:
+    def _load_labels(self, directory: str) -> Any:
         try:
             import pandas as pd
         except ImportError:
@@ -316,7 +315,7 @@ class IDTReeS(VisionDataset):
 
     def _load(
         self, root: str
-    ) -> Tuple[List[str], Dict[int, Dict[str, Any]], pd.DataFrame]:
+    ) -> Tuple[List[str], Dict[int, Dict[str, Any]], Any]:
         """Load a files, geometries, and labels.
 
         Args:
