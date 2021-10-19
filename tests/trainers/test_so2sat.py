@@ -21,7 +21,7 @@ from .test_utils import mocked_log
 class TestSo2SatClassificationTask:
     @pytest.fixture
     def default_config(self) -> Dict[str, Any]:
-        task_conf = OmegaConf.load("conf/task_defaults/so2sat.yaml")
+        task_conf = OmegaConf.load(os.path.join("conf", "task_defaults", "so2sat.yaml"))
         task_args = OmegaConf.to_object(task_conf.experiment.module)
         task_args = cast(Dict[str, Any], task_args)
         return task_args
