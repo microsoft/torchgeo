@@ -6,7 +6,7 @@
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
 from .farseg import FarSeg
 from .fccd import FCEF, FCSiamConc, FCSiamDiff
-from .fcn import FCN, FCN_modified
+from .fcn import FCN, FCN_modified, FCN_larger_modified
 from .rcf import RCF
 
 __all__ = (
@@ -15,6 +15,7 @@ __all__ = (
     "ChangeStarFarSeg",
     "FarSeg",
     "FCN",
+    "FCN_larger_modified",
     "FCN_modified",
     "FCEF",
     "FCSiamConc",
