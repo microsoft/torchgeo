@@ -10,6 +10,9 @@ from .chesapeake_learn_on_prior import (
     ChesapeakeCVPRPriorSegmentationTask,
 )
 from .cyclone import CycloneDataModule, CycloneSimpleRegressionTask
+from .enviroatlas import EnviroatlasDataModule, EnviroatlasSegmentationTask
+from .enviroatlas_learn_on_prior import EnviroatlasPriorDataModule, EnviroatlasPriorSegmentationTask
+from .enviroatlas_learn_the_prior import EnviroatlasLearnPriorDataModule, EnviroatlasLearnPriorTask
 from .landcoverai import LandcoverAIDataModule, LandcoverAISegmentationTask
 from .naipchesapeake import NAIPChesapeakeDataModule, NAIPChesapeakeSegmentationTask
 from .resisc45 import RESISC45ClassificationTask, RESISC45DataModule
@@ -24,6 +27,12 @@ __all__ = (
     "ChesapeakeCVPRPriorDataModule",
     "CycloneDataModule",
     "CycloneSimpleRegressionTask",
+    "EnviroatlasSegmentationTask",
+    "EnviroatlasDataModule",
+    "EnviroatlasPriorSegmentationTask",
+    "EnviroatlasPriorDataModule",
+    "EnviroatlasLearnPriorDataModule", 
+    "EnviroatlasLearnPriorTask",
     "LandcoverAIDataModule",
     "LandcoverAISegmentationTask",
     "NAIPChesapeakeDataModule",
