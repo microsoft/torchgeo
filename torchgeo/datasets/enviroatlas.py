@@ -22,32 +22,38 @@ from rasterio.crs import CRS
 from .geo import GeoDataset, RasterDataset
 from .utils import BoundingBox, check_integrity, download_and_extract_archive
 
+ENVIROATLAS_CLASS_DEFINITIONS = {
+    0: ("Unclassified"),
+    10: ("Water"),
+    20: ("Impervious Surface"),
+    30: ("Soil and Barren"),
+    40: ("Trees and Forest"),
+    52: ("Shrubs"),
+    70: ("Grass and Herbaceous"),
+    80: ("Agriculture"),
+    82: ("Orchards"),
+    91: ("Woody Wetlands"),
+    92: ("Emergent Wetlands")
+}
 
-import sys
-sys.path.append('/home/esther/lc-mapping/scripts/')
-import landcover_definitions as lc
+def create_map_raw_lc_to_idx(class_definitions):
+    """Map raw landcover values to contiguous index values starting with 0."""
+    LC_TO_IDX = np.zeros(np.array(list(class_definitions.keys())).max() + 1, dtype=np.uint8)
+    for i, k in enumerate(class_definitions.keys()):
+        LC_TO_IDX[k] = i
+    return LC_TO_IDX    
+
 # this is the only thing we take from lc
-map_raw_enviroatlas_to_idx = lc.map_raw_lc_to_idx['enviroatlas']
+map_raw_enviroatlas_to_idx = create_map_raw_lc_to_idx(ENVIROATLAS_CLASS_DEFINITIONS)
 
-class Enviroatlas(GeoDataset):
-    """CVPR 2019 Chesapeake Land Cover dataset.
-
-    The `CVPR 2019 Chesapeake Land Cover
-    <https://lila.science/datasets/chesapeakelandcover>`_ dataset contains two layers of
-    NAIP aerial imagery, Landsat 8 leaf-on and leaf-off imagery, Chesapeake Bay land
-    cover labels, NLCD land cover labels, and Microsoft building footprint labels.
-
-    This dataset was organized to accompany the 2019 CVPR paper, "Large Scale
-    High-Resolution Land Cover Mapping with Multi-Resolution Data".
-
-    If you use this dataset in your research, please cite the following paper:
-
-    * https://doi.org/10.1109/cvpr.2019.01301
+class Enviroatlas_without_prior(GeoDataset):
+    """Enviroatlas dataset covering four cities.
+    
+    Highres label data from EPA envioratlas dataset from 
+    https://edg.epa.gov/metadata/catalog/search/resource/details.page? +
+    uuid=%7Badf673a0-11b4-40d6-befd-8bf75b370cba%7D.
+    roads, waterways, waterbodies, and buildings fused as detailed in {todo cite other repo}.
     """
-
-#     url = "https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip"  # noqa: E501
-#     filename = "cvpr_chesapeake_landcover.zip"
-#     md5 = "0ea5e7cb861be3fb8a06fedaaaf91af9"
 
     crs = CRS.from_epsg(3857)
     res = 1
@@ -61,10 +67,7 @@ class Enviroatlas(GeoDataset):
         "d2_waterbodies",
         "e_buildings",
         "h_highres_labels",
-        "prior_whole_city_cooccurrences_101_15",
         "prior_from_cooccurrences_101_31",
-        "prior_whole_city_cooccurrences_101_15_scrubs_as_trees",
-        "prior_test_tile_cooccurrences_101_15_scrubs_as_trees"
     ]
     
     states = ["pittsburgh_pa-2010_1m",
@@ -98,7 +101,7 @@ class Enviroatlas(GeoDataset):
     def __init__(
         self,
         root: str = "data",
-        splits: Sequence[str] = ["de-train"],
+        splits: Sequence[str] = ["pittsburgh_pa-2010_1m-train"],
         layers: List[str] = ["a_naip", "h_highres_labels"],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         cache: bool = True,
@@ -134,7 +137,7 @@ class Enviroatlas(GeoDataset):
         self.cache = cache
         self.checksum = checksum
         
-        self.need_toreindex_enviroatlas_labels = True
+        self.need_to_reindex_enviroatlas_labels = True
 
         if download:
             self._download()
@@ -168,10 +171,6 @@ class Enviroatlas(GeoDataset):
                             "d2_waterbodies": row["properties"]["d2_waterbodies"],
                             "e_buildings": row["properties"]["e_buildings"],
                             "h_highres_labels": row["properties"]["h_highres_labels"],
-                            "prior_whole_city_cooccurrences_101_15": row["properties"]["prior_whole_city_cooccurrences_101_15"],
-                            "prior_whole_city_cooccurrences_101_15_scrubs_as_trees": row["properties"]["prior_whole_city_cooccurrences_101_15_scrubs_as_trees"],
-                            "prior_test_tile_cooccurrences_101_15_scrubs_as_trees": row["properties"]["a_naip"].replace("a_naip",
-                                    "prior_test_tile_cooccurrences_101_15_scrubs_as_trees"),
                             "prior_from_cooccurrences_101_31":row["properties"]['a_naip'].replace('a_naip',
                                                                                                         'prior_from_cooccurrences_101_31')
                         },
@@ -231,15 +230,12 @@ class Enviroatlas(GeoDataset):
 
                 if layer in [
                     "a_naip", 
-                    "prior_whole_city_cooccurrences_101_15",
-                    "prior_whole_city_cooccurrences_101_15_scrubs_as_trees",
-                    "prior_test_tile_cooccurrences_101_15_scrubs_as_trees",
                     "prior_from_cooccurrences_101_31"
                 ]:
                     sample["image"].append(data)
                 elif layer in ["h_highres_labels"]:
                     # reindex the enviroatlas labels if they're not already 0-10 index
-                    if layer == "h_highres_labels" and self.need_toreindex_enviroatlas_labels: 
+                    if layer == "h_highres_labels" and self.need_to_reindex_enviroatlas_labels: 
                         data = map_raw_enviroatlas_to_idx[data]
                         sample["mask"].append(data)
         else:
@@ -261,66 +257,22 @@ class Enviroatlas(GeoDataset):
             sample = self.transforms(sample)
 
         return sample
+     
+class Enviroatlas(GeoDataset):
+    """Enviroatlas dataset covering four cities with prior and weak input data layers.
     
-
-    '''
-    def _check_integrity(self) -> bool:
-        """Check integrity of dataset.
-
-        Returns:
-            True if dataset files are found and/or MD5s match, else False
-        """
-        integrity: bool = check_integrity(
-            os.path.join(self.root, self.filename),
-            self.md5 if self.checksum else None,
-        )
-
-        return integrity
-
-    def _download(self) -> None:
-        """Download the dataset and extract it."""
-        if self._check_integrity():
-            print("Files already downloaded and verified")
-            return
-
-        download_and_extract_archive(
-            self.url,
-            self.root,
-            filename=self.filename,
-            md5=self.md5,
-        )
-        '''
-    
-    
- 
-class EnviroatlasPrior(GeoDataset):
-    """CVPR 2019 Chesapeake Land Cover dataset. With priors from NLCD, buildings, and OSM
-
-    The `CVPR 2019 Chesapeake Land Cover
-    <https://lila.science/datasets/chesapeakelandcover>`_ dataset contains two layers of
-    NAIP aerial imagery, Landsat 8 leaf-on and leaf-off imagery, Chesapeake Bay land
-    cover labels, NLCD land cover labels, and Microsoft building footprint labels.
-
-    This dataset was organized to accompany the 2019 CVPR paper, "Large Scale
-    High-Resolution Land Cover Mapping with Multi-Resolution Data".
-
-    If you use this dataset in your research, please cite the following paper:
-
-    * https://doi.org/10.1109/cvpr.2019.01301
+    Highres label data from EPA envioratlas dataset from 
+    https://edg.epa.gov/metadata/catalog/search/resource/details.page? +
+    uuid=%7Badf673a0-11b4-40d6-befd-8bf75b370cba%7D.
+    roads, waterways, waterbodies, and buildings fused as detailed in {todo cite other repo}.
     """
 
-    url = "https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip"  # noqa: E501
-    filename = "cvpr_chesapeake_landcover.zip"
-    md5 = "0ea5e7cb861be3fb8a06fedaaaf91af9"
 
     crs = CRS.from_epsg(3857)
     res = 1
 
-    valid_prior_layers = ['prior_whole_city_cooccurrences_101_15', 
-                          'prior_from_cooccurrences_101_31',
-                          'prior_whole_city_cooccurrences_101_15_scrubs_as_trees',
-                           "prior_test_tile_cooccurrences_101_15_scrubs_as_trees"]
- #   valid_prior_layers = [f'p_prior_osm_{version}' for version in valid_prior_versions]
+    valid_prior_layers = ['prior_from_cooccurrences_101_31']
+
     valid_layers = [
         "a_naip",
         "b_nlcd",
@@ -332,7 +284,7 @@ class EnviroatlasPrior(GeoDataset):
         "h_highres_labels",
     ] + valid_prior_layers
     
-    need_toreindex_enviroatlas_labels = True
+    need_to_reindex_enviroatlas_labels = True
 
     states = ["pittsburgh_pa-2010_1m",
               "durham_nc-2012_1m",
@@ -365,8 +317,9 @@ class EnviroatlasPrior(GeoDataset):
     def __init__(
         self,
         root: str = "data",
-        splits: Sequence[str] = ["de-train"],
-        layers: List[str] = ["a_naip",'prior_whole_city_cooccurrences_101_15'],
+        splits: Sequence[str] = ["pittsburgh_pa-2010_1m-train"],
+        layers: List[str] = ["a_naip",'prior_whole_city_cooccurrences_101_31'],
+        prior_as_input = False,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
@@ -381,6 +334,8 @@ class EnviroatlasPrior(GeoDataset):
             layers: a list containing a subset of "naip-new", "naip-old", "lc", "nlcd",
                 "landsat-leaf-on", "landsat-leaf-off", "buildings" indicating which
                 layers to load
+            prior_as_input: bool describing whether the prior is used as an input (True)
+                or as supervision (False). 
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
@@ -404,6 +359,8 @@ class EnviroatlasPrior(GeoDataset):
         self.layers = layers
         self.cache = cache
         self.checksum = checksum
+        
+        self.prior_as_input = prior_as_input
 
         if download:
             self._download()
@@ -436,12 +393,6 @@ class EnviroatlasPrior(GeoDataset):
                             "d2_waterbodies": row["properties"]["d2_waterbodies"],
                             "e_buildings": row["properties"]["e_buildings"],
                             "h_highres_labels": row["properties"]["h_highres_labels"],
-                            "prior_whole_city_cooccurrences_101_15": \
-                                  row["properties"]["prior_whole_city_cooccurrences_101_15"],
-                            "prior_whole_city_cooccurrences_101_15_scrubs_as_trees": \
-                                  row["properties"]["prior_whole_city_cooccurrences_101_15_scrubs_as_trees"],
-                            "prior_test_tile_cooccurrences_101_15_scrubs_as_trees": row["properties"]["a_naip"].replace("a_naip",
-                                    "prior_test_tile_cooccurrences_101_15_scrubs_as_trees"),
                             "prior_from_cooccurrences_101_31":row["properties"]["a_naip"].replace('a_naip',
                                                                                                        "prior_from_cooccurrences_101_31")
                         },
@@ -503,14 +454,16 @@ class EnviroatlasPrior(GeoDataset):
                     "a_naip"
                 ]:
                     sample["image"].append(data)
-                elif layer in ["prior_whole_city_cooccurrences_101_15",
-                               "prior_from_cooccurrences_101_31",
-                               "prior_whole_city_cooccurrences_101_15_scrubs_as_trees",
-                               "prior_test_tile_cooccurrences_101_15_scrubs_as_trees"]:
-                    sample["mask"].append(data)  
+                    
+                elif layer in ["prior_from_cooccurrences_101_31"]:
+                    if prior_as_input:
+                        sample["image"].append(data)  
+                    else:
+                        sample["mask"].append(data) 
+                        
                 elif layer in ["h_highres_labels"]:
                     # reindex the enviroatlas labels if they're not already 0-10 index
-                    if layer == "h_highres_labels" and self.need_toreindex_enviroatlas_labels: 
+                    if layer == "h_highres_labels" and self.need_to_reindex_enviroatlas_labels: 
                         data = map_raw_enviroatlas_to_idx[data]
                         sample["mask"].append(data)
         else:
@@ -641,7 +594,7 @@ class EnviroatlasWeakInput(GeoDataset):
         self.cache = cache
         self.checksum = checksum
         
-        self.need_toreindex_enviroatlas_labels = True
+        self.need_to_reindex_enviroatlas_labels = True
 
         if download:
             self._download()
@@ -745,7 +698,7 @@ class EnviroatlasWeakInput(GeoDataset):
                     sample["image"].append(data)
                 elif layer in ["h_highres_labels"]:
                     # reindex the enviroatlas labels if they're not already 0-10 index
-                    if layer == "h_highres_labels" and self.need_toreindex_enviroatlas_labels: 
+                    if layer == "h_highres_labels" and self.need_to_reindex_enviroatlas_labels: 
                         data = map_raw_enviroatlas_to_idx[data]
                         sample["mask"].append(data)
         else:

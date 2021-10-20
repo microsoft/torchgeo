@@ -29,9 +29,50 @@ from ..models import FCN_modified
 DataLoader.__module__ = "torch.utils.data"
 Module.__module__ = "torch.nn"
 
-import sys
-sys.path.append('home/esther/lc-mapping/scripts/')
-import landcover_definitions as lc
+ENVIROATLAS_CLASS_COLORS_DICT = {
+    0: (255, 255, 255, 255), #
+    1: (0, 197, 255, 255), # from CC Water
+    2: (156, 156, 156, 255), # from CC Impervious
+    3: (255, 170, 0, 255), # from CC Barren
+    4: (38, 115, 0, 255), # from CC Tree Canopy
+    5: (204, 184, 121, 255), # from NLCD shrub
+    6: (163, 255, 115, 255), # from CC Low Vegetation
+    7: (220, 217, 57, 255), # from NLCD Pasture/Hay color
+    8: (171, 108, 40, 255), # from NLCD Cultivated Crops
+    9: (184, 217, 235, 255), # from NLCD Woody Wetlands
+    10: (108, 159, 184, 255), # from NLCD Emergent Herbaceous Wetlands
+    11: (0,0,0,0), # extra for black
+    12: (70, 100, 159, 255), # extra for dark blue
+}
+
+def get_colors(class_colors):
+    """Map colors dict to colors array."""
+    return np.array([class_colors[c] for c in class_colors.keys()]) / 255.0
+
+ENVIORATLAS_CLASS_COLORS = get_colors(ENVIROATLAS_CLASS_COLORS_DICT)
+
+
+def vis_lc_from_colors(r, colors, renorm=True, reindexed=True):
+    """Function for visualizing color scheme with potentially soft class assigments."""
+    sparse = r.shape[0] != len(colors)
+    colors_cycle  = range(0, len(colors))
+
+    if sparse:
+        z = np.zeros((3,) + r.shape)
+        s = r
+        for c in colors_cycle:
+            for ch in range(3):
+                z[ch] += colors[c][ch] * (s == c).astype(float)
+        
+    else:
+        z = np.zeros((3,) + r.shape[1:])
+        if renorm: s = r / r.sum(0)
+        else: s = r
+        for c in colors_cycle:
+            for ch in range(3):
+                z[ch] += colors[c][ch] * s[c] 
+    return z
+    
 
 class EnviroatlasSegmentationTask(LightningModule):
     """LightningModule for training models on the Enviroatlas Land Cover dataset.
@@ -42,7 +83,7 @@ class EnviroatlasSegmentationTask(LightningModule):
 
     def config_task(self, kwargs: Dict[str, Any]) -> None:
         self.classes_keep = kwargs['classes_keep']
-        self.colors = [lc.lc_colors['enviroatlas'][c] for c in self.classes_keep]
+        self.colors = [ENVIORATLAS_CLASS_COLORS[c] for c in self.classes_keep]
         self.n_classes = len(self.classes_keep) 
         self.n_classes_with_nodata = len(self.classes_keep) + 1
         self.ignore_index = len(self.classes_keep)
@@ -162,8 +203,6 @@ class EnviroatlasSegmentationTask(LightningModule):
         y_hat = self.forward(x)
         y_hat_hard = y_hat.argmax(dim=1)
 
-      #  print('yhat shape', y_hat.shape)
-      #  print('y unqiue values', y.unique())
         loss = self.loss(y_hat, y)
 
         # by default, the test and validation steps only log per *epoch*
@@ -179,7 +218,7 @@ class EnviroatlasSegmentationTask(LightningModule):
             )
             if self.include_prior_as_datayer:
                 prior = batch["image"][0][4:].cpu().numpy()
-                prior_vis = lc.vis_lc_from_colors(prior, self.colors).T.swapaxes(0,1)
+                prior_vis = vis_lc_from_colors(prior, self.colors).T.swapaxes(0,1)
                 img[:,:,:3] = (prior_vis + img[:,:,:3]) / 2. 
                 
             # This is specific to the 5 class definition
@@ -191,10 +230,10 @@ class EnviroatlasSegmentationTask(LightningModule):
                 axs[0].axis("off")
                 axs[1].imshow(prior_vis)
                 axs[1].axis("off")
-                axs[2].imshow(lc.vis_lc_from_colors(mask, self.colors).T.swapaxes(0,1), interpolation="none")
+                axs[2].imshow(vis_lc_from_colors(mask, self.colors).T.swapaxes(0,1), interpolation="none")
                 axs[2].axis("off")
                 axs[2].set_title('labels')
-                axs[3].imshow(lc.vis_lc_from_colors(pred, self.colors).T.swapaxes(0,1), interpolation="none")
+                axs[3].imshow(vis_lc_from_colors(pred, self.colors).T.swapaxes(0,1), interpolation="none")
                 axs[3].axis("off")
                 axs[3].set_title('predictions')
                 plt.tight_layout()
@@ -202,10 +241,10 @@ class EnviroatlasSegmentationTask(LightningModule):
                 fig, axs = plt.subplots(1, 3, figsize=(12, 4))
                 axs[0].imshow(img[:, :, :3])
                 axs[0].axis("off")
-                axs[1].imshow(lc.vis_lc_from_colors(mask, self.colors).T.swapaxes(0,1), interpolation="none")
+                axs[1].imshow(vis_lc_from_colors(mask, self.colors).T.swapaxes(0,1), interpolation="none")
                 axs[1].axis("off")
                 axs[1].set_title('labels')
-                axs[2].imshow(lc.vis_lc_from_colors(pred, self.colors).T.swapaxes(0,1), interpolation="none")
+                axs[2].imshow(vis_lc_from_colors(pred, self.colors).T.swapaxes(0,1), interpolation="none")
                 axs[2].axis("off")
                 axs[2].set_title('predictions')
                 plt.tight_layout()
@@ -233,13 +272,9 @@ class EnviroatlasSegmentationTask(LightningModule):
         y = batch["mask"]
         y_hat = self.forward(x)
         y_hat_hard = y_hat.argmax(dim=1)
-        
-    #    print(torch.unique(y))
-    #    print(torch.unique(y_hat_hard))
 
-        # hacky way to deal with nodata
+        #  deal with nodata in the test batches
         loss = 0
-        #loss = self.loss(y_hat, y)
         
         # by default, the test and validation steps only log per *epoch*
         self.log("test_loss", loss)
@@ -279,7 +314,7 @@ class EnviroatlasSegmentationTask(LightningModule):
 
 
 class EnviroatlasDataModule(LightningDataModule):
-    """LightningDataModule implementation for the Chesapeake CVPR Land Cover dataset.
+    """LightningDataModule implementation for the Enviroatlas dataset.
 
     Uses the random splits defined per state to partition tiles into train, val,
     and test sets.
@@ -323,7 +358,6 @@ class EnviroatlasDataModule(LightningDataModule):
         
         print(patches_per_tile)
         self.root_dir = root_dir
-    #    self.train_state = train_state
         self.include_prior_as_datalayer = include_prior_as_datalayer
         if self.include_prior_as_datalayer:
             self.layers = ["a_naip",  "prior_from_cooccurrences_101_31", "h_highres_labels"]
@@ -335,12 +369,13 @@ class EnviroatlasDataModule(LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
         
+        # if the prior is to be used, use it as input layer, not output supervision 
+        self.prior_as_input = True
+        
         self.train_set_scaling_subset =train_set_scaling_subset
-        print('scaling subset: ',self.train_set_scaling_subset)
         
         self.classes_keep = classes_keep
         self.ignore_index = len(classes_keep)
-        print(self.classes_keep) 
         
         self.train_sets = [f"{state}-{train_set}" for state in states]
         self.val_sets = [f"{state}-{val_set}" for state in states]
@@ -401,10 +436,9 @@ class EnviroatlasDataModule(LightningDataModule):
     
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Preprocesses a single sample."""
-        
-        # this will error if there's classes that aren't in classes_keep
+            
+        # reindex to just the EnviroAtlas classes to be kept
         reindex_map = dict(zip(self.classes_keep, np.arange(len(self.classes_keep))))
-      #  print('reindex map ' , reindex_map)
         reindexed_mask = -1 * torch.ones(sample["mask"].shape)
         for old_idx, new_idx in reindex_map.items():
             reindexed_mask[sample["mask"] == old_idx] = new_idx
@@ -434,6 +468,7 @@ class EnviroatlasDataModule(LightningDataModule):
             self.root_dir,
             splits=self.train_sets,
             layers=self.layers,
+            prior_as_input=self.prior_as_input,
             transforms=None,
             download=False,
             checksum=False,
@@ -469,6 +504,7 @@ class EnviroatlasDataModule(LightningDataModule):
             self.root_dir,
             splits=self.train_sets,
             layers=self.layers,
+            prior_as_input=self.prior_as_input,
             transforms=train_transforms,
             download=False,
             checksum=False,
@@ -477,6 +513,7 @@ class EnviroatlasDataModule(LightningDataModule):
             self.root_dir,
             splits=self.val_sets,
             layers=self.layers,
+            prior_as_input=self.prior_as_input,
             transforms=val_transforms,
             download=False,
             checksum=False,
@@ -485,6 +522,7 @@ class EnviroatlasDataModule(LightningDataModule):
             self.root_dir,
             splits=self.test_sets,
             layers=self.layers,
+            prior_as_input=self.prior_as_input,
             transforms=test_transforms,
             download=False,
             checksum=False,
@@ -496,7 +534,7 @@ class EnviroatlasDataModule(LightningDataModule):
         print('train set of size ',  self.train_dataset.index.get_size())
         print('original patch size',  self.original_patch_size)
         sampler = RandomBatchGeoSampler(
-            self.train_dataset.index,
+            self.train_dataset,
             size=self.original_patch_size,
             batch_size=self.batch_size,
             length=self.patches_per_tile * self.train_dataset.index.get_size() 
@@ -505,14 +543,13 @@ class EnviroatlasDataModule(LightningDataModule):
             self.train_dataset,
             batch_sampler=sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
-         #   pin_memory=False,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for validation."""
         print('original patch size',  self.original_patch_size)
         sampler = RandomBatchGeoSampler(
-                self.val_dataset.index,
+                self.val_dataset,
                 size=self.original_patch_size,
                 batch_size=self.batch_size,
                 length=self.patches_per_tile * self.val_dataset.index.get_size() // 2,
@@ -526,7 +563,7 @@ class EnviroatlasDataModule(LightningDataModule):
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing."""
         sampler = GridGeoSampler(
-            self.test_dataset.index,
+            self.test_dataset,
             size=self.original_patch_size,
             stride=self.original_patch_size,
         )
@@ -535,6 +572,5 @@ class EnviroatlasDataModule(LightningDataModule):
             batch_size= 16, #self.batch_size // 2,
             sampler=sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
-  #          pin_memory=False,
         )
 

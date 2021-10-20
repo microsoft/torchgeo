@@ -25,9 +25,7 @@ from .cowc import COWC, COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCycloneWindEstimation
 from .enviroatlas import (
-    Enviroatlas,
-    EnviroatlasPrior,
-    EnviroatlasWeakInput
+    Enviroatlas
 )
 from .etci2021 import ETCI2021
 from .eurosat import EuroSAT
@@ -84,8 +82,6 @@ __all__ = (
     "ChesapeakeCVPR",
     "ChesapeakeCVPRPrior",
     "Enviroatlas",
-    "EnviroatlasPrior",
-    "EnviroatlasWeakInput",
     "Landsat",
     "Landsat1",
     "Landsat2",
