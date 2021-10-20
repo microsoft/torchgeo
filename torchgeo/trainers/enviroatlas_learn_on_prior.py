@@ -22,15 +22,10 @@ from torch.utils.tensorboard import SummaryWriter  # type: ignore[attr-defined]
 from torchmetrics import Accuracy, IoU, MetricCollection
 from torchvision.transforms import Compose
 
-from ..datasets import EnviroatlasPrior
+from ..datasets import Enviroatlas
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from ..models import FCN, FCN_modified
-
-import sys
-sys.path.append('/home/esther/h_highres_labels-mapping/scripts')
-from nn_functions import cross_entropy_on_prior, loss_on_prior_simple, loss_on_prior_reversed_kl_simple
-import landcover_definitions as lc
-
+from ..losses import loss_on_prior_reversed_kl_simple, loss_on_prior_simple
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -38,9 +33,48 @@ DataLoader.__module__ = "torch.utils.data"
 Module.__module__ = "torch.nn"
 
 
-# CMAP = matplotlib.colors.ListedColormap(
-#     [np.array(Chesapeake7.cmap[i + 1]) / 255.0 for i in range(6)]
-# )
+ENVIROATLAS_CLASS_COLORS_DICT = {
+    0: (255, 255, 255, 255), #
+    1: (0, 197, 255, 255), # from CC Water
+    2: (156, 156, 156, 255), # from CC Impervious
+    3: (255, 170, 0, 255), # from CC Barren
+    4: (38, 115, 0, 255), # from CC Tree Canopy
+    5: (204, 184, 121, 255), # from NLCD shrub
+    6: (163, 255, 115, 255), # from CC Low Vegetation
+    7: (220, 217, 57, 255), # from NLCD Pasture/Hay color
+    8: (171, 108, 40, 255), # from NLCD Cultivated Crops
+    9: (184, 217, 235, 255), # from NLCD Woody Wetlands
+    10: (108, 159, 184, 255), # from NLCD Emergent Herbaceous Wetlands
+    11: (0,0,0,0), # extra for black
+    12: (70, 100, 159, 255), # extra for dark blue
+}
+
+def get_colors(class_colors):
+    """Map colors dict to colors array."""
+    return np.array([class_colors[c] for c in class_colors.keys()]) / 255.0
+
+ENVIORATLAS_CLASS_COLORS = get_colors(ENVIROATLAS_CLASS_COLORS_DICT)
+
+def vis_lc_from_colors(r, colors, renorm=True, reindexed=True):
+    """Function for visualizing color scheme with potentially soft class assigments."""
+    sparse = r.shape[0] != len(colors)
+    colors_cycle  = range(0, len(colors))
+
+    if sparse:
+        z = np.zeros((3,) + r.shape)
+        s = r
+        for c in colors_cycle:
+            for ch in range(3):
+                z[ch] += colors[c][ch] * (s == c).astype(float)
+        
+    else:
+        z = np.zeros((3,) + r.shape[1:])
+        if renorm: s = r / r.sum(0)
+        else: s = r
+        for c in colors_cycle:
+            for ch in range(3):
+                z[ch] += colors[c][ch] * s[c] 
+    return z
 
 
 class EnviroatlasPriorSegmentationTask(LightningModule):
@@ -54,7 +88,7 @@ class EnviroatlasPriorSegmentationTask(LightningModule):
         """Configures the task based on kwargs parameters."""
         
         self.classes_keep = kwargs['classes_keep']
-        self.colors = [lc.lc_colors['enviroatlas'][c] for c in self.classes_keep]
+        self.colors = [ENVIROATLAS_CLASS_COLORS[c] for c in self.classes_keep]
         self.n_classes = len(self.classes_keep) 
         self.n_classes_with_nodata = len(self.classes_keep) + 1
         self.ignore_index = len(self.classes_keep)
@@ -95,11 +129,7 @@ class EnviroatlasPriorSegmentationTask(LightningModule):
             raise ValueError(
                     f"Model type '{kwargs['segmentation_model']}' is not valid."
                 )
-#         else:
-#             model_ckpt = kwargs['model_ckpt']
-#             print(f'using checkpoint from: {model_ckpt}')
-#             self.model = self.load_from_checkpoint(model_ckpt)
-        
+
         if kwargs["loss"] == "qr_forward":
            # self.loss = loss_on_prior_simple
             self.loss = loss_on_prior_simple
@@ -194,9 +224,7 @@ class EnviroatlasPriorSegmentationTask(LightningModule):
         # by default, the train step logs every `log_every_n_steps` steps where
         # `log_every_n_steps` is a parameter to the `Trainer` object
         self.log("train_loss", loss, on_step=True, on_epoch=False)
-#         self.train_accuracy(y_hat_hard, y_hard)
-#         self.train_iou(y_hat_hard, y_hard)
-        
+
         self.train_accuracy_q(y_hat_hard, y_hr)
         self.train_iou_q(y_hat_hard, y_hr)
         self.train_accuracy_r(r_hat_hard, y_hr)
@@ -235,8 +263,6 @@ class EnviroatlasPriorSegmentationTask(LightningModule):
             
         # by default, the test and validation steps only log per *epoch*
         self.log("val_loss", loss)
-#         self.val_accuracy(y_hat_hard, y_hard)
-#         self.val_iou(y_hat_hard, y_hard)
         self.val_accuracy_q(y_hat_hard, y_hr)
         self.val_iou_q(y_hat_hard, y_hr)
         
@@ -250,30 +276,25 @@ class EnviroatlasPriorSegmentationTask(LightningModule):
             img = np.rollaxis(  # convert image to channels last format
                 batch["image"][0].cpu().numpy(), 0, 3
             )
-            # mask = batch["mask"][0].cpu().numpy()
-            # pred = y_hat_hard[0].cpu().numpy()
+
             prior = batch["mask"][0]
             
-#             print(prior.shape)
-#             print(self.colors)
-            prior_vis = lc.vis_lc_from_colors(prior.cpu().numpy(), self.colors).T.swapaxes(0,1)
-            highres_labels_vis = lc.vis_lc_from_colors(batch["highres_labels"][0].cpu().numpy(), self.colors).T.swapaxes(0,1)
+            prior_vis = vis_lc_from_colors(prior.cpu().numpy(), self.colors).T.swapaxes(0,1)
+            highres_labels_vis = vis_lc_from_colors(batch["highres_labels"][0].cpu().numpy(), self.colors).T.swapaxes(0,1)
             
             q = torch.exp(y_hat[0])
-            pred_vis = lc.vis_lc_from_colors(q.cpu().numpy(), self.colors).T.swapaxes(0,1)
+            pred_vis = vis_lc_from_colors(q.cpu().numpy(), self.colors).T.swapaxes(0,1)
             # calculated r (one one image, so classes are on dim 0)
             r = nn.functional.normalize( z[0] * prior, p=1,dim=0)
-            r_vis = lc.vis_lc_from_colors(r.cpu().numpy(), self.colors).T.swapaxes(0,1)
+            r_vis = vis_lc_from_colors(r.cpu().numpy(), self.colors).T.swapaxes(0,1)
     
             fig, axs = plt.subplots(1,5, figsize=(20, 4))
             axs[0].imshow(img[:, :, :3])
             axs[0].set_title('NAIP')
             axs[0].axis("off")
-           # axs[1].imshow(mask_vis, vmin=0, vmax=6, cmap=CMAP, interpolation="none")
             axs[1].imshow(prior_vis, interpolation="none")
             axs[1].set_title('prior')
             axs[1].axis("off")
-           # axs[2].imshow(pred_vis, vmin=0, vmax=6, cmap=CMAP, interpolation="none")
             axs[2].imshow(pred_vis, interpolation="none")
             axs[2].set_title('q()')
             axs[2].axis("off")
@@ -324,8 +345,6 @@ class EnviroatlasPriorSegmentationTask(LightningModule):
             
         # by default, the test and validation steps only log per *epoch*
         self.log("test_loss", loss)
-    #    self.test_accuracy(y_hat_hard, y_hard)
-     #   self.test_iou(y_hat_hard, y_hard)
         self.test_accuracy_q(y_hat_hard, y_hr)
         self.test_iou_q(y_hat_hard, y_hr)
         self.test_accuracy_r(r_hat_hard, y_hr)
@@ -425,7 +444,6 @@ class EnviroatlasPriorDataModule(LightningDataModule):
         print(self.patches_per_tile, ' patches_per_tile')
         self.patch_size = patch_size
         self.original_patch_size = 512
-      #  self.original_patch_size = int(patch_size * pix_to_m_scale)
         self.batch_size = batch_size
         print(self.batch_size, ' batch size')
         self.num_workers = num_workers
@@ -434,6 +452,9 @@ class EnviroatlasPriorDataModule(LightningDataModule):
         self.classes_keep = classes_keep
         self.ignore_index = len(classes_keep)
         print(self.classes_keep) 
+        
+        # prior is to be used as output supervision
+        self.prior_as_input = False
 
         
         self.train_sets = [f"{state}-{train_set}" for state in states]
@@ -525,10 +546,11 @@ class EnviroatlasPriorDataModule(LightningDataModule):
         """Confirms that the dataset is downloaded on the local node.
         This method is called once per node, while :func:`setup` is called once per GPU.
         """
-        EnviroatlasPrior(
+        Enviroatlas(
             self.root_dir,
             splits=self.train_sets,
             layers=self.layers,
+            prior_as_input = self.prior_as_input,
             transforms=None,
             download=False,
             checksum=False,
@@ -560,26 +582,29 @@ class EnviroatlasPriorDataModule(LightningDataModule):
         )
         
         
-        self.train_dataset = EnviroatlasPrior(
+        self.train_dataset = Enviroatlas(
             self.root_dir,
             splits=self.train_sets,
             layers=self.layers,
+            prior_as_input = self.prior_as_input,
             transforms=train_transforms,
             download=False,
             checksum=False,
         )
-        self.val_dataset = EnviroatlasPrior(
+        self.val_dataset = Enviroatlas(
             self.root_dir,
             splits=self.val_sets,
             layers=self.layers,
+            prior_as_input = self.prior_as_input,
             transforms=val_transforms,
             download=False,
             checksum=False,
         )
-        self.test_dataset = EnviroatlasPrior(
+        self.test_dataset = Enviroatlas(
             self.root_dir,
             splits=self.test_sets,
             layers=self.layers,
+            prior_as_input = self.prior_as_input,
             transforms=test_transforms,
             download=False,
             checksum=False,
@@ -590,7 +615,7 @@ class EnviroatlasPriorDataModule(LightningDataModule):
         print('train set of size ',  self.train_dataset.index.get_size())
         print('original patch size',  self.original_patch_size)
         sampler = RandomBatchGeoSampler(
-            self.train_dataset.index,
+            self.train_dataset,
             size=self.original_patch_size,
             batch_size=self.batch_size,
             length=self.patches_per_tile * self.train_dataset.index.get_size() 
@@ -599,14 +624,13 @@ class EnviroatlasPriorDataModule(LightningDataModule):
             self.train_dataset,
             batch_sampler=sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
-         #   pin_memory=False,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for validation."""
         print('original patch size',  self.original_patch_size)
         sampler = RandomBatchGeoSampler(
-                self.val_dataset.index,
+                self.val_dataset,
                 size=self.original_patch_size,
                 batch_size=self.batch_size,
                 length=self.patches_per_tile * self.val_dataset.index.get_size() // 2,
@@ -620,7 +644,7 @@ class EnviroatlasPriorDataModule(LightningDataModule):
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing."""
         sampler = GridGeoSampler(
-            self.test_dataset.index,
+            self.test_dataset,
             size=self.original_patch_size,
             stride=self.original_patch_size,
         )
@@ -629,5 +653,4 @@ class EnviroatlasPriorDataModule(LightningDataModule):
             batch_size= 16, #self.batch_size // 2,
             sampler=sampler,  # type: ignore[arg-type]
             num_workers=self.num_workers,
-  #          pin_memory=False,
         )

@@ -22,24 +22,57 @@ from torch.utils.tensorboard import SummaryWriter  # type: ignore[attr-defined]
 from torchmetrics import Accuracy, IoU, MetricCollection
 from torchvision.transforms import Compose
 
-
-from ..datasets import EnviroatlasWeakInput
+from ..datasets import Enviroatlas
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
-from ..models import FCN_modified,FCN_larger_modified
+from ..models import FCN_modified, FCN_larger_modified
+
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 DataLoader.__module__ = "torch.utils.data"
 Module.__module__ = "torch.nn"
 
-import sys
-sys.path.append('/home/esther/lc-mapping/scripts')
-import landcover_definitions as lc
+ENVIROATLAS_CLASS_COLORS_DICT = {
+    0: (255, 255, 255, 255), #
+    1: (0, 197, 255, 255), # from CC Water
+    2: (156, 156, 156, 255), # from CC Impervious
+    3: (255, 170, 0, 255), # from CC Barren
+    4: (38, 115, 0, 255), # from CC Tree Canopy
+    5: (204, 184, 121, 255), # from NLCD shrub
+    6: (163, 255, 115, 255), # from CC Low Vegetation
+    7: (220, 217, 57, 255), # from NLCD Pasture/Hay color
+    8: (171, 108, 40, 255), # from NLCD Cultivated Crops
+    9: (184, 217, 235, 255), # from NLCD Woody Wetlands
+    10: (108, 159, 184, 255), # from NLCD Emergent Herbaceous Wetlands
+    11: (0,0,0,0), # extra for black
+    12: (70, 100, 159, 255), # extra for dark blue
+}
 
+def get_colors(class_colors):
+    """Map colors dict to colors array."""
+    return np.array([class_colors[c] for c in class_colors.keys()]) / 255.0
 
-# CMAP = matplotlib.colors.ListedColormap(
-#     [np.array(Chesapeake7.cmap[i + 1]) / 255.0 for i in range(6)]
-# )
+ENVIORATLAS_CLASS_COLORS = get_colors(ENVIROATLAS_CLASS_COLORS_DICT)
 
+def vis_lc_from_colors(r, colors, renorm=True, reindexed=True):
+    """Function for visualizing color scheme with potentially soft class assigments."""
+    sparse = r.shape[0] != len(colors)
+    colors_cycle  = range(0, len(colors))
+
+    if sparse:
+        z = np.zeros((3,) + r.shape)
+        s = r
+        for c in colors_cycle:
+            for ch in range(3):
+                z[ch] += colors[c][ch] * (s == c).astype(float)
+        
+    else:
+        z = np.zeros((3,) + r.shape[1:])
+        if renorm: s = r / r.sum(0)
+        else: s = r
+        for c in colors_cycle:
+            for ch in range(3):
+                z[ch] += colors[c][ch] * s[c] 
+    return z
 
 class EnviroatlasLearnPriorTask(LightningModule):
     """LightningModule for training models on the Chesapeake CVPR Land Cover dataset.
@@ -51,7 +84,7 @@ class EnviroatlasLearnPriorTask(LightningModule):
     def config_task(self, kwargs: Dict[str, Any]) -> None:
         
         self.classes_keep = kwargs['classes_keep']
-        self.colors = [lc.lc_colors['enviroatlas'][c] for c in self.classes_keep]
+        self.colors = [ENVIROATLAS_CLASS_COLORS[c] for c in self.classes_keep]
         self.n_classes = len(self.classes_keep) 
         self.n_classes_with_nodata = len(self.classes_keep) + 1
         self.ignore_index = len(self.classes_keep)
@@ -207,31 +240,26 @@ class EnviroatlasLearnPriorTask(LightningModule):
             mask = batch["mask"][0].cpu().numpy()
             q = torch.exp(y_hat[0][:self.n_classes]).cpu().numpy()
             
-            # squish the input layers of the image according to this assumption:
+            # squish the input layers of the image according to the assumption
+            # that they are in this order:
             #[f"nlcd_onehot_blurred_kernelsize_{nlcd_blur_kernelsize}_sigma_{nlcd_blur_sigma}", 
             #           "buildings", "roads", "waterbodies", "waterways", "lc"]
             squished_layers = inputs.copy()
             squished_layers[1] += inputs[5:7].sum(axis=0) # buildings and roads
             squished_layers[0] += inputs[7:9].sum(axis=0) # water
             
-            input_vis = lc.vis_lc_from_colors(squished_layers[:5]/squished_layers[:5].sum(axis=0), 
+            input_vis = vis_lc_from_colors(squished_layers[:5]/squished_layers[:5].sum(axis=0), 
                                            self.colors).T.swapaxes(0,1)
-            pred_vis = lc.vis_lc_from_colors(q, self.colors).T.swapaxes(0,1)
-            label_vis = lc.vis_lc_from_colors(mask, self.colors).T.swapaxes(0,1)
-     #       print(pred_vis.min(), pred_vis.max())
-            fig, axs = plt.subplots(1, 3, figsize=(12, 4))
-            
-            # WHAT to plot
-            
+            pred_vis = vis_lc_from_colors(q, self.colors).T.swapaxes(0,1)
+            label_vis = vis_lc_from_colors(mask, self.colors).T.swapaxes(0,1)
+
+            fig, axs = plt.subplots(1, 3, figsize=(12, 4))            
             axs[0].imshow(input_vis, interpolation="none")
             axs[0].axis("off")
-            
             axs[1].imshow(pred_vis, interpolation="none")
             axs[1].axis("off")
-            
             axs[2].imshow(label_vis, interpolation="none")
             axs[2].axis("off")
-            
             plt.tight_layout()
 
             # the SummaryWriter is a tensorboard object, see:
@@ -357,6 +385,11 @@ class EnviroatlasLearnPriorDataModule(LightningDataModule):
         self.ignore_index = len(classes_keep)
         print(self.classes_keep) 
         
+        # if the prior is to be used, use it as input layer, not output supervision 
+        # unless you modifify the code prior will not be used at all
+        self.prior_as_input = True
+        
+        
         self.train_sets = [f"{state}-{train_set}" for state in states]
         self.val_sets = [f"{state}-{val_set}" for state in states]
         self.test_sets = [f"{state}-{test_set}" for state in states]
@@ -450,10 +483,11 @@ class EnviroatlasLearnPriorDataModule(LightningDataModule):
         """Confirms that the dataset is downloaded on the local node.
         This method is called once per node, while :func:`setup` is called once per GPU.
         """
-        EnviroatlasWeakInput(
+        Enviroatlas(
             self.root_dir,
             splits=self.train_sets,
             layers=self.layers,
+            prior_as_input=self.prior_as_input,
             transforms=None,
             download=False,
             checksum=False,
@@ -486,26 +520,29 @@ class EnviroatlasLearnPriorDataModule(LightningDataModule):
         
         
         print('training on ',self.train_sets)
-        self.train_dataset = EnviroatlasWeakInput(
+        self.train_dataset = Enviroatlas(
             self.root_dir,
             splits=self.train_sets,
             layers=self.layers,
+            prior_as_input=self.prior_as_input,
             transforms=train_transforms,
             download=False,
             checksum=False,
         )
-        self.val_dataset = EnviroatlasWeakInput(
+        self.val_dataset = Enviroatlas(
             self.root_dir,
             splits=self.val_sets,
             layers=self.layers,
+            prior_as_input=self.prior_as_input,
             transforms=val_transforms,
             download=False,
             checksum=False,
         )
-        self.test_dataset = EnviroatlasWeakInput(
+        self.test_dataset = Enviroatlas(
             self.root_dir,
             splits=self.test_sets,
             layers=self.layers,
+            prior_as_input=self.prior_as_input,
             transforms=test_transforms,
             download=False,
             checksum=False,
@@ -515,7 +552,7 @@ class EnviroatlasLearnPriorDataModule(LightningDataModule):
         """Return a DataLoader for training."""
         print('train set of size ',  self.train_dataset.index.get_size())
         sampler = RandomBatchGeoSampler(
-            self.train_dataset.index,
+            self.train_dataset,
             size=self.original_patch_size,
             batch_size=self.batch_size,
             length=self.patches_per_tile * self.train_dataset.index.get_size() 
@@ -530,7 +567,7 @@ class EnviroatlasLearnPriorDataModule(LightningDataModule):
     def val_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for validation."""
         sampler = RandomBatchGeoSampler(
-                self.val_dataset.index,
+                self.val_dataset,
                 size=self.original_patch_size,
                 batch_size=self.batch_size,
                 length=self.patches_per_tile * self.val_dataset.index.get_size() // 2,
@@ -544,7 +581,7 @@ class EnviroatlasLearnPriorDataModule(LightningDataModule):
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing."""
         sampler = GridGeoSampler(
-            self.test_dataset.index,
+            self.test_dataset,
             size=self.original_patch_size,
             stride=self.original_patch_size,
         )
