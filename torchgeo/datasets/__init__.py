@@ -24,9 +24,7 @@ from .chesapeake import (
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCycloneWindEstimation
-from .enviroatlas import (
-    Enviroatlas
-)
+from .enviroatlas import Enviroatlas
 from .etci2021 import ETCI2021
 from .eurosat import EuroSAT
 from .geo import (
