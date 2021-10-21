@@ -63,8 +63,10 @@ class Enviroatlas(GeoDataset):
     crs = CRS.from_epsg(3857)
     res = 1
 
-    valid_prior_layers = ["prior_from_cooccurrences_101_31",
-                          "prior_from_cooccurrences_101_31_no_osm_no_buildings"]
+    valid_prior_layers = [
+        "prior_from_cooccurrences_101_31",
+        "prior_from_cooccurrences_101_31_no_osm_no_buildings",
+    ]
 
     valid_layers = [
         "a_naip",
@@ -84,7 +86,7 @@ class Enviroatlas(GeoDataset):
         "durham_nc-2012_1m",
         "austin_tx-2012_1m",
         "phoenix_az-2010_1m",
-    ]  
+    ]
 
     # only pittsburch has a train and val set
     # all states have test and val5
@@ -192,9 +194,12 @@ class Enviroatlas(GeoDataset):
                             "d2_waterbodies": row["properties"]["d2_waterbodies"],
                             "e_buildings": row["properties"]["e_buildings"],
                             "h_highres_labels": row["properties"]["h_highres_labels"],
-                            "prior_from_cooccurrences_101_31_no_osm_no_buildings": row["properties"][
-                                "a_naip"
-                            ].replace("a_naip", "prior_from_cooccurrences_101_31_no_osm_no_buildings"),
+                            "prior_from_cooccurrences_101_31_no_osm_no_buildings": row[
+                                "properties"
+                            ]["a_naip"].replace(
+                                "a_naip",
+                                "prior_from_cooccurrences_101_31_no_osm_no_buildings",
+                            ),
                             "prior_from_cooccurrences_101_31": row["properties"][
                                 "a_naip"
                             ].replace("a_naip", "prior_from_cooccurrences_101_31"),
@@ -254,17 +259,19 @@ class Enviroatlas(GeoDataset):
                     )
 
                 if layer in [
-                    "a_naip", 
+                    "a_naip",
                     "e_buildings",
                     "c_roads",
                     "d1_waterways",
                     "d2_waterbodies",
-                    "d_water"                    
+                    "d_water",
                 ]:
                     sample["image"].append(data)
 
-                elif layer in ["prior_from_cooccurrences_101_31",
-                               "prior_from_cooccurrences_101_31_no_osm_no_buildings"]:
+                elif layer in [
+                    "prior_from_cooccurrences_101_31",
+                    "prior_from_cooccurrences_101_31_no_osm_no_buildings",
+                ]:
                     if self.prior_as_input:
                         sample["image"].append(data)
                     else:
