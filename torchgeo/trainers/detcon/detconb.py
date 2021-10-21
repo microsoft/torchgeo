@@ -6,6 +6,7 @@ from torch.nn.modules import Module
 import torch.nn.functional as F
 import numpy as np
 from torchgeo.Trainer import byol
+import skimage
 
 Module.__module__ = "torch.nn"
 
