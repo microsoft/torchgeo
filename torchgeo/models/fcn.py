@@ -134,18 +134,21 @@ class FCN_modified(Module):
             x = x.log()
 
         return x
-    
+
+
 class FCN_larger_modified(Module):
     """A simple 5 layer FCN with leaky relus and 'same' padding."""
 
-    def __init__(self, 
-                 in_channels: int, 
-                 classes: int, 
-                 num_filters: int = 128, 
-                 output_smooth: float = 1e-2,
-                 log_outputs: bool = True) -> None:
+    def __init__(
+        self,
+        in_channels: int,
+        classes: int,
+        num_filters: int = 128,
+        output_smooth: float = 1e-2,
+        log_outputs: bool = True,
+    ) -> None:
         """Initializes the 5 layer FCN model.
-        
+
         Args:
             in_channels: Number of input channels that the model will expect
             classes: Number of filters in the final layer
@@ -170,13 +173,13 @@ class FCN_larger_modified(Module):
             nn.modules.LeakyReLU(inplace=True),
             conv2,
             nn.modules.LeakyReLU(inplace=True),
-            conv3
+            conv3,
         )
 
         self.last = nn.modules.Conv2d(
             num_filters, classes, kernel_size=1, stride=1, padding=0
         )
-        
+
         self.output_smooth = output_smooth
         self.log_outputs = log_outputs
 
@@ -189,5 +192,5 @@ class FCN_larger_modified(Module):
         x = nn.functional.normalize(x, p=1, dim=1)
         if self.log_outputs:
             x = x.log()
-        
+
         return x
