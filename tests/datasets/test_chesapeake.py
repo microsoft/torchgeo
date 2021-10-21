@@ -9,15 +9,16 @@ from typing import Generator
 import matplotlib.pyplot as plt
 import pytest
 import torch
+import torch.nn as nn
+from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import BoundingBox, Chesapeake13, ZipDataset
-from torchgeo.transforms import Identity
+from torchgeo.datasets import BoundingBox, Chesapeake13, ChesapeakeCVPR, ZipDataset
 
 
-def download_url(url: str, root: str, *args: str) -> None:
+def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -41,7 +42,7 @@ class TestChesapeake13:
             plt, "show", lambda *args: None
         )
         root = str(tmp_path)
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return Chesapeake13(root, transforms=transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: Chesapeake13) -> None:
@@ -76,3 +77,84 @@ class TestChesapeake13:
             IndexError, match="query: .* not found in index with bounds:"
         ):
             dataset[query]
+
+
+class TestChesapeakeCVPR:
+    @pytest.fixture(
+        params=[
+            ("naip-new", "naip-old", "nlcd"),
+            ("landsat-leaf-on", "landsat-leaf-off", "lc"),
+            ("naip-new", "landsat-leaf-on", "lc", "nlcd", "buildings"),
+        ]
+    )
+    def dataset(
+        self,
+        request: SubRequest,
+        monkeypatch: Generator[MonkeyPatch, None, None],
+        tmp_path: Path,
+    ) -> ChesapeakeCVPR:
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            torchgeo.datasets.chesapeake, "download_url", download_url
+        )
+        md5 = "564b8d944a941b0b65db9f56c92b93a2"
+        monkeypatch.setattr(ChesapeakeCVPR, "md5", md5)  # type: ignore[attr-defined]
+        url = os.path.join(
+            "tests", "data", "chesapeake", "cvpr", "cvpr_chesapeake_landcover.zip"
+        )
+        monkeypatch.setattr(ChesapeakeCVPR, "url", url)  # type: ignore[attr-defined]
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            ChesapeakeCVPR,
+            "files",
+            ["de_1m_2013_extended-debuffered-test_tiles", "spatial_index.geojson"],
+        )
+        root = str(tmp_path)
+        transforms = nn.Identity()  # type: ignore[attr-defined]
+        return ChesapeakeCVPR(
+            root,
+            splits=["de-test"],
+            layers=request.param,
+            transforms=transforms,
+            download=True,
+            checksum=True,
+        )
+
+    def test_getitem(self, dataset: ChesapeakeCVPR) -> None:
+        x = dataset[dataset.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x["crs"], CRS)
+        assert isinstance(x["mask"], torch.Tensor)
+
+    def test_add(self, dataset: ChesapeakeCVPR) -> None:
+        ds = dataset + dataset
+        assert isinstance(ds, ZipDataset)
+
+    def test_already_extracted(self, dataset: ChesapeakeCVPR) -> None:
+        ChesapeakeCVPR(root=dataset.root, download=True)
+
+    def test_already_downloaded(self, tmp_path: Path) -> None:
+        url = os.path.join(
+            "tests", "data", "chesapeake", "cvpr", "cvpr_chesapeake_landcover.zip"
+        )
+        root = str(tmp_path)
+        shutil.copy(url, root)
+        ChesapeakeCVPR(root)
+
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(RuntimeError, match="Dataset not found"):
+            ChesapeakeCVPR(str(tmp_path), checksum=True)
+
+    def test_out_of_bounds_query(self, dataset: ChesapeakeCVPR) -> None:
+        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        with pytest.raises(
+            IndexError, match="query: .* not found in index with bounds:"
+        ):
+            dataset[query]
+
+    def test_multiple_hits_query(self, dataset: ChesapeakeCVPR) -> None:
+        ds = ChesapeakeCVPR(
+            root=dataset.root, splits=["de-train", "de-test"], layers=dataset.layers
+        )
+        with pytest.raises(
+            IndexError, match="query: .* spans multiple tiles which is not valid"
+        ):
+            ds[dataset.bounds]

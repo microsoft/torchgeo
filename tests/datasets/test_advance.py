@@ -9,11 +9,11 @@ from typing import Any, Generator
 
 import pytest
 import torch
+import torch.nn as nn
 from _pytest.monkeypatch import MonkeyPatch
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import ADVANCE
-from torchgeo.transforms import Identity
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -40,7 +40,7 @@ class TestADVANCE:
         monkeypatch.setattr(ADVANCE, "urls", urls)  # type: ignore[attr-defined]
         monkeypatch.setattr(ADVANCE, "md5s", md5s)  # type: ignore[attr-defined]
         root = str(tmp_path)
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return ADVANCE(root, transforms, download=True, checksum=True)
 
     @pytest.fixture

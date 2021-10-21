@@ -7,7 +7,6 @@ from typing import Dict, Iterator
 import pytest
 from _pytest.fixtures import SubRequest
 from rasterio.crs import CRS
-from rtree.index import Index, Property
 from torch.utils.data import DataLoader
 
 from torchgeo.datasets import BoundingBox, GeoDataset
@@ -29,12 +28,10 @@ class CustomGeoSampler(GeoSampler):
 class CustomGeoDataset(GeoDataset):
     def __init__(
         self,
-        bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5),
         crs: CRS = CRS.from_epsg(3005),
         res: float = 1,
     ) -> None:
         super().__init__()
-        self.index.insert(0, bounds)
         self.crs = crs
         self.res = res
 
@@ -53,6 +50,7 @@ class TestGeoSampler:
     def test_len(self, sampler: CustomGeoSampler) -> None:
         assert len(sampler) == 2
 
+    @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(self, sampler: CustomGeoSampler, num_workers: int) -> None:
         ds = CustomGeoDataset()
@@ -70,11 +68,11 @@ class TestGeoSampler:
 class TestRandomGeoSampler:
     @pytest.fixture(scope="function", params=[3, 4.5, (2, 2), (3, 4.5), (4.5, 3)])
     def sampler(self, request: SubRequest) -> RandomGeoSampler:
-        index = Index(interleaved=False, properties=Property(dimension=3))
-        index.insert(0, (0, 10, 20, 30, 40, 50))
-        index.insert(1, (0, 10, 20, 30, 40, 50))
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 20, 30, 40, 50))
+        ds.index.insert(1, (0, 10, 20, 30, 40, 50))
         size = request.param
-        return RandomGeoSampler(index, size, length=10)
+        return RandomGeoSampler(ds, size, length=10)
 
     def test_iter(self, sampler: RandomGeoSampler) -> None:
         for query in sampler:
@@ -91,6 +89,7 @@ class TestRandomGeoSampler:
     def test_len(self, sampler: RandomGeoSampler) -> None:
         assert len(sampler) == sampler.length
 
+    @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(self, sampler: RandomGeoSampler, num_workers: int) -> None:
         ds = CustomGeoDataset()
@@ -114,11 +113,11 @@ class TestGridGeoSampler:
         ],
     )
     def sampler(self, request: SubRequest) -> GridGeoSampler:
-        index = Index(interleaved=False, properties=Property(dimension=3))
-        index.insert(0, (0, 20, 0, 10, 40, 50))
-        index.insert(1, (0, 20, 0, 10, 40, 50))
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 20, 0, 10, 40, 50))
+        ds.index.insert(1, (0, 20, 0, 10, 40, 50))
         size, stride = request.param
-        return GridGeoSampler(index, size, stride)
+        return GridGeoSampler(ds, size, stride)
 
     def test_iter(self, sampler: GridGeoSampler) -> None:
         for query in sampler:
@@ -132,6 +131,7 @@ class TestGridGeoSampler:
                 query.maxt - query.mint, sampler.roi.maxt - sampler.roi.mint
             )
 
+    @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(self, sampler: GridGeoSampler, num_workers: int) -> None:
         ds = CustomGeoDataset()

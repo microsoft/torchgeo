@@ -80,6 +80,11 @@ Smallholder Cashew Plantations in Benin
 
 .. autoclass:: BeninSmallHolderCashews
 
+BigEarthNet
+^^^^^^^^^^^
+
+.. autoclass:: BigEarthNet
+
 Cars Overhead With Context (COWC)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -143,6 +148,7 @@ SpaceNet
 .. autoclass:: SpaceNet
 .. autoclass:: SpaceNet1
 .. autoclass:: SpaceNet2
+.. autoclass:: SpaceNet4
 
 Tropical Cyclone Wind Estimation Competition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

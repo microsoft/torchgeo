@@ -8,13 +8,13 @@ from typing import Generator
 
 import pytest
 import torch
+import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import LandCoverAI
-from torchgeo.transforms import Identity
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -40,7 +40,7 @@ class TestLandCoverAI:
         monkeypatch.setattr(LandCoverAI, "sha256", sha256)  # type: ignore[attr-defined]
         root = str(tmp_path)
         split = request.param
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return LandCoverAI(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: LandCoverAI) -> None:

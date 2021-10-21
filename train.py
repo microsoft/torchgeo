@@ -23,6 +23,8 @@ from torchgeo.trainers import (
     LandcoverAISegmentationTask,
     NAIPChesapeakeDataModule,
     NAIPChesapeakeSegmentationTask,
+    RESISC45ClassificationTask,
+    RESISC45DataModule,
     SEN12MSDataModule,
     SEN12MSSegmentationTask,
     So2SatClassificationTask,
@@ -39,6 +41,7 @@ TASK_TO_MODULES_MAPPING: Dict[
     "cyclone": (CycloneSimpleRegressionTask, CycloneDataModule),
     "landcoverai": (LandcoverAISegmentationTask, LandcoverAIDataModule),
     "naipchesapeake": (NAIPChesapeakeSegmentationTask, NAIPChesapeakeDataModule),
+    "resisc45": (RESISC45ClassificationTask, RESISC45DataModule),
     "sen12ms": (SEN12MSSegmentationTask, SEN12MSDataModule),
     "so2sat": (So2SatClassificationTask, So2SatDataModule),
 }

@@ -105,46 +105,6 @@ def assert_matching(output: Dict[str, Tensor], expected: Dict[str, Tensor]) -> N
         assert equal, err
 
 
-def test_random_horizontal_flip(sample: Dict[str, Tensor]) -> None:
-    tr = transforms.RandomHorizontalFlip(p=1)
-    output = tr(sample)
-    expected = {
-        "image": torch.tensor(  # type: ignore[attr-defined]
-            [[[3, 2, 1], [6, 5, 4], [9, 8, 7]]]
-        ),
-        "mask": torch.tensor(  # type: ignore[attr-defined]
-            [[1, 0, 0], [1, 1, 0], [1, 1, 1]]
-        ),
-        "boxes": torch.tensor(  # type: ignore[attr-defined]
-            [[1, 0, 3, 2], [0, 1, 2, 3]]
-        ),
-    }
-    assert_matching(output, expected)
-
-
-def test_random_vertical_flip(sample: Dict[str, Tensor]) -> None:
-    tr = transforms.RandomVerticalFlip(p=1)
-    output = tr(sample)
-    expected = {
-        "image": torch.tensor(  # type: ignore[attr-defined]
-            [[[7, 8, 9], [4, 5, 6], [1, 2, 3]]]
-        ),
-        "mask": torch.tensor(  # type: ignore[attr-defined]
-            [[1, 1, 1], [0, 1, 1], [0, 0, 1]]
-        ),
-        "boxes": torch.tensor(  # type: ignore[attr-defined]
-            [[0, 1, 2, 3], [1, 0, 3, 2]]
-        ),
-    }
-    assert_matching(output, expected)
-
-
-def test_identity(sample: Dict[str, Tensor]) -> None:
-    tr = transforms.Identity()
-    output = tr(sample)
-    assert_matching(output, sample)
-
-
 def test_augmentation_sequential_gray(batch_gray: Dict[str, Tensor]) -> None:
     expected = {
         "image": torch.tensor(  # type: ignore[attr-defined]

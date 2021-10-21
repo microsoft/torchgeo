@@ -16,11 +16,13 @@ import pytest
 import torch
 from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
+from torch.utils.data import TensorDataset
 
 import torchgeo.datasets.utils
 from torchgeo.datasets.utils import (
     BoundingBox,
     collate_dict,
+    dataset_split,
     disambiguate_timestamp,
     download_and_extract_archive,
     download_radiant_mlhub_collection,
@@ -257,6 +259,12 @@ class TestBoundingBox:
             datetime(2021, 9, 30, 23, 59, 59, 999999).timestamp(),
         ),
         (
+            "Dec 21",
+            "%b %y",
+            datetime(2021, 12, 1, 0, 0, 0, 0).timestamp(),
+            datetime(2021, 12, 31, 23, 59, 59, 999999).timestamp(),
+        ),
+        (
             "2021-09-13",
             "%Y-%m-%d",
             datetime(2021, 9, 13, 0, 0, 0, 0).timestamp(),
@@ -335,3 +343,21 @@ def test_nonexisting_directory(tmp_path: Path) -> None:
 
     with working_dir(str(subdir), create=True):
         assert subdir.cwd() == subdir
+
+
+def test_dataset_split() -> None:
+    num_samples = 24
+    x = torch.ones(num_samples, 5)  # type: ignore[attr-defined]
+    y = torch.randint(low=0, high=2, size=(num_samples,))  # type: ignore[attr-defined]
+    ds = TensorDataset(x, y)
+
+    # Test only train/val set split
+    train_ds, val_ds = dataset_split(ds, val_pct=1 / 2)
+    assert len(train_ds) == num_samples // 2
+    assert len(val_ds) == num_samples // 2
+
+    # Test train/val/test set split
+    train_ds, val_ds, test_ds = dataset_split(ds, val_pct=1 / 3, test_pct=1 / 3)
+    assert len(train_ds) == num_samples // 3
+    assert len(val_ds) == num_samples // 3
+    assert len(test_ds) == num_samples // 3

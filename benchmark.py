@@ -12,9 +12,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from torchvision.models import resnet18
+from torchvision.models import resnet34
 
-from torchgeo.datasets import CDL, BoundingBox, Landsat8
+from torchgeo.datasets import CDL, Landsat8
 from torchgeo.samplers import GridGeoSampler, RandomBatchGeoSampler, RandomGeoSampler
 
 
@@ -83,7 +83,7 @@ def set_up_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-s",
         "--stride",
-        default=2 ** 7,
+        default=112,
         type=int,
         help="sampling stride for GridGeoSampler",
     )
@@ -145,26 +145,15 @@ def main(args: argparse.Namespace) -> None:
         length = args.num_batches * args.batch_size
         num_batches = args.num_batches
 
-    # Workaround for https://github.com/microsoft/torchgeo/issues/149
-    roi = BoundingBox(
-        -2000000, 2200000, 280000, 3170000, dataset.bounds.mint, dataset.bounds.maxt
-    )
+    # Convert from pixel coords to CRS coords
+    size = args.patch_size * cdl.res
+    stride = args.stride * cdl.res
+
     samplers = [
-        RandomGeoSampler(
-            landsat.index,
-            size=args.patch_size,
-            length=length,
-            roi=roi,
-        ),
-        GridGeoSampler(
-            landsat.index, size=args.patch_size, stride=args.stride, roi=roi
-        ),
+        RandomGeoSampler(landsat, size=size, length=length),
+        GridGeoSampler(landsat, size=size, stride=stride),
         RandomBatchGeoSampler(
-            landsat.index,
-            size=args.patch_size,
-            batch_size=args.batch_size,
-            length=length,
-            roi=roi,
+            landsat, size=size, batch_size=args.batch_size, length=length
         ),
     ]
 
@@ -224,7 +213,7 @@ def main(args: argparse.Namespace) -> None:
         )
 
     # Benchmark model
-    model = resnet18()
+    model = resnet34()
     # Change number of input channels to match Landsat
     model.conv1 = nn.Conv2d(  # type: ignore[attr-defined]
         len(bands), 64, kernel_size=7, stride=2, padding=3, bias=False
@@ -259,7 +248,7 @@ def main(args: argparse.Namespace) -> None:
     duration = toc - tic
 
     if args.verbose:
-        print("\nResNet-18:")
+        print("\nResNet-34:")
         print(f"  duration: {duration:.3f} sec")
         print(f"  count: {num_total_patches} patches")
         print(f"  rate: {num_total_patches / duration:.3f} patches/sec")
@@ -271,7 +260,7 @@ def main(args: argparse.Namespace) -> None:
             "duration": duration,
             "count": num_total_patches,
             "rate": num_total_patches / duration,
-            "sampler": "resnet18",
+            "sampler": "ResNet-34",
             "batch_size": args.batch_size,
             "num_workers": args.num_workers,
         }
@@ -297,8 +286,6 @@ def main(args: argparse.Namespace) -> None:
 
 
 if __name__ == "__main__":
-    os.environ["GDAL_CACHEMAX"] = "50%"
-
     parser = set_up_parser()
     args = parser.parse_args()
 

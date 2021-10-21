@@ -11,12 +11,12 @@ from typing import Generator
 import matplotlib.pyplot as plt
 import pytest
 import torch
+import torch.nn as nn
 from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import CDL, BoundingBox, ZipDataset
-from torchgeo.transforms import Identity
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -44,7 +44,7 @@ class TestCDL:
             plt, "show", lambda *args: None
         )
         root = str(tmp_path)
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return CDL(root, transforms=transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: CDL) -> None:

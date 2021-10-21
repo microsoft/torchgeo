@@ -9,11 +9,11 @@ from typing import Any, Generator
 
 import pytest
 import torch
+import torch.nn as nn
 from _pytest.monkeypatch import MonkeyPatch
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import ZueriCrop
-from torchgeo.transforms import Identity
 
 pytest.importorskip("h5py")
 
@@ -41,7 +41,7 @@ class TestZueriCrop:
         monkeypatch.setattr(ZueriCrop, "urls", urls)  # type: ignore[attr-defined]
         monkeypatch.setattr(ZueriCrop, "md5s", md5s)  # type: ignore[attr-defined]
         root = str(tmp_path)
-        transforms = Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return ZueriCrop(root, transforms, download=True, checksum=True)
 
     @pytest.fixture

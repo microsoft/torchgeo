@@ -78,7 +78,7 @@ html_theme_options = {
     "logo_only": True,
     "pytorch_project": "docs",
     "navigation_with_keys": True,
-    "analytics_id": "UA-117752657-2",
+    "analytics_id": "UA-209075005-1",
 }
 
 html_favicon = os.path.join("..", "logo", "favicon.ico")

@@ -5,6 +5,7 @@
 
 from .advance import ADVANCE
 from .benin_cashews import BeninSmallHolderCashews
+from .bigearthnet import BigEarthNet
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
 from .chesapeake import (
@@ -56,7 +57,7 @@ from .resisc45 import RESISC45
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel2
 from .so2sat import So2Sat
-from .spacenet import SpaceNet, SpaceNet1, SpaceNet2
+from .spacenet import SpaceNet, SpaceNet1, SpaceNet2, SpaceNet4
 from .ucmerced import UCMerced
 from .utils import BoundingBox, collate_dict
 from .zuericrop import ZueriCrop
@@ -93,6 +94,7 @@ __all__ = (
     # VisionDataset
     "ADVANCE",
     "BeninSmallHolderCashews",
+    "BigEarthNet",
     "COWC",
     "COWCCounting",
     "COWCDetection",
@@ -109,6 +111,7 @@ __all__ = (
     "SpaceNet",
     "SpaceNet1",
     "SpaceNet2",
+    "SpaceNet4",
     "TropicalCycloneWindEstimation",
     "UCMerced",
     "VHR10",

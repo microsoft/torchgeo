@@ -22,6 +22,7 @@ import torch
 from rasterio.crs import CRS
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
+from rasterio.windows import from_bounds
 from rtree.index import Index, Property
 from torch import Tensor
 from torch.utils.data import Dataset
@@ -104,6 +105,15 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         """
         return ZipDataset([self, other])
 
+    def __len__(self) -> int:
+        """Return the number of files in the dataset.
+
+        Returns:
+            length of the dataset
+        """
+        count: int = self.index.count(self.index.bounds)
+        return count
+
     def __str__(self) -> str:
         """Return the informal string representation of the object.
 
@@ -113,7 +123,8 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         return f"""\
 {self.__class__.__name__} Dataset
     type: GeoDataset
-    bbox: {self.bounds}"""
+    bbox: {self.bounds}
+    size: {len(self)}"""
 
     @property
     def bounds(self) -> BoundingBox:
@@ -286,7 +297,7 @@ class RasterDataset(GeoDataset):
                     filepath = glob.glob(os.path.join(directory, filename))[0]
                     band_filepaths.append(filepath)
                 data_list.append(self._merge_files(band_filepaths, query))
-            data = torch.stack(data_list)
+            data = torch.cat(data_list)  # type: ignore[attr-defined]
         else:
             data = self._merge_files(filepaths, query)
 
@@ -318,7 +329,16 @@ class RasterDataset(GeoDataset):
             vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
-        dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res)
+        if len(vrt_fhs) == 1:
+            src = vrt_fhs[0]
+            out_width = int(round((query.maxx - query.minx) / self.res))
+            out_height = int(round((query.maxy - query.miny) / self.res))
+            out_shape = (src.count, out_height, out_width)
+            dest = src.read(
+                out_shape=out_shape, window=from_bounds(*bounds, src.transform)
+            )
+        else:
+            dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res)
         dest = dest.astype(np.int32)
 
         tensor: Tensor = torch.tensor(dest)  # type: ignore[attr-defined]
@@ -447,7 +467,7 @@ class VectorDataset(GeoDataset):
                     (minx, maxx), (miny, maxy) = fiona.transform.transform(
                         src.crs, crs.to_dict(), [minx, maxx], [miny, maxy]
                     )
-            except (fiona.errors.DriverError, fiona.errors.FionaValueError):
+            except fiona.errors.FionaValueError:
                 # Skip files that fiona is unable to read
                 continue
             else:
@@ -719,6 +739,14 @@ class ZipDataset(GeoDataset):
             sample.update(ds[query])
         return sample
 
+    def __len__(self) -> int:
+        """Return the number of files in the dataset.
+
+        Returns:
+            length of the dataset
+        """
+        return sum(map(len, self.datasets))
+
     def __str__(self) -> str:
         """Return the informal string representation of the object.
 
@@ -728,7 +756,8 @@ class ZipDataset(GeoDataset):
         return f"""\
 {self.__class__.__name__} Dataset
     type: ZipDataset
-    bbox: {self.bounds}"""
+    bbox: {self.bounds}
+    size: {len(self)}"""
 
     @property
     def bounds(self) -> BoundingBox:

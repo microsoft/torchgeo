@@ -11,6 +11,8 @@ experiment:
     classification_model: "resnet18"
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
+    in_channels: 3
   datamodule:
     batch_size: 128
     num_workers: 6
+    bands: "rgb"

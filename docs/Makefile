@@ -6,7 +6,7 @@
 # You can set these variables from the command line, and also
 # from the environment for the first two.
 SPHINX_BUILD		?= sphinx-build
-SPHINX_BUILD_OPTS	?= -W --keep-going
+SPHINX_BUILD_OPTS	?= -W -j auto --keep-going
 SOURCE_DIR		= .
 BUILD_DIR		= _build
 

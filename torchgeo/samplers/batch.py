@@ -7,10 +7,9 @@ import abc
 import random
 from typing import Iterator, List, Optional, Tuple, Union
 
-from rtree.index import Index
 from torch.utils.data import Sampler
 
-from torchgeo.datasets import BoundingBox
+from torchgeo.datasets import BoundingBox, GeoDataset
 
 from .utils import _to_tuple, get_random_bounding_box
 
@@ -43,13 +42,13 @@ class RandomBatchGeoSampler(BatchGeoSampler):
     This is particularly useful during training when you want to maximize the size of
     the dataset and return as many random :term:`chips <chip>` as possible.
 
-    When sampling from :class:`~torchgeo.datasets.ZipDataset`, the ``index`` should come
-    from a tile-based dataset if possible.
+    When sampling from :class:`~torchgeo.datasets.ZipDataset`, the ``dataset`` should be
+    a tile-based dataset if possible.
     """
 
     def __init__(
         self,
-        index: Index,
+        dataset: GeoDataset,
         size: Union[Tuple[float, float], float],
         batch_size: int,
         length: int,
@@ -65,21 +64,22 @@ class RandomBatchGeoSampler(BatchGeoSampler):
           height dimension, and the second *float* for the width dimension
 
         Args:
-            index: index of a :class:`~torchgeo.datasets.GeoDataset`
+            dataset: dataset to index from
             size: dimensions of each :term:`patch` in units of CRS
             batch_size: number of samples per batch
             length: number of samples per epoch
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
-                (defaults to the bounds of ``index``)
+                (defaults to the bounds of ``dataset.index``)
         """
-        self.index = index
+        self.index = dataset.index
+        self.res = dataset.res
         self.size = _to_tuple(size)
         self.batch_size = batch_size
         self.length = length
         if roi is None:
-            roi = BoundingBox(*index.bounds)
+            roi = BoundingBox(*self.index.bounds)
         self.roi = roi
-        self.hits = list(index.intersection(roi, objects=True))
+        self.hits = list(self.index.intersection(roi, objects=True))
 
     def __iter__(self) -> Iterator[List[BoundingBox]]:
         """Return the indices of a dataset.
@@ -96,7 +96,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             batch = []
             for _ in range(self.batch_size):
 
-                bounding_box = get_random_bounding_box(bounds, self.size)
+                bounding_box = get_random_bounding_box(bounds, self.size, self.res)
                 batch.append(bounding_box)
 
             yield batch
