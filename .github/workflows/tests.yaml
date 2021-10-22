@@ -19,8 +19,6 @@ jobs:
         python-version: 3.9
     - name: Install pip dependencies
       run: |
-        # TODO: remove after kornia's next release (>0.5.11)
-        pip install git+https://github.com/kornia/kornia@master # required for mypy fixes
         pip install cython numpy  # needed for pycocotools
         pip install .[datasets,tests,train]
     - name: Run mypy checks
