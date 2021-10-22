@@ -347,7 +347,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         self.patches_per_tile = patches_per_tile
         self.patch_size = patch_size
         # This is a rough estimate of how large of a patch we will need to sample in
-        # EPSG:3857 in order to garuntee a large enough patch in the local CRS.
+        # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
         self.original_patch_size = int(patch_size * 2.0)
         self.batch_size = batch_size
         self.num_workers = num_workers
@@ -502,10 +502,10 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""
         sampler = RandomBatchGeoSampler(
-            self.train_dataset.index,
+            self.train_dataset,
             size=self.original_patch_size,
             batch_size=self.batch_size,
-            length=self.patches_per_tile * self.train_dataset.index.get_size(),
+            length=self.patches_per_tile * len(self.train_dataset),
         )
         return DataLoader(
             self.train_dataset,
@@ -516,7 +516,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
     def val_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for validation."""
         sampler = GridGeoSampler(
-            self.val_dataset.index,
+            self.val_dataset,
             size=self.original_patch_size,
             stride=self.original_patch_size,
         )
@@ -530,7 +530,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing."""
         sampler = GridGeoSampler(
-            self.test_dataset.index,
+            self.test_dataset,
             size=self.original_patch_size,
             stride=self.original_patch_size,
         )
