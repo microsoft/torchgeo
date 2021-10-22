@@ -64,7 +64,7 @@ class FarSeg(Module):
             classes: number of output segmentation classes
             backbone_pretrained: whether to use pretrained weight for backbone
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         if backbone in ["resnet18", "resnet34"]:
             max_channels = 512
         elif backbone in ["resnet50", "resnet101"]:
@@ -129,7 +129,7 @@ class _FSRelation(Module):
             in_channels_list: a list of input channels
             out_channels: number of output channels
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
 
         self.scene_encoder = ModuleList(
             [
@@ -160,7 +160,7 @@ class _FSRelation(Module):
                 )
             )
 
-        self.normalizer = Sigmoid()  # type: ignore[no-untyped-call]
+        self.normalizer = Sigmoid()
 
     def forward(self, scene_feature: Tensor, features: List[Tensor]) -> List[Tensor]:
         """Forward pass of the model."""
@@ -202,7 +202,7 @@ class _LightWeightDecoder(Module):
                 levels
             out_feature_output_stride: output stride of output feature maps
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
 
         self.blocks = ModuleList()
         for in_feat_os in in_feature_output_strides:

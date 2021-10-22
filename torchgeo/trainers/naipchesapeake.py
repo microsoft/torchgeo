@@ -325,7 +325,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         """Return a DataLoader for training."""
         return DataLoader(
             self.dataset,
-            batch_sampler=self.train_sampler,  # type: ignore[arg-type]
+            batch_sampler=self.train_sampler,
             num_workers=self.num_workers,
         )
 
@@ -334,7 +334,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         return DataLoader(
             self.dataset,
             batch_size=self.batch_size,
-            sampler=self.val_sampler,  # type: ignore[arg-type]
+            sampler=self.val_sampler,
             num_workers=self.num_workers,
         )
 
@@ -343,6 +343,6 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
-            sampler=self.test_sampler,  # type: ignore[arg-type]
+            sampler=self.test_sampler,
             num_workers=self.num_workers,
         )
