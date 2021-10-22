@@ -16,11 +16,9 @@ from torch import Tensor, optim
 from torch.autograd import Variable
 from torch.nn.modules import BatchNorm1d, Conv2d, Linear, Module, ReLU, Sequential
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torch.utils.data import DataLoader
 from torchvision.models import resnet18
 from torchvision.models.resnet import resnet50
 
-DataLoader.__module__ = "torch.utils.data"
 Module.__module__ = "torch.nn"
 Sequential.__module__ = "torch.nn"
 Linear.__module__ = "torch.nn"
