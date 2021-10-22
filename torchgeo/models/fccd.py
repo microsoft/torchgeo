@@ -37,7 +37,7 @@ class ConvBlock(Module):
             dropout: probability for each dropout layer
             pool: max pool last conv layer output if True
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         layers = []
         for i in range(1, len(channels)):
             layers.extend(
