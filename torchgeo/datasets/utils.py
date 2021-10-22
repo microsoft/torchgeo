@@ -413,11 +413,11 @@ def dataset_split(
         a list of the subset datasets. Either [train, val] or [train, val, test]
     """
     if test_pct is None:
-        val_length = int(len(dataset) * val_pct)  # type: ignore[arg-type]
-        train_length = len(dataset) - val_length  # type: ignore[arg-type]
+        val_length = int(len(dataset) * val_pct)
+        train_length = len(dataset) - val_length
         return random_split(dataset, [train_length, val_length])
     else:
-        val_length = int(len(dataset) * val_pct)  # type: ignore[arg-type]
-        test_length = int(len(dataset) * test_pct)  # type: ignore[arg-type]
-        train_length = len(dataset) - (val_length + test_length)  # type: ignore[arg-type] # noqa: E501
+        val_length = int(len(dataset) * val_pct)
+        test_length = int(len(dataset) * test_pct)
+        train_length = len(dataset) - (val_length + test_length)
         return random_split(dataset, [train_length, val_length, test_length])

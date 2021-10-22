@@ -225,7 +225,7 @@ class FCEF(Module):
             classes: number of output segmentation classes
                 (default=2 for binary segmentation)
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.encoder = Encoder(in_channels * t, pool=True)
         self.decoder = Decoder(classes)
         self.upsample = Upsample()
@@ -267,7 +267,7 @@ class FCSiamConc(Module):
             classes: number of output segmentation classes
                 (default=2 for binary segmentation)
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.encoder = Encoder(in_channels, pool=False)
         self.decoder = ConcatDecoder(t, classes)
         self.upsample = Upsample()
@@ -318,7 +318,7 @@ class FCSiamDiff(nn.modules.Module):
             classes: number of output segmentation classes
                 (default=2 for binary segmentation)
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.encoder = Encoder(in_channels, pool=False)
         self.decoder = Decoder(classes)
         self.upsample = Upsample()

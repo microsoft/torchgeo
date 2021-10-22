@@ -56,7 +56,7 @@ class RandomApply(Module):
             augm: augmentation function to apply
             p: probability with which the augmentation function is applied
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.augm = augm
         self.p = p
 
@@ -90,7 +90,7 @@ class SimCLRAugmentation(Module):
         Args:
             image_size: Tuple of integers defining the image size
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.size = image_size
 
         self.augmentation = Sequential(
@@ -128,7 +128,7 @@ class MLP(Module):
             projection_size: size of the output layer
             hidden_size: size of the hidden layer
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.mlp = Sequential(
             Linear(dim, hidden_size),
             BatchNorm1d(hidden_size),  # type: ignore[no-untyped-call]
@@ -174,7 +174,7 @@ class EncoderWrapper(Module):
             hidden_size: size of hidden layer of the projector MLP
             layer: layer from model to project
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
 
         self.model = model
         self.projection_size = projection_size
@@ -275,7 +275,7 @@ class BYOL(Module):
             beta: the speed at which the target encoder is updated using the main
                 encoder
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
 
         self.augment: Module
         if augment_fn is None:

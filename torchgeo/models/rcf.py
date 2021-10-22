@@ -43,7 +43,7 @@ class RCF(Module):
             kernel_size: size of the kernel used to compute the RCFs
             bias: bias of the convolutional layer
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
 
         assert features % 2 == 0
 

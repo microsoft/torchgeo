@@ -44,7 +44,7 @@ class ChangeMixin(Module):
             num_convs: number of convolution blocks
             scale_factor: number of upsampling factor
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         layers: List[Module] = [
             nn.modules.Sequential(
                 nn.modules.Conv2d(in_channels, inner_channels, 3, 1, 1),
@@ -130,7 +130,7 @@ class ChangeStar(Module):
                 ``'t2t1'``: concatenate bitemporal features in the order of t2->t1;
                 ``'mean'``: the weighted mean of the output of ``'t1t2'`` and ``'t1t2'``
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.dense_feature_extractor = dense_feature_extractor
         self.seg_classifier = seg_classifier
         self.changemixin = changemixin

@@ -509,7 +509,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         )
         return DataLoader(
             self.train_dataset,
-            batch_sampler=sampler,  # type: ignore[arg-type]
+            batch_sampler=sampler,
             num_workers=self.num_workers,
         )
 
@@ -523,7 +523,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         return DataLoader(
             self.val_dataset,
             batch_size=self.batch_size,
-            sampler=sampler,  # type: ignore[arg-type]
+            sampler=sampler,
             num_workers=self.num_workers,
         )
 
@@ -537,6 +537,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
-            sampler=sampler,  # type: ignore[arg-type]
+            sampler=sampler,
             num_workers=self.num_workers,
         )
