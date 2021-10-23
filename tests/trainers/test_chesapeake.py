@@ -23,6 +23,7 @@ class TestChesapeakeCVPRSegmentationTask:
             ["de-test"],
             ["de-test"],
             ["de-test"],
+            patch_size=128,
             patches_per_tile=2,
             batch_size=2,
             num_workers=0,
