@@ -6,7 +6,6 @@ import os
 from typing import Any, Dict, Generator, cast
 
 import pytest
-import torch
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
@@ -24,8 +23,8 @@ class TestChesapeakeCVPRSegmentationTask:
             ["de-test"],
             ["de-test"],
             ["de-test"],
-            patches_per_tile=1,
-            batch_size=1,
+            patches_per_tile=2,
+            batch_size=2,
             num_workers=0,
         )
         dm.prepare_data()
@@ -119,8 +118,8 @@ class TestChesapeakeCVPRDataModule:
             ["de-test"],
             ["de-test"],
             ["de-test"],
-            patches_per_tile=1,
-            batch_size=1,
+            patches_per_tile=2,
+            batch_size=2,
             num_workers=0,
         )
         dm.prepare_data()
