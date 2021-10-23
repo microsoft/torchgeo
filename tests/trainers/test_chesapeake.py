@@ -19,16 +19,15 @@ from .test_utils import mocked_log
 class TestChesapeakeCVPRSegmentationTask:
     @pytest.fixture
     def datamodule(self) -> ChesapeakeCVPRDataModule:
-        kwargs = {
-            "root_dir": os.path.join("tests", "data", "chesapeake", "cvpr"),
-            "train_splits": ["de-test"],
-            "val_splits": ["de-test"],
-            "test_splits": ["de-test"],
-            "patches_per_tile": 1,
-            "batch_size": 1,
-            "num_workers": 0,
-        }
-        dm = ChesapeakeCVPRDataModule(**kwargs)
+        dm = ChesapeakeCVPRDataModule(
+            os.path.join("tests", "data", "chesapeake", "cvpr"),
+            ["de-test"],
+            ["de-test"],
+            ["de-test"],
+            patches_per_tile=1,
+            batch_size=1,
+            num_workers=0,
+        )
         dm.prepare_data()
         dm.setup()
         return dm
@@ -72,8 +71,7 @@ class TestChesapeakeCVPRSegmentationTask:
         task: ChesapeakeCVPRSegmentationTask,
     ) -> None:
         batch = next(iter(datamodule.train_dataloader()))
-        out = task.training_step(batch, 0)
-        assert isinstance(out, torch.Tensor)
+        task.training_step(batch, 0)
         task.training_epoch_end(0)
 
     def test_validation(
@@ -82,8 +80,7 @@ class TestChesapeakeCVPRSegmentationTask:
         task: ChesapeakeCVPRSegmentationTask,
     ) -> None:
         batch = next(iter(datamodule.val_dataloader()))
-        out = task.validation_step(batch, 0)
-        assert isinstance(out, torch.Tensor)
+        task.validation_step(batch, 0)
         task.validation_epoch_end(0)
 
     def test_test(
@@ -92,8 +89,7 @@ class TestChesapeakeCVPRSegmentationTask:
         task: ChesapeakeCVPRSegmentationTask,
     ) -> None:
         batch = next(iter(datamodule.test_dataloader()))
-        out = task.test_step(batch, 0)
-        assert isinstance(out, torch.Tensor)
+        task.test_step(batch, 0)
         task.test_epoch_end(0)
 
     def test_invalid_class_set(self, config: Dict[str, Any]) -> None:
@@ -118,16 +114,15 @@ class TestChesapeakeCVPRSegmentationTask:
 class TestChesapeakeCVPRDataModule:
     @pytest.fixture
     def datamodule(self) -> ChesapeakeCVPRDataModule:
-        kwargs = {
-            "root_dir": os.path.join("tests", "data", "chesapeake", "cvpr"),
-            "train_splits": ["de-test"],
-            "val_splits": ["de-test"],
-            "test_splits": ["de-test"],
-            "patches_per_tile": 1,
-            "batch_size": 1,
-            "num_workers": 0,
-        }
-        dm = ChesapeakeCVPRDataModule(**kwargs)
+        dm = ChesapeakeCVPRDataModule(
+            os.path.join("tests", "data", "chesapeake", "cvpr"),
+            ["de-test"],
+            ["de-test"],
+            ["de-test"],
+            patches_per_tile=1,
+            batch_size=1,
+            num_workers=0,
+        )
         dm.prepare_data()
         dm.setup()
         return dm
