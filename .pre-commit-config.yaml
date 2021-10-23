@@ -19,13 +19,13 @@ repos:
         rev: 6.1.0
         hooks:
         -   id: pydocstyle
-            exclude: (tests|docs)
+            exclude: (tests|docs|experiments)
             additional_dependencies: ["toml"]
 
     -   repo: https://github.com/pre-commit/mirrors-mypy
         rev: v0.910
         hooks:
         -   id: mypy
-            args: [--strict, --ignore-missing-imports]
-            additional_dependencies: [torch>=1.7, pytorch-lightning>=1.3, pytest>=6, omegaconf>=2.1]
+            args: [--strict, --ignore-missing-imports, --show-error-codes]
+            additional_dependencies: [torch>=1.7, pytorch-lightning>=1.3, pytest>=6, omegaconf>=2.1, kornia>=0.6]
             exclude: (build|data|dist|logo|logs|output)/
