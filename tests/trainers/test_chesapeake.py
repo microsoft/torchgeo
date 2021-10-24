@@ -16,18 +16,22 @@ from torchgeo.trainers import ChesapeakeCVPRDataModule, ChesapeakeCVPRSegmentati
 
 from .test_utils import mocked_log
 
+
 class FakeExperiment(object):
     def add_figure(self, *args, **kwargs):
         pass
+
 
 class FakeLogger(object):
     def __init__(self):
         self.experiment = FakeExperiment()
 
+
 class FakeTrainer(object):
     def __init__(self):
         self.logger = FakeLogger()
         self.global_step = 1
+
 
 class TestChesapeakeCVPRSegmentationTask:
     @pytest.fixture
