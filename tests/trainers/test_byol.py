@@ -2,18 +2,14 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Generator, cast
+from typing import Any, Dict, cast
 
 import pytest
-import torch
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning.core.lightning import LightningModule
 
 from torchgeo.trainers import BYOLTask, ChesapeakeCVPRDataModule
-
-from .test_utils import mocked_log
 
 
 class TestBYOLTask:
@@ -50,16 +46,13 @@ class TestBYOLTask:
     ) -> None:
         batch = next(iter(datamodule.train_dataloader()))
         task.training_step(batch, 0)
-        task.training_epoch_end(0)
 
     def test_validation(
         self, datamodule: ChesapeakeCVPRDataModule, task: BYOLTask
     ) -> None:
         batch = next(iter(datamodule.val_dataloader()))
         task.validation_step(batch, 0)
-        task.validation_epoch_end(0)
 
     def test_test(self, datamodule: ChesapeakeCVPRDataModule, task: BYOLTask) -> None:
         batch = next(iter(datamodule.test_dataloader()))
         task.test_step(batch, 0)
-        task.test_epoch_end(0)

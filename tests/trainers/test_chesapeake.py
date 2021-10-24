@@ -6,7 +6,6 @@ import os
 from typing import Any, Dict, Generator, cast
 
 import pytest
-import pytorch_lightning as pl
 import torch
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
@@ -18,17 +17,17 @@ from .test_utils import mocked_log
 
 
 class FakeExperiment(object):
-    def add_figure(self, *args, **kwargs):
+    def add_figure(self, *args: Any, **kwargs: Any) -> None:
         pass
 
 
 class FakeLogger(object):
-    def __init__(self):
+    def __init__(self) -> None:
         self.experiment = FakeExperiment()
 
 
 class FakeTrainer(object):
-    def __init__(self):
+    def __init__(self) -> None:
         self.logger = FakeLogger()
         self.global_step = 1
 
@@ -78,7 +77,7 @@ class TestChesapeakeCVPRSegmentationTask:
         config["class_set"] = class_set
         task = ChesapeakeCVPRSegmentationTask(**config)
         trainer = FakeTrainer()
-        task.trainer = trainer
+        task.trainer = trainer  # type: ignore[assignment]
         monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
         return task
 
@@ -162,9 +161,13 @@ class TestChesapeakeCVPRDataModule:
     def test_nodata_check(self, datamodule: ChesapeakeCVPRDataModule) -> None:
         nodata_check = datamodule.nodata_check()
         sample = {
-            "image": torch.ones(1, 256, 256),
-            "mask": torch.ones(256, 256),
+            "image": torch.ones(1, 256, 256),  # type: ignore[attr-defined]
+            "mask": torch.ones(256, 256),  # type: ignore[attr-defined]
         }
         out = nodata_check(sample)
-        assert torch.equal(out["image"], torch.zeros(1, 512, 512))
-        assert torch.equal(out["mask"], torch.zeros(512, 512))
+        assert torch.equal(  # type: ignore[attr-defined]
+            out["image"], torch.zeros(1, 512, 512)  # type: ignore[attr-defined]
+        )
+        assert torch.equal(  # type: ignore[attr-defined]
+            out["mask"], torch.zeros(512, 512)  # type: ignore[attr-defined]
+        )
