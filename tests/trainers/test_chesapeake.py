@@ -13,7 +13,7 @@ from omegaconf import OmegaConf
 
 from torchgeo.trainers import ChesapeakeCVPRDataModule, ChesapeakeCVPRSegmentationTask
 
-from .test_utils import mocked_log, FakeTrainer
+from .test_utils import FakeTrainer, mocked_log
 
 
 class TestChesapeakeCVPRSegmentationTask:

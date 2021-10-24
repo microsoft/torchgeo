@@ -3,15 +3,12 @@
 
 import os
 import sys
-from typing import Any, Dict, Generator, Tuple, cast
+from typing import Any, Dict, Generator, cast
 
 import pytest
-import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
-from torchvision import models
 
 from torchgeo.trainers import RESISC45ClassificationTask, RESISC45DataModule
 
@@ -21,7 +18,7 @@ from .test_utils import mocked_log
 @pytest.mark.skipif(sys.platform == "win32", reason="requires unrar executable")
 class TestRESISC45ClassificationTask:
     @pytest.fixture
-    def default_config(self) -> Dict[str, Any]:
+    def config(self) -> Dict[str, Any]:
         task_conf = OmegaConf.load(
             os.path.join("conf", "task_defaults", "resisc45.yaml")
         )
@@ -46,95 +43,61 @@ class TestRESISC45ClassificationTask:
         dm.setup()
         return dm
 
-    @pytest.mark.parametrize(
-        "classification_model",
-        [
-            ("resnet18", models.resnet.ResNet),
-            ("resnet34", models.resnet.ResNet),
-        ],
-    )
-    def test_classification_model(
-        self, default_config: Dict[str, Any], classification_model: Tuple[str, Any]
-    ) -> None:
-        config_string, config_class = classification_model
-        default_config["classification_model"] = config_string
-        task = RESISC45ClassificationTask(**default_config)
-        assert isinstance(task.model, config_class)
+    @pytest.fixture(params=["resnet18", "resnet34"])
+    def task(
+        self,
+        config: Dict[str, Any],
+        request: SubRequest,
+        monkeypatch: Generator[MonkeyPatch, None, None],
+    ) -> RESISC45ClassificationTask:
+        config["classification_model"] = request.param
+        task = RESISC45ClassificationTask(**config)
+        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
+        return task
 
-    @pytest.mark.parametrize(
-        "loss",
-        [
-            ("ce", nn.CrossEntropyLoss),  # type: ignore[attr-defined]
-        ],
-    )
-    def test_loss(self, default_config: Dict[str, Any], loss: Tuple[str, Any]) -> None:
-        config_string, config_class = loss
-        default_config["loss"] = config_string
-        task = RESISC45ClassificationTask(**default_config)
-        assert isinstance(task.loss, config_class)
+    def test_configure_optimizers(self, task: RESISC45ClassificationTask) -> None:
+        out = task.configure_optimizers()
+        assert "optimizer" in out
+        assert "lr_scheduler" in out
 
     def test_training(
-        self,
-        default_config: Dict[str, Any],
-        datamodule: RESISC45DataModule,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        self, datamodule: RESISC45DataModule, task: RESISC45ClassificationTask
     ) -> None:
-        task = RESISC45ClassificationTask(**default_config)
         batch = next(iter(datamodule.train_dataloader()))
-        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
-        out = task.training_step(batch, 0)
-        assert isinstance(out, torch.Tensor)
+        task.training_step(batch, 0)
         task.training_epoch_end(0)
 
     def test_validation(
-        self,
-        default_config: Dict[str, Any],
-        datamodule: RESISC45DataModule,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        self, datamodule: RESISC45DataModule, task: RESISC45ClassificationTask
     ) -> None:
-        task = RESISC45ClassificationTask(**default_config)
         batch = next(iter(datamodule.val_dataloader()))
-        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
-
         task.validation_step(batch, 0)
         task.validation_epoch_end(0)
 
     def test_test(
-        self,
-        default_config: Dict[str, Any],
-        datamodule: RESISC45DataModule,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        self, datamodule: RESISC45DataModule, task: RESISC45ClassificationTask
     ) -> None:
-        task = RESISC45ClassificationTask(**default_config)
         batch = next(iter(datamodule.test_dataloader()))
-        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
-
         task.test_step(batch, 0)
         task.test_epoch_end(0)
 
-    def test_invalid_model(self, default_config: Dict[str, Any]) -> None:
-        default_config["classification_model"] = "invalid_model"
+    def test_invalid_model(self, config: Dict[str, Any]) -> None:
+        config["classification_model"] = "invalid_model"
         error_message = "Model type 'invalid_model' is not valid."
         with pytest.raises(ValueError, match=error_message):
-            RESISC45ClassificationTask(**default_config)
+            RESISC45ClassificationTask(**config)
 
-    def test_invalid_loss(self, default_config: Dict[str, Any]) -> None:
-        default_config["loss"] = "invalid_loss"
+    def test_invalid_loss(self, config: Dict[str, Any]) -> None:
+        config["loss"] = "invalid_loss"
         error_message = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=error_message):
-            RESISC45ClassificationTask(**default_config)
+            RESISC45ClassificationTask(**config)
 
-    def test_invalid_weights(self, default_config: Dict[str, Any]) -> None:
-        default_config["weights"] = "invalid_weights"
+    def test_invalid_weights(self, config: Dict[str, Any]) -> None:
+        config["weights"] = "invalid_weights"
         error_message = "Weight type 'invalid_weights' is not valid."
         with pytest.raises(ValueError, match=error_message):
-            RESISC45ClassificationTask(**default_config)
-
-    def test_configure_optimizers(self, default_config: Dict[str, Any]) -> None:
-        task = RESISC45ClassificationTask(**default_config)
-        out = task.configure_optimizers()
-        assert "optimizer" in out
-        assert "lr_scheduler" in out
+            RESISC45ClassificationTask(**config)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="requires unrar executable")

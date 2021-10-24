@@ -2,12 +2,9 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Generator, Tuple, cast
+from typing import Any, Dict, Generator, cast
 
 import pytest
-import segmentation_models_pytorch as smp
-import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
@@ -19,7 +16,7 @@ from .test_utils import mocked_log
 
 class TestSEN12MSSegmentationTask:
     @pytest.fixture
-    def default_config(self) -> Dict[str, Any]:
+    def config(self) -> Dict[str, Any]:
         task_conf = OmegaConf.load(
             os.path.join("conf", "task_defaults", "sen12ms.yaml")
         )
@@ -39,84 +36,55 @@ class TestSEN12MSSegmentationTask:
         dm.setup()
         return dm
 
-    @pytest.mark.parametrize("segmentation_model", [("unet", smp.Unet)])
-    def test_segmentation_model(
-        self, default_config: Dict[str, Any], segmentation_model: Tuple[str, Any]
-    ) -> None:
-        config_string, config_class = segmentation_model
-        default_config["segmentation_model"] = config_string
-        task = SEN12MSSegmentationTask(**default_config)
-        assert isinstance(task.model, config_class)
+    @pytest.fixture(params=["ce", "jaccard"])
+    def task(
+        self,
+        config: Dict[str, Any],
+        request: SubRequest,
+        monkeypatch: Generator[MonkeyPatch, None, None],
+    ) -> SEN12MSSegmentationTask:
+        config["loss"] = request.param
+        task = SEN12MSSegmentationTask(**config)
+        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
+        return task
 
-    @pytest.mark.parametrize(
-        "loss",
-        [
-            ("ce", nn.CrossEntropyLoss),  # type: ignore[attr-defined]
-            ("jaccard", smp.losses.JaccardLoss),
-        ],
-    )
-    def test_loss(self, default_config: Dict[str, Any], loss: Tuple[str, Any]) -> None:
-        config_string, config_class = loss
-        default_config["loss"] = config_string
-        task = SEN12MSSegmentationTask(**default_config)
-        assert isinstance(task.loss, config_class)
-
-    def test_configure_optimizers(self, default_config: Dict[str, Any]) -> None:
-        task = SEN12MSSegmentationTask(**default_config)
+    def test_configure_optimizers(self, task: SEN12MSSegmentationTask) -> None:
         out = task.configure_optimizers()
         assert "optimizer" in out
         assert "lr_scheduler" in out
 
     def test_training(
-        self,
-        default_config: Dict[str, Any],
-        datamodule: SEN12MSDataModule,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        self, datamodule: SEN12MSDataModule, task: SEN12MSSegmentationTask
     ) -> None:
-        task = SEN12MSSegmentationTask(**default_config)
         batch = next(iter(datamodule.train_dataloader()))
-        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
-        out = task.training_step(batch, 0)
-        assert isinstance(out, torch.Tensor)
+        task.training_step(batch, 0)
         task.training_epoch_end(0)
 
     def test_validation(
-        self,
-        default_config: Dict[str, Any],
-        datamodule: SEN12MSDataModule,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        self, datamodule: SEN12MSDataModule, task: SEN12MSSegmentationTask
     ) -> None:
-        task = SEN12MSSegmentationTask(**default_config)
         batch = next(iter(datamodule.val_dataloader()))
-        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
-
         task.validation_step(batch, 0)
         task.validation_epoch_end(0)
 
     def test_test(
-        self,
-        default_config: Dict[str, Any],
-        datamodule: SEN12MSDataModule,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        self, datamodule: SEN12MSDataModule, task: SEN12MSSegmentationTask
     ) -> None:
-        task = SEN12MSSegmentationTask(**default_config)
         batch = next(iter(datamodule.test_dataloader()))
-        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
-
         task.test_step(batch, 0)
         task.test_epoch_end(0)
 
-    def test_invalid_model(self, default_config: Dict[str, Any]) -> None:
-        default_config["segmentation_model"] = "invalid_model"
+    def test_invalid_model(self, config: Dict[str, Any]) -> None:
+        config["segmentation_model"] = "invalid_model"
         error_message = "Model type 'invalid_model' is not valid."
         with pytest.raises(ValueError, match=error_message):
-            SEN12MSSegmentationTask(**default_config)
+            SEN12MSSegmentationTask(**config)
 
-    def test_invalid_loss(self, default_config: Dict[str, Any]) -> None:
-        default_config["loss"] = "invalid_loss"
+    def test_invalid_loss(self, config: Dict[str, Any]) -> None:
+        config["loss"] = "invalid_loss"
         error_message = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=error_message):
-            SEN12MSSegmentationTask(**default_config)
+            SEN12MSSegmentationTask(**config)
 
 
 class TestSEN12MSDataModule:

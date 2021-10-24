@@ -6,13 +6,13 @@ import os
 from typing import Any, Dict, Generator, cast
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 from _pytest.fixtures import SubRequest
+from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 
 from torchgeo.trainers import LandcoverAIDataModule, LandcoverAISegmentationTask
 
-from .test_utils import mocked_log, FakeTrainer
+from .test_utils import FakeTrainer, mocked_log
 
 
 class TestLandcoverAISegmentationTask:
@@ -59,7 +59,6 @@ class TestLandcoverAISegmentationTask:
 
     def test_training(
         self,
-        config: Dict[str, Any],
         datamodule: LandcoverAIDataModule,
         task: LandcoverAISegmentationTask,
     ) -> None:
@@ -69,7 +68,6 @@ class TestLandcoverAISegmentationTask:
 
     def test_validation(
         self,
-        config: Dict[str, Any],
         datamodule: LandcoverAIDataModule,
         task: LandcoverAISegmentationTask,
     ) -> None:
@@ -79,7 +77,6 @@ class TestLandcoverAISegmentationTask:
 
     def test_test(
         self,
-        config: Dict[str, Any],
         datamodule: LandcoverAIDataModule,
         task: LandcoverAISegmentationTask,
     ) -> None:
