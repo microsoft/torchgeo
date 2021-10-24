@@ -96,7 +96,7 @@ class TestChesapeakeCVPR:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.chesapeake, "download_url", download_url
         )
-        md5 = "77dc1bd0aeb4ff50e29dc692b1d3aa9b"
+        md5 = "882d18b1f15ea4498bf54e674aecd5d4"
         monkeypatch.setattr(ChesapeakeCVPR, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join(
             "tests", "data", "chesapeake", "cvpr", "cvpr_chesapeake_landcover.zip"

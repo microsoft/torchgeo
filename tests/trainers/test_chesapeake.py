@@ -6,6 +6,8 @@ import os
 from typing import Any, Dict, Generator, cast
 
 import pytest
+import pytorch_lightning as pl
+import torch
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
@@ -45,6 +47,7 @@ class TestChesapeakeCVPRSegmentationTask:
         params=itertools.product(
             ["unet", "deeplabv3+", "fcn"],
             ["ce", "jaccard", "focal"],
+            [5, 7],
         )
     )
     def task(
@@ -53,10 +56,13 @@ class TestChesapeakeCVPRSegmentationTask:
         request: SubRequest,
         monkeypatch: Generator[MonkeyPatch, None, None],
     ) -> ChesapeakeCVPRSegmentationTask:
-        model, loss = request.param
-        config["segmentation_model"] = model
+        segmentation_model, loss, class_set = request.param
+        config["segmentation_model"] = segmentation_model
         config["loss"] = loss
+        config["class_set"] = class_set
         task = ChesapeakeCVPRSegmentationTask(**config)
+        trainer = pl.Trainer()
+        task.trainer = trainer
         monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
         return task
 
@@ -112,8 +118,8 @@ class TestChesapeakeCVPRSegmentationTask:
 
 
 class TestChesapeakeCVPRDataModule:
-    @pytest.fixture
-    def datamodule(self) -> ChesapeakeCVPRDataModule:
+    @pytest.fixture(params=[5, 7])
+    def datamodule(self, request: SubRequest) -> ChesapeakeCVPRDataModule:
         dm = ChesapeakeCVPRDataModule(
             os.path.join("tests", "data", "chesapeake", "cvpr"),
             ["de-test"],
@@ -122,6 +128,7 @@ class TestChesapeakeCVPRDataModule:
             patches_per_tile=2,
             batch_size=2,
             num_workers=0,
+            class_set=request.param,
         )
         dm.prepare_data()
         dm.setup()
@@ -135,3 +142,13 @@ class TestChesapeakeCVPRDataModule:
 
     def test_test_dataloader(self, datamodule: ChesapeakeCVPRDataModule) -> None:
         next(iter(datamodule.test_dataloader()))
+
+    def test_nodata_check(self, datamodule: ChesapeakeCVPRDataModule) -> None:
+        nodata_check = datamodule.nodata_check()
+        sample = {
+            "image": torch.ones(1, 256, 256),
+            "mask": torch.ones(256, 256),
+        }
+        out = nodata_check(sample)
+        assert torch.equal(out["image"], torch.zeros(1, 512, 512))
+        assert torch.equal(out["mask"], torch.zeros(512, 512))
