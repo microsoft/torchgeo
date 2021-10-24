@@ -1,25 +1,23 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import itertools
 import os
-from typing import Any, Dict, Generator, Tuple, cast
+from typing import Any, Dict, Generator, cast
 
 import pytest
-import segmentation_models_pytorch as smp
-import torch
-import torch.nn as nn
 from _pytest.monkeypatch import MonkeyPatch
+from _pytest.fixtures import SubRequest
 from omegaconf import OmegaConf
 
-from torchgeo.models.fcn import FCN
 from torchgeo.trainers import LandcoverAIDataModule, LandcoverAISegmentationTask
 
-from .test_utils import mocked_log
+from .test_utils import mocked_log, FakeTrainer
 
 
 class TestLandcoverAISegmentationTask:
     @pytest.fixture
-    def default_config(self) -> Dict[str, Any]:
+    def config(self) -> Dict[str, Any]:
         task_conf = OmegaConf.load(
             os.path.join("conf", "task_defaults", "landcoverai.yaml")
         )
@@ -37,86 +35,75 @@ class TestLandcoverAISegmentationTask:
         dm.setup()
         return dm
 
-    @pytest.mark.parametrize(
-        "segmentation_model",
-        [("unet", smp.Unet), ("deeplabv3+", smp.DeepLabV3Plus), ("fcn", FCN)],
+    @pytest.fixture(
+        params=itertools.product(
+            ["unet", "deeplabv3+", "fcn"],
+            ["ce", "jaccard", "focal"],
+        )
     )
-    def test_segmentation_model(
-        self, default_config: Dict[str, Any], segmentation_model: Tuple[str, Any]
-    ) -> None:
-        config_string, config_class = segmentation_model
-        default_config["segmentation_model"] = config_string
-        task = LandcoverAISegmentationTask(**default_config)
-        assert isinstance(task.model, config_class)
-
-    @pytest.mark.parametrize(
-        "loss",
-        [
-            ("ce", nn.CrossEntropyLoss),  # type: ignore[attr-defined]
-            ("jaccard", smp.losses.JaccardLoss),
-            ("focal", smp.losses.FocalLoss),
-        ],
-    )
-    def test_loss(self, default_config: Dict[str, Any], loss: Tuple[str, Any]) -> None:
-        config_string, config_class = loss
-        default_config["loss"] = config_string
-        task = LandcoverAISegmentationTask(**default_config)
-        assert isinstance(task.loss, config_class)
+    def task(
+        self,
+        config: Dict[str, Any],
+        request: SubRequest,
+        monkeypatch: Generator[MonkeyPatch, None, None],
+    ) -> LandcoverAISegmentationTask:
+        segmentation_model, loss = request.param
+        config["segmentation_model"] = segmentation_model
+        config["loss"] = loss
+        config["verbose"] = True
+        task = LandcoverAISegmentationTask(**config)
+        trainer = FakeTrainer()
+        task.trainer = trainer  # type: ignore[assignment]
+        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
+        return task
 
     def test_training(
         self,
-        default_config: Dict[str, Any],
+        config: Dict[str, Any],
         datamodule: LandcoverAIDataModule,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        task: LandcoverAISegmentationTask,
     ) -> None:
-        task = LandcoverAISegmentationTask(**default_config)
         batch = next(iter(datamodule.train_dataloader()))
-        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
-        out = task.training_step(batch, 0)
-        assert isinstance(out, torch.Tensor)
+        task.training_step(batch, 0)
         task.training_epoch_end(0)
 
     def test_validation(
         self,
-        default_config: Dict[str, Any],
+        config: Dict[str, Any],
         datamodule: LandcoverAIDataModule,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        task: LandcoverAISegmentationTask,
     ) -> None:
-        task = LandcoverAISegmentationTask(**default_config)
         batch = next(iter(datamodule.val_dataloader()))
-        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
         task.validation_step(batch, 0)
         task.validation_epoch_end(0)
 
     def test_test(
         self,
-        default_config: Dict[str, Any],
+        config: Dict[str, Any],
         datamodule: LandcoverAIDataModule,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        task: LandcoverAISegmentationTask,
     ) -> None:
-        task = LandcoverAISegmentationTask(**default_config)
         batch = next(iter(datamodule.test_dataloader()))
-        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
         task.test_step(batch, 0)
         task.test_epoch_end(0)
 
-    def test_configure_optimizers(self, default_config: Dict[str, Any]) -> None:
-        task = LandcoverAISegmentationTask(**default_config)
+    def test_configure_optimizers(self, config: Dict[str, Any]) -> None:
+        task = LandcoverAISegmentationTask(**config)
         out = task.configure_optimizers()
         assert "optimizer" in out
         assert "lr_scheduler" in out
 
-    def test_invalid_model(self, default_config: Dict[str, Any]) -> None:
-        default_config["segmentation_model"] = "invalid_model"
+    def test_invalid_model(self, config: Dict[str, Any]) -> None:
+        config["segmentation_model"] = "invalid_model"
         error_message = "Model type 'invalid_model' is not valid."
         with pytest.raises(ValueError, match=error_message):
-            LandcoverAISegmentationTask(**default_config)
+            LandcoverAISegmentationTask(**config)
 
-    def test_invalid_loss(self, default_config: Dict[str, Any]) -> None:
-        default_config["loss"] = "invalid_loss"
+    def test_invalid_loss(self, config: Dict[str, Any]) -> None:
+        config["loss"] = "invalid_loss"
         error_message = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=error_message):
-            LandcoverAISegmentationTask(**default_config)
+            LandcoverAISegmentationTask(**config)
 
 
 class TestLandcoverAIDataModule:

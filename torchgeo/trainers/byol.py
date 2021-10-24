@@ -215,7 +215,7 @@ class EncoderWrapper(Module):
 
     def _register_hook(self) -> None:
         """Register a hook for layer that we will extract features from."""
-        layer = list(self.model.children())[self.layer]
+        layer = list(self.model.children())[self.layer]  # type: ignore[index]
         layer.register_forward_hook(self._hook)
 
     def forward(self, x: Tensor) -> Tensor:

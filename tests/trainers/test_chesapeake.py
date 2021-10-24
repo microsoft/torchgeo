@@ -13,23 +13,7 @@ from omegaconf import OmegaConf
 
 from torchgeo.trainers import ChesapeakeCVPRDataModule, ChesapeakeCVPRSegmentationTask
 
-from .test_utils import mocked_log
-
-
-class FakeExperiment(object):
-    def add_figure(self, *args: Any, **kwargs: Any) -> None:
-        pass
-
-
-class FakeLogger(object):
-    def __init__(self) -> None:
-        self.experiment = FakeExperiment()
-
-
-class FakeTrainer(object):
-    def __init__(self) -> None:
-        self.logger = FakeLogger()
-        self.global_step = 1
+from .test_utils import mocked_log, FakeTrainer
 
 
 class TestChesapeakeCVPRSegmentationTask:

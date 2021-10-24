@@ -21,6 +21,22 @@ from torchgeo.trainers.utils import extract_encoder, load_state_dict
 Module.__module__ = "nn.Module"
 
 
+class FakeExperiment(object):
+    def add_figure(self, *args: Any, **kwargs: Any) -> None:
+        pass
+
+
+class FakeLogger(object):
+    def __init__(self) -> None:
+        self.experiment = FakeExperiment()
+
+
+class FakeTrainer(object):
+    def __init__(self) -> None:
+        self.logger = FakeLogger()
+        self.global_step = 1
+
+
 def mocked_log(*args: Any, **kwargs: Any) -> None:
     pass
 
