@@ -3,7 +3,6 @@
 
 """Trainer task for BYOL."""
 import random
-from copy import deepcopy
 from typing import Any, Callable, Dict, Optional, Tuple, Union, cast
 
 import torch
@@ -216,11 +215,7 @@ class EncoderWrapper(Module):
 
     def _register_hook(self) -> None:
         """Register a hook for layer that we will extract features from."""
-        if isinstance(self.layer, str):
-            layer = dict([*self.model.named_modules()])[self.layer]
-        else:
-            layer = list(self.model.children())[self.layer]
-
+        layer = list(self.model.children())[self.layer]
         layer.register_forward_hook(self._hook)
 
     def forward(self, x: Tensor) -> Tensor:
@@ -287,7 +282,9 @@ class BYOL(Module):
             model, projection_size, hidden_size, layer=hidden_layer
         )
         self.predictor = MLP(projection_size, projection_size, hidden_size)
-        self._target: Optional[Module] = None
+        self.target = EncoderWrapper(
+            model, projection_size, hidden_size, layer=hidden_layer
+        )
 
         # Perform a single forward pass to initialize the wrapper correctly
         self.encoder(
@@ -306,13 +303,6 @@ class BYOL(Module):
             output from the model
         """
         return cast(Tensor, self.predictor(self.encoder(x)))
-
-    @property
-    def target(self) -> Module:
-        """The "target" model."""
-        if self._target is None:
-            self._target = deepcopy(self.encoder)
-        return self._target
 
     def update_target(self) -> None:
         """Method to update the "target" model weights."""
