@@ -52,8 +52,8 @@ def extract_encoder(path: str) -> Tuple[str, Dict[str, Tensor]]:
         )
     else:
         raise ValueError(
-            """Unknown checkpoint task. Only encoder or classification_model"""
-            """extraction is supported"""
+            "Unknown checkpoint task. Only encoder or classification_model"
+            " extraction is supported"
         )
 
     return name, state_dict
@@ -80,15 +80,15 @@ def load_state_dict(model: Module, state_dict: Dict[str, Tensor]) -> Module:
 
     if in_channels != expected_in_channels:
         warnings.warn(
-            f"""input channels {in_channels} != input channels in pretrained"""
-            """model {expected_in_channels}. Overriding with new input channels"""
+            f"input channels {in_channels} != input channels in pretrained"
+            f" model {expected_in_channels}. Overriding with new input channels"
         )
         del state_dict["conv1.weight"]
 
     if num_classes != expected_num_classes:
         warnings.warn(
-            f"""num classes {num_classes} != num classes in pretrained model"""
-            """{expected_num_classes}. Overriding with new num classes"""
+            f"num classes {num_classes} != num classes in pretrained model"
+            f" {expected_num_classes}. Overriding with new num classes"
         )
         del state_dict["fc.weight"], state_dict["fc.bias"]
 

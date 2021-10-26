@@ -10,5 +10,6 @@ experiment:
     batch_size: 128
     num_workers: 6
     weights: ${experiment.module.weights}
+    unsupervised_mode: false
     val_split_pct: 0.2
     test_split_pct: 0.2

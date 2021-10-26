@@ -97,10 +97,7 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
         else:
             raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
 
-    def __init__(
-        self,
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
@@ -284,15 +281,13 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         optimizer = torch.optim.Adam(
-            self.model.parameters(),
-            lr=self.hparams["learning_rate"],
+            self.model.parameters(), lr=self.hparams["learning_rate"]
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer,
-                    patience=self.hparams["learning_rate_schedule_patience"],
+                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
                 ),
                 "monitor": "val_loss",
             },
@@ -347,7 +342,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         self.patches_per_tile = patches_per_tile
         self.patch_size = patch_size
         # This is a rough estimate of how large of a patch we will need to sample in
-        # EPSG:3857 in order to garuntee a large enough patch in the local CRS.
+        # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
         self.original_patch_size = int(patch_size * 2.0)
         self.batch_size = batch_size
         self.num_workers = num_workers
@@ -502,21 +497,19 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""
         sampler = RandomBatchGeoSampler(
-            self.train_dataset.index,
+            self.train_dataset,
             size=self.original_patch_size,
             batch_size=self.batch_size,
-            length=self.patches_per_tile * self.train_dataset.index.get_size(),
+            length=self.patches_per_tile * len(self.train_dataset),
         )
         return DataLoader(
-            self.train_dataset,
-            batch_sampler=sampler,
-            num_workers=self.num_workers,
+            self.train_dataset, batch_sampler=sampler, num_workers=self.num_workers
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for validation."""
         sampler = GridGeoSampler(
-            self.val_dataset.index,
+            self.val_dataset,
             size=self.original_patch_size,
             stride=self.original_patch_size,
         )
@@ -530,7 +523,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing."""
         sampler = GridGeoSampler(
-            self.test_dataset.index,
+            self.test_dataset,
             size=self.original_patch_size,
             stride=self.original_patch_size,
         )
