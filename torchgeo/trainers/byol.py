@@ -3,7 +3,6 @@
 
 """Trainer task for BYOL."""
 import random
-from copy import deepcopy
 from typing import Any, Callable, Dict, Optional, Tuple, Union, cast
 
 import torch
@@ -16,11 +15,9 @@ from torch import Tensor, optim
 from torch.autograd import Variable
 from torch.nn.modules import BatchNorm1d, Conv2d, Linear, Module, ReLU, Sequential
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torch.utils.data import DataLoader
 from torchvision.models import resnet18
 from torchvision.models.resnet import resnet50
 
-DataLoader.__module__ = "torch.utils.data"
 Module.__module__ = "torch.nn"
 Sequential.__module__ = "torch.nn"
 Linear.__module__ = "torch.nn"
@@ -94,7 +91,9 @@ class SimCLRAugmentation(Module):
         self.size = image_size
 
         self.augmentation = Sequential(
-            KorniaTransform.Resize(size=image_size),  # type: ignore[attr-defined]
+            KorniaTransform.Resize(  # type: ignore[attr-defined]
+                size=image_size, align_corners=False
+            ),
             # Not suitable for multispectral adapt
             # RandomApply(K.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.8),
             # K.RandomGrayscale(p=0.2),
@@ -218,11 +217,7 @@ class EncoderWrapper(Module):
 
     def _register_hook(self) -> None:
         """Register a hook for layer that we will extract features from."""
-        if isinstance(self.layer, str):
-            layer = dict([*self.model.named_modules()])[self.layer]
-        else:
-            layer = list(self.model.children())[self.layer]
-
+        layer = list(self.model.children())[self.layer]  # type: ignore[index]
         layer.register_forward_hook(self._hook)
 
     def forward(self, x: Tensor) -> Tensor:
@@ -289,7 +284,9 @@ class BYOL(Module):
             model, projection_size, hidden_size, layer=hidden_layer
         )
         self.predictor = MLP(projection_size, projection_size, hidden_size)
-        self._target: Optional[Module] = None
+        self.target = EncoderWrapper(
+            model, projection_size, hidden_size, layer=hidden_layer
+        )
 
         # Perform a single forward pass to initialize the wrapper correctly
         self.encoder(
@@ -308,13 +305,6 @@ class BYOL(Module):
             output from the model
         """
         return cast(Tensor, self.predictor(self.encoder(x)))
-
-    @property
-    def target(self) -> Module:
-        """The "target" model."""
-        if self._target is None:
-            self._target = deepcopy(self.encoder)
-        return self._target
 
     def update_target(self) -> None:
         """Method to update the "target" model weights."""
@@ -367,10 +357,7 @@ class BYOLTask(LightningModule):
         encoder.conv1 = new_layer
         self.model = BYOL(encoder, image_size=(256, 256))
 
-    def __init__(
-        self,
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize a LightningModule for pre-training a model with BYOL.
 
         Keyword Args:
@@ -414,8 +401,7 @@ class BYOLTask(LightningModule):
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer,
-                    patience=self.hparams["learning_rate_schedule_patience"],
+                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
                 ),
                 "monitor": "val_loss",
             },

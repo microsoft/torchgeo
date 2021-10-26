@@ -31,7 +31,7 @@ class TestRESISC45:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.resisc45, "download_url", download_url
         )
-        md5 = "9c221122164d17b8118d2b6527ee5e9c"
+        md5 = "5d898bd91e3ebc64314893ff191b2f9d"
         monkeypatch.setattr(RESISC45, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "resisc45", "NWPU-RESISC45.rar")
         monkeypatch.setattr(RESISC45, "url", url)  # type: ignore[attr-defined]
@@ -47,7 +47,7 @@ class TestRESISC45:
         assert x["image"].shape[0] == 3
 
     def test_len(self, dataset: RESISC45) -> None:
-        assert len(dataset) == 2
+        assert len(dataset) == 9
 
     def test_already_downloaded(self, dataset: RESISC45, tmp_path: Path) -> None:
         RESISC45(root=str(tmp_path), download=True)

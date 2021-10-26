@@ -5,7 +5,6 @@
 
 from typing import Any, Dict, Optional, cast
 
-import kornia.augmentation as K
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
@@ -65,10 +64,7 @@ class RESISC45ClassificationTask(pl.LightningModule):
         else:
             raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
 
-    def __init__(
-        self,
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
@@ -100,7 +96,7 @@ class RESISC45ClassificationTask(pl.LightningModule):
     def training_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> Tensor:
-        """Training step - reports average accuracy and average IoU.
+        """Training step.
 
         Args:
             batch: Current batch
@@ -135,7 +131,7 @@ class RESISC45ClassificationTask(pl.LightningModule):
     def validation_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
-        """Validation step - reports average accuracy and average IoU.
+        """Validation step.
 
         Args:
             batch: Current batch
@@ -163,7 +159,7 @@ class RESISC45ClassificationTask(pl.LightningModule):
     def test_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
-        """Test step identical to the validation step.
+        """Test step.
 
         Args:
             batch: Current batch
@@ -196,16 +192,14 @@ class RESISC45ClassificationTask(pl.LightningModule):
             a "lr dict" according to the pytorch lightning documentation --
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
-        optimizer = torch.optim.Adam(
-            self.model.parameters(),
-            lr=self.hparams["learning_rate"],
+        optimizer = torch.optim.AdamW(
+            self.model.parameters(), lr=self.hparams["learning_rate"]
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer,
-                    patience=self.hparams["learning_rate_schedule_patience"],
+                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
                 ),
                 "monitor": "val_loss",
             },
@@ -233,6 +227,8 @@ class RESISC45DataModule(pl.LightningDataModule):
         num_workers: int = 4,
         weights: str = "random",
         unsupervised_mode: bool = False,
+        val_split_pct: float = 0.2,
+        test_split_pct: float = 0.2,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for RESISC45 based DataLoaders.
@@ -245,6 +241,8 @@ class RESISC45DataModule(pl.LightningDataModule):
                 "random_rgb"
             unsupervised_mode: Makes the train dataloader return imagery from the train,
                 val, and test sets
+            val_split_pct: What percentage of the dataset to use as a validation set
+            test_split_pct: What percentage of the dataset to use as a test set
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
@@ -253,27 +251,16 @@ class RESISC45DataModule(pl.LightningDataModule):
         self.weights = weights
         self.unsupervised_mode = unsupervised_mode
 
-        self.val_split_pct = kwargs["val_split_pct"]
-        self.test_split_pct = kwargs["test_split_pct"]
+        self.val_split_pct = val_split_pct
+        self.test_split_pct = test_split_pct
 
         self.norm = Normalize(self.band_means, self.band_stds)
-        self.transforms = K.AugmentationSequential(
-            K.RandomAffine(degrees=30),
-            K.RandomHorizontalFlip(),
-            K.RandomVerticalFlip(),
-            data_keys=["input"],
-        )
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         sample["image"] = sample["image"].float()
         sample["image"] /= 255.0
         sample["image"] = self.norm(sample["image"])
-        return sample
-
-    def kornia_pipeline(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset with Kornia."""
-        sample["image"] = self.transforms(sample["image"]).squeeze()
         return sample
 
     def prepare_data(self) -> None:
@@ -292,19 +279,13 @@ class RESISC45DataModule(pl.LightningDataModule):
 
         if not self.unsupervised_mode:
 
-            dataset = RESISC45(
-                self.root_dir,
-                transforms=transforms,
-            )
+            dataset = RESISC45(self.root_dir, transforms=transforms)
             self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
                 dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
             )
         else:
 
-            self.train_dataset = RESISC45(
-                self.root_dir,
-                transforms=transforms,
-            )
+            self.train_dataset = RESISC45(self.root_dir, transforms=transforms)
             self.val_dataset, self.test_dataset = None, None  # type: ignore[assignment]
 
     def train_dataloader(self) -> DataLoader[Any]:
@@ -318,7 +299,7 @@ class RESISC45DataModule(pl.LightningDataModule):
 
     def val_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for validation."""
-        if self.val_dataset is None or len(self.val_dataset) == 0:
+        if self.unsupervised_mode or self.val_split_pct == 0:
             return self.train_dataloader()
         else:
             return DataLoader(
@@ -330,7 +311,7 @@ class RESISC45DataModule(pl.LightningDataModule):
 
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing."""
-        if self.test_dataset is None or len(self.test_dataset) == 0:
+        if self.unsupervised_mode or self.test_split_pct == 0:
             return self.train_dataloader()
         else:
             return DataLoader(
