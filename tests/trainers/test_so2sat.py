@@ -77,6 +77,10 @@ class TestSo2SatClassificationTask:
         task.test_step(batch, 0)
         task.test_epoch_end(0)
 
+    def test_weights(self, checkpoint: str, config: Dict[str, Any]) -> None:
+        config["weights"] = checkpoint
+        So2SatClassificationTask(**config)
+
     def test_invalid_model(self, config: Dict[str, Any]) -> None:
         config["classification_model"] = "invalid_model"
         error_message = "Model type 'invalid_model' is not valid."
