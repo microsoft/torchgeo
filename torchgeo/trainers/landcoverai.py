@@ -71,10 +71,7 @@ class LandcoverAISegmentationTask(pl.LightningModule):
         else:
             raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
 
-    def __init__(
-        self,
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
@@ -245,15 +242,13 @@ class LandcoverAISegmentationTask(pl.LightningModule):
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         optimizer = torch.optim.Adam(
-            self.model.parameters(),
-            lr=self.hparams["learning_rate"],
+            self.model.parameters(), lr=self.hparams["learning_rate"]
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer,
-                    patience=self.hparams["learning_rate_schedule_patience"],
+                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
                 ),
                 "monitor": "val_loss",
             },
@@ -267,11 +262,7 @@ class LandcoverAIDataModule(pl.LightningDataModule):
     """
 
     def __init__(
-        self,
-        root_dir: str,
-        batch_size: int = 64,
-        num_workers: int = 4,
-        **kwargs: Any,
+        self, root_dir: str, batch_size: int = 64, num_workers: int = 4, **kwargs: Any
     ) -> None:
         """Initialize a LightningDataModule for Landcover.AI based DataLoaders.
 
@@ -299,11 +290,7 @@ class LandcoverAIDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        _ = LandCoverAI(
-            self.root_dir,
-            download=True,
-            checksum=False,
-        )
+        _ = LandCoverAI(self.root_dir, download=True, checksum=False)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -314,21 +301,15 @@ class LandcoverAIDataModule(pl.LightningDataModule):
         val_test_transforms = self.preprocess
 
         self.train_dataset = LandCoverAI(
-            self.root_dir,
-            split="train",
-            transforms=train_transforms,
+            self.root_dir, split="train", transforms=train_transforms
         )
 
         self.val_dataset = LandCoverAI(
-            self.root_dir,
-            split="val",
-            transforms=val_test_transforms,
+            self.root_dir, split="val", transforms=val_test_transforms
         )
 
         self.test_dataset = LandCoverAI(
-            self.root_dir,
-            split="test",
-            transforms=val_test_transforms,
+            self.root_dir, split="test", transforms=val_test_transforms
         )
 
     def train_dataloader(self) -> DataLoader[Any]:

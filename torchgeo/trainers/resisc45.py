@@ -64,10 +64,7 @@ class RESISC45ClassificationTask(pl.LightningModule):
         else:
             raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
 
-    def __init__(
-        self,
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
@@ -196,15 +193,13 @@ class RESISC45ClassificationTask(pl.LightningModule):
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         optimizer = torch.optim.AdamW(
-            self.model.parameters(),
-            lr=self.hparams["learning_rate"],
+            self.model.parameters(), lr=self.hparams["learning_rate"]
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer,
-                    patience=self.hparams["learning_rate_schedule_patience"],
+                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
                 ),
                 "monitor": "val_loss",
             },
@@ -284,19 +279,13 @@ class RESISC45DataModule(pl.LightningDataModule):
 
         if not self.unsupervised_mode:
 
-            dataset = RESISC45(
-                self.root_dir,
-                transforms=transforms,
-            )
+            dataset = RESISC45(self.root_dir, transforms=transforms)
             self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
                 dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
             )
         else:
 
-            self.train_dataset = RESISC45(
-                self.root_dir,
-                transforms=transforms,
-            )
+            self.train_dataset = RESISC45(self.root_dir, transforms=transforms)
             self.val_dataset, self.test_dataset = None, None  # type: ignore[assignment]
 
     def train_dataloader(self) -> DataLoader[Any]:

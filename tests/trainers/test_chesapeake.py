@@ -38,7 +38,7 @@ class TestChesapeakeCVPRSegmentationTask:
     @pytest.fixture(
         params=itertools.product(
             ["unet", "deeplabv3+", "fcn"], ["ce", "jaccard", "focal"], [5, 7]
-        ),
+        )
     )
     def config(self, request: SubRequest) -> Dict[str, Any]:
         task_conf = OmegaConf.load(

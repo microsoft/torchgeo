@@ -37,7 +37,7 @@ class SEN12MSSegmentationTask(pl.LightningModule):
             self.model = smp.Unet(
                 encoder_name=self.hparams["encoder_name"],
                 encoder_weights=self.hparams["encoder_weights"],
-                in_channels=15,
+                in_channels=self.hparams["in_channels"],
                 classes=11,
             )
         else:
@@ -52,10 +52,7 @@ class SEN12MSSegmentationTask(pl.LightningModule):
         else:
             raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
 
-    def __init__(
-        self,
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
@@ -70,12 +67,7 @@ class SEN12MSSegmentationTask(pl.LightningModule):
 
         self.config_task()
 
-        self.train_metrics = MetricCollection(
-            [
-                Accuracy(),
-            ],
-            prefix="train_",
-        )
+        self.train_metrics = MetricCollection([Accuracy()], prefix="train_")
         self.val_metrics = self.train_metrics.clone(prefix="val_")
         self.test_metrics = self.train_metrics.clone(prefix="test_")
 
@@ -181,15 +173,13 @@ class SEN12MSSegmentationTask(pl.LightningModule):
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         optimizer = torch.optim.AdamW(
-            self.model.parameters(),
-            lr=self.hparams["learning_rate"],
+            self.model.parameters(), lr=self.hparams["learning_rate"]
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer,
-                    patience=self.hparams["learning_rate_schedule_patience"],
+                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
                 ),
                 "monitor": "val_loss",
             },
@@ -289,12 +279,7 @@ class SEN12MSDataModule(pl.LightningDataModule):
         We split samples between train and val geographically with proportions of 80/20.
         This mimics the geographic test set split.
         """
-        season_to_int = {
-            "winter": 0,
-            "spring": 1000,
-            "summer": 2000,
-            "fall": 3000,
-        }
+        season_to_int = {"winter": 0, "spring": 1000, "summer": 2000, "fall": 3000}
 
         self.all_train_dataset = SEN12MS(
             self.root_dir,

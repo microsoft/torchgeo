@@ -3,7 +3,7 @@
 
 import itertools
 import os
-from typing import Any, Dict, Generator, cast
+from typing import Any, Dict, Generator, Tuple, cast
 
 import pytest
 from _pytest.fixtures import SubRequest
@@ -15,13 +15,19 @@ from torchgeo.trainers import So2SatClassificationTask, So2SatDataModule
 from .test_utils import mocked_log
 
 
-@pytest.fixture(scope="module", params=itertools.product([True, False], ["rgb", "s2"]))
-def datamodule(request: SubRequest) -> So2SatDataModule:
-    unsupervised_mode, bands = request.param
+@pytest.fixture(scope="module", params=[("rgb", 3), ("s2", 10)])
+def bands(request: SubRequest) -> Tuple[str, int]:
+    return request.param
+
+
+@pytest.fixture(scope="module", params=[True, False])
+def datamodule(bands: Tuple[str, int], request: SubRequest) -> So2SatDataModule:
+    band_set = bands[0]
+    unsupervised_mode = request.param
     root = os.path.join("tests", "data", "so2sat")
     batch_size = 1
     num_workers = 0
-    dm = So2SatDataModule(root, batch_size, num_workers, bands, unsupervised_mode)
+    dm = So2SatDataModule(root, batch_size, num_workers, band_set, unsupervised_mode)
     dm.prepare_data()
     dm.setup()
     return dm
@@ -29,12 +35,13 @@ def datamodule(request: SubRequest) -> So2SatDataModule:
 
 class TestSo2SatClassificationTask:
     @pytest.fixture(
-        params=itertools.product(["ce", "jaccard", "focal"], ["imagenet", "random"]),
+        params=itertools.product(["ce", "jaccard", "focal"], ["imagenet", "random"])
     )
-    def config(self, request: SubRequest) -> Dict[str, Any]:
+    def config(self, request: SubRequest, bands: Tuple[str, int]) -> Dict[str, Any]:
         task_conf = OmegaConf.load(os.path.join("conf", "task_defaults", "so2sat.yaml"))
         task_args = OmegaConf.to_object(task_conf.experiment.module)
         task_args = cast(Dict[str, Any], task_args)
+        task_args["in_channels"] = bands[1]
         loss, weights = request.param
         task_args["loss"] = loss
         task_args["weights"] = weights
@@ -74,7 +81,7 @@ class TestSo2SatClassificationTask:
         task.test_step(batch, 0)
         task.test_epoch_end(0)
 
-    def test_weights(self, checkpoint: str, config: Dict[str, Any]) -> None:
+    def test_pretrained(self, checkpoint: str, config: Dict[str, Any]) -> None:
         config["weights"] = checkpoint
         So2SatClassificationTask(**config)
 
@@ -93,6 +100,13 @@ class TestSo2SatClassificationTask:
     def test_invalid_weights(self, config: Dict[str, Any]) -> None:
         config["weights"] = "invalid_weights"
         error_message = "Weight type 'invalid_weights' is not valid."
+        with pytest.raises(ValueError, match=error_message):
+            So2SatClassificationTask(**config)
+
+    def test_invalid_pretrained(self, checkpoint: str, config: Dict[str, Any]) -> None:
+        config["weights"] = checkpoint
+        config["classification_model"] = "resnet50"
+        error_message = "Trying to load resnet18 weights into a resnet50"
         with pytest.raises(ValueError, match=error_message):
             So2SatClassificationTask(**config)
 

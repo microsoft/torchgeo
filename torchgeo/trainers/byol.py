@@ -355,10 +355,7 @@ class BYOLTask(LightningModule):
         encoder.conv1 = new_layer
         self.model = BYOL(encoder, image_size=(256, 256))
 
-    def __init__(
-        self,
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize a LightningModule for pre-training a model with BYOL.
 
         Keyword Args:
@@ -402,8 +399,7 @@ class BYOLTask(LightningModule):
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer,
-                    patience=self.hparams["learning_rate_schedule_patience"],
+                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
                 ),
                 "monitor": "val_loss",
             },

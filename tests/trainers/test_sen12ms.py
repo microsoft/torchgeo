@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Generator, cast
+from typing import Any, Dict, Generator, Tuple, cast
 
 import pytest
 from _pytest.fixtures import SubRequest
@@ -14,11 +14,18 @@ from torchgeo.trainers import SEN12MSDataModule, SEN12MSSegmentationTask
 from .test_utils import mocked_log
 
 
-@pytest.fixture(scope="module", params=["all", "s1", "s2-all", "s2-reduced"])
-def datamodule(request: SubRequest) -> SEN12MSDataModule:
+@pytest.fixture(
+    scope="module", params=[("all", 15), ("s1", 2), ("s2-all", 13), ("s2-reduced", 6)]
+)
+def bands(request: SubRequest) -> Tuple[str, int]:
+    return request.param
+
+
+@pytest.fixture(scope="module")
+def datamodule(bands: Tuple[str, int]) -> SEN12MSDataModule:
     root = os.path.join("tests", "data", "sen12ms")
     seed = 0
-    band_set = request.param
+    band_set = bands[0]
     batch_size = 1
     num_workers = 0
     dm = SEN12MSDataModule(root, seed, band_set, batch_size, num_workers)
@@ -29,12 +36,13 @@ def datamodule(request: SubRequest) -> SEN12MSDataModule:
 
 class TestSEN12MSSegmentationTask:
     @pytest.fixture(params=["ce", "jaccard"])
-    def config(self, request: SubRequest) -> Dict[str, Any]:
+    def config(self, bands: Tuple[str, int], request: SubRequest) -> Dict[str, Any]:
         task_conf = OmegaConf.load(
             os.path.join("conf", "task_defaults", "sen12ms.yaml")
         )
         task_args = OmegaConf.to_object(task_conf.experiment.module)
         task_args = cast(Dict[str, Any], task_args)
+        task_args["in_channels"] = bands[1]
         task_args["loss"] = request.param
         return task_args
 

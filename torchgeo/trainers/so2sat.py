@@ -63,12 +63,7 @@ class So2SatClassificationTask(pl.LightningModule):
                 ).detach()
             # Create the new layer
             self.model.conv1 = Conv2d(
-                in_channels,
-                64,
-                kernel_size=7,
-                stride=1,
-                padding=2,
-                bias=False,
+                in_channels, 64, kernel_size=7, stride=1, padding=2, bias=False
             )
             nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
                 self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
@@ -116,10 +111,7 @@ class So2SatClassificationTask(pl.LightningModule):
         else:
             raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
 
-    def __init__(
-        self,
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
@@ -247,15 +239,13 @@ class So2SatClassificationTask(pl.LightningModule):
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         optimizer = torch.optim.AdamW(
-            self.model.parameters(),
-            lr=self.hparams["learning_rate"],
+            self.model.parameters(), lr=self.hparams["learning_rate"]
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer,
-                    patience=self.hparams["learning_rate_schedule_patience"],
+                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
                 ),
                 "monitor": "val_loss",
             },
@@ -391,41 +381,29 @@ class So2SatDataModule(pl.LightningDataModule):
         if not self.unsupervised_mode:
 
             self.train_dataset = So2Sat(
-                self.root_dir,
-                split="train",
-                transforms=train_transforms,
+                self.root_dir, split="train", transforms=train_transforms
             )
 
             self.val_dataset = So2Sat(
-                self.root_dir,
-                split="validation",
-                transforms=val_test_transforms,
+                self.root_dir, split="validation", transforms=val_test_transforms
             )
 
             self.test_dataset = So2Sat(
-                self.root_dir,
-                split="test",
-                transforms=val_test_transforms,
+                self.root_dir, split="test", transforms=val_test_transforms
             )
 
         else:
 
             temp_train = So2Sat(
-                self.root_dir,
-                split="train",
-                transforms=train_transforms,
+                self.root_dir, split="train", transforms=train_transforms
             )
 
             self.val_dataset = So2Sat(
-                self.root_dir,
-                split="validation",
-                transforms=train_transforms,
+                self.root_dir, split="validation", transforms=train_transforms
             )
 
             self.test_dataset = So2Sat(
-                self.root_dir,
-                split="test",
-                transforms=train_transforms,
+                self.root_dir, split="test", transforms=train_transforms
             )
 
             self.train_dataset = cast(

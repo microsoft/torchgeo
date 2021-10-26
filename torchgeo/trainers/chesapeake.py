@@ -97,10 +97,7 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
         else:
             raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
 
-    def __init__(
-        self,
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
@@ -284,15 +281,13 @@ class ChesapeakeCVPRSegmentationTask(LightningModule):
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         optimizer = torch.optim.Adam(
-            self.model.parameters(),
-            lr=self.hparams["learning_rate"],
+            self.model.parameters(), lr=self.hparams["learning_rate"]
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer,
-                    patience=self.hparams["learning_rate_schedule_patience"],
+                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
                 ),
                 "monitor": "val_loss",
             },
@@ -508,9 +503,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             length=self.patches_per_tile * len(self.train_dataset),
         )
         return DataLoader(
-            self.train_dataset,
-            batch_sampler=sampler,
-            num_workers=self.num_workers,
+            self.train_dataset, batch_sampler=sampler, num_workers=self.num_workers
         )
 
     def val_dataloader(self) -> DataLoader[Any]:

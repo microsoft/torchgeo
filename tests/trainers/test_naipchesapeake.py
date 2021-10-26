@@ -31,7 +31,7 @@ def datamodule() -> NAIPChesapeakeDataModule:
 
 class TestNAIPChesapeakeSegmentationTask:
     @pytest.fixture(
-        params=itertools.product(["unet", "deeplabv3+", "fcn"], ["ce", "jaccard"]),
+        params=itertools.product(["unet", "deeplabv3+", "fcn"], ["ce", "jaccard"])
     )
     def config(self, request: SubRequest) -> Dict[str, Any]:
         task_conf = OmegaConf.load(

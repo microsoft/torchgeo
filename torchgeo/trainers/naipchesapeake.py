@@ -71,10 +71,7 @@ class NAIPChesapeakeSegmentationTask(pl.LightningModule):
         else:
             raise ValueError(f"Loss type '{kwargs['loss']}' is not valid.")
 
-    def __init__(
-        self,
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
@@ -202,15 +199,13 @@ class NAIPChesapeakeSegmentationTask(pl.LightningModule):
     def configure_optimizers(self) -> Dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler."""
         optimizer = torch.optim.AdamW(
-            self.model.parameters(),
-            lr=self.hparams["learning_rate"],
+            self.model.parameters(), lr=self.hparams["learning_rate"]
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer,
-                    patience=self.hparams["learning_rate_schedule_patience"],
+                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
                 ),
                 "monitor": "val_loss",
                 "verbose": True,
@@ -267,11 +262,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        Chesapeake13(
-            self.chesapeake_root_dir,
-            download=True,
-            checksum=False,
-        )
+        Chesapeake13(self.chesapeake_root_dir, download=True, checksum=False)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -308,9 +299,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""
         return DataLoader(
-            self.dataset,
-            batch_sampler=self.train_sampler,
-            num_workers=self.num_workers,
+            self.dataset, batch_sampler=self.train_sampler, num_workers=self.num_workers
         )
 
     def val_dataloader(self) -> DataLoader[Any]:

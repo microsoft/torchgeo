@@ -30,7 +30,7 @@ class TestLandcoverAISegmentationTask:
     @pytest.fixture(
         params=itertools.product(
             ["unet", "deeplabv3+", "fcn"], ["ce", "jaccard", "focal"]
-        ),
+        )
     )
     def config(self, request: SubRequest) -> Dict[str, Any]:
         task_conf = OmegaConf.load(
