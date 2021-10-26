@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import itertools
 import os
 from typing import Any, Dict, Generator, cast
 
@@ -17,7 +16,12 @@ from .test_utils import FakeTrainer, mocked_log
 
 
 @pytest.fixture(scope="module", params=[5, 7])
-def datamodule(request: SubRequest) -> ChesapeakeCVPRDataModule:
+def class_set(request: SubRequest) -> int:
+    return cast(int, request.param)
+
+
+@pytest.fixture(scope="module")
+def datamodule(class_set: int) -> ChesapeakeCVPRDataModule:
     dm = ChesapeakeCVPRDataModule(
         os.path.join("tests", "data", "chesapeake", "cvpr"),
         ["de-test"],
@@ -27,7 +31,7 @@ def datamodule(request: SubRequest) -> ChesapeakeCVPRDataModule:
         patches_per_tile=2,
         batch_size=2,
         num_workers=0,
-        class_set=request.param,
+        class_set=class_set,
     )
     dm.prepare_data()
     dm.setup()
@@ -36,20 +40,18 @@ def datamodule(request: SubRequest) -> ChesapeakeCVPRDataModule:
 
 class TestChesapeakeCVPRSegmentationTask:
     @pytest.fixture(
-        params=itertools.product(
-            ["unet", "deeplabv3+", "fcn"], ["ce", "jaccard", "focal"], [5, 7]
-        )
+        params=zip(["unet", "deeplabv3+", "fcn"], ["ce", "jaccard", "focal"])
     )
-    def config(self, request: SubRequest) -> Dict[str, Any]:
+    def config(self, class_set: int, request: SubRequest) -> Dict[str, Any]:
         task_conf = OmegaConf.load(
             os.path.join("conf", "task_defaults", "chesapeake_cvpr.yaml")
         )
         task_args = OmegaConf.to_object(task_conf.experiment.module)
         task_args = cast(Dict[str, Any], task_args)
-        segmentation_model, loss, class_set = request.param
+        segmentation_model, loss = request.param
+        task_args["class_set"] = class_set
         task_args["segmentation_model"] = segmentation_model
         task_args["loss"] = loss
-        task_args["class_set"] = class_set
         return task_args
 
     @pytest.fixture

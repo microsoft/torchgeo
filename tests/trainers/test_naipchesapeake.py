@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import itertools
 import os
 from typing import Any, Dict, Generator, cast
 
@@ -30,9 +29,7 @@ def datamodule() -> NAIPChesapeakeDataModule:
 
 
 class TestNAIPChesapeakeSegmentationTask:
-    @pytest.fixture(
-        params=itertools.product(["unet", "deeplabv3+", "fcn"], ["ce", "jaccard"])
-    )
+    @pytest.fixture(params=zip(["unet", "deeplabv3+", "fcn"], ["ce", "ce", "jaccard"]))
     def config(self, request: SubRequest) -> Dict[str, Any]:
         task_conf = OmegaConf.load(
             os.path.join("conf", "task_defaults", "chesapeake_cvpr.yaml")

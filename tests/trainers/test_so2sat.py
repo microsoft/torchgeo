@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import itertools
 import os
 from typing import Any, Dict, Generator, Tuple, cast
 
@@ -35,7 +34,7 @@ def datamodule(bands: Tuple[str, int], request: SubRequest) -> So2SatDataModule:
 
 class TestSo2SatClassificationTask:
     @pytest.fixture(
-        params=itertools.product(["ce", "jaccard", "focal"], ["imagenet", "random"])
+        params=zip(["ce", "jaccard", "focal"], ["imagenet", "random", "random"])
     )
     def config(self, request: SubRequest, bands: Tuple[str, int]) -> Dict[str, Any]:
         task_conf = OmegaConf.load(os.path.join("conf", "task_defaults", "so2sat.yaml"))
