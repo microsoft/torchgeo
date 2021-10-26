@@ -36,11 +36,7 @@ if __name__ == "__main__":
     work: "Queue[str]" = Queue()
 
     for (model, lr, loss, weights, seed) in itertools.product(
-        model_options,
-        lr_options,
-        loss_options,
-        weight_options,
-        seeds,
+        model_options, lr_options, loss_options, weight_options, seeds
     ):
 
         experiment_name = f"{model}_{lr}_{loss}_{weights.replace('_','-')}_{seed}"
@@ -72,13 +68,7 @@ if __name__ == "__main__":
 
     processes = []
     for gpu_idx in GPUS:
-        p = Process(
-            target=do_work,
-            args=(
-                work,
-                gpu_idx,
-            ),
-        )
+        p = Process(target=do_work, args=(work, gpu_idx))
         processes.append(p)
         p.start()
     for p in processes:

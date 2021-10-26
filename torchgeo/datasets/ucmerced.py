@@ -110,10 +110,7 @@ class UCMerced(VisionClassificationDataset):
         self.download = download
         self.checksum = checksum
         self._verify()
-        super().__init__(
-            root=os.path.join(root, self.base_dir),
-            transforms=transforms,
-        )
+        super().__init__(root=os.path.join(root, self.base_dir), transforms=transforms)
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
@@ -122,8 +119,7 @@ class UCMerced(VisionClassificationDataset):
             True if dataset files are found and/or MD5s match, else False
         """
         integrity: bool = check_integrity(
-            os.path.join(self.root, self.filename),
-            self.md5 if self.checksum else None,
+            os.path.join(self.root, self.filename), self.md5 if self.checksum else None
         )
         return integrity
 

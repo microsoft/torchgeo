@@ -226,9 +226,7 @@ class CV4AKenyaCropType(VisionDataset):
             print(f"Loading labels/field_ids for {tile_name}")
 
         directory = os.path.join(
-            self.root,
-            "ref_african_crops_kenya_02_labels",
-            tile_name + "_label",
+            self.root, "ref_african_crops_kenya_02_labels", tile_name + "_label"
         )
 
         with Image.open(os.path.join(directory, "labels.tif")) as img:

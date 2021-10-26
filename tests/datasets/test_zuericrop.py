@@ -25,9 +25,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestZueriCrop:
     @pytest.fixture
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
+        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> ZueriCrop:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.zuericrop, "download_url", download_url

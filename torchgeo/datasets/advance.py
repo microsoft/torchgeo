@@ -227,8 +227,5 @@ class ADVANCE(VisionDataset):
 
         for filename, url, md5 in zip(self.filenames, self.urls, self.md5s):
             download_and_extract_archive(
-                url,
-                self.root,
-                filename=filename,
-                md5=md5 if self.checksum else None,
+                url, self.root, filename=filename, md5=md5 if self.checksum else None
             )

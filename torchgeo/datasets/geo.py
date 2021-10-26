@@ -61,8 +61,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     res: float
 
     def __init__(
-        self,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        self, transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -302,11 +301,7 @@ class RasterDataset(GeoDataset):
             data = self._merge_files(filepaths, query)
 
         key = "image" if self.is_image else "mask"
-        sample = {
-            key: data,
-            "crs": self.crs,
-            "bbox": query,
-        }
+        sample = {key: data, "crs": self.crs, "bbox": query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)

@@ -13,12 +13,7 @@ import torch
 
 from torchgeo.trainers import ChesapeakeCVPRDataModule, ChesapeakeCVPRSegmentationTask
 
-ALL_TEST_SPLITS = [
-    ["de-val"],
-    ["pa-test"],
-    ["ny-test"],
-    ["pa-test", "ny-test"],
-]
+ALL_TEST_SPLITS = [["de-val"], ["pa-test"], ["ny-test"], ["pa-test", "ny-test"]]
 
 
 def set_up_parser() -> argparse.ArgumentParser:

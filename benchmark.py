@@ -96,10 +96,7 @@ def set_up_parser() -> argparse.ArgumentParser:
         metavar="NUM",
     )
     parser.add_argument(
-        "--seed",
-        default=0,
-        type=int,
-        help="random seed for reproducibility",
+        "--seed", default=0, type=int, help="random seed for reproducibility"
     )
     parser.add_argument(
         "--output-fn",
@@ -109,10 +106,7 @@ def set_up_parser() -> argparse.ArgumentParser:
         metavar="FILE",
     )
     parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="print results to stdout",
+        "-v", "--verbose", action="store_true", help="print results to stdout"
     )
 
     return parser
@@ -164,9 +158,7 @@ def main(args: argparse.Namespace) -> None:
 
         if isinstance(sampler, RandomBatchGeoSampler):
             dataloader = DataLoader(
-                dataset,
-                batch_sampler=sampler,
-                num_workers=args.num_workers,
+                dataset, batch_sampler=sampler, num_workers=args.num_workers
             )
         else:
             dataloader = DataLoader(

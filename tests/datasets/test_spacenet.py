@@ -53,11 +53,7 @@ class TestSpaceNet1:
         root = str(tmp_path)
         transforms = nn.Identity()  # type: ignore[attr-defined]
         return SpaceNet1(
-            root,
-            image=request.param,
-            transforms=transforms,
-            download=True,
-            api_key="",
+            root, image=request.param, transforms=transforms, download=True, api_key=""
         )
 
     def test_getitem(self, dataset: SpaceNet1) -> None:
@@ -155,9 +151,7 @@ class TestSpaceNet4:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             radiant_mlhub.Collection, "fetch", fetch_collection
         )
-        test_md5 = {
-            "sn4_AOI_6_Atlanta": "ea37c2d87e2c3a1d8b2a7c2230080d46",
-        }
+        test_md5 = {"sn4_AOI_6_Atlanta": "ea37c2d87e2c3a1d8b2a7c2230080d46"}
 
         test_angles = ["nadir", "off-nadir", "very-off-nadir"]
 
