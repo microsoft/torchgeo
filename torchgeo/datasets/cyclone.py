@@ -113,9 +113,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
             source_id.replace("source", "{0}"),
         )
 
-        sample: Dict[str, Any] = {
-            "image": self._load_image(directory),
-        }
+        sample: Dict[str, Any] = {"image": self._load_image(directory)}
         sample.update(self._load_features(directory))
 
         if self.transforms is not None:

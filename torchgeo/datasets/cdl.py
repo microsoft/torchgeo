@@ -127,9 +127,7 @@ class CDL(RasterDataset):
         """Download the dataset."""
         for year, md5 in self.md5s:
             download_url(
-                self.url.format(year),
-                self.root,
-                md5=md5 if self.checksum else None,
+                self.url.format(year), self.root, md5=md5 if self.checksum else None
             )
 
     def _extract(self) -> None:

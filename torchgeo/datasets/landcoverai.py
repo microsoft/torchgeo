@@ -114,10 +114,7 @@ class LandCoverAI(VisionDataset):
             data and label at that index
         """
         id_ = self.ids[index].rstrip()
-        sample = {
-            "image": self._load_image(id_),
-            "mask": self._load_target(id_),
-        }
+        sample = {"image": self._load_image(id_), "mask": self._load_target(id_)}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -173,8 +170,7 @@ class LandCoverAI(VisionDataset):
             True if dataset files are found and/or MD5s match, else False
         """
         integrity: bool = check_integrity(
-            os.path.join(self.root, self.filename),
-            self.md5 if self.checksum else None,
+            os.path.join(self.root, self.filename), self.md5 if self.checksum else None
         )
 
         return integrity

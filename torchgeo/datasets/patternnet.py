@@ -99,10 +99,7 @@ class PatternNet(VisionClassificationDataset):
         self.download = download
         self.checksum = checksum
         self._verify()
-        super().__init__(
-            root=os.path.join(root, self.directory),
-            transforms=transforms,
-        )
+        super().__init__(root=os.path.join(root, self.directory), transforms=transforms)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.

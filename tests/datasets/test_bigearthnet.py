@@ -99,11 +99,7 @@ class TestBigEarthNet:
             )
             download_url(dataset.metadata["s2"]["url"], root=str(tmp_path))
 
-        BigEarthNet(
-            root=str(tmp_path),
-            bands=dataset.bands,
-            download=False,
-        )
+        BigEarthNet(root=str(tmp_path), bands=dataset.bands, download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         err = "Dataset not found in `root` directory and `download=False`, "

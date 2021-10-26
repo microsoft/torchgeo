@@ -130,11 +130,7 @@ trainer:
   fast_dev_run: true
 """
     )
-    args = [
-        sys.executable,
-        "train.py",
-        "config_file=" + str(config_file),
-    ]
+    args = [sys.executable, "train.py", "config_file=" + str(config_file)]
     subprocess.run(args, check=True)
 
 

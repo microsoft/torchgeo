@@ -130,8 +130,7 @@ class Chesapeake(RasterDataset, abc.ABC):
             True if dataset MD5s match, else False
         """
         integrity: bool = check_integrity(
-            os.path.join(self.root, self.zipfile),
-            self.md5 if self.checksum else None,
+            os.path.join(self.root, self.zipfile), self.md5 if self.checksum else None
         )
         return integrity
 
@@ -142,10 +141,7 @@ class Chesapeake(RasterDataset, abc.ABC):
             return
 
         download_and_extract_archive(
-            self.url,
-            self.root,
-            filename=self.zipfile,
-            md5=self.md5,
+            self.url, self.root, filename=self.zipfile, md5=self.md5
         )
 
 
@@ -430,12 +426,7 @@ class ChesapeakeCVPR(GeoDataset):
         hits = self.index.intersection(query, objects=True)
         filepaths = [hit.object for hit in hits]
 
-        sample = {
-            "image": [],
-            "mask": [],
-            "crs": self.crs,
-            "bbox": query,
-        }
+        sample = {"image": [], "mask": [], "crs": self.crs, "bbox": query}
 
         if len(filepaths) == 0:
             raise IndexError(
@@ -528,12 +519,7 @@ class ChesapeakeCVPR(GeoDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        download_url(
-            self.url,
-            self.root,
-            filename=self.filename,
-            md5=self.md5,
-        )
+        download_url(self.url, self.root, filename=self.filename, md5=self.md5)
 
     def _extract(self) -> None:
         """Extract the dataset."""

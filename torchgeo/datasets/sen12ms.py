@@ -176,10 +176,7 @@ class SEN12MS(VisionDataset):
             image, dim=0, index=self.bands
         )
 
-        sample: Dict[str, Tensor] = {
-            "image": image,
-            "mask": lc,
-        }
+        sample: Dict[str, Tensor] = {"image": image, "mask": lc}
 
         if self.transforms is not None:
             sample = self.transforms(sample)

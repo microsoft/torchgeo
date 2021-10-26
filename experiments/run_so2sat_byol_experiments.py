@@ -37,11 +37,7 @@ if __name__ == "__main__":
     work: "Queue[str]" = Queue()
 
     for (model, lr, loss, weights, bands) in itertools.product(
-        model_options,
-        lr_options,
-        loss_options,
-        weight_options,
-        bands_options,
+        model_options, lr_options, loss_options, weight_options, bands_options
     ):
 
         experiment_name = f"{model}_{lr}_{loss}_byol_{bands}-{weights.split('/')[-2]}"
@@ -73,13 +69,7 @@ if __name__ == "__main__":
 
     processes = []
     for gpu_idx in GPUS:
-        p = Process(
-            target=do_work,
-            args=(
-                work,
-                gpu_idx,
-            ),
-        )
+        p = Process(target=do_work, args=(work, gpu_idx))
         processes.append(p)
         p.start()
     for p in processes:

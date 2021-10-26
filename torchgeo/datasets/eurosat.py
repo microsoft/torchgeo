@@ -102,8 +102,7 @@ class EuroSAT(VisionClassificationDataset):
             True if dataset files are found and/or MD5s match, else False
         """
         integrity: bool = check_integrity(
-            os.path.join(self.root, self.filename),
-            self.md5 if self.checksum else None,
+            os.path.join(self.root, self.filename), self.md5 if self.checksum else None
         )
         return integrity
 

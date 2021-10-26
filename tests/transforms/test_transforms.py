@@ -122,8 +122,7 @@ def test_augmentation_sequential_gray(batch_gray: Dict[str, Tensor]) -> None:
         "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
     }
     augs = transforms.AugmentationSequential(
-        K.RandomHorizontalFlip(p=1.0),
-        data_keys=["image", "mask", "boxes"],
+        K.RandomHorizontalFlip(p=1.0), data_keys=["image", "mask", "boxes"]
     )
     output = augs(batch_gray)
     assert_matching(output, expected)
@@ -152,8 +151,7 @@ def test_augmentation_sequential_rgb(batch_rgb: Dict[str, Tensor]) -> None:
         "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
     }
     augs = transforms.AugmentationSequential(
-        K.RandomHorizontalFlip(p=1.0),
-        data_keys=["image", "mask", "boxes"],
+        K.RandomHorizontalFlip(p=1.0), data_keys=["image", "mask", "boxes"]
     )
     output = augs(batch_rgb)
     assert_matching(output, expected)
@@ -186,8 +184,7 @@ def test_augmentation_sequential_multispectral(
         "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
     }
     augs = transforms.AugmentationSequential(
-        K.RandomHorizontalFlip(p=1.0),
-        data_keys=["image", "mask", "boxes"],
+        K.RandomHorizontalFlip(p=1.0), data_keys=["image", "mask", "boxes"]
     )
     output = augs(batch_multispectral)
     assert_matching(output, expected)
@@ -220,8 +217,7 @@ def test_augmentation_sequential_image_only(
         "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
     }
     augs = transforms.AugmentationSequential(
-        K.RandomHorizontalFlip(p=1.0),
-        data_keys=["image"],
+        K.RandomHorizontalFlip(p=1.0), data_keys=["image"]
     )
     output = augs(batch_multispectral)
     assert_matching(output, expected)
@@ -263,8 +259,7 @@ def test_sequential_transforms_augmentations(
         indices.AppendNDVI(index_red=0, index_nir=0),
         indices.AppendNDWI(index_green=0, index_nir=0),
         transforms.AugmentationSequential(
-            K.RandomHorizontalFlip(p=1.0),
-            data_keys=["image", "mask", "boxes"],
+            K.RandomHorizontalFlip(p=1.0), data_keys=["image", "mask", "boxes"]
         ),
     )
     output = train_transforms(batch_multispectral)

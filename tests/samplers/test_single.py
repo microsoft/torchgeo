@@ -26,11 +26,7 @@ class CustomGeoSampler(GeoSampler):
 
 
 class CustomGeoDataset(GeoDataset):
-    def __init__(
-        self,
-        crs: CRS = CRS.from_epsg(3005),
-        res: float = 1,
-    ) -> None:
+    def __init__(self, crs: CRS = CRS.from_epsg(3005), res: float = 1) -> None:
         super().__init__()
         self.crs = crs
         self.res = res
@@ -99,14 +95,7 @@ class TestRandomGeoSampler:
 class TestGridGeoSampler:
     @pytest.fixture(
         scope="function",
-        params=[
-            (8, 1),
-            (6, 2),
-            (4, 3),
-            (2.5, 3),
-            ((8, 6), (1, 2)),
-            ((6, 4), (2, 3)),
-        ],
+        params=[(8, 1), (6, 2), (4, 3), (2.5, 3), ((8, 6), (1, 2)), ((6, 4), (2, 3))],
     )
     def sampler(self, request: SubRequest) -> GridGeoSampler:
         ds = CustomGeoDataset()

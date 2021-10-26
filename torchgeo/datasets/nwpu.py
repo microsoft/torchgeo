@@ -121,9 +121,7 @@ class VHR10(VisionDataset):
 
             self.coco = COCO(
                 os.path.join(
-                    self.root,
-                    "NWPU VHR-10 dataset",
-                    self.target_meta["filename"],
+                    self.root, "NWPU VHR-10 dataset", self.target_meta["filename"]
                 )
             )
 
@@ -137,10 +135,7 @@ class VHR10(VisionDataset):
             data and label at that index
         """
         id_ = index % len(self) + 1
-        sample = {
-            "image": self._load_image(id_),
-            "label": self._load_target(id_),
-        }
+        sample = {"image": self._load_image(id_), "label": self._load_target(id_)}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -214,9 +209,7 @@ class VHR10(VisionDataset):
         if self.split == "positive":
             target = check_integrity(
                 os.path.join(
-                    self.root,
-                    "NWPU VHR-10 dataset",
-                    self.target_meta["filename"],
+                    self.root, "NWPU VHR-10 dataset", self.target_meta["filename"]
                 ),
                 self.target_meta["md5"] if self.checksum else None,
             )

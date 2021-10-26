@@ -351,10 +351,7 @@ class BeninSmallHolderCashews(VisionDataset):
         """Rasterizes the dataset's labels (in geojson format)."""
         # Create a mask layer out of the geojson
         mask_geojson_fn = os.path.join(
-            self.root,
-            "ts_cashew_benin_labels",
-            "_common",
-            "labels.geojson",
+            self.root, "ts_cashew_benin_labels", "_common", "labels.geojson"
         )
         with open(mask_geojson_fn, "r") as f:
             geojson = json.load(f)

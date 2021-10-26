@@ -214,10 +214,7 @@ class BigEarthNet(VisionDataset):
         """
         image = self._load_image(index)
         label = self._load_target(index)
-        sample: Dict[str, Tensor] = {
-            "image": image,
-            "label": label,
-        }
+        sample: Dict[str, Tensor] = {"image": image, "label": label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -365,10 +362,7 @@ class BigEarthNet(VisionDataset):
             md5: md5 of downloaded file
         """
         download_url(
-            url,
-            self.root,
-            filename=filename,
-            md5=md5 if self.checksum else None,
+            url, self.root, filename=filename, md5=md5 if self.checksum else None
         )
 
     def _extract(self, filepath: str) -> None:

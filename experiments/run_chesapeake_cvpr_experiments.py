@@ -77,13 +77,7 @@ if __name__ == "__main__":
 
     processes = []
     for gpu_idx in GPUS:
-        p = Process(
-            target=do_work,
-            args=(
-                work,
-                gpu_idx,
-            ),
-        )
+        p = Process(target=do_work, args=(work, gpu_idx))
         processes.append(p)
         p.start()
     for p in processes:

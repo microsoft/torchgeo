@@ -536,20 +536,10 @@ class SpaceNet4(SpaceNet):
     """
 
     dataset_id = "spacenet4"
-    collection_md5_dict = {
-        "sn4_AOI_6_Atlanta": "c597d639cba5257927a97e3eff07b753",
-    }
+    collection_md5_dict = {"sn4_AOI_6_Atlanta": "c597d639cba5257927a97e3eff07b753"}
 
-    imagery = {
-        "MS": "MS.tif",
-        "PAN": "PAN.tif",
-        "PS-RGBNIR": "PS-RGBNIR.tif",
-    }
-    chip_size = {
-        "MS": (225, 225),
-        "PAN": (900, 900),
-        "PS-RGBNIR": (900, 900),
-    }
+    imagery = {"MS": "MS.tif", "PAN": "PAN.tif", "PS-RGBNIR": "PS-RGBNIR.tif"}
+    chip_size = {"MS": (225, 225), "PAN": (900, 900), "PS-RGBNIR": (900, 900)}
     label_glob = "labels.geojson"
 
     angle_catalog_map = {

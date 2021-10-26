@@ -30,9 +30,7 @@ def fetch(dataset_id: str, **kwargs: str) -> Dataset:
 class TestBeninSmallHolderCashews:
     @pytest.fixture
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
+        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> BeninSmallHolderCashews:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(  # type: ignore[attr-defined]

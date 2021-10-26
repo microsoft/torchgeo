@@ -26,9 +26,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestCDL:
     @pytest.fixture
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
+        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> CDL:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.cdl, "download_url", download_url

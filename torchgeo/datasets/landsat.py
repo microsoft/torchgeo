@@ -83,12 +83,7 @@ class Landsat1(Landsat):
 
     filename_glob = "LM01_*_SR_B4.*"
 
-    all_bands = [
-        "B4",
-        "B5",
-        "B6",
-        "B7",
-    ]
+    all_bands = ["B4", "B5", "B6", "B7"]
     rgb_bands = ["B6", "B5", "B4"]
 
 
@@ -109,12 +104,7 @@ class Landsat4MSS(Landsat):
 
     filename_glob = "LM04_*_SR_B1.*"
 
-    all_bands = [
-        "B1",
-        "B2",
-        "B3",
-        "B4",
-    ]
+    all_bands = ["B1", "B2", "B3", "B4"]
     rgb_bands = ["B3", "B2", "B1"]
 
 
@@ -123,15 +113,7 @@ class Landsat4TM(Landsat):
 
     filename_glob = "LT04_*_SR_B1.*"
 
-    all_bands = [
-        "B1",
-        "B2",
-        "B3",
-        "B4",
-        "B5",
-        "B6",
-        "B7",
-    ]
+    all_bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7"]
     rgb_bands = ["B3", "B2", "B1"]
 
 
@@ -152,16 +134,7 @@ class Landsat7(Landsat):
 
     filename_glob = "LE07_*_SR_B1.*"
 
-    all_bands = [
-        "B1",
-        "B2",
-        "B3",
-        "B4",
-        "B5",
-        "B6",
-        "B7",
-        "B8",
-    ]
+    all_bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8"]
     rgb_bands = ["B3", "B2", "B1"]
 
 
@@ -170,19 +143,7 @@ class Landsat8(Landsat):
 
     filename_glob = "LC08_*_SR_B2.*"
 
-    all_bands = [
-        "B1",
-        "B2",
-        "B3",
-        "B4",
-        "B5",
-        "B6",
-        "B7",
-        "B8",
-        "B9",
-        "B10",
-        "B11",
-    ]
+    all_bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11"]
     rgb_bands = ["B4", "B3", "B2"]
 
 

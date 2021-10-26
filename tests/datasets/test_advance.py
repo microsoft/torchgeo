@@ -23,9 +23,7 @@ def download_url(url: str, root: str, *args: str) -> None:
 class TestADVANCE:
     @pytest.fixture
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
+        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> ADVANCE:
         pytest.importorskip("scipy", minversion="0.9.0")
         monkeypatch.setattr(  # type: ignore[attr-defined]
