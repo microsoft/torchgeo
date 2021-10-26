@@ -259,7 +259,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
 
     def chesapeake_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Chesapeake Dataset."""
-        sample["mask"] = sample["mask"].long()
+        sample["mask"] = sample["mask"].long()[0]
         return sample
 
     def prepare_data(self) -> None:
