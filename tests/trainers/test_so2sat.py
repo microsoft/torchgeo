@@ -84,6 +84,7 @@ class TestSo2SatClassificationTask:
         task_conf = OmegaConf.load(os.path.join("conf", "task_defaults", "so2sat.yaml"))
         task_args = OmegaConf.to_object(task_conf.experiment.module)
         task_args = cast(Dict[str, Any], task_args)
+        task_args["weights"] = checkpoint
         So2SatClassificationTask(**task_args)
 
     def test_invalid_model(self, config: Dict[str, Any]) -> None:
