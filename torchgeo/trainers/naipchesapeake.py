@@ -94,9 +94,9 @@ class NAIPChesapeakeSegmentationTask(pl.LightningModule):
         self.val_accuracy = Accuracy()
         self.test_accuracy = Accuracy()
 
-        self.train_iou = IoU(num_classes=self.num_classes)
-        self.val_iou = IoU(num_classes=self.num_classes)
-        self.test_iou = IoU(num_classes=self.num_classes)
+        self.train_iou = IoU(num_classes=self.classes)
+        self.val_iou = IoU(num_classes=self.classes)
+        self.test_iou = IoU(num_classes=self.classes)
 
     def forward(self, x: Tensor) -> Any:  # type: ignore[override]
         """Forward pass of the model."""
@@ -201,24 +201,10 @@ class NAIPChesapeakeSegmentationTask(pl.LightningModule):
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler."""
-        optimizer: torch.optim.optimizer.Optimizer
-        if self.hparams["optimizer"] == "adamw":
-            optimizer = torch.optim.AdamW(
-                self.model.parameters(),
-                lr=self.hparams["learning_rate"],
-            )
-        elif self.hparams["optimizer"] == "sgd":
-            optimizer = torch.optim.SGD(
-                self.model.parameters(),
-                lr=self.hparams["learning_rate"],
-                momentum=0.9,
-                weight_decay=1e-2,
-            )
-        else:
-            raise ValueError(
-                f"Optimizer choice '{self.hparams['optimizer']}' is not valid."
-            )
-
+        optimizer = torch.optim.AdamW(
+            self.model.parameters(),
+            lr=self.hparams["learning_rate"],
+        )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
@@ -265,13 +251,15 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
 
-    # TODO: This needs to be converted to actual transforms instead of hacked
-    def custom_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset."""
+    def naip_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Transform a single sample from the NAIP Dataset."""
         sample["image"] = sample["image"] / 255.0
         sample["image"] = sample["image"].float()
-        sample["mask"] = sample["mask"].long()
+        return sample
 
+    def chesapeake_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Transform a single sample from the Chesapeake Dataset."""
+        sample["mask"] = sample["mask"].long()
         return sample
 
     def prepare_data(self) -> None:
@@ -280,7 +268,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         This method is only called once per run.
         """
         Chesapeake13(
-            self.naip_root_dir,
+            self.chesapeake_root_dir,
             download=True,
             checksum=False,
         )
@@ -293,13 +281,13 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         # TODO: these transforms will be applied independently, this won't work if we
         # add things like random horizontal flip
         chesapeake = Chesapeake13(
-            self.chesapeake_root_dir, transforms=self.custom_transform
+            self.chesapeake_root_dir, transforms=self.chesapeake_transform
         )
         naip = NAIP(
             self.naip_root_dir,
             chesapeake.crs,
             chesapeake.res,
-            transforms=self.custom_transform,
+            transforms=self.naip_transform,
         )
         self.dataset = chesapeake + naip
 
@@ -312,14 +300,10 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         test_roi = BoundingBox(roi.minx, roi.maxx, midy, roi.maxy, roi.mint, roi.maxt)
 
         self.train_sampler = RandomBatchGeoSampler(
-            naip.index, self.patch_size, self.batch_size, self.length, train_roi
+            naip, self.patch_size, self.batch_size, self.length, train_roi
         )
-        self.val_sampler = GridGeoSampler(
-            naip.index, self.patch_size, self.stride, val_roi
-        )
-        self.test_sampler = GridGeoSampler(
-            naip.index, self.patch_size, self.stride, test_roi
-        )
+        self.val_sampler = GridGeoSampler(naip, self.patch_size, self.stride, val_roi)
+        self.test_sampler = GridGeoSampler(naip, self.patch_size, self.stride, test_roi)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""
@@ -341,7 +325,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing."""
         return DataLoader(
-            self.test_dataset,
+            self.dataset,
             batch_size=self.batch_size,
             sampler=self.test_sampler,
             num_workers=self.num_workers,
