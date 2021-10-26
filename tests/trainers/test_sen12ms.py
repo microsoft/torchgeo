@@ -18,7 +18,7 @@ from .test_utils import mocked_log
     scope="module", params=[("all", 15), ("s1", 2), ("s2-all", 13), ("s2-reduced", 6)]
 )
 def bands(request: SubRequest) -> Tuple[str, int]:
-    return request.param
+    return cast(Tuple[str, int], request.param)
 
 
 @pytest.fixture(scope="module")
