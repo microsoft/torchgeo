@@ -91,7 +91,9 @@ class SimCLRAugmentation(Module):
         self.size = image_size
 
         self.augmentation = Sequential(
-            KorniaTransform.Resize(size=image_size),  # type: ignore[attr-defined]
+            KorniaTransform.Resize(  # type: ignore[attr-defined]
+                size=image_size, align_corners=False
+            ),
             # Not suitable for multispectral adapt
             # RandomApply(K.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.8),
             # K.RandomGrayscale(p=0.2),
