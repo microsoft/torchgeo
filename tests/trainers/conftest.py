@@ -14,13 +14,13 @@ from torch import Tensor
 from torch.nn.modules import Module
 
 
-@pytest.fixture
+@pytest.fixture(scope="package")
 def model() -> Module:
     model: Module = torchvision.models.resnet18(pretrained=False)
     return model
 
 
-@pytest.fixture
+@pytest.fixture(scope="package")
 def state_dict(model: Module) -> Dict[str, Tensor]:
     return model.state_dict()
 

@@ -15,44 +15,42 @@ from torchgeo.trainers import NAIPChesapeakeDataModule, NAIPChesapeakeSegmentati
 from .test_utils import FakeTrainer, mocked_log
 
 
-class TestNAIPChesapeakeSegmentationTask:
-    @pytest.fixture
-    def datamodule(self) -> NAIPChesapeakeDataModule:
-        dm = NAIPChesapeakeDataModule(
-            os.path.join("tests", "data", "naip"),
-            os.path.join("tests", "data", "chesapeake", "BAYWIDE"),
-            batch_size=2,
-            num_workers=0,
-        )
-        dm.patch_size = 128
-        dm.prepare_data()
-        dm.setup()
-        return dm
+@pytest.fixture(scope="module")
+def datamodule() -> NAIPChesapeakeDataModule:
+    dm = NAIPChesapeakeDataModule(
+        os.path.join("tests", "data", "naip"),
+        os.path.join("tests", "data", "chesapeake", "BAYWIDE"),
+        batch_size=2,
+        num_workers=0,
+    )
+    dm.patch_size = 128
+    dm.prepare_data()
+    dm.setup()
+    return dm
 
-    @pytest.fixture
-    def config(self) -> Dict[str, Any]:
+
+class TestNAIPChesapeakeSegmentationTask:
+    @pytest.fixture(
+        params=itertools.product(["unet", "deeplabv3+", "fcn"], ["ce", "jaccard"]),
+    )
+    def config(self, request: SubRequest) -> Dict[str, Any]:
         task_conf = OmegaConf.load(
             os.path.join("conf", "task_defaults", "chesapeake_cvpr.yaml")
         )
         task_args = OmegaConf.to_object(task_conf.experiment.module)
         task_args = cast(Dict[str, Any], task_args)
+        segmentation_model, loss = request.param
+        task_args["segmentation_model"] = segmentation_model
+        task_args["loss"] = loss
         return task_args
 
-    @pytest.fixture(
-        params=itertools.product(["unet", "deeplabv3+", "fcn"], ["ce", "jaccard"])
-    )
+    @pytest.fixture
     def task(
-        self,
-        config: Dict[str, Any],
-        request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        self, config: Dict[str, Any], monkeypatch: Generator[MonkeyPatch, None, None]
     ) -> NAIPChesapeakeSegmentationTask:
-        segmentation_model, loss = request.param
-        config["segmentation_model"] = segmentation_model
-        config["loss"] = loss
         task = NAIPChesapeakeSegmentationTask(**config)
         trainer = FakeTrainer()
-        task.trainer = trainer  # type: ignore[assignment]
+        monkeypatch.setattr(task, "trainer", trainer)  # type: ignore[attr-defined]
         monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
         return task
 
@@ -62,27 +60,21 @@ class TestNAIPChesapeakeSegmentationTask:
         assert "lr_scheduler" in out
 
     def test_training(
-        self,
-        datamodule: NAIPChesapeakeDataModule,
-        task: NAIPChesapeakeSegmentationTask,
+        self, datamodule: NAIPChesapeakeDataModule, task: NAIPChesapeakeSegmentationTask
     ) -> None:
         batch = next(iter(datamodule.train_dataloader()))
         task.training_step(batch, 0)
         task.training_epoch_end(0)
 
     def test_validation(
-        self,
-        datamodule: NAIPChesapeakeDataModule,
-        task: NAIPChesapeakeSegmentationTask,
+        self, datamodule: NAIPChesapeakeDataModule, task: NAIPChesapeakeSegmentationTask
     ) -> None:
         batch = next(iter(datamodule.val_dataloader()))
         task.validation_step(batch, 0)
         task.validation_epoch_end(0)
 
     def test_test(
-        self,
-        datamodule: NAIPChesapeakeDataModule,
-        task: NAIPChesapeakeSegmentationTask,
+        self, datamodule: NAIPChesapeakeDataModule, task: NAIPChesapeakeSegmentationTask
     ) -> None:
         batch = next(iter(datamodule.test_dataloader()))
         task.test_step(batch, 0)
@@ -102,19 +94,6 @@ class TestNAIPChesapeakeSegmentationTask:
 
 
 class TestNAIPChesapeakeDataModule:
-    @pytest.fixture
-    def datamodule(self) -> NAIPChesapeakeDataModule:
-        dm = NAIPChesapeakeDataModule(
-            os.path.join("tests", "data", "naip"),
-            os.path.join("tests", "data", "chesapeake", "BAYWIDE"),
-            batch_size=2,
-            num_workers=0,
-        )
-        dm.patch_size = 128
-        dm.prepare_data()
-        dm.setup()
-        return dm
-
     def test_train_dataloader(self, datamodule: NAIPChesapeakeDataModule) -> None:
         next(iter(datamodule.train_dataloader()))
 

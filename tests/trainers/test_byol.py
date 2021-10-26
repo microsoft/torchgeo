@@ -18,6 +18,23 @@ from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
 from .test_utils import mocked_log
 
 
+@pytest.fixture(scope="module")
+def datamodule() -> ChesapeakeCVPRDataModule:
+    dm = ChesapeakeCVPRDataModule(
+        os.path.join("tests", "data", "chesapeake", "cvpr"),
+        ["de-test"],
+        ["de-test"],
+        ["de-test"],
+        patch_size=128,
+        patches_per_tile=2,
+        batch_size=2,
+        num_workers=0,
+    )
+    dm.prepare_data()
+    dm.setup()
+    return dm
+
+
 class TestBYOL:
     def test_custom_augment_fn(self) -> None:
         encoder = resnet18()
@@ -36,37 +53,18 @@ class TestBYOL:
 
 
 class TestBYOLTask:
-    @pytest.fixture
-    def config(self) -> Dict[str, Any]:
+    @pytest.fixture(params=["resnet18", "resnet50"])
+    def config(self, request: SubRequest) -> Dict[str, Any]:
         task_conf = OmegaConf.load(os.path.join("conf", "task_defaults", "byol.yaml"))
         task_args = OmegaConf.to_object(task_conf.experiment.module)
         task_args = cast(Dict[str, Any], task_args)
+        task_args["encoder"] = request.param
         return task_args
 
     @pytest.fixture
-    def datamodule(self) -> ChesapeakeCVPRDataModule:
-        dm = ChesapeakeCVPRDataModule(
-            os.path.join("tests", "data", "chesapeake", "cvpr"),
-            ["de-test"],
-            ["de-test"],
-            ["de-test"],
-            patch_size=128,
-            patches_per_tile=2,
-            batch_size=2,
-            num_workers=0,
-        )
-        dm.prepare_data()
-        dm.setup()
-        return dm
-
-    @pytest.fixture(params=["resnet18", "resnet50"])
     def task(
-        self,
-        config: Dict[str, Any],
-        request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        self, config: Dict[str, Any], monkeypatch: Generator[MonkeyPatch, None, None]
     ) -> LightningModule:
-        config["encoder"] = request.param
         task = BYOLTask(**config)
         monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
         return task

@@ -15,77 +15,67 @@ from torchgeo.trainers import LandcoverAIDataModule, LandcoverAISegmentationTask
 from .test_utils import FakeTrainer, mocked_log
 
 
+@pytest.fixture(scope="module")
+def datamodule() -> LandcoverAIDataModule:
+    root = os.path.join("tests", "data", "landcoverai")
+    batch_size = 2
+    num_workers = 0
+    dm = LandcoverAIDataModule(root, batch_size, num_workers)
+    dm.prepare_data()
+    dm.setup()
+    return dm
+
+
 class TestLandcoverAISegmentationTask:
-    @pytest.fixture
-    def config(self) -> Dict[str, Any]:
+    @pytest.fixture(
+        params=itertools.product(
+            ["unet", "deeplabv3+", "fcn"], ["ce", "jaccard", "focal"]
+        ),
+    )
+    def config(self, request: SubRequest) -> Dict[str, Any]:
         task_conf = OmegaConf.load(
             os.path.join("conf", "task_defaults", "landcoverai.yaml")
         )
         task_args = OmegaConf.to_object(task_conf.experiment.module)
         task_args = cast(Dict[str, Any], task_args)
+        segmentation_model, loss = request.param
+        task_args["segmentation_model"] = segmentation_model
+        task_args["loss"] = loss
+        task_args["verbose"] = True
         return task_args
 
     @pytest.fixture
-    def datamodule(self) -> LandcoverAIDataModule:
-        root = os.path.join("tests", "data", "landcoverai")
-        batch_size = 2
-        num_workers = 0
-        dm = LandcoverAIDataModule(root, batch_size, num_workers)
-        dm.prepare_data()
-        dm.setup()
-        return dm
-
-    @pytest.fixture(
-        params=itertools.product(
-            ["unet", "deeplabv3+", "fcn"],
-            ["ce", "jaccard", "focal"],
-        )
-    )
     def task(
-        self,
-        config: Dict[str, Any],
-        request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        self, config: Dict[str, Any], monkeypatch: Generator[MonkeyPatch, None, None]
     ) -> LandcoverAISegmentationTask:
-        segmentation_model, loss = request.param
-        config["segmentation_model"] = segmentation_model
-        config["loss"] = loss
-        config["verbose"] = True
         task = LandcoverAISegmentationTask(**config)
         trainer = FakeTrainer()
-        task.trainer = trainer  # type: ignore[assignment]
+        monkeypatch.setattr(task, "trainer", trainer)  # type: ignore[attr-defined]
         monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
         return task
 
     def test_training(
-        self,
-        datamodule: LandcoverAIDataModule,
-        task: LandcoverAISegmentationTask,
+        self, datamodule: LandcoverAIDataModule, task: LandcoverAISegmentationTask
     ) -> None:
         batch = next(iter(datamodule.train_dataloader()))
         task.training_step(batch, 0)
         task.training_epoch_end(0)
 
     def test_validation(
-        self,
-        datamodule: LandcoverAIDataModule,
-        task: LandcoverAISegmentationTask,
+        self, datamodule: LandcoverAIDataModule, task: LandcoverAISegmentationTask
     ) -> None:
         batch = next(iter(datamodule.val_dataloader()))
         task.validation_step(batch, 0)
         task.validation_epoch_end(0)
 
     def test_test(
-        self,
-        datamodule: LandcoverAIDataModule,
-        task: LandcoverAISegmentationTask,
+        self, datamodule: LandcoverAIDataModule, task: LandcoverAISegmentationTask
     ) -> None:
         batch = next(iter(datamodule.test_dataloader()))
         task.test_step(batch, 0)
         task.test_epoch_end(0)
 
-    def test_configure_optimizers(self, config: Dict[str, Any]) -> None:
-        task = LandcoverAISegmentationTask(**config)
+    def test_configure_optimizers(self, task: LandcoverAISegmentationTask) -> None:
         out = task.configure_optimizers()
         assert "optimizer" in out
         assert "lr_scheduler" in out
@@ -104,16 +94,6 @@ class TestLandcoverAISegmentationTask:
 
 
 class TestLandcoverAIDataModule:
-    @pytest.fixture
-    def datamodule(self) -> LandcoverAIDataModule:
-        root = os.path.join("tests", "data", "landcoverai")
-        batch_size = 1
-        num_workers = 0
-        dm = LandcoverAIDataModule(root, batch_size, num_workers)
-        dm.prepare_data()
-        dm.setup()
-        return dm
-
     def test_train_dataloader(self, datamodule: LandcoverAIDataModule) -> None:
         next(iter(datamodule.train_dataloader()))
 

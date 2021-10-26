@@ -13,6 +13,18 @@ from torchgeo.trainers import CycloneDataModule, CycloneSimpleRegressionTask
 from .test_utils import mocked_log
 
 
+@pytest.fixture(scope="module")
+def datamodule() -> CycloneDataModule:
+    root = os.path.join("tests", "data", "cyclone")
+    seed = 0
+    batch_size = 1
+    num_workers = 0
+    dm = CycloneDataModule(root, seed, batch_size, num_workers)
+    dm.prepare_data()
+    dm.setup()
+    return dm
+
+
 class TestCycloneSimpleRegressionTask:
     @pytest.fixture
     def config(self) -> Dict[str, Any]:
@@ -22,17 +34,6 @@ class TestCycloneSimpleRegressionTask:
         task_args = OmegaConf.to_object(task_conf.experiment.module)
         task_args = cast(Dict[str, Any], task_args)
         return task_args
-
-    @pytest.fixture
-    def datamodule(self) -> CycloneDataModule:
-        root = os.path.join("tests", "data", "cyclone")
-        seed = 0
-        batch_size = 1
-        num_workers = 0
-        dm = CycloneDataModule(root, seed, batch_size, num_workers)
-        dm.prepare_data()
-        dm.setup()
-        return dm
 
     @pytest.fixture
     def task(
@@ -48,25 +49,19 @@ class TestCycloneSimpleRegressionTask:
         assert "lr_scheduler" in out
 
     def test_training(
-        self,
-        datamodule: CycloneDataModule,
-        task: CycloneSimpleRegressionTask,
+        self, datamodule: CycloneDataModule, task: CycloneSimpleRegressionTask
     ) -> None:
         batch = next(iter(datamodule.train_dataloader()))
         task.training_step(batch, 0)
 
     def test_validation(
-        self,
-        datamodule: CycloneDataModule,
-        task: CycloneSimpleRegressionTask,
+        self, datamodule: CycloneDataModule, task: CycloneSimpleRegressionTask
     ) -> None:
         batch = next(iter(datamodule.val_dataloader()))
         task.validation_step(batch, 0)
 
     def test_test(
-        self,
-        datamodule: CycloneDataModule,
-        task: CycloneSimpleRegressionTask,
+        self, datamodule: CycloneDataModule, task: CycloneSimpleRegressionTask
     ) -> None:
         batch = next(iter(datamodule.test_dataloader()))
         task.test_step(batch, 0)
@@ -79,17 +74,6 @@ class TestCycloneSimpleRegressionTask:
 
 
 class TestCycloneDataModule:
-    @pytest.fixture
-    def datamodule(self) -> CycloneDataModule:
-        root = os.path.join("tests", "data", "cyclone")
-        seed = 0
-        batch_size = 1
-        num_workers = 0
-        dm = CycloneDataModule(root, seed, batch_size, num_workers)
-        dm.prepare_data()
-        dm.setup()
-        return dm
-
     def test_train_dataloader(self, datamodule: CycloneDataModule) -> None:
         next(iter(datamodule.train_dataloader()))
 

@@ -12,10 +12,6 @@ from torch.nn.modules import Module
 
 from torchgeo.trainers.utils import extract_encoder, load_state_dict
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Module.__module__ = "nn.Module"
-
 
 class FakeExperiment(object):
     def add_figure(self, *args: Any, **kwargs: Any) -> None:
@@ -41,8 +37,10 @@ def test_extract_encoder_unsupported_model(tmp_path: Path) -> None:
     checkpoint = {"hyper_parameters": {"some_unsupported_model": "resnet18"}}
     path = os.path.join(str(tmp_path), "dummy.ckpt")
     torch.save(checkpoint, path)
-    err = """Unknown checkpoint task. Only encoder or classification_model"""
-    """extraction is supported"""
+    err = (
+        "Unknown checkpoint task. Only encoder or classification_model"
+        " extraction is supported"
+    )
     with pytest.raises(ValueError, match=err):
         extract_encoder(path)
 
@@ -62,16 +60,13 @@ def test_load_state_dict_unequal_input_channels(checkpoint: str, model: Module) 
 
     in_channels = 7
     model.conv1 = nn.Conv2d(  # type: ignore[attr-defined]
-        in_channels,
-        out_channels=64,
-        kernel_size=7,
-        stride=1,
-        padding=2,
-        bias=False,
+        in_channels, out_channels=64, kernel_size=7, stride=1, padding=2, bias=False
     )
 
-    warning = f"""input channels {in_channels} != input channels in pretrained"""
-    f"""model {expected_in_channels}. Overriding with new input channels"""
+    warning = (
+        f"input channels {in_channels} != input channels in pretrained"
+        f" model {expected_in_channels}. Overriding with new input channels"
+    )
     with pytest.warns(UserWarning, match=warning):
         model = load_state_dict(model, state_dict)
 
@@ -86,7 +81,9 @@ def test_load_state_dict_unequal_classes(checkpoint: str, model: Module) -> None
         in_features, out_features=num_classes
     )
 
-    warning = f"""num classes {num_classes} != num classes in pretrained model"""
-    f"""{expected_num_classes}. Overriding with new num classes"""
+    warning = (
+        f"num classes {num_classes} != num classes in pretrained model"
+        f" {expected_num_classes}. Overriding with new num classes"
+    )
     with pytest.warns(UserWarning, match=warning):
         model = load_state_dict(model, state_dict)

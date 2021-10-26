@@ -14,36 +14,34 @@ from torchgeo.trainers import SEN12MSDataModule, SEN12MSSegmentationTask
 from .test_utils import mocked_log
 
 
+@pytest.fixture(scope="module", params=["all", "s1", "s2-all", "s2-reduced"])
+def datamodule(request: SubRequest) -> SEN12MSDataModule:
+    root = os.path.join("tests", "data", "sen12ms")
+    seed = 0
+    band_set = request.param
+    batch_size = 1
+    num_workers = 0
+    dm = SEN12MSDataModule(root, seed, band_set, batch_size, num_workers)
+    dm.prepare_data()
+    dm.setup()
+    return dm
+
+
 class TestSEN12MSSegmentationTask:
-    @pytest.fixture
-    def config(self) -> Dict[str, Any]:
+    @pytest.fixture(params=["ce", "jaccard"])
+    def config(self, request: SubRequest) -> Dict[str, Any]:
         task_conf = OmegaConf.load(
             os.path.join("conf", "task_defaults", "sen12ms.yaml")
         )
         task_args = OmegaConf.to_object(task_conf.experiment.module)
         task_args = cast(Dict[str, Any], task_args)
+        task_args["loss"] = request.param
         return task_args
 
     @pytest.fixture
-    def datamodule(self) -> SEN12MSDataModule:
-        root = os.path.join("tests", "data", "sen12ms")
-        seed = 0
-        band_set = "all"
-        batch_size = 1
-        num_workers = 0
-        dm = SEN12MSDataModule(root, seed, band_set, batch_size, num_workers)
-        dm.prepare_data()
-        dm.setup()
-        return dm
-
-    @pytest.fixture(params=["ce", "jaccard"])
     def task(
-        self,
-        config: Dict[str, Any],
-        request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        self, config: Dict[str, Any], monkeypatch: Generator[MonkeyPatch, None, None]
     ) -> SEN12MSSegmentationTask:
-        config["loss"] = request.param
         task = SEN12MSSegmentationTask(**config)
         monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
         return task
@@ -88,18 +86,6 @@ class TestSEN12MSSegmentationTask:
 
 
 class TestSEN12MSDataModule:
-    @pytest.fixture(params=["all", "s1", "s2-all", "s2-reduced"])
-    def datamodule(self, request: SubRequest) -> SEN12MSDataModule:
-        root = os.path.join("tests", "data", "sen12ms")
-        seed = 0
-        band_set = request.param
-        batch_size = 1
-        num_workers = 0
-        dm = SEN12MSDataModule(root, seed, band_set, batch_size, num_workers)
-        dm.prepare_data()
-        dm.setup()
-        return dm
-
     def test_train_dataloader(self, datamodule: SEN12MSDataModule) -> None:
         next(iter(datamodule.train_dataloader()))
 

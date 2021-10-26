@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-import sys
 from typing import Any, Dict, Generator, cast
 
 import pytest
@@ -15,42 +14,40 @@ from torchgeo.trainers import RESISC45ClassificationTask, RESISC45DataModule
 from .test_utils import mocked_log
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="requires unrar executable")
+@pytest.fixture(scope="module", params=[True, False])
+def datamodule(request: SubRequest) -> RESISC45DataModule:
+    root = os.path.join("tests", "data", "resisc45")
+    batch_size = 2
+    num_workers = 0
+    unsupervised_mode = request.param
+    dm = RESISC45DataModule(
+        root,
+        batch_size,
+        num_workers,
+        val_split_pct=0.33,
+        test_split_pct=0.33,
+        unsupervised_mode=unsupervised_mode,
+    )
+    dm.prepare_data()
+    dm.setup()
+    return dm
+
+
 class TestRESISC45ClassificationTask:
-    @pytest.fixture
-    def config(self) -> Dict[str, Any]:
+    @pytest.fixture(params=["resnet18", "resnet34"])
+    def config(self, request: SubRequest) -> Dict[str, Any]:
         task_conf = OmegaConf.load(
             os.path.join("conf", "task_defaults", "resisc45.yaml")
         )
         task_args = OmegaConf.to_object(task_conf.experiment.module)
         task_args = cast(Dict[str, Any], task_args)
+        task_args["classification_model"] = request.param
         return task_args
 
     @pytest.fixture
-    def datamodule(self) -> RESISC45DataModule:
-        root = os.path.join("tests", "data", "resisc45")
-        batch_size = 2
-        num_workers = 0
-        dm = RESISC45DataModule(
-            root,
-            batch_size,
-            num_workers,
-            val_split_pct=0.33,
-            test_split_pct=0.33,
-            unsupervised_mode=False,
-        )
-        dm.prepare_data()
-        dm.setup()
-        return dm
-
-    @pytest.fixture(params=["resnet18", "resnet34"])
     def task(
-        self,
-        config: Dict[str, Any],
-        request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        self, config: Dict[str, Any], monkeypatch: Generator[MonkeyPatch, None, None]
     ) -> RESISC45ClassificationTask:
-        config["classification_model"] = request.param
         task = RESISC45ClassificationTask(**config)
         monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
         return task
@@ -100,26 +97,7 @@ class TestRESISC45ClassificationTask:
             RESISC45ClassificationTask(**config)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="requires unrar executable")
 class TestRESISC45DataModule:
-    @pytest.fixture(params=[True, False])  # Fixture for unsupervised mode
-    def datamodule(self, request: SubRequest) -> RESISC45DataModule:
-        root = os.path.join("tests", "data", "resisc45")
-        batch_size = 2
-        num_workers = 0
-        unsupervised_mode = request.param
-        dm = RESISC45DataModule(
-            root,
-            batch_size,
-            num_workers,
-            val_split_pct=0.33,
-            test_split_pct=0.33,
-            unsupervised_mode=unsupervised_mode,
-        )
-        dm.prepare_data()
-        dm.setup()
-        return dm
-
     def test_train_dataloader(self, datamodule: RESISC45DataModule) -> None:
         next(iter(datamodule.train_dataloader()))
 
