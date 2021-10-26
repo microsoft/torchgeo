@@ -23,7 +23,7 @@ def datamodule() -> NAIPChesapeakeDataModule:
         batch_size=2,
         num_workers=0,
     )
-    dm.patch_size = 128
+    dm.patch_size = 32
     dm.prepare_data()
     dm.setup()
     return dm

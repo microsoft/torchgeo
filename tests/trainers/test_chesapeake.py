@@ -23,7 +23,7 @@ def datamodule(request: SubRequest) -> ChesapeakeCVPRDataModule:
         ["de-test"],
         ["de-test"],
         ["de-test"],
-        patch_size=128,
+        patch_size=32,
         patches_per_tile=2,
         batch_size=2,
         num_workers=0,
@@ -118,15 +118,15 @@ class TestChesapeakeCVPRDataModule:
         next(iter(datamodule.test_dataloader()))
 
     def test_nodata_check(self, datamodule: ChesapeakeCVPRDataModule) -> None:
-        nodata_check = datamodule.nodata_check()
+        nodata_check = datamodule.nodata_check(4)
         sample = {
-            "image": torch.ones(1, 256, 256),  # type: ignore[attr-defined]
-            "mask": torch.ones(256, 256),  # type: ignore[attr-defined]
+            "image": torch.ones(1, 2, 2),  # type: ignore[attr-defined]
+            "mask": torch.ones(2, 2),  # type: ignore[attr-defined]
         }
         out = nodata_check(sample)
         assert torch.equal(  # type: ignore[attr-defined]
-            out["image"], torch.zeros(1, 512, 512)  # type: ignore[attr-defined]
+            out["image"], torch.zeros(1, 4, 4)  # type: ignore[attr-defined]
         )
         assert torch.equal(  # type: ignore[attr-defined]
-            out["mask"], torch.zeros(512, 512)  # type: ignore[attr-defined]
+            out["mask"], torch.zeros(4, 4)  # type: ignore[attr-defined]
         )

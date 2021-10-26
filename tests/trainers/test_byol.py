@@ -25,7 +25,7 @@ def datamodule() -> ChesapeakeCVPRDataModule:
         ["de-test"],
         ["de-test"],
         ["de-test"],
-        patch_size=128,
+        patch_size=4,
         patches_per_tile=2,
         batch_size=2,
         num_workers=0,
@@ -48,7 +48,7 @@ class TestBYOL:
             bias=layer.bias,
         ).requires_grad_()
         encoder.conv1 = new_layer
-        augment_fn = SimCLRAugmentation((256, 256))
+        augment_fn = SimCLRAugmentation((2, 2))
         BYOL(encoder, augment_fn=augment_fn)
 
 
