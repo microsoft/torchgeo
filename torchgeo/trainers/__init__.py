@@ -12,6 +12,7 @@ from .resisc45 import RESISC45ClassificationTask, RESISC45DataModule
 from .sen12ms import SEN12MSDataModule, SEN12MSSegmentationTask
 from .so2sat import So2SatClassificationTask, So2SatDataModule
 from .tasks import ClassificationTask
+from .ucmerced import UCMercedClassificationTask, UCMercedDataModule
 
 __all__ = (
     # Tasks
@@ -32,6 +33,8 @@ __all__ = (
     "SEN12MSSegmentationTask",
     "So2SatDataModule",
     "So2SatClassificationTask",
+    "UCMercedClassificationTask",
+    "UCMercedDataModule",
 )
 
 # https://stackoverflow.com/questions/40018681

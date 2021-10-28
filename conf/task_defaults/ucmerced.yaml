@@ -1,0 +1,15 @@
+experiment:
+  task: "ucmerced"
+  module:
+    loss: "ce"
+    classification_model: "resnet18"
+    weights: null
+    learning_rate: 1e-3
+    learning_rate_schedule_patience: 6
+    in_channels: 3
+  datamodule:
+    batch_size: 128
+    num_workers: 6
+    unsupervised_mode: false
+    val_split_pct: 0.1
+    test_split_pct: 0.1
