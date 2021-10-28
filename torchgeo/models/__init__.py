@@ -8,7 +8,6 @@ from .farseg import FarSeg
 from .fccd import FCEF, FCSiamConc, FCSiamDiff
 from .fcn import FCN
 from .rcf import RCF
-from .resnet import resnet50
 
 __all__ = (
     "ChangeMixin",
@@ -20,7 +19,6 @@ __all__ = (
     "FCSiamConc",
     "FCSiamDiff",
     "RCF",
-    "resnet50",
 )
 
 # https://stackoverflow.com/questions/40018681
