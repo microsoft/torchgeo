@@ -3,6 +3,7 @@
 
 """TorchGeo trainers."""
 
+from .tasks import ClassificationTask
 from .byol import BYOLTask
 from .chesapeake import ChesapeakeCVPRDataModule, ChesapeakeCVPRSegmentationTask
 from .cyclone import CycloneDataModule, CycloneSimpleRegressionTask
@@ -13,6 +14,9 @@ from .sen12ms import SEN12MSDataModule, SEN12MSSegmentationTask
 from .so2sat import So2SatClassificationTask, So2SatDataModule
 
 __all__ = (
+    # Tasks
+    "ClassificationTask",
+    # Trainers
     "BYOLTask",
     "ChesapeakeCVPRSegmentationTask",
     "ChesapeakeCVPRDataModule",
