@@ -3,207 +3,26 @@
 
 """RESISC45 trainer."""
 
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, Optional
 
 import pytorch_lightning as pl
 import torch
-import torch.nn as nn
-import torchvision.models
-from torch import Tensor
-from torch.nn.modules import Conv2d, Linear, Module
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
-from torchmetrics import Accuracy, IoU, MetricCollection
 from torchvision.transforms import Compose, Normalize
 
 from ..datasets import RESISC45
 from ..datasets.utils import dataset_split
+from .tasks import ClassificationTask
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 DataLoader.__module__ = "torch.utils.data"
-Module.__module__ = "torch.nn"
-Conv2d.__module__ = "nn.Conv2d"
-Linear.__module__ = "nn.Linear"
-
-IN_CHANNELS = 3
-NUM_CLASSES = 45
 
 
-class RESISC45ClassificationTask(pl.LightningModule):
+class RESISC45ClassificationTask(ClassificationTask):
     """LightningModule for training models on the RESISC45 Dataset."""
 
-    def config_task(self) -> None:
-        """Configures the task based on kwargs parameters passed to the constructor."""
-        pretrained = "imagenet" in self.hparams["weights"]
-
-        if "resnet" in self.hparams["classification_model"]:
-            self.model = getattr(
-                torchvision.models.resnet, self.hparams["classification_model"]
-            )(pretrained=pretrained)
-            in_features = self.model.fc.in_features
-            self.model.fc = Linear(in_features, out_features=NUM_CLASSES)
-        else:
-            raise ValueError(
-                f"Model type '{self.hparams['classification_model']}' is not valid."
-            )
-
-        if "resnet" in self.hparams["classification_model"]:
-
-            if self.hparams["weights"] in ["imagenet_only", "random"]:
-                pass
-            else:
-                raise ValueError(
-                    f"Weight type '{self.hparams['weights']}' is not valid."
-                )
-        else:
-            pass  # stub for initializing the weights of other models
-
-        if self.hparams["loss"] == "ce":
-            self.loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
-        else:
-            raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
-
-    def __init__(self, **kwargs: Any) -> None:
-        """Initialize the LightningModule with a model and loss function.
-
-        Keyword Args:
-            classification_model: Name of the classification model use
-            loss: Name of the loss function
-            weights: Either "random", "imagenet_only", "imagenet_and_random", or
-                "random_rgb"
-        """
-        super().__init__()
-        self.save_hyperparameters()  # creates `self.hparams` from kwargs
-
-        self.config_task()
-
-        self.train_metrics = MetricCollection(
-            {
-                "OverallAccuracy": Accuracy(num_classes=NUM_CLASSES, average="micro"),
-                "AverageAccuracy": Accuracy(num_classes=NUM_CLASSES, average="macro"),
-                "IoU": IoU(num_classes=NUM_CLASSES),
-            },
-            prefix="train_",
-        )
-        self.val_metrics = self.train_metrics.clone(prefix="val_")
-        self.test_metrics = self.train_metrics.clone(prefix="test_")
-
-    def forward(self, x: Tensor) -> Any:  # type: ignore[override]
-        """Forward pass of the model."""
-        return self.model(x)
-
-    def training_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> Tensor:
-        """Training step.
-
-        Args:
-            batch: Current batch
-            batch_idx: Index of current batch
-
-        Returns:
-            training loss
-        """
-        x = batch["image"]
-        y = batch["label"]
-        y_hat = self.forward(x)
-        y_hat_hard = y_hat.argmax(dim=1)
-
-        loss = self.loss(y_hat, y)
-
-        # by default, the train step logs every `log_every_n_steps` steps where
-        # `log_every_n_steps` is a parameter to the `Trainer` object
-        self.log("train_loss", loss, on_step=True, on_epoch=False)
-        self.train_metrics(y_hat_hard, y)
-
-        return cast(Tensor, loss)
-
-    def training_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch-level training metrics.
-
-        Args:
-            outputs: list of items returned by training_step
-        """
-        self.log_dict(self.train_metrics.compute())
-        self.train_metrics.reset()
-
-    def validation_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
-        """Validation step.
-
-        Args:
-            batch: Current batch
-            batch_idx: Index of current batch
-        """
-        x = batch["image"]
-        y = batch["label"]
-        y_hat = self.forward(x)
-        y_hat_hard = y_hat.argmax(dim=1)
-
-        loss = self.loss(y_hat, y)
-
-        self.log("val_loss", loss, on_step=False, on_epoch=True)
-        self.val_metrics(y_hat_hard, y)
-
-    def validation_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level validation metrics.
-
-        Args:
-            outputs: list of items returned by validation_step
-        """
-        self.log_dict(self.val_metrics.compute())
-        self.val_metrics.reset()
-
-    def test_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
-        """Test step.
-
-        Args:
-            batch: Current batch
-            batch_idx: Index of current batch
-        """
-        x = batch["image"]
-        y = batch["label"]
-        y_hat = self.forward(x)
-        y_hat_hard = y_hat.argmax(dim=1)
-
-        loss = self.loss(y_hat, y)
-
-        # by default, the test and validation steps only log per *epoch*
-        self.log("test_loss", loss, on_step=False, on_epoch=True)
-        self.test_metrics(y_hat_hard, y)
-
-    def test_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level test metrics.
-
-        Args:
-            outputs: list of items returned by test_step
-        """
-        self.log_dict(self.test_metrics.compute())
-        self.test_metrics.reset()
-
-    def configure_optimizers(self) -> Dict[str, Any]:
-        """Initialize the optimizer and learning rate scheduler.
-
-        Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
-        """
-        optimizer = torch.optim.AdamW(
-            self.model.parameters(), lr=self.hparams["learning_rate"]
-        )
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": ReduceLROnPlateau(
-                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
-                ),
-                "monitor": "val_loss",
-            },
-        }
+    num_classes = 45
 
 
 class RESISC45DataModule(pl.LightningDataModule):
