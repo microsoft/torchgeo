@@ -57,7 +57,7 @@ class Enviroatlas(GeoDataset):
     https://edg.epa.gov/metadata/catalog/search/resource/details.page? +
     uuid=%7Badf673a0-11b4-40d6-befd-8bf75b370cba%7D.
     roads, waterways, waterbodies, and buildings fused as detailed in
-    {todo cite other repo}.
+    https://github.com/estherrolf/qr_for_landcover.
     """
 
     crs = CRS.from_epsg(3857)
