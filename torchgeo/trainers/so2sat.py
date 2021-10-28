@@ -32,8 +32,18 @@ class So2SatClassificationTask(ClassificationTask):
 
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor."""
-        pretrained = "imagenet" in self.hparams["weights"]
         in_channels = self.hparams["in_channels"]
+
+        pretrained = False
+        if not os.path.exists(self.hparams["weights"]):
+            if self.hparams["weights"] == "imagenet":
+                pretrained = True
+            elif self.hparams["weights"] == "random":
+                pretrained = False
+            else:
+                raise ValueError(
+                    f"Weight type '{self.hparams['weights']}' is not valid."
+                )
 
         # Create the model
         if "resnet" in self.hparams["classification_model"]:
@@ -63,12 +73,7 @@ class So2SatClassificationTask(ClassificationTask):
                     w_new = torch.clone(  # type: ignore[attr-defined]
                         self.model.conv1.weight
                     ).detach()
-
-                    if in_channels > 3:
-                        w_new[:, :3, :, :] = w_old
-                    else:
-                        w_new[:, :in_channels, :, :] = w_old[:, :in_channels, :, :]
-
+                    w_new[:, :3, :, :] = w_old
                     self.model.conv1.weight = nn.Parameter(  # type: ignore[attr-defined] # noqa: E501
                         w_new
                     )

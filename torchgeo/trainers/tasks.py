@@ -28,12 +28,22 @@ class ClassificationTask(pl.LightningModule):
     """Abstract base class for image classification LightningModules."""
 
     #: number of classes in dataset
-    num_classes: int = 10
+    num_classes: int = 45
 
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor."""
-        pretrained = "imagenet" in self.hparams["weights"]
         in_channels = self.hparams["in_channels"]
+
+        pretrained = False
+        if not os.path.exists(self.hparams["weights"]):
+            if self.hparams["weights"] == "imagenet":
+                pretrained = True
+            elif self.hparams["weights"] == "random":
+                pretrained = False
+            else:
+                raise ValueError(
+                    f"Weight type '{self.hparams['weights']}' is not valid."
+                )
 
         # Create the model
         if "resnet" in self.hparams["classification_model"]:
@@ -63,12 +73,7 @@ class ClassificationTask(pl.LightningModule):
                     w_new = torch.clone(  # type: ignore[attr-defined]
                         self.model.conv1.weight
                     ).detach()
-
-                    if in_channels > 3:
-                        w_new[:, :3, :, :] = w_old
-                    else:
-                        w_new[:, :in_channels, :, :] = w_old[:, :in_channels, :, :]
-
+                    w_new[:, :3, :, :] = w_old
                     self.model.conv1.weight = nn.Parameter(  # type: ignore[attr-defined] # noqa: E501
                         w_new
                     )
@@ -120,14 +125,14 @@ class ClassificationTask(pl.LightningModule):
         self.train_metrics = MetricCollection(
             {
                 "OverallAccuracy": Accuracy(
-                    num_classes=self.hparams["num_classes"], average="micro"
+                    num_classes=self.num_classes, average="micro"
                 ),
                 "AverageAccuracy": Accuracy(
-                    num_classes=self.hparams["num_classes"], average="macro"
+                    num_classes=self.num_classes, average="macro"
                 ),
                 "IoU": IoU(num_classes=self.num_classes),
                 "F1Score": FBeta(
-                    num_classes=self.hparams["num_classes"],
+                    num_classes=self.num_classes,
                     beta=1.0,
                     average="micro",
                 ),

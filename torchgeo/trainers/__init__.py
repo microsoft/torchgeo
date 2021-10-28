@@ -3,7 +3,6 @@
 
 """TorchGeo trainers."""
 
-from .tasks import ClassificationTask
 from .byol import BYOLTask
 from .chesapeake import ChesapeakeCVPRDataModule, ChesapeakeCVPRSegmentationTask
 from .cyclone import CycloneDataModule, CycloneSimpleRegressionTask
@@ -12,6 +11,7 @@ from .naipchesapeake import NAIPChesapeakeDataModule, NAIPChesapeakeSegmentation
 from .resisc45 import RESISC45ClassificationTask, RESISC45DataModule
 from .sen12ms import SEN12MSDataModule, SEN12MSSegmentationTask
 from .so2sat import So2SatClassificationTask, So2SatDataModule
+from .tasks import ClassificationTask
 
 __all__ = (
     # Tasks
