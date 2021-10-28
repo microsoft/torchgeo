@@ -29,6 +29,8 @@ from torchgeo.trainers import (
     SEN12MSSegmentationTask,
     So2SatClassificationTask,
     So2SatDataModule,
+    UCMercedClassificationTask,
+    UCMercedDataModule,
 )
 
 TASK_TO_MODULES_MAPPING: Dict[
@@ -42,6 +44,7 @@ TASK_TO_MODULES_MAPPING: Dict[
     "resisc45": (RESISC45ClassificationTask, RESISC45DataModule),
     "sen12ms": (SEN12MSSegmentationTask, SEN12MSDataModule),
     "so2sat": (So2SatClassificationTask, So2SatDataModule),
+    "ucmerced": (UCMercedClassificationTask, UCMercedDataModule),
 }
 
 
