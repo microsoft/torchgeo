@@ -43,12 +43,12 @@ class TestUCMerced:
         assert isinstance(x["label"], torch.Tensor)
 
     def test_len(self, dataset: UCMerced) -> None:
-        assert len(dataset) == 2
+        assert len(dataset) == 4
 
     def test_add(self, dataset: UCMerced) -> None:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
-        assert len(ds) == 4
+        assert len(ds) == 8
 
     def test_already_downloaded(self, dataset: UCMerced, tmp_path: Path) -> None:
         UCMerced(root=str(tmp_path), download=True)
