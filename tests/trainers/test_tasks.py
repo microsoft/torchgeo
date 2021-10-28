@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Generator, cast, Tuple
+from typing import Any, Dict, Generator, Tuple, cast
 
 import pytest
 from _pytest.fixtures import SubRequest
@@ -73,9 +73,7 @@ class TestClassificationTask:
         task.validation_step(batch, 0)
         task.validation_epoch_end(0)
 
-    def test_test(
-        self, datamodule: So2SatDataModule, task: ClassificationTask
-    ) -> None:
+    def test_test(self, datamodule: So2SatDataModule, task: ClassificationTask) -> None:
         batch = next(iter(datamodule.test_dataloader()))
         task.test_step(batch, 0)
         task.test_epoch_end(0)
