@@ -28,7 +28,7 @@ class TestUCMerced:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.ucmerced, "download_url", download_url
         )
-        md5 = "95e710774f3ef6d9ecb0cd42e4d0fc23"
+        md5 = "a42ef8779469d196d8f2971ee135f030"
         monkeypatch.setattr(UCMerced, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "ucmerced", "UCMerced_LandUse.zip")
         monkeypatch.setattr(UCMerced, "url", url)  # type: ignore[attr-defined]
