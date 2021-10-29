@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
-from torchvision.transforms import Compose, Normalize
+from torchvision.transforms import Compose
 
 from ..datasets import BigEarthNet
 from ..datasets.utils import dataset_split
@@ -32,17 +32,51 @@ class BigEarthNetDataModule(pl.LightningDataModule):
     """
 
     # (VV, VH, B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B11, B12)
+    # min/max band statistics computed on 83k random samples
+    band_mins_raw = torch.tensor(  # type: ignore[attr-defined]
+        [-70.0, -72.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+    )
+    band_maxs_raw = torch.tensor(  # type: ignore[attr-defined]
+        [
+            31.0,
+            35.0,
+            18556.0,
+            20528.0,
+            18903.0,
+            17846.0,
+            16593.0,
+            16512.0,
+            16394.0,
+            16575.0,
+            16124.0,
+            16097.0,
+            15336.0,
+            15203.0,
+        ]
+    )
+
+    # min/max band statistics computed by percentile clipping the
+    # above to samples to [2, 98]
     band_mins = torch.tensor(  # type: ignore[attr-defined]
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        [-48.0, -42.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
     )
     band_maxs = torch.tensor(  # type: ignore[attr-defined]
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    )
-    band_means = torch.tensor(  # type: ignore[attr-defined]
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    )
-    band_stds = torch.tensor(  # type: ignore[attr-defined]
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        [
+            6.0,
+            16.0,
+            9859.0,
+            12874.1,
+            13160.1,
+            14437.3,
+            12479.0,
+            12564.3,
+            12282.2,
+            15605.0,
+            12186.0,
+            9453.1,
+            5896.0,
+            5533.0,
+        ]
     )
 
     def __init__(
@@ -78,13 +112,23 @@ class BigEarthNetDataModule(pl.LightningDataModule):
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
 
-        self.norm = Normalize(self.band_means, self.band_stds)
+        if bands == "all":
+            self.mins = self.band_mins[:, None, None]
+            self.maxs = self.band_maxs[:, None, None]
+        elif bands == "s1":
+            self.mins = self.band_mins[:2, None, None]
+            self.maxs = self.band_maxs[:2, None, None]
+        else:
+            self.mins = self.band_mins[2:, None, None]
+            self.maxs = self.band_maxs[2:, None, None]
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         sample["image"] = sample["image"].float()
-        # sample["image"] /= 255.0
-        # sample["image"] = self.norm(sample["image"])
+        sample["image"] = (sample["image"] - self.mins) / (self.maxs - self.mins)
+        sample["image"] = torch.clip(  # type: ignore[attr-defined]
+            sample["image"], min=0.0, max=1.0
+        )
         return sample
 
     def prepare_data(self) -> None:
