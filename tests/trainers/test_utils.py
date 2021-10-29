@@ -10,7 +10,11 @@ import torch
 import torch.nn as nn
 from torch.nn.modules import Module
 
-from torchgeo.trainers.utils import extract_encoder, load_state_dict
+from torchgeo.trainers.utils import (
+    extract_encoder,
+    load_state_dict,
+    reinit_initial_conv_layer,
+)
 
 
 class FakeExperiment(object):
@@ -87,3 +91,17 @@ def test_load_state_dict_unequal_classes(checkpoint: str, model: Module) -> None
     )
     with pytest.warns(UserWarning, match=warning):
         model = load_state_dict(model, state_dict)
+
+
+def test_reinit_initial_conv_layer() -> None:
+    conv_layer = nn.Conv2d(3, 5, kernel_size=3, stride=2, padding=1, bias=True)
+    initial_weights = conv_layer.weight.data.clone()
+
+    new_conv_layer = reinit_initial_conv_layer(conv_layer, 4, keep_rgb_weights=True)
+
+    out_channels, in_channels, k1, k2 = new_conv_layer.weight.shape
+    assert torch.allclose(initial_weights, new_conv_layer.weight.data[:, :3, :, :])
+    assert out_channels == 5
+    assert in_channels == 4
+    assert k1 == 3 and k2 == 3
+    assert new_conv_layer.stride[0] == 2

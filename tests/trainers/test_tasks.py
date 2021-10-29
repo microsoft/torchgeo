@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Generator, Optional, cast
+from typing import Any, Dict, Generator, Optional, cast, Tuple
 
 import pytest
 import pytorch_lightning as pl
@@ -99,20 +99,21 @@ class TestClassificationTask:
         return dm
 
     @pytest.fixture(
-        scope="class",
-        params=zip(["ce", "jaccard", "focal"], ["imagenet", "random", "random"]),
+        params=zip(
+            ["ce", "jaccard", "focal"],
+            ["imagenet", "random", "random"],
+            ["resnet18", "vgg11", "vgg11"],
+        )
     )
-    def config(
-        self, request: SubRequest, datamodule: DummyDataModule
-    ) -> Dict[str, Any]:
-        task_args = {}
-        task_args["classification_model"] = "resnet18"
-        task_args["learning_rate"] = 3e-4  # type: ignore[assignment]
-        task_args["learning_rate_schedule_patience"] = 6  # type: ignore[assignment]
-        task_args["in_channels"] = datamodule.num_channels  # type: ignore[assignment]
-        loss, weights = request.param
+    def config(self, request: SubRequest, bands: Tuple[str, int]) -> Dict[str, Any]:
+        task_conf = OmegaConf.load(os.path.join("conf", "task_defaults", "so2sat.yaml"))
+        task_args = OmegaConf.to_object(task_conf.experiment.module)
+        task_args = cast(Dict[str, Any], task_args)
+        task_args["in_channels"] = bands[1]
+        loss, weights, model = request.param
         task_args["loss"] = loss
         task_args["weights"] = weights
+        task_args["classification_model"] = model
         return task_args
 
     @pytest.fixture

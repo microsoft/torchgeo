@@ -116,10 +116,12 @@ def reinit_initial_conv_layer(
     Returns:
         a Conv2d layer with new kernel weights
     """
+    use_bias = layer.bias is not None
     if keep_rgb_weights:
         w_old = layer.weight.data[:, :3, :, :].clone()
-        if layer.bias:
-            b_old = layer.bias.data.clone()
+        if use_bias:
+            # mypy doesn't realize that bias isn't None here...
+            b_old = layer.bias.data.clone()  # type: ignore[union-attr]
 
     new_layer = Conv2d(
         new_in_channels,
@@ -129,7 +131,7 @@ def reinit_initial_conv_layer(
         padding=layer.padding,  # type: ignore[arg-type]
         dilation=layer.dilation,  # type: ignore[arg-type]
         groups=layer.groups,
-        bias=layer.bias,  # type: ignore[arg-type]
+        bias=use_bias,
         padding_mode=layer.padding_mode,
     )
     nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
@@ -138,7 +140,7 @@ def reinit_initial_conv_layer(
 
     if keep_rgb_weights:
         new_layer.weight.data[:, :3, :, :] = w_old
-        if new_layer.bias:
-            new_layer.bias.data = b_old
+        if use_bias:
+            new_layer.bias.data = b_old  # type: ignore[union-attr]
 
     return new_layer
