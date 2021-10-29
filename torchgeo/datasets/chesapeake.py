@@ -762,3 +762,4 @@ class ChesapeakeCVPRPrior(GeoDataset):
             filename=self.filename,
             md5=self.md5,
         )
+
