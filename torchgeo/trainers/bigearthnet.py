@@ -32,7 +32,7 @@ class BigEarthNetDataModule(pl.LightningDataModule):
     """
 
     # (VV, VH, B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B11, B12)
-    # min/max band statistics computed on 83k random samples
+    # min/max band statistics computed on 100k random samples
     band_mins_raw = torch.tensor(  # type: ignore[attr-defined]
         [-70.0, -72.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0]
     )
@@ -42,13 +42,13 @@ class BigEarthNetDataModule(pl.LightningDataModule):
             35.0,
             18556.0,
             20528.0,
-            18903.0,
-            17846.0,
-            16593.0,
+            18976.0,
+            17874.0,
+            16611.0,
             16512.0,
             16394.0,
-            16575.0,
-            16124.0,
+            16672.0,
+            16141.0,
             16097.0,
             15336.0,
             15203.0,
@@ -65,17 +65,17 @@ class BigEarthNetDataModule(pl.LightningDataModule):
             6.0,
             16.0,
             9859.0,
-            12874.1,
-            13160.1,
-            14437.3,
-            12479.0,
-            12564.3,
-            12282.2,
-            15605.0,
-            12186.0,
-            9453.1,
-            5896.0,
-            5533.0,
+            12872.0,
+            13163.0,
+            14445.0,
+            12477.0,
+            12563.0,
+            12289.0,
+            15596.0,
+            12183.0,
+            9458.0,
+            5897.0,
+            5544.0,
         ]
     )
 
