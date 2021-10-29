@@ -334,13 +334,14 @@ class MultiLabelClassificationTask(ClassificationTask):
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
+        y_hat_hard = torch.softmax(y_hat, dim=-1)  # type: ignore[attr-defined]
 
         loss = self.loss(y_hat, y.to(torch.float))  # type: ignore[attr-defined]
 
         # by default, the train step logs every `log_every_n_steps` steps where
         # `log_every_n_steps` is a parameter to the `Trainer` object
         self.log("train_loss", loss, on_step=True, on_epoch=False)
-        self.train_metrics(y_hat, y)
+        self.train_metrics(y_hat_hard, y)
 
         return cast(Tensor, loss)
 
@@ -356,11 +357,12 @@ class MultiLabelClassificationTask(ClassificationTask):
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
+        y_hat_hard = torch.softmax(y_hat, dim=-1)  # type: ignore[attr-defined]
 
         loss = self.loss(y_hat, y.to(torch.float))  # type: ignore[attr-defined]
 
         self.log("val_loss", loss, on_step=False, on_epoch=True)
-        self.val_metrics(y_hat, y)
+        self.val_metrics(y_hat_hard, y)
 
     def test_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
@@ -374,9 +376,10 @@ class MultiLabelClassificationTask(ClassificationTask):
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
+        y_hat_hard = torch.softmax(y_hat, dim=-1)  # type: ignore[attr-defined]
 
         loss = self.loss(y_hat, y.to(torch.float))  # type: ignore[attr-defined]
 
         # by default, the test and validation steps only log per *epoch*
         self.log("test_loss", loss, on_step=False, on_epoch=True)
-        self.test_metrics(y_hat, y)
+        self.test_metrics(y_hat_hard, y)
