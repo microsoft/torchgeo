@@ -73,7 +73,10 @@ class ClassificationTask(pl.LightningModule):
                     w_new = torch.clone(  # type: ignore[attr-defined]
                         self.model.conv1.weight
                     ).detach()
-                    w_new[:, :3, :, :] = w_old
+                    if in_channels > 3:
+                        w_new[:, :3, :, :] = w_old
+                    else:
+                        w_new[:, :in_channels, :, :] = w_old[:, :in_channels, :, :]
                     self.model.conv1.weight = nn.Parameter(  # type: ignore[attr-defined] # noqa: E501
                         w_new
                     )
@@ -264,3 +267,115 @@ class ClassificationTask(pl.LightningModule):
                 "monitor": "val_loss",
             },
         }
+
+
+class MultiLabelClassificationTask(ClassificationTask):
+    """Abstract base class for multi label image classification LightningModules."""
+
+    #: number of classes in dataset
+    num_classes: int = 43
+
+    def config_task(self) -> None:
+        """Configures the task based on kwargs parameters passed to the constructor."""
+        self.config_model()
+
+        if self.hparams["loss"] == "bce":
+            self.loss = nn.BCEWithLogitsLoss()  # type: ignore[attr-defined]
+        else:
+            raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the LightningModule with a model and loss function.
+
+        Keyword Args:
+            classification_model: Name of the classification model use
+            loss: Name of the loss function
+            weights: Either "random", "imagenet_only", "imagenet_and_random", or
+                "random_rgb"
+        """
+        super().__init__(**kwargs)
+        self.save_hyperparameters()  # creates `self.hparams` from kwargs
+
+        self.config_task()
+
+        self.train_metrics = MetricCollection(
+            {
+                "OverallAccuracy": Accuracy(
+                    num_classes=self.num_classes, average="micro", multiclass=False
+                ),
+                "AverageAccuracy": Accuracy(
+                    num_classes=self.num_classes, average="macro", multiclass=False
+                ),
+                "F1Score": FBeta(
+                    num_classes=self.num_classes,
+                    beta=1.0,
+                    average="micro",
+                    multiclass=False,
+                ),
+            },
+            prefix="train_",
+        )
+        self.val_metrics = self.train_metrics.clone(prefix="val_")
+        self.test_metrics = self.train_metrics.clone(prefix="test_")
+
+    def training_step(  # type: ignore[override]
+        self, batch: Dict[str, Any], batch_idx: int
+    ) -> Tensor:
+        """Training step.
+
+        Args:
+            batch: Current batch
+            batch_idx: Index of current batch
+
+        Returns:
+            training loss
+        """
+        x = batch["image"]
+        y = batch["label"]
+        y_hat = self.forward(x)
+
+        loss = self.loss(y_hat, y.to(torch.float))
+
+        # by default, the train step logs every `log_every_n_steps` steps where
+        # `log_every_n_steps` is a parameter to the `Trainer` object
+        self.log("train_loss", loss, on_step=True, on_epoch=False)
+        self.train_metrics(y_hat, y)
+
+        return cast(Tensor, loss)
+
+    def validation_step(  # type: ignore[override]
+        self, batch: Dict[str, Any], batch_idx: int
+    ) -> None:
+        """Validation step.
+
+        Args:
+            batch: Current batch
+            batch_idx: Index of current batch
+        """
+        x = batch["image"]
+        y = batch["label"]
+        y_hat = self.forward(x)
+
+        loss = self.loss(y_hat, y.to(torch.float))
+
+        self.log("val_loss", loss, on_step=False, on_epoch=True)
+        self.val_metrics(y_hat, y)
+
+    def test_step(  # type: ignore[override]
+        self, batch: Dict[str, Any], batch_idx: int
+    ) -> None:
+        """Test step.
+
+        Args:
+            batch: Current batch
+            batch_idx: Index of current batch
+        """
+        x = batch["image"]
+        y = batch["label"]
+        y_hat = self.forward(x)
+
+        loss = self.loss(y_hat, y.to(torch.float))
+
+        # by default, the test and validation steps only log per *epoch*
+        self.log("test_loss", loss, on_step=False, on_epoch=True)
+        self.test_metrics(y_hat, y)
