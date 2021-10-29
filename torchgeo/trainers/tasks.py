@@ -58,9 +58,7 @@ class ClassificationTask(pl.LightningModule):
             # Update first layer
             if in_channels != 3:
                 self.model.conv1 = utils.reinit_initial_conv_layer(
-                    self.model.conv1,
-                    in_channels,
-                    keep_rgb_weights=pretrained
+                    self.model.conv1, in_channels, keep_rgb_weights=pretrained
                 )
         elif "vgg" in self.hparams["classification_model"]:
             self.model = getattr(
@@ -71,9 +69,7 @@ class ClassificationTask(pl.LightningModule):
             # Update first layer
             if in_channels != 3:
                 self.model.features[0] = utils.reinit_initial_conv_layer(
-                    self.model.features[0],
-                    in_channels,
-                    keep_rgb_weights=pretrained
+                    self.model.features[0], in_channels, keep_rgb_weights=pretrained
                 )
         else:
             raise ValueError(

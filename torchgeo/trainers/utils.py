@@ -10,7 +10,7 @@ from typing import Dict, Tuple
 import torch
 import torch.nn as nn
 from torch import Tensor
-from torch.nn.modules import Module, Conv2d
+from torch.nn.modules import Conv2d, Module
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -99,9 +99,7 @@ def load_state_dict(model: Module, state_dict: Dict[str, Tensor]) -> Module:
 
 
 def reinit_initial_conv_layer(
-    layer: Conv2d,
-    new_in_channels: int,
-    keep_rgb_weights: bool
+    layer: Conv2d, new_in_channels: int, keep_rgb_weights: bool
 ) -> Conv2d:
     """Clones a Conv2d layer while optionally retaining some of the original weights.
 
