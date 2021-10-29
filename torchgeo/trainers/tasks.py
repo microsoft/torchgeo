@@ -57,32 +57,24 @@ class ClassificationTask(pl.LightningModule):
 
             # Update first layer
             if in_channels != 3:
-                w_old = torch.empty(0)  # type: ignore[attr-defined]
-                if pretrained:
-                    w_old = torch.clone(  # type: ignore[attr-defined]
-                        self.model.conv1.weight
-                    ).detach()
-                # Create the new layer
-                self.model.conv1 = Conv2d(
-                    in_channels, 64, kernel_size=7, stride=2, padding=3, bias=False
+                self.model.conv1 = utils.reinit_initial_conv_layer(
+                    self.model.conv1,
+                    in_channels,
+                    keep_rgb_weights=pretrained
                 )
-                nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
-                    self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
-                )
+        elif "vgg" in self.hparams["classification_model"]:
+            self.model = getattr(
+                torchvision.models.vgg, self.hparams["classification_model"]
+            )(pretrained=pretrained)
+            self.model.classifier[6] = Linear(4096, self.num_classes)
 
-                # We copy over the pretrained RGB weights
-                if pretrained:
-                    w_new = torch.clone(  # type: ignore[attr-defined]
-                        self.model.conv1.weight
-                    ).detach()
-                    if in_channels > 3:
-                        w_new[:, :3, :, :] = w_old
-                    else:
-                        w_old = w_old[:, :in_channels, :, :]
-                        w_new[:, :in_channels, :, :] = w_old
-                    self.model.conv1.weight = nn.Parameter(  # type: ignore[attr-defined] # noqa: E501
-                        w_new
-                    )
+            # Update first layer
+            if in_channels != 3:
+                self.model.features[0] = utils.reinit_initial_conv_layer(
+                    self.model.features[0],
+                    in_channels,
+                    keep_rgb_weights=pretrained
+                )
         else:
             raise ValueError(
                 f"Model type '{self.hparams['classification_model']}' is not valid."
