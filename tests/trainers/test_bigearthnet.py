@@ -1,0 +1,47 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+import os
+from typing import Tuple, cast
+
+import pytest
+from _pytest.fixtures import SubRequest
+
+from torchgeo.trainers import BigEarthNetDataModule
+
+
+@pytest.fixture(scope="module", params=[("s1", 2), ("s2", 12), ("all", 14)])
+def bands(request: SubRequest) -> Tuple[str, int]:
+    return cast(Tuple[str, int], request.param)
+
+
+@pytest.fixture(scope="module", params=[True, False])
+def datamodule(bands: Tuple[str, int], request: SubRequest) -> BigEarthNetDataModule:
+    band_set = bands[0]
+    unsupervised_mode = request.param
+    root = os.path.join("tests", "data", "bigearthnet")
+    batch_size = 1
+    num_workers = 0
+    dm = BigEarthNetDataModule(
+        root,
+        band_set,
+        batch_size,
+        num_workers,
+        unsupervised_mode,
+        val_split_pct=0.3,
+        test_split_pct=0.3,
+    )
+    dm.prepare_data()
+    dm.setup()
+    return dm
+
+
+class TestBigEarthNetDataModule:
+    def test_train_dataloader(self, datamodule: BigEarthNetDataModule) -> None:
+        next(iter(datamodule.train_dataloader()))
+
+    def test_val_dataloader(self, datamodule: BigEarthNetDataModule) -> None:
+        next(iter(datamodule.val_dataloader()))
+
+    def test_test_dataloader(self, datamodule: BigEarthNetDataModule) -> None:
+        next(iter(datamodule.test_dataloader()))
