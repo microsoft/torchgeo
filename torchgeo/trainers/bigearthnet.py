@@ -110,7 +110,7 @@ class BigEarthNetDataModule(pl.LightningDataModule):
                 dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
             )
         else:
-            self.train_dataset = BigEarthNet(
+            self.train_dataset = BigEarthNet(  # type: ignore[assignment]
                 self.root_dir, bands=self.bands, transforms=transforms
             )
             self.val_dataset, self.test_dataset = None, None  # type: ignore[assignment]

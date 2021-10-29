@@ -55,7 +55,7 @@ class ClassificationTask(pl.LightningModule):
 
             # Update first layer
             if in_channels != 3:
-                w_old = None
+                w_old = torch.empty(0)  # type: ignore[attr-defined]
                 if pretrained:
                     w_old = torch.clone(  # type: ignore[attr-defined]
                         self.model.conv1.weight
@@ -76,7 +76,8 @@ class ClassificationTask(pl.LightningModule):
                     if in_channels > 3:
                         w_new[:, :3, :, :] = w_old
                     else:
-                        w_new[:, :in_channels, :, :] = w_old[:, :in_channels, :, :]
+                        w_old = w_old[:, :in_channels, :, :]
+                        w_new[:, :in_channels, :, :] = w_old
                     self.model.conv1.weight = nn.Parameter(  # type: ignore[attr-defined] # noqa: E501
                         w_new
                     )
@@ -334,7 +335,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         y = batch["label"]
         y_hat = self.forward(x)
 
-        loss = self.loss(y_hat, y.to(torch.float))
+        loss = self.loss(y_hat, y.to(torch.float))  # type: ignore[attr-defined]
 
         # by default, the train step logs every `log_every_n_steps` steps where
         # `log_every_n_steps` is a parameter to the `Trainer` object
@@ -356,7 +357,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         y = batch["label"]
         y_hat = self.forward(x)
 
-        loss = self.loss(y_hat, y.to(torch.float))
+        loss = self.loss(y_hat, y.to(torch.float))  # type: ignore[attr-defined]
 
         self.log("val_loss", loss, on_step=False, on_epoch=True)
         self.val_metrics(y_hat, y)
@@ -374,7 +375,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         y = batch["label"]
         y_hat = self.forward(x)
 
-        loss = self.loss(y_hat, y.to(torch.float))
+        loss = self.loss(y_hat, y.to(torch.float))  # type: ignore[attr-defined]
 
         # by default, the test and validation steps only log per *epoch*
         self.log("test_loss", loss, on_step=False, on_epoch=True)
