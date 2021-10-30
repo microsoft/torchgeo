@@ -70,7 +70,7 @@ class TestTropicalCycloneWindEstimation:
         assert isinstance(x["storm_id"], str)
         assert isinstance(x["relative_time"], int)
         assert isinstance(x["ocean"], int)
-        assert isinstance(x["wind_speed"], int)
+        assert isinstance(x["target"], int)
         assert x["image"].shape == (dataset.size, dataset.size)
 
     def test_len(self, dataset: TropicalCycloneWindEstimation) -> None:

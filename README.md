@@ -56,7 +56,7 @@ import torchgeo.datasets
 
 dataset = torchgeo.datasets.TropicalCycloneWindEstimation(split="train", download=True)
 print(dataset[0]["image"].shape)
-print(dataset[0]["wind_speed"])
+print(dataset[0]["target"])
 ```
 
 ## Contributing

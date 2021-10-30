@@ -66,7 +66,7 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
             training loss
         """
         x = batch["image"]
-        y = batch["wind_speed"].view(-1, 1)
+        y = batch["target"].view(-1, 1)
         y_hat = self.forward(x)
 
         loss = F.mse_loss(y_hat, y)
@@ -88,7 +88,7 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
             batch_idx: Index of current batch
         """
         x = batch["image"]
-        y = batch["wind_speed"].view(-1, 1)
+        y = batch["target"].view(-1, 1)
         y_hat = self.forward(x)
 
         loss = F.mse_loss(y_hat, y)
@@ -107,7 +107,7 @@ class CycloneSimpleRegressionTask(pl.LightningModule):
             batch_idx: Index of current batch
         """
         x = batch["image"]
-        y = batch["wind_speed"].view(-1, 1)
+        y = batch["target"].view(-1, 1)
         y_hat = self.forward(x)
 
         loss = F.mse_loss(y_hat, y)
@@ -177,8 +177,8 @@ class CycloneDataModule(pl.LightningDataModule):
         sample["image"] = (
             sample["image"].unsqueeze(0).repeat(3, 1, 1)
         )  # convert to 3 channel
-        sample["wind_speed"] = torch.as_tensor(  # type: ignore[attr-defined]
-            sample["wind_speed"]
+        sample["target"] = torch.as_tensor(  # type: ignore[attr-defined]
+            sample["target"]
         ).float()
 
         return sample
