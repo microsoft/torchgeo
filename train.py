@@ -14,9 +14,9 @@ from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 
 from torchgeo.trainers import (
-    BYOLTask,
     BigEarthNetClassificationTask,
     BigEarthNetDataModule,
+    BYOLTask,
     ChesapeakeCVPRDataModule,
     ChesapeakeCVPRSegmentationTask,
     CycloneDataModule,
