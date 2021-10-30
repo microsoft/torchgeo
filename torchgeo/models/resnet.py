@@ -3,11 +3,11 @@
 
 """Pre-trained ResNet models."""
 
-from typing import Type, Union, List
+from typing import Any, List, Type, Union
 
+import torch.nn as nn
 from torch.hub import load_state_dict_from_url
-from torchvision.models import ResNet, Bottleneck, BasicBlock
-
+from torchvision.models.resnet import BasicBlock, Bottleneck, ResNet
 
 MODEL_URLS = {
     "sentinel2": {
@@ -16,17 +16,21 @@ MODEL_URLS = {
 }
 
 
-IN_CHANNELS = {
-    "sentinel2": 10
-}
+IN_CHANNELS = {"sentinel2": 10}
 
-NUM_CLASSES = {
-    "sentinel2": 17
-}
+NUM_CLASSES = {"sentinel2": 17}
 
 
-def _resnet(sensor: str, arch: str, block: Type[Union[BasicBlock, BottleNeck]], layers: List[int], pretrained: bool, progress: bool, **kwargs: Any) -> ResNet:
-    """ResNet model.
+def _resnet(
+    sensor: str,
+    arch: str,
+    block: Type[Union[BasicBlock, Bottleneck]],
+    layers: List[int],
+    pretrained: bool,
+    progress: bool,
+    **kwargs: Any,
+) -> ResNet:
+    """Resnet model.
 
     If you use this model in your research, please cite the following paper:
 
@@ -48,17 +52,27 @@ def _resnet(sensor: str, arch: str, block: Type[Union[BasicBlock, BottleNeck]], 
 
     # Replace the first layer with the correct number of input channels
     model.conv1 = nn.Conv2d(  # type: ignore[attr-defined]
-        IN_CHANNELS[sensor], out_channels=64, kernel_size=7, stride=1, padding=2, bias=False
+        IN_CHANNELS[sensor],
+        out_channels=64,
+        kernel_size=7,
+        stride=1,
+        padding=2,
+        bias=False,
     )
 
     # Load pretrained weights
     if pretrained:
-        state_dict = load_state_dict_from_url(MODEL_URLS[sensor][arch], progress=progress)
+        state_dict = load_state_dict_from_url(  # type: ignore[no-untyped-call]
+            MODEL_URLS[sensor][arch], progress=progress
+        )
         model.load_state_dict(state_dict)
 
     return model
 
-def resnet50(sensor: str, pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
+
+def resnet50(
+    sensor: str, pretrained: bool = False, progress: bool = True, **kwargs: Any
+) -> ResNet:
     """ResNet-50 model.
 
     If you use this model in your research, please cite the following paper:
@@ -73,4 +87,6 @@ def resnet50(sensor: str, pretrained: bool = False, progress: bool = True, **kwa
     Returns:
         A ResNet-50 model
     """
-    return _resnet(sensor, "resnet50", Bottleneck, [3, 4, 6, 3], pretrained, progress, **kwargs)
+    return _resnet(
+        sensor, "resnet50", Bottleneck, [3, 4, 6, 3], pretrained, progress, **kwargs
+    )
