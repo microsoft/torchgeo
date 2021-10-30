@@ -23,8 +23,7 @@ def extract_encoder(path: str) -> Tuple[str, Dict[str, Tensor]]:
         path: path to checkpoint file (.ckpt)
 
     Returns:
-        name: str representing model name (generally a torchvision resnet model)
-        state_dict: dict of layer names and weight tensors
+        tuple containing model name and state dict
 
     Raises:
         ValueError: if 'classification_model' or 'encoder' not in

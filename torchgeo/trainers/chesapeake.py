@@ -351,7 +351,16 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
     def pad_to(
         self, size: int = 512, image_value: int = 0, mask_value: int = 0
     ) -> Callable[[Dict[str, Tensor]], Dict[str, Tensor]]:
-        """Returns a function to perform a padding transform on a single sample."""
+        """Returns a function to perform a padding transform on a single sample.
+
+        Args:
+            size: output image size
+            image_value: value to pad image with
+            mask_value: value to pad mask with
+
+        Returns:
+            function to perform padding
+        """
 
         def pad_inner(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
             _, height, width = sample["image"].shape
@@ -381,7 +390,14 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
     def center_crop(
         self, size: int = 512
     ) -> Callable[[Dict[str, Tensor]], Dict[str, Tensor]]:
-        """Returns a function to perform a center crop transform on a single sample."""
+        """Returns a function to perform a center crop transform on a single sample.
+
+        Args:
+            size: output image size
+
+        Returns:
+            function to perform center crop
+        """
 
         def center_crop_inner(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
             _, height, width = sample["image"].shape
@@ -396,7 +412,14 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         return center_crop_inner
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Preprocesses a single sample."""
+        """Preprocesses a single sample.
+
+        Args:
+            sample dictionary containing image and mask
+
+        Returns:
+            preprocessed sample
+        """
         sample["image"] = sample["image"] / 255.0
         sample["mask"] = sample["mask"]
         sample["mask"] = sample["mask"].squeeze()
@@ -413,7 +436,14 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
     def nodata_check(
         self, size: int = 512
     ) -> Callable[[Dict[str, Tensor]], Dict[str, Tensor]]:
-        """Returns a function to check for nodata or missized input."""
+        """Returns a function to check for nodata or mis-sized input.
+
+        Args:
+            size: output image size
+
+        Returns:
+            function to check for nodata values
+        """
 
         def nodata_check_inner(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
             num_channels, height, width = sample["image"].shape
@@ -447,6 +477,9 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
 
         The splits should be done here vs. in :func:`__init__` per the docs:
         https://pytorch-lightning.readthedocs.io/en/latest/extensions/datamodules.html#setup.
+
+        Args:
+            stage: stage to set up
         """
         train_transforms = Compose(
             [
@@ -495,7 +528,11 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training."""
+        """Return a DataLoader for training.
+
+        Returns:
+            training data loader
+        """
         sampler = RandomBatchGeoSampler(
             self.train_dataset,
             size=self.original_patch_size,
@@ -507,7 +544,11 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation."""
+        """Return a DataLoader for validation.
+
+        Returns:
+            validation data loader
+        """
         sampler = GridGeoSampler(
             self.val_dataset,
             size=self.original_patch_size,
@@ -521,7 +562,11 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing."""
+        """Return a DataLoader for testing.
+
+        Returns:
+            testing data loader
+        """
         sampler = GridGeoSampler(
             self.test_dataset,
             size=self.original_patch_size,

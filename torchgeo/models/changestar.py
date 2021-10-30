@@ -72,7 +72,7 @@ class ChangeMixin(Module):
         """Forward pass of the model.
 
         Args:
-            x: input bitemporal feature maps of shape [b, t, c, h, w]
+            bi_feature: input bitemporal feature maps of shape [b, t, c, h, w]
 
         Returns:
             a list of bidirected output predictions
@@ -146,13 +146,8 @@ class ChangeStar(Module):
             x: a bitemporal input tensor of shape [B, T, C, H, W]
 
         Returns:
-            a dictionary containing
-                if training stage, returning
-                    bi_seg_logit: bitemporal semantic segmentation logit
-                    bi_change_logit: bidirected binary change detection logit
-                if inference stage, returning
-                    bi_seg_logit: bitemporal semantic segmentation logit
-                    change_prob:  binary change detection probability
+            a dictionary containing bitemporal semantic segmentation logit and binary
+            change detection logit/probability
         """
         b, t, c, h, w = x.shape
         x = rearrange(x, "b t c h w -> (b t) c h w")
