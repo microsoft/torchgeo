@@ -16,28 +16,29 @@ from .tasks import ClassificationTask, MultiLabelClassificationTask
 from .ucmerced import UCMercedClassificationTask, UCMercedDataModule
 
 __all__ = (
-    # Tasks
+    # Base Classes
     "ClassificationTask",
     "MultiLabelClassificationTask",
-    # Trainers
+    # Tasks
     "BigEarthNetClassificationTask",
-    "BigEarthNetDataModule",
     "BYOLTask",
     "ChesapeakeCVPRSegmentationTask",
-    "ChesapeakeCVPRDataModule",
-    "CycloneDataModule",
     "CycloneSimpleRegressionTask",
-    "LandcoverAIDataModule",
     "LandcoverAISegmentationTask",
-    "NAIPChesapeakeDataModule",
     "NAIPChesapeakeSegmentationTask",
     "RESISC45ClassificationTask",
-    "RESISC45DataModule",
-    "SEN12MSDataModule",
     "SEN12MSSegmentationTask",
-    "So2SatDataModule",
     "So2SatClassificationTask",
     "UCMercedClassificationTask",
+    # DataModules
+    "BigEarthNetDataModule",
+    "ChesapeakeCVPRDataModule",
+    "CycloneDataModule",
+    "LandcoverAIDataModule",
+    "NAIPChesapeakeDataModule",
+    "RESISC45DataModule",
+    "SEN12MSDataModule",
+    "So2SatDataModule",
     "UCMercedDataModule",
 )
 
