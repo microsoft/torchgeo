@@ -18,4 +18,4 @@ def test_resnet(
     x = torch.zeros(1, in_channels, 256, 256)  # type: ignore[attr-defined]
     y = model(x)
     assert isinstance(y, torch.Tensor)
-    assert y.size() == torch.Size([1, 17])
+    assert y.size() == torch.Size([1, 17])  # type: ignore[attr-defined]
