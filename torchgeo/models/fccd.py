@@ -231,7 +231,14 @@ class FCEF(Module):
         self.upsample = Upsample()
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward pass of the model."""
+        """Forward pass of the model.
+
+        Args:
+            x: input image
+
+        Returns:
+            prediction
+        """
         b, t, c, h, w = x.shape
         x = rearrange(x, "b t c h w -> b (t c) h w")
 
@@ -274,7 +281,14 @@ class FCSiamConc(Module):
         self.pool = nn.modules.MaxPool2d(kernel_size=2)
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward pass of the model."""
+        """Forward pass of the model.
+
+        Args:
+            x: input image
+
+        Returns:
+            prediction
+        """
         b, t, c, h, w = x.shape
         x = rearrange(x, "b t c h w -> (b t) c h w")
 
@@ -325,7 +339,14 @@ class FCSiamDiff(nn.modules.Module):
         self.pool = nn.modules.MaxPool2d(kernel_size=2)
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward pass of the model."""
+        """Forward pass of the model.
+
+        Args:
+            x: input image
+
+        Returns:
+            prediction
+        """
         b, t, c, h, w = x.shape
         x = rearrange(x, "b t c h w -> (b t) c h w")
 

@@ -96,13 +96,28 @@ class NAIPChesapeakeSegmentationTask(pl.LightningModule):
         self.test_iou = IoU(num_classes=self.classes)
 
     def forward(self, x: Tensor) -> Any:  # type: ignore[override]
-        """Forward pass of the model."""
+        """Forward pass of the model.
+
+        Args:
+            x: input image
+
+        Returns:
+            prediction
+        """
         return self.model(x)
 
     def training_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> Tensor:
-        """Training step - reports average accuracy and average IoU."""
+        """Training step - reports average accuracy and average IoU.
+
+        Args:
+            batch: current batch
+            batch_idx: index of current batch
+
+        Returns:
+            training loss
+        """
         x = batch["image"]
         y = batch["mask"]
         y_hat = self.forward(x)
@@ -119,7 +134,11 @@ class NAIPChesapeakeSegmentationTask(pl.LightningModule):
         return cast(Tensor, loss)
 
     def training_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level training metrics."""
+        """Logs epoch level training metrics.
+
+        Args:
+            outputs: list of items returned by training_step
+        """
         self.log("train_acc", self.train_accuracy.compute())
         self.log("train_iou", self.train_iou.compute())
         self.train_accuracy.reset()
@@ -128,7 +147,12 @@ class NAIPChesapeakeSegmentationTask(pl.LightningModule):
     def validation_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
-        """Validation step - reports average accuracy and average IoU."""
+        """Validation step - reports average accuracy and average IoU.
+
+        Args:
+            batch: current batch
+            batch_idx: index of current batch
+        """
         x = batch["image"]
         y = batch["mask"]
         y_hat = self.forward(x)
@@ -167,7 +191,11 @@ class NAIPChesapeakeSegmentationTask(pl.LightningModule):
             plt.close()
 
     def validation_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level validation metrics."""
+        """Logs epoch level validation metrics.
+
+        Args:
+            outputs: list of items returned by validation_step
+        """
         self.log("val_acc", self.val_accuracy.compute())
         self.log("val_iou", self.val_iou.compute())
         self.val_accuracy.reset()
@@ -176,7 +204,12 @@ class NAIPChesapeakeSegmentationTask(pl.LightningModule):
     def test_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
-        """Test step identical to the validation step."""
+        """Test step identical to the validation step.
+
+        Args:
+            batch: current batch
+            batch_idx: index of current batch
+        """
         x = batch["image"]
         y = batch["mask"]
         y_hat = self.forward(x)
@@ -190,14 +223,23 @@ class NAIPChesapeakeSegmentationTask(pl.LightningModule):
         self.test_iou(y_hat_hard, y)
 
     def test_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level test metrics."""
+        """Logs epoch level test metrics.
+
+        Args:
+            outputs: list of items returned by test_step
+        """
         self.log("test_acc", self.test_accuracy.compute())
         self.log("test_iou", self.test_iou.compute())
         self.test_accuracy.reset()
         self.test_iou.reset()
 
     def configure_optimizers(self) -> Dict[str, Any]:
-        """Initialize the optimizer and learning rate scheduler."""
+        """Initialize the optimizer and learning rate scheduler.
+
+        Returns:
+            a "lr dict" according to the pytorch lightning documentation --
+            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+        """
         optimizer = torch.optim.AdamW(
             self.model.parameters(), lr=self.hparams["learning_rate"]
         )
@@ -247,13 +289,27 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
 
     def naip_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the NAIP Dataset."""
+        """Transform a single sample from the NAIP Dataset.
+
+        Args:
+            sample: NAIP image dictionary
+
+        Returns:
+            preprocessed NAIP data
+        """
         sample["image"] = sample["image"] / 255.0
         sample["image"] = sample["image"].float()
         return sample
 
     def chesapeake_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Chesapeake Dataset."""
+        """Transform a single sample from the Chesapeake Dataset.
+
+        Args:
+            sample: Chesapeake mask dictionary
+
+        Returns:
+            preprocessed Chesapeake data
+        """
         sample["mask"] = sample["mask"].long()[0]
         return sample
 
@@ -268,6 +324,9 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         """Initialize the main ``Dataset`` objects.
 
         This method is called once per GPU per run.
+
+        Args:
+            stage: state to set up
         """
         # TODO: these transforms will be applied independently, this won't work if we
         # add things like random horizontal flip
@@ -297,13 +356,21 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         self.test_sampler = GridGeoSampler(naip, self.patch_size, self.stride, test_roi)
 
     def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training."""
+        """Return a DataLoader for training.
+
+        Returns:
+            training data loader
+        """
         return DataLoader(
             self.dataset, batch_sampler=self.train_sampler, num_workers=self.num_workers
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation."""
+        """Return a DataLoader for validation.
+
+        Returns:
+            validation data loader
+        """
         return DataLoader(
             self.dataset,
             batch_size=self.batch_size,
@@ -312,7 +379,11 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing."""
+        """Return a DataLoader for testing.
+
+        Returns:
+            testing data loader
+        """
         return DataLoader(
             self.dataset,
             batch_size=self.batch_size,

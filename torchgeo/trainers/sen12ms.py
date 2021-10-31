@@ -72,7 +72,14 @@ class SEN12MSSegmentationTask(pl.LightningModule):
         self.test_metrics = self.train_metrics.clone(prefix="test_")
 
     def forward(self, x: Tensor) -> Any:  # type: ignore[override]
-        """Forward pass of the model."""
+        """Forward pass of the model.
+
+        Args:
+            x: input image
+
+        Returns:
+            prediction
+        """
         return self.model(x)
 
     def training_step(  # type: ignore[override]
@@ -196,8 +203,8 @@ class SEN12MSDataModule(pl.LightningDataModule):
     https://arxiv.org/abs/2002.08254.
     """
 
-    # Mapping from the IGBP class definitions to the DFC2020, taken from the dataloader
-    # here https://github.com/lukasliebel/dfc2020_baseline.
+    #: Mapping from the IGBP class definitions to the DFC2020, taken from the dataloader
+    #: here https://github.com/lukasliebel/dfc2020_baseline.
     DFC2020_CLASS_MAPPING = torch.tensor(  # type: ignore[attr-defined]
         [
             0,  # maps 0s to 0
@@ -252,7 +259,14 @@ class SEN12MSDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
 
     def custom_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset."""
+        """Transform a single sample from the Dataset.
+
+        Args:
+            sample: dictionary containing image and mask
+
+        Returns:
+            preprocessed sample
+        """
         sample["image"] = sample["image"].float()
 
         if self.band_set == "all":
@@ -278,6 +292,9 @@ class SEN12MSDataModule(pl.LightningDataModule):
 
         We split samples between train and val geographically with proportions of 80/20.
         This mimics the geographic test set split.
+
+        Args:
+            stage: stage to set up
         """
         season_to_int = {"winter": 0, "spring": 1000, "summer": 2000, "fall": 3000}
 
@@ -322,7 +339,11 @@ class SEN12MSDataModule(pl.LightningDataModule):
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training."""
+        """Return a DataLoader for training.
+
+        Returns:
+            training data loader
+        """
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,
@@ -331,7 +352,11 @@ class SEN12MSDataModule(pl.LightningDataModule):
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation."""
+        """Return a DataLoader for validation.
+
+        Returns:
+            validation data loader
+        """
         return DataLoader(
             self.val_dataset,
             batch_size=self.batch_size,
@@ -340,7 +365,11 @@ class SEN12MSDataModule(pl.LightningDataModule):
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing."""
+        """Return a DataLoader for testing.
+
+        Returns:
+            testing data loader
+        """
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
