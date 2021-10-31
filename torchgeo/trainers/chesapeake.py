@@ -415,7 +415,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         """Preprocesses a single sample.
 
         Args:
-            sample dictionary containing image and mask
+            sample: sample dictionary containing image and mask
 
         Returns:
             preprocessed sample
