@@ -72,7 +72,14 @@ class UCMercedDataModule(pl.LightningDataModule):
         self.norm = Normalize(self.band_means, self.band_stds)
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset."""
+        """Transform a single sample from the Dataset.
+
+        Args:
+            sample: dictionary containing image
+
+        Returns:
+            preprocessed sample
+        """
         sample["image"] = sample["image"].float()
         sample["image"] /= 255.0
         c, h, w = sample["image"].shape
@@ -94,6 +101,9 @@ class UCMercedDataModule(pl.LightningDataModule):
         """Initialize the main ``Dataset`` objects.
 
         This method is called once per GPU per run.
+
+        Args:
+            stage: stage to set up
         """
         transforms = Compose([self.preprocess])
 
@@ -109,7 +119,11 @@ class UCMercedDataModule(pl.LightningDataModule):
             self.val_dataset, self.test_dataset = None, None  # type: ignore[assignment]
 
     def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training."""
+        """Return a DataLoader for training.
+
+        Returns:
+            training data loader
+        """
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,
@@ -118,7 +132,11 @@ class UCMercedDataModule(pl.LightningDataModule):
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation."""
+        """Return a DataLoader for validation.
+
+        Returns:
+            validation data loader
+        """
         if self.unsupervised_mode or self.val_split_pct == 0:
             return self.train_dataloader()
         else:
@@ -130,7 +148,11 @@ class UCMercedDataModule(pl.LightningDataModule):
             )
 
     def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing."""
+        """Return a DataLoader for testing.
+
+        Returns:
+            testing data loader
+        """
         if self.unsupervised_mode or self.test_split_pct == 0:
             return self.train_dataloader()
         else:

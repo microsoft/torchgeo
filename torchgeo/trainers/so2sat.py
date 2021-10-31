@@ -197,7 +197,14 @@ class So2SatDataModule(pl.LightningDataModule):
         self.unsupervised_mode = unsupervised_mode
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset."""
+        """Transform a single sample from the Dataset.
+
+        Args:
+            sample: dictionary containing image
+
+        Returns:
+            preprocessed sample
+        """
         # sample["image"] = (sample["image"] - self.band_means) / self.band_stds
         sample["image"] = sample["image"].float()
         sample["image"] = sample["image"][self.reindex_to_rgb_first, :, :]
@@ -218,6 +225,9 @@ class So2SatDataModule(pl.LightningDataModule):
         """Initialize the main ``Dataset`` objects.
 
         This method is called once per GPU per run.
+
+        Args:
+            stage: stage to set up
         """
         train_transforms = Compose([self.preprocess])
         val_test_transforms = self.preprocess
@@ -255,7 +265,11 @@ class So2SatDataModule(pl.LightningDataModule):
             )
 
     def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training."""
+        """Return a DataLoader for training.
+
+        Returns:
+            training data loader
+        """
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,
@@ -264,7 +278,11 @@ class So2SatDataModule(pl.LightningDataModule):
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation."""
+        """Return a DataLoader for validation.
+
+        Returns:
+            validation data loader
+        """
         return DataLoader(
             self.val_dataset,
             batch_size=self.batch_size,
@@ -273,7 +291,11 @@ class So2SatDataModule(pl.LightningDataModule):
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing."""
+        """Return a DataLoader for testing.
+
+        Returns:
+            testing data loader
+        """
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,

@@ -143,7 +143,14 @@ class ClassificationTask(pl.LightningModule):
         self.test_metrics = self.train_metrics.clone(prefix="test_")
 
     def forward(self, x: Tensor) -> Any:  # type: ignore[override]
-        """Forward pass of the model."""
+        """Forward pass of the model.
+
+        Args:
+            x: input image
+
+        Returns:
+            prediction
+        """
         return self.model(x)
 
     def training_step(  # type: ignore[override]

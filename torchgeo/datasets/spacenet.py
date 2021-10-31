@@ -148,9 +148,9 @@ class SpaceNet(VisionDataset, abc.ABC):
         """Rasterizes the dataset's labels (in geojson format).
 
         Args:
-            path (str): path to the label
-            tfm (Affine): transform of corresponding image
-            shape (List[int, int]): shape of corresponding image
+            path: path to the label
+            tfm: transform of corresponding image
+            shape: shape of corresponding image
 
         Returns:
             Tensor: label tensor
@@ -289,9 +289,12 @@ class SpaceNet1(SpaceNet):
     Dataset format:
 
     * Imagery - Worldview-2 GeoTIFFs
+
         * 8Band.tif (Multispectral)
         * RGB.tif (Pansharpened RGB)
+
     * Labels - GeoJSON
+
         * labels.geojson
 
     If you use this dataset in your research, please cite the following paper:
@@ -350,8 +353,7 @@ class SpaceNet2(SpaceNet):
     is a dataset of building footprints over the cities of Las Vegas,
     Paris, Shanghai and Khartoum.
 
-    Collection features
-
+    Collection features:
 
     +------------+---------------------+------------+------------+
     |    AOI     | Area (km\ :sup:`2`\)| # Images   | # Buildings|
@@ -365,7 +367,7 @@ class SpaceNet2(SpaceNet):
     | Khartoum   |    765              |   1012     |  35,503    |
     +------------+---------------------+------------+------------+
 
-    Imagery features
+    Imagery features:
 
     .. list-table::
         :widths: 10 10 10 10 10
@@ -388,15 +390,17 @@ class SpaceNet2(SpaceNet):
             - 650 x 650
             - 650 x 650
 
-
-    Dataset format
+    Dataset format:
 
     * Imagery - Worldview-3 GeoTIFFs
+
         * PAN.tif (Panchromatic)
         * MS.tif (Multispectral)
         * PS-MS (Pansharpened Multispectral)
         * PS-RGB (Pansharpened RGB)
+
     * Labels - GeoJSON
+
         * label.geojson
 
     If you use this dataset in your research, please cite the following paper:
@@ -504,8 +508,7 @@ class SpaceNet4(SpaceNet):
     associated building footprints over the city of Atlanta. The off-nadir angle
     ranges from 7 degrees to 54 degrees.
 
-
-    Dataset features
+    Dataset features:
 
     * No. of chipped images: 28,728 (PAN/MS/PS-RGBNIR)
     * No. of label files: 1064
@@ -513,13 +516,16 @@ class SpaceNet4(SpaceNet):
     * Area Coverage: 665 sq km
     * Chip size: 225 x 225 (MS), 900 x 900 (PAN/PS-RGBNIR)
 
-    Dataset format
+    Dataset format:
 
     * Imagery - Worldview-2 GeoTIFFs
+
         * PAN.tif (Panchromatic)
         * MS.tif (Multispectral)
         * PS-RGBNIR (Pansharpened RGBNIR)
+
     * Labels - GeoJSON
+
         * labels.geojson
 
     If you use this dataset in your research, please cite the following paper:
@@ -594,7 +600,7 @@ class SpaceNet4(SpaceNet):
             root: root directory where dataset can be found
             image: image selection which must be in ["MS", "PAN", "PS-RGBNIR"]
             angles: angle selection which must be in ["nadir", "off-nadir",
-            "very-off-nadir"]
+                "very-off-nadir"]
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory.
