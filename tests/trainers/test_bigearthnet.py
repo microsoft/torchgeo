@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Tuple, cast
 
 import pytest
 from _pytest.fixtures import SubRequest
@@ -11,16 +10,7 @@ from torchgeo.trainers import BigEarthNetDataModule
 
 
 class TestBigEarthNetDataModule:
-    @pytest.fixture(
-        params=[
-            ("s1", True),
-            ("s2", True),
-            ("all", True),
-            ("s1", False),
-            ("s2", False),
-            ("all", False),
-        ]
-    )
+    @pytest.fixture(scope="class", params=zip(["s1", "s2", "all"], [True, True, False]))
     def datamodule(self, request: SubRequest) -> BigEarthNetDataModule:
         bands, unsupervised_mode = request.param
         root = os.path.join("tests", "data", "bigearthnet")

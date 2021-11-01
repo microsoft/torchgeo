@@ -2,52 +2,109 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Generator, Tuple, cast
+from typing import Any, Dict, Generator, Optional, cast
 
 import pytest
+import pytorch_lightning as pl
+import torch
+import torch.nn.functional as F
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
+from torch import Tensor
+from torch.utils.data import DataLoader, Dataset, TensorDataset
 
-from torchgeo.trainers import (
-    BigEarthNetDataModule,
-    ClassificationTask,
-    MultiLabelClassificationTask,
-    So2SatDataModule,
-)
+from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
 
 from .test_utils import mocked_log
 
 
-class TestClassificationTask:
-    @pytest.fixture(params=[("rgb", 3), ("s2", 10)])
-    def bands(self, request: SubRequest) -> Tuple[str, int]:
-        return cast(Tuple[str, int], request.param)
+class DummyDataset(Dataset):  # type: ignore[type-arg]
+    def __init__(self, num_channels: int, num_classes: int, multilabel: bool) -> None:
+        x = torch.randn(10, num_channels, 128, 128)  # (b, c, h, w)
+        y = torch.randint(  # type: ignore[attr-defined]
+            0, num_classes, size=(10,)
+        )  # (b,)
 
-    @pytest.fixture(params=[True, False])
-    def datamodule(
-        self, bands: Tuple[str, int], request: SubRequest
-    ) -> So2SatDataModule:
-        band_set = bands[0]
-        unsupervised_mode = request.param
-        root = os.path.join("tests", "data", "so2sat")
-        batch_size = 2
-        num_workers = 0
-        dm = So2SatDataModule(
-            root, batch_size, num_workers, band_set, unsupervised_mode
+        if multilabel:
+            y = F.one_hot(y, num_classes=num_classes)  # (b, classes)
+
+        self.dataset = TensorDataset(x, y)
+
+    def __len__(self) -> int:
+        return len(self.dataset)
+
+    def __getitem__(self, idx: int) -> Dict[str, Tensor]:
+        x, y = self.dataset[idx]
+        sample = {"image": x, "label": y}
+        return sample
+
+
+class DummyDataModule(pl.LightningDataModule):
+    def __init__(
+        self,
+        num_channels: int,
+        num_classes: int,
+        multilabel: bool,
+        batch_size: int = 1,
+        num_workers: int = 0,
+    ) -> None:
+        super().__init__()  # type: ignore[no-untyped-call]
+        self.num_channels = num_channels
+        self.num_classes = num_classes
+        self.multilabel = multilabel
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        self.dataset = DummyDataset(
+            num_channels=self.num_channels,
+            num_classes=self.num_classes,
+            multilabel=self.multilabel,
+        )
+
+    def train_dataloader(self):
+        return DataLoader(
+            self.dataset, batch_size=self.batch_size, num_workers=self.num_workers
+        )
+
+    def val_dataloader(self):
+        return DataLoader(
+            self.dataset, batch_size=self.batch_size, num_workers=self.num_workers
+        )
+
+    def test_dataloader(self):
+        return DataLoader(
+            self.dataset, batch_size=self.batch_size, num_workers=self.num_workers
+        )
+
+
+class TestClassificationTask:
+    @pytest.fixture(scope="class", params=[2, 3, 5])
+    def datamodule(self, request: SubRequest) -> DummyDataModule:
+        dm = DummyDataModule(
+            num_channels=request.param,
+            num_classes=45,
+            multilabel=False,
+            batch_size=2,
+            num_workers=0,
         )
         dm.prepare_data()
         dm.setup()
         return dm
 
     @pytest.fixture(
-        params=zip(["ce", "jaccard", "focal"], ["imagenet", "random", "random"])
+        scope="class",
+        params=zip(["ce", "jaccard", "focal"], ["imagenet", "random", "random"]),
     )
-    def config(self, request: SubRequest, bands: Tuple[str, int]) -> Dict[str, Any]:
-        task_conf = OmegaConf.load(os.path.join("conf", "task_defaults", "so2sat.yaml"))
-        task_args = OmegaConf.to_object(task_conf.experiment.module)
-        task_args = cast(Dict[str, Any], task_args)
-        task_args["in_channels"] = bands[1]
+    def config(
+        self, request: SubRequest, datamodule: DummyDataModule
+    ) -> Dict[str, Any]:
+        task_args = {}
+        task_args["classification_model"] = "resnet18"
+        task_args["learning_rate"] = 3e-4  # type: ignore[assignment]
+        task_args["learning_rate_schedule_patience"] = 6  # type: ignore[assignment]
+        task_args["in_channels"] = datamodule.num_channels  # type: ignore[assignment]
         loss, weights = request.param
         task_args["loss"] = loss
         task_args["weights"] = weights
@@ -67,21 +124,25 @@ class TestClassificationTask:
         assert "lr_scheduler" in out
 
     def test_training(
-        self, datamodule: So2SatDataModule, task: ClassificationTask
+        self, datamodule: DummyDataModule, task: ClassificationTask
     ) -> None:
-        batch = next(iter(datamodule.train_dataloader()))
+        batch = next(
+            iter(datamodule.train_dataloader())  # type: ignore[no-untyped-call]
+        )
         task.training_step(batch, 0)
         task.training_epoch_end(0)
 
     def test_validation(
-        self, datamodule: So2SatDataModule, task: ClassificationTask
+        self, datamodule: DummyDataModule, task: ClassificationTask
     ) -> None:
-        batch = next(iter(datamodule.val_dataloader()))
+        batch = next(iter(datamodule.val_dataloader()))  # type: ignore[no-untyped-call]
         task.validation_step(batch, 0)
         task.validation_epoch_end(0)
 
-    def test_test(self, datamodule: So2SatDataModule, task: ClassificationTask) -> None:
-        batch = next(iter(datamodule.test_dataloader()))
+    def test_test(self, datamodule: DummyDataModule, task: ClassificationTask) -> None:
+        batch = next(
+            iter(datamodule.test_dataloader())  # type: ignore[no-untyped-call]
+        )
         task.test_step(batch, 0)
         task.test_epoch_end(0)
 
@@ -101,6 +162,7 @@ class TestClassificationTask:
 
     def test_invalid_loss(self, config: Dict[str, Any]) -> None:
         config["loss"] = "invalid_loss"
+        config["classification_model"] = "resnet18"
         error_message = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=error_message):
             ClassificationTask(**config)
@@ -120,40 +182,28 @@ class TestClassificationTask:
 
 
 class TestMultiLabelClassificationTask:
-    @pytest.fixture(params=[("s1", 2), ("s2", 12), ("all", 14)])
-    def bands(self, request: SubRequest) -> Tuple[str, int]:
-        return cast(Tuple[str, int], request.param)
-
-    @pytest.fixture(params=[True, False])
-    def datamodule(
-        self, bands: Tuple[str, int], request: SubRequest
-    ) -> BigEarthNetDataModule:
-        band_set = bands[0]
-        unsupervised_mode = request.param
-        root = os.path.join("tests", "data", "bigearthnet")
-        batch_size = 1
-        num_workers = 0
-        dm = BigEarthNetDataModule(
-            root,
-            band_set,
-            batch_size,
-            num_workers,
-            unsupervised_mode,
-            val_split_pct=0.3,
-            test_split_pct=0.3,
+    @pytest.fixture
+    def datamodule(self, request: SubRequest) -> DummyDataModule:
+        dm = DummyDataModule(
+            num_channels=3,
+            num_classes=43,
+            multilabel=True,
+            batch_size=2,
+            num_workers=0,
         )
         dm.prepare_data()
         dm.setup()
         return dm
 
     @pytest.fixture(params=zip(["bce", "bce"], ["imagenet", "random"]))
-    def config(self, request: SubRequest, bands: Tuple[str, int]) -> Dict[str, Any]:
-        task_conf = OmegaConf.load(
-            os.path.join("conf", "task_defaults", "bigearthnet.yaml")
-        )
-        task_args = OmegaConf.to_object(task_conf.experiment.module)
-        task_args = cast(Dict[str, Any], task_args)
-        task_args["in_channels"] = bands[1]
+    def config(
+        self, datamodule: DummyDataModule, request: SubRequest
+    ) -> Dict[str, Any]:
+        task_args = {}
+        task_args["classification_model"] = "resnet18"
+        task_args["learning_rate"] = 3e-4  # type: ignore[assignment]
+        task_args["learning_rate_schedule_patience"] = 6  # type: ignore[assignment]
+        task_args["in_channels"] = datamodule.num_channels  # type: ignore[assignment]
         loss, weights = request.param
         task_args["loss"] = loss
         task_args["weights"] = weights
@@ -168,29 +218,25 @@ class TestMultiLabelClassificationTask:
         return task
 
     def test_training(
-        self,
-        datamodule: BigEarthNetDataModule,
-        task: MultiLabelClassificationTask,
+        self, datamodule: DummyDataModule, task: ClassificationTask
     ) -> None:
-        batch = next(iter(datamodule.train_dataloader()))
+        batch = next(
+            iter(datamodule.train_dataloader())  # type: ignore[no-untyped-call]
+        )
         task.training_step(batch, 0)
         task.training_epoch_end(0)
 
     def test_validation(
-        self,
-        datamodule: BigEarthNetDataModule,
-        task: MultiLabelClassificationTask,
+        self, datamodule: DummyDataModule, task: ClassificationTask
     ) -> None:
-        batch = next(iter(datamodule.val_dataloader()))
+        batch = next(iter(datamodule.val_dataloader()))  # type: ignore[no-untyped-call]
         task.validation_step(batch, 0)
         task.validation_epoch_end(0)
 
-    def test_test(
-        self,
-        datamodule: BigEarthNetDataModule,
-        task: MultiLabelClassificationTask,
-    ) -> None:
-        batch = next(iter(datamodule.test_dataloader()))
+    def test_test(self, datamodule: DummyDataModule, task: ClassificationTask) -> None:
+        batch = next(
+            iter(datamodule.test_dataloader())  # type: ignore[no-untyped-call]
+        )
         task.test_step(batch, 0)
         task.test_epoch_end(0)
 
