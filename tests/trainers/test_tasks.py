@@ -156,16 +156,19 @@ class TestRegressionTask:
     ) -> None:
         batch = next(iter(datamodule.train_dataloader()))
         task.training_step(batch, 0)
+        task.training_epoch_end(0)
 
     def test_validation(
         self, datamodule: CycloneDataModule, task: RegressionTask
     ) -> None:
         batch = next(iter(datamodule.val_dataloader()))
         task.validation_step(batch, 0)
+        task.validation_epoch_end(0)
 
     def test_test(self, datamodule: CycloneDataModule, task: RegressionTask) -> None:
         batch = next(iter(datamodule.test_dataloader()))
         task.test_step(batch, 0)
+        task.test_epoch_end(0)
 
     def test_invalid_model(self, config: Dict[str, Any]) -> None:
         config["model"] = "invalid_model"

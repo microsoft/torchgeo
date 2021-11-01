@@ -15,7 +15,7 @@ from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torchmetrics import Accuracy, FBeta, IoU, MetricCollection
+from torchmetrics import Accuracy, FBeta, IoU, MeanSquaredError, MetricCollection
 from torchvision import models
 
 from . import utils
@@ -288,6 +288,13 @@ class RegressionTask(pl.LightningModule):
         self.save_hyperparameters()  # creates `self.hparams` from kwargs
         self.config_task()
 
+        self.train_metrics = MetricCollection(
+            {"RMSE": MeanSquaredError(squared=False)},
+            prefix="train_",
+        )
+        self.val_metrics = self.train_metrics.clone(prefix="val_")
+        self.test_metrics = self.train_metrics.clone(prefix="test_")
+
     def forward(self, x: Tensor) -> Any:  # type: ignore[override]
         """Forward pass of the model."""
         return self.model(x)
@@ -311,11 +318,18 @@ class RegressionTask(pl.LightningModule):
         loss = F.mse_loss(y_hat, y)
 
         self.log("train_loss", loss)  # logging to TensorBoard
-
-        rmse = torch.sqrt(loss)  # type: ignore[attr-defined]
-        self.log("train_rmse", rmse)
+        self.train_metrics(y_hat, y)
 
         return loss
+
+    def training_epoch_end(self, outputs: Any) -> None:
+        """Logs epoch-level training metrics.
+
+        Args:
+            outputs: list of items returned by training_step
+        """
+        self.log_dict(self.train_metrics.compute())
+        self.train_metrics.reset()
 
     def validation_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
@@ -332,9 +346,16 @@ class RegressionTask(pl.LightningModule):
 
         loss = F.mse_loss(y_hat, y)
         self.log("val_loss", loss)
+        self.val_metrics(y_hat, y)
 
-        rmse = torch.sqrt(loss)  # type: ignore[attr-defined]
-        self.log("val_rmse", rmse)
+    def validation_epoch_end(self, outputs: Any) -> None:
+        """Logs epoch level validation metrics.
+
+        Args:
+            outputs: list of items returned by validation_step
+        """
+        self.log_dict(self.val_metrics.compute())
+        self.val_metrics.reset()
 
     def test_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
@@ -351,9 +372,16 @@ class RegressionTask(pl.LightningModule):
 
         loss = F.mse_loss(y_hat, y)
         self.log("test_loss", loss)
+        self.test_metrics(y_hat, y)
 
-        rmse = torch.sqrt(loss)  # type: ignore[attr-defined]
-        self.log("test_rmse", rmse)
+    def test_epoch_end(self, outputs: Any) -> None:
+        """Logs epoch level test metrics.
+
+        Args:
+            outputs: list of items returned by test_step
+        """
+        self.log_dict(self.test_metrics.compute())
+        self.test_metrics.reset()
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
