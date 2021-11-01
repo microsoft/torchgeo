@@ -287,6 +287,7 @@ class MultiLabelClassificationTask(ClassificationTask):
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
+
         Keyword Args:
             classification_model: Name of the classification model use
             loss: Name of the loss function
@@ -322,6 +323,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         self, batch: Dict[str, Any], batch_idx: int
     ) -> Tensor:
         """Training step.
+
         Args:
             batch: Current batch
             batch_idx: Index of current batch
@@ -346,6 +348,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
         """Validation step.
+
         Args:
             batch: Current batch
             batch_idx: Index of current batch
@@ -364,6 +367,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
         """Test step.
+
         Args:
             batch: Current batch
             batch_idx: Index of current batch

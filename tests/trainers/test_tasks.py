@@ -68,17 +68,17 @@ class DummyDataModule(pl.LightningDataModule):
             multilabel=self.multilabel,
         )
 
-    def train_dataloader(self):
+    def train_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
         return DataLoader(
             self.dataset, batch_size=self.batch_size, num_workers=self.num_workers
         )
 
-    def val_dataloader(self):
+    def val_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
         return DataLoader(
             self.dataset, batch_size=self.batch_size, num_workers=self.num_workers
         )
 
-    def test_dataloader(self):
+    def test_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
         return DataLoader(
             self.dataset, batch_size=self.batch_size, num_workers=self.num_workers
         )
