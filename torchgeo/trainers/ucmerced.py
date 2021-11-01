@@ -44,9 +44,6 @@ class UCMercedDataModule(pl.LightningDataModule):
         root_dir: str,
         batch_size: int = 64,
         num_workers: int = 4,
-        unsupervised_mode: bool = False,
-        val_split_pct: float = 0.2,
-        test_split_pct: float = 0.2,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for UCMerced based DataLoaders.
@@ -55,19 +52,11 @@ class UCMercedDataModule(pl.LightningDataModule):
             root_dir: The ``root`` arugment to pass to the UCMerced Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
-            unsupervised_mode: Makes the train dataloader return imagery from the train,
-                val, and test sets
-            val_split_pct: What percentage of the dataset to use as a validation set
-            test_split_pct: What percentage of the dataset to use as a test set
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
-        self.unsupervised_mode = unsupervised_mode
-
-        self.val_split_pct = val_split_pct
-        self.test_split_pct = test_split_pct
 
         self.norm = Normalize(self.band_means, self.band_stds)
 
@@ -107,16 +96,9 @@ class UCMercedDataModule(pl.LightningDataModule):
         """
         transforms = Compose([self.preprocess])
 
-        if not self.unsupervised_mode:
-
-            dataset = UCMerced(self.root_dir, transforms=transforms)
-            self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-                dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
-            )
-        else:
-
-            self.train_dataset = UCMerced(self.root_dir, transforms=transforms)
-            self.val_dataset, self.test_dataset = None, None  # type: ignore[assignment]
+        self.train_dataset = UCMerced(self.root_dir, "train", transforms=transforms)
+        self.val_dataset = UCMerced(self.root_dir, "val", transforms=transforms)
+        self.test_dataset = UCMerced(self.root_dir, "test", transforms=transforms)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.
@@ -137,15 +119,12 @@ class UCMercedDataModule(pl.LightningDataModule):
         Returns:
             validation data loader
         """
-        if self.unsupervised_mode or self.val_split_pct == 0:
-            return self.train_dataloader()
-        else:
-            return DataLoader(
-                self.val_dataset,
-                batch_size=self.batch_size,
-                num_workers=self.num_workers,
-                shuffle=False,
-            )
+        return DataLoader(
+            self.val_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=False,
+        )
 
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing.
@@ -153,12 +132,9 @@ class UCMercedDataModule(pl.LightningDataModule):
         Returns:
             testing data loader
         """
-        if self.unsupervised_mode or self.test_split_pct == 0:
-            return self.train_dataloader()
-        else:
-            return DataLoader(
-                self.test_dataset,
-                batch_size=self.batch_size,
-                num_workers=self.num_workers,
-                shuffle=False,
-            )
+        return DataLoader(
+            self.test_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=False,
+        )
