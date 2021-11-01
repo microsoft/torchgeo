@@ -13,7 +13,6 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, Normalize
 
 from ..datasets import UCMerced
-from ..datasets.utils import dataset_split
 from .tasks import ClassificationTask
 
 # https://github.com/pytorch/pytorch/issues/60979
