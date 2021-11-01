@@ -11,22 +11,24 @@ from torchgeo.trainers import BigEarthNetDataModule
 
 
 class TestBigEarthNetDataModule:
-    @pytest.fixture(params=[("s1", 2), ("s2", 12), ("all", 14)])
-    def bands(self, request: SubRequest) -> Tuple[str, int]:
-        return cast(Tuple[str, int], request.param)
-
-    @pytest.fixture(params=[True, False])
-    def datamodule(
-        self, bands: Tuple[str, int], request: SubRequest
-    ) -> BigEarthNetDataModule:
-        band_set = bands[0]
-        unsupervised_mode = request.param
+    @pytest.fixture(
+        params=[
+            ("s1", True),
+            ("s2", True),
+            ("all", True),
+            ("s1", False),
+            ("s2", False),
+            ("all", False),
+        ]
+    )
+    def datamodule(self, request: SubRequest) -> BigEarthNetDataModule:
+        bands, unsupervised_mode = request.param
         root = os.path.join("tests", "data", "bigearthnet")
         batch_size = 1
         num_workers = 0
         dm = BigEarthNetDataModule(
             root,
-            band_set,
+            bands,
             batch_size,
             num_workers,
             unsupervised_mode,
