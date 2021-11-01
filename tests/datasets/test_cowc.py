@@ -44,14 +44,14 @@ class TestCOWCCounting:
             COWCCounting, "base_url", base_url
         )
         md5s = [
-            "fd44e49492d63e9050e80d2157813263",
-            "c44f6d709076562116b1a445ea91a228",
-            "405d33d745a850c3a0c5e84713c5fd26",
-            "3bd99854a243218fe40ea11dd552887f",
-            "5648852da4212876502c7a454e70ce8e",
-            "f91460b2e7dcfbad53f5f5ede05f2da2",
-            "9d26d6c4bca7c6e932b0a6340647af8b",
-            "ccc18c4ac29a13ad2bcb293ff6be69fe",
+            "a729b6e29278a9a000aa349dad3c78cb",
+            "a8ff4c4de4b8c66bd9c5ec17f532b3a2",
+            "bc6b9493b8e39b87d189cadcc4823e05",
+            "f111948e2ac262c024c8fe32ba5b1434",
+            "8c333fcfa4168afa5376310958d15166",
+            "479670049aa9a48b4895cff6db3aa615",
+            "56043d4716ad0a1eedd392b0a543973b",
+            "b77193aef7c473379cd8d4e40d413137",
         ]
         monkeypatch.setattr(COWCCounting, "md5s", md5s)  # type: ignore[attr-defined]
         root = str(tmp_path)
@@ -66,12 +66,12 @@ class TestCOWCCounting:
         assert isinstance(x["label"], torch.Tensor)
 
     def test_len(self, dataset: COWC) -> None:
-        assert len(dataset) == 12
+        assert len(dataset) in [6, 12]
 
     def test_add(self, dataset: COWC) -> None:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
-        assert len(ds) == 24
+        assert len(ds) in [12, 24]
 
     def test_already_downloaded(self, dataset: COWC) -> None:
         COWCCounting(root=dataset.root, download=True)
@@ -90,9 +90,12 @@ class TestCOWCCounting:
 
 
 class TestCOWCDetection:
-    @pytest.fixture
+    @pytest.fixture(params=["train", "test"])
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+        self,
+        monkeypatch: Generator[MonkeyPatch, None, None],
+        tmp_path: Path,
+        request: SubRequest,
     ) -> COWC:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.utils, "download_url", download_url
@@ -102,18 +105,18 @@ class TestCOWCDetection:
             COWCDetection, "base_url", base_url
         )
         md5s = [
-            "dd8725ab4dd13cf0cc674213bb09e068",
-            "37619fce32dbca46d2fd96716cfb2d5e",
-            "405d33d745a850c3a0c5e84713c5fd26",
-            "3bd99854a243218fe40ea11dd552887f",
-            "5648852da4212876502c7a454e70ce8e",
-            "f91460b2e7dcfbad53f5f5ede05f2da2",
-            "9d26d6c4bca7c6e932b0a6340647af8b",
-            "ccc18c4ac29a13ad2bcb293ff6be69fe",
+            "cc913824d9aa6c7af6f957dcc2cb9690",
+            "f8e07e70958d8d57ab464f62e9abab80",
+            "6a481cd785b0f16e9e1ab016a0695e57",
+            "e9578491977d291def2611b84c84fdfd",
+            "0bb1c285b170c23a8590cf2926fd224e",
+            "60fa485b16c0e5b28db756fd1d8a0438",
+            "97c886fb7558f4e8779628917ca64596",
+            "ab21a117b754e04e65c63f94aa648e33",
         ]
         monkeypatch.setattr(COWCDetection, "md5s", md5s)  # type: ignore[attr-defined]
         root = str(tmp_path)
-        split = "train"
+        split = request.param
         transforms = nn.Identity()  # type: ignore[attr-defined]
         return COWCDetection(root, split, transforms, download=True, checksum=True)
 
@@ -124,12 +127,12 @@ class TestCOWCDetection:
         assert isinstance(x["label"], torch.Tensor)
 
     def test_len(self, dataset: COWC) -> None:
-        assert len(dataset) == 12
+        assert len(dataset) in [6, 12]
 
     def test_add(self, dataset: COWC) -> None:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
-        assert len(ds) == 24
+        assert len(ds) in [12, 24]
 
     def test_already_downloaded(self, dataset: COWC) -> None:
         COWCDetection(root=dataset.root, download=True)

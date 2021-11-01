@@ -101,7 +101,9 @@ class COWC(VisionDataset, abc.ABC):
         self.images = []
         self.targets = []
         with open(
-            os.path.join(self.root, self.filename.format(split)), newline=""
+            os.path.join(self.root, self.filename.format(split)),
+            encoding="utf-8-sig",
+            newline="",
         ) as f:
             reader = csv.reader(f, delimiter=" ")
             for row in reader:
