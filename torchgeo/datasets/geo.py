@@ -607,6 +607,7 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
         root: str,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         loader: Optional[Callable[[str], Any]] = pil_loader,
+        is_valid_file: Optional[Callable[[str], bool]] = None,
     ) -> None:
         """Initialize a new VisionClassificationDataset instance.
 
@@ -616,11 +617,17 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
                 entry and returns a transformed version
             loader: a callable function which takes as input a path to an image and
                 returns a PIL Image or numpy array
+            is_valid_file: A function that takes the path of an Image file and checks if
+                the file is a valid file
         """
         # When transform & target_transform are None, ImageFolder.__getitem__(index)
         # returns a PIL.Image and int for image and label, respectively
         super().__init__(
-            root=root, transform=None, target_transform=None, loader=loader
+            root=root,
+            transform=None,
+            target_transform=None,
+            loader=loader,
+            is_valid_file=is_valid_file,
         )
 
         # Must be set after calling super().__init__()
