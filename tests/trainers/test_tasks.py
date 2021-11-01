@@ -131,23 +131,19 @@ class TestClassificationTask:
     def test_training(
         self, datamodule: DummyDataModule, task: ClassificationTask
     ) -> None:
-        batch = next(
-            iter(datamodule.train_dataloader())  # type: ignore[no-untyped-call]
-        )
+        batch = next(iter(datamodule.train_dataloader()))
         task.training_step(batch, 0)
         task.training_epoch_end(0)
 
     def test_validation(
         self, datamodule: DummyDataModule, task: ClassificationTask
     ) -> None:
-        batch = next(iter(datamodule.val_dataloader()))  # type: ignore[no-untyped-call]
+        batch = next(iter(datamodule.val_dataloader()))
         task.validation_step(batch, 0)
         task.validation_epoch_end(0)
 
     def test_test(self, datamodule: DummyDataModule, task: ClassificationTask) -> None:
-        batch = next(
-            iter(datamodule.test_dataloader())  # type: ignore[no-untyped-call]
-        )
+        batch = next(iter(datamodule.test_dataloader()))
         task.test_step(batch, 0)
         task.test_epoch_end(0)
 
@@ -225,23 +221,19 @@ class TestMultiLabelClassificationTask:
     def test_training(
         self, datamodule: DummyDataModule, task: ClassificationTask
     ) -> None:
-        batch = next(
-            iter(datamodule.train_dataloader())  # type: ignore[no-untyped-call]
-        )
+        batch = next(iter(datamodule.train_dataloader()))
         task.training_step(batch, 0)
         task.training_epoch_end(0)
 
     def test_validation(
         self, datamodule: DummyDataModule, task: ClassificationTask
     ) -> None:
-        batch = next(iter(datamodule.val_dataloader()))  # type: ignore[no-untyped-call]
+        batch = next(iter(datamodule.val_dataloader()))
         task.validation_step(batch, 0)
         task.validation_epoch_end(0)
 
     def test_test(self, datamodule: DummyDataModule, task: ClassificationTask) -> None:
-        batch = next(
-            iter(datamodule.test_dataloader())  # type: ignore[no-untyped-call]
-        )
+        batch = next(iter(datamodule.test_dataloader()))
         task.test_step(batch, 0)
         task.test_epoch_end(0)
 
