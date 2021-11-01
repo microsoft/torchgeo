@@ -12,7 +12,6 @@ import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 from torch import Tensor
-from torch.nn.modules import Module
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter  # type: ignore[attr-defined]
@@ -25,7 +24,6 @@ from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 DataLoader.__module__ = "torch.utils.data"
-Module.__module__ = "torch.nn"
 
 
 class NAIPChesapeakeSegmentationTask(pl.LightningModule):

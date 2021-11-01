@@ -7,134 +7,14 @@ from typing import Any, Dict, Optional
 
 import pytorch_lightning as pl
 import torch
-import torch.nn.functional as F
 from sklearn.model_selection import GroupShuffleSplit
-from torch import Tensor
-from torch.nn.modules import Module
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader, Subset
-from torchvision import models
 
 from ..datasets import TropicalCycloneWindEstimation
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 DataLoader.__module__ = "torch.utils.data"
-Module.__module__ = "torch.nn"
-
-
-class CycloneSimpleRegressionTask(pl.LightningModule):
-    """LightningModule for training models on the NASA Cyclone Dataset using MSE loss.
-
-    This does not take into account other per-sample features available in this dataset.
-    """
-
-    def config_task(self) -> None:
-        """Configures the task based on kwargs parameters."""
-        if self.hparams["model"] == "resnet18":
-            self.model = models.resnet18(pretrained=False, num_classes=1)
-        else:
-            raise ValueError(f"Model type '{self.hparams['model']}' is not valid.")
-
-    def __init__(self, **kwargs: Any) -> None:
-        """Initialize a new LightningModule for training simple regression models.
-
-        Keyword Args:
-            model: Name of the model to use
-            learning_rate: Initial learning rate to use in the optimizer
-            learning_rate_schedule_patience: Patience parameter for the LR scheduler
-        """
-        super().__init__()
-        self.save_hyperparameters()  # creates `self.hparams` from kwargs
-
-        self.config_task()
-
-    def forward(self, x: Tensor) -> Any:  # type: ignore[override]
-        """Forward pass of the model."""
-        return self.model(x)
-
-    def training_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> Tensor:
-        """Training step with an MSE loss.
-
-        Args:
-            batch: Current batch
-            batch_idx: Index of current batch
-
-        Returns:
-            training loss
-        """
-        x = batch["image"]
-        y = batch["target"].view(-1, 1)
-        y_hat = self.forward(x)
-
-        loss = F.mse_loss(y_hat, y)
-
-        self.log("train_loss", loss)  # logging to TensorBoard
-
-        rmse = torch.sqrt(loss)  # type: ignore[attr-defined]
-        self.log("train_rmse", rmse)
-
-        return loss
-
-    def validation_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
-        """Validation step.
-
-        Args:
-            batch: Current batch
-            batch_idx: Index of current batch
-        """
-        x = batch["image"]
-        y = batch["target"].view(-1, 1)
-        y_hat = self.forward(x)
-
-        loss = F.mse_loss(y_hat, y)
-        self.log("val_loss", loss)
-
-        rmse = torch.sqrt(loss)  # type: ignore[attr-defined]
-        self.log("val_rmse", rmse)
-
-    def test_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
-        """Test step.
-
-        Args:
-            batch: Current batch
-            batch_idx: Index of current batch
-        """
-        x = batch["image"]
-        y = batch["target"].view(-1, 1)
-        y_hat = self.forward(x)
-
-        loss = F.mse_loss(y_hat, y)
-        self.log("test_loss", loss)
-
-        rmse = torch.sqrt(loss)  # type: ignore[attr-defined]
-        self.log("test_rmse", rmse)
-
-    def configure_optimizers(self) -> Dict[str, Any]:
-        """Initialize the optimizer and learning rate scheduler.
-
-        Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
-        """
-        optimizer = torch.optim.AdamW(
-            self.model.parameters(), lr=self.hparams["learning_rate"]
-        )
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": ReduceLROnPlateau(
-                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
-                ),
-                "monitor": "val_loss",
-            },
-        }
 
 
 class CycloneDataModule(pl.LightningDataModule):

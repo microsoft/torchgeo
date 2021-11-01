@@ -4,25 +4,16 @@
 import os
 
 import pytest
-from _pytest.fixtures import SubRequest
 
 from torchgeo.trainers import UCMercedDataModule
 
 
-@pytest.fixture(scope="module", params=[True, False])
-def datamodule(request: SubRequest) -> UCMercedDataModule:
+@pytest.fixture(scope="module")
+def datamodule() -> UCMercedDataModule:
     root = os.path.join("tests", "data", "ucmerced")
     batch_size = 2
     num_workers = 0
-    unsupervised_mode = request.param
-    dm = UCMercedDataModule(
-        root,
-        batch_size,
-        num_workers,
-        val_split_pct=0.33,
-        test_split_pct=0.33,
-        unsupervised_mode=unsupervised_mode,
-    )
+    dm = UCMercedDataModule(root, batch_size, num_workers)
     dm.prepare_data()
     dm.setup()
     return dm
