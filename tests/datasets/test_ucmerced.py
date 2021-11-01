@@ -36,10 +36,10 @@ class TestUCMerced:
         monkeypatch.setattr(UCMerced, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "ucmerced", "UCMerced_LandUse.zip")
         monkeypatch.setattr(UCMerced, "url", url)  # type: ignore[attr-defined]
-        monkeypatch.setattr(
+        monkeypatch.setattr(  # type: ignore[attr-defined]
             UCMerced,
             "split_urls",
-            {  # type: ignore[attr-defined]
+            {
                 "train": os.path.join(
                     "tests", "data", "ucmerced", "uc_merced-train.txt"
                 ),
@@ -47,10 +47,10 @@ class TestUCMerced:
                 "test": os.path.join("tests", "data", "ucmerced", "uc_merced-test.txt"),
             },
         )
-        monkeypatch.setattr(
+        monkeypatch.setattr(  # type: ignore[attr-defined]
             UCMerced,
             "split_md5s",
-            {  # type: ignore[attr-defined]
+            {
                 "train": "a01fa9f13333bb176fc1bfe26ff4c711",
                 "val": "a01fa9f13333bb176fc1bfe26ff4c711",
                 "test": "a01fa9f13333bb176fc1bfe26ff4c711",
