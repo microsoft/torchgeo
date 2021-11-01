@@ -140,7 +140,7 @@ class UCMerced(VisionClassificationDataset):
         super().__init__(
             root=os.path.join(root, self.base_dir),
             transforms=transforms,
-            is_valid_file=is_in_split
+            is_valid_file=is_in_split,
         )
 
     def _check_integrity(self) -> bool:
@@ -194,8 +194,8 @@ class UCMerced(VisionClassificationDataset):
             download_url(
                 self.split_urls[split],
                 self.root,
-                filename=f'uc_merced-{split}.txt',
-                md5=self.split_md5s[split] if self.checksum else None
+                filename=f"uc_merced-{split}.txt",
+                md5=self.split_md5s[split] if self.checksum else None,
             )
 
     def _extract(self) -> None:
