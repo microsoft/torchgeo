@@ -11,9 +11,9 @@ from omegaconf import OmegaConf
 
 from torchgeo.trainers import (
     ClassificationTask,
-    So2SatDataModule,
-    RegressionTask,
     CycloneDataModule,
+    RegressionTask,
+    So2SatDataModule,
 )
 
 from .test_utils import mocked_log
