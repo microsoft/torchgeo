@@ -106,7 +106,7 @@ def reinit_initial_conv_layer(
     When replacing the first convolutional layer in a model with one that operates over
     different number of input channels, we sometimes want to keep a subset of the kernel
     weights the same (e.g. the RGB weights of an ImageNet pretrained model). This is a
-    convinience function that performs that function.
+    convenience function that performs that function.
 
     Args:
         layer: the Conv2d layer to initialize
