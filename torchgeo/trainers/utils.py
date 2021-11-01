@@ -110,7 +110,7 @@ def reinit_initial_conv_layer(
 
     Args:
         layer: the Conv2d layer to initialize
-        new_in_channels: the new number of input
+        new_in_channels: the new number of input channels
         keep_rgb_weights: flag indicating whether to re-initialize the first 3 channels
 
     Returns:
