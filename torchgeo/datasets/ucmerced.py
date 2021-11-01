@@ -50,6 +50,11 @@ class UCMerced(VisionClassificationDataset):
     * storagetanks
     * tenniscourt
 
+    This dataset uses the train/val/test splits defined in the "In-domain representation
+    learning for remote sensing" paper:
+
+    * https://arxiv.org/abs/1911.06721.
+
     If you use this dataset in your research, please cite the following paper:
 
     * https://dl.acm.org/doi/10.1145/1869790.1869829
@@ -85,9 +90,22 @@ class UCMerced(VisionClassificationDataset):
     ]
     class_counts = {class_name: 100 for class_name in classes}
 
+    splits = ["train", "val", "test"]
+    split_urls = {
+        "train": "https://storage.googleapis.com/remote_sensing_representations/uc_merced-train.txt",  # noqa: E501
+        "val": "https://storage.googleapis.com/remote_sensing_representations/uc_merced-val.txt",  # noqa: E501
+        "test": "https://storage.googleapis.com/remote_sensing_representations/uc_merced-test.txt",  # noqa: E501
+    }
+    split_md5s = {
+        "train": "f2fb12eb2210cfb53f93f063a35ff374",
+        "val": "11ecabfc52782e5ea6a9c7c0d263aca0",
+        "test": "046aff88472d8fc07c4678d03749e28d",
+    }
+
     def __init__(
         self,
         root: str = "data",
+        split: str = "train",
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -96,6 +114,7 @@ class UCMerced(VisionClassificationDataset):
 
         Args:
             root: root directory where dataset can be found
+            split: one of "train", "val", or "test"
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -105,12 +124,24 @@ class UCMerced(VisionClassificationDataset):
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
+        assert split in self.splits
         self.root = root
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
         self._verify()
-        super().__init__(root=os.path.join(root, self.base_dir), transforms=transforms)
+
+        valid_fns = set()
+        with open(os.path.join(self.root, f"uc_merced-{split}.txt"), "r") as f:
+            for fn in f:
+                valid_fns.add(fn.strip())
+        is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns
+
+        super().__init__(
+            root=os.path.join(root, self.base_dir),
+            transforms=transforms,
+            is_valid_file=is_in_split
+        )
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
@@ -159,6 +190,13 @@ class UCMerced(VisionClassificationDataset):
             filename=self.filename,
             md5=self.md5 if self.checksum else None,
         )
+        for split in self.splits:
+            download_url(
+                self.split_urls[split],
+                self.root,
+                filename=f'uc_merced-{split}.txt',
+                md5=self.split_md5s[split] if self.checksum else None
+            )
 
     def _extract(self) -> None:
         """Extract the dataset."""
