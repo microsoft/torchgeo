@@ -15,7 +15,6 @@ import torch.nn.functional as F
 from pytorch_lightning.core.datamodule import LightningDataModule
 from pytorch_lightning.core.lightning import LightningModule
 from torch import Tensor
-from torch.nn.modules import Module
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter  # type: ignore[attr-defined]
@@ -29,7 +28,6 @@ from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 DataLoader.__module__ = "torch.utils.data"
-Module.__module__ = "torch.nn"
 
 # TODO: move the color maps to a dataset object
 CMAP_7 = matplotlib.colors.ListedColormap(

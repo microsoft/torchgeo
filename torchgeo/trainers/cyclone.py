@@ -8,7 +8,6 @@ from typing import Any, Dict, Optional
 import pytorch_lightning as pl
 import torch
 from sklearn.model_selection import GroupShuffleSplit
-from torch.nn.modules import Module
 from torch.utils.data import DataLoader, Subset
 
 from ..datasets import TropicalCycloneWindEstimation
@@ -16,7 +15,6 @@ from ..datasets import TropicalCycloneWindEstimation
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 DataLoader.__module__ = "torch.utils.data"
-Module.__module__ = "torch.nn"
 
 
 class CycloneDataModule(pl.LightningDataModule):
