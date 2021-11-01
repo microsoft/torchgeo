@@ -10,6 +10,7 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.monkeypatch import MonkeyPatch
+from _pytest.fixtures import SubRequest
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
@@ -21,9 +22,11 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestUCMerced:
-    @pytest.fixture()
+    @pytest.fixture(params=["train", "val", "test"])
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+        self, monkeypatch: Generator[MonkeyPatch, None, None],
+        tmp_path: Path,
+        request: SubRequest
     ) -> UCMerced:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.ucmerced, "download_url", download_url
@@ -32,9 +35,20 @@ class TestUCMerced:
         monkeypatch.setattr(UCMerced, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "ucmerced", "UCMerced_LandUse.zip")
         monkeypatch.setattr(UCMerced, "url", url)  # type: ignore[attr-defined]
+        monkeypatch.setattr(UCMerced, "split_urls", {  # type: ignore[attr-defined]
+            "train": os.path.join("tests", "data", "ucmerced", "uc_merced-train.txt"),
+            "val": os.path.join("tests", "data", "ucmerced", "uc_merced-val.txt"),
+            "test": os.path.join("tests", "data", "ucmerced", "uc_merced-test.txt"),
+        })
+        monkeypatch.setattr(UCMerced, "split_md5s", {  # type: ignore[attr-defined]
+            "train": "a01fa9f13333bb176fc1bfe26ff4c711",
+            "val": "a01fa9f13333bb176fc1bfe26ff4c711",
+            "test": "a01fa9f13333bb176fc1bfe26ff4c711",
+        })
         root = str(tmp_path)
+        split = request.param
         transforms = nn.Identity()  # type: ignore[attr-defined]
-        return UCMerced(root, transforms, download=True, checksum=True)
+        return UCMerced(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: UCMerced) -> None:
         x = dataset[0]
