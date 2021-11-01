@@ -1,0 +1,4 @@
+agricultural00.tif
+agricultural01.tif
+agricultural02.tif
+airplane00.tif
