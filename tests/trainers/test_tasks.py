@@ -110,7 +110,7 @@ class TestClassificationTask:
         task_args["weights"] = weights
         return task_args
 
-    @pytest.fixture
+    @pytest.fixture(scope="class")
     def task(
         self, config: Dict[str, Any], monkeypatch: Generator[MonkeyPatch, None, None]
     ) -> ClassificationTask:
@@ -182,7 +182,7 @@ class TestClassificationTask:
 
 
 class TestMultiLabelClassificationTask:
-    @pytest.fixture
+    @pytest.fixture(scope="class")
     def datamodule(self, request: SubRequest) -> DummyDataModule:
         dm = DummyDataModule(
             num_channels=3,
@@ -195,7 +195,7 @@ class TestMultiLabelClassificationTask:
         dm.setup()
         return dm
 
-    @pytest.fixture(params=zip(["bce", "bce"], ["imagenet", "random"]))
+    @pytest.fixture(scope="class", params=zip(["bce", "bce"], ["imagenet", "random"]))
     def config(
         self, datamodule: DummyDataModule, request: SubRequest
     ) -> Dict[str, Any]:
@@ -209,7 +209,7 @@ class TestMultiLabelClassificationTask:
         task_args["weights"] = weights
         return task_args
 
-    @pytest.fixture
+    @pytest.fixture(scope="class")
     def task(
         self, config: Dict[str, Any], monkeypatch: Generator[MonkeyPatch, None, None]
     ) -> MultiLabelClassificationTask:
