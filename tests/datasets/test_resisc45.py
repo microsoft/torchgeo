@@ -10,6 +10,7 @@ from typing import Generator
 import pytest
 import torch
 import torch.nn as nn
+from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 
 import torchgeo.datasets.utils
@@ -24,9 +25,12 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 @pytest.mark.skipif(sys.platform == "win32", reason="requires unrar executable")
 class TestRESISC45:
-    @pytest.fixture(params=["train", "test"])
+    @pytest.fixture(params=["train", "val", "test"])
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+        self,
+        monkeypatch: Generator[MonkeyPatch, None, None],
+        tmp_path: Path,
+        request: SubRequest,
     ) -> RESISC45:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.resisc45, "download_url", download_url
@@ -35,9 +39,30 @@ class TestRESISC45:
         monkeypatch.setattr(RESISC45, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "resisc45", "NWPU-RESISC45.rar")
         monkeypatch.setattr(RESISC45, "url", url)  # type: ignore[attr-defined]
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            RESISC45,
+            "split_urls",
+            {
+                "train": os.path.join(
+                    "tests", "data", "resisc45", "resisc45-train.txt"
+                ),
+                "val": os.path.join("tests", "data", "resisc45", "resisc45-val.txt"),
+                "test": os.path.join("tests", "data", "resisc45", "resisc45-test.txt"),
+            },
+        )
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            RESISC45,
+            "split_md5s",
+            {
+                "train": "7760b1960c9a3ff46fb985810815e14d",
+                "val": "7760b1960c9a3ff46fb985810815e14d",
+                "test": "7760b1960c9a3ff46fb985810815e14d",
+            },
+        )
         root = str(tmp_path)
+        split = request.param
         transforms = nn.Identity()  # type: ignore[attr-defined]
-        return RESISC45(root, transforms, download=True, checksum=True)
+        return RESISC45(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: RESISC45) -> None:
         x = dataset[0]
