@@ -430,7 +430,7 @@ class RegressionTask(pl.LightningModule):
             training loss
         """
         x = batch["image"]
-        y = batch["target"].view(-1, 1)
+        y = batch["label"].view(-1, 1)
         y_hat = self.forward(x)
 
         loss = F.mse_loss(y_hat, y)
@@ -459,7 +459,7 @@ class RegressionTask(pl.LightningModule):
             batch_idx: Index of current batch
         """
         x = batch["image"]
-        y = batch["target"].view(-1, 1)
+        y = batch["label"].view(-1, 1)
         y_hat = self.forward(x)
 
         loss = F.mse_loss(y_hat, y)
@@ -485,7 +485,7 @@ class RegressionTask(pl.LightningModule):
             batch_idx: Index of current batch
         """
         x = batch["image"]
-        y = batch["target"].view(-1, 1)
+        y = batch["label"].view(-1, 1)
         y_hat = self.forward(x)
 
         loss = F.mse_loss(y_hat, y)
