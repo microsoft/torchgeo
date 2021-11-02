@@ -168,7 +168,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
 
         features["relative_time"] = int(features["relative_time"])
         features["ocean"] = int(features["ocean"])
-        features["target"] = int(features["wind_speed"])
+        features["label"] = int(features["wind_speed"])
 
         return features
 

@@ -64,8 +64,8 @@ class CycloneDataModule(pl.LightningDataModule):
         sample["image"] = (
             sample["image"].unsqueeze(0).repeat(3, 1, 1)
         )  # convert to 3 channel
-        sample["target"] = torch.as_tensor(  # type: ignore[attr-defined]
-            sample["target"]
+        sample["label"] = torch.as_tensor(  # type: ignore[attr-defined]
+            sample["label"]
         ).float()
 
         return sample
