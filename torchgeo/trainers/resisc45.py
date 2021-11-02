@@ -43,7 +43,6 @@ class RESISC45DataModule(pl.LightningDataModule):
         root_dir: str,
         batch_size: int = 64,
         num_workers: int = 4,
-        weights: str = "random",
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for RESISC45 based DataLoaders.
@@ -52,14 +51,11 @@ class RESISC45DataModule(pl.LightningDataModule):
             root_dir: The ``root`` arugment to pass to the RESISC45 Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
-            weights: Either "random", "imagenet_only", "imagenet_and_random", or
-                "random_rgb"
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
-        self.weights = weights
 
         self.norm = Normalize(self.band_means, self.band_stds)
 

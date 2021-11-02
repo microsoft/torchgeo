@@ -114,7 +114,7 @@ class RESISC45(VisionClassificationDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new PatternNet dataset instance.
+        """Initialize a new RESISC45 dataset instance.
 
         Args:
             root: root directory where dataset can be found
