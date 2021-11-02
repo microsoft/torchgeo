@@ -3,6 +3,7 @@
 
 """TorchGeo trainers."""
 
+from .bigearthnet import BigEarthNetClassificationTask, BigEarthNetDataModule
 from .byol import BYOLTask
 from .chesapeake import ChesapeakeCVPRDataModule, ChesapeakeCVPRSegmentationTask
 from .cyclone import CycloneDataModule
@@ -11,29 +12,35 @@ from .naipchesapeake import NAIPChesapeakeDataModule, NAIPChesapeakeSegmentation
 from .resisc45 import RESISC45ClassificationTask, RESISC45DataModule
 from .sen12ms import SEN12MSDataModule, SEN12MSSegmentationTask
 from .so2sat import So2SatClassificationTask, So2SatDataModule
-from .tasks import ClassificationTask, RegressionTask
+from .tasks import ClassificationTask, MultiLabelClassificationTask, RegressionTask
 from .ucmerced import UCMercedClassificationTask, UCMercedDataModule
 
 __all__ = (
     # Tasks
-    "ClassificationTask",
-    "RegressionTask",
-    # Trainers
+    "BigEarthNetClassificationTask",
     "BYOLTask",
     "ChesapeakeCVPRSegmentationTask",
     "ChesapeakeCVPRDataModule",
+    "ClassificationTask",
     "CycloneDataModule",
     "LandcoverAIDataModule",
     "LandcoverAISegmentationTask",
-    "NAIPChesapeakeDataModule",
+    "MultiLabelClassificationTask",
     "NAIPChesapeakeSegmentationTask",
     "RESISC45ClassificationTask",
-    "RESISC45DataModule",
-    "SEN12MSDataModule",
+    "RegressionTask",
     "SEN12MSSegmentationTask",
-    "So2SatDataModule",
     "So2SatClassificationTask",
     "UCMercedClassificationTask",
+    # DataModules
+    "BigEarthNetDataModule",
+    "ChesapeakeCVPRDataModule",
+    "CycloneDataModule",
+    "LandcoverAIDataModule",
+    "NAIPChesapeakeDataModule",
+    "RESISC45DataModule",
+    "SEN12MSDataModule",
+    "So2SatDataModule",
     "UCMercedDataModule",
 )
 

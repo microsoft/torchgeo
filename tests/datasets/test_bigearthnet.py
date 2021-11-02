@@ -71,7 +71,7 @@ class TestBigEarthNet:
             assert x["image"].shape == (12, 120, 120)
 
     def test_len(self, dataset: BigEarthNet) -> None:
-        assert len(dataset) == 2
+        assert len(dataset) == 4
 
     def test_already_downloaded(self, dataset: BigEarthNet, tmp_path: Path) -> None:
         BigEarthNet(root=str(tmp_path), bands=dataset.bands, download=True)
