@@ -88,7 +88,6 @@ class UCMerced(VisionClassificationDataset):
         "storagetanks",
         "tenniscourt",
     ]
-    class_counts = {class_name: 100 for class_name in classes}
 
     splits = ["train", "val", "test"]
     split_urls = {
