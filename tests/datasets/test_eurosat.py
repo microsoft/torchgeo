@@ -9,6 +9,7 @@ from typing import Generator
 import pytest
 import torch
 import torch.nn as nn
+from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
@@ -21,9 +22,12 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestEuroSAT:
-    @pytest.fixture()
+    @pytest.fixture(params=["train", "val", "test"])
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+        self,
+        monkeypatch: Generator[MonkeyPatch, None, None],
+        tmp_path: Path,
+        request: SubRequest,
     ) -> EuroSAT:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.eurosat, "download_url", download_url
@@ -32,9 +36,28 @@ class TestEuroSAT:
         monkeypatch.setattr(EuroSAT, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "eurosat", "EuroSATallBands.zip")
         monkeypatch.setattr(EuroSAT, "url", url)  # type: ignore[attr-defined]
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            EuroSAT,
+            "split_urls",
+            {
+                "train": os.path.join("tests", "data", "eurosat", "eurosat-train.txt"),
+                "val": os.path.join("tests", "data", "eurosat", "eurosat-val.txt"),
+                "test": os.path.join("tests", "data", "eurosat", "eurosat-test.txt"),
+            },
+        )
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            EuroSAT,
+            "split_md5s",
+            {
+                "train": "4af60a00fdfdf8500572ae5360694b71",
+                "val": "4af60a00fdfdf8500572ae5360694b71",
+                "test": "4af60a00fdfdf8500572ae5360694b71",
+            },
+        )
         root = str(tmp_path)
+        split = request.param
         transforms = nn.Identity()  # type: ignore[attr-defined]
-        return EuroSAT(root, transforms, download=True, checksum=True)
+        return EuroSAT(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: EuroSAT) -> None:
         x = dataset[0]
