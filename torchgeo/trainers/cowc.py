@@ -6,6 +6,7 @@
 from typing import Any, Dict, Optional
 
 import pytorch_lightning as pl
+from torch import Generator
 from torch.utils.data import DataLoader, random_split
 
 from ..datasets import COWCCounting
@@ -29,13 +30,10 @@ class COWCCountingDataModule(pl.LightningDataModule):
         """Initialize a LightningDataModule for COWC Counting based DataLoaders.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the
-                COWCCounting Datasets classes
-            seed: The seed value to use when doing the sklearn based GroupShuffleSplit
+            root_dir: The ``root`` arugment to pass to the COWCCounting Dataset class
+            seed: The seed value to use when doing the dataset random_split
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
-            api_key: The RadiantEarth MLHub API key to use if the dataset needs to be
-                downloaded
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
@@ -52,7 +50,7 @@ class COWCCountingDataModule(pl.LightningDataModule):
         Returns:
             preprocessed sample
         """
-        sample["image"] = sample["image"] / 255.0  # scale to [0,1]
+        sample["image"] = sample["image"] / 255.0  # scale to [0, 1]
         sample["label"] = sample["label"].float()
         return sample
 
@@ -82,6 +80,7 @@ class COWCCountingDataModule(pl.LightningDataModule):
         self.train_dataset, self.val_dataset = random_split(
             train_val_dataset,
             [len(train_val_dataset) - len(self.test_dataset), len(self.test_dataset)],
+            generator=Generator().manual_seed(self.seed),
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
