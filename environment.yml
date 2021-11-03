@@ -41,4 +41,5 @@ dependencies:
     - segmentation-models-pytorch>=0.2
     - setuptools>=30.4
     - sphinx>=3
+    - timm>=0.2.1
     - torchmetrics
