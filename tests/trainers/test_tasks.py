@@ -100,17 +100,21 @@ class TestClassificationTask:
 
     @pytest.fixture(
         scope="class",
-        params=zip(["ce", "jaccard", "focal"], ["imagenet", "random", "random"]),
+        params=zip(
+            ["ce", "jaccard", "focal"],
+            ["imagenet", "random", "random"],
+            ["resnet18", "hrnet_w18_small_v2", "tf_efficientnet_b0"],
+        ),
     )
     def config(
         self, request: SubRequest, datamodule: DummyDataModule
     ) -> Dict[str, Any]:
+        loss, weights, model = request.param
         task_args = {}
-        task_args["classification_model"] = "resnet18"
-        task_args["learning_rate"] = 3e-4  # type: ignore[assignment]
-        task_args["learning_rate_schedule_patience"] = 6  # type: ignore[assignment]
-        task_args["in_channels"] = datamodule.num_channels  # type: ignore[assignment]
-        loss, weights = request.param
+        task_args["classification_model"] = model
+        task_args["learning_rate"] = 3e-4
+        task_args["learning_rate_schedule_patience"] = 6
+        task_args["in_channels"] = datamodule.num_channels
         task_args["loss"] = loss
         task_args["weights"] = weights
         return task_args
@@ -157,7 +161,7 @@ class TestClassificationTask:
 
     def test_invalid_model(self, config: Dict[str, Any]) -> None:
         config["classification_model"] = "invalid_model"
-        error_message = "Model type 'invalid_model' is not valid."
+        error_message = "Model type 'invalid_model' is not a valid timm model."
         with pytest.raises(ValueError, match=error_message):
             ClassificationTask(**config)
 
