@@ -6,7 +6,7 @@
 from typing import Any, Dict, Optional
 
 import pytorch_lightning as pl
-from torch import Generator
+from torch import Generator  # type: ignore[attr-defined]
 from torch.utils.data import DataLoader, random_split
 
 from ..datasets import COWCCounting
