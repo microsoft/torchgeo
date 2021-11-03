@@ -99,6 +99,7 @@ class TestClassificationTask:
         return dm
 
     @pytest.fixture(
+        scope="class",
         params=zip(
             ["ce", "jaccard", "focal"],
             ["imagenet", "random", "random"],
@@ -108,14 +109,14 @@ class TestClassificationTask:
     def config(
         self, request: SubRequest, datamodule: DummyDataModule
     ) -> Dict[str, Any]:
-        task_conf = OmegaConf.load(os.path.join("conf", "task_defaults", "so2sat.yaml"))
-        task_args = OmegaConf.to_object(task_conf.experiment.module)
-        task_args = cast(Dict[str, Any], task_args)
-        task_args["in_channels"] = datamodule.num_channels
         loss, weights, model = request.param
+        task_args = {}
+        task_args["classification_model"] = model
+        task_args["learning_rate"] = 3e-4
+        task_args["learning_rate_schedule_patience"] = 6
+        task_args["in_channels"] = datamodule.num_channels
         task_args["loss"] = loss
         task_args["weights"] = weights
-        task_args["classification_model"] = model
         return task_args
 
     @pytest.fixture
