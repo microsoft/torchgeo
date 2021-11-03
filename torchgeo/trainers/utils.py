@@ -129,8 +129,8 @@ def reinit_initial_conv_layer(
             # mypy doesn't realize that bias isn't None here...
             b_old = layer.bias.data.clone()  # type: ignore[union-attr]
 
-    updated_stride = layer.stride if new_stride is not None else new_stride
-    updated_padding = layer.padding if new_padding is not None else new_padding
+    updated_stride = layer.stride if new_stride is None else new_stride
+    updated_padding = layer.padding if new_padding is None else new_padding
 
     new_layer = Conv2d(
         new_in_channels,
