@@ -53,7 +53,7 @@ class UCMerced(VisionClassificationDataset):
     This dataset uses the train/val/test splits defined in the "In-domain representation
     learning for remote sensing" paper:
 
-    * https://arxiv.org/abs/1911.06721.
+    * https://arxiv.org/abs/1911.06721
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -88,7 +88,6 @@ class UCMerced(VisionClassificationDataset):
         "storagetanks",
         "tenniscourt",
     ]
-    class_counts = {class_name: 100 for class_name in classes}
 
     splits = ["train", "val", "test"]
     split_urls = {
