@@ -78,6 +78,11 @@ class RESISC45(VisionClassificationDataset):
     43. thermal_power_station
     44. wetland
 
+    This dataset uses the train/val/test splits defined in the "In-domain representation
+    learning for remote sensing" paper:
+
+    * https://arxiv.org/abs/1911.06721
+
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1109/jproc.2017.2675998
@@ -89,27 +94,53 @@ class RESISC45(VisionClassificationDataset):
     filename = "NWPU-RESISC45.rar"
     directory = "NWPU-RESISC45"
 
+    splits = ["train", "val", "test"]
+    split_urls = {
+        "train": "https://storage.googleapis.com/remote_sensing_representations/resisc45-train.txt",  # noqa: E501
+        "val": "https://storage.googleapis.com/remote_sensing_representations/resisc45-val.txt",  # noqa: E501
+        "test": "https://storage.googleapis.com/remote_sensing_representations/resisc45-test.txt",  # noqa: E501
+    }
+    split_md5s = {
+        "train": "b5a4c05a37de15e4ca886696a85c403e",
+        "val": "a0770cee4c5ca20b8c32bbd61e114805",
+        "test": "3dda9e4988b47eb1de9f07993653eb08",
+    }
+
     def __init__(
         self,
         root: str = "data",
+        split: str = "train",
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new PatternNet dataset instance.
+        """Initialize a new RESISC45 dataset instance.
 
         Args:
             root: root directory where dataset can be found
+            split: one of "train", "val", or "test"
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
+        assert split in self.splits
         self.root = root
         self.download = download
         self.checksum = checksum
         self._verify()
-        super().__init__(root=os.path.join(root, self.directory), transforms=transforms)
+
+        valid_fns = set()
+        with open(os.path.join(self.root, f"resisc45-{split}.txt"), "r") as f:
+            for fn in f:
+                valid_fns.add(fn.strip())
+        is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns
+
+        super().__init__(
+            root=os.path.join(root, self.directory),
+            transforms=transforms,
+            is_valid_file=is_in_split,
+        )
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
@@ -148,6 +179,13 @@ class RESISC45(VisionClassificationDataset):
             filename=self.filename,
             md5=self.md5 if self.checksum else None,
         )
+        for split in self.splits:
+            download_url(
+                self.split_urls[split],
+                self.root,
+                filename=f"resisc45-{split}.txt",
+                md5=self.split_md5s[split] if self.checksum else None,
+            )
 
     def _extract(self) -> None:
         """Extract the dataset."""

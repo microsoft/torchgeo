@@ -37,6 +37,11 @@ class EuroSAT(VisionClassificationDataset):
     * Pasture
     * Forest
 
+    This dataset uses the train/val/test splits defined in the "In-domain representation
+    learning for remote sensing" paper:
+
+    * https://arxiv.org/abs/1911.06721
+
     If you use this dataset in your research, please cite the following papers:
 
     * https://ieeexplore.ieee.org/document/8736785
@@ -51,22 +56,23 @@ class EuroSAT(VisionClassificationDataset):
     base_dir = os.path.join(
         "ds", "images", "remote_sensing", "otherDatasets", "sentinel_2", "tif"
     )
-    class_counts = {
-        "AnnualCrop": 3000,
-        "Forest": 3000,
-        "HerbaceousVegetation": 3000,
-        "Highway": 2500,
-        "Industrial": 2500,
-        "Pasture": 2000,
-        "PermanentCrop": 2500,
-        "Residential": 3000,
-        "River": 2500,
-        "SeaLake": 3000,
+
+    splits = ["train", "val", "test"]
+    split_urls = {
+        "train": "https://storage.googleapis.com/remote_sensing_representations/eurosat-train.txt",  # noqa: E501
+        "val": "https://storage.googleapis.com/remote_sensing_representations/eurosat-val.txt",  # noqa: E501
+        "test": "https://storage.googleapis.com/remote_sensing_representations/eurosat-test.txt",  # noqa: E501
+    }
+    split_md5s = {
+        "train": "908f142e73d6acdf3f482c5e80d851b1",
+        "val": "95de90f2aa998f70a3b2416bfe0687b4",
+        "test": "7ae5ab94471417b6e315763121e67c5f",
     }
 
     def __init__(
         self,
         root: str = "data",
+        split: str = "train",
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -75,6 +81,7 @@ class EuroSAT(VisionClassificationDataset):
 
         Args:
             root: root directory where dataset can be found
+            split: one of "train", "val", or "test"
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -89,10 +96,18 @@ class EuroSAT(VisionClassificationDataset):
         self.download = download
         self.checksum = checksum
         self._verify()
+
+        valid_fns = set()
+        with open(os.path.join(self.root, f"eurosat-{split}.txt"), "r") as f:
+            for fn in f:
+                valid_fns.add(fn.strip().replace(".jpg", ".tif"))
+        is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns
+
         super().__init__(
             root=os.path.join(root, self.base_dir),
             transforms=transforms,
             loader=rasterio_loader,
+            is_valid_file=is_in_split,
         )
 
     def _check_integrity(self) -> bool:
@@ -142,6 +157,13 @@ class EuroSAT(VisionClassificationDataset):
             filename=self.filename,
             md5=self.md5 if self.checksum else None,
         )
+        for split in self.splits:
+            download_url(
+                self.split_urls[split],
+                self.root,
+                filename=f"eurosat-{split}.txt",
+                md5=self.split_md5s[split] if self.checksum else None,
+            )
 
     def _extract(self) -> None:
         """Extract the dataset."""
