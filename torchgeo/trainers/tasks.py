@@ -10,13 +10,13 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision.models
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import Accuracy, FBeta, IoU, MeanSquaredError, MetricCollection
 from torchvision import models
+import timm
 
 from . import utils
 
@@ -35,59 +35,46 @@ class ClassificationTask(pl.LightningModule):
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor."""
         in_channels = self.hparams["in_channels"]
+        classification_model = self.hparams["classification_model"]
 
-        pretrained = False
+        imagenet_pretrained = False
+        custom_pretrained = False
         if not os.path.exists(self.hparams["weights"]):
             if self.hparams["weights"] == "imagenet":
-                pretrained = True
+                imagenet_pretrained = True
             elif self.hparams["weights"] == "random":
-                pretrained = False
+                imagenet_pretrained = False
             else:
                 raise ValueError(
                     f"Weight type '{self.hparams['weights']}' is not valid."
                 )
+            custom_pretrained = False
+        else:
+            custom_pretrained = True
 
         # Create the model
-        if "resnet" in self.hparams["classification_model"]:
-            self.model = getattr(
-                torchvision.models.resnet, self.hparams["classification_model"]
-            )(pretrained=pretrained)
-            in_features = self.model.fc.in_features
-            self.model.fc = Linear(in_features, out_features=self.num_classes)
-
-            # Update first layer
-            if in_channels != 3:
-                self.model.conv1 = utils.reinit_initial_conv_layer(
-                    self.model.conv1, in_channels, keep_rgb_weights=pretrained
-                )
-        elif "vgg" in self.hparams["classification_model"]:
-            self.model = getattr(
-                torchvision.models.vgg, self.hparams["classification_model"]
-            )(pretrained=pretrained)
-            self.model.classifier[6] = Linear(4096, self.num_classes)
-
-            # Update first layer
-            if in_channels != 3:
-                self.model.features[0] = utils.reinit_initial_conv_layer(
-                    self.model.features[0], in_channels, keep_rgb_weights=pretrained
-                )
+        valid_models = timm.list_models(pretrained=True)
+        if classification_model in valid_models:
+            self.model = timm.create_model(
+                classification_model,
+                num_classes=self.num_classes,
+                in_chans=in_channels,
+                pretrained=imagenet_pretrained
+            )
         else:
             raise ValueError(
-                f"Model type '{self.hparams['classification_model']}' is not valid."
+                f"Model type '{classification_model}' is not a valid timm model."
             )
 
-        # Load pretrained weights checkpoint weights
-        if "resnet" in self.hparams["classification_model"]:
-            if os.path.exists(self.hparams["weights"]):
-                name, state_dict = utils.extract_encoder(self.hparams["weights"])
+        if custom_pretrained:
+            name, state_dict = utils.extract_encoder(self.hparams["weights"])
 
-                if self.hparams["classification_model"] != name:
-                    raise ValueError(
-                        f"Trying to load {name} weights into a "
-                        f"{self.hparams['classification_model']}"
-                    )
-
-                self.model = utils.load_state_dict(self.model, state_dict)
+            if self.hparams["classification_model"] != name:
+                raise ValueError(
+                    f"Trying to load {name} weights into a "
+                    f"{self.hparams['classification_model']}"
+                )
+            self.model = utils.load_state_dict(self.model, state_dict)
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
