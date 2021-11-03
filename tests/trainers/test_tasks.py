@@ -105,7 +105,9 @@ class TestClassificationTask:
             ["resnet18", "hrnet_w18_small_v2", "tf_efficientnet_b0"],
         )
     )
-    def config(self, request: SubRequest, datamodule: DummyDataModule) -> Dict[str, Any]:
+    def config(
+        self, request: SubRequest, datamodule: DummyDataModule
+    ) -> Dict[str, Any]:
         task_conf = OmegaConf.load(os.path.join("conf", "task_defaults", "so2sat.yaml"))
         task_args = OmegaConf.to_object(task_conf.experiment.module)
         task_args = cast(Dict[str, Any], task_args)

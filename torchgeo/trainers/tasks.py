@@ -7,6 +7,7 @@ import os
 from typing import Any, Dict, cast
 
 import pytorch_lightning as pl
+import timm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -16,7 +17,6 @@ from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import Accuracy, FBeta, IoU, MeanSquaredError, MetricCollection
 from torchvision import models
-import timm
 
 from . import utils
 
@@ -59,7 +59,7 @@ class ClassificationTask(pl.LightningModule):
                 classification_model,
                 num_classes=self.num_classes,
                 in_chans=in_channels,
-                pretrained=imagenet_pretrained
+                pretrained=imagenet_pretrained,
             )
         else:
             raise ValueError(
