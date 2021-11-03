@@ -53,6 +53,7 @@ class COWCCountingDataModule(pl.LightningDataModule):
             preprocessed sample
         """
         sample["image"] = sample["image"] / 255.0  # scale to [0,1]
+        sample["label"] = sample["label"].float()
         return sample
 
     def prepare_data(self) -> None:
