@@ -104,7 +104,7 @@ class TestClassificationTask:
             ["ce", "jaccard", "focal"],
             ["imagenet", "random", "random"],
             ["resnet18", "hrnet_w18_small_v2", "tf_efficientnet_b0"],
-        )
+        ),
     )
     def config(
         self, request: SubRequest, datamodule: DummyDataModule
