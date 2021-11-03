@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Generator, Optional, cast, Tuple
+from typing import Any, Dict, Generator, Optional, cast
 
 import pytest
 import pytorch_lightning as pl
@@ -102,14 +102,14 @@ class TestClassificationTask:
         params=zip(
             ["ce", "jaccard", "focal"],
             ["imagenet", "random", "random"],
-            ["resnet18", "vgg11", "vgg11"],
+            ["resnet18", "hrnet_w18_small_v2", "tf_efficientnet_b0"],
         )
     )
-    def config(self, request: SubRequest, bands: Tuple[str, int]) -> Dict[str, Any]:
+    def config(self, request: SubRequest, datamodule: DummyDataModule) -> Dict[str, Any]:
         task_conf = OmegaConf.load(os.path.join("conf", "task_defaults", "so2sat.yaml"))
         task_args = OmegaConf.to_object(task_conf.experiment.module)
         task_args = cast(Dict[str, Any], task_args)
-        task_args["in_channels"] = bands[1]
+        task_args["in_channels"] = datamodule.num_channels
         loss, weights, model = request.param
         task_args["loss"] = loss
         task_args["weights"] = weights
@@ -158,7 +158,7 @@ class TestClassificationTask:
 
     def test_invalid_model(self, config: Dict[str, Any]) -> None:
         config["classification_model"] = "invalid_model"
-        error_message = "Model type 'invalid_model' is not valid."
+        error_message = "Model type 'invalid_model' is not a valid timm model."
         with pytest.raises(ValueError, match=error_message):
             ClassificationTask(**config)
 
