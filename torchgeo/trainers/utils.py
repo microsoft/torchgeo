@@ -5,7 +5,7 @@
 
 import warnings
 from collections import OrderedDict
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -99,7 +99,11 @@ def load_state_dict(model: Module, state_dict: Dict[str, Tensor]) -> Module:
 
 
 def reinit_initial_conv_layer(
-    layer: Conv2d, new_in_channels: int, keep_rgb_weights: bool
+    layer: Conv2d,
+    new_in_channels: int,
+    keep_rgb_weights: bool,
+    new_stride: Optional[Union[int, Tuple[int, int]]] = None,
+    new_padding: Optional[Union[str, Union[int, Tuple[int, int]]]] = None,
 ) -> Conv2d:
     """Clones a Conv2d layer while optionally retaining some of the original weights.
 
@@ -112,6 +116,8 @@ def reinit_initial_conv_layer(
         layer: the Conv2d layer to initialize
         new_in_channels: the new number of input channels
         keep_rgb_weights: flag indicating whether to re-initialize the first 3 channels
+        new_stride: optionally, overwrites the ``layer``'s stride with this value
+        new_padding: optionally, overwrites the ``layers``'s padding with this value
 
     Returns:
         a Conv2d layer with new kernel weights
@@ -123,12 +129,15 @@ def reinit_initial_conv_layer(
             # mypy doesn't realize that bias isn't None here...
             b_old = layer.bias.data.clone()  # type: ignore[union-attr]
 
+    updated_stride = layer.stride if new_stride is not None else new_stride
+    updated_padding = layer.padding if new_padding is not None else new_padding
+
     new_layer = Conv2d(
         new_in_channels,
         layer.out_channels,
         kernel_size=layer.kernel_size,  # type: ignore[arg-type]
-        stride=layer.stride,  # type: ignore[arg-type]
-        padding=layer.padding,  # type: ignore[arg-type]
+        stride=updated_stride,  # type: ignore[arg-type]
+        padding=updated_padding,  # type: ignore[arg-type]
         dilation=layer.dilation,  # type: ignore[arg-type]
         groups=layer.groups,
         bias=use_bias,
