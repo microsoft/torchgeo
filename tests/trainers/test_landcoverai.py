@@ -9,7 +9,8 @@ from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 
-from torchgeo.trainers import LandcoverAIDataModule, LandcoverAISegmentationTask
+from torchgeo.datasets import LandcoverAIDataModule
+from torchgeo.trainers import LandcoverAISegmentationTask
 
 from .test_utils import FakeTrainer, mocked_log
 
@@ -88,14 +89,3 @@ class TestLandcoverAISegmentationTask:
         error_message = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=error_message):
             LandcoverAISegmentationTask(**config)
-
-
-class TestLandcoverAIDataModule:
-    def test_train_dataloader(self, datamodule: LandcoverAIDataModule) -> None:
-        next(iter(datamodule.train_dataloader()))
-
-    def test_val_dataloader(self, datamodule: LandcoverAIDataModule) -> None:
-        next(iter(datamodule.val_dataloader()))
-
-    def test_test_dataloader(self, datamodule: LandcoverAIDataModule) -> None:
-        next(iter(datamodule.test_dataloader()))

@@ -14,7 +14,7 @@ from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import RESISC45
+from torchgeo.datasets import RESISC45, RESISC45DataModule
 
 pytest.importorskip("rarfile")
 
@@ -90,3 +90,24 @@ class TestRESISC45:
         "to automaticaly download the dataset."
         with pytest.raises(RuntimeError, match=err):
             RESISC45(str(tmp_path))
+
+
+class TestRESISC45DataModule:
+    @pytest.fixture(scope="class")
+    def datamodule(self) -> RESISC45DataModule:
+        root = os.path.join("tests", "data", "resisc45")
+        batch_size = 2
+        num_workers = 0
+        dm = RESISC45DataModule(root, batch_size, num_workers)
+        dm.prepare_data()
+        dm.setup()
+        return dm
+
+    def test_train_dataloader(self, datamodule: RESISC45DataModule) -> None:
+        next(iter(datamodule.train_dataloader()))
+
+    def test_val_dataloader(self, datamodule: RESISC45DataModule) -> None:
+        next(iter(datamodule.val_dataloader()))
+
+    def test_test_dataloader(self, datamodule: RESISC45DataModule) -> None:
+        next(iter(datamodule.test_dataloader()))

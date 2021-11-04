@@ -14,9 +14,9 @@ from omegaconf import OmegaConf
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
+from torchgeo.datasets import CycloneDataModule
 from torchgeo.trainers import (
     ClassificationTask,
-    CycloneDataModule,
     MultiLabelClassificationTask,
     RegressionTask,
 )

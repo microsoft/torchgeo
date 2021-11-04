@@ -14,7 +14,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import LandCoverAI
+from torchgeo.datasets import LandCoverAI, LandcoverAIDataModule
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -67,3 +67,24 @@ class TestLandCoverAI:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             LandCoverAI(str(tmp_path))
+
+
+class TestLandcoverAIDataModule:
+    @pytest.fixture(scope="class")
+    def datamodule(self) -> LandcoverAIDataModule:
+        root = os.path.join("tests", "data", "landcoverai")
+        batch_size = 2
+        num_workers = 0
+        dm = LandcoverAIDataModule(root, batch_size, num_workers)
+        dm.prepare_data()
+        dm.setup()
+        return dm
+
+    def test_train_dataloader(self, datamodule: LandcoverAIDataModule) -> None:
+        next(iter(datamodule.train_dataloader()))
+
+    def test_val_dataloader(self, datamodule: LandcoverAIDataModule) -> None:
+        next(iter(datamodule.val_dataloader()))
+
+    def test_test_dataloader(self, datamodule: LandcoverAIDataModule) -> None:
+        next(iter(datamodule.test_dataloader()))

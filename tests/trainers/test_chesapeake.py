@@ -5,12 +5,12 @@ import os
 from typing import Any, Dict, Generator, cast
 
 import pytest
-import torch
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 
-from torchgeo.trainers import ChesapeakeCVPRDataModule, ChesapeakeCVPRSegmentationTask
+from torchgeo.datasets import ChesapeakeCVPRDataModule
+from torchgeo.trainers import ChesapeakeCVPRSegmentationTask
 
 from .test_utils import FakeTrainer, mocked_log
 
@@ -107,28 +107,3 @@ class TestChesapeakeCVPRSegmentationTask:
         error_message = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=error_message):
             ChesapeakeCVPRSegmentationTask(**config)
-
-
-class TestChesapeakeCVPRDataModule:
-    def test_train_dataloader(self, datamodule: ChesapeakeCVPRDataModule) -> None:
-        next(iter(datamodule.train_dataloader()))
-
-    def test_val_dataloader(self, datamodule: ChesapeakeCVPRDataModule) -> None:
-        next(iter(datamodule.val_dataloader()))
-
-    def test_test_dataloader(self, datamodule: ChesapeakeCVPRDataModule) -> None:
-        next(iter(datamodule.test_dataloader()))
-
-    def test_nodata_check(self, datamodule: ChesapeakeCVPRDataModule) -> None:
-        nodata_check = datamodule.nodata_check(4)
-        sample = {
-            "image": torch.ones(1, 2, 2),  # type: ignore[attr-defined]
-            "mask": torch.ones(2, 2),  # type: ignore[attr-defined]
-        }
-        out = nodata_check(sample)
-        assert torch.equal(  # type: ignore[attr-defined]
-            out["image"], torch.zeros(1, 4, 4)  # type: ignore[attr-defined]
-        )
-        assert torch.equal(  # type: ignore[attr-defined]
-            out["mask"], torch.zeros(4, 4)  # type: ignore[attr-defined]
-        )

@@ -31,6 +31,7 @@ Chesapeake Bay High-Resolution Land Cover Project
 .. autoclass:: ChesapeakeVA
 .. autoclass:: ChesapeakeWV
 .. autoclass:: ChesapeakeCVPR
+.. autoclass:: ChesapeakeCVPRDataModule
 
 Cropland Data Layer (CDL)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -56,6 +57,7 @@ National Agriculture Imagery Program (NAIP)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: NAIP
+.. autoclass:: NAIPChesapeakeDataModule
 
 Sentinel
 ^^^^^^^^
@@ -84,6 +86,7 @@ BigEarthNet
 ^^^^^^^^^^^
 
 .. autoclass:: BigEarthNet
+.. autoclass:: BigEarthNetDataModule
 
 Cars Overhead With Context (COWC)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -91,6 +94,7 @@ Cars Overhead With Context (COWC)
 .. autoclass:: COWC
 .. autoclass:: COWCCounting
 .. autoclass:: COWCDetection
+.. autoclass:: COWCCountingDataModule
 
 CV4A Kenya Crop Type Competition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -116,6 +120,7 @@ LandCover.ai (Land Cover from Aerial Imagery)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: LandCoverAI
+.. autoclass:: LandcoverAIDataModule
 
 LEVIR-CD+ (LEVIR Change Detection +)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -131,16 +136,19 @@ RESISC45 (Remote Sensing Image Scene Classification)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: RESISC45
+.. autoclass:: RESISC45DataModule
 
 SEN12MS
 ^^^^^^^
 
 .. autoclass:: SEN12MS
+.. autoclass:: SEN12MSDataModule
 
 So2Sat
 ^^^^^^
 
 .. autoclass:: So2Sat
+.. autoclass:: So2SatDataModule
 
 SpaceNet
 ^^^^^^^^
@@ -154,6 +162,7 @@ Tropical Cyclone Wind Estimation Competition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: TropicalCycloneWindEstimation
+.. autoclass:: CycloneDataModule
 
 NWPU VHR-10
 ^^^^^^^^^^^
@@ -164,6 +173,7 @@ UC Merced
 ^^^^^^^^^
 
 .. autoclass:: UCMerced
+.. autoclass:: UCMercedDataModule
 
 ZueriCrop
 ^^^^^^^^^
