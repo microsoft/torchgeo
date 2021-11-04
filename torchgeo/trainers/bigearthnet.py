@@ -3,14 +3,6 @@
 
 """BigEarthNet trainer."""
 
-from typing import Any, Dict, Optional
-
-import pytorch_lightning as pl
-import torch
-from torch.utils.data import DataLoader
-from torchvision.transforms import Compose
-
-from ..datasets import BigEarthNet
 from .tasks import MultiLabelClassificationTask
 
 

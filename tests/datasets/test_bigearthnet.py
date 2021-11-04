@@ -152,20 +152,19 @@ class TestBigEarthNet:
 
 
 class TestBigEarthNetDataModule:
-    @pytest.fixture(scope="class", params=zip(["s1", "s2", "all"], [True, True, False]))
+    @pytest.fixture(scope="class", params=["s1", "s2", "all"])
     def datamodule(self, request: SubRequest) -> BigEarthNetDataModule:
-        bands, unsupervised_mode = request.param
+        bands = request.param
         root = os.path.join("tests", "data", "bigearthnet")
+        num_classes = 19
         batch_size = 1
         num_workers = 0
         dm = BigEarthNetDataModule(
             root,
             bands,
+            num_classes,
             batch_size,
             num_workers,
-            unsupervised_mode,
-            val_split_pct=0.3,
-            test_split_pct=0.3,
         )
         dm.prepare_data()
         dm.setup()
