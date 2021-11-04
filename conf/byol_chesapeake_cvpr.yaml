@@ -1,0 +1,15 @@
+trainer:
+  gpus: 1
+  min_epochs: 20
+  max_epochs: 50
+experiment:
+  task: "byol_chesapeake_cvpr"
+  module:
+    model: "byol"
+    encoder: "resnet50"
+    learning_rate: 1e-2
+    input_channels: 4
+    imagenet_pretraining: True
+  datamodule:
+    batch_size: 96
+    num_workers: 6

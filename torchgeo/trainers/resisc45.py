@@ -305,7 +305,15 @@ class RESISC45DataModule(pl.LightningDataModule):
                 self.root_dir,
                 transforms=transforms,
             )
-            self.val_dataset, self.test_dataset = None, None  # type: ignore[assignment]
+
+            dataset = RESISC45(
+                self.root_dir,
+                transforms=transforms,
+            )
+
+            _, self.val_dataset = dataset_split(
+                dataset, val_pct=10, test_pct=None
+            )  # type: ignore[assignment]
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""

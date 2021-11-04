@@ -1,0 +1,14 @@
+experiment:
+  task: "byol"
+  name: "test_byol_resisc45"
+  module:
+    model: "byol"
+    encoder: "resnet50"
+    input_channels: 3
+    imagenet_pretraining: True
+    learning_rate: 1e-3
+    learning_rate_schedule_patience: 6
+  datamodule:
+    batch_size: 64
+    num_workers: 6
+    unsupervised_mode: True

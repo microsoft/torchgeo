@@ -37,6 +37,7 @@ TASK_TO_MODULES_MAPPING: Dict[
     "byol": (BYOLTask, So2SatDataModule),
     "byol_landcoverai": (BYOLTask, LandcoverAIDataModule),
     "byol_chesapeake_cvpr": (BYOLTask, ChesapeakeCVPRDataModule),
+    "byol_resisc45": (BYOLTask, RESISC45DataModule),
     "chesapeake_cvpr": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
     "cyclone": (CycloneSimpleRegressionTask, CycloneDataModule),
     "landcoverai": (LandcoverAISegmentationTask, LandcoverAIDataModule),
