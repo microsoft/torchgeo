@@ -6,6 +6,7 @@
 from .bigearthnet import BigEarthNetClassificationTask, BigEarthNetDataModule
 from .byol import BYOLTask
 from .chesapeake import ChesapeakeCVPRDataModule, ChesapeakeCVPRSegmentationTask
+from .cowc import COWCCountingDataModule
 from .cyclone import CycloneDataModule
 from .landcoverai import LandcoverAIDataModule, LandcoverAISegmentationTask
 from .naipchesapeake import NAIPChesapeakeDataModule, NAIPChesapeakeSegmentationTask
@@ -20,10 +21,7 @@ __all__ = (
     "BigEarthNetClassificationTask",
     "BYOLTask",
     "ChesapeakeCVPRSegmentationTask",
-    "ChesapeakeCVPRDataModule",
     "ClassificationTask",
-    "CycloneDataModule",
-    "LandcoverAIDataModule",
     "LandcoverAISegmentationTask",
     "MultiLabelClassificationTask",
     "NAIPChesapeakeSegmentationTask",
@@ -35,6 +33,7 @@ __all__ = (
     # DataModules
     "BigEarthNetDataModule",
     "ChesapeakeCVPRDataModule",
+    "COWCCountingDataModule",
     "CycloneDataModule",
     "LandcoverAIDataModule",
     "NAIPChesapeakeDataModule",
