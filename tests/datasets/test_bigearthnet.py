@@ -76,11 +76,10 @@ class TestBigEarthNet:
         root = str(tmp_path)
         transforms = nn.Identity()  # type: ignore[attr-defined]
         return BigEarthNet(
-            root, bands, split, num_classes, transforms, download=True, checksum=True
+            root, split, bands, num_classes, transforms, download=True, checksum=True
         )
 
     def test_getitem(self, dataset: BigEarthNet) -> None:
-        print(len(dataset), dataset.split, dataset.bands)
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)

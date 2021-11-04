@@ -272,8 +272,8 @@ class BigEarthNet(VisionDataset):
     def __init__(
         self,
         root: str = "data",
-        bands: str = "all",
         split: str = "train",
+        bands: str = "all",
         num_classes: int = 19,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
@@ -283,20 +283,20 @@ class BigEarthNet(VisionDataset):
 
         Args:
             root: root directory where dataset can be found
-            bands: load Sentinel-1 bands, Sentinel-2, or both. one of {s1, s2, all}
             split: train/val/test split to load
+            bands: load Sentinel-1 bands, Sentinel-2, or both. one of {s1, s2, all}
             num_classes: number of classes to load in target. one of {19, 43}
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
+        assert split in self.splits_metadata
         assert bands in ["s1", "s2", "all"]
         assert num_classes in [43, 19]
-        assert split in self.splits_metadata
         self.root = root
-        self.bands = bands
         self.split = split
+        self.bands = bands
         self.num_classes = num_classes
         self.transforms = transforms
         self.download = download
