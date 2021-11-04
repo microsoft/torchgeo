@@ -81,7 +81,7 @@ class BigEarthNet(VisionDataset):
     18. Inland marshes
     19. Intertidal flats
     20. Land principally occupied by agriculture, with significant
-      areas of natural vegetation
+        areas of natural vegetation
     21. Mineral extraction sites
     22. Mixed forest
     23. Moors and heathland
@@ -114,7 +114,7 @@ class BigEarthNet(VisionDataset):
     4. Pastures
     5. Complex cultivation patterns
     6. Land principally occupied by agriculture, with significant
-      areas of natural vegetation
+        areas of natural vegetation
     7. Agro-forestry areas
     8. Broad-leaved forest
     9. Coniferous forest
