@@ -80,8 +80,8 @@ class BigEarthNet(VisionDataset):
     17. Industrial or commercial units
     18. Inland marshes
     19. Intertidal flats
-    20. Land principally occupied by agriculture, with
-        significant areas of natural vegetation
+    20. Land principally occupied by agriculture, with significant
+      areas of natural vegetation
     21. Mineral extraction sites
     22. Mixed forest
     23. Moors and heathland
@@ -105,6 +105,7 @@ class BigEarthNet(VisionDataset):
     41. Water bodies
     42. Water courses
 
+
     Dataset classes (19):
     0. Urban fabric
     1. Industrial or commercial units
@@ -113,7 +114,7 @@ class BigEarthNet(VisionDataset):
     4. Pastures
     5. Complex cultivation patterns
     6. Land principally occupied by agriculture, with significant
-        areas of natural vegetation
+      areas of natural vegetation
     7. Agro-forestry areas
     8. Broad-leaved forest
     9. Coniferous forest
