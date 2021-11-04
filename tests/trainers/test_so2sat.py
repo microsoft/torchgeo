@@ -9,7 +9,8 @@ from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 
-from torchgeo.trainers import So2SatClassificationTask, So2SatDataModule
+from torchgeo.datasets import So2SatDataModule
+from torchgeo.trainers import So2SatClassificationTask
 
 from .test_utils import mocked_log
 
@@ -112,14 +113,3 @@ class TestSo2SatClassificationTask:
         error_message = "Trying to load resnet18 weights into a resnet50"
         with pytest.raises(ValueError, match=error_message):
             So2SatClassificationTask(**config)
-
-
-class TestSo2SatDataModule:
-    def test_train_dataloader(self, datamodule: So2SatDataModule) -> None:
-        next(iter(datamodule.train_dataloader()))
-
-    def test_val_dataloader(self, datamodule: So2SatDataModule) -> None:
-        next(iter(datamodule.val_dataloader()))
-
-    def test_test_dataloader(self, datamodule: So2SatDataModule) -> None:
-        next(iter(datamodule.test_dataloader()))

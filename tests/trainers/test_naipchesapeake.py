@@ -9,7 +9,8 @@ from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 
-from torchgeo.trainers import NAIPChesapeakeDataModule, NAIPChesapeakeSegmentationTask
+from torchgeo.datasets import NAIPChesapeakeDataModule
+from torchgeo.trainers import NAIPChesapeakeSegmentationTask
 
 from .test_utils import FakeTrainer, mocked_log
 
@@ -88,14 +89,3 @@ class TestNAIPChesapeakeSegmentationTask:
         error_message = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=error_message):
             NAIPChesapeakeSegmentationTask(**config)
-
-
-class TestNAIPChesapeakeDataModule:
-    def test_train_dataloader(self, datamodule: NAIPChesapeakeDataModule) -> None:
-        next(iter(datamodule.train_dataloader()))
-
-    def test_val_dataloader(self, datamodule: NAIPChesapeakeDataModule) -> None:
-        next(iter(datamodule.val_dataloader()))
-
-    def test_test_dataloader(self, datamodule: NAIPChesapeakeDataModule) -> None:
-        next(iter(datamodule.test_dataloader()))
