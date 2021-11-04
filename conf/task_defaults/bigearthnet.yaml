@@ -7,7 +7,9 @@ experiment:
     learning_rate_schedule_patience: 6
     weights: "random"
     in_channels: 14
+    num_classes: 19
   datamodule:
     batch_size: 128
     num_workers: 6
     bands: "all"
+    num_classes: 19

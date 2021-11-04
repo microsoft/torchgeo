@@ -36,9 +36,6 @@ Linear.__module__ = "nn.Linear"
 class ClassificationTask(pl.LightningModule):
     """Abstract base class for image classification LightningModules."""
 
-    #: number of classes in dataset
-    num_classes: int = 45
-
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor."""
         in_channels = self.hparams["in_channels"]
@@ -64,7 +61,7 @@ class ClassificationTask(pl.LightningModule):
         if classification_model in valid_models:
             self.model = timm.create_model(
                 classification_model,
-                num_classes=self.num_classes,
+                num_classes=self.hparams["num_classes"],
                 in_chans=in_channels,
                 pretrained=imagenet_pretrained,
             )
@@ -113,14 +110,14 @@ class ClassificationTask(pl.LightningModule):
         self.train_metrics = MetricCollection(
             {
                 "OverallAccuracy": Accuracy(
-                    num_classes=self.num_classes, average="micro"
+                    num_classes=self.hparams["num_classes"], average="micro"
                 ),
                 "AverageAccuracy": Accuracy(
-                    num_classes=self.num_classes, average="macro"
+                    num_classes=self.hparams["num_classes"], average="macro"
                 ),
-                "IoU": IoU(num_classes=self.num_classes),
+                "IoU": IoU(num_classes=self.hparams["num_classes"]),
                 "F1Score": FBeta(
-                    num_classes=self.num_classes, beta=1.0, average="micro"
+                    num_classes=self.hparams["num_classes"], beta=1.0, average="micro"
                 ),
             },
             prefix="train_",
@@ -255,9 +252,6 @@ class ClassificationTask(pl.LightningModule):
 class MultiLabelClassificationTask(ClassificationTask):
     """Abstract base class for multi label image classification LightningModules."""
 
-    #: number of classes in dataset
-    num_classes: int = 43
-
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
         self.config_model()
@@ -284,13 +278,13 @@ class MultiLabelClassificationTask(ClassificationTask):
         self.train_metrics = MetricCollection(
             {
                 "OverallAccuracy": Accuracy(
-                    num_classes=self.num_classes, average="micro", multiclass=False
+                    num_classes=self.hparams["num_classes"], average="micro", multiclass=False
                 ),
                 "AverageAccuracy": Accuracy(
-                    num_classes=self.num_classes, average="macro", multiclass=False
+                    num_classes=self.hparams["num_classes"], average="macro", multiclass=False
                 ),
                 "F1Score": FBeta(
-                    num_classes=self.num_classes,
+                    num_classes=self.hparams["num_classes"],
                     beta=1.0,
                     average="micro",
                     multiclass=False,

@@ -22,8 +22,6 @@ Linear.__module__ = "nn.Linear"
 class So2SatClassificationTask(ClassificationTask):
     """LightningModule for training models on the So2Sat Dataset."""
 
-    num_classes = 17
-
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor."""
         in_channels = self.hparams["in_channels"]
