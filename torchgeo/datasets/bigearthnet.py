@@ -47,7 +47,7 @@ class BigEarthNet(VisionDataset):
     * Imagery from tiles in Europe between Jun 2017 - May 2018
     * 12 spectral bands with 10-60 m per pixel resolution (base 120x120 px)
     * 2 synthetic aperture radar bands (120x120 px)
-    * 43 scene classes from the 2018 CORINE Land Cover database (CLC 2018)
+    * 43 or 19 scene classes from the 2018 CORINE Land Cover database (CLC 2018)
 
     Dataset format:
 
@@ -59,7 +59,7 @@ class BigEarthNet(VisionDataset):
     * All bands: (VV, VH, B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B11, B12)
     * Sentinel-2 bands are of different spatial resolutions and upsampled to 10m
 
-    Dataset classes:
+    Dataset classes (43):
 
     0. Agro-forestry areas
     1. Airports
@@ -106,13 +106,35 @@ class BigEarthNet(VisionDataset):
     41. Water bodies
     42. Water courses
 
+    Dataset classes (19):
+    0. Urban fabric
+    1. Industrial or commercial units
+    2. Arable land
+    3. Permanent crops
+    4. Pastures
+    5. Complex cultivation patterns
+    6. Land principally occupied by agriculture, with significant
+        areas of natural vegetation
+    7. Agro-forestry areas
+    8. Broad-leaved forest
+    9. Coniferous forest
+    10. Mixed forest
+    11. Natural grassland and sparsely vegetated areas
+    12. Moors, heathland and sclerophyllous vegetation
+    13. Transitional woodland, shrub
+    14. Beaches, dunes, sands
+    15. Inland wetlands
+    16. Coastal wetlands
+    17. Inland waters
+    18. Marine waters
+
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1109/IGARSS.2019.8900532
 
     """
 
-    classes = [
+    classes_43 = [
         "Agro-forestry areas",
         "Airports",
         "Annual crops associated with permanent crops",
@@ -158,6 +180,79 @@ class BigEarthNet(VisionDataset):
         "Water bodies",
         "Water courses",
     ]
+    classes_19 = [
+        "Urban fabric",
+        "Industrial or commercial units",
+        "Arable land",
+        "Permanent crops",
+        "Pastures",
+        "Complex cultivation patterns",
+        "Land principally occupied by agriculture, with significant areas of natural "
+        "vegetation",
+        "Agro-forestry areas",
+        "Broad-leaved forest",
+        "Coniferous forest",
+        "Mixed forest",
+        "Natural grassland and sparsely vegetated areas",
+        "Moors, heathland and sclerophyllous vegetation",
+        "Transitional woodland, shrub",
+        "Beaches, dunes, sands",
+        "Inland wetlands",
+        "Coastal wetlands",
+        "Inland waters",
+        "Marine waters",
+    ]
+    label_converter = {
+        0: 0,
+        1: 0,
+        2: 1,
+        11: 2,
+        12: 2,
+        13: 2,
+        14: 3,
+        15: 3,
+        16: 3,
+        18: 3,
+        17: 4,
+        19: 5,
+        20: 6,
+        21: 7,
+        22: 8,
+        23: 9,
+        24: 10,
+        25: 11,
+        31: 11,
+        26: 12,
+        27: 12,
+        28: 13,
+        29: 14,
+        33: 15,
+        34: 15,
+        35: 16,
+        36: 16,
+        38: 17,
+        39: 17,
+        40: 18,
+        41: 18,
+        42: 18,
+    }
+    splits_metadata = {
+        "train": {
+            "url": "https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/master/splits/train.csv?inline=false",  # noqa: E501
+            "filename": "bigearthnet-train.csv",
+            "md5": "623e501b38ab7b12fe44f0083c00986d",
+        },
+        "val": {
+            "url": "https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/master/splits/val.csv?inline=false",  # noqa: E501
+            "filename": "bigearthnet-val.csv",
+            "md5": "22efe8ed9cbd71fa10742ff7df2b7978",
+        },
+        "test": {
+            "url": "https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/master/splits/test.csv?inline=false",  # noqa: E501
+            "filename": "bigearthnet-test.csv",
+            "md5": "697fb90677e30571b9ac7699b7e5b432",
+        },
+    }
     metadata = {
         "s1": {
             "url": "http://bigearth.net/downloads/BigEarthNet-S1-v1.0.tar.gz",
@@ -178,6 +273,8 @@ class BigEarthNet(VisionDataset):
         self,
         root: str = "data",
         bands: str = "all",
+        split: str = "train",
+        num_classes: int = 19,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -187,29 +284,26 @@ class BigEarthNet(VisionDataset):
         Args:
             root: root directory where dataset can be found
             bands: load Sentinel-1 bands, Sentinel-2, or both. one of {s1, s2, all}
+            split: train/val/test split to load
+            num_classes: number of classes to load in target. one of {19, 43}
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
         assert bands in ["s1", "s2", "all"]
+        assert num_classes in [43, 19]
+        assert split in self.splits_metadata
         self.root = root
         self.bands = bands
+        self.split = split
+        self.num_classes = num_classes
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
-        self.class2idx = {c: i for i, c in enumerate(self.classes)}
-        self.num_classes = len(self.classes)
+        self.class2idx = {c: i for i, c in enumerate(self.classes_43)}
         self._verify()
-
-        if bands == "s2":
-            self.files = glob.glob(
-                os.path.join(self.root, self.metadata["s2"]["directory"], "*")
-            )
-        else:
-            self.files = glob.glob(
-                os.path.join(self.root, self.metadata["s1"]["directory"], "*")
-            )
+        self.folders = self._load_folders()
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
@@ -235,7 +329,30 @@ class BigEarthNet(VisionDataset):
         Returns:
             length of the dataset
         """
-        return len(self.files)
+        return len(self.folders)
+
+    def _load_folders(self) -> List[Dict[str, str]]:
+        """Load folder paths.
+
+        Returns:
+            list of dicts of s1 and s2 folder paths
+        """
+        filename = self.splits_metadata[self.split]["filename"]
+        dir_s1 = self.metadata["s1"]["directory"]
+        dir_s2 = self.metadata["s2"]["directory"]
+
+        with open(os.path.join(self.root, filename)) as f:
+            lines = f.read().strip().splitlines()
+            pairs = [line.split(",") for line in lines]
+
+        folders = [
+            {
+                "s1": os.path.join(self.root, dir_s1, pair[1]),
+                "s2": os.path.join(self.root, dir_s2, pair[0]),
+            }
+            for pair in pairs
+        ]
+        return folders
 
     def _load_paths(self, index: int) -> List[str]:
         """Load paths to band files.
@@ -246,26 +363,23 @@ class BigEarthNet(VisionDataset):
         Returns:
             list of file paths
         """
-        folder = self.files[index]
-        paths = glob.glob(os.path.join(folder, "*.tif"))
-        # S1->S2 patch mapping is in S1 patch metadata json file
         if self.bands == "all":
-            paths = sorted(paths)
-
-            metadata_path = glob.glob(os.path.join(folder, "*.json"))[0]
-            with open(metadata_path, "r") as f:
-                name_s2 = json.load(f)["corresponding_s2_patch"]
-
-            folder_s2 = os.path.join(
-                self.root, self.metadata["s2"]["directory"], name_s2
-            )
+            folder_s1 = self.folders[index]["s1"]
+            folder_s2 = self.folders[index]["s2"]
+            paths_s1 = glob.glob(os.path.join(folder_s1, "*.tif"))
             paths_s2 = glob.glob(os.path.join(folder_s2, "*.tif"))
+            paths_s1 = sorted(paths_s1)
             paths_s2 = sorted(paths_s2, key=sort_bands)
-            paths.extend(paths_s2)
+            paths = paths_s1 + paths_s2
         elif self.bands == "s1":
+            folder = self.folders[index]["s1"]
+            paths = glob.glob(os.path.join(folder, "*.tif"))
             paths = sorted(paths)
         else:
+            folder = self.folders[index]["s2"]
+            paths = glob.glob(os.path.join(folder, "*.tif"))
             paths = sorted(paths, key=sort_bands)
+
         return paths
 
     def _load_image(self, index: int) -> Tensor:
@@ -303,11 +417,25 @@ class BigEarthNet(VisionDataset):
         Returns:
             the target label
         """
-        folder = self.files[index]
+        if self.bands == "s2":
+            folder = self.folders[index]["s2"]
+        else:
+            folder = self.folders[index]["s1"]
+
         path = glob.glob(os.path.join(folder, "*.json"))[0]
         with open(path, "r") as f:
             labels = json.load(f)["labels"]
+
+        # labels -> indices
         indices = [self.class2idx[label] for label in labels]
+
+        # Map 43 to 19 class labels
+        if self.num_classes == 19:
+            indices = [
+                self.label_converter.get(idx) for idx in indices  # type: ignore[misc]
+            ]
+            indices = [idx for idx in indices if idx is not None]
+
         target: Tensor = torch.zeros(  # type: ignore[attr-defined]
             self.num_classes, dtype=torch.long  # type: ignore[attr-defined]
         )
@@ -325,12 +453,22 @@ class BigEarthNet(VisionDataset):
         md5s = [self.metadata[k]["md5"] for k in keys]
         filenames = [self.metadata[k]["filename"] for k in keys]
         directories = [self.metadata[k]["directory"] for k in keys]
+        urls.extend([self.splits_metadata[k]["url"] for k in self.splits_metadata])
+        md5s.extend([self.splits_metadata[k]["md5"] for k in self.splits_metadata])
+        filenames_splits = [
+            self.splits_metadata[k]["filename"] for k in self.splits_metadata
+        ]
+        filenames.extend(filenames_splits)
+
+        # Check if the split file already exist
+        exists = []
+        for filename in filenames_splits:
+            exists.append(os.path.exists(os.path.join(self.root, filename)))
 
         # Check if the files already exist
-        exists = [
-            os.path.exists(os.path.join(self.root, directory))
-            for directory in directories
-        ]
+        for directory in directories:
+            exists.append(os.path.exists(os.path.join(self.root, directory)))
+
         if all(exists):
             return
 
@@ -369,9 +507,10 @@ class BigEarthNet(VisionDataset):
             filename: output filename to write downloaded file
             md5: md5 of downloaded file
         """
-        download_url(
-            url, self.root, filename=filename, md5=md5 if self.checksum else None
-        )
+        if not os.path.exists(filename):
+            download_url(
+                url, self.root, filename=filename, md5=md5 if self.checksum else None
+            )
 
     def _extract(self, filepath: str) -> None:
         """Extract the dataset.
@@ -379,172 +518,5 @@ class BigEarthNet(VisionDataset):
         Args:
             filepath: path to file to be extracted
         """
-        extract_archive(filepath)
-
-
-class BigEarthNetDataModule(pl.LightningDataModule):
-    """LightningDataModule implementation for the BigEarthNet dataset.
-
-    Uses the train/val/test splits from the dataset.
-    """
-
-    # (VV, VH, B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B11, B12)
-    # min/max band statistics computed on 100k random samples
-    band_mins_raw = torch.tensor(  # type: ignore[attr-defined]
-        [-70.0, -72.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0]
-    )
-    band_maxs_raw = torch.tensor(  # type: ignore[attr-defined]
-        [
-            31.0,
-            35.0,
-            18556.0,
-            20528.0,
-            18976.0,
-            17874.0,
-            16611.0,
-            16512.0,
-            16394.0,
-            16672.0,
-            16141.0,
-            16097.0,
-            15336.0,
-            15203.0,
-        ]
-    )
-
-    # min/max band statistics computed by percentile clipping the
-    # above to samples to [2, 98]
-    band_mins = torch.tensor(  # type: ignore[attr-defined]
-        [-48.0, -42.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-    )
-    band_maxs = torch.tensor(  # type: ignore[attr-defined]
-        [
-            6.0,
-            16.0,
-            9859.0,
-            12872.0,
-            13163.0,
-            14445.0,
-            12477.0,
-            12563.0,
-            12289.0,
-            15596.0,
-            12183.0,
-            9458.0,
-            5897.0,
-            5544.0,
-        ]
-    )
-
-    def __init__(
-        self,
-        root_dir: str,
-        bands: str = "all",
-        batch_size: int = 64,
-        num_workers: int = 4,
-        unsupervised_mode: bool = False,
-        val_split_pct: float = 0.2,
-        test_split_pct: float = 0.2,
-        **kwargs: Any,
-    ) -> None:
-        """Initialize a LightningDataModule for BigEarthNet based DataLoaders.
-
-        Args:
-            root_dir: The ``root`` arugment to pass to the BigEarthNet Dataset classes
-            bands: load Sentinel-1 bands, Sentinel-2, or both. one of {s1, s2, all}
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
-            unsupervised_mode: Makes the train dataloader return imagery from the train,
-                val, and test sets
-            val_split_pct: What percentage of the dataset to use as a validation set
-            test_split_pct: What percentage of the dataset to use as a test set
-        """
-        super().__init__()  # type: ignore[no-untyped-call]
-        self.root_dir = root_dir
-        self.bands = bands
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.unsupervised_mode = unsupervised_mode
-
-        self.val_split_pct = val_split_pct
-        self.test_split_pct = test_split_pct
-
-        if bands == "all":
-            self.mins = self.band_mins[:, None, None]
-            self.maxs = self.band_maxs[:, None, None]
-        elif bands == "s1":
-            self.mins = self.band_mins[:2, None, None]
-            self.maxs = self.band_maxs[:2, None, None]
-        else:
-            self.mins = self.band_mins[2:, None, None]
-            self.maxs = self.band_maxs[2:, None, None]
-
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset."""
-        sample["image"] = sample["image"].float()
-        sample["image"] = (sample["image"] - self.mins) / (self.maxs - self.mins)
-        sample["image"] = torch.clip(  # type: ignore[attr-defined]
-            sample["image"], min=0.0, max=1.0
-        )
-        return sample
-
-    def prepare_data(self) -> None:
-        """Make sure that the dataset is downloaded.
-
-        This method is only called once per run.
-        """
-        BigEarthNet(self.root_dir, bands=self.bands, checksum=False)
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
-
-        This method is called once per GPU per run.
-        """
-        transforms = Compose([self.preprocess])
-
-        if not self.unsupervised_mode:
-
-            dataset = BigEarthNet(
-                self.root_dir, bands=self.bands, transforms=transforms
-            )
-            self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-                dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
-            )
-        else:
-            self.train_dataset = BigEarthNet(  # type: ignore[assignment]
-                self.root_dir, bands=self.bands, transforms=transforms
-            )
-            self.val_dataset, self.test_dataset = None, None  # type: ignore[assignment]
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training."""
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation."""
-        if self.unsupervised_mode or self.val_split_pct == 0:
-            return self.train_dataloader()
-        else:
-            return DataLoader(
-                self.val_dataset,
-                batch_size=self.batch_size,
-                num_workers=self.num_workers,
-                shuffle=False,
-            )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing."""
-        if self.unsupervised_mode or self.test_split_pct == 0:
-            return self.train_dataloader()
-        else:
-            return DataLoader(
-                self.test_dataset,
-                batch_size=self.batch_size,
-                num_workers=self.num_workers,
-                shuffle=False,
-            )
+        if not filepath.endswith(".csv"):
+            extract_archive(filepath)
