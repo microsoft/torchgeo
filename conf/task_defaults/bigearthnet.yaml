@@ -8,6 +8,7 @@ experiment:
     weights: "random"
     in_channels: 14
   datamodule:
+    num_classes: 19
     batch_size: 128
     num_workers: 6
     bands: "all"
