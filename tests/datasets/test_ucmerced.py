@@ -14,7 +14,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import UCMerced
+from torchgeo.datasets import UCMerced, UCMercedDataModule
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -91,3 +91,24 @@ class TestUCMerced:
         "to automaticaly download the dataset."
         with pytest.raises(RuntimeError, match=err):
             UCMerced(str(tmp_path))
+
+
+class TestUCMercedDataModule:
+    @pytest.fixture(scope="class")
+    def datamodule(self) -> UCMercedDataModule:
+        root = os.path.join("tests", "data", "ucmerced")
+        batch_size = 2
+        num_workers = 0
+        dm = UCMercedDataModule(root, batch_size, num_workers)
+        dm.prepare_data()
+        dm.setup()
+        return dm
+
+    def test_train_dataloader(self, datamodule: UCMercedDataModule) -> None:
+        next(iter(datamodule.train_dataloader()))
+
+    def test_val_dataloader(self, datamodule: UCMercedDataModule) -> None:
+        next(iter(datamodule.val_dataloader()))
+
+    def test_test_dataloader(self, datamodule: UCMercedDataModule) -> None:
+        next(iter(datamodule.test_dataloader()))

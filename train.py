@@ -13,27 +13,29 @@ from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 
-from torchgeo.trainers import (
-    BigEarthNetClassificationTask,
+from torchgeo.datasets import (
     BigEarthNetDataModule,
-    BYOLTask,
     ChesapeakeCVPRDataModule,
-    ChesapeakeCVPRSegmentationTask,
     COWCCountingDataModule,
     CycloneDataModule,
     LandcoverAIDataModule,
-    LandcoverAISegmentationTask,
     NAIPChesapeakeDataModule,
+    RESISC45DataModule,
+    SEN12MSDataModule,
+    So2SatDataModule,
+    UCMercedDataModule,
+)
+from torchgeo.trainers import (
+    BigEarthNetClassificationTask,
+    BYOLTask,
+    ChesapeakeCVPRSegmentationTask,
+    LandcoverAISegmentationTask,
     NAIPChesapeakeSegmentationTask,
     RegressionTask,
     RESISC45ClassificationTask,
-    RESISC45DataModule,
-    SEN12MSDataModule,
     SEN12MSSegmentationTask,
     So2SatClassificationTask,
-    So2SatDataModule,
     UCMercedClassificationTask,
-    UCMercedDataModule,
 )
 
 TASK_TO_MODULES_MAPPING: Dict[

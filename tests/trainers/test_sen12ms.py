@@ -9,7 +9,8 @@ from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 
-from torchgeo.trainers import SEN12MSDataModule, SEN12MSSegmentationTask
+from torchgeo.datasets import SEN12MSDataModule
+from torchgeo.trainers import SEN12MSSegmentationTask
 
 from .test_utils import mocked_log
 
@@ -91,14 +92,3 @@ class TestSEN12MSSegmentationTask:
         error_message = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=error_message):
             SEN12MSSegmentationTask(**config)
-
-
-class TestSEN12MSDataModule:
-    def test_train_dataloader(self, datamodule: SEN12MSDataModule) -> None:
-        next(iter(datamodule.train_dataloader()))
-
-    def test_val_dataloader(self, datamodule: SEN12MSDataModule) -> None:
-        next(iter(datamodule.val_dataloader()))
-
-    def test_test_dataloader(self, datamodule: SEN12MSDataModule) -> None:
-        next(iter(datamodule.test_dataloader()))

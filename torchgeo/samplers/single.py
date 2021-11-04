@@ -9,7 +9,8 @@ from typing import Iterator, Optional, Tuple, Union
 
 from torch.utils.data import Sampler
 
-from torchgeo.datasets import BoundingBox, GeoDataset
+from torchgeo.datasets.geo import GeoDataset
+from torchgeo.datasets.utils import BoundingBox
 
 from .utils import _to_tuple, get_random_bounding_box
 

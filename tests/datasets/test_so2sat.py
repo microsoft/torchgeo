@@ -11,7 +11,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 
-from torchgeo.datasets import So2Sat
+from torchgeo.datasets import So2Sat, So2SatDataModule
 
 
 class TestSo2Sat:
@@ -53,3 +53,25 @@ class TestSo2Sat:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             So2Sat(str(tmp_path))
+
+
+class TestSo2SatDataModule:
+    @pytest.fixture(scope="class", params=zip([True, False], ["rgb", "s2"]))
+    def datamodule(self, request: SubRequest) -> So2SatDataModule:
+        unsupervised_mode, bands = request.param
+        root = os.path.join("tests", "data", "so2sat")
+        batch_size = 2
+        num_workers = 0
+        dm = So2SatDataModule(root, batch_size, num_workers, bands, unsupervised_mode)
+        dm.prepare_data()
+        dm.setup()
+        return dm
+
+    def test_train_dataloader(self, datamodule: So2SatDataModule) -> None:
+        next(iter(datamodule.train_dataloader()))
+
+    def test_val_dataloader(self, datamodule: So2SatDataModule) -> None:
+        next(iter(datamodule.val_dataloader()))
+
+    def test_test_dataloader(self, datamodule: So2SatDataModule) -> None:
+        next(iter(datamodule.test_dataloader()))
