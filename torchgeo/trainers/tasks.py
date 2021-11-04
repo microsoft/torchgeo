@@ -15,7 +15,14 @@ from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torchmetrics import Accuracy, FBeta, IoU, MeanSquaredError, MetricCollection
+from torchmetrics import (
+    Accuracy,
+    FBeta,
+    IoU,
+    MeanAbsoluteError,
+    MeanSquaredError,
+    MetricCollection,
+)
 from torchvision import models
 
 from . import utils
@@ -365,7 +372,11 @@ class RegressionTask(pl.LightningModule):
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters."""
         if self.hparams["model"] == "resnet18":
-            self.model = models.resnet18(pretrained=False, num_classes=1)
+            self.model = models.resnet18(pretrained=True)
+            in_features = self.model.fc.in_features
+            self.model.fc = nn.Linear(  # type: ignore[attr-defined]
+                in_features, out_features=1
+            )
         else:
             raise ValueError(f"Model type '{self.hparams['model']}' is not valid.")
 
@@ -382,7 +393,7 @@ class RegressionTask(pl.LightningModule):
         self.config_task()
 
         self.train_metrics = MetricCollection(
-            {"RMSE": MeanSquaredError(squared=False)},
+            {"RMSE": MeanSquaredError(squared=False), "MAE": MeanAbsoluteError()},
             prefix="train_",
         )
         self.val_metrics = self.train_metrics.clone(prefix="val_")
