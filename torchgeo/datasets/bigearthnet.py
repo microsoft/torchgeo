@@ -105,8 +105,8 @@ class BigEarthNet(VisionDataset):
     41. Water bodies
     42. Water courses
 
-
     Dataset classes (19):
+
     0. Urban fabric
     1. Industrial or commercial units
     2. Arable land
