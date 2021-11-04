@@ -278,10 +278,14 @@ class MultiLabelClassificationTask(ClassificationTask):
         self.train_metrics = MetricCollection(
             {
                 "OverallAccuracy": Accuracy(
-                    num_classes=self.hparams["num_classes"], average="micro", multiclass=False
+                    num_classes=self.hparams["num_classes"],
+                    average="micro",
+                    multiclass=False,
                 ),
                 "AverageAccuracy": Accuracy(
-                    num_classes=self.hparams["num_classes"], average="macro", multiclass=False
+                    num_classes=self.hparams["num_classes"],
+                    average="macro",
+                    multiclass=False,
                 ),
                 "F1Score": FBeta(
                     num_classes=self.hparams["num_classes"],

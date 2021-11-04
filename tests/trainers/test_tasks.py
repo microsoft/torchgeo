@@ -113,7 +113,7 @@ class TestClassificationTask:
         self, request: SubRequest, datamodule: DummyDataModule
     ) -> Dict[str, Any]:
         loss, weights, model = request.param
-        task_args = {}
+        task_args: Dict[str, Any] = {}
         task_args["classification_model"] = model
         task_args["learning_rate"] = 3e-4
         task_args["learning_rate_schedule_patience"] = 6
@@ -211,11 +211,11 @@ class TestMultiLabelClassificationTask:
     def config(
         self, datamodule: DummyDataModule, request: SubRequest
     ) -> Dict[str, Any]:
-        task_args = {}
+        task_args: Dict[str, Any] = {}
         task_args["classification_model"] = "resnet18"
-        task_args["learning_rate"] = 3e-4  # type: ignore[assignment]
-        task_args["learning_rate_schedule_patience"] = 6  # type: ignore[assignment]
-        task_args["in_channels"] = datamodule.num_channels  # type: ignore[assignment]
+        task_args["learning_rate"] = 3e-4
+        task_args["learning_rate_schedule_patience"] = 6
+        task_args["in_channels"] = datamodule.num_channels
         loss, weights = request.param
         task_args["loss"] = loss
         task_args["num_classes"] = self.num_classes

@@ -43,7 +43,9 @@ class So2SatClassificationTask(ClassificationTask):
                 torchvision.models.resnet, self.hparams["classification_model"]
             )(pretrained=pretrained)
             in_features = self.model.fc.in_features
-            self.model.fc = Linear(in_features, out_features=self.num_classes)
+            self.model.fc = Linear(
+                in_features, out_features=self.hparams["num_classes"]
+            )
 
             # Update first layer
             if in_channels != 3:

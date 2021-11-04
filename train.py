@@ -28,13 +28,13 @@ from torchgeo.datasets import (
 from torchgeo.trainers import (
     BYOLTask,
     ChesapeakeCVPRSegmentationTask,
+    ClassificationTask,
     LandcoverAISegmentationTask,
+    MultiLabelClassificationTask,
     NAIPChesapeakeSegmentationTask,
     RegressionTask,
     SEN12MSSegmentationTask,
     So2SatClassificationTask,
-    ClassificationTask,
-    MultiLabelClassificationTask
 )
 
 TASK_TO_MODULES_MAPPING: Dict[
