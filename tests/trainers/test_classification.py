@@ -15,11 +15,8 @@ from torch import Tensor
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
 from torchgeo.datasets import So2SatDataModule
-from torchgeo.trainers import (
-    ClassificationTask,
-    MultiLabelClassificationTask,
-    So2SatClassificationTask,
-)
+from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
+from torchgeo.trainers.classification import So2SatClassificationTask
 
 from .test_utils import mocked_log
 

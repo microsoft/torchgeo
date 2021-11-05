@@ -26,7 +26,7 @@ Linear.__module__ = "nn.Linear"
 
 
 class ClassificationTask(pl.LightningModule):
-    """Abstract base class for image classification LightningModules."""
+    """LightningModule for image classification."""
 
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor."""
@@ -242,7 +242,7 @@ class ClassificationTask(pl.LightningModule):
 
 
 class MultiLabelClassificationTask(ClassificationTask):
-    """Abstract base class for multi label image classification LightningModules."""
+    """LightningModule for multi-label image classification."""
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
@@ -358,7 +358,11 @@ class MultiLabelClassificationTask(ClassificationTask):
 
 # TODO: move this functionality into ClassificationTask and remove this class
 class So2SatClassificationTask(ClassificationTask):
-    """LightningModule for training models on the So2Sat Dataset."""
+    """LightningModule for training models on the So2Sat Dataset.
+
+    .. deprecated:: 0.1
+       Use :class:`ClassificationTask` instead.
+    """
 
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor."""

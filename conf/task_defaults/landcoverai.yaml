@@ -8,6 +8,9 @@ experiment:
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
     verbose: false
+    in_channels: 3
+    num_classes: 6
+    num_filters: 256
   datamodule:
     batch_size: 32
     num_workers: 4

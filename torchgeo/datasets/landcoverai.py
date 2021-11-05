@@ -208,8 +208,8 @@ class LandCoverAI(VisionDataset):
                 exec(split)
 
 
-class LandcoverAIDataModule(pl.LightningDataModule):
-    """LightningDataModule implementation for the Landcover.AI dataset.
+class LandCoverAIDataModule(pl.LightningDataModule):
+    """LightningDataModule implementation for the LandCover.ai dataset.
 
     Uses the train/val/test splits from the dataset.
     """
@@ -217,7 +217,7 @@ class LandcoverAIDataModule(pl.LightningDataModule):
     def __init__(
         self, root_dir: str, batch_size: int = 64, num_workers: int = 4, **kwargs: Any
     ) -> None:
-        """Initialize a LightningDataModule for Landcover.AI based DataLoaders.
+        """Initialize a LightningDataModule for LandCover.ai based DataLoaders.
 
         Args:
             root_dir: The ``root`` arugment to pass to the Landcover.AI Dataset classes
