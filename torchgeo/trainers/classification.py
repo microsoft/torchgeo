@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Base trainer tasks."""
+"""Classification tasks."""
 
 import os
 from typing import Any, Dict, cast
@@ -10,20 +10,12 @@ import pytorch_lightning as pl
 import timm
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+import torchvision.models
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torchmetrics import (
-    Accuracy,
-    FBeta,
-    IoU,
-    MeanAbsoluteError,
-    MeanSquaredError,
-    MetricCollection,
-)
-from torchvision import models
+from torchmetrics import Accuracy, FBeta, IoU, MetricCollection
 
 from . import utils
 
@@ -364,143 +356,73 @@ class MultiLabelClassificationTask(ClassificationTask):
         self.test_metrics(y_hat_hard, y)
 
 
-class RegressionTask(pl.LightningModule):
-    """LightningModule for training models on regression datasets."""
+# TODO: move this functionality into ClassificationTask and remove this class
+class So2SatClassificationTask(ClassificationTask):
+    """LightningModule for training models on the So2Sat Dataset."""
 
-    def config_task(self) -> None:
-        """Configures the task based on kwargs parameters."""
-        if self.hparams["model"] == "resnet18":
-            self.model = models.resnet18(pretrained=True)
+    def config_model(self) -> None:
+        """Configures the model based on kwargs parameters passed to the constructor."""
+        in_channels = self.hparams["in_channels"]
+
+        pretrained = False
+        if not os.path.exists(self.hparams["weights"]):
+            if self.hparams["weights"] == "imagenet":
+                pretrained = True
+            elif self.hparams["weights"] == "random":
+                pretrained = False
+            else:
+                raise ValueError(
+                    f"Weight type '{self.hparams['weights']}' is not valid."
+                )
+
+        # Create the model
+        if "resnet" in self.hparams["classification_model"]:
+            self.model = getattr(
+                torchvision.models.resnet, self.hparams["classification_model"]
+            )(pretrained=pretrained)
             in_features = self.model.fc.in_features
-            self.model.fc = nn.Linear(  # type: ignore[attr-defined]
-                in_features, out_features=1
+            self.model.fc = Linear(
+                in_features, out_features=self.hparams["num_classes"]
             )
+
+            # Update first layer
+            if in_channels != 3:
+                w_old = None
+                if pretrained:
+                    w_old = torch.clone(  # type: ignore[attr-defined]
+                        self.model.conv1.weight
+                    ).detach()
+                # Create the new layer
+                self.model.conv1 = Conv2d(
+                    in_channels, 64, kernel_size=7, stride=1, padding=2, bias=False
+                )
+                nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
+                    self.model.conv1.weight, mode="fan_out", nonlinearity="relu"
+                )
+
+                # We copy over the pretrained RGB weights
+                if pretrained:
+                    w_new = torch.clone(  # type: ignore[attr-defined]
+                        self.model.conv1.weight
+                    ).detach()
+                    w_new[:, :3, :, :] = w_old
+                    self.model.conv1.weight = nn.Parameter(  # type: ignore[attr-defined] # noqa: E501
+                        w_new
+                    )
         else:
-            raise ValueError(f"Model type '{self.hparams['model']}' is not valid.")
+            raise ValueError(
+                f"Model type '{self.hparams['classification_model']}' is not valid."
+            )
 
-    def __init__(self, **kwargs: Any) -> None:
-        """Initialize a new LightningModule for training simple regression models.
+        # Load pretrained weights checkpoint weights
+        if "resnet" in self.hparams["classification_model"]:
+            if os.path.exists(self.hparams["weights"]):
+                name, state_dict = utils.extract_encoder(self.hparams["weights"])
 
-        Keyword Args:
-            model: Name of the model to use
-            learning_rate: Initial learning rate to use in the optimizer
-            learning_rate_schedule_patience: Patience parameter for the LR scheduler
-        """
-        super().__init__()
-        self.save_hyperparameters()  # creates `self.hparams` from kwargs
-        self.config_task()
+                if self.hparams["classification_model"] != name:
+                    raise ValueError(
+                        f"Trying to load {name} weights into a "
+                        f"{self.hparams['classification_model']}"
+                    )
 
-        self.train_metrics = MetricCollection(
-            {"RMSE": MeanSquaredError(squared=False), "MAE": MeanAbsoluteError()},
-            prefix="train_",
-        )
-        self.val_metrics = self.train_metrics.clone(prefix="val_")
-        self.test_metrics = self.train_metrics.clone(prefix="test_")
-
-    def forward(self, x: Tensor) -> Any:  # type: ignore[override]
-        """Forward pass of the model."""
-        return self.model(x)
-
-    def training_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> Tensor:
-        """Training step with an MSE loss.
-
-        Args:
-            batch: Current batch
-            batch_idx: Index of current batch
-
-        Returns:
-            training loss
-        """
-        x = batch["image"]
-        y = batch["label"].view(-1, 1)
-        y_hat = self.forward(x)
-
-        loss = F.mse_loss(y_hat, y)
-
-        self.log("train_loss", loss)  # logging to TensorBoard
-        self.train_metrics(y_hat, y)
-
-        return loss
-
-    def training_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch-level training metrics.
-
-        Args:
-            outputs: list of items returned by training_step
-        """
-        self.log_dict(self.train_metrics.compute())
-        self.train_metrics.reset()
-
-    def validation_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
-        """Validation step.
-
-        Args:
-            batch: Current batch
-            batch_idx: Index of current batch
-        """
-        x = batch["image"]
-        y = batch["label"].view(-1, 1)
-        y_hat = self.forward(x)
-
-        loss = F.mse_loss(y_hat, y)
-        self.log("val_loss", loss)
-        self.val_metrics(y_hat, y)
-
-    def validation_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level validation metrics.
-
-        Args:
-            outputs: list of items returned by validation_step
-        """
-        self.log_dict(self.val_metrics.compute())
-        self.val_metrics.reset()
-
-    def test_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
-        """Test step.
-
-        Args:
-            batch: Current batch
-            batch_idx: Index of current batch
-        """
-        x = batch["image"]
-        y = batch["label"].view(-1, 1)
-        y_hat = self.forward(x)
-
-        loss = F.mse_loss(y_hat, y)
-        self.log("test_loss", loss)
-        self.test_metrics(y_hat, y)
-
-    def test_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level test metrics.
-
-        Args:
-            outputs: list of items returned by test_step
-        """
-        self.log_dict(self.test_metrics.compute())
-        self.test_metrics.reset()
-
-    def configure_optimizers(self) -> Dict[str, Any]:
-        """Initialize the optimizer and learning rate scheduler.
-
-        Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
-        """
-        optimizer = torch.optim.AdamW(
-            self.model.parameters(), lr=self.hparams["learning_rate"]
-        )
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": ReduceLROnPlateau(
-                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
-                ),
-                "monitor": "val_loss",
-            },
-        }
+                self.model = utils.load_state_dict(self.model, state_dict)

@@ -19,23 +19,6 @@ from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
 from .test_utils import mocked_log
 
 
-@pytest.fixture(scope="module")
-def datamodule() -> ChesapeakeCVPRDataModule:
-    dm = ChesapeakeCVPRDataModule(
-        os.path.join("tests", "data", "chesapeake", "cvpr"),
-        ["de-test"],
-        ["de-test"],
-        ["de-test"],
-        patch_size=4,
-        patches_per_tile=2,
-        batch_size=2,
-        num_workers=0,
-    )
-    dm.prepare_data()
-    dm.setup()
-    return dm
-
-
 class TestBYOL:
     def test_custom_augment_fn(self) -> None:
         encoder = resnet18()
@@ -54,6 +37,22 @@ class TestBYOL:
 
 
 class TestBYOLTask:
+    @pytest.fixture(scope="class")
+    def datamodule(self) -> ChesapeakeCVPRDataModule:
+        dm = ChesapeakeCVPRDataModule(
+            os.path.join("tests", "data", "chesapeake", "cvpr"),
+            ["de-test"],
+            ["de-test"],
+            ["de-test"],
+            patch_size=4,
+            patches_per_tile=2,
+            batch_size=2,
+            num_workers=0,
+        )
+        dm.prepare_data()
+        dm.setup()
+        return dm
+
     @pytest.fixture(params=["resnet18", "resnet50"])
     def config(self, request: SubRequest) -> Dict[str, Any]:
         task_conf = OmegaConf.load(os.path.join("conf", "task_defaults", "byol.yaml"))
