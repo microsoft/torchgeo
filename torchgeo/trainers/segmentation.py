@@ -49,7 +49,6 @@ class SemanticSegmentationTask(LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
-
         if self.hparams["segmentation_model"] == "unet":
             self.model = smp.Unet(
                 encoder_name=self.hparams["encoder_name"],
