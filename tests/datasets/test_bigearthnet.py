@@ -3,7 +3,6 @@
 
 import os
 import shutil
-from itertools import product
 from pathlib import Path
 from typing import Generator
 
@@ -23,7 +22,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 class TestBigEarthNet:
     @pytest.fixture(
-        params=product(["all", "s1", "s2"], [43, 19], ["train", "val", "test"])
+        params=zip(["all", "s1", "s2"], [43, 19, 19], ["train", "val", "test"])
     )
     def dataset(
         self,
