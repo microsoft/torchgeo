@@ -21,7 +21,9 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestBigEarthNet:
-    @pytest.fixture(params=["all", "s1", "s2"])
+    @pytest.fixture(
+        params=zip(["all", "s1", "s2"], [43, 19, 19], ["train", "val", "test"])
+    )
     def dataset(
         self,
         monkeypatch: Generator[MonkeyPatch, None, None],
@@ -46,20 +48,42 @@ class TestBigEarthNet:
                 "directory": "BigEarthNet-v1.0",
             },
         }
+        splits_metadata = {
+            "train": {
+                "url": os.path.join(data_dir, "bigearthnet-train.csv"),
+                "filename": "bigearthnet-train.csv",
+                "md5": "167ac4d5de8dde7b5aeaa812f42031e7",
+            },
+            "val": {
+                "url": os.path.join(data_dir, "bigearthnet-val.csv"),
+                "filename": "bigearthnet-val.csv",
+                "md5": "aff594ba256a52e839a3b5fefeb9ef42",
+            },
+            "test": {
+                "url": os.path.join(data_dir, "bigearthnet-test.csv"),
+                "filename": "bigearthnet-test.csv",
+                "md5": "851a6bdda484d47f60e121352dcb1bf5",
+            },
+        }
         monkeypatch.setattr(  # type: ignore[attr-defined]
             BigEarthNet, "metadata", metadata
         )
-        bands = request.param
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            BigEarthNet, "splits_metadata", splits_metadata
+        )
+        bands, num_classes, split = request.param
         root = str(tmp_path)
         transforms = nn.Identity()  # type: ignore[attr-defined]
-        return BigEarthNet(root, bands, transforms, download=True, checksum=True)
+        return BigEarthNet(
+            root, split, bands, num_classes, transforms, download=True, checksum=True
+        )
 
     def test_getitem(self, dataset: BigEarthNet) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["label"], torch.Tensor)
-        assert x["label"].shape == (43,)
+        assert x["label"].shape == (dataset.num_classes,)
         assert x["image"].dtype == torch.int32  # type: ignore[attr-defined]
         assert x["label"].dtype == torch.int64  # type: ignore[attr-defined]
 
@@ -71,10 +95,21 @@ class TestBigEarthNet:
             assert x["image"].shape == (12, 120, 120)
 
     def test_len(self, dataset: BigEarthNet) -> None:
-        assert len(dataset) == 4
+        if dataset.split == "train":
+            assert len(dataset) == 2
+        elif dataset.split == "val":
+            assert len(dataset) == 1
+        else:
+            assert len(dataset) == 1
 
     def test_already_downloaded(self, dataset: BigEarthNet, tmp_path: Path) -> None:
-        BigEarthNet(root=str(tmp_path), bands=dataset.bands, download=True)
+        BigEarthNet(
+            root=str(tmp_path),
+            bands=dataset.bands,
+            split=dataset.split,
+            num_classes=dataset.num_classes,
+            download=True,
+        )
 
     def test_already_downloaded_not_extracted(
         self, dataset: BigEarthNet, tmp_path: Path
@@ -99,7 +134,13 @@ class TestBigEarthNet:
             )
             download_url(dataset.metadata["s2"]["url"], root=str(tmp_path))
 
-        BigEarthNet(root=str(tmp_path), bands=dataset.bands, download=False)
+        BigEarthNet(
+            root=str(tmp_path),
+            bands=dataset.bands,
+            split=dataset.split,
+            num_classes=dataset.num_classes,
+            download=False,
+        )
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         err = "Dataset not found in `root` directory and `download=False`, "
@@ -110,20 +151,19 @@ class TestBigEarthNet:
 
 
 class TestBigEarthNetDataModule:
-    @pytest.fixture(scope="class", params=zip(["s1", "s2", "all"], [True, True, False]))
+    @pytest.fixture(scope="class", params=["s1", "s2", "all"])
     def datamodule(self, request: SubRequest) -> BigEarthNetDataModule:
-        bands, unsupervised_mode = request.param
+        bands = request.param
         root = os.path.join("tests", "data", "bigearthnet")
+        num_classes = 19
         batch_size = 1
         num_workers = 0
         dm = BigEarthNetDataModule(
             root,
             bands,
+            num_classes,
             batch_size,
             num_workers,
-            unsupervised_mode,
-            val_split_pct=0.3,
-            test_split_pct=0.3,
         )
         dm.prepare_data()
         dm.setup()
