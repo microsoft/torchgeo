@@ -22,8 +22,6 @@ Linear.__module__ = "nn.Linear"
 class So2SatClassificationTask(ClassificationTask):
     """LightningModule for training models on the So2Sat Dataset."""
 
-    num_classes = 17
-
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor."""
         in_channels = self.hparams["in_channels"]
@@ -45,7 +43,9 @@ class So2SatClassificationTask(ClassificationTask):
                 torchvision.models.resnet, self.hparams["classification_model"]
             )(pretrained=pretrained)
             in_features = self.model.fc.in_features
-            self.model.fc = Linear(in_features, out_features=self.num_classes)
+            self.model.fc = Linear(
+                in_features, out_features=self.hparams["num_classes"]
+            )
 
             # Update first layer
             if in_channels != 3:

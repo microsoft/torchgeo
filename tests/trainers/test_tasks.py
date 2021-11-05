@@ -85,11 +85,14 @@ class DummyDataModule(pl.LightningDataModule):
 
 
 class TestClassificationTask:
+
+    num_classes = 10
+
     @pytest.fixture(scope="class", params=[2, 3, 5])
     def datamodule(self, request: SubRequest) -> DummyDataModule:
         dm = DummyDataModule(
             num_channels=request.param,
-            num_classes=45,
+            num_classes=self.num_classes,
             multilabel=False,
             batch_size=2,
             num_workers=0,
@@ -110,12 +113,13 @@ class TestClassificationTask:
         self, request: SubRequest, datamodule: DummyDataModule
     ) -> Dict[str, Any]:
         loss, weights, model = request.param
-        task_args = {}
+        task_args: Dict[str, Any] = {}
         task_args["classification_model"] = model
         task_args["learning_rate"] = 3e-4
         task_args["learning_rate_schedule_patience"] = 6
         task_args["in_channels"] = datamodule.num_channels
         task_args["loss"] = loss
+        task_args["num_classes"] = self.num_classes
         task_args["weights"] = weights
         return task_args
 
@@ -187,11 +191,14 @@ class TestClassificationTask:
 
 
 class TestMultiLabelClassificationTask:
+
+    num_classes = 10
+
     @pytest.fixture(scope="class")
     def datamodule(self, request: SubRequest) -> DummyDataModule:
         dm = DummyDataModule(
             num_channels=3,
-            num_classes=43,
+            num_classes=self.num_classes,
             multilabel=True,
             batch_size=2,
             num_workers=0,
@@ -204,13 +211,14 @@ class TestMultiLabelClassificationTask:
     def config(
         self, datamodule: DummyDataModule, request: SubRequest
     ) -> Dict[str, Any]:
-        task_args = {}
+        task_args: Dict[str, Any] = {}
         task_args["classification_model"] = "resnet18"
-        task_args["learning_rate"] = 3e-4  # type: ignore[assignment]
-        task_args["learning_rate_schedule_patience"] = 6  # type: ignore[assignment]
-        task_args["in_channels"] = datamodule.num_channels  # type: ignore[assignment]
+        task_args["learning_rate"] = 3e-4
+        task_args["learning_rate_schedule_patience"] = 6
+        task_args["in_channels"] = datamodule.num_channels
         loss, weights = request.param
         task_args["loss"] = loss
+        task_args["num_classes"] = self.num_classes
         task_args["weights"] = weights
         return task_args
 
