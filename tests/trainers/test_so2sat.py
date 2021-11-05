@@ -44,7 +44,6 @@ class TestSo2SatClassificationTask:
         task_args["in_channels"] = bands[1]
         loss, weights = request.param
         task_args["loss"] = loss
-        task_args["num_classes"] = 17
         task_args["weights"] = weights
         return task_args
 
