@@ -26,32 +26,31 @@ from torchgeo.datasets import (
     UCMercedDataModule,
 )
 from torchgeo.trainers import (
-    BigEarthNetClassificationTask,
     BYOLTask,
     ChesapeakeCVPRSegmentationTask,
+    ClassificationTask,
     LandcoverAISegmentationTask,
+    MultiLabelClassificationTask,
     NAIPChesapeakeSegmentationTask,
     RegressionTask,
-    RESISC45ClassificationTask,
     SEN12MSSegmentationTask,
     So2SatClassificationTask,
-    UCMercedClassificationTask,
 )
 
 TASK_TO_MODULES_MAPPING: Dict[
     str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
 ] = {
-    "bigearthnet": (BigEarthNetClassificationTask, BigEarthNetDataModule),
+    "bigearthnet": (MultiLabelClassificationTask, BigEarthNetDataModule),
     "byol": (BYOLTask, ChesapeakeCVPRDataModule),
     "chesapeake_cvpr": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
     "cowc_counting": (RegressionTask, COWCCountingDataModule),
     "cyclone": (RegressionTask, CycloneDataModule),
     "landcoverai": (LandcoverAISegmentationTask, LandcoverAIDataModule),
     "naipchesapeake": (NAIPChesapeakeSegmentationTask, NAIPChesapeakeDataModule),
-    "resisc45": (RESISC45ClassificationTask, RESISC45DataModule),
+    "resisc45": (ClassificationTask, RESISC45DataModule),
     "sen12ms": (SEN12MSSegmentationTask, SEN12MSDataModule),
     "so2sat": (So2SatClassificationTask, So2SatDataModule),
-    "ucmerced": (UCMercedClassificationTask, UCMercedDataModule),
+    "ucmerced": (ClassificationTask, UCMercedDataModule),
 }
 
 
