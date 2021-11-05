@@ -1,0 +1,226 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+"""Sentinel 2 imagery from the Seasonal Contrast paper."""
+
+import os
+from collections import defaultdict
+from typing import Callable, Dict, List, Optional, cast
+
+import cv2
+import numpy as np
+import rasterio
+import torch
+from torch import Tensor
+
+from .geo import VisionDataset
+from .utils import check_integrity, download_and_extract_archive
+
+
+class SeasonalContrastS2Dataset(VisionDataset):
+    r"""Sentinel 2 imagery from the Seasonal Contrast paper.
+
+    The `Seasonal Contrast imagery <https://github.com/ElementAI/seasonal-contrast/>`_
+    dataset contains Sentinel 2 imagery patches sampled from different points in time
+    around the 10k most populated cities on Earth.
+
+    Dataset features:
+
+    * Two versions: 100K and 1M patches
+    * 12 band Sentinel 2 imagery from 5 points in time at each location
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://arxiv.org/pdf/2103.16607.pdf
+    """
+
+    ALL_BANDS = [
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B8A",
+        "B9",
+        "B11",
+        "B12",
+    ]
+    RGB_BANDS = ["B4", "B3", "B2"]
+
+    urls = {
+        # 7.3 GB
+        "100k": "https://zenodo.org/record/4728033/files/seco_100k.zip?download=1",
+        # 36.3 GB
+        "1m": "https://zenodo.org/record/4728033/files/seco_1m.zip?download=1",
+    }
+    filenames = {
+        "100k": "seco_100k.zip",
+        "1m": "seco_1m.zip",
+    }
+    md5s = {
+        "100k": "ebf2d5e03adc6e657f9a69a20ad863e0",
+        "1m": "187963d852d4d3ce6637743ec3a4bd9e",
+    }
+    directory_names = {
+        "100k": "seasonal_contrast_100k",
+        "1m": "seasonal_contrast_1m",
+    }
+
+    def __init__(
+        self,
+        root: str = "data",
+        version: str = "100k",
+        bands: List[str] = RGB_BANDS,
+        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        download: bool = False,
+        checksum: bool = False,
+    ) -> None:
+        """Initialize a new SeCo dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            version: one of "100k" or "1m" for the version of the dataset to use
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            download: if True, download dataset and store it in the root directory
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            AssertionError: if ``version`` argument is invalid
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
+        """
+        assert version in ["100k", "1m"]
+        for band in bands:
+            assert band in self.ALL_BANDS
+
+        self.root = root
+        self.bands = bands
+        self.url = self.urls[version]
+        self.filename = self.filenames[version]
+        self.md5 = self.md5s[version]
+        self.directory_name = self.directory_names[version]
+        self.transforms = transforms
+        self.checksum = checksum
+
+        if download:
+            self._download()
+
+        if not self._check_integrity():
+            raise RuntimeError(
+                "Dataset not found or corrupted. "
+                + "You can use download=True to download it"
+            )
+
+        self.scene_to_patches = defaultdict(list)
+        for root_directory, directories, fns in os.walk(
+            os.path.join(self.root, self.directory_name)
+        ):
+            if len(directories) == 0 and len(fns) > 0:
+                root_directory, patch_name = os.path.split(root_directory)
+                _, scene_name = os.path.split(root_directory)
+                self.scene_to_patches[scene_name].append(patch_name)
+
+        self.scenes = sorted(self.scene_to_patches.keys())
+        for scene_name in self.scenes:
+            self.scene_to_patches[scene_name] = sorted(
+                self.scene_to_patches[scene_name]
+            )
+
+    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+        """Return an index within the dataset.
+
+        Args:
+            index: index to return
+
+        Returns:
+            sample with an "image" in 5xCxHxW format where the 5 indexes over the same
+                patch sampled from different points in time by the SeCo method
+        """
+        scene_name = self.scenes[index]
+        patch_names = self.scene_to_patches[scene_name]
+
+        imagery = [
+            self._load_patch(scene_name, patch_name) for patch_name in patch_names
+        ]
+
+        sample = {"image": torch.stack(imagery, dim=0)}
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+    def __len__(self) -> int:
+        """Return the number of data points in the dataset.
+
+        Returns:
+            length of the dataset
+        """
+        return len(self.scenes)
+
+    def _load_patch(self, scene_name: str, patch_name: str) -> Tensor:
+        """Load a single image patch.
+
+        Args:
+            scene_name: the name of the scene to load from, e.g. '019999'
+            patch_name: the name of the patch to load, e.g.
+                '20200713T075609_20200713T081050_T36QZH'
+
+        Returns:
+            the image with the subset of bands specified by ``self.bands``
+        """
+        all_data = []
+        for band in self.bands:
+            fn = os.path.join(
+                self.root,
+                self.directory_name,
+                scene_name,
+                patch_name,
+                f"{band}.tif",
+            )
+            with rasterio.open(fn) as f:
+                band_data = f.read(1)
+                height, width = band_data.shape
+                assert height == width
+                if height < 264 and width < 264:
+                    band_data = cv2.resize(
+                        band_data, (264, 264), interpolation=cv2.INTER_LINEAR
+                    )
+                all_data.append(band_data)
+        image = torch.from_numpy(  # type: ignore[attr-defined]
+            np.stack(all_data, axis=0)
+        )
+        return cast(Tensor, image)
+
+    def _check_integrity(self) -> bool:
+        """Check integrity of dataset.
+
+        Returns:
+            True if dataset files are found and/or MD5s match, else False
+        """
+        integrity: bool = check_integrity(
+            os.path.join(self.root, self.filename), self.md5 if self.checksum else None
+        )
+
+        return integrity
+
+    def _download(self) -> None:
+        """Download the dataset and extract it.
+
+        Raises:
+            AssertionError: if the checksum of split.py does not match
+        """
+        if self._check_integrity():
+            print("Files already downloaded and verified")
+            return
+
+        download_and_extract_archive(
+            self.url,
+            self.root,
+            filename=self.filename,
+            md5=self.md5 if self.checksum else None,
+        )
