@@ -7,10 +7,10 @@ import os
 from collections import defaultdict
 from typing import Callable, Dict, List, Optional, cast
 
-import cv2
 import numpy as np
 import rasterio
 import torch
+from PIL import Image
 from torch import Tensor
 
 from .geo import VisionDataset
@@ -18,7 +18,7 @@ from .utils import check_integrity, download_and_extract_archive
 
 
 class SeasonalContrastS2Dataset(VisionDataset):
-    r"""Sentinel 2 imagery from the Seasonal Contrast paper.
+    """Sentinel 2 imagery from the Seasonal Contrast paper.
 
     The `Seasonal Contrast imagery <https://github.com/ElementAI/seasonal-contrast/>`_
     dataset contains Sentinel 2 imagery patches sampled from different points in time
@@ -115,6 +115,8 @@ class SeasonalContrastS2Dataset(VisionDataset):
                 + "You can use download=True to download it"
             )
 
+        # TODO: This is slow, I think this should be generated on download and then
+        # loaded in the constructor
         self.scene_to_patches = defaultdict(list)
         for root_directory, directories, fns in os.walk(
             os.path.join(self.root, self.directory_name)
@@ -187,8 +189,12 @@ class SeasonalContrastS2Dataset(VisionDataset):
                 height, width = band_data.shape
                 assert height == width
                 if height < 264 and width < 264:
-                    band_data = cv2.resize(
-                        band_data, (264, 264), interpolation=cv2.INTER_LINEAR
+                    # TODO: PIL resize is much slower than cv2, we should check to see
+                    # what could be sped up throughout later. There is also a potential
+                    # slowdown here from converting to/from a PIL Image just to resize.
+                    pil_image = Image.fromarray(band_data)
+                    band_data = np.array(
+                        pil_image.resize((264, 264), resample=Image.BILINEAR)
                     )
                 all_data.append(band_data)
         image = torch.from_numpy(  # type: ignore[attr-defined]
