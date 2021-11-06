@@ -8,6 +8,7 @@ from typing import Any, Dict, cast
 import kornia.augmentation as K
 import torch
 from torch import Tensor
+from torch.optim.lr_scheduler import StepLR
 
 from .tasks import ClassificationTask
 
@@ -63,3 +64,22 @@ class RESISC45ClassificationTask(ClassificationTask):
         self.train_metrics(y_hat_hard, y)
 
         return cast(Tensor, loss)
+
+    def configure_optimizers(self) -> Dict[str, Any]:
+        """Initialize the optimizer and learning rate scheduler.
+
+        Returns:
+            a "lr dict" according to the pytorch lightning documentation --
+            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+        """
+        optimizer = torch.optim.AdamW(
+            self.model.parameters(), lr=self.hparams["learning_rate"]
+        )
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": StepLR(
+                    optimizer, 20
+                ),
+            },
+        }
