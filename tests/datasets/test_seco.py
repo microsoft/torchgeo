@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import glob
 import os
 import shutil
 from pathlib import Path
@@ -70,8 +71,15 @@ class TestSeasonalContrastS2Dataset:
         assert isinstance(ds, ConcatDataset)
         assert len(ds) == 4
 
-    def test_already_downloaded(self, dataset: SeasonalContrastS2Dataset) -> None:
+    def test_already_extracted(self, dataset: SeasonalContrastS2Dataset) -> None:
         SeasonalContrastS2Dataset(root=dataset.root, download=True)
+
+    def test_already_downloaded(self, tmp_path: Path) -> None:
+        pathname = os.path.join("tests", "data", "seco", "*.zip")
+        root = str(tmp_path)
+        for zipfile in glob.iglob(pathname):
+            shutil.copy(zipfile, root)
+        SeasonalContrastS2Dataset(root)
 
     def test_invalid_version(self) -> None:
         with pytest.raises(AssertionError):
