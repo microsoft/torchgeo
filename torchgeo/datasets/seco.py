@@ -233,7 +233,7 @@ class SeasonalContrastS2Dataset(VisionDataset):
             self.url,
             self.root,
             filename=self.filename,
-            md5=self.md5 if self.checksum else None
+            md5=self.md5 if self.checksum else None,
         )
 
     def _extract(self) -> None:
