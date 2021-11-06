@@ -32,12 +32,10 @@ from torchgeo.trainers import (
     RegressionTask,
     SemanticSegmentationTask,
 )
-from torchgeo.trainers.classification import So2SatClassificationTask
-from torchgeo.trainers.segmentation import (
-    ChesapeakeCVPRSegmentationTask,
-    LandCoverAISegmentationTask,
-    NAIPChesapeakeSegmentationTask,
-)
+from torchgeo.trainers.chesapeake import ChesapeakeCVPRSegmentationTask
+from torchgeo.trainers.landcoverai import LandCoverAISegmentationTask
+from torchgeo.trainers.naipchesapeake import NAIPChesapeakeSegmentationTask
+from torchgeo.trainers.so2sat import So2SatClassificationTask
 
 TASK_TO_MODULES_MAPPING: Dict[
     str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
