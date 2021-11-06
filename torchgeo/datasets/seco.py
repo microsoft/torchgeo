@@ -17,7 +17,7 @@ from .geo import VisionDataset
 from .utils import download_url, extract_archive
 
 
-class SeasonalContrastS2Dataset(VisionDataset):
+class SeasonalContrastS2(VisionDataset):
     """Sentinel 2 imagery from the Seasonal Contrast paper.
 
     The `Seasonal Contrast imagery <https://github.com/ElementAI/seasonal-contrast/>`_
