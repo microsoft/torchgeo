@@ -59,7 +59,6 @@ trainer: # These are the parameters passed to the pytorch lightning Trainer obje
   weights_summary: 'top'
   weights_save_path: null
   num_sanity_val_steps: 2
-  truncated_bptt_steps: null
   resume_from_checkpoint: null
   profiler: null
   benchmark: False
@@ -72,8 +71,6 @@ trainer: # These are the parameters passed to the pytorch lightning Trainer obje
   prepare_data_per_node: True
   plugins: null
   amp_backend: 'native'
-  amp_level: 'O2'
-  distributed_backend: null
   move_metrics_to_cpu: False
   multiple_trainloader_mode: 'max_size_cycle'
   stochastic_weight_avg: False
