@@ -78,8 +78,6 @@ class RESISC45ClassificationTask(ClassificationTask):
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
-                "scheduler": StepLR(
-                    optimizer, 20
-                ),
+                "scheduler": StepLR(optimizer, 20),
             },
         }
