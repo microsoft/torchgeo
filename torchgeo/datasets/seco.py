@@ -14,7 +14,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import VisionDataset
-from .utils import check_integrity, download_and_extract_archive
+from .utils import download_url, extract_archive
 
 
 class SeasonalContrastS2Dataset(VisionDataset):
@@ -104,16 +104,10 @@ class SeasonalContrastS2Dataset(VisionDataset):
         self.md5 = self.md5s[version]
         self.directory_name = self.directory_names[version]
         self.transforms = transforms
+        self.download = download
         self.checksum = checksum
 
-        if download:
-            self._download()
-
-        if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+        self._verify()
 
         # TODO: This is slow, I think this should be generated on download and then
         # loaded in the constructor
@@ -188,7 +182,8 @@ class SeasonalContrastS2Dataset(VisionDataset):
                 band_data = f.read(1)
                 height, width = band_data.shape
                 assert height == width
-                if height < 264 and width < 264:
+                size = height
+                if size < 264:
                     # TODO: PIL resize is much slower than cv2, we should check to see
                     # what could be sped up throughout later. There is also a potential
                     # slowdown here from converting to/from a PIL Image just to resize.
@@ -203,31 +198,46 @@ class SeasonalContrastS2Dataset(VisionDataset):
         )
         return cast(Tensor, image)
 
-    def _check_integrity(self) -> bool:
-        """Check integrity of dataset.
-
-        Returns:
-            True if dataset files are found and/or MD5s match, else False
-        """
-        integrity: bool = check_integrity(
-            os.path.join(self.root, self.filename), self.md5 if self.checksum else None
-        )
-
-        return integrity
-
-    def _download(self) -> None:
-        """Download the dataset and extract it.
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
 
         Raises:
-            AssertionError: if the checksum of split.py does not match
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        if self._check_integrity():
-            print("Files already downloaded and verified")
+        # Check if the extracted files already exist
+        directory_path = os.path.join(self.root, self.directory_name)
+        if os.path.exists(directory_path):
             return
 
-        download_and_extract_archive(
+        # Check if the zip files have already been downloaded
+        zip_path = os.path.join(self.root, self.filename)
+        if os.path.exists(zip_path):
+            self._extract()
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automaticaly download the dataset."
+            )
+
+        # Download the dataset
+        self._download()
+        self._extract()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        download_url(
             self.url,
             self.root,
             filename=self.filename,
-            md5=self.md5 if self.checksum else None,
+            md5=self.md5 if self.checksum else None
+        )
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        extract_archive(
+            os.path.join(self.root, self.filename),
         )

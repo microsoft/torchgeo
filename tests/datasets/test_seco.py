@@ -17,7 +17,7 @@ import torchgeo.datasets.utils
 from torchgeo.datasets import SeasonalContrastS2Dataset
 
 
-def download_url(url: str, root: str, *args: str) -> None:
+def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -32,7 +32,7 @@ class TestSeasonalContrastS2Dataset:
         request: SubRequest,
     ) -> SeasonalContrastS2Dataset:
         monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.utils, "download_url", download_url
+            torchgeo.datasets.seco, "download_url", download_url
         )
         monkeypatch.setattr(  # type: ignore[attr-defined]
             SeasonalContrastS2Dataset,
@@ -82,5 +82,5 @@ class TestSeasonalContrastS2Dataset:
             SeasonalContrastS2Dataset(bands=["A1steaksauce"])
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(RuntimeError, match="Dataset not found"):
             SeasonalContrastS2Dataset(str(tmp_path))
