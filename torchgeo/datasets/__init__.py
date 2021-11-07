@@ -55,6 +55,7 @@ from .naip import NAIP, NAIPChesapeakeDataModule
 from .nwpu import VHR10
 from .patternnet import PatternNet
 from .resisc45 import RESISC45, RESISC45DataModule
+from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS, SEN12MSDataModule
 from .sentinel import Sentinel, Sentinel2
 from .so2sat import So2Sat, So2SatDataModule
@@ -113,6 +114,7 @@ __all__ = (
     "PatternNet",
     "RESISC45",
     "RESISC45DataModule",
+    "SeasonalContrastS2",
     "SEN12MS",
     "SEN12MSDataModule",
     "So2Sat",
