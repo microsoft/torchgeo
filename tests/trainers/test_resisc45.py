@@ -7,21 +7,20 @@ from typing import Any, Dict
 import pytest
 
 from torchgeo.datasets import RESISC45DataModule
-from torchgeo.trainers import RESISC45ClassificationTask
-
-
-@pytest.fixture(scope="module")
-def datamodule() -> RESISC45DataModule:
-    root = os.path.join("tests", "data", "resisc45")
-    batch_size = 2
-    num_workers = 0
-    dm = RESISC45DataModule(root, batch_size, num_workers)
-    dm.prepare_data()
-    dm.setup()
-    return dm
+from torchgeo.trainers.resisc45 import RESISC45ClassificationTask
 
 
 class TestRESISC45ClassificationTask:
+    @pytest.fixture(scope="class")
+    def datamodule() -> RESISC45DataModule:
+        root = os.path.join("tests", "data", "resisc45")
+        batch_size = 2
+        num_workers = 0
+        dm = RESISC45DataModule(root, batch_size, num_workers)
+        dm.prepare_data()
+        dm.setup()
+        return dm
+
     @pytest.fixture()
     def config(self) -> Dict[str, Any]:
         task_args: Dict[str, Any] = {}

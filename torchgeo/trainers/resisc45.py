@@ -12,8 +12,13 @@ from torch import Tensor
 from .tasks import ClassificationTask
 
 
+# TODO: move this functionality into ClassificationTask and remove this class
 class RESISC45ClassificationTask(ClassificationTask):
-    """LightningModule for training on RESISC45 with data augmentation."""
+    """LightningModule for training on RESISC45 with data augmentation.
+
+    .. deprecated:: 0.1
+       Use :class:`ClassificationTask` instead.
+    """
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
