@@ -1,3 +1,5 @@
+program:
+  data_dir: "tests/data/so2sat"
 experiment:
   task: "so2sat"
   module:

@@ -1,3 +1,5 @@
+program:
+  data_dir: "tests/data/chesapeake/cvpr"
 experiment:
   task: "chesapeake_cvpr"
   module:

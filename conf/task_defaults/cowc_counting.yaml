@@ -1,3 +1,5 @@
+program:
+  data_dir: "tests/data/cowc_counting"
 experiment:
   task: cowc_counting
   module:

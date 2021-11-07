@@ -1,3 +1,5 @@
+program:
+  data_dir: "tests/data/resisc45"
 experiment:
   task: "resisc45"
   module:

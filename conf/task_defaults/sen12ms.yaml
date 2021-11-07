@@ -1,3 +1,5 @@
+program:
+  data_dir: "tests/data/sen12ms"
 experiment:
   task: "sen12ms"
   module:

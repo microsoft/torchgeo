@@ -1,3 +1,6 @@
+program:
+  naip_root_dir: "tests/data/naip"
+  chesapeake_root_dir: "tests/data/chesapeake/BAYWIDE"
 experiment:
   task: "naipchesapeake"
   module:
