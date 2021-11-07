@@ -1,6 +1,3 @@
-program:
-  naip_root_dir: "tests/data/naip"
-  chesapeake_root_dir: "tests/data/chesapeake/BAYWIDE"
 experiment:
   task: "naipchesapeake"
   module:
@@ -15,5 +12,6 @@ experiment:
     num_classes: 13
     num_filters: 64
   datamodule:
+    naip_root_dir: "tests/data/naip"
+    chesapeake_root_dir: "tests/data/chesapeake/BAYWIDE"
     batch_size: 32
-    num_workers: 4

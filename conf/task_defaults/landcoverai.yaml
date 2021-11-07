@@ -1,5 +1,3 @@
-program:
-  data_dir: "tests/data/landcoverai"
 experiment:
   task: "landcoverai"
   module:
@@ -14,5 +12,5 @@ experiment:
     num_classes: 6
     num_filters: 256
   datamodule:
+    root_dir: "tests/data/landcoverai"
     batch_size: 32
-    num_workers: 4

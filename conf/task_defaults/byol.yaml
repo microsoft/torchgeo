@@ -1,5 +1,3 @@
-program:
-  data_dir: "tests/data/chesapeake/cvpr"
 experiment:
   task: "ssl"
   name: "test_byol"
@@ -11,11 +9,11 @@ experiment:
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
   datamodule:
-    batch_size: 64
-    num_workers: 6
+    root_dir: "tests/data/chesapeake/cvpr"
     train_splits:
       - "de-train"
     val_splits:
       - "de-val"
     test_splits:
       - "de-test"
+    batch_size: 64

@@ -17,6 +17,8 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.9
+    - name: Install apt dependencies
+      run: sudo apt-get install gdal-bin
     - name: Install pip dependencies
       run: |
         pip install gdal tqdm  # TODO: these deps shouldn't be needed

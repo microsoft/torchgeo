@@ -1,5 +1,3 @@
-program:
-  data_dir: "tests/data/chesapeake/cvpr"
 experiment:
   task: "chesapeake_cvpr"
   module:
@@ -14,9 +12,14 @@ experiment:
     num_classes: 7
     num_filters: 256
   datamodule:
-    train_state: "de"
+    root_dir: "tests/data/chesapeake/cvpr"
+    train_splits:
+    - "de-test"
+    val_splits:
+    - "de-test"
+    test_splits:
+    - "de-test"
     patches_per_tile: 200
     patch_size: 256
     batch_size: 64
-    num_workers: 4
     num_classes: ${experiment.module.num_classes}

@@ -1,5 +1,3 @@
-program:
-  data_dir: "tests/data/sen12ms"
 experiment:
   task: "sen12ms"
   module:
@@ -13,5 +11,5 @@ experiment:
     in_channels: 15
     num_classes: 11
   datamodule:
+    root_dir: "tests/data/sen12ms"
     batch_size: 32
-    num_workers: 4
