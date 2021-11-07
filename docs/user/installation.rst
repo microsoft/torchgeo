@@ -110,15 +110,3 @@ Optional dependencies can be installed by enabling build variants:
 Run ``spack info py-torchgeo`` for a complete list of variants.
 
 See the `spack documentation <https://spack.readthedocs.io/>`_ for more details.
-
-source
-------
-
-TorchGeo can also be installed from source using the ``setup.py`` file and setuptools.
-
-.. code-block:: console
-
-   $ git clone https://github.com/microsoft/torchgeo.git
-   $ cd torchgeo
-   $ python setup.py build
-   $ python setup.py install
