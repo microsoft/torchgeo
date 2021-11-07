@@ -162,5 +162,6 @@ def test_tasks(task: str, tmp_path: Path) -> None:
         "trainer.fast_dev_run=1",
         "experiment.task=" + task,
         "program.overwrite=True",
+        "config_file=" + os.path.join("conf", "task_defaults", task + ".yaml"),
     ]
     subprocess.run(args, check=True)
