@@ -18,7 +18,7 @@ from torchgeo.datasets import (
     ChesapeakeCVPRDataModule,
     COWCCountingDataModule,
     CycloneDataModule,
-    LandcoverAIDataModule,
+    LandCoverAIDataModule,
     NAIPChesapeakeDataModule,
     RESISC45DataModule,
     SEN12MSDataModule,
@@ -27,15 +27,15 @@ from torchgeo.datasets import (
 )
 from torchgeo.trainers import (
     BYOLTask,
-    ChesapeakeCVPRSegmentationTask,
     ClassificationTask,
-    LandcoverAISegmentationTask,
     MultiLabelClassificationTask,
-    NAIPChesapeakeSegmentationTask,
     RegressionTask,
-    SEN12MSSegmentationTask,
-    So2SatClassificationTask,
+    SemanticSegmentationTask,
 )
+from torchgeo.trainers.chesapeake import ChesapeakeCVPRSegmentationTask
+from torchgeo.trainers.landcoverai import LandCoverAISegmentationTask
+from torchgeo.trainers.naipchesapeake import NAIPChesapeakeSegmentationTask
+from torchgeo.trainers.so2sat import So2SatClassificationTask
 
 TASK_TO_MODULES_MAPPING: Dict[
     str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
@@ -45,10 +45,10 @@ TASK_TO_MODULES_MAPPING: Dict[
     "chesapeake_cvpr": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
     "cowc_counting": (RegressionTask, COWCCountingDataModule),
     "cyclone": (RegressionTask, CycloneDataModule),
-    "landcoverai": (LandcoverAISegmentationTask, LandcoverAIDataModule),
+    "landcoverai": (LandCoverAISegmentationTask, LandCoverAIDataModule),
     "naipchesapeake": (NAIPChesapeakeSegmentationTask, NAIPChesapeakeDataModule),
     "resisc45": (ClassificationTask, RESISC45DataModule),
-    "sen12ms": (SEN12MSSegmentationTask, SEN12MSDataModule),
+    "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),
     "so2sat": (So2SatClassificationTask, So2SatDataModule),
     "ucmerced": (ClassificationTask, UCMercedDataModule),
 }

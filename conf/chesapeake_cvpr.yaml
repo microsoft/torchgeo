@@ -15,7 +15,9 @@ experiment:
     encoder_output_stride: 16
     learning_rate: 1e-2
     learning_rate_schedule_patience: 6
-    class_set: 7
+    in_channels: 4
+    num_classes: 7
+    num_filters: 256
   datamodule:
     batch_size: 64
     num_workers: 6

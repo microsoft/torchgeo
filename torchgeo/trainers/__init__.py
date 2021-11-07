@@ -4,23 +4,16 @@
 """TorchGeo trainers."""
 
 from .byol import BYOLTask
-from .chesapeake import ChesapeakeCVPRSegmentationTask
-from .landcoverai import LandcoverAISegmentationTask
-from .naipchesapeake import NAIPChesapeakeSegmentationTask
-from .sen12ms import SEN12MSSegmentationTask
-from .so2sat import So2SatClassificationTask
-from .tasks import ClassificationTask, MultiLabelClassificationTask, RegressionTask
+from .classification import ClassificationTask, MultiLabelClassificationTask
+from .regression import RegressionTask
+from .segmentation import SemanticSegmentationTask
 
 __all__ = (
     "BYOLTask",
-    "ChesapeakeCVPRSegmentationTask",
     "ClassificationTask",
-    "LandcoverAISegmentationTask",
     "MultiLabelClassificationTask",
-    "NAIPChesapeakeSegmentationTask",
     "RegressionTask",
-    "SEN12MSSegmentationTask",
-    "So2SatClassificationTask",
+    "SemanticSegmentationTask",
 )
 
 # https://stackoverflow.com/questions/40018681

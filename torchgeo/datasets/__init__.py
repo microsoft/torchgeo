@@ -36,7 +36,7 @@ from .geo import (
     ZipDataset,
 )
 from .gid15 import GID15
-from .landcoverai import LandCoverAI, LandcoverAIDataModule
+from .landcoverai import LandCoverAI, LandCoverAIDataModule
 from .landsat import (
     Landsat,
     Landsat1,
@@ -108,7 +108,7 @@ __all__ = (
     "EuroSAT",
     "GID15",
     "LandCoverAI",
-    "LandcoverAIDataModule",
+    "LandCoverAIDataModule",
     "LEVIRCDPlus",
     "PatternNet",
     "RESISC45",

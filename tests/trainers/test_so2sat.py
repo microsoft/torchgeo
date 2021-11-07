@@ -10,30 +10,32 @@ from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 
 from torchgeo.datasets import So2SatDataModule
-from torchgeo.trainers import So2SatClassificationTask
+from torchgeo.trainers.so2sat import So2SatClassificationTask
 
 from .test_utils import mocked_log
 
 
-@pytest.fixture(scope="module", params=[("rgb", 3), ("s2", 10)])
-def bands(request: SubRequest) -> Tuple[str, int]:
-    return cast(Tuple[str, int], request.param)
-
-
-@pytest.fixture(scope="module", params=[True, False])
-def datamodule(bands: Tuple[str, int], request: SubRequest) -> So2SatDataModule:
-    band_set = bands[0]
-    unsupervised_mode = request.param
-    root = os.path.join("tests", "data", "so2sat")
-    batch_size = 2
-    num_workers = 0
-    dm = So2SatDataModule(root, batch_size, num_workers, band_set, unsupervised_mode)
-    dm.prepare_data()
-    dm.setup()
-    return dm
-
-
 class TestSo2SatClassificationTask:
+    @pytest.fixture(scope="class", params=[("rgb", 3), ("s2", 10)])
+    def bands(self, request: SubRequest) -> Tuple[str, int]:
+        return cast(Tuple[str, int], request.param)
+
+    @pytest.fixture(scope="class", params=[True, False])
+    def datamodule(
+        self, bands: Tuple[str, int], request: SubRequest
+    ) -> So2SatDataModule:
+        band_set = bands[0]
+        unsupervised_mode = request.param
+        root = os.path.join("tests", "data", "so2sat")
+        batch_size = 2
+        num_workers = 0
+        dm = So2SatDataModule(
+            root, batch_size, num_workers, band_set, unsupervised_mode
+        )
+        dm.prepare_data()
+        dm.setup()
+        return dm
+
     @pytest.fixture(
         params=zip(["ce", "jaccard", "focal"], ["imagenet", "random", "random"])
     )
@@ -92,12 +94,6 @@ class TestSo2SatClassificationTask:
     def test_invalid_model(self, config: Dict[str, Any]) -> None:
         config["classification_model"] = "invalid_model"
         error_message = "Model type 'invalid_model' is not valid."
-        with pytest.raises(ValueError, match=error_message):
-            So2SatClassificationTask(**config)
-
-    def test_invalid_loss(self, config: Dict[str, Any]) -> None:
-        config["loss"] = "invalid_loss"
-        error_message = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=error_message):
             So2SatClassificationTask(**config)
 

@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""So2Sat trainer."""
+"""Classification tasks."""
 
 import os
 
@@ -11,16 +11,16 @@ import torchvision.models
 from torch.nn.modules import Conv2d, Linear
 
 from . import utils
-from .tasks import ClassificationTask
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Conv2d.__module__ = "nn.Conv2d"
-Linear.__module__ = "nn.Linear"
+from .classification import ClassificationTask
 
 
+# TODO: move this functionality into ClassificationTask and remove this class
 class So2SatClassificationTask(ClassificationTask):
-    """LightningModule for training models on the So2Sat Dataset."""
+    """LightningModule for training models on the So2Sat Dataset.
+
+    .. deprecated:: 0.1
+       Use :class:`ClassificationTask` instead.
+    """
 
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor."""

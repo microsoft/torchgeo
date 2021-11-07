@@ -1,7 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Trainer task for BYOL."""
+"""BYOL tasks."""
+
 import random
 from typing import Any, Callable, Dict, Optional, Tuple, Union, cast
 
@@ -18,12 +19,9 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchvision.models import resnet18
 from torchvision.models.resnet import resnet50
 
+# https://github.com/pytorch/pytorch/issues/60979
+# https://github.com/pytorch/pytorch/pull/61045
 Module.__module__ = "torch.nn"
-Sequential.__module__ = "torch.nn"
-Linear.__module__ = "torch.nn"
-ReLU.__module__ = "torch.nn"
-BatchNorm1d.__module__ = "torch.nn"
-Conv2d.__module__ = "torch.nn"
 
 
 def normalized_mse(x: Tensor, y: Tensor) -> Tensor:
