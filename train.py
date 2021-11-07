@@ -35,6 +35,7 @@ from torchgeo.trainers import (
 from torchgeo.trainers.chesapeake import ChesapeakeCVPRSegmentationTask
 from torchgeo.trainers.landcoverai import LandCoverAISegmentationTask
 from torchgeo.trainers.naipchesapeake import NAIPChesapeakeSegmentationTask
+from torchgeo.trainers.resisc45 import RESISC45ClassificationTask
 from torchgeo.trainers.so2sat import So2SatClassificationTask
 
 TASK_TO_MODULES_MAPPING: Dict[
@@ -47,7 +48,7 @@ TASK_TO_MODULES_MAPPING: Dict[
     "cyclone": (RegressionTask, CycloneDataModule),
     "landcoverai": (LandCoverAISegmentationTask, LandCoverAIDataModule),
     "naipchesapeake": (NAIPChesapeakeSegmentationTask, NAIPChesapeakeDataModule),
-    "resisc45": (ClassificationTask, RESISC45DataModule),
+    "resisc45": (RESISC45ClassificationTask, RESISC45DataModule),
     "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),
     "so2sat": (So2SatClassificationTask, So2SatDataModule),
     "ucmerced": (ClassificationTask, UCMercedDataModule),
