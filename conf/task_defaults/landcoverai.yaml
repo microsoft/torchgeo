@@ -14,3 +14,4 @@ experiment:
   datamodule:
     root_dir: "tests/data/landcoverai"
     batch_size: 32
+    num_workers: 0

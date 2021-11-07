@@ -7,3 +7,4 @@ experiment:
   datamodule:
     root_dir: "tests/data/cyclone"
     batch_size: 32
+    num_workers: 0

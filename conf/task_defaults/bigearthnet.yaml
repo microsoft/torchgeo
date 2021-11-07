@@ -13,3 +13,4 @@ experiment:
     bands: "all"
     num_classes: ${experiment.module.num_classes}
     batch_size: 128
+    num_workers: 0

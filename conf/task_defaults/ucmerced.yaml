@@ -11,3 +11,4 @@ experiment:
   datamodule:
     root_dir: "tests/data/ucmerced"
     batch_size: 128
+    num_workers: 0

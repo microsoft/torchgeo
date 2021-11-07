@@ -13,3 +13,4 @@ experiment:
   datamodule:
     root_dir: "tests/data/sen12ms"
     batch_size: 32
+    num_workers: 0

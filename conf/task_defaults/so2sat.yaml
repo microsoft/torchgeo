@@ -11,4 +11,5 @@ experiment:
   datamodule:
     root_dir: "tests/data/so2sat"
     batch_size: 128
+    num_workers: 0
     bands: "rgb"

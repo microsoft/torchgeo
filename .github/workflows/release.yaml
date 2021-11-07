@@ -25,7 +25,7 @@ jobs:
     - name: Install pip dependencies
       run: |
         pip install gdal tqdm  # TODO: these deps shouldn't be needed
-        pip install .[tests,train]
+        pip install .[datasets,tests,train]
         pip install -r docs/requirements.txt
     - name: Run notebook checks
       run: pytest --nbmake docs/tutorials
@@ -40,6 +40,6 @@ jobs:
       with:
         python-version: 3.9
     - name: Install pip dependencies
-      run: pip install .[tests,train]
+      run: pip install .[datasets,tests,train]
     - name: Run integration checks
       run: pytest -m slow

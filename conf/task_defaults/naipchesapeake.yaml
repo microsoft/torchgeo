@@ -15,3 +15,4 @@ experiment:
     naip_root_dir: "tests/data/naip"
     chesapeake_root_dir: "tests/data/chesapeake/BAYWIDE"
     batch_size: 32
+    num_workers: 0

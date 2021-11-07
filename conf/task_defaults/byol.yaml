@@ -11,9 +11,10 @@ experiment:
   datamodule:
     root_dir: "tests/data/chesapeake/cvpr"
     train_splits:
-      - "de-train"
+      - "de-test"
     val_splits:
-      - "de-val"
+      - "de-test"
     test_splits:
       - "de-test"
     batch_size: 64
+    num_workers: 0
