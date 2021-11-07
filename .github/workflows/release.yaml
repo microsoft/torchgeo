@@ -18,7 +18,10 @@ jobs:
       with:
         python-version: 3.9
     - name: Install apt dependencies
-      run: sudo apt-get install libgdal-dev
+      run: |
+        sudo apt-add-repository ppa:ubuntugis/ubuntugis-unstable
+        sudo apt-get update
+        sudo apt-get install gdal-bin libgdal-dev
     - name: Install pip dependencies
       run: |
         pip install gdal tqdm  # TODO: these deps shouldn't be needed
