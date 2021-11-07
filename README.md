@@ -23,7 +23,7 @@ Tests:
 The recommended way to install TorchGeo is with [pip](https://pip.pypa.io/):
 
 ```console
-$ pip install git+https://github.com/microsoft/torchgeo.git
+$ pip install torchgeo
 ```
 
 For [conda](https://docs.conda.io/) and [spack](https://spack.io/) installation instructions, see the [documentation](https://torchgeo.readthedocs.io/en/latest/user/installation.html).

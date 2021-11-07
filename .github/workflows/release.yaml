@@ -18,7 +18,9 @@ jobs:
       with:
         python-version: 3.9
     - name: Install pip dependencies
-      run: pip install .[tests,train]
+      run: |
+        pip install .[tests,train]
+        pip install -r docs/requirements.txt
     - name: Run notebook checks
       run: pytest --nbmake docs/tutorials
   integration:

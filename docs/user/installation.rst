@@ -1,17 +1,16 @@
 Installation
 ============
 
-TorchGeo is simple and easy to install. We support installation using the `pip <https://pip.pypa.io/>`_, `conda <https://docs.conda.io/>`_, and `spack <https://spack.io/>`_ package managers, although you can also install from source if you want to.
+TorchGeo is simple and easy to install. We support installation using the `pip <https://pip.pypa.io/>`_, `conda <https://docs.conda.io/>`_, and `spack <https://spack.io/>`_ package managers.
 
 pip
 ---
 
-..
-   Since TorchGeo is written in pure-Python, the easiest way to install it is using pip:
+Since TorchGeo is written in pure-Python, the easiest way to install it is using pip:
 
-   .. code-block:: console
+.. code-block:: console
 
-      $ pip install torchgeo
+   $ pip install torchgeo
 
 
 If you want to install a development version, you can use a VCS project URL:
@@ -32,16 +31,10 @@ or a local git checkout:
 
 By default, only required dependencies are installed. TorchGeo has a number of optional dependencies for specific datasets or development. These can be installed with a comma-separated list:
 
-..
-   .. code-block:: console
-
-      $ pip install torchgeo[datasets]
-      $ pip install torchgeo[style,tests]
-
 .. code-block:: console
 
-   $ pip install .[datasets]
-   $ pip install .[style,tests]
+   $ pip install torchgeo[datasets]
+   $ pip install torchgeo[style,tests]
 
 
 See the ``setup.cfg`` for a complete list of options. See the `pip documentation <https://pip.pypa.io/>`_ for more details.
@@ -57,12 +50,11 @@ If you need to install non-Python dependencies like PyTorch, it's better to use 
    $ conda config --set channel_priority strict
 
 
-..
-   Now, you can install the latest stable release using:
+Now, you can install the latest stable release using:
 
-   .. code-block:: console
+.. code-block:: console
 
-      $ conda install torchgeo
+   $ conda install torchgeo
 
 
 Conda does not directly support installing development versions, but you can use conda to install our dependencies, then use pip to install TorchGeo itself.
