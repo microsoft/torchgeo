@@ -138,6 +138,11 @@ RESISC45 (Remote Sensing Image Scene Classification)
 .. autoclass:: RESISC45
 .. autoclass:: RESISC45DataModule
 
+Seasonal Contrast
+^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SeasonalContrastS2
+
 SEN12MS
 ^^^^^^^
 
