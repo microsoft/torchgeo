@@ -28,6 +28,8 @@ jobs:
         pip install .[datasets,tests,train]
         pip install -r docs/requirements.txt
     - name: Run notebook checks
+      env:
+        MLHUB_API_KEY: ${{ secrets.MLHUB_API_KEY }}
       run: pytest --nbmake docs/tutorials
   integration:
     name: integration
