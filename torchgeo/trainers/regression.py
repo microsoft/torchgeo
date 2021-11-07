@@ -1,81 +1,67 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""SEN12MS trainer."""
+"""Regression tasks."""
 
-from typing import Any, Dict, cast
+from typing import Any, Dict
 
 import pytorch_lightning as pl
-import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch import Tensor
+from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torchmetrics import Accuracy, MetricCollection
+from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
+from torchvision import models
+
+# https://github.com/pytorch/pytorch/issues/60979
+# https://github.com/pytorch/pytorch/pull/61045
+Conv2d.__module__ = "nn.Conv2d"
+Linear.__module__ = "nn.Linear"
 
 
-class SEN12MSSegmentationTask(pl.LightningModule):
-    """LightningModule for training models on the SEN12MS Dataset.
-
-    This allows using arbitrary models and losses from the
-    ``pytorch_segmentation_models`` package.
-    """
+class RegressionTask(pl.LightningModule):
+    """LightningModule for training models on regression datasets."""
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters."""
-        if self.hparams["segmentation_model"] == "unet":
-            self.model = smp.Unet(
-                encoder_name=self.hparams["encoder_name"],
-                encoder_weights=self.hparams["encoder_weights"],
-                in_channels=self.hparams["in_channels"],
-                classes=11,
+        if self.hparams["model"] == "resnet18":
+            self.model = models.resnet18(pretrained=True)
+            in_features = self.model.fc.in_features
+            self.model.fc = nn.Linear(  # type: ignore[attr-defined]
+                in_features, out_features=1
             )
         else:
-            raise ValueError(
-                f"Model type '{self.hparams['segmentation_model']}' is not valid."
-            )
-
-        if self.hparams["loss"] == "ce":
-            self.loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
-        elif self.hparams["loss"] == "jaccard":
-            self.loss = smp.losses.JaccardLoss(mode="multiclass")
-        else:
-            raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
+            raise ValueError(f"Model type '{self.hparams['model']}' is not valid.")
 
     def __init__(self, **kwargs: Any) -> None:
-        """Initialize the LightningModule with a model and loss function.
+        """Initialize a new LightningModule for training simple regression models.
 
         Keyword Args:
-            segmentation_model: Name of the segmentation model type to use
-            encoder_name: Name of the encoder model backbone to use
-            encoder_weights: None or "imagenet" to use imagenet pretrained weights in
-                the encoder model
-            loss: Name of the loss function
+            model: Name of the model to use
+            learning_rate: Initial learning rate to use in the optimizer
+            learning_rate_schedule_patience: Patience parameter for the LR scheduler
         """
         super().__init__()
         self.save_hyperparameters()  # creates `self.hparams` from kwargs
-
         self.config_task()
 
-        self.train_metrics = MetricCollection([Accuracy()], prefix="train_")
+        self.train_metrics = MetricCollection(
+            {"RMSE": MeanSquaredError(squared=False), "MAE": MeanAbsoluteError()},
+            prefix="train_",
+        )
         self.val_metrics = self.train_metrics.clone(prefix="val_")
         self.test_metrics = self.train_metrics.clone(prefix="test_")
 
     def forward(self, x: Tensor) -> Any:  # type: ignore[override]
-        """Forward pass of the model.
-
-        Args:
-            x: input image
-
-        Returns:
-            prediction
-        """
+        """Forward pass of the model."""
         return self.model(x)
 
     def training_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> Tensor:
-        """Training step.
+        """Training step with an MSE loss.
 
         Args:
             batch: Current batch
@@ -85,19 +71,18 @@ class SEN12MSSegmentationTask(pl.LightningModule):
             training loss
         """
         x = batch["image"]
-        y = batch["mask"]
+        y = batch["label"].view(-1, 1)
         y_hat = self.forward(x)
-        y_hat_hard = y_hat.argmax(dim=1)
 
-        loss = self.loss(y_hat, y)
+        loss = F.mse_loss(y_hat, y)
 
-        self.log("train_loss", loss, on_step=True, on_epoch=False)
-        self.train_metrics(y_hat_hard, y)
+        self.log("train_loss", loss)  # logging to TensorBoard
+        self.train_metrics(y_hat, y)
 
-        return cast(Tensor, loss)
+        return loss
 
     def training_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level training metrics.
+        """Logs epoch-level training metrics.
 
         Args:
             outputs: list of items returned by training_step
@@ -115,14 +100,12 @@ class SEN12MSSegmentationTask(pl.LightningModule):
             batch_idx: Index of current batch
         """
         x = batch["image"]
-        y = batch["mask"]
+        y = batch["label"].view(-1, 1)
         y_hat = self.forward(x)
-        y_hat_hard = y_hat.argmax(dim=1)
 
-        loss = self.loss(y_hat, y)
-
-        self.log("val_loss", loss, on_step=False, on_epoch=True)
-        self.val_metrics(y_hat_hard, y)
+        loss = F.mse_loss(y_hat, y)
+        self.log("val_loss", loss)
+        self.val_metrics(y_hat, y)
 
     def validation_epoch_end(self, outputs: Any) -> None:
         """Logs epoch level validation metrics.
@@ -143,15 +126,12 @@ class SEN12MSSegmentationTask(pl.LightningModule):
             batch_idx: Index of current batch
         """
         x = batch["image"]
-        y = batch["mask"]
+        y = batch["label"].view(-1, 1)
         y_hat = self.forward(x)
-        y_hat_hard = y_hat.argmax(dim=1)
 
-        loss = self.loss(y_hat, y)
-
-        # by default, the test and validation steps only log per *epoch*
-        self.log("test_loss", loss, on_step=False, on_epoch=True)
-        self.test_metrics(y_hat_hard, y)
+        loss = F.mse_loss(y_hat, y)
+        self.log("test_loss", loss)
+        self.test_metrics(y_hat, y)
 
     def test_epoch_end(self, outputs: Any) -> None:
         """Logs epoch level test metrics.
