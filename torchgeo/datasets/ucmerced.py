@@ -225,7 +225,7 @@ class UCMercedDataModule(pl.LightningDataModule):
         self,
         root_dir: str,
         batch_size: int = 64,
-        num_workers: int = 4,
+        num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for UCMerced based DataLoaders.
@@ -266,7 +266,7 @@ class UCMercedDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        UCMerced(self.root_dir, download=True, checksum=False)
+        UCMerced(self.root_dir, download=False, checksum=False)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.

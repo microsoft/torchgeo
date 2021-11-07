@@ -553,7 +553,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         patches_per_tile: int = 200,
         patch_size: int = 256,
         batch_size: int = 64,
-        num_workers: int = 4,
+        num_workers: int = 0,
         class_set: int = 7,
         **kwargs: Any,
     ) -> None:
@@ -711,7 +711,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             splits=self.train_splits,
             layers=self.layers,
             transforms=None,
-            download=True,
+            download=False,
             checksum=False,
         )
 

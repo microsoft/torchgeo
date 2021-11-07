@@ -73,7 +73,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         naip_root_dir: str,
         chesapeake_root_dir: str,
         batch_size: int = 64,
-        num_workers: int = 4,
+        num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for NAIP and Chesapeake based DataLoaders.
@@ -120,7 +120,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        Chesapeake13(self.chesapeake_root_dir, download=True, checksum=False)
+        Chesapeake13(self.chesapeake_root_dir, download=False, checksum=False)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
