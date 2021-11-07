@@ -9,7 +9,7 @@ import kornia.augmentation as K
 import torch
 from torch import Tensor
 
-from .tasks import ClassificationTask
+from .classification import ClassificationTask
 
 
 # TODO: move this functionality into ClassificationTask and remove this class

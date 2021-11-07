@@ -12,7 +12,7 @@ from torchgeo.trainers.resisc45 import RESISC45ClassificationTask
 
 class TestRESISC45ClassificationTask:
     @pytest.fixture(scope="class")
-    def datamodule() -> RESISC45DataModule:
+    def datamodule(self) -> RESISC45DataModule:
         root = os.path.join("tests", "data", "resisc45")
         batch_size = 2
         num_workers = 0
