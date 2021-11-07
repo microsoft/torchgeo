@@ -35,7 +35,7 @@ class TestRESISC45:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.resisc45, "download_url", download_url
         )
-        md5 = "5d898bd91e3ebc64314893ff191b2f9d"
+        md5 = "5895dea3757ba88707d52f5521c444d3"
         monkeypatch.setattr(RESISC45, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "resisc45", "NWPU-RESISC45.rar")
         monkeypatch.setattr(RESISC45, "url", url)  # type: ignore[attr-defined]
