@@ -64,7 +64,6 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
     """
 
     # TODO: tune these hyperparams
-    patch_size = 256
     length = 1000
     stride = 128
 
@@ -74,6 +73,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         chesapeake_root_dir: str,
         batch_size: int = 64,
         num_workers: int = 0,
+        patch_size: int = 256,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for NAIP and Chesapeake based DataLoaders.
@@ -83,12 +83,14 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             chesapeake_root_dir: directory containing Chesapeake data
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
+            patch_size: size of patches to sample
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.naip_root_dir = naip_root_dir
         self.chesapeake_root_dir = chesapeake_root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.patch_size = patch_size
 
     def naip_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the NAIP Dataset.
