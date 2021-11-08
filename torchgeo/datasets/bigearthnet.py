@@ -582,7 +582,7 @@ class BigEarthNetDataModule(pl.LightningDataModule):
         bands: str = "all",
         num_classes: int = 19,
         batch_size: int = 64,
-        num_workers: int = 4,
+        num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for BigEarthNet based DataLoaders.

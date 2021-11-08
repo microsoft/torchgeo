@@ -134,20 +134,34 @@ trainer:
     subprocess.run(args, check=True)
 
 
-@pytest.mark.parametrize("task", ["cowc_counting", "cyclone", "sen12ms", "landcoverai"])
+@pytest.mark.parametrize(
+    "task",
+    [
+        "bigearthnet",
+        "byol",
+        "chesapeake_cvpr",
+        "cowc_counting",
+        "cyclone",
+        "landcoverai",
+        "naipchesapeake",
+        "resisc45",
+        "sen12ms",
+        "so2sat",
+        "ucmerced",
+    ],
+)
 def test_tasks(task: str, tmp_path: Path) -> None:
     output_dir = tmp_path / "output"
-    data_dir = os.path.join("tests", "data", task)
     log_dir = tmp_path / "logs"
     args = [
         sys.executable,
         "train.py",
         "experiment.name=test",
         "program.output_dir=" + str(output_dir),
-        "program.data_dir=" + data_dir,
         "program.log_dir=" + str(log_dir),
         "trainer.fast_dev_run=1",
         "experiment.task=" + task,
         "program.overwrite=True",
+        "config_file=" + os.path.join("conf", "task_defaults", task + ".yaml"),
     ]
     subprocess.run(args, check=True)

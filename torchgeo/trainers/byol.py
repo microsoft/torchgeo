@@ -451,3 +451,6 @@ class BYOLTask(LightningModule):
         )
 
         self.log("val_loss", loss, on_step=False, on_epoch=True)
+
+    def test_step(self, *args: Any) -> None:  # type: ignore[override]
+        """No-op, does nothing."""

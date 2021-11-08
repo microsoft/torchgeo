@@ -227,7 +227,7 @@ class CycloneDataModule(pl.LightningDataModule):
         root_dir: str,
         seed: int,
         batch_size: int = 64,
-        num_workers: int = 4,
+        num_workers: int = 0,
         api_key: Optional[str] = None,
         **kwargs: Any,
     ) -> None:

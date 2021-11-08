@@ -219,7 +219,7 @@ class RESISC45DataModule(pl.LightningDataModule):
         self,
         root_dir: str,
         batch_size: int = 64,
-        num_workers: int = 4,
+        num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for RESISC45 based DataLoaders.

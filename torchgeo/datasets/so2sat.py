@@ -243,7 +243,7 @@ class So2SatDataModule(pl.LightningDataModule):
         self,
         root_dir: str,
         batch_size: int = 64,
-        num_workers: int = 4,
+        num_workers: int = 0,
         bands: str = "rgb",
         unsupervised_mode: bool = False,
         **kwargs: Any,

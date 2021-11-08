@@ -9,6 +9,7 @@ experiment:
     in_channels: 3
     num_classes: 17
   datamodule:
+    root_dir: "tests/data/so2sat"
     batch_size: 128
-    num_workers: 6
+    num_workers: 0
     bands: "rgb"

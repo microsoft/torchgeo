@@ -58,3 +58,10 @@ class TestLandCoverAISegmentationTask:
         batch = next(iter(datamodule.val_dataloader()))
         task.validation_step(batch, 0)
         task.validation_epoch_end(0)
+
+    def test_test(
+        self, datamodule: LandCoverAIDataModule, task: LandCoverAISegmentationTask
+    ) -> None:
+        batch = next(iter(datamodule.test_dataloader()))
+        task.test_step(batch, 0)
+        task.test_epoch_end(0)

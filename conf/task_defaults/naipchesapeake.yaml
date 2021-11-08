@@ -12,5 +12,8 @@ experiment:
     num_classes: 13
     num_filters: 64
   datamodule:
+    naip_root_dir: "tests/data/naip"
+    chesapeake_root_dir: "tests/data/chesapeake/BAYWIDE"
     batch_size: 32
-    num_workers: 4
+    num_workers: 0
+    patch_size: 32

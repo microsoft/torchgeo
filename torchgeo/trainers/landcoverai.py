@@ -109,3 +109,23 @@ class LandCoverAISegmentationTask(SemanticSegmentationTask):
             )
 
             plt.close()
+
+    def test_step(  # type: ignore[override]
+        self, batch: Dict[str, Any], batch_idx: int
+    ) -> None:
+        """Test step identical to the validation step.
+
+        Args:
+            batch: Current batch
+            batch_idx: Index of current batch
+        """
+        x = batch["image"]
+        y = batch["mask"].long().squeeze()
+        y_hat = self.forward(x)
+        y_hat_hard = y_hat.argmax(dim=1)
+
+        loss = self.loss(y_hat, y)
+
+        # by default, the test and validation steps only log per *epoch*
+        self.log("test_loss", loss, on_step=False, on_epoch=True)
+        self.test_metrics(y_hat_hard, y)

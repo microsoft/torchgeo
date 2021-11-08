@@ -215,7 +215,7 @@ class LandCoverAIDataModule(pl.LightningDataModule):
     """
 
     def __init__(
-        self, root_dir: str, batch_size: int = 64, num_workers: int = 4, **kwargs: Any
+        self, root_dir: str, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
         """Initialize a LightningDataModule for LandCover.ai based DataLoaders.
 
@@ -250,7 +250,7 @@ class LandCoverAIDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        _ = LandCoverAI(self.root_dir, download=True, checksum=False)
+        _ = LandCoverAI(self.root_dir, download=False, checksum=False)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.

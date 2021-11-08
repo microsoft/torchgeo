@@ -27,7 +27,7 @@ class So2SatClassificationTask(ClassificationTask):
         in_channels = self.hparams["in_channels"]
 
         pretrained = False
-        if not os.path.exists(self.hparams["weights"]):
+        if self.hparams["weights"] and not os.path.exists(self.hparams["weights"]):
             if self.hparams["weights"] == "imagenet":
                 pretrained = True
             elif self.hparams["weights"] == "random":

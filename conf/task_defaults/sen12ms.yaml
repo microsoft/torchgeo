@@ -11,5 +11,6 @@ experiment:
     in_channels: 15
     num_classes: 11
   datamodule:
+    root_dir: "tests/data/sen12ms"
     batch_size: 32
-    num_workers: 4
+    num_workers: 0
