@@ -17,9 +17,19 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.9
+    - name: Install apt dependencies
+      run: |
+        sudo apt-add-repository ppa:ubuntugis/ubuntugis-unstable
+        sudo apt-get update
+        sudo apt-get install gdal-bin libgdal-dev
     - name: Install pip dependencies
-      run: pip install .[tests]
+      run: |
+        pip install gdal tqdm  # TODO: these deps shouldn't be needed
+        pip install .[datasets,tests,train]
+        pip install -r docs/requirements.txt
     - name: Run notebook checks
+      env:
+        MLHUB_API_KEY: ${{ secrets.MLHUB_API_KEY }}
       run: pytest --nbmake docs/tutorials
   integration:
     name: integration
@@ -32,6 +42,6 @@ jobs:
       with:
         python-version: 3.9
     - name: Install pip dependencies
-      run: pip install .[tests]
+      run: pip install .[datasets,tests,train]
     - name: Run integration checks
       run: pytest -m slow

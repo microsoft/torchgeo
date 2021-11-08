@@ -39,7 +39,7 @@ dependencies:
     - scikit-learn>=0.18
     - scipy>=0.9
     - segmentation-models-pytorch>=0.2
-    - setuptools>=30.4
+    - setuptools>=42
     - sphinx>=3
     - timm>=0.2.1
     - torchmetrics

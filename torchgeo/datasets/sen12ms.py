@@ -289,7 +289,7 @@ class SEN12MSDataModule(pl.LightningDataModule):
         seed: int,
         band_set: str = "all",
         batch_size: int = 64,
-        num_workers: int = 4,
+        num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for SEN12MS based DataLoaders.

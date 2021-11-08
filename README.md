@@ -1,4 +1,4 @@
-<img src="logo/logo-color.svg" width="400" alt="TorchGeo"/>
+<img src="https://raw.githubusercontent.com/microsoft/torchgeo/main/logo/logo-color.svg" width="400" alt="TorchGeo"/>
 
 TorchGeo is a [PyTorch](https://pytorch.org/) domain library, similar to [torchvision](https://pytorch.org/vision), that provides datasets, transforms, samplers, and pre-trained models specific to geospatial data.
 
@@ -23,7 +23,7 @@ Tests:
 The recommended way to install TorchGeo is with [pip](https://pip.pypa.io/):
 
 ```console
-$ pip install git+https://github.com/microsoft/torchgeo.git
+$ pip install torchgeo
 ```
 
 For [conda](https://docs.conda.io/) and [spack](https://spack.io/) installation instructions, see the [documentation](https://torchgeo.readthedocs.io/en/latest/user/installation.html).

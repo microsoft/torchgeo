@@ -278,7 +278,7 @@ class COWCCountingDataModule(pl.LightningDataModule):
         root_dir: str,
         seed: int,
         batch_size: int = 64,
-        num_workers: int = 4,
+        num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for COWC Counting based DataLoaders.
@@ -314,7 +314,7 @@ class COWCCountingDataModule(pl.LightningDataModule):
         This includes optionally downloading the dataset. This is done once per node,
         while :func:`setup` is done once per GPU.
         """
-        COWCCounting(self.root_dir, download=True)
+        COWCCounting(self.root_dir, download=False)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Create the train/val/test splits based on the original Dataset objects.
