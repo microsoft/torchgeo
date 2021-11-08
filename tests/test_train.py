@@ -164,6 +164,4 @@ def test_tasks(task: str, tmp_path: Path) -> None:
         "program.overwrite=True",
         "config_file=" + os.path.join("conf", "task_defaults", task + ".yaml"),
     ]
-    if task == "naipchesapeake":
-        args.append("experiment.datamodule.patch_size=32")
     subprocess.run(args, check=True)
