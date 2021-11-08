@@ -114,7 +114,7 @@ class BigEarthNet(VisionDataset):
     4. Pastures
     5. Complex cultivation patterns
     6. Land principally occupied by agriculture, with significant
-        areas of natural vegetation
+       areas of natural vegetation
     7. Agro-forestry areas
     8. Broad-leaved forest
     9. Coniferous forest
