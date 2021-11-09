@@ -169,12 +169,16 @@ class ETCI2021(VisionDataset):
         folders = sorted(glob.glob(os.path.join(root, directory, "*")))
         folders = [os.path.join(folder, "tiles") for folder in folders]
         for folder in folders:
-            vvs = glob.glob(os.path.join(folder, "vv", "*.png"))
-            vhs = glob.glob(os.path.join(folder, "vh", "*.png"))
-            water_masks = glob.glob(os.path.join(folder, "water_body_label", "*.png"))
+            vvs = sorted(glob.glob(os.path.join(folder, "vv", "*.png")))
+            vhs = sorted(glob.glob(os.path.join(folder, "vh", "*.png")))
+            water_masks = sorted(
+                glob.glob(os.path.join(folder, "water_body_label", "*.png"))
+            )
 
             if split != "test":
-                flood_masks = glob.glob(os.path.join(folder, "flood_label", "*.png"))
+                flood_masks = sorted(
+                    glob.glob(os.path.join(folder, "flood_label", "*.png"))
+                )
 
                 for vv, vh, flood_mask, water_mask in zip(
                     vvs, vhs, flood_masks, water_masks
