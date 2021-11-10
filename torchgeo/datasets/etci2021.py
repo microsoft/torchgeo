@@ -263,7 +263,7 @@ class ETCI2021(VisionDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by __getitem__
+            sample: a sample returned by :meth:`__getitem__`
         """
         import matplotlib.pyplot as plt
 
