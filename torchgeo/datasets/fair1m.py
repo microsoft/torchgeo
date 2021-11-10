@@ -8,6 +8,8 @@ import os
 from typing import Any, Callable, Dict, Optional, Tuple
 from xml.etree import ElementTree
 
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 import torch
@@ -35,12 +37,15 @@ def read_pascal_voc(path: str) -> Dict[str, Any]:
     """
     et = ElementTree.parse(path)
     element = et.getroot()
-    filename = element.find("source").find("filename").text
+    filename = element.find("source").find("filename").text  # type: ignore[union-attr]
     labels, points = [], []
-    for obj in element.find("objects").findall("object"):
-        obj_points = [p.text.split(",") for p in obj.find("points").findall("point")]
+    for obj in element.find("objects").findall("object"):  # type: ignore[union-attr]
+        obj_points = [
+            p for p in obj.find("points").findall("point")  # type: ignore[union-attr]
+        ]
+        obj_points = [p.text.split(",") for p in obj_points]  # type: ignore[union-attr]
         obj_points = [(float(p1), float(p2)) for p1, p2 in obj_points]
-        label = obj.find("possibleresult").find("name").text
+        label = obj.find("possibleresult").find("name").text  # type: ignore[union-attr]
         labels.append(label)
         points.append(obj_points)
     return dict(filename=filename, points=points, labels=labels)
@@ -233,6 +238,28 @@ class FAIR1M(VisionDataset):
         labels = torch.tensor(labels_list)  # type: ignore[attr-defined]
         return boxes, labels
 
+    def plot(self, index: int) -> None:
+        """Plot a data sample.
+
+        Args:
+            index: the index of the sample to plot
+        """
+        sample = self[index]
+        image = sample["image"].permute((1, 2, 0)).numpy()
+        polygons = [
+            patches.Polygon(points, color="r", fill=False)
+            for points in sample["bbox"].numpy()
+        ]
+        ax = plt.axes()
+        ax.imshow(image)
+        ax.axis("off")
+        ax.figure.set_size_inches(10, 10)
+        ax.figure.tight_layout()
+        for polygon in polygons:
+            ax.add_patch(polygon)
+        plt.show()
+        plt.close()
+
 
 class FAIR1MDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the FAIR1M dataset."""
@@ -295,7 +322,9 @@ class FAIR1MDataModule(pl.LightningDataModule):
                 dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
             )
         else:
-            self.train_dataset = FAIR1M(self.root_dir, transforms=transforms)
+            self.train_dataset = FAIR1M(  # type: ignore[assignment]
+                self.root_dir, transforms=transforms
+            )
             self.val_dataset, self.test_dataset = None, None  # type: ignore[assignment]
 
     def train_dataloader(self) -> DataLoader[Any]:
