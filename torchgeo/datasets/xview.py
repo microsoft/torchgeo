@@ -178,7 +178,7 @@ class XView2(VisionDataset):
             index: the index of the sample to plot
 
         Returns:
-
+            the matplotlib.pyplot figure
         """
         sample = self[index]
         image1 = draw_semantic_segmentation_masks(
