@@ -16,11 +16,11 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
 
-from ..datasets.utils import dataset_split
+from ..datasets.utils import dataset_split, draw_semantic_segmentation_masks
 from .geo import VisionDataset
 
 
-class xView2(VisionDataset):
+class XView2(VisionDataset):
     """xView2 dataset.
 
     The `xView2 <https://xview2.org/>`_
@@ -33,6 +33,7 @@ class xView2(VisionDataset):
 
     Dataset classes:
 
+    0. background
     1. no damage
     2. minor damage
     3. major damage
@@ -56,7 +57,8 @@ class xView2(VisionDataset):
             "directory": "test_images_labels_targets",
         },
     }
-    classes = ["no-damage", "minor-damage", "major-damage", "destroyed"]
+    classes = ["background", "no-damage", "minor-damage", "major-damage", "destroyed"]
+    colormap = ["green", "blue", "orange", "red"]
 
     def __init__(
         self,
@@ -64,7 +66,7 @@ class xView2(VisionDataset):
         split: str = "train",
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
     ) -> None:
-        """Initialize a new LEVIR-CD+ dataset instance.
+        """Initialize a new xView2 dataset instance.
 
         Args:
             root: root directory where dataset can be found
@@ -166,28 +168,36 @@ class xView2(VisionDataset):
         with Image.open(filename) as img:
             array = np.array(img.convert("L"))
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
-            tensor = torch.clamp(tensor, min=0, max=1)  # type: ignore[attr-defined]
             tensor = tensor.to(torch.long)  # type: ignore[attr-defined]
             return tensor
 
-    def plot(self, index: int) -> None:
+    def plot(self, index: int, alpha: float = 0.5) -> plt.Figure:
         """Plot a data sample.
 
         Args:
             index: the index of the sample to plot
+
+        Returns:
+
         """
         sample = self[index]
-        image = sample["image"].permute((1, 2, 0)).numpy()
-        ax = plt.axes()
-        ax.imshow(image)
-        ax.axis("off")
-        ax.figure.set_size_inches(10, 10)
-        ax.figure.tight_layout()
-        plt.show()
-        plt.close()
+        image1 = draw_semantic_segmentation_masks(
+            sample["image"][0], sample["mask"][0], alpha=alpha, colors=self.colormap
+        )
+        image2 = draw_semantic_segmentation_masks(
+            sample["image"][1], sample["mask"][1], alpha=alpha, colors=self.colormap
+        )
+        fig, (ax1, ax2) = plt.subplots(ncols=2)
+        fig.set_size_inches((25, 25))
+        ax1.imshow(image1)
+        ax1.set_axis_off()
+        ax2.imshow(image2)
+        ax2.set_axis_off()
+        plt.tight_layout()
+        return fig
 
 
-class xView2DataModule(pl.LightningDataModule):
+class XView2DataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the xView2 dataset.
 
     Uses the train/val/test splits from the dataset.
@@ -238,7 +248,7 @@ class xView2DataModule(pl.LightningDataModule):
         """
         transforms = Compose([self.preprocess])
 
-        dataset = xView2(self.root_dir, "train", transforms=transforms)
+        dataset = XView2(self.root_dir, "train", transforms=transforms)
 
         if self.val_split_pct > 0.0:
             self.train_dataset, self.val_dataset, _ = dataset_split(
@@ -248,7 +258,7 @@ class xView2DataModule(pl.LightningDataModule):
             self.train_dataset = dataset  # type: ignore[assignment]
             self.val_dataset = None  # type: ignore[assignment]
 
-        self.test_dataset = xView2(self.root_dir, "test", transforms=transforms)
+        self.test_dataset = XView2(self.root_dir, "test", transforms=transforms)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.
