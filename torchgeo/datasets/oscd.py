@@ -48,6 +48,10 @@ class OSCD(VisionDataset):
 
     url = "https://drive.google.com/file/d/1jidN0DKEIybOrP0j7Bos8bGDDq3Varj3"
     md5 = "1adf156f628aa32fb2e8fe6cada16c04" # TODO: find this
+    zipfile_glob = "*OSCD.zip"
+    zipfile_glob2 = "*Onera*.zip"
+    # TODO: need to change filename_glob due to how this is checked in verify
+    filename_glob = "*OSCD.*"
     filename = "OSCD.zip"
     splits = ["train", "test"]
 
@@ -79,16 +83,10 @@ class OSCD(VisionDataset):
         self.root = root
         self.split = split
         self.transforms = transforms
+        self.download = download
         self.checksum = checksum
 
-        if download:
-            self._download()
-
-        if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+        self._verify()
 
         self.files = self._load_files(self.root, self.split)
 
@@ -181,6 +179,7 @@ class OSCD(VisionDataset):
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
+
         # Check if the extracted files already exist
         pathname = os.path.join(self.root, "**", self.filename_glob)
         for fname in glob.iglob(pathname, recursive=True):
@@ -210,6 +209,7 @@ class OSCD(VisionDataset):
         download_url(
                 self.url,
                 self.root,
+                filename=self.filename,
                 md5=md5 if self.checksum else None,
         )
 
@@ -218,6 +218,11 @@ class OSCD(VisionDataset):
         pathname = os.path.join(self.root, self.zipfile_glob)
         for zipfile in glob.iglob(pathname):
             extract_archive(zipfile)
+        # TODO: nicer way to solve this nested zipfile structure
+        pathname = os.path.join(self.root, self.zipfile_glob2)
+        for zipfile in glob.iglob(pathname):
+            extract_archive(zipfile)
+
 
     def _check_integrity(self) -> bool:
         """Checks the integrity of the dataset structure.
