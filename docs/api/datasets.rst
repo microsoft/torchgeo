@@ -113,6 +113,11 @@ EuroSAT
 .. autoclass:: EuroSAT
 .. autoclass:: EuroSATDataModule
 
+FAIR1M (Fine-grAined object recognItion in high-Resolution imagery)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: FAIR1M
+
 GID-15 (Gaofen Image Dataset)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
