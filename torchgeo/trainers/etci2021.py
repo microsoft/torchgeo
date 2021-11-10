@@ -16,7 +16,7 @@ from .segmentation import SemanticSegmentationTask
 class ETCI2021SemanticSegmentationTask(SemanticSegmentationTask):
     """LightningModule for training on ETCI2021 with data augmentation.
 
-    .. deprecated:: 0.1
+    .. deprecated:: 0.2
        Use :class:`SemanticSegmentationTask` instead.
     """
 
