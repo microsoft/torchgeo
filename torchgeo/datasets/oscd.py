@@ -207,17 +207,17 @@ class OSCD(VisionDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-		download_url(
-			self.url,
-			self.root,
-			md5=md5 if self.checksum else None,
-		)
+        download_url(
+                self.url,
+                self.root,
+                md5=md5 if self.checksum else None,
+        )
 
     def _extract(self) -> None:
         """Extract the dataset."""
         pathname = os.path.join(self.root, self.zipfile_glob)
         for zipfile in glob.iglob(pathname):
-			extract_archive(zipfile)
+            extract_archive(zipfile)
 
     def _check_integrity(self) -> bool:
         """Checks the integrity of the dataset structure.

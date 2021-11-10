@@ -53,6 +53,7 @@ from .landsat import (
 from .levircd import LEVIRCDPlus
 from .naip import NAIP, NAIPChesapeakeDataModule
 from .nwpu import VHR10
+from .oscd import OSCD
 from .patternnet import PatternNet
 from .resisc45 import RESISC45, RESISC45DataModule
 from .seco import SeasonalContrastS2
@@ -111,6 +112,7 @@ __all__ = (
     "LandCoverAI",
     "LandCoverAIDataModule",
     "LEVIRCDPlus",
+    "OSCD",
     "PatternNet",
     "RESISC45",
     "RESISC45DataModule",
