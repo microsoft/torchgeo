@@ -16,6 +16,13 @@ from .geo import VisionDataset
 from .utils import download_url, extract_archive
 
 
+def sort_bands(x: str) -> str:
+    """Sort Sentinel-2 band files in the correct order."""
+    x = os.path.basename(x).split("_")[-1]
+    x = os.path.splitext(x)[0]
+    if x == "B8A":
+        x = "B08A"
+    return x
 
 class OSCD(VisionDataset):
     # TODO: update this to OSCD
@@ -48,10 +55,12 @@ class OSCD(VisionDataset):
 
     url = "https://drive.google.com/file/d/1jidN0DKEIybOrP0j7Bos8bGDDq3Varj3"
     md5 = "1adf156f628aa32fb2e8fe6cada16c04" # TODO: find this
+
+    # TODO: find better way to solve nested zip file structure
     zipfile_glob = "*OSCD.zip"
     zipfile_glob2 = "*Onera*.zip"
     # TODO: need to change filename_glob due to how this is checked in verify
-    filename_glob = "*OSCD.*"
+    filename_glob = "*Onera*"
     filename = "OSCD.zip"
     splits = ["train", "test"]
 
@@ -88,7 +97,7 @@ class OSCD(VisionDataset):
 
         self._verify()
 
-        self.files = self._load_files(self.root, self.split)
+        self.files = self._load_files()
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
@@ -120,25 +129,26 @@ class OSCD(VisionDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str, split: str) -> List[Dict[str, str]]:
-        """Return the paths of the files in the dataset.
+    # TODO: this needs to be refactored 
+    def _load_files(self) -> List[Dict[str, str]]:
+        regions = []
+        temp_split = "Test" if self.split == "test" else "Train"
+        labels_root = os.path.join(self.root, f"Onera Satellite Change Detection dataset - {temp_split} Labels")
+        images_root = os.path.join(self.root, "Onera Satellite Change Detection dataset - Images")
+        folders = glob.glob(os.path.join(labels_root, "*/"))
+        for folder in folders:
+            region = folder.split(os.sep)[-2]
+            mask = os.path.join(labels_root, region, "cm", "cm.png")
+            images1 = glob.glob(os.path.join(images_root, region, "imgs_1_rect", "*.tif"))
+            images2 = glob.glob(os.path.join(images_root, region, "imgs_2_rect", "*.tif"))
+            images1 = sorted(images1, key=sort_bands)
+            images2 = sorted(images2, key=sort_bands)
+            with open(os.path.join(images_root, region, "dates.txt")) as f:
+                dates = tuple([line.split()[-1] for line in f.read().strip().splitlines()])
 
-        Args:
-            root: root dir of dataset
-            split: subset of dataset, one of [train, test]
+            regions.append(dict(region=region, images1=images1, images2=images2, mask=mask, dates=dates))
 
-        Returns:
-            list of dicts containing paths for each pair of image1, image2, mask
-        """
-        files = []
-        images = glob.glob(os.path.join(root, split, "A", "*.png"))
-        images = sorted([os.path.basename(image) for image in images])
-        for image in images:
-            image1 = os.path.join(root, split, "A", image)
-            image2 = os.path.join(root, split, "B", image)
-            mask = os.path.join(root, split, "label", image)
-            files.append(dict(image1=image1, image2=image2, mask=mask))
-        return files
+        return regions
 
     def _load_image(self, path: str) -> Tensor:
         """Load a single image.
@@ -222,33 +232,3 @@ class OSCD(VisionDataset):
         pathname = os.path.join(self.root, self.zipfile_glob2)
         for zipfile in glob.iglob(pathname):
             extract_archive(zipfile)
-
-
-    def _check_integrity(self) -> bool:
-        """Checks the integrity of the dataset structure.
-
-        Returns:
-            True if the dataset directories and split files are found, else False
-        """
-        for filename in self.splits:
-            filepath = os.path.join(self.root, filename)
-            if not os.path.exists(filepath):
-                return False
-        return True
-
-    def _download2(self) -> None:
-        """Download the dataset and extract it.
-
-        Raises:
-            AssertionError: if the checksum of split.py does not match
-        """
-        if self._check_integrity():
-            print("Files already downloaded and verified")
-            return
-
-        download_and_extract_archive(
-            self.url,
-            self.root,
-            filename=self.filename,
-            md5=self.md5 if self.checksum else None,
-        )
