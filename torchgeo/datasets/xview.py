@@ -26,17 +26,10 @@ class xView2(VisionDataset):
     The `xView2 <https://xview2.org/>`_
     dataset is a dataset for building disaster change detection.
 
-    Dataset features:
-
-    * image pairs of 20 different urban regions across Texas between 2002-2020
-    * binary change masks representing building change
-    * three spectral bands - RGB
-    * 985 image pairs with 50 cm per pixel resolution (~1024x1024 px)
-
     Dataset format:
 
     * images are three-channel pngs
-    * masks are single-channel pngs where no change = 0, change = 255
+    * masks are single-channel pngs where the pixel values represent the class
 
     Dataset classes:
 
@@ -84,7 +77,7 @@ class xView2(VisionDataset):
         self.split = split
         self.transforms = transforms
         self.class2idx = {c: i for i, c in enumerate(self.classes)}
-        self.files = self._load_files(self.root, self.split)
+        self.files = self._load_files(root, split)
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
@@ -126,7 +119,7 @@ class xView2(VisionDataset):
             split: subset of dataset, one of [train, test]
 
         Returns:
-            list of dicts containing paths for each pair of image1, image2, mask
+            list of dicts containing paths for each pair of images and masks
         """
         files = []
         directory = self.metadata[split]["directory"]
