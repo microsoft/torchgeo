@@ -1,4 +1,9 @@
 from torchgeo.datasets import OSCD
 
-t = OSCD(download=True)
+ocsd = OSCD(download=True)
+
+sample = ocsd[1]
+
+print(sample["image"].shape)
+print(sample["mask"].shape)
 

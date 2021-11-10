@@ -3,12 +3,13 @@
 
 """OSCD dataset."""
 
-import glob
 import os
+import glob
+import tifffile
 from typing import Callable, Dict, List, Optional
 
-import numpy as np
 import torch
+import numpy as np
 from PIL import Image
 from torch import Tensor
 
@@ -109,8 +110,9 @@ class OSCD(VisionDataset):
             data and label at that index
         """
         files = self.files[index]
-        image1 = self._load_image(files["image1"])
-        image2 = self._load_image(files["image2"])
+        # TODO: implement choosing bands (right now assuming bands="all")
+        image1 = self._load_image(files["images1"])
+        image2 = self._load_image(files["images2"])
         mask = self._load_target(files["mask"])
 
         image = torch.stack(tensors=[image1, image2], dim=0)
@@ -150,7 +152,7 @@ class OSCD(VisionDataset):
 
         return regions
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, paths: List[str]) -> Tensor:
         """Load a single image.
 
         Args:
@@ -159,13 +161,11 @@ class OSCD(VisionDataset):
         Returns:
             the image
         """
-        filename = os.path.join(path)
-        with Image.open(filename) as img:
-            array = np.array(img.convert("RGB"))
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
-            # Convert from HxWxC to CxHxW
-            tensor = tensor.permute((2, 0, 1))
-            return tensor
+
+        images = np.stack([tifffile.imread(path) for path in paths], axis=0)
+        images = images.astype(np.long)
+        return torch.from_numpy(images)
+
 
     def _load_target(self, path: str) -> Tensor:
         """Load the target mask for a single image.
