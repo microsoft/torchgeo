@@ -13,7 +13,8 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import VisionDataset
-from .utils import download_and_extract_archive
+from .utils import download_url, extract_archive
+
 
 
 class OSCD(VisionDataset):
@@ -46,7 +47,7 @@ class OSCD(VisionDataset):
     """
 
     url = "https://drive.google.com/file/d/1jidN0DKEIybOrP0j7Bos8bGDDq3Varj3"
-    md5 = "1adf156f628aa32fb2e8fe6cada16c04"
+    md5 = "1adf156f628aa32fb2e8fe6cada16c04" # TODO: find this
     filename = "OSCD.zip"
     splits = ["train", "test"]
 
@@ -175,6 +176,49 @@ class OSCD(VisionDataset):
             tensor = tensor.to(torch.long)  # type: ignore[attr-defined]
             return tensor
 
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
+        # Check if the extracted files already exist
+        pathname = os.path.join(self.root, "**", self.filename_glob)
+        for fname in glob.iglob(pathname, recursive=True):
+            if not fname.endswith(".zip"):
+                return
+
+        # Check if the zip files have already been downloaded
+        pathname = os.path.join(self.root, self.zipfile_glob)
+        if glob.glob(pathname):
+            self._extract()
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automaticaly download the dataset."
+            )
+
+        # Download the dataset
+        self._download()
+        self._extract()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+		download_url(
+			self.url,
+			self.root,
+			md5=md5 if self.checksum else None,
+		)
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        pathname = os.path.join(self.root, self.zipfile_glob)
+        for zipfile in glob.iglob(pathname):
+			extract_archive(zipfile)
+
     def _check_integrity(self) -> bool:
         """Checks the integrity of the dataset structure.
 
@@ -187,7 +231,7 @@ class OSCD(VisionDataset):
                 return False
         return True
 
-    def _download(self) -> None:
+    def _download2(self) -> None:
         """Download the dataset and extract it.
 
         Raises:
