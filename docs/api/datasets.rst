@@ -182,6 +182,12 @@ UC Merced
 .. autoclass:: UCMerced
 .. autoclass:: UCMercedDataModule
 
+xView2
+^^^^^^
+
+.. autoclass:: xView2
+.. autoclass:: xView2DataModule
+
 ZueriCrop
 ^^^^^^^^^
 
