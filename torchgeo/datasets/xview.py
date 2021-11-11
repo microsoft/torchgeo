@@ -182,10 +182,16 @@ class XView2(VisionDataset):
         """
         sample = self[index]
         image1 = draw_semantic_segmentation_masks(
-            sample["image"][0], sample["mask"][0], alpha=alpha, colors=self.colormap
+            sample["image"][0],
+            sample["mask"][0],
+            alpha=alpha,
+            colors=self.colormap  # type: ignore[arg-type]
         )
         image2 = draw_semantic_segmentation_masks(
-            sample["image"][1], sample["mask"][1], alpha=alpha, colors=self.colormap
+            sample["image"][1],
+            sample["mask"][1],
+            alpha=alpha,
+            colors=self.colormap  # type: ignore[arg-type]
         )
         fig, (ax1, ax2) = plt.subplots(ncols=2)
         fig.set_size_inches((25, 25))

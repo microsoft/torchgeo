@@ -443,7 +443,7 @@ def draw_semantic_segmentation_masks(
     mask: Tensor,
     alpha: float = 0.5,
     colors: Optional[ColorMap] = None,
-) -> np.ndarray:
+) -> np.ndarray:  # type: ignore[type-arg]
     """Overlay a semantic segmentation mask onto an image.
 
     Args:
@@ -454,11 +454,11 @@ def draw_semantic_segmentation_masks(
     Returns:
         a list of the subset datasets. Either [train, val] or [train, val, test]
     """
-    classes = torch.unique(mask)
+    classes = torch.unique(mask)  # type: ignore[attr-defined]
     classes = classes[1:]
     class_masks = mask == classes[:, None, None]
     img = draw_segmentation_masks(
         image=image, masks=class_masks, alpha=alpha, colors=colors
     )
-    img = img.permute((1, 2, 0))
-    return img.numpy()
+    img = img.permute((1, 2, 0)).numpy()
+    return img  # type: ignore[no-any-return]
