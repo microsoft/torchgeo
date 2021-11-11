@@ -34,6 +34,7 @@ from .utils import BoundingBox, disambiguate_timestamp
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 Dataset.__module__ = "torch.utils.data"
+ImageFolder.__module__ = "torchvision.datasets"
 
 
 class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
