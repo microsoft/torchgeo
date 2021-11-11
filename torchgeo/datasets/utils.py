@@ -32,7 +32,7 @@ __all__ = (
     "collate_dict",
     "rasterio_loader",
     "dataset_split",
-    "sort_sentinel2_bands"
+    "sort_sentinel2_bands",
 )
 
 
