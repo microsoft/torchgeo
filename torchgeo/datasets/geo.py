@@ -26,7 +26,7 @@ from rasterio.windows import from_bounds
 from rtree.index import Index, Property
 from torch import Tensor
 from torch.utils.data import Dataset
-from torchvision.datasets.folder import ImageFolder
+from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
 
 from .utils import BoundingBox, disambiguate_timestamp
