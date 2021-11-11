@@ -26,7 +26,7 @@ from rasterio.windows import from_bounds
 from rtree.index import Index, Property
 from torch import Tensor
 from torch.utils.data import Dataset
-from torchvision.datasets.folder import ImageFolder
+from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
 
 from .utils import BoundingBox, disambiguate_timestamp
@@ -34,6 +34,7 @@ from .utils import BoundingBox, disambiguate_timestamp
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 Dataset.__module__ = "torch.utils.data"
+ImageFolder.__module__ = "torchvision.datasets"
 
 
 class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
