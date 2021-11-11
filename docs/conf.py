@@ -59,6 +59,7 @@ nitpick_ignore = [
     ("py:class", ".."),
     # TODO: can't figure out why this isn't found
     ("py:class", "LightningDataModule"),
+    ("py:class", "torchvision.datasets.folder.ImageFolder"),
 ]
 
 
