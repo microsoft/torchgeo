@@ -11,6 +11,7 @@ from .naipchesapeake import NAIPChesapeakeDataModule, NAIPChesapeakeSegmentation
 from .resisc45 import RESISC45ClassificationTask, RESISC45DataModule
 from .sen12ms import SEN12MSDataModule, SEN12MSSegmentationTask
 from .so2sat import So2SatClassificationTask, So2SatDataModule
+from .SSLEvaluator import SSLSegmentationFineTunerEvaluator, SSLClassificationProbingEvaluator
 
 __all__ = (
     "BYOLTask",
@@ -28,6 +29,8 @@ __all__ = (
     "SEN12MSSegmentationTask",
     "So2SatDataModule",
     "So2SatClassificationTask",
+    "SSLClassificationProbingEvaluator",
+    "SSLSegmentationFineTunerEvaluator",
 )
 
 # https://stackoverflow.com/questions/40018681
