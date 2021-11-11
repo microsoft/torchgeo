@@ -422,6 +422,7 @@ def dataset_split(
         train_length = len(dataset) - (val_length + test_length)
         return random_split(dataset, [train_length, val_length, test_length])
 
+
 def sort_sentinel2_bands(x: str) -> str:
     """Sort Sentinel-2 band files in the correct order."""
     x = os.path.basename(x).split("_")[-1]
