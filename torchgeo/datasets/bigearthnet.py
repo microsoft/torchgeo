@@ -18,20 +18,11 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
 
 from .geo import VisionDataset
-from .utils import download_url, extract_archive
+from .utils import download_url, extract_archive, sort_sentinel2_bands
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 DataLoader.__module__ = "torch.utils.data"
-
-
-def sort_bands(x: str) -> str:
-    """Sort Sentinel-2 band files in the correct order."""
-    x = os.path.basename(x).split("_")[-1]
-    x = os.path.splitext(x)[0]
-    if x == "B8A":
-        x = "B08A"
-    return x
 
 
 class BigEarthNet(VisionDataset):
@@ -369,7 +360,7 @@ class BigEarthNet(VisionDataset):
             paths_s1 = glob.glob(os.path.join(folder_s1, "*.tif"))
             paths_s2 = glob.glob(os.path.join(folder_s2, "*.tif"))
             paths_s1 = sorted(paths_s1)
-            paths_s2 = sorted(paths_s2, key=sort_bands)
+            paths_s2 = sorted(paths_s2, key=sort_sentinel2_bands)
             paths = paths_s1 + paths_s2
         elif self.bands == "s1":
             folder = self.folders[index]["s1"]
@@ -378,7 +369,7 @@ class BigEarthNet(VisionDataset):
         else:
             folder = self.folders[index]["s2"]
             paths = glob.glob(os.path.join(folder, "*.tif"))
-            paths = sorted(paths, key=sort_bands)
+            paths = sorted(paths, key=sort_sentinel2_bands)
 
         return paths
 
