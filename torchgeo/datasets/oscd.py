@@ -6,6 +6,7 @@
 import os
 import glob
 import tifffile
+import rasterio
 from typing import Callable, Dict, List, Optional
 
 import torch
@@ -154,7 +155,8 @@ class OSCD(VisionDataset):
             the image
         """
 
-        images = np.stack([tifffile.imread(path) for path in paths], axis=0)
+        # images = np.stack([tifffile.imread(path) for path in paths], axis=0)
+        images = np.stack([rasterio.open(path).read() for path in paths], axis=0)
         images = images.astype(np.long)
         return torch.from_numpy(images)
 
