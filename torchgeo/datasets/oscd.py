@@ -14,16 +14,8 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import VisionDataset
-from .utils import download_url, extract_archive
+from .utils import download_url, extract_archive, sort_sentinel2_bands
 
-
-def sort_bands(x: str) -> str:
-    """Sort Sentinel-2 band files in the correct order."""
-    x = os.path.basename(x).split("_")[-1]
-    x = os.path.splitext(x)[0]
-    if x == "B8A":
-        x = "B08A"
-    return x
 
 class OSCD(VisionDataset):
     # TODO: update this to OSCD
@@ -143,8 +135,8 @@ class OSCD(VisionDataset):
             mask = os.path.join(labels_root, region, "cm", "cm.png")
             images1 = glob.glob(os.path.join(images_root, region, "imgs_1_rect", "*.tif"))
             images2 = glob.glob(os.path.join(images_root, region, "imgs_2_rect", "*.tif"))
-            images1 = sorted(images1, key=sort_bands)
-            images2 = sorted(images2, key=sort_bands)
+            images1 = sorted(images1, key=sort_sentinel2_bands)
+            images2 = sorted(images2, key=sort_sentinel2_bands)
             with open(os.path.join(images_root, region, "dates.txt")) as f:
                 dates = tuple([line.split()[-1] for line in f.read().strip().splitlines()])
 
