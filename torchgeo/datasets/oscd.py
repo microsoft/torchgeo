@@ -5,7 +5,6 @@
 
 import os
 import glob
-import tifffile
 import rasterio
 from typing import Callable, Dict, List, Optional
 
