@@ -3,13 +3,13 @@
 
 """OSCD dataset."""
 
-import os
 import glob
-import rasterio
+import os
 from typing import Callable, Dict, List, Optional
 
-import torch
 import numpy as np
+import rasterio
+import torch
 from PIL import Image
 from torch import Tensor
 
@@ -47,7 +47,7 @@ class OSCD(VisionDataset):
     """
 
     url = "https://drive.google.com/file/d/1jidN0DKEIybOrP0j7Bos8bGDDq3Varj3"
-    md5 = "1adf156f628aa32fb2e8fe6cada16c04" # TODO: find this
+    md5 = "1adf156f628aa32fb2e8fe6cada16c04"  # TODO: find this
 
     # TODO: find better way to solve nested zip file structure
     zipfile_glob = "*OSCD.zip"
@@ -123,24 +123,42 @@ class OSCD(VisionDataset):
         """
         return len(self.files)
 
-    # TODO: this needs to be refactored 
+    # TODO: this needs to be refactored
     def _load_files(self) -> List[Dict[str, str]]:
         regions = []
         temp_split = "Test" if self.split == "test" else "Train"
-        labels_root = os.path.join(self.root, f"Onera Satellite Change Detection dataset - {temp_split} Labels")
-        images_root = os.path.join(self.root, "Onera Satellite Change Detection dataset - Images")
+        labels_root = os.path.join(
+            self.root, f"Onera Satellite Change Detection dataset - {temp_split} Labels"
+        )
+        images_root = os.path.join(
+            self.root, "Onera Satellite Change Detection dataset - Images"
+        )
         folders = glob.glob(os.path.join(labels_root, "*/"))
         for folder in folders:
             region = folder.split(os.sep)[-2]
             mask = os.path.join(labels_root, region, "cm", "cm.png")
-            images1 = glob.glob(os.path.join(images_root, region, "imgs_1_rect", "*.tif"))
-            images2 = glob.glob(os.path.join(images_root, region, "imgs_2_rect", "*.tif"))
+            images1 = glob.glob(
+                os.path.join(images_root, region, "imgs_1_rect", "*.tif")
+            )
+            images2 = glob.glob(
+                os.path.join(images_root, region, "imgs_2_rect", "*.tif")
+            )
             images1 = sorted(images1, key=sort_sentinel2_bands)
             images2 = sorted(images2, key=sort_sentinel2_bands)
             with open(os.path.join(images_root, region, "dates.txt")) as f:
-                dates = tuple([line.split()[-1] for line in f.read().strip().splitlines()])
+                dates = tuple(
+                    [line.split()[-1] for line in f.read().strip().splitlines()]
+                )
 
-            regions.append(dict(region=region, images1=images1, images2=images2, mask=mask, dates=dates))
+            regions.append(
+                dict(
+                    region=region,
+                    images1=images1,
+                    images2=images2,
+                    mask=mask,
+                    dates=dates,
+                )
+            )
 
         return regions
 
@@ -153,12 +171,10 @@ class OSCD(VisionDataset):
         Returns:
             the image
         """
-
         # images = np.stack([tifffile.imread(path) for path in paths], axis=0)
         images = np.stack([rasterio.open(path).read() for path in paths], axis=0)
         images = images.astype(np.long)
         return torch.from_numpy(images)
-
 
     def _load_target(self, path: str) -> Tensor:
         """Load the target mask for a single image.
@@ -179,10 +195,10 @@ class OSCD(VisionDataset):
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
+
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-
         # Check if the extracted files already exist
         pathname = os.path.join(self.root, "**", self.filename_glob)
         for fname in glob.iglob(pathname, recursive=True):
@@ -210,10 +226,10 @@ class OSCD(VisionDataset):
     def _download(self) -> None:
         """Download the dataset."""
         download_url(
-                self.url,
-                self.root,
-                filename=self.filename,
-                md5=md5 if self.checksum else None,
+            self.url,
+            self.root,
+            filename=self.filename,
+            md5=md5 if self.checksum else None,
         )
 
     def _extract(self) -> None:

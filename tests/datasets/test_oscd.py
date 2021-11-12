@@ -6,4 +6,3 @@ sample = ocsd[1]
 
 print(sample["image"].shape)
 print(sample["mask"].shape)
-
