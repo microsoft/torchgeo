@@ -19,7 +19,7 @@ import rasterio
 import torch
 from torch import Tensor
 from torch.utils.data import Dataset, Subset, random_split
-from torchvision.datasets.utils import download_url
+from torchvision.datasets.utils import check_integrity, download_url
 
 
 class _rarfile:
