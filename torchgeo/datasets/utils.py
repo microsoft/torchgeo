@@ -22,17 +22,17 @@ from torch.utils.data import Dataset, Subset, random_split
 from torchvision.datasets.utils import check_integrity, download_url
 
 __all__ = (
-     "check_integrity",
-     "download_url",
-     "download_and_extract_archive",
-     "extract_archive",
-     "BoundingBox",
-     "disambiguate_timestamp",
-     "working_dir",
-     "collate_dict",
-     "rasterio_loader",
-     "dataset_split",
-	 "sort_sentinel2_bands",
+    "check_integrity",
+    "download_url",
+    "download_and_extract_archive",
+    "extract_archive",
+    "BoundingBox",
+    "disambiguate_timestamp",
+    "working_dir",
+    "collate_dict",
+    "rasterio_loader",
+    "dataset_split",
+    "sort_sentinel2_bands",
 )
 
 
