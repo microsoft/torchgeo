@@ -104,6 +104,7 @@ intersphinx_mapping = {
     "rasterio": ("https://rasterio.readthedocs.io/en/latest/", None),
     "rtree": ("https://rtree.readthedocs.io/en/latest/", None),
     "torch": ("https://pytorch.org/docs/stable", None),
+    "torchvision": ("https://pytorch.org/vision/stable", None),
 }
 
 # nbsphinx
