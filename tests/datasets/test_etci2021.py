@@ -35,19 +35,19 @@ class TestETCI2021:
         metadata = {
             "train": {
                 "filename": "train.zip",
-                "md5": "50c10eb07d6db9aee3ba36401e4a2c45",
+                "md5": "1f2544bb1f59b623bcf7569e25fdd21e",
                 "directory": "train",
                 "url": os.path.join(data_dir, "train.zip"),
             },
             "val": {
                 "filename": "val_with_ref_labels.zip",
-                "md5": "3e8b5a3cb95e6029e0e2c2d4b4ec6fba",
+                "md5": "1f973eb2f78753518753ae892b675248",
                 "directory": "test",
                 "url": os.path.join(data_dir, "val_with_ref_labels.zip"),
             },
             "test": {
                 "filename": "test_without_ref_labels.zip",
-                "md5": "c8ee1e5d3e478761cd00ebc6f28b0ae7",
+                "md5": "44f4e71e3c52812c64e846e8cdc9fdd8",
                 "directory": "test_internal",
                 "url": os.path.join(data_dir, "test_without_ref_labels.zip"),
             },
