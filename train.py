@@ -28,17 +28,17 @@ from torchgeo.datasets import (
 )
 from torchgeo.trainers import (
     BYOLTask,
-    ChesapeakeCVPRSegmentationTask,
     ClassificationTask,
-    ETCI2021SemanticSegmentationTask,
-    LandCoverAISegmentationTask,
     MultiLabelClassificationTask,
-    NAIPChesapeakeSegmentationTask,
     RegressionTask,
-    RESISC45ClassificationTask,
     SemanticSegmentationTask,
-    So2SatClassificationTask,
 )
+from torchgeo.trainers.chesapeake import ChesapeakeCVPRSegmentationTask
+from torchgeo.trainers.etci2021 import ETCI2021SemanticSegmentationTask
+from torchgeo.trainers.landcoverai import LandCoverAISegmentationTask
+from torchgeo.trainers.naipchesapeake import NAIPChesapeakeSegmentationTask
+from torchgeo.trainers.resisc45 import RESISC45ClassificationTask
+from torchgeo.trainers.so2sat import So2SatClassificationTask
 
 TASK_TO_MODULES_MAPPING: Dict[
     str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
