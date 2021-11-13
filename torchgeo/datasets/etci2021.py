@@ -7,9 +7,11 @@ import glob
 import os
 from typing import Any, Callable, Dict, List, Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Generator, Tensor  # type: ignore[attr-defined]
 from torch.utils.data import DataLoader, random_split
@@ -259,35 +261,68 @@ class ETCI2021(VisionDataset):
         )
 
     @staticmethod
-    def plot(sample: Dict[str, Tensor]) -> None:
+    def plot(
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: a sample returned by :meth:`__getitem__`
-        """
-        import matplotlib.pyplot as plt
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
 
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
         vv = np.rollaxis(sample["image"][:3].numpy(), 0, 3)
         vh = np.rollaxis(sample["image"][3:].numpy(), 0, 3)
         water_mask = sample["mask"][0].numpy()
+
+        showing_flood_mask = False
+        showing_predictions = False
         num_panels = 3
         if sample["mask"].shape[0] > 1:
             flood_mask = sample["mask"][1].numpy()
             num_panels += 1
+            showing_flood_mask = True
 
-        _, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 3))
+        if "prediction" in sample:
+            predictions = sample["prediction"].numpy()
+            num_panels += 1
+            showing_predictions = True
+
+        fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 3))
         axs[0].imshow(vv)
         axs[0].axis("off")
         axs[1].imshow(vh)
         axs[1].axis("off")
         axs[2].imshow(water_mask)
         axs[2].axis("off")
-        if num_panels == 4:
-            axs[3].imshow(flood_mask)
-            axs[3].axis("off")
-        plt.tight_layout()
-        plt.show()
-        plt.close()
+        if show_titles:
+            axs[0].set_title("VV")
+            axs[1].set_title("VH")
+            axs[2].set_title("Water mask")
+
+        idx = 0
+        if showing_flood_mask:
+            axs[3 + idx].imshow(flood_mask)
+            axs[3 + idx].axis("off")
+            if show_titles:
+                axs[3 + idx].set_title("Flood mask")
+            idx += 1
+
+        if showing_predictions:
+            axs[3 + idx].imshow(predictions)
+            axs[3 + idx].axis("off")
+            if show_titles:
+                axs[3 + idx].set_title("Predictions")
+            idx += 1
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig
 
 
 class ETCI2021DataModule(pl.LightningDataModule):
