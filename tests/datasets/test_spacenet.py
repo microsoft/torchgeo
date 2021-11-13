@@ -13,7 +13,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 
-from torchgeo.datasets import SpaceNet1, SpaceNet2, SpaceNet4
+from torchgeo.datasets import SpaceNet1, SpaceNet2, SpaceNet4, SpaceNet7
 
 TEST_DATA_DIR = "tests/data/spacenet"
 
@@ -171,7 +171,7 @@ class TestSpaceNet4:
 
     def test_getitem(self, dataset: SpaceNet4) -> None:
         # Get image-label pair with empty label to
-        # enusre coverage
+        # ensure coverage
         x = dataset[2]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
@@ -199,3 +199,56 @@ class TestSpaceNet4:
             RuntimeError, match="Collection sn4_AOI_6_Atlanta corrupted"
         ):
             SpaceNet4(root=dataset.root, download=True, checksum=True)
+
+
+class TestSpaceNet7:
+    @pytest.fixture(params=["train", "test"])
+    def dataset(
+        self,
+        request: SubRequest,
+        monkeypatch: Generator[MonkeyPatch, None, None],
+        tmp_path: Path,
+    ) -> SpaceNet7:
+        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            radiant_mlhub.Collection, "fetch", fetch_collection
+        )
+        test_md5 = {
+            "sn7_train_source": "254fd6b16e350b071137b2658332091f",
+            "sn7_train_labels": "05befe86b037a3af75c7143553033664",
+            "sn7_test_source": "37d98d44a9da39657ed4b7beee22a21e",
+        }
+
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            SpaceNet7, "collection_md5_dict", test_md5
+        )
+        root = str(tmp_path)
+        transforms = nn.Identity()  # type: ignore[attr-defined]
+        return SpaceNet7(
+            root, split=request.param, transforms=transforms, download=True, api_key=""
+        )
+
+    def test_getitem(self, dataset: SpaceNet7) -> None:
+        x = dataset[0]
+        assert isinstance(x, dict)
+        assert isinstance(x["image"], torch.Tensor)
+        if dataset.split == "train":
+            assert isinstance(x["mask"], torch.Tensor)
+
+    def test_len(self, dataset: SpaceNet7) -> None:
+        if dataset.split == "train":
+            assert len(dataset) == 2
+        else:
+            assert len(dataset) == 1
+
+    def test_already_downloaded(self, dataset: SpaceNet4) -> None:
+        SpaceNet7(root=dataset.root, download=True)
+
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(RuntimeError, match="Dataset not found"):
+            SpaceNet7(str(tmp_path))
+
+    def test_collection_checksum(self, dataset: SpaceNet4) -> None:
+        dataset.collection_md5_dict["sn7_train_source"] = "randommd5hash123"
+        with pytest.raises(RuntimeError, match="Collection sn7_train_source corrupted"):
+            SpaceNet7(root=dataset.root, download=True, checksum=True)
