@@ -13,7 +13,18 @@ import tarfile
 import zipfile
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple, Union, cast
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+    cast,
+    overload,
+)
 
 import numpy as np
 import rasterio
@@ -222,7 +233,15 @@ class BoundingBox:
                 f"Bounding box is invalid: 'mint={self.mint}' > 'maxt={self.maxt}'"
             )
 
+    @overload
     def __getitem__(self, key: int) -> float:
+        pass
+
+    @overload
+    def __getitem__(self, key: slice) -> List[float]:
+        pass
+
+    def __getitem__(self, key: Union[int, slice]) -> Union[float, List[float]]:
         """Index the (minx, maxx, miny, maxy, mint, maxt) tuple.
 
         Args:
@@ -236,7 +255,7 @@ class BoundingBox:
         """
         return [self.minx, self.maxx, self.miny, self.maxy, self.mint, self.maxt][key]
 
-    def __iter__(self) -> float:
+    def __iter__(self) -> Iterator[float]:
         """Container iterator.
 
         Returns:

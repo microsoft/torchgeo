@@ -176,7 +176,7 @@ class TestBoundingBox:
 
         assert bbox[0] == 0
         assert bbox[-1] == 5
-        assert bbox[1:3] == (1, 2)
+        assert bbox[1:3] == [1, 2]
 
     def test_repr_str(self) -> None:
         bbox = BoundingBox(0, 1, 2.0, 3.0, -5, -4)
