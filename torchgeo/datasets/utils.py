@@ -235,11 +235,31 @@ class BoundingBox:
 
     @overload
     def __getitem__(self, key: int) -> float:
-        pass
+        """Index the (minx, maxx, miny, maxy, mint, maxt) tuple.
+
+        Args:
+            key: integer or slice object
+
+        Returns:
+            the value(s) at that index
+
+        Raises:
+            IndexError: if key is out of bounds
+        """
 
     @overload
     def __getitem__(self, key: slice) -> List[float]:
-        pass
+        """Index the (minx, maxx, miny, maxy, mint, maxt) tuple.
+
+        Args:
+            key: integer or slice object
+
+        Returns:
+            the value(s) at that index
+
+        Raises:
+            IndexError: if key is out of bounds
+        """
 
     def __getitem__(self, key: Union[int, slice]) -> Union[float, List[float]]:
         """Index the (minx, maxx, miny, maxy, mint, maxt) tuple.
