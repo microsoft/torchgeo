@@ -293,14 +293,14 @@ class BoundingBox(Tuple[float, float, float, float, float, float]):
             and self.maxt >= other.mint
         )
 
-    def contains(self, other: "BoundingBox") -> bool:
-        """Whether this bounding box contains the other.
+    def __contains__(self, other: "BoundingBox") -> bool:
+        """Whether or not other is within the bounds of this bounding box.
 
         Args:
             other: another bounding box
 
         Returns:
-            True if this bounding box contains the other, else False
+            True if other is within this bounding box, else False
         """
         return (
             (self.minx <= other.minx <= self.maxx)

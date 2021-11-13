@@ -30,7 +30,7 @@ from .eurosat import EuroSAT, EuroSATDataModule
 from .geo import (
     GeoDataset,
     RasterDataset,
-    UnionDataset
+    UnionDataset,
     VectorDataset,
     VisionClassificationDataset,
     VisionDataset,
