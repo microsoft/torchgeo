@@ -233,33 +233,14 @@ class BoundingBox:
                 f"Bounding box is invalid: 'mint={self.mint}' > 'maxt={self.maxt}'"
             )
 
+    # https://github.com/PyCQA/pydocstyle/issues/525
     @overload
-    def __getitem__(self, key: int) -> float:
-        """Index the (minx, maxx, miny, maxy, mint, maxt) tuple.
-
-        Args:
-            key: integer or slice object
-
-        Returns:
-            the value(s) at that index
-
-        Raises:
-            IndexError: if key is out of bounds
-        """
+    def __getitem__(self, key: int) -> float:  # noqa: D105
+        pass
 
     @overload
-    def __getitem__(self, key: slice) -> List[float]:
-        """Index the (minx, maxx, miny, maxy, mint, maxt) tuple.
-
-        Args:
-            key: integer or slice object
-
-        Returns:
-            the value(s) at that index
-
-        Raises:
-            IndexError: if key is out of bounds
-        """
+    def __getitem__(self, key: slice) -> List[float]:  # noqa: D105
+        pass
 
     def __getitem__(self, key: Union[int, slice]) -> Union[float, List[float]]:
         """Index the (minx, maxx, miny, maxy, mint, maxt) tuple.
