@@ -222,11 +222,7 @@ class UCMercedDataModule(pl.LightningDataModule):
     band_stds = torch.tensor([1, 1, 1])  # type: ignore[attr-defined]
 
     def __init__(
-        self,
-        root_dir: str,
-        batch_size: int = 64,
-        num_workers: int = 0,
-        **kwargs: Any,
+        self, root_dir: str, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
         """Initialize a LightningDataModule for UCMerced based DataLoaders.
 

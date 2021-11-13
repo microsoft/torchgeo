@@ -216,11 +216,7 @@ class RESISC45DataModule(pl.LightningDataModule):
     )
 
     def __init__(
-        self,
-        root_dir: str,
-        batch_size: int = 64,
-        num_workers: int = 0,
-        **kwargs: Any,
+        self, root_dir: str, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
         """Initialize a LightningDataModule for RESISC45 based DataLoaders.
 

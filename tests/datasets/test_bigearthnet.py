@@ -158,13 +158,7 @@ class TestBigEarthNetDataModule:
         num_classes = 19
         batch_size = 1
         num_workers = 0
-        dm = BigEarthNetDataModule(
-            root,
-            bands,
-            num_classes,
-            batch_size,
-            num_workers,
-        )
+        dm = BigEarthNetDataModule(root, bands, num_classes, batch_size, num_workers)
         dm.prepare_data()
         dm.setup()
         return dm
