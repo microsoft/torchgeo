@@ -34,7 +34,6 @@ from torchgeo.trainers import (
     SemanticSegmentationTask,
 )
 from torchgeo.trainers.chesapeake import ChesapeakeCVPRSegmentationTask
-from torchgeo.trainers.etci2021 import ETCI2021SemanticSegmentationTask
 from torchgeo.trainers.landcoverai import LandCoverAISegmentationTask
 from torchgeo.trainers.naipchesapeake import NAIPChesapeakeSegmentationTask
 from torchgeo.trainers.resisc45 import RESISC45ClassificationTask
@@ -48,7 +47,7 @@ TASK_TO_MODULES_MAPPING: Dict[
     "chesapeake_cvpr": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
     "cowc_counting": (RegressionTask, COWCCountingDataModule),
     "cyclone": (RegressionTask, CycloneDataModule),
-    "etci2021": (ETCI2021SemanticSegmentationTask, ETCI2021DataModule),
+    "etci2021": (ClassificationTask, ETCI2021DataModule),
     "landcoverai": (LandCoverAISegmentationTask, LandCoverAIDataModule),
     "naipchesapeake": (NAIPChesapeakeSegmentationTask, NAIPChesapeakeDataModule),
     "resisc45": (RESISC45ClassificationTask, RESISC45DataModule),
