@@ -59,7 +59,7 @@ from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS, SEN12MSDataModule
 from .sentinel import Sentinel, Sentinel2
 from .so2sat import So2Sat, So2SatDataModule
-from .spacenet import SpaceNet, SpaceNet1, SpaceNet2, SpaceNet4
+from .spacenet import SpaceNet, SpaceNet1, SpaceNet2, SpaceNet4, SpaceNet7
 from .ucmerced import UCMerced, UCMercedDataModule
 from .utils import BoundingBox, collate_dict
 from .zuericrop import ZueriCrop
@@ -123,6 +123,7 @@ __all__ = (
     "SpaceNet1",
     "SpaceNet2",
     "SpaceNet4",
+    "SpaceNet7",
     "TropicalCycloneWindEstimation",
     "CycloneDataModule",
     "UCMerced",
