@@ -84,3 +84,10 @@ class TestETCI2021:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             ETCI2021(str(tmp_path))
+
+    def test_plot(self, dataset: ETCI2021) -> None:
+        x = dataset[0].copy()
+        ETCI2021.plot(x, suptitle="Test")
+        ETCI2021.plot(x, show_titles=False)
+        x["prediction"] = x["mask"][0].clone()
+        ETCI2021.plot(x)
