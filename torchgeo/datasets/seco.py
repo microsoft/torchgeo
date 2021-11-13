@@ -56,18 +56,12 @@ class SeasonalContrastS2(VisionDataset):
         # 36.3 GB
         "1m": "https://zenodo.org/record/4728033/files/seco_1m.zip?download=1",
     }
-    filenames = {
-        "100k": "seco_100k.zip",
-        "1m": "seco_1m.zip",
-    }
+    filenames = {"100k": "seco_100k.zip", "1m": "seco_1m.zip"}
     md5s = {
         "100k": "ebf2d5e03adc6e657f9a69a20ad863e0",
         "1m": "187963d852d4d3ce6637743ec3a4bd9e",
     }
-    directory_names = {
-        "100k": "seasonal_contrast_100k",
-        "1m": "seasonal_contrast_1m",
-    }
+    directory_names = {"100k": "seasonal_contrast_100k", "1m": "seasonal_contrast_1m"}
 
     def __init__(
         self,
@@ -172,11 +166,7 @@ class SeasonalContrastS2(VisionDataset):
         all_data = []
         for band in self.bands:
             fn = os.path.join(
-                self.root,
-                self.directory_name,
-                scene_name,
-                patch_name,
-                f"{band}.tif",
+                self.root, self.directory_name, scene_name, patch_name, f"{band}.tif"
             )
             with rasterio.open(fn) as f:
                 band_data = f.read(1)
@@ -238,6 +228,4 @@ class SeasonalContrastS2(VisionDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        extract_archive(
-            os.path.join(self.root, self.filename),
-        )
+        extract_archive(os.path.join(self.root, self.filename))
