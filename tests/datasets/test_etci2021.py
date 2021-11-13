@@ -72,10 +72,7 @@ class TestETCI2021:
             assert x["mask"].shape[0] == 1
 
     def test_len(self, dataset: ETCI2021) -> None:
-        if dataset.split == "train":
-            assert len(dataset) == 12
-        else:
-            assert len(dataset) == 4
+        assert len(dataset) == 2
 
     def test_already_downloaded(self, dataset: ETCI2021) -> None:
         ETCI2021(root=dataset.root, download=True)

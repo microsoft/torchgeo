@@ -47,7 +47,7 @@ TASK_TO_MODULES_MAPPING: Dict[
     "chesapeake_cvpr": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
     "cowc_counting": (RegressionTask, COWCCountingDataModule),
     "cyclone": (RegressionTask, CycloneDataModule),
-    "etci2021": (ClassificationTask, ETCI2021DataModule),
+    "etci2021": (SemanticSegmentationTask, ETCI2021DataModule),
     "landcoverai": (LandCoverAISegmentationTask, LandCoverAIDataModule),
     "naipchesapeake": (NAIPChesapeakeSegmentationTask, NAIPChesapeakeDataModule),
     "resisc45": (RESISC45ClassificationTask, RESISC45DataModule),
