@@ -16,7 +16,7 @@ jobs:
     - name: Set up python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: "3.10"
     - name: Install apt dependencies
       run: |
         sudo apt-add-repository ppa:ubuntugis/ubuntugis-unstable
@@ -40,7 +40,7 @@ jobs:
     - name: Set up python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: "3.10"
     - name: Install pip dependencies
       run: pip install .[datasets,tests,train]
     - name: Run integration checks

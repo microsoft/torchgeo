@@ -16,7 +16,7 @@ jobs:
     - name: Set up python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: "3.10"
     - name: Install pip dependencies
       run: |
         pip install cython numpy  # needed for pycocotools
@@ -29,10 +29,10 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
         exclude:
         - os: windows-latest
-          python-version: 3.6
+          python-version: "3.6"
     steps:
     - name: Clone repo
       uses: actions/checkout@v2
