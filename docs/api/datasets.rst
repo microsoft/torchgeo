@@ -105,6 +105,7 @@ ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: ETCI2021
+.. autoclass:: ETCI2021DataModule
 
 EuroSAT
 ^^^^^^^^^^^^^^^^^^^^^^^^

@@ -53,7 +53,7 @@ class SemanticSegmentationTask(LightningModule):
 
         if self.hparams["loss"] == "ce":
             self.loss = nn.CrossEntropyLoss(  # type: ignore[attr-defined]
-                ignore_index=0
+                ignore_index=-1000 if self.ignore_zeros is None else 0
             )
         elif self.hparams["loss"] == "jaccard":
             self.loss = smp.losses.JaccardLoss(
@@ -61,7 +61,7 @@ class SemanticSegmentationTask(LightningModule):
             )
         elif self.hparams["loss"] == "focal":
             self.loss = smp.losses.FocalLoss(
-                "multiclass", ignore_index=0, normalized=True
+                "multiclass", ignore_index=self.ignore_zeros, normalized=True
             )
         else:
             raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
@@ -77,6 +77,7 @@ class SemanticSegmentationTask(LightningModule):
             in_channels: Number of channels in input image
             num_classes: Number of semantic classes to predict
             loss: Name of the loss function
+            ignore_zeros: Whether to ignore the "0" class value in the loss and metrics
 
         Raises:
             ValueError: if kwargs arguments are invalid
@@ -84,12 +85,20 @@ class SemanticSegmentationTask(LightningModule):
         super().__init__()
         self.save_hyperparameters()  # creates `self.hparams` from kwargs
 
+        self.ignore_zeros = None if kwargs["ignore_zeros"] else 0
+
         self.config_task()
 
         self.train_metrics = MetricCollection(
             [
-                Accuracy(num_classes=self.hparams["num_classes"], ignore_index=0),
-                IoU(num_classes=self.hparams["num_classes"], ignore_index=0),
+                Accuracy(
+                    num_classes=self.hparams["num_classes"],
+                    ignore_index=self.ignore_zeros,
+                ),
+                IoU(
+                    num_classes=self.hparams["num_classes"],
+                    ignore_index=self.ignore_zeros,
+                ),
             ],
             prefix="train_",
         )
