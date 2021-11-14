@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 from torch.utils.data import DataLoader
@@ -18,6 +19,7 @@ from torchvision.transforms import Compose
 
 from ..datasets.utils import dataset_split, draw_semantic_segmentation_masks
 from .geo import VisionDataset
+from .utils import check_integrity, extract_archive
 
 
 class XView2(VisionDataset):
@@ -47,14 +49,14 @@ class XView2(VisionDataset):
 
     metadata = {
         "train": {
-            "filename": "train_images_labels_targets.tar",
+            "filename": "train_images_labels_targets.tar.gz",
             "md5": "a20ebbfb7eb3452785b63ad02ffd1e16",
-            "directory": "train_images_labels_targets",
+            "directory": "train",
         },
         "test": {
-            "filename": "test_images_labels_targets.tar",
+            "filename": "test_images_labels_targets.tar.gz",
             "md5": "1b39c47e05d1319c17cc8763cee6fe0c",
-            "directory": "test_images_labels_targets",
+            "directory": "test",
         },
     }
     classes = ["background", "no-damage", "minor-damage", "major-damage", "destroyed"]
@@ -65,6 +67,7 @@ class XView2(VisionDataset):
         root: str = "data",
         split: str = "train",
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        checksum: bool = False,
     ) -> None:
         """Initialize a new xView2 dataset instance.
 
@@ -73,11 +76,16 @@ class XView2(VisionDataset):
             split: one of "train" or "test"
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
         assert split in self.metadata
         self.root = root
         self.split = split
         self.transforms = transforms
+        self.checksum = checksum
+
+        self._verify()
+
         self.class2idx = {c: i for i, c in enumerate(self.classes)}
         self.files = self._load_files(root, split)
 
@@ -125,8 +133,8 @@ class XView2(VisionDataset):
         """
         files = []
         directory = self.metadata[split]["directory"]
-        image_root = os.path.join(root, directory, split, "images")
-        mask_root = os.path.join(root, directory, split, "targets")
+        image_root = os.path.join(root, directory, "images")
+        mask_root = os.path.join(root, directory, "targets")
         images = glob.glob(os.path.join(image_root, "*.png"))
         basenames = [os.path.basename(f) for f in images]
         basenames = ["_".join(f.split("_")[:-2]) for f in basenames]
@@ -171,35 +179,104 @@ class XView2(VisionDataset):
             tensor = tensor.to(torch.long)  # type: ignore[attr-defined]
             return tensor
 
-    def plot(self, index: int, alpha: float = 0.5) -> plt.Figure:
-        """Plot a data sample.
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if checksum fails or the dataset is not downloaded
+        """
+        # Check if the files already exist
+        exists = []
+        for split_info in self.metadata.values():
+            for directory in ["images", "labels", "targets"]:
+                exists.append(
+                    os.path.exists(
+                        os.path.join(self.root, split_info["directory"], directory)
+                    )
+                )
+
+        if all(exists):
+            return
+
+        # Check if .tar.gz files already exists (if so then extract)
+        exists = []
+        for split_info in self.metadata.values():
+            filepath = os.path.join(self.root, split_info["filename"])
+            if os.path.isfile(filepath):
+                if self.checksum and not check_integrity(filepath, split_info["md5"]):
+                    raise RuntimeError("Dataset found, but corrupted.")
+                exists.append(True)
+                extract_archive(filepath)
+            else:
+                exists.append(False)
+
+        if all(exists):
+            return
+
+        # Check if the user requested to download the dataset
+        raise RuntimeError(
+            "Dataset not found in `root` directory, either specify a different"
+            + " `root` directory or manually download the dataset to this directory."
+        )
+
+    @staticmethod
+    def plot(
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+        alpha: float = 0.5,
+    ) -> Figure:
+        """Plot a sample from the dataset.
 
         Args:
-            index: the index of the sample to plot
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+            alpha: opacity with which to render predictions on top of the imagery
 
         Returns:
-            the matplotlib.pyplot figure
+            a matplotlib Figure with the rendered sample
         """
-        sample = self[index]
+        ncols = 2
         image1 = draw_semantic_segmentation_masks(
             sample["image"][0],
             sample["mask"][0],
             alpha=alpha,
-            colors=self.colormap  # type: ignore[arg-type]
+            colors=XView2.colormap,  # type: ignore[arg-type]
         )
         image2 = draw_semantic_segmentation_masks(
             sample["image"][1],
             sample["mask"][1],
             alpha=alpha,
-            colors=self.colormap  # type: ignore[arg-type]
+            colors=XView2.colormap,  # type: ignore[arg-type]
         )
-        fig, (ax1, ax2) = plt.subplots(ncols=2)
-        fig.set_size_inches((25, 25))
-        ax1.imshow(image1)
-        ax1.set_axis_off()
-        ax2.imshow(image2)
-        ax2.set_axis_off()
-        plt.tight_layout()
+        if "prediction" in sample:  # NOTE: this assumes predictions are made for post
+            ncols += 1
+            image3 = draw_semantic_segmentation_masks(
+                sample["image"][1],
+                sample["prediction"],
+                alpha=alpha,
+                colors=XView2.colormap,  # type: ignore[arg-type]
+            )
+
+        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
+        axs[0].imshow(image1)
+        axs[0].axis("off")
+        axs[1].imshow(image2)
+        axs[1].axis("off")
+        if ncols > 2:
+            axs[2].imshow(image3)
+            axs[2].axis("off")
+
+        if show_titles:
+            axs[0].set_title("Pre disaster")
+            axs[1].set_title("Post disaster")
+            if ncols > 2:
+                axs[3].set_title("Predictions")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
         return fig
 
 

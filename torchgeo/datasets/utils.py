@@ -34,7 +34,7 @@ __all__ = (
     "rasterio_loader",
     "dataset_split",
     "sort_sentinel2_bands",
-    "draw_semantic_segmentation_masks"
+    "draw_semantic_segmentation_masks",
 )
 
 
@@ -439,10 +439,7 @@ def sort_sentinel2_bands(x: str) -> str:
 
 
 def draw_semantic_segmentation_masks(
-    image: Tensor,
-    mask: Tensor,
-    alpha: float = 0.5,
-    colors: Optional[ColorMap] = None,
+    image: Tensor, mask: Tensor, alpha: float = 0.5, colors: Optional[ColorMap] = None
 ) -> np.ndarray:  # type: ignore[type-arg]
     """Overlay a semantic segmentation mask onto an image.
 
