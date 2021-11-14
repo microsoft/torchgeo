@@ -272,7 +272,7 @@ class XView2(VisionDataset):
             axs[0].set_title("Pre disaster")
             axs[1].set_title("Post disaster")
             if ncols > 2:
-                axs[3].set_title("Predictions")
+                axs[2].set_title("Predictions")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
