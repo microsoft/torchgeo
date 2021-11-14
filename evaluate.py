@@ -69,6 +69,7 @@ def set_up_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--task",
         choices=TASK_TO_MODULES_MAPPING.keys(),
+        required=True,
         type=str,
         help="name of task to test",
     )
@@ -186,7 +187,7 @@ def main(args: argparse.Namespace) -> None:
         }
         assert set(val_row.keys()) == set(test_row.keys())
 
-        fieldnames = list(test_results.keys())
+        fieldnames = list(test_row.keys())
     elif issubclass(TASK, SemanticSegmentationTask):
         val_row: Dict[str, Union[str, float]] = {  # type: ignore[no-redef]
             "split": "val",
