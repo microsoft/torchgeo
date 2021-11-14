@@ -8,54 +8,14 @@
 import argparse
 import csv
 import os
-from typing import Any, Dict, Tuple, Type, Union
+from typing import Any, Dict, Union
 
-import torch
-from torchmetrics import MetricCollection, Accuracy, IoU, Metric
 import pytorch_lightning as pl
+import torch
+from torchmetrics import Accuracy, IoU, Metric, MetricCollection
 
-from torchgeo.datasets import (
-    BigEarthNetDataModule,
-    ChesapeakeCVPRDataModule,
-    COWCCountingDataModule,
-    CycloneDataModule,
-    ETCI2021DataModule,
-    LandCoverAIDataModule,
-    NAIPChesapeakeDataModule,
-    RESISC45DataModule,
-    SEN12MSDataModule,
-    So2SatDataModule,
-    UCMercedDataModule,
-)
-from torchgeo.trainers import (
-    BYOLTask,
-    ClassificationTask,
-    MultiLabelClassificationTask,
-    RegressionTask,
-    SemanticSegmentationTask,
-)
-from torchgeo.trainers.chesapeake import ChesapeakeCVPRSegmentationTask
-from torchgeo.trainers.landcoverai import LandCoverAISegmentationTask
-from torchgeo.trainers.naipchesapeake import NAIPChesapeakeSegmentationTask
-from torchgeo.trainers.resisc45 import RESISC45ClassificationTask
-from torchgeo.trainers.so2sat import So2SatClassificationTask
-
-TASK_TO_MODULES_MAPPING: Dict[
-    str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
-] = {
-    "bigearthnet": (MultiLabelClassificationTask, BigEarthNetDataModule),
-    "byol": (BYOLTask, ChesapeakeCVPRDataModule),
-    "chesapeake_cvpr": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
-    "cowc_counting": (RegressionTask, COWCCountingDataModule),
-    "cyclone": (RegressionTask, CycloneDataModule),
-    "etci2021": (SemanticSegmentationTask, ETCI2021DataModule),
-    "landcoverai": (LandCoverAISegmentationTask, LandCoverAIDataModule),
-    "naipchesapeake": (NAIPChesapeakeSegmentationTask, NAIPChesapeakeDataModule),
-    "resisc45": (RESISC45ClassificationTask, RESISC45DataModule),
-    "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),
-    "so2sat": (So2SatClassificationTask, So2SatDataModule),
-    "ucmerced": (ClassificationTask, UCMercedDataModule),
-}
+from torchgeo import _TASK_TO_MODULES_MAPPING as TASK_TO_MODULES_MAPPING
+from torchgeo.trainers import ClassificationTask, SemanticSegmentationTask
 
 
 def set_up_parser() -> argparse.ArgumentParser:
@@ -126,7 +86,7 @@ def run_eval_loop(
     model: pl.LightningModule,
     dataloader: Any,
     device: torch.device,  # type: ignore[name-defined]
-    metrics: Metric
+    metrics: Metric,
 ) -> Any:
     """Runs a standard test loop over a dataloader and records metrics.
 
@@ -224,27 +184,25 @@ def main(args: argparse.Namespace) -> None:
 
     if args.task == "etci2021":  # Custom metric setup for testing ETCI2021
 
-        metrics = MetricCollection([
-            Accuracy(
-                num_classes=2,
-            ),
-            IoU(
-                num_classes=2,
-                reduction="none"
-            )
-        ]).to(device)
+        metrics = MetricCollection(
+            [Accuracy(num_classes=2), IoU(num_classes=2, reduction="none")]
+        ).to(device)
 
         val_results = run_eval_loop(model, dm.val_dataloader(), device, metrics)
         test_results = run_eval_loop(model, dm.test_dataloader(), device, metrics)
 
-        val_row.update({
-            "overall_accuracy": val_results["Accuracy"].item(),
-            "iou": val_results["IoU"][1].item(),
-        })
-        test_row.update({
-            "overall_accuracy": test_results["Accuracy"].item(),
-            "iou": test_results["IoU"][1].item(),
-        })
+        val_row.update(
+            {
+                "overall_accuracy": val_results["Accuracy"].item(),
+                "iou": val_results["IoU"][1].item(),
+            }
+        )
+        test_row.update(
+            {
+                "overall_accuracy": test_results["Accuracy"].item(),
+                "iou": test_results["IoU"][1].item(),
+            }
+        )
     else:  # Test with PyTorch Lightning as usual
 
         val_results = run_eval_loop(
@@ -256,23 +214,31 @@ def main(args: argparse.Namespace) -> None:
 
         # Save the results and model hyperparameters to a CSV file
         if issubclass(TASK, ClassificationTask):
-            val_row.update({
-                "average_accuracy": val_results["val_AverageAccuracy"].item(),
-                "overall_accuracy": val_results["val_OverallAccuracy"].item(),
-            })
-            test_row.update({
-                "average_accuracy": test_results["test_AverageAccuracy"].item(),
-                "overall_accuracy": test_results["test_OverallAccuracy"].item(),
-            })
+            val_row.update(
+                {
+                    "average_accuracy": val_results["val_AverageAccuracy"].item(),
+                    "overall_accuracy": val_results["val_OverallAccuracy"].item(),
+                }
+            )
+            test_row.update(
+                {
+                    "average_accuracy": test_results["test_AverageAccuracy"].item(),
+                    "overall_accuracy": test_results["test_OverallAccuracy"].item(),
+                }
+            )
         elif issubclass(TASK, SemanticSegmentationTask):
-            val_row.update({
-                "overall_accuracy": val_results["val_Accuracy"].item(),
-                "iou": val_results["val_IoU"].item(),
-            })
-            test_row.update({
-                "overall_accuracy": test_results["test_Accuracy"].item(),
-                "iou": test_results["test_IoU"].item(),
-            })
+            val_row.update(
+                {
+                    "overall_accuracy": val_results["val_Accuracy"].item(),
+                    "iou": val_results["val_IoU"].item(),
+                }
+            )
+            test_row.update(
+                {
+                    "overall_accuracy": test_results["test_Accuracy"].item(),
+                    "iou": test_results["test_IoU"].item(),
+                }
+            )
 
     assert set(val_row.keys()) == set(test_row.keys())
     fieldnames = list(test_row.keys())
