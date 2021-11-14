@@ -26,7 +26,11 @@ class XView2(VisionDataset):
     """xView2 dataset.
 
     The `xView2 <https://xview2.org/>`_
-    dataset is a dataset for building disaster change detection.
+    dataset is a dataset for building disaster change detection. This dataset object
+    uses the "Challenge training set (~7.8 GB)" and "Challenge test set (~2.6 GB)" data
+    from the xView2 website as the train and test splits. Note, the xView2 website
+    contains other data under the xView2 umbrella that are _not_ included here. E.g.
+    the "Tier3 training data", the "Challenge holdout set", and the "full data".
 
     Dataset format:
 
