@@ -8,8 +8,10 @@
 import argparse
 import csv
 import os
-from typing import Dict, Tuple, Type, Union
+from typing import Any, Dict, Tuple, Type, Union
 
+import torch
+from torchmetrics import MetricCollection, Accuracy, IoU, Metric
 import pytorch_lightning as pl
 
 from torchgeo.datasets import (
@@ -69,7 +71,6 @@ def set_up_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--task",
         choices=TASK_TO_MODULES_MAPPING.keys(),
-        required=True,
         type=str,
         help="name of task to test",
     )
@@ -121,6 +122,37 @@ def set_up_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def run_eval_loop(
+    model: pl.LightningModule,
+    dataloader: Any,
+    device: torch.device,  # type: ignore[name-defined]
+    metrics: Metric
+) -> Any:
+    """Runs a standard test loop over a dataloader and records metrics.
+
+    Args:
+        model: the model used for inference
+        dataloader: the dataloader to get samples from
+        device: the device to put data on
+        metrics: a torchmetrics compatible Metric to score the output from the model
+
+    Returns:
+        the result of ``metric.compute()``
+    """
+    for batch in dataloader:
+        x = batch["image"].to(device)
+        if "mask" in batch:
+            y = batch["mask"].to(device)
+        elif "label" in batch:
+            y = batch["label"].to(device)
+        with torch.inference_mode():
+            y_pred = model(x)
+        metrics(y_pred, y)
+    results = metrics.compute()
+    metrics.reset()
+    return results
+
+
 def main(args: argparse.Namespace) -> None:
     """High-level pipeline.
 
@@ -133,13 +165,6 @@ def main(args: argparse.Namespace) -> None:
     assert os.path.exists(args.root_dir)
     TASK = TASK_TO_MODULES_MAPPING[args.task][0]
     DATAMODULE = TASK_TO_MODULES_MAPPING[args.task][1]
-
-    trainer = pl.Trainer(
-        gpus=[args.gpu],
-        logger=False,
-        progress_bar_refresh_rate=0,
-        checkpoint_callback=False,
-    )
 
     # Loads the saved model from checkpoint based on the `args.task` name that was
     # passed as input
@@ -155,16 +180,7 @@ def main(args: argparse.Namespace) -> None:
     )
     dm.setup()
 
-    # Run the model checkpoint on the validation set and the test set and save the
-    # results.
-    # NOTE: we might want to manually run these loops so that we can record different
-    # metrics than those in the different generic tasks
-    val_results = trainer.validate(
-        model=model, dataloaders=dm.val_dataloader(), verbose=False
-    )[0]
-    test_results = trainer.test(model=model, datamodule=dm, verbose=False)[0]
-
-    # Save the results and model hyperparameters to a CSV file
+    # Record model hyperparameters
     if issubclass(TASK, ClassificationTask):
         val_row: Dict[str, Union[str, float]] = {
             "split": "val",
@@ -172,8 +188,6 @@ def main(args: argparse.Namespace) -> None:
             "learning_rate": model.hparams["learning_rate"],
             "weights": model.hparams["weights"],
             "loss": model.hparams["loss"],
-            "average_accuracy": val_results["val_AverageAccuracy"],
-            "overall_accuracy": val_results["val_OverallAccuracy"],
         }
 
         test_row: Dict[str, Union[str, float]] = {
@@ -182,12 +196,7 @@ def main(args: argparse.Namespace) -> None:
             "learning_rate": model.hparams["learning_rate"],
             "weights": model.hparams["weights"],
             "loss": model.hparams["loss"],
-            "average_accuracy": test_results["test_AverageAccuracy"],
-            "overall_accuracy": test_results["test_OverallAccuracy"],
         }
-        assert set(val_row.keys()) == set(test_row.keys())
-
-        fieldnames = list(test_row.keys())
     elif issubclass(TASK, SemanticSegmentationTask):
         val_row: Dict[str, Union[str, float]] = {  # type: ignore[no-redef]
             "split": "val",
@@ -196,8 +205,6 @@ def main(args: argparse.Namespace) -> None:
             "encoder_weights": model.hparams["encoder_weights"],
             "learning_rate": model.hparams["learning_rate"],
             "loss": model.hparams["loss"],
-            "overall_accuracy": val_results["val_Accuracy"],
-            "iou": val_results["val_IoU"],
         }
 
         test_row: Dict[str, Union[str, float]] = {  # type: ignore[no-redef]
@@ -207,14 +214,68 @@ def main(args: argparse.Namespace) -> None:
             "encoder_weights": model.hparams["encoder_weights"],
             "learning_rate": model.hparams["learning_rate"],
             "loss": model.hparams["loss"],
-            "overall_accuracy": test_results["test_Accuracy"],
-            "iou": test_results["test_IoU"],
         }
-        assert set(val_row.keys()) == set(test_row.keys())
-
-        fieldnames = list(test_row.keys())
     else:
         raise ValueError(f"{TASK} is not supported")
+
+    # Compute metrics
+    device = torch.device("cuda:%d" % (args.gpu))  # type: ignore[attr-defined]
+    model = model.to(device)
+
+    if args.task == "etci2021":  # Custom metric setup for testing ETCI2021
+
+        metrics = MetricCollection([
+            Accuracy(
+                num_classes=2,
+            ),
+            IoU(
+                num_classes=2,
+                reduction="none"
+            )
+        ]).to(device)
+
+        val_results = run_eval_loop(model, dm.val_dataloader(), device, metrics)
+        test_results = run_eval_loop(model, dm.test_dataloader(), device, metrics)
+
+        val_row.update({
+            "overall_accuracy": val_results["Accuracy"].item(),
+            "iou": val_results["IoU"][1].item(),
+        })
+        test_row.update({
+            "overall_accuracy": test_results["Accuracy"].item(),
+            "iou": test_results["IoU"][1].item(),
+        })
+    else:  # Test with PyTorch Lightning as usual
+
+        val_results = run_eval_loop(
+            model, dm.val_dataloader(), device, model.val_metrics
+        )
+        test_results = run_eval_loop(
+            model, dm.test_dataloader(), device, model.test_metrics
+        )
+
+        # Save the results and model hyperparameters to a CSV file
+        if issubclass(TASK, ClassificationTask):
+            val_row.update({
+                "average_accuracy": val_results["val_AverageAccuracy"].item(),
+                "overall_accuracy": val_results["val_OverallAccuracy"].item(),
+            })
+            test_row.update({
+                "average_accuracy": test_results["test_AverageAccuracy"].item(),
+                "overall_accuracy": test_results["test_OverallAccuracy"].item(),
+            })
+        elif issubclass(TASK, SemanticSegmentationTask):
+            val_row.update({
+                "overall_accuracy": val_results["val_Accuracy"].item(),
+                "iou": val_results["val_IoU"].item(),
+            })
+            test_row.update({
+                "overall_accuracy": test_results["test_Accuracy"].item(),
+                "iou": test_results["test_IoU"].item(),
+            })
+
+    assert set(val_row.keys()) == set(test_row.keys())
+    fieldnames = list(test_row.keys())
 
     # Write to file
     if not os.path.exists(args.output_fn):
