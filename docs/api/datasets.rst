@@ -105,6 +105,7 @@ ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: ETCI2021
+.. autoclass:: ETCI2021DataModule
 
 EuroSAT
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -167,6 +168,7 @@ SpaceNet
 .. autoclass:: SpaceNet1
 .. autoclass:: SpaceNet2
 .. autoclass:: SpaceNet4
+.. autoclass:: SpaceNet7
 
 Tropical Cyclone Wind Estimation Competition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -25,7 +25,7 @@ from .chesapeake import (
 from .cowc import COWC, COWCCounting, COWCCountingDataModule, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import CycloneDataModule, TropicalCycloneWindEstimation
-from .etci2021 import ETCI2021
+from .etci2021 import ETCI2021, ETCI2021DataModule
 from .eurosat import EuroSAT
 from .geo import (
     GeoDataset,
@@ -60,7 +60,7 @@ from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS, SEN12MSDataModule
 from .sentinel import Sentinel, Sentinel2
 from .so2sat import So2Sat, So2SatDataModule
-from .spacenet import SpaceNet, SpaceNet1, SpaceNet2, SpaceNet4
+from .spacenet import SpaceNet, SpaceNet1, SpaceNet2, SpaceNet4, SpaceNet7
 from .ucmerced import UCMerced, UCMercedDataModule
 from .utils import BoundingBox, collate_dict
 from .zuericrop import ZueriCrop
@@ -107,6 +107,7 @@ __all__ = (
     "COWCCountingDataModule",
     "CV4AKenyaCropType",
     "ETCI2021",
+    "ETCI2021DataModule",
     "EuroSAT",
     "GID15",
     "LandCoverAI",
@@ -125,6 +126,7 @@ __all__ = (
     "SpaceNet1",
     "SpaceNet2",
     "SpaceNet4",
+    "SpaceNet7",
     "TropicalCycloneWindEstimation",
     "CycloneDataModule",
     "UCMerced",
