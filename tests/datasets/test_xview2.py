@@ -16,7 +16,7 @@ from torchgeo.datasets import XView2, XView2DataModule
 
 
 class TestXView2:
-    @pytest.fixture(params=["train", "test"])
+    @pytest.fixture(scope="class", params=["train", "test"])
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
     ) -> XView2:
