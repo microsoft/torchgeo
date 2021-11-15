@@ -447,7 +447,7 @@ def draw_semantic_segmentation_masks(
         image: tensor of shape (3, h, w)
         mask: tensor of shape (h, w) with pixel values representing the classes
         alpha: alpha blend factor
-        colors: (Optional) list of RGB int tuples, or color strings e.g. red, #FF00FF
+        colors: list of RGB int tuples, or color strings e.g. red, #FF00FF
     Returns:
         a list of the subset datasets. Either [train, val] or [train, val, test]
     """
