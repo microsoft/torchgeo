@@ -111,6 +111,7 @@ EuroSAT
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: EuroSAT
+.. autoclass:: EuroSATDataModule
 
 GID-15 (Gaofen Image Dataset)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
