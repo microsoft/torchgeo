@@ -62,6 +62,7 @@ from .so2sat import So2Sat, So2SatDataModule
 from .spacenet import SpaceNet, SpaceNet1, SpaceNet2, SpaceNet4, SpaceNet7
 from .ucmerced import UCMerced, UCMercedDataModule
 from .utils import BoundingBox, collate_dict
+from .xview import XView2, XView2DataModule
 from .zuericrop import ZueriCrop
 
 __all__ = (
@@ -131,6 +132,8 @@ __all__ = (
     "UCMerced",
     "UCMercedDataModule",
     "VHR10",
+    "XView2",
+    "XView2DataModule",
     "ZueriCrop",
     # Base classes
     "GeoDataset",

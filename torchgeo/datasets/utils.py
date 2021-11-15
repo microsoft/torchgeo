@@ -20,6 +20,7 @@ import torch
 from torch import Tensor
 from torch.utils.data import Dataset, Subset, random_split
 from torchvision.datasets.utils import check_integrity, download_url
+from torchvision.utils import draw_segmentation_masks
 
 __all__ = (
     "check_integrity",
@@ -33,7 +34,11 @@ __all__ = (
     "rasterio_loader",
     "dataset_split",
     "sort_sentinel2_bands",
+    "draw_semantic_segmentation_masks",
 )
+
+
+ColorMap = Union[List[Union[str, Tuple[int, int, int]]], str, Tuple[int, int, int]]
 
 
 class _rarfile:
@@ -431,3 +436,26 @@ def sort_sentinel2_bands(x: str) -> str:
     if x == "B8A":
         x = "B08A"
     return x
+
+
+def draw_semantic_segmentation_masks(
+    image: Tensor, mask: Tensor, alpha: float = 0.5, colors: Optional[ColorMap] = None
+) -> np.ndarray:  # type: ignore[type-arg]
+    """Overlay a semantic segmentation mask onto an image.
+
+    Args:
+        image: tensor of shape (3, h, w)
+        mask: tensor of shape (h, w) with pixel values representing the classes
+        alpha: alpha blend factor
+        colors: list of RGB int tuples, or color strings e.g. red, #FF00FF
+    Returns:
+        a list of the subset datasets. Either [train, val] or [train, val, test]
+    """
+    classes = torch.unique(mask)  # type: ignore[attr-defined]
+    classes = classes[1:]
+    class_masks = mask == classes[:, None, None]
+    img = draw_segmentation_masks(
+        image=image, masks=class_masks, alpha=alpha, colors=colors
+    )
+    img = img.permute((1, 2, 0)).numpy()
+    return img  # type: ignore[no-any-return]
