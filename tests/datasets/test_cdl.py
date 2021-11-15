@@ -59,7 +59,7 @@ class TestCDL:
         bbox = dataset.bounds
         time = datetime(2021, 6, 1).timestamp()
         query = BoundingBox(bbox.minx, bbox.maxx, bbox.miny, bbox.maxy, time, time)
-        next(dataset.index.intersection(query))
+        next(dataset.index.intersection(tuple(query)))
 
     def test_already_extracted(self, dataset: CDL) -> None:
         CDL(root=dataset.root, download=True)

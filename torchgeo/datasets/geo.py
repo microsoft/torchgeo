@@ -268,7 +268,7 @@ class RasterDataset(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(query, objects=True)
+        hits = self.index.intersection(tuple(query), objects=True)
         filepaths = [hit.object for hit in hits]
 
         if not filepaths:
@@ -492,7 +492,7 @@ class VectorDataset(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(query, objects=True)
+        hits = self.index.intersection(tuple(query), objects=True)
         filepaths = [hit.object for hit in hits]
 
         if not filepaths:
@@ -833,7 +833,7 @@ class UnionDataset(GeoDataset):
         merged_index = Index(interleaved=False, properties=Property(dimension=3))
         i = 0
         for j, ds in enumerate(datasets):
-            hits = list(ds.index.intersection(ds.bounds, objects=True))
+            hits = list(ds.index.intersection(tuple(ds.bounds), objects=True))
             for hit in hits:
                 merged_index.insert(i, hit.bounds, j)
                 i += 1
@@ -851,7 +851,7 @@ class UnionDataset(GeoDataset):
         Raises:
             IndexError: if query is not within bounds of the index
         """
-        if not query.intersects(self.bounds):
+        if not query.intersects(tuple(self.bounds)):
             raise IndexError(
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
@@ -861,7 +861,7 @@ class UnionDataset(GeoDataset):
         # images and replace with Sentinel images.
         sample = {}
         for ds in self.datasets:
-            if query.intersects(ds.bounds):
+            if query.intersects(tuple(ds.bounds)):
                 try:
                     sample.update(ds[query])
                 except IndexError:

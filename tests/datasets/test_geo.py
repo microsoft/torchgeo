@@ -32,7 +32,7 @@ class CustomGeoDataset(GeoDataset):
         res: float = 1,
     ) -> None:
         super().__init__()
-        self.index.insert(0, bounds)
+        self.index.insert(0, tuple(bounds))
         self.crs = crs
         self.res = res
 

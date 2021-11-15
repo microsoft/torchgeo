@@ -80,7 +80,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         if roi is None:
             roi = BoundingBox(*self.index.bounds)
         self.roi = roi
-        self.hits = list(self.index.intersection(roi, objects=True))
+        self.hits = list(self.index.intersection(tuple(roi), objects=True))
 
     def __iter__(self) -> Iterator[List[BoundingBox]]:
         """Return the indices of a dataset.
