@@ -16,7 +16,7 @@ from torchgeo.datasets import XView2, XView2DataModule
 
 
 class TestXView2:
-    @pytest.fixture(scope="class", params=["train", "test"])
+    @pytest.fixture(params=["train", "test"])
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
     ) -> XView2:
@@ -87,10 +87,10 @@ class TestXView2:
 
     def test_plot(self, dataset: XView2) -> None:
         x = dataset[0].copy()
-        XView2.plot(x, suptitle="Test")
-        XView2.plot(x, show_titles=False)
+        dataset.plot(x, suptitle="Test")
+        dataset.plot(x, show_titles=False)
         x["prediction"] = x["mask"][0].clone()
-        XView2.plot(x)
+        dataset.plot(x)
 
 
 class TestXView2DataModule:

@@ -223,8 +223,8 @@ class XView2(VisionDataset):
             + " `root` directory or manually download the dataset to this directory."
         )
 
-    @staticmethod
     def plot(
+        self,
         sample: Dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
@@ -246,13 +246,13 @@ class XView2(VisionDataset):
             sample["image"][0],
             sample["mask"][0],
             alpha=alpha,
-            colors=XView2.colormap,  # type: ignore[arg-type]
+            colors=self.colormap,  # type: ignore[arg-type]
         )
         image2 = draw_semantic_segmentation_masks(
             sample["image"][1],
             sample["mask"][1],
             alpha=alpha,
-            colors=XView2.colormap,  # type: ignore[arg-type]
+            colors=self.colormap,  # type: ignore[arg-type]
         )
         if "prediction" in sample:  # NOTE: this assumes predictions are made for post
             ncols += 1
@@ -260,7 +260,7 @@ class XView2(VisionDataset):
                 sample["image"][1],
                 sample["prediction"],
                 alpha=alpha,
-                colors=XView2.colormap,  # type: ignore[arg-type]
+                colors=self.colormap,  # type: ignore[arg-type]
             )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
