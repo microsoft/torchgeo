@@ -35,7 +35,7 @@ __all__ = (
     "dataset_split",
     "sort_sentinel2_bands",
     "draw_semantic_segmentation_masks",
-    "rgb_to_mask"
+    "rgb_to_mask",
 )
 
 

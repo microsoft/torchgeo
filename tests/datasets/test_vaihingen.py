@@ -20,7 +20,7 @@ class TestVaihingen:
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
     ) -> Vaihingen:
-        md5s = ["c15fbff78d307e51c73f609c0859afc3", "0cb795003a01154a72db7efaabbc76ae"]
+        md5s = ["c15fbff78d307e51c73f609c0859afc3", "ec2c0a5149f2371479b38cf8cfbab961"]
         splits = {
             "train": ["top_mosaic_09cm_area1.tif", "top_mosaic_09cm_area11.tif"],
             "test": ["top_mosaic_09cm_area6.tif", "top_mosaic_09cm_area24.tif"],
@@ -45,7 +45,7 @@ class TestVaihingen:
         root = os.path.join("tests", "data", "vaihingen")
         filenames = [
             "ISPRS_semantic_labeling_Vaihingen.zip",
-            "ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip"
+            "ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip",
         ]
         for filename in filenames:
             shutil.copyfile(
@@ -56,7 +56,7 @@ class TestVaihingen:
     def test_corrupted(self, tmp_path: Path) -> None:
         filenames = [
             "ISPRS_semantic_labeling_Vaihingen.zip",
-            "ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip"
+            "ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip",
         ]
         for filename in filenames:
             with open(os.path.join(tmp_path, filename), "w") as f:
