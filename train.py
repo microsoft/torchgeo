@@ -6,55 +6,14 @@
 """torchgeo model training script."""
 
 import os
-from typing import Any, Dict, Tuple, Type, cast
+from typing import Any, Dict, cast
 
 import pytorch_lightning as pl
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 
-from torchgeo.datasets import (
-    BigEarthNetDataModule,
-    ChesapeakeCVPRDataModule,
-    COWCCountingDataModule,
-    CycloneDataModule,
-    ETCI2021DataModule,
-    LandCoverAIDataModule,
-    NAIPChesapeakeDataModule,
-    RESISC45DataModule,
-    SEN12MSDataModule,
-    So2SatDataModule,
-    UCMercedDataModule,
-)
-from torchgeo.trainers import (
-    BYOLTask,
-    ClassificationTask,
-    MultiLabelClassificationTask,
-    RegressionTask,
-    SemanticSegmentationTask,
-)
-from torchgeo.trainers.chesapeake import ChesapeakeCVPRSegmentationTask
-from torchgeo.trainers.landcoverai import LandCoverAISegmentationTask
-from torchgeo.trainers.naipchesapeake import NAIPChesapeakeSegmentationTask
-from torchgeo.trainers.resisc45 import RESISC45ClassificationTask
-from torchgeo.trainers.so2sat import So2SatClassificationTask
-
-TASK_TO_MODULES_MAPPING: Dict[
-    str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
-] = {
-    "bigearthnet": (MultiLabelClassificationTask, BigEarthNetDataModule),
-    "byol": (BYOLTask, ChesapeakeCVPRDataModule),
-    "chesapeake_cvpr": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
-    "cowc_counting": (RegressionTask, COWCCountingDataModule),
-    "cyclone": (RegressionTask, CycloneDataModule),
-    "etci2021": (SemanticSegmentationTask, ETCI2021DataModule),
-    "landcoverai": (LandCoverAISegmentationTask, LandCoverAIDataModule),
-    "naipchesapeake": (NAIPChesapeakeSegmentationTask, NAIPChesapeakeDataModule),
-    "resisc45": (RESISC45ClassificationTask, RESISC45DataModule),
-    "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),
-    "so2sat": (So2SatClassificationTask, So2SatDataModule),
-    "ucmerced": (ClassificationTask, UCMercedDataModule),
-}
+from torchgeo import _TASK_TO_MODULES_MAPPING as TASK_TO_MODULES_MAPPING
 
 
 def set_up_omegaconf() -> DictConfig:

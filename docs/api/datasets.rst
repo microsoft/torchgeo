@@ -111,6 +111,7 @@ EuroSAT
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: EuroSAT
+.. autoclass:: EuroSATDataModule
 
 GID-15 (Gaofen Image Dataset)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -186,6 +187,12 @@ UC Merced
 
 .. autoclass:: UCMerced
 .. autoclass:: UCMercedDataModule
+
+xView2
+^^^^^^
+
+.. autoclass:: XView2
+.. autoclass:: XView2DataModule
 
 ZueriCrop
 ^^^^^^^^^
