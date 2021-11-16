@@ -25,7 +25,7 @@ class Vaihingen2D(VisionDataset):
     """Vaihingen 2D Semantic Segmentation dataset.
 
     The `Vaihingen <https://www2.isprs.org/commissions/comm2/wg4/benchmark/2d-sem-label-vaihingen/>`_
-    dataset is a dataset urban semantic segmentation used in the 2D Semantic Labeling
+    dataset is a dataset for urban semantic segmentation used in the 2D Semantic Labeling
     Contest - Vaihingen. This dataset uses the "ISPRS_semantic_labeling_Vaihingen.zip"
     and "ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip" files to create the
     train/test sets used in the challenge. The dataset can be requested at the challenge
