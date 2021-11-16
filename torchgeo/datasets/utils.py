@@ -459,3 +459,24 @@ def draw_semantic_segmentation_masks(
     )
     img = img.permute((1, 2, 0)).numpy()
     return img  # type: ignore[no-any-return]
+
+
+def rgb_to_mask(
+    rgb: np.ndarray, colors: List[Tuple[int, int, int]]
+) -> np.ndarray:  # type: ignore[type-arg]
+    """Converts an RGB colormap mask to a integer mask.
+
+    Args:
+        rgb: array mask of coded with RGB tuples
+        colors: list of RGB tuples to convert to integer indices
+    Returns:
+        integer array mask
+    """
+    h, w = rgb.shape[:2]
+    mask = np.zeros(shape=(h, w), dtype=np.uint8)
+    for i, c in enumerate(colors):
+        cmask = rgb == c
+        # Only update mask if class is present in mask
+        if isinstance(cmask, np.ndarray):
+            mask[cmask.all(axis=-1)] = i
+    return mask
