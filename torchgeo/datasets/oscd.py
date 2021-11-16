@@ -18,7 +18,6 @@ from .utils import download_url, extract_archive, sort_sentinel2_bands
 
 
 class OSCD(VisionDataset):
-    # TODO: update this to OSCD
     """OSCD dataset.
 
     The Onera Satellite Change Detection dataset addresses the issue of detecting
