@@ -21,19 +21,19 @@ class OSCD(VisionDataset):
     # TODO: update this to OSCD
     """OSCD dataset.
 
-    The `LEVIR-CD+ <https://github.com/S2Looking/Dataset>`_
-    dataset is a dataset for building change detection.
+    The Onera Satellite Change Detection dataset addresses the issue of detecting
+    changes between satellite images from different dates.
 
     Dataset features:
 
-    * image pairs of 20 different urban regions across Texas between 2002-2020
-    * binary change masks representing building change
-    * three spectral bands - RGB
-    * 985 image pairs with 50 cm per pixel resolution (~1024x1024 px)
+    * 24 pairs of images from all over the world between 2015-2018
+    * binary change masks representing urban changes such as new buildings or roads
+    * 13 spectral bands
+    * Images vary in spatial resolution between 10m, 20m, and 60m
 
     Dataset format:
 
-    * images are three-channel pngs
+    * images are 13-channel tifs
     * masks are single-channel pngs where no change = 0, change = 255
 
     Dataset classes:
@@ -43,7 +43,7 @@ class OSCD(VisionDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/2107.09244
+    * https://arxiv.org/abs/1810.08468
     """
 
     url = "https://drive.google.com/file/d/1jidN0DKEIybOrP0j7Bos8bGDDq3Varj3"
