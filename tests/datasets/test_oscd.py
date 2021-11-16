@@ -10,8 +10,8 @@ from typing import Generator
 import pytest
 import torch
 import torch.nn as nn
-from torch.utils.data import ConcatDataset
 from _pytest.monkeypatch import MonkeyPatch
+from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import OSCD
