@@ -26,7 +26,7 @@ class Potsdam2D(VisionDataset):
     """Potsdam 2D Semantic Segmentation dataset.
 
     The `Potsdam <https://www2.isprs.org/commissions/comm2/wg4/benchmark/2d-sem-label-potsdam/>`_
-    dataset is a dataset urban semantic segmentation used in the 2D Semantic Labeling
+    dataset is a dataset for urban semantic segmentation used in the 2D Semantic Labeling
     Content - Potsdam. This dataset uses the "4_Ortho_RGBIR.zip" and "5_Labels_all.zip"
     files to create the train/test sets used in the challenge. The dataset can be
     requested at the challenge homepage. Note, the server contains additional data
