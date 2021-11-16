@@ -65,7 +65,7 @@ class OSCD(VisionDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new LEVIR-CD+ dataset instance.
+        """Initialize a new OSCD dataset instance.
 
         Args:
             root: root directory where dataset can be found
