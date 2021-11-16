@@ -106,7 +106,7 @@ class OSCD(VisionDataset):
         # TODO: implement choosing bands (right now assuming bands="all")
         image1 = self._load_image(files["images1"])
         image2 = self._load_image(files["images2"])
-        mask = self._load_target(files["mask"])
+        mask = self._load_target(str(files["mask"]))
 
         image = torch.stack(tensors=[image1, image2], dim=0)
         sample = {"image": image, "mask": mask}
@@ -174,10 +174,10 @@ class OSCD(VisionDataset):
         """
         images = np.stack([rasterio.open(path).read() for path in paths], axis=0)
         images = images.astype(np.int_)
-        tensor: Tensor = torch.from_numpy(images)  # type: ignore[attr-defined]
+        tensor: Tensor = torch.from_numpy(images) # type: ignore[attr-defined]
         return tensor
 
-    def _load_target(self, path: Sequence[str]) -> Tensor:
+    def _load_target(self, path: str) -> Tensor:
         """Load the target mask for a single image.
 
         Args:
