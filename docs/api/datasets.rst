@@ -138,6 +138,7 @@ Potsdam
 ^^^^^^^
 
 .. autoclass:: Potsdam
+.. autoclass:: PotsdamDataModule
 
 RESISC45 (Remote Sensing Image Scene Classification)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
