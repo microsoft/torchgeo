@@ -4,11 +4,9 @@
 import glob
 import os
 import shutil
-from datetime import datetime
 from pathlib import Path
 from typing import Generator
 
-import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -47,7 +45,7 @@ class TestOSCD:
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
 
-    def test_len(self, datset: OSCD) -> None:
+    def test_len(self, dataset: OSCD) -> None:
         assert len(dataset) == 14
 
     def test_add(self, dataset: OSCD) -> None:
