@@ -7,10 +7,11 @@ import os
 from typing import Any, Callable, Dict, Optional
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pytorch_lightning as pl
-import rasterio
 import torch
 from matplotlib.figure import Figure
+from PIL import Image
 from torch import Tensor
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
@@ -20,8 +21,8 @@ from .geo import VisionDataset
 from .utils import check_integrity, extract_archive, rgb_to_mask
 
 
-class Vaihingen(VisionDataset):
-    """Vaihingen dataset.
+class Vaihingen2D(VisionDataset):
+    """Vaihingen 2D Semantic Segmentation dataset.
 
     The `Vaihingen <https://www2.isprs.org/commissions/comm2/wg4/benchmark/2d-sem-label-vaihingen/>`_
     dataset is a dataset urban semantic segmentation used in the 2D Semantic Labeling
@@ -180,10 +181,12 @@ class Vaihingen(VisionDataset):
             the image
         """
         path = self.files[index]["image"]
-        with rasterio.open(path) as f:
-            array = f.read()
+        with Image.open(path) as img:
+            array = np.array(img.convert("RGB"))
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
-            return tensor
+            # Convert from HxWxC to CxHxW
+            tensor = tensor.permute((2, 0, 1))
+        return tensor
 
     def _load_target(self, index: int) -> Tensor:
         """Load the target mask for a single image.
@@ -195,12 +198,13 @@ class Vaihingen(VisionDataset):
             the target mask
         """
         path = self.files[index]["mask"]
-        with rasterio.open(path) as f:
-            array = f.read()
-            array = rgb_to_mask(array.transpose((1, 2, 0)), self.colormap)
+        with Image.open(path) as img:
+            array = np.array(img.convert("RGB"))
+            array = rgb_to_mask(array, self.colormap)
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            # Convert from HxWxC to CxHxW
             tensor = tensor.to(torch.long)  # type: ignore[attr-defined]
-            return tensor
+        return tensor
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
@@ -290,7 +294,7 @@ class Vaihingen(VisionDataset):
         return fig
 
 
-class VaihingenDataModule(pl.LightningDataModule):
+class Vaihingen2DDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the Vaihingen dataset.
 
     Uses the train/test splits from the dataset.
@@ -341,7 +345,7 @@ class VaihingenDataModule(pl.LightningDataModule):
         """
         transforms = Compose([self.preprocess])
 
-        dataset = Vaihingen(self.root_dir, "train", transforms=transforms)
+        dataset = Vaihingen2D(self.root_dir, "train", transforms=transforms)
 
         if self.val_split_pct > 0.0:
             self.train_dataset, self.val_dataset, _ = dataset_split(
@@ -351,7 +355,7 @@ class VaihingenDataModule(pl.LightningDataModule):
             self.train_dataset = dataset  # type: ignore[assignment]
             self.val_dataset = None  # type: ignore[assignment]
 
-        self.test_dataset = Vaihingen(self.root_dir, "test", transforms=transforms)
+        self.test_dataset = Vaihingen2D(self.root_dir, "test", transforms=transforms)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.
