@@ -134,6 +134,12 @@ PatternNet
 
 .. autoclass:: PatternNet
 
+Potsdam
+^^^^^^^
+
+.. autoclass:: Potsdam2D
+.. autoclass:: Potsdam2DDataModule
+
 RESISC45 (Remote Sensing Image Scene Classification)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
