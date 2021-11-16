@@ -198,12 +198,13 @@ class Potsdam2D(VisionDataset):
             the target mask
         """
         path = self.files[index]["mask"]
-        with rasterio.open(path) as f:
-            array = f.read()
-            array = rgb_to_mask(array.transpose((1, 2, 0)), self.colormap)
+        with Image.open(path) as img:
+            array = np.array(img.convert("RGB"))
+            array = rgb_to_mask(array, self.colormap)
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            # Convert from HxWxC to CxHxW
             tensor = tensor.to(torch.long)  # type: ignore[attr-defined]
-            return tensor
+        return tensor
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
