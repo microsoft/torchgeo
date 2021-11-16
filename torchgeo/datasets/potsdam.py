@@ -23,17 +23,17 @@ from .utils import check_integrity, extract_archive, rgb_to_mask
 class Potsdam(VisionDataset):
     """Potsdam dataset.
 
-    The `Potsdam <https://Potsdam.org/>`_
-    dataset is a dataset for building disaster change detection. This dataset object
-    uses the "Challenge training set (~7.8 GB)" and "Challenge test set (~2.6 GB)" data
-    from the Potsdam website as the train and test splits. Note, the Potsdam website
-    contains other data under the Potsdam umbrella that are _not_ included here. E.g.
-    the "Tier3 training data", the "Challenge holdout set", and the "full data".
+    The `Potsdam <https://www2.isprs.org/commissions/comm2/wg4/benchmark/2d-sem-label-potsdam/>`_
+    dataset is a dataset urban semantic segmentation used in the 2D Semantic Labeling
+    Content - Potsdam. This dataset uses the "4_Ortho_RGBIR.zip" and "5_Labels_all.zip"
+    files to create the train/test sets used in the challenge. The dataset can be requested
+    at the challenge homepage. Note, the server contains additional data for 3D Semantic Labeling
+    which are currently not supported.
 
     Dataset format:
 
-    * images are three-channel pngs
-    * masks are single-channel pngs where the pixel values represent the class
+    * images are 4-channel geotiffs
+    * masks are 3-channel geotiffs with unique RGB values representing the class
 
     Dataset classes:
 
@@ -46,7 +46,7 @@ class Potsdam(VisionDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/1911.09296
+    * https://doi.org/10.5194/isprsannals-I-3-293-2012
 
     """
 
@@ -175,7 +175,7 @@ class Potsdam(VisionDataset):
         """Load a single image.
 
         Args:
-            path: path to the image
+            index: index to return
 
         Returns:
             the image
@@ -190,7 +190,7 @@ class Potsdam(VisionDataset):
         """Load the target mask for a single image.
 
         Args:
-            path: path to the image
+            index: index to return
 
         Returns:
             the target mask
