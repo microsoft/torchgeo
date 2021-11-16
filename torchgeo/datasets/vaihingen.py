@@ -121,7 +121,7 @@ class Vaihingen2D(VisionDataset):
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new Vaihingen dataset instance.
+        """Initialize a new Vaihingen2D dataset instance.
 
         Args:
             root: root directory where dataset can be found
