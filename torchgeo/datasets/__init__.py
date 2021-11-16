@@ -64,6 +64,8 @@ from .ucmerced import UCMerced, UCMercedDataModule
 from .utils import BoundingBox, collate_dict
 from .xview import XView2, XView2DataModule
 from .zuericrop import ZueriCrop
+from .vaihingen import Vaihingen, VaihingenDataModule
+
 
 __all__ = (
     # GeoDataset
@@ -131,6 +133,8 @@ __all__ = (
     "CycloneDataModule",
     "UCMerced",
     "UCMercedDataModule",
+    "Vaihingen",
+    "VaihingenDataModule",
     "VHR10",
     "XView2",
     "XView2DataModule",

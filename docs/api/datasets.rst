@@ -172,6 +172,12 @@ Tropical Cyclone Wind Estimation Competition
 .. autoclass:: TropicalCycloneWindEstimation
 .. autoclass:: CycloneDataModule
 
+Vaihingen
+^^^^^^^^^
+
+.. autoclass:: Vaihingen
+.. autoclass:: VaihingenDataModule
+
 NWPU VHR-10
 ^^^^^^^^^^^
 

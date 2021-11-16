@@ -35,6 +35,7 @@ __all__ = (
     "dataset_split",
     "sort_sentinel2_bands",
     "draw_semantic_segmentation_masks",
+    "rgb_to_mask"
 )
 
 
@@ -461,7 +462,7 @@ def draw_semantic_segmentation_masks(
     return img  # type: ignore[no-any-return]
 
 
-def rgb_to_mask(
+def rgb_to_mask(  # type: ignore[type-arg]
     rgb: np.ndarray, colors: List[Tuple[int, int, int]]
 ) -> np.ndarray:  # type: ignore[type-arg]
     """Converts an RGB colormap mask to a integer mask.

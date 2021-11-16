@@ -25,14 +25,15 @@ class Vaihingen(VisionDataset):
 
     The `Vaihingen <https://www2.isprs.org/commissions/comm2/wg4/benchmark/2d-sem-label-vaihingen/>`_
     dataset is a dataset urban semantic segmentation used in the 2D Semantic Labeling
-    Contest - Vaihingen. This dataset uses the "4_Ortho_RGBIR.zip" and "5_Labels_all.zip"
-    files to create the train/test sets used in the challenge. The dataset can be requested
-    at the challenge homepage. Note, the server contains additional data for 3D Semantic Labeling
-    which are currently not supported.
+    Contest - Vaihingen. This dataset uses the "ISPRS_semantic_labeling_Vaihingen.zip"
+    and "ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip" files to create the
+    train/test sets used in the challenge. The dataset can be requested at the challenge
+    homepage. Note, the server contains additional data for 3D Semantic Labeling which
+    are currently not supported.
 
     Dataset format:
 
-    * images are 4-channel geotiffs
+    * images are 3-channel RGB geotiffs
     * masks are 3-channel geotiffs with unique RGB values representing the class
 
     Dataset classes:
@@ -48,7 +49,7 @@ class Vaihingen(VisionDataset):
 
     * https://doi.org/10.5194/isprsannals-I-3-293-2012
 
-    """
+    """  # noqa: E501
 
     filenames = [
         "ISPRS_semantic_labeling_Vaihingen.zip",
@@ -58,46 +59,41 @@ class Vaihingen(VisionDataset):
     image_root = "top"
     splits = {
         "train": [
-            "top_Vaihingen_2_10",
-            "top_Vaihingen_2_11",
-            "top_Vaihingen_2_12",
-            "top_Vaihingen_3_10",
-            "top_Vaihingen_3_11",
-            "top_Vaihingen_3_12",
-            "top_Vaihingen_4_10",
-            "top_Vaihingen_4_11",
-            "top_Vaihingen_4_12",
-            "top_Vaihingen_5_10",
-            "top_Vaihingen_5_11",
-            "top_Vaihingen_5_12",
-            "top_Vaihingen_6_10",
-            "top_Vaihingen_6_11",
-            "top_Vaihingen_6_12",
-            "top_Vaihingen_6_7",
-            "top_Vaihingen_6_8",
-            "top_Vaihingen_6_9",
-            "top_Vaihingen_7_10",
-            "top_Vaihingen_7_11",
-            "top_Vaihingen_7_12",
-            "top_Vaihingen_7_7",
-            "top_Vaihingen_7_8",
-            "top_Vaihingen_7_9",
+            "top_mosaic_09cm_area1.tif",
+            "top_mosaic_09cm_area11.tif",
+            "top_mosaic_09cm_area13.tif",
+            "top_mosaic_09cm_area15.tif",
+            "top_mosaic_09cm_area17.tif",
+            "top_mosaic_09cm_area21.tif",
+            "top_mosaic_09cm_area23.tif",
+            "top_mosaic_09cm_area26.tif",
+            "top_mosaic_09cm_area28.tif",
+            "top_mosaic_09cm_area3.tif",
+            "top_mosaic_09cm_area30.tif",
+            "top_mosaic_09cm_area32.tif",
+            "top_mosaic_09cm_area34.tif",
+            "top_mosaic_09cm_area37.tif",
+            "top_mosaic_09cm_area5.tif",
+            "top_mosaic_09cm_area7.tif",
         ],
         "test": [
-            "top_Vaihingen_5_15",
-            "top_Vaihingen_6_15",
-            "top_Vaihingen_6_13",
-            "top_Vaihingen_3_13",
-            "top_Vaihingen_4_14",
-            "top_Vaihingen_6_14",
-            "top_Vaihingen_5_14",
-            "top_Vaihingen_2_13",
-            "top_Vaihingen_4_15",
-            "top_Vaihingen_2_14",
-            "top_Vaihingen_5_13",
-            "top_Vaihingen_4_13",
-            "top_Vaihingen_3_14",
-            "top_Vaihingen_7_13",
+            "top_mosaic_09cm_area6.tif",
+            "top_mosaic_09cm_area24.tif",
+            "top_mosaic_09cm_area35.tif",
+            "top_mosaic_09cm_area16.tif",
+            "top_mosaic_09cm_area14.tif",
+            "top_mosaic_09cm_area22.tif",
+            "top_mosaic_09cm_area10.tif",
+            "top_mosaic_09cm_area4.tif",
+            "top_mosaic_09cm_area2.tif",
+            "top_mosaic_09cm_area20.tif",
+            "top_mosaic_09cm_area8.tif",
+            "top_mosaic_09cm_area31.tif",
+            "top_mosaic_09cm_area33.tif",
+            "top_mosaic_09cm_area27.tif",
+            "top_mosaic_09cm_area38.tif",
+            "top_mosaic_09cm_area12.tif",
+            "top_mosaic_09cm_area29.tif",
         ],
     }
     classes = [
