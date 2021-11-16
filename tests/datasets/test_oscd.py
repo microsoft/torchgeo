@@ -10,10 +10,11 @@ from typing import Generator
 import pytest
 import torch
 import torch.nn as nn
+from torch.utils.data import ConcatDataset
 from _pytest.monkeypatch import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import OSCD, ZipDataset
+from torchgeo.datasets import OSCD
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -50,7 +51,7 @@ class TestOSCD:
 
     def test_add(self, dataset: OSCD) -> None:
         ds = dataset + dataset
-        assert isinstance(ds, ZipDataset)
+        assert isinstance(ds, ConcatDataset)
 
     def test_already_extracted(self, dataset: OSCD) -> None:
         OSCD(root=dataset.root, download=True)
