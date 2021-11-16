@@ -54,7 +54,7 @@ from .levircd import LEVIRCDPlus
 from .naip import NAIP, NAIPChesapeakeDataModule
 from .nwpu import VHR10
 from .patternnet import PatternNet
-from .potsdam import Potsdam, PotsdamDataModule
+from .potsdam import Potsdam2D, Potsdam2DDataModule
 from .resisc45 import RESISC45, RESISC45DataModule
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS, SEN12MSDataModule
@@ -116,8 +116,8 @@ __all__ = (
     "LandCoverAIDataModule",
     "LEVIRCDPlus",
     "PatternNet",
-    "Potsdam",
-    "PotsdamDataModule",
+    "Potsdam2D",
+    "Potsdam2DDataModule",
     "RESISC45",
     "RESISC45DataModule",
     "SeasonalContrastS2",

@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import rasterio
 import torch
+import numpy as np
+from PIL import Image
 from matplotlib.figure import Figure
 from torch import Tensor
 from torch.utils.data import DataLoader
@@ -20,8 +22,8 @@ from .geo import VisionDataset
 from .utils import check_integrity, extract_archive, rgb_to_mask
 
 
-class Potsdam(VisionDataset):
-    """Potsdam dataset.
+class Potsdam2D(VisionDataset):
+    """Potsdam 2D Semantic Segmentation dataset.
 
     The `Potsdam <https://www2.isprs.org/commissions/comm2/wg4/benchmark/2d-sem-label-potsdam/>`_
     dataset is a dataset urban semantic segmentation used in the 2D Semantic Labeling
@@ -291,7 +293,7 @@ class Potsdam(VisionDataset):
         return fig
 
 
-class PotsdamDataModule(pl.LightningDataModule):
+class Potsdam2DDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the Potsdam dataset.
 
     Uses the train/test splits from the dataset.
@@ -305,10 +307,10 @@ class PotsdamDataModule(pl.LightningDataModule):
         val_split_pct: float = 0.2,
         **kwargs: Any,
     ) -> None:
-        """Initialize a LightningDataModule for Potsdam based DataLoaders.
+        """Initialize a LightningDataModule for Potsdam2D based DataLoaders.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the Potsdam Dataset classes
+            root_dir: The ``root`` argument to pass to the Potsdam2D Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
             val_split_pct: What percentage of the dataset to use as a validation set
@@ -342,7 +344,7 @@ class PotsdamDataModule(pl.LightningDataModule):
         """
         transforms = Compose([self.preprocess])
 
-        dataset = Potsdam(self.root_dir, "train", transforms=transforms)
+        dataset = Potsdam2D(self.root_dir, "train", transforms=transforms)
 
         if self.val_split_pct > 0.0:
             self.train_dataset, self.val_dataset, _ = dataset_split(
@@ -352,7 +354,7 @@ class PotsdamDataModule(pl.LightningDataModule):
             self.train_dataset = dataset  # type: ignore[assignment]
             self.val_dataset = None  # type: ignore[assignment]
 
-        self.test_dataset = Potsdam(self.root_dir, "test", transforms=transforms)
+        self.test_dataset = Potsdam2D(self.root_dir, "test", transforms=transforms)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.
