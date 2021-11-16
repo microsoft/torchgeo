@@ -463,8 +463,7 @@ def draw_semantic_segmentation_masks(
 
 
 def rgb_to_mask(
-    rgb: np.ndarray,
-    colors: List[Tuple[int, int, int]]
+    rgb: np.ndarray, colors: List[Tuple[int, int, int]]  # type: ignore[type-arg]
 ) -> np.ndarray:  # type: ignore[type-arg]
     """Converts an RGB colormap mask to a integer mask.
 
