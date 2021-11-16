@@ -15,7 +15,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from torchgeo.datasets import Vaihingen2D, Vaihingen2DDataModule
 
 
-class TestVaihingen:
+class TestVaihingen2D:
     @pytest.fixture(params=["train", "test"])
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
