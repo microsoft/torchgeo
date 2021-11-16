@@ -5,14 +5,13 @@
 
 import glob
 import os
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 import rasterio
 import torch
 from PIL import Image
 from torch import Tensor
-from typing import Sequence, Union
 
 from .geo import VisionDataset
 from .utils import download_url, extract_archive, sort_sentinel2_bands
