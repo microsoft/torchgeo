@@ -470,6 +470,7 @@ def rgb_to_mask(
     Args:
         rgb: array mask of coded with RGB tuples
         colors: list of RGB tuples to convert to integer indices
+
     Returns:
         integer array mask
     """
