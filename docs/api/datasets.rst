@@ -175,8 +175,8 @@ Tropical Cyclone Wind Estimation Competition
 Vaihingen
 ^^^^^^^^^
 
-.. autoclass:: Vaihingen
-.. autoclass:: VaihingenDataModule
+.. autoclass:: Vaihingen2D
+.. autoclass:: Vaihingen2DDataModule
 
 NWPU VHR-10
 ^^^^^^^^^^^

@@ -295,7 +295,7 @@ class Vaihingen2D(VisionDataset):
 
 
 class Vaihingen2DDataModule(pl.LightningDataModule):
-    """LightningDataModule implementation for the Vaihingen dataset.
+    """LightningDataModule implementation for the Vaihingen2D dataset.
 
     Uses the train/test splits from the dataset.
     """
@@ -308,10 +308,10 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
         val_split_pct: float = 0.2,
         **kwargs: Any,
     ) -> None:
-        """Initialize a LightningDataModule for Vaihingen based DataLoaders.
+        """Initialize a LightningDataModule for Vaihingen2D based DataLoaders.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the Vaihingen Dataset classes
+            root_dir: The ``root`` argument to pass to the Vaihingen Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
             val_split_pct: What percentage of the dataset to use as a validation set
