@@ -73,7 +73,7 @@ class TestPotsdam2D:
         dataset.plot(x)
 
 
-class TestPotsdamDataModule:
+class TestPotsdam2DDataModule:
     @pytest.fixture(scope="class", params=[0.0, 0.5])
     def datamodule(self, request: SubRequest) -> Potsdam2DDataModule:
         root = os.path.join("tests", "data", "potsdam")
