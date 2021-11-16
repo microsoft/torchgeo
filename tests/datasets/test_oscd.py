@@ -46,7 +46,7 @@ class TestOSCD:
         assert isinstance(x["mask"], torch.Tensor)
 
     def test_len(self, dataset: OSCD) -> None:
-        assert len(dataset) == 14
+        assert len(dataset) == 1
 
     def test_add(self, dataset: OSCD) -> None:
         ds = dataset + dataset
