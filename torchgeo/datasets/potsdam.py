@@ -7,12 +7,12 @@ import os
 from typing import Any, Callable, Dict, Optional
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pytorch_lightning as pl
 import rasterio
 import torch
-import numpy as np
-from PIL import Image
 from matplotlib.figure import Figure
+from PIL import Image
 from torch import Tensor
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
