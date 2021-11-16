@@ -15,7 +15,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from torchgeo.datasets import Potsdam2D, Potsdam2DDataModule
 
 
-class TestPotsdam:
+class TestPotsdam2D:
     @pytest.fixture(params=["train", "test"])
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
