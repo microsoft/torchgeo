@@ -82,7 +82,7 @@ class TestVaihingen2D:
         dataset.plot(x)
 
 
-class TestVaihingenDataModule:
+class TestVaihingen2DDataModule:
     @pytest.fixture(scope="class", params=[0.0, 0.5])
     def datamodule(self, request: SubRequest) -> Vaihingen2DDataModule:
         root = os.path.join("tests", "data", "vaihingen")
