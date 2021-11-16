@@ -12,6 +12,7 @@ import rasterio
 import torch
 from PIL import Image
 from torch import Tensor
+from typing import Sequence, Union
 
 from .geo import VisionDataset
 from .utils import download_url, extract_archive, sort_sentinel2_bands
@@ -124,7 +125,7 @@ class OSCD(VisionDataset):
         return len(self.files)
 
     # TODO: this needs to be refactored
-    def _load_files(self) -> List[Dict[str, str]]:
+    def _load_files(self) -> List[Dict[str, Union[str, Sequence[str]]]]:
         regions = []
         temp_split = "Test" if self.split == "test" else "Train"
         labels_root = os.path.join(
@@ -162,7 +163,7 @@ class OSCD(VisionDataset):
 
         return regions
 
-    def _load_image(self, paths: List[str]) -> Tensor:
+    def _load_image(self, paths: Sequence[str]) -> Tensor:
         """Load a single image.
 
         Args:
@@ -171,12 +172,12 @@ class OSCD(VisionDataset):
         Returns:
             the image
         """
-        # images = np.stack([tifffile.imread(path) for path in paths], axis=0)
         images = np.stack([rasterio.open(path).read() for path in paths], axis=0)
-        images = images.astype(np.long)
-        return torch.from_numpy(images)
+        images = images.astype(np.int_)
+        tensor: Tensor = torch.from_numpy(images) # type: ignore[attr-defined]
+        return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Sequence[str]) -> Tensor:
         """Load the target mask for a single image.
 
         Args:
