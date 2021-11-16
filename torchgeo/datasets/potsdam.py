@@ -295,7 +295,7 @@ class Potsdam2D(VisionDataset):
 
 
 class Potsdam2DDataModule(pl.LightningDataModule):
-    """LightningDataModule implementation for the Potsdam dataset.
+    """LightningDataModule implementation for the Potsdam2D dataset.
 
     Uses the train/test splits from the dataset.
     """
