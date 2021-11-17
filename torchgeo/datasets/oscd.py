@@ -7,14 +7,17 @@ import glob
 import os
 from typing import Callable, Dict, List, Optional, Sequence, Union
 
-import numpy as np
-import rasterio
 import torch
+import rasterio
+import numpy as np
+import matplotlib.pyplot as plt
 from PIL import Image
 from torch import Tensor
+from matplotlib.figure import Figure
 
 from .geo import VisionDataset
 from .utils import download_url, extract_archive, sort_sentinel2_bands
+from ..datasets.utils import draw_semantic_segmentation_masks
 
 
 class OSCD(VisionDataset):
@@ -53,6 +56,8 @@ class OSCD(VisionDataset):
     filename_glob = "*Onera*"
     filename = "OSCD.zip"
     splits = ["train", "test"]
+
+    colormap = ["blue"]
 
     def __init__(
         self,
@@ -171,7 +176,7 @@ class OSCD(VisionDataset):
         for path in paths:
             with rasterio.open(path) as f:
                 images.append(f.read())
-        np_images = np.stack(images, axis=0).astype(np.int_)
+        np_images = np.stack(images, axis=0).astype(np.int_).squeeze()
         tensor: Tensor = torch.from_numpy(np_images)  # type: ignore[attr-defined]
         return tensor
 
@@ -239,3 +244,84 @@ class OSCD(VisionDataset):
         pathname = os.path.join(self.root, self.zipfile_glob2)
         for zipfile in glob.iglob(pathname):
             extract_archive(zipfile)
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+        alpha: float = 0.5,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+            alpha: opacity with which to render predictions on top of the imagery
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        ncols = 2
+
+        img = sample["image"][0][:3].float()
+        img /= img.sum()
+        img *= 255
+        img = img.type(torch.uint8)
+        mask = sample["mask"]
+
+        image1 = draw_semantic_segmentation_masks(
+            img,
+            sample["mask"],
+            alpha=alpha,
+            colors=self.colormap,  # type: ignore[arg-type]
+        )
+        image2 = draw_semantic_segmentation_masks(
+            img,
+            sample["mask"],
+            alpha=alpha,
+            colors=self.colormap,  # type: ignore[arg-type]
+        )
+
+        '''
+        image1 = draw_semantic_segmentation_masks(
+            sample["image"][0][:3],
+            sample["mask"],
+            alpha=alpha,
+            colors=self.colormap,  # type: ignore[arg-type]
+        )
+        image2 = draw_semantic_segmentation_masks(
+            sample["image"][1][:3],
+            sample["mask"],
+            alpha=alpha,
+            colors=self.colormap,  # type: ignore[arg-type]
+        )
+        '''
+        
+        if "prediction" in sample:  # NOTE: this assumes predictions are made for post
+            ncols += 1
+            image3 = draw_semantic_segmentation_masks(
+                sample["image"][1],
+                sample["prediction"],
+                alpha=alpha,
+                colors=self.colormap,  # type: ignore[arg-type]
+            )
+
+        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
+        axs[0].imshow(image1)
+        axs[0].axis("off")
+        axs[1].imshow(image2)
+        axs[1].axis("off")
+        if ncols > 2:
+            axs[2].imshow(image3)
+            axs[2].axis("off")
+
+        if show_titles:
+            axs[0].set_title("Pre disaster")
+            axs[1].set_title("Post disaster")
+            if ncols > 2:
+                axs[2].set_title("Predictions")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
