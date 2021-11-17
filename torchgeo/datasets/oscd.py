@@ -170,8 +170,11 @@ class OSCD(VisionDataset):
         Returns:
             the image
         """
-        images = np.stack([rasterio.open(path).read() for path in paths], axis=0)
-        images = images.astype(np.int_)
+        images = []
+        for path in paths:
+            with rasterio.open(path) as f:
+                images.append(f.read())
+        images = np.stack(images, axis=0).astype(np.int_)
         tensor: Tensor = torch.from_numpy(images)  # type: ignore[attr-defined]
         return tensor
 
