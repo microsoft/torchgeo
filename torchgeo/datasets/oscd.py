@@ -171,7 +171,8 @@ class OSCD(VisionDataset):
         for path in paths:
             with rasterio.open(path) as f:
                 images.append(f.read())
-        tensor: Tensor = torch.from_numpy(np.stack(images, axis=0).astype(np.int_))  # type: ignore[attr-defined]
+        np_images = np.stack(images, axis=0).astype(np.int_)
+        tensor: Tensor = torch.from_numpy(np_images)  # type: ignore[attr-defined]
         return tensor
 
     def _load_target(self, path: str) -> Tensor:
