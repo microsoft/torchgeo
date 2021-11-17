@@ -259,19 +259,20 @@ class OSCD(VisionDataset):
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
             alpha: opacity with which to render predictions on top of the imagery
+
         Returns:
             a matplotlib Figure with the rendered sample
         """
         ncols = 2
 
-        rgb_img1 = sample["image"][0, 1:4].float().numpy()
+        rgb_img1 = sample["image"][0, [3, 2, 1]].float().numpy()
         per02 = np.percentile(rgb_img1, 2)  # type: ignore[no-untyped-call]
         per98 = np.percentile(rgb_img1, 98)  # type: ignore[no-untyped-call]
         rgb_img1 = (np.clip((rgb_img1 - per02) / (per98 - per02), 0, 1) * 255).astype(
             np.uint8
         )
 
-        rgb_img2 = sample["image"][1, 1:4].float().numpy()
+        rgb_img2 = sample["image"][1, [3, 2, 1]].float().numpy()
         per02 = np.percentile(rgb_img2, 2)  # type: ignore[no-untyped-call]
         per98 = np.percentile(rgb_img2, 98)  # type: ignore[no-untyped-call]
         rgb_img2 = (np.clip((rgb_img2 - per02) / (per98 - per02), 0, 1) * 255).astype(
