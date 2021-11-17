@@ -7,17 +7,17 @@ import glob
 import os
 from typing import Callable, Dict, List, Optional, Sequence, Union
 
-import torch
-import rasterio
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import rasterio
+import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
-from matplotlib.figure import Figure
 
+from ..datasets.utils import draw_semantic_segmentation_masks
 from .geo import VisionDataset
 from .utils import download_url, extract_archive, sort_sentinel2_bands
-from ..datasets.utils import draw_semantic_segmentation_masks
 
 
 class OSCD(VisionDataset):
@@ -263,61 +263,40 @@ class OSCD(VisionDataset):
         """
         ncols = 2
 
-        img = sample["image"][0][:3].float()
-        img /= img.sum()
-        img *= 255
-        img = img.type(torch.uint8)
-        mask = sample["mask"]
+        rgb_img1 = sample["image"][0, 1:4].float().numpy()
+        per02, per98 = np.percentile(rgb_img1, 2), np.percentile(rgb_img1, 98)
+        rgb_img1 = (np.clip((rgb_img1 - per02) / (per98 - per02), 0, 1) * 255).astype(
+            np.uint8
+        )
+
+        rgb_img2 = sample["image"][1, 1:4].float().numpy()
+        per02, per98 = np.percentile(rgb_img2, 2), np.percentile(rgb_img2, 98)
+        rgb_img2 = (np.clip((rgb_img2 - per02) / (per98 - per02), 0, 1) * 255).astype(
+            np.uint8
+        )
 
         image1 = draw_semantic_segmentation_masks(
-            img,
+            torch.from_numpy(rgb_img1),  # type: ignore[attr-defined]
             sample["mask"],
             alpha=alpha,
             colors=self.colormap,  # type: ignore[arg-type]
         )
         image2 = draw_semantic_segmentation_masks(
-            img,
+            torch.from_numpy(rgb_img2),  # type: ignore[attr-defined]
             sample["mask"],
             alpha=alpha,
             colors=self.colormap,  # type: ignore[arg-type]
         )
-
-        '''
-        image1 = draw_semantic_segmentation_masks(
-            sample["image"][0][:3],
-            sample["mask"],
-            alpha=alpha,
-            colors=self.colormap,  # type: ignore[arg-type]
-        )
-        image2 = draw_semantic_segmentation_masks(
-            sample["image"][1][:3],
-            sample["mask"],
-            alpha=alpha,
-            colors=self.colormap,  # type: ignore[arg-type]
-        )
-        '''
-        
-        if "prediction" in sample:  # NOTE: this assumes predictions are made for post
-            ncols += 1
-            image3 = draw_semantic_segmentation_masks(
-                sample["image"][1],
-                sample["prediction"],
-                alpha=alpha,
-                colors=self.colormap,  # type: ignore[arg-type]
-            )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
         axs[0].imshow(image1)
         axs[0].axis("off")
         axs[1].imshow(image2)
         axs[1].axis("off")
-        if ncols > 2:
-            axs[2].imshow(image3)
-            axs[2].axis("off")
 
         if show_titles:
-            axs[0].set_title("Pre disaster")
-            axs[1].set_title("Post disaster")
+            axs[0].set_title("Pre change")
+            axs[1].set_title("Post change")
             if ncols > 2:
                 axs[2].set_title("Predictions")
 
