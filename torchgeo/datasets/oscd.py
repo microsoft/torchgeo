@@ -48,10 +48,8 @@ class OSCD(VisionDataset):
     url = "https://drive.google.com/file/d/1jidN0DKEIybOrP0j7Bos8bGDDq3Varj3"
     md5 = "7383412da7ece1dca1c12dc92ac77f09"
 
-    # TODO: find better way to solve nested zip file structure
     zipfile_glob = "*OSCD.zip"
     zipfile_glob2 = "*Onera*.zip"
-    # TODO: need to change filename_glob due to how this is checked in verify
     filename_glob = "*Onera*"
     filename = "OSCD.zip"
     splits = ["train", "test"]
@@ -122,7 +120,6 @@ class OSCD(VisionDataset):
         """
         return len(self.files)
 
-    # TODO: this needs to be refactored
     def _load_files(self) -> List[Dict[str, Union[str, Sequence[str]]]]:
         regions = []
         temp_split = "Test" if self.split == "test" else "Train"
