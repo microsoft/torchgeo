@@ -67,4 +67,4 @@ class TestOSCD:
             OSCD(str(tmp_path))
 
     def test_plot(self, dataset: OSCD) -> None:
-        dataset.plot(dataset[0])
+        dataset.plot(dataset[0], suptitle="Test")
