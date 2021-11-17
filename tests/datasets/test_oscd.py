@@ -65,3 +65,6 @@ class TestOSCD:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):
             OSCD(str(tmp_path))
+
+    def test_plot(self, dataset: OSCD) -> None:
+        dataset.plot(dataset[0])
