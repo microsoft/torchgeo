@@ -29,8 +29,7 @@ class TestOSCD:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.oscd, "download_url", download_url
         )
-        # idk if this is right yet
-        md5 = "1adf156f628aa32fb2e8fe6cada16c04"
+        md5 = "d6ebaae1ea0f3ae960af31531d394521"
 
         monkeypatch.setattr(OSCD, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "oscd", "OSCD.zip")
