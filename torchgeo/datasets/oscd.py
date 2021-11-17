@@ -297,8 +297,6 @@ class OSCD(VisionDataset):
         if show_titles:
             axs[0].set_title("Pre change")
             axs[1].set_title("Post change")
-            if ncols > 2:
-                axs[2].set_title("Predictions")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
