@@ -46,7 +46,7 @@ class OSCD(VisionDataset):
     """
 
     url = "https://drive.google.com/file/d/1jidN0DKEIybOrP0j7Bos8bGDDq3Varj3"
-    md5 = "1adf156f628aa32fb2e8fe6cada16c04"  # TODO: find this
+    md5 = "7383412da7ece1dca1c12dc92ac77f09"
 
     # TODO: find better way to solve nested zip file structure
     zipfile_glob = "*OSCD.zip"
@@ -236,7 +236,6 @@ class OSCD(VisionDataset):
         pathname = os.path.join(self.root, self.zipfile_glob)
         for zipfile in glob.iglob(pathname):
             extract_archive(zipfile)
-        # TODO: nicer way to solve this nested zipfile structure
         pathname = os.path.join(self.root, self.zipfile_glob2)
         for zipfile in glob.iglob(pathname):
             extract_archive(zipfile)

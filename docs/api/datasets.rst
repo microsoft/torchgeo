@@ -130,7 +130,7 @@ LEVIR-CD+ (LEVIR Change Detection +)
 .. autoclass:: LEVIRCDPlus
 
 OSCD (OSCD Change Detection)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: OSCD
 
