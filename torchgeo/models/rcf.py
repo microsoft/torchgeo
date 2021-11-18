@@ -52,7 +52,9 @@ class RCF(Module):
         if seed is None:
             generator = None
         else:
-            generator = torch.Generator().manual_seed(seed)  # type: ignore[attr-defined]
+            generator = torch.Generator().manual_seed(  # type: ignore[attr-defined]
+                seed
+            )
 
         # We register the weight and bias tensors as "buffers". This does two things:
         # makes them behave correctly when we call .to(...) on the module, and makes
