@@ -2,12 +2,15 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Generator
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 from torchgeo.datasets import RESISC45DataModule
 from torchgeo.trainers.resisc45 import RESISC45ClassificationTask
+
+from .test_utils import FakeTrainer, mocked_log
 
 
 class TestRESISC45ClassificationTask:
@@ -34,8 +37,13 @@ class TestRESISC45ClassificationTask:
         return task_args
 
     @pytest.fixture
-    def task(self, config: Dict[str, Any]) -> RESISC45ClassificationTask:
+    def task(
+        self, config: Dict[str, Any], monkeypatch: Generator[MonkeyPatch, None, None]
+    ) -> RESISC45ClassificationTask:
         task = RESISC45ClassificationTask(**config)
+        trainer = FakeTrainer()
+        monkeypatch.setattr(task, "trainer", trainer)  # type: ignore[attr-defined]
+        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
         return task
 
     def test_training(
