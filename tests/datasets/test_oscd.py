@@ -43,7 +43,10 @@ class TestOSCD:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
+        assert x["image"].ndim == 4
+        assert x["image"].shape[:2] == (2, 13) 
         assert isinstance(x["mask"], torch.Tensor)
+        assert x["mask"].ndim == 2
 
     def test_len(self, dataset: OSCD) -> None:
         assert len(dataset) == 1
