@@ -24,14 +24,8 @@ class OSCD(VisionDataset):
     """OSCD dataset.
 
     The Onera Satellite Change Detection dataset addresses the issue of detecting
-    changes between satellite images from different dates.
-
-    Dataset features:
-
-    * 24 pairs of images from all over the world between 2015-2018
-    * binary change masks representing urban changes such as new buildings or roads
-    * 13 spectral bands
-    * Images vary in spatial resolution between 10m, 20m, and 60m
+    changes between satellite images from different dates. Imagery comes from
+    Sentinel-2 which contains varying resolutions per band.
 
     Dataset format:
 
