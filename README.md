@@ -66,15 +66,15 @@ print(dataset[0]["label"])
 
 If you use this software in your work, please cite [our paper](https://arxiv.org/abs/2111.08872):
 ```
-@article{stewart2021torchgeo,
-  title={TorchGeo: deep learning with geospatial data}, 
-  author={Adam J. Stewart and Caleb Robinson and Isaac A. Corley and Anthony Ortiz and Juan M. Lavista Ferres and Arindam Banerjee},
-  journal={arXiv preprint arXiv:2111.08872},
-  year={2021}
+@article{Stewart_TorchGeo_deep_learning_2021,
+    author = {Stewart, Adam J. and Robinson, Caleb and Corley, Isaac A. and Ortiz, Anthony and Lavista Ferres, Juan M. and Banerjee, Arindam},
+    journal = {arXiv preprint arXiv:2111.08872},
+    month = {11},
+    title = {{TorchGeo: deep learning with geospatial data}},
+    url = {https://github.com/microsoft/torchgeo},
+    year = {2021}
 }
 ```
-
-In the "About" section of GitHub, there is a "Cite this repository" button from which you can copy the APA or BibTeX citation format.
 
 ## Contributing
 

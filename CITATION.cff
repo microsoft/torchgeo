@@ -15,8 +15,8 @@ preferred-citation:
     given-names: "Juan M."
   - family-names: "Banerjee"
     given-names: "Arindam"
-  title: "TorchGeo: deep learning with geospatial data"
   journal: "arXiv preprint arXiv:2111.08872"
-  year: 2021
   month: 11
+  title: "TorchGeo: deep learning with geospatial data"
   url: "https://github.com/microsoft/torchgeo"
+  year: 2021
