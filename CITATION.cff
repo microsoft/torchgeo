@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Stewart"
+  given-names: "Adam J."
+- family-names: "Robinson"
+  given-names: "Caleb"
+- family-names: "Corley"
+  given-names: "Isaac A."
+- family-names: "Ortiz"
+  given-names: "Anthony"
+- family-names: "Lavista Ferres"
+  given-names: "Juan M."
+- family-names: "Banerjee"
+  given-names: "Arindam"
+title: "TorchGeo: deep learning with geospatial data"
+version: 0.1.0
+date-released: 2021-11-17
+url: "https://github.com/microsoft/torchgeo"
