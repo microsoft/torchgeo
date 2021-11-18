@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -77,9 +78,12 @@ class TestVaihingen2D:
     def test_plot(self, dataset: Vaihingen2D) -> None:
         x = dataset[0].copy()
         dataset.plot(x, suptitle="Test")
+        plt.close()
         dataset.plot(x, show_titles=False)
+        plt.close()
         x["prediction"] = x["mask"].clone()
         dataset.plot(x)
+        plt.close()
 
 
 class TestVaihingen2DDataModule:
