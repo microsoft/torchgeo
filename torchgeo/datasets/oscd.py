@@ -34,12 +34,12 @@ class OSCD(VisionDataset):
 
     Dataset classes:
 
-    1. no change
-    2. change
+    0. no change
+    1. change
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/1810.08468
+    * https://doi.org/10.1109/IGARSS.2018.8518015
     """
 
     url = "https://drive.google.com/file/d/1jidN0DKEIybOrP0j7Bos8bGDDq3Varj3"
@@ -121,9 +121,9 @@ class OSCD(VisionDataset):
 
     def _load_files(self) -> List[Dict[str, Union[str, Sequence[str]]]]:
         regions = []
-        temp_split = "Test" if self.split == "test" else "Train"
         labels_root = os.path.join(
-            self.root, f"Onera Satellite Change Detection dataset - {temp_split} Labels"
+            self.root,
+            f"Onera Satellite Change Detection dataset - {self.split.capitalize()} Labels",
         )
         images_root = os.path.join(
             self.root, "Onera Satellite Change Detection dataset - Images"
@@ -170,8 +170,8 @@ class OSCD(VisionDataset):
         for path in paths:
             with rasterio.open(path) as f:
                 images.append(f.read())
-        np_images = np.stack(images, axis=0).astype(np.int_).squeeze()
-        tensor: Tensor = torch.from_numpy(np_images)  # type: ignore[attr-defined]
+        array = np.stack(images, axis=0).astype(np.int_).squeeze()
+        tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
         return tensor
 
     def _load_target(self, path: str) -> Tensor:
