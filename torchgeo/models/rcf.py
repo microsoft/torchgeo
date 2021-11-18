@@ -3,7 +3,7 @@
 
 """Implementation of a random convolutional feature projection model."""
 
-from typing import cast
+from typing import Optional, cast
 
 import torch
 import torch.nn.functional as F
@@ -31,6 +31,7 @@ class RCF(Module):
         features: int = 16,
         kernel_size: int = 3,
         bias: float = -1.0,
+        seed: Optional[int] = None,
     ) -> None:
         """Initializes the RCF model.
 
@@ -42,10 +43,16 @@ class RCF(Module):
             features: number of features to compute, must be divisible by 2
             kernel_size: size of the kernel used to compute the RCFs
             bias: bias of the convolutional layer
+            seed: random seed used to initialize the convolutional layer
         """
         super().__init__()
 
         assert features % 2 == 0
+
+        if seed is None:
+            generator = None
+        else:
+            generator = torch.Generator().manual_seed(42)  # type: ignore[attr-defined]
 
         # We register the weight and bias tensors as "buffers". This does two things:
         # makes them behave correctly when we call .to(...) on the module, and makes
@@ -59,6 +66,7 @@ class RCF(Module):
                 kernel_size,
                 kernel_size,
                 requires_grad=False,
+                generator=generator,
             ),
         )
         self.register_buffer(
