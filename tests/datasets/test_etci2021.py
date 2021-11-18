@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -88,9 +89,12 @@ class TestETCI2021:
     def test_plot(self, dataset: ETCI2021) -> None:
         x = dataset[0].copy()
         ETCI2021.plot(x, suptitle="Test")
+        plt.close()
         ETCI2021.plot(x, show_titles=False)
+        plt.close()
         x["prediction"] = x["mask"][0].clone()
         ETCI2021.plot(x)
+        plt.close()
 
 
 class TestETCI2021DataModule:
