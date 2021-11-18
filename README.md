@@ -62,6 +62,13 @@ print(dataset[0]["image"].shape)
 print(dataset[0]["label"])
 ```
 
+## Citation
+
+If you use this software in your work, please cite the following paper:
+https://arxiv.org/abs/2111.08872
+
+In the "About" section of GitHub, there is a "Cite this repository" button from which you can copy the APA or BibTeX citation format.
+
 ## Contributing
 
 This project welcomes contributions and suggestions. If you would like to submit a pull request, see our [Contribution Guide](https://torchgeo.readthedocs.io/en/latest/user/contributing.html) for more information.
