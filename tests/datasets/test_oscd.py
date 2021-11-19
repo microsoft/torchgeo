@@ -30,10 +30,13 @@ class TestOSCD:
             torchgeo.datasets.oscd, "download_url", download_url
         )
         md5 = "d6ebaae1ea0f3ae960af31531d394521"
-
         monkeypatch.setattr(OSCD, "md5", md5)  # type: ignore[attr-defined]
-        url = os.path.join("tests", "data", "oscd", "OSCD.zip")
-        monkeypatch.setattr(OSCD, "url", url)  # type: ignore[attr-defined]
+	urls = {
+	    "Onera Satellite Change Detection dataset - Images.zip": os.path.join("tests", "data", "oscd", "Onera Satellite Change Detection dataset - Images.zip"),
+	    "Onera Satellite Change Detection dataset - Train Labels": os.path.join("tests", "data", "oscd", "Onera Satellite Change Detection dataset - Train Labels"),
+	    "Onera Satellite Change Detection dataset - Test Labels": os.path.join("tests", "data", "oscd", "Onera Satellite Change Detection dataset - Test Labels")
+	}
+        monkeypatch.setattr(OSCD, "urls", urls)  # type: ignore[attr-defined]
 
         root = str(tmp_path)
         transforms = nn.Identity()  # type: ignore[attr-defined]
