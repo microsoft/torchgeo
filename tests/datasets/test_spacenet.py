@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -76,6 +77,13 @@ class TestSpaceNet1:
         with pytest.raises(RuntimeError, match="Dataset not found"):
             SpaceNet1(str(tmp_path))
 
+    def test_plot(self, dataset: SpaceNet1) -> None:
+        x = dataset[0].copy()
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
+
 
 class TestSpaceNet2:
     @pytest.fixture(params=["PAN", "MS", "PS-MS", "PS-RGB"])
@@ -137,6 +145,13 @@ class TestSpaceNet2:
         dataset.collection_md5_dict["sn2_AOI_2_Vegas"] = "randommd5hash123"
         with pytest.raises(RuntimeError, match="Collection sn2_AOI_2_Vegas corrupted"):
             SpaceNet2(root=dataset.root, download=True, checksum=True)
+
+    def test_plot(self, dataset: SpaceNet2) -> None:
+        x = dataset[0].copy()
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
 
 
 class TestSpaceNet4:
@@ -200,6 +215,13 @@ class TestSpaceNet4:
         ):
             SpaceNet4(root=dataset.root, download=True, checksum=True)
 
+    def test_plot(self, dataset: SpaceNet4) -> None:
+        x = dataset[0].copy()
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
+
 
 class TestSpaceNet7:
     @pytest.fixture(params=["train", "test"])
@@ -252,3 +274,10 @@ class TestSpaceNet7:
         dataset.collection_md5_dict["sn7_train_source"] = "randommd5hash123"
         with pytest.raises(RuntimeError, match="Collection sn7_train_source corrupted"):
             SpaceNet7(root=dataset.root, download=True, checksum=True)
+
+    def test_plot(self, dataset: SpaceNet7) -> None:
+        x = dataset[0].copy()
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()

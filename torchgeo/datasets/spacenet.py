@@ -10,17 +10,22 @@ import re
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import fiona
+import matplotlib.pyplot as plt
 import numpy as np
 import rasterio as rio
 import torch
 from affine import Affine
 from fiona.errors import FionaValueError
+from fiona.transform import transform_geom
+from matplotlib.figure import Figure
+from rasterio.crs import CRS
 from rasterio.features import rasterize
 from torch import Tensor
 
 from torchgeo.datasets.geo import VisionDataset
 from torchgeo.datasets.utils import (
     check_integrity,
+    contrast_stretch,
     download_radiant_mlhub_collection,
     extract_archive,
 )
@@ -32,7 +37,7 @@ class SpaceNet(VisionDataset, abc.ABC):
     The `SpaceNet <https://spacenet.ai/datasets/>`_ datasets are a set of
     datasets that all together contain >11M building footprints and ~20,000 km
     of road labels mapped over high-resolution satellite imagery obtained from
-    Worldview-2 and Worldview-3 sensors.
+    a variety of sensors such as Worldview-2, Worldview-3 and Dove sensors.
     """
 
     @property
@@ -129,7 +134,7 @@ class SpaceNet(VisionDataset, abc.ABC):
                 files.append({"image_path": imgpath, "label_path": lbl_path})
         return files
 
-    def _load_image(self, path: str) -> Tuple[Tensor, Affine]:
+    def _load_image(self, path: str) -> Tuple[Tensor, Affine, CRS]:
         """Load a single image.
 
         Args:
@@ -140,11 +145,13 @@ class SpaceNet(VisionDataset, abc.ABC):
         """
         filename = os.path.join(path)
         with rio.open(filename) as img:
-            array = img.read().astype(np.float32)
+            array = img.read().astype(np.int32)
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
-            return tensor, img.transform
+            return tensor, img.transform, img.crs
 
-    def _load_mask(self, path: str, tfm: Affine, shape: Tuple[int, int]) -> Tensor:
+    def _load_mask(
+        self, path: str, tfm: Affine, raster_crs: CRS, shape: Tuple[int, int]
+    ) -> Tensor:
         """Rasterizes the dataset's labels (in geojson format).
 
         Args:
@@ -157,7 +164,18 @@ class SpaceNet(VisionDataset, abc.ABC):
         """
         try:
             with fiona.open(path) as src:
-                labels = [feature["geometry"] for feature in src]
+                vector_crs = CRS(src.crs)
+                if raster_crs == vector_crs:
+                    labels = [feature["geometry"] for feature in src]
+                else:
+                    labels = [
+                        transform_geom(
+                            vector_crs.to_string(),
+                            raster_crs.to_string(),
+                            feature["geometry"],
+                        )
+                        for feature in src
+                    ]
         except FionaValueError:
             labels = []
 
@@ -195,9 +213,9 @@ class SpaceNet(VisionDataset, abc.ABC):
             data and label at that index
         """
         files = self.files[index]
-        img, tfm = self._load_image(files["image_path"])
+        img, tfm, raster_crs = self._load_image(files["image_path"])
         h, w = img.shape[1:]
-        mask = self._load_mask(files["label_path"], tfm, (h, w))
+        mask = self._load_mask(files["label_path"], tfm, raster_crs, (h, w))
 
         ch, cw = self.chip_size[self.image]
         sample = {"image": img[:, :ch, :cw], "mask": mask[:ch, :cw]}
@@ -270,6 +288,53 @@ class SpaceNet(VisionDataset, abc.ABC):
 
             print("Extracting...")
             extract_archive(archive_path)
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        # image can be 1 channel or >3 channels
+        if sample["image"].shape[0] == 1:
+            image = np.rollaxis(sample["image"].numpy(), 0, 3)
+        else:
+            image = np.rollaxis(sample["image"][:3].numpy(), 0, 3)
+        image = contrast_stretch(image)
+
+        ncols = 1
+        show_mask = False
+        if "mask" in sample:
+            mask = sample["mask"].numpy()
+            ncols += 1
+            show_mask = True
+        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 8, 8))
+        if not isinstance(axs, np.ndarray):
+            axs = [axs]
+        axs[0].imshow(image)
+        axs[0].axis("off")
+        if show_titles:
+            axs[0].set_title("Image")
+
+        if show_mask:
+            axs[1].imshow(mask)
+            axs[1].axis("off")
+            if show_titles:
+                axs[1].set_title("Predictions")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig
 
 
 class SpaceNet1(SpaceNet):
@@ -811,13 +876,13 @@ class SpaceNet7(SpaceNet):
         """
         sample = {}
         files = self.files[index]
-        img, tfm = self._load_image(files["image_path"])
+        img, tfm, raster_crs = self._load_image(files["image_path"])
         h, w = img.shape[1:]
 
         ch, cw = self.chip_size["img"]
         sample["image"] = img[:, :ch, :cw]
         if self.split == "train":
-            mask = self._load_mask(files["label_path"], tfm, (h, w))
+            mask = self._load_mask(files["label_path"], tfm, raster_crs, (h, w))
             sample["mask"] = mask[:ch, :cw]
 
         if self.transforms is not None:
