@@ -23,8 +23,9 @@ from .utils import download_url, extract_archive, sort_sentinel2_bands
 class OSCD(VisionDataset):
     """OSCD dataset.
 
-    The Onera Satellite Change Detection dataset addresses the issue of detecting
-    changes between satellite images from different dates. Imagery comes from
+    The `Onera Satellite Change Detection <https://rcdaudt.github.io/oscd/>`_
+    dataset addresses the issue of detecting changes between
+    satellite images from different dates. Imagery comes from
     Sentinel-2 which contains varying resolutions per band.
 
     Dataset format:
