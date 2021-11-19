@@ -240,8 +240,6 @@ class XView2(VisionDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
-
-        .. versionadded: 0.2
         """
         ncols = 2
         image1 = draw_semantic_segmentation_masks(
