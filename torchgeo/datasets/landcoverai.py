@@ -234,6 +234,8 @@ class LandCoverAI(VisionDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
         """
         image = np.rollaxis(sample["image"].numpy(), 0, 3)
         mask = sample["mask"].numpy()

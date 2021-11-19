@@ -499,7 +499,9 @@ def percentile_normalization(
         upper: upper percentile in range [0,100]
 
     Returns
-        normalized version of ``img`` as
+        normalized version of ``img``
+
+    .. versionadded:: 0.2
     """
     assert lower < upper
     lower_percentile = np.percentile(  # type: ignore[no-untyped-call]

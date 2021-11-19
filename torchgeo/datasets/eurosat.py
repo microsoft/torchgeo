@@ -197,12 +197,14 @@ class EuroSAT(VisionClassificationDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`__getitem__`
+            sample: a sample returned by :meth:`VisionClassificationDataset.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
         """
         image = np.rollaxis(sample["image"][[3, 2, 1]].numpy(), 0, 3).copy()
         image = np.clip(image / 3000, 0, 1)
