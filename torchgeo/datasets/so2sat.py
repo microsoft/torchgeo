@@ -6,6 +6,7 @@
 import os
 from typing import Any, Callable, Dict, Optional, cast
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 import torch
@@ -14,7 +15,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
 
 from .geo import VisionDataset
-from .utils import check_integrity
+from .utils import check_integrity, percentile_normalization
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -203,6 +204,47 @@ class So2Sat(VisionDataset):
             if not check_integrity(filepath, md5 if self.checksum else None):
                 return False
         return True
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`VisionClassificationDataset.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        image = np.rollaxis(sample["image"][[10, 9, 8]].numpy(), 0, 3)
+        image = percentile_normalization(image, 0, 100)
+        label = cast(int, sample["label"].item())
+        label_class = self.classes[label]
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction = cast(int, sample["prediction"].item())
+            prediction_class = self.classes[prediction]
+
+        fig, ax = plt.subplots(figsize=(4, 4))
+        ax.imshow(image)
+        ax.axis("off")
+        if show_titles:
+            title = f"Label: {label_class}"
+            if showing_predictions:
+                title += f"\nPrediction: {prediction_class}"
+            ax.set_title(title)
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig
 
 
 class So2SatDataModule(pl.LightningDataModule):
