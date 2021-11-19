@@ -80,7 +80,7 @@ class TestOSCD:
 
     def test_len(self, dataset: OSCD) -> None:
         if dataset.split == "train":
-            assert len(dataset) == 2
+            assert len(dataset) == 1
         else:
             assert len(dataset) == 1
 

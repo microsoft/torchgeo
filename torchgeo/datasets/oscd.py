@@ -281,14 +281,14 @@ class OSCD(VisionDataset):
 
         rgb_inds = [3, 2, 1] if self.bands == "all" else [0, 1, 2]
 
-        def get_masked(img: Tensor) -> Array:
+        def get_masked(img: Tensor) -> Array:  # type: ignore[type-arg]
             rgb_img = img[rgb_inds].float().numpy()
             per02 = np.percentile(rgb_img, 2)  # type: ignore[no-untyped-call]
             per98 = np.percentile(rgb_img, 98)  # type: ignore[no-untyped-call]
             rgb_img = (np.clip((rgb_img - per02) / (per98 - per02), 0, 1) * 255).astype(
                 np.uint8
             )
-            array: Array = draw_semantic_segmentation_masks(
+            array: Array = draw_semantic_segmentation_masks(  # type: ignore[type-arg]
                 torch.from_numpy(rgb_img),  # type: ignore[attr-defined]
                 sample["mask"],
                 alpha=alpha,
