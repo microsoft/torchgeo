@@ -50,10 +50,10 @@ class OSCD(VisionDataset):
         "Onera Satellite Change Detection dataset - Images.zip": (
             "https://partage.imt.fr/index.php/s/gKRaWgRnLMfwMGo/download"
         ),
-        "Onera Satellite Change Detection dataset - Train Labels": (
+        "Onera Satellite Change Detection dataset - Train Labels.zip": (
             "https://partage.mines-telecom.fr/index.php/s/2D6n03k58ygBSpu/download"
         ),
-        "Onera Satellite Change Detection dataset - Test Labels": (
+        "Onera Satellite Change Detection dataset - Test Labels.zip": (
             "https://partage.imt.fr/index.php/s/gpStKn4Mpgfnr63/download"
         ),
     }
@@ -136,7 +136,7 @@ class OSCD(VisionDataset):
         regions = []
         labels_root = os.path.join(
             self.root,
-            f"Onera Satellite Change Detection dataset - {self.split.capitalize()}"
+            f"Onera Satellite Change Detection dataset - {self.split.capitalize()} "
             + "Labels",
         )
         images_root = os.path.join(
