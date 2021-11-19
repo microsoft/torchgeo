@@ -79,7 +79,10 @@ class TestOSCD:
             assert x["image"].shape[:2] == (2, 13)
 
     def test_len(self, dataset: OSCD) -> None:
-        assert len(dataset) == 1
+        if dataset.split == "train":
+            assert len(dataset) == 2
+        else:
+            assert len(dataset) == 1
 
     def test_add(self, dataset: OSCD) -> None:
         ds = dataset + dataset
