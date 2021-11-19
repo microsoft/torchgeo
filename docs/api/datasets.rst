@@ -129,6 +129,11 @@ LEVIR-CD+ (LEVIR Change Detection +)
 
 .. autoclass:: LEVIRCDPlus
 
+OSCD (Onera Satellite Change Detection)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: OSCD
+
 PatternNet
 ^^^^^^^^^^
 
