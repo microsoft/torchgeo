@@ -42,13 +42,16 @@ class OSCD(VisionDataset):
     * https://doi.org/10.1109/IGARSS.2018.8518015
     """
 
-    url = "https://drive.google.com/file/d/1jidN0DKEIybOrP0j7Bos8bGDDq3Varj3"
+    urls = {
+        "oscd_images.zip": "https://partage.imt.fr/index.php/s/gKRaWgRnLMfwMGo/download",
+        "oscd_train_labels.zip": "https://partage.mines-telecom.fr/index.php/s/2D6n03k58ygBSpu/download",
+        "oscd_test_labels.zip": "https://partage.imt.fr/index.php/s/gpStKn4Mpgfnr63/download"
+    }
+
     md5 = "7383412da7ece1dca1c12dc92ac77f09"
 
-    zipfile_glob = "*OSCD.zip"
-    zipfile_glob2 = "*Onera*.zip"
+    zipfile_glob = "*oscd*.zip"
     filename_glob = "*Onera*"
-    filename = "OSCD.zip"
     splits = ["train", "test"]
 
     colormap = ["blue"]
@@ -223,19 +226,17 @@ class OSCD(VisionDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        download_url(
-            self.url,
-            self.root,
-            filename=self.filename,
-            md5=self.md5 if self.checksum else None,
-        )
+        for f_name in self.urls:
+            download_url(
+                self.urls[f_name],
+                self.root,
+                filename=f_name,
+                md5=self.md5 if self.checksum else None,
+            )
 
     def _extract(self) -> None:
         """Extract the dataset."""
         pathname = os.path.join(self.root, self.zipfile_glob)
-        for zipfile in glob.iglob(pathname):
-            extract_archive(zipfile)
-        pathname = os.path.join(self.root, self.zipfile_glob2)
         for zipfile in glob.iglob(pathname):
             extract_archive(zipfile)
 
