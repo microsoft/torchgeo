@@ -10,6 +10,7 @@ from typing import Generator
 import pytest
 import torch
 import torch.nn as nn
+from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from matplotlib import pyplot as plt
 from torch.utils.data import ConcatDataset
@@ -23,9 +24,12 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestOSCD:
-    @pytest.fixture
+    @pytest.fixture(params=zip(["all", "rgb"], ["train", "test"]))
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+        self,
+        monkeypatch: Generator[MonkeyPatch, None, None],
+        tmp_path: Path,
+        request: SubRequest,
     ) -> OSCD:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.oscd, "download_url", download_url
@@ -54,18 +58,25 @@ class TestOSCD:
         }
         monkeypatch.setattr(OSCD, "urls", urls)  # type: ignore[attr-defined]
 
+        bands, split = request.param
         root = str(tmp_path)
         transforms = nn.Identity()  # type: ignore[attr-defined]
-        return OSCD(root, transforms=transforms, download=True, checksum=True)
+        return OSCD(
+            root, split, bands, transforms=transforms, download=True, checksum=True
+        )
 
     def test_getitem(self, dataset: OSCD) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert x["image"].ndim == 4
-        assert x["image"].shape[:2] == (2, 13)
         assert isinstance(x["mask"], torch.Tensor)
         assert x["mask"].ndim == 2
+
+        if dataset.bands == "rgb":
+            assert x["image"].shape[:2] == (2, 3)
+        else:
+            assert x["image"].shape[:2] == (2, 13)
 
     def test_len(self, dataset: OSCD) -> None:
         assert len(dataset) == 1

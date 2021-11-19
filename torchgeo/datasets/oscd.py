@@ -70,6 +70,7 @@ class OSCD(VisionDataset):
         self,
         root: str = "data",
         split: str = "train",
+        bands: str = "all",
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -90,9 +91,11 @@ class OSCD(VisionDataset):
                 don't match
         """
         assert split in self.splits
+        assert bands in ["rgb", "all"]
 
         self.root = root
         self.split = split
+        self.bands = bands
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
@@ -111,7 +114,6 @@ class OSCD(VisionDataset):
             data and label at that index
         """
         files = self.files[index]
-        # TODO: implement choosing bands (right now assuming bands="all")
         image1 = self._load_image(files["images1"])
         image2 = self._load_image(files["images2"])
         mask = self._load_target(str(files["mask"]))
@@ -154,6 +156,9 @@ class OSCD(VisionDataset):
             )
             images1 = sorted(images1, key=sort_sentinel2_bands)
             images2 = sorted(images2, key=sort_sentinel2_bands)
+            if self.bands == "rgb":
+                images1 = images1[1:4][::-1]
+                images2 = images2[1:4][::-1]
             with open(os.path.join(images_root, region, "dates.txt")) as f:
                 dates = tuple(
                     [line.split()[-1] for line in f.read().strip().splitlines()]
@@ -271,14 +276,16 @@ class OSCD(VisionDataset):
         """
         ncols = 2
 
-        rgb_img1 = sample["image"][0, [3, 2, 1]].float().numpy()
+        rgb_inds = [3, 2, 1] if self.bands == "all" else [0, 1, 2]
+
+        rgb_img1 = sample["image"][0, rgb_inds].float().numpy()
         per02 = np.percentile(rgb_img1, 2)  # type: ignore[no-untyped-call]
         per98 = np.percentile(rgb_img1, 98)  # type: ignore[no-untyped-call]
         rgb_img1 = (np.clip((rgb_img1 - per02) / (per98 - per02), 0, 1) * 255).astype(
             np.uint8
         )
 
-        rgb_img2 = sample["image"][1, [3, 2, 1]].float().numpy()
+        rgb_img2 = sample["image"][1, rgb_inds].float().numpy()
         per02 = np.percentile(rgb_img2, 2)  # type: ignore[no-untyped-call]
         per98 = np.percentile(rgb_img2, 98)  # type: ignore[no-untyped-call]
         rgb_img2 = (np.clip((rgb_img2 - per02) / (per98 - per02), 0, 1) * 255).astype(
