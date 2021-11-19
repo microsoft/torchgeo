@@ -40,6 +40,8 @@ class OSCD(VisionDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1109/IGARSS.2018.8518015
+
+    .. versionadded:: 0.2
     """
 
     urls = {
