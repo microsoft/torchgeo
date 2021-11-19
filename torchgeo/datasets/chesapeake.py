@@ -29,6 +29,7 @@ from .geo import GeoDataset, RasterDataset
 from .utils import (
     BoundingBox,
     check_integrity,
+    collate_dict,
     download_and_extract_archive,
     download_url,
     extract_archive,
@@ -783,7 +784,10 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             length=self.patches_per_tile * len(self.train_dataset),
         )
         return DataLoader(
-            self.train_dataset, batch_sampler=sampler, num_workers=self.num_workers
+            self.train_dataset,
+            batch_sampler=sampler,
+            num_workers=self.num_workers,
+            collate_fn=collate_dict,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -802,6 +806,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             batch_size=self.batch_size,
             sampler=sampler,
             num_workers=self.num_workers,
+            collate_fn=collate_dict,
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
@@ -820,4 +825,5 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             batch_size=self.batch_size,
             sampler=sampler,
             num_workers=self.num_workers,
+            collate_fn=collate_dict,
         )
