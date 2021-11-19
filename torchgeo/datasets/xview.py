@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 import torch
-from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 from torch.utils.data import DataLoader
@@ -230,7 +229,7 @@ class XView2(VisionDataset):
         show_titles: bool = True,
         suptitle: Optional[str] = None,
         alpha: float = 0.5,
-    ) -> Figure:
+    ) -> plt.Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -241,6 +240,8 @@ class XView2(VisionDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        .. versionadded: 0.2
         """
         ncols = 2
         image1 = draw_semantic_segmentation_masks(
