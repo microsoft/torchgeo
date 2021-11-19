@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -67,6 +68,16 @@ class TestLandCoverAI:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             LandCoverAI(str(tmp_path))
+
+    def test_plot(self, dataset: LandCoverAI) -> None:
+        x = dataset[0].copy()
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
+        x["prediction"] = x["mask"].clone()
+        dataset.plot(x)
+        plt.close()
 
 
 class TestLandCoverAIDataModule:

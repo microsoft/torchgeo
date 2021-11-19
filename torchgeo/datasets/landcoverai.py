@@ -8,9 +8,11 @@ import os
 from functools import lru_cache
 from typing import Any, Callable, Dict, Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 import torch
+from matplotlib.colors import ListedColormap
 from PIL import Image
 from torch import Tensor
 from torch.utils.data import DataLoader
@@ -67,6 +69,16 @@ class LandCoverAI(VisionDataset):
     filename = "landcover.ai.v1.zip"
     md5 = "3268c89070e8734b4e91d531c0617e03"
     sha256 = "15ee4ca9e3fd187957addfa8f0d74ac31bc928a966f76926e11b3c33ea76daa1"
+    classes = ["Background", "Building", "Woodland", "Water", "Road"]
+    cmap = ListedColormap(
+        [
+            [0.63921569, 1.0, 0.45098039],
+            [0.61176471, 0.61176471, 0.61176471],
+            [0.14901961, 0.45098039, 0.0],
+            [0.0, 0.77254902, 1.0],
+            [0.0, 0.0, 0.0],
+        ]
+    )
 
     def __init__(
         self,
@@ -206,6 +218,54 @@ class LandCoverAI(VisionDataset):
                 split = f.read().encode("utf-8")
                 assert hashlib.sha256(split).hexdigest() == self.sha256
                 exec(split)
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        image = np.rollaxis(sample["image"].numpy(), 0, 3)
+        mask = sample["mask"].numpy()
+
+        num_panels = 2
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            predictions = sample["prediction"].numpy()
+            num_panels += 1
+
+        fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
+        axs[0].imshow(image)
+        axs[0].axis("off")
+        axs[1].imshow(mask, vmin=0, vmax=4, cmap=self.cmap, interpolation="none")
+        axs[1].axis("off")
+        if show_titles:
+            axs[0].set_title("Image")
+            axs[1].set_title("Mask")
+
+        if showing_predictions:
+            axs[2].imshow(
+                predictions, vmin=0, vmax=4, cmap=self.cmap, interpolation="none"
+            )
+            axs[2].axis("off")
+            if show_titles:
+                axs[2].set_title("Predictions")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig
 
 
 class LandCoverAIDataModule(pl.LightningDataModule):

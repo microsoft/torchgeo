@@ -4,8 +4,10 @@
 """EuroSAT dataset."""
 
 import os
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, cast
 
+import matplotlib.pyplot as plt
+import numpy as np
 import pytorch_lightning as pl
 import torch
 from torch import Tensor
@@ -72,6 +74,18 @@ class EuroSAT(VisionClassificationDataset):
         "val": "95de90f2aa998f70a3b2416bfe0687b4",
         "test": "7ae5ab94471417b6e315763121e67c5f",
     }
+    classes = [
+        "Industrial Buildings",
+        "Residential Buildings",
+        "Annual Crop",
+        "Permanent Crop",
+        "River",
+        "Sea and Lake",
+        "Herbaceous Vegetation",
+        "Highway",
+        "Pasture",
+        "Forest",
+    ]
 
     def __init__(
         self,
@@ -173,6 +187,48 @@ class EuroSAT(VisionClassificationDataset):
         """Extract the dataset."""
         filepath = os.path.join(self.root, self.filename)
         extract_archive(filepath)
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`VisionClassificationDataset.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        image = np.rollaxis(sample["image"][[3, 2, 1]].numpy(), 0, 3).copy()
+        image = np.clip(image / 3000, 0, 1)
+
+        label = cast(int, sample["label"].item())
+        label_class = self.classes[label]
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction = cast(int, sample["prediction"].item())
+            prediction_class = self.classes[prediction]
+
+        fig, ax = plt.subplots(figsize=(4, 4))
+        ax.imshow(image)
+        ax.axis("off")
+        if show_titles:
+            title = f"Label: {label_class}"
+            if showing_predictions:
+                title += f"\nPrediction: {prediction_class}"
+            ax.set_title(title)
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig
 
 
 class EuroSATDataModule(pl.LightningDataModule):
