@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -90,3 +91,19 @@ class TestSeasonalContrastS2:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):
             SeasonalContrastS2(str(tmp_path))
+
+    def test_plot(self, dataset: SeasonalContrastS2) -> None:
+        if not all(band in dataset.bands for band in dataset.RGB_BANDS):
+            with pytest.raises(ValueError, match="Dataset doesn't contain"):
+                x = dataset[0].copy()
+                dataset.plot(x, suptitle="Test")
+        else:
+            x = dataset[0].copy()
+            dataset.plot(x, suptitle="Test")
+            plt.close()
+            dataset.plot(x, show_titles=False)
+            plt.close()
+
+            with pytest.raises(ValueError, match="doesn't support plotting"):
+                x["prediction"] = torch.tensor(1)  # type: ignore[attr-defined]
+                dataset.plot(x)

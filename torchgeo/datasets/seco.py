@@ -7,6 +7,7 @@ import os
 from collections import defaultdict
 from typing import Callable, Dict, List, Optional, cast
 
+import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
@@ -14,7 +15,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import VisionDataset
-from .utils import download_url, extract_archive
+from .utils import download_url, extract_archive, percentile_normalization
 
 
 class SeasonalContrastS2(VisionDataset):
@@ -229,3 +230,52 @@ class SeasonalContrastS2(VisionDataset):
     def _extract(self) -> None:
         """Extract the dataset."""
         extract_archive(os.path.join(self.root, self.filename))
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        Raises:
+            ValueError: if the RGB bands are included in ``self.bands`` or the sample
+                contains a "prediction" key
+
+        .. versionadded:: 0.2
+        """
+        if "prediction" in sample:
+            raise ValueError("This dataset doesn't support plotting predictions")
+
+        rgb_indices = []
+        for band in self.RGB_BANDS:
+            if band in self.bands:
+                rgb_indices.append(self.bands.index(band))
+            else:
+                raise ValueError("Dataset doesn't contain some of the RGB bands")
+
+        images = []
+        for i in range(5):
+            image = np.rollaxis(sample["image"][i, rgb_indices].numpy(), 0, 3)
+            image = percentile_normalization(image, 0, 100)
+            images.append(image)
+
+        fig, axs = plt.subplots(ncols=5, figsize=(20, 4))
+        for i in range(5):
+            axs[i].imshow(images[i])
+            axs[i].axis("off")
+            if show_titles:
+                axs[i].set_title(f"t={i+1}")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig
