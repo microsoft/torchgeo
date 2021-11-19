@@ -504,12 +504,8 @@ def percentile_normalization(
     .. versionadded:: 0.2
     """
     assert lower < upper
-    lower_percentile = np.percentile(  # type: ignore[no-untyped-call]
-        img, lower, axis=(0, 1)
-    )
-    upper_percentile = np.percentile(  # type: ignore[no-untyped-call]
-        img, upper, axis=(0, 1)
-    )
+    lower_percentile = np.percentile(img, lower)  # type: ignore[no-untyped-call]
+    upper_percentile = np.percentile(img, upper)  # type: ignore[no-untyped-call]
     img_normalized = np.clip(
         (img - lower_percentile) / (upper_percentile - lower_percentile), 0, 1
     )
