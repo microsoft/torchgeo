@@ -329,7 +329,7 @@ class SpaceNet(VisionDataset, abc.ABC):
             axs[0].set_title("Image")
 
         if show_mask:
-            axs[1].imshow(mask)
+            axs[1].imshow(mask, interpolation="none")
             axs[1].axis("off")
             if show_titles:
                 axs[1].set_title("Predictions")
