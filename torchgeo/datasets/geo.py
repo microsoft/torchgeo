@@ -851,7 +851,7 @@ class UnionDataset(GeoDataset):
         Raises:
             IndexError: if query is not within bounds of the index
         """
-        if not query.intersects(tuple(self.bounds)):
+        if not query.intersects(self.bounds):
             raise IndexError(
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
@@ -861,7 +861,7 @@ class UnionDataset(GeoDataset):
         # images and replace with Sentinel images.
         sample = {}
         for ds in self.datasets:
-            if query.intersects(tuple(ds.bounds)):
+            if query.intersects(ds.bounds):
                 try:
                     sample.update(ds[query])
                 except IndexError:
