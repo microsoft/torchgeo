@@ -12,9 +12,9 @@ import numpy as np
 import rasterio
 import torch
 from matplotlib.figure import Figure
+from numpy import ndarray as Array
 from PIL import Image
 from torch import Tensor
-from numpy import ndarray as Array
 
 from ..datasets.utils import draw_semantic_segmentation_masks
 from .geo import VisionDataset
