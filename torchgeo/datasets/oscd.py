@@ -148,17 +148,19 @@ class OSCD(VisionDataset):
         for folder in folders:
             region = folder.split(os.sep)[-2]
             mask = os.path.join(labels_root, region, "cm", "cm.png")
-            images1 = glob.glob(
-                os.path.join(images_root, region, "imgs_1_rect", "*.tif")
-            )
-            images2 = glob.glob(
-                os.path.join(images_root, region, "imgs_2_rect", "*.tif")
-            )
-            images1 = sorted(images1, key=sort_sentinel2_bands)
-            images2 = sorted(images2, key=sort_sentinel2_bands)
+
+            def get_image_paths(ind):
+                return sorted(
+                    glob.glob(
+                        os.path.join(images_root, region, f"imgs_{ind}_rect", "*.tif")
+                    ),
+                    key=sort_sentinel2_bands,
+                )
+
+            images1, images2 = get_image_paths(1), get_image_paths(2)
             if self.bands == "rgb":
-                images1 = images1[1:4][::-1]
-                images2 = images2[1:4][::-1]
+                images1, images2 = images1[1:4][::-1], images2[1:4][::-1]
+
             with open(os.path.join(images_root, region, "dates.txt")) as f:
                 dates = tuple(
                     [line.split()[-1] for line in f.read().strip().splitlines()]
