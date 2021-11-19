@@ -10,18 +10,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 import torch
-from matplotlib.figure import Figure
 from torch import Tensor
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, Normalize
 
 from .geo import VisionClassificationDataset
-from .utils import (
-    check_integrity,
-    download_url,
-    extract_archive,
-    rasterio_loader,
-)
+from .utils import check_integrity, download_url, extract_archive, rasterio_loader
 
 
 class EuroSAT(VisionClassificationDataset):
@@ -199,7 +193,7 @@ class EuroSAT(VisionClassificationDataset):
         sample: Dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> Figure:
+    ) -> plt.Figure:
         """Plot a sample from the dataset.
 
         Args:
