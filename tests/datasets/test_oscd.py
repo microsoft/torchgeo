@@ -78,7 +78,7 @@ class TestOSCD:
         OSCD(root=dataset.root, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join("tests", "data", "oscd", "OSCD.zip")
+        pathname = os.path.join("tests", "data", "oscd", "*Onera*.zip")
         root = str(tmp_path)
         for zipfile in glob.iglob(pathname):
             shutil.copy(zipfile, root)
