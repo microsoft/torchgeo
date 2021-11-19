@@ -12,7 +12,7 @@ import sys
 import tarfile
 import zipfile
 from datetime import datetime, timedelta
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import rasterio
@@ -482,3 +482,33 @@ def rgb_to_mask(
         if isinstance(cmask, np.ndarray):
             mask[cmask.all(axis=-1)] = i
     return mask
+
+
+def percentile_normalization(
+    img: np.ndarray, lower: float = 2, upper: float = 98  # type: ignore[type-arg]
+) -> np.ndarray:  # type: ignore[type-arg]
+    """Applies percentile normalization to an input image.
+
+    Specifically, this will rescale the values in the input such that values <= the
+    lower percentile value will be 0 and values >= the upper percentile value will be 1.
+    Using the 2nd and 98th percentile usually results in good visualizations.
+
+    Args:
+        img: image to normalize
+        lower: lower percentile in range [0,100]
+        upper: upper percentile in range [0,100]
+
+    Returns
+        normalized version of ``img`` as
+    """
+    assert lower < upper
+    lower_percentile = np.percentile(  # type: ignore[no-untyped-call]
+        img, lower, axis=(0, 1)
+    )
+    upper_percentile = np.percentile(  # type: ignore[no-untyped-call]
+        img, upper, axis=(0, 1)
+    )
+    img_normalized = np.clip(
+        (img - lower_percentile) / (upper_percentile - lower_percentile), 0, 1
+    )
+    return cast(np.ndarray, img_normalized)  # type: ignore[type-arg]
