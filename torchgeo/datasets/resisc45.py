@@ -4,8 +4,10 @@
 """RESISC45 dataset."""
 
 import os
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, cast
 
+import matplotlib.pyplot as plt
+import numpy as np
 import pytorch_lightning as pl
 import torch
 from torch import Tensor
@@ -113,6 +115,53 @@ class RESISC45(VisionClassificationDataset):
         "val": "a0770cee4c5ca20b8c32bbd61e114805",
         "test": "3dda9e4988b47eb1de9f07993653eb08",
     }
+    classes = [
+        "airplane",
+        "airport",
+        "baseball_diamond",
+        "basketball_court",
+        "beach",
+        "bridge",
+        "chaparral",
+        "church",
+        "circular_farmland",
+        "cloud",
+        "commercial_area",
+        "dense_residential",
+        "desert",
+        "forest",
+        "freeway",
+        "golf_course",
+        "ground_track_field",
+        "harbor",
+        "industrial_area",
+        "intersection",
+        "island",
+        "lake",
+        "meadow",
+        "medium_residential",
+        "mobile_home_park",
+        "mountain",
+        "overpass",
+        "palace",
+        "parking_lot",
+        "railway",
+        "railway_station",
+        "rectangular_farmland",
+        "river",
+        "roundabout",
+        "runway",
+        "sea_ice",
+        "ship",
+        "snowberg",
+        "sparse_residential",
+        "stadium",
+        "storage_tank",
+        "tennis_court",
+        "terrace",
+        "thermal_power_station",
+        "wetland",
+    ]
 
     def __init__(
         self,
@@ -199,6 +248,44 @@ class RESISC45(VisionClassificationDataset):
         """Extract the dataset."""
         filepath = os.path.join(self.root, self.filename)
         extract_archive(filepath)
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        image = np.rollaxis(sample["image"].numpy(), 0, 3)
+        label = cast(int, sample["label"].item())
+        label_class = self.classes[label]
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction = cast(int, sample["prediction"].item())
+            prediction_class = self.classes[prediction]
+
+        fig, ax = plt.subplots(figsize=(4, 4))
+        ax.imshow(image)
+        ax.axis("off")
+        if show_titles:
+            title = f"Label: {label_class}"
+            if showing_predictions:
+                title += f"\nPrediction: {prediction_class}"
+            ax.set_title(title)
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig
 
 
 class RESISC45DataModule(pl.LightningDataModule):
