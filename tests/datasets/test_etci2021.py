@@ -88,12 +88,12 @@ class TestETCI2021:
 
     def test_plot(self, dataset: ETCI2021) -> None:
         x = dataset[0].copy()
-        ETCI2021.plot(x, suptitle="Test")
+        dataset.plot(x, suptitle="Test")
         plt.close()
-        ETCI2021.plot(x, show_titles=False)
+        dataset.plot(x, show_titles=False)
         plt.close()
         x["prediction"] = x["mask"][0].clone()
-        ETCI2021.plot(x)
+        dataset.plot(x)
         plt.close()
 
 
