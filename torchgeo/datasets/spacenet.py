@@ -710,6 +710,7 @@ class SpaceNet7(SpaceNet):
        * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
          imagery and labels from the Radiant Earth MLHub
 
+    .. versionadded:: 0.2
     """
 
     dataset_id = "spacenet7"

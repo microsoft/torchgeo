@@ -49,6 +49,7 @@ class XView2(VisionDataset):
 
     * https://arxiv.org/abs/1911.09296
 
+    .. versionadded: 0.2
     """
 
     metadata = {
@@ -288,6 +289,8 @@ class XView2DataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the xView2 dataset.
 
     Uses the train/val/test splits from the dataset.
+
+    .. versionadded: 0.2
     """
 
     def __init__(

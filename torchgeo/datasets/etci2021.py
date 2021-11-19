@@ -330,6 +330,8 @@ class ETCI2021DataModule(pl.LightningDataModule):
 
     Splits the existing train split from the dataset into train/val with 80/20
     proportions, then uses the existing val dataset as the test data.
+
+    .. versionadded:: 0.2
     """
 
     band_means = torch.tensor(  # type: ignore[attr-defined]
