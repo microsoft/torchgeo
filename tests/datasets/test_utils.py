@@ -12,6 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Generator, Tuple
 
+import numpy as np
 import pytest
 import torch
 from _pytest.monkeypatch import MonkeyPatch
@@ -28,6 +29,7 @@ from torchgeo.datasets.utils import (
     download_radiant_mlhub_collection,
     download_radiant_mlhub_dataset,
     extract_archive,
+    percentile_normalization,
     working_dir,
 )
 
@@ -361,3 +363,11 @@ def test_dataset_split() -> None:
     assert len(train_ds) == num_samples // 3
     assert len(val_ds) == num_samples // 3
     assert len(test_ds) == num_samples // 3
+
+
+def test_percentile_normalization() -> None:
+    img = np.array([[1, 2], [98, 100]])
+
+    img = percentile_normalization(img, 2, 98)
+    assert img.min() == 0
+    assert img.max() == 1

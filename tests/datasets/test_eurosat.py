@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -89,6 +90,16 @@ class TestEuroSAT:
         "to automaticaly download the dataset."
         with pytest.raises(RuntimeError, match=err):
             EuroSAT(str(tmp_path))
+
+    def test_plot(self, dataset: EuroSAT) -> None:
+        x = dataset[0].copy()
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
+        x["prediction"] = x["label"].clone()
+        dataset.plot(x)
+        plt.close()
 
 
 class TestEuroSATDataModule:

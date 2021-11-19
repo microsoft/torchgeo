@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 import torch
-from matplotlib.figure import Figure
 from PIL import Image
 from torch import Generator, Tensor  # type: ignore[attr-defined]
 from torch.utils.data import DataLoader, random_split
@@ -265,7 +264,7 @@ class ETCI2021(VisionDataset):
         sample: Dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> Figure:
+    ) -> plt.Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -280,18 +279,16 @@ class ETCI2021(VisionDataset):
         vh = np.rollaxis(sample["image"][3:].numpy(), 0, 3)
         water_mask = sample["mask"][0].numpy()
 
-        showing_flood_mask = False
-        showing_predictions = False
+        showing_flood_mask = sample["mask"].shape[0] > 1
+        showing_predictions = "prediction" in sample
         num_panels = 3
-        if sample["mask"].shape[0] > 1:
+        if showing_flood_mask:
             flood_mask = sample["mask"][1].numpy()
             num_panels += 1
-            showing_flood_mask = True
 
-        if "prediction" in sample:
+        if showing_predictions:
             predictions = sample["prediction"].numpy()
             num_panels += 1
-            showing_predictions = True
 
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 3))
         axs[0].imshow(vv)

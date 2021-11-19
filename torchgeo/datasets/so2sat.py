@@ -6,6 +6,7 @@
 import os
 from typing import Any, Callable, Dict, Optional, cast
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 import torch
@@ -14,7 +15,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
 
 from .geo import VisionDataset
-from .utils import check_integrity
+from .utils import check_integrity, percentile_normalization
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -41,6 +42,26 @@ class So2Sat(VisionDataset):
     * Training: 42 cities around the world
     * Validation: western half of 10 other cities covering 10 cultural zones
     * Testing: eastern half of the 10 other cities
+
+    Dataset classes:
+
+    0. Compact high rise
+    1. Compact middle rise
+    2. Compact low rise
+    3. Open high rise
+    4. Open mid rise
+    5. Open low rise
+    6. Lightweight low rise
+    7. Large low rise
+    8. Sparsely built
+    9. Heavy industry
+    10. Dense trees
+    11. Scattered trees
+    12. Bush, scrub
+    13. Low plants
+    14. Bare rock or paved
+    15. Bare soil or sand
+    16. Water
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -71,6 +92,25 @@ class So2Sat(VisionDataset):
         "validation": "71cfa6795de3e22207229d06d6f8775d",
         "test": "e81426102b488623a723beab52b31a8a",
     }
+    classes = [
+        "Compact high rise",
+        "Compact mid rise",
+        "Compact low rise",
+        "Open high rise",
+        "Open mid rise",
+        "Open low rise",
+        "Lightweight low rise",
+        "Large low rise",
+        "Sparsely built",
+        "Heavy industry",
+        "Dense trees",
+        "Scattered trees",
+        "Bush, scrub",
+        "Low plants",
+        "Bare rock or paved",
+        "Bare soil or sand",
+        "Water",
+    ]
 
     def __init__(
         self,
@@ -123,7 +163,8 @@ class So2Sat(VisionDataset):
         with h5py.File(self.fn, "r") as f:
             s1 = f["sen1"][index].astype(np.float64)  # convert from <f8 to float64
             s2 = f["sen2"][index].astype(np.float64)  # convert from <f8 to float64
-            label = int(  # convert one-hot encoding to int64 then Python int
+            # convert one-hot encoding to int64 then torch int
+            label = torch.tensor(  # type: ignore[attr-defined]
                 f["label"][index].argmax()
             )
 
@@ -163,6 +204,47 @@ class So2Sat(VisionDataset):
             if not check_integrity(filepath, md5 if self.checksum else None):
                 return False
         return True
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        image = np.rollaxis(sample["image"][[10, 9, 8]].numpy(), 0, 3)
+        image = percentile_normalization(image, 0, 100)
+        label = cast(int, sample["label"].item())
+        label_class = self.classes[label]
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction = cast(int, sample["prediction"].item())
+            prediction_class = self.classes[prediction]
+
+        fig, ax = plt.subplots(figsize=(4, 4))
+        ax.imshow(image)
+        ax.axis("off")
+        if show_titles:
+            title = f"Label: {label_class}"
+            if showing_predictions:
+                title += f"\nPrediction: {prediction_class}"
+            ax.set_title(title)
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig
 
 
 class So2SatDataModule(pl.LightningDataModule):
