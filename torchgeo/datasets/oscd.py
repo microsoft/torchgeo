@@ -46,15 +46,16 @@ class OSCD(VisionDataset):
     """
 
     folder_prefix = "Onera Satellite Change Detection dataset - "
-    links = [
-        "https://partage.imt.fr/index.php/s/gKRaWgRnLMfwMGo/download",
-        "https://partage.mines-telecom.fr/index.php/s/2D6n03k58ygBSpu/download",
-        "https://partage.imt.fr/index.php/s/gpStKn4Mpgfnr63/download",
-    ]
     urls = {
-        folder_prefix + "Images.zip": links[0],
-        folder_prefix + "Train Labels.zip": links[1],
-        folder_prefix + "Test Labels.zip": links[2],
+        "Onera Satellite Change Detection dataset - Images.zip": (
+            "https://partage.imt.fr/index.php/s/gKRaWgRnLMfwMGo/download"
+        ),
+        "Onera Satellite Change Detection dataset - Train Labels": (
+            "https://partage.mines-telecom.fr/index.php/s/2D6n03k58ygBSpu/download"
+        ),
+        "Onera Satellite Change Detection dataset - Test Labels": (
+            "https://partage.imt.fr/index.php/s/gpStKn4Mpgfnr63/download"
+        ),
     }
 
     md5 = "7383412da7ece1dca1c12dc92ac77f09"
@@ -134,9 +135,13 @@ class OSCD(VisionDataset):
     def _load_files(self) -> List[Dict[str, Union[str, Sequence[str]]]]:
         regions = []
         labels_root = os.path.join(
-            self.root, self.folder_prefix + f"{self.split.capitalize()} Labels"
+            self.root,
+            f"Onera Satellite Change Detection dataset - {self.split.capitalize()}"
+            + "Labels",
         )
-        images_root = os.path.join(self.root, self.folder_prefix + "Images")
+        images_root = os.path.join(
+            self.root, "Onera Satellite Change Detection dataset - Images"
+        )
         folders = glob.glob(os.path.join(labels_root, "*/"))
         for folder in folders:
             region = folder.split(os.sep)[-2]
