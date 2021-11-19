@@ -29,8 +29,8 @@ from torchgeo.datasets.utils import (
     download_radiant_mlhub_collection,
     download_radiant_mlhub_dataset,
     extract_archive,
-    working_dir,
     percentile_normalization,
+    working_dir,
 )
 
 
@@ -366,10 +366,7 @@ def test_dataset_split() -> None:
 
 
 def test_percentile_normalization() -> None:
-    img = np.array([
-        [1, 2],
-        [98, 100],
-    ])
+    img = np.array([[1, 2], [98, 100]])
 
     img = percentile_normalization(img, 2, 98)
     assert img.min() == 0
