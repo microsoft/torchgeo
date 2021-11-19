@@ -10,9 +10,9 @@ from typing import Generator
 import pytest
 import torch
 import torch.nn as nn
+from _pytest.monkeypatch import MonkeyPatch
 from matplotlib import pyplot as plt
 from torch.utils.data import ConcatDataset
-from _pytest.monkeypatch import MonkeyPatch
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import OSCD
@@ -32,11 +32,26 @@ class TestOSCD:
         )
         md5 = "d6ebaae1ea0f3ae960af31531d394521"
         monkeypatch.setattr(OSCD, "md5", md5)  # type: ignore[attr-defined]
-	urls = {
-	    "Onera Satellite Change Detection dataset - Images.zip": os.path.join("tests", "data", "oscd", "Onera Satellite Change Detection dataset - Images.zip"),
-	    "Onera Satellite Change Detection dataset - Train Labels": os.path.join("tests", "data", "oscd", "Onera Satellite Change Detection dataset - Train Labels"),
-	    "Onera Satellite Change Detection dataset - Test Labels": os.path.join("tests", "data", "oscd", "Onera Satellite Change Detection dataset - Test Labels")
-	}
+        urls = {
+            "Onera Satellite Change Detection dataset - Images.zip": os.path.join(
+                "tests",
+                "data",
+                "oscd",
+                "Onera Satellite Change Detection dataset - Images.zip",
+            ),
+            "Onera Satellite Change Detection dataset - Train Labels": os.path.join(
+                "tests",
+                "data",
+                "oscd",
+                "Onera Satellite Change Detection dataset - Train Labels",
+            ),
+            "Onera Satellite Change Detection dataset - Test Labels": os.path.join(
+                "tests",
+                "data",
+                "oscd",
+                "Onera Satellite Change Detection dataset - Test Labels",
+            ),
+        }
         monkeypatch.setattr(OSCD, "urls", urls)  # type: ignore[attr-defined]
 
         root = str(tmp_path)
@@ -48,7 +63,7 @@ class TestOSCD:
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert x["image"].ndim == 4
-        assert x["image"].shape[:2] == (2, 13) 
+        assert x["image"].shape[:2] == (2, 13)
         assert isinstance(x["mask"], torch.Tensor)
         assert x["mask"].ndim == 2
 
