@@ -44,6 +44,9 @@ class RCF(Module):
             kernel_size: size of the kernel used to compute the RCFs
             bias: bias of the convolutional layer
             seed: random seed used to initialize the convolutional layer
+
+        .. versionadded:: 0.2
+           The *seed* parameter.
         """
         super().__init__()
 

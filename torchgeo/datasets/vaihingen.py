@@ -50,6 +50,7 @@ class Vaihingen2D(VisionDataset):
 
     * https://doi.org/10.5194/isprsannals-I-3-293-2012
 
+    .. versionadded: 0.2
     """  # noqa: E501
 
     filenames = [
@@ -298,6 +299,8 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the Vaihingen2D dataset.
 
     Uses the train/test splits from the dataset.
+
+    .. versionadded: 0.2
     """
 
     def __init__(

@@ -179,6 +179,8 @@ class EuroSATDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the EuroSAT dataset.
 
     Uses the train/val/test splits from the dataset.
+
+    .. versionadded:: 0.2
     """
 
     band_means = torch.tensor(  # type: ignore[attr-defined]

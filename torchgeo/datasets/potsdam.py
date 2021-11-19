@@ -50,6 +50,7 @@ class Potsdam2D(VisionDataset):
 
     * https://doi.org/10.5194/isprsannals-I-3-293-2012
 
+    .. versionadded:: 0.2
     """  # noqa: E501
 
     filenames = ["4_Ortho_RGBIR.zip", "5_Labels_all.zip"]
@@ -298,6 +299,8 @@ class Potsdam2DDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the Potsdam2D dataset.
 
     Uses the train/test splits from the dataset.
+
+    .. versionadded: 0.2
     """
 
     def __init__(
