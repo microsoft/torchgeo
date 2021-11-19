@@ -42,6 +42,26 @@ class So2Sat(VisionDataset):
     * Validation: western half of 10 other cities covering 10 cultural zones
     * Testing: eastern half of the 10 other cities
 
+    Dataset classes:
+
+    0. Compact high rise
+    1. Compact middle rise
+    2. Compact low rise
+    3. Open high rise
+    4. Open mid rise
+    5. Open low rise
+    6. Lightweight low rise
+    7. Large low rise
+    8. Sparsely built
+    9. Heavy industry
+    10. Dense trees
+    11. Scattered trees
+    12. Bush, scrub
+    13. Low plants
+    14. Bare rock or paved
+    15. Bare soil or sand
+    16. Water
+
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1109/MGRS.2020.2964708
@@ -71,6 +91,25 @@ class So2Sat(VisionDataset):
         "validation": "71cfa6795de3e22207229d06d6f8775d",
         "test": "e81426102b488623a723beab52b31a8a",
     }
+    classes = [
+        "Compact high rise",
+        "Compact mid rise",
+        "Compact low rise",
+        "Open high rise",
+        "Open mid rise",
+        "Open low rise",
+        "Lightweight low rise",
+        "Large low rise",
+        "Sparsely built",
+        "Heavy industry",
+        "Dense trees",
+        "Scattered trees",
+        "Bush, scrub",
+        "Low plants",
+        "Bare rock or paved",
+        "Bare soil or sand",
+        "Water",
+    ]
 
     def __init__(
         self,
@@ -123,7 +162,8 @@ class So2Sat(VisionDataset):
         with h5py.File(self.fn, "r") as f:
             s1 = f["sen1"][index].astype(np.float64)  # convert from <f8 to float64
             s2 = f["sen2"][index].astype(np.float64)  # convert from <f8 to float64
-            label = int(  # convert one-hot encoding to int64 then Python int
+            # convert one-hot encoding to int64 then torch int
+            label = torch.tensor(  # type: ignore[attr-defined]
                 f["label"][index].argmax()
             )
 

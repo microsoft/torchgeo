@@ -35,7 +35,7 @@ class TestSo2Sat:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
-        assert isinstance(x["label"], int)
+        assert isinstance(x["label"], torch.Tensor)
 
     def test_len(self, dataset: So2Sat) -> None:
         assert len(dataset) == 10
