@@ -304,6 +304,8 @@ class SpaceNet(VisionDataset, abc.ABC):
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
         """
         # image can be 1 channel or >3 channels
         if sample["image"].shape[0] == 1:
