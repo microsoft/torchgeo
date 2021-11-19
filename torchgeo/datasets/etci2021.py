@@ -260,8 +260,8 @@ class ETCI2021(VisionDataset):
             md5=self.metadata[self.split]["md5"] if self.checksum else None,
         )
 
-    @staticmethod
     def plot(
+        self,
         sample: Dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
