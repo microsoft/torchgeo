@@ -10,8 +10,9 @@ from typing import Generator
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
+from matplotlib import pyplot as plt
 from torch.utils.data import ConcatDataset
+from _pytest.monkeypatch import MonkeyPatch
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import OSCD
@@ -74,3 +75,4 @@ class TestOSCD:
 
     def test_plot(self, dataset: OSCD) -> None:
         dataset.plot(dataset[0], suptitle="Test")
+        plt.close()
