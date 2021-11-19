@@ -39,17 +39,17 @@ class TestOSCD:
                 "oscd",
                 "Onera Satellite Change Detection dataset - Images.zip",
             ),
-            "Onera Satellite Change Detection dataset - Train Labels": os.path.join(
+            "Onera Satellite Change Detection dataset - Train Labels.zip": os.path.join(
                 "tests",
                 "data",
                 "oscd",
-                "Onera Satellite Change Detection dataset - Train Labels",
+                "Onera Satellite Change Detection dataset - Train Labels.zip",
             ),
-            "Onera Satellite Change Detection dataset - Test Labels": os.path.join(
+            "Onera Satellite Change Detection dataset - Test Labels.zip": os.path.join(
                 "tests",
                 "data",
                 "oscd",
-                "Onera Satellite Change Detection dataset - Test Labels",
+                "Onera Satellite Change Detection dataset - Test Labels.zip",
             ),
         }
         monkeypatch.setattr(OSCD, "urls", urls)  # type: ignore[attr-defined]
