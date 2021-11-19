@@ -43,14 +43,14 @@ class OSCD(VisionDataset):
     """
 
     urls = {
-        "oscd_images.zip": "https://partage.imt.fr/index.php/s/gKRaWgRnLMfwMGo/download",
-        "oscd_train_labels.zip": "https://partage.mines-telecom.fr/index.php/s/2D6n03k58ygBSpu/download",
-        "oscd_test_labels.zip": "https://partage.imt.fr/index.php/s/gpStKn4Mpgfnr63/download"
+        "Onera Satellite Change Detection dataset - Images.zip": "https://partage.imt.fr/index.php/s/gKRaWgRnLMfwMGo/download",
+        "Onera Satellite Change Detection dataset - Train Labels": "https://partage.mines-telecom.fr/index.php/s/2D6n03k58ygBSpu/download",
+        "Onera Satellite Change Detection dataset - Test Labels": "https://partage.imt.fr/index.php/s/gpStKn4Mpgfnr63/download"
     }
 
     md5 = "7383412da7ece1dca1c12dc92ac77f09"
 
-    zipfile_glob = "*oscd*.zip"
+    zipfile_glob = "*Onera*.zip"
     filename_glob = "*Onera*"
     splits = ["train", "test"]
 
