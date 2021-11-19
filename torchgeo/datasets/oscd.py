@@ -14,6 +14,7 @@ import torch
 from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
+from numpy import ndarray as Array
 
 from ..datasets.utils import draw_semantic_segmentation_masks
 from .geo import VisionDataset
@@ -149,7 +150,7 @@ class OSCD(VisionDataset):
             region = folder.split(os.sep)[-2]
             mask = os.path.join(labels_root, region, "cm", "cm.png")
 
-            def get_image_paths(ind):
+            def get_image_paths(ind: int) -> List[str]:
                 return sorted(
                     glob.glob(
                         os.path.join(images_root, region, f"imgs_{ind}_rect", "*.tif")
@@ -280,33 +281,22 @@ class OSCD(VisionDataset):
 
         rgb_inds = [3, 2, 1] if self.bands == "all" else [0, 1, 2]
 
-        rgb_img1 = sample["image"][0, rgb_inds].float().numpy()
-        per02 = np.percentile(rgb_img1, 2)  # type: ignore[no-untyped-call]
-        per98 = np.percentile(rgb_img1, 98)  # type: ignore[no-untyped-call]
-        rgb_img1 = (np.clip((rgb_img1 - per02) / (per98 - per02), 0, 1) * 255).astype(
-            np.uint8
-        )
+        def get_masked(img: Tensor) -> Array:
+            rgb_img = img[rgb_inds].float().numpy()
+            per02 = np.percentile(rgb_img, 2)  # type: ignore[no-untyped-call]
+            per98 = np.percentile(rgb_img, 98)  # type: ignore[no-untyped-call]
+            rgb_img = (np.clip((rgb_img - per02) / (per98 - per02), 0, 1) * 255).astype(
+                np.uint8
+            )
+            array: Array = draw_semantic_segmentation_masks(
+                torch.from_numpy(rgb_img),  # type: ignore[attr-defined]
+                sample["mask"],
+                alpha=alpha,
+                colors=self.colormap,  # type: ignore[arg-type]
+            )
+            return array
 
-        rgb_img2 = sample["image"][1, rgb_inds].float().numpy()
-        per02 = np.percentile(rgb_img2, 2)  # type: ignore[no-untyped-call]
-        per98 = np.percentile(rgb_img2, 98)  # type: ignore[no-untyped-call]
-        rgb_img2 = (np.clip((rgb_img2 - per02) / (per98 - per02), 0, 1) * 255).astype(
-            np.uint8
-        )
-
-        image1 = draw_semantic_segmentation_masks(
-            torch.from_numpy(rgb_img1),  # type: ignore[attr-defined]
-            sample["mask"],
-            alpha=alpha,
-            colors=self.colormap,  # type: ignore[arg-type]
-        )
-        image2 = draw_semantic_segmentation_masks(
-            torch.from_numpy(rgb_img2),  # type: ignore[attr-defined]
-            sample["mask"],
-            alpha=alpha,
-            colors=self.colormap,  # type: ignore[arg-type]
-        )
-
+        image1, image2 = get_masked(sample["image"][0]), get_masked(sample["image"][1])
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
         axs[0].imshow(image1)
         axs[0].axis("off")
