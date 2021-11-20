@@ -46,7 +46,6 @@ class OSCD(VisionDataset):
     .. versionadded:: 0.2
     """
 
-    folder_prefix = "Onera Satellite Change Detection dataset - "
     urls = {
         "Onera Satellite Change Detection dataset - Images.zip": (
             "https://partage.imt.fr/index.php/s/gKRaWgRnLMfwMGo/download"
