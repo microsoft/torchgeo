@@ -42,9 +42,6 @@ class RandomBatchGeoSampler(BatchGeoSampler):
 
     This is particularly useful during training when you want to maximize the size of
     the dataset and return as many random :term:`chips <chip>` as possible.
-
-    When sampling from :class:`~torchgeo.datasets.ZipDataset`, the ``dataset`` should be
-    a tile-based dataset if possible.
     """
 
     def __init__(

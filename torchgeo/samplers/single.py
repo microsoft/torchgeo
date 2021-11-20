@@ -117,9 +117,6 @@ class GridGeoSampler(GeoSampler):
     The overlap between each chip (``chip_size - stride``) should be approximately equal
     to the `receptive field <https://distill.pub/2019/computing-receptive-fields/>`_ of
     the CNN.
-
-    When sampling from :class:`~torchgeo.datasets.ZipDataset`, the ``dataset`` should be
-    a non-tile-based dataset if possible.
     """
 
     def __init__(

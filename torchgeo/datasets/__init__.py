@@ -29,12 +29,12 @@ from .etci2021 import ETCI2021, ETCI2021DataModule
 from .eurosat import EuroSAT, EuroSATDataModule
 from .geo import (
     GeoDataset,
+    IntersectionDataset,
     RasterDataset,
     UnionDataset,
     VectorDataset,
     VisionClassificationDataset,
     VisionDataset,
-    ZipDataset,
 )
 from .gid15 import GID15
 from .landcoverai import LandCoverAI, LandCoverAIDataModule
@@ -147,12 +147,12 @@ __all__ = (
     "ZueriCrop",
     # Base classes
     "GeoDataset",
+    "IntersectionDataset",
     "RasterDataset",
     "UnionDataset",
     "VectorDataset",
     "VisionDataset",
     "VisionClassificationDataset",
-    "ZipDataset",
     # Utilities
     "BoundingBox",
     "collate_dict",

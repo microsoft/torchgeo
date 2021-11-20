@@ -89,8 +89,8 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
             IndexError: if query is not found in the index
         """
 
-    def __add__(self, other: "GeoDataset") -> "ZipDataset":  # type: ignore[override]
-        """Merge two GeoDatasets.
+    def __and__(self, other: "GeoDataset") -> "IntersectionDataset":
+        """Take the intersection of two GeoDatasets.
 
         Args:
             other: another dataset
@@ -103,7 +103,23 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
                 or if datasets do not have the same
                 :term:`coordinate reference system (CRS)`
         """
-        return ZipDataset([self, other])
+        return IntersectionDataset(self, other)
+
+    def __or__(self, other: "GeoDataset") -> "UnionDataset":
+        """Take the union of two GeoDatasets.
+
+        Args:
+            other: another dataset
+
+        Returns:
+            a single dataset
+
+        Raises:
+            ValueError: if other is not a GeoDataset, or if datasets do not overlap,
+                or if datasets do not have the same
+                :term:`coordinate reference system (CRS)`
+        """
+        return UnionDataset(self, other)
 
     def __len__(self) -> int:
         """Return the number of files in the dataset.
@@ -676,46 +692,39 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
         return tensor, label
 
 
-class ZipDataset(GeoDataset):
-    """Dataset for merging two or more GeoDatasets.
+class IntersectionDataset(GeoDataset):
+    """Dataset representing the intersection of two GeoDatasets.
 
     For example, this allows you to combine an image source like Landsat8 with a target
     label like CDL.
     """
 
-    def __init__(self, datasets: Sequence[GeoDataset]) -> None:
+    def __init__(self, dataset1: GeoDataset, dataset2: GeoDataset) -> None:
         """Initialize a new Dataset instance.
 
         Args:
-            datasets: list of datasets to merge
+            dataset1: the first dataset
+            dataset2: the second dataset
 
         Raises:
             ValueError: if datasets contains non-GeoDatasets, do not overlap, are not in
                 the same :term:`coordinate reference system (CRS)`, or do not have the
                 same resolution
         """
-        for ds in datasets:
+        super().__init__()
+        self.datasets = [dataset1, dataset2]
+
+        for ds in self.datasets:
             if not isinstance(ds, GeoDataset):
-                raise ValueError("ZipDataset only supports GeoDatasets")
+                raise ValueError("IntersectionDataset only supports GeoDatasets")
 
-        crs = datasets[0].crs
-        res = datasets[0].res
-        for ds in datasets:
-            if ds.crs != crs:
-                raise ValueError("Datasets must be in the same CRS")
-            if not math.isclose(ds.res, res):
-                # TODO: relax this constraint someday
-                raise ValueError("Datasets must have the same resolution")
+        if dataset1.crs != dataset2.crs:
+            raise ValueError("Datasets must be in the same CRS")
+        if not math.isclose(dataset1.res, dataset2.res):
+            raise ValueError("Datasets must have the same resolution")
 
-        self.datasets = datasets
-        self.crs = crs
-        self.res = res
-
-        # Make sure datasets have overlap
-        try:
-            self.bounds
-        except ValueError:
-            raise ValueError("Datasets have no overlap")
+        self.crs = dataset1.crs
+        self.res = dataset1.res
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
@@ -742,14 +751,6 @@ class ZipDataset(GeoDataset):
             sample.update(ds[query])
         return sample
 
-    def __len__(self) -> int:
-        """Return the number of files in the dataset.
-
-        Returns:
-            length of the dataset
-        """
-        return sum(map(len, self.datasets))
-
     def __str__(self) -> str:
         """Return the informal string representation of the object.
 
@@ -758,86 +759,53 @@ class ZipDataset(GeoDataset):
         """
         return f"""\
 {self.__class__.__name__} Dataset
-    type: ZipDataset
+    type: IntersectionDataset
     bbox: {self.bounds}
     size: {len(self)}"""
 
-    @property
-    def bounds(self) -> BoundingBox:
-        """Bounds of the index.
-
-        Returns:
-            (minx, maxx, miny, maxy, mint, maxt) of the dataset
-        """
-        # We want to compute the intersection of all dataset bounds, not the union
-        minx = max([ds.bounds[0] for ds in self.datasets])
-        maxx = min([ds.bounds[1] for ds in self.datasets])
-        miny = max([ds.bounds[2] for ds in self.datasets])
-        maxy = min([ds.bounds[3] for ds in self.datasets])
-        mint = max([ds.bounds[4] for ds in self.datasets])
-        maxt = min([ds.bounds[5] for ds in self.datasets])
-
-        return BoundingBox(minx, maxx, miny, maxy, mint, maxt)
-
 
 class UnionDataset(GeoDataset):
-    """Dataset for merging two or more GeoDatasets via a union of their scenes.
+    """Dataset representing the union of two GeoDatasets.
 
     For example, this allows you to combine two spatially disparate datasets.
     """
 
-    def __init__(self, datasets: Sequence[GeoDataset]) -> None:
+    def __init__(self, dataset1: GeoDataset, dataset2: GeoDataset) -> None:
         """Initialize a new Dataset instance.
 
         Args:
-            datasets: list of datasets to merge
+            dataset1: the first dataset
+            dataset2: the second dataset
 
         Raises:
-            ValueError: if datasets contains non-GeoDatasets, are not in
+            ValueError: if datasets contains non-GeoDatasets, do not overlap, are not in
                 the same :term:`coordinate reference system (CRS)`, or do not have the
                 same resolution
         """
-        for ds in datasets:
+        super().__init__()
+        self.datasets = [dataset1, dataset2]
+
+        for ds in self.datasets:
             if not isinstance(ds, GeoDataset):
-                raise ValueError("ZipDataset only supports GeoDatasets")
+                raise ValueError("UnionDataset only supports GeoDatasets")
 
-        crs = datasets[0].crs
-        res = datasets[0].res
-        for ds in datasets:
-            if ds.crs != crs:
-                raise ValueError("Datasets must be in the same CRS")
-            if not math.isclose(ds.res, res):
-                # TODO: relax this constraint someday
-                raise ValueError("Datasets must have the same resolution")
+        if dataset1.crs != dataset2.crs:
+            raise ValueError("Datasets must be in the same CRS")
+        if not math.isclose(dataset1.res, dataset2.res):
+            raise ValueError("Datasets must have the same resolution")
 
-        self.datasets = datasets
-        self.crs = crs
-        self.res = res
-        self.index = self._mege_dataset_indexes(datasets)
+        self.crs = dataset1.crs
+        self.res = dataset1.res
+        self._merge_dataset_indices()
 
-        # Make sure datasets have overlap
-        try:
-            self.bounds
-        except ValueError:
-            raise ValueError("Datasets have no overlap")
-
-    def _mege_dataset_indexes(self, datasets: Sequence[GeoDataset]) -> Index:
-        """Creates a new R-tree out of the individual indexes from a list of datasets.
-
-        Args:
-            dataset: a list of datasets
-
-        Returns:
-            an R-tree containing entries from all the component datasets
-        """
-        merged_index = Index(interleaved=False, properties=Property(dimension=3))
+    def _merge_dataset_indices(self) -> None:
+        """Creates a new R-tree out of the individual indices from two datasets."""
         i = 0
-        for j, ds in enumerate(datasets):
-            hits = list(ds.index.intersection(tuple(ds.bounds), objects=True))
+        for j, ds in enumerate(self.datasets):
+            hits = list(ds.index.intersection(tuple(ds.bounds)))
             for hit in hits:
-                merged_index.insert(i, hit.bounds, j)
+                self.index.insert(i, hit.bounds, j)
                 i += 1
-        return merged_index
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
@@ -879,21 +847,5 @@ class UnionDataset(GeoDataset):
         return f"""\
 {self.__class__.__name__} Dataset
     type: UnionDataset
-    bbox: {self.bounds}"""
-
-    @property
-    def bounds(self) -> BoundingBox:
-        """Bounds of the index.
-
-        Returns:
-            (minx, maxx, miny, maxy, mint, maxt) of the dataset
-        """
-        # We want to compute the union of all dataset bounds, not the intersection
-        minx = min([ds.bounds[0] for ds in self.datasets])
-        maxx = max([ds.bounds[1] for ds in self.datasets])
-        miny = min([ds.bounds[2] for ds in self.datasets])
-        maxy = max([ds.bounds[3] for ds in self.datasets])
-        mint = min([ds.bounds[4] for ds in self.datasets])
-        maxt = max([ds.bounds[5] for ds in self.datasets])
-
-        return BoundingBox(minx, maxx, miny, maxy, mint, maxt)
+    bbox: {self.bounds}
+    size: {len(self)}"""
