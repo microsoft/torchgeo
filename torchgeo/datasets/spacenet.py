@@ -25,9 +25,9 @@ from torch import Tensor
 from torchgeo.datasets.geo import VisionDataset
 from torchgeo.datasets.utils import (
     check_integrity,
-    contrast_stretch,
     download_radiant_mlhub_collection,
     extract_archive,
+    percentile_normalization,
 )
 
 
@@ -37,7 +37,7 @@ class SpaceNet(VisionDataset, abc.ABC):
     The `SpaceNet <https://spacenet.ai/datasets/>`_ datasets are a set of
     datasets that all together contain >11M building footprints and ~20,000 km
     of road labels mapped over high-resolution satellite imagery obtained from
-    a variety of sensors such as Worldview-2, Worldview-3 and Dove sensors.
+    a variety of sensors such as Worldview-2, Worldview-3 and Dove.
     """
 
     @property
@@ -312,7 +312,7 @@ class SpaceNet(VisionDataset, abc.ABC):
             image = np.rollaxis(sample["image"].numpy(), 0, 3)
         else:
             image = np.rollaxis(sample["image"][:3].numpy(), 0, 3)
-        image = contrast_stretch(image)
+        image = percentile_normalization(image)
 
         ncols = 1
         show_mask = False

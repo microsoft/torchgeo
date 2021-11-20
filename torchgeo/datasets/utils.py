@@ -24,7 +24,6 @@ from torchvision.utils import draw_segmentation_masks
 
 __all__ = (
     "check_integrity",
-    "contrast_stretch",
     "download_url",
     "download_and_extract_archive",
     "extract_archive",
