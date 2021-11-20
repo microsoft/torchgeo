@@ -5,11 +5,11 @@
 
 import glob
 import os
-from typing import Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 import numpy as np
+import pytorch_lightning as pl
 import rasterio
 import torch
 from matplotlib.figure import Figure
@@ -18,7 +18,6 @@ from PIL import Image
 from torch import Tensor
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
-
 
 from ..datasets.utils import draw_semantic_segmentation_masks
 from .geo import VisionDataset
@@ -316,13 +315,14 @@ class OSCD(VisionDataset):
 
         return fig
 
-#TODO: add validation split
+
+# TODO: add validation split
 class OSCDDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the OSCD dataset.
     Uses the train/test splits from the dataset.
     """
 
-    # TODO: OSCD only has 13 bands, figure out which one it doesn't have among these (maybe first?)
+    # TODO: OSCD only has 13 bands, figure out which one it doesn't have among these
 
     # (VV, VH, B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B11, B12)
     # min/max band statistics computed on 100k random samples
@@ -383,7 +383,7 @@ class OSCDDataModule(pl.LightningDataModule):
         """Initialize a LightningDataModule for OSCD based DataLoaders.
         Args:
             root_dir: The ``root`` arugment to pass to the OSCD Dataset classes
-            bands: "rgb" or "all" 
+            bands: "rgb" or "all"
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
         """
@@ -393,15 +393,12 @@ class OSCDDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
 
-        if bands == "all":
+        if bands == "rgb":
+            self.mins = self.band_mins[[3, 2, 1], None, None]
+            self.maxs = self.band_maxs[[3, 2, 1], None, None]
+        else:
             self.mins = self.band_mins[:, None, None]
             self.maxs = self.band_maxs[:, None, None]
-        elif bands == "s1":
-            self.mins = self.band_mins[:2, None, None]
-            self.maxs = self.band_maxs[:2, None, None]
-        else:
-            self.mins = self.band_mins[2:, None, None]
-            self.maxs = self.band_maxs[2:, None, None]
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
@@ -416,24 +413,18 @@ class OSCDDataModule(pl.LightningDataModule):
         """Make sure that the dataset is downloaded.
         This method is only called once per run.
         """
-        BigEarthNet(self.root_dir, split="train", bands=self.bands, checksum=False)
+        OSCD(self.root_dir, split="train", bands=self.bands, checksum=False)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
         This method is called once per GPU per run.
         """
         transforms = Compose([self.preprocess])
-        self.train_dataset = BigEarthNet(
-            self.root_dir,
-            split="train",
-            bands=self.bands,
-            transforms=transforms,
+        self.train_dataset = OSCD(
+            self.root_dir, split="train", bands=self.bands, transforms=transforms
         )
-        self.test_dataset = BigEarthNet(
-            self.root_dir,
-            split="test",
-            bands=self.bands,
-            transforms=transforms,
+        self.test_dataset = OSCD(
+            self.root_dir, split="test", bands=self.bands, transforms=transforms
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
@@ -452,4 +443,4 @@ class OSCDDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=False,
-        )       
+        )
