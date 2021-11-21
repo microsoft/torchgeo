@@ -312,7 +312,7 @@ class SpaceNet(VisionDataset, abc.ABC):
             image = np.rollaxis(sample["image"].numpy(), 0, 3)
         else:
             image = np.rollaxis(sample["image"][:3].numpy(), 0, 3)
-        image = percentile_normalization(image)
+        image = percentile_normalization(image, axis=(0, 1))
 
         ncols = 1
         show_mask = False
