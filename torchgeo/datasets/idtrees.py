@@ -259,10 +259,10 @@ class IDTReeS(VisionDataset):
             geoms = [self.geometries[i]["geometry"]["coordinates"][0][:4] for i in ids]
         # Test set - Task 2 has no mapping csv. Mapping is inside of geometry
         else:
-            ids = [  # type: ignore[misc]
-                k  # type: ignore[has-type]
+            ids = [
+                k
                 for k, v in self.geometries.items()
-                if v["properties"]["plotID"] == base_path  # type: ignore[has-type]
+                if v["properties"]["plotID"] == base_path
             ]
             geoms = [self.geometries[i]["geometry"]["coordinates"][0][:4] for i in ids]
 
