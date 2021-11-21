@@ -28,7 +28,6 @@ dependencies:
     - nbmake>=0.1
     - nbsphinx>=0.8.5
     - omegaconf>=2.1
-    - open3d
     - opencv-python
     - pandas
     - pillow>=2.9
