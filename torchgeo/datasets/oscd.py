@@ -19,7 +19,7 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
 
-from ..datasets.utils import draw_semantic_segmentation_masks
+from ..datasets.utils import datset_split, draw_semantic_segmentation_masks
 from .geo import VisionDataset
 from .utils import download_url, extract_archive, sort_sentinel2_bands
 
@@ -319,16 +319,33 @@ class OSCD(VisionDataset):
 # TODO: add validation split
 class OSCDDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the OSCD dataset.
-    Uses the train/test splits from the dataset.
+
+    Uses the train/val/test splits from the dataset.
+
+    .. versionadded: 0.2
     """
 
-    # NOTE: For some reason this doesn't have the B10 band so for now I'll insert a value 
+    # NOTE: For some reason this doesn't have the B10 band so for now I'll insert a value
     # based on it's neighbor while I figure out what to put there.
 
     # (B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B10, B11, B12)
     # min/max band statistics computed on 100k random samples
     band_mins_raw = torch.tensor(  # type: ignore[attr-defined]
-        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0] # B10 = mode(all)
+        [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+        ]  # B10 = mode(all)
     )
     band_maxs_raw = torch.tensor(  # type: ignore[attr-defined]
         [
@@ -342,7 +359,7 @@ class OSCDDataModule(pl.LightningDataModule):
             16672.0,
             16141.0,
             16097.0,
-            15716.0, # (16097 + 15336)/2
+            15716.0,  # (16097 + 15336)/2
             15336.0,
             15203.0,
         ]
@@ -351,7 +368,21 @@ class OSCDDataModule(pl.LightningDataModule):
     # min/max band statistics computed by percentile clipping the
     # above to samples to [2, 98]
     band_mins = torch.tensor(  # type: ignore[attr-defined]
-        [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] # B10 = mode(all)
+        [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+        ]  # B10 = mode(all)
     )
     band_maxs = torch.tensor(  # type: ignore[attr-defined]
         [
@@ -365,7 +396,7 @@ class OSCDDataModule(pl.LightningDataModule):
             15596.0,
             12183.0,
             9458.0,
-            7677.0, # (9458 + 5897)/2
+            7677.0,  # (9458 + 5897)/2
             5897.0,
             5544.0,
         ]
@@ -377,6 +408,7 @@ class OSCDDataModule(pl.LightningDataModule):
         bands: str = "all",
         batch_size: int = 64,
         num_workers: int = 0,
+        val_split_pct: float = 0.2,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for OSCD based DataLoaders.
@@ -391,6 +423,7 @@ class OSCDDataModule(pl.LightningDataModule):
         self.bands = bands
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.val_split_pct = val_split_pct
 
         if bands == "rgb":
             self.mins = self.band_mins[[3, 2, 1], None, None]
@@ -419,9 +452,20 @@ class OSCDDataModule(pl.LightningDataModule):
         This method is called once per GPU per run.
         """
         transforms = Compose([self.preprocess])
-        self.train_dataset = OSCD(
+
+        dataset = OSCD(
             self.root_dir, split="train", bands=self.bands, transforms=transforms
         )
+
+        # TODO: maybe we can remove this if statement? include this functionality in dataset_split?
+        if self.val_split_pct > 0.0:
+            self.train_dataset, self.val_dataset, _ = dataset_split(
+                dataset, val_pct=self.val_split_pct, test_pct=0.0
+            )
+        else:
+            self.train_dataset = dataset  # type: ignore[assignment]
+            self.val_dataset = None  # type: ignore[assignment]
+
         self.test_dataset = OSCD(
             self.root_dir, split="test", bands=self.bands, transforms=transforms
         )
@@ -434,6 +478,18 @@ class OSCDDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=True,
         )
+
+    def val_dataloader(self) -> DataLoader[Any]:
+        """Return a DataLoader for validation."""
+        if self.val_split_pct == 0.0:
+            return self.train_dataloader()
+        else:
+            return DataLoader(
+                self.val_dataset,
+                batch_size=self.batch_size,
+                num_workers=self.num_workers,
+                shuffle=False,
+            )
 
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing."""
