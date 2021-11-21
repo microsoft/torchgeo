@@ -8,11 +8,13 @@ import os
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import fiona
+import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
 from rasterio.enums import Resampling
 from torch import Tensor
+from torchvision.utils import draw_bounding_boxes
 
 from .geo import VisionDataset
 from .utils import download_url, extract_archive
@@ -114,7 +116,6 @@ class IDTReeS(VisionDataset):
         },
     }
     directories = {"train": ["train"], "test": ["task1", "task2"]}
-    data_types = ["rgb", "hsi", "chm", "las"]
     image_size = (200, 200)
 
     def __init__(
@@ -137,6 +138,9 @@ class IDTReeS(VisionDataset):
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            ImportError: if laspy and pandas are are not installed
         """
         assert split in ["train", "test"]
         assert task in ["task1", "task2"]
@@ -147,8 +151,23 @@ class IDTReeS(VisionDataset):
         self.download = download
         self.checksum = checksum
         self.class2idx = {c: i for i, c in enumerate(self.classes)}
+        self.idx2class = {i: c for i, c in enumerate(self.classes)}
         self.num_classes = len(self.classes)
         self._verify()
+
+        try:
+            import pandas as pd  # noqa: F401
+        except ImportError:
+            raise ImportError(
+                "pandas is not installed and is required to use this dataset"
+            )
+        try:
+            import laspy  # noqa: F401
+        except ImportError:
+            raise ImportError(
+                "laspy is not installed and is required to use this dataset"
+            )
+
         self.images, self.geometries, self.labels = self._load(root)
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
@@ -161,30 +180,18 @@ class IDTReeS(VisionDataset):
             data and label at that index
         """
         path = self.images[index]
+        image = self._load_image(path).to(torch.uint8)  # type:ignore[attr-defined]
+        hsi = self._load_image(path.replace("RGB", "HSI"))
+        chm = self._load_image(path.replace("RGB", "CHM"))
+        las = self._load_las(path.replace("RGB", "LAS").replace(".tif", ".las"))
+        sample = {"image": image, "hsi": hsi, "chm": chm, "las": las}
 
         if self.split == "test":
-            if self.task == "task1":
-                image = self._load_image(path)
-                sample = {"image": image}
-            else:
-                image = self._load_image(path)
-                boxes = self._load_boxes(path)
-                sample = {"image": image, "boxes": boxes}
+            if self.task == "task2":
+                sample["boxes"] = self._load_boxes(path)
         else:
-            image = self._load_image(path)
-            hsi = self._load_image(path.replace("RGB", "HSI"))
-            chm = self._load_image(path.replace("RGB", "CHM"))
-            las = self._load_las(path.replace("RGB", "LAS").replace(".tif", ".las"))
-            boxes = self._load_boxes(path)
-            label = self._load_target(path)
-            sample = {
-                "image": image,
-                "hsi": hsi,
-                "chm": chm,
-                "las": las,
-                "boxes": boxes,
-                "label": label,
-            }
+            sample["boxes"] = self._load_boxes(path)
+            sample["label"] = self._load_target(path)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -213,6 +220,8 @@ class IDTReeS(VisionDataset):
                 array = f.read(
                     out_shape=self.image_size, resampling=Resampling.bilinear
                 )
+            else:
+                array = f.read()
         tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
         return tensor
 
@@ -225,18 +234,22 @@ class IDTReeS(VisionDataset):
         Returns:
             the point cloud
         """
-        try:
-            import laspy
-        except ImportError:
-            raise ImportError(
-                "laspy is not installed and is required to use this dataset"
-            )
+        import laspy
+
         las = laspy.read(path)
         array = np.stack([las.x, las.y, las.z], axis=0)
         tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
         return tensor
 
     def _load_boxes(self, path: str) -> Tensor:
+        """Load object bounding boxes.
+
+        Args:
+            path: path to .tif file
+
+        Returns:
+            the bounding boxes
+        """
         base_path = os.path.basename(path)
 
         # Find object ids and geometries
@@ -246,8 +259,10 @@ class IDTReeS(VisionDataset):
             geoms = [self.geometries[i]["geometry"]["coordinates"][0][:4] for i in ids]
         # Test set - Task 2 has no mapping csv. Mapping is inside of geometry
         else:
-            ids = [
-                k for k, v in self.geometries if v["properties"]["plotID"] == base_path
+            ids = [  # type: ignore[misc]
+                k  # type: ignore[has-type]
+                for k, v in self.geometries.items()
+                if v["properties"]["plotID"] == base_path  # type: ignore[has-type]
             ]
             geoms = [self.geometries[i]["geometry"]["coordinates"][0][:4] for i in ids]
 
@@ -266,13 +281,13 @@ class IDTReeS(VisionDataset):
         return tensor
 
     def _load_target(self, path: str) -> Tensor:
-        """Load the boxes and target label for a single sample.
+        """Load target label for a single sample.
 
         Args:
             path: path to image
 
         Returns:
-            the target boxes (xyxy) and label
+            the label
         """
         # Find indices for objects in the image
         base_path = os.path.basename(path)
@@ -284,13 +299,45 @@ class IDTReeS(VisionDataset):
         tensor: Tensor = torch.tensor(labels)  # type: ignore[attr-defined]
         return tensor
 
+    def _load(self, root: str) -> Tuple[List[str], Dict[int, Dict[str, Any]], Any]:
+        """Load files, geometries, and labels.
+
+        Args:
+            root: root directory
+
+        Returns:
+            the image path, geometries, and labels
+        """
+        import pandas as pd
+
+        if self.split == "train":
+            directory = os.path.join(root, self.directories[self.split][0])
+            labels: pd.DataFrame = self._load_labels(directory)
+            geoms = self._load_geometries(directory)
+        else:
+            directory = os.path.join(root, self.task)
+            if self.task == "task1":
+                geoms = None  # type: ignore[assignment]
+                labels = None
+            else:
+                geoms = self._load_geometries(directory)
+                labels = None
+
+        images = self._load_images(directory)
+
+        return images, geoms, labels
+
     def _load_labels(self, directory: str) -> Any:
-        try:
-            import pandas as pd
-        except ImportError:
-            raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
+        """Load the csv files containing the labels.
+
+        Args:
+            directory: directory containing csv files
+
+        Returns:
+            a pandas DataFrame containing the labels for each image
+        """
+        import pandas as pd
+
         path_mapping = os.path.join(directory, "Field", "itc_rsFile.csv")
         path_labels = os.path.join(directory, "Field", "train_data.csv")
         df_mapping = pd.read_csv(path_mapping)
@@ -303,43 +350,37 @@ class IDTReeS(VisionDataset):
         return df
 
     def _load_geometries(self, directory: str) -> Dict[int, Dict[str, Any]]:
+        """Load the shape files containing the geometries.
+
+        Args:
+            directory: directory containing .shp files
+
+        Returns:
+            a dict containing the geometries for each object
+        """
         filepaths = glob.glob(os.path.join(directory, "ITC", "*.shp"))
 
         features: Dict[int, Dict[str, Any]] = {}
         for path in filepaths:
             with fiona.open(path) as src:
-                for feature in src:
-                    features[feature["properties"]["id"]] = feature
+                for i, feature in enumerate(src):
+                    if self.split == "train":
+                        features[feature["properties"]["id"]] = feature
+                    # Test set task 2 has no id
+                    else:
+                        features[i] = feature
         return features
 
     def _load_images(self, directory: str) -> List[str]:
-        return glob.glob(os.path.join(directory, "RemoteSensing", "RGB", "*.tif"))
-
-    def _load(self, root: str) -> Tuple[List[str], Dict[int, Dict[str, Any]], Any]:
-        """Load a files, geometries, and labels.
+        """List the image file paths.
 
         Args:
-            index: index to return
+            directory: directory containing .tif RGB images
 
         Returns:
-            the raster image or target
+            list of RGB images
         """
-        if self.split == "train":
-            directory = os.path.join(root, self.directories[self.split][0])
-            labels = self._load_labels(directory)
-            geoms = self._load_geometries(directory)
-        else:
-            directory = os.path.join(root, self.task)
-            if self.task == "task1":
-                geoms = None
-                labels = None
-            else:
-                geoms = self._load_geometries(directory)
-                labels = None
-
-        images = self._load_images(directory)
-
-        return images, geoms, labels
+        return glob.glob(os.path.join(directory, "RemoteSensing", "RGB", "*.tif"))
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
@@ -380,3 +421,120 @@ class IDTReeS(VisionDataset):
         )
         filepath = os.path.join(self.root, filename)
         extract_archive(filepath)
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+        hsi_indices: Tuple[int, int, int] = (0, 1, 2),
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+            hsi_indices: tuple of indices to create HSI false color image
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        assert len(hsi_indices) == 3
+
+        def normalize(x: Tensor) -> Tensor:
+            return (x - x.min()) / (x.max() - x.min())
+
+        ncols = 3
+
+        hsi = normalize(sample["hsi"][hsi_indices, :, :]).permute((1, 2, 0)).numpy()
+        chm = normalize(sample["chm"]).permute((1, 2, 0)).numpy()
+
+        if "boxes" in sample:
+            labels = (
+                [self.idx2class[int(i)] for i in sample["label"]]
+                if "label" in sample
+                else None
+            )
+            image = draw_bounding_boxes(
+                image=sample["image"], boxes=sample["boxes"], labels=labels
+            )
+            image = image.permute((1, 2, 0)).numpy()
+        else:
+            image = sample["image"].permute((1, 2, 0)).numpy()
+
+        if "prediction_boxes" in sample:
+            ncols += 1
+            labels = (
+                [self.idx2class[int(i)] for i in sample["prediction_label"]]
+                if "prediction_label" in sample
+                else None
+            )
+            preds = draw_bounding_boxes(
+                image=sample["image"], boxes=sample["prediction_boxes"], labels=labels
+            )
+            preds = preds.permute((1, 2, 0)).numpy()
+
+        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
+        axs[0].imshow(image)
+        axs[0].axis("off")
+        axs[1].imshow(hsi)
+        axs[1].axis("off")
+        axs[2].imshow(chm)
+        axs[2].axis("off")
+        if ncols > 3:
+            axs[3].imshow(preds)
+            axs[3].axis("off")
+
+        if show_titles:
+            axs[0].set_title("Ground Truth")
+            axs[1].set_title("Hyperspectral False Color Image")
+            axs[2].set_title("Canopy Height Model")
+            if ncols > 3:
+                axs[3].set_title("Predictions")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
+
+    def plot_las(self, index: int, colormap: Optional[str] = None) -> None:
+        """Plot a sample point cloud at the index.
+
+        Args:
+            index: index to plot
+            colormap: a valid matplotlib colormap
+
+        Raises:
+            ImportError: if open3d is not installed
+        """
+        try:
+            import open3d  # noqa: F401
+        except ImportError:
+            raise ImportError(
+                "open3d is not installed and is required to use this dataset"
+            )
+        import laspy
+
+        path = self.images[index]
+        path = path.replace("RGB", "LAS").replace(".tif", ".las")
+        las = laspy.read(path)
+        points = np.stack([las.x, las.y, las.z], axis=0).transpose((1, 0))
+
+        if colormap:
+            cm = plt.cm.get_cmap(colormap)
+            norm = plt.Normalize()
+            colors = cm(norm(points[:, 2]))[:, :3]
+        else:
+            # Some point cloud files have no color->points mapping
+            if hasattr(las, "red"):
+                colors = np.stack([las.red, las.green, las.blue], axis=0)
+                colors = colors.transpose((1, 0)) / 65535
+            # Default to no colormap if no colors exist in las file
+            else:
+                colors = np.zeros_like(points)
+
+        pcd = open3d.geometry.PointCloud()
+        pcd.points = open3d.utility.Vector3dVector(points)
+        pcd.colors = open3d.utility.Vector3dVector(colors)
+        open3d.visualization.draw_geometries([pcd])
