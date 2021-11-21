@@ -12,7 +12,7 @@ import sys
 import tarfile
 import zipfile
 from datetime import datetime, timedelta
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
 import rasterio
