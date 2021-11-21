@@ -16,7 +16,7 @@ from matplotlib import pyplot as plt
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import OSCD
+from torchgeo.datasets import OSCD, OSCDDataModule
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -105,3 +105,25 @@ class TestOSCD:
     def test_plot(self, dataset: OSCD) -> None:
         dataset.plot(dataset[0], suptitle="Test")
         plt.close()
+
+
+class TestOSCDDataModule:
+    @pytest.fixture(scope="class", params=zip(["all", "rgb"], [0.0, 0.5]))
+    def datamodule(self, request: SubRequest) -> OSCDDataModule:
+        bands, val_split_pct = request.param
+        root = os.path.join("tests", "data", "oscd")
+        batch_size = 1
+        num_workers = 0
+        dm = OSCDDataModule(root, bands, batch_size, num_workers, val_split_pct)
+        dm.prepare_data()
+        dm.setup()
+        return dm
+
+    def test_train_dataloader(self, datamodule: OSCDDataModule) -> None:
+        next(iter(datamodule.train_dataloader()))
+
+    def test_val_dataloader(self, datamodule: OSCDDataModule) -> None:
+        next(iter(datamodule.val_dataloader()))
+
+    def test_test_dataloader(self, datamodule: OSCDDataModule) -> None:
+        next(iter(datamodule.test_dataloader()))
