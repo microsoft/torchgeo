@@ -322,17 +322,16 @@ class OSCDDataModule(pl.LightningDataModule):
     Uses the train/test splits from the dataset.
     """
 
-    # TODO: OSCD only has 13 bands, figure out which one it doesn't have among these
+    # NOTE: For some reason this doesn't have the B10 band so for now I'll insert a value 
+    # based on it's neighbor while I figure out what to put there.
 
-    # (VV, VH, B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B11, B12)
+    # (B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B10, B11, B12)
     # min/max band statistics computed on 100k random samples
     band_mins_raw = torch.tensor(  # type: ignore[attr-defined]
-        [-70.0, -72.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0] # B10 = mode(all)
     )
     band_maxs_raw = torch.tensor(  # type: ignore[attr-defined]
         [
-            31.0,
-            35.0,
             18556.0,
             20528.0,
             18976.0,
@@ -343,6 +342,7 @@ class OSCDDataModule(pl.LightningDataModule):
             16672.0,
             16141.0,
             16097.0,
+            15716.0, # (16097 + 15336)/2
             15336.0,
             15203.0,
         ]
@@ -351,12 +351,10 @@ class OSCDDataModule(pl.LightningDataModule):
     # min/max band statistics computed by percentile clipping the
     # above to samples to [2, 98]
     band_mins = torch.tensor(  # type: ignore[attr-defined]
-        [-48.0, -42.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+        [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] # B10 = mode(all)
     )
     band_maxs = torch.tensor(  # type: ignore[attr-defined]
         [
-            6.0,
-            16.0,
             9859.0,
             12872.0,
             13163.0,
@@ -367,6 +365,7 @@ class OSCDDataModule(pl.LightningDataModule):
             15596.0,
             12183.0,
             9458.0,
+            7677.0, # (9458 + 5897)/2
             5897.0,
             5544.0,
         ]
