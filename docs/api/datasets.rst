@@ -133,6 +133,7 @@ OSCD (Onera Satellite Change Detection)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: OSCD
+.. autoclass:: OSCDDataModule
 
 PatternNet
 ^^^^^^^^^^
