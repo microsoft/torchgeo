@@ -489,7 +489,7 @@ def percentile_normalization(
     img: np.ndarray,  # type: ignore[type-arg]
     lower: float = 2,
     upper: float = 98,
-    axis: Optional[Union[int, Tuple[int, int]]] = None,
+    axis: Optional[Union[int, Sequence[int]]] = None,
 ) -> np.ndarray:  # type: ignore[type-arg]
     """Applies percentile normalization to an input image.
 
