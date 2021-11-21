@@ -19,7 +19,7 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
 
-from ..datasets.utils import datset_split, draw_semantic_segmentation_masks
+from ..datasets.utils import dataset_split, draw_semantic_segmentation_masks
 from .geo import VisionDataset
 from .utils import download_url, extract_archive, sort_sentinel2_bands
 
@@ -325,8 +325,8 @@ class OSCDDataModule(pl.LightningDataModule):
     .. versionadded: 0.2
     """
 
-    # NOTE: For some reason this doesn't have the B10 band so for now I'll insert a value
-    # based on it's neighbor while I figure out what to put there.
+    # NOTE: For some reason this doesn't have the B10 band so for now I'll insert
+    # a value based on it's neighbor while I figure out what to put there.
 
     # (B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B10, B11, B12)
     # min/max band statistics computed on 100k random samples
@@ -461,7 +461,8 @@ class OSCDDataModule(pl.LightningDataModule):
             self.root_dir, split="train", bands=self.bands, transforms=transforms
         )
 
-        # TODO: maybe we can remove this if statement? include this functionality in dataset_split?
+        # TODO: maybe we can remove this if statement?
+        # include this functionality in dataset_split?
         if self.val_split_pct > 0.0:
             self.train_dataset, self.val_dataset, _ = dataset_split(
                 dataset, val_pct=self.val_split_pct, test_pct=0.0
