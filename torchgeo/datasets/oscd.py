@@ -412,11 +412,13 @@ class OSCDDataModule(pl.LightningDataModule):
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for OSCD based DataLoaders.
+
         Args:
             root_dir: The ``root`` arugment to pass to the OSCD Dataset classes
             bands: "rgb" or "all"
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
+            val_split_pct: What percentage of the dataset to use as a validation set
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
@@ -443,12 +445,14 @@ class OSCDDataModule(pl.LightningDataModule):
 
     def prepare_data(self) -> None:
         """Make sure that the dataset is downloaded.
+
         This method is only called once per run.
         """
         OSCD(self.root_dir, split="train", bands=self.bands, checksum=False)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
+
         This method is called once per GPU per run.
         """
         transforms = Compose([self.preprocess])
