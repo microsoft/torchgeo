@@ -11,6 +11,7 @@ import fiona
 import numpy as np
 import rasterio
 import torch
+from rasterio.enums import Resampling
 from torch import Tensor
 
 from .geo import VisionDataset
@@ -112,11 +113,9 @@ class IDTReeS(VisionDataset):
             "filename": "IDTREES_competition_test_v2.zip",
         },
     }
-    directories = {
-        "train": ["train"],
-        "test": ["task1", "task2"],
-    }
+    directories = {"train": ["train"], "test": ["task1", "task2"]}
     data_types = ["rgb", "hsi", "chm", "las"]
+    image_size = (200, 200)
 
     def __init__(
         self,
@@ -210,7 +209,10 @@ class IDTReeS(VisionDataset):
             the image
         """
         with rasterio.open(path) as f:
-            array = f.read()
+            if f.shape != self.image_size:
+                array = f.read(
+                    out_shape=self.image_size, resampling=Resampling.bilinear
+                )
         tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
         return tensor
 
@@ -361,7 +363,7 @@ class IDTReeS(VisionDataset):
         # Check if zip file already exists (if so then extract)
         filepath = os.path.join(self.root, filename)
         if os.path.exists(filepath):
-            self._extract(filepath)
+            extract_archive(filepath)
             return
 
         # Check if the user requested to download the dataset
@@ -373,29 +375,8 @@ class IDTReeS(VisionDataset):
             )
 
         # Download and extract the dataset
-        self._download(url, filename, md5)
-        filepath = os.path.join(self.root, filename)
-        self._extract(filepath)
-
-    def _download(self, url: str, filename: str, md5: str) -> None:
-        """Download the dataset.
-
-        Args:
-            url: url to download file
-            filename: output filename to write downloaded file
-            md5: md5 of downloaded file
-        """
         download_url(
-            url,
-            self.root,
-            filename=filename,
-            md5=md5 if self.checksum else None,
+            url, self.root, filename=filename, md5=md5 if self.checksum else None
         )
-
-    def _extract(self, filepath: str) -> None:
-        """Extract the dataset.
-
-        Args:
-            filepath: path to file to be extracted
-        """
+        filepath = os.path.join(self.root, filename)
         extract_archive(filepath)
