@@ -217,12 +217,7 @@ class IDTReeS(VisionDataset):
             the image
         """
         with rasterio.open(path) as f:
-            if f.shape != self.image_size:
-                array = f.read(
-                    out_shape=self.image_size, resampling=Resampling.bilinear
-                )
-            else:
-                array = f.read()
+            array = f.read(out_shape=self.image_size, resampling=Resampling.bilinear)
         tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
         return tensor
 
@@ -236,7 +231,6 @@ class IDTReeS(VisionDataset):
             the point cloud
         """
         import laspy
-
         las = laspy.read(path)
         array = np.stack([las.x, las.y, las.z], axis=0)
         tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
@@ -324,7 +318,7 @@ class IDTReeS(VisionDataset):
                 geoms = self._load_geometries(directory)
                 labels = None
 
-        images = self._load_images(directory)
+        images = glob.glob(os.path.join(directory, "RemoteSensing", "RGB", "*.tif"))
 
         return images, geoms, labels
 
@@ -371,17 +365,6 @@ class IDTReeS(VisionDataset):
                     else:
                         features[i] = feature
         return features
-
-    def _load_images(self, directory: str) -> List[str]:
-        """List the image file paths.
-
-        Args:
-            directory: directory containing .tif RGB images
-
-        Returns:
-            list of RGB images
-        """
-        return glob.glob(os.path.join(directory, "RemoteSensing", "RGB", "*.tif"))
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
