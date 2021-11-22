@@ -5,18 +5,21 @@
 
 import glob
 import os
-from typing import Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pytorch_lightning as pl
 import rasterio
 import torch
 from matplotlib.figure import Figure
 from numpy import ndarray as Array
 from PIL import Image
 from torch import Tensor
+from torch.utils.data import DataLoader
+from torchvision.transforms import Compose, Normalize
 
-from ..datasets.utils import draw_semantic_segmentation_masks
+from ..datasets.utils import dataset_split, draw_semantic_segmentation_masks
 from .geo import VisionDataset
 from .utils import download_url, extract_archive, sort_sentinel2_bands
 
@@ -310,3 +313,151 @@ class OSCD(VisionDataset):
             plt.suptitle(suptitle)
 
         return fig
+
+
+class OSCDDataModule(pl.LightningDataModule):
+    """LightningDataModule implementation for the OSCD dataset.
+
+    Uses the train/val/test splits from the dataset.
+
+    .. versionadded: 0.2
+    """
+
+    band_means = torch.tensor(  # type: ignore[attr-defined]
+        [
+            1583.0741,
+            1374.3202,
+            1294.1616,
+            1325.6158,
+            1478.7408,
+            1933.0822,
+            2166.0608,
+            2076.4868,
+            2306.0652,
+            690.9814,
+            16.2360,
+            2080.3347,
+            1524.6930,
+        ]
+    )
+
+    band_stds = torch.tensor(  # type: ignore[attr-defined]
+        [
+            52.1937,
+            83.4168,
+            105.6966,
+            151.1401,
+            147.4615,
+            115.9289,
+            123.1974,
+            114.6483,
+            141.4530,
+            73.2758,
+            4.8368,
+            213.4821,
+            179.4793,
+        ]
+    )
+
+    def __init__(
+        self,
+        root_dir: str,
+        bands: str = "all",
+        batch_size: int = 64,
+        num_workers: int = 0,
+        val_split_pct: float = 0.2,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a LightningDataModule for OSCD based DataLoaders.
+
+        Args:
+            root_dir: The ``root`` arugment to pass to the OSCD Dataset classes
+            bands: "rgb" or "all"
+            batch_size: The batch size to use in all created DataLoaders
+            num_workers: The number of workers to use in all created DataLoaders
+            val_split_pct: What percentage of the dataset to use as a validation set
+        """
+        super().__init__()  # type: ignore[no-untyped-call]
+        self.root_dir = root_dir
+        self.bands = bands
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+        self.val_split_pct = val_split_pct
+
+        if bands == "rgb":
+            self.band_means = self.band_means[[3, 2, 1], None, None]
+            self.band_stds = self.band_stds[[3, 2, 1], None, None]
+        else:
+            self.band_means = self.band_means[:, None, None]
+            self.band_stds = self.band_stds[:, None, None]
+
+        self.norm = Normalize(self.band_means, self.band_stds)
+
+    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Transform a single sample from the Dataset."""
+        sample["image"] = sample["image"].float()
+        sample["image"] = self.norm(sample["image"])
+        sample["image"] = torch.clamp(  # type: ignore[attr-defined]
+            sample["image"], min=0.0, max=1.0
+        )
+        return sample
+
+    def prepare_data(self) -> None:
+        """Make sure that the dataset is downloaded.
+
+        This method is only called once per run.
+        """
+        OSCD(self.root_dir, split="train", bands=self.bands, checksum=False)
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        """Initialize the main ``Dataset`` objects.
+
+        This method is called once per GPU per run.
+        """
+        transforms = Compose([self.preprocess])
+
+        dataset = OSCD(
+            self.root_dir, split="train", bands=self.bands, transforms=transforms
+        )
+
+        if self.val_split_pct > 0.0:
+            self.train_dataset, self.val_dataset, _ = dataset_split(
+                dataset, val_pct=self.val_split_pct, test_pct=0.0
+            )
+        else:
+            self.train_dataset = dataset  # type: ignore[assignment]
+            self.val_dataset = None  # type: ignore[assignment]
+
+        self.test_dataset = OSCD(
+            self.root_dir, split="test", bands=self.bands, transforms=transforms
+        )
+
+    def train_dataloader(self) -> DataLoader[Any]:
+        """Return a DataLoader for training."""
+        return DataLoader(
+            self.train_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=True,
+        )
+
+    def val_dataloader(self) -> DataLoader[Any]:
+        """Return a DataLoader for validation."""
+        if self.val_split_pct == 0.0:
+            return self.train_dataloader()
+        else:
+            return DataLoader(
+                self.val_dataset,
+                batch_size=self.batch_size,
+                num_workers=self.num_workers,
+                shuffle=False,
+            )
+
+    def test_dataloader(self) -> DataLoader[Any]:
+        """Return a DataLoader for testing."""
+        return DataLoader(
+            self.test_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=False,
+        )
