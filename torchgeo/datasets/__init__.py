@@ -53,7 +53,7 @@ from .landsat import (
 from .levircd import LEVIRCDPlus
 from .naip import NAIP, NAIPChesapeakeDataModule
 from .nwpu import VHR10
-from .oscd import OSCD
+from .oscd import OSCD, OSCDDataModule
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D, Potsdam2DDataModule
 from .resisc45 import RESISC45, RESISC45DataModule
@@ -118,6 +118,7 @@ __all__ = (
     "LandCoverAIDataModule",
     "LEVIRCDPlus",
     "OSCD",
+    "OSCDDataModule",
     "PatternNet",
     "Potsdam2D",
     "Potsdam2DDataModule",
