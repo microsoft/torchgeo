@@ -12,7 +12,7 @@ import sys
 import tarfile
 import zipfile
 from datetime import datetime, timedelta
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
 import rasterio
@@ -36,6 +36,7 @@ __all__ = (
     "sort_sentinel2_bands",
     "draw_semantic_segmentation_masks",
     "rgb_to_mask",
+    "percentile_normalization",
 )
 
 
@@ -485,7 +486,10 @@ def rgb_to_mask(
 
 
 def percentile_normalization(
-    img: np.ndarray, lower: float = 2, upper: float = 98  # type: ignore[type-arg]
+    img: np.ndarray,  # type: ignore[type-arg]
+    lower: float = 2,
+    upper: float = 98,
+    axis: Optional[Union[int, Sequence[int]]] = None,
 ) -> np.ndarray:  # type: ignore[type-arg]
     """Applies percentile normalization to an input image.
 
@@ -497,6 +501,8 @@ def percentile_normalization(
         img: image to normalize
         lower: lower percentile in range [0,100]
         upper: upper percentile in range [0,100]
+        axis: Axis or axes along which the percentiles are computed. The default
+            is to compute the percentile(s) along a flattened version of the array.
 
     Returns
         normalized version of ``img``
@@ -504,8 +510,12 @@ def percentile_normalization(
     .. versionadded:: 0.2
     """
     assert lower < upper
-    lower_percentile = np.percentile(img, lower)  # type: ignore[no-untyped-call]
-    upper_percentile = np.percentile(img, upper)  # type: ignore[no-untyped-call]
+    lower_percentile = np.percentile(  # type: ignore[no-untyped-call]
+        img, lower, axis=axis
+    )
+    upper_percentile = np.percentile(  # type: ignore[no-untyped-call]
+        img, upper, axis=axis
+    )
     img_normalized = np.clip(
         (img - lower_percentile) / (upper_percentile - lower_percentile), 0, 1
     )
