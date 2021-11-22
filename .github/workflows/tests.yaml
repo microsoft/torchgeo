@@ -20,6 +20,7 @@ jobs:
     - name: Install pip dependencies
       run: |
         pip install cython numpy  # needed for pycocotools
+        pip install https://storage.googleapis.com/open3d-releases-master/python-wheels/open3d-0.13.0+d6db895-cp39-cp39-manylinux_2_27_x86_64.whl
         pip install .[datasets,tests,train]
     - name: Run mypy checks
       run: mypy .
