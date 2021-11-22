@@ -385,14 +385,14 @@ class OSCDDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.val_split_pct = val_split_pct
 
-        self.norm = Normalize(self.band_means, self.band_stds)
-
         if bands == "rgb":
             self.band_means = self.band_means[[3, 2, 1], None, None]
             self.band_stds = self.band_stds[[3, 2, 1], None, None]
         else:
             self.band_means = self.band_means[:, None, None]
             self.band_stds = self.band_stds[:, None, None]
+
+        self.norm = Normalize(self.band_means, self.band_stds)
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
