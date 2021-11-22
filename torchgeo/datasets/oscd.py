@@ -17,7 +17,7 @@ from numpy import ndarray as Array
 from PIL import Image
 from torch import Tensor
 from torch.utils.data import DataLoader
-from torchvision.transforms import Compose
+from torchvision.transforms import Compose, Normalize
 
 from ..datasets.utils import dataset_split, draw_semantic_segmentation_masks
 from .geo import VisionDataset
@@ -324,80 +324,39 @@ class OSCDDataModule(pl.LightningDataModule):
     .. versionadded: 0.2
     """
 
-    # NOTE: For some reason this doesn't have the B10 band so for now I'll insert
-    # a value based on it's neighbor while I figure out what to put there.
-
-    # (B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B10, B11, B12)
-    # min/max band statistics computed on 100k random samples
-    band_mins_raw = torch.tensor(  # type: ignore[attr-defined]
+    band_means = torch.tensor(  # type: ignore[attr-defined]
         [
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            0.0,
-            0.0,
-        ]  # B10 = mode(all)
-    )
-    band_maxs_raw = torch.tensor(  # type: ignore[attr-defined]
-        [
-            18556.0,
-            20528.0,
-            18976.0,
-            17874.0,
-            16611.0,
-            16512.0,
-            16394.0,
-            16672.0,
-            16141.0,
-            16097.0,
-            15716.0,  # (16097 + 15336)/2
-            15336.0,
-            15203.0,
+            1583.0741,
+            1374.3202,
+            1294.1616,
+            1325.6158,
+            1478.7408,
+            1933.0822,
+            2166.0608,
+            2076.4868,
+            2306.0652,
+            690.9814,
+            16.2360,
+            2080.3347,
+            1524.6930,
         ]
     )
 
-    # min/max band statistics computed by percentile clipping the
-    # above to samples to [2, 98]
-    band_mins = torch.tensor(  # type: ignore[attr-defined]
+    band_stds = torch.tensor(  # type: ignore[attr-defined]
         [
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-        ]  # B10 = mode(all)
-    )
-    band_maxs = torch.tensor(  # type: ignore[attr-defined]
-        [
-            9859.0,
-            12872.0,
-            13163.0,
-            14445.0,
-            12477.0,
-            12563.0,
-            12289.0,
-            15596.0,
-            12183.0,
-            9458.0,
-            7677.0,  # (9458 + 5897)/2
-            5897.0,
-            5544.0,
+            52.1937,
+            83.4168,
+            105.6966,
+            151.1401,
+            147.4615,
+            115.9289,
+            123.1974,
+            114.6483,
+            141.4530,
+            73.2758,
+            4.8368,
+            213.4821,
+            179.4793,
         ]
     )
 
@@ -426,6 +385,8 @@ class OSCDDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.val_split_pct = val_split_pct
 
+        self.norm = Normalize(self.band_means, self.band_stds)
+
         if bands == "rgb":
             self.mins = self.band_mins[[3, 2, 1], None, None]
             self.maxs = self.band_maxs[[3, 2, 1], None, None]
@@ -436,7 +397,7 @@ class OSCDDataModule(pl.LightningDataModule):
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         sample["image"] = sample["image"].float()
-        sample["image"] = (sample["image"] - self.mins) / (self.maxs - self.mins)
+        sample["image"] = self.norm(sample["image"])
         sample["image"] = torch.clip(  # type: ignore[attr-defined]
             sample["image"], min=0.0, max=1.0
         )
