@@ -23,13 +23,13 @@ dependencies:
     - isort[colors]>=5.8
     - jupyterlab
     - kornia>=0.5.4
-    - laspy
+    - laspy>=2.0.0
     - mypy>=0.900
     - nbmake>=0.1
     - nbsphinx>=0.8.5
     - omegaconf>=2.1
     - opencv-python
-    - pandas
+    - pandas>=1.0
     - pillow>=2.9
     - pydocstyle[toml]>=6.1
     - pytest>=6
