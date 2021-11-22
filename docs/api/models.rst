@@ -31,3 +31,8 @@ Random-convolutional feature (RCF) extractor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: RCF
+
+Residual Network (ResNet)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: resnet50
