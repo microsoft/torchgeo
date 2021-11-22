@@ -231,6 +231,7 @@ class IDTReeS(VisionDataset):
             the point cloud
         """
         import laspy
+
         las = laspy.read(path)
         array = np.stack([las.x, las.y, las.z], axis=0)
         tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
@@ -482,12 +483,16 @@ class IDTReeS(VisionDataset):
 
         return fig
 
-    def plot_las(self, index: int, colormap: Optional[str] = None) -> None:
+    def plot_las(self, index: int, colormap: Optional[str] = None) -> Any:
         """Plot a sample point cloud at the index.
 
         Args:
             index: index to plot
             colormap: a valid matplotlib colormap
+
+        Returns:
+            a open3d.visualizer.Visualizer object. Use
+                Visualizer.run() to display
 
         Raises:
             ImportError: if open3d is not installed
@@ -521,4 +526,7 @@ class IDTReeS(VisionDataset):
         pcd = open3d.geometry.PointCloud()
         pcd.points = open3d.utility.Vector3dVector(points)
         pcd.colors = open3d.utility.Vector3dVector(colors)
-        open3d.visualization.draw_geometries([pcd])
+        vis = open3d.visualization.Visualizer()
+        vis.create_window()
+        vis.add_geometry(pcd)
+        return vis
