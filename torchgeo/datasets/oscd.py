@@ -398,7 +398,7 @@ class OSCDDataModule(pl.LightningDataModule):
         """Transform a single sample from the Dataset."""
         sample["image"] = sample["image"].float()
         sample["image"] = self.norm(sample["image"])
-        sample["image"] = torch.clip(  # type: ignore[attr-defined]
+        sample["image"] = torch.clamp(  # type: ignore[attr-defined]
             sample["image"], min=0.0, max=1.0
         )
         return sample
