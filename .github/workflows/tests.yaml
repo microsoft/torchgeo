@@ -62,6 +62,18 @@ jobs:
         conda list
         conda info
       if: ${{ runner.os == 'Windows' }}
+    - name: Install open3d (Windows Python 3.9)
+      run: |
+        pip install https://storage.googleapis.com/open3d-releases-master/python-wheels/open3d-0.13.0+d6db895-cp39-cp39-win_amd64.whl
+      if: ${{ runner.os == 'Windows' && runner.python-version == '3.9' }}
+    - name: Install open3d (Linux Python 3.9)
+      run: |
+        pip install https://storage.googleapis.com/open3d-releases-master/python-wheels/open3d-0.13.0+d6db895-cp39-cp39-manylinux_2_27_x86_64.whl
+      if: ${{ runner.os == 'Linux' && runner.python-version == '3.9' }}
+    - name: Install open3d (Mac Python 3.9)
+      run: |
+        pip install https://storage.googleapis.com/open3d-releases-master/python-wheels/open3d-0.13.0+d6db895-cp39-cp39-macosx_10_14_x86_64.whl
+      if: ${{ runner.os == 'macOS' && runner.python-version == '3.9' }}
     - name: Install pip dependencies
       run: |
         pip install cython numpy  # needed for pycocotools
