@@ -393,8 +393,15 @@ class OSCDDataModule(pl.LightningDataModule):
 
         self.norm = Normalize(self.band_means, self.band_stds)
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, 
+            sample: Dict[str, Any],
+            crop_size: Optional[Tuple[int]] = None) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
+        if crop_size is not None:
+            sh = sample["img"].shape[-2:]
+            cy, cx = np.random.randint(0, [sh[0]-crop_size[0],sh[1]-crop_size[1]], 2)    
+            sample["image"] = sample["image"][:, :, cy:cy+crop_size[0], cx:cx+crop_size[1]]
+
         sample["image"] = sample["image"].float()
         sample["image"] = self.norm(sample["image"])
         sample["image"] = torch.clamp(  # type: ignore[attr-defined]
