@@ -10,7 +10,6 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
-import rasterio
 import torch
 from matplotlib.figure import Figure
 from numpy import ndarray as Array
@@ -192,9 +191,9 @@ class OSCD(VisionDataset):
         """
         images = []
         for path in paths:
-            with rasterio.open(path) as f:
-                images.append(f.read())
-        array = np.stack(images, axis=0).astype(np.int_).squeeze()
+            with Image.open(path) as img:
+                images.append(np.array(img))
+        array = np.stack(images, axis=0).astype(np.int_)
         tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
         return tensor
 
