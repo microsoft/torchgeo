@@ -367,7 +367,7 @@ class OSCDDataModule(pl.LightningDataModule):
         batch_size: int = 64,
         num_workers: int = 0,
         val_split_pct: float = 0.2,
-        crop_size: Optional[Tuple[int, int]] = None,
+        crop_size: Tuple[int, int] = (64, 64),
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for OSCD based DataLoaders.
@@ -395,18 +395,10 @@ class OSCDDataModule(pl.LightningDataModule):
             self.band_stds = self.band_stds[:, None, None]
 
         self.norm = Normalize(self.band_means, self.band_stds)
-        if crop_size is not None:
-            self.random_crop = K.AugmentationSequential(K.RandomCrop(crop_size))
-        else:
-            self.random_crop = None
+        self.rcrop = K.AugmentationSequential(K.RandomCrop(crop_size))
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
-        if self.random_crop is not None:
-            sample["image"], sample["mask"] = self.random_crop(
-                sample["image"], sample["mask"]
-            )
-
         sample["image"] = sample["image"].float()
         sample["image"] = self.norm(sample["image"])
         sample["image"] = torch.clamp(  # type: ignore[attr-defined]
@@ -426,7 +418,13 @@ class OSCDDataModule(pl.LightningDataModule):
 
         This method is called once per GPU per run.
         """
-        transforms = Compose([self.preprocess])
+        def random_crop(sample: Dict[str, Any]) -> Dict[str, Any]:
+            sample["image"], sample["mask"] = self.rcrop(
+                sample["image"], sample["mask"]
+            )
+            return sample
+
+        transforms = Compose([self.preprocess, random_crop])
 
         dataset = OSCD(
             self.root_dir, split="train", bands=self.bands, transforms=transforms
@@ -439,6 +437,8 @@ class OSCDDataModule(pl.LightningDataModule):
         else:
             self.train_dataset = dataset  # type: ignore[assignment]
             self.val_dataset = None  # type: ignore[assignment]
+
+        transforms = Compose([self.preprocess])
 
         self.test_dataset = OSCD(
             self.root_dir, split="test", bands=self.bands, transforms=transforms
