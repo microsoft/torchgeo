@@ -156,7 +156,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         Returns:
             the :term:`coordinate reference system (CRS)`
         """
-        return self.crs
+        return self._crs
 
     @crs.setter
     def crs(self, new_crs: CRS) -> None:
@@ -167,23 +167,23 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         Args:
             new_crs: new :term:`coordinate reference system (CRS)`
         """
-        if new_crs == self.crs:
+        if new_crs == self._crs:
             return
 
         new_index = Index(interleaved=False, properties=Property(dimension=3))
 
         project = pyproj.Transformer.from_crs(
-            pyproj.CRS(str(self.crs)), pyproj.CRS(str(new_crs)), always_xy=True
+            pyproj.CRS(str(self._crs)), pyproj.CRS(str(new_crs)), always_xy=True
         ).transform
         for hit in self.index.intersection(self.index.bounds, objects=True):
             old_minx, old_maxx, old_miny, old_maxy, mint, maxt = hit.bounds
             old_box = shapely.geometry.box(old_minx, old_miny, old_maxx, old_maxy)
             new_box = shapely.ops.transform(project, old_box)
-            new_minx, new_miny, new_maxx, new_maxy = new_box
+            new_minx, new_miny, new_maxx, new_maxy = new_box.bounds
             new_bounds = (new_minx, new_maxx, new_miny, new_maxy, mint, maxt)
             new_index.insert(hit.id, new_bounds, hit.object)
 
-        self.crs = new_crs
+        self._crs = new_crs
         self.index = new_index
 
 
@@ -304,7 +304,7 @@ class RasterDataset(GeoDataset):
                 f"No {self.__class__.__name__} data was found in '{root}'"
             )
 
-        self.crs = cast(CRS, crs)
+        self._crs = cast(CRS, crs)
         self.res = cast(float, res)
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
@@ -529,7 +529,7 @@ class VectorDataset(GeoDataset):
                 f"No {self.__class__.__name__} data was found in '{root}'"
             )
 
-        self.crs = crs
+        self._crs = crs
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
@@ -748,7 +748,7 @@ class IntersectionDataset(GeoDataset):
             if not isinstance(ds, GeoDataset):
                 raise ValueError("IntersectionDataset only supports GeoDatasets")
 
-        self.crs = dataset1.crs
+        self._crs = dataset1.crs
         self.res = dataset1.res
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
@@ -823,7 +823,7 @@ class UnionDataset(GeoDataset):
             if not isinstance(ds, GeoDataset):
                 raise ValueError("UnionDataset only supports GeoDatasets")
 
-        self.crs = dataset1.crs
+        self._crs = dataset1.crs
         self.res = dataset1.res
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res

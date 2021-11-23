@@ -143,7 +143,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             chesapeake.res,
             transforms=self.naip_transform,
         )
-        self.dataset = chesapeake + naip
+        self.dataset = chesapeake & naip
 
         # TODO: figure out better train/val/test split
         roi = self.dataset.bounds

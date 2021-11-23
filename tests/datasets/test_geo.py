@@ -34,7 +34,7 @@ class CustomGeoDataset(GeoDataset):
     ) -> None:
         super().__init__()
         self.index.insert(0, tuple(bounds))
-        self.crs = crs
+        self._crs = crs
         self.res = res
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, BoundingBox]:
@@ -259,13 +259,13 @@ class TestIntersectionDataset:
         assert dataset[query] == {"index": query}
 
     def test_len(self, dataset: IntersectionDataset) -> None:
-        assert len(dataset) == 2
+        assert len(dataset) == 1
 
     def test_str(self, dataset: IntersectionDataset) -> None:
         out = str(dataset)
         assert "type: IntersectionDataset" in out
         assert "bbox: BoundingBox" in out
-        assert "size: 2" in out
+        assert "size: 1" in out
 
     def test_vision_dataset(self) -> None:
         ds1 = CustomVisionDataset()
@@ -278,20 +278,17 @@ class TestIntersectionDataset:
     def test_different_crs(self) -> None:
         ds1 = CustomGeoDataset(crs=CRS.from_epsg(3005))
         ds2 = CustomGeoDataset(crs=CRS.from_epsg(32616))
-        with pytest.raises(ValueError, match="Datasets must be in the same CRS"):
-            IntersectionDataset(ds1, ds2)
+        IntersectionDataset(ds1, ds2)
 
     def test_different_res(self) -> None:
         ds1 = CustomGeoDataset(res=1)
         ds2 = CustomGeoDataset(res=2)
-        with pytest.raises(ValueError, match="Datasets must have the same resolution"):
-            IntersectionDataset(ds1, ds2)
+        IntersectionDataset(ds1, ds2)
 
     def test_no_overlap(self) -> None:
         ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
         ds2 = CustomGeoDataset(BoundingBox(6, 7, 8, 9, 10, 11))
-        with pytest.raises(ValueError, match="Datasets have no overlap"):
-            IntersectionDataset(ds1, ds2)
+        IntersectionDataset(ds1, ds2)
 
     def test_invalid_query(self, dataset: IntersectionDataset) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
