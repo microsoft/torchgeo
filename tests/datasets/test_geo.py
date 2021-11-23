@@ -338,3 +338,54 @@ class TestIntersectionDataset:
             IndexError, match="query: .* not found in index with bounds:"
         ):
             dataset[query]
+
+
+class TestUnionDataset:
+    @pytest.fixture(scope="class")
+    def dataset(self) -> UnionDataset:
+        ds1 = CustomGeoDataset()
+        ds2 = CustomGeoDataset()
+        return ds1 | ds2
+
+    def test_getitem(self, dataset: UnionDataset) -> None:
+        query = BoundingBox(0, 1, 2, 3, 4, 5)
+        assert dataset[query] == {"index": query}
+
+    def test_len(self, dataset: UnionDataset) -> None:
+        assert len(dataset) == 2
+
+    def test_str(self, dataset: UnionDataset) -> None:
+        out = str(dataset)
+        assert "type: UnionDataset" in out
+        assert "bbox: BoundingBox" in out
+        assert "size: 2" in out
+
+    def test_vision_dataset(self) -> None:
+        ds1 = CustomVisionDataset()
+        ds2 = CustomVisionDataset()
+        with pytest.raises(
+            ValueError, match="UnionDataset only supports GeoDatasets"
+        ):
+            UnionDataset(ds1, ds2)  # type: ignore[arg-type]
+
+    def test_different_crs(self) -> None:
+        ds1 = CustomGeoDataset(crs=CRS.from_epsg(3005))
+        ds2 = CustomGeoDataset(crs=CRS.from_epsg(32616))
+        UnionDataset(ds1, ds2)
+
+    def test_different_res(self) -> None:
+        ds1 = CustomGeoDataset(res=1)
+        ds2 = CustomGeoDataset(res=2)
+        UnionDataset(ds1, ds2)
+
+    def test_no_overlap(self) -> None:
+        ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
+        ds2 = CustomGeoDataset(BoundingBox(6, 7, 8, 9, 10, 11))
+        UnionDataset(ds1, ds2)
+
+    def test_invalid_query(self, dataset: UnionDataset) -> None:
+        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        with pytest.raises(
+            IndexError, match="query: .* not found in index with bounds:"
+        ):
+            dataset[query]

@@ -866,8 +866,6 @@ class UnionDataset(GeoDataset):
                     sample.update(ds[query])
                 except IndexError:
                     pass
-        if not sample:
-            raise IndexError(f"query: {query} not found in merged index")
         return sample
 
     def __str__(self) -> str:
