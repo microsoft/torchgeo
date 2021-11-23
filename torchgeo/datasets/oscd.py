@@ -418,6 +418,7 @@ class OSCDDataModule(pl.LightningDataModule):
 
         This method is called once per GPU per run.
         """
+
         def random_crop(sample: Dict[str, Any]) -> Dict[str, Any]:
             sample["image"], sample["mask"] = self.rcrop(
                 sample["image"], sample["mask"]
