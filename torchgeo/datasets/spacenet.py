@@ -737,6 +737,127 @@ class SpaceNet4(SpaceNet):
         return files
 
 
+class SpaceNet5(SpaceNet):
+    r"""SpaceNet 5: Automated Road Network Extraction and Route Travel Time Estimation.
+
+    `SpaceNet 5 <https://spacenet.ai/sn5-challenge/>`_
+    is a dataset of road networks over the cities of Moscow, Mumbai and San
+    Juan (unavailable).
+
+    Collection features:
+
+    +------------+---------------------+------------+---------------------------+
+    |    AOI     | Area (km\ :sup:`2`\)| # Images   | # Road Network Labels (km)|
+    +============+=====================+============+===========================+
+    | Moscow     |    1353             |   1353     |         3066              |
+    +------------+---------------------+------------+---------------------------+
+    | Mumbai     |    1021             |   1016     |         1951              |
+    +------------+---------------------+------------+---------------------------+
+
+    Imagery features:
+
+    .. list-table::
+        :widths: 10 10 10 10 10
+        :header-rows: 1
+        :stub-columns: 1
+
+        *   -
+            - PAN
+            - MS
+            - PS-MS
+            - PS-RGB
+        *   - GSD (m)
+            - 0.31
+            - 1.24
+            - 0.30
+            - 0.30
+        *   - Chip size (px)
+            - 1300 x 1300
+            - 325 x 325
+            - 1300 x 1300
+            - 1300 x 1300
+
+    Dataset format:
+
+    * Imagery - Worldview-3 GeoTIFFs
+
+        * PAN.tif (Panchromatic)
+        * MS.tif (Multispectral)
+        * PS-MS (Pansharpened Multispectral)
+        * PS-RGB (Pansharpened RGB)
+
+    * Labels - GeoJSON
+
+        * labels.geojson
+
+    If you use this dataset in your research, please use the following citation:
+
+    * The SpaceNet Partners, “SpaceNet5: Automated Road Network Extraction and
+      Route Travel Time Estimation from Satellite Imagery”,
+      https://spacenet.ai/sn5-challenge/
+
+    .. note::
+
+       This dataset requires the following additional library to be installed:
+
+       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
+         imagery and labels from the Radiant Earth MLHub
+
+    .. versionadded:: 0.2
+    """
+
+    dataset_id = "spacenet5"
+    collection_md5_dict = {
+        "sn5_AOI_7_Moscow": "b18107f878152fe7e75444373c320cba",
+        "sn5_AOI_8_Mumbai": "1f1e2b3c26fbd15bfbcdbb6b02ae051c",
+    }
+
+    imagery = {
+        "MS": "MS.tif",
+        "PAN": "PAN.tif",
+        "PS-MS": "PS-MS.tif",
+        "PS-RGB": "PS-RGB.tif",
+    }
+    chip_size = {
+        "MS": (325, 325),
+        "PAN": (1300, 1300),
+        "PS-MS": (1300, 1300),
+        "PS-RGB": (1300, 1300),
+    }
+    label_glob = "labels.geojson"
+
+    def __init__(
+        self,
+        root: str,
+        image: str = "PS-RGB",
+        collections: List[str] = [],
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        download: bool = False,
+        api_key: Optional[str] = None,
+        checksum: bool = False,
+    ) -> None:
+        """Initialize a new SpaceNet 5 Dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            image: image selection which must be in ["MS", "PAN", "PS-MS", "PS-RGB"]
+            collections: collection selection which must be a subset of:
+                         [sn5_AOI_7_Moscow, sn5_AOI_8_Mumbai]
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            download: if True, download dataset and store it in the root directory.
+            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing
+        """
+        assert image in {"MS", "PAN", "PS-MS", "PS-RGB"}
+        super().__init__(
+            root, image, collections, transforms, download, api_key, checksum
+        )
+
+
 class SpaceNet7(SpaceNet):
     """SpaceNet 7: Multi-Temporal Urban Development Challenge.
 
