@@ -6,7 +6,6 @@
 import abc
 import functools
 import glob
-import math
 import os
 import re
 import sys
@@ -16,8 +15,10 @@ import fiona
 import fiona.transform
 import matplotlib.pyplot as plt
 import numpy as np
+import pyproj
 import rasterio
 import rasterio.merge
+import shapely
 import torch
 from rasterio.crs import CRS
 from rasterio.io import DatasetReader
@@ -54,9 +55,6 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     This isn't true for :class:`VisionDataset`, where the lack of geospatial information
     prohibits swapping image sources or target labels.
     """
-
-    #: :term:`coordinate reference system (CRS)` for the dataset.
-    crs: CRS
 
     #: Resolution of the dataset in units of CRS.
     res: float
@@ -150,6 +148,43 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
             (minx, maxx, miny, maxy, mint, maxt) of the dataset
         """
         return BoundingBox(*self.index.bounds)
+
+    @property
+    def crs(self) -> CRS:
+        """:term:`coordinate reference system (CRS)` for the dataset.
+
+        Returns:
+            the :term:`coordinate reference system (CRS)`
+        """
+        return self.crs
+
+    @crs.setter
+    def crs(self, new_crs: CRS) -> None:
+        """Change the :term:`coordinate reference system (CRS)` of a GeoDataset.
+
+        If ``new_crs == self.crs``, does nothing, otherwise updates the R-tree index.
+
+        Args:
+            new_crs: new :term:`coordinate reference system (CRS)`
+        """
+        if new_crs == self.crs:
+            return
+
+        new_index = Index(interleaved=False, properties=Property(dimension=3))
+
+        project = pyproj.Transformer.from_crs(
+            pyproj.CRS(str(self.crs)), pyproj.CRS(str(new_crs)), always_xy=True
+        ).transform
+        for hit in self.index.intersection(self.index.bounds, objects=True):
+            old_minx, old_maxx, old_miny, old_maxy, mint, maxt = hit.bounds
+            old_box = shapely.geometry.box(old_minx, old_miny, old_maxx, old_maxy)
+            new_box = shapely.ops.transform(project, old_box)
+            new_minx, new_miny, new_maxx, new_maxy = new_box
+            new_bounds = (new_minx, new_maxx, new_miny, new_maxy, mint, maxt)
+            new_index.insert(hit.id, new_bounds, hit.object)
+
+        self.crs = new_crs
+        self.index = new_index
 
 
 class RasterDataset(GeoDataset):
@@ -705,11 +740,6 @@ class IntersectionDataset(GeoDataset):
         Args:
             dataset1: the first dataset
             dataset2: the second dataset
-
-        Raises:
-            ValueError: if datasets contains non-GeoDatasets, do not overlap, are not in
-                the same :term:`coordinate reference system (CRS)`, or do not have the
-                same resolution
         """
         super().__init__()
         self.datasets = [dataset1, dataset2]
@@ -718,13 +748,22 @@ class IntersectionDataset(GeoDataset):
             if not isinstance(ds, GeoDataset):
                 raise ValueError("IntersectionDataset only supports GeoDatasets")
 
-        if dataset1.crs != dataset2.crs:
-            raise ValueError("Datasets must be in the same CRS")
-        if not math.isclose(dataset1.res, dataset2.res):
-            raise ValueError("Datasets must have the same resolution")
-
         self.crs = dataset1.crs
         self.res = dataset1.res
+        dataset2.crs = dataset1.crs
+        dataset2.res = dataset1.res
+        self._merge_dataset_indices()
+
+    def _merge_dataset_indices(self) -> None:
+        """Create a new R-tree out of the individual indices from two datasets."""
+        i = 0
+        ds1, ds2 = self.datasets
+        for hit1 in ds1.index.intersection(ds1.index.bounds, objects=True):
+            for hit2 in ds2.index.intersection(hit1.bounds, objects=True):
+                box1 = BoundingBox(*hit1.bounds)
+                box2 = BoundingBox(*hit2.bounds)
+                self.index.insert(i, tuple(box1 & box2))
+                i += 1
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
@@ -776,11 +815,6 @@ class UnionDataset(GeoDataset):
         Args:
             dataset1: the first dataset
             dataset2: the second dataset
-
-        Raises:
-            ValueError: if datasets contains non-GeoDatasets, do not overlap, are not in
-                the same :term:`coordinate reference system (CRS)`, or do not have the
-                same resolution
         """
         super().__init__()
         self.datasets = [dataset1, dataset2]
@@ -789,20 +823,17 @@ class UnionDataset(GeoDataset):
             if not isinstance(ds, GeoDataset):
                 raise ValueError("UnionDataset only supports GeoDatasets")
 
-        if dataset1.crs != dataset2.crs:
-            raise ValueError("Datasets must be in the same CRS")
-        if not math.isclose(dataset1.res, dataset2.res):
-            raise ValueError("Datasets must have the same resolution")
-
         self.crs = dataset1.crs
         self.res = dataset1.res
+        dataset2.crs = dataset1.crs
+        dataset2.res = dataset1.res
         self._merge_dataset_indices()
 
     def _merge_dataset_indices(self) -> None:
-        """Creates a new R-tree out of the individual indices from two datasets."""
+        """Create a new R-tree out of the individual indices from two datasets."""
         i = 0
         for j, ds in enumerate(self.datasets):
-            hits = list(ds.index.intersection(tuple(ds.bounds)))
+            hits = ds.index.intersection(ds.index.bounds, objects=True)
             for hit in hits:
                 self.index.insert(i, hit.bounds, j)
                 i += 1
