@@ -17,7 +17,7 @@ from numpy import ndarray as Array
 from PIL import Image
 from torch import Tensor
 from torch.utils.data import DataLoader
-from torchvision.transforms import Compose, Normalize
+from torchvision.transforms import Compose, Normalize, RandomCrop
 
 from ..datasets.utils import dataset_split, draw_semantic_segmentation_masks
 from .geo import VisionDataset
@@ -366,6 +366,7 @@ class OSCDDataModule(pl.LightningDataModule):
         batch_size: int = 64,
         num_workers: int = 0,
         val_split_pct: float = 0.2,
+        crop_size: Optional[Sequence[int]] = None,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for OSCD based DataLoaders.
@@ -392,19 +393,12 @@ class OSCDDataModule(pl.LightningDataModule):
             self.band_stds = self.band_stds[:, None, None]
 
         self.norm = Normalize(self.band_means, self.band_stds)
+        self.random_crop = RandomCrop(crop_size) if crop_size is not None else None
 
-    def preprocess(
-        self, sample: Dict[str, Any], crop_size: Optional[Sequence[int]] = None
-    ) -> Dict[str, Any]:
+    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
-        if crop_size is not None:
-            sh = sample["img"].shape[-2:]
-            cy, cx = np.random.randint(
-                0, [sh[0] - crop_size[0], sh[1] - crop_size[1]], 2
-            )
-            sample["image"] = sample["image"][
-                :, :, cy : cy + crop_size[0], cx : cx + crop_size[1]
-            ]
+        if self.random_crop is not None:
+            sample["image"] = self.random_crop(sample["image"])
 
         sample["image"] = sample["image"].float()
         sample["image"] = self.norm(sample["image"])
