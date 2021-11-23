@@ -58,6 +58,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
     #: Resolution of the dataset in units of CRS.
     res: float
+    _crs: CRS
 
     def __init__(
         self, transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None
