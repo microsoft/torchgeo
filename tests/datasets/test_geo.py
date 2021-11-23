@@ -13,11 +13,13 @@ from rasterio.crs import CRS
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import (
+    NAIP,
     BoundingBox,
+    CanadianBuildingFootprints,
     GeoDataset,
     IntersectionDataset,
-    Landsat8,
     RasterDataset,
+    Sentinel2,
     UnionDataset,
     VectorDataset,
     VisionClassificationDataset,
@@ -129,19 +131,39 @@ class TestGeoDataset:
 
 class TestRasterDataset:
     @pytest.fixture(params=[True, False])
-    def dataset(self, request: SubRequest) -> Landsat8:
-        root = os.path.join("tests", "data", "landsat8")
-        bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7"]
+    def naip(self, request: SubRequest) -> NAIP:
+        root = os.path.join("tests", "data", "naip")
         crs = CRS.from_epsg(3005)
         transforms = nn.Identity()  # type: ignore[attr-defined]
         cache = request.param
-        return Landsat8(root, bands=bands, crs=crs, transforms=transforms, cache=cache)
+        return NAIP(root, crs=crs, transforms=transforms, cache=cache)
 
-    def test_getitem(self, dataset: Landsat8) -> None:
-        x = dataset[dataset.bounds]
+    @pytest.fixture(params=[True, False])
+    def sentinel(self, request: SubRequest) -> Sentinel2:
+        root = os.path.join("tests", "data", "sentinel2")
+        bands = ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B11"]
+        transforms = nn.Identity()  # type: ignore[attr-defined]
+        cache = request.param
+        return Sentinel2(root, bands=bands, transforms=transforms, cache=cache)
+
+    def test_getitem_single_file(self, naip: NAIP) -> None:
+        x = naip[naip.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["image"], torch.Tensor)
+
+    def test_getitem_separate_files(self, sentinel: Sentinel2) -> None:
+        x = sentinel[sentinel.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x["crs"], CRS)
+        assert isinstance(x["image"], torch.Tensor)
+
+    def test_invalid_query(self, sentinel: Sentinel2) -> None:
+        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        with pytest.raises(
+            IndexError, match="query: .* not found in index with bounds: .*"
+        ):
+            sentinel[query]
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="No RasterDataset data was found"):
@@ -149,6 +171,25 @@ class TestRasterDataset:
 
 
 class TestVectorDataset:
+    @pytest.fixture
+    def dataset(self) -> CanadianBuildingFootprints:
+        root = os.path.join("tests", "data", "cbf")
+        transforms = nn.Identity()  # type: ignore[attr-defined]
+        return CanadianBuildingFootprints(root, res=0.1, transforms=transforms)
+
+    def test_getitem(self, dataset: CanadianBuildingFootprints) -> None:
+        x = dataset[dataset.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x["crs"], CRS)
+        assert isinstance(x["mask"], torch.Tensor)
+
+    def test_invalid_query(self, dataset: CanadianBuildingFootprints) -> None:
+        query = BoundingBox(2, 2, 2, 2, 2, 2)
+        with pytest.raises(
+            IndexError, match="query: .* not found in index with bounds:"
+        ):
+            dataset[query]
+
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="No VectorDataset data was found"):
             VectorDataset(str(tmp_path))
@@ -201,7 +242,8 @@ class TestVisionDataset:
 class TestVisionClassificationDataset:
     @pytest.fixture(scope="class")
     def dataset(self, root: str) -> VisionClassificationDataset:
-        return VisionClassificationDataset(root)
+        transforms = nn.Identity()  # type: ignore[attr-defined]
+        return VisionClassificationDataset(root, transforms=transforms)
 
     @pytest.fixture(scope="class")
     def root(self) -> str:
