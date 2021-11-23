@@ -5,8 +5,9 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
+import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
@@ -17,7 +18,7 @@ from numpy import ndarray as Array
 from PIL import Image
 from torch import Tensor
 from torch.utils.data import DataLoader
-from torchvision.transforms import Compose, Normalize, RandomCrop
+from torchvision.transforms import Compose, Normalize
 
 from ..datasets.utils import dataset_split, draw_semantic_segmentation_masks
 from .geo import VisionDataset
@@ -366,7 +367,7 @@ class OSCDDataModule(pl.LightningDataModule):
         batch_size: int = 64,
         num_workers: int = 0,
         val_split_pct: float = 0.2,
-        crop_size: Optional[Sequence[int]] = None,
+        crop_size: Optional[Tuple[int, int]] = None,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for OSCD based DataLoaders.
@@ -393,12 +394,17 @@ class OSCDDataModule(pl.LightningDataModule):
             self.band_stds = self.band_stds[:, None, None]
 
         self.norm = Normalize(self.band_means, self.band_stds)
-        self.random_crop = RandomCrop(crop_size) if crop_size is not None else None
+        if crop_size is not None:
+            self.random_crop = K.AugmentationSequential(K.RandomCrop(crop_size))
+        else:
+            self.random_crop = None
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         if self.random_crop is not None:
-            sample["image"] = self.random_crop(sample["image"])
+            sample["image"], sample["mask"] = self.random_crop(
+                sample["image"], sample["mask"]
+            )
 
         sample["image"] = sample["image"].float()
         sample["image"] = self.norm(sample["image"])
