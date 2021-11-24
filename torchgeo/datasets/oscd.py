@@ -450,10 +450,8 @@ class OSCDDataModule(pl.LightningDataModule):
             sample["mask"] = sample["mask"].squeeze()[0].to(torch.long)
             return sample
         def slice_up(sample: Dict[str, Any]) -> Dict[str, Any]:
-            sample["image"] = self.get_slices(sample["image"])
-            sample["mask"] = self.get_slices(sample["mask"][None, None, ...])[0, 0]
-            print(sample["image"].shape)
-            print(sample["mask"].shape)
+            sample["image"] = torch.swapaxes(self.get_slices(sample["image"]), 0, 1)
+            sample["mask"] = torch.swapaxes(self.get_slices(sample["mask"][None, None, ...]), 0, 1)[:, 0, 0]
             return sample
 
         train_transforms = Compose([self.preprocess, random_crop])
