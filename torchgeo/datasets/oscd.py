@@ -492,7 +492,7 @@ class OSCDDataModule(pl.LightningDataModule):
         else:
             return DataLoader(
                 self.val_dataset,
-                batch_size=self.batch_size,
+                batch_size=1,
                 num_workers=self.num_workers,
                 shuffle=False,
             )
@@ -501,7 +501,7 @@ class OSCDDataModule(pl.LightningDataModule):
         """Return a DataLoader for testing."""
         return DataLoader(
             self.test_dataset,
-            batch_size=self.batch_size,
+            batch_size=1,
             num_workers=self.num_workers,
             shuffle=False,
         )
