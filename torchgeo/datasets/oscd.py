@@ -13,10 +13,11 @@ import numpy as np
 import pytorch_lightning as pl
 import rasterio
 import torch
+from einsum import repeat
 from matplotlib.figure import Figure
 from numpy import ndarray as Array
 from PIL import Image
-from torch import Tensor, nn
+from torch import Tensor
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, Normalize
 
@@ -427,13 +428,15 @@ class OSCDDataModule(pl.LightningDataModule):
             sample["image"], sample["mask"] = self.rcrop(
                 sample["image"], sample["mask"]
             )
-            sample["mask"] = sample["mask"].squeeze()[0].to(torch.long)
+            sample["mask"] = sample["mask"].squeeze()[0]  # type: ignore[attr-defined]
             return sample
 
         train_transforms = Compose([self.preprocess, random_crop])
         test_transforms = Compose([self.preprocess])
 
-        dataset = OSCD(self.root_dir, split="train", bands=self.bands, transforms=train_transforms)
+        dataset = OSCD(
+            self.root_dir, split="train", bands=self.bands, transforms=train_transforms
+        )
 
         if self.val_split_pct > 0.0:
             self.train_dataset, self.val_dataset, _ = dataset_split(
