@@ -428,7 +428,7 @@ class OSCDDataModule(pl.LightningDataModule):
             sample["image"], sample["mask"] = self.rcrop(
                 sample["image"], sample["mask"]
             )
-            sample["mask"] = sample["mask"].squeeze()[0]  # type: ignore[attr-defined]
+            sample["mask"] = sample["mask"].squeeze()[0]
             return sample
 
         train_transforms = Compose([self.preprocess, random_crop])
