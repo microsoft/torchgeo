@@ -13,7 +13,7 @@ import numpy as np
 import pytorch_lightning as pl
 import rasterio
 import torch
-from einsum import repeat
+from einops import repeat
 from matplotlib.figure import Figure
 from numpy import ndarray as Array
 from PIL import Image
