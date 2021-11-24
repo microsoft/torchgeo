@@ -128,7 +128,8 @@ class TestOSCDDataModule:
 
     def test_val_dataloader(self, datamodule: OSCDDataModule) -> None:
         sample = next(iter(datamodule.val_dataloader()))
-        assert sample["image"].shape[-2:] == sample["mask"].shape[-2:] == (3, 3)
+        if datamodule.val_split_pct > 0.0:
+            assert sample["image"].shape[-2:] == sample["mask"].shape[-2:] == (3, 3)
 
     def test_test_dataloader(self, datamodule: OSCDDataModule) -> None:
         sample = next(iter(datamodule.test_dataloader()))

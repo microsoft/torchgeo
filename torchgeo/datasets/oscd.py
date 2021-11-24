@@ -434,19 +434,22 @@ class OSCDDataModule(pl.LightningDataModule):
         train_transforms = Compose([self.preprocess, random_crop])
         test_transforms = Compose([self.preprocess])
 
-        dataset = OSCD(
+        train_dataset = OSCD(
             self.root_dir, split="train", bands=self.bands, transforms=train_transforms
         )
-
         if self.val_split_pct > 0.0:
+            val_dataset = OSCD(
+                self.root_dir,
+                split="train",
+                bands=self.bands,
+                transforms=test_transforms,
+            )
             self.train_dataset, self.val_dataset, _ = dataset_split(
-                dataset, val_pct=self.val_split_pct, test_pct=0.0
+                train_dataset, val_pct=self.val_split_pct, test_pct=0.0
             )
-            self.val_dataset.dataset.transforms = (  # type: ignore[attr-defined]
-                test_transforms
-            )
+            self.val_dataset.dataset = val_dataset
         else:
-            self.train_dataset = dataset  # type: ignore[assignment]
+            self.train_dataset = train_dataset  # type: ignore[assignment]
             self.val_dataset = None  # type: ignore[assignment]
 
         self.test_dataset = OSCD(
