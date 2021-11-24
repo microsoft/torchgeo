@@ -431,24 +431,26 @@ class OSCDDataModule(pl.LightningDataModule):
             sample["mask"] = sample["mask"].squeeze()[0]  # type: ignore[attr-defined]
             return sample
 
-        train_transf = Compose([self.preprocess, random_crop])
-        transf = Compose([self.preprocess])
+        train_transforms = Compose([self.preprocess, random_crop])
+        test_transforms = Compose([self.preprocess])
 
         dataset = OSCD(
-            self.root_dir, split="train", bands=self.bands, transforms=train_transf
+            self.root_dir, split="train", bands=self.bands, transforms=train_transforms
         )
 
         if self.val_split_pct > 0.0:
             self.train_dataset, self.val_dataset, _ = dataset_split(
                 dataset, val_pct=self.val_split_pct, test_pct=0.0
             )
-            self.val_dataset.dataset.transforms = transf  # type: ignore[attr-defined]
+            self.val_dataset.dataset.transforms = (
+                test_transforms  # type: ignore[attr-defined]
+            )
         else:
             self.train_dataset = dataset  # type: ignore[assignment]
             self.val_dataset = None  # type: ignore[assignment]
 
         self.test_dataset = OSCD(
-            self.root_dir, split="test", bands=self.bands, transforms=transf
+            self.root_dir, split="test", bands=self.bands, transforms=test_transforms
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
