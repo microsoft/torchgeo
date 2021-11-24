@@ -442,7 +442,7 @@ class OSCDDataModule(pl.LightningDataModule):
             self.train_dataset, self.val_dataset, _ = dataset_split(
                 dataset, val_pct=self.val_split_pct, test_pct=0.0
             )
-            # self.val_dataset.transforms = test_transforms
+            self.val_dataset.transforms = test_transforms
         else:
             self.train_dataset = dataset  # type: ignore[assignment]
             self.val_dataset = None  # type: ignore[assignment]
