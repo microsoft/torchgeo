@@ -17,8 +17,7 @@ from kornia.contrib import ExtractTensorPatches
 from matplotlib.figure import Figure
 from numpy import ndarray as Array
 from PIL import Image
-from torch import nn
-from torch import Tensor
+from torch import Tensor, nn
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, Normalize
@@ -320,14 +319,15 @@ class OSCD(VisionDataset):
 
 
 class PadToDivisible(nn.Module):
-    """ Pad an input tensor to be divisible by a h, w. """
+    """Pad an input tensor to be divisible by a h, w."""
+
     def __init__(self, size: Tuple[int, int]) -> None:
         super().__init__()
         self.h, self.w = size
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         xh, xw = x.shape[-2:]
-        pad_h, pad_w = self.h - (xh %  self.h), self.w - (xw % self.w)
+        pad_h, pad_w = self.h - (xh % self.h), self.w - (xw % self.w)
         x = F.pad(x, (0, pad_w, 0, pad_h))
         return x
 
@@ -412,13 +412,11 @@ class OSCDDataModule(pl.LightningDataModule):
 
         self.norm = Normalize(self.band_means, self.band_stds)
         self.rcrop = K.AugmentationSequential(
-            K.RandomCrop(crop_size),
-            data_keys=["input", "mask"],
-            same_on_batch=True
+            K.RandomCrop(crop_size), data_keys=["input", "mask"], same_on_batch=True
         )
         self.get_slices = nn.Sequential(
             PadToDivisible(crop_size),
-            ExtractTensorPatches(window_size=crop_size, stride=crop_size)
+            ExtractTensorPatches(window_size=crop_size, stride=crop_size),
         )
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
@@ -445,21 +443,24 @@ class OSCDDataModule(pl.LightningDataModule):
         """
 
         def random_crop(sample: Dict[str, Any]) -> Dict[str, Any]:
-            sample["mask"] = repeat(sample["mask"], "h w -> t h w", t=2)
-            sample["image"], sample["mask"] = self.rcrop(sample["image"], sample["mask"])
+            sample["mask"] = torch.repeat(sample["mask"], "h w -> t h w", t=2)
+            sample["image"], sample["mask"] = self.rcrop(
+                sample["image"], sample["mask"]
+            )
             sample["mask"] = sample["mask"].squeeze()[0].to(torch.long)
             return sample
+
         def slice_up(sample: Dict[str, Any]) -> Dict[str, Any]:
             sample["image"] = torch.swapaxes(self.get_slices(sample["image"]), 0, 1)
-            sample["mask"] = torch.swapaxes(self.get_slices(sample["mask"][None, None, ...]), 0, 1)[:, 0, 0]
+            sample["mask"] = torch.swapaxes(
+                self.get_slices(sample["mask"][None, None, ...]), 0, 1
+            )[:, 0, 0]
             return sample
 
         train_transforms = Compose([self.preprocess, random_crop])
         test_transforms = Compose([self.preprocess, slice_up])
 
-        dataset = OSCD(
-            self.root_dir, split="train", bands=self.bands, transforms=None
-        )
+        dataset = OSCD(self.root_dir, split="train", bands=self.bands, transforms=None)
 
         if self.val_split_pct > 0.0:
             self.train_dataset, self.val_dataset, _ = dataset_split(
@@ -500,8 +501,5 @@ class OSCDDataModule(pl.LightningDataModule):
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing."""
         return DataLoader(
-            self.test_dataset,
-            batch_size=1,
-            num_workers=self.num_workers,
-            shuffle=False,
+            self.test_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
         )
