@@ -13,6 +13,7 @@ import numpy as np
 import pytorch_lightning as pl
 import rasterio
 import torch
+from einops import repeat
 from kornia.contrib import ExtractTensorPatches
 from matplotlib.figure import Figure
 from numpy import ndarray as Array
@@ -443,7 +444,7 @@ class OSCDDataModule(pl.LightningDataModule):
         """
 
         def random_crop(sample: Dict[str, Any]) -> Dict[str, Any]:
-            sample["mask"] = torch.repeat(sample["mask"], "h w -> t h w", t=2)
+            sample["mask"] = repeat(sample["mask"], "h w -> t h w", t=2)
             sample["image"], sample["mask"] = self.rcrop(
                 sample["image"], sample["mask"]
             )
@@ -460,18 +461,16 @@ class OSCDDataModule(pl.LightningDataModule):
         train_transforms = Compose([self.preprocess, random_crop])
         test_transforms = Compose([self.preprocess, slice_up])
 
-        dataset = OSCD(self.root_dir, split="train", bands=self.bands, transforms=None)
+        dataset = OSCD(self.root_dir, split="train", bands=self.bands, transforms=train_transforms)
 
         if self.val_split_pct > 0.0:
             self.train_dataset, self.val_dataset, _ = dataset_split(
                 dataset, val_pct=self.val_split_pct, test_pct=0.0
             )
-            self.val_dataset.transforms = test_transforms
+            # self.val_dataset.transforms = test_transforms
         else:
             self.train_dataset = dataset  # type: ignore[assignment]
             self.val_dataset = None  # type: ignore[assignment]
-
-        self.train_dataset.transforms = train_transforms
 
         self.test_dataset = OSCD(
             self.root_dir, split="test", bands=self.bands, transforms=test_transforms
