@@ -13,13 +13,10 @@ import numpy as np
 import pytorch_lightning as pl
 import rasterio
 import torch
-from einops import repeat
-from kornia.contrib import ExtractTensorPatches
 from matplotlib.figure import Figure
 from numpy import ndarray as Array
 from PIL import Image
 from torch import Tensor, nn
-from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, Normalize
 
@@ -319,20 +316,6 @@ class OSCD(VisionDataset):
         return fig
 
 
-class PadToDivisible(nn.Module):
-    """Pad an input tensor to be divisible by a h, w."""
-
-    def __init__(self, size: Tuple[int, int]) -> None:
-        super().__init__()
-        self.h, self.w = size
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        xh, xw = x.shape[-2:]
-        pad_h, pad_w = self.h - (xh % self.h), self.w - (xw % self.w)
-        x = F.pad(x, (0, pad_w, 0, pad_h))
-        return x
-
-
 class OSCDDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the OSCD dataset.
 
@@ -415,10 +398,6 @@ class OSCDDataModule(pl.LightningDataModule):
         self.rcrop = K.AugmentationSequential(
             K.RandomCrop(crop_size), data_keys=["input", "mask"], same_on_batch=True
         )
-        self.get_slices = nn.Sequential(
-            PadToDivisible(crop_size),
-            ExtractTensorPatches(window_size=crop_size, stride=crop_size),
-        )
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
@@ -451,15 +430,8 @@ class OSCDDataModule(pl.LightningDataModule):
             sample["mask"] = sample["mask"].squeeze()[0].to(torch.long)
             return sample
 
-        def slice_up(sample: Dict[str, Any]) -> Dict[str, Any]:
-            sample["image"] = torch.swapaxes(self.get_slices(sample["image"]), 0, 1)
-            sample["mask"] = torch.swapaxes(
-                self.get_slices(sample["mask"][None, None, ...]), 0, 1
-            )[:, 0, 0]
-            return sample
-
         train_transforms = Compose([self.preprocess, random_crop])
-        test_transforms = Compose([self.preprocess, slice_up])
+        test_transforms = Compose([self.preprocess])
 
         dataset = OSCD(self.root_dir, split="train", bands=self.bands, transforms=train_transforms)
 
