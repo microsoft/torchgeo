@@ -23,7 +23,6 @@ from torch.utils.data import TensorDataset
 import torchgeo.datasets.utils
 from torchgeo.datasets.utils import (
     BoundingBox,
-    collate_dict,
     dataset_split,
     disambiguate_timestamp,
     download_and_extract_archive,
@@ -31,6 +30,7 @@ from torchgeo.datasets.utils import (
     download_radiant_mlhub_dataset,
     extract_archive,
     percentile_normalization,
+    stack_samples,
     working_dir,
 )
 
@@ -443,7 +443,7 @@ def test_disambiguate_timestamp(
     assert math.isclose(maxt, max_datetime)
 
 
-def test_collate_dict() -> None:
+def test_stack_samples() -> None:
     samples = [
         {
             "foo": torch.tensor(1),  # type: ignore[attr-defined]
@@ -456,7 +456,7 @@ def test_collate_dict() -> None:
             "crs": CRS.from_epsg(3005),
         },
     ]
-    sample = collate_dict(samples)
+    sample = stack_samples(samples)
     assert torch.allclose(  # type: ignore[attr-defined]
         sample["foo"], torch.tensor([1, 3])  # type: ignore[attr-defined]
     )

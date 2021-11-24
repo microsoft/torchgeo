@@ -258,4 +258,10 @@ Utilities
 ---------
 
 .. autoclass:: BoundingBox
-.. autofunction:: collate_dict
+
+Collation Functions
+^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: stack_samples
+.. autofunction:: concat_samples
+.. autofunction:: merge_samples

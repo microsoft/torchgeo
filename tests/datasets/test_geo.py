@@ -363,9 +363,7 @@ class TestUnionDataset:
     def test_vision_dataset(self) -> None:
         ds1 = CustomVisionDataset()
         ds2 = CustomVisionDataset()
-        with pytest.raises(
-            ValueError, match="UnionDataset only supports GeoDatasets"
-        ):
+        with pytest.raises(ValueError, match="UnionDataset only supports GeoDatasets"):
             UnionDataset(ds1, ds2)  # type: ignore[arg-type]
 
     def test_different_crs(self) -> None:

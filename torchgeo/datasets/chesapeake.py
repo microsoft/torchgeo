@@ -29,10 +29,10 @@ from .geo import GeoDataset, RasterDataset
 from .utils import (
     BoundingBox,
     check_integrity,
-    collate_dict,
     download_and_extract_archive,
     download_url,
     extract_archive,
+    stack_samples,
 )
 
 # https://github.com/pytorch/pytorch/issues/60979
@@ -787,7 +787,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             self.train_dataset,
             batch_sampler=sampler,
             num_workers=self.num_workers,
-            collate_fn=collate_dict,
+            collate_fn=stack_samples,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -806,7 +806,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             batch_size=self.batch_size,
             sampler=sampler,
             num_workers=self.num_workers,
-            collate_fn=collate_dict,
+            collate_fn=stack_samples,
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
@@ -825,5 +825,5 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             batch_size=self.batch_size,
             sampler=sampler,
             num_workers=self.num_workers,
-            collate_fn=collate_dict,
+            collate_fn=stack_samples,
         )

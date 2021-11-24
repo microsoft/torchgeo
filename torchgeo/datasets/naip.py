@@ -12,7 +12,7 @@ from ..samplers.batch import RandomBatchGeoSampler
 from ..samplers.single import GridGeoSampler
 from .chesapeake import Chesapeake13
 from .geo import RasterDataset
-from .utils import BoundingBox, collate_dict
+from .utils import BoundingBox, stack_samples
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -169,7 +169,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             self.dataset,
             batch_sampler=self.train_sampler,
             num_workers=self.num_workers,
-            collate_fn=collate_dict,
+            collate_fn=stack_samples,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -183,7 +183,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             sampler=self.val_sampler,
             num_workers=self.num_workers,
-            collate_fn=collate_dict,
+            collate_fn=stack_samples,
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
@@ -197,5 +197,5 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             sampler=self.test_sampler,
             num_workers=self.num_workers,
-            collate_fn=collate_dict,
+            collate_fn=stack_samples,
         )

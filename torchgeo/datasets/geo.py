@@ -30,7 +30,7 @@ from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
 
-from .utils import BoundingBox, disambiguate_timestamp
+from .utils import BoundingBox, concat_samples, disambiguate_timestamp, merge_samples
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -735,15 +735,24 @@ class IntersectionDataset(GeoDataset):
     label like CDL.
     """
 
-    def __init__(self, dataset1: GeoDataset, dataset2: GeoDataset) -> None:
+    def __init__(
+        self,
+        dataset1: GeoDataset,
+        dataset2: GeoDataset,
+        collate_fn: Callable[
+            [Sequence[Dict[str, Any]]], Dict[str, Any]
+        ] = concat_samples,
+    ) -> None:
         """Initialize a new Dataset instance.
 
         Args:
             dataset1: the first dataset
             dataset2: the second dataset
+            collate_fn: function used to collate samples
         """
         super().__init__()
         self.datasets = [dataset1, dataset2]
+        self.collate_fn = collate_fn
 
         for ds in self.datasets:
             if not isinstance(ds, GeoDataset):
@@ -751,8 +760,12 @@ class IntersectionDataset(GeoDataset):
 
         self._crs = dataset1.crs
         self.res = dataset1.res
+
+        # Force dataset2 to have the same CRS/res as dataset1
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
+
+        # Merge dataset indices into a single index
         self._merge_dataset_indices()
 
     def _merge_dataset_indices(self) -> None:
@@ -783,13 +796,10 @@ class IntersectionDataset(GeoDataset):
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
-        # TODO: use collate_dict here to concatenate instead of replace.
-        # For example, if using Landsat + Sentinel + CDL, don't want to remove Landsat
-        # images and replace with Sentinel images.
-        sample = {}
-        for ds in self.datasets:
-            sample.update(ds[query])
-        return sample
+        # All datasets are guaranteed to a valid query
+        samples = [ds[query] for ds in self.datasets]
+
+        return self.collate_fn(samples)
 
     def __str__(self) -> str:
         """Return the informal string representation of the object.
@@ -810,15 +820,24 @@ class UnionDataset(GeoDataset):
     For example, this allows you to combine two spatially disparate datasets.
     """
 
-    def __init__(self, dataset1: GeoDataset, dataset2: GeoDataset) -> None:
+    def __init__(
+        self,
+        dataset1: GeoDataset,
+        dataset2: GeoDataset,
+        collate_fn: Callable[
+            [Sequence[Dict[str, Any]]], Dict[str, Any]
+        ] = merge_samples,
+    ) -> None:
         """Initialize a new Dataset instance.
 
         Args:
             dataset1: the first dataset
             dataset2: the second dataset
+            collate_fn: function used to collate samples
         """
         super().__init__()
         self.datasets = [dataset1, dataset2]
+        self.collate_fn = collate_fn
 
         for ds in self.datasets:
             if not isinstance(ds, GeoDataset):
@@ -826,17 +845,21 @@ class UnionDataset(GeoDataset):
 
         self._crs = dataset1.crs
         self.res = dataset1.res
+
+        # Force dataset2 to have the same CRS/res as dataset1
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
+
+        # Merge dataset indices into a single index
         self._merge_dataset_indices()
 
     def _merge_dataset_indices(self) -> None:
         """Create a new R-tree out of the individual indices from two datasets."""
         i = 0
-        for j, ds in enumerate(self.datasets):
+        for ds in self.datasets:
             hits = ds.index.intersection(ds.index.bounds, objects=True)
             for hit in hits:
-                self.index.insert(i, hit.bounds, j)
+                self.index.insert(i, hit.bounds)
                 i += 1
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
@@ -856,17 +879,13 @@ class UnionDataset(GeoDataset):
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
-        # TODO: use collate_dict here to concatenate instead of replace.
-        # For example, if using Landsat + Sentinel + CDL, don't want to remove Landsat
-        # images and replace with Sentinel images.
-        sample = {}
+        # Not all datasets are guaranteed to have a valid query
+        samples = []
         for ds in self.datasets:
-            if query.intersects(ds.bounds):
-                try:
-                    sample.update(ds[query])
-                except IndexError:
-                    pass
-        return sample
+            if ds.index.intersection(tuple(query)):
+                samples.append(ds[query])
+
+        return self.collate_fn(samples)
 
     def __str__(self) -> str:
         """Return the informal string representation of the object.

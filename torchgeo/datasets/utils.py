@@ -42,7 +42,9 @@ __all__ = (
     "BoundingBox",
     "disambiguate_timestamp",
     "working_dir",
-    "collate_dict",
+    "stack_samples",
+    "concat_samples",
+    "merge_samples",
     "rasterio_loader",
     "dataset_split",
     "sort_sentinel2_bands",
@@ -419,8 +421,11 @@ def working_dir(dirname: str, create: bool = False) -> Iterator[None]:
         os.chdir(cwd)
 
 
-def collate_dict(samples: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Merge a list of samples to form a mini-batch of Tensors.
+def stack_samples(samples: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    """Stack a list of samples along a new axis.
+
+    Useful for forming a mini-batch of samples to pass to
+    :class:`torch.utils.data.DataLoader`.
 
     Args:
         samples: list of samples
@@ -428,14 +433,59 @@ def collate_dict(samples: List[Dict[str, Any]]) -> Dict[str, Any]:
     Returns:
         a single sample
     """
-    collated = {}
+    collated: Dict[str, Any] = {}
     for key, value in samples[0].items():
         if isinstance(value, Tensor):
             collated[key] = torch.stack([sample[key] for sample in samples])
         else:
-            collated[key] = [
-                sample[key] for sample in samples
-            ]  # type: ignore[assignment]
+            collated[key] = [sample[key] for sample in samples]
+    return collated
+
+
+def concat_samples(samples: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    """Concatenate a list of samples along an existing axis.
+
+    Useful for joining samples in a :class:`torchgeo.datasets.IntersectionDataset`.
+
+    Args:
+        samples: list of samples
+
+    Returns:
+        a single sample
+    """
+    collated: Dict[str, Any] = {}
+    for key, value in samples[0].items():
+        if isinstance(value, Tensor):
+            collated[key] = torch.cat(  # type: ignore[attr-defined]
+                [sample[key] for sample in samples]
+            )
+        else:
+            collated[key] = value
+    return collated
+
+
+def merge_samples(samples: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    """Merge a list of samples.
+
+    Useful for joining samples in a :class:`torchgeo.datasets.UnionDataset`.
+
+    Args:
+        samples: list of samples
+
+    Returns:
+        a single sample
+    """
+    collated: Dict[str, Any] = {}
+    for sample in samples:
+        for key, value in sample.items():
+            if key in collated and isinstance(value, Tensor):
+                # Take the maximum so that nodata values (zeros) get replaced
+                # by data values whenever possible
+                collated[key] = torch.maximum(  # type: ignore[attr-defined]
+                    collated[key], value
+                )
+            else:
+                collated[key] = value
     return collated
 
 
