@@ -7,45 +7,6 @@ on:
     branches:
     - main
 jobs:
-  tmp:
-    name: tmp
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.6, 3.7, 3.8, 3.9]
-    steps:
-    - name: Clone repo
-      uses: actions/checkout@v2
-    - name: Set up python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install apt dependencies (Linux)
-      run: sudo apt-get install unrar
-      if: ${{ runner.os == 'Linux' }}
-    - name: Install brew dependencies (macOS)
-      run: brew install rar
-      if: ${{ runner.os == 'macOS' }}
-    - name: Install conda (Windows)
-      uses: conda-incubator/setup-miniconda@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-        channels: conda-forge
-        channel-priority: strict
-      if: ${{ runner.os == 'Windows' }}
-    - name: Install conda dependencies (Windows)
-      run: |
-        conda install 'fiona>=1.5' h5py 'rasterio>=1.0.16'
-        conda list
-        conda info
-      if: ${{ runner.os == 'Windows' }}
-    - name: Install pip dependencies
-      run: |
-        pip install cython numpy  # needed for pycocotools
-        pip install .[datasets,tests,train]
-    - name: Check matplotlib backend
-      run: python tmp.py
   mypy:
     name: mypy
     runs-on: ubuntu-latest
