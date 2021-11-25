@@ -7,6 +7,7 @@ import abc
 import random
 from typing import Iterator, List, Optional, Tuple, Union
 
+from rtree.index import Index, Property
 from torch.utils.data import Sampler
 
 from torchgeo.datasets.geo import GeoDataset
@@ -27,6 +28,27 @@ class BatchGeoSampler(Sampler[List[BoundingBox]], abc.ABC):
     :class:`~torchgeo.datasets.GeoDataset`. This includes things like latitude,
     longitude, height, width, projection, coordinate system, and time.
     """
+
+    def __init__(self, dataset: GeoDataset, roi: Optional[BoundingBox] = None) -> None:
+        """Initialize a new Sampler instance.
+
+        Args:
+            dataset: dataset to index from
+            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+                (defaults to the bounds of ``dataset.index``)
+        """
+        if roi is None:
+            self.index = dataset.index
+            roi = BoundingBox(*self.index.bounds)
+        else:
+            self.index = Index(interleaved=False, properties=Property(dimension=3))
+            hits = dataset.index.intersection(tuple(roi), objects=True)
+            for hit in hits:
+                bbox = BoundingBox(*hit.bounds) & roi
+                self.index.insert(hit.id, tuple(bbox), hit.object)
+
+        self.res = dataset.res
+        self.roi = roi
 
     @abc.abstractmethod
     def __iter__(self) -> Iterator[List[BoundingBox]]:
@@ -69,15 +91,11 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
         """
-        self.index = dataset.index
-        self.res = dataset.res
+        super().__init__(dataset, roi)
         self.size = _to_tuple(size)
         self.batch_size = batch_size
         self.length = length
-        if roi is None:
-            roi = BoundingBox(*self.index.bounds)
-        self.roi = roi
-        self.hits = list(self.index.intersection(tuple(roi), objects=True))
+        self.hits = list(self.index.intersection(tuple(self.roi), objects=True))
 
     def __iter__(self) -> Iterator[List[BoundingBox]]:
         """Return the indices of a dataset.

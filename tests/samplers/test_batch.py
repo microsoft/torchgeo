@@ -56,8 +56,9 @@ class TestBatchGeoSampler:
             continue
 
     def test_abstract(self) -> None:
+        ds = CustomGeoDataset()
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            BatchGeoSampler(None)  # type: ignore[abstract]
+            BatchGeoSampler(ds)  # type: ignore[abstract]
 
 
 class TestRandomBatchGeoSampler:
@@ -84,6 +85,16 @@ class TestRandomBatchGeoSampler:
 
     def test_len(self, sampler: RandomBatchGeoSampler) -> None:
         assert len(sampler) == sampler.length // sampler.batch_size
+
+    def test_roi(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        ds.index.insert(1, (5, 15, 5, 15, 5, 15))
+        roi = BoundingBox(0, 10, 0, 10, 0, 10)
+        sampler = RandomBatchGeoSampler(ds, 2, 2, 10, roi=roi)
+        for batch in sampler:
+            for query in batch:
+                assert query in roi
 
     @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
