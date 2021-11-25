@@ -9,6 +9,7 @@ import glob
 import os
 import re
 import sys
+import warnings
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
 
 import fiona
@@ -88,8 +89,13 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
             IndexError: if query is not found in the index
         """
 
-    def __and__(self, other: "GeoDataset") -> "IntersectionDataset":
-        """Take the intersection of two GeoDatasets.
+    def __add__(  # type: ignore[override]
+        self, other: "GeoDataset"
+    ) -> "IntersectionDataset":
+        """Take the addition of two GeoDatasets.
+
+        :class:`GeoDataset` addition can be ambiguous and is no longer supported.
+        Users should instead use the intersection or union operator.
 
         Args:
             other: another dataset
@@ -98,9 +104,35 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
             a single dataset
 
         Raises:
-            ValueError: if other is not a GeoDataset, or if datasets do not overlap,
-                or if datasets do not have the same
-                :term:`coordinate reference system (CRS)`
+            ValueError: if other is not a :class:`GeoDataset`
+
+        Warns:
+            DeprecationWarning: if addition is used instead of intersection or union
+
+        .. deprecated: 0.2
+           Use the intersection or union operator instead.
+        """
+        # TODO: in the next release, we should keep this function but instead raise
+        # NotImplementedError. Otherwise, this will return a ConcatDataset that won't
+        # function properly without any warnings to the user.
+        warnings.warn(
+            "GeoDataset addition is deprecated, "
+            "use the intersection or union operator instead.",
+            DeprecationWarning,
+        )
+        return self & other
+
+    def __and__(self, other: "GeoDataset") -> "IntersectionDataset":
+        """Take the intersection of two :class:`GeoDataset`s.
+
+        Args:
+            other: another dataset
+
+        Returns:
+            a single dataset
+
+        Raises:
+            ValueError: if other is not a :class:`GeoDataset`
         """
         return IntersectionDataset(self, other)
 
@@ -114,9 +146,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
             a single dataset
 
         Raises:
-            ValueError: if other is not a GeoDataset, or if datasets do not overlap,
-                or if datasets do not have the same
-                :term:`coordinate reference system (CRS)`
+            ValueError: if other is not a :class:`GeoDataset`
         """
         return UnionDataset(self, other)
 
@@ -749,6 +779,9 @@ class IntersectionDataset(GeoDataset):
             dataset1: the first dataset
             dataset2: the second dataset
             collate_fn: function used to collate samples
+
+        Raises:
+            ValueError: if either dataset is not a :class:`GeoDataset`
         """
         super().__init__()
         self.datasets = [dataset1, dataset2]
@@ -834,6 +867,9 @@ class UnionDataset(GeoDataset):
             dataset1: the first dataset
             dataset2: the second dataset
             collate_fn: function used to collate samples
+
+        Raises:
+            ValueError: if either dataset is not a :class:`GeoDataset`
         """
         super().__init__()
         self.datasets = [dataset1, dataset2]

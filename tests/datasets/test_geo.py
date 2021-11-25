@@ -63,6 +63,10 @@ class TestGeoDataset:
     def test_len(self, dataset: GeoDataset) -> None:
         assert len(dataset) == 1
 
+    def test_add(self, dataset: GeoDataset) -> None:
+        with pytest.deprecated_call():
+            dataset + dataset
+
     def test_and_two(self) -> None:
         ds1 = CustomGeoDataset()
         ds2 = CustomGeoDataset()
