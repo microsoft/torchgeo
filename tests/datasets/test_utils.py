@@ -11,7 +11,7 @@ import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Generator, Tuple
+from typing import Any, Dict, Generator, List, Tuple
 
 import numpy as np
 import pytest
@@ -23,12 +23,14 @@ from torch.utils.data import TensorDataset
 import torchgeo.datasets.utils
 from torchgeo.datasets.utils import (
     BoundingBox,
+    concat_samples,
     dataset_split,
     disambiguate_timestamp,
     download_and_extract_archive,
     download_radiant_mlhub_collection,
     download_radiant_mlhub_dataset,
     extract_archive,
+    merge_samples,
     percentile_normalization,
     stack_samples,
     working_dir,
@@ -443,26 +445,103 @@ def test_disambiguate_timestamp(
     assert math.isclose(maxt, max_datetime)
 
 
-def test_stack_samples() -> None:
-    samples = [
-        {
-            "foo": torch.tensor(1),  # type: ignore[attr-defined]
-            "bar": torch.tensor(2),  # type: ignore[attr-defined]
-            "crs": CRS.from_epsg(3005),
-        },
-        {
-            "foo": torch.tensor(3),  # type: ignore[attr-defined]
-            "bar": torch.tensor(4),  # type: ignore[attr-defined]
-            "crs": CRS.from_epsg(3005),
-        },
-    ]
-    sample = stack_samples(samples)
-    assert torch.allclose(  # type: ignore[attr-defined]
-        sample["foo"], torch.tensor([1, 3])  # type: ignore[attr-defined]
-    )
-    assert torch.allclose(  # type: ignore[attr-defined]
-        sample["bar"], torch.tensor([2, 4])  # type: ignore[attr-defined]
-    )
+class TestCollateFunctionsMatchingKeys:
+    @pytest.fixture(scope="class")
+    def samples(self) -> List[Dict[str, Any]]:
+        return [
+            {
+                "image": torch.tensor([1, 2, 0]),  # type: ignore[attr-defined]
+                "crs": CRS.from_epsg(2000),
+            },
+            {
+                "image": torch.tensor([0, 0, 3]),  # type: ignore[attr-defined]
+                "crs": CRS.from_epsg(2001),
+            },
+        ]
+
+    def test_stack_samples(self, samples: List[Dict[str, Any]]) -> None:
+        sample = stack_samples(samples)
+        assert (
+            sample["image"].size() == torch.Size([2, 3])  # type: ignore[attr-defined]
+        )
+        assert torch.allclose(  # type: ignore[attr-defined]
+            sample["image"],
+            torch.tensor([[1, 2, 0], [0, 0, 3]]),  # type: ignore[attr-defined]
+        )
+        assert sample["crs"] == [CRS.from_epsg(2000), CRS.from_epsg(2001)]
+
+    def test_concat_samples(self, samples: List[Dict[str, Any]]) -> None:
+        sample = concat_samples(samples)
+        assert sample["image"].size() == torch.Size([6])  # type: ignore[attr-defined]
+        assert torch.allclose(  # type: ignore[attr-defined]
+            sample["image"],
+            torch.tensor([1, 2, 0, 0, 0, 3]),  # type: ignore[attr-defined]
+        )
+        assert sample["crs"] == CRS.from_epsg(2000)
+
+    def test_merge_samples(self, samples: List[Dict[str, Any]]) -> None:
+        sample = merge_samples(samples)
+        assert sample["image"].size() == torch.Size([3])  # type: ignore[attr-defined]
+        assert torch.allclose(  # type: ignore[attr-defined]
+            sample["image"], torch.tensor([1, 2, 3])  # type: ignore[attr-defined]
+        )
+        assert sample["crs"] == CRS.from_epsg(2001)
+
+
+class TestCollateFunctionsDifferingKeys:
+    @pytest.fixture(scope="class")
+    def samples(self) -> List[Dict[str, Any]]:
+        return [
+            {
+                "image": torch.tensor([1, 2, 0]),  # type: ignore[attr-defined]
+                "crs1": CRS.from_epsg(2000),
+            },
+            {
+                "mask": torch.tensor([0, 0, 3]),  # type: ignore[attr-defined]
+                "crs2": CRS.from_epsg(2001),
+            },
+        ]
+
+    def test_stack_samples(self, samples: List[Dict[str, Any]]) -> None:
+        sample = stack_samples(samples)
+        assert (
+            sample["image"].size() == torch.Size([1, 3])  # type: ignore[attr-defined]
+        )
+        assert sample["mask"].size() == torch.Size([1, 3])  # type: ignore[attr-defined]
+        assert torch.allclose(  # type: ignore[attr-defined]
+            sample["image"], torch.tensor([[1, 2, 0]])  # type: ignore[attr-defined]
+        )
+        assert torch.allclose(  # type: ignore[attr-defined]
+            sample["mask"], torch.tensor([[0, 0, 3]])  # type: ignore[attr-defined]
+        )
+        assert sample["crs1"] == [CRS.from_epsg(2000)]
+        assert sample["crs2"] == [CRS.from_epsg(2001)]
+
+    def test_concat_samples(self, samples: List[Dict[str, Any]]) -> None:
+        sample = concat_samples(samples)
+        assert sample["image"].size() == torch.Size([3])  # type: ignore[attr-defined]
+        assert sample["mask"].size() == torch.Size([3])  # type: ignore[attr-defined]
+        assert torch.allclose(  # type: ignore[attr-defined]
+            sample["image"], torch.tensor([1, 2, 0])  # type: ignore[attr-defined]
+        )
+        assert torch.allclose(  # type: ignore[attr-defined]
+            sample["mask"], torch.tensor([0, 0, 3])  # type: ignore[attr-defined]
+        )
+        assert sample["crs1"] == CRS.from_epsg(2000)
+        assert sample["crs2"] == CRS.from_epsg(2001)
+
+    def test_merge_samples(self, samples: List[Dict[str, Any]]) -> None:
+        sample = merge_samples(samples)
+        assert sample["image"].size() == torch.Size([3])  # type: ignore[attr-defined]
+        assert sample["mask"].size() == torch.Size([3])  # type: ignore[attr-defined]
+        assert torch.allclose(  # type: ignore[attr-defined]
+            sample["image"], torch.tensor([1, 2, 0])  # type: ignore[attr-defined]
+        )
+        assert torch.allclose(  # type: ignore[attr-defined]
+            sample["mask"], torch.tensor([0, 0, 3])  # type: ignore[attr-defined]
+        )
+        assert sample["crs1"] == CRS.from_epsg(2000)
+        assert sample["crs2"] == CRS.from_epsg(2001)
 
 
 def test_existing_directory(tmp_path: Path) -> None:

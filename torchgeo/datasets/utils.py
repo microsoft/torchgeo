@@ -4,6 +4,7 @@
 """Common dataset utilities."""
 
 import bz2
+import collections
 import contextlib
 import gzip
 import lzma
@@ -16,6 +17,7 @@ from datetime import datetime, timedelta
 from typing import (
     Any,
     Dict,
+    Iterable,
     Iterator,
     List,
     Optional,
@@ -421,7 +423,23 @@ def working_dir(dirname: str, create: bool = False) -> Iterator[None]:
         os.chdir(cwd)
 
 
-def stack_samples(samples: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+def _list_dict_to_dict_list(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, List[Any]]:
+    """Convert a list of dictionaries to a dictionary of lists.
+
+    Args:
+        samples: a list of dictionaries
+
+    Returns:
+        a dictionary of lists
+    """
+    collated = collections.defaultdict(list)
+    for sample in samples:
+        for key, value in sample.items():
+            collated[key].append(value)
+    return collated
+
+
+def stack_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
     """Stack a list of samples along a new axis.
 
     Useful for forming a mini-batch of samples to pass to
@@ -433,16 +451,14 @@ def stack_samples(samples: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
     Returns:
         a single sample
     """
-    collated: Dict[str, Any] = {}
-    for key, value in samples[0].items():
-        if isinstance(value, Tensor):
-            collated[key] = torch.stack([sample[key] for sample in samples])
-        else:
-            collated[key] = [sample[key] for sample in samples]
+    collated: Dict[Any, Any] = _list_dict_to_dict_list(samples)
+    for key, value in collated.items():
+        if isinstance(value[0], Tensor):
+            collated[key] = torch.stack(value)
     return collated
 
 
-def concat_samples(samples: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+def concat_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
     """Concatenate a list of samples along an existing axis.
 
     Useful for joining samples in a :class:`torchgeo.datasets.IntersectionDataset`.
@@ -453,18 +469,16 @@ def concat_samples(samples: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
     Returns:
         a single sample
     """
-    collated: Dict[str, Any] = {}
-    for key, value in samples[0].items():
-        if isinstance(value, Tensor):
-            collated[key] = torch.cat(  # type: ignore[attr-defined]
-                [sample[key] for sample in samples]
-            )
+    collated: Dict[Any, Any] = _list_dict_to_dict_list(samples)
+    for key, value in collated.items():
+        if isinstance(value[0], Tensor):
+            collated[key] = torch.cat(value)  # type: ignore[attr-defined]
         else:
-            collated[key] = value
+            collated[key] = value[0]
     return collated
 
 
-def merge_samples(samples: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+def merge_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
     """Merge a list of samples.
 
     Useful for joining samples in a :class:`torchgeo.datasets.UnionDataset`.
@@ -475,7 +489,7 @@ def merge_samples(samples: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
     Returns:
         a single sample
     """
-    collated: Dict[str, Any] = {}
+    collated: Dict[Any, Any] = {}
     for sample in samples:
         for key, value in sample.items():
             if key in collated and isinstance(value, Tensor):
