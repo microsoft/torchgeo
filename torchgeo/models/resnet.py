@@ -22,10 +22,6 @@ IN_CHANNELS = {"sentinel2": {"all": 10}}
 
 NUM_CLASSES = {"sentinel2": 17}
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-ResNet.__module__ = "torchvision.models"
-
 
 def _resnet(
     sensor: str,
