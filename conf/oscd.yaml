@@ -1,0 +1,5 @@
+trainer:
+  gpus: 1
+  min_epochs: 20
+  max_epochs: 100
+  benchmark: True

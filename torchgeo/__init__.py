@@ -55,6 +55,7 @@ _TASK_TO_MODULES_MAPPING: Dict[
     "etci2021": (SemanticSegmentationTask, ETCI2021DataModule),
     "landcoverai": (LandCoverAISegmentationTask, LandCoverAIDataModule),
     "naipchesapeake": (NAIPChesapeakeSegmentationTask, NAIPChesapeakeDataModule),
+    "oscd": (SemanticSegmentationTask, OSCDDataModule),
     "resisc45": (RESISC45ClassificationTask, RESISC45DataModule),
     "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),
     "so2sat": (So2SatClassificationTask, So2SatDataModule),
