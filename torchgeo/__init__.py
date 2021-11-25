@@ -22,6 +22,7 @@ from .datasets import (
     EuroSATDataModule,
     LandCoverAIDataModule,
     NAIPChesapeakeDataModule,
+    OSCDDataModule,
     RESISC45DataModule,
     SEN12MSDataModule,
     So2SatDataModule,
