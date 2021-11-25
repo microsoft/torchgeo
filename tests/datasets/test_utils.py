@@ -461,8 +461,8 @@ class TestCollateFunctionsMatchingKeys:
 
     def test_stack_samples(self, samples: List[Dict[str, Any]]) -> None:
         sample = stack_samples(samples)
-        assert (
-            sample["image"].size() == torch.Size([2, 3])  # type: ignore[attr-defined]
+        assert sample["image"].size() == torch.Size(  # type: ignore[attr-defined]
+            [2, 3]
         )
         assert torch.allclose(  # type: ignore[attr-defined]
             sample["image"],
@@ -504,8 +504,8 @@ class TestCollateFunctionsDifferingKeys:
 
     def test_stack_samples(self, samples: List[Dict[str, Any]]) -> None:
         sample = stack_samples(samples)
-        assert (
-            sample["image"].size() == torch.Size([1, 3])  # type: ignore[attr-defined]
+        assert sample["image"].size() == torch.Size(  # type: ignore[attr-defined]
+            [1, 3]
         )
         assert sample["mask"].size() == torch.Size([1, 3])  # type: ignore[attr-defined]
         assert torch.allclose(  # type: ignore[attr-defined]
