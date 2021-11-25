@@ -48,13 +48,35 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     * :term:`coordinate reference system (CRS)`
     * resolution
 
-    These kind of datasets are special because they can be combined. For example:
+    :class:`GeoDataset` is a special class of datasets. Unlike :class:`VisionDataset`,
+    the presence of geospatial information allows two or more datasets to be combined
+    based on latitude/longitude. This allows users to do things like:
 
-    * Combine Landsat8 and CDL to train a model for crop classification
-    * Combine NAIP and Chesapeake to train a model for land cover mapping
+    * Combine image and target labels and sample from both simultaneously
+      (e.g. Landsat and CDL)
+    * Combine datasets for multiple image sources for multimodal learning or data fusion
+      (e.g. Landsat and Sentinel)
 
-    This isn't true for :class:`VisionDataset`, where the lack of geospatial information
-    prohibits swapping image sources or target labels.
+    These combinations require that all queries are present in *both* datasets,
+    and can be combined using an :class:`IntersectionDataset`:
+
+    .. code-block:: python
+
+       dataset = landsat & cdl
+
+    Users may also want to:
+
+    * Combine datasets for multiple image sources and treat them as equivalent
+      (e.g. Landsat 7 and Landsat 8)
+    * Combine datasets for disparate geospatial locations
+      (e.g. Chesapeake NY and PA)
+
+    These combinations require that all queries are present in *at least one* dataset,
+    and can be combined using a :class:`UnionDataset`:
+
+    .. code-block:: python
+
+       dataset = landsat7 | landsat8
     """
 
     #: Resolution of the dataset in units of CRS.
@@ -123,7 +145,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         return self & other
 
     def __and__(self, other: "GeoDataset") -> "IntersectionDataset":
-        """Take the intersection of two :class:`GeoDataset`s.
+        """Take the intersection of two :class:`GeoDataset`.
 
         Args:
             other: another dataset
@@ -761,8 +783,19 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
 class IntersectionDataset(GeoDataset):
     """Dataset representing the intersection of two GeoDatasets.
 
-    For example, this allows you to combine an image source like Landsat8 with a target
-    label like CDL.
+    This allows users to do things like:
+
+    * Combine image and target labels and sample from both simultaneously
+      (e.g. Landsat and CDL)
+    * Combine datasets for multiple image sources for multimodal learning or data fusion
+      (e.g. Landsat and Sentinel)
+
+    These combinations require that all queries are present in *both* datasets,
+    and can be combined using an :class:`IntersectionDataset`:
+
+    .. code-block:: python
+
+       dataset = landsat & cdl
     """
 
     def __init__(
@@ -850,7 +883,19 @@ class IntersectionDataset(GeoDataset):
 class UnionDataset(GeoDataset):
     """Dataset representing the union of two GeoDatasets.
 
-    For example, this allows you to combine two spatially disparate datasets.
+    This allows users to do things like:
+
+    * Combine datasets for multiple image sources and treat them as equivalent
+      (e.g. Landsat 7 and Landsat 8)
+    * Combine datasets for disparate geospatial locations
+      (e.g. Chesapeake NY and PA)
+
+    These combinations require that all queries are present in *at least one* dataset,
+    and can be combined using a :class:`UnionDataset`:
+
+    .. code-block:: python
+
+       dataset = landsat7 | landsat8
     """
 
     def __init__(
