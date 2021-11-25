@@ -7,7 +7,7 @@ The goal of this library is to make it simple:
 1. for machine learning experts to use geospatial data in their workflows, and
 2. for remote sensing experts to use their data in machine learning workflows.
 
-See our [installation instructions](#installation-instructions), [documentation](#documentation), and [examples](#example-usage) to learn how to use torchgeo.
+See our [installation instructions](#installation), [documentation](#documentation), and [examples](#example-usage) to learn how to use TorchGeo.
 
 External links:
 [![docs](https://readthedocs.org/projects/torchgeo/badge/?version=latest)](https://torchgeo.readthedocs.io/en/latest/?badge=latest)
@@ -21,7 +21,7 @@ Tests:
 [![style](https://github.com/microsoft/torchgeo/actions/workflows/style.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/style.yaml)
 [![tests](https://github.com/microsoft/torchgeo/actions/workflows/tests.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/tests.yaml)
 
-## Installation instructions
+## Installation
 
 The recommended way to install TorchGeo is with [pip](https://pip.pypa.io/):
 
@@ -33,11 +33,64 @@ For [conda](https://docs.conda.io/) and [spack](https://spack.io/) installation 
 
 ## Documentation
 
-You can find the documentation for torchgeo on [ReadTheDocs](https://torchgeo.readthedocs.io).
+You can find the documentation for TorchGeo on [ReadTheDocs](https://torchgeo.readthedocs.io).
 
-## Example usage
+## Example Usage
 
-The following sections give basic examples of what you can do with torchgeo. For more examples, check out our [tutorials](https://torchgeo.readthedocs.io/en/latest/tutorials/getting_started.html).
+The following sections give basic examples of what you can do with TorchGeo. For more examples, check out our [tutorials](https://torchgeo.readthedocs.io/en/latest/tutorials/getting_started.html).
+
+First we'll import various classes and functions used in the following sections:
+
+```python
+from torch.utils.data import DataLoader
+from torchgeo.datasets import CDL, Landsat7, Landsat8, TropicalCycloneWindEstimation, stack_samples
+from torchgeo.samplers import RandomGeoSampler
+```
+
+### Composing geospatial datasets
+
+Many use cases involve working with geospatial data and combining it in intelligent ways. In this example, we assume that the user has Landsat 7 and 8 imagery downloaded. We first create a single dataset containing all Landsat imagery. We only use the Landsat 7 bands for Landsat 8 and take the union between both datasets.
+
+```python
+landsat7 = Landsat7(root="...")
+landsat8 = Landsat8(root="...", bands=landsat7.bands)
+landsat = landsat7 | landsat8
+```
+
+Next, we take the intersection between this dataset and the Cropland Data Layer (CDL) dataset. We want to take the intersection instead of the union to ensure that we only sample from regions that have both Landsat and CDL data. Note that we can automatically download and checksum CDL data.
+
+```python
+cdl = CDL(root="...", download=True, checksum=True)
+dataset = landsat & cdl
+```
+
+This dataset can now be used with a PyTorch data loader. In order to sample from this dataset using geospatial coordinates, we create a random sampler class.
+
+```python
+sampler = RandomGeoSampler(dataset, size=256, length=10000)
+dataloader = DataLoader(dataset, batch_size=128, sampler=sampler, num_workers=4, collate_fn=stack_samples)
+```
+
+This data loader can now be used in your normal training/evaluation pipeline.
+
+```python
+for batch in dataloader:
+    # train a model, or make predictions using a pre-trained model
+```
+
+### Download and use the Tropical Cyclone Wind Estimation Competition dataset
+
+This dataset is from a competition hosted by [Driven Data](https://www.drivendata.org/) in collaboration with [Radiant Earth](https://www.radiant.earth/). See [here](https://www.drivendata.org/competitions/72/predict-wind-speeds/) for more information.
+
+Using this dataset in TorchGeo is as simple as importing and instantiating the appropriate class.
+
+```python
+import torchgeo.datasets
+
+dataset = torchgeo.datasets.TropicalCycloneWindEstimation(split="train", download=True)
+print(dataset[0]["image"].shape)
+print(dataset[0]["label"])
+```
 
 ### Train and test models using our PyTorch Lightning based training script
 
@@ -46,20 +99,6 @@ The `train.py` script is configurable via the command line and/or via YAML confi
 
 ```console
 $ python train.py config_file=conf/landcoverai.yaml
-```
-
-### Download and use the Tropical Cyclone Wind Estimation Competition dataset
-
-This dataset is from a competition hosted by [Driven Data](https://www.drivendata.org/) in collaboration with [Radiant Earth](https://www.radiant.earth/). See [here](https://www.drivendata.org/competitions/72/predict-wind-speeds/) for more information.
-
-Using this dataset in torchgeo is as simple as importing and instantiating the appropriate class.
-
-```python
-import torchgeo.datasets
-
-dataset = torchgeo.datasets.TropicalCycloneWindEstimation(split="train", download=True)
-print(dataset[0]["image"].shape)
-print(dataset[0]["label"])
 ```
 
 ## Citation
