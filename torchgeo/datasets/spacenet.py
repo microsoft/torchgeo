@@ -5,6 +5,7 @@
 
 import abc
 import glob
+import math
 import os
 import re
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -830,6 +831,7 @@ class SpaceNet5(SpaceNet):
         self,
         root: str,
         image: str = "PS-RGB",
+        speed_mask: Optional[bool] = False,
         collections: List[str] = [],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
@@ -841,6 +843,8 @@ class SpaceNet5(SpaceNet):
         Args:
             root: root directory where dataset can be found
             image: image selection which must be in ["MS", "PAN", "PS-MS", "PS-RGB"]
+            speed_mask: use multi-class speed mask (created by binning roads at
+                10 mph increments) as label if true, else use binary mask
             collections: collection selection which must be a subset of:
                          [sn5_AOI_7_Moscow, sn5_AOI_8_Mumbai]
             transforms: a function/transform that takes input sample and its target as
@@ -853,9 +857,121 @@ class SpaceNet5(SpaceNet):
             RuntimeError: if ``download=False`` but dataset is missing
         """
         assert image in {"MS", "PAN", "PS-MS", "PS-RGB"}
+        self.speed_mask = speed_mask
         super().__init__(
             root, image, collections, transforms, download, api_key, checksum
         )
+
+    def _load_mask(
+        self, path: str, tfm: Affine, raster_crs: CRS, shape: Tuple[int, int]
+    ) -> Tensor:
+        """Rasterizes the dataset's labels (in geojson format).
+
+        Args:
+            path: path to the label
+            tfm: transform of corresponding image
+            shape: shape of corresponding image
+
+        Returns:
+            Tensor: label tensor
+        """
+        min_speed_bin = 1
+        max_speed_bin = 65
+        speed_arr_bin = np.arange(min_speed_bin, max_speed_bin + 1)
+        bin_size_mph = 10.0
+        speed_cls_arr = np.array(
+            [int(math.ceil(s / bin_size_mph)) for s in speed_arr_bin]
+        )
+
+        try:
+            with fiona.open(path) as src:
+                vector_crs = CRS(src.crs)
+                labels = []
+
+                for feature in src:
+                    if raster_crs != vector_crs:
+                        geom = transform_geom(
+                            vector_crs.to_string(),
+                            raster_crs.to_string(),
+                            feature["geometry"],
+                        )
+                    else:
+                        geom = feature["geometry"]
+
+                    if self.speed_mask:
+                        val = speed_cls_arr[
+                            int(feature["properties"]["inferred_speed_mph"]) - 1
+                        ]
+                    else:
+                        val = 1
+
+                    labels.append((geom, val))
+
+        except FionaValueError:
+            labels = []
+
+        if not labels:
+            mask_data = np.zeros(shape=shape)
+        else:
+            mask_data = rasterize(
+                labels,
+                out_shape=shape,
+                fill=0,  # nodata value
+                transform=tfm,
+                all_touched=False,
+                dtype=np.uint8,
+            )
+
+        mask: Tensor = torch.from_numpy(mask_data).long()  # type: ignore[attr-defined]
+        return mask
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        # image can be 1 channel or >3 channels
+        if sample["image"].shape[0] == 1:
+            image = np.rollaxis(sample["image"].numpy(), 0, 3)
+        else:
+            image = np.rollaxis(sample["image"][:3].numpy(), 0, 3)
+        image = percentile_normalization(image, axis=(0, 1))
+
+        ncols = 2
+        mask = sample["mask"].numpy()
+        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 8, 8))
+
+        axs[0].imshow(image)
+        axs[0].axis("off")
+        if show_titles:
+            axs[0].set_title("Image")
+
+        if self.speed_mask:
+            cmap = plt.get_cmap("autumn_r").copy()
+            cmap.set_under(color="black")
+            axs[1].imshow(mask, vmin=0.1, vmax=7, cmap=cmap, interpolation="none")
+        else:
+            axs[1].imshow(mask, cmap="Greys_r", interpolation="none")
+        axs[1].axis("off")
+        if show_titles:
+            axs[1].set_title("Predictions")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig
 
 
 class SpaceNet7(SpaceNet):
