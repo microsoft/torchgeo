@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import glob
+import itertools
 import os
 import shutil
 from pathlib import Path
@@ -224,7 +225,9 @@ class TestSpaceNet4:
 
 
 class TestSpaceNet5:
-    @pytest.fixture(params=["PAN", "MS", "PS-MS", "PS-RGB"])
+    @pytest.fixture(
+        params=list(itertools.product(["PAN", "MS", "PS-MS", "PS-RGB"], [False, True]))
+    )
     def dataset(
         self,
         request: SubRequest,
@@ -247,47 +250,18 @@ class TestSpaceNet5:
         transforms = nn.Identity()  # type: ignore[attr-defined]
         return SpaceNet5(
             root,
-            image=request.param,
-            speed_mask=True,
+            image=request.param[0],
+            speed_mask=request.param[1],
             collections=["sn5_AOI_7_Moscow", "sn5_AOI_8_Mumbai"],
             transforms=transforms,
             download=True,
             api_key="",
         )
 
-    @pytest.fixture(params=[False, True])
-    def dataset_speed_mask(
-        self,
-        request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
-    ) -> SpaceNet5:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            radiant_mlhub.Collection, "fetch", fetch_collection
-        )
-        test_md5 = {
-            "sn5_AOI_7_Moscow": "e0d5f41f1b6b0ee7696c15e5ff3141f5",
-            "sn5_AOI_8_Mumbai": "ab898700ee586a137af492b84a08e662",
-        }
-
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            SpaceNet5, "collection_md5_dict", test_md5
-        )
-        root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
-        return SpaceNet5(
-            root,
-            image="PS-RGB",
-            speed_mask=request.param,
-            collections=["sn5_AOI_8_Mumbai"],
-            transforms=transforms,
-            download=True,
-            api_key="",
-        )
-
     def test_getitem(self, dataset: SpaceNet5) -> None:
-        x = dataset[0]
+        # Iterate over all elements to maximize coverage
+        samples = [i for i in dataset]  # type: ignore[attr-defined]
+        x = samples[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
@@ -297,12 +271,6 @@ class TestSpaceNet5:
             assert x["image"].shape[0] == 8
         else:
             assert x["image"].shape[0] == 1
-
-    def test_getitem_speed_mask(self, dataset_speed_mask: SpaceNet5) -> None:
-        x = dataset_speed_mask[1].copy()
-        assert isinstance(x, dict)
-        assert isinstance(x["image"], torch.Tensor)
-        assert isinstance(x["mask"], torch.Tensor)
 
     def test_len(self, dataset: SpaceNet5) -> None:
         assert len(dataset) == 5
@@ -324,13 +292,6 @@ class TestSpaceNet5:
         dataset.plot(x, suptitle="Test")
         plt.close()
         dataset.plot(x, show_titles=False)
-        plt.close()
-
-    def test_plot_speed_mask(self, dataset_speed_mask: SpaceNet5) -> None:
-        x = dataset_speed_mask[0].copy()
-        dataset_speed_mask.plot(x, suptitle="Test")
-        plt.close()
-        dataset_speed_mask.plot(x, show_titles=False)
         plt.close()
 
 
