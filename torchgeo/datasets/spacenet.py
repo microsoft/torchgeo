@@ -4,6 +4,7 @@
 """SpaceNet datasets."""
 
 import abc
+import copy
 import glob
 import math
 import os
@@ -960,7 +961,7 @@ class SpaceNet5(SpaceNet):
             axs[0].set_title("Image")
 
         if self.speed_mask:
-            cmap = plt.get_cmap("autumn_r").copy()
+            cmap = copy.copy(plt.get_cmap("autumn_r"))
             cmap.set_under(color="black")
             axs[1].imshow(mask, vmin=0.1, vmax=7, cmap=cmap, interpolation="none")
         else:
