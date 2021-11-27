@@ -226,7 +226,7 @@ class TestSpaceNet4:
 
 class TestSpaceNet5:
     @pytest.fixture(
-        params=list(itertools.product(["PAN", "MS", "PS-MS", "PS-RGB"], [False, True]))
+        params=itertools.product(["PAN", "MS", "PS-MS", "PS-RGB"], [False, True])
     )
     def dataset(
         self,
