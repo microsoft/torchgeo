@@ -68,7 +68,7 @@ This dataset can now be used with a PyTorch data loader. In order to sample from
 
 ```python
 sampler = RandomGeoSampler(dataset, size=256, length=10000)
-dataloader = DataLoader(dataset, batch_size=128, sampler=sampler, num_workers=4, collate_fn=stack_samples)
+dataloader = DataLoader(dataset, batch_size=128, sampler=sampler, collate_fn=stack_samples)
 ```
 
 This data loader can now be used in your normal training/evaluation pipeline.
