@@ -334,7 +334,7 @@ class SpaceNet(VisionDataset, abc.ABC):
             axs[1].imshow(mask, interpolation="none")
             axs[1].axis("off")
             if show_titles:
-                axs[1].set_title("Predictions")
+                axs[1].set_title("Labels")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
@@ -968,7 +968,7 @@ class SpaceNet5(SpaceNet):
             axs[1].imshow(mask, cmap="Greys_r", interpolation="none")
         axs[1].axis("off")
         if show_titles:
-            axs[1].set_title("Predictions")
+            axs[1].set_title("Labels")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
