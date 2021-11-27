@@ -862,7 +862,7 @@ class IntersectionDataset(GeoDataset):
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
-        # All datasets are guaranteed to a valid query
+        # All datasets are guaranteed to have a valid query
         samples = [ds[query] for ds in self.datasets]
 
         return self.collate_fn(samples)
