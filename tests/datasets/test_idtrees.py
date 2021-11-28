@@ -148,7 +148,10 @@ class TestIDTReeS:
             dataset.plot(x, show_titles=False)
             plt.close()
 
-    @pytest.mark.skipif(sys.platform == "darwin", reason="segmentation fault on macOS")
+    @pytest.mark.skipif(
+        sys.platform in ["darwin", "win32"],
+        reason="segmentation fault on macOS and windows",
+    )
     def test_plot_las(self, dataset: IDTReeS) -> None:
         pytest.importorskip("open3d")
         vis = dataset.plot_las(index=0, colormap="BrBG")
