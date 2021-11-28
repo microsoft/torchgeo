@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import sys
 import builtins
 import glob
 import os
@@ -147,6 +148,10 @@ class TestIDTReeS:
             dataset.plot(x, show_titles=False)
             plt.close()
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin",
+        reason="segmentation fault on macOS"
+    )
     def test_plot_las(self, dataset: IDTReeS) -> None:
         pytest.importorskip("open3d")
         vis = dataset.plot_las(index=0, colormap="BrBG")
