@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import glob
+import itertools
 import os
 import shutil
 from pathlib import Path
@@ -14,7 +15,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 
-from torchgeo.datasets import SpaceNet1, SpaceNet2, SpaceNet4, SpaceNet7
+from torchgeo.datasets import SpaceNet1, SpaceNet2, SpaceNet4, SpaceNet5, SpaceNet7
 
 TEST_DATA_DIR = "tests/data/spacenet"
 
@@ -216,6 +217,77 @@ class TestSpaceNet4:
             SpaceNet4(root=dataset.root, download=True, checksum=True)
 
     def test_plot(self, dataset: SpaceNet4) -> None:
+        x = dataset[0].copy()
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
+
+
+class TestSpaceNet5:
+    @pytest.fixture(
+        params=itertools.product(["PAN", "MS", "PS-MS", "PS-RGB"], [False, True])
+    )
+    def dataset(
+        self,
+        request: SubRequest,
+        monkeypatch: Generator[MonkeyPatch, None, None],
+        tmp_path: Path,
+    ) -> SpaceNet5:
+        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            radiant_mlhub.Collection, "fetch", fetch_collection
+        )
+        test_md5 = {
+            "sn5_AOI_7_Moscow": "e0d5f41f1b6b0ee7696c15e5ff3141f5",
+            "sn5_AOI_8_Mumbai": "ab898700ee586a137af492b84a08e662",
+        }
+
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            SpaceNet5, "collection_md5_dict", test_md5
+        )
+        root = str(tmp_path)
+        transforms = nn.Identity()  # type: ignore[attr-defined]
+        return SpaceNet5(
+            root,
+            image=request.param[0],
+            speed_mask=request.param[1],
+            collections=["sn5_AOI_7_Moscow", "sn5_AOI_8_Mumbai"],
+            transforms=transforms,
+            download=True,
+            api_key="",
+        )
+
+    def test_getitem(self, dataset: SpaceNet5) -> None:
+        # Iterate over all elements to maximize coverage
+        samples = [i for i in dataset]  # type: ignore[attr-defined]
+        x = samples[0]
+        assert isinstance(x, dict)
+        assert isinstance(x["image"], torch.Tensor)
+        assert isinstance(x["mask"], torch.Tensor)
+        if dataset.image == "PS-RGB":
+            assert x["image"].shape[0] == 3
+        elif dataset.image in ["MS", "PS-MS"]:
+            assert x["image"].shape[0] == 8
+        else:
+            assert x["image"].shape[0] == 1
+
+    def test_len(self, dataset: SpaceNet5) -> None:
+        assert len(dataset) == 5
+
+    def test_already_downloaded(self, dataset: SpaceNet5) -> None:
+        SpaceNet5(root=dataset.root, download=True)
+
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(RuntimeError, match="Dataset not found"):
+            SpaceNet5(str(tmp_path))
+
+    def test_collection_checksum(self, dataset: SpaceNet5) -> None:
+        dataset.collection_md5_dict["sn5_AOI_8_Mumbai"] = "randommd5hash123"
+        with pytest.raises(RuntimeError, match="Collection sn5_AOI_8_Mumbai corrupted"):
+            SpaceNet5(root=dataset.root, download=True, checksum=True)
+
+    def test_plot(self, dataset: SpaceNet5) -> None:
         x = dataset[0].copy()
         dataset.plot(x, suptitle="Test")
         plt.close()
