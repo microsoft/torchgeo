@@ -59,6 +59,8 @@ nitpick_ignore = [
     ("py:class", ".."),
     # TODO: can't figure out why this isn't found
     ("py:class", "LightningDataModule"),
+    # Undocumented class
+    ("py:class", "torchvision.models.resnet.ResNet"),
 ]
 
 
