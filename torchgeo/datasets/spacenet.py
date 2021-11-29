@@ -109,7 +109,9 @@ class SpaceNet(VisionDataset, abc.ABC):
         if to_be_downloaded:
             if not download:
                 raise RuntimeError(
-                    "Dataset not found. You can use download=True to download it."
+                    f"Dataset not found in `root={self.root}` and `download=False`, "
+                    "either specify a different `root` directory or use "
+                    "`download=True` to automaticaly download the dataset."
                 )
             else:
                 self._download(to_be_downloaded, api_key)
@@ -1071,7 +1073,9 @@ class SpaceNet7(SpaceNet):
         if to_be_downloaded:
             if not download:
                 raise RuntimeError(
-                    "Dataset not found. You can use download=True to download it."
+                    f"Dataset not found in `root={self.root}` and `download=False`, "
+                    "either specify a different `root` directory or use "
+                    "`download=True` to automaticaly download the dataset."
                 )
             else:
                 self._download(to_be_downloaded, api_key)
