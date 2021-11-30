@@ -129,7 +129,7 @@ def main(args: argparse.Namespace) -> None:
     landsat = Landsat8(
         args.landsat_root, crs=cdl.crs, res=cdl.res, cache=args.cache, bands=bands
     )
-    dataset = landsat + cdl
+    dataset = landsat & cdl
 
     # Initialize samplers
     if args.epoch_size:

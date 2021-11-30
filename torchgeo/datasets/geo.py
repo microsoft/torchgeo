@@ -83,6 +83,19 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     res: float
     _crs: CRS
 
+    # NOTE: according to the Python docs:
+    #
+    # * https://docs.python.org/3/library/exceptions.html#NotImplementedError
+    #
+    # the correct way to handle __add__ not being supported is to set it to None,
+    # not to return NotImplemented or raise NotImplementedError. The downside of
+    # this is that we have no way to explain to a user why they get an error and
+    # what they should do instead (use __and__ or __or__).
+
+    #: :class:`GeoDataset` addition can be ambiguous and is no longer supported.
+    #: Users should instead use the intersection or union operator.
+    __add__ = None  # type: ignore[assignment]
+
     def __init__(
         self, transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None
     ) -> None:
@@ -110,39 +123,6 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         Raises:
             IndexError: if query is not found in the index
         """
-
-    def __add__(  # type: ignore[override]
-        self, other: "GeoDataset"
-    ) -> "IntersectionDataset":
-        """Take the addition of two GeoDatasets.
-
-        :class:`GeoDataset` addition can be ambiguous and is no longer supported.
-        Users should instead use the intersection or union operator.
-
-        Args:
-            other: another dataset
-
-        Returns:
-            a single dataset
-
-        Raises:
-            ValueError: if other is not a :class:`GeoDataset`
-
-        Warns:
-            DeprecationWarning: if addition is used instead of intersection or union
-
-        .. deprecated: 0.2
-           Use the intersection or union operator instead.
-        """
-        # TODO: in the next release, we should keep this function but instead raise
-        # NotImplementedError. Otherwise, this will return a ConcatDataset that won't
-        # function properly without any warnings to the user.
-        warnings.warn(
-            "GeoDataset addition is deprecated, "
-            "use the intersection or union operator instead.",
-            DeprecationWarning,
-        )
-        return self & other
 
     def __and__(self, other: "GeoDataset") -> "IntersectionDataset":
         """Take the intersection of two :class:`GeoDataset`.
