@@ -364,10 +364,10 @@ class OSCDDataModule(pl.LightningDataModule):
         self,
         root_dir: str,
         bands: str = "all",
-        batch_size: int = 64,
+        batch_size: int = 32,
         num_workers: int = 0,
         val_split_pct: float = 0.2,
-        crop_size: Tuple[int, int] = (64, 64),
+        crop_size: Tuple[int, int, int] = (32, 64, 64),
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for OSCD based DataLoaders.
@@ -378,7 +378,7 @@ class OSCDDataModule(pl.LightningDataModule):
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
             val_split_pct: What percentage of the dataset to use as a validation set
-            crop_size: Size of random crop from image and mask
+            crop_size: Size of random crop from image and mask (n, height, width)
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
@@ -386,6 +386,7 @@ class OSCDDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.val_split_pct = val_split_pct
+        self.crop_size = crop_size
 
         if bands == "rgb":
             self.band_means = self.band_means[[3, 2, 1], None, None]
@@ -396,7 +397,7 @@ class OSCDDataModule(pl.LightningDataModule):
 
         self.norm = Normalize(self.band_means, self.band_stds)
         self.rcrop = K.AugmentationSequential(
-            K.RandomCrop(crop_size), data_keys=["input", "mask"], same_on_batch=True
+            K.RandomCrop(crop_size[1:]), data_keys=["input", "mask"], same_on_batch=True
         )
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
@@ -422,15 +423,19 @@ class OSCDDataModule(pl.LightningDataModule):
         This method is called once per GPU per run.
         """
 
-        def random_crop(sample: Dict[str, Any]) -> Dict[str, Any]:
-            sample["mask"] = repeat(sample["mask"], "h w -> t h w", t=2)
-            sample["image"], sample["mask"] = self.rcrop(
-                sample["image"], sample["mask"]
-            )
-            sample["mask"] = sample["mask"].squeeze()[0]
+        def n_random_crop(sample: Dict[str, Any]) -> Dict[str, Any]:
+            images, masks = [], []
+            for i in range(self.crop_size[0]):
+                mask = repeat(sample["mask"], "h w -> t h w", t=2)
+                image, mask = self.rcrop(sample["image"], mask)
+                mask = mask.squeeze()[0]
+                images.append(image)
+                masks.append(mask)
+            sample["image"] = torch.stack(images)
+            sample["mask"] = torch.stack(masks)
             return sample
 
-        train_transforms = Compose([self.preprocess, random_crop])
+        train_transforms = Compose([self.preprocess, n_random_crop])
         test_transforms = Compose([self.preprocess])
 
         train_dataset = OSCD(
