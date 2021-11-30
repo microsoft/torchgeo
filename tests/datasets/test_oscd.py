@@ -111,7 +111,7 @@ class TestOSCDDataModule:
     @pytest.fixture(scope="class", params=zip(["all", "rgb"], [0.0, 0.5]))
     def datamodule(self, request: SubRequest) -> OSCDDataModule:
         bands, val_split_pct = request.param
-        crop_size = (2, 2)
+        crop_size = (2, 2, 2)
         root = os.path.join("tests", "data", "oscd")
         batch_size = 1
         num_workers = 0
