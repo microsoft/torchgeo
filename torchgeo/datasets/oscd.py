@@ -11,7 +11,6 @@ import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
-import rasterio
 import torch
 from einops import repeat
 from matplotlib.figure import Figure
@@ -194,9 +193,9 @@ class OSCD(VisionDataset):
         """
         images = []
         for path in paths:
-            with rasterio.open(path) as f:
-                images.append(f.read())
-        array = np.stack(images, axis=0).astype(np.int_).squeeze()
+            with Image.open(path) as img:
+                images.append(np.array(img))
+        array = np.stack(images, axis=0).astype(np.int_)
         tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
         return tensor
 
