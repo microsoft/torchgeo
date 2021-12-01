@@ -18,6 +18,7 @@ from numpy import ndarray as Array
 from PIL import Image
 from torch import Tensor
 from torch.utils.data import DataLoader
+from torch.utils.data._utils.collate import default_collate
 from torchvision.transforms import Compose, Normalize
 
 from ..datasets.utils import dataset_split, draw_semantic_segmentation_masks
@@ -462,10 +463,18 @@ class OSCDDataModule(pl.LightningDataModule):
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""
+
+        def collate_wrapper(batch: Dict[str, Any]) -> Dict[str, Any]:
+            batch = default_collate(batch)
+            batch["image"] = torch.flatten(batch["image"], 0, 1)  # type: ignore[attr-defined]
+            batch["mask"] = torch.flatten(batch["mask"], 0, 1)  # type: ignore[attr-defined]
+            return batch
+
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
+            collate_fn=collate_wrapper,
             shuffle=True,
         )
 
