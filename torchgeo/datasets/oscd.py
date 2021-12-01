@@ -409,6 +409,9 @@ class OSCDDataModule(pl.LightningDataModule):
         sample["image"] = torch.clamp(  # type: ignore[attr-defined]
             sample["image"], min=0.0, max=1.0
         )
+        sample["image"] = torch.flatten(  # type: ignore[attr-defined]
+            sample["image"], 0, 1
+        )
         return sample
 
     def prepare_data(self) -> None:
@@ -430,7 +433,7 @@ class OSCDDataModule(pl.LightningDataModule):
                 mask = repeat(sample["mask"], "h w -> t h w", t=2)
                 image, mask = self.rcrop(sample["image"], mask)
                 mask = mask.squeeze()[0]
-                images.append(image)
+                images.append(image.squeeze())
                 masks.append(mask)
             sample["image"] = torch.stack(images)
             sample["mask"] = torch.stack(masks)
@@ -466,8 +469,12 @@ class OSCDDataModule(pl.LightningDataModule):
 
         def collate_wrapper(batch: Dict[str, Any]) -> Dict[str, Any]:
             batch = default_collate(batch)
-            batch["image"] = torch.flatten(batch["image"], 0, 1)  # type: ignore[attr-defined]
-            batch["mask"] = torch.flatten(batch["mask"], 0, 1)  # type: ignore[attr-defined]
+            batch["image"] = torch.flatten(  # type: ignore[attr-defined]
+                batch["image"], 0, 1
+            )
+            batch["mask"] = torch.flatten(  # type: ignore[attr-defined]
+                batch["mask"], 0, 1
+            )
             return batch
 
         return DataLoader(
