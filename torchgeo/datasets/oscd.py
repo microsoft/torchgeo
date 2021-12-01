@@ -320,7 +320,8 @@ class OSCD(VisionDataset):
 class OSCDDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the OSCD dataset.
 
-    Uses the train/val/test splits from the dataset.
+    Uses the train/test splits from the dataset and further splits
+    the train split into train/val splits.
 
     .. versionadded: 0.2
     """
