@@ -467,15 +467,15 @@ class OSCDDataModule(pl.LightningDataModule):
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""
 
-        def collate_wrapper(batch: Dict[str, Any]) -> Dict[str, Any]:
-            batch = default_collate(batch)
-            batch["image"] = torch.flatten(  # type: ignore[attr-defined]
-                batch["image"], 0, 1
+        def collate_wrapper(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
+            ret_batch: Dict[str, Any] = default_collate(batch)  # type: ignore[no-untyped-call]
+            ret_batch["image"] = torch.flatten(  # type: ignore[attr-defined]
+                ret_batch["image"], 0, 1
             )
-            batch["mask"] = torch.flatten(  # type: ignore[attr-defined]
-                batch["mask"], 0, 1
+            ret_batch["mask"] = torch.flatten(  # type: ignore[attr-defined]
+                ret_batch["mask"], 0, 1
             )
-            return batch
+            return ret_batch
 
         return DataLoader(
             self.train_dataset,
