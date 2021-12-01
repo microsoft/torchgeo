@@ -125,12 +125,27 @@ class TestOSCDDataModule:
     def test_train_dataloader(self, datamodule: OSCDDataModule) -> None:
         sample = next(iter(datamodule.train_dataloader()))
         assert sample["image"].shape[-2:] == sample["mask"].shape[-2:] == (2, 2)
+        assert sample["image"].shape[0] == sample["mask"].shape[0] == 2
+        if datamodule.bands == "all":
+            assert sample["image"].shape[1] == 26
+        else:
+            assert sample["image"].shape[1] == 6
 
     def test_val_dataloader(self, datamodule: OSCDDataModule) -> None:
         sample = next(iter(datamodule.val_dataloader()))
         if datamodule.val_split_pct > 0.0:
             assert sample["image"].shape[-2:] == sample["mask"].shape[-2:] == (3, 3)
+            assert sample["image"].shape[0] == sample["mask"].shape[0] == 1
+            if datamodule.bands == "all":
+                assert sample["image"].shape[1] == 26
+            else:
+                assert sample["image"].shape[1] == 6
 
     def test_test_dataloader(self, datamodule: OSCDDataModule) -> None:
         sample = next(iter(datamodule.test_dataloader()))
         assert sample["image"].shape[-2:] == sample["mask"].shape[-2:] == (3, 3)
+        assert sample["image"].shape[0] == sample["mask"].shape[0] == 1
+        if datamodule.bands == "all":
+            assert sample["image"].shape[1] == 26
+        else:
+            assert sample["image"].shape[1] == 6
