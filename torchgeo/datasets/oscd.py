@@ -407,9 +407,6 @@ class OSCDDataModule(pl.LightningDataModule):
         sample["image"] = sample["image"].float()
         sample["mask"] = sample["mask"].float()
         sample["image"] = self.norm(sample["image"])
-        sample["image"] = torch.clamp(  # type: ignore[attr-defined]
-            sample["image"], min=0.0, max=1.0
-        )
         sample["image"] = torch.flatten(  # type: ignore[attr-defined]
             sample["image"], 0, 1
         )
