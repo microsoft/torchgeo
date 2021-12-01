@@ -43,13 +43,41 @@ First we'll import various classes and functions used in the following sections:
 
 ```python
 from torch.utils.data import DataLoader
-from torchgeo.datasets import CDL, Landsat7, Landsat8, TropicalCycloneWindEstimation, stack_samples
+from torchgeo.datasets import CDL, COWCDetection, Landsat7, Landsat8, stack_samples
 from torchgeo.samplers import RandomGeoSampler
 ```
 
-### Composing geospatial datasets
+### Benchmark datasets
 
-Many use cases involve working with geospatial data and combining it in intelligent ways. In this example, we assume that the user has Landsat 7 and 8 imagery downloaded. We first create a single dataset containing all Landsat imagery. We only use the Landsat 7 bands for Landsat 8 and take the union between both datasets.
+TorchGeo includes a number of [*benchmark*](https://torchgeo.readthedocs.io/en/latest/api/datasets.html#non-geospatial-datasets) datasets, datasets that include both input images and target labels. This includes datasets for tasks like image classification, regression, semantic segmentation, object detection, instance segmentation, change detection, and more.
+
+If you've used [torchvision](https://pytorch.org/vision) before, these datasets should seem very familiar. In this example, we'll create a dataset for the Cars Overhead With Context (COWC) car detection dataset. This dataset can be automatically downloaded, checksummed, and extracted, just like with torchvision.
+
+```python
+dataset = COWCDetection(root="...", split="train", download=True, checksum=True)
+```
+
+This dataset can then be passed to a PyTorch data loader.
+
+```python
+dataloader = DataLoader(dataset, batch_size=128, shuffle=True, num_workers=4)
+```
+
+The only difference between a benchmark dataset in TorchGeo and a similar dataset in torchvision is that each dataset returns a dictionary with keys for each PyTorch Tensor.
+
+```python
+for batch in dataloader:
+    image = batch["image"]
+    label = batch["label"]
+
+    # train a model, or make predictions using a pre-trained model
+```
+
+### Geospatial datasets
+
+Many remote sensing applications involve working with [*generic*](https://torchgeo.readthedocs.io/en/latest/api/datasets.html#geospatial-datasets) geospatial data. This data can be challenging to work with due to the sheer variety of data. Geospatial imagery is often multispectral with a different number of spectral bands and spatial resolution for every satellite. In addition, each file may be in a different coordinate reference system (CRS), requiring the data to be reprojected into a matching CRS.
+
+In this example, we show how easy it is to work with geospatial data and to sample small image patches from a combination of Landsat and Cropland Data Layer (CDL) data using TorchGeo. First, we assume that the user has Landsat 7 and 8 imagery downloaded. Since Landsat 8 has more spectral bands than Landsat 7, we'll only use the bands that both satellites have in common. We'll create a single dataset including all images from both Landsat 7 and 8 data by taking the union between these two datasets.
 
 ```python
 landsat7 = Landsat7(root="...")
@@ -64,7 +92,7 @@ cdl = CDL(root="...", download=True, checksum=True)
 dataset = landsat & cdl
 ```
 
-This dataset can now be used with a PyTorch data loader. In order to sample from this dataset using geospatial coordinates, we create a random sampler class.
+This dataset can now be used with a PyTorch data loader. Unlike benchmark datasets, geospatial datasets often include very large images. For example, the CDL dataset consists of a single image covering the entire continental United States. In order to sample from these datasets using geospatial coordinates, TorchGeo defines a number of [*samplers*](https://torchgeo.readthedocs.io/en/latest/api/samplers.html). In this example, we'll use a random sampler that returns 256x256 pixel images and an epoch length of 10,000 images. We also use a custom collation function to combine each sample dictionary into a mini-batch of samples.
 
 ```python
 sampler = RandomGeoSampler(dataset, size=256, length=10000)
@@ -75,24 +103,13 @@ This data loader can now be used in your normal training/evaluation pipeline.
 
 ```python
 for batch in dataloader:
+    image = batch["image"]
+    mask = batch["mask"]
+
     # train a model, or make predictions using a pre-trained model
 ```
 
-### Download and use the Tropical Cyclone Wind Estimation Competition dataset
-
-This dataset is from a competition hosted by [Driven Data](https://www.drivendata.org/) in collaboration with [Radiant Earth](https://www.radiant.earth/). See [here](https://www.drivendata.org/competitions/72/predict-wind-speeds/) for more information.
-
-Using this dataset in TorchGeo is as simple as importing and instantiating the appropriate class.
-
-```python
-import torchgeo.datasets
-
-dataset = torchgeo.datasets.TropicalCycloneWindEstimation(split="train", download=True)
-print(dataset[0]["image"].shape)
-print(dataset[0]["label"])
-```
-
-### Train and test models using our PyTorch Lightning based training script
+### Train and test models using our PyTorch Lightning-based training script
 
 We provide a script, `train.py` for training models using a subset of the datasets. We do this with the PyTorch Lightning `LightningModule`s and `LightningDataModule`s implemented under the `torchgeo.trainers` namespace.
 The `train.py` script is configurable via the command line and/or via YAML configuration files. See the [conf/](conf/) directory for example configuration files that can be customized for different training runs.
