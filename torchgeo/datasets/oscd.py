@@ -366,7 +366,7 @@ class OSCDDataModule(pl.LightningDataModule):
         self,
         root_dir: str,
         bands: str = "all",
-        batch_size: int = 32,
+        train_batch_size: int = 32,
         num_workers: int = 0,
         val_split_pct: float = 0.2,
         crop_size: Tuple[int, int, int] = (32, 64, 64),
@@ -377,7 +377,8 @@ class OSCDDataModule(pl.LightningDataModule):
         Args:
             root_dir: The ``root`` arugment to pass to the OSCD Dataset classes
             bands: "rgb" or "all"
-            batch_size: The batch size to use in all created DataLoaders
+            train_batch_size: The batch size used in the train DataLoader
+                (val_batch_size == test_batch_size == 1)
             num_workers: The number of workers to use in all created DataLoaders
             val_split_pct: What percentage of the dataset to use as a validation set
             crop_size: Size of random crop from image and mask (n, height, width)
@@ -385,7 +386,7 @@ class OSCDDataModule(pl.LightningDataModule):
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
         self.bands = bands
-        self.batch_size = batch_size
+        self.train_batch_size = train_batch_size
         self.num_workers = num_workers
         self.val_split_pct = val_split_pct
         self.crop_size = crop_size
@@ -479,7 +480,7 @@ class OSCDDataModule(pl.LightningDataModule):
 
         return DataLoader(
             self.train_dataset,
-            batch_size=self.batch_size,
+            batch_size=self.train_batch_size,
             num_workers=self.num_workers,
             collate_fn=collate_wrapper,
             shuffle=True,
