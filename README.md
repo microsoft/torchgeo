@@ -81,7 +81,7 @@ In this example, we show how easy it is to work with geospatial data and to samp
 
 ```python
 landsat7 = Landsat7(root="...")
-landsat8 = Landsat8(root="...", bands=landsat7.bands)
+landsat8 = Landsat8(root="...", bands=["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9"])
 landsat = landsat7 | landsat8
 ```
 
