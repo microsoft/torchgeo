@@ -4,7 +4,9 @@
 """SpaceNet datasets."""
 
 import abc
+import copy
 import glob
+import math
 import os
 import re
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -107,7 +109,9 @@ class SpaceNet(VisionDataset, abc.ABC):
         if to_be_downloaded:
             if not download:
                 raise RuntimeError(
-                    "Dataset not found. You can use download=True to download it."
+                    f"Dataset not found in `root={self.root}` and `download=False`, "
+                    "either specify a different `root` directory or use "
+                    "`download=True` to automaticaly download the dataset."
                 )
             else:
                 self._download(to_be_downloaded, api_key)
@@ -332,7 +336,7 @@ class SpaceNet(VisionDataset, abc.ABC):
             axs[1].imshow(mask, interpolation="none")
             axs[1].axis("off")
             if show_titles:
-                axs[1].set_title("Predictions")
+                axs[1].set_title("Labels")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
@@ -737,6 +741,242 @@ class SpaceNet4(SpaceNet):
         return files
 
 
+class SpaceNet5(SpaceNet):
+    r"""SpaceNet 5: Automated Road Network Extraction and Route Travel Time Estimation.
+
+    `SpaceNet 5 <https://spacenet.ai/sn5-challenge/>`_
+    is a dataset of road networks over the cities of Moscow, Mumbai and San
+    Juan (unavailable).
+
+    Collection features:
+
+    +------------+---------------------+------------+---------------------------+
+    |    AOI     | Area (km\ :sup:`2`\)| # Images   | # Road Network Labels (km)|
+    +============+=====================+============+===========================+
+    | Moscow     |    1353             |   1353     |         3066              |
+    +------------+---------------------+------------+---------------------------+
+    | Mumbai     |    1021             |   1016     |         1951              |
+    +------------+---------------------+------------+---------------------------+
+
+    Imagery features:
+
+    .. list-table::
+        :widths: 10 10 10 10 10
+        :header-rows: 1
+        :stub-columns: 1
+
+        *   -
+            - PAN
+            - MS
+            - PS-MS
+            - PS-RGB
+        *   - GSD (m)
+            - 0.31
+            - 1.24
+            - 0.30
+            - 0.30
+        *   - Chip size (px)
+            - 1300 x 1300
+            - 325 x 325
+            - 1300 x 1300
+            - 1300 x 1300
+
+    Dataset format:
+
+    * Imagery - Worldview-3 GeoTIFFs
+
+        * PAN.tif (Panchromatic)
+        * MS.tif (Multispectral)
+        * PS-MS (Pansharpened Multispectral)
+        * PS-RGB (Pansharpened RGB)
+
+    * Labels - GeoJSON
+
+        * labels.geojson
+
+    If you use this dataset in your research, please use the following citation:
+
+    * The SpaceNet Partners, “SpaceNet5: Automated Road Network Extraction and
+      Route Travel Time Estimation from Satellite Imagery”,
+      https://spacenet.ai/sn5-challenge/
+
+    .. note::
+
+       This dataset requires the following additional library to be installed:
+
+       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
+         imagery and labels from the Radiant Earth MLHub
+
+    .. versionadded:: 0.2
+    """
+
+    dataset_id = "spacenet5"
+    collection_md5_dict = {
+        "sn5_AOI_7_Moscow": "b18107f878152fe7e75444373c320cba",
+        "sn5_AOI_8_Mumbai": "1f1e2b3c26fbd15bfbcdbb6b02ae051c",
+    }
+
+    imagery = {
+        "MS": "MS.tif",
+        "PAN": "PAN.tif",
+        "PS-MS": "PS-MS.tif",
+        "PS-RGB": "PS-RGB.tif",
+    }
+    chip_size = {
+        "MS": (325, 325),
+        "PAN": (1300, 1300),
+        "PS-MS": (1300, 1300),
+        "PS-RGB": (1300, 1300),
+    }
+    label_glob = "labels.geojson"
+
+    def __init__(
+        self,
+        root: str,
+        image: str = "PS-RGB",
+        speed_mask: Optional[bool] = False,
+        collections: List[str] = [],
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        download: bool = False,
+        api_key: Optional[str] = None,
+        checksum: bool = False,
+    ) -> None:
+        """Initialize a new SpaceNet 5 Dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            image: image selection which must be in ["MS", "PAN", "PS-MS", "PS-RGB"]
+            speed_mask: use multi-class speed mask (created by binning roads at
+                10 mph increments) as label if true, else use binary mask
+            collections: collection selection which must be a subset of:
+                         [sn5_AOI_7_Moscow, sn5_AOI_8_Mumbai]
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            download: if True, download dataset and store it in the root directory.
+            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing
+        """
+        assert image in {"MS", "PAN", "PS-MS", "PS-RGB"}
+        self.speed_mask = speed_mask
+        super().__init__(
+            root, image, collections, transforms, download, api_key, checksum
+        )
+
+    def _load_mask(
+        self, path: str, tfm: Affine, raster_crs: CRS, shape: Tuple[int, int]
+    ) -> Tensor:
+        """Rasterizes the dataset's labels (in geojson format).
+
+        Args:
+            path: path to the label
+            tfm: transform of corresponding image
+            shape: shape of corresponding image
+
+        Returns:
+            Tensor: label tensor
+        """
+        min_speed_bin = 1
+        max_speed_bin = 65
+        speed_arr_bin = np.arange(min_speed_bin, max_speed_bin + 1)
+        bin_size_mph = 10.0
+        speed_cls_arr = np.array(
+            [int(math.ceil(s / bin_size_mph)) for s in speed_arr_bin]
+        )
+
+        try:
+            with fiona.open(path) as src:
+                vector_crs = CRS(src.crs)
+                labels = []
+
+                for feature in src:
+                    if raster_crs != vector_crs:
+                        geom = transform_geom(
+                            vector_crs.to_string(),
+                            raster_crs.to_string(),
+                            feature["geometry"],
+                        )
+                    else:
+                        geom = feature["geometry"]
+
+                    if self.speed_mask:
+                        val = speed_cls_arr[
+                            int(feature["properties"]["inferred_speed_mph"]) - 1
+                        ]
+                    else:
+                        val = 1
+
+                    labels.append((geom, val))
+
+        except FionaValueError:
+            labels = []
+
+        if not labels:
+            mask_data = np.zeros(shape=shape)
+        else:
+            mask_data = rasterize(
+                labels,
+                out_shape=shape,
+                fill=0,  # nodata value
+                transform=tfm,
+                all_touched=False,
+                dtype=np.uint8,
+            )
+
+        mask: Tensor = torch.from_numpy(mask_data).long()  # type: ignore[attr-defined]
+        return mask
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`SpaceNet.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        # image can be 1 channel or >3 channels
+        if sample["image"].shape[0] == 1:
+            image = np.rollaxis(sample["image"].numpy(), 0, 3)
+        else:
+            image = np.rollaxis(sample["image"][:3].numpy(), 0, 3)
+        image = percentile_normalization(image, axis=(0, 1))
+
+        ncols = 2
+        mask = sample["mask"].numpy()
+        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 8, 8))
+
+        axs[0].imshow(image)
+        axs[0].axis("off")
+        if show_titles:
+            axs[0].set_title("Image")
+
+        if self.speed_mask:
+            cmap = copy.copy(plt.get_cmap("autumn_r"))
+            cmap.set_under(color="black")
+            axs[1].imshow(mask, vmin=0.1, vmax=7, cmap=cmap, interpolation="none")
+        else:
+            axs[1].imshow(mask, cmap="Greys_r", interpolation="none")
+        axs[1].axis("off")
+        if show_titles:
+            axs[1].set_title("Labels")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig
+
+
 class SpaceNet7(SpaceNet):
     """SpaceNet 7: Multi-Temporal Urban Development Challenge.
 
@@ -833,7 +1073,9 @@ class SpaceNet7(SpaceNet):
         if to_be_downloaded:
             if not download:
                 raise RuntimeError(
-                    "Dataset not found. You can use download=True to download it."
+                    f"Dataset not found in `root={self.root}` and `download=False`, "
+                    "either specify a different `root` directory or use "
+                    "`download=True` to automaticaly download the dataset."
                 )
             else:
                 self._download(to_be_downloaded, api_key)

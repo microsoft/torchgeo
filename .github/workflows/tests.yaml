@@ -26,6 +26,8 @@ jobs:
   pytest:
     name: pytest
     runs-on: ${{ matrix.os }}
+    env:
+      MPLBACKEND: Agg
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
