@@ -8,6 +8,7 @@ import os
 from functools import lru_cache
 from typing import Callable, Dict, Optional, Tuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import rasterio.features
@@ -135,7 +136,7 @@ class BeninSmallHolderCashews(VisionDataset):
         "2020_10_30",
     )
 
-    band_names = (
+    ALL_BANDS = (
         "B01",
         "B02",
         "B03",
@@ -150,16 +151,17 @@ class BeninSmallHolderCashews(VisionDataset):
         "B12",
         "CLD",
     )
+    RGB_BANDS = ("B04", "B03", "B02")
 
-    class_names = {
-        0: "No data",
-        1: "Well-managed planatation",
-        2: "Poorly-managed planatation",
-        3: "Non-planatation",
-        4: "Residential",
-        5: "Background",
-        6: "Uncertain",
-    }
+    classes = [
+        "No data",
+        "Well-managed planatation",
+        "Poorly-managed planatation",
+        "Non-planatation",
+        "Residential",
+        "Background",
+        "Uncertain",
+    ]
 
     # Same for all tiles
     tile_height = 1186
@@ -170,7 +172,7 @@ class BeninSmallHolderCashews(VisionDataset):
         root: str = "data",
         chip_size: int = 256,
         stride: int = 128,
-        bands: Tuple[str, ...] = band_names,
+        bands: Tuple[str, ...] = ALL_BANDS,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
@@ -273,11 +275,11 @@ class BeninSmallHolderCashews(VisionDataset):
         """
         assert isinstance(bands, tuple), "The list of bands must be a tuple"
         for band in bands:
-            if band not in self.band_names:
+            if band not in self.ALL_BANDS:
                 raise ValueError(f"'{band}' is an invalid band name.")
 
     @lru_cache(maxsize=128)
-    def _load_all_imagery(self, bands: Tuple[str, ...] = band_names) -> Tensor:
+    def _load_all_imagery(self, bands: Tuple[str, ...] = ALL_BANDS) -> Tensor:
         """Load all the imagery (across time) for the dataset.
 
         Optionally allows for subsetting of the bands that are loaded.
@@ -410,3 +412,74 @@ class BeninSmallHolderCashews(VisionDataset):
         target_archive_path = os.path.join(self.root, self.target_meta["filename"])
         for fn in [image_archive_path, target_archive_path]:
             extract_archive(fn, self.root)
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        This method only plots the first 5 images from the 70 image time series.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        Raises:
+            ValueError: if the RGB bands are not included in ``self.bands``
+
+        .. versionadded:: 0.2
+        """
+        rgb_indices = []
+        for band in self.RGB_BANDS:
+            if band in self.bands:
+                rgb_indices.append(self.bands.index(band))
+            else:
+                raise ValueError("Dataset doesn't contain some of the RGB bands")
+
+        num_time_points = sample["image"].shape[0]
+        num_image_panels = min(5, num_time_points)
+
+        images = []
+        for i in range(num_image_panels):
+            image = np.rollaxis(sample["image"][i, rgb_indices].numpy(), 0, 3)
+            image = np.clip(image / 3000, 0, 1)
+            images.append(image)
+
+        mask = sample["mask"].numpy()
+
+        num_panels = num_image_panels + 1
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            predictions = sample["prediction"].numpy()
+            num_panels += 1
+
+        fig, axs = plt.subplots(ncols=num_panels, figsize=(4 * num_panels, 4))
+        for i in range(num_image_panels):
+            axs[i].imshow(images[i])
+            axs[i].axis("off")
+            if show_titles:
+                axs[i].set_title(f"t={i+1}")
+
+        axs[num_image_panels].imshow(mask, vmin=0, vmax=6, interpolation="none")
+        axs[num_image_panels].axis("off")
+        if show_titles:
+            axs[num_image_panels].set_title("Mask")
+
+        if showing_predictions:
+            axs[num_image_panels + 1].imshow(
+                predictions, vmin=0, vmax=6, interpolation="none"
+            )
+            axs[num_image_panels + 1].axis("off")
+            if show_titles:
+                axs[num_image_panels + 1].set_title("Predictions")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig

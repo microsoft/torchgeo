@@ -7,9 +7,11 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
+from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
@@ -28,9 +30,12 @@ def fetch(dataset_id: str, **kwargs: str) -> Dataset:
 
 
 class TestBeninSmallHolderCashews:
-    @pytest.fixture
+    @pytest.fixture(params=[("B01",), BeninSmallHolderCashews.ALL_BANDS])
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+        self,
+        monkeypatch: Generator[MonkeyPatch, None, None],
+        tmp_path: Path,
+        request: SubRequest,
     ) -> BeninSmallHolderCashews:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(  # type: ignore[attr-defined]
@@ -49,9 +54,12 @@ class TestBeninSmallHolderCashews:
         )
         root = str(tmp_path)
         transforms = nn.Identity()  # type: ignore[attr-defined]
+        bands = request.param
+
         return BeninSmallHolderCashews(
             root,
             transforms=transforms,
+            bands=bands,
             download=True,
             api_key="",
             checksum=True,
@@ -87,3 +95,18 @@ class TestBeninSmallHolderCashews:
 
         with pytest.raises(ValueError, match="is an invalid band name."):
             BeninSmallHolderCashews(bands=("foo", "bar"))
+
+    def test_plot(self, dataset: BeninSmallHolderCashews) -> None:
+        if not all(band in dataset.bands for band in dataset.RGB_BANDS):
+            with pytest.raises(ValueError, match="Dataset doesn't contain"):
+                x = dataset[0].copy()
+                dataset.plot(x, suptitle="Test")
+        else:
+            x = dataset[0].copy()
+            dataset.plot(x, suptitle="Test")
+            plt.close()
+            dataset.plot(x, show_titles=False)
+            plt.close()
+            x["prediction"] = x["mask"].clone()
+            dataset.plot(x)
+            plt.close()
