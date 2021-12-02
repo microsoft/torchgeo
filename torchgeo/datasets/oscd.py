@@ -5,17 +5,20 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
+import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 import torch
+from einops import repeat
 from matplotlib.figure import Figure
 from numpy import ndarray as Array
 from PIL import Image
 from torch import Tensor
 from torch.utils.data import DataLoader
+from torch.utils.data._utils.collate import default_collate
 from torchvision.transforms import Compose, Normalize
 
 from ..datasets.utils import dataset_split, draw_semantic_segmentation_masks
@@ -317,7 +320,8 @@ class OSCD(VisionDataset):
 class OSCDDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the OSCD dataset.
 
-    Uses the train/val/test splits from the dataset.
+    Uses the train/test splits from the dataset and further splits
+    the train split into train/val splits.
 
     .. versionadded: 0.2
     """
@@ -362,9 +366,11 @@ class OSCDDataModule(pl.LightningDataModule):
         self,
         root_dir: str,
         bands: str = "all",
-        batch_size: int = 64,
+        train_batch_size: int = 32,
         num_workers: int = 0,
         val_split_pct: float = 0.2,
+        patch_size: Tuple[int, int] = (64, 64),
+        num_patches_per_tile: int = 32,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for OSCD based DataLoaders.
@@ -372,16 +378,21 @@ class OSCDDataModule(pl.LightningDataModule):
         Args:
             root_dir: The ``root`` arugment to pass to the OSCD Dataset classes
             bands: "rgb" or "all"
-            batch_size: The batch size to use in all created DataLoaders
+            train_batch_size: The batch size used in the train DataLoader
+                (val_batch_size == test_batch_size == 1)
             num_workers: The number of workers to use in all created DataLoaders
             val_split_pct: What percentage of the dataset to use as a validation set
+            patch_size: Size of random patch from image and mask (height, width)
+            num_patches_per_tile: number of random patches per sample
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
         self.bands = bands
-        self.batch_size = batch_size
+        self.train_batch_size = train_batch_size
         self.num_workers = num_workers
         self.val_split_pct = val_split_pct
+        self.patch_size = patch_size
+        self.num_patches_per_tile = num_patches_per_tile
 
         if bands == "rgb":
             self.band_means = self.band_means[[3, 2, 1], None, None]
@@ -391,13 +402,17 @@ class OSCDDataModule(pl.LightningDataModule):
             self.band_stds = self.band_stds[:, None, None]
 
         self.norm = Normalize(self.band_means, self.band_stds)
+        self.rcrop = K.AugmentationSequential(
+            K.RandomCrop(patch_size), data_keys=["input", "mask"], same_on_batch=True
+        )
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         sample["image"] = sample["image"].float()
+        sample["mask"] = sample["mask"].float()
         sample["image"] = self.norm(sample["image"])
-        sample["image"] = torch.clamp(  # type: ignore[attr-defined]
-            sample["image"], min=0.0, max=1.0
+        sample["image"] = torch.flatten(  # type: ignore[attr-defined]
+            sample["image"], 0, 1
         )
         return sample
 
@@ -413,30 +428,64 @@ class OSCDDataModule(pl.LightningDataModule):
 
         This method is called once per GPU per run.
         """
-        transforms = Compose([self.preprocess])
 
-        dataset = OSCD(
-            self.root_dir, split="train", bands=self.bands, transforms=transforms
+        def n_random_crop(sample: Dict[str, Any]) -> Dict[str, Any]:
+            images, masks = [], []
+            for i in range(self.num_patches_per_tile):
+                mask = repeat(sample["mask"], "h w -> t h w", t=2)
+                image, mask = self.rcrop(sample["image"], mask)
+                mask = mask.squeeze()[0]
+                images.append(image.squeeze())
+                masks.append(mask)
+            sample["image"] = torch.stack(images)
+            sample["mask"] = torch.stack(masks)
+            return sample
+
+        train_transforms = Compose([self.preprocess, n_random_crop])
+        test_transforms = Compose([self.preprocess])
+
+        train_dataset = OSCD(
+            self.root_dir, split="train", bands=self.bands, transforms=train_transforms
         )
-
         if self.val_split_pct > 0.0:
-            self.train_dataset, self.val_dataset, _ = dataset_split(
-                dataset, val_pct=self.val_split_pct, test_pct=0.0
+            val_dataset = OSCD(
+                self.root_dir,
+                split="train",
+                bands=self.bands,
+                transforms=test_transforms,
             )
+            self.train_dataset, self.val_dataset, _ = dataset_split(
+                train_dataset, val_pct=self.val_split_pct, test_pct=0.0
+            )
+            self.val_dataset.dataset = val_dataset
         else:
-            self.train_dataset = dataset  # type: ignore[assignment]
+            self.train_dataset = train_dataset  # type: ignore[assignment]
             self.val_dataset = None  # type: ignore[assignment]
 
         self.test_dataset = OSCD(
-            self.root_dir, split="test", bands=self.bands, transforms=transforms
+            self.root_dir, split="test", bands=self.bands, transforms=test_transforms
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""
+
+        def collate_wrapper(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
+            r_batch: Dict[str, Any] = default_collate(  # type: ignore[no-untyped-call]
+                batch
+            )
+            r_batch["image"] = torch.flatten(  # type: ignore[attr-defined]
+                r_batch["image"], 0, 1
+            )
+            r_batch["mask"] = torch.flatten(  # type: ignore[attr-defined]
+                r_batch["mask"], 0, 1
+            )
+            return r_batch
+
         return DataLoader(
             self.train_dataset,
-            batch_size=self.batch_size,
+            batch_size=self.train_batch_size,
             num_workers=self.num_workers,
+            collate_fn=collate_wrapper,
             shuffle=True,
         )
 
@@ -447,7 +496,7 @@ class OSCDDataModule(pl.LightningDataModule):
         else:
             return DataLoader(
                 self.val_dataset,
-                batch_size=self.batch_size,
+                batch_size=1,
                 num_workers=self.num_workers,
                 shuffle=False,
             )
@@ -455,8 +504,5 @@ class OSCDDataModule(pl.LightningDataModule):
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing."""
         return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
+            self.test_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
         )
