@@ -34,7 +34,7 @@ def test_resnet(
     )
 
     new_model_urls = {
-        "sentinel2": {"all": {"resnet50": str(tmp_path / "resnet50-sentinel2.pt")}}
+        "sentinel2": {"all": {"resnet50": str(tmp_path / "resnet50-sentinel2-2.pt")}}
     }
 
     monkeypatch.setattr(  # type: ignore[attr-defined]
