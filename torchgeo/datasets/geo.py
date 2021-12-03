@@ -807,8 +807,18 @@ class IntersectionDataset(GeoDataset):
         self.res = dataset1.res
 
         # Force dataset2 to have the same CRS/res as dataset1
-        dataset2.crs = dataset1.crs
-        dataset2.res = dataset1.res
+        if dataset1.crs != dataset2.crs:
+            print(
+                f"Converting {dataset2.__class__.__name__} CRS from "
+                f"{dataset2.crs} to {dataset1.crs}"
+            )
+            dataset2.crs = dataset1.crs
+        if dataset1.res != dataset2.res:
+            print(
+                f"Converting {dataset2.__class__.__name__} resolution from "
+                f"{dataset2.res} to {dataset1.res}"
+            )
+            dataset2.res = dataset1.res
 
         # Merge dataset indices into a single index
         self._merge_dataset_indices()
@@ -907,8 +917,18 @@ class UnionDataset(GeoDataset):
         self.res = dataset1.res
 
         # Force dataset2 to have the same CRS/res as dataset1
-        dataset2.crs = dataset1.crs
-        dataset2.res = dataset1.res
+        if dataset1.crs != dataset2.crs:
+            print(
+                f"Converting {dataset2.__class__.__name__} CRS from "
+                f"{dataset2.crs} to {dataset1.crs}"
+            )
+            dataset2.crs = dataset1.crs
+        if dataset1.res != dataset2.res:
+            print(
+                f"Converting {dataset2.__class__.__name__} resolution from "
+                f"{dataset2.res} to {dataset1.res}"
+            )
+            dataset2.res = dataset1.res
 
         # Merge dataset indices into a single index
         self._merge_dataset_indices()

@@ -63,6 +63,10 @@ class TestGeoDataset:
     def test_len(self, dataset: GeoDataset) -> None:
         assert len(dataset) == 1
 
+    @pytest.mark.parametrize("crs", [CRS.from_epsg(3005), CRS.from_epsg(32616)])
+    def test_crs(self, dataset: GeoDataset, crs: CRS) -> None:
+        dataset.crs = crs
+
     def test_and_two(self) -> None:
         ds1 = CustomGeoDataset()
         ds2 = CustomGeoDataset()
