@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Generator
+from typing import Any, Generator, Optional
 
 import pytest
 import torch
@@ -13,6 +13,18 @@ from torch.nn.modules import Module
 import torchgeo.models.resnet
 from torchgeo.datasets.utils import extract_archive
 from torchgeo.models import resnet50
+
+
+def load_state_dict_from_file(
+    file: str,
+    model_dir: Optional[str] = None,
+    map_location: Optional[Any] = None,
+    progress: Optional[bool] = True,
+    check_hash: Optional[bool] = False,
+    file_name: Optional[str] = None,
+) -> Any:
+    """Mockup of ``torch.hub.load_state_dict_from_url``."""
+    return torch.load(file)  # type: ignore[no-untyped-call]
 
 
 @pytest.mark.parametrize(
@@ -39,6 +51,9 @@ def test_resnet(
 
     monkeypatch.setattr(  # type: ignore[attr-defined]
         torchgeo.models.resnet, "MODEL_URLS", new_model_urls
+    )
+    monkeypatch.setattr(  # type: ignore[attr-defined]
+        torchgeo.models.resnet, "load_state_dict_from_url", load_state_dict_from_file
     )
 
     model = model_class(sensor, bands, pretrained=True)
