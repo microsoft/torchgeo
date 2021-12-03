@@ -5,7 +5,6 @@ trainer:
   benchmark: True
 
 experiment:
-  name: "oscd"
   task: "oscd"
   module:
     loss: "ce"
@@ -20,6 +19,7 @@ experiment:
     num_filters: 256
     ignore_zeros: False
   datamodule:
-    root_dir: "tests/data/oscd"
+    root_dir: "data"
     batch_size: 2
     num_workers: 0
+    val_split_pct: 0.0
