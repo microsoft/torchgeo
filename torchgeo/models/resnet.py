@@ -5,6 +5,7 @@
 
 from typing import Any, List, Type, Union
 
+import torch
 import torch.nn as nn
 from torch.hub import load_state_dict_from_url
 from torchvision.models.resnet import BasicBlock, Bottleneck, ResNet
@@ -66,9 +67,13 @@ def _resnet(
 
     # Load pretrained weights
     if pretrained:
-        state_dict = load_state_dict_from_url(  # type: ignore[no-untyped-call]
-            MODEL_URLS[sensor][bands][arch], progress=progress
-        )
+        remote = MODEL_URLS[sensor][bands][arch]
+        if remote.startswith("http"):
+            state_dict = load_state_dict_from_url(  # type: ignore[no-untyped-call]
+                remote, progress=progress
+            )
+        else:
+            state_dict = torch.load(remote)  # type: ignore[no-untyped-call]
         model.load_state_dict(state_dict)
 
     return model
