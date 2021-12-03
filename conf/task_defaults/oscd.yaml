@@ -1,4 +1,5 @@
 experiment:
+  name: "oscd"
   task: "oscd"
   module:
     loss: "bce"
@@ -8,8 +9,8 @@ experiment:
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
     verbose: false
-    in_channels: 13
-    num_classes: 1
+    in_channels: 26
+    num_classes: 2
     num_filters: 256
     ignore_zeros: False
   datamodule:

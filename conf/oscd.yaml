@@ -21,6 +21,5 @@ experiment:
     ignore_zeros: False
   datamodule:
     root_dir: "tests/data/oscd"
-    batch_size: 1
+    batch_size: 2
     num_workers: 0
-    val_split_pct: 0.0
