@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 import torch
+import torch.nn.functional as F
 from einops import repeat
 from matplotlib.figure import Figure
 from numpy import ndarray as Array
@@ -406,6 +407,45 @@ class OSCDDataModule(pl.LightningDataModule):
             K.RandomCrop(patch_size), data_keys=["input", "mask"], same_on_batch=True
         )
 
+    def pad_to(
+        self, size: int = 512, image_value: int = 0, mask_value: int = 0
+    ) -> Callable[[Dict[str, Tensor]], Dict[str, Tensor]]:
+        """Returns a function to perform a padding transform on a single sample.
+
+        Args:
+            size: output image size
+            image_value: value to pad image with
+            mask_value: value to pad mask with
+
+        Returns:
+            function to perform padding
+        """
+
+        def pad_inner(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+            _, height, width = sample["image"].shape
+            assert height <= size and width <= size
+
+            height_pad = size - height
+            width_pad = size - width
+
+            # See https://pytorch.org/docs/stable/generated/torch.nn.functional.pad.html
+            # for a description of the format of the padding tuple
+            sample["image"] = F.pad(
+                sample["image"],
+                (0, width_pad, 0, height_pad),
+                mode="constant",
+                value=image_value,
+            )
+            sample["mask"] = F.pad(
+                sample["mask"],
+                (0, width_pad, 0, height_pad),
+                mode="constant",
+                value=mask_value,
+            )
+            return sample
+
+        return pad_inner
+
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         sample["image"] = sample["image"].float()
@@ -442,7 +482,9 @@ class OSCDDataModule(pl.LightningDataModule):
             return sample
 
         train_transforms = Compose([self.preprocess, n_random_crop])
-        test_transforms = Compose([self.preprocess])
+        # for testing and validation we pad all inputs to a fixed size to avoid issues
+        # with the upsampling paths in encoder-decoder architectures
+        test_transforms = Compose([self.preprocess, self.pad_to(1024 + 256)])
 
         train_dataset = OSCD(
             self.root_dir, split="train", bands=self.bands, transforms=train_transforms

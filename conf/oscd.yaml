@@ -19,7 +19,6 @@ experiment:
     num_filters: 256
     ignore_zeros: False
   datamodule:
-    root_dir: "data"
-    batch_size: 2
-    num_workers: 0
-    val_split_pct: 0.0
+    train_batch_size: 2
+    num_workers: 6
+    val_split_pct: 0.1
