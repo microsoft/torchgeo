@@ -543,7 +543,7 @@ class BigEarthNet(VisionDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if self.bands is "s1"
+            ValueError: if ``self.bands`` is "s1"
 
         .. versionadded:: 0.2
         """
