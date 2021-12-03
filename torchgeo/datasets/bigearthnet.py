@@ -8,6 +8,7 @@ import json
 import os
 from typing import Callable, Dict, List, Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
@@ -504,3 +505,74 @@ class BigEarthNet(VisionDataset):
         """
         if not filepath.endswith(".csv"):
             extract_archive(filepath)
+
+    def _onehot_labels_to_names(
+        self, label_mask: np.ndarray  # type: ignore[type-arg]
+    ) -> List[str]:
+        """Gets a list of class names given a label mask.
+
+        Args:
+            label_mask: a boolean mask corresponding to a set of labels or predictions
+
+        Returns
+            a list of class names corresponding to the input mask
+        """
+        labels = []
+        for i, mask in enumerate(label_mask):
+            if mask:
+                if self.num_classes == 19:
+                    labels.append(self.classes_19[i])
+                elif self.num_classes == 43:
+                    labels.append(self.classes_43[i])
+        return labels
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        Raises:
+            ValueError: if self.bands is "s1"
+
+        .. versionadded:: 0.2
+        """
+        if self.bands == "s2":
+            image = np.rollaxis(sample["image"][[3, 2, 1]].numpy(), 0, 3)
+        elif self.bands == "all":
+            image = np.rollaxis(sample["image"][[5, 4, 3]].numpy(), 0, 3)
+        else:
+            raise ValueError("The s1 band set does not contain RGB bands")
+
+        image = np.clip(image / 2000, 0, 1)
+
+        label_mask = sample["label"].numpy().astype(np.bool8)
+        labels = self._onehot_labels_to_names(label_mask)
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction_mask = sample["prediction"].numpy().astype(np.bool8)
+            predictions = self._onehot_labels_to_names(prediction_mask)
+
+        fig, ax = plt.subplots(figsize=(4, 4))
+        ax.imshow(image)
+        ax.axis("off")
+        if show_titles:
+            title = f"Labels: {', '.join(labels)}"
+            if showing_predictions:
+                title += f"\nPredictions: {', '.join(predictions)}"
+            ax.set_title(title)
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig

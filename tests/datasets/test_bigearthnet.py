@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -148,3 +149,18 @@ class TestBigEarthNet:
         "to automaticaly download the dataset."
         with pytest.raises(RuntimeError, match=err):
             BigEarthNet(str(tmp_path))
+
+    def test_plot(self, dataset: BigEarthNet) -> None:
+        if dataset.bands == "s1":
+            with pytest.raises(ValueError, match="The s1 band set does not contain"):
+                x = dataset[0].copy()
+                dataset.plot(x, suptitle="Test")
+        else:
+            x = dataset[0].copy()
+            dataset.plot(x, suptitle="Test")
+            plt.close()
+            dataset.plot(x, show_titles=False)
+            plt.close()
+            x["prediction"] = x["label"].clone()
+            dataset.plot(x)
+            plt.close()
