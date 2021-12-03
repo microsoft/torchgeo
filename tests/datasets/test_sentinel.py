@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 from rasterio.crs import CRS
 
-from torchgeo.datasets import BoundingBox, Sentinel2, ZipDataset
+from torchgeo.datasets import BoundingBox, IntersectionDataset, Sentinel2, UnionDataset
 
 
 class TestSentinel2:
@@ -29,9 +29,13 @@ class TestSentinel2:
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["image"], torch.Tensor)
 
-    def test_add(self, dataset: Sentinel2) -> None:
-        ds = dataset + dataset
-        assert isinstance(ds, ZipDataset)
+    def test_and(self, dataset: Sentinel2) -> None:
+        ds = dataset & dataset
+        assert isinstance(ds, IntersectionDataset)
+
+    def test_or(self, dataset: Sentinel2) -> None:
+        ds = dataset | dataset
+        assert isinstance(ds, UnionDataset)
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="No Sentinel2 data was found in "):

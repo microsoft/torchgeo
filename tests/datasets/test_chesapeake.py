@@ -20,7 +20,8 @@ from torchgeo.datasets import (
     Chesapeake13,
     ChesapeakeCVPR,
     ChesapeakeCVPRDataModule,
-    ZipDataset,
+    IntersectionDataset,
+    UnionDataset,
 )
 
 
@@ -55,9 +56,13 @@ class TestChesapeake13:
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
 
-    def test_add(self, dataset: Chesapeake13) -> None:
-        ds = dataset + dataset
-        assert isinstance(ds, ZipDataset)
+    def test_and(self, dataset: Chesapeake13) -> None:
+        ds = dataset & dataset
+        assert isinstance(ds, IntersectionDataset)
+
+    def test_or(self, dataset: Chesapeake13) -> None:
+        ds = dataset | dataset
+        assert isinstance(ds, UnionDataset)
 
     def test_already_downloaded(self, dataset: Chesapeake13) -> None:
         Chesapeake13(root=dataset.root, download=True)
@@ -128,9 +133,13 @@ class TestChesapeakeCVPR:
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
 
-    def test_add(self, dataset: ChesapeakeCVPR) -> None:
-        ds = dataset + dataset
-        assert isinstance(ds, ZipDataset)
+    def test_and(self, dataset: ChesapeakeCVPR) -> None:
+        ds = dataset & dataset
+        assert isinstance(ds, IntersectionDataset)
+
+    def test_or(self, dataset: ChesapeakeCVPR) -> None:
+        ds = dataset | dataset
+        assert isinstance(ds, UnionDataset)
 
     def test_already_extracted(self, dataset: ChesapeakeCVPR) -> None:
         ChesapeakeCVPR(root=dataset.root, download=True)

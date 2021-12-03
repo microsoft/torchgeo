@@ -14,7 +14,12 @@ from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import BoundingBox, CanadianBuildingFootprints, ZipDataset
+from torchgeo.datasets import (
+    BoundingBox,
+    CanadianBuildingFootprints,
+    IntersectionDataset,
+    UnionDataset,
+)
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -66,9 +71,13 @@ class TestCanadianBuildingFootprints:
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
 
-    def test_add(self, dataset: CanadianBuildingFootprints) -> None:
-        ds = dataset + dataset
-        assert isinstance(ds, ZipDataset)
+    def test_and(self, dataset: CanadianBuildingFootprints) -> None:
+        ds = dataset & dataset
+        assert isinstance(ds, IntersectionDataset)
+
+    def test_or(self, dataset: CanadianBuildingFootprints) -> None:
+        ds = dataset | dataset
+        assert isinstance(ds, UnionDataset)
 
     def test_already_downloaded(self, dataset: CanadianBuildingFootprints) -> None:
         CanadianBuildingFootprints(root=dataset.root, download=True)

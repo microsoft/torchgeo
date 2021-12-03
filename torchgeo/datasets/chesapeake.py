@@ -32,6 +32,7 @@ from .utils import (
     download_and_extract_archive,
     download_url,
     extract_archive,
+    stack_samples,
 )
 
 # https://github.com/pytorch/pytorch/issues/60979
@@ -434,7 +435,7 @@ class ChesapeakeCVPR(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(query, objects=True)
+        hits = self.index.intersection(tuple(query), objects=True)
         filepaths = [hit.object for hit in hits]
 
         sample = {"image": [], "mask": [], "crs": self.crs, "bbox": query}
@@ -783,7 +784,10 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             length=self.patches_per_tile * len(self.train_dataset),
         )
         return DataLoader(
-            self.train_dataset, batch_sampler=sampler, num_workers=self.num_workers
+            self.train_dataset,
+            batch_sampler=sampler,
+            num_workers=self.num_workers,
+            collate_fn=stack_samples,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -802,6 +806,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             batch_size=self.batch_size,
             sampler=sampler,
             num_workers=self.num_workers,
+            collate_fn=stack_samples,
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
@@ -820,4 +825,5 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             batch_size=self.batch_size,
             sampler=sampler,
             num_workers=self.num_workers,
+            collate_fn=stack_samples,
         )
