@@ -16,7 +16,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import CDL, BoundingBox, ZipDataset
+from torchgeo.datasets import CDL, BoundingBox, IntersectionDataset, UnionDataset
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -51,15 +51,19 @@ class TestCDL:
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
 
-    def test_add(self, dataset: CDL) -> None:
-        ds = dataset + dataset
-        assert isinstance(ds, ZipDataset)
+    def test_and(self, dataset: CDL) -> None:
+        ds = dataset & dataset
+        assert isinstance(ds, IntersectionDataset)
+
+    def test_or(self, dataset: CDL) -> None:
+        ds = dataset | dataset
+        assert isinstance(ds, UnionDataset)
 
     def test_full_year(self, dataset: CDL) -> None:
         bbox = dataset.bounds
         time = datetime(2021, 6, 1).timestamp()
         query = BoundingBox(bbox.minx, bbox.maxx, bbox.miny, bbox.maxy, time, time)
-        next(dataset.index.intersection(query))
+        next(dataset.index.intersection(tuple(query)))
 
     def test_already_extracted(self, dataset: CDL) -> None:
         CDL(root=dataset.root, download=True)

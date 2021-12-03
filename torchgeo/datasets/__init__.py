@@ -29,11 +29,12 @@ from .etci2021 import ETCI2021, ETCI2021DataModule
 from .eurosat import EuroSAT, EuroSATDataModule
 from .geo import (
     GeoDataset,
+    IntersectionDataset,
     RasterDataset,
+    UnionDataset,
     VectorDataset,
     VisionClassificationDataset,
     VisionDataset,
-    ZipDataset,
 )
 from .gid15 import GID15
 from .landcoverai import LandCoverAI, LandCoverAIDataModule
@@ -63,7 +64,7 @@ from .sentinel import Sentinel, Sentinel2
 from .so2sat import So2Sat, So2SatDataModule
 from .spacenet import SpaceNet, SpaceNet1, SpaceNet2, SpaceNet4, SpaceNet5, SpaceNet7
 from .ucmerced import UCMerced, UCMercedDataModule
-from .utils import BoundingBox, collate_dict
+from .utils import BoundingBox, concat_samples, merge_samples, stack_samples
 from .vaihingen import Vaihingen2D, Vaihingen2DDataModule
 from .xview import XView2, XView2DataModule
 from .zuericrop import ZueriCrop
@@ -147,14 +148,17 @@ __all__ = (
     "ZueriCrop",
     # Base classes
     "GeoDataset",
+    "IntersectionDataset",
     "RasterDataset",
+    "UnionDataset",
     "VectorDataset",
     "VisionDataset",
     "VisionClassificationDataset",
-    "ZipDataset",
     # Utilities
     "BoundingBox",
-    "collate_dict",
+    "concat_samples",
+    "merge_samples",
+    "stack_samples",
 )
 
 # https://stackoverflow.com/questions/40018681

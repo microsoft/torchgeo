@@ -6,11 +6,12 @@ import glob
 import math
 import os
 import pickle
+import re
 import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Generator, Tuple
+from typing import Any, Dict, Generator, List, Tuple
 
 import numpy as np
 import pytest
@@ -22,14 +23,16 @@ from torch.utils.data import TensorDataset
 import torchgeo.datasets.utils
 from torchgeo.datasets.utils import (
     BoundingBox,
-    collate_dict,
+    concat_samples,
     dataset_split,
     disambiguate_timestamp,
     download_and_extract_archive,
     download_radiant_mlhub_collection,
     download_radiant_mlhub_dataset,
     extract_archive,
+    merge_samples,
     percentile_normalization,
+    stack_samples,
     working_dir,
 )
 
@@ -164,7 +167,13 @@ def test_missing_radiant_mlhub(mock_missing_module: None) -> None:
 
 
 class TestBoundingBox:
-    def test_new_init(self) -> None:
+    def test_repr_str(self) -> None:
+        bbox = BoundingBox(0, 1, 2.0, 3.0, -5, -4)
+        expected = "BoundingBox(minx=0, maxx=1, miny=2.0, maxy=3.0, mint=-5, maxt=-4)"
+        assert repr(bbox) == expected
+        assert str(bbox) == expected
+
+    def test_getitem(self) -> None:
         bbox = BoundingBox(0, 1, 2, 3, 4, 5)
 
         assert bbox.minx == 0
@@ -176,13 +185,143 @@ class TestBoundingBox:
 
         assert bbox[0] == 0
         assert bbox[-1] == 5
-        assert bbox[1:3] == (1, 2)
+        assert bbox[1:3] == [1, 2]
 
-    def test_repr_str(self) -> None:
-        bbox = BoundingBox(0, 1, 2.0, 3.0, -5, -4)
-        expected = "BoundingBox(minx=0, maxx=1, miny=2.0, maxy=3.0, mint=-5, maxt=-4)"
-        assert repr(bbox) == expected
-        assert str(bbox) == expected
+    def test_iter(self) -> None:
+        bbox = BoundingBox(0, 1, 2, 3, 4, 5)
+
+        assert tuple(bbox) == (0, 1, 2, 3, 4, 5)
+
+        i = 0
+        for _ in bbox:
+            i += 1
+        assert i == 6
+
+    @pytest.mark.parametrize(
+        "test_input,expected",
+        [
+            # Same box
+            ((0, 1, 0, 1, 0, 1), True),
+            ((0.0, 1.0, 0.0, 1.0, 0.0, 1.0), True),
+            # bbox1 strictly within bbox2
+            ((-1, 2, -1, 2, -1, 2), True),
+            # bbox2 strictly within bbox1
+            ((0.25, 0.75, 0.25, 0.75, 0.25, 0.75), False),
+            # One corner of bbox1 within bbox2
+            ((0.5, 1.5, 0.5, 1.5, 0.5, 1.5), False),
+            ((0.5, 1.5, -0.5, 0.5, 0.5, 1.5), False),
+            ((0.5, 1.5, 0.5, 1.5, -0.5, 0.5), False),
+            ((0.5, 1.5, -0.5, 0.5, -0.5, 0.5), False),
+            ((-0.5, 0.5, 0.5, 1.5, 0.5, 1.5), False),
+            ((-0.5, 0.5, -0.5, 0.5, 0.5, 1.5), False),
+            ((-0.5, 0.5, 0.5, 1.5, -0.5, 0.5), False),
+            ((-0.5, 0.5, -0.5, 0.5, -0.5, 0.5), False),
+            # No overlap
+            ((0.5, 1.5, 0.5, 1.5, 2, 3), False),
+            ((0.5, 1.5, 2, 3, 0.5, 1.5), False),
+            ((2, 3, 0.5, 1.5, 0.5, 1.5), False),
+            ((2, 3, 2, 3, 2, 3), False),
+        ],
+    )
+    def test_contains(
+        self,
+        test_input: Tuple[float, float, float, float, float, float],
+        expected: bool,
+    ) -> None:
+        bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
+        bbox2 = BoundingBox(*test_input)
+        assert (bbox1 in bbox2) == expected
+
+    @pytest.mark.parametrize(
+        "test_input,expected",
+        [
+            # Same box
+            ((0, 1, 0, 1, 0, 1), (0, 1, 0, 1, 0, 1)),
+            ((0.0, 1.0, 0.0, 1.0, 0.0, 1.0), (0, 1, 0, 1, 0, 1)),
+            # bbox1 strictly within bbox2
+            ((-1, 2, -1, 2, -1, 2), (-1, 2, -1, 2, -1, 2)),
+            # bbox2 strictly within bbox1
+            ((0.25, 0.75, 0.25, 0.75, 0.25, 0.75), (0, 1, 0, 1, 0, 1)),
+            # One corner of bbox1 within bbox2
+            ((0.5, 1.5, 0.5, 1.5, 0.5, 1.5), (0, 1.5, 0, 1.5, 0, 1.5)),
+            ((0.5, 1.5, -0.5, 0.5, 0.5, 1.5), (0, 1.5, -0.5, 1, 0, 1.5)),
+            ((0.5, 1.5, 0.5, 1.5, -0.5, 0.5), (0, 1.5, 0, 1.5, -0.5, 1)),
+            ((0.5, 1.5, -0.5, 0.5, -0.5, 0.5), (0, 1.5, -0.5, 1, -0.5, 1)),
+            ((-0.5, 0.5, 0.5, 1.5, 0.5, 1.5), (-0.5, 1, 0, 1.5, 0, 1.5)),
+            ((-0.5, 0.5, -0.5, 0.5, 0.5, 1.5), (-0.5, 1, -0.5, 1, 0, 1.5)),
+            ((-0.5, 0.5, 0.5, 1.5, -0.5, 0.5), (-0.5, 1, 0, 1.5, -0.5, 1)),
+            ((-0.5, 0.5, -0.5, 0.5, -0.5, 0.5), (-0.5, 1, -0.5, 1, -0.5, 1)),
+            # No overlap
+            ((0.5, 1.5, 0.5, 1.5, 2, 3), (0, 1.5, 0, 1.5, 0, 3)),
+            ((0.5, 1.5, 2, 3, 0.5, 1.5), (0, 1.5, 0, 3, 0, 1.5)),
+            ((2, 3, 0.5, 1.5, 0.5, 1.5), (0, 3, 0, 1.5, 0, 1.5)),
+            ((2, 3, 2, 3, 2, 3), (0, 3, 0, 3, 0, 3)),
+        ],
+    )
+    def test_or(
+        self,
+        test_input: Tuple[float, float, float, float, float, float],
+        expected: Tuple[float, float, float, float, float, float],
+    ) -> None:
+        bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
+        bbox2 = BoundingBox(*test_input)
+        bbox3 = BoundingBox(*expected)
+        assert (bbox1 | bbox2) == bbox3
+
+    @pytest.mark.parametrize(
+        "test_input,expected",
+        [
+            # Same box
+            ((0, 1, 0, 1, 0, 1), (0, 1, 0, 1, 0, 1)),
+            ((0.0, 1.0, 0.0, 1.0, 0.0, 1.0), (0, 1, 0, 1, 0, 1)),
+            # bbox1 strictly within bbox2
+            ((-1, 2, -1, 2, -1, 2), (0, 1, 0, 1, 0, 1)),
+            # bbox2 strictly within bbox1
+            (
+                (0.25, 0.75, 0.25, 0.75, 0.25, 0.75),
+                (0.25, 0.75, 0.25, 0.75, 0.25, 0.75),
+            ),
+            # One corner of bbox1 within bbox2
+            ((0.5, 1.5, 0.5, 1.5, 0.5, 1.5), (0.5, 1, 0.5, 1, 0.5, 1)),
+            ((0.5, 1.5, -0.5, 0.5, 0.5, 1.5), (0.5, 1, 0, 0.5, 0.5, 1)),
+            ((0.5, 1.5, 0.5, 1.5, -0.5, 0.5), (0.5, 1, 0.5, 1, 0, 0.5)),
+            ((0.5, 1.5, -0.5, 0.5, -0.5, 0.5), (0.5, 1, 0, 0.5, 0, 0.5)),
+            ((-0.5, 0.5, 0.5, 1.5, 0.5, 1.5), (0, 0.5, 0.5, 1, 0.5, 1)),
+            ((-0.5, 0.5, -0.5, 0.5, 0.5, 1.5), (0, 0.5, 0, 0.5, 0.5, 1)),
+            ((-0.5, 0.5, 0.5, 1.5, -0.5, 0.5), (0, 0.5, 0.5, 1, 0, 0.5)),
+            ((-0.5, 0.5, -0.5, 0.5, -0.5, 0.5), (0, 0.5, 0, 0.5, 0, 0.5)),
+        ],
+    )
+    def test_and_intersection(
+        self,
+        test_input: Tuple[float, float, float, float, float, float],
+        expected: Tuple[float, float, float, float, float, float],
+    ) -> None:
+        bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
+        bbox2 = BoundingBox(*test_input)
+        bbox3 = BoundingBox(*expected)
+        assert (bbox1 & bbox2) == bbox3
+
+    @pytest.mark.parametrize(
+        "test_input",
+        [
+            # No overlap
+            (0.5, 1.5, 0.5, 1.5, 2, 3),
+            (0.5, 1.5, 2, 3, 0.5, 1.5),
+            (2, 3, 0.5, 1.5, 0.5, 1.5),
+            (2, 3, 2, 3, 2, 3),
+        ],
+    )
+    def test_and_no_intersection(
+        self, test_input: Tuple[float, float, float, float, float, float]
+    ) -> None:
+        bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
+        bbox2 = BoundingBox(*test_input)
+        with pytest.raises(
+            ValueError,
+            match=re.escape(f"Bounding boxes {bbox1} and {bbox2} do not overlap"),
+        ):
+            bbox1 & bbox2
 
     @pytest.mark.parametrize(
         "test_input,expected",
@@ -306,26 +445,103 @@ def test_disambiguate_timestamp(
     assert math.isclose(maxt, max_datetime)
 
 
-def test_collate_dict() -> None:
-    samples = [
-        {
-            "foo": torch.tensor(1),  # type: ignore[attr-defined]
-            "bar": torch.tensor(2),  # type: ignore[attr-defined]
-            "crs": CRS.from_epsg(3005),
-        },
-        {
-            "foo": torch.tensor(3),  # type: ignore[attr-defined]
-            "bar": torch.tensor(4),  # type: ignore[attr-defined]
-            "crs": CRS.from_epsg(3005),
-        },
-    ]
-    sample = collate_dict(samples)
-    assert torch.allclose(  # type: ignore[attr-defined]
-        sample["foo"], torch.tensor([1, 3])  # type: ignore[attr-defined]
-    )
-    assert torch.allclose(  # type: ignore[attr-defined]
-        sample["bar"], torch.tensor([2, 4])  # type: ignore[attr-defined]
-    )
+class TestCollateFunctionsMatchingKeys:
+    @pytest.fixture(scope="class")
+    def samples(self) -> List[Dict[str, Any]]:
+        return [
+            {
+                "image": torch.tensor([1, 2, 0]),  # type: ignore[attr-defined]
+                "crs": CRS.from_epsg(2000),
+            },
+            {
+                "image": torch.tensor([0, 0, 3]),  # type: ignore[attr-defined]
+                "crs": CRS.from_epsg(2001),
+            },
+        ]
+
+    def test_stack_samples(self, samples: List[Dict[str, Any]]) -> None:
+        sample = stack_samples(samples)
+        assert sample["image"].size() == torch.Size(  # type: ignore[attr-defined]
+            [2, 3]
+        )
+        assert torch.allclose(  # type: ignore[attr-defined]
+            sample["image"],
+            torch.tensor([[1, 2, 0], [0, 0, 3]]),  # type: ignore[attr-defined]
+        )
+        assert sample["crs"] == [CRS.from_epsg(2000), CRS.from_epsg(2001)]
+
+    def test_concat_samples(self, samples: List[Dict[str, Any]]) -> None:
+        sample = concat_samples(samples)
+        assert sample["image"].size() == torch.Size([6])  # type: ignore[attr-defined]
+        assert torch.allclose(  # type: ignore[attr-defined]
+            sample["image"],
+            torch.tensor([1, 2, 0, 0, 0, 3]),  # type: ignore[attr-defined]
+        )
+        assert sample["crs"] == CRS.from_epsg(2000)
+
+    def test_merge_samples(self, samples: List[Dict[str, Any]]) -> None:
+        sample = merge_samples(samples)
+        assert sample["image"].size() == torch.Size([3])  # type: ignore[attr-defined]
+        assert torch.allclose(  # type: ignore[attr-defined]
+            sample["image"], torch.tensor([1, 2, 3])  # type: ignore[attr-defined]
+        )
+        assert sample["crs"] == CRS.from_epsg(2001)
+
+
+class TestCollateFunctionsDifferingKeys:
+    @pytest.fixture(scope="class")
+    def samples(self) -> List[Dict[str, Any]]:
+        return [
+            {
+                "image": torch.tensor([1, 2, 0]),  # type: ignore[attr-defined]
+                "crs1": CRS.from_epsg(2000),
+            },
+            {
+                "mask": torch.tensor([0, 0, 3]),  # type: ignore[attr-defined]
+                "crs2": CRS.from_epsg(2001),
+            },
+        ]
+
+    def test_stack_samples(self, samples: List[Dict[str, Any]]) -> None:
+        sample = stack_samples(samples)
+        assert sample["image"].size() == torch.Size(  # type: ignore[attr-defined]
+            [1, 3]
+        )
+        assert sample["mask"].size() == torch.Size([1, 3])  # type: ignore[attr-defined]
+        assert torch.allclose(  # type: ignore[attr-defined]
+            sample["image"], torch.tensor([[1, 2, 0]])  # type: ignore[attr-defined]
+        )
+        assert torch.allclose(  # type: ignore[attr-defined]
+            sample["mask"], torch.tensor([[0, 0, 3]])  # type: ignore[attr-defined]
+        )
+        assert sample["crs1"] == [CRS.from_epsg(2000)]
+        assert sample["crs2"] == [CRS.from_epsg(2001)]
+
+    def test_concat_samples(self, samples: List[Dict[str, Any]]) -> None:
+        sample = concat_samples(samples)
+        assert sample["image"].size() == torch.Size([3])  # type: ignore[attr-defined]
+        assert sample["mask"].size() == torch.Size([3])  # type: ignore[attr-defined]
+        assert torch.allclose(  # type: ignore[attr-defined]
+            sample["image"], torch.tensor([1, 2, 0])  # type: ignore[attr-defined]
+        )
+        assert torch.allclose(  # type: ignore[attr-defined]
+            sample["mask"], torch.tensor([0, 0, 3])  # type: ignore[attr-defined]
+        )
+        assert sample["crs1"] == CRS.from_epsg(2000)
+        assert sample["crs2"] == CRS.from_epsg(2001)
+
+    def test_merge_samples(self, samples: List[Dict[str, Any]]) -> None:
+        sample = merge_samples(samples)
+        assert sample["image"].size() == torch.Size([3])  # type: ignore[attr-defined]
+        assert sample["mask"].size() == torch.Size([3])  # type: ignore[attr-defined]
+        assert torch.allclose(  # type: ignore[attr-defined]
+            sample["image"], torch.tensor([1, 2, 0])  # type: ignore[attr-defined]
+        )
+        assert torch.allclose(  # type: ignore[attr-defined]
+            sample["mask"], torch.tensor([0, 0, 3])  # type: ignore[attr-defined]
+        )
+        assert sample["crs1"] == CRS.from_epsg(2000)
+        assert sample["crs2"] == CRS.from_epsg(2001)
 
 
 def test_existing_directory(tmp_path: Path) -> None:

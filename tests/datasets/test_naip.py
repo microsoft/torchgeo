@@ -12,7 +12,13 @@ import torch.nn as nn
 from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 
-from torchgeo.datasets import NAIP, BoundingBox, NAIPChesapeakeDataModule, ZipDataset
+from torchgeo.datasets import (
+    NAIP,
+    BoundingBox,
+    IntersectionDataset,
+    NAIPChesapeakeDataModule,
+    UnionDataset,
+)
 
 
 class TestNAIP:
@@ -31,9 +37,13 @@ class TestNAIP:
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["image"], torch.Tensor)
 
-    def test_add(self, dataset: NAIP) -> None:
-        ds = dataset + dataset
-        assert isinstance(ds, ZipDataset)
+    def test_and(self, dataset: NAIP) -> None:
+        ds = dataset & dataset
+        assert isinstance(ds, IntersectionDataset)
+
+    def test_or(self, dataset: NAIP) -> None:
+        ds = dataset | dataset
+        assert isinstance(ds, UnionDataset)
 
     def test_plot(self, dataset: NAIP) -> None:
         query = dataset.bounds
