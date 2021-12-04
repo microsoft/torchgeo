@@ -7,7 +7,7 @@ trainer:
 experiment:
   task: "oscd"
   module:
-    loss: "ce"
+    loss: "jaccard"
     segmentation_model: "unet"
     encoder_name: "resnet18"
     encoder_weights: "imagenet"
@@ -22,3 +22,4 @@ experiment:
     train_batch_size: 2
     num_workers: 6
     val_split_pct: 0.1
+    bands: "all"
