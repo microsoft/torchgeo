@@ -23,4 +23,4 @@ experiment:
     num_workers: 6
     val_split_pct: 0.1
     bands: "all"
-    num_patches_per_tile: 64
+    num_patches_per_tile: 128
