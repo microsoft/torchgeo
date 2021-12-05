@@ -1,4 +1,4 @@
-name: torchgeo38
+name: torchgeo
 channels:
   - conda-forge
   - open3d-admin
