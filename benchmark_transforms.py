@@ -8,14 +8,49 @@ import csv
 import os
 import statistics
 import time
+from typing import Callable, Dict, Tuple
 
 import kornia.augmentation as K
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
+from torch import Tensor
+from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
 from torchgeo.transforms import AugmentationSequential, indices
+
+
+class DummyDataset(Dataset):
+    def __init__(
+        self,
+        num_samples: int,
+        input_shape: Tuple[int, int, int],
+        transforms: Callable = nn.Identity(),
+        masks: bool = False,
+    ) -> None:
+        self.transforms = transforms
+        self.load_masks = masks
+        self.images = torch.randn(num_samples, 1, *input_shape).to(
+            torch.float
+        )  # type: ignore[attr-defined]
+        self.masks = torch.randint(  # type: ignore[attr-defined]
+            0, 10, size=(num_samples, 1, *input_shape)
+        ).to(
+            torch.float
+        )  # type: ignore[attr-defined]
+
+    def __len__(self) -> int:
+        return self.images.shape[0]
+
+    def __getitem__(self, idx: int) -> Dict[str, Tensor]:
+        image = self.images[idx]
+        sample = {"image": image}
+        if self.load_masks:
+            mask = self.masks[idx]
+            sample["mask"] = mask
+        sample = self.transforms(sample)
+        return sample
 
 
 def set_up_parser() -> argparse.ArgumentParser:
@@ -30,10 +65,10 @@ def set_up_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-d",
         "--device",
-        choices=["cpu", "cuda"],
+        choices=["cpu", "cpu-multiproc", "cuda"],
         default="cuda",
         type=str,
-        help="CPU or GPU",
+        help="CPU, CPU with parallelism, or GPU",
     )
     parser.add_argument(
         "-i",
@@ -43,19 +78,9 @@ def set_up_parser() -> argparse.ArgumentParser:
         help="number of runs to perform for averaging",
     )
     parser.add_argument(
-        "-c",
-        "--channels",
-        type=int,
-        default=12,
-        help="number of channels in the image",
+        "-c", "--channels", type=int, default=12, help="number of channels in the image"
     )
-    parser.add_argument(
-        "-s",
-        "--shape",
-        type=int,
-        default=128,
-        help="image shape",
-    )
+    parser.add_argument("-s", "--shape", type=int, default=128, help="image shape")
     parser.add_argument(
         "-b",
         "--batch-size",
@@ -64,10 +89,14 @@ def set_up_parser() -> argparse.ArgumentParser:
         help="number of samples in each mini-batch",
     )
     parser.add_argument(
-        "--seed",
-        default=0,
+        "-w",
+        "--num-workers",
+        default=4,
         type=int,
-        help="random seed for reproducibility",
+        help="number of dataloader works (only valid for device=cpu-multiproc)",
+    )
+    parser.add_argument(
+        "--seed", default=0, type=int, help="random seed for reproducibility"
     )
     parser.add_argument(
         "--output-fn",
@@ -77,16 +106,10 @@ def set_up_parser() -> argparse.ArgumentParser:
         metavar="FILE",
     )
     parser.add_argument(
-        "-m",
-        "--mask",
-        action="store_true",
-        help="Benchmark with masks in the batch",
+        "-m", "--mask", action="store_true", help="Benchmark with masks in the batch"
     )
     parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="print results to stdout",
+        "-v", "--verbose", action="store_true", help="print results to stdout"
     )
     return parser
 
@@ -102,20 +125,7 @@ def run(args: argparse.Namespace) -> float:
     Returns:
         the execution time of a single run
     """
-    device = torch.device(args.device)  # type: ignore[attr-defined]
-    image = torch.randn(args.batch_size, args.channels, *(args.shape, args.shape))
-    image = image.to(device)
-    batch = dict(image=image)
-    data_keys = ["image"]
-
-    if args.mask:
-        mask = torch.randint(  # type: ignore[attr-defined]
-            0, 10, size=(args.batch_size, 1, *(args.shape, args.shape))
-        )
-        mask = mask.to(torch.float).to(device)  # type: ignore[attr-defined]
-        batch["mask"] = mask
-        data_keys.append("mask")
-
+    data_keys = ["image", "mask"] if args.mask else ["image"]
     augmentations = AugmentationSequential(
         K.RandomHorizontalFlip(p=1.0),
         K.RandomVerticalFlip(p=1.0),
@@ -130,11 +140,41 @@ def run(args: argparse.Namespace) -> float:
         indices.AppendNDVI(index_red=0, index_nir=1),
         indices.AppendNDWI(index_green=0, index_nir=1),
         augmentations,
-    ).to(device)
+    )
 
-    tic = time.time()
-    transforms(batch)
-    toc = time.time()
+    if args.device != "cpu-multiproc":
+        device = torch.device(args.device)  # type: ignore[attr-defined]
+        image = torch.randn(args.batch_size, args.channels, *(args.shape, args.shape))
+        image = image.to(device)
+        batch = dict(image=image)
+        if args.mask:
+            mask = torch.randint(  # type: ignore[attr-defined]
+                0, 10, size=(args.batch_size, 1, *(args.shape, args.shape))
+            )
+            mask = mask.to(torch.float).to(device)  # type: ignore[attr-defined]
+            batch["mask"] = mask
+
+        tic = time.time()
+        transforms(batch)
+        toc = time.time()
+    else:
+        dataset = DummyDataset(
+            num_samples=args.batch_size,
+            input_shape=(args.channels, args.shape, args.shape),
+            transforms=transforms,
+            masks=args.mask,
+        )
+        dataloader = DataLoader(
+            dataset,
+            batch_size=args.batch_size,
+            shuffle=False,
+            num_workers=args.num_workers,
+        )
+        dataloader = iter(dataloader)
+        tic = time.time()
+        next(dataloader)
+        toc = time.time()
+
     duration = toc - tic
     return duration
 
