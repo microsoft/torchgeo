@@ -37,6 +37,7 @@ from .geo import (
     VisionDataset,
 )
 from .gid15 import GID15
+from .idtrees import IDTReeS
 from .landcoverai import LandCoverAI, LandCoverAIDataModule
 from .landsat import (
     Landsat,
@@ -115,6 +116,7 @@ __all__ = (
     "EuroSAT",
     "EuroSATDataModule",
     "GID15",
+    "IDTReeS",
     "LandCoverAI",
     "LandCoverAIDataModule",
     "LEVIRCDPlus",

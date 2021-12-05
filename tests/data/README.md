@@ -91,3 +91,28 @@ masks = np.random.randint(low=0, high=num_classes, size=(1, 1)).astype(np.uint8)
 f.create_dataset("images", data=images)
 f.create_dataset("masks", data=masks)
 f.close()
+```
+
+### LAS Point Cloud files
+
+```python
+import laspy
+
+num_points = 4
+
+las = laspy.read("0.las")
+las.points = las.points[:num_points]
+
+points = np.random.randint(low=0, high=100, size=(num_points,), dtype=las.x.dtype)
+las.x = points
+las.y = points
+las.z = points
+
+if hasattr(las, "red"):
+    colors = np.random.randint(low=0, high=10, size=(num_points,), dtype=las.red.dtype)
+    las.red = colors
+    las.green = colors
+    las.blue = colors
+
+las.write("0.las")
+```
