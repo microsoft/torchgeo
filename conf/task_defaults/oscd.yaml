@@ -1,8 +1,7 @@
 experiment:
-  name: "oscd"
   task: "oscd"
   module:
-    loss: "bce"
+    loss: "jaccard"
     segmentation_model: "unet"
     encoder_name: "resnet18"
     encoder_weights: "imagenet"
@@ -12,8 +11,11 @@ experiment:
     in_channels: 26
     num_classes: 2
     num_filters: 256
-    ignore_zeros: False
+    ignore_zeros: True
   datamodule:
     root_dir: "tests/data/oscd"
     batch_size: 32
     num_workers: 0
+    val_split_pct: 0.1
+    bands: "all"
+    num_patches_per_tile: 128
