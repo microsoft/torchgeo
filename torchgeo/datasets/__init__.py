@@ -55,6 +55,7 @@ from .landsat import (
 from .levircd import LEVIRCDPlus
 from .loveda import LoveDA, LoveDADataModule
 from .naip import NAIP, NAIPChesapeakeDataModule
+from .nasa_marine_debris import NASAMarineDebris, NASAMarineDebrisDataModule
 from .nwpu import VHR10
 from .oscd import OSCD, OSCDDataModule
 from .patternnet import PatternNet
@@ -123,6 +124,8 @@ __all__ = (
     "LEVIRCDPlus",
     "LoveDA",
     "LoveDADataModule",
+    "NASAMarineDebris",
+    "NASAMarineDebrisDataModule",
     "OSCD",
     "OSCDDataModule",
     "PatternNet",
