@@ -140,6 +140,12 @@ LoveDA (Land-cOVEr Domain Adaptive semantic segmentation)
 .. autoclass:: LoveDA
 .. autoclass:: LoveDADataModule
 
+NASA Marine Debris
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: NASAMarineDebris
+.. autoclass:: NASAMarineDebrisDataModule
+
 OSCD (Onera Satellite Change Detection)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
