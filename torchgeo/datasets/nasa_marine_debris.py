@@ -24,6 +24,14 @@ from .utils import dataset_split, download_radiant_mlhub_dataset, extract_archiv
 DataLoader.__module__ = "torch.utils.data"
 
 
+
+def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
+    output: Dict[str, Any] = {}
+    output["image"] = torch.stack([sample["image"] for sample in batch])
+    output["boxes"] = [sample["boxes"] for sample in batch]
+    return output
+
+
 class NASAMarineDebris(VisionDataset):
     """NASA Marine Debris dataset.
 
@@ -338,6 +346,7 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=True,
+            collate_fn=collate_fn
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -351,6 +360,7 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=False,
+            collate_fn=collate_fn
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
@@ -364,4 +374,5 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=False,
+            collate_fn=collate_fn
         )
