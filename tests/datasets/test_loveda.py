@@ -6,13 +6,13 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
+import torchgeo.datasets.utils
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
-
-import torchgeo.datasets.utils
 from torchgeo.datasets import LoveDA
 
 
@@ -28,9 +28,7 @@ class TestLoveDA:
         tmp_path: Path,
         request: SubRequest,
     ) -> LoveDA:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.utils, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         md5 = "3d5b1373ef9a3084ec493b9b2056fe07"
 
         info_dict = {
@@ -53,11 +51,11 @@ class TestLoveDA:
 
         monkeypatch.setattr(
             LoveDA, "info_dict", info_dict
-        )  # type: ignore[attr-defined]
+        )
 
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return LoveDA(
             root=root, split=split, transforms=transforms, download=True, checksum=True
         )
@@ -90,3 +88,25 @@ class TestLoveDA:
             RuntimeError, match="Dataset not found at root directory or corrupted."
         ):
             LoveDA(str(tmp_path))
+
+    def test_plot(self, dataset: LoveDA) -> None:
+        # dataset does not have a batch size dimension
+        img = dataset[0]["image"].unsqueeze(0)
+        if dataset.split != "test":  # training and validation images
+            mask = dataset[0]["mask"].unsqueeze(0)
+            batch = {"image": img, "mask": mask}
+        else:  # test images
+            batch = {"image": dataset[0]["image"].unsqueeze(0)}
+        dataset.plot(batch, suptitle="Test")
+        plt.close()
+
+        # now testing with batch size of 2
+        if dataset.split != "test":
+            batch = {
+                "image": torch.cat((img, img), dim=0),
+                "mask": torch.cat((mask, mask), dim=0),
+            }
+        else:
+            batch = {"image": torch.cat((img, img), dim=0)}
+        dataset.plot(batch, suptitle="Test")
+        plt.close()

@@ -217,7 +217,7 @@ class LoveDA(VisionDataset):
         filename = os.path.join(path)
         with Image.open(filename) as img:
             array = np.array(img.convert("RGB"))
-            tensor: Tensor = torch.from_numpy(array)
+            tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -234,7 +234,7 @@ class LoveDA(VisionDataset):
         filename = os.path.join(path)
         with Image.open(filename) as img:
             array = np.array(img.convert("L"))
-            tensor: Tensor = torch.from_numpy(array).long()
+            tensor = torch.from_numpy(array).long()
             return tensor
 
     def _check_integrity(self) -> bool:
@@ -275,17 +275,37 @@ class LoveDA(VisionDataset):
             sample: a sample returne by :meth:`__getitem__`
             suptitle: optional suptitle to use for figure
         """
-        images, masks = sample["image"], sample["mask"]
+        if self.split != "test":
+            images, masks = sample["image"], sample["mask"]
+            nrows = 2
+        else:
+            images = sample["image"]
+            nrows = 1
+
         batch_size = images.shape[0]
         fig, axs = plt.subplots(
-            nrows=2, ncols=batch_size, figsize=(batch_size * 10, 10)
+            nrows=nrows, ncols=batch_size, figsize=(batch_size * 10, 10)
         )
 
         for i in range(batch_size):
-            axs[0, i].imshow(images[i, :, :, :].permute(1, 2, 0))
-            axs[0, i].axis("off")
-            axs[1, i].imshow(masks[i, :, :])
-            axs[1, i].axis("off")
+            if self.split != "test":
+                if batch_size == 1:
+                    axs[i].imshow(images[i, :, :, :].permute(1, 2, 0))
+                    axs[i].axis("off")
+                    axs[i].imshow(masks[i, :, :])
+                    axs[i].axis("off")
+                else:
+                    axs[0, i].imshow(images[i, :, :, :].permute(1, 2, 0))
+                    axs[0, i].axis("off")
+                    axs[1, i].imshow(masks[i, :, :])
+                    axs[1, i].axis("off")
+            else:
+                if batch_size == 1:
+                    axs.imshow(images[i, :, :, :].permute(1, 2, 0))
+                    axs.axis("off")
+                else:
+                    axs[i].imshow(images[i, :, :, :].permute(1, 2, 0))
+                    axs[i].axis("off")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
