@@ -40,20 +40,16 @@ class LoveDA(VisionDataset):
     3. road
     4. water
     5. barren
-    6. forestn
+    6. forest
     7. agriculture
 
     No-data regions assigned with 0 and should be ignored.
 
     If you use this dataset in your research, please cite the following paper:
 
-    * <https://openreview.net/forum?id=bLBIbVaGDu>
+    * <https://arxiv.org/abs/2110.08733>
     """
 
-    # url of train split
-    url = "https://drive.google.com/file/d/1xbnKVN5aRMlpxISXgutzQO0hPT_b4lMi/view?usp=sharing"
-    # md5 of train split
-    md5 = "de2b196043ed9b4af1690b3f9a7d558f"
     scenes = ["urban", "rural"]
     splits = ["train", "val", "test"]
 
@@ -90,7 +86,7 @@ class LoveDA(VisionDataset):
         self,
         root: str = "./data",
         split: str = "val",
-        scene: list = ["urban", "rural"],
+        scene: List = ["urban", "rural"],
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
