@@ -17,7 +17,7 @@ from .utils import download_and_extract_archive
 
 
 class LoveDA(VisionDataset):
-    """LoveDA dataset
+    """LoveDA dataset.
 
     The LoveDA <https://github.com/Junjue-Wang/LoveDA> datataset is a semantic segmentation
     dataset.
@@ -91,7 +91,7 @@ class LoveDA(VisionDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initializes a new LoveDA dataset instance
+        """Initialize a new LoveDA dataset instance.
 
         Args:
             root: root directory where dataset can be found
@@ -106,6 +106,7 @@ class LoveDA(VisionDataset):
             AssertionError if ``scene`` argument is invalid
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
+
         """
         assert split in self.splits
         assert set(scene).intersection(
@@ -139,13 +140,14 @@ class LoveDA(VisionDataset):
         self.files = self._load_files(self.scene_paths, self.split)
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
-        """ Return an index within the dataset.
+        """Return an index within the dataset.
 
         Args:
             index: index to return
 
         Returns:
             sample: image and mask at that index with image of dimension 3x1024x1024 and mask of dimension 1024x1024
+
         """
         files = self.files[index]
         image = self._load_image(files["image"])
@@ -162,20 +164,22 @@ class LoveDA(VisionDataset):
         return sample
 
     def __len__(self) -> int:
-        """ Return the number of datapoints in the dataset
+        """Return the number of datapoints in the dataset.
 
         Returns:
             length of dataset
+
         """
         return len(self.files)
 
-    def _load_files(self, scene_paths: list, split: str) -> List[Dict[str, str]]:
-        """ Return the paths of the files in the dataset.
+    def _load_files(self, scene_paths: List, split: str) -> List[Dict[str, str]]:
+        """Return the paths of the files in the dataset.
 
         Args:
             scene_paths: contains one or two paths, depending on whether user has specified
                          only 'rural', 'only 'urban' or both
             split: subset of dataset, one of [train, val, test]
+
         """
         images = []
 
@@ -195,13 +199,14 @@ class LoveDA(VisionDataset):
         return files
 
     def _load_image(self, path: str) -> Tensor:
-        """ Load a single image.
+        """Load a single image.
 
         Args:
             path: path to the image
 
         Returns:
             tensor: the loaded image
+
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
@@ -212,12 +217,13 @@ class LoveDA(VisionDataset):
             return tensor
 
     def _load_target(self, path: str) -> Tensor:
-        """ Load a single mask corresponding to image
+        """Load a single mask corresponding to image.
 
         Args:
             path: path to the mask
         Returns:
             tensor: the mask of the image
+
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
@@ -227,12 +233,12 @@ class LoveDA(VisionDataset):
             return tensor
 
     def _check_integrity(self) -> bool:
-        """Checks the integrity of the dataset structure.
+        """Check the integrity of the dataset structure.
 
         Returns:
             True if the dataset directories and split files are found, else False
-        """
 
+        """
         for s in self.scene_paths:
             if not os.path.exists(s):
                 return False
@@ -240,10 +246,11 @@ class LoveDA(VisionDataset):
         return True
 
     def _download(self) -> None:
-        """Download the dataset and extract it
+        """Download the dataset and extract it.
 
         Raises:
             AssertionError: if the checksum of split.py does not match
+
         """
         if self._check_integrity():
             print("Files already downloaded and verified")
