@@ -28,7 +28,9 @@ class TestLoveDA:
         tmp_path: Path,
         request: SubRequest,
     ) -> LoveDA:
-        monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
+        monkeypatch.setattr(
+            torchgeo.datasets.utils, "download_url", download_url
+        )  # type: ignore[attr-defined]
         md5 = "3d5b1373ef9a3084ec493b9b2056fe07"
 
         info_dict = {
@@ -51,11 +53,11 @@ class TestLoveDA:
 
         monkeypatch.setattr(
             LoveDA, "info_dict", info_dict
-        )
+        )  # type: ignore[attr-defined]
 
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()
+        transforms = nn.Identity()  # type: ignore[attr-defined]
         return LoveDA(
             root=root, split=split, transforms=transforms, download=True, checksum=True
         )
@@ -103,10 +105,12 @@ class TestLoveDA:
         # now testing with batch size of 2
         if dataset.split != "test":
             batch = {
-                "image": torch.cat((img, img), dim=0),
-                "mask": torch.cat((mask, mask), dim=0),
+                "image": torch.cat((img, img), dim=0),  # type: ignore[attr-defined]
+                "mask": torch.cat((mask, mask), dim=0),  # type: ignore[attr-defined]
             }
         else:
-            batch = {"image": torch.cat((img, img), dim=0)}
+            batch = {
+                "image": torch.cat((img, img), dim=0)
+            }  # type: ignore[attr-defined]
         dataset.plot(batch, suptitle="Test")
         plt.close()

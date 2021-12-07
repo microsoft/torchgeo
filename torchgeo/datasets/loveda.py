@@ -217,7 +217,7 @@ class LoveDA(VisionDataset):
         filename = os.path.join(path)
         with Image.open(filename) as img:
             array = np.array(img.convert("RGB"))
-            tensor = torch.from_numpy(array)
+            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -234,7 +234,9 @@ class LoveDA(VisionDataset):
         filename = os.path.join(path)
         with Image.open(filename) as img:
             array = np.array(img.convert("L"))
-            tensor = torch.from_numpy(array).long()
+            tensor: Tensor = torch.from_numpy(
+                array
+            ).long()  # type: ignore[attr-defined]
             return tensor
 
     def _check_integrity(self) -> bool:
