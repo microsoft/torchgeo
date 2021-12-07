@@ -7,13 +7,12 @@ import glob
 import os
 from typing import Callable, Dict, List, Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
-
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
 
 from .geo import VisionDataset
 from .utils import download_and_extract_archive
@@ -58,17 +57,20 @@ class LoveDA(VisionDataset):
 
     info_dict = {
         "train": {
-            "url": "https://drive.google.com/file/d/1xbnKVN5aRMlpxISXgutzQO0hPT_b4lMi/view?usp=sharing",
+            "url": "https://drive.google.com/file/d/1xbnKVN5aRMl \
+            pxISXgutzQO0hPT_b4lMi/view?usp=sharing",
             "filename": "Train.zip",
             "md5": "de2b196043ed9b4af1690b3f9a7d558f",
         },
         "val": {
-            "url": "https://drive.google.com/file/d/1yTMfeon1Oc4ia9oCX7r5Yq4C39I0oO_b/view?usp=sharing",
+            "url": "https://drive.google.com/file/d/1yTMfeon1Oc4 \
+                ia9oCX7r5Yq4C39I0oO_b/view?usp=sharing",
             "filename": "Val.zip",
             "md5": "84cae2577468ff0b5386758bb386d31d",
         },
         "test": {
-            "url": "https://drive.google.com/file/d/1ON7bWat7u9fGV16stAosdmzMIpcydnVC/view?usp=sharing",
+            "url": "https://drive.google.com/file/d/1ON7bWat7u9f \
+                GV16stAosdmzMIpcydnVC/view?usp=sharing",
             "filename": "Test.zip",
             "md5": "a489be0090465e01fb067795d24e6b47",
         },
@@ -266,20 +268,18 @@ class LoveDA(VisionDataset):
             md5=self.md5 if self.checksum else None,
         )
 
-    def plot(
-            self,
-            sample: Dict[str, Tensor],
-            suptitle: Optional[str] = None,
-    ) -> Figure:
+    def plot(self, sample: Dict[str, Tensor], suptitle: Optional[str] = None) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: a sample returne by :meth:`__getitem__`
             suptitle: optional suptitle to use for figure
         """
-        images, masks = sample['image'], sample['mask']
+        images, masks = sample["image"], sample["mask"]
         batch_size = images.shape[0]
-        fig, axs = plt.subplots(nrows=2, ncols=batch_size, figsize=(batch_size * 10, 10))
+        fig, axs = plt.subplots(
+            nrows=2, ncols=batch_size, figsize=(batch_size * 10, 10)
+        )
 
         for i in range(batch_size):
             axs[0, i].imshow(images[i, :, :, :].permute(1, 2, 0))
