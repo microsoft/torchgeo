@@ -1,7 +1,7 @@
 program:
   output_dir: output/oscd/
   log_dir: output/oscd/logs/
-  data_dir: data
+  data_dir: tests/data/oscd
   overwrite: true
   seed: 1
 
