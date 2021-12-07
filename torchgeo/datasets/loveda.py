@@ -12,6 +12,9 @@ import torch
 from PIL import Image
 from torch import Tensor
 
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+
 from .geo import VisionDataset
 from .utils import download_and_extract_archive
 
@@ -19,13 +22,13 @@ from .utils import download_and_extract_archive
 class LoveDA(VisionDataset):
     """LoveDA dataset.
 
-    The LoveDA <https://github.com/Junjue-Wang/LoveDA> datataset is a semantic segmentation
-    dataset.
+    The LoveDA <https://github.com/Junjue-Wang/LoveDA> datataset is a
+    semantic segmentation dataset.
 
     Dataset features:
 
-    * 2713 urban scene and 3274 rural scene HSR images with a total of 166768 annotated objects
-    from Nanjing, Changzhou and Wuhan cities
+    * 2713 urban scene and 3274 rural scene HSR images with a total
+    of 166768 annotated objects from Nanjing, Changzhou and Wuhan cities
     * dataset comes with predefined train, validation, and test set
 
     Dataset format:
@@ -146,7 +149,8 @@ class LoveDA(VisionDataset):
             index: index to return
 
         Returns:
-            sample: image and mask at that index with image of dimension 3x1024x1024 and mask of dimension 1024x1024
+            sample: image and mask at that index with image of dimension 3x1024x1024
+                    and mask of dimension 1024x1024
 
         """
         files = self.files[index]
@@ -172,12 +176,12 @@ class LoveDA(VisionDataset):
         """
         return len(self.files)
 
-    def _load_files(self, scene_paths: List, split: str) -> List[Dict[str, str]]:
+    def _load_files(self, scene_paths: List[str], split: str) -> List[Dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
-            scene_paths: contains one or two paths, depending on whether user has specified
-                         only 'rural', 'only 'urban' or both
+            scene_paths: contains one or two paths, depending on whether user has
+                         specified only 'rural', 'only 'urban' or both
             split: subset of dataset, one of [train, val, test]
 
         """
@@ -211,7 +215,7 @@ class LoveDA(VisionDataset):
         filename = os.path.join(path)
         with Image.open(filename) as img:
             array = np.array(img.convert("RGB"))
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor: Tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -228,8 +232,7 @@ class LoveDA(VisionDataset):
         filename = os.path.join(path)
         with Image.open(filename) as img:
             array = np.array(img.convert("L"))
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
-            tensor = tensor.to(torch.long)  # type: ignore[attr-defines]
+            tensor: Tensor = torch.from_numpy(array).long()
             return tensor
 
     def _check_integrity(self) -> bool:
@@ -262,3 +265,29 @@ class LoveDA(VisionDataset):
             filename=self.filename,
             md5=self.md5 if self.checksum else None,
         )
+
+    def plot(
+            self,
+            sample: Dict[str, Tensor],
+            suptitle: Optional[str] = None,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returne by :meth:`__getitem__`
+            suptitle: optional suptitle to use for figure
+        """
+        images, masks = sample['image'], sample['mask']
+        batch_size = images.shape[0]
+        fig, axs = plt.subplots(nrows=2, ncols=batch_size, figsize=(batch_size * 10, 10))
+
+        for i in range(batch_size):
+            axs[0, i].imshow(images[i, :, :, :].permute(1, 2, 0))
+            axs[0, i].axis("off")
+            axs[1, i].imshow(masks[i, :, :])
+            axs[1, i].axis("off")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
