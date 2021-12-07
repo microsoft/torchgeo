@@ -28,9 +28,9 @@ class TestLoveDA:
         tmp_path: Path,
         request: SubRequest,
     ) -> LoveDA:
-        monkeypatch.setattr(
+        monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.utils, "download_url", download_url
-        )  # type: ignore[attr-defined]
+        )
         md5 = "3d5b1373ef9a3084ec493b9b2056fe07"
 
         info_dict = {
@@ -51,9 +51,9 @@ class TestLoveDA:
             },
         }
 
-        monkeypatch.setattr(
+        monkeypatch.setattr(  # type: ignore[attr-defined]
             LoveDA, "info_dict", info_dict
-        )  # type: ignore[attr-defined]
+        )
 
         root = str(tmp_path)
         split = request.param
@@ -110,7 +110,7 @@ class TestLoveDA:
             }
         else:
             batch = {
-                "image": torch.cat((img, img), dim=0)
-            }  # type: ignore[attr-defined]
+                "image": torch.cat((img, img), dim=0)  # type: ignore[attr-defined]
+            }
         dataset.plot(batch, suptitle="Test")
         plt.close()

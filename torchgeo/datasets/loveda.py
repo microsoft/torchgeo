@@ -50,6 +50,8 @@ class LoveDA(VisionDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * <https://arxiv.org/abs/2110.08733>
+
+    .. versionadded:: 0.2
     """
 
     scenes = ["urban", "rural"]
@@ -89,7 +91,7 @@ class LoveDA(VisionDataset):
 
     def __init__(
         self,
-        root: str = "./data",
+        root: str = "data",
         split: str = "val",
         scene: List[str] = ["urban", "rural"],
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
