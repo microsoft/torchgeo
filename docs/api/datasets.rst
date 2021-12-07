@@ -10,7 +10,7 @@ In :mod:`torchgeo`, we define two types of datasets: :ref:`Geospatial Datasets` 
 Geospatial Datasets
 -------------------
 
-:class:`GeoDataset` is designed for datasets that contain geospatial information, like latitude, longitude, coordinate system, and projection. Datasets containing this kind of information can be combined using :class:`ZipDataset`.
+:class:`GeoDataset` is designed for datasets that contain geospatial information, like latitude, longitude, coordinate system, and projection. Datasets containing this kind of information can be combined using :class:`IntersectionDataset` and :class:`UnionDataset`.
 
 Canadian Building Footprints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -117,6 +117,11 @@ GID-15 (Gaofen Image Dataset)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: GID15
+
+IDTReeS
+^^^^^^^
+
+.. autoclass:: IDTReeS
 
 LandCover.ai (Land Cover from Aerial Imagery)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -245,13 +250,24 @@ VisionClassificationDataset
 
 .. autoclass:: VisionClassificationDataset
 
-ZipDataset
-^^^^^^^^^^
+IntersectionDataset
+^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: ZipDataset
+.. autoclass:: IntersectionDataset
+
+UnionDataset
+^^^^^^^^^^^^
+
+.. autoclass:: UnionDataset
 
 Utilities
 ---------
 
 .. autoclass:: BoundingBox
-.. autofunction:: collate_dict
+
+Collation Functions
+^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: stack_samples
+.. autofunction:: concat_samples
+.. autofunction:: merge_samples

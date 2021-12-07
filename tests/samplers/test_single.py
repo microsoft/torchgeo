@@ -28,7 +28,7 @@ class CustomGeoSampler(GeoSampler):
 class CustomGeoDataset(GeoDataset):
     def __init__(self, crs: CRS = CRS.from_epsg(3005), res: float = 1) -> None:
         super().__init__()
-        self.crs = crs
+        self._crs = crs
         self.res = res
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, BoundingBox]:
@@ -46,6 +46,11 @@ class TestGeoSampler:
     def test_len(self, sampler: CustomGeoSampler) -> None:
         assert len(sampler) == 2
 
+    def test_abstract(self) -> None:
+        ds = CustomGeoDataset()
+        with pytest.raises(TypeError, match="Can't instantiate abstract class"):
+            GeoSampler(ds)  # type: ignore[abstract]
+
     @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(self, sampler: CustomGeoSampler, num_workers: int) -> None:
@@ -53,10 +58,6 @@ class TestGeoSampler:
         dl = DataLoader(ds, sampler=sampler, num_workers=num_workers)
         for _ in dl:
             continue
-
-    def test_abstract(self) -> None:
-        with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            GeoSampler(None)  # type: ignore[abstract]
 
 
 class TestRandomGeoSampler:
@@ -82,6 +83,15 @@ class TestRandomGeoSampler:
 
     def test_len(self, sampler: RandomGeoSampler) -> None:
         assert len(sampler) == sampler.length
+
+    def test_roi(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        ds.index.insert(1, (5, 15, 5, 15, 5, 15))
+        roi = BoundingBox(0, 10, 0, 10, 0, 10)
+        sampler = RandomGeoSampler(ds, 2, 10, roi=roi)
+        for query in sampler:
+            assert query in roi
 
     @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
@@ -116,6 +126,21 @@ class TestGridGeoSampler:
                 query.maxt - query.mint, sampler.roi.maxt - sampler.roi.mint
             )
 
+    def test_len(self, sampler: GridGeoSampler) -> None:
+        rows = int((10 - sampler.size[0]) // sampler.stride[0]) + 1
+        cols = int((20 - sampler.size[1]) // sampler.stride[1]) + 1
+        length = rows * cols * 2
+        assert len(sampler) == length
+
+    def test_roi(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        ds.index.insert(1, (5, 15, 5, 15, 5, 15))
+        roi = BoundingBox(0, 10, 0, 10, 0, 10)
+        sampler = GridGeoSampler(ds, 2, 1, roi=roi)
+        for query in sampler:
+            assert query in roi
+
     @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(self, sampler: GridGeoSampler, num_workers: int) -> None:
@@ -123,9 +148,3 @@ class TestGridGeoSampler:
         dl = DataLoader(ds, sampler=sampler, num_workers=num_workers)
         for _ in dl:
             continue
-
-    def test_len(self, sampler: GridGeoSampler) -> None:
-        rows = int((10 - sampler.size[0]) // sampler.stride[0]) + 1
-        cols = int((20 - sampler.size[1]) // sampler.stride[1]) + 1
-        length = rows * cols * 2
-        assert len(sampler) == length

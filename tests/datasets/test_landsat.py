@@ -12,7 +12,7 @@ import torch.nn as nn
 from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 
-from torchgeo.datasets import BoundingBox, Landsat8, ZipDataset
+from torchgeo.datasets import BoundingBox, IntersectionDataset, Landsat8, UnionDataset
 
 
 class TestLandsat8:
@@ -35,9 +35,13 @@ class TestLandsat8:
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["image"], torch.Tensor)
 
-    def test_add(self, dataset: Landsat8) -> None:
-        ds = dataset + dataset
-        assert isinstance(ds, ZipDataset)
+    def test_and(self, dataset: Landsat8) -> None:
+        ds = dataset & dataset
+        assert isinstance(ds, IntersectionDataset)
+
+    def test_or(self, dataset: Landsat8) -> None:
+        ds = dataset | dataset
+        assert isinstance(ds, UnionDataset)
 
     def test_plot(self, dataset: Landsat8) -> None:
         query = dataset.bounds

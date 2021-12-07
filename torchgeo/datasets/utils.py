@@ -4,6 +4,7 @@
 """Common dataset utilities."""
 
 import bz2
+import collections
 import contextlib
 import gzip
 import lzma
@@ -11,8 +12,21 @@ import os
 import sys
 import tarfile
 import zipfile
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple, Union, cast
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+    cast,
+    overload,
+)
 
 import numpy as np
 import rasterio
@@ -30,7 +44,9 @@ __all__ = (
     "BoundingBox",
     "disambiguate_timestamp",
     "working_dir",
-    "collate_dict",
+    "stack_samples",
+    "concat_samples",
+    "merge_samples",
     "rasterio_loader",
     "dataset_split",
     "sort_sentinel2_bands",
@@ -184,96 +200,133 @@ def download_radiant_mlhub_collection(
     collection.download(output_dir=download_root, api_key=api_key)
 
 
-class BoundingBox(Tuple[float, float, float, float, float, float]):
-    """Data class for indexing spatiotemporal data.
+@dataclass(frozen=True)
+class BoundingBox:
+    """Data class for indexing spatiotemporal data."""
 
-    Attributes:
-        minx (float): western boundary
-        maxx (float): eastern boundary
-        miny (float): southern boundary
-        maxy (float): northern boundary
-        mint (float): earliest boundary
-        maxt (float): latest boundary
-    """
+    #: western boundary
+    minx: float
+    #: eastern boundary
+    maxx: float
+    #: southern boundary
+    miny: float
+    #: northern boundary
+    maxy: float
+    #: earliest boundary
+    mint: float
+    #: latest boundary
+    maxt: float
 
-    def __new__(
-        cls,
-        minx: float,
-        maxx: float,
-        miny: float,
-        maxy: float,
-        mint: float,
-        maxt: float,
-    ) -> "BoundingBox":
-        """Create a new instance of BoundingBox.
-
-        Args:
-            minx: western boundary
-            maxx: eastern boundary
-            miny: southern boundary
-            maxy: northern boundary
-            mint: earliest boundary
-            maxt: latest boundary
+    def __post_init__(self) -> None:
+        """Validate the arguments passed to :meth:`__init__`.
 
         Raises:
             ValueError: if bounding box is invalid
                 (minx > maxx, miny > maxy, or mint > maxt)
         """
-        if minx > maxx:
-            raise ValueError(f"Bounding box is invalid: 'minx={minx}' > 'maxx={maxx}'")
-        if miny > maxy:
-            raise ValueError(f"Bounding box is invalid: 'miny={miny}' > 'maxy={maxy}'")
-        if mint > maxt:
-            raise ValueError(f"Bounding box is invalid: 'mint={mint}' > 'maxt={maxt}'")
+        if self.minx > self.maxx:
+            raise ValueError(
+                f"Bounding box is invalid: 'minx={self.minx}' > 'maxx={self.maxx}'"
+            )
+        if self.miny > self.maxy:
+            raise ValueError(
+                f"Bounding box is invalid: 'miny={self.miny}' > 'maxy={self.maxy}'"
+            )
+        if self.mint > self.maxt:
+            raise ValueError(
+                f"Bounding box is invalid: 'mint={self.mint}' > 'maxt={self.maxt}'"
+            )
 
-        # Using super() doesn't work with mypy, see:
-        # https://stackoverflow.com/q/60611012/5828163
-        return tuple.__new__(cls, [minx, maxx, miny, maxy, mint, maxt])
+    # https://github.com/PyCQA/pydocstyle/issues/525
+    @overload
+    def __getitem__(self, key: int) -> float:  # noqa: D105
+        pass
 
-    def __init__(
-        self,
-        minx: float,
-        maxx: float,
-        miny: float,
-        maxy: float,
-        mint: float,
-        maxt: float,
-    ) -> None:
-        """Initialize a new instance of BoundingBox.
+    @overload
+    def __getitem__(self, key: slice) -> List[float]:  # noqa: D105
+        pass
+
+    def __getitem__(self, key: Union[int, slice]) -> Union[float, List[float]]:
+        """Index the (minx, maxx, miny, maxy, mint, maxt) tuple.
 
         Args:
-            minx: western boundary
-            maxx: eastern boundary
-            miny: southern boundary
-            maxy: northern boundary
-            mint: earliest boundary
-            maxt: latest boundary
-        """
-        self.minx = minx
-        self.maxx = maxx
-        self.miny = miny
-        self.maxy = maxy
-        self.mint = mint
-        self.maxt = maxt
-
-    def __getnewargs__(self) -> Tuple[float, float, float, float, float, float]:
-        """Values passed to the ``__new__()`` method upon unpickling.
+            key: integer or slice object
 
         Returns:
-            tuple of bounds
-        """
-        return self.minx, self.maxx, self.miny, self.maxy, self.mint, self.maxt
+            the value(s) at that index
 
-    def __repr__(self) -> str:
-        """Return the formal string representation of the object.
+        Raises:
+            IndexError: if key is out of bounds
+        """
+        return [self.minx, self.maxx, self.miny, self.maxy, self.mint, self.maxt][key]
+
+    def __iter__(self) -> Iterator[float]:
+        """Container iterator.
 
         Returns:
-            formal string representation
+            iterator object that iterates over all objects in the container
+        """
+        yield from [self.minx, self.maxx, self.miny, self.maxy, self.mint, self.maxt]
+
+    def __contains__(self, other: "BoundingBox") -> bool:
+        """Whether or not other is within the bounds of this bounding box.
+
+        Args:
+            other: another bounding box
+
+        Returns:
+            True if other is within this bounding box, else False
         """
         return (
-            f"{self.__class__.__name__}(minx={self.minx}, maxx={self.maxx}, "
-            f"miny={self.miny}, maxy={self.maxy}, mint={self.mint}, maxt={self.maxt})"
+            (self.minx <= other.minx <= self.maxx)
+            and (self.minx <= other.maxx <= self.maxx)
+            and (self.miny <= other.miny <= self.maxy)
+            and (self.miny <= other.maxy <= self.maxy)
+            and (self.mint <= other.mint <= self.maxt)
+            and (self.mint <= other.maxt <= self.maxt)
         )
+
+    def __or__(self, other: "BoundingBox") -> "BoundingBox":
+        """The union operator.
+
+        Args:
+            other: another bounding box
+
+        Returns:
+            the minimum bounding box that contains both self and other
+        """
+        return BoundingBox(
+            min(self.minx, other.minx),
+            max(self.maxx, other.maxx),
+            min(self.miny, other.miny),
+            max(self.maxy, other.maxy),
+            min(self.mint, other.mint),
+            max(self.maxt, other.maxt),
+        )
+
+    def __and__(self, other: "BoundingBox") -> "BoundingBox":
+        """The intersection operator.
+
+        Args:
+            other: another bounding box
+
+        Returns:
+            the intersection of self and other
+
+        Raises:
+            ValueError: if self and other do not intersect
+        """
+        try:
+            return BoundingBox(
+                max(self.minx, other.minx),
+                min(self.maxx, other.maxx),
+                max(self.miny, other.miny),
+                min(self.maxy, other.maxy),
+                max(self.mint, other.mint),
+                min(self.maxt, other.maxt),
+            )
+        except ValueError:
+            raise ValueError(f"Bounding boxes {self} and {other} do not overlap")
 
     def intersects(self, other: "BoundingBox") -> bool:
         """Whether or not two bounding boxes intersect.
@@ -370,8 +423,27 @@ def working_dir(dirname: str, create: bool = False) -> Iterator[None]:
         os.chdir(cwd)
 
 
-def collate_dict(samples: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Merge a list of samples to form a mini-batch of Tensors.
+def _list_dict_to_dict_list(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, List[Any]]:
+    """Convert a list of dictionaries to a dictionary of lists.
+
+    Args:
+        samples: a list of dictionaries
+
+    Returns:
+        a dictionary of lists
+    """
+    collated = collections.defaultdict(list)
+    for sample in samples:
+        for key, value in sample.items():
+            collated[key].append(value)
+    return collated
+
+
+def stack_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
+    """Stack a list of samples along a new axis.
+
+    Useful for forming a mini-batch of samples to pass to
+    :class:`torch.utils.data.DataLoader`.
 
     Args:
         samples: list of samples
@@ -379,14 +451,55 @@ def collate_dict(samples: List[Dict[str, Any]]) -> Dict[str, Any]:
     Returns:
         a single sample
     """
-    collated = {}
-    for key, value in samples[0].items():
-        if isinstance(value, Tensor):
-            collated[key] = torch.stack([sample[key] for sample in samples])
+    collated: Dict[Any, Any] = _list_dict_to_dict_list(samples)
+    for key, value in collated.items():
+        if isinstance(value[0], Tensor):
+            collated[key] = torch.stack(value)
+    return collated
+
+
+def concat_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
+    """Concatenate a list of samples along an existing axis.
+
+    Useful for joining samples in a :class:`torchgeo.datasets.IntersectionDataset`.
+
+    Args:
+        samples: list of samples
+
+    Returns:
+        a single sample
+    """
+    collated: Dict[Any, Any] = _list_dict_to_dict_list(samples)
+    for key, value in collated.items():
+        if isinstance(value[0], Tensor):
+            collated[key] = torch.cat(value)  # type: ignore[attr-defined]
         else:
-            collated[key] = [
-                sample[key] for sample in samples
-            ]  # type: ignore[assignment]
+            collated[key] = value[0]
+    return collated
+
+
+def merge_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
+    """Merge a list of samples.
+
+    Useful for joining samples in a :class:`torchgeo.datasets.UnionDataset`.
+
+    Args:
+        samples: list of samples
+
+    Returns:
+        a single sample
+    """
+    collated: Dict[Any, Any] = {}
+    for sample in samples:
+        for key, value in sample.items():
+            if key in collated and isinstance(value, Tensor):
+                # Take the maximum so that nodata values (zeros) get replaced
+                # by data values whenever possible
+                collated[key] = torch.maximum(  # type: ignore[attr-defined]
+                    collated[key], value
+                )
+            else:
+                collated[key] = value
     return collated
 
 

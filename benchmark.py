@@ -14,7 +14,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision.models import resnet34
 
-from torchgeo.datasets import CDL, Landsat8
+from torchgeo.datasets import CDL, Landsat8, stack_samples
 from torchgeo.samplers import GridGeoSampler, RandomBatchGeoSampler, RandomGeoSampler
 
 
@@ -129,7 +129,7 @@ def main(args: argparse.Namespace) -> None:
     landsat = Landsat8(
         args.landsat_root, crs=cdl.crs, res=cdl.res, cache=args.cache, bands=bands
     )
-    dataset = landsat + cdl
+    dataset = landsat & cdl
 
     # Initialize samplers
     if args.epoch_size:
@@ -158,7 +158,10 @@ def main(args: argparse.Namespace) -> None:
 
         if isinstance(sampler, RandomBatchGeoSampler):
             dataloader = DataLoader(
-                dataset, batch_sampler=sampler, num_workers=args.num_workers
+                dataset,
+                batch_sampler=sampler,
+                num_workers=args.num_workers,
+                collate_fn=stack_samples,
             )
         else:
             dataloader = DataLoader(
@@ -166,6 +169,7 @@ def main(args: argparse.Namespace) -> None:
                 batch_size=args.batch_size,
                 sampler=sampler,  # type: ignore[arg-type]
                 num_workers=args.num_workers,
+                collate_fn=stack_samples,
             )
 
         tic = time.time()
