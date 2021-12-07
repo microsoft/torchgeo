@@ -86,7 +86,7 @@ class LoveDA(VisionDataset):
         self,
         root: str = "./data",
         split: str = "val",
-        scene: List = ["urban", "rural"],
+        scene: List[str] = ["urban", "rural"],
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
