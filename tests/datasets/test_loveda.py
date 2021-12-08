@@ -10,9 +10,10 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-import torchgeo.datasets.utils
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
+
+import torchgeo.datasets.utils
 from torchgeo.datasets import LoveDA
 
 
@@ -102,15 +103,5 @@ class TestLoveDA:
         dataset.plot(batch, suptitle="Test")
         plt.close()
 
-        # now testing with batch size of 2
-        if dataset.split != "test":
-            batch = {
-                "image": torch.cat((img, img), dim=0),  # type: ignore[attr-defined]
-                "mask": torch.cat((mask, mask), dim=0),  # type: ignore[attr-defined]
-            }
-        else:
-            batch = {
-                "image": torch.cat((img, img), dim=0)  # type: ignore[attr-defined]
-            }
         dataset.plot(batch, suptitle="Test")
         plt.close()
