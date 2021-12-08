@@ -93,15 +93,5 @@ class TestLoveDA:
             LoveDA(str(tmp_path))
 
     def test_plot(self, dataset: LoveDA) -> None:
-        # dataset does not have a batch size dimension
-        img = dataset[0]["image"].unsqueeze(0)
-        if dataset.split != "test":  # training and validation images
-            mask = dataset[0]["mask"].unsqueeze(0)
-            batch = {"image": img, "mask": mask}
-        else:  # test images
-            batch = {"image": dataset[0]["image"].unsqueeze(0)}
-        dataset.plot(batch, suptitle="Test")
-        plt.close()
-
-        dataset.plot(batch, suptitle="Test")
+        dataset.plot(dataset[0], suptitle="Test")
         plt.close()

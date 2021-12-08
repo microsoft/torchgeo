@@ -279,22 +279,21 @@ class LoveDA(VisionDataset):
             suptitle: optional suptitle to use for figure
         """
         if self.split != "test":
-            images, masks = sample["image"], sample["mask"]
+            image, mask = sample["image"], sample["mask"]
             ncols = 2
         else:
-            images = sample["image"]
+            image = sample["image"]
             ncols = 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
 
         if self.split != "test":
-
-            axs[0].imshow(images[0, :, :, :].permute(1, 2, 0))
+            axs[0].imshow(image.permute(1, 2, 0))
             axs[0].axis("off")
-            axs[1].imshow(masks[0, :, :])
+            axs[1].imshow(mask)
             axs[1].axis("off")
         else:
-            axs.imshow(images[0, :, :, :].permute(1, 2, 0))
+            axs.imshow(image.permute(1, 2, 0))
             axs.axis("off")
 
         if suptitle is not None:
