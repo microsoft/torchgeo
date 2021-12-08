@@ -16,7 +16,7 @@ dependencies:
   - rarfile>=3
   - rasterio>=1.0.16
   - shapely>=1.3
-  - torchvision>=0.3
+  - torchvision>=0.10
   - pip:
     - black>=21.4b0
     - flake8>=3.8
