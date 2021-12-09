@@ -162,7 +162,7 @@ class LoveDA(VisionDataset):
             index: index to return
 
         Returns:
-            sample: image and mask at that index with image of dimension 3x1024x1024
+            image and mask at that index with image of dimension 3x1024x1024
                     and mask of dimension 1024x1024
         """
         files = self.files[index]
@@ -219,7 +219,7 @@ class LoveDA(VisionDataset):
             path: path to the image
 
         Returns:
-            tensor: the loaded image
+            the loaded image
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
@@ -236,7 +236,7 @@ class LoveDA(VisionDataset):
             path: path to the mask
 
         Returns:
-            tensor: the mask of the image
+            the mask of the image
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
@@ -283,7 +283,7 @@ class LoveDA(VisionDataset):
             sample: a sample return by :meth:`__getitem__`
             suptitle: optional suptitle to use for figure
         Returns:
-            fig: a matplotlib Figure with the rendered sample
+            a matplotlib Figure with the rendered sample
         """
         if self.split != "test":
             image, mask = sample["image"], sample["mask"]
