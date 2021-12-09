@@ -134,6 +134,12 @@ LEVIR-CD+ (LEVIR Change Detection +)
 
 .. autoclass:: LEVIRCDPlus
 
+LoveDA (Land-cOVEr Domain Adaptive semantic segmentation)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: LoveDA
+.. autoclass:: LoveDADataModule
+
 OSCD (Onera Satellite Change Detection)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
