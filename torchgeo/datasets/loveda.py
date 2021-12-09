@@ -5,17 +5,22 @@
 
 import glob
 import os
-from typing import Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pytorch_lightning as pl
 import torch
-from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
+from torch.utils.data import DataLoader
 
 from .geo import VisionDataset
 from .utils import download_and_extract_archive
+
+# https://github.com/pytorch/pytorch/issues/60979
+# https://github.com/pytorch/pytorch/pull/61045
+DataLoader.__module__ = "torch.utils.data"
 
 
 class LoveDA(VisionDataset):
@@ -116,12 +121,13 @@ class LoveDA(VisionDataset):
             AssertionError: if ``scene`` argument is invalid
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
-
         """
+        print(split)
         assert split in self.splits
         assert set(scene).intersection(
             set(self.scenes)
         ), "The possible scenes are 'rural' and/or 'urban'"
+        assert len(scene) <= 2, "There are no other scenes than 'rural' or 'urban'"
 
         self.root = root
         self.split = split
@@ -158,7 +164,6 @@ class LoveDA(VisionDataset):
         Returns:
             sample: image and mask at that index with image of dimension 3x1024x1024
                     and mask of dimension 1024x1024
-
         """
         files = self.files[index]
         image = self._load_image(files["image"])
@@ -179,7 +184,6 @@ class LoveDA(VisionDataset):
 
         Returns:
             length of dataset
-
         """
         return len(self.files)
 
@@ -270,14 +274,16 @@ class LoveDA(VisionDataset):
             md5=self.md5 if self.checksum else None,
         )
 
-    def plot(self, sample: Dict[str, Tensor], suptitle: Optional[str] = None) -> Figure:
+    def plot(
+        self, sample: Dict[str, Tensor], suptitle: Optional[str] = None
+    ) -> plt.Figure:
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returne by :meth:`__getitem__`
+            sample: a sample return by :meth:`__getitem__`
             suptitle: optional suptitle to use for figure
         Returns:
-            fig: matplotlib Figure showing sample from dataset split
+            fig: a matplotlib Figure with the rendered sample
         """
         if self.split != "test":
             image, mask = sample["image"], sample["mask"]
@@ -301,3 +307,117 @@ class LoveDA(VisionDataset):
             plt.suptitle(suptitle)
 
         return fig
+
+
+class LoveDADataModule(pl.LightningDataModule):
+    """LightningDataModule implementation for the LoveDA dataset.
+
+    Uses the train/val/test splits from the dataset.
+    """
+
+    def __init__(
+        self,
+        root_dir: str,
+        scene: List[str],
+        batch_size: int = 32,
+        num_workers: int = 0,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a LightningDataModule for LoveDA based DataLoaders.
+
+        Args:
+            root_dir: The ``root`` argument to pass to LoveDA Dataset classes
+            scene: specify whether to load only 'urban', only 'rural' or both
+            batch_size: The batch size to use in all created DataLoaders
+            num_workers: The number of workers to use in all created DataLoaders
+        """
+        super().__init__()  # type: ignore[no-untyped-call]
+        self.root_dir = root_dir
+        self.scene = scene
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+
+    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Transform a single sample from the Dataset.
+
+        Args:
+            sample: dictionary containing image and mask
+
+        Returns:
+            preprocessed sample
+        """
+        sample["image"] = sample["image"] / 255.0
+
+        return sample
+
+    def prepare_data(self) -> None:
+        """Make sure that the dataset is downloaded.
+
+        This method is only called once per run.
+        """
+        _ = LoveDA(self.root_dir, scene=self.scene, download=False, checksum=False)
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        """Initialize the main ``Dataset`` objects.
+
+        This method is called once per GPU per run.
+
+        Args:
+            stage: stage to set up
+        """
+        train_transforms = self.preprocess
+        val_test_transforms = self.preprocess
+
+        self.train_dataset = LoveDA(
+            self.root_dir, split="train", scene=self.scene, transforms=train_transforms
+        )
+
+        self.val_dataset = LoveDA(
+            self.root_dir, split="val", scene=self.scene, transforms=val_test_transforms
+        )
+
+        self.test_dataset = LoveDA(
+            self.root_dir,
+            split="test",
+            scene=self.scene,
+            transforms=val_test_transforms,
+        )
+
+    def train_dataloader(self) -> DataLoader[Any]:
+        """Return a DataLoader for training.
+
+        Returns:
+            training data loader
+        """
+        return DataLoader(
+            self.train_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=True,
+        )
+
+    def val_dataloader(self) -> DataLoader[Any]:
+        """Return a DataLoader for validation.
+
+        Returns:
+            validation data loader
+        """
+        return DataLoader(
+            self.val_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=False,
+        )
+
+    def test_dataloader(self) -> DataLoader[Any]:
+        """Return a DataLoader for testing.
+
+        Returns:
+            testing data loader
+        """
+        return DataLoader(
+            self.test_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=False,
+        )
