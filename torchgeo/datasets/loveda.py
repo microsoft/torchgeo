@@ -66,20 +66,17 @@ class LoveDA(VisionDataset):
 
     info_dict = {
         "train": {
-            "url": "https://drive.google.com/file/d/1xbnKVN5aRMl \
-            pxISXgutzQO0hPT_b4lMi/view?usp=sharing",
+            "url": "https://zenodo.org/record/5706578/files/Train.zip?download=1",
             "filename": "Train.zip",
             "md5": "de2b196043ed9b4af1690b3f9a7d558f",
         },
         "val": {
-            "url": "https://drive.google.com/file/d/1yTMfeon1Oc4 \
-                ia9oCX7r5Yq4C39I0oO_b/view?usp=sharing",
+            "url": "https://zenodo.org/record/5706578/files/Val.zip?download=1",
             "filename": "Val.zip",
             "md5": "84cae2577468ff0b5386758bb386d31d",
         },
         "test": {
-            "url": "https://drive.google.com/file/d/1ON7bWat7u9f \
-                GV16stAosdmzMIpcydnVC/view?usp=sharing",
+            "url": "https://zenodo.org/record/5706578/files/Test.zip?download=1",
             "filename": "Test.zip",
             "md5": "a489be0090465e01fb067795d24e6b47",
         },
