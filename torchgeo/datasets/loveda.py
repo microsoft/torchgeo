@@ -163,7 +163,7 @@ class LoveDA(VisionDataset):
 
         Returns:
             image and mask at that index with image of dimension 3x1024x1024
-                    and mask of dimension 1024x1024
+            and mask of dimension 1024x1024
         """
         files = self.files[index]
         image = self._load_image(files["image"])
@@ -282,6 +282,7 @@ class LoveDA(VisionDataset):
         Args:
             sample: a sample return by :meth:`__getitem__`
             suptitle: optional suptitle to use for figure
+
         Returns:
             a matplotlib Figure with the rendered sample
         """
