@@ -21,14 +21,16 @@ from .utils import download_and_extract_archive
 class LoveDA(VisionDataset):
     """LoveDA dataset.
 
-    The LoveDA <https://github.com/Junjue-Wang/LoveDA> datataset is a
+    The `LoveDA <https://github.com/Junjue-Wang/LoveDA>`_ datataset is a
     semantic segmentation dataset.
 
     Dataset features:
 
-    * 2713 urban scene and 3274 rural scene HSR images with a total
-    of 166768 annotated objects from Nanjing, Changzhou and Wuhan cities
+    * 2713 urban scene and 3274 rural scene HSR images, spatial resolution of 0.3m
+    * image source is Google Earth platform
+    * total of 166768 annotated objects from Nanjing, Changzhou and Wuhan cities
     * dataset comes with predefined train, validation, and test set
+    * dataset differentiates between 'rural' and 'urban' images
 
     Dataset format:
 
@@ -92,7 +94,7 @@ class LoveDA(VisionDataset):
     def __init__(
         self,
         root: str = "data",
-        split: str = "val",
+        split: str = "train",
         scene: List[str] = ["urban", "rural"],
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
@@ -103,6 +105,7 @@ class LoveDA(VisionDataset):
         Args:
             root: root directory where dataset can be found
             split: one of "train", "val", or "test"
+            scene: specify whether to load only 'urban', only 'rural' or both
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -110,7 +113,7 @@ class LoveDA(VisionDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            AssertionError if ``scene`` argument is invalid
+            AssertionError: if ``scene`` argument is invalid
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
 
@@ -187,7 +190,6 @@ class LoveDA(VisionDataset):
             scene_paths: contains one or two paths, depending on whether user has
                          specified only 'rural', 'only 'urban' or both
             split: subset of dataset, one of [train, val, test]
-
         """
         images = []
 
@@ -214,7 +216,6 @@ class LoveDA(VisionDataset):
 
         Returns:
             tensor: the loaded image
-
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
@@ -229,9 +230,9 @@ class LoveDA(VisionDataset):
 
         Args:
             path: path to the mask
+
         Returns:
             tensor: the mask of the image
-
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
@@ -245,7 +246,6 @@ class LoveDA(VisionDataset):
 
         Returns:
             True if the dataset directories and split files are found, else False
-
         """
         for s in self.scene_paths:
             if not os.path.exists(s):
@@ -258,7 +258,6 @@ class LoveDA(VisionDataset):
 
         Raises:
             AssertionError: if the checksum of split.py does not match
-
         """
         if self._check_integrity():
             print("Files already downloaded and verified")
@@ -277,6 +276,8 @@ class LoveDA(VisionDataset):
         Args:
             sample: a sample returne by :meth:`__getitem__`
             suptitle: optional suptitle to use for figure
+        Returns:
+            fig: matplotlib Figure showing sample from dataset split
         """
         if self.split != "test":
             image, mask = sample["image"], sample["mask"]
