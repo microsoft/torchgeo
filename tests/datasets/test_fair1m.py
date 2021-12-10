@@ -5,10 +5,10 @@ import os
 import shutil
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.fixtures import SubRequest
 
 from torchgeo.datasets import FAIR1M, FAIR1MDataModule
 
@@ -35,30 +35,38 @@ class TestFAIR1M:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
-        assert isinstance(x["bbox"], torch.Tensor)
+        assert isinstance(x["boxes"], torch.Tensor)
         assert isinstance(x["label"], torch.Tensor)
         assert x["image"].shape[0] == 3
-        assert x["bbox"].shape[-2:] == (5, 2)
+        assert x["boxes"].shape[-2:] == (5, 2)
         assert x["label"].ndim == 1
 
     def test_len(self, dataset: FAIR1M) -> None:
         assert len(dataset) == 4
 
+    def test_plot(self, dataset: FAIR1M) -> None:
+        x = dataset[0].copy()
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
+        x["prediction_boxes"] = x["boxes"].clone()
+        dataset.plot(x)
+        plt.close()
+
 
 class TestFAIR1MDataModule:
     @pytest.fixture(scope="class", params=[True, False])
-    def datamodule(self, request: SubRequest) -> FAIR1MDataModule:
+    def datamodule(self) -> FAIR1MDataModule:
         root = os.path.join("tests", "data", "fair1m")
         batch_size = 2
         num_workers = 0
-        unsupervised_mode = request.param
         dm = FAIR1MDataModule(
             root,
             batch_size,
             num_workers,
             val_split_pct=0.33,
             test_split_pct=0.33,
-            unsupervised_mode=unsupervised_mode,
         )
         dm.setup()
         return dm

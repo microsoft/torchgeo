@@ -117,6 +117,7 @@ FAIR1M (Fine-grAined object recognItion in high-Resolution imagery)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: FAIR1M
+.. autoclass:: FAIR1MDataModule
 
 GID-15 (Gaofen Image Dataset)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

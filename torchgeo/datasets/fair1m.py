@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 from xml.etree import ElementTree
 
 import matplotlib.patches as patches
@@ -18,7 +18,7 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
 
-from ..datasets.utils import dataset_split
+from ..datasets.utils import check_integrity, dataset_split, extract_archive
 from .geo import VisionDataset
 
 # https://github.com/pytorch/pytorch/issues/60979
@@ -26,7 +26,21 @@ from .geo import VisionDataset
 DataLoader.__module__ = "torch.utils.data"
 
 
-def read_pascal_voc(path: str) -> Dict[str, Any]:
+def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
+    """Custom object detection collate fn to handle variable number of boxes.
+
+    Args:
+        batch: list of sample dicts return by dataset
+    Returns:
+        batch dict output
+    """
+    output: Dict[str, Any] = {}
+    output["image"] = torch.stack([sample["image"] for sample in batch])
+    output["boxes"] = [sample["boxes"] for sample in batch]
+    return output
+
+
+def parse_pascal_voc(path: str) -> Dict[str, Any]:
     """Read a PASCAL VOC annotation file.
 
     Args:
@@ -44,7 +58,9 @@ def read_pascal_voc(path: str) -> Dict[str, Any]:
             p for p in obj.find("points").findall("point")  # type: ignore[union-attr]
         ]
         obj_points = [p.text.split(",") for p in obj_points]  # type: ignore[union-attr]
-        obj_points = [(float(p1), float(p2)) for p1, p2 in obj_points]  # type: ignore[arg-type]
+        obj_points = [
+            (float(p1), float(p2)) for p1, p2 in obj_points  # type: ignore[arg-type]
+        ]
         label = obj.find("possibleresult").find("name").text  # type: ignore[union-attr]
         labels.append(label)
         points.append(obj_points)
@@ -68,7 +84,7 @@ class FAIR1M(VisionDataset):
     Dataset format:
 
     * images are three-channel tiffs
-    * labels are xml files with PASCAL VOC annotations
+    * labels are xml files with PASCAL VOC like annotations
 
     Dataset classes:
 
@@ -114,6 +130,7 @@ class FAIR1M(VisionDataset):
 
     * https://arxiv.org/abs/2103.05569
 
+    .. versionadded:: 0.2
     """
 
     classes = {
@@ -159,6 +176,10 @@ class FAIR1M(VisionDataset):
     image_root: str = "images"
     labels_root: str = "labelXmls"
 
+    directories = []
+    filenames = []
+    md5s = []
+
     def __init__(
         self,
         root: str = "data",
@@ -173,9 +194,9 @@ class FAIR1M(VisionDataset):
         """
         self.root = root
         self.transforms = transforms
-
-        files = sorted(glob.glob(os.path.join(self.root, self.labels_root, "*.xml")))
-        self.files = [read_pascal_voc(f) for f in files]
+        self.files = sorted(
+            glob.glob(os.path.join(self.root, self.labels_root, "*.xml"))
+        )
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
@@ -186,9 +207,11 @@ class FAIR1M(VisionDataset):
         Returns:
             data and label at that index
         """
-        image = self._load_image(index)
-        boxes, labels = self._load_target(index)
-        sample = {"image": image, "bbox": boxes, "label": labels}
+        path = self.files[index]
+        parsed = parse_pascal_voc(path)
+        image = self._load_image(parsed["filename"])
+        boxes, labels = self._load_target(parsed["points"], parsed["labels"])
+        sample = {"image": image, "boxes": boxes, "label": labels}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -203,17 +226,16 @@ class FAIR1M(VisionDataset):
         """
         return len(self.files)
 
-    def _load_image(self, index: int) -> Tensor:
+    def _load_image(self, path: str) -> Tensor:
         """Load a single image.
 
         Args:
-            index: index to return
+            path: path to image
 
         Returns:
             the image
         """
-        filename = self.files[index]["filename"]
-        path = os.path.join(self.root, self.image_root, filename)
+        path = os.path.join(self.root, self.image_root, path)
         with Image.open(path) as img:
             array = np.array(img.convert("RGB"))
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
@@ -221,44 +243,111 @@ class FAIR1M(VisionDataset):
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, index: int) -> Tuple[Tensor, Tensor]:
+    def _load_target(
+        self, points: List[List[Tuple[float, float]]], labels: List[str]
+    ) -> Tuple[Tensor, Tensor]:
         """Load the target mask for a single image.
 
         Args:
-            index: index to return
+            points: list of point tuple lists
+            labels: list of class labels
 
         Returns:
             the target bounding boxes and labels
         """
-        boxes_list = self.files[index]["points"]
-        labels_list = [
-            self.classes[label]["id"] for label in self.files[index]["labels"]
-        ]
-        boxes = torch.tensor(boxes_list).to(torch.float)  # type: ignore[attr-defined]
+        labels_list = [self.classes[label]["id"] for label in labels]
+        boxes = torch.tensor(points).to(torch.float)  # type: ignore[attr-defined]
         labels = torch.tensor(labels_list)  # type: ignore[attr-defined]
-        return boxes, labels
+        return boxes, cast(Tensor, labels)
 
-    def plot(self, index: int) -> None:
-        """Plot a data sample.
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if checksum fails or the dataset is not downloaded
+        """
+        # Check if the files already exist
+        if os.path.exists(os.path.join(self.root, self.image_root)):
+            return
+
+        # Check if .zip files already exists (if so extract)
+        exists = []
+        for filename, md5 in zip(self.filenames, self.md5s):
+            filepath = os.path.join(self.root, filename)
+            if os.path.isfile(filepath):
+                if self.checksum and not check_integrity(filepath, md5):
+                    raise RuntimeError("Dataset found, but corrupted.")
+                exists.append(True)
+                extract_archive(filepath)
+            else:
+                exists.append(False)
+
+        if all(exists):
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise RuntimeError(
+                "Dataset not found in `root` directory and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automaticaly download the dataset."
+            )
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
 
         Args:
-            index: the index of the sample to plot
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
         """
-        sample = self[index]
         image = sample["image"].permute((1, 2, 0)).numpy()
+
+        ncols = 1
+        if "prediction_boxes" in sample:
+            ncols += 1
+
+        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
+        if ncols < 2:
+            axs = [axs]
+
+        axs[0].imshow(image)
+        axs[0].axis("off")
         polygons = [
             patches.Polygon(points, color="r", fill=False)
-            for points in sample["bbox"].numpy()
+            for points in sample["boxes"].numpy()
         ]
-        ax = plt.axes()
-        ax.imshow(image)
-        ax.axis("off")
-        ax.figure.set_size_inches(10, 10)
-        ax.figure.tight_layout()
         for polygon in polygons:
-            ax.add_patch(polygon)
-        plt.show()
-        plt.close()
+            axs[0].add_patch(polygon)
+
+        if show_titles:
+            axs[0].set_title("Ground Truth")
+
+        if ncols > 1:
+            axs[1].imshow(image)
+            axs[1].axis("off")
+            polygons = [
+                patches.Polygon(points, color="r", fill=False)
+                for points in sample["prediction_boxes"].numpy()
+            ]
+            for polygon in polygons:
+                axs[0].add_patch(polygon)
+
+            if show_titles:
+                axs[1].set_title("Predictions")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
 
 
 class FAIR1MDataModule(pl.LightningDataModule):
@@ -269,7 +358,6 @@ class FAIR1MDataModule(pl.LightningDataModule):
         root_dir: str,
         batch_size: int = 64,
         num_workers: int = 0,
-        unsupervised_mode: bool = False,
         val_split_pct: float = 0.2,
         test_split_pct: float = 0.2,
         **kwargs: Any,
@@ -280,8 +368,6 @@ class FAIR1MDataModule(pl.LightningDataModule):
             root_dir: The ``root`` arugment to pass to the FAIR1M Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
-            unsupervised_mode: Makes the train dataloader return imagery from the train,
-                val, and test sets
             val_split_pct: What percentage of the dataset to use as a validation set
             test_split_pct: What percentage of the dataset to use as a test set
         """
@@ -289,7 +375,6 @@ class FAIR1MDataModule(pl.LightningDataModule):
         self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
-        self.unsupervised_mode = unsupervised_mode
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
 
@@ -306,6 +391,13 @@ class FAIR1MDataModule(pl.LightningDataModule):
         sample["image"] /= 255.0
         return sample
 
+    def prepare_data(self) -> None:
+        """Make sure that the dataset is downloaded.
+
+        This method is only called once per run.
+        """
+        FAIR1M(self.root_dir)
+
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
 
@@ -316,16 +408,10 @@ class FAIR1MDataModule(pl.LightningDataModule):
         """
         transforms = Compose([self.preprocess])
 
-        if not self.unsupervised_mode:
-            dataset = FAIR1M(self.root_dir, transforms=transforms)
-            self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-                dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
-            )
-        else:
-            self.train_dataset = FAIR1M(  # type: ignore[assignment]
-                self.root_dir, transforms=transforms
-            )
-            self.val_dataset, self.test_dataset = None, None  # type: ignore[assignment]
+        dataset = FAIR1M(self.root_dir, transforms=transforms)
+        self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
+            dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
+        )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.
@@ -338,6 +424,7 @@ class FAIR1MDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=True,
+            collate_fn=collate_fn,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -346,15 +433,13 @@ class FAIR1MDataModule(pl.LightningDataModule):
         Returns:
             validation data loader
         """
-        if self.unsupervised_mode or self.val_split_pct == 0:
-            return self.train_dataloader()
-        else:
-            return DataLoader(
-                self.val_dataset,
-                batch_size=self.batch_size,
-                num_workers=self.num_workers,
-                shuffle=False,
-            )
+        return DataLoader(
+            self.val_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=False,
+            collate_fn=collate_fn,
+        )
 
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing.
@@ -362,12 +447,10 @@ class FAIR1MDataModule(pl.LightningDataModule):
         Returns:
             testing data loader
         """
-        if self.unsupervised_mode or self.test_split_pct == 0:
-            return self.train_dataloader()
-        else:
-            return DataLoader(
-                self.test_dataset,
-                batch_size=self.batch_size,
-                num_workers=self.num_workers,
-                shuffle=False,
-            )
+        return DataLoader(
+            self.test_dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=False,
+            collate_fn=collate_fn,
+        )
