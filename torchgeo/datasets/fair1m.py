@@ -44,7 +44,7 @@ def read_pascal_voc(path: str) -> Dict[str, Any]:
             p for p in obj.find("points").findall("point")  # type: ignore[union-attr]
         ]
         obj_points = [p.text.split(",") for p in obj_points]  # type: ignore[union-attr]
-        obj_points = [(float(p1), float(p2)) for p1, p2 in obj_points]
+        obj_points = [(float(p1), float(p2)) for p1, p2 in obj_points]  # type: ignore[arg-type]
         label = obj.find("possibleresult").find("name").text  # type: ignore[union-attr]
         labels.append(label)
         points.append(obj_points)
