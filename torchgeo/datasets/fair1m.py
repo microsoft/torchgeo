@@ -75,7 +75,7 @@ class FAIR1M(VisionDataset):
 
     Dataset features:
 
-    * 15,000+ images with 0.3-0.8m m per pixel resolution (1,000-10,000 px)
+    * 15,000+ images with 0.3-0.8 m per pixel resolution (1,000-10,000 px)
     * 1 million object instances
     * 5 object categories, 37 object sub-categories
     * three spectral bands - RGB
