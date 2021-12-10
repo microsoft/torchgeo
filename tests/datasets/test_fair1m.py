@@ -50,6 +50,14 @@ class TestFAIR1M:
             shutil.copy(filepath, str(tmp_path))
         FAIR1M(root=str(tmp_path), checksum=True)
 
+    def test_corrupted(self, tmp_path: Path) -> None:
+        filenames = ["images.zip", "labelXmls.zip"]
+        for filename in filenames:
+            with open(os.path.join(tmp_path, filename), "w") as f:
+                f.write("bad")
+        with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
+            FAIR1M(root=str(tmp_path), checksum=True)
+
     def test_not_downloaded(self, tmp_path: Path) -> None:
         err = "Dataset not found in `root` directory, "
         "specify a different `root` directory."

@@ -175,8 +175,6 @@ class FAIR1M(VisionDataset):
 
     image_root: str = "images"
     labels_root: str = "labelXmls"
-
-    directories = ["images", "labelXmls"]
     filenames = ["images.zip", "labelXmls.zip"]
     md5s = ["a460fe6b1b5b276bf856ce9ac72d6568", "ca8666dc43a553f8d65e5dc671a8ac3c"]
 
@@ -268,10 +266,13 @@ class FAIR1M(VisionDataset):
         """Verify the integrity of the dataset.
 
         Raises:
-            RuntimeError: if checksum fails or the dataset is not downloaded
+            RuntimeError: if checksum fails or the dataset is not found
         """
         # Check if the files already exist
-        if all([os.path.exists(d) for d in self.directories]):
+        exists = []
+        for directory in [self.image_root, self.labels_root]:
+            exists.append(os.path.exists(os.path.join(self.root, directory)))
+        if all(exists):
             return
 
         # Check if .zip files already exists (if so extract)
@@ -288,11 +289,11 @@ class FAIR1M(VisionDataset):
 
         if all(exists):
             return
-        else:
-            raise RuntimeError(
-                "Dataset not found in `root` directory, "
-                "specify a different `root` directory."
-            )
+
+        raise RuntimeError(
+            "Dataset not found in `root` directory, "
+            "specify a different `root` directory."
+        )
 
     def plot(
         self,
@@ -391,13 +392,6 @@ class FAIR1MDataModule(pl.LightningDataModule):
         sample["image"] = sample["image"].float()
         sample["image"] /= 255.0
         return sample
-
-    def prepare_data(self) -> None:
-        """Make sure that the dataset is downloaded.
-
-        This method is only called once per run.
-        """
-        FAIR1M(self.root_dir)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
