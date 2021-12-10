@@ -1,7 +1,6 @@
 name: torchgeo
 channels:
   - conda-forge
-  - open3d-admin
 dependencies:
   - cudatoolkit
   - einops
