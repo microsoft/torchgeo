@@ -5,7 +5,7 @@ experiment:
     model: "byol"
     encoder: "resnet18"
     input_channels: 4
-    imagenet_pretraining: True
+    imagenet_pretraining: False
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
   datamodule:
