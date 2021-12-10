@@ -27,7 +27,7 @@ class RegressionTask(pl.LightningModule):
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters."""
         if self.hparams["model"] == "resnet18":
-            self.model = models.resnet18(pretrained=True)
+            self.model = models.resnet18(pretrained=self.hparams["pretrained"])
             in_features = self.model.fc.in_features
             self.model.fc = nn.Linear(  # type: ignore[attr-defined]
                 in_features, out_features=1

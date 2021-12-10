@@ -100,7 +100,7 @@ class TestClassificationTask:
         scope="class",
         params=zip(
             ["ce", "jaccard", "focal"],
-            ["imagenet", "random", "random"],
+            ["random", "random", "random"],
             ["resnet18", "hrnet_w18_small_v2", "tf_efficientnet_b0"],
         ),
     )
@@ -202,7 +202,7 @@ class TestMultiLabelClassificationTask:
         dm.setup()
         return dm
 
-    @pytest.fixture(scope="class", params=zip(["bce", "bce"], ["imagenet", "random"]))
+    @pytest.fixture(scope="class", params=zip(["bce", "bce"], ["random", "random"]))
     def config(
         self, datamodule: DummyDataModule, request: SubRequest
     ) -> Dict[str, Any]:
