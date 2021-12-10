@@ -25,14 +25,11 @@ from .chesapeake import (
 from .cowc import COWC, COWCCounting, COWCCountingDataModule, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import CycloneDataModule, TropicalCycloneWindEstimation
-<<<<<<< HEAD
 from .etci2021 import ETCI2021, ETCI2021DataModule
 from .eurosat import EuroSAT, EuroSATDataModule
-=======
 from .etci2021 import ETCI2021
 from .eurosat import EuroSAT
 from .fair1m import FAIR1M, FAIR1MDataModule
->>>>>>> add fair1m dataset and datamodule, tests
 from .geo import (
     GeoDataset,
     IntersectionDataset,

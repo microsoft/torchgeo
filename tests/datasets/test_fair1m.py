@@ -15,10 +15,7 @@ from torchgeo.datasets import FAIR1M, FAIR1MDataModule
 
 class TestFAIR1M:
     @pytest.fixture
-    def dataset(
-        self,
-        tmp_path: Path,
-    ) -> FAIR1M:
+    def dataset(self, tmp_path: Path) -> FAIR1M:
         data_dir = os.path.join("tests", "data", "fair1m")
         shutil.copytree(
             os.path.join(data_dir, "images"), os.path.join(str(tmp_path), "images")
@@ -62,11 +59,7 @@ class TestFAIR1MDataModule:
         batch_size = 2
         num_workers = 0
         dm = FAIR1MDataModule(
-            root,
-            batch_size,
-            num_workers,
-            val_split_pct=0.33,
-            test_split_pct=0.33,
+            root, batch_size, num_workers, val_split_pct=0.33, test_split_pct=0.33
         )
         dm.setup()
         return dm
