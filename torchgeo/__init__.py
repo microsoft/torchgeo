@@ -38,7 +38,6 @@ from .trainers.chesapeake import ChesapeakeCVPRSegmentationTask
 from .trainers.landcoverai import LandCoverAISegmentationTask
 from .trainers.naipchesapeake import NAIPChesapeakeSegmentationTask
 from .trainers.resisc45 import RESISC45ClassificationTask
-from .trainers.so2sat import So2SatClassificationTask
 
 __author__ = "Adam J. Stewart"
 __version__ = "0.2.0.dev0"
@@ -57,6 +56,6 @@ _TASK_TO_MODULES_MAPPING: Dict[
     "naipchesapeake": (NAIPChesapeakeSegmentationTask, NAIPChesapeakeDataModule),
     "resisc45": (RESISC45ClassificationTask, RESISC45DataModule),
     "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),
-    "so2sat": (So2SatClassificationTask, So2SatDataModule),
+    "so2sat": (ClassificationTask, So2SatDataModule),
     "ucmerced": (ClassificationTask, UCMercedDataModule),
 }

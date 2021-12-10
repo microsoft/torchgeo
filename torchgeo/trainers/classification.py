@@ -35,14 +35,12 @@ class ClassificationTask(pl.LightningModule):
         imagenet_pretrained = False
         custom_pretrained = False
         if self.hparams["weights"] and not os.path.exists(self.hparams["weights"]):
-            if self.hparams["weights"] == "imagenet":
-                imagenet_pretrained = True
-            elif self.hparams["weights"] == "random":
-                imagenet_pretrained = False
-            else:
+            if self.hparams["weights"] not in ["imagenet", "random"]:
                 raise ValueError(
                     f"Weight type '{self.hparams['weights']}' is not valid."
                 )
+            else:
+                imagenet_pretrained = self.hparams["weights"] == "imagenet"
             custom_pretrained = False
         else:
             custom_pretrained = True
