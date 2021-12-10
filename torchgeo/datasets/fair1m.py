@@ -176,14 +176,15 @@ class FAIR1M(VisionDataset):
     image_root: str = "images"
     labels_root: str = "labelXmls"
 
-    directories = []
-    filenames = []
-    md5s = []
+    directories = ["images", "labelXmls"]
+    filenames = ["images.zip", "labelXmls.zip"]
+    md5s = ["a460fe6b1b5b276bf856ce9ac72d6568", "ca8666dc43a553f8d65e5dc671a8ac3c"]
 
     def __init__(
         self,
         root: str = "data",
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        checksum: bool = False,
     ) -> None:
         """Initialize a new FAIR1M dataset instance.
 
@@ -191,9 +192,12 @@ class FAIR1M(VisionDataset):
             root: root directory where dataset can be found
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
         self.root = root
         self.transforms = transforms
+        self.checksum = checksum
+        self._verify()
         self.files = sorted(
             glob.glob(os.path.join(self.root, self.labels_root, "*.xml"))
         )
@@ -267,7 +271,7 @@ class FAIR1M(VisionDataset):
             RuntimeError: if checksum fails or the dataset is not downloaded
         """
         # Check if the files already exist
-        if os.path.exists(os.path.join(self.root, self.image_root)):
+        if all([os.path.exists(d) for d in self.directories]):
             return
 
         # Check if .zip files already exists (if so extract)
@@ -284,13 +288,10 @@ class FAIR1M(VisionDataset):
 
         if all(exists):
             return
-
-        # Check if the user requested to download the dataset
-        if not self.download:
+        else:
             raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "Dataset not found in `root` directory, "
+                "specify a different `root` directory."
             )
 
     def plot(

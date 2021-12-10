@@ -4,27 +4,23 @@
 import os
 import shutil
 from pathlib import Path
+from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
+from _pytest.monkeypatch import MonkeyPatch
 
 from torchgeo.datasets import FAIR1M, FAIR1MDataModule
 
 
 class TestFAIR1M:
     @pytest.fixture
-    def dataset(self, tmp_path: Path) -> FAIR1M:
-        data_dir = os.path.join("tests", "data", "fair1m")
-        shutil.copytree(
-            os.path.join(data_dir, "images"), os.path.join(str(tmp_path), "images")
-        )
-        shutil.copytree(
-            os.path.join(data_dir, "labelXmls"),
-            os.path.join(str(tmp_path), "labelXmls"),
-        )
-        root = str(tmp_path)
+    def dataset(self, monkeypatch: Generator[MonkeyPatch, None, None]) -> FAIR1M:
+        md5s = ["f278aba757de9079225db42107e09e30", "aca59017207141951b53e91795d8179e"]
+        monkeypatch.setattr(FAIR1M, "md5s", md5s)  # type: ignore[attr-defined]
+        root = os.path.join("tests", "data", "fair1m")
         transforms = nn.Identity()  # type: ignore[attr-defined]
         return FAIR1M(root, transforms)
 
@@ -40,6 +36,25 @@ class TestFAIR1M:
 
     def test_len(self, dataset: FAIR1M) -> None:
         assert len(dataset) == 4
+
+    def test_already_downloaded(self, dataset: FAIR1M, tmp_path: Path) -> None:
+        shutil.rmtree(str(tmp_path))
+        shutil.copytree(dataset.root, str(tmp_path))
+        FAIR1M(root=str(tmp_path))
+
+    def test_already_downloaded_not_extracted(
+        self, dataset: FAIR1M, tmp_path: Path
+    ) -> None:
+        for filename in dataset.filenames:
+            filepath = os.path.join("tests", "data", "fair1m", filename)
+            shutil.copy(filepath, str(tmp_path))
+        FAIR1M(root=str(tmp_path), checksum=True)
+
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        err = "Dataset not found in `root` directory, "
+        "specify a different `root` directory."
+        with pytest.raises(RuntimeError, match=err):
+            FAIR1M(str(tmp_path))
 
     def test_plot(self, dataset: FAIR1M) -> None:
         x = dataset[0].copy()
