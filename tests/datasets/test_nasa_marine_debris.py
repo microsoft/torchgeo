@@ -70,9 +70,9 @@ class TestNASAMarineDebris:
         NASAMarineDebris(root=str(tmp_path), download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = rf"Dataset not found in `root={str(tmp_path)}` directory and "
-        "`download=False`, either specify a different `root` directory"
-        "or use `download=True` to automaticaly download the dataset."
+        err = "Dataset not found in `root` directory and `download=False`, "
+        "either specify a different `root` directory or use `download=True` "
+        "to automaticaly download the dataset."
         with pytest.raises(RuntimeError, match=err):
             NASAMarineDebris(str(tmp_path))
 

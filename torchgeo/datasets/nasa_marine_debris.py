@@ -217,9 +217,9 @@ class NASAMarineDebris(VisionDataset):
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
-                rf"Dataset not found in `root={self.root}` directory and "
-                "`download=False`, either specify a different `root` directory"
-                "or use `download=True` to automaticaly download the dataset."
+                "Dataset not found in `root` directory and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automaticaly download the dataset."
             )
 
         # TODO: need a checksum check in here post downloading
