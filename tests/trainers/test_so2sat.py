@@ -37,7 +37,7 @@ class TestSo2SatClassificationTask:
         return dm
 
     @pytest.fixture(
-        params=zip(["ce", "jaccard", "focal"], ["imagenet", "random", "random"])
+        params=zip(["ce", "jaccard", "focal"], ["random", "random", "random"])
     )
     def config(self, request: SubRequest, bands: Tuple[str, int]) -> Dict[str, Any]:
         task_conf = OmegaConf.load(os.path.join("conf", "task_defaults", "so2sat.yaml"))
