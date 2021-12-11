@@ -27,6 +27,7 @@ from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import CycloneDataModule, TropicalCycloneWindEstimation
 from .etci2021 import ETCI2021, ETCI2021DataModule
 from .eurosat import EuroSAT, EuroSATDataModule
+from .fair1m import FAIR1M, FAIR1MDataModule
 from .geo import (
     GeoDataset,
     IntersectionDataset,
@@ -117,6 +118,8 @@ __all__ = (
     "ETCI2021DataModule",
     "EuroSAT",
     "EuroSATDataModule",
+    "FAIR1M",
+    "FAIR1MDataModule",
     "GID15",
     "IDTReeS",
     "LandCoverAI",
