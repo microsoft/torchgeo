@@ -50,8 +50,8 @@ extensions = [
 exclude_patterns = ["_build"]
 
 # Sphinx 3.0+ required for:
-# autodoc_typehints = "description"
-needs_sphinx = "3.0"
+# autodoc_typehints_description_target = "documented"
+needs_sphinx = "4.0"
 
 nitpicky = True
 nitpick_ignore = [
@@ -91,6 +91,7 @@ html_css_files = ["workaround.css"]
 # -- Extension configuration -------------------------------------------------
 
 # sphinx.ext.autodoc
+autoclass_content = "class"
 autodoc_default_options = {
     "members": True,
     "special-members": True,
@@ -98,6 +99,7 @@ autodoc_default_options = {
 }
 autodoc_member_order = "bysource"
 autodoc_typehints = "description"
+autodoc_typehints_description_target = "documented"
 
 # sphinx.ext.intersphinx
 intersphinx_mapping = {
