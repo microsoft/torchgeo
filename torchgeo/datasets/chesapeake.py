@@ -26,12 +26,7 @@ from torchvision.transforms import Compose
 from ..samplers.batch import RandomBatchGeoSampler
 from ..samplers.single import GridGeoSampler
 from .geo import GeoDataset, RasterDataset
-from .utils import (
-    BoundingBox,
-    download_url,
-    extract_archive,
-    stack_samples,
-)
+from .utils import BoundingBox, download_url, extract_archive, stack_samples
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
