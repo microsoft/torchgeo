@@ -41,7 +41,7 @@ def mock_missing_module(monkeypatch: Generator[MonkeyPatch, None, None]) -> None
     import_orig = builtins.__import__
 
     def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name in ["rarfile", "radiant_mlhub"]:
+        if name in ["radiant_mlhub", "rarfile", "zipfile_deflate64"]:
             raise ImportError()
         return import_orig(name, *args, **kwargs)
 
@@ -109,6 +109,13 @@ def test_missing_rarfile(mock_missing_module: None) -> None:
         extract_archive(
             os.path.join("tests", "data", "vhr10", "NWPU VHR-10 dataset.rar")
         )
+
+
+def test_missing_zipfile_deflate64(mock_missing_module: None) -> None:
+    # Should fallback on Python builtin zipfile
+    extract_archive(
+        os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip")
+    )
 
 
 def test_unsupported_scheme() -> None:
