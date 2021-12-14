@@ -88,7 +88,8 @@ class _zipfile:
                 import zipfile_deflate64 as zipfile
             except ImportError:
                 # Only supports normal zip files
-                import zipfile
+                # https://github.com/python/mypy/issues/1153
+                import zipfile  # type: ignore[no-redef]
 
             return zipfile.ZipFile(*self.args, **self.kwargs)
 

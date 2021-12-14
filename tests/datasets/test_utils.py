@@ -113,9 +113,7 @@ def test_missing_rarfile(mock_missing_module: None) -> None:
 
 def test_missing_zipfile_deflate64(mock_missing_module: None) -> None:
     # Should fallback on Python builtin zipfile
-    extract_archive(
-        os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip")
-    )
+    extract_archive(os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip"))
 
 
 def test_unsupported_scheme() -> None:
