@@ -126,10 +126,10 @@ class TestIDTReeS:
                 match=f"{package} is not installed and is required to use this dataset",
             ):
                 IDTReeS(dataset.root, download=True, checksum=True)
-        else:
+        elif package in ["open3d"]:
             with pytest.raises(
                 ImportError,
-                match=f"{package} is not installed and is required to use this dataset",
+                match=f"{package} is not installed and is required to plot point clouds",
             ):
                 dataset.plot_las(0)
 
