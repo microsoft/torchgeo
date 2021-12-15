@@ -522,7 +522,7 @@ class IDTReeS(VisionDataset):
             import open3d  # noqa: F401
         except ImportError:
             raise ImportError(
-                "open3d is not installed and is required to use this dataset"
+                "open3d is not installed and is required to plot point clouds"
             )
         import laspy
 

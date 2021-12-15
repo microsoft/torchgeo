@@ -14,12 +14,15 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from torchgeo.datasets import So2Sat, So2SatDataModule
 
+pytest.importorskip("h5py")
+
 
 class TestSo2Sat:
     @pytest.fixture(params=["train", "validation", "test"])
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
     ) -> So2Sat:
+
         md5s = {
             "train": "086c5fa964a401d4194d09ab161c39f1",
             "validation": "dd864f1af0cd495af99d7de80103f49e",

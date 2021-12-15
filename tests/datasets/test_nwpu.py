@@ -17,7 +17,6 @@ from torch.utils.data import ConcatDataset
 import torchgeo.datasets.utils
 from torchgeo.datasets import VHR10
 
-pytest.importorskip("rarfile")
 pytest.importorskip("pycocotools")
 
 
@@ -35,6 +34,7 @@ class TestVHR10:
         tmp_path: Path,
         request: SubRequest,
     ) -> VHR10:
+        pytest.importorskip("rarfile", minversion="3")
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.nwpu, "download_url", download_url
         )
