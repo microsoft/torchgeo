@@ -129,7 +129,7 @@ class TestIDTReeS:
         elif package in ["open3d"]:
             with pytest.raises(
                 ImportError,
-                match=f"{package} is not installed and is required to plot point clouds",
+                match=f"{package} is not installed and is required to plot point cloud",
             ):
                 dataset.plot_las(0)
 
