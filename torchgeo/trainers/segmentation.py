@@ -12,8 +12,10 @@ from pytorch_lightning.core.lightning import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter  # type: ignore[attr-defined]
 from torchmetrics import Accuracy, IoU, MetricCollection
 
+from ..datasets.utils import unbind_samples
 from ..models import FCN
 
 # https://github.com/pytorch/pytorch/issues/60979
@@ -172,6 +174,18 @@ class SemanticSegmentationTask(LightningModule):
 
         self.log("val_loss", loss, on_step=False, on_epoch=True)
         self.val_metrics(y_hat_hard, y)
+
+        if batch_idx < 10:
+            try:
+                sample = unbind_samples(batch)[0]
+                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                fig = datamodule.val_dataset.plot(sample)
+                summary_writer: SummaryWriter = datamodule.logger.experiment
+                summary_writer.add_figure(
+                    f"image/{batch_idx}", fig, global_step=datamodule.global_step
+                )
+            except AttributeError:
+                pass
 
     def validation_epoch_end(self, outputs: Any) -> None:
         """Logs epoch level validation metrics.

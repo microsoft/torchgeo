@@ -46,6 +46,7 @@ __all__ = (
     "stack_samples",
     "concat_samples",
     "merge_samples",
+    "unbind_samples",
     "rasterio_loader",
     "sort_sentinel2_bands",
     "draw_semantic_segmentation_masks",
@@ -512,6 +513,29 @@ def merge_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
             else:
                 collated[key] = value
     return collated
+
+
+def unbind_samples(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
+    """Reverse of :func:`stack_samples`.
+
+    Useful for turning a mini-batch of samples into a list of samples. These individual
+    samples can then be plotted using a dataset's ``plot`` method.
+
+    Args:
+        sample: a single sample
+
+    Returns:
+         list of samples
+    """
+    uncollated: List[Dict[Any, Any]] = [{}] * max(map(len, sample.values()))
+    for key, values in sample.items():
+        if isinstance(values, Tensor):
+            for i, value in enumerate(torch.unbind(values)):
+                uncollated[i][key] = value
+        else:
+            for i, value in enumerate(values):
+                uncollated[i][key] = value
+    return uncollated
 
 
 def rasterio_loader(path: str) -> "np.typing.NDArray[np.int_]":

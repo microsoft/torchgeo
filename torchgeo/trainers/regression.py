@@ -12,8 +12,11 @@ import torch.nn.functional as F
 from torch import Tensor
 from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.utils.tensorboard import SummaryWriter  # type: ignore[attr-defined]
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
 from torchvision import models
+
+from ..datasets.utils import unbind_samples
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -106,6 +109,18 @@ class RegressionTask(pl.LightningModule):
         loss = F.mse_loss(y_hat, y)
         self.log("val_loss", loss)
         self.val_metrics(y_hat, y)
+
+        if batch_idx < 10:
+            try:
+                sample = unbind_samples(batch)[0]
+                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                fig = datamodule.val_dataset.plot(sample)
+                summary_writer: SummaryWriter = datamodule.logger.experiment
+                summary_writer.add_figure(
+                    f"image/{batch_idx}", fig, global_step=datamodule.global_step
+                )
+            except AttributeError:
+                pass
 
     def validation_epoch_end(self, outputs: Any) -> None:
         """Logs epoch level validation metrics.

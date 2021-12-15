@@ -5,6 +5,7 @@
 
 from typing import Any, Dict, Optional
 
+import kornia.augmentation as K
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
@@ -36,6 +37,36 @@ class LandCoverAIDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
 
+    def on_after_batch_transfer(
+        self, batch: Dict[str, Any], batch_idx: int
+    ) -> Dict[str, Any]:
+        """Apply batch augmentations after batch is transferred to the device.
+
+        Args:
+            batch: mini-batch of data
+            batch_idx: batch index
+
+        Returns:
+            augmented mini-batch
+        """
+        try:
+            if self.trainer.training:  # type: ignore[union-attr]
+                train_augmentations = K.AugmentationSequential(
+                    K.RandomRotation(p=0.5, degrees=90),
+                    K.RandomHorizontalFlip(p=0.5),
+                    K.RandomVerticalFlip(p=0.5),
+                    K.RandomSharpness(p=0.5),
+                    K.ColorJitter(
+                        p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1
+                    ),
+                    data_keys=["input", "mask"],
+                )
+                batch = train_augmentations(batch)
+        except AttributeError:
+            pass
+        return batch
+
+
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
 
@@ -57,7 +88,7 @@ class LandCoverAIDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        _ = LandCoverAI(self.root_dir, download=False, checksum=False)
+        LandCoverAI(self.root_dir, download=False, checksum=False)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.

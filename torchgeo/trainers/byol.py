@@ -16,8 +16,11 @@ from torch import Tensor, optim
 from torch.autograd import Variable
 from torch.nn.modules import BatchNorm1d, Conv2d, Linear, Module, ReLU, Sequential
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.utils.tensorboard import SummaryWriter  # type: ignore[attr-defined]
 from torchvision.models import resnet18
 from torchvision.models.resnet import resnet50
+
+from ..datasets.utils import unbind_samples
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -451,6 +454,18 @@ class BYOLTask(LightningModule):
         )
 
         self.log("val_loss", loss, on_step=False, on_epoch=True)
+
+        if batch_idx < 10:
+            try:
+                sample = unbind_samples(batch)[0]
+                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                fig = datamodule.val_dataset.plot(sample)
+                summary_writer: SummaryWriter = datamodule.logger.experiment
+                summary_writer.add_figure(
+                    f"image/{batch_idx}", fig, global_step=datamodule.global_step
+                )
+            except AttributeError:
+                pass
 
     def test_step(self, *args: Any) -> None:  # type: ignore[override]
         """No-op, does nothing."""
