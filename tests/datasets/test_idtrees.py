@@ -125,7 +125,7 @@ class TestIDTReeS:
                 ImportError,
                 match=f"{package} is not installed and is required to use this dataset",
             ):
-                IDTReeS(dataset.root, download=True, checksum=True)
+                IDTReeS(dataset.root)
         elif package in ["open3d"]:
             with pytest.raises(
                 ImportError,

@@ -1,11 +1,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import builtins
 import os
 import shutil
 import sys
 from pathlib import Path
-from typing import Generator
+from typing import Any, Generator
 
 import pytest
 import torch
@@ -54,6 +55,21 @@ class TestVHR10:
         transforms = nn.Identity()  # type: ignore[attr-defined]
         return VHR10(root, split, transforms, download=True, checksum=True)
 
+    @pytest.fixture
+    def mock_missing_module(
+        self, monkeypatch: Generator[MonkeyPatch, None, None]
+    ) -> None:
+        import_orig = builtins.__import__
+
+        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
+            if name == "pycocotools.coco":
+                raise ImportError()
+            return import_orig(name, *args, **kwargs)
+
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            builtins, "__import__", mocked_import
+        )
+
     def test_getitem(self, dataset: VHR10) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
@@ -84,3 +100,13 @@ class TestVHR10:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             VHR10(str(tmp_path))
+
+    def test_mock_missing_module(
+        self, dataset: VHR10, mock_missing_module: None
+    ) -> None:
+        if dataset.split == "positive":
+            with pytest.raises(
+                ImportError,
+                match="pycocotools is not installed and is required to use this datase",
+            ):
+                VHR10(dataset.root, dataset.split)
