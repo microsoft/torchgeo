@@ -36,8 +36,16 @@ def _compute_index(band_a: Tensor, band_b: Tensor) -> Tensor:
 
 
 class AppendIndex(Module):
+    """
+    Normalized Difference Built-up Index (NDBI): (swir - nir) / (swir + nir)
+    Normalized Difference Snow Index (NDSI): (green - swir) / (green + swir)
+    Normalized Difference Vegetation Index (NDVI): (red - nir) / (red + nir)
+    Normalized Difference Water Index: (green - nir) / (green + nir)
 
-    def __init__(self, band_a: int, band_b: int) -> None:
+    """
+    _INDICES = {'ndbi', 'ndsi', 'ndvi', 'ndwi'}
+
+    def __init__(self, index: str, band_a: int, band_b: int) -> None:
         super().__init__()
         self.dim = -3
         self.band_a = band_a

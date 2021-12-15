@@ -39,66 +39,14 @@ def batch() -> Dict[str, Tensor]:
     }
 
 
-def test_ndbi(sample: Dict[str, Tensor]) -> None:
-    index = indices.ndbi(swir=sample["image"], nir=sample["image"])
+def test_index(sample: Dict[str, Tensor]) -> None:
+    index = indices._compute_index(swir=sample["image"], nir=sample["image"])
     assert index.ndim == 3
     assert index.shape[-2:] == sample["image"].shape[-2:]
 
 
-def test_ndsi(sample: Dict[str, Tensor]) -> None:
-    index = indices.ndsi(green=sample["image"], swir=sample["image"])
-    assert index.ndim == 3
-    assert index.shape[-2:] == sample["image"].shape[-2:]
-
-
-def test_ndvi(sample: Dict[str, Tensor]) -> None:
-    index = indices.ndvi(red=sample["image"], nir=sample["image"])
-    assert index.ndim == 3
-    assert index.shape[-2:] == sample["image"].shape[-2:]
-
-
-def test_ndwi(sample: Dict[str, Tensor]) -> None:
-    index = indices.ndwi(green=sample["image"], nir=sample["image"])
-    assert index.ndim == 3
-    assert index.shape[-2:] == sample["image"].shape[-2:]
-
-
-def test_nbr(sample: Dict[str, Tensor]) -> None:
-    index = indices.nbr(nir=sample["image"], swir=sample["image"])
-    assert index.ndim == 3
-    assert index.shape[-2:] == sample["image"].shape[-2:]
-
-
-def test_append_ndbi(batch: Dict[str, Tensor]) -> None:
+def test_append_index(batch: Dict[str, Tensor]) -> None:
     b, c, h, w = batch["image"].shape
-    tr = indices.AppendNDBI(index_swir=0, index_nir=0)
-    output = tr(batch)
-    assert output["image"].shape == (b, c + 1, h, w)
-
-
-def test_append_ndsi(batch: Dict[str, Tensor]) -> None:
-    b, c, h, w = batch["image"].shape
-    tr = indices.AppendNDSI(index_green=0, index_swir=0)
-    output = tr(batch)
-    assert output["image"].shape == (b, c + 1, h, w)
-
-
-def test_append_ndvi(batch: Dict[str, Tensor]) -> None:
-    b, c, h, w = batch["image"].shape
-    tr = indices.AppendNDVI(index_red=0, index_nir=0)
-    output = tr(batch)
-    assert output["image"].shape == (b, c + 1, h, w)
-
-
-def test_append_ndwi(batch: Dict[str, Tensor]) -> None:
-    b, c, h, w = batch["image"].shape
-    tr = indices.AppendNDWI(index_green=0, index_nir=0)
-    output = tr(batch)
-    assert output["image"].shape == (b, c + 1, h, w)
-
-
-def test_append_nbr(batch: Dict[str, Tensor]) -> None:
-    b, c, h, w = batch["image"].shape
-    tr = indices.AppendNBR(index_nir=0, index_swir=0)
+    tr = indices.AppendIndex(index_swir=0, index_nir=0)
     output = tr(batch)
     assert output["image"].shape == (b, c + 1, h, w)
