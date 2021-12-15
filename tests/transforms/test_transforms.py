@@ -257,10 +257,7 @@ def test_sequential_transforms_augmentations(
         "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
     }
     train_transforms = nn.Sequential(  # type: ignore[attr-defined]
-        indices.AppendNDBI(index_swir=0, index_nir=0),
-        indices.AppendNDSI(index_green=0, index_swir=0),
-        indices.AppendNDVI(index_red=0, index_nir=0),
-        indices.AppendNDWI(index_green=0, index_nir=0),
+        indices.AppendIndex(band_a=0, band_b=0),
         transforms.AugmentationSequential(
             K.RandomHorizontalFlip(p=1.0), data_keys=["image", "mask", "boxes"]
         ),
