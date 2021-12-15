@@ -22,6 +22,19 @@ Module.__module__ = "torch.nn"
 _EPSILON = 1e-10
 
 
+def _compute_index(band_a: Tensor, band_b: Tensor) -> Tensor:
+    """Compute common difference-based indices
+    
+    Args:
+        band_a: tensor containing the reference band
+        band_b: tensor containing the difference band
+
+    Returns:
+        tensor which contains the computer index values
+    """
+    return (band_a - band_b) / ((band_a + band_b) + _EPSILON)
+
+
 def ndbi(swir: Tensor, nir: Tensor) -> Tensor:
     """Compute Normalized Different Built-up Index (NDBI).
 
@@ -33,7 +46,7 @@ def ndbi(swir: Tensor, nir: Tensor) -> Tensor:
         tensor containing computed NDBI values
 
     """
-    return (swir - nir) / ((swir + nir) + _EPSILON)
+    return _compute_index(swir, nir)
 
 
 def nbr(nir: Tensor, swir: Tensor) -> Tensor:
@@ -61,20 +74,20 @@ def ndsi(green: Tensor, swir: Tensor) -> Tensor:
     Returns:
         tensor containing computed NDSI values
     """
-    return (green - swir) / ((green + swir) + _EPSILON)
+    return _compute_index(green, swir)
 
 
-def ndvi(red: Tensor, nir: Tensor) -> Tensor:
+def ndvi(nir: Tensor, red: Tensor) -> Tensor:
     """Compute Normalized Different Vegetation Index (NDVI).
 
     Args:
-        red: tensor containing red band
         nir: tensor containing nir band
+        red: tensor containing red band
 
     Returns:
         tensor containing computed NDVI values
     """
-    return (nir - red) / ((nir + red) + _EPSILON)
+    return _compute_index(nir, red)
 
 
 def ndwi(green: Tensor, nir: Tensor) -> Tensor:
@@ -87,7 +100,7 @@ def ndwi(green: Tensor, nir: Tensor) -> Tensor:
     Returns:
         tensor containing computed NDWI values
     """
-    return (green - nir) / ((green + nir) + _EPSILON)
+    return _compute_index(green, nir)
 
 
 class AppendNDBI(Module):
