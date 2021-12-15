@@ -22,7 +22,6 @@ class TestSo2Sat:
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
     ) -> So2Sat:
-
         md5s = {
             "train": "086c5fa964a401d4194d09ab161c39f1",
             "validation": "dd864f1af0cd495af99d7de80103f49e",
