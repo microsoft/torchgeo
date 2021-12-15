@@ -7,38 +7,6 @@ on:
     branches:
     - main
 jobs:
-  mypy:
-    name: mypy
-    runs-on: ubuntu-latest
-    steps:
-    - name: Clone repo
-      uses: actions/checkout@v2
-    - name: Set up python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
-    - name: Install pip dependencies
-      run: |
-        pip install cython numpy  # needed for pycocotools
-        pip install .[datasets,tests]
-    - name: Run mypy checks
-      run: mypy .
-  datasets:
-    name: datasets
-    runs-on: ubuntu-latest
-    steps:
-    - name: Clone repo
-      uses: actions/checkout@v2
-    - name: Set up python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
-    - name: Install pip dependencies
-      run: |
-        pip install cython numpy  # needed for pycocotools
-        pip install .[tests]
-    - name: Run pytest checks
-      run: pytest --cov=torchgeo --cov-report=xml
   pytest:
     name: pytest
     runs-on: ${{ matrix.os }}
