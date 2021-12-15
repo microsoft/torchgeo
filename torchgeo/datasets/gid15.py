@@ -262,6 +262,13 @@ class GID15(VisionDataset):
             image = sample["image"]
             ncols = 1
 
+        if "predictions" in sample and "mask" in sample:
+            ncols = 3
+            pred = sample["predictions"]
+        elif "predictions" in sample and "mask" not in sample:
+            ncols = 2
+            pred = sample["predictions"]
+
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
 
         if self.split != "test":
@@ -269,9 +276,18 @@ class GID15(VisionDataset):
             axs[0].axis("off")
             axs[1].imshow(mask)
             axs[1].axis("off")
+            if "predictions" in sample:
+                axs[2].imshow(pred)
+                axs[2].axis("off")
         else:
-            axs.imshow(image.permute(1, 2, 0))
-            axs.axis("off")
+            if "predictions" in sample:
+                axs[0].imshow(image.permute(1, 2, 0))
+                axs[0].axis("off")
+                axs[1].imshow(pred)
+                axs[1].axis("off")
+            else:
+                axs.imshow(image.permute(1, 2, 0))
+                axs.axis("off")
 
         if suptitle is not None:
             plt.suptitle(suptitle)

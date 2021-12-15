@@ -70,3 +70,14 @@ class TestGID15:
     def test_plot(self, dataset: GID15) -> None:
         dataset.plot(dataset[0], suptitle="Test")
         plt.close()
+
+        if dataset.split != "test":
+            sample = dataset[0]
+            sample["predictions"] = torch.clone(  # type: ignore[attr-defined]
+                sample["mask"]
+            )
+            dataset.plot(sample, suptitle="Prediction")
+        else:
+            sample = dataset[0]
+            sample["predictions"] = torch.ones((1, 1))  # type: ignore[attr-defined]
+            dataset.plot(sample)
