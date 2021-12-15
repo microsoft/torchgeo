@@ -526,6 +526,8 @@ def unbind_samples(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
 
     Returns:
          list of samples
+
+    .. versionadded:: 0.2
     """
     uncollated: List[Dict[Any, Any]] = [{}] * max(map(len, sample.values()))
     for key, values in sample.items():
