@@ -252,6 +252,8 @@ class GID15(VisionDataset):
 
         Returns;
             a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
         """
         if self.split != "test":
             image, mask = sample["image"], sample["mask"]
