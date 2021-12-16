@@ -63,7 +63,7 @@ def get_random_bounding_box(
     if sample_mode == SIZE_IN_CRS_UNITS:
         maxy = miny + t_size[0]
     elif sample_mode == SIZE_IN_PIXELS:
-        maxy = miny + t_size[1] * res
+        maxy = miny + t_size[0] * res
 
     mint = bounds.mint
     maxt = bounds.maxt
