@@ -262,11 +262,8 @@ class GID15(VisionDataset):
             image = sample["image"]
             ncols = 1
 
-        if "predictions" in sample and "mask" in sample:
-            ncols = 3
-            pred = sample["predictions"]
-        elif "predictions" in sample and "mask" not in sample:
-            ncols = 2
+        if "predictions" in sample:
+            ncols += 1
             pred = sample["predictions"]
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
