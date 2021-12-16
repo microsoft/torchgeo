@@ -26,13 +26,7 @@ from torchvision.transforms import Compose
 from ..samplers.batch import RandomBatchGeoSampler
 from ..samplers.single import GridGeoSampler
 from .geo import GeoDataset, RasterDataset
-from .utils import (
-    BoundingBox,
-    check_integrity,
-    download_and_extract_archive,
-    download_url,
-    extract_archive,
-)
+from .utils import BoundingBox, download_url, extract_archive
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -121,39 +115,47 @@ class Chesapeake(RasterDataset, abc.ABC):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         self.root = root
+        self.download = download
         self.checksum = checksum
 
-        if download:
-            self._download()
-
-        if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+        self._verify()
 
         super().__init__(root, crs, res, transforms, cache)
 
-    def _check_integrity(self) -> bool:
-        """Check integrity of dataset.
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
 
-        Returns:
-            True if dataset MD5s match, else False
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        integrity: bool = check_integrity(
-            os.path.join(self.root, self.zipfile), self.md5 if self.checksum else None
-        )
-        return integrity
-
-    def _download(self) -> None:
-        """Download the dataset and extract it."""
-        if self._check_integrity():
-            print("Files already downloaded and verified")
+        # Check if the extracted file already exists
+        if os.path.exists(os.path.join(self.root, self.filename)):
             return
 
-        download_and_extract_archive(
-            self.url, self.root, filename=self.zipfile, md5=self.md5
-        )
+        # Check if the zip file has already been downloaded
+        if os.path.exists(os.path.join(self.root, self.zipfile)):
+            self._extract()
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automaticaly download the dataset."
+            )
+
+        # Download the dataset
+        self._download()
+        self._extract()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        download_url(self.url, self.root, filename=self.zipfile, md5=self.md5)
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        extract_archive(os.path.join(self.root, self.zipfile))
 
 
 class Chesapeake7(Chesapeake):

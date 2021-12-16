@@ -34,7 +34,7 @@ class TestChesapeake13:
         self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> Chesapeake13:
         monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.utils, "download_url", download_url
+            torchgeo.datasets.chesapeake, "download_url", download_url
         )
         md5 = "9557b609e614a1f79dec6eb1bb3f3a06"
         monkeypatch.setattr(Chesapeake13, "md5", md5)  # type: ignore[attr-defined]
@@ -59,8 +59,20 @@ class TestChesapeake13:
         ds = dataset + dataset
         assert isinstance(ds, ZipDataset)
 
-    def test_already_downloaded(self, dataset: Chesapeake13) -> None:
+    def test_already_extracted(self, dataset: Chesapeake13) -> None:
         Chesapeake13(root=dataset.root, download=True)
+
+    def test_already_downloaded(self, tmp_path: Path) -> None:
+        url = os.path.join(
+            "tests", "data", "chesapeake", "BAYWIDE", "Baywide_13Class_20132014.zip"
+        )
+        root = str(tmp_path)
+        shutil.copy(url, root)
+        Chesapeake13(root)
+
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(RuntimeError, match="Dataset not found"):
+            Chesapeake13(str(tmp_path), checksum=True)
 
     def test_plot(self, dataset: Chesapeake13) -> None:
         query = dataset.bounds
@@ -70,10 +82,6 @@ class TestChesapeake13:
     def test_url(self) -> None:
         ds = Chesapeake13(os.path.join("tests", "data", "chesapeake", "BAYWIDE"))
         assert "cicwebresources.blob.core.windows.net" in ds.url
-
-    def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
-            Chesapeake13(str(tmp_path))
 
     def test_invalid_query(self, dataset: Chesapeake13) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
