@@ -67,8 +67,7 @@ Conda does not directly support installing development versions, but you can use
    $ conda activate torchgeo
    $ pip install .
 
-
-.. note:: If you do not have access to a GPU or are running on macOS, replace ``pytorch-gpu`` with ``pytorch-cpu`` in the ``environment.yml`` file.
+.. note:: The above method will not work on Windows. Windows users are recommended to create a conda environment and install dependencies via pip.
 
 Conda does not directly support optional dependencies. If you install from conda-forge, only required dependencies will be installed by default. Optional dependencies can be installed afterwards using pip. If you install using the ``environment.yml`` file, all optional dependencies are installed by default.
 
