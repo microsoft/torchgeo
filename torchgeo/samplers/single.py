@@ -13,6 +13,7 @@ from torch.utils.data import Sampler
 from torchgeo.datasets.geo import GeoDataset
 from torchgeo.datasets.utils import BoundingBox
 
+from .constants import SIZE_IN_CRS_UNITS
 from .utils import _to_tuple, get_random_bounding_box
 
 # https://github.com/pytorch/pytorch/issues/60979
@@ -75,6 +76,7 @@ class RandomGeoSampler(GeoSampler):
         size: Union[Tuple[float, float], float],
         length: int,
         roi: Optional[BoundingBox] = None,
+        sample_mode: int = SIZE_IN_CRS_UNITS,
     ) -> None:
         """Initialize a new Sampler instance.
 
@@ -95,6 +97,7 @@ class RandomGeoSampler(GeoSampler):
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
         self.length = length
+        self.sample_mode = sample_mode
         self.hits = list(self.index.intersection(tuple(self.roi), objects=True))
 
     def __iter__(self) -> Iterator[BoundingBox]:
@@ -109,7 +112,9 @@ class RandomGeoSampler(GeoSampler):
             bounds = BoundingBox(*hit.bounds)
 
             # Choose a random index within that tile
-            bounding_box = get_random_bounding_box(bounds, self.size, self.res)
+            bounding_box = get_random_bounding_box(
+                bounds, self.size, self.res, self.sample_mode
+            )
 
             yield bounding_box
 

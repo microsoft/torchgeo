@@ -12,6 +12,7 @@ from torch.utils.data import Sampler
 
 from torchgeo.datasets.geo import GeoDataset
 from torchgeo.datasets.utils import BoundingBox
+from torchgeo.samplers.constants import SIZE_IN_CRS_UNITS
 
 from .utils import _to_tuple, get_random_bounding_box
 
@@ -73,6 +74,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         batch_size: int,
         length: int,
         roi: Optional[BoundingBox] = None,
+        sample_mode: int = SIZE_IN_CRS_UNITS,
     ) -> None:
         """Initialize a new Sampler instance.
 
@@ -95,6 +97,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         self.size = _to_tuple(size)
         self.batch_size = batch_size
         self.length = length
+        self.sample_mode = sample_mode
         self.hits = list(self.index.intersection(tuple(self.roi), objects=True))
 
     def __iter__(self) -> Iterator[List[BoundingBox]]:
@@ -112,7 +115,9 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             batch = []
             for _ in range(self.batch_size):
 
-                bounding_box = get_random_bounding_box(bounds, self.size, self.res)
+                bounding_box = get_random_bounding_box(
+                    bounds, self.size, self.res, self.sample_mode
+                )
                 batch.append(bounding_box)
 
             yield batch
