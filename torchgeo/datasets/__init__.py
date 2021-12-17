@@ -13,7 +13,6 @@ from .chesapeake import (
     Chesapeake7,
     Chesapeake13,
     ChesapeakeCVPR,
-    ChesapeakeCVPRPrior,
     ChesapeakeDC,
     ChesapeakeDE,
     ChesapeakeMD,

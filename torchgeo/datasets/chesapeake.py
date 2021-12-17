@@ -293,9 +293,19 @@ class ChesapeakeCVPR(GeoDataset):
     * https://doi.org/10.1109/cvpr.2019.01301
     """
 
-    url = "https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip"  # noqa: E501
-    filename = "cvpr_chesapeake_landcover.zip"
-    md5 = "1225ccbb9590e9396875f221e5031514"
+    subdatasets = ["base", "prior_extension"]
+    urls = {
+        "base": "https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip",  # noqa: E501
+        "prior_extension": "https://zenodo.org/record/5652512/files/cvpr_chesapeake_landcover_prior_extension.zip?download=1",  # noqa: E501
+    }
+    filenames = {
+        "base": "cvpr_chesapeake_landcover.zip",
+        "prior_extension": "cvpr_chesapeake_landcover_prior_extension.zip",
+    }
+    md5s = {
+        "base": "1225ccbb9590e9396875f221e5031514",
+        "prior_extension": "8f43ec30e155274dd652e157c48d2598",
+    }
 
     crs = CRS.from_epsg(3857)
     res = 1
@@ -308,6 +318,7 @@ class ChesapeakeCVPR(GeoDataset):
         "nlcd",
         "lc",
         "buildings",
+        "prior_from_cooccurrences_101_31_no_osm_no_buildings",
     ]
     states = ["de", "md", "va", "wv", "pa", "ny"]
     splits = (
@@ -316,6 +327,7 @@ class ChesapeakeCVPR(GeoDataset):
         + [f"{state}-test" for state in states]
     )
 
+    # these are used to check the integrity of the dataset
     files = [
         "de_1m_2013_extended-debuffered-test_tiles",
         "de_1m_2013_extended-debuffered-train_tiles",
@@ -335,6 +347,14 @@ class ChesapeakeCVPR(GeoDataset):
         "wv_1m_2014_extended-debuffered-test_tiles",
         "wv_1m_2014_extended-debuffered-train_tiles",
         "wv_1m_2014_extended-debuffered-val_tiles",
+        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_buildings.tif",
+        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-off.tif",  # noqa: E501
+        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-on.tif",  # noqa: E501
+        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_lc.tif",
+        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-new.tif",
+        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-old.tif",
+        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_nlcd.tif",
+        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif",  # noqa: E501
         "spatial_index.geojson",
     ]
 
@@ -365,7 +385,8 @@ class ChesapeakeCVPR(GeoDataset):
             splits: a list of strings in the format "{state}-{train,val,test}"
                 indicating the subset of data to use, for example "ny-train"
             layers: a list containing a subset of "naip-new", "naip-old", "lc", "nlcd",
-                "landsat-leaf-on", "landsat-leaf-off", "buildings" indicating which
+                "landsat-leaf-on", "landsat-leaf-off", "buildings", or
+                "prior_from_cooccurrences_101_31_no_osm_no_buildings" indicating which
                 layers to load
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
@@ -399,6 +420,12 @@ class ChesapeakeCVPR(GeoDataset):
                     box = shapely.geometry.shape(row["geometry"])
                     minx, miny, maxx, maxy = box.bounds
                     coords = (minx, maxx, miny, maxy, mint, maxt)
+
+                    prior_fn = row["properties"]["lc"].replace(
+                        "lc.tif",
+                        "prior_from_cooccurrences_101_31_no_osm_no_buildings.tif",
+                    )
+
                     self.index.insert(
                         i,
                         coords,
@@ -410,6 +437,7 @@ class ChesapeakeCVPR(GeoDataset):
                             "lc": row["properties"]["lc"],
                             "nlcd": row["properties"]["nlcd"],
                             "buildings": row["properties"]["buildings"],
+                            "prior_from_cooccurrences_101_31_no_osm_no_buildings": prior_fn,  # noqa: E501
                         },
                     )
 
@@ -467,7 +495,12 @@ class ChesapeakeCVPR(GeoDataset):
                     "landsat-leaf-off",
                 ]:
                     sample["image"].append(data)
-                elif layer in ["lc", "nlcd", "buildings"]:
+                elif layer in [
+                    "lc",
+                    "nlcd",
+                    "buildings",
+                    "prior_from_cooccurrences_101_31_no_osm_no_buildings",
+                ]:
                     sample["mask"].append(data)
         else:
             raise IndexError(f"query: {query} spans multiple tiles which is not valid")
@@ -503,7 +536,10 @@ class ChesapeakeCVPR(GeoDataset):
             return
 
         # Check if the zip files have already been downloaded
-        if os.path.exists(os.path.join(self.root, self.filename)):
+        if all([
+            os.path.exists(os.path.join(self.root, self.filenames[subdataset]))
+            for subdataset in self.subdatasets
+        ]):
             self._extract()
             return
 
@@ -521,168 +557,18 @@ class ChesapeakeCVPR(GeoDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        download_url(self.url, self.root, filename=self.filename, md5=self.md5)
+        for subdataset in self.subdatasets:
+            download_url(
+                self.urls[subdataset],
+                self.root,
+                filename=self.filenames[subdataset],
+                md5=self.md5s[subdataset]
+            )
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        extract_archive(os.path.join(self.root, self.filename))
-
-
-class ChesapeakeCVPRPrior(GeoDataset):
-    """CVPR 2019 Chesapeake Land Cover dataset. With priors from NLCD, buildings, and OSM.
-
-    The `CVPR 2019 Chesapeake Land Cover
-    <https://lila.science/datasets/chesapeakelandcover>`_ dataset contains two layers of
-    NAIP aerial imagery, Landsat 8 leaf-on and leaf-off imagery, Chesapeake Bay land
-    cover labels, NLCD land cover labels, and Microsoft building footprint labels.
-
-    This dataset was organized to accompany the 2019 CVPR paper, "Large Scale
-    High-Resolution Land Cover Mapping with Multi-Resolution Data".
-
-    If you use this dataset in your research, please cite the following paper:
-
-    * https://doi.org/10.1109/cvpr.2019.01301
-    """
-
-    url = "https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip"  # noqa: E501
-    filename = "cvpr_chesapeake_landcover.zip"
-    md5 = "0ea5e7cb861be3fb8a06fedaaaf91af9"
-
-    crs = CRS.from_epsg(3857)
-    res = 1
-
-    valid_layers = [
-        "naip-new",
-        "naip-old",
-        "landsat-leaf-on",
-        "landsat-leaf-off",
-        "nlcd",
-        "lc",
-        "buildings",
-        "prior_from_cooccurrences_101_31_no_osm_no_buildings",
-    ]
-    states = ["de", "md", "va", "wv", "pa", "ny"]
-    splits = (
-        [f"{state}-train" for state in states]
-        + [f"{state}-val" for state in states]
-        + [f"{state}-test" for state in states]
-    )
-
-    p_src_crs = pyproj.CRS("epsg:3857")
-    p_transformers = {
-        "epsg:26917": pyproj.Transformer.from_crs(
-            p_src_crs, pyproj.CRS("epsg:26917"), always_xy=True
-        ).transform,
-        "epsg:26918": pyproj.Transformer.from_crs(
-            p_src_crs, pyproj.CRS("epsg:26918"), always_xy=True
-        ).transform,
-    }
-
-    def __init__(
-        self,
-        root: str = "data",
-        splits: Sequence[str] = ["de-train"],
-        layers: List[str] = ["naip-new", "prior_v1"],
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
-        cache: bool = True,
-        download: bool = False,
-        checksum: bool = False,
-    ) -> None:
-        """Initialize a new Dataset instance.
-
-        Args:
-            root: root directory where dataset can be found
-            split: a string in the format "{state}-{train,val,test}" indicating the
-                subset of data to use, for example "ny-train"
-            layers: a list containing a subset of "naip-new", "naip-old", "lc", "nlcd",
-                "landsat-leaf-on", "landsat-leaf-off", "buildings" indicating which
-                layers to load
-            transforms: a function/transform that takes an input sample
-                and returns a transformed version
-            cache: if True, cache file handle to speed up repeated sampling
-            download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
-
-        Raises:
-            FileNotFoundError: if no files are found in ``root``
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
-        for split in splits:
-            assert split in self.splits
-        super().__init__(transforms)  # creates self.index and self.transform
-        self.root = root
-        self.layers = layers
-        self.cache = cache
-        self.checksum = checksum
-
-        if download:
-            self._download()
-
-        if checksum:
-            if not self._check_integrity():
-                raise RuntimeError(
-                    "Dataset not found or corrupted. "
-                    + "You can use download=True to download it"
-                )
-
-        # Add all tiles into the index in epsg:3857 based on the included geojson
-        mint: float = 0
-        maxt: float = sys.maxsize
-        with fiona.open(os.path.join(root, "spatial_index.geojson"), "r") as f:
-            for i, row in enumerate(f):
-                if row["properties"]["split"] in splits:
-                    box = shapely.geometry.shape(row["geometry"])
-                    minx, miny, maxx, maxy = box.bounds
-                    coords = (minx, maxx, miny, maxy, mint, maxt)
-                    self.index.insert(
-                        i,
-                        coords,
-                        {
-                            "naip-new": row["properties"]["naip-new"],
-                            "naip-old": row["properties"]["naip-old"],
-                            "landsat-leaf-on": row["properties"]["landsat-leaf-on"],
-                            "landsat-leaf-off": row["properties"]["landsat-leaf-off"],
-                            "lc": row["properties"]["lc"],
-                            "nlcd": row["properties"]["nlcd"],
-                            "buildings": row["properties"]["buildings"],
-                            "prior_from_cooccurrences_101_31_no_osm_no_buildings": row[
-                                "properties"
-                            ]["lc"].replace(
-                                "lc",
-                                "prior_from_cooccurrences_101_31_no_osm_no_buildings",
-                            ),
-                        },
-                    )
-
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
-
-        Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
-
-        Returns:
-            sample of image/mask and metadata at that index
-
-        Raises:
-            IndexError: if query is not found in the index
-        """
-        hits = self.index.intersection(query, objects=True)
-        filepaths = [hit.object for hit in hits]
-
-        sample = {
-            "image": [],
-            "mask": [],
-            "crs": self.crs,
-            "bbox": query,
-        }
-
-        if len(filepaths) == 0:
-            raise IndexError(
-                f"query: {query} not found in index with bounds: {self.bounds}"
-            )
-        elif len(filepaths) == 1:
-            filenames = filepaths[0]
-            query_geom_transformed = None  # is set by the first layer
+        for subdataset in self.subdatasets:
+            extract_archive(os.path.join(self.root, self.filenames[subdataset]))
 
             minx, maxx, miny, maxy, mint, maxt = query
             query_box = shapely.geometry.box(minx, miny, maxx, maxy)
@@ -763,4 +649,293 @@ class ChesapeakeCVPRPrior(GeoDataset):
             self.root,
             filename=self.filename,
             md5=self.md5,
+
+class ChesapeakeCVPRDataModule(LightningDataModule):
+    """LightningDataModule implementation for the Chesapeake CVPR Land Cover dataset.
+
+    Uses the random splits defined per state to partition tiles into train, val,
+    and test sets.
+    """
+
+    def __init__(
+        self,
+        root_dir: str,
+        train_splits: List[str],
+        val_splits: List[str],
+        test_splits: List[str],
+        patches_per_tile: int = 200,
+        patch_size: int = 256,
+        batch_size: int = 64,
+        num_workers: int = 0,
+        class_set: int = 7,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a LightningDataModule for Chesapeake CVPR based DataLoaders.
+
+        Args:
+            root_dir: The ``root`` arugment to pass to the ChesapeakeCVPR Dataset
+                classes
+            train_splits: The splits used to train the model, e.g. ["ny-train"]
+            val_splits: The splits used to validate the model, e.g. ["ny-val"]
+            test_splits: The splits used to test the model, e.g. ["ny-test"]
+            patches_per_tile: The number of patches per tile to sample
+            patch_size: The size of each patch in pixels (test patches will be 1.5 times
+                this size)
+            batch_size: The batch size to use in all created DataLoaders
+            num_workers: The number of workers to use in all created DataLoaders
+            class_set: The high-resolution land cover class set to use - 5 or 7
+        """
+        super().__init__()  # type: ignore[no-untyped-call]
+        for state in train_splits + val_splits + test_splits:
+            assert state in ChesapeakeCVPR.splits
+        assert class_set in [5, 7]
+
+        self.root_dir = root_dir
+        self.train_splits = train_splits
+        self.val_splits = val_splits
+        self.test_splits = test_splits
+        self.layers = ["naip-new", "lc"]
+        self.patches_per_tile = patches_per_tile
+        self.patch_size = patch_size
+        # This is a rough estimate of how large of a patch we will need to sample in
+        # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
+        self.original_patch_size = int(patch_size * 2.0)
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+        self.class_set = class_set
+
+    def pad_to(
+        self, size: int = 512, image_value: int = 0, mask_value: int = 0
+    ) -> Callable[[Dict[str, Tensor]], Dict[str, Tensor]]:
+        """Returns a function to perform a padding transform on a single sample.
+
+        Args:
+            size: output image size
+            image_value: value to pad image with
+            mask_value: value to pad mask with
+
+        Returns:
+            function to perform padding
+        """
+
+        def pad_inner(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+            _, height, width = sample["image"].shape
+            assert height <= size and width <= size
+
+            height_pad = size - height
+            width_pad = size - width
+
+            # See https://pytorch.org/docs/stable/generated/torch.nn.functional.pad.html
+            # for a description of the format of the padding tuple
+            sample["image"] = F.pad(
+                sample["image"],
+                (0, width_pad, 0, height_pad),
+                mode="constant",
+                value=image_value,
+            )
+            sample["mask"] = F.pad(
+                sample["mask"],
+                (0, width_pad, 0, height_pad),
+                mode="constant",
+                value=mask_value,
+            )
+            return sample
+
+        return pad_inner
+
+    def center_crop(
+        self, size: int = 512
+    ) -> Callable[[Dict[str, Tensor]], Dict[str, Tensor]]:
+        """Returns a function to perform a center crop transform on a single sample.
+
+        Args:
+            size: output image size
+
+        Returns:
+            function to perform center crop
+        """
+
+        def center_crop_inner(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+            _, height, width = sample["image"].shape
+
+            y1 = (height - size) // 2
+            x1 = (width - size) // 2
+            sample["image"] = sample["image"][:, y1 : y1 + size, x1 : x1 + size]
+            sample["mask"] = sample["mask"][:, y1 : y1 + size, x1 : x1 + size]
+
+            return sample
+
+        return center_crop_inner
+
+    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Preprocesses a single sample.
+
+        Args:
+            sample: sample dictionary containing image and mask
+
+        Returns:
+            preprocessed sample
+        """
+        sample["image"] = sample["image"] / 255.0
+        sample["mask"] = sample["mask"]
+        sample["mask"] = sample["mask"].squeeze()
+
+        if self.class_set == 5:
+            sample["mask"][sample["mask"] == 5] = 4
+            sample["mask"][sample["mask"] == 6] = 4
+
+        sample["image"] = sample["image"].float()
+        sample["mask"] = sample["mask"].long()
+
+        return sample
+
+    def nodata_check(
+        self, size: int = 512
+    ) -> Callable[[Dict[str, Tensor]], Dict[str, Tensor]]:
+        """Returns a function to check for nodata or mis-sized input.
+
+        Args:
+            size: output image size
+
+        Returns:
+            function to check for nodata values
+        """
+
+        def nodata_check_inner(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+            num_channels, height, width = sample["image"].shape
+
+            if height < size or width < size:
+                sample["image"] = torch.zeros(  # type: ignore[attr-defined]
+                    (num_channels, size, size)
+                )
+                sample["mask"] = torch.zeros((size, size))  # type: ignore[attr-defined]
+
+            return sample
+
+        return nodata_check_inner
+
+    def prepare_data(self) -> None:
+        """Confirms that the dataset is downloaded on the local node.
+
+        This method is called once per node, while :func:`setup` is called once per GPU.
+        """
+        ChesapeakeCVPR(
+            self.root_dir,
+            splits=self.train_splits,
+            layers=self.layers,
+            transforms=None,
+            download=False,
+            checksum=False,
+        )
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        """Create the train/val/test splits based on the original Dataset objects.
+
+        The splits should be done here vs. in :func:`__init__` per the docs:
+        https://pytorch-lightning.readthedocs.io/en/latest/extensions/datamodules.html#setup.
+
+        Args:
+            stage: stage to set up
+        """
+        train_transforms = Compose(
+            [
+                self.center_crop(self.patch_size),
+                self.nodata_check(self.patch_size),
+                self.preprocess,
+            ]
+        )
+        val_transforms = Compose(
+            [
+                self.center_crop(self.patch_size),
+                self.nodata_check(self.patch_size),
+                self.preprocess,
+            ]
+        )
+        test_transforms = Compose(
+            [
+                self.pad_to(self.original_patch_size, image_value=0, mask_value=0),
+                self.preprocess,
+            ]
+        )
+
+        self.train_dataset = ChesapeakeCVPR(
+            self.root_dir,
+            splits=self.train_splits,
+            layers=self.layers,
+            transforms=train_transforms,
+            download=False,
+            checksum=False,
+        )
+        self.val_dataset = ChesapeakeCVPR(
+            self.root_dir,
+            splits=self.val_splits,
+            layers=self.layers,
+            transforms=val_transforms,
+            download=False,
+            checksum=False,
+        )
+        self.test_dataset = ChesapeakeCVPR(
+            self.root_dir,
+            splits=self.test_splits,
+            layers=self.layers,
+            transforms=test_transforms,
+            download=False,
+            checksum=False,
+        )
+
+    def train_dataloader(self) -> DataLoader[Any]:
+        """Return a DataLoader for training.
+
+        Returns:
+            training data loader
+        """
+        sampler = RandomBatchGeoSampler(
+            self.train_dataset,
+            size=self.original_patch_size,
+            batch_size=self.batch_size,
+            length=self.patches_per_tile * len(self.train_dataset),
+        )
+        return DataLoader(
+            self.train_dataset,
+            batch_sampler=sampler,
+            num_workers=self.num_workers,
+            collate_fn=stack_samples,
+        )
+
+    def val_dataloader(self) -> DataLoader[Any]:
+        """Return a DataLoader for validation.
+
+        Returns:
+            validation data loader
+        """
+        sampler = GridGeoSampler(
+            self.val_dataset,
+            size=self.original_patch_size,
+            stride=self.original_patch_size,
+        )
+        return DataLoader(
+            self.val_dataset,
+            batch_size=self.batch_size,
+            sampler=sampler,
+            num_workers=self.num_workers,
+            collate_fn=stack_samples,
+        )
+
+    def test_dataloader(self) -> DataLoader[Any]:
+        """Return a DataLoader for testing.
+
+        Returns:
+            testing data loader
+        """
+        sampler = GridGeoSampler(
+            self.test_dataset,
+            size=self.original_patch_size,
+            stride=self.original_patch_size,
+        )
+        return DataLoader(
+            self.test_dataset,
+            batch_size=self.batch_size,
+            sampler=sampler,
+            num_workers=self.num_workers,
+            collate_fn=stack_samples,
         )
