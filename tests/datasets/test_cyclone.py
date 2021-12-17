@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -91,6 +92,10 @@ class TestTropicalCycloneWindEstimation:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             TropicalCycloneWindEstimation(str(tmp_path))
+
+    def test_plot(self, dataset: TropicalCycloneWindEstimation) -> None:
+        dataset.plot(dataset[0], suptitle="Test")
+        plt.close()
 
 
 class TestCycloneDataModule:
