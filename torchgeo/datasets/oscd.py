@@ -196,7 +196,9 @@ class OSCD(VisionDataset):
         for path in paths:
             with Image.open(path) as img:
                 images.append(np.array(img))
-        array: Array = np.stack(images, axis=0).astype(np.int_)  # type: ignore[type-arg]
+        array: Array = np.stack(images, axis=0).astype(  # type: ignore[type-arg]
+            np.int_
+        )
         tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
         return tensor
 
