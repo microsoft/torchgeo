@@ -46,9 +46,7 @@ def get_colors(class_colors):
     return np.array([class_colors[c] for c in class_colors.keys()]) / 255.0
 
 
-lc_colors = {
-    "chesapeake_4_no_zeros": get_colors(CHESAPEAKE_4_NO_ZEROS_CLASS_COLORS),
-}
+lc_colors = {"chesapeake_4_no_zeros": get_colors(CHESAPEAKE_4_NO_ZEROS_CLASS_COLORS)}
 
 
 # visualize predicitons and priors
@@ -147,10 +145,7 @@ class ChesapeakeCVPRPriorSegmentationTask(LightningModule):
         else:
             raise ValueError(f"Loss type '{kwargs['loss']}' is not valid.")
 
-    def __init__(
-        self,
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
@@ -373,15 +368,13 @@ class ChesapeakeCVPRPriorSegmentationTask(LightningModule):
     def configure_optimizers(self) -> Dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler."""
         optimizer = torch.optim.Adam(
-            self.model.parameters(),
-            lr=self.hparams["learning_rate"],
+            self.model.parameters(), lr=self.hparams["learning_rate"]
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer,
-                    patience=self.hparams["learning_rate_schedule_patience"],
+                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
                 ),
                 "monitor": "val_loss",
                 "verbose": True,
@@ -581,18 +574,8 @@ class ChesapeakeCVPRPriorDataModule(LightningDataModule):
         The splits should be done here vs. in :func:`__init__` per the docs:
         https://pytorch-lightning.readthedocs.io/en/latest/extensions/datamodules.html#setup.
         """
-        train_transforms = Compose(
-            [
-                self.center_crop(self.patch_size),
-                self.preprocess,
-            ]
-        )
-        val_transforms = Compose(
-            [
-                self.center_crop(self.patch_size),
-                self.preprocess,
-            ]
-        )
+        train_transforms = Compose([self.center_crop(self.patch_size), self.preprocess])
+        val_transforms = Compose([self.center_crop(self.patch_size), self.preprocess])
         test_transforms = Compose(
             [
                 self.pad_to(self.original_patch_size, image_value=0, mask_value=7),

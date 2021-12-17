@@ -536,10 +536,12 @@ class ChesapeakeCVPR(GeoDataset):
             return
 
         # Check if the zip files have already been downloaded
-        if all([
-            os.path.exists(os.path.join(self.root, self.filenames[subdataset]))
-            for subdataset in self.subdatasets
-        ]):
+        if all(
+            [
+                os.path.exists(os.path.join(self.root, self.filenames[subdataset]))
+                for subdataset in self.subdatasets
+            ]
+        ):
             self._extract()
             return
 
@@ -562,7 +564,7 @@ class ChesapeakeCVPR(GeoDataset):
                 self.urls[subdataset],
                 self.root,
                 filename=self.filenames[subdataset],
-                md5=self.md5s[subdataset]
+                md5=self.md5s[subdataset],
             )
 
     def _extract(self) -> None:
