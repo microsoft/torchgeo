@@ -7,6 +7,7 @@ import glob
 import os
 from typing import Callable, Dict, List, Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from PIL import Image
@@ -239,3 +240,53 @@ class GID15(VisionDataset):
             filename=self.filename,
             md5=self.md5 if self.checksum else None,
         )
+
+    def plot(
+        self, sample: Dict[str, Tensor], suptitle: Optional[str] = None
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample return by :meth:`__getitem__`
+            suptitle: optional suptitle to use for figure
+
+        Returns;
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        if self.split != "test":
+            image, mask = sample["image"], sample["mask"]
+            ncols = 2
+        else:
+            image = sample["image"]
+            ncols = 1
+
+        if "predictions" in sample:
+            ncols += 1
+            pred = sample["predictions"]
+
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
+
+        if self.split != "test":
+            axs[0].imshow(image.permute(1, 2, 0))
+            axs[0].axis("off")
+            axs[1].imshow(mask)
+            axs[1].axis("off")
+            if "predictions" in sample:
+                axs[2].imshow(pred)
+                axs[2].axis("off")
+        else:
+            if "predictions" in sample:
+                axs[0].imshow(image.permute(1, 2, 0))
+                axs[0].axis("off")
+                axs[1].imshow(pred)
+                axs[1].axis("off")
+            else:
+                axs.imshow(image.permute(1, 2, 0))
+                axs.axis("off")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
