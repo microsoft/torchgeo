@@ -97,6 +97,13 @@ class TestTropicalCycloneWindEstimation:
         dataset.plot(dataset[0], suptitle="Test")
         plt.close()
 
+        sample = dataset[0]
+        sample["prediction"] = torch.tensor(  # type: ignore[attr-defined]
+            sample["label"]
+        )
+        dataset.plot(sample)
+        plt.close()
+
 
 class TestCycloneDataModule:
     @pytest.fixture(scope="class")
