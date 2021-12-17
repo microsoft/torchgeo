@@ -167,7 +167,7 @@ def main(args: argparse.Namespace) -> None:
             dataloader = DataLoader(
                 dataset,
                 batch_size=args.batch_size,
-                sampler=sampler,  # type: ignore[arg-type]
+                sampler=sampler,
                 num_workers=args.num_workers,
                 collate_fn=stack_samples,
             )

@@ -334,7 +334,7 @@ class IDTReeS(VisionDataset):
         else:
             directory = os.path.join(root, self.task)
             if self.task == "task1":
-                geoms = None  # type: ignore[assignment]
+                geoms = None
                 labels = None
             else:
                 geoms = self._load_geometries(directory)
@@ -342,7 +342,7 @@ class IDTReeS(VisionDataset):
 
         images = glob.glob(os.path.join(directory, "RemoteSensing", "RGB", "*.tif"))
 
-        return images, geoms, labels
+        return images, geoms, labels  # type: ignore[return-value]
 
     def _load_labels(self, directory: str) -> Any:
         """Load the csv files containing the labels.
