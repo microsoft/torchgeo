@@ -197,6 +197,35 @@ class COWC(VisionDataset, abc.ABC):
                 md5=md5 if self.checksum else None,
             )
 
+
+class COWCCounting(COWC):
+    """COWC Dataset for car counting."""
+
+    base_url = (
+        "https://gdo152.llnl.gov/cowc/download/cowc/datasets/patch_sets/counting/"
+    )
+    filenames = [
+        "COWC_train_list_64_class.txt.bz2",
+        "COWC_test_list_64_class.txt.bz2",
+        "COWC_Counting_Toronto_ISPRS.tbz",
+        "COWC_Counting_Selwyn_LINZ.tbz",
+        "COWC_Counting_Potsdam_ISPRS.tbz",
+        "COWC_Counting_Vaihingen_ISPRS.tbz",
+        "COWC_Counting_Columbus_CSUAV_AFRL.tbz",
+        "COWC_Counting_Utah_AGRC.tbz",
+    ]
+    md5s = [
+        "187543d20fa6d591b8da51136e8ef8fb",
+        "930cfd6e160a7b36db03146282178807",
+        "bc2613196dfa93e66d324ae43e7c1fdb",
+        "ea842ae055f5c74d0d933d2194764545",
+        "19a77ab9932b722ef52b197d70e68ce7",
+        "4009c1e420566390746f5b4db02afdb9",
+        "daf8033c4e8ceebbf2c3cac3fabb8b10",
+        "777ec107ed2a3d54597a739ce74f95ad",
+    ]
+    filename = "COWC_{}_list_64_class.txt"
+
     def plot(
         self,
         sample: Dict[str, Tensor],
@@ -236,35 +265,6 @@ class COWC(VisionDataset, abc.ABC):
         return fig
 
 
-class COWCCounting(COWC):
-    """COWC Dataset for car counting."""
-
-    base_url = (
-        "https://gdo152.llnl.gov/cowc/download/cowc/datasets/patch_sets/counting/"
-    )
-    filenames = [
-        "COWC_train_list_64_class.txt.bz2",
-        "COWC_test_list_64_class.txt.bz2",
-        "COWC_Counting_Toronto_ISPRS.tbz",
-        "COWC_Counting_Selwyn_LINZ.tbz",
-        "COWC_Counting_Potsdam_ISPRS.tbz",
-        "COWC_Counting_Vaihingen_ISPRS.tbz",
-        "COWC_Counting_Columbus_CSUAV_AFRL.tbz",
-        "COWC_Counting_Utah_AGRC.tbz",
-    ]
-    md5s = [
-        "187543d20fa6d591b8da51136e8ef8fb",
-        "930cfd6e160a7b36db03146282178807",
-        "bc2613196dfa93e66d324ae43e7c1fdb",
-        "ea842ae055f5c74d0d933d2194764545",
-        "19a77ab9932b722ef52b197d70e68ce7",
-        "4009c1e420566390746f5b4db02afdb9",
-        "daf8033c4e8ceebbf2c3cac3fabb8b10",
-        "777ec107ed2a3d54597a739ce74f95ad",
-    ]
-    filename = "COWC_{}_list_64_class.txt"
-
-
 class COWCDetection(COWC):
     """COWC Dataset for car detection."""
 
@@ -289,9 +289,50 @@ class COWCDetection(COWC):
         "bf053545cc1915d8b6597415b746fe48",
         "23945d5b22455450a938382ccc2a8b27",
         "f40522dc97bea41b10117d4a5b946a6f",
-        "195da7c9443a939a468c9f232fd86ee3",
+        # "195da7c9443a939a468c9f232fd86ee3",
     ]
     filename = "COWC_{}_list_detection.txt"
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`VisionClassificationDataset.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        image, label = sample["image"], sample["label"]
+
+        label_title = "True" if label == 1 else "False"
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction = cast(int, sample["prediction"].item())
+            prediction_title = "True" if prediction == 1 else "False"
+
+        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+        ax.imshow(image.permute(1, 2, 0))
+        ax.axis("off")
+        if show_titles:
+            title = f"Label: {label_title}"
+            if showing_predictions:
+                title += f"\nPrediction: {prediction_title}"
+            ax.set_title(title)
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
 
 
 # TODO: add COCW-M datasets:
