@@ -31,8 +31,24 @@ def ndbi(swir: Tensor, nir: Tensor) -> Tensor:
 
     Returns:
         tensor containing computed NDBI values
+
     """
     return (swir - nir) / ((swir + nir) + _EPSILON)
+
+
+def nbr(nir: Tensor, swir: Tensor) -> Tensor:
+    """Compute Normalized Burn Ratio (NBR).
+
+    Args:
+        nir: tensor containing nir band
+        swir: tensor containing swir band
+
+    Returns:
+        tensor containing computed NBR values
+
+    .. versionadded:: 0.2.0
+    """
+    return (nir - swir) / ((nir + swir) + _EPSILON)
 
 
 def ndsi(green: Tensor, swir: Tensor) -> Tensor:
@@ -107,6 +123,46 @@ class AppendNDBI(Module):  # type: ignore[misc,name-defined]
             index = ndbi(
                 swir=sample["image"][:, self.index_swir],
                 nir=sample["image"][:, self.index_nir],
+            )
+            index = index.unsqueeze(self.dim)
+            sample["image"] = torch.cat(  # type: ignore[attr-defined]
+                [sample["image"], index], dim=self.dim
+            )
+
+        return sample
+
+
+class AppendNBR(Module):  # type: ignore[misc,name-defined]
+    """Normalized Burn Ratio (NBR).
+
+    .. versionadded:: 0.2.0
+    """
+
+    def __init__(self, index_nir: int, index_swir: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_nir: index of the Near Infrared (NIR) band in the image
+            index_swir: index of the Short-wave Infrared (SWIR) band in the image
+        """
+        super().__init__()
+        self.dim = -3
+        self.index_nir = index_nir
+        self.index_swir = index_swir
+
+    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+        """Create a band for NBR and append to image channels.
+
+        Args:
+            sample: a single data sample
+
+        Returns:
+            a sample where the image has an additional channel representing NBR
+        """
+        if "image" in sample:
+            index = nbr(
+                nir=sample["image"][:, self.index_nir],
+                swir=sample["image"][:, self.index_swir],
             )
             index = index.unsqueeze(self.dim)
             sample["image"] = torch.cat(  # type: ignore[attr-defined]
