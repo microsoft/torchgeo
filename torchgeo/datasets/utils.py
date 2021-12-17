@@ -522,7 +522,7 @@ def unbind_samples(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
     samples can then be plotted using a dataset's ``plot`` method.
 
     Args:
-        sample: a single sample
+        sample: a mini-batch of samples
 
     Returns:
          list of samples
