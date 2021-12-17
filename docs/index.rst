@@ -17,6 +17,7 @@ torchgeo
 
    api/datamodules
    api/datasets
+   api/losses
    api/models
    api/samplers
    api/trainers
