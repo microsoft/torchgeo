@@ -941,3 +941,275 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             num_workers=self.num_workers,
             collate_fn=stack_samples,
         )
+
+
+class ChesapeakeCVPRPriorDataModule(LightningDataModule):
+    """LightningDataModule implementation for the Chesapeake CVPR Land Cover dataset.
+
+    Uses the random splits defined per state to partition tiles into train, val,
+    and test sets.
+    """
+
+    def __init__(
+        self,
+        root_dir: str,
+        states_str: str,  # this should be updated to the new ways of doing things
+        prior_version: str,  # this is fixed to the type of prior included in the dataset
+        patches_per_tile: int = 200,
+        patch_size: int = 128,
+        batch_size: int = 64,
+        num_workers: int = 4,
+        prior_smoothing_constant: float = 1e-2,  # "what amount of additive smoothing you add to each channel in the prior" -- final_prior = renormalize over channel(prior + 1e-4)
+        condense_barren: bool = True,  # always true
+        condense_road_and_impervious: bool = True,  # always true
+        train_set: str = "train",  # these need to be updated to the new ways of doing things
+        val_set: str = "val",
+        test_set: str = "test",
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a LightningDataModule for Chesapeake CVPR based DataLoaders.
+
+        Args:
+            root_dir: The ``root`` arugment to pass to the ChesapeakeCVPR Dataset
+                classes
+            patches_per_tile: The number of patches per tile to sample
+            batch_size: The batch size to use in all created DataLoaders
+            num_workers: The number of workers to use in all created DataLoaders
+            condense_barren: whether to condense the barren class with impervious
+            condense_road_and_impervious: whether to condense roads with impervious, if
+                condense_barren is false
+            patch_size: size of patches to use
+            prior_smoothing_constant: additive smoothing to prior
+            prior_version: string describing what prior to use
+            states_str: states to use for training, concatenated with '+'
+            test_set: string describing what set to test on
+            val_set: string describing what set to validate on
+            train_set: string describing what set to train on
+        """
+        super().__init__()  # type: ignore[no-untyped-call]
+
+        states = states_str.split("+")
+
+        self.root_dir = root_dir
+        self.states = states
+        self.prior_version = prior_version
+        self.layers = ["naip-new", f"prior_{prior_version}", "lc"]
+        self.patches_per_tile = np.int(patches_per_tile / len(states))
+        print(self.patches_per_tile, " patches_per_tile")
+        self.patch_size = patch_size
+        self.original_patch_size = 512
+        self.batch_size = batch_size
+        print(self.batch_size, " batch size")
+        self.num_workers = num_workers
+        self.prior_smoothing_constant = prior_smoothing_constant
+        self.condense_road_and_impervious = condense_road_and_impervious
+        self.condense_barren = condense_barren
+        self.train_sets = [f"{state}-{train_set}" for state in states]
+        self.val_sets = [f"{state}-{val_set}" for state in states]
+        self.test_sets = [f"{state}-{test_set}" for state in states]
+        print(f"train sets are: {self.train_sets}")
+        print(f"val sets are: {self.val_sets}")
+        print(f"test sets are: {self.test_sets}")
+
+    def pad_to(
+        self, size: int = 512, image_value: int = 0, mask_value: int = 0
+    ) -> Callable[[Dict[str, Tensor]], Dict[str, Tensor]]:
+        """Returns a function to perform a padding transform on a single sample."""
+
+        def pad_inner(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+            _, height, width = sample["image"].shape
+
+            assert height <= size and width <= size, print(height, width, size)
+
+            height_pad = size - height
+            width_pad = size - width
+
+            # See https://pytorch.org/docs/stable/generated/torch.nn.functional.pad.html
+            # for a description of the format of the padding tuple
+            sample["image"] = F.pad(
+                sample["image"],
+                (0, width_pad, 0, height_pad),
+                mode="constant",
+                value=image_value,
+            )
+            sample["mask"] = F.pad(
+                sample["mask"],
+                (0, width_pad, 0, height_pad),
+                mode="constant",
+                value=mask_value,
+            )
+            return sample
+
+        return pad_inner
+
+    def center_crop(
+        self, size: int = 512
+    ) -> Callable[[Dict[str, Tensor]], Dict[str, Tensor]]:
+        """Returns a function to perform a center crop transform on a single sample."""
+
+        def center_crop_inner(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+            _, height, width = sample["image"].shape
+            assert height >= size and width >= size, f"{height} or {width} < {size}"
+
+            y1 = (height - size) // 2
+            x1 = (width - size) // 2
+            sample["image"] = sample["image"][:, y1 : y1 + size, x1 : x1 + size]
+            sample["mask"] = sample["mask"][:, y1 : y1 + size, x1 : x1 + size]
+
+            return sample
+
+        return center_crop_inner
+
+    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Preprocesses a single sample."""
+        # separate out the highres labels
+        sample["highres_labels"] = sample["mask"][-1].int()  # labels
+        sample["mask"] = sample["mask"][:-1]  # prior
+
+        impervious_idxs_highres_orig = [4, 5, 6]
+        impervious_idx_condesed = [4]
+        if self.condense_barren:
+            # prior mask should be good to go -- we'll normalize it below
+
+            # Now remap all the highres labels
+            impervious_idxs_highres_orig = [4, 5, 6]
+            impervious_idx_condesed = 4
+            for c_idx in impervious_idxs_highres_orig:
+                sample["highres_labels"][
+                    sample["highres_labels"] == c_idx
+                ] = impervious_idx_condesed
+
+            nodata_idx_pad_orig = 7
+            nodata_idx_pad_condensed = 5  # note that we're about to subtract one
+
+            sample["highres_labels"][
+                sample["highres_labels"] == nodata_idx_pad_orig
+            ] = nodata_idx_pad_condensed
+            # subtract 1 so it starts with 0
+            sample["highres_labels"] = sample["highres_labels"] - 1
+
+        # note: we never use this option in the experiments
+        elif self.condense_road_and_impervious:
+            impervious_idx = 5
+            road_idx = 6
+            # recast road idx to impervious
+            sample["highres_labels"][
+                sample["highres_labels"] == road_idx
+            ] = impervious_idx
+            # subtract 1
+            sample["highres_labels"] = sample["highres_labels"] - 1
+
+            # add roads to impervious then remove road index
+            sample["mask"][impervious_idx] += sample["mask"][road_idx]
+            # remove road index and nodata
+            sample["mask"] = sample["mask"][1:-1]
+
+        # make sure prior is normalized, then smooth
+        sample["mask"] = nn.functional.normalize(sample["mask"].float(), p=1, dim=0)
+        sample["mask"] = nn.functional.normalize(
+            sample["mask"] + self.prior_smoothing_constant, p=1, dim=0
+        )
+        sample["image"] = sample["image"].float() / 255.0
+
+        sample["mask"] = sample["mask"]  # .squeeze()
+        sample["highres_labels"] = sample["highres_labels"]  # .squeeze()
+        return sample
+
+    def prepare_data(self) -> None:
+        """Confirms that the dataset is downloaded on the local node.
+
+        This method is called once per node, while :func:`setup` is called once per GPU.
+        """
+        ChesapeakeCVPRPrior(
+            self.root_dir,
+            splits=self.train_sets,
+            layers=self.layers,
+            transforms=None,
+            download=False,
+            checksum=False,
+        )
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        """Create the train/val/test splits based on the original Dataset objects.
+
+        The splits should be done here vs. in :func:`__init__` per the docs:
+        https://pytorch-lightning.readthedocs.io/en/latest/extensions/datamodules.html#setup.
+        """
+        train_transforms = Compose([self.center_crop(self.patch_size), self.preprocess])
+        val_transforms = Compose([self.center_crop(self.patch_size), self.preprocess])
+        test_transforms = Compose(
+            [
+                self.pad_to(self.original_patch_size, image_value=0, mask_value=7),
+                self.preprocess,
+            ]
+        )
+
+        self.train_dataset = ChesapeakeCVPRPrior(
+            self.root_dir,
+            splits=self.train_sets,
+            layers=self.layers,
+            transforms=train_transforms,
+            download=False,
+            checksum=False,
+        )
+        self.val_dataset = ChesapeakeCVPRPrior(
+            self.root_dir,
+            splits=self.val_sets,
+            layers=self.layers,
+            transforms=val_transforms,
+            download=False,
+            checksum=False,
+        )
+        self.test_dataset = ChesapeakeCVPRPrior(
+            self.root_dir,
+            splits=self.test_sets,
+            layers=self.layers,
+            transforms=test_transforms,
+            download=False,
+            checksum=False,
+        )
+
+    def train_dataloader(self) -> DataLoader[Any]:
+        """Return a DataLoader for training."""
+        print("train set of size ", self.train_dataset.index.get_size())
+        print("original patch size", self.original_patch_size)
+        sampler = RandomBatchGeoSampler(
+            self.train_dataset,
+            size=self.original_patch_size,
+            batch_size=self.batch_size,
+            length=self.patches_per_tile * self.train_dataset.index.get_size(),
+        )
+        return DataLoader(
+            self.train_dataset,
+            batch_sampler=sampler,  # type: ignore[arg-type]
+            num_workers=self.num_workers,
+        )
+
+    def val_dataloader(self) -> DataLoader[Any]:
+        """Return a DataLoader for validation."""
+        print("original patch size", self.original_patch_size)
+        sampler = RandomBatchGeoSampler(
+            self.val_dataset,
+            size=self.original_patch_size,
+            batch_size=self.batch_size,
+            length=self.patches_per_tile * self.val_dataset.index.get_size() // 2,
+        )
+        return DataLoader(
+            self.val_dataset,
+            batch_sampler=sampler,  # type: ignore[arg-type]
+            num_workers=self.num_workers,
+        )
+
+    def test_dataloader(self) -> DataLoader[Any]:
+        """Return a DataLoader for testing."""
+        sampler = GridGeoSampler(
+            self.test_dataset,
+            size=self.original_patch_size,
+            stride=self.original_patch_size,
+        )
+        return DataLoader(
+            self.test_dataset,
+            batch_size=16,  # self.batch_size // 2,
+            sampler=sampler,  # type: ignore[arg-type]
+            num_workers=self.num_workers,
+        )
