@@ -172,6 +172,30 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     bbox: {self.bounds}
     size: {len(self)}"""
 
+    # NOTE: This hack should be removed once the following issue is fixed:
+    # https://github.com/Toblerity/rtree/issues/87
+
+    def __getstate__(self):
+        """Define how instances are pickled.
+
+        Returns:
+            the state necessary to unpickle the instance
+        """
+        index = self.index.intersection(self.index.bounds, objects=True)
+        index = [(item.id, item.bounds, item.object) for item in index]
+        return self.__dict__, index
+
+    def __setstate__(self, state):
+        """Define how to unpickle an instance.
+
+        Args:
+            state: the state of the instance when it was pickled
+        """
+        attrs, index = state
+        self.__dict__.update(attrs)
+        for item in index:
+            self.index.insert(*item)
+
     @property
     def bounds(self) -> BoundingBox:
         """Bounds of the index.
