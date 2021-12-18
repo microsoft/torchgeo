@@ -405,6 +405,7 @@ class OSCDDataModule(pl.LightningDataModule):
         self.rcrop = K.AugmentationSequential(
             K.RandomCrop(patch_size), data_keys=["input", "mask"], same_on_batch=True
         )
+        self.padto = K.PadTo((1280, 1280))
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
@@ -442,9 +443,8 @@ class OSCDDataModule(pl.LightningDataModule):
             return sample
 
         def pad_to(sample: Dict[str, Any]) -> Dict[str, Any]:
-            padto = K.PadTo((1280, 1280))
-            sample["image"] = padto(sample["image"])[0]
-            sample["mask"] = padto(sample["mask"].float()).long()[0, 0]
+            sample["image"] = self.padto(sample["image"])[0]
+            sample["mask"] = self.padto(sample["mask"].float()).long()[0, 0]
             return sample
 
         train_transforms = Compose([self.preprocess, n_random_crop])
