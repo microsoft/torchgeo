@@ -98,7 +98,7 @@ def test_mock_missing_module(mock_missing_module: None) -> None:
     ],
 )
 def test_extract_archive(src: str, tmp_path: Path) -> None:
-    pytest.importorskip("rarfile")
+    pytest.importorskip("rarfile", minversion="3")
     extract_archive(os.path.join("tests", "data", src), str(tmp_path))
 
 

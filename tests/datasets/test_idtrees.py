@@ -19,6 +19,9 @@ from _pytest.monkeypatch import MonkeyPatch
 import torchgeo.datasets.utils
 from torchgeo.datasets import IDTReeS
 
+pytest.importorskip("pandas", minversion="0.19.1")
+pytest.importorskip("laspy", minversion="2")
+
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
@@ -32,8 +35,6 @@ class TestIDTReeS:
         tmp_path: Path,
         request: SubRequest,
     ) -> IDTReeS:
-        pytest.importorskip("pandas")
-        pytest.importorskip("laspy")
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.idtrees, "download_url", download_url
         )
@@ -124,11 +125,11 @@ class TestIDTReeS:
                 ImportError,
                 match=f"{package} is not installed and is required to use this dataset",
             ):
-                IDTReeS(dataset.root, download=True, checksum=True)
-        else:
+                IDTReeS(dataset.root, dataset.split, dataset.task)
+        elif package in ["open3d"]:
             with pytest.raises(
                 ImportError,
-                match=f"{package} is not installed and is required to use this dataset",
+                match=f"{package} is not installed and is required to plot point cloud",
             ):
                 dataset.plot_las(0)
 
@@ -153,7 +154,7 @@ class TestIDTReeS:
         reason="segmentation fault on macOS and windows",
     )
     def test_plot_las(self, dataset: IDTReeS) -> None:
-        pytest.importorskip("open3d")
+        pytest.importorskip("open3d", minversion="0.11.2")
         vis = dataset.plot_las(index=0, colormap="BrBG")
         vis.close()
         vis = dataset.plot_las(index=0, colormap=None)

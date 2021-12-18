@@ -25,7 +25,6 @@ class TestADVANCE:
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> ADVANCE:
-        pytest.importorskip("scipy", minversion="0.9.0")
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.utils, "download_url", download_url
         )
@@ -57,6 +56,7 @@ class TestADVANCE:
         )
 
     def test_getitem(self, dataset: ADVANCE) -> None:
+        pytest.importorskip("scipy", minversion="0.9.0")
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
