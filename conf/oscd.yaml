@@ -6,7 +6,6 @@ trainer:
 
 experiment:
   task: "oscd"
-  name: "oscd_test5"
   module:
     loss: "jaccard"
     segmentation_model: "unet"

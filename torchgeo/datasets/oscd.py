@@ -444,7 +444,7 @@ class OSCDDataModule(pl.LightningDataModule):
         def pad_to(sample: Dict[str, Any]) -> Dict[str, Any]:
             padto = K.PadTo((1280, 1280))
             sample["image"] = padto(sample["image"])[0]
-            sample["mask"] = padto(sample["mask"].float()).long()[0]
+            sample["mask"] = padto(sample["mask"].float()).long()[0, 0]
             return sample
 
         train_transforms = Compose([self.preprocess, n_random_crop])
