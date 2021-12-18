@@ -16,8 +16,6 @@ from _pytest.monkeypatch import MonkeyPatch
 import torchgeo.datasets.utils
 from torchgeo.datasets import RESISC45, RESISC45DataModule
 
-pytest.importorskip("rarfile")
-
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
@@ -32,6 +30,8 @@ class TestRESISC45:
         tmp_path: Path,
         request: SubRequest,
     ) -> RESISC45:
+        pytest.importorskip("rarfile", minversion="3")
+
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.resisc45, "download_url", download_url
         )

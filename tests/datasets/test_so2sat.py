@@ -1,9 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import builtins
 import os
 from pathlib import Path
-from typing import Generator
+from typing import Any, Generator
 
 import pytest
 import torch
@@ -12,6 +13,8 @@ from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 
 from torchgeo.datasets import So2Sat, So2SatDataModule
+
+pytest.importorskip("h5py")
 
 
 class TestSo2Sat:
@@ -30,6 +33,21 @@ class TestSo2Sat:
         split = request.param
         transforms = nn.Identity()  # type: ignore[attr-defined]
         return So2Sat(root, split, transforms, checksum=True)
+
+    @pytest.fixture
+    def mock_missing_module(
+        self, monkeypatch: Generator[MonkeyPatch, None, None]
+    ) -> None:
+        import_orig = builtins.__import__
+
+        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
+            if name == "h5py":
+                raise ImportError()
+            return import_orig(name, *args, **kwargs)
+
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            builtins, "__import__", mocked_import
+        )
 
     def test_getitem(self, dataset: So2Sat) -> None:
         x = dataset[0]

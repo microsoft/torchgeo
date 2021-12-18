@@ -117,7 +117,12 @@ class VHR10(VisionDataset):
 
         if split == "positive":
             # Must be installed to parse annotations file
-            from pycocotools.coco import COCO
+            try:
+                from pycocotools.coco import COCO  # noqa: F401
+            except ImportError:
+                raise ImportError(
+                    "pycocotools is not installed and is required to use this dataset"
+                )
 
             self.coco = COCO(
                 os.path.join(

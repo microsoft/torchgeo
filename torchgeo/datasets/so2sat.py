@@ -92,7 +92,12 @@ class So2Sat(VisionDataset):
             AssertionError: if ``split`` argument is invalid
             RuntimeError: if data is not found in ``root``, or checksums don't match
         """
-        import h5py
+        try:
+            import h5py  # noqa: F401
+        except ImportError:
+            raise ImportError(
+                "h5py is not installed and is required to use this dataset"
+            )
 
         assert split in ["train", "validation", "test"]
 
