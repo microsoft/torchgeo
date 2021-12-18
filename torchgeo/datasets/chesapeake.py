@@ -723,7 +723,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         if self.use_prior_labels:
             self.layers = [
                 "naip-new",
-                "prior_from_cooccurrences_101_31_no_osm_no_buildings"
+                "prior_from_cooccurrences_101_31_no_osm_no_buildings",
             ]
         else:
             self.layers = ["naip-new", "lc"]
