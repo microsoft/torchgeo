@@ -228,7 +228,7 @@ class TestChesapeakeCVPRDataModule:
             batch_size=2,
             num_workers=0,
             class_set=request.param[0],
-            use_prior_labels=request.param[1]
+            use_prior_labels=request.param[1],
         )
         dm.prepare_data()
         dm.setup()
@@ -269,5 +269,5 @@ class TestChesapeakeCVPRDataModule:
                 batch_size=2,
                 num_workers=0,
                 class_set=7,
-                use_prior_labels=True
+                use_prior_labels=True,
             )
