@@ -333,7 +333,6 @@ class COWCDetection(COWC):
         sample: Dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-        **kwargs: Any,
     ) -> plt.Figure:
         """Plot a sample from the dataset.
 
