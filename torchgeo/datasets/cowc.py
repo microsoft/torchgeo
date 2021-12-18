@@ -197,6 +197,45 @@ class COWC(VisionDataset, abc.ABC):
                 md5=md5 if self.checksum else None,
             )
 
+    def plot_sample(
+        self,
+        sample: Dict[str, Tensor],
+        label_title: str,
+        prediction_title: Optional[str] = None,
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`VisionClassificationDataset.__getitem__`
+            label_title: title for label depending on Counting or Detection
+            prediction_title: title for prediction depending on Counting or Detection
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        image = sample["image"]
+
+        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+        ax.imshow(image.permute(1, 2, 0))
+        ax.axis("off")
+
+        if show_titles:
+            title = f"Label: {label_title}"
+            if prediction_title is not None:
+                title += f"\nPrediction: {prediction_title}"
+            ax.set_title(title)
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
+
 
 class COWCCounting(COWC):
     """COWC Dataset for car counting."""
@@ -244,25 +283,21 @@ class COWCCounting(COWC):
 
         .. versionadded:: 0.2
         """
-        image, label = sample["image"], sample["label"]
+        label_title = cast(str, sample["label"].item())
 
         showing_predictions = "prediction" in sample
         if showing_predictions:
-            prediction = cast(int, sample["prediction"].item())
+            prediction_title = cast(str, cast(int, sample["prediction"].item()))
+        else:
+            prediction_title = None
 
-        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-        ax.imshow(image.permute(1, 2, 0))
-        ax.axis("off")
-        if show_titles:
-            title = f"Label: {label}"
-            if showing_predictions:
-                title += f"\nPrediction: {prediction}"
-            ax.set_title(title)
-
-        if suptitle is not None:
-            plt.suptitle(suptitle)
-
-        return fig
+        return super().plot_sample(
+            sample=sample,
+            show_titles=show_titles,
+            suptitle=suptitle,
+            label_title=label_title,
+            prediction_title=prediction_title,
+        )
 
 
 class COWCDetection(COWC):
@@ -289,7 +324,7 @@ class COWCDetection(COWC):
         "bf053545cc1915d8b6597415b746fe48",
         "23945d5b22455450a938382ccc2a8b27",
         "f40522dc97bea41b10117d4a5b946a6f",
-        # "195da7c9443a939a468c9f232fd86ee3",
+        "195da7c9443a939a468c9f232fd86ee3",
     ]
     filename = "COWC_{}_list_detection.txt"
 
@@ -298,6 +333,7 @@ class COWCDetection(COWC):
         sample: Dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
+        **kwargs: Any,
     ) -> plt.Figure:
         """Plot a sample from the dataset.
 
@@ -311,28 +347,21 @@ class COWCDetection(COWC):
 
         .. versionadded:: 0.2
         """
-        image, label = sample["image"], sample["label"]
-
-        label_title = "True" if label == 1 else "False"
+        label_title = cast(str, bool(sample["label"].item()))
 
         showing_predictions = "prediction" in sample
         if showing_predictions:
-            prediction = cast(int, sample["prediction"].item())
-            prediction_title = "True" if prediction == 1 else "False"
+            prediction_title = cast(str, bool(sample["prediction"].item()))
+        else:
+            prediction_title = None
 
-        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-        ax.imshow(image.permute(1, 2, 0))
-        ax.axis("off")
-        if show_titles:
-            title = f"Label: {label_title}"
-            if showing_predictions:
-                title += f"\nPrediction: {prediction_title}"
-            ax.set_title(title)
-
-        if suptitle is not None:
-            plt.suptitle(suptitle)
-
-        return fig
+        return super().plot_sample(
+            sample=sample,
+            show_titles=show_titles,
+            suptitle=suptitle,
+            label_title=label_title,
+            prediction_title=prediction_title,
+        )
 
 
 # TODO: add COCW-M datasets:
