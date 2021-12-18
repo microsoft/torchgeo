@@ -175,25 +175,36 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     # NOTE: This hack should be removed once the following issue is fixed:
     # https://github.com/Toblerity/rtree/issues/87
 
-    def __getstate__(self):
+    def __getstate__(
+        self,
+    ) -> Tuple[
+        Dict[Any, Any],
+        List[Tuple[int, Tuple[float, float, float, float, float, float], str]],
+    ]:
         """Define how instances are pickled.
 
         Returns:
             the state necessary to unpickle the instance
         """
-        index = self.index.intersection(self.index.bounds, objects=True)
-        index = [(item.id, item.bounds, item.object) for item in index]
-        return self.__dict__, index
+        objects = self.index.intersection(self.index.bounds, objects=True)
+        tuples = [(item.id, item.bounds, item.object) for item in objects]
+        return self.__dict__, tuples
 
-    def __setstate__(self, state):
+    def __setstate__(
+        self,
+        state: Tuple[
+            Dict[Any, Any],
+            List[Tuple[int, Tuple[float, float, float, float, float, float], str]],
+        ],
+    ) -> None:
         """Define how to unpickle an instance.
 
         Args:
             state: the state of the instance when it was pickled
         """
-        attrs, index = state
+        attrs, tuples = state
         self.__dict__.update(attrs)
-        for item in index:
+        for item in tuples:
             self.index.insert(*item)
 
     @property
