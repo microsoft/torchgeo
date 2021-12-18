@@ -6,8 +6,9 @@
 import json
 import os
 from functools import lru_cache
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, cast
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 import torch
@@ -213,6 +214,46 @@ class TropicalCycloneWindEstimation(VisionDataset):
                 filename = "_".join([self.collection_id, split, resource_type])
                 filename = os.path.join(self.root, filename) + ".tar.gz"
                 extract_archive(filename, self.root)
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample return by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional suptitle to use for figure
+
+        Returns;
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        image, label = sample["image"], sample["label"]
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction = sample["prediction"].item()
+
+        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+
+        ax.imshow(image, cmap="gray")
+        ax.axis("off")
+
+        if show_titles:
+            title = f"Label: {label}"
+            if showing_predictions:
+                title += f"\nPrediction: {cast(str, prediction)}"
+            ax.set_title(title)
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
 
 
 class CycloneDataModule(pl.LightningDataModule):
