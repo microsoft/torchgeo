@@ -114,10 +114,10 @@ nbsphinx_execute = "never"
 # TODO: branch/tag should change depending on which version of docs you look at
 # TODO: width option of image directive is broken, see:
 # https://github.com/pytorch/pytorch_sphinx_theme/issues/140
-nbsphinx_prolog = f"""
+nbsphinx_prolog = """
 {% set colab = "https://colab.research.google.com" %}
 {% set repo = "microsoft/torchgeo" %}
-{% set branch = "releases/v{version}" %}
+{% set branch = "releases/v{{ env.config.version }}" %}
 
 .. image:: {{ colab }}/assets/colab-badge.svg
    :class: colabbadge
