@@ -10,5 +10,9 @@ The :mod:`torchgeo` package consists of popular datasets, model architectures, a
 common image transformations for geospatial data.
 """
 
+# Fix circular import issue, see:
+# https://github.com/microsoft/torchgeo/issues/276
+import torchgeo.datasets
+
 __author__ = "Adam J. Stewart"
 __version__ = "0.1.1"
