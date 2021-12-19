@@ -72,6 +72,15 @@ class TestSo2Sat:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             So2Sat(str(tmp_path))
 
+    def test_mock_missing_module(
+        self, dataset: So2Sat, mock_missing_module: None
+    ) -> None:
+        with pytest.raises(
+            ImportError,
+            match="h5py is not installed and is required to use this dataset",
+        ):
+            So2Sat(dataset.root)
+
 
 class TestSo2SatDataModule:
     @pytest.fixture(scope="class", params=zip([True, False], ["rgb", "s2"]))

@@ -12,7 +12,7 @@ common image transformations for geospatial data.
 
 # Fix circular import issue, see:
 # https://github.com/microsoft/torchgeo/issues/276
-import torchgeo.datasets
+import torchgeo.datasets  # noqa: F401
 
 __author__ = "Adam J. Stewart"
 __version__ = "0.1.1"

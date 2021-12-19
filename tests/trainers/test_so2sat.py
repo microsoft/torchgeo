@@ -14,6 +14,8 @@ from torchgeo.trainers.so2sat import So2SatClassificationTask
 
 from .test_utils import mocked_log
 
+pytest.importorskip("h5py")
+
 
 class TestSo2SatClassificationTask:
     @pytest.fixture(scope="class", params=[("rgb", 3), ("s2", 10)])
