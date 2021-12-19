@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+import pickle
 from pathlib import Path
 from typing import Dict
 
@@ -89,6 +90,14 @@ class TestGeoDataset:
         assert "type: GeoDataset" in out
         assert "bbox: BoundingBox" in out
         assert "size: 1" in out
+
+    def test_picklable(self, dataset: GeoDataset) -> None:
+        x = pickle.dumps(dataset)
+        y = pickle.loads(x)
+        assert dataset.crs == y.crs
+        assert dataset.res == y.res
+        assert len(dataset) == len(y)
+        assert dataset.bounds == y.bounds
 
     def test_abstract(self) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
