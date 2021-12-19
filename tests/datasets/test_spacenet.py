@@ -80,6 +80,7 @@ class TestSpaceNet1:
 
     def test_plot(self, dataset: SpaceNet1) -> None:
         x = dataset[0].copy()
+        x["prediction"] = x["mask"]
         dataset.plot(x, suptitle="Test")
         plt.close()
         dataset.plot(x, show_titles=False)
@@ -149,6 +150,7 @@ class TestSpaceNet2:
 
     def test_plot(self, dataset: SpaceNet2) -> None:
         x = dataset[0].copy()
+        x["prediction"] = x["mask"]
         dataset.plot(x, suptitle="Test")
         plt.close()
         dataset.plot(x, show_titles=False)
@@ -218,6 +220,7 @@ class TestSpaceNet4:
 
     def test_plot(self, dataset: SpaceNet4) -> None:
         x = dataset[0].copy()
+        x["prediction"] = x["mask"]
         dataset.plot(x, suptitle="Test")
         plt.close()
         dataset.plot(x, show_titles=False)
@@ -289,9 +292,12 @@ class TestSpaceNet5:
 
     def test_plot(self, dataset: SpaceNet5) -> None:
         x = dataset[0].copy()
+        x["prediction"] = x["mask"]
         dataset.plot(x, suptitle="Test")
         plt.close()
         dataset.plot(x, show_titles=False)
+        plt.close()
+        dataset.plot({"image": x["image"]})
         plt.close()
 
 
@@ -349,6 +355,8 @@ class TestSpaceNet7:
 
     def test_plot(self, dataset: SpaceNet7) -> None:
         x = dataset[0].copy()
+        if dataset.split == "train":
+            x["prediction"] = x["mask"]
         dataset.plot(x, suptitle="Test")
         plt.close()
         dataset.plot(x, show_titles=False)
