@@ -283,8 +283,6 @@ class COWCCounting(COWC):
 
         .. versionadded:: 0.2
         """
-        label_title = cast(str, sample["label"].item())
-
         showing_predictions = "prediction" in sample
         if showing_predictions:
             prediction_title = cast(str, cast(int, sample["prediction"].item()))
@@ -295,7 +293,7 @@ class COWCCounting(COWC):
             sample=sample,
             show_titles=show_titles,
             suptitle=suptitle,
-            label_title=label_title,
+            label_title=cast(str, sample["label"].item()),
             prediction_title=prediction_title,
         )
 
@@ -346,8 +344,6 @@ class COWCDetection(COWC):
 
         .. versionadded:: 0.2
         """
-        label_title = cast(str, bool(sample["label"].item()))
-
         showing_predictions = "prediction" in sample
         if showing_predictions:
             prediction_title = cast(str, bool(sample["prediction"].item()))
@@ -358,7 +354,7 @@ class COWCDetection(COWC):
             sample=sample,
             show_titles=show_titles,
             suptitle=suptitle,
-            label_title=label_title,
+            label_title=cast(str, bool(sample["label"].item())),
             prediction_title=prediction_title,
         )
 
