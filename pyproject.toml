@@ -82,6 +82,7 @@ filterwarnings = [
     "ignore:.*Create unlinked descriptors is going to go away.*:DeprecationWarning",
     # https://github.com/tensorflow/tensorboard/pull/5138
     "ignore:.*is a deprecated alias for the builtin.*:DeprecationWarning",
+    "ignore:.*Previous behaviour produces incorrect box coordinates.*:UserWarning",
 ]
 markers = [
     "slow: marks tests as slow",
