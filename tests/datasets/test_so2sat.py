@@ -24,9 +24,9 @@ class TestSo2Sat:
         self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
     ) -> So2Sat:
         md5s = {
-            "train": "086c5fa964a401d4194d09ab161c39f1",
-            "validation": "dd864f1af0cd495af99d7de80103f49e",
-            "test": "320102c5c15f3cee7691f203824028ce",
+            "train": "2fa6b9d8995e3b6272af42719f05aaa2",
+            "validation": "fe3dbf74971766d5038f6cbc0b1390ae",
+            "test": "87d428eff44267ca642fc739cc442331",
         }
 
         monkeypatch.setattr(So2Sat, "md5s", md5s)  # type: ignore[attr-defined]
