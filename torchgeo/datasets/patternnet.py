@@ -4,8 +4,9 @@
 """PatternNet dataset."""
 
 import os
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, Optional, cast
 
+import matplotlib.pyplot as plt
 from torch import Tensor
 
 from .geo import VisionClassificationDataset
@@ -79,6 +80,47 @@ class PatternNet(VisionClassificationDataset):
     filename = "PatternNet.zip"
     directory = "images"
 
+    label_dict = {
+        0: "airplane",
+        1: "baseball_field",
+        2: "basketball_court",
+        3: "beach",
+        4: "bridge",
+        5: "cemetery",
+        6: "chaparral",
+        7: "christmas_tree_farm",
+        8: "closed_road",
+        9: "coastal_mansion",
+        10: "crosswalk",
+        11: "dense_residential",
+        12: "ferry_terminal",
+        13: "football_field",
+        14: "forest",
+        15: "freeway",
+        16: "golf_course",
+        17: "harbor",
+        18: "intersection",
+        19: "mobile_home_park",
+        20: "nursing_home",
+        21: "oil_gas_field",
+        22: "oil_well",
+        23: "overpass",
+        24: "parking_lot",
+        25: "parking_space",
+        26: "railway",
+        27: "river",
+        28: "runway",
+        29: "runway_marking",
+        30: "shipping_yard",
+        31: "solar_panel",
+        32: "sparse_residential",
+        33: "storage_tank",
+        34: "swimming_pool",
+        35: "tennis_court",
+        36: "transformer_station",
+        37: "wastewater_treatment_plant",
+    }
+
     def __init__(
         self,
         root: str = "data",
@@ -143,3 +185,43 @@ class PatternNet(VisionClassificationDataset):
         """Extract the dataset."""
         filepath = os.path.join(self.root, self.filename)
         extract_archive(filepath)
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample return by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional suptitle to use for figure
+
+        Returns;
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        image, label = sample["image"], cast(int, sample["label"].item())
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction = cast(int, sample["prediction"].item())
+
+        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+
+        ax.imshow(image.permute(1, 2, 0))
+        ax.axis("off")
+
+        if show_titles:
+            title = f"Label: {self.label_dict[label]}"
+            if showing_predictions:
+                title += f"\nPrediction: {self.label_dict[prediction]}"
+            ax.set_title(title)
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
