@@ -141,9 +141,9 @@ nbsphinx_prolog = """
     {% set branch = "releases%2Fv" ~ env.config.version %}
 {% endif %}
 
-.. image:: https://img.shields.io/badge/-Launch%20in%20Hub-blue
+.. image:: https://img.shields.io/badge/-Launch%20on%20Planetary%20Computer-blue
    :class: colabbadge
-   :alt: Launch in Hub
+   :alt: Launch on Planetary Computer
    :target: {{ host }}?repo={{ repo }}&urlpath={{ urlpath }}&branch={{ branch }}
 """
 
