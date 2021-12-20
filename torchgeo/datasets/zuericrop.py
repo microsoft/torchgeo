@@ -6,8 +6,10 @@
 import os
 from typing import Callable, Dict, Optional, Tuple
 
+import matplotlib.pyplot as plt
 import torch
 from torch import Tensor
+from torchvision.utils import draw_bounding_boxes
 
 from .geo import VisionDataset
 from .utils import download_url
@@ -55,6 +57,9 @@ class ZueriCrop(VisionDataset):
     ]
     md5s = ["1635231df67f3d25f4f1e62c98e221a4", "5118398c7a5bbc246f5f6bb35d8d529b"]
     filenames = ["ZueriCrop.hdf5", "labels.csv"]
+
+    band_names = ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B10"]
+    RGB_BANDS = ["B04", "B03", "B02"]
 
     def __init__(
         self,
@@ -230,3 +235,60 @@ class ZueriCrop(VisionDataset):
                     filename=filename,
                     md5=md5 if self.checksum else None,
                 )
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        time_step: int = 0,
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample return by :meth:`__getitem__`
+            time_step: time step at which to access image, beginning with 0
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional suptitle to use for figure
+
+        Returns;
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        import pdb
+
+        pdb.set_trace()
+        ncols = 2
+        image, _ = sample["image"][time_step, -3:, ...], sample["mask"]
+        _, boxes = sample["label"], sample["boxes"]
+
+        boxes = draw_bounding_boxes(
+            image=image.to(torch.uint8),  # type: ignore[attr-defined]
+            boxes=sample["boxes"],
+        )
+
+        if "prediction_boxes" in sample:
+            ncols += 1
+            preds = draw_bounding_boxes(
+                image=sample["image"], boxes=sample["prediction_boxes"]
+            )
+            preds = preds.permute((1, 2, 0))
+
+        fig, axs = plt.subplots(ncols=ncols, figsize=(10, 10 * ncols))
+
+        axs[0].imshow(image.permute(1, 2, 0))
+        axs[0].axis("off")
+        axs[1].imshow(boxes.permute(1, 2, 0))
+        axs[1].axis("off")
+
+        if show_titles:
+            axs[0].set_title("Image")
+            axs[1].set_title("Boxes")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
+
+        return fig
