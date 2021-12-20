@@ -125,6 +125,14 @@ __all__ = (
     "LoveDA",
     "NASAMarineDebris",
     "OSCD",
+<<<<<<< HEAD
+=======
+    "OSCDDataModule",
+    "PASTISInstanceSegmentation",
+    "PASTISInstanceSegmentationDataModule",
+    "PASTISSemanticSegmentation",
+    "PASTISSemanticSegmentationDataModule",
+>>>>>>> draft
     "PatternNet",
     "Potsdam2D",
     "RESISC45",
