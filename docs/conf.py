@@ -118,7 +118,7 @@ nbsphinx_execute = "never"
 nbsphinx_prolog = """
 {% set colab = "https://colab.research.google.com" %}
 {% set repo = "microsoft/torchgeo" %}
-{% set branch = "releases/v{{ env.config.version }}" %}
+{% set branch = "releases/v" ~ {{ env.config.version }} %}
 
 .. image:: {{ colab }}/assets/colab-badge.svg
    :class: colabbadge
