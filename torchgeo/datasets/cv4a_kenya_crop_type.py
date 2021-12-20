@@ -8,6 +8,7 @@ import os
 from functools import lru_cache
 from typing import Callable, Dict, List, Optional, Tuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from PIL import Image
@@ -101,6 +102,8 @@ class CV4AKenyaCropType(VisionDataset):
         "B12",
         "CLD",
     )
+
+    RGB_BANDS = ["B04", "B03", "B02"]
 
     # Same for all tiles
     tile_height = 3035
@@ -400,3 +403,69 @@ class CV4AKenyaCropType(VisionDataset):
         target_archive_path = os.path.join(self.root, self.target_meta["filename"])
         for fn in [image_archive_path, target_archive_path]:
             extract_archive(fn, self.root)
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        time_step: int = 0,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample return by :meth:`__getitem__`
+            time_step: time step at which to access image, beginning with 0
+            suptitle: optional suptitle to use for figure
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        rgb_indices = []
+        for band in self.RGB_BANDS:
+            if band in self.bands:
+                rgb_indices.append(self.bands.index(band))
+            else:
+                raise ValueError("Dataset doesn't contain some of the RGB bands")
+
+        if "prediction" in sample:
+            prediction = sample["prediction"]
+            n_cols = 3
+        else:
+            n_cols = 2
+
+        image, mask = sample["image"], sample["mask"]
+
+        assert (
+            time_step <= image.shape[0] - 1
+        ), "The specified time step \
+            does not exist, image onyl contains {} time \
+                instances".format(
+            image.shape[0]
+        )
+
+        image = image[time_step, rgb_indices, :, :]
+        print(image.max())
+        print(image.min())
+        print(image.shape)
+        print(mask.shape)
+
+        fig, axs = plt.subplots(nrows=1, ncols=n_cols, figsize=(10, n_cols * 5))
+
+        axs[0].imshow(image.permute(1, 2, 0))
+        axs[0].axis("off")
+        axs[0].set_title("Image")
+        axs[1].imshow(mask)
+        axs[1].axis("off")
+        axs[1].set_title("Mask")
+
+        if "prediction" in sample:
+            axs[2].imshow(prediction)
+            axs[2].axis("off")
+            axs[2].set_title("Prediction")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig

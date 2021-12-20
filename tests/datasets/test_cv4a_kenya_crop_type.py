@@ -7,9 +7,11 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
+from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
@@ -30,9 +32,12 @@ def fetch(dataset_id: str, **kwargs: str) -> Dataset:
 
 
 class TestCV4AKenyaCropType:
-    @pytest.fixture
+    @pytest.fixture(params=[tuple(["B01"]), tuple(CV4AKenyaCropType.band_names)])
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+        self,
+        monkeypatch: Generator[MonkeyPatch, None, None],
+        tmp_path: Path,
+        request: SubRequest,
     ) -> CV4AKenyaCropType:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(  # type: ignore[attr-defined]
@@ -56,6 +61,7 @@ class TestCV4AKenyaCropType:
         transforms = nn.Identity()  # type: ignore[attr-defined]
         return CV4AKenyaCropType(
             root,
+            bands=request.param,
             transforms=transforms,
             download=True,
             api_key="",
@@ -113,3 +119,17 @@ class TestCV4AKenyaCropType:
 
         with pytest.raises(ValueError, match="is an invalid band name."):
             CV4AKenyaCropType(bands=("foo", "bar"))
+
+    def test_plot(self, dataset: CV4AKenyaCropType) -> None:
+        if not all(band in dataset.bands for band in dataset.RGB_BANDS):
+            with pytest.raises(ValueError, match="Dataset doesn't contain"):
+                x = dataset[0].copy()
+                dataset.plot(x, time_step=0, suptitle="Test")
+        else:
+            dataset.plot(dataset[0], time_step=0, suptitle="Test")
+            plt.close()
+
+            sample = dataset[0]
+            sample["prediction"] = sample["mask"].clone()
+            dataset.plot(sample, time_step=0, suptitle="Pred")
+            plt.close()
