@@ -407,11 +407,12 @@ class OSCDDataModule(pl.LightningDataModule):
         self.rcrop = K.AugmentationSequential(
             K.RandomCrop(patch_size), data_keys=["input", "mask"], same_on_batch=True
         )
+        self.padto = K.PadTo((1280, 1280))
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         sample["image"] = sample["image"].float()
-        sample["mask"] = sample["mask"].float()
+        sample["mask"] = sample["mask"]
         sample["image"] = self.norm(sample["image"])
         sample["image"] = torch.flatten(  # type: ignore[attr-defined]
             sample["image"], 0, 1
@@ -434,17 +435,24 @@ class OSCDDataModule(pl.LightningDataModule):
         def n_random_crop(sample: Dict[str, Any]) -> Dict[str, Any]:
             images, masks = [], []
             for i in range(self.num_patches_per_tile):
-                mask = repeat(sample["mask"], "h w -> t h w", t=2)
+                mask = repeat(sample["mask"], "h w -> t h w", t=2).float()
                 image, mask = self.rcrop(sample["image"], mask)
                 mask = mask.squeeze()[0]
                 images.append(image.squeeze())
-                masks.append(mask)
+                masks.append(mask.long())
             sample["image"] = torch.stack(images)
             sample["mask"] = torch.stack(masks)
             return sample
 
+        def pad_to(sample: Dict[str, Any]) -> Dict[str, Any]:
+            sample["image"] = self.padto(sample["image"])[0]
+            sample["mask"] = self.padto(sample["mask"].float()).long()[0, 0]
+            return sample
+
         train_transforms = Compose([self.preprocess, n_random_crop])
-        test_transforms = Compose([self.preprocess])
+        # for testing and validation we pad all inputs to a fixed size to avoid issues
+        # with the upsampling paths in encoder-decoder architectures
+        test_transforms = Compose([self.preprocess, pad_to])
 
         train_dataset = OSCD(
             self.root_dir, split="train", bands=self.bands, transforms=train_transforms
