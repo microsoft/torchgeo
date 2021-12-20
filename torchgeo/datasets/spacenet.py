@@ -16,12 +16,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio as rio
 import torch
-from affine import Affine
 from fiona.errors import FionaValueError
 from fiona.transform import transform_geom
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from rasterio.features import rasterize
+from rasterio.transform import Affine
 from torch import Tensor
 
 from torchgeo.datasets.geo import VisionDataset
