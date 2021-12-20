@@ -28,10 +28,6 @@ from ..samplers.single import GridGeoSampler
 from .geo import GeoDataset, RasterDataset
 from .utils import BoundingBox, download_url, extract_archive, stack_samples
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class Chesapeake(RasterDataset, abc.ABC):
     """Abstract base class for all Chesapeake datasets.

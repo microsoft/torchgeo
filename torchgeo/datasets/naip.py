@@ -14,10 +14,6 @@ from .chesapeake import Chesapeake13
 from .geo import RasterDataset
 from .utils import BoundingBox, stack_samples
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class NAIP(RasterDataset):
     """National Agriculture Imagery Program (NAIP) dataset.

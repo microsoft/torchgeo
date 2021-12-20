@@ -17,10 +17,6 @@ from torchvision.transforms import Compose
 from .geo import VisionDataset
 from .utils import check_integrity, percentile_normalization
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class So2Sat(VisionDataset):
     """So2Sat dataset.

@@ -171,7 +171,3 @@ __all__ = (
     "merge_samples",
     "stack_samples",
 )
-
-# https://stackoverflow.com/questions/40018681
-for module in __all__:
-    globals()[module].__module__ = "torchgeo.datasets"

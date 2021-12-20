@@ -17,10 +17,6 @@ from torchvision.transforms import Compose, Normalize
 from .geo import VisionClassificationDataset
 from .utils import check_integrity, download_url, extract_archive
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class UCMerced(VisionClassificationDataset):
     """UC Merced dataset.

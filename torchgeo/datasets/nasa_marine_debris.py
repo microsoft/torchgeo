@@ -19,10 +19,6 @@ from torchvision.utils import draw_bounding_boxes
 from .geo import VisionDataset
 from .utils import dataset_split, download_radiant_mlhub_dataset, extract_archive
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
     """Custom object detection collate fn to handle variable boxes.

@@ -11,12 +11,6 @@ from einops import rearrange
 from torch import Tensor
 from torch.nn.modules import Module, ModuleList, Sequential
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Module.__module__ = "nn.Module"
-ModuleList.__module__ = "nn.ModuleList"
-Sequential.__module__ = "nn.Sequential"
-
 
 class ConvBlock(Module):
     """N-layer convolutional encoder block N x (Conv2d->BN->ReLU->Dropout)."""

@@ -20,10 +20,6 @@ from torch.utils.data import DataLoader, Subset
 from .geo import VisionDataset
 from .utils import check_integrity, download_radiant_mlhub_dataset, extract_archive
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class TropicalCycloneWindEstimation(VisionDataset):
     """Tropical Cyclone Wind Estimation Competition dataset.

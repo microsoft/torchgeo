@@ -21,10 +21,6 @@ from torchvision.transforms import Compose
 from ..datasets.utils import check_integrity, dataset_split, extract_archive
 from .geo import VisionDataset
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
     """Custom object detection collate fn to handle variable number of boxes.

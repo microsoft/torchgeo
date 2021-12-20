@@ -18,10 +18,6 @@ from torch.utils.data import DataLoader, random_split
 from .geo import VisionDataset
 from .utils import check_integrity, download_and_extract_archive
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class COWC(VisionDataset, abc.ABC):
     """Abstract base class for the COWC dataset.

@@ -17,10 +17,6 @@ from torch.utils.data import DataLoader, Subset
 from .geo import VisionDataset
 from .utils import check_integrity
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class SEN12MS(VisionDataset):
     """SEN12MS dataset.

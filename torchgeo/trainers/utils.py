@@ -12,11 +12,6 @@ import torch.nn as nn
 from torch import Tensor
 from torch.nn.modules import Conv2d, Module
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Module.__module__ = "nn.Module"
-Conv2d.__module__ = "nn.Conv2d"
-
 
 def extract_encoder(path: str) -> Tuple[str, Dict[str, Tensor]]:
     """Extracts an encoder from a pytorch lightning checkpoint file.

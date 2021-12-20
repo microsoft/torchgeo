@@ -20,10 +20,6 @@ from torchvision.transforms import Compose
 from .geo import VisionDataset
 from .utils import download_url, extract_archive, sort_sentinel2_bands
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class BigEarthNet(VisionDataset):
     """BigEarthNet dataset.

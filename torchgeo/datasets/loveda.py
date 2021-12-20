@@ -18,10 +18,6 @@ from torch.utils.data import DataLoader
 from .geo import VisionDataset
 from .utils import download_and_extract_archive
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class LoveDA(VisionDataset):
     """LoveDA dataset.
