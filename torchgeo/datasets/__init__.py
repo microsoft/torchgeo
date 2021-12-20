@@ -191,6 +191,14 @@ __all__ = (
     "MillionAID",
     "NASAMarineDebris",
     "OSCD",
+<<<<<<< HEAD
+=======
+    "OSCDDataModule",
+    "PASTISInstanceSegmentation",
+    "PASTISInstanceSegmentationDataModule",
+    "PASTISSemanticSegmentation",
+    "PASTISSemanticSegmentationDataModule",
+>>>>>>> draft
     "PatternNet",
     "Potsdam2D",
     "RESISC45",
