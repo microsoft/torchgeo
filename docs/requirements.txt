@@ -4,5 +4,5 @@ ipywidgets>=7
 nbsphinx>=0.8.5
 # release versions missing files, must install from master
 -e git+https://github.com/pytorch/pytorch_sphinx_theme.git#egg=pytorch_sphinx_theme
-# sphinx 3+ required for autodoc_typehints = description
-sphinx>=3
+# sphinx 4+ required for autodoc_typehints_description_target = documented
+sphinx>=4
