@@ -91,7 +91,6 @@ html_css_files = ["workaround.css"]
 # -- Extension configuration -------------------------------------------------
 
 # sphinx.ext.autodoc
-autoclass_content = "class"
 autodoc_default_options = {
     "members": True,
     "special-members": True,
