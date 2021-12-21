@@ -7,6 +7,7 @@ import glob
 import os
 from typing import Callable, Dict, List, Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from PIL import Image
@@ -47,6 +48,7 @@ class LEVIRCDPlus(VisionDataset):
     url = "https://drive.google.com/file/d/1JamSsxiytXdzAIk6VDVWfc-OsX-81U81"
     md5 = "1adf156f628aa32fb2e8fe6cada16c04"
     filename = "LEVIR-CD+.zip"
+    directory = "LEVIR-CD+"
     splits = ["train", "test"]
 
     def __init__(
@@ -88,7 +90,7 @@ class LEVIRCDPlus(VisionDataset):
                 + "You can use download=True to download it"
             )
 
-        self.files = self._load_files(self.root, self.split)
+        self.files = self._load_files(self.root, self.directory, self.split)
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
@@ -120,23 +122,26 @@ class LEVIRCDPlus(VisionDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str, split: str) -> List[Dict[str, str]]:
+    def _load_files(
+        self, root: str, directory: str, split: str
+    ) -> List[Dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
             root: root dir of dataset
+            directory: sub directory LEVIR-CD+
             split: subset of dataset, one of [train, test]
 
         Returns:
             list of dicts containing paths for each pair of image1, image2, mask
         """
         files = []
-        images = glob.glob(os.path.join(root, split, "A", "*.png"))
+        images = glob.glob(os.path.join(root, directory, split, "A", "*.png"))
         images = sorted([os.path.basename(image) for image in images])
         for image in images:
-            image1 = os.path.join(root, split, "A", image)
-            image2 = os.path.join(root, split, "B", image)
-            mask = os.path.join(root, split, "label", image)
+            image1 = os.path.join(root, directory, split, "A", image)
+            image2 = os.path.join(root, directory, split, "B", image)
+            mask = os.path.join(root, directory, split, "label", image)
             files.append(dict(image1=image1, image2=image2, mask=mask))
         return files
 
@@ -181,7 +186,7 @@ class LEVIRCDPlus(VisionDataset):
             True if the dataset directories and split files are found, else False
         """
         for filename in self.splits:
-            filepath = os.path.join(self.root, filename)
+            filepath = os.path.join(self.root, self.directory, filename)
             if not os.path.exists(filepath):
                 return False
         return True
@@ -202,3 +207,25 @@ class LEVIRCDPlus(VisionDataset):
             filename=self.filename,
             md5=self.md5 if self.checksum else None,
         )
+
+    def plot(
+        self, sample: Dict[str, Tensor], suptitle: Optional[str] = None
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample return by :meth:`__getitem__`
+            suptitle: optional suptitle to use for figure
+
+        Returns;
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        image, mask = sample["image"], sample["mask"]
+
+        fig, axs = plt.subplots(1, 2, figsize=(10, 10))
+        axs[0].imshow(image.permute(1, 2, 0))
+        axs[1].imshow(mask)
+
+        return fig
