@@ -32,7 +32,7 @@ def fetch(dataset_id: str, **kwargs: str) -> Dataset:
 
 
 class TestCV4AKenyaCropType:
-    @pytest.fixture(params=[tuple(["B01"]), tuple(CV4AKenyaCropType.band_names)])
+    @pytest.fixture
     def dataset(
         self,
         monkeypatch: Generator[MonkeyPatch, None, None],
@@ -58,10 +58,10 @@ class TestCV4AKenyaCropType:
             CV4AKenyaCropType, "dates", ["20190606"]
         )
         root = str(tmp_path)
+        self.root = root
         transforms = nn.Identity()  # type: ignore[attr-defined]
         return CV4AKenyaCropType(
             root,
-            bands=request.param,
             transforms=transforms,
             download=True,
             api_key="",
@@ -121,15 +121,21 @@ class TestCV4AKenyaCropType:
             CV4AKenyaCropType(bands=("foo", "bar"))
 
     def test_plot(self, dataset: CV4AKenyaCropType) -> None:
-        if not all(band in dataset.bands for band in dataset.RGB_BANDS):
-            with pytest.raises(ValueError, match="Dataset doesn't contain"):
-                x = dataset[0].copy()
-                dataset.plot(x, time_step=0, suptitle="Test")
-        else:
-            dataset.plot(dataset[0], time_step=0, suptitle="Test")
-            plt.close()
+        dataset.plot(dataset[0], time_step=0, suptitle="Test")
+        plt.close()
 
-            sample = dataset[0]
-            sample["prediction"] = sample["mask"].clone()
-            dataset.plot(sample, time_step=0, suptitle="Pred")
-            plt.close()
+        sample = dataset[0]
+        sample["prediction"] = sample["mask"].clone()
+        dataset.plot(sample, time_step=0, suptitle="Pred")
+        plt.close()
+
+    def test_plot_rgb(self) -> None:
+        dataset = CV4AKenyaCropType(
+            root=self.root,
+            bands=tuple(["B01"]),
+            download=True,
+            api_key="",
+            checksum=False,
+            verbose=True,
+        )
+        dataset.plot(dataset[0], time_step=0, suptitle="Single Band")

@@ -437,19 +437,13 @@ class CV4AKenyaCropType(VisionDataset):
 
         image, mask = sample["image"], sample["mask"]
 
-        assert (
-            time_step <= image.shape[0] - 1
-        ), "The specified time step \
-            does not exist, image onyl contains {} time \
-                instances".format(
-            image.shape[0]
-        )
+        assert time_step <= image.shape[0] - 1, (
+            "The specified time step"
+            " does not exist, image only contains {} time"
+            " instances."
+        ).format(image.shape[0])
 
         image = image[time_step, rgb_indices, :, :]
-        print(image.max())
-        print(image.min())
-        print(image.shape)
-        print(mask.shape)
 
         fig, axs = plt.subplots(nrows=1, ncols=n_cols, figsize=(10, n_cols * 5))
 
