@@ -26,6 +26,7 @@ torchgeo
    :caption: Tutorials
 
    tutorials/getting_started
+   tutorials/custom_raster_dataset
    tutorials/transforms
    tutorials/indices
    tutorials/trainers
