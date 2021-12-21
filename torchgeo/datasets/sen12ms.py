@@ -4,8 +4,9 @@
 """SEN12MS dataset."""
 
 import os
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Optional, Tuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 import rasterio
@@ -69,12 +70,71 @@ class SEN12MS(VisionDataset):
        This download will likely take several hours.
     """  # noqa: E501
 
-    BAND_SETS: Dict[str, List[int]] = {
-        "all": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
-        "s1": [0, 1],
-        "s2-all": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
-        "s2-reduced": [3, 4, 5, 9, 12, 13],
+    # BAND_SETS: Dict[str, List[int]] = {
+    #     "all": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+    #     "s1": [0, 1],
+    #     "s2-all": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+    #     "s2-reduced": [3, 4, 5, 9, 12, 13],
+    # }
+
+    BAND_SETS: Dict[str, Tuple[str, ...]] = {
+        "all": tuple(
+            [
+                "VV",
+                "VH",
+                "B01",
+                "B02",
+                "B03",
+                "B04",
+                "B05",
+                "B06",
+                "B07",
+                "B08",
+                "B8A",
+                "B09",
+                "B10",
+                "B11",
+                "B12",
+            ]
+        ),
+        "s1": ("VV", "VH"),
+        "s2-all": (
+            "B01",
+            "B02",
+            "B03",
+            "B04",
+            "B05",
+            "B06",
+            "B07",
+            "B08",
+            "B8A",
+            "B09",
+            "B10",
+            "B11",
+            "B12",
+        ),
+        "s2-reduced": ("B02", "B03", "B04", "B08", "B10", "B11"),
     }
+
+    band_names = (
+        "VV",
+        "VH",
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B07",
+        "B08",
+        "B8A",
+        "B09",
+        "B10",
+        "B11",
+        "B12",
+    )
+
+    RGB_BANDS = ["B04", "B03", "B02"]
 
     filenames = [
         "ROIs1158_spring_lc.tar.gz",
@@ -121,7 +181,7 @@ class SEN12MS(VisionDataset):
         self,
         root: str = "data",
         split: str = "train",
-        bands: List[int] = BAND_SETS["all"],
+        bands: Tuple[str, ...] = BAND_SETS["all"],
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
@@ -147,9 +207,14 @@ class SEN12MS(VisionDataset):
         """
         assert split in ["train", "test"]
 
+        self._validate_bands(bands)
+        self.band_indices = torch.tensor(  # type: ignore[attr-defined]
+            [self.band_names.index(b) for b in bands]
+        ).long()
+        self.bands = bands
+
         self.root = root
         self.split = split
-        self.bands = torch.tensor(bands).long()  # type: ignore[attr-defined]
         self.transforms = transforms
         self.checksum = checksum
 
@@ -180,7 +245,7 @@ class SEN12MS(VisionDataset):
 
         image = torch.cat(tensors=[s1, s2], dim=0)  # type: ignore[attr-defined]
         image = torch.index_select(  # type: ignore[attr-defined]
-            image, dim=0, index=self.bands
+            image, dim=0, index=self.band_indices
         )
 
         sample: Dict[str, Tensor] = {"image": image, "mask": lc}
@@ -223,6 +288,21 @@ class SEN12MS(VisionDataset):
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             return tensor
 
+    def _validate_bands(self, bands: Tuple[str, ...]) -> None:
+        """Validate list of bands.
+
+        Args:
+            bands: user-provided tuple of bands to load
+
+        Raises:
+            AssertionError: if ``bands`` is not a tuple
+            ValueError: if an invalid band name is provided
+        """
+        assert isinstance(bands, tuple), "The list of bands must be a tuple"
+        for band in bands:
+            if band not in self.band_names:
+                raise ValueError(f"'{band}' is an invalid band name.")
+
     def _check_integrity_light(self) -> bool:
         """Checks the integrity of the dataset structure.
 
@@ -246,6 +326,61 @@ class SEN12MS(VisionDataset):
             if not check_integrity(filepath, md5 if self.checksum else None):
                 return False
         return True
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample return by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional suptitle to use for figure
+
+        Returns;
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        rgb_indices = []
+        for band in self.RGB_BANDS:
+            if band in self.bands:
+                rgb_indices.append(self.bands.index(band))
+            else:
+                raise ValueError("Dataset doesn't contain some of the RGB bands")
+
+        image, _ = sample["image"][rgb_indices, ...], sample["mask"]
+        ncols = 2
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            _ = sample["prediction"]
+            ncols += 1
+
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
+
+        axs[0].imshow(image.permute(1, 2, 0))
+        axs[0].axis("off")
+        # axs[1].imshow(mask)
+        # axs[1].axis("off")
+
+        if showing_predictions:
+            # axs[2].imshow(prediction)
+            axs[2].axis("off")
+
+        if show_titles:
+            axs[0].set_title("Image")
+            axs[1].set_title("Mask")
+            if showing_predictions:
+                axs[2].set_title("Prediction")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
 
 
 class SEN12MSDataModule(pl.LightningDataModule):
