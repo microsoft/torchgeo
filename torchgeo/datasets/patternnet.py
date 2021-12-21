@@ -80,7 +80,7 @@ class PatternNet(VisionClassificationDataset):
     filename = "PatternNet.zip"
     directory = "images"
 
-    label_dict = {
+    classes = {
         0: "airplane",
         1: "baseball_field",
         2: "basketball_court",
@@ -195,7 +195,7 @@ class PatternNet(VisionClassificationDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample return by :meth:`__getitem__`
+            sample: a sample return by :meth:`VisionClassificationDataset.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for figure
 
@@ -216,9 +216,9 @@ class PatternNet(VisionClassificationDataset):
         ax.axis("off")
 
         if show_titles:
-            title = f"Label: {self.label_dict[label]}"
+            title = f"Label: {self.classes[label]}"
             if showing_predictions:
-                title += f"\nPrediction: {self.label_dict[prediction]}"
+                title += f"\nPrediction: {self.classes[prediction]}"
             ax.set_title(title)
 
         if suptitle is not None:
