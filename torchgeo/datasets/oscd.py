@@ -15,9 +15,13 @@ from numpy import ndarray as Array
 from PIL import Image
 from torch import Tensor
 
-from ..datasets.utils import draw_semantic_segmentation_masks
 from .geo import VisionDataset
-from .utils import download_url, extract_archive, sort_sentinel2_bands
+from .utils import (
+    download_url,
+    draw_semantic_segmentation_masks,
+    extract_archive,
+    sort_sentinel2_bands,
+)
 
 
 class OSCD(VisionDataset):

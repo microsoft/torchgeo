@@ -13,9 +13,8 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from ..datasets.utils import draw_semantic_segmentation_masks
 from .geo import VisionDataset
-from .utils import check_integrity, extract_archive
+from .utils import check_integrity, draw_semantic_segmentation_masks, extract_archive
 
 
 class XView2(VisionDataset):

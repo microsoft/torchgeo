@@ -13,9 +13,13 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
-from ..datasets.utils import draw_semantic_segmentation_masks
 from .geo import VisionDataset
-from .utils import check_integrity, extract_archive, rgb_to_mask
+from .utils import (
+    check_integrity,
+    draw_semantic_segmentation_masks,
+    extract_archive,
+    rgb_to_mask,
+)
 
 
 class Vaihingen2D(VisionDataset):

@@ -15,8 +15,8 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from ..datasets.utils import check_integrity, extract_archive
 from .geo import VisionDataset
+from .utils import check_integrity, extract_archive
 
 
 def parse_pascal_voc(path: str) -> Dict[str, Any]:

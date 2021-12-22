@@ -24,8 +24,8 @@ from rasterio.features import rasterize
 from rasterio.transform import Affine
 from torch import Tensor
 
-from torchgeo.datasets.geo import VisionDataset
-from torchgeo.datasets.utils import (
+from .geo import VisionDataset
+from .utils import (
     check_integrity,
     download_radiant_mlhub_collection,
     extract_archive,
