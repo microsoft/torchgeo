@@ -209,12 +209,16 @@ class LEVIRCDPlus(VisionDataset):
         )
 
     def plot(
-        self, sample: Dict[str, Tensor], suptitle: Optional[str] = None
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
     ) -> plt.Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: a sample return by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for figure
 
         Returns;
@@ -222,10 +226,39 @@ class LEVIRCDPlus(VisionDataset):
 
         .. versionadded:: 0.2
         """
-        image, mask = sample["image"], sample["mask"]
+        image1, image2, mask = (
+            sample["image"][0, ...],
+            sample["image"][1, ...],
+            sample["mask"],
+        )
+        ncols = 3
 
-        fig, axs = plt.subplots(1, 2, figsize=(10, 10))
-        axs[0].imshow(image.permute(1, 2, 0))
-        axs[1].imshow(mask)
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction = sample["prediction"]
+            ncols += 1
+
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
+
+        axs[0].imshow(image1.permute(1, 2, 0))
+        axs[0].axis("off")
+        axs[1].imshow(image2.permute(1, 2, 0))
+        axs[1].axis("off")
+        axs[2].imshow(mask)
+        axs[2].axis("off")
+
+        if showing_predictions:
+            axs[3].imshow(prediction)
+            if show_titles:
+                axs[3].set_title("Prediction")
+                axs[3].axis("off")
+
+        if show_titles:
+            axs[0].set_title("Image 1")
+            axs[1].set_title("Image 2")
+            axs[2].set_title("Mask")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
 
         return fig

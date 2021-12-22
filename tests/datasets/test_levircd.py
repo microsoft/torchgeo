@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -60,3 +61,12 @@ class TestLEVIRCDPlus:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             LEVIRCDPlus(str(tmp_path))
+
+    def test_plot(self, dataset: LEVIRCDPlus) -> None:
+        dataset.plot(dataset[0], suptitle="Test")
+        plt.close()
+
+        sample = dataset[0]
+        sample["prediction"] = sample["mask"].clone()
+        dataset.plot(sample, suptitle="Prediction")
+        plt.close()
