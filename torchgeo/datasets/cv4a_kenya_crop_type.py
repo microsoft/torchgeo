@@ -407,6 +407,7 @@ class CV4AKenyaCropType(VisionDataset):
     def plot(
         self,
         sample: Dict[str, Tensor],
+        show_titles: bool = True,
         time_step: int = 0,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
@@ -414,6 +415,7 @@ class CV4AKenyaCropType(VisionDataset):
 
         Args:
             sample: a sample return by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
             time_step: time step at which to access image, beginning with 0
             suptitle: optional suptitle to use for figure
 
@@ -449,15 +451,18 @@ class CV4AKenyaCropType(VisionDataset):
 
         axs[0].imshow(image.permute(1, 2, 0))
         axs[0].axis("off")
-        axs[0].set_title("Image")
         axs[1].imshow(mask)
         axs[1].axis("off")
-        axs[1].set_title("Mask")
 
         if "prediction" in sample:
             axs[2].imshow(prediction)
             axs[2].axis("off")
-            axs[2].set_title("Prediction")
+            if show_titles:
+                axs[2].set_title("Prediction")
+
+        if show_titles:
+            axs[0].set_title("Image")
+            axs[1].set_title("Mask")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
