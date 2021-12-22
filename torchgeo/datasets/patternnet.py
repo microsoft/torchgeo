@@ -78,48 +78,7 @@ class PatternNet(VisionClassificationDataset):
     url = "https://drive.google.com/file/d/127lxXYqzO6Bd0yZhvEbgIfz95HaEnr9K"
     md5 = "96d54b3224c5350a98d55d5a7e6984ad"
     filename = "PatternNet.zip"
-    directory = "images"
-
-    classes = {
-        0: "airplane",
-        1: "baseball_field",
-        2: "basketball_court",
-        3: "beach",
-        4: "bridge",
-        5: "cemetery",
-        6: "chaparral",
-        7: "christmas_tree_farm",
-        8: "closed_road",
-        9: "coastal_mansion",
-        10: "crosswalk",
-        11: "dense_residential",
-        12: "ferry_terminal",
-        13: "football_field",
-        14: "forest",
-        15: "freeway",
-        16: "golf_course",
-        17: "harbor",
-        18: "intersection",
-        19: "mobile_home_park",
-        20: "nursing_home",
-        21: "oil_gas_field",
-        22: "oil_well",
-        23: "overpass",
-        24: "parking_lot",
-        25: "parking_space",
-        26: "railway",
-        27: "river",
-        28: "runway",
-        29: "runway_marking",
-        30: "shipping_yard",
-        31: "solar_panel",
-        32: "sparse_residential",
-        33: "storage_tank",
-        34: "swimming_pool",
-        35: "tennis_court",
-        36: "transformer_station",
-        37: "wastewater_treatment_plant",
-    }
+    directory = "PatternNet/images"
 
     def __init__(
         self,
