@@ -13,7 +13,7 @@ from typing import Dict, Tuple, Type
 
 import pytorch_lightning as pl
 
-from .datasets import (
+from .datamodules import (
     BigEarthNetDataModule,
     ChesapeakeCVPRDataModule,
     COWCCountingDataModule,

@@ -73,7 +73,7 @@ strict_equality = true
 
 [tool.pydocstyle]
 convention = "google"
-match_dir = "(datasets|models|samplers|torchgeo|trainers|transforms)"
+match_dir = "(datamodules|datasets|models|samplers|torchgeo|trainers|transforms)"
 
 [tool.pytest.ini_options]
 # Skip slow tests by default
