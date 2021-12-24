@@ -10,9 +10,7 @@ from typing import Iterator, List, Optional, Tuple, Union
 from rtree.index import Index, Property
 from torch.utils.data import Sampler
 
-from torchgeo.datasets.geo import GeoDataset
-from torchgeo.datasets.utils import BoundingBox
-
+from ..datasets import BoundingBox, GeoDataset
 from .utils import _to_tuple, get_random_bounding_box
 
 # https://github.com/pytorch/pytorch/issues/60979

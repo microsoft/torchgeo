@@ -11,7 +11,7 @@ import os
 import pytorch_lightning as pl
 import torch
 
-from torchgeo.datasets import ChesapeakeCVPRDataModule
+from torchgeo.datamodules import ChesapeakeCVPRDataModule
 from torchgeo.trainers.chesapeake import ChesapeakeCVPRSegmentationTask
 
 ALL_TEST_SPLITS = [["de-val"], ["pa-test"], ["ny-test"], ["pa-test", "ny-test"]]

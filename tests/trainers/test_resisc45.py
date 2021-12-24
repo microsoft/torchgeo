@@ -7,7 +7,7 @@ from typing import Any, Dict, Generator
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
-from torchgeo.datasets import RESISC45DataModule
+from torchgeo.datamodules import RESISC45DataModule
 from torchgeo.trainers.resisc45 import RESISC45ClassificationTask
 
 from .test_utils import FakeTrainer, mocked_log
