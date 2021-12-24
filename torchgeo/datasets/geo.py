@@ -134,6 +134,8 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
         Raises:
             ValueError: if other is not a :class:`GeoDataset`
+
+        .. versionadded: 0.2
         """
         return IntersectionDataset(self, other)
 
@@ -148,6 +150,8 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
         Raises:
             ValueError: if other is not a :class:`GeoDataset`
+
+        .. versionadded: 0.2
         """
         return UnionDataset(self, other)
 
@@ -222,6 +226,8 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
         Returns:
             the :term:`coordinate reference system (CRS)`
+
+        .. versionadded: 0.2
         """
         return self._crs
 
@@ -233,6 +239,8 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
         Args:
             new_crs: new :term:`coordinate reference system (CRS)`
+
+        .. versionadded: 0.2
         """
         if new_crs == self._crs:
             return
@@ -810,6 +818,8 @@ class IntersectionDataset(GeoDataset):
     .. code-block:: python
 
        dataset = landsat & cdl
+
+    .. versionadded: 0.2
     """
 
     def __init__(
@@ -920,6 +930,8 @@ class UnionDataset(GeoDataset):
     .. code-block:: python
 
        dataset = landsat7 | landsat8
+
+    .. versionadded: 0.2
     """
 
     def __init__(
