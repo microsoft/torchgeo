@@ -3,7 +3,7 @@
 
 import torch
 
-from torchgeo.losses import loss_on_prior_reversed_kl_simple, loss_on_prior_simple
+from torchgeo.losses import RQLoss, QRLoss
 
 
 class TestQRLosses:
@@ -11,10 +11,10 @@ class TestQRLosses:
         probs = torch.rand(2, 4, 10, 10)
         log_probs = torch.log(probs)  # type: ignore[attr-defined]
         targets = torch.rand(2, 4, 10, 10)
-        loss_on_prior_simple(log_probs, targets)
+        QRLoss()(log_probs, targets)
 
     def test_loss_on_prior_reversed_kl_simple(self) -> None:
         probs = torch.rand(2, 4, 10, 10)
         log_probs = torch.log(probs)  # type: ignore[attr-defined]
         targets = torch.rand(2, 4, 10, 10)
-        loss_on_prior_reversed_kl_simple(log_probs, targets)
+        RQLoss()(log_probs, targets)

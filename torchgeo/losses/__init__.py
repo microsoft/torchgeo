@@ -3,9 +3,9 @@
 
 """TorchGeo losses."""
 
-from .qr_losses import loss_on_prior_reversed_kl_simple, loss_on_prior_simple
+from .qr_losses import QRLoss, RQLoss
 
-__all__ = ("loss_on_prior_simple", "loss_on_prior_reversed_kl_simple")
+__all__ = ("QRLoss", "RQLoss")
 
 # https://stackoverflow.com/questions/40018681
 for module in __all__:
