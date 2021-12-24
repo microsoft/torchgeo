@@ -16,6 +16,8 @@ class QRLoss(Module):
 
     This loss is defined in 'Resolving label uncertainty with implicit generative
     models' https://openreview.net/forum?id=AEa_UepnMDX.
+
+    .. versionadded:: 0.2
     """
 
     def forward(self, log_probs: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
@@ -45,6 +47,8 @@ class RQLoss(Module):
 
     This loss is defined in 'Resolving label uncertainty with implicit generative
     models' https://openreview.net/forum?id=AEa_UepnMDX.
+
+    .. versionadded:: 0.2
     """
 
     def forward(
