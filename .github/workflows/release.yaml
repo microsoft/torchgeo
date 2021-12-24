@@ -7,6 +7,36 @@ on:
     branches:
     - release**
 jobs:
+  datasets:
+    name: datasets
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone repo
+      uses: actions/checkout@v2
+    - name: Set up python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install pip dependencies
+      run: |
+        pip install cython numpy  # needed for pycocotools
+        pip install .[tests]
+    - name: Run pytest checks
+      run: pytest --cov=torchgeo --cov-report=xml
+  integration:
+    name: integration
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone repo
+      uses: actions/checkout@v2
+    - name: Set up python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install pip dependencies
+      run: pip install .[datasets,tests]
+    - name: Run integration checks
+      run: pytest -m slow
   notebooks:
     name: notebooks
     runs-on: ubuntu-latest
@@ -25,17 +55,3 @@ jobs:
       env:
         MLHUB_API_KEY: ${{ secrets.MLHUB_API_KEY }}
       run: pytest --nbmake docs/tutorials
-  integration:
-    name: integration
-    runs-on: ubuntu-latest
-    steps:
-    - name: Clone repo
-      uses: actions/checkout@v2
-    - name: Set up python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
-    - name: Install pip dependencies
-      run: pip install .[datasets,tests]
-    - name: Run integration checks
-      run: pytest -m slow
