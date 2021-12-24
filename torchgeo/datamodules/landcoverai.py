@@ -66,7 +66,6 @@ class LandCoverAIDataModule(pl.LightningDataModule):
             pass
         return batch
 
-
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
 
