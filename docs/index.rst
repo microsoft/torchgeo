@@ -15,6 +15,7 @@ torchgeo
    :maxdepth: 2
    :caption: Package Reference
 
+   api/datamodules
    api/datasets
    api/models
    api/samplers

@@ -8,7 +8,7 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 
-from torchgeo.datasets import NAIPChesapeakeDataModule
+from torchgeo.datamodules import NAIPChesapeakeDataModule
 from torchgeo.trainers.naipchesapeake import NAIPChesapeakeSegmentationTask
 
 from .test_utils import FakeTrainer, mocked_log

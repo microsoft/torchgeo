@@ -12,7 +12,7 @@ from omegaconf import OmegaConf
 from pytorch_lightning.core.lightning import LightningModule
 from torchvision.models import resnet18
 
-from torchgeo.datasets import ChesapeakeCVPRDataModule
+from torchgeo.datamodules import ChesapeakeCVPRDataModule
 from torchgeo.trainers import BYOLTask
 from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
 

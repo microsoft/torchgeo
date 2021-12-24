@@ -6,7 +6,7 @@
 import random
 from typing import Tuple, Union
 
-from torchgeo.datasets.utils import BoundingBox
+from ..datasets import BoundingBox
 
 
 def _to_tuple(value: Union[Tuple[float, float], float]) -> Tuple[float, float]:
