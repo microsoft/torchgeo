@@ -44,7 +44,7 @@ class XView2(VisionDataset):
 
     * https://arxiv.org/abs/1911.09296
 
-    .. versionadded: 0.2
+    .. versionadded:: 0.2
     """
 
     metadata = {

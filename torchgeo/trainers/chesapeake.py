@@ -35,7 +35,7 @@ CMAP_5 = matplotlib.colors.ListedColormap(
 class ChesapeakeCVPRSegmentationTask(SemanticSegmentationTask):
     """LightningModule for training models on the Chesapeake CVPR Land Cover dataset.
 
-    .. deprecated: 0.1
+    .. deprecated:: 0.1
        Use :class:`SemanticSegmentationTask` instead.
     """
 
