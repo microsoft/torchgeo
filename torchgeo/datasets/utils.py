@@ -445,6 +445,26 @@ def _list_dict_to_dict_list(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, List
     return collated
 
 
+def _dict_list_to_list_dict(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
+    """Convert a dictionary of lists to a list of dictionaries.
+
+    Args:
+        sample: a dictionary of lists
+
+    Returns:
+        a list of dictionaries
+
+    .. versionadded:: 0.2
+    """
+    uncollated: List[Dict[Any, Any]] = [
+        {} for _ in range(max(map(len, sample.values())))
+    ]
+    for key, values in sample.items():
+        for i, value in enumerate(values):
+            uncollated[i][key] = value
+    return uncollated
+
+
 def stack_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
     """Stack a list of samples along a new axis.
 
@@ -529,15 +549,10 @@ def unbind_samples(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
 
     .. versionadded:: 0.2
     """
-    uncollated: List[Dict[Any, Any]] = [{}] * max(map(len, sample.values()))
     for key, values in sample.items():
         if isinstance(values, Tensor):
-            for i, value in enumerate(torch.unbind(values)):
-                uncollated[i][key] = value
-        else:
-            for i, value in enumerate(values):
-                uncollated[i][key] = value
-    return uncollated
+            sample[key] = torch.unbind(values)
+    return _dict_list_to_list_dict(sample)
 
 
 def rasterio_loader(path: str) -> "np.typing.NDArray[np.int_]":
