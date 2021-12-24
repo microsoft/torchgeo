@@ -8,7 +8,7 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 
-from torchgeo.datasets import CycloneDataModule
+from torchgeo.datamodules import CycloneDataModule
 from torchgeo.trainers import RegressionTask
 
 from .test_utils import mocked_log

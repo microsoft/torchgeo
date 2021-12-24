@@ -32,7 +32,6 @@ import numpy as np
 import rasterio
 import torch
 from torch import Tensor
-from torch.utils.data import Dataset, Subset, random_split
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
 
@@ -48,7 +47,6 @@ __all__ = (
     "concat_samples",
     "merge_samples",
     "rasterio_loader",
-    "dataset_split",
     "sort_sentinel2_bands",
     "draw_semantic_segmentation_masks",
     "rgb_to_mask",
@@ -223,6 +221,8 @@ class BoundingBox:
         Raises:
             ValueError: if bounding box is invalid
                 (minx > maxx, miny > maxy, or mint > maxt)
+
+        .. versionadded:: 0.2
         """
         if self.minx > self.maxx:
             raise ValueError(
@@ -276,6 +276,8 @@ class BoundingBox:
 
         Returns:
             True if other is within this bounding box, else False
+
+        .. versionadded:: 0.2
         """
         return (
             (self.minx <= other.minx <= self.maxx)
@@ -294,6 +296,8 @@ class BoundingBox:
 
         Returns:
             the minimum bounding box that contains both self and other
+
+        .. versionadded:: 0.2
         """
         return BoundingBox(
             min(self.minx, other.minx),
@@ -315,6 +319,8 @@ class BoundingBox:
 
         Raises:
             ValueError: if self and other do not intersect
+
+        .. versionadded:: 0.2
         """
         try:
             return BoundingBox(
@@ -431,6 +437,8 @@ def _list_dict_to_dict_list(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, List
 
     Returns:
         a dictionary of lists
+
+    .. versionadded:: 0.2
     """
     collated = collections.defaultdict(list)
     for sample in samples:
@@ -450,6 +458,8 @@ def stack_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
 
     Returns:
         a single sample
+
+    .. versionadded:: 0.2
     """
     collated: Dict[Any, Any] = _list_dict_to_dict_list(samples)
     for key, value in collated.items():
@@ -468,6 +478,8 @@ def concat_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
 
     Returns:
         a single sample
+
+    .. versionadded:: 0.2
     """
     collated: Dict[Any, Any] = _list_dict_to_dict_list(samples)
     for key, value in collated.items():
@@ -488,6 +500,8 @@ def merge_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
 
     Returns:
         a single sample
+
+    .. versionadded:: 0.2
     """
     collated: Dict[Any, Any] = {}
     for sample in samples:
@@ -517,31 +531,6 @@ def rasterio_loader(path: str) -> np.ndarray:  # type: ignore[type-arg]
         # VisionClassificationDataset expects images returned with channels last (HWC)
         array = array.transpose(1, 2, 0)
     return array
-
-
-def dataset_split(
-    dataset: Dataset[Any], val_pct: float, test_pct: Optional[float] = None
-) -> List[Subset[Any]]:
-    """Split a torch Dataset into train/val/test sets.
-
-    If ``test_pct`` is not set then only train and validation splits are returned.
-
-    Args:
-        dataset: dataset to be split into train/val or train/val/test subsets
-        val_pct: percentage of samples to be in validation set
-        test_pct: (Optional) percentage of samples to be in test set
-    Returns:
-        a list of the subset datasets. Either [train, val] or [train, val, test]
-    """
-    if test_pct is None:
-        val_length = int(len(dataset) * val_pct)
-        train_length = len(dataset) - val_length
-        return random_split(dataset, [train_length, val_length])
-    else:
-        val_length = int(len(dataset) * val_pct)
-        test_length = int(len(dataset) * test_pct)
-        train_length = len(dataset) - (val_length + test_length)
-        return random_split(dataset, [train_length, val_length, test_length])
 
 
 def sort_sentinel2_bands(x: str) -> str:

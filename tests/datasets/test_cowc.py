@@ -15,7 +15,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import COWCCounting, COWCCountingDataModule, COWCDetection
+from torchgeo.datasets import COWCCounting, COWCDetection
 from torchgeo.datasets.cowc import COWC
 
 
@@ -169,25 +169,3 @@ class TestCOWCDetection:
         x["prediction"] = x["label"].clone()
         dataset.plot(x)
         plt.close()
-
-
-class TestCOWCCountingDataModule:
-    @pytest.fixture(scope="class")
-    def datamodule(self) -> COWCCountingDataModule:
-        root = os.path.join("tests", "data", "cowc_counting")
-        seed = 0
-        batch_size = 1
-        num_workers = 0
-        dm = COWCCountingDataModule(root, seed, batch_size, num_workers)
-        dm.prepare_data()
-        dm.setup()
-        return dm
-
-    def test_train_dataloader(self, datamodule: COWCCountingDataModule) -> None:
-        next(iter(datamodule.train_dataloader()))
-
-    def test_val_dataloader(self, datamodule: COWCCountingDataModule) -> None:
-        next(iter(datamodule.val_dataloader()))
-
-    def test_test_dataloader(self, datamodule: COWCCountingDataModule) -> None:
-        next(iter(datamodule.test_dataloader()))

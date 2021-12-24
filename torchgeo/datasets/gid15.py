@@ -262,9 +262,9 @@ class GID15(VisionDataset):
             image = sample["image"]
             ncols = 1
 
-        if "predictions" in sample:
+        if "prediction" in sample:
             ncols += 1
-            pred = sample["predictions"]
+            pred = sample["prediction"]
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
 
@@ -273,11 +273,11 @@ class GID15(VisionDataset):
             axs[0].axis("off")
             axs[1].imshow(mask)
             axs[1].axis("off")
-            if "predictions" in sample:
+            if "prediction" in sample:
                 axs[2].imshow(pred)
                 axs[2].axis("off")
         else:
-            if "predictions" in sample:
+            if "prediction" in sample:
                 axs[0].imshow(image.permute(1, 2, 0))
                 axs[0].axis("off")
                 axs[1].imshow(pred)

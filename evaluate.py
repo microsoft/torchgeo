@@ -14,8 +14,8 @@ import pytorch_lightning as pl
 import torch
 from torchmetrics import Accuracy, IoU, Metric, MetricCollection
 
-from torchgeo import _TASK_TO_MODULES_MAPPING as TASK_TO_MODULES_MAPPING
 from torchgeo.trainers import ClassificationTask, SemanticSegmentationTask
+from train import TASK_TO_MODULES_MAPPING
 
 
 def set_up_parser() -> argparse.ArgumentParser:

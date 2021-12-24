@@ -9,7 +9,7 @@ from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 
-from torchgeo.datasets import ChesapeakeCVPRDataModule
+from torchgeo.datamodules import ChesapeakeCVPRDataModule
 from torchgeo.trainers.chesapeake import ChesapeakeCVPRSegmentationTask
 
 from .test_utils import FakeTrainer, mocked_log

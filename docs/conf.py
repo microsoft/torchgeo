@@ -50,8 +50,8 @@ extensions = [
 exclude_patterns = ["_build"]
 
 # Sphinx 3.0+ required for:
-# autodoc_typehints = "description"
-needs_sphinx = "3.0"
+# autodoc_typehints_description_target = "documented"
+needs_sphinx = "4.0"
 
 nitpicky = True
 nitpick_ignore = [
@@ -98,6 +98,7 @@ autodoc_default_options = {
 }
 autodoc_member_order = "bysource"
 autodoc_typehints = "description"
+autodoc_typehints_description_target = "documented"
 
 # sphinx.ext.intersphinx
 intersphinx_mapping = {
@@ -116,14 +117,35 @@ nbsphinx_execute = "never"
 # TODO: width option of image directive is broken, see:
 # https://github.com/pytorch/pytorch_sphinx_theme/issues/140
 nbsphinx_prolog = """
-{% set colab = "https://colab.research.google.com" %}
+{% set host = "https://colab.research.google.com" %}
 {% set repo = "microsoft/torchgeo" %}
-{% set branch = "main" %}
+{% set urlpath = "docs/" ~ env.docname ~ ".ipynb" %}
+{% if "dev" in env.config.release %}
+    {% set branch = "main" %}
+{% else %}
+    {% set branch = "releases/v" ~ env.config.version %}
+{% endif %}
 
-.. image:: {{ colab }}/assets/colab-badge.svg
+.. image:: {{ host }}/assets/colab-badge.svg
    :class: colabbadge
    :alt: Open in Colab
-   :target: {{ colab }}/github/{{ repo }}/blob/{{ branch }}/docs/{{ env.docname }}.ipynb
+   :target: {{ host }}/github/{{ repo }}/blob/{{ branch }}/{{ urlpath }}
+
+{% set host = "https://pccompute.westeurope.cloudapp.azure.com" %}
+{% set host = host ~ "/compute/hub/user-redirect/git-pull" %}
+{% set repo = "https%3A%2F%2Fgithub.com%2Fmicrosoft%2Ftorchgeo" %}
+{% set urlpath = "tree%2Ftorchgeo%2Fdocs%2F" %}
+{% set urlpath = urlpath ~ env.docname | replace("/", "%2F") ~ ".ipynb" %}
+{% if "dev" in env.config.release %}
+    {% set branch = "main" %}
+{% else %}
+    {% set branch = "releases%2Fv" ~ env.config.version %}
+{% endif %}
+
+.. image:: https://img.shields.io/badge/-Open%20on%20Planetary%20Computer-blue
+   :class: colabbadge
+   :alt: Open on Planetary Computer
+   :target: {{ host }}?repo={{ repo }}&urlpath={{ urlpath }}&branch={{ branch }}
 """
 
 # Disables requirejs in nbsphinx to enable compatibility with the pytorch_sphinx_theme
