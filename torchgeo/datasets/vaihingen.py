@@ -51,7 +51,7 @@ class Vaihingen2D(VisionDataset):
 
     * https://doi.org/10.5194/isprsannals-I-3-293-2012
 
-    .. versionadded: 0.2
+    .. versionadded:: 0.2
     """  # noqa: E501
 
     filenames = [

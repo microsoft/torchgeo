@@ -23,7 +23,7 @@ class OSCDDataModule(pl.LightningDataModule):
     Uses the train/test splits from the dataset and further splits
     the train split into train/val splits.
 
-    .. versionadded: 0.2
+    .. versionadded:: 0.2
     """
 
     band_means = torch.tensor(  # type: ignore[attr-defined]

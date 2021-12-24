@@ -18,7 +18,7 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
 
     Uses the train/test splits from the dataset.
 
-    .. versionadded: 0.2
+    .. versionadded:: 0.2
     """
 
     def __init__(

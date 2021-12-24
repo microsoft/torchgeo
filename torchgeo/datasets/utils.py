@@ -222,7 +222,7 @@ class BoundingBox:
             ValueError: if bounding box is invalid
                 (minx > maxx, miny > maxy, or mint > maxt)
 
-        .. versionadded: 0.2
+        .. versionadded:: 0.2
         """
         if self.minx > self.maxx:
             raise ValueError(
@@ -277,7 +277,7 @@ class BoundingBox:
         Returns:
             True if other is within this bounding box, else False
 
-        .. versionadded: 0.2
+        .. versionadded:: 0.2
         """
         return (
             (self.minx <= other.minx <= self.maxx)
@@ -297,7 +297,7 @@ class BoundingBox:
         Returns:
             the minimum bounding box that contains both self and other
 
-        .. versionadded: 0.2
+        .. versionadded:: 0.2
         """
         return BoundingBox(
             min(self.minx, other.minx),
@@ -320,7 +320,7 @@ class BoundingBox:
         Raises:
             ValueError: if self and other do not intersect
 
-        .. versionadded: 0.2
+        .. versionadded:: 0.2
         """
         try:
             return BoundingBox(
@@ -438,7 +438,7 @@ def _list_dict_to_dict_list(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, List
     Returns:
         a dictionary of lists
 
-    .. versionadded: 0.2
+    .. versionadded:: 0.2
     """
     collated = collections.defaultdict(list)
     for sample in samples:
@@ -459,7 +459,7 @@ def stack_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
     Returns:
         a single sample
 
-    .. versionadded: 0.2
+    .. versionadded:: 0.2
     """
     collated: Dict[Any, Any] = _list_dict_to_dict_list(samples)
     for key, value in collated.items():
@@ -479,7 +479,7 @@ def concat_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
     Returns:
         a single sample
 
-    .. versionadded: 0.2
+    .. versionadded:: 0.2
     """
     collated: Dict[Any, Any] = _list_dict_to_dict_list(samples)
     for key, value in collated.items():
@@ -501,7 +501,7 @@ def merge_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
     Returns:
         a single sample
 
-    .. versionadded: 0.2
+    .. versionadded:: 0.2
     """
     collated: Dict[Any, Any] = {}
     for sample in samples:
