@@ -6,14 +6,58 @@
 """torchgeo model training script."""
 
 import os
-from typing import Any, Dict, cast
+from typing import Any, Dict, Tuple, Type, cast
 
 import pytorch_lightning as pl
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 
-from torchgeo import _TASK_TO_MODULES_MAPPING as TASK_TO_MODULES_MAPPING
+from .datamodules import (
+    BigEarthNetDataModule,
+    ChesapeakeCVPRDataModule,
+    COWCCountingDataModule,
+    CycloneDataModule,
+    ETCI2021DataModule,
+    EuroSATDataModule,
+    LandCoverAIDataModule,
+    NAIPChesapeakeDataModule,
+    OSCDDataModule,
+    RESISC45DataModule,
+    SEN12MSDataModule,
+    So2SatDataModule,
+    UCMercedDataModule,
+)
+from .trainers import (
+    BYOLTask,
+    ClassificationTask,
+    MultiLabelClassificationTask,
+    RegressionTask,
+    SemanticSegmentationTask,
+)
+from .trainers.chesapeake import ChesapeakeCVPRSegmentationTask
+from .trainers.landcoverai import LandCoverAISegmentationTask
+from .trainers.naipchesapeake import NAIPChesapeakeSegmentationTask
+from .trainers.resisc45 import RESISC45ClassificationTask
+
+TASK_TO_MODULES_MAPPING: Dict[
+    str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
+] = {
+    "bigearthnet": (MultiLabelClassificationTask, BigEarthNetDataModule),
+    "byol": (BYOLTask, ChesapeakeCVPRDataModule),
+    "chesapeake_cvpr": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
+    "cowc_counting": (RegressionTask, COWCCountingDataModule),
+    "cyclone": (RegressionTask, CycloneDataModule),
+    "eurosat": (ClassificationTask, EuroSATDataModule),
+    "etci2021": (SemanticSegmentationTask, ETCI2021DataModule),
+    "landcoverai": (LandCoverAISegmentationTask, LandCoverAIDataModule),
+    "naipchesapeake": (NAIPChesapeakeSegmentationTask, NAIPChesapeakeDataModule),
+    "oscd": (SemanticSegmentationTask, OSCDDataModule),
+    "resisc45": (RESISC45ClassificationTask, RESISC45DataModule),
+    "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),
+    "so2sat": (ClassificationTask, So2SatDataModule),
+    "ucmerced": (ClassificationTask, UCMercedDataModule),
+}
 
 
 def set_up_omegaconf() -> DictConfig:
