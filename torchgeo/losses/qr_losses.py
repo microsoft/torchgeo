@@ -51,9 +51,7 @@ class RQLoss(Module):
     .. versionadded:: 0.2
     """
 
-    def forward(
-        self, log_probs: torch.Tensor, target: torch.Tensor
-    ) -> torch.Tensor:
+    def forward(self, log_probs: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Computes the RQ (backwards) loss on prior.
 
         Args:
@@ -72,7 +70,7 @@ class RQLoss(Module):
         loss = torch.einsum(  # type: ignore[attr-defined]
             "bcxy,bcxy->bxy",
             r,
-            torch.log(r) - torch.log(q)  # type: ignore[attr-defined]
+            torch.log(r) - torch.log(q),  # type: ignore[attr-defined]
         ).mean()
 
         return cast(torch.Tensor, loss)

@@ -3,7 +3,7 @@
 
 import torch
 
-from torchgeo.losses import RQLoss, QRLoss
+from torchgeo.losses import QRLoss, RQLoss
 
 
 class TestQRLosses:
