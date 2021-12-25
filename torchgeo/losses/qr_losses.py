@@ -20,18 +20,18 @@ class QRLoss(Module):
     .. versionadded:: 0.2
     """
 
-    def forward(self, log_probs: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+    def forward(self, probs: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Computes the QR (forwards) loss on prior.
 
         Args:
-            log_probs: log-probabilities of predictions, expected shape B x C x H x W.
+            probs: probabilities of predictions, expected shape B x C x H x W.
             target: prior probabilities, expected shape B x C x H x W.
 
         Returns:
             qr loss
         """
-        q = torch.exp(log_probs)  # type: ignore[attr-defined]
-        q_bar = q.mean(axis=(0, 2, 3))
+        q = probs
+        q_bar = q.mean(dim=(0, 2, 3))
         qbar_log_S = (q_bar * torch.log(q_bar)).sum()  # type: ignore[attr-defined]
 
         q_log_p = torch.einsum(  # type: ignore[attr-defined]
@@ -51,20 +51,22 @@ class RQLoss(Module):
     .. versionadded:: 0.2
     """
 
-    def forward(self, log_probs: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+    def forward(self, probs: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Computes the RQ (backwards) loss on prior.
 
         Args:
-            log_probs: log-probabilities of predictions, expected shape B x C x H x W
+            probs: probabilities of predictions, expected shape B x C x H x W
             target: prior probabilities, expected shape B x C x H x W
 
         Returns:
             qr loss
         """
-        q = torch.exp(log_probs)  # type: ignore[attr-defined]
+        q = probs
 
         # manually normalize due to https://github.com/pytorch/pytorch/issues/70100
-        z = q / q.norm(p=1, dim=(0, 2, 3), keepdim=True).clamp_min(1e-12).expand_as(q)
+        z = q / q.norm(  # type: ignore[no-untyped-call]
+            p=1, dim=(0, 2, 3), keepdim=True
+        ).clamp_min(1e-12).expand_as(q)
         r = F.normalize(z * target, p=1, dim=1)
 
         loss = torch.einsum(  # type: ignore[attr-defined]
