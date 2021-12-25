@@ -417,15 +417,15 @@ class BeninSmallHolderCashews(VisionDataset):
         self,
         sample: Dict[str, Tensor],
         show_titles: bool = True,
+        time_step: int = 0,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
         """Plot a sample from the dataset.
 
-        This method only plots the first 5 images from the 70 image time series.
-
         Args:
             sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
+            time_step: time step at which to access image, beginning with 0
             suptitle: optional string to use as a suptitle
 
         Returns:
@@ -444,41 +444,37 @@ class BeninSmallHolderCashews(VisionDataset):
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
         num_time_points = sample["image"].shape[0]
-        num_image_panels = min(5, num_time_points)
+        assert time_step < num_time_points
 
-        images = []
-        for i in range(num_image_panels):
-            image = np.rollaxis(sample["image"][i, rgb_indices].numpy(), 0, 3)
-            image = np.clip(image / 3000, 0, 1)
-            images.append(image)
-
+        image = np.rollaxis(sample["image"][time_step, rgb_indices].numpy(), 0, 3)
+        image = np.clip(image / 3000, 0, 1)
         mask = sample["mask"].numpy()
 
-        num_panels = num_image_panels + 1
+        num_panels = 2
         showing_predictions = "prediction" in sample
         if showing_predictions:
             predictions = sample["prediction"].numpy()
             num_panels += 1
 
         fig, axs = plt.subplots(ncols=num_panels, figsize=(4 * num_panels, 4))
-        for i in range(num_image_panels):
-            axs[i].imshow(images[i])
-            axs[i].axis("off")
-            if show_titles:
-                axs[i].set_title(f"t={i+1}")
 
-        axs[num_image_panels].imshow(mask, vmin=0, vmax=6, interpolation="none")
-        axs[num_image_panels].axis("off")
+        axs[0].imshow(image)
+        axs[0].axis("off")
         if show_titles:
-            axs[num_image_panels].set_title("Mask")
+            axs[0].set_title(f"t={time_step}")
+
+        axs[1].imshow(mask, vmin=0, vmax=6, interpolation="none")
+        axs[1].axis("off")
+        if show_titles:
+            axs[1].set_title("Mask")
 
         if showing_predictions:
-            axs[num_image_panels + 1].imshow(
+            axs[2].imshow(
                 predictions, vmin=0, vmax=6, interpolation="none"
             )
-            axs[num_image_panels + 1].axis("off")
+            axs[2].axis("off")
             if show_titles:
-                axs[num_image_panels + 1].set_title("Predictions")
+                axs[2].set_title("Predictions")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
