@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
@@ -30,12 +29,11 @@ def fetch(dataset_id: str, **kwargs: str) -> Dataset:
 
 
 class TestBeninSmallHolderCashews:
-    @pytest.fixture(params=[("B01",), BeninSmallHolderCashews.ALL_BANDS])
+    @pytest.fixture()
     def dataset(
         self,
         monkeypatch: Generator[MonkeyPatch, None, None],
         tmp_path: Path,
-        request: SubRequest,
     ) -> BeninSmallHolderCashews:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(  # type: ignore[attr-defined]
@@ -54,7 +52,42 @@ class TestBeninSmallHolderCashews:
         )
         root = str(tmp_path)
         transforms = nn.Identity()  # type: ignore[attr-defined]
-        bands = request.param
+        bands = BeninSmallHolderCashews.ALL_BANDS
+
+        return BeninSmallHolderCashews(
+            root,
+            transforms=transforms,
+            bands=bands,
+            download=True,
+            api_key="",
+            checksum=True,
+            verbose=True,
+        )
+
+    @pytest.fixture()
+    def single_band_dataset(
+        self,
+        monkeypatch: Generator[MonkeyPatch, None, None],
+        tmp_path: Path,
+    ) -> BeninSmallHolderCashews:
+        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            radiant_mlhub.Dataset, "fetch", fetch
+        )
+        source_md5 = "255efff0f03bc6322470949a09bc76db"
+        labels_md5 = "ed2195d93ca6822d48eb02bc3e81c127"
+        monkeypatch.setitem(  # type: ignore[attr-defined]
+            BeninSmallHolderCashews.image_meta, "md5", source_md5
+        )
+        monkeypatch.setitem(  # type: ignore[attr-defined]
+            BeninSmallHolderCashews.target_meta, "md5", labels_md5
+        )
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            BeninSmallHolderCashews, "dates", ("2019_11_05",)
+        )
+        root = str(tmp_path)
+        transforms = nn.Identity()  # type: ignore[attr-defined]
+        bands = ("B01",)
 
         return BeninSmallHolderCashews(
             root,
@@ -97,16 +130,16 @@ class TestBeninSmallHolderCashews:
             BeninSmallHolderCashews(bands=("foo", "bar"))
 
     def test_plot(self, dataset: BeninSmallHolderCashews) -> None:
-        if not all(band in dataset.bands for band in dataset.RGB_BANDS):
-            with pytest.raises(ValueError, match="Dataset doesn't contain"):
-                x = dataset[0].copy()
-                dataset.plot(x, suptitle="Test")
-        else:
-            x = dataset[0].copy()
-            dataset.plot(x, suptitle="Test")
-            plt.close()
-            dataset.plot(x, show_titles=False)
-            plt.close()
-            x["prediction"] = x["mask"].clone()
-            dataset.plot(x)
-            plt.close()
+        x = dataset[0].copy()
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
+        x["prediction"] = x["mask"].clone()
+        dataset.plot(x)
+        plt.close()
+
+    def test_failed_plot(self, single_band_dataset: BeninSmallHolderCashews) -> None:
+        with pytest.raises(ValueError, match="Dataset doesn't contain"):
+            x = single_band_dataset[0].copy()
+            single_band_dataset.plot(x, suptitle="Test")
