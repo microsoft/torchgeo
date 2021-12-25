@@ -469,9 +469,7 @@ class BeninSmallHolderCashews(VisionDataset):
             axs[1].set_title("Mask")
 
         if showing_predictions:
-            axs[2].imshow(
-                predictions, vmin=0, vmax=6, interpolation="none"
-            )
+            axs[2].imshow(predictions, vmin=0, vmax=6, interpolation="none")
             axs[2].axis("off")
             if show_titles:
                 axs[2].set_title("Predictions")

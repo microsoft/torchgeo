@@ -118,6 +118,7 @@ class BigEarthNet(VisionDataset):
     * https://doi.org/10.1109/IGARSS.2019.8900532
 
     """
+
     class_sets = {
         19: [
             "Urban fabric",
