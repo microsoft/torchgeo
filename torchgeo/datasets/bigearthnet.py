@@ -118,75 +118,77 @@ class BigEarthNet(VisionDataset):
     * https://doi.org/10.1109/IGARSS.2019.8900532
 
     """
+    class_sets = {
+        19: [
+            "Urban fabric",
+            "Industrial or commercial units",
+            "Arable land",
+            "Permanent crops",
+            "Pastures",
+            "Complex cultivation patterns",
+            "Land principally occupied by agriculture, with significant areas of"
+            " natural vegetation",
+            "Agro-forestry areas",
+            "Broad-leaved forest",
+            "Coniferous forest",
+            "Mixed forest",
+            "Natural grassland and sparsely vegetated areas",
+            "Moors, heathland and sclerophyllous vegetation",
+            "Transitional woodland, shrub",
+            "Beaches, dunes, sands",
+            "Inland wetlands",
+            "Coastal wetlands",
+            "Inland waters",
+            "Marine waters",
+        ],
+        43: [
+            "Agro-forestry areas",
+            "Airports",
+            "Annual crops associated with permanent crops",
+            "Bare rock",
+            "Beaches, dunes, sands",
+            "Broad-leaved forest",
+            "Burnt areas",
+            "Coastal lagoons",
+            "Complex cultivation patterns",
+            "Coniferous forest",
+            "Construction sites",
+            "Continuous urban fabric",
+            "Discontinuous urban fabric",
+            "Dump sites",
+            "Estuaries",
+            "Fruit trees and berry plantations",
+            "Green urban areas",
+            "Industrial or commercial units",
+            "Inland marshes",
+            "Intertidal flats",
+            "Land principally occupied by agriculture, with significant areas of"
+            " natural vegetation",
+            "Mineral extraction sites",
+            "Mixed forest",
+            "Moors and heathland",
+            "Natural grassland",
+            "Non-irrigated arable land",
+            "Olive groves",
+            "Pastures",
+            "Peatbogs",
+            "Permanently irrigated land",
+            "Port areas",
+            "Rice fields",
+            "Road and rail networks and associated land",
+            "Salines",
+            "Salt marshes",
+            "Sclerophyllous vegetation",
+            "Sea and ocean",
+            "Sparsely vegetated areas",
+            "Sport and leisure facilities",
+            "Transitional woodland/shrub",
+            "Vineyards",
+            "Water bodies",
+            "Water courses",
+        ],
+    }
 
-    classes_43 = [
-        "Agro-forestry areas",
-        "Airports",
-        "Annual crops associated with permanent crops",
-        "Bare rock",
-        "Beaches, dunes, sands",
-        "Broad-leaved forest",
-        "Burnt areas",
-        "Coastal lagoons",
-        "Complex cultivation patterns",
-        "Coniferous forest",
-        "Construction sites",
-        "Continuous urban fabric",
-        "Discontinuous urban fabric",
-        "Dump sites",
-        "Estuaries",
-        "Fruit trees and berry plantations",
-        "Green urban areas",
-        "Industrial or commercial units",
-        "Inland marshes",
-        "Intertidal flats",
-        "Land principally occupied by agriculture, with significant areas of "
-        "natural vegetation",
-        "Mineral extraction sites",
-        "Mixed forest",
-        "Moors and heathland",
-        "Natural grassland",
-        "Non-irrigated arable land",
-        "Olive groves",
-        "Pastures",
-        "Peatbogs",
-        "Permanently irrigated land",
-        "Port areas",
-        "Rice fields",
-        "Road and rail networks and associated land",
-        "Salines",
-        "Salt marshes",
-        "Sclerophyllous vegetation",
-        "Sea and ocean",
-        "Sparsely vegetated areas",
-        "Sport and leisure facilities",
-        "Transitional woodland/shrub",
-        "Vineyards",
-        "Water bodies",
-        "Water courses",
-    ]
-    classes_19 = [
-        "Urban fabric",
-        "Industrial or commercial units",
-        "Arable land",
-        "Permanent crops",
-        "Pastures",
-        "Complex cultivation patterns",
-        "Land principally occupied by agriculture, with significant areas of natural "
-        "vegetation",
-        "Agro-forestry areas",
-        "Broad-leaved forest",
-        "Coniferous forest",
-        "Mixed forest",
-        "Natural grassland and sparsely vegetated areas",
-        "Moors, heathland and sclerophyllous vegetation",
-        "Transitional woodland, shrub",
-        "Beaches, dunes, sands",
-        "Inland wetlands",
-        "Coastal wetlands",
-        "Inland waters",
-        "Marine waters",
-    ]
     label_converter = {
         0: 0,
         1: 0,
@@ -221,6 +223,7 @@ class BigEarthNet(VisionDataset):
         41: 18,
         42: 18,
     }
+
     splits_metadata = {
         "train": {
             "url": "https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/master/splits/train.csv?inline=false",  # noqa: E501
@@ -286,7 +289,7 @@ class BigEarthNet(VisionDataset):
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
-        self.class2idx = {c: i for i, c in enumerate(self.classes_43)}
+        self.class2idx = {c: i for i, c in enumerate(self.class_sets[43])}
         self._verify()
         self.folders = self._load_folders()
 
@@ -520,10 +523,7 @@ class BigEarthNet(VisionDataset):
         labels = []
         for i, mask in enumerate(label_mask):
             if mask:
-                if self.num_classes == 19:
-                    labels.append(self.classes_19[i])
-                elif self.num_classes == 43:
-                    labels.append(self.classes_43[i])
+                labels.append(self.class_sets[self.num_classes][i])
         return labels
 
     def plot(
