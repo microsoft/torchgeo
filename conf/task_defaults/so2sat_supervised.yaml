@@ -1,7 +1,7 @@
 experiment:
   task: "so2sat"
   module:
-    loss: "ce"
+    loss: "focal"
     classification_model: "resnet18"
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
@@ -10,6 +10,7 @@ experiment:
     num_classes: 17
   datamodule:
     root_dir: "tests/data/so2sat"
-    batch_size: 128
+    batch_size: 1
     num_workers: 0
     bands: "rgb"
+    unsupervised_mode: False

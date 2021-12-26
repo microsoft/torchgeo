@@ -14,30 +14,20 @@ from torchgeo.trainers import RegressionTask
 
 class TestRegressionTask:
     @pytest.mark.parametrize(
-        "name,classname,datamodule_kwargs",
-        [
-            ("cowc_counting", COWCCountingDataModule, {}),
-            ("cyclone", CycloneDataModule, {}),
-        ],
+        "name,classname",
+        [("cowc_counting", COWCCountingDataModule), ("cyclone", CycloneDataModule)],
     )
-    def test_trainer(
-        self,
-        name: str,
-        classname: LightningDataModule,
-        datamodule_kwargs: Dict[Any, Any],
-    ) -> None:
+    def test_trainer(self, name: str, classname: LightningDataModule) -> None:
+        conf = OmegaConf.load(os.path.join("conf", "task_defaults", name + ".yaml"))
+        conf_dict = OmegaConf.to_object(conf.experiment)
+        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+
         # Instantiate datamodule
-        root = os.path.join("tests", "data", name)
-        datamodule = classname(
-            root, seed=0, batch_size=1, num_workers=0, **datamodule_kwargs
-        )
+        datamodule_kwargs = conf_dict["datamodule"]
+        datamodule = classname(**datamodule_kwargs)
 
         # Instantiate model
-        model_conf = OmegaConf.load(
-            os.path.join("conf", "task_defaults", name + ".yaml")
-        )
-        model_kwargs = OmegaConf.to_object(model_conf.experiment.module)
-        model_kwargs = cast(Dict[str, Any], model_kwargs)
+        model_kwargs = conf_dict["module"]
         model = RegressionTask(**model_kwargs)
 
         # Instantiate trainer
@@ -46,6 +36,6 @@ class TestRegressionTask:
         trainer.test(model=model, datamodule=datamodule)
 
     def test_invalid_model(self) -> None:
-        error_message = "Model type 'invalid_model' is not valid."
-        with pytest.raises(ValueError, match=error_message):
+        match = "Model type 'invalid_model' is not valid."
+        with pytest.raises(ValueError, match=match):
             RegressionTask(model="invalid_model")

@@ -84,14 +84,12 @@ wavfile.write("01.wav", rate=22050, data=audio)
 import h5py
 import numpy as np
 
-f = h5py.File("data.hdf5", "w")
-
 num_classes = 10
-images = np.random.randint(low=0, high=255, size=(64, 64, 3)).astype(np.uint8)
-masks = np.random.randint(low=0, high=num_classes, size=(64, 64)).astype(np.uint8)
-f.create_dataset("images", data=images)
-f.create_dataset("masks", data=masks)
-f.close()
+images = np.random.randint(256, size=(64, 64, 3), dtype=np.uint8)
+masks = np.random.randint(num_classes, size=(64, 64), dtype=np.uint8)
+with h5py.File("data.hdf5", "w") as f:
+    f.create_dataset("images", data=images)
+    f.create_dataset("masks", data=masks)
 ```
 
 ### LAS Point Cloud files

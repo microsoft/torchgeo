@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import bz2
 import csv
 import hashlib
@@ -40,12 +43,12 @@ data_list = {"train": [], "test": []}
 image_md5s = []
 for site in sites:
     # Create images
-    for split in ['train', 'train', 'test']:
+    for split in ["train", "train", "test"]:
         directory = os.path.join(site, split)
         os.makedirs(directory, exist_ok=True)
         filename = os.path.join(directory, f"fake_{i}.png")
 
-        img = Image.new('RGB', (SIZE, SIZE))
+        img = Image.new("RGB", (SIZE, SIZE))
         img.save(filename)
 
         data_list[split].append((filename, random.randrange(STOP)))

@@ -10,5 +10,5 @@ experiment:
     num_classes: 45
   datamodule:
     root_dir: "tests/data/resisc45"
-    batch_size: 128
+    batch_size: 1
     num_workers: 0
