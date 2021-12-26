@@ -228,9 +228,9 @@ class Urban3DChallenge(VisionDataset):
         dtm = percentile_normalization(sample["image"][3].numpy(), lower=0, upper=99)
         dsm = percentile_normalization(sample["image"][4].numpy(), lower=0, upper=99)
         ndsm = percentile_normalization(sample["image"][5].numpy(), lower=0, upper=99)
-        tensor = torch.from_numpy(image).permute(2, 0, 1)
+        tensor = torch.from_numpy(image).permute(2, 0, 1)  # type: ignore[attr-defined]
         mask = draw_segmentation_masks(
-            image=tensor,  # type: ignore[attr-defined]
+            image=tensor,
             masks=sample["mask"].to(torch.bool),  # type: ignore[attr-defined]
             alpha=alpha,
             colors="red",
@@ -239,7 +239,7 @@ class Urban3DChallenge(VisionDataset):
         showing_predictions = "prediction" in sample
         if showing_predictions:
             preds = draw_segmentation_masks(
-                image=tensor,  # type: ignore[attr-defined]
+                image=tensor,
                 masks=sample["prediction"].to(torch.bool),  # type: ignore[attr-defined]
                 alpha=alpha,
                 colors="red",

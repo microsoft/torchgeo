@@ -6,6 +6,7 @@
 from typing import Any, Dict, Optional
 
 import pytorch_lightning as pl
+import torch
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
 
@@ -19,10 +20,18 @@ DataLoader.__module__ = "torch.utils.data"
 class Urban3DChallengeDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the Urban3DChallenge dataset."""
 
+    # above to samples to [2, 98]
+    band_mins = torch.tensor(  # type: ignore[attr-defined]
+        [-48.0, -42.0, 1.0, 1.0, 1.0, 1.0]
+    )
+    band_maxs = torch.tensor(  # type: ignore[attr-defined]
+        [6.0, 16.0, 9859.0, 12872.0, 13163.0, 14445.0]
+    )
+
     def __init__(
         self, root_dir: str, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
-        """Initialize a LightningDataModule for Urban3D based DataLoaders.
+        """Initialize a LightningDataModule for Urban3DChallenge based DataLoaders.
 
         Args:
             root_dir: The ``root`` argument to pass to the Urban3D Dataset classes
@@ -43,6 +52,10 @@ class Urban3DChallengeDataModule(pl.LightningDataModule):
         Returns:
             preprocessed sample
         """
+        sample["image"] = (sample["image"] - self.mins) / (self.maxs - self.mins)
+        sample["image"] = torch.clamp(  # type: ignore[attr-defined]
+            sample["image"], min=0.0, max=1.0
+        )
         return sample
 
     def setup(self, stage: Optional[str] = None) -> None:
