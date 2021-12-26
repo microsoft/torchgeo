@@ -245,7 +245,7 @@ class Urban3DChallenge(VisionDataset):
             ).permute(1, 2, 0)
             ncols += 1
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(100, ncols * 100))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
         axs[0].imshow(image)
         axs[0].axis("off")
         axs[1].imshow(dtm)
