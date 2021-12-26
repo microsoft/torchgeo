@@ -79,6 +79,7 @@ from .utils import (
     unbind_samples,
 )
 from .urban3d import US3D
+from .urban3d import Urban3DChallenge
 from .vaihingen import Vaihingen2D
 from .xview import XView2
 from .zuericrop import ZueriCrop
@@ -148,7 +149,7 @@ __all__ = (
     "SpaceNet7",
     "TropicalCycloneWindEstimation",
     "UCMerced",
-    "US3D",
+    "Urban3DChallenge",
     "Vaihingen2D",
     "VHR10",
     "XView2",

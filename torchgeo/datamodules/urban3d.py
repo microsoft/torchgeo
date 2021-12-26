@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""US3D datamodule."""
+"""Urban3DChallenge datamodule."""
 
 from typing import Any, Dict, Optional
 
@@ -9,15 +9,15 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
 
-from ..datasets import US3D
+from ..datasets import Urban3DChallenge
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 DataLoader.__module__ = "torch.utils.data"
 
 
-class US3DDataModule(pl.LightningDataModule):
-    """LightningDataModule implementation for the US3D dataset."""
+class Urban3DChallengeDataModule(pl.LightningDataModule):
+    """LightningDataModule implementation for the Urban3DChallenge dataset."""
 
     def __init__(
         self, root_dir: str, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
@@ -43,7 +43,6 @@ class US3DDataModule(pl.LightningDataModule):
         Returns:
             preprocessed sample
         """
-        sample["image"] = sample["image"].float()
         return sample
 
     def setup(self, stage: Optional[str] = None) -> None:
@@ -56,9 +55,15 @@ class US3DDataModule(pl.LightningDataModule):
         """
         transforms = Compose([self.preprocess])
 
-        self.train_dataset = US3D(self.root_dir, split="train", transforms=transforms)
-        self.val_dataset = US3D(self.root_dir, split="val", transforms=transforms)
-        self.test_dataset = US3D(self.root_dir, split="test", transforms=transforms)
+        self.train_dataset = Urban3DChallenge(
+            self.root_dir, split="train", transforms=transforms
+        )
+        self.val_dataset = Urban3DChallenge(
+            self.root_dir, split="val", transforms=transforms
+        )
+        self.test_dataset = Urban3DChallenge(
+            self.root_dir, split="test", transforms=transforms
+        )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.
