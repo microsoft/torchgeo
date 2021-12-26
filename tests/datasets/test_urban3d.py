@@ -26,8 +26,8 @@ class TestUrban3DChallenge:
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
-        assert x["image"].dtype == torch.float
-        assert x["mask"].dtype == torch.long
+        assert x["image"].dtype == torch.float  # type: ignore[attr-defined]
+        assert x["mask"].dtype == torch.long  # type: ignore[attr-defined]
         assert x["image"].ndim == 3
         assert x["image"].shape[0] == 6
         assert x["mask"].ndim == 2

@@ -115,7 +115,7 @@ class Urban3DChallenge(VisionDataset):
         dtm = self._load_image(files["dtm"])
         dsm = self._load_image(files["dsm"])
         ndsm = dsm - dtm
-        image = torch.cat([rgb, dtm, dsm, ndsm], dim=0)
+        image = torch.cat([rgb, dtm, dsm, ndsm], dim=0)  # type: ignore[attr-defined]
 
         mask = self._load_target(files["binary_mask"])
         mask = mask.to(torch.long)  # type: ignore[attr-defined]
@@ -171,9 +171,9 @@ class Urban3DChallenge(VisionDataset):
             os.path.basename(f) for f in glob.glob(os.path.join(image_root, "*.tif"))
         ]
         prefixes = set([os.path.splitext(f)[0].rsplit("_", 1)[0] for f in basenames])
-        prefixes = sorted(list(prefixes))
+
         files = []
-        for prefix in prefixes:
+        for prefix in sorted(prefixes):
             files.append(
                 dict(
                     rgb=os.path.join(image_root, f"{prefix}_RGB.tif"),
@@ -228,8 +228,9 @@ class Urban3DChallenge(VisionDataset):
         dtm = percentile_normalization(sample["image"][3].numpy(), lower=0, upper=99)
         dsm = percentile_normalization(sample["image"][4].numpy(), lower=0, upper=99)
         ndsm = percentile_normalization(sample["image"][5].numpy(), lower=0, upper=99)
+        tensor = torch.from_numpy(image).permute(2, 0, 1)
         mask = draw_segmentation_masks(
-            image=torch.from_numpy(image).permute(2, 0, 1),
+            image=tensor,  # type: ignore[attr-defined]
             masks=sample["mask"].to(torch.bool),  # type: ignore[attr-defined]
             alpha=alpha,
             colors="red",
@@ -238,7 +239,7 @@ class Urban3DChallenge(VisionDataset):
         showing_predictions = "prediction" in sample
         if showing_predictions:
             preds = draw_segmentation_masks(
-                image=torch.from_numpy(image).permute(2, 0, 1),
+                image=tensor,  # type: ignore[attr-defined]
                 masks=sample["prediction"].to(torch.bool),  # type: ignore[attr-defined]
                 alpha=alpha,
                 colors="red",
