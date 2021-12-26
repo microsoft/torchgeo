@@ -217,6 +217,11 @@ UC Merced
 
 .. autoclass:: UCMerced
 
+Urban 3D Challenge
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: Urban3DChallenge
+
 Vaihingen
 ^^^^^^^^^
 
