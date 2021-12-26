@@ -79,10 +79,11 @@ match_dir = "(datamodules|datasets|losses|models|samplers|torchgeo|trainers|tran
 # Skip slow tests by default
 addopts = "-m 'not slow'"
 filterwarnings = [
-    "ignore:.*Create unlinked descriptors is going to go away.*:DeprecationWarning",
+    "ignore:.*Create unlinked descriptors is going to go away:DeprecationWarning",
     # https://github.com/tensorflow/tensorboard/pull/5138
-    "ignore:.*is a deprecated alias for the builtin.*:DeprecationWarning",
-    "ignore:.*Previous behaviour produces incorrect box coordinates.*:UserWarning",
+    "ignore:.*is a deprecated alias for the builtin:DeprecationWarning",
+    "ignore:Previous behaviour produces incorrect box coordinates:UserWarning",
+    "ignore:The dataloader, .*, does not have many workers which may be a bottleneck:UserWarning",
 ]
 markers = [
     "slow: marks tests as slow",
