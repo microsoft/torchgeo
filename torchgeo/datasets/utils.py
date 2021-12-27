@@ -198,7 +198,7 @@ def download_radiant_mlhub_collection(
     collection.download(output_dir=download_root, api_key=api_key)
 
 
-@dataclass(frozen=True)
+@dataclass
 class BoundingBox:
     """Data class for indexing spatiotemporal data."""
 
