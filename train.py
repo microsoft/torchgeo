@@ -43,7 +43,9 @@ from torchgeo.trainers.resisc45 import RESISC45ClassificationTask
 TASK_TO_MODULES_MAPPING: Dict[
     str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
 ] = {
-    "bigearthnet": (MultiLabelClassificationTask, BigEarthNetDataModule),
+    "bigearthnet_all": (MultiLabelClassificationTask, BigEarthNetDataModule),
+    "bigearthnet_s1": (MultiLabelClassificationTask, BigEarthNetDataModule),
+    "bigearthnet_s2": (MultiLabelClassificationTask, BigEarthNetDataModule),
     "byol": (BYOLTask, ChesapeakeCVPRDataModule),
     "chesapeake_cvpr": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
     "cowc_counting": (RegressionTask, COWCCountingDataModule),
@@ -55,7 +57,8 @@ TASK_TO_MODULES_MAPPING: Dict[
     "oscd": (SemanticSegmentationTask, OSCDDataModule),
     "resisc45": (RESISC45ClassificationTask, RESISC45DataModule),
     "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),
-    "so2sat": (ClassificationTask, So2SatDataModule),
+    "so2sat_supervised": (ClassificationTask, So2SatDataModule),
+    "so2sat_unsupervised": (ClassificationTask, So2SatDataModule),
     "ucmerced": (ClassificationTask, UCMercedDataModule),
 }
 
