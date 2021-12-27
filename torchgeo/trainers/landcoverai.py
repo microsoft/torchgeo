@@ -46,9 +46,10 @@ class LandCoverAISegmentationTask(SemanticSegmentationTask):
             training loss
         """
         x = batch["image"]
-        y = batch["mask"]
+        y = batch["mask"].float().unsqueeze(1)
         with torch.no_grad():
             x, y = self.train_augmentations(x, y)
+        y = y.squeeze(1).long()
 
         y_hat = self.forward(x)
         y_hat_hard = y_hat.argmax(dim=1)
