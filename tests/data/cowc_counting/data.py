@@ -10,7 +10,6 @@ import glob
 import os
 import random
 import shutil
-import tarfile
 
 from PIL import Image
 
@@ -43,22 +42,23 @@ data_list = {"train": [], "test": []}
 image_md5s = []
 for site in sites:
     # Create images
-    for split in ["train", "train", "test"]:
+    for split in ["test", "train", "train"]:
         directory = os.path.join(site, split)
         os.makedirs(directory, exist_ok=True)
-        filename = os.path.join(directory, f"fake_{i}.png")
+        filename = os.path.join(directory, f"fake_{i:02}.png")
 
         img = Image.new("RGB", (SIZE, SIZE))
         img.save(filename)
 
         data_list[split].append((filename, random.randrange(STOP)))
 
-        i += 1
+        if split == "train":
+            i += 1
 
     # Compress images
     filename = f"COWC_{PREFIX}_{site}.tbz"
-    with tarfile.open(filename, "w:bz2") as tar:
-        tar.add(site)
+    bad_filename = shutil.make_archive(filename.replace(".tbz", ""), "bztar", ".", site)
+    os.rename(bad_filename, filename)
 
     # Compute checksums
     with open(filename, "rb") as f:

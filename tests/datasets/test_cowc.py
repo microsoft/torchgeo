@@ -45,14 +45,14 @@ class TestCOWCCounting:
             COWCCounting, "base_url", base_url
         )
         md5s = [
-            "660e70330f6f14d06fe21bb6c18456d3",
-            "029099f1daff5402c235c5ecf6f4bfca",
-            "652a6f13242475b92312be681a2da120",
-            "8c14d5ba1248ebd94f877f58299e5864",
-            "1566d8a1255c22bdd3b12e901081bf0d",
-            "7455ce50757674c1d0351901a575b0d0",
-            "33eb18145fdb76d35b0d25a46f51500d",
-            "c6da2ae0694aab9e85be4d2a60b68936",
+            "7d0c6d1fb548d3ea3a182a56ce231f97",
+            "2e9a806b19b21f9d796c7393ad8f51ee",
+            "39453c0627effd908e773c5c1f8aecc9",
+            "67190b3e0ca8aa1fc93250aa5383a8f3",
+            "575aead6a0c92aba37d613895194da7c",
+            "e7c2279040d3ce31b9c925c45d0c61e2",
+            "f159e23d52bd0b5656fe296f427b98e1",
+            "0a4daed8c5f6c4e20faa6e38636e4346",
         ]
         monkeypatch.setattr(COWCCounting, "md5s", md5s)  # type: ignore[attr-defined]
         root = str(tmp_path)
@@ -116,14 +116,14 @@ class TestCOWCDetection:
             COWCDetection, "base_url", base_url
         )
         md5s = [
-            "8f74bb77c7e3032e451dae2ea5809c7b",
-            "253b9bd4da1cfedd4e5ce87751710e97",
-            "e272b0d36ac747b9cb5e3977be4cedf9",
-            "5cbff32b00213a5403a80b46d65acda2",
-            "d57ae3c60d6746a41861c4be03b8ed72",
-            "7d656906eedb9c5cda716ec6438ba549",
-            "44b801efa5c394b981c60ebe7f011465",
-            "6acfad4a31a914ff3b6e4af27406aae3",
+            "6bbbdb36ee4922e879f66ed9234cb8ab",
+            "09e4af08c6e6553afe5098b328ce9749",
+            "12a2708ab7644766e43f5aae34aa7f2a",
+            "a896433398a0c58263c0d266cfc93bc4",
+            "911ed42c104db60f7a7d03a5b36bc1ab",
+            "4cdb4fefab6a2951591e7840c11a229d",
+            "dd315cfb48dfa7ddb8230c942682bc37",
+            "dccc2257e9c4a9dde2b4f84769804046",
         ]
         monkeypatch.setattr(COWCDetection, "md5s", md5s)  # type: ignore[attr-defined]
         root = str(tmp_path)
