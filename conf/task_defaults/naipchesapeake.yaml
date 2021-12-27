@@ -10,11 +10,11 @@ experiment:
     learning_rate_schedule_patience: 2
     in_channels: 4
     num_classes: 13
-    num_filters: 64
+    num_filters: 1
     ignore_zeros: False
   datamodule:
     naip_root_dir: "tests/data/naip"
     chesapeake_root_dir: "tests/data/chesapeake/BAYWIDE"
-    batch_size: 32
+    batch_size: 1
     num_workers: 0
     patch_size: 32

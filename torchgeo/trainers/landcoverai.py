@@ -49,7 +49,6 @@ class LandCoverAISegmentationTask(SemanticSegmentationTask):
         y = batch["mask"]
         with torch.no_grad():
             x, y = self.train_augmentations(x, y)
-        y = y.long().squeeze()
 
         y_hat = self.forward(x)
         y_hat_hard = y_hat.argmax(dim=1)
@@ -76,7 +75,7 @@ class LandCoverAISegmentationTask(SemanticSegmentationTask):
             batch_idx: Index of current batch
         """
         x = batch["image"]
-        y = batch["mask"].long().squeeze()
+        y = batch["mask"]
         y_hat = self.forward(x)
         y_hat_hard = y_hat.argmax(dim=1)
 
@@ -120,7 +119,7 @@ class LandCoverAISegmentationTask(SemanticSegmentationTask):
             batch_idx: Index of current batch
         """
         x = batch["image"]
-        y = batch["mask"].long().squeeze()
+        y = batch["mask"]
         y_hat = self.forward(x)
         y_hat_hard = y_hat.argmax(dim=1)
 

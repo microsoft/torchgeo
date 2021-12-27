@@ -10,7 +10,7 @@ experiment:
     learning_rate_schedule_patience: 6
     in_channels: 4
     num_classes: 7
-    num_filters: 256
+    num_filters: 1
     ignore_zeros: False
   datamodule:
     root_dir: "tests/data/chesapeake/cvpr"
@@ -20,8 +20,8 @@ experiment:
     - "de-test"
     test_splits:
     - "de-test"
-    patches_per_tile: 200
-    patch_size: 256
-    batch_size: 64
+    patches_per_tile: 1
+    patch_size: 64
+    batch_size: 1
     num_workers: 0
     class_set: ${experiment.module.num_classes}

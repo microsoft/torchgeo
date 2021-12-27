@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Union, cast
+from typing import Any, Dict, Type, cast
 
 import pytest
 from omegaconf import OmegaConf
@@ -29,7 +29,7 @@ class TestClassificationTask:
             ("ucmerced", UCMercedDataModule),
         ],
     )
-    def test_trainer(self, name: str, classname: LightningDataModule) -> None:
+    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
         if name == "so2sat":
             pytest.importorskip("h5py")
 
@@ -51,7 +51,7 @@ class TestClassificationTask:
         trainer.test(model=model, datamodule=datamodule)
 
     @pytest.fixture
-    def model_kwargs(self) -> Dict[str, Union[str, int]]:
+    def model_kwargs(self) -> Dict[Any, Any]:
         return {
             "classification_model": "resnet18",
             "in_channels": 1,
@@ -60,15 +60,13 @@ class TestClassificationTask:
             "weights": "random",
         }
 
-    def test_pretrained(
-        self, model_kwargs: Dict[str, Union[str, int]], checkpoint: str
-    ) -> None:
+    def test_pretrained(self, model_kwargs: Dict[Any, Any], checkpoint: str) -> None:
         model_kwargs["weights"] = checkpoint
         with pytest.warns(UserWarning):
             ClassificationTask(**model_kwargs)
 
     def test_invalid_pretrained(
-        self, model_kwargs: Dict[str, Union[str, int]], checkpoint: str
+        self, model_kwargs: Dict[Any, Any], checkpoint: str
     ) -> None:
         model_kwargs["weights"] = checkpoint
         model_kwargs["classification_model"] = "resnet50"
@@ -76,19 +74,19 @@ class TestClassificationTask:
         with pytest.raises(ValueError, match=match):
             ClassificationTask(**model_kwargs)
 
-    def test_invalid_loss(self, model_kwargs: Dict[str, Union[str, int]]) -> None:
+    def test_invalid_loss(self, model_kwargs: Dict[Any, Any]) -> None:
         model_kwargs["loss"] = "invalid_loss"
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
             ClassificationTask(**model_kwargs)
 
-    def test_invalid_model(self, model_kwargs: Dict[str, Union[str, int]]) -> None:
+    def test_invalid_model(self, model_kwargs: Dict[Any, Any]) -> None:
         model_kwargs["classification_model"] = "invalid_model"
         match = "Model type 'invalid_model' is not a valid timm model."
         with pytest.raises(ValueError, match=match):
             ClassificationTask(**model_kwargs)
 
-    def test_invalid_weights(self, model_kwargs: Dict[str, Union[str, int]]) -> None:
+    def test_invalid_weights(self, model_kwargs: Dict[Any, Any]) -> None:
         model_kwargs["weights"] = "invalid_weights"
         match = "Weight type 'invalid_weights' is not valid."
         with pytest.raises(ValueError, match=match):
@@ -104,7 +102,7 @@ class TestMultiLabelClassificationTask:
             ("bigearthnet_s2", BigEarthNetDataModule),
         ],
     )
-    def test_trainer(self, name: str, classname: LightningDataModule) -> None:
+    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
         conf = OmegaConf.load(os.path.join("conf", "task_defaults", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
         conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
@@ -123,7 +121,7 @@ class TestMultiLabelClassificationTask:
         trainer.test(model=model, datamodule=datamodule)
 
     @pytest.fixture
-    def model_kwargs(self) -> Dict[str, Union[str, int]]:
+    def model_kwargs(self) -> Dict[Any, Any]:
         return {
             "classification_model": "resnet18",
             "in_channels": 1,
@@ -132,7 +130,7 @@ class TestMultiLabelClassificationTask:
             "weights": "random",
         }
 
-    def test_invalid_loss(self, model_kwargs: Dict[str, Union[str, int]]) -> None:
+    def test_invalid_loss(self, model_kwargs: Dict[Any, Any]) -> None:
         model_kwargs["loss"] = "invalid_loss"
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):

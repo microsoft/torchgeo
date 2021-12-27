@@ -134,19 +134,24 @@ trainer:
     subprocess.run(args, check=True)
 
 
+# TODO: these tests can probably be removed now
 @pytest.mark.parametrize(
     "task",
     [
-        "bigearthnet",
+        "bigearthnet_all",
+        "bigearthnet_s1",
+        "bigearthnet_s2",
         "byol",
         "chesapeake_cvpr",
         "cowc_counting",
         "cyclone",
         "landcoverai",
         "naipchesapeake",
+        "oscd",
         "resisc45",
         "sen12ms",
-        "so2sat",
+        "so2sat_supervised",
+        "so2sat_unsupervised",
         "ucmerced",
     ],
 )

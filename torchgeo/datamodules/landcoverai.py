@@ -48,7 +48,7 @@ class LandCoverAIDataModule(pl.LightningDataModule):
         sample["image"] = sample["image"] / 255.0
 
         sample["image"] = sample["image"].float()
-        sample["mask"] = sample["mask"].float().unsqueeze(0) + 1
+        sample["mask"] = sample["mask"].long() + 1
 
         return sample
 
