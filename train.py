@@ -27,6 +27,7 @@ from torchgeo.datamodules import (
     SEN12MSDataModule,
     So2SatDataModule,
     UCMercedDataModule,
+    Urban3DChallengeDataModule
 )
 from torchgeo.trainers import (
     BYOLTask,
@@ -53,6 +54,7 @@ TASK_TO_MODULES_MAPPING: Dict[
     "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),
     "so2sat": (ClassificationTask, So2SatDataModule),
     "ucmerced": (ClassificationTask, UCMercedDataModule),
+    "urban3dchallenge": (SemanticSegmentationTask, Urban3DChallengeDataModule),
 }
 
 
