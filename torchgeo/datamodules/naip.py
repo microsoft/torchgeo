@@ -63,6 +63,9 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         """
         sample["image"] = sample["image"] / 255.0
         sample["image"] = sample["image"].float()
+
+        del sample["bbox"]
+
         return sample
 
     def chesapeake_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
@@ -75,6 +78,9 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             preprocessed Chesapeake data
         """
         sample["mask"] = sample["mask"].long()[0]
+
+        del sample["bbox"]
+
         return sample
 
     def prepare_data(self) -> None:
