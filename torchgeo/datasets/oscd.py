@@ -60,8 +60,17 @@ class OSCD(VisionDataset):
             "https://partage.imt.fr/index.php/s/gpStKn4Mpgfnr63/download"
         ),
     }
-
-    md5 = "7383412da7ece1dca1c12dc92ac77f09"
+    md5s = {
+        "Onera Satellite Change Detection dataset - Images.zip": (
+            "c50d4a2941da64e03a47ac4dec63d915"
+        ),
+        "Onera Satellite Change Detection dataset - Train Labels.zip": (
+            "4d2965af8170c705ebad3d6ee71b6990"
+        ),
+        "Onera Satellite Change Detection dataset - Test Labels.zip": (
+            "8177d437793c522653c442aa4e66c617"
+        ),
+    }
 
     zipfile_glob = "*Onera*.zip"
     filename_glob = "*Onera*"
@@ -254,7 +263,7 @@ class OSCD(VisionDataset):
                 self.urls[f_name],
                 self.root,
                 filename=f_name,
-                md5=self.md5 if self.checksum else None,
+                md5=self.md5s[f_name] if self.checksum else None,
             )
 
     def _extract(self) -> None:

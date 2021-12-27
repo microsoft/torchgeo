@@ -34,8 +34,18 @@ class TestOSCD:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.oscd, "download_url", download_url
         )
-        md5 = "d6ebaae1ea0f3ae960af31531d394521"
-        monkeypatch.setattr(OSCD, "md5", md5)  # type: ignore[attr-defined]
+        md5s = {
+            "Onera Satellite Change Detection dataset - Images.zip": (
+                "fb4e3f54c3a31fd3f21f98cad4ddfb74"
+            ),
+            "Onera Satellite Change Detection dataset - Train Labels.zip": (
+                "ca526434a60e9abdf97d528dc29e9f13"
+            ),
+            "Onera Satellite Change Detection dataset - Test Labels.zip": (
+                "ca0ba73ba66d06fa4903e269ef12eb50"
+            ),
+        }
+        monkeypatch.setattr(OSCD, "md5s", md5s)  # type: ignore[attr-defined]
         urls = {
             "Onera Satellite Change Detection dataset - Images.zip": os.path.join(
                 "tests",
