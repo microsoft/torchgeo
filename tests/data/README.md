@@ -53,18 +53,28 @@ VisionDataset data can be created like so.
 ### RGB images
 
 ```python
+import numpy as np
 from PIL import Image
 
-img = Image.new("RGB", (64, 64))
+DTYPE = np.uint8
+SIZE = 64
+
+arr = np.random.randint(np.iinfo(DTYPE).max, size=(SIZE, SIZE, 3), dtype=DTYPE)
+img = Image.fromarray(arr)
 img.save("01.png")
 ```
 
 ### Grayscale images
 
 ```python
+import numpy as np
 from PIL import Image
 
-img = Image.new("L", (64, 64))
+DTYPE = np.uint8
+SIZE = 64
+
+arr = np.random.randint(np.iinfo(DTYPE).max, size=(SIZE, SIZE), dtype=DTYPE)
+img = Image.fromarray(arr)
 img.save("02.jpg")
 ```
 
@@ -84,9 +94,12 @@ wavfile.write("01.wav", rate=22050, data=audio)
 import h5py
 import numpy as np
 
-num_classes = 10
-images = np.random.randint(256, size=(64, 64, 3), dtype=np.uint8)
-masks = np.random.randint(num_classes, size=(64, 64), dtype=np.uint8)
+DTYPE = np.uint8
+SIZE = 64
+NUM_CLASSES = 10
+
+images = np.random.randint(np.iinfo(DTYPE).max, size=(SIZE, SIZE, 3), dtype=DTYPE)
+masks = np.random.randint(NUM_CLASSES, size=(SIZE, SIZE), dtype=DTYPE)
 with h5py.File("data.hdf5", "w") as f:
     f.create_dataset("images", data=images)
     f.create_dataset("masks", data=masks)
