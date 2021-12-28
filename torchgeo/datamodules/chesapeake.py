@@ -39,6 +39,8 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         batch_size: int = 64,
         num_workers: int = 0,
         class_set: int = 7,
+        use_prior_labels: bool = False,
+        prior_smoothing_constant: float = 1e-4,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for Chesapeake CVPR based DataLoaders.
@@ -55,17 +57,27 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
             class_set: The high-resolution land cover class set to use - 5 or 7
+            use_prior_labels: Flag for using a prior over high-resolution classes
+                instead of the high-resolution labels themselves
+            prior_smoothing_constant: additive smoothing to add when using prior labels
+
+        Raises:
+            ValueError: if ``use_prior_labels`` is used with ``class_set==7``
         """
         super().__init__()  # type: ignore[no-untyped-call]
         for state in train_splits + val_splits + test_splits:
             assert state in ChesapeakeCVPR.splits
         assert class_set in [5, 7]
+        if use_prior_labels and class_set != 5:
+            raise ValueError(
+                "The pre-generated prior labels are only valid for the 5"
+                + " class set of labels"
+            )
 
         self.root_dir = root_dir
         self.train_splits = train_splits
         self.val_splits = val_splits
         self.test_splits = test_splits
-        self.layers = ["naip-new", "lc"]
         self.patches_per_tile = patches_per_tile
         self.patch_size = patch_size
         # This is a rough estimate of how large of a patch we will need to sample in
@@ -74,6 +86,16 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.class_set = class_set
+        self.use_prior_labels = use_prior_labels
+        self.prior_smoothing_constant = prior_smoothing_constant
+
+        if self.use_prior_labels:
+            self.layers = [
+                "naip-new",
+                "prior_from_cooccurrences_101_31_no_osm_no_buildings",
+            ]
+        else:
+            self.layers = ["naip-new", "lc"]
 
     def pad_to(
         self, size: int = 512, image_value: int = 0, mask_value: int = 0
@@ -148,15 +170,20 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             preprocessed sample
         """
         sample["image"] = sample["image"] / 255.0
-        sample["mask"] = sample["mask"]
         sample["mask"] = sample["mask"].squeeze()
 
-        if self.class_set == 5:
-            sample["mask"][sample["mask"] == 5] = 4
-            sample["mask"][sample["mask"] == 6] = 4
+        if self.use_prior_labels:
+            sample["mask"] = F.normalize(sample["mask"].float(), p=1, dim=0)
+            sample["mask"] = F.normalize(
+                sample["mask"] + self.prior_smoothing_constant, p=1, dim=0
+            )
+        else:
+            if self.class_set == 5:
+                sample["mask"][sample["mask"] == 5] = 4
+                sample["mask"][sample["mask"] == 6] = 4
+            sample["mask"] = sample["mask"].long()
 
         sample["image"] = sample["image"].float()
-        sample["mask"] = sample["mask"].long()
 
         return sample
 

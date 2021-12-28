@@ -101,6 +101,7 @@ class TestChesapeakeCVPR:
             ("naip-new", "naip-old", "nlcd"),
             ("landsat-leaf-on", "landsat-leaf-off", "lc"),
             ("naip-new", "landsat-leaf-on", "lc", "nlcd", "buildings"),
+            ("naip-new", "prior_from_cooccurrences_101_31_no_osm_no_buildings"),
         ]
     )
     def dataset(
@@ -112,12 +113,34 @@ class TestChesapeakeCVPR:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.chesapeake, "download_url", download_url
         )
-        md5 = "882d18b1f15ea4498bf54e674aecd5d4"
-        monkeypatch.setattr(ChesapeakeCVPR, "md5", md5)  # type: ignore[attr-defined]
-        url = os.path.join(
-            "tests", "data", "chesapeake", "cvpr", "cvpr_chesapeake_landcover.zip"
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            ChesapeakeCVPR,
+            "md5s",
+            {
+                "base": "882d18b1f15ea4498bf54e674aecd5d4",
+                "prior_extension": "677446c486f3145787938b14ee3da13f",
+            },
         )
-        monkeypatch.setattr(ChesapeakeCVPR, "url", url)  # type: ignore[attr-defined]
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            ChesapeakeCVPR,
+            "urls",
+            {
+                "base": os.path.join(
+                    "tests",
+                    "data",
+                    "chesapeake",
+                    "cvpr",
+                    "cvpr_chesapeake_landcover.zip",
+                ),
+                "prior_extension": os.path.join(
+                    "tests",
+                    "data",
+                    "chesapeake",
+                    "cvpr",
+                    "cvpr_chesapeake_landcover_prior_extension.zip",
+                ),
+            },
+        )
         monkeypatch.setattr(  # type: ignore[attr-defined]
             ChesapeakeCVPR,
             "files",
@@ -152,11 +175,23 @@ class TestChesapeakeCVPR:
         ChesapeakeCVPR(root=dataset.root, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        url = os.path.join(
-            "tests", "data", "chesapeake", "cvpr", "cvpr_chesapeake_landcover.zip"
-        )
         root = str(tmp_path)
-        shutil.copy(url, root)
+        shutil.copy(
+            os.path.join(
+                "tests", "data", "chesapeake", "cvpr", "cvpr_chesapeake_landcover.zip"
+            ),
+            root,
+        )
+        shutil.copy(
+            os.path.join(
+                "tests",
+                "data",
+                "chesapeake",
+                "cvpr",
+                "cvpr_chesapeake_landcover_prior_extension.zip",
+            ),
+            root,
+        )
         ChesapeakeCVPR(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:

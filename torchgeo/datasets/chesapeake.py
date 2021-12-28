@@ -293,9 +293,19 @@ class ChesapeakeCVPR(GeoDataset):
     * https://doi.org/10.1109/cvpr.2019.01301
     """
 
-    url = "https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip"  # noqa: E501
-    filename = "cvpr_chesapeake_landcover.zip"
-    md5 = "1225ccbb9590e9396875f221e5031514"
+    subdatasets = ["base", "prior_extension"]
+    urls = {
+        "base": "https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip",  # noqa: E501
+        "prior_extension": "https://zenodo.org/record/5652512/files/cvpr_chesapeake_landcover_prior_extension.zip?download=1",  # noqa: E501
+    }
+    filenames = {
+        "base": "cvpr_chesapeake_landcover.zip",
+        "prior_extension": "cvpr_chesapeake_landcover_prior_extension.zip",
+    }
+    md5s = {
+        "base": "1225ccbb9590e9396875f221e5031514",
+        "prior_extension": "8f43ec30e155274dd652e157c48d2598",
+    }
 
     crs = CRS.from_epsg(3857)
     res = 1
@@ -308,6 +318,7 @@ class ChesapeakeCVPR(GeoDataset):
         "nlcd",
         "lc",
         "buildings",
+        "prior_from_cooccurrences_101_31_no_osm_no_buildings",
     ]
     states = ["de", "md", "va", "wv", "pa", "ny"]
     splits = (
@@ -316,6 +327,7 @@ class ChesapeakeCVPR(GeoDataset):
         + [f"{state}-test" for state in states]
     )
 
+    # these are used to check the integrity of the dataset
     files = [
         "de_1m_2013_extended-debuffered-test_tiles",
         "de_1m_2013_extended-debuffered-train_tiles",
@@ -335,6 +347,14 @@ class ChesapeakeCVPR(GeoDataset):
         "wv_1m_2014_extended-debuffered-test_tiles",
         "wv_1m_2014_extended-debuffered-train_tiles",
         "wv_1m_2014_extended-debuffered-val_tiles",
+        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_buildings.tif",
+        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-off.tif",  # noqa: E501
+        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-on.tif",  # noqa: E501
+        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_lc.tif",
+        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-new.tif",
+        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-old.tif",
+        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_nlcd.tif",
+        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif",  # noqa: E501
         "spatial_index.geojson",
     ]
 
@@ -365,7 +385,8 @@ class ChesapeakeCVPR(GeoDataset):
             splits: a list of strings in the format "{state}-{train,val,test}"
                 indicating the subset of data to use, for example "ny-train"
             layers: a list containing a subset of "naip-new", "naip-old", "lc", "nlcd",
-                "landsat-leaf-on", "landsat-leaf-off", "buildings" indicating which
+                "landsat-leaf-on", "landsat-leaf-off", "buildings", or
+                "prior_from_cooccurrences_101_31_no_osm_no_buildings" indicating which
                 layers to load
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
@@ -399,6 +420,12 @@ class ChesapeakeCVPR(GeoDataset):
                     box = shapely.geometry.shape(row["geometry"])
                     minx, miny, maxx, maxy = box.bounds
                     coords = (minx, maxx, miny, maxy, mint, maxt)
+
+                    prior_fn = row["properties"]["lc"].replace(
+                        "lc.tif",
+                        "prior_from_cooccurrences_101_31_no_osm_no_buildings.tif",
+                    )
+
                     self.index.insert(
                         i,
                         coords,
@@ -410,6 +437,7 @@ class ChesapeakeCVPR(GeoDataset):
                             "lc": row["properties"]["lc"],
                             "nlcd": row["properties"]["nlcd"],
                             "buildings": row["properties"]["buildings"],
+                            "prior_from_cooccurrences_101_31_no_osm_no_buildings": prior_fn,  # noqa: E501
                         },
                     )
 
@@ -467,7 +495,12 @@ class ChesapeakeCVPR(GeoDataset):
                     "landsat-leaf-off",
                 ]:
                     sample["image"].append(data)
-                elif layer in ["lc", "nlcd", "buildings"]:
+                elif layer in [
+                    "lc",
+                    "nlcd",
+                    "buildings",
+                    "prior_from_cooccurrences_101_31_no_osm_no_buildings",
+                ]:
                     sample["mask"].append(data)
         else:
             raise IndexError(f"query: {query} spans multiple tiles which is not valid")
@@ -503,7 +536,12 @@ class ChesapeakeCVPR(GeoDataset):
             return
 
         # Check if the zip files have already been downloaded
-        if os.path.exists(os.path.join(self.root, self.filename)):
+        if all(
+            [
+                os.path.exists(os.path.join(self.root, self.filenames[subdataset]))
+                for subdataset in self.subdatasets
+            ]
+        ):
             self._extract()
             return
 
@@ -521,8 +559,15 @@ class ChesapeakeCVPR(GeoDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        download_url(self.url, self.root, filename=self.filename, md5=self.md5)
+        for subdataset in self.subdatasets:
+            download_url(
+                self.urls[subdataset],
+                self.root,
+                filename=self.filenames[subdataset],
+                md5=self.md5s[subdataset],
+            )
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        extract_archive(os.path.join(self.root, self.filename))
+        for subdataset in self.subdatasets:
+            extract_archive(os.path.join(self.root, self.filenames[subdataset]))
