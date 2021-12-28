@@ -84,6 +84,8 @@ filterwarnings = [
     "ignore:.*is a deprecated alias for the builtin:DeprecationWarning",
     "ignore:Previous behaviour produces incorrect box coordinates:UserWarning",
     "ignore:The dataloader, .*, does not have many workers which may be a bottleneck:UserWarning",
+    "ignore:Your `.*_dataloader` has `shuffle=True`:UserWarning",
+    "ignore:Trying to infer the `batch_size` from an ambiguous collection:UserWarning",
 ]
 markers = [
     "slow: marks tests as slow",
