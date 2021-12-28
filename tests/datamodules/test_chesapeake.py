@@ -52,7 +52,7 @@ class TestChesapeakeCVPRDataModule:
             out["mask"], torch.zeros(4, 4)  # type: ignore[attr-defined]
         )
 
-    def test_invalid_param_config(self, datamodule: ChesapeakeCVPRDataModule) -> None:
+    def test_invalid_param_config(self) -> None:
         with pytest.raises(ValueError, match="The pre-generated prior labels"):
             ChesapeakeCVPRDataModule(
                 os.path.join("tests", "data", "chesapeake", "cvpr"),
