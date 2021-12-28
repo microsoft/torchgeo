@@ -45,7 +45,7 @@ exclude_lines = [
 
 [tool.isort]
 profile = "black"
-known_first_party = ["docs", "tests", "torchgeo"]
+known_first_party = ["docs", "tests", "torchgeo", "train"]
 extend_skip = [".spack-env/", "data", "logs", "output"]
 skip_gitignore = true
 color_output = true
@@ -73,7 +73,7 @@ strict_equality = true
 
 [tool.pydocstyle]
 convention = "google"
-match_dir = "(datasets|models|samplers|torchgeo|trainers|transforms)"
+match_dir = "(datamodules|datasets|models|samplers|torchgeo|trainers|transforms)"
 
 [tool.pytest.ini_options]
 # Skip slow tests by default
@@ -82,6 +82,7 @@ filterwarnings = [
     "ignore:.*Create unlinked descriptors is going to go away.*:DeprecationWarning",
     # https://github.com/tensorflow/tensorboard/pull/5138
     "ignore:.*is a deprecated alias for the builtin.*:DeprecationWarning",
+    "ignore:.*Previous behaviour produces incorrect box coordinates.*:UserWarning",
 ]
 markers = [
     "slow: marks tests as slow",

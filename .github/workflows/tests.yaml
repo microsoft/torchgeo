@@ -3,9 +3,11 @@ on:
   push:
     branches:
     - main
+    - release**
   pull_request:
     branches:
     - main
+    - release**
 jobs:
   mypy:
     name: mypy
@@ -20,7 +22,7 @@ jobs:
     - name: Install pip dependencies
       run: |
         pip install cython numpy  # needed for pycocotools
-        pip install .[datasets,tests,train]
+        pip install .[datasets,tests]
     - name: Run mypy checks
       run: mypy .
   pytest:
@@ -64,7 +66,7 @@ jobs:
     - name: Install pip dependencies
       run: |
         pip install cython numpy  # needed for pycocotools
-        pip install .[datasets,tests,train]
+        pip install .[datasets,tests]
     - name: Run pytest checks
       run: pytest --cov=torchgeo --cov-report=xml
     - name: Report coverage

@@ -134,6 +134,8 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
         Raises:
             ValueError: if other is not a :class:`GeoDataset`
+
+        .. versionadded:: 0.2
         """
         return IntersectionDataset(self, other)
 
@@ -148,6 +150,8 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
         Raises:
             ValueError: if other is not a :class:`GeoDataset`
+
+        .. versionadded:: 0.2
         """
         return UnionDataset(self, other)
 
@@ -172,6 +176,41 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     bbox: {self.bounds}
     size: {len(self)}"""
 
+    # NOTE: This hack should be removed once the following issue is fixed:
+    # https://github.com/Toblerity/rtree/issues/87
+
+    def __getstate__(
+        self,
+    ) -> Tuple[
+        Dict[Any, Any],
+        List[Tuple[int, Tuple[float, float, float, float, float, float], str]],
+    ]:
+        """Define how instances are pickled.
+
+        Returns:
+            the state necessary to unpickle the instance
+        """
+        objects = self.index.intersection(self.index.bounds, objects=True)
+        tuples = [(item.id, item.bounds, item.object) for item in objects]
+        return self.__dict__, tuples
+
+    def __setstate__(
+        self,
+        state: Tuple[
+            Dict[Any, Any],
+            List[Tuple[int, Tuple[float, float, float, float, float, float], str]],
+        ],
+    ) -> None:
+        """Define how to unpickle an instance.
+
+        Args:
+            state: the state of the instance when it was pickled
+        """
+        attrs, tuples = state
+        self.__dict__.update(attrs)
+        for item in tuples:
+            self.index.insert(*item)
+
     @property
     def bounds(self) -> BoundingBox:
         """Bounds of the index.
@@ -187,6 +226,8 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
         Returns:
             the :term:`coordinate reference system (CRS)`
+
+        .. versionadded:: 0.2
         """
         return self._crs
 
@@ -198,6 +239,8 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
         Args:
             new_crs: new :term:`coordinate reference system (CRS)`
+
+        .. versionadded:: 0.2
         """
         if new_crs == self._crs:
             return
@@ -775,6 +818,8 @@ class IntersectionDataset(GeoDataset):
     .. code-block:: python
 
        dataset = landsat & cdl
+
+    .. versionadded:: 0.2
     """
 
     def __init__(
@@ -885,6 +930,8 @@ class UnionDataset(GeoDataset):
     .. code-block:: python
 
        dataset = landsat7 | landsat8
+
+    .. versionadded:: 0.2
     """
 
     def __init__(

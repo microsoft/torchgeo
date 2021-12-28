@@ -16,7 +16,7 @@ from .segmentation import SemanticSegmentationTask
 class NAIPChesapeakeSegmentationTask(SemanticSegmentationTask):
     """LightningModule for training models on the NAIP and Chesapeake datasets.
 
-    .. deprecated: 0.1
+    .. deprecated:: 0.1
        Use :class:`SemanticSegmentationTask` instead.
     """
 

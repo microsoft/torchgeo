@@ -8,7 +8,7 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 
-from torchgeo.datasets import LandCoverAIDataModule
+from torchgeo.datamodules import LandCoverAIDataModule
 from torchgeo.trainers.landcoverai import LandCoverAISegmentationTask
 
 from .test_utils import FakeTrainer, mocked_log

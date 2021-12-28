@@ -19,7 +19,7 @@ from .segmentation import SemanticSegmentationTask
 class LandCoverAISegmentationTask(SemanticSegmentationTask):
     """LightningModule for training models on the Landcover.AI Dataset.
 
-    .. deprecated: 0.1
+    .. deprecated:: 0.1
        Use :class:`SemanticSegmentationTask` instead.
     """
 
