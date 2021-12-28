@@ -8,6 +8,7 @@ import json
 import os
 from typing import Callable, Dict, List, Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
@@ -118,74 +119,77 @@ class BigEarthNet(VisionDataset):
 
     """
 
-    classes_43 = [
-        "Agro-forestry areas",
-        "Airports",
-        "Annual crops associated with permanent crops",
-        "Bare rock",
-        "Beaches, dunes, sands",
-        "Broad-leaved forest",
-        "Burnt areas",
-        "Coastal lagoons",
-        "Complex cultivation patterns",
-        "Coniferous forest",
-        "Construction sites",
-        "Continuous urban fabric",
-        "Discontinuous urban fabric",
-        "Dump sites",
-        "Estuaries",
-        "Fruit trees and berry plantations",
-        "Green urban areas",
-        "Industrial or commercial units",
-        "Inland marshes",
-        "Intertidal flats",
-        "Land principally occupied by agriculture, with significant areas of "
-        "natural vegetation",
-        "Mineral extraction sites",
-        "Mixed forest",
-        "Moors and heathland",
-        "Natural grassland",
-        "Non-irrigated arable land",
-        "Olive groves",
-        "Pastures",
-        "Peatbogs",
-        "Permanently irrigated land",
-        "Port areas",
-        "Rice fields",
-        "Road and rail networks and associated land",
-        "Salines",
-        "Salt marshes",
-        "Sclerophyllous vegetation",
-        "Sea and ocean",
-        "Sparsely vegetated areas",
-        "Sport and leisure facilities",
-        "Transitional woodland/shrub",
-        "Vineyards",
-        "Water bodies",
-        "Water courses",
-    ]
-    classes_19 = [
-        "Urban fabric",
-        "Industrial or commercial units",
-        "Arable land",
-        "Permanent crops",
-        "Pastures",
-        "Complex cultivation patterns",
-        "Land principally occupied by agriculture, with significant areas of natural "
-        "vegetation",
-        "Agro-forestry areas",
-        "Broad-leaved forest",
-        "Coniferous forest",
-        "Mixed forest",
-        "Natural grassland and sparsely vegetated areas",
-        "Moors, heathland and sclerophyllous vegetation",
-        "Transitional woodland, shrub",
-        "Beaches, dunes, sands",
-        "Inland wetlands",
-        "Coastal wetlands",
-        "Inland waters",
-        "Marine waters",
-    ]
+    class_sets = {
+        19: [
+            "Urban fabric",
+            "Industrial or commercial units",
+            "Arable land",
+            "Permanent crops",
+            "Pastures",
+            "Complex cultivation patterns",
+            "Land principally occupied by agriculture, with significant areas of"
+            " natural vegetation",
+            "Agro-forestry areas",
+            "Broad-leaved forest",
+            "Coniferous forest",
+            "Mixed forest",
+            "Natural grassland and sparsely vegetated areas",
+            "Moors, heathland and sclerophyllous vegetation",
+            "Transitional woodland, shrub",
+            "Beaches, dunes, sands",
+            "Inland wetlands",
+            "Coastal wetlands",
+            "Inland waters",
+            "Marine waters",
+        ],
+        43: [
+            "Agro-forestry areas",
+            "Airports",
+            "Annual crops associated with permanent crops",
+            "Bare rock",
+            "Beaches, dunes, sands",
+            "Broad-leaved forest",
+            "Burnt areas",
+            "Coastal lagoons",
+            "Complex cultivation patterns",
+            "Coniferous forest",
+            "Construction sites",
+            "Continuous urban fabric",
+            "Discontinuous urban fabric",
+            "Dump sites",
+            "Estuaries",
+            "Fruit trees and berry plantations",
+            "Green urban areas",
+            "Industrial or commercial units",
+            "Inland marshes",
+            "Intertidal flats",
+            "Land principally occupied by agriculture, with significant areas of"
+            " natural vegetation",
+            "Mineral extraction sites",
+            "Mixed forest",
+            "Moors and heathland",
+            "Natural grassland",
+            "Non-irrigated arable land",
+            "Olive groves",
+            "Pastures",
+            "Peatbogs",
+            "Permanently irrigated land",
+            "Port areas",
+            "Rice fields",
+            "Road and rail networks and associated land",
+            "Salines",
+            "Salt marshes",
+            "Sclerophyllous vegetation",
+            "Sea and ocean",
+            "Sparsely vegetated areas",
+            "Sport and leisure facilities",
+            "Transitional woodland/shrub",
+            "Vineyards",
+            "Water bodies",
+            "Water courses",
+        ],
+    }
+
     label_converter = {
         0: 0,
         1: 0,
@@ -220,6 +224,7 @@ class BigEarthNet(VisionDataset):
         41: 18,
         42: 18,
     }
+
     splits_metadata = {
         "train": {
             "url": "https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/master/splits/train.csv?inline=false",  # noqa: E501
@@ -285,7 +290,7 @@ class BigEarthNet(VisionDataset):
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
-        self.class2idx = {c: i for i, c in enumerate(self.classes_43)}
+        self.class2idx = {c: i for i, c in enumerate(self.class_sets[43])}
         self._verify()
         self.folders = self._load_folders()
 
@@ -504,3 +509,71 @@ class BigEarthNet(VisionDataset):
         """
         if not filepath.endswith(".csv"):
             extract_archive(filepath)
+
+    def _onehot_labels_to_names(
+        self, label_mask: "np.typing.NDArray[np.bool_]"
+    ) -> List[str]:
+        """Gets a list of class names given a label mask.
+
+        Args:
+            label_mask: a boolean mask corresponding to a set of labels or predictions
+
+        Returns
+            a list of class names corresponding to the input mask
+        """
+        labels = []
+        for i, mask in enumerate(label_mask):
+            if mask:
+                labels.append(self.class_sets[self.num_classes][i])
+        return labels
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        Raises:
+            ValueError: if ``self.bands`` is "s1"
+
+        .. versionadded:: 0.2
+        """
+        if self.bands == "s2":
+            image = np.rollaxis(sample["image"][[3, 2, 1]].numpy(), 0, 3)
+            image = np.clip(image / 2000, 0, 1)
+        elif self.bands == "all":
+            image = np.rollaxis(sample["image"][[5, 4, 3]].numpy(), 0, 3)
+            image = np.clip(image / 2000, 0, 1)
+        elif self.bands == "s1":
+            image = sample["image"][0].numpy()
+
+        label_mask = sample["label"].numpy().astype(np.bool_)
+        labels = self._onehot_labels_to_names(label_mask)
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction_mask = sample["prediction"].numpy().astype(np.bool_)
+            predictions = self._onehot_labels_to_names(prediction_mask)
+
+        fig, ax = plt.subplots(figsize=(4, 4))
+        ax.imshow(image)
+        ax.axis("off")
+        if show_titles:
+            title = f"Labels: {', '.join(labels)}"
+            if showing_predictions:
+                title += f"\nPredictions: {', '.join(predictions)}"
+            ax.set_title(title)
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig
