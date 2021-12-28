@@ -36,8 +36,8 @@ class TestBYOLTask:
     @pytest.mark.parametrize(
         "name,classname",
         [
-            ("chesapeake_cvpr_5", ChesapeakeCVPRDataModule),
             ("chesapeake_cvpr_7", ChesapeakeCVPRDataModule),
+            ("chesapeake_cvpr_prior", ChesapeakeCVPRDataModule),
         ],
     )
     def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
