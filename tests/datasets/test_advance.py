@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 from typing import Any, Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -86,3 +87,13 @@ class TestADVANCE:
             match="scipy is not installed and is required to use this dataset",
         ):
             dataset[0]
+
+    def test_plot(self, dataset: ADVANCE) -> None:
+        x = dataset[0].copy()
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
+        x["prediction"] = x["label"].clone()
+        dataset.plot(x)
+        plt.close()

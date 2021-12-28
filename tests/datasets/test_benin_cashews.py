@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -49,9 +50,12 @@ class TestBeninSmallHolderCashews:
         )
         root = str(tmp_path)
         transforms = nn.Identity()  # type: ignore[attr-defined]
+        bands = BeninSmallHolderCashews.ALL_BANDS
+
         return BeninSmallHolderCashews(
             root,
             transforms=transforms,
+            bands=bands,
             download=True,
             api_key="",
             checksum=True,
@@ -87,3 +91,19 @@ class TestBeninSmallHolderCashews:
 
         with pytest.raises(ValueError, match="is an invalid band name."):
             BeninSmallHolderCashews(bands=("foo", "bar"))
+
+    def test_plot(self, dataset: BeninSmallHolderCashews) -> None:
+        x = dataset[0].copy()
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
+        x["prediction"] = x["mask"].clone()
+        dataset.plot(x)
+        plt.close()
+
+    def test_failed_plot(self, dataset: BeninSmallHolderCashews) -> None:
+        single_band_dataset = BeninSmallHolderCashews(root=dataset.root, bands=("B01",))
+        with pytest.raises(ValueError, match="Dataset doesn't contain"):
+            x = single_band_dataset[0].copy()
+            single_band_dataset.plot(x, suptitle="Test")
