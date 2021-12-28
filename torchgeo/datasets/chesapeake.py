@@ -288,6 +288,12 @@ class ChesapeakeCVPR(GeoDataset):
     This dataset was organized to accompany the 2019 CVPR paper, "Large Scale
     High-Resolution Land Cover Mapping with Multi-Resolution Data".
 
+    The paper "Resolving label uncertainty with implicit generative models" added an
+    additional layer of data to this dataset containing a prior over the Chesapeake Bay
+    land cover classes generated from the NLCD land cover labels. For more information
+    about this layer see `the dataset documentation
+    <https://zenodo.org/record/5652512#.YcuAIZLMIQ8>`_.
+
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1109/cvpr.2019.01301
