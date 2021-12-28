@@ -511,7 +511,7 @@ class BigEarthNet(VisionDataset):
             extract_archive(filepath)
 
     def _onehot_labels_to_names(
-        self, label_mask: np.typing.NDArray[np.bool_]
+        self, label_mask: "np.typing.NDArray[np.bool_]"
     ) -> List[str]:
         """Gets a list of class names given a label mask.
 
