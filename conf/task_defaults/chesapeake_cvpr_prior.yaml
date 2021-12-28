@@ -26,4 +26,4 @@ experiment:
     batch_size: 2
     num_workers: 0
     class_set: ${experiment.module.num_classes}
-    use_prior_labels: False
+    use_prior_labels: True
