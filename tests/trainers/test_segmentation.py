@@ -23,12 +23,17 @@ class TestSemanticSegmentationTask:
     @pytest.mark.parametrize(
         "name,classname",
         [
-            ("chesapeake_cvpr", ChesapeakeCVPRDataModule),
+            ("chesapeake_cvpr_5", ChesapeakeCVPRDataModule),
+            ("chesapeake_cvpr_7", ChesapeakeCVPRDataModule),
             ("etci2021", ETCI2021DataModule),
             ("landcoverai", LandCoverAIDataModule),
             ("naipchesapeake", NAIPChesapeakeDataModule),
-            ("oscd", OSCDDataModule),
-            ("sen12ms", SEN12MSDataModule),
+            ("oscd_all", OSCDDataModule),
+            ("oscd_rgb", OSCDDataModule),
+            ("sen12ms_all", SEN12MSDataModule),
+            ("sen12ms_s1", SEN12MSDataModule),
+            ("sen12ms_s2_all", SEN12MSDataModule),
+            ("sen12ms_s2_reduced", SEN12MSDataModule),
         ],
     )
     def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
