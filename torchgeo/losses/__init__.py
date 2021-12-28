@@ -3,7 +3,7 @@
 
 """TorchGeo losses."""
 
-from .qr_losses import QRLoss, RQLoss
+from .qr import QRLoss, RQLoss
 
 __all__ = ("QRLoss", "RQLoss")
 
