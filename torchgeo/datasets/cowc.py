@@ -197,11 +197,9 @@ class COWC(VisionDataset, abc.ABC):
                 md5=md5 if self.checksum else None,
             )
 
-    def plot_sample(
+    def plot(
         self,
         sample: Dict[str, Tensor],
-        label_title: str,
-        prediction_title: Optional[str] = None,
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
@@ -209,8 +207,6 @@ class COWC(VisionDataset, abc.ABC):
 
         Args:
             sample: a sample returned by :meth:`VisionClassificationDataset.__getitem__`
-            label_title: title for label depending on Counting or Detection
-            prediction_title: title for prediction depending on Counting or Detection
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 
@@ -220,15 +216,22 @@ class COWC(VisionDataset, abc.ABC):
         .. versionadded:: 0.2
         """
         image = sample["image"]
+        label = cast(str, sample["label"].item())
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction = cast(str, sample["prediction"].item())
+        else:
+            prediction = None
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
         ax.imshow(image.permute(1, 2, 0))
         ax.axis("off")
 
         if show_titles:
-            title = f"Label: {label_title}"
-            if prediction_title is not None:
-                title += f"\nPrediction: {prediction_title}"
+            title = f"Label: {label}"
+            if prediction is not None:
+                title += f"\nPrediction: {prediction}"
             ax.set_title(title)
 
         if suptitle is not None:
@@ -265,38 +268,6 @@ class COWCCounting(COWC):
     ]
     filename = "COWC_{}_list_64_class.txt"
 
-    def plot(
-        self,
-        sample: Dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: Optional[str] = None,
-    ) -> plt.Figure:
-        """Plot a sample from the dataset.
-
-        Args:
-            sample: a sample returned by :meth:`VisionClassificationDataset.__getitem__`
-            show_titles: flag indicating whether to show titles above each panel
-            suptitle: optional string to use as a suptitle
-
-        Returns:
-            a matplotlib Figure with the rendered sample
-
-        .. versionadded:: 0.2
-        """
-        showing_predictions = "prediction" in sample
-        if showing_predictions:
-            prediction_title = cast(str, cast(int, sample["prediction"].item()))
-        else:
-            prediction_title = None
-
-        return super().plot_sample(
-            sample=sample,
-            show_titles=show_titles,
-            suptitle=suptitle,
-            label_title=cast(str, sample["label"].item()),
-            prediction_title=prediction_title,
-        )
-
 
 class COWCDetection(COWC):
     """COWC Dataset for car detection."""
@@ -325,38 +296,6 @@ class COWCDetection(COWC):
         "195da7c9443a939a468c9f232fd86ee3",
     ]
     filename = "COWC_{}_list_detection.txt"
-
-    def plot(
-        self,
-        sample: Dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: Optional[str] = None,
-    ) -> plt.Figure:
-        """Plot a sample from the dataset.
-
-        Args:
-            sample: a sample returned by :meth:`VisionClassificationDataset.__getitem__`
-            show_titles: flag indicating whether to show titles above each panel
-            suptitle: optional string to use as a suptitle
-
-        Returns:
-            a matplotlib Figure with the rendered sample
-
-        .. versionadded:: 0.2
-        """
-        showing_predictions = "prediction" in sample
-        if showing_predictions:
-            prediction_title = cast(str, bool(sample["prediction"].item()))
-        else:
-            prediction_title = None
-
-        return super().plot_sample(
-            sample=sample,
-            show_titles=show_titles,
-            suptitle=suptitle,
-            label_title=cast(str, bool(sample["label"].item())),
-            prediction_title=prediction_title,
-        )
 
 
 # TODO: add COCW-M datasets:
