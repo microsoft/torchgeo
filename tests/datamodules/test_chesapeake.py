@@ -18,7 +18,7 @@ class TestChesapeakeCVPRDataModule:
             os.path.join("conf", "task_defaults", "chesapeake_cvpr_5.yaml")
         )
         kwargs = OmegaConf.to_object(conf.experiment.datamodule)
-        kwargs = cast(Dict[Any, Dict[Any, Any]], kwargs)
+        kwargs = cast(Dict[str, Any], kwargs)
 
         datamodule = ChesapeakeCVPRDataModule(**kwargs)
         datamodule.prepare_data()
