@@ -23,7 +23,6 @@ class TestSemanticSegmentationTask:
     @pytest.mark.parametrize(
         "name,classname",
         [
-            ("chesapeake_cvpr_5", ChesapeakeCVPRDataModule),
             ("chesapeake_cvpr_7", ChesapeakeCVPRDataModule),
             ("etci2021", ETCI2021DataModule),
             ("landcoverai", LandCoverAIDataModule),
