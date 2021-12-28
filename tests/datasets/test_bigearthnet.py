@@ -151,16 +151,11 @@ class TestBigEarthNet:
             BigEarthNet(str(tmp_path))
 
     def test_plot(self, dataset: BigEarthNet) -> None:
-        if dataset.bands == "s1":
-            with pytest.raises(ValueError, match="The s1 band set does not contain"):
-                x = dataset[0].copy()
-                dataset.plot(x, suptitle="Test")
-        else:
-            x = dataset[0].copy()
-            dataset.plot(x, suptitle="Test")
-            plt.close()
-            dataset.plot(x, show_titles=False)
-            plt.close()
-            x["prediction"] = x["label"].clone()
-            dataset.plot(x)
-            plt.close()
+        x = dataset[0].copy()
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
+        x["prediction"] = x["label"].clone()
+        dataset.plot(x)
+        plt.close()

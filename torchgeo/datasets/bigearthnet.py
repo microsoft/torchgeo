@@ -511,7 +511,7 @@ class BigEarthNet(VisionDataset):
             extract_archive(filepath)
 
     def _onehot_labels_to_names(
-        self, label_mask: np.ndarray  # type: ignore[type-arg]
+        self, label_mask: np.typing.NDArray[np.bool_]
     ) -> List[str]:
         """Gets a list of class names given a label mask.
 
@@ -550,19 +550,19 @@ class BigEarthNet(VisionDataset):
         """
         if self.bands == "s2":
             image = np.rollaxis(sample["image"][[3, 2, 1]].numpy(), 0, 3)
+            image = np.clip(image / 2000, 0, 1)
         elif self.bands == "all":
             image = np.rollaxis(sample["image"][[5, 4, 3]].numpy(), 0, 3)
-        else:
-            raise ValueError("The s1 band set does not contain RGB bands")
+            image = np.clip(image / 2000, 0, 1)
+        elif self.bands == "s1":
+            image = sample["image"][0].numpy()
 
-        image = np.clip(image / 2000, 0, 1)
-
-        label_mask = sample["label"].numpy().astype(np.bool8)
+        label_mask = sample["label"].numpy().astype(np.bool_)
         labels = self._onehot_labels_to_names(label_mask)
 
         showing_predictions = "prediction" in sample
         if showing_predictions:
-            prediction_mask = sample["prediction"].numpy().astype(np.bool8)
+            prediction_mask = sample["prediction"].numpy().astype(np.bool_)
             predictions = self._onehot_labels_to_names(prediction_mask)
 
         fig, ax = plt.subplots(figsize=(4, 4))
