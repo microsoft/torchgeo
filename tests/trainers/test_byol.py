@@ -6,7 +6,6 @@ from typing import Any, Dict, Type, cast
 
 import pytest
 import torch.nn as nn
-from _pytest.fixtures import SubRequest
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 from torchvision.models import resnet18
@@ -17,20 +16,20 @@ from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
 
 
 class TestBYOL:
-   def test_custom_augment_fn(self) -> None:
-       encoder = resnet18()
-       layer = encoder.conv1
-       new_layer = nn.Conv2d(  # type: ignore[attr-defined]
-           in_channels=4,
-           out_channels=layer.out_channels,
-           kernel_size=layer.kernel_size,
-           stride=layer.stride,
-           padding=layer.padding,
-           bias=layer.bias,
-       ).requires_grad_()
-       encoder.conv1 = new_layer
-       augment_fn = SimCLRAugmentation((2, 2))
-       BYOL(encoder, augment_fn=augment_fn)
+    def test_custom_augment_fn(self) -> None:
+        encoder = resnet18()
+        layer = encoder.conv1
+        new_layer = nn.Conv2d(  # type: ignore[attr-defined]
+            in_channels=4,
+            out_channels=layer.out_channels,
+            kernel_size=layer.kernel_size,
+            stride=layer.stride,
+            padding=layer.padding,
+            bias=layer.bias,
+        ).requires_grad_()
+        encoder.conv1 = new_layer
+        augment_fn = SimCLRAugmentation((2, 2))
+        BYOL(encoder, augment_fn=augment_fn)
 
 
 class TestBYOLTask:
