@@ -233,8 +233,7 @@ class LEVIRCDPlus(VisionDataset):
         )
         ncols = 3
 
-        showing_predictions = "prediction" in sample
-        if showing_predictions:
+        if "prediction" in sample:
             prediction = sample["prediction"]
             ncols += 1
 
@@ -247,7 +246,7 @@ class LEVIRCDPlus(VisionDataset):
         axs[2].imshow(mask)
         axs[2].axis("off")
 
-        if showing_predictions:
+        if "prediction" in sample:
             axs[3].imshow(prediction)
             axs[3].axis("off")
             if show_titles:
