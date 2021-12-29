@@ -36,7 +36,7 @@ class TestZueriCrop:
             os.path.join(data_dir, "ZueriCrop.hdf5"),
             os.path.join(data_dir, "labels.csv"),
         ]
-        md5s = ["8c0ca5ad53903aeba8a1d06bba50a5ec", "d41d8cd98f00b204e9800998ecf8427e"]
+        md5s = ["1635231df67f3d25f4f1e62c98e221a4", "5118398c7a5bbc246f5f6bb35d8d529b"]
         monkeypatch.setattr(ZueriCrop, "urls", urls)  # type: ignore[attr-defined]
         monkeypatch.setattr(ZueriCrop, "md5s", md5s)  # type: ignore[attr-defined]
         root = str(tmp_path)
@@ -111,7 +111,7 @@ class TestZueriCrop:
         plt.close()
 
         sample = dataset[0]
-        sample["prediction_boxes"] = sample["boxes"].clone()
+        sample["prediction"] = sample["mask"].clone()
         dataset.plot(sample, suptitle="prediction")
         plt.close()
 

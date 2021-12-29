@@ -9,10 +9,10 @@ from typing import Callable, Dict, Optional, Tuple
 import matplotlib.pyplot as plt
 import torch
 from torch import Tensor
-from torchvision.utils import draw_bounding_boxes
+from torchvision.utils import draw_segmentation_masks
 
 from .geo import VisionDataset
-from .utils import download_url
+from .utils import download_url, percentile_normalization
 
 
 class ZueriCrop(VisionDataset):
@@ -58,7 +58,7 @@ class ZueriCrop(VisionDataset):
     md5s = ["1635231df67f3d25f4f1e62c98e221a4", "5118398c7a5bbc246f5f6bb35d8d529b"]
     filenames = ["ZueriCrop.hdf5", "labels.csv"]
 
-    band_names = tuple(["NIR", "B03", "B02", "B04", "B05", "B06", "B07", "B11", "B12"])
+    band_names = ("NIR", "B03", "B02", "B04", "B05", "B06", "B07", "B11", "B12")
     RGB_BANDS = ["B04", "B03", "B02"]
 
     def __init__(
@@ -113,7 +113,6 @@ class ZueriCrop(VisionDataset):
             sample containing image, mask, bounding boxes, and target label
         """
         image = self._load_image(index)
-        image = image / 1e4  # normalize bands
         mask, boxes, label = self._load_target(index)
 
         sample = {"image": image, "mask": mask, "boxes": boxes, "label": label}
@@ -291,38 +290,38 @@ class ZueriCrop(VisionDataset):
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
         ncols = 2
-        image, _ = sample["image"][time_step, rgb_indices, ...], sample["mask"]
-        _, boxes = sample["label"], sample["boxes"]
-
-        boxes = draw_bounding_boxes(
-            image=image.to(torch.uint8),  # type: ignore[attr-defined]
-            boxes=sample["boxes"],
+        image, mask = sample["image"][time_step, rgb_indices, ...], sample["mask"].to(
+            torch.bool  # type: ignore[attr-defined]
         )
 
-        if "prediction_boxes" in sample:
+        image = torch.tensor(  # type: ignore[attr-defined]
+            percentile_normalization(image.numpy()) * 255,
+            dtype=torch.uint8,  # type: ignore[attr-defined]
+        )
+
+        mask = draw_segmentation_masks(image=image, masks=mask)
+
+        if "prediction" in sample:
             ncols += 1
-            preds = draw_bounding_boxes(
-                image=image.to(torch.uint8),  # type: ignore[attr-defined]
-                boxes=sample["prediction_boxes"],
-            )
-            preds = preds.permute((1, 2, 0))
+            preds = sample["prediction"].to(torch.bool)  # type: ignore[attr-defined]
+            preds = draw_segmentation_masks(image=image, masks=preds)
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(10, 10 * ncols))
 
         axs[0].imshow(image.permute(1, 2, 0))
         axs[0].axis("off")
-        axs[1].imshow(boxes.permute(1, 2, 0))
+        axs[1].imshow(mask.permute(1, 2, 0))
         axs[1].axis("off")
 
         if show_titles:
             axs[0].set_title("Image")
-            axs[1].set_title("Boxes")
+            axs[1].set_title("Mask")
 
-        if "prediction_boxes" in sample:
-            axs[2].imshow(preds)
+        if "prediction" in sample:
+            axs[2].imshow(preds.permute(1, 2, 0))
             axs[2].axis("off")
             if show_titles:
-                axs[2].set_title("Prediction Boxes")
+                axs[2].set_title("Prediction")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
