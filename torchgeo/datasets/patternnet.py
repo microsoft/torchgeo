@@ -78,7 +78,7 @@ class PatternNet(VisionClassificationDataset):
     url = "https://drive.google.com/file/d/127lxXYqzO6Bd0yZhvEbgIfz95HaEnr9K"
     md5 = "96d54b3224c5350a98d55d5a7e6984ad"
     filename = "PatternNet.zip"
-    directory = "PatternNet/images"
+    directory = os.path.join("PatternNet", "images")
 
     def __init__(
         self,
@@ -154,7 +154,7 @@ class PatternNet(VisionClassificationDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample return by :meth:`VisionClassificationDataset.__getitem__`
+            sample: a sample returned by :meth:`VisionClassificationDataset.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for figure
 
