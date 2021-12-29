@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -113,3 +114,17 @@ class TestCV4AKenyaCropType:
 
         with pytest.raises(ValueError, match="is an invalid band name."):
             CV4AKenyaCropType(bands=("foo", "bar"))
+
+    def test_plot(self, dataset: CV4AKenyaCropType) -> None:
+        dataset.plot(dataset[0], time_step=0, suptitle="Test")
+        plt.close()
+
+        sample = dataset[0]
+        sample["prediction"] = sample["mask"].clone()
+        dataset.plot(sample, time_step=0, suptitle="Pred")
+        plt.close()
+
+    def test_plot_rgb(self, dataset: CV4AKenyaCropType) -> None:
+        dataset = CV4AKenyaCropType(root=dataset.root, bands=tuple(["B01"]))
+        with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
+            dataset.plot(dataset[0], time_step=0, suptitle="Single Band")
