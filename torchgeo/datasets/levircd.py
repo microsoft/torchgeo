@@ -249,9 +249,9 @@ class LEVIRCDPlus(VisionDataset):
 
         if showing_predictions:
             axs[3].imshow(prediction)
+            axs[3].axis("off")
             if show_titles:
                 axs[3].set_title("Prediction")
-                axs[3].axis("off")
 
         if show_titles:
             axs[0].set_title("Image 1")
