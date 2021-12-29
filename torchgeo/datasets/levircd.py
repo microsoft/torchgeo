@@ -217,11 +217,11 @@ class LEVIRCDPlus(VisionDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample return by :meth:`__getitem__`
+            sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for figure
 
-        Returns;
+        Returns:
             a matplotlib Figure with the rendered sample
 
         .. versionadded:: 0.2
