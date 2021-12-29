@@ -414,7 +414,7 @@ class CV4AKenyaCropType(VisionDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample return by :meth:`__getitem__`
+            sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             time_step: time step at which to access image, beginning with 0
             suptitle: optional suptitle to use for figure

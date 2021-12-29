@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
@@ -34,10 +33,7 @@ def fetch(dataset_id: str, **kwargs: str) -> Dataset:
 class TestCV4AKenyaCropType:
     @pytest.fixture
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> CV4AKenyaCropType:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(  # type: ignore[attr-defined]
@@ -58,7 +54,6 @@ class TestCV4AKenyaCropType:
             CV4AKenyaCropType, "dates", ["20190606"]
         )
         root = str(tmp_path)
-        self.root = root
         transforms = nn.Identity()  # type: ignore[attr-defined]
         return CV4AKenyaCropType(
             root,
