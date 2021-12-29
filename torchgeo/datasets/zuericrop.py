@@ -58,12 +58,13 @@ class ZueriCrop(VisionDataset):
     md5s = ["1635231df67f3d25f4f1e62c98e221a4", "5118398c7a5bbc246f5f6bb35d8d529b"]
     filenames = ["ZueriCrop.hdf5", "labels.csv"]
 
-    band_names = ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B10"]
+    band_names = tuple(["NIR", "B03", "B02", "B04", "B05", "B06", "B07", "B11", "B12"])
     RGB_BANDS = ["B04", "B03", "B02"]
 
     def __init__(
         self,
         root: str = "data",
+        bands: Tuple[str, ...] = band_names,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -81,7 +82,13 @@ class ZueriCrop(VisionDataset):
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
+        self._validate_bands(bands)
+        self.band_indices = torch.tensor(  # type: ignore[attr-defined]
+            [self.band_names.index(b) for b in bands]
+        ).long()
+
         self.root = root
+        self.bands = bands
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
@@ -106,6 +113,7 @@ class ZueriCrop(VisionDataset):
             sample containing image, mask, bounding boxes, and target label
         """
         image = self._load_image(index)
+        image = image / 1e4  # normalize bands
         mask, boxes, label = self._load_target(index)
 
         sample = {"image": image, "mask": mask, "boxes": boxes, "label": label}
@@ -144,6 +152,9 @@ class ZueriCrop(VisionDataset):
         tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
         # Convert from TxHxWxC to TxCxHxW
         tensor = tensor.permute((0, 3, 1, 2))
+        tensor = torch.index_select(  # type: ignore[attr-defined]
+            tensor, dim=1, index=self.band_indices
+        )
         return tensor
 
     def _load_target(self, index: int) -> Tuple[Tensor, Tensor, Tensor]:
@@ -236,6 +247,22 @@ class ZueriCrop(VisionDataset):
                     md5=md5 if self.checksum else None,
                 )
 
+    def _validate_bands(self, bands: Tuple[str, ...]) -> None:
+        """Validate list of bands.
+
+        Args:
+            bands: user-provided tuple of bands to load
+        Raises:
+            AssertionError: if ``bands`` is not a tuple
+            ValueError: if an invalid band name is provided
+
+        .. versionadded:: 0.2
+        """
+        assert isinstance(bands, tuple), "The list of bands must be a tuple"
+        for band in bands:
+            if band not in self.band_names:
+                raise ValueError(f"'{band}' is an invalid band name.")
+
     def plot(
         self,
         sample: Dict[str, Tensor],
@@ -256,11 +283,15 @@ class ZueriCrop(VisionDataset):
 
         .. versionadded:: 0.2
         """
-        import pdb
+        rgb_indices = []
+        for band in self.RGB_BANDS:
+            if band in self.bands:
+                rgb_indices.append(self.bands.index(band))
+            else:
+                raise ValueError("Dataset doesn't contain some of the RGB bands")
 
-        pdb.set_trace()
         ncols = 2
-        image, _ = sample["image"][time_step, -3:, ...], sample["mask"]
+        image, _ = sample["image"][time_step, rgb_indices, ...], sample["mask"]
         _, boxes = sample["label"], sample["boxes"]
 
         boxes = draw_bounding_boxes(
@@ -271,7 +302,8 @@ class ZueriCrop(VisionDataset):
         if "prediction_boxes" in sample:
             ncols += 1
             preds = draw_bounding_boxes(
-                image=sample["image"], boxes=sample["prediction_boxes"]
+                image=image.to(torch.uint8),  # type: ignore[attr-defined]
+                boxes=sample["prediction_boxes"],
             )
             preds = preds.permute((1, 2, 0))
 
@@ -288,7 +320,5 @@ class ZueriCrop(VisionDataset):
 
         if suptitle is not None:
             plt.suptitle(suptitle)
-
-        return fig
 
         return fig
