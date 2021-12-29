@@ -318,6 +318,12 @@ class ZueriCrop(VisionDataset):
             axs[0].set_title("Image")
             axs[1].set_title("Boxes")
 
+        if "prediction_boxes" in sample:
+            axs[2].imshow(preds)
+            axs[2].axis("off")
+            if show_titles:
+                axs[2].set_title("Prediction Boxes")
+
         if suptitle is not None:
             plt.suptitle(suptitle)
 
