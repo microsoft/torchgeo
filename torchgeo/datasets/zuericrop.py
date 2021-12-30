@@ -4,12 +4,11 @@
 """ZueriCrop dataset."""
 
 import os
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, Optional, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import torch
 from torch import Tensor
-from torchvision.utils import draw_segmentation_masks
 
 from .geo import VisionDataset
 from .utils import download_url, percentile_normalization
@@ -64,7 +63,7 @@ class ZueriCrop(VisionDataset):
     def __init__(
         self,
         root: str = "data",
-        bands: Tuple[str, ...] = band_names,
+        bands: Sequence[str] = band_names,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -73,6 +72,7 @@ class ZueriCrop(VisionDataset):
 
         Args:
             root: root directory where dataset can be found
+            bands: the subset of bands to load
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -246,7 +246,7 @@ class ZueriCrop(VisionDataset):
                     md5=md5 if self.checksum else None,
                 )
 
-    def _validate_bands(self, bands: Tuple[str, ...]) -> None:
+    def _validate_bands(self, bands: Sequence[str]) -> None:
         """Validate list of bands.
 
         Args:
@@ -290,27 +290,26 @@ class ZueriCrop(VisionDataset):
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
         ncols = 2
-        image, mask = sample["image"][time_step, rgb_indices, ...], sample["mask"].to(
-            torch.bool  # type: ignore[attr-defined]
-        )
+        image, mask = sample["image"][time_step, rgb_indices, ...], sample["mask"]
 
         image = torch.tensor(  # type: ignore[attr-defined]
             percentile_normalization(image.numpy()) * 255,
             dtype=torch.uint8,  # type: ignore[attr-defined]
         )
 
-        mask = draw_segmentation_masks(image=image, masks=mask)
+        mask = torch.argmax(mask, dim=0)  # type: ignore[attr-defined]
 
         if "prediction" in sample:
             ncols += 1
-            preds = sample["prediction"].to(torch.bool)  # type: ignore[attr-defined]
-            preds = draw_segmentation_masks(image=image, masks=preds)
+            preds = torch.argmax(  # type: ignore[attr-defined]
+                sample["prediction"], dim=0
+            )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(10, 10 * ncols))
 
         axs[0].imshow(image.permute(1, 2, 0))
         axs[0].axis("off")
-        axs[1].imshow(mask.permute(1, 2, 0))
+        axs[1].imshow(mask)
         axs[1].axis("off")
 
         if show_titles:
@@ -318,7 +317,7 @@ class ZueriCrop(VisionDataset):
             axs[1].set_title("Mask")
 
         if "prediction" in sample:
-            axs[2].imshow(preds.permute(1, 2, 0))
+            axs[2].imshow(preds)
             axs[2].axis("off")
             if show_titles:
                 axs[2].set_title("Prediction")
