@@ -116,6 +116,6 @@ class TestZueriCrop:
         plt.close()
 
     def test_plot_rgb(self, dataset: ZueriCrop) -> None:
-        dataset = ZueriCrop(root=dataset.root, bands=("B02"))
+        dataset = ZueriCrop(root=dataset.root, bands=("B02",))
         with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
             dataset.plot(dataset[0], time_step=0, suptitle="Single Band")
