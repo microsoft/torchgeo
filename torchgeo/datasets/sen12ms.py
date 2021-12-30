@@ -374,5 +374,3 @@ class SEN12MS(VisionDataset):
             plt.suptitle(suptitle)
 
         return fig
-
-
