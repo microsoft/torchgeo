@@ -43,19 +43,28 @@ from torchgeo.trainers.resisc45 import RESISC45ClassificationTask
 TASK_TO_MODULES_MAPPING: Dict[
     str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
 ] = {
-    "bigearthnet": (MultiLabelClassificationTask, BigEarthNetDataModule),
+    "bigearthnet_all": (MultiLabelClassificationTask, BigEarthNetDataModule),
+    "bigearthnet_s1": (MultiLabelClassificationTask, BigEarthNetDataModule),
+    "bigearthnet_s2": (MultiLabelClassificationTask, BigEarthNetDataModule),
     "byol": (BYOLTask, ChesapeakeCVPRDataModule),
-    "chesapeake_cvpr": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
+    "chesapeake_cvpr_5": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
+    "chesapeake_cvpr_7": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
+    "chesapeake_cvpr_prior": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
     "cowc_counting": (RegressionTask, COWCCountingDataModule),
     "cyclone": (RegressionTask, CycloneDataModule),
     "eurosat": (ClassificationTask, EuroSATDataModule),
     "etci2021": (SemanticSegmentationTask, ETCI2021DataModule),
     "landcoverai": (LandCoverAISegmentationTask, LandCoverAIDataModule),
     "naipchesapeake": (NAIPChesapeakeSegmentationTask, NAIPChesapeakeDataModule),
-    "oscd": (SemanticSegmentationTask, OSCDDataModule),
+    "oscd_all": (SemanticSegmentationTask, OSCDDataModule),
+    "oscd_rgb": (SemanticSegmentationTask, OSCDDataModule),
     "resisc45": (RESISC45ClassificationTask, RESISC45DataModule),
-    "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),
-    "so2sat": (ClassificationTask, So2SatDataModule),
+    "sen12ms_all": (SemanticSegmentationTask, SEN12MSDataModule),
+    "sen12ms_s1": (SemanticSegmentationTask, SEN12MSDataModule),
+    "sen12ms_s2_all": (SemanticSegmentationTask, SEN12MSDataModule),
+    "sen12ms_s2_reduced": (SemanticSegmentationTask, SEN12MSDataModule),
+    "so2sat_supervised": (ClassificationTask, So2SatDataModule),
+    "so2sat_unsupervised": (ClassificationTask, So2SatDataModule),
     "ucmerced": (ClassificationTask, UCMercedDataModule),
 }
 

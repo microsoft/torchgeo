@@ -2,41 +2,28 @@
 # Licensed under the MIT License.
 
 import os
+from typing import Any, Dict, cast
 
 import pytest
 import torch
-from _pytest.fixtures import SubRequest
+from omegaconf import OmegaConf
 
 from torchgeo.datamodules import ChesapeakeCVPRDataModule
 
 
 class TestChesapeakeCVPRDataModule:
-    @pytest.fixture(scope="class", params=[(5, True), (5, False), (7, False)])
-    def datamodule(self, request: SubRequest) -> ChesapeakeCVPRDataModule:
-        dm = ChesapeakeCVPRDataModule(
-            os.path.join("tests", "data", "chesapeake", "cvpr"),
-            ["de-test"],
-            ["de-test"],
-            ["de-test"],
-            patch_size=32,
-            patches_per_tile=2,
-            batch_size=2,
-            num_workers=0,
-            class_set=request.param[0],
-            use_prior_labels=request.param[1],
+    @pytest.fixture(scope="class")
+    def datamodule(self) -> ChesapeakeCVPRDataModule:
+        conf = OmegaConf.load(
+            os.path.join("conf", "task_defaults", "chesapeake_cvpr_5.yaml")
         )
-        dm.prepare_data()
-        dm.setup()
-        return dm
+        kwargs = OmegaConf.to_object(conf.experiment.datamodule)
+        kwargs = cast(Dict[str, Any], kwargs)
 
-    def test_train_dataloader(self, datamodule: ChesapeakeCVPRDataModule) -> None:
-        next(iter(datamodule.train_dataloader()))
-
-    def test_val_dataloader(self, datamodule: ChesapeakeCVPRDataModule) -> None:
-        next(iter(datamodule.val_dataloader()))
-
-    def test_test_dataloader(self, datamodule: ChesapeakeCVPRDataModule) -> None:
-        next(iter(datamodule.test_dataloader()))
+        datamodule = ChesapeakeCVPRDataModule(**kwargs)
+        datamodule.prepare_data()
+        datamodule.setup()
+        return datamodule
 
     def test_nodata_check(self, datamodule: ChesapeakeCVPRDataModule) -> None:
         nodata_check = datamodule.nodata_check(4)

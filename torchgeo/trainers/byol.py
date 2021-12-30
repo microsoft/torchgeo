@@ -247,7 +247,7 @@ class BYOL(Module):
         model: Module,
         image_size: Tuple[int, int] = (256, 256),
         hidden_layer: Union[str, int] = -2,
-        input_channels: int = 4,
+        in_channels: int = 4,
         projection_size: int = 256,
         hidden_size: int = 4096,
         augment_fn: Optional[Module] = None,
@@ -261,7 +261,7 @@ class BYOL(Module):
             image_size: the size of the training images
             hidden_layer: the hidden layer in ``model`` to attach the projection
                 head to, can be the name of the layer or index of the layer
-            input_channels: number of input channels to the model
+            in_channels: number of input channels to the model
             projection_size: size of first layer of the projection MLP
             hidden_size: size of the hidden layer of the projection MLP
             augment_fn: an instance of a module that performs data augmentation
@@ -277,7 +277,7 @@ class BYOL(Module):
             self.augment = augment_fn
 
         self.beta = beta
-        self.input_channels = input_channels
+        self.in_channels = in_channels
         self.encoder = EncoderWrapper(
             model, projection_size, hidden_size, layer=hidden_layer
         )
@@ -288,9 +288,7 @@ class BYOL(Module):
 
         # Perform a single forward pass to initialize the wrapper correctly
         self.encoder(
-            torch.zeros(  # type: ignore[attr-defined]
-                2, self.input_channels, *image_size
-            )
+            torch.zeros(2, self.in_channels, *image_size)  # type: ignore[attr-defined]
         )
 
     def forward(self, x: Tensor) -> Tensor:
@@ -315,21 +313,23 @@ class BYOLTask(LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
-        input_channels = self.hparams["input_channels"]
+        in_channels = self.hparams["in_channels"]
         pretrained = self.hparams["imagenet_pretraining"]
         encoder = None
 
-        if self.hparams["encoder"] == "resnet18":
+        if self.hparams["encoder_name"] == "resnet18":
             encoder = resnet18(pretrained=pretrained)
-        elif self.hparams["encoder"] == "resnet50":
+        elif self.hparams["encoder_name"] == "resnet50":
             encoder = resnet50(pretrained=pretrained)
         else:
-            raise ValueError(f"Encoder type '{self.hparams['encoder']}' is not valid.")
+            raise ValueError(
+                f"Encoder type '{self.hparams['encoder_name']}' is not valid."
+            )
 
         layer = encoder.conv1
         # Creating new Conv2d layer
         new_layer = Conv2d(
-            in_channels=input_channels,
+            in_channels=in_channels,
             out_channels=layer.out_channels,
             kernel_size=layer.kernel_size,
             stride=layer.stride,
@@ -343,7 +343,7 @@ class BYOLTask(LightningModule):
             ...  # type: ignore[index]
         ] = Variable(layer.weight.clone(), requires_grad=True)
         # Copying the weights of the old layer to the extra channels
-        for i in range(input_channels - layer.in_channels):
+        for i in range(in_channels - layer.in_channels):
             channel = layer.in_channels + i
             new_layer.weight[:, channel : channel + 1, :, :].data[
                 ...  # type: ignore[index]
@@ -359,8 +359,8 @@ class BYOLTask(LightningModule):
         """Initialize a LightningModule for pre-training a model with BYOL.
 
         Keyword Args:
-            input_channels: number of channels on the input imagery
-            encoder: either "resnet18" or "resnet50"
+            in_channels: number of channels on the input imagery
+            encoder_name: either "resnet18" or "resnet50"
             imagenet_pretraining: bool indicating whether to use imagenet pretrained
                 weights
 

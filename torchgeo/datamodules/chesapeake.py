@@ -185,6 +185,8 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
 
         sample["image"] = sample["image"].float()
 
+        del sample["bbox"]
+
         return sample
 
     def nodata_check(

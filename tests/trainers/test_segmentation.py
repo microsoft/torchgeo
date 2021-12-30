@@ -2,95 +2,77 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Generator, cast
+from typing import Any, Dict, Type, cast
 
 import pytest
-from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
+from pytorch_lightning import LightningDataModule, Trainer
 
-from torchgeo.datamodules import ChesapeakeCVPRDataModule
+from torchgeo.datamodules import (
+    ChesapeakeCVPRDataModule,
+    ETCI2021DataModule,
+    LandCoverAIDataModule,
+    NAIPChesapeakeDataModule,
+    OSCDDataModule,
+    SEN12MSDataModule,
+)
 from torchgeo.trainers import SemanticSegmentationTask
-
-from .test_utils import FakeTrainer, mocked_log
 
 
 class TestSemanticSegmentationTask:
-    @pytest.fixture(scope="class")
-    def datamodule(self) -> ChesapeakeCVPRDataModule:
-        dm = ChesapeakeCVPRDataModule(
-            os.path.join("tests", "data", "chesapeake", "cvpr"),
-            ["de-test"],
-            ["de-test"],
-            ["de-test"],
-            patch_size=32,
-            patches_per_tile=2,
-            batch_size=2,
-            num_workers=0,
-            class_set=7,
-        )
-        dm.prepare_data()
-        dm.setup()
-        return dm
-
-    @pytest.fixture(
-        params=zip(["unet", "deeplabv3+", "fcn"], ["ce", "jaccard", "focal"])
+    @pytest.mark.parametrize(
+        "name,classname",
+        [
+            ("chesapeake_cvpr_5", ChesapeakeCVPRDataModule),
+            ("etci2021", ETCI2021DataModule),
+            ("landcoverai", LandCoverAIDataModule),
+            ("naipchesapeake", NAIPChesapeakeDataModule),
+            ("oscd_all", OSCDDataModule),
+            ("oscd_rgb", OSCDDataModule),
+            ("sen12ms_all", SEN12MSDataModule),
+            ("sen12ms_s1", SEN12MSDataModule),
+            ("sen12ms_s2_all", SEN12MSDataModule),
+            ("sen12ms_s2_reduced", SEN12MSDataModule),
+        ],
     )
-    def config(self, request: SubRequest) -> Dict[str, Any]:
-        task_conf = OmegaConf.load(
-            os.path.join("conf", "task_defaults", "chesapeake_cvpr.yaml")
-        )
-        task_args = OmegaConf.to_object(task_conf.experiment.module)
-        task_args = cast(Dict[str, Any], task_args)
-        segmentation_model, loss = request.param
-        task_args["segmentation_model"] = segmentation_model
-        task_args["loss"] = loss
-        return task_args
+    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
+        conf = OmegaConf.load(os.path.join("conf", "task_defaults", name + ".yaml"))
+        conf_dict = OmegaConf.to_object(conf.experiment)
+        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+
+        # Instantiate datamodule
+        datamodule_kwargs = conf_dict["datamodule"]
+        datamodule = classname(**datamodule_kwargs)
+
+        # Instantiate model
+        model_kwargs = conf_dict["module"]
+        model = SemanticSegmentationTask(**model_kwargs)
+
+        # Instantiate trainer
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1)
+        trainer.fit(model=model, datamodule=datamodule)
+        trainer.test(model=model, datamodule=datamodule)
 
     @pytest.fixture
-    def task(
-        self, config: Dict[str, Any], monkeypatch: Generator[MonkeyPatch, None, None]
-    ) -> SemanticSegmentationTask:
-        task = SemanticSegmentationTask(**config)
-        trainer = FakeTrainer()
-        monkeypatch.setattr(task, "trainer", trainer)  # type: ignore[attr-defined]
-        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
-        return task
+    def model_kwargs(self) -> Dict[Any, Any]:
+        return {
+            "segmentation_model": "unet",
+            "encoder_name": "resnet18",
+            "encoder_weights": None,
+            "in_channels": 1,
+            "num_classes": 1,
+            "loss": "ce",
+            "ignore_zeros": True,
+        }
 
-    def test_configure_optimizers(self, task: SemanticSegmentationTask) -> None:
-        out = task.configure_optimizers()
-        assert "optimizer" in out
-        assert "lr_scheduler" in out
+    def test_invalid_model(self, model_kwargs: Dict[Any, Any]) -> None:
+        model_kwargs["segmentation_model"] = "invalid_model"
+        match = "Model type 'invalid_model' is not valid."
+        with pytest.raises(ValueError, match=match):
+            SemanticSegmentationTask(**model_kwargs)
 
-    def test_training(
-        self, datamodule: ChesapeakeCVPRDataModule, task: SemanticSegmentationTask
-    ) -> None:
-        batch = next(iter(datamodule.train_dataloader()))
-        task.training_step(batch, 0)
-        task.training_epoch_end(0)
-
-    def test_validation(
-        self, datamodule: ChesapeakeCVPRDataModule, task: SemanticSegmentationTask
-    ) -> None:
-        batch = next(iter(datamodule.val_dataloader()))
-        task.validation_step(batch, 0)
-        task.validation_epoch_end(0)
-
-    def test_test(
-        self, datamodule: ChesapeakeCVPRDataModule, task: SemanticSegmentationTask
-    ) -> None:
-        batch = next(iter(datamodule.test_dataloader()))
-        task.test_step(batch, 0)
-        task.test_epoch_end(0)
-
-    def test_invalid_model(self, config: Dict[str, Any]) -> None:
-        config["segmentation_model"] = "invalid_model"
-        error_message = "Model type 'invalid_model' is not valid."
-        with pytest.raises(ValueError, match=error_message):
-            SemanticSegmentationTask(**config)
-
-    def test_invalid_loss(self, config: Dict[str, Any]) -> None:
-        config["loss"] = "invalid_loss"
-        error_message = "Loss type 'invalid_loss' is not valid."
-        with pytest.raises(ValueError, match=error_message):
-            SemanticSegmentationTask(**config)
+    def test_invalid_loss(self, model_kwargs: Dict[Any, Any]) -> None:
+        model_kwargs["loss"] = "invalid_loss"
+        match = "Loss type 'invalid_loss' is not valid."
+        with pytest.raises(ValueError, match=match):
+            SemanticSegmentationTask(**model_kwargs)
