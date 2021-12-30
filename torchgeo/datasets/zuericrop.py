@@ -257,7 +257,7 @@ class ZueriCrop(VisionDataset):
 
         .. versionadded:: 0.2
         """
-        assert isinstance(bands, tuple), "The list of bands must be a tuple"
+        assert isinstance(bands, Sequence), "The list of bands must be a sequence"
         for band in bands:
             if band not in self.band_names:
                 raise ValueError(f"'{band}' is an invalid band name.")
