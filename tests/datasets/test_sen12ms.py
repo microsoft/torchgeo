@@ -97,6 +97,11 @@ class TestSEN12MS:
         dataset.plot(sample, suptitle="prediction")
         plt.close()
 
+    def test_plot_rgb(self, dataset: SEN12MS) -> None:
+        dataset = SEN12MS(root=dataset.root, bands=tuple(["B01"]))
+        with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
+            dataset.plot(dataset[0], suptitle="Single Band")
+
 
 class TestSEN12MSDataModule:
     @pytest.fixture(scope="class", params=["all", "s1", "s2-all", "s2-reduced"])

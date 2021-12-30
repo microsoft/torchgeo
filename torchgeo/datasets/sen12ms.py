@@ -4,7 +4,7 @@
 """SEN12MS dataset."""
 
 import os
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, Optional, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +16,7 @@ from torch import Tensor
 from torch.utils.data import DataLoader, Subset
 
 from .geo import VisionDataset
-from .utils import check_integrity
+from .utils import check_integrity, percentile_normalization
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -70,56 +70,8 @@ class SEN12MS(VisionDataset):
        This download will likely take several hours.
     """  # noqa: E501
 
-    # BAND_SETS: Dict[str, List[int]] = {
-    #     "all": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
-    #     "s1": [0, 1],
-    #     "s2-all": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
-    #     "s2-reduced": [3, 4, 5, 9, 12, 13],
-    # }
-
     BAND_SETS: Dict[str, Tuple[str, ...]] = {
-        "all": tuple(
-            [
-                "VV",
-                "VH",
-                "B01",
-                "B02",
-                "B03",
-                "B04",
-                "B05",
-                "B06",
-                "B07",
-                "B08",
-                "B8A",
-                "B09",
-                "B10",
-                "B11",
-                "B12",
-            ]
-        ),
-        "s1": tuple(["VV", "VH"]),
-        "s2-all": tuple(
-            [
-                "B01",
-                "B02",
-                "B03",
-                "B04",
-                "B05",
-                "B06",
-                "B07",
-                "B08",
-                "B8A",
-                "B09",
-                "B10",
-                "B11",
-                "B12",
-            ]
-        ),
-        "s2-reduced": tuple(["B02", "B03", "B04", "B08", "B10", "B11"]),
-    }
-
-    band_names = tuple(
-        [
+        "all": (
             "VV",
             "VH",
             "B01",
@@ -135,7 +87,42 @@ class SEN12MS(VisionDataset):
             "B10",
             "B11",
             "B12",
-        ]
+        ),
+        "s1": ("VV", "VH"),
+        "s2-all": (
+            "B01",
+            "B02",
+            "B03",
+            "B04",
+            "B05",
+            "B06",
+            "B07",
+            "B08",
+            "B8A",
+            "B09",
+            "B10",
+            "B11",
+            "B12",
+        ),
+        "s2-reduced": ("B02", "B03", "B04", "B08", "B10", "B11"),
+    }
+
+    band_names = (
+        "VV",
+        "VH",
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B07",
+        "B08",
+        "B8A",
+        "B09",
+        "B10",
+        "B11",
+        "B12",
     )
 
     RGB_BANDS = ["B04", "B03", "B02"]
@@ -144,23 +131,23 @@ class SEN12MS(VisionDataset):
         "ROIs1158_spring_lc.tar.gz",
         "ROIs1158_spring_s1.tar.gz",
         "ROIs1158_spring_s2.tar.gz",
-        # "ROIs1868_summer_lc.tar.gz",
-        # "ROIs1868_summer_s1.tar.gz",
-        # "ROIs1868_summer_s2.tar.gz",
-        # "ROIs1970_fall_lc.tar.gz",
-        # "ROIs1970_fall_s1.tar.gz",
-        # "ROIs1970_fall_s2.tar.gz",
-        # "ROIs2017_winter_lc.tar.gz",
-        # "ROIs2017_winter_s1.tar.gz",
-        # "ROIs2017_winter_s2.tar.gz",
+        "ROIs1868_summer_lc.tar.gz",
+        "ROIs1868_summer_s1.tar.gz",
+        "ROIs1868_summer_s2.tar.gz",
+        "ROIs1970_fall_lc.tar.gz",
+        "ROIs1970_fall_s1.tar.gz",
+        "ROIs1970_fall_s2.tar.gz",
+        "ROIs2017_winter_lc.tar.gz",
+        "ROIs2017_winter_s1.tar.gz",
+        "ROIs2017_winter_s2.tar.gz",
         "train_list.txt",
         "test_list.txt",
     ]
     light_filenames = [
         "ROIs1158_spring",
-        # "ROIs1868_summer",
-        # "ROIs1970_fall",
-        # "ROIs2017_winter",
+        "ROIs1868_summer",
+        "ROIs1970_fall",
+        "ROIs2017_winter",
         "train_list.txt",
         "test_list.txt",
     ]
@@ -168,15 +155,15 @@ class SEN12MS(VisionDataset):
         "6e2e8fa8b8cba77ddab49fd20ff5c37b",
         "fba019bb27a08c1db96b31f718c34d79",
         "d58af2c15a16f376eb3308dc9b685af2",
-        # "2c5bd80244440b6f9d54957c6b1f23d4",
-        # "01044b7f58d33570c6b57fec28a3d449",
-        # "4dbaf72ecb704a4794036fe691427ff3",
-        # "9b126a68b0e3af260071b3139cb57cee",
-        # "19132e0aab9d4d6862fd42e8e6760847",
-        # "b8f117818878da86b5f5e06400eb1866",
-        # "0fa0420ef7bcfe4387c7e6fe226dc728",
-        # "bb8cbfc16b95a4f054a3d5380e0130ed",
-        # "3807545661288dcca312c9c538537b63",
+        "2c5bd80244440b6f9d54957c6b1f23d4",
+        "01044b7f58d33570c6b57fec28a3d449",
+        "4dbaf72ecb704a4794036fe691427ff3",
+        "9b126a68b0e3af260071b3139cb57cee",
+        "19132e0aab9d4d6862fd42e8e6760847",
+        "b8f117818878da86b5f5e06400eb1866",
+        "0fa0420ef7bcfe4387c7e6fe226dc728",
+        "bb8cbfc16b95a4f054a3d5380e0130ed",
+        "3807545661288dcca312c9c538537b63",
         "0a68d4e1eb24f128fccdb930000b2546",
         "c7faad064001e646445c4c634169484d",
     ]
@@ -185,7 +172,7 @@ class SEN12MS(VisionDataset):
         self,
         root: str = "data",
         split: str = "train",
-        bands: Tuple[str, ...] = BAND_SETS["all"],
+        bands: Sequence[str] = BAND_SETS["all"],
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
@@ -292,7 +279,7 @@ class SEN12MS(VisionDataset):
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             return tensor
 
-    def _validate_bands(self, bands: Tuple[str, ...]) -> None:
+    def _validate_bands(self, bands: Sequence[str]) -> None:
         """Validate list of bands.
 
         Args:
@@ -313,9 +300,6 @@ class SEN12MS(VisionDataset):
         Returns:
             True if the dataset directories and split files are found, else False
         """
-        import pdb
-
-        pdb.set_trace()
         for filename in self.light_filenames:
             filepath = os.path.join(self.root, filename)
             if not os.path.exists(filepath):
@@ -358,32 +342,30 @@ class SEN12MS(VisionDataset):
                 rgb_indices.append(self.bands.index(band))
             else:
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
-        import pdb
 
-        pdb.set_trace()
-        image, _ = sample["image"][rgb_indices, ...], sample["mask"]
+        image, mask = sample["image"][rgb_indices, ...].numpy(), sample["mask"][0]
+        image = percentile_normalization(image)
         ncols = 2
 
-        showing_predictions = "prediction" in sample
-        if showing_predictions:
-            _ = sample["prediction"]
+        if "prediction" in sample:
+            preds = sample["prediction"][0]
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
 
         axs[0].imshow(image.permute(1, 2, 0))
         axs[0].axis("off")
-        # axs[1].imshow(mask)
-        # axs[1].axis("off")
+        axs[1].imshow(mask)
+        axs[1].axis("off")
 
-        if showing_predictions:
-            # axs[2].imshow(prediction)
+        if "prediction" in sample:
+            axs[2].imshow(preds)
             axs[2].axis("off")
 
         if show_titles:
             axs[0].set_title("Image")
             axs[1].set_title("Mask")
-            if showing_predictions:
+            if "prediction" in sample:
                 axs[2].set_title("Prediction")
 
         if suptitle is not None:
