@@ -104,7 +104,7 @@ class TestZueriCrop:
 
     def test_invalid_bands(self) -> None:
         with pytest.raises(ValueError):
-            ZueriCrop(bands=tuple(["OK", "BK"]))
+            ZueriCrop(bands=("OK", "BK"))
 
     def test_plot(self, dataset: ZueriCrop) -> None:
         dataset.plot(dataset[0], suptitle="Test")
@@ -116,6 +116,6 @@ class TestZueriCrop:
         plt.close()
 
     def test_plot_rgb(self, dataset: ZueriCrop) -> None:
-        dataset = ZueriCrop(root=dataset.root, bands=tuple(["B02"]))
+        dataset = ZueriCrop(root=dataset.root, bands=("B02"))
         with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
             dataset.plot(dataset[0], time_step=0, suptitle="Single Band")

@@ -272,12 +272,12 @@ class ZueriCrop(VisionDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample return by :meth:`__getitem__`
+            sample: a sample returned by :meth:`__getitem__`
             time_step: time step at which to access image, beginning with 0
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for figure
 
-        Returns;
+        Returns:
             a matplotlib Figure with the rendered sample
 
         .. versionadded:: 0.2
@@ -290,7 +290,7 @@ class ZueriCrop(VisionDataset):
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
         ncols = 2
-        image, mask = sample["image"][time_step, rgb_indices, ...], sample["mask"]
+        image, mask = sample["image"][time_step, rgb_indices], sample["mask"]
 
         image = torch.tensor(  # type: ignore[attr-defined]
             percentile_normalization(image.numpy()) * 255,
