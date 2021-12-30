@@ -24,9 +24,9 @@ class TestSo2Sat:
         self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
     ) -> So2Sat:
         md5s = {
-            "train": "2fa6b9d8995e3b6272af42719f05aaa2",
-            "validation": "fe3dbf74971766d5038f6cbc0b1390ae",
-            "test": "87d428eff44267ca642fc739cc442331",
+            "train": "82e0f2d51766b89cb905dbaf8275eb5b",
+            "validation": "bf292ae4737c1698b1a3c6f5e742e0e1",
+            "test": "9a3bbe181b038d4e51f122c4be3c569e",
         }
 
         monkeypatch.setattr(So2Sat, "md5s", md5s)  # type: ignore[attr-defined]
@@ -57,13 +57,13 @@ class TestSo2Sat:
         assert isinstance(x["label"], torch.Tensor)
 
     def test_len(self, dataset: So2Sat) -> None:
-        assert len(dataset) == 10
+        assert len(dataset) == 1
 
     def test_out_of_bounds(self, dataset: So2Sat) -> None:
         # h5py at version 2.10.0 raises a ValueError instead of an IndexError so we
         # check for both here
         with pytest.raises((IndexError, ValueError)):
-            dataset[10]
+            dataset[1]
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):

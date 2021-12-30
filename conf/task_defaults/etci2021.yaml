@@ -12,5 +12,5 @@ experiment:
     ignore_zeros: True
   datamodule:
     root_dir: "tests/data/etci2021"
-    batch_size: 32
+    batch_size: 1
     num_workers: 0

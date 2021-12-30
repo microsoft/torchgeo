@@ -40,11 +40,10 @@ class TestChesapeakeCVPRSegmentationTask:
     @pytest.fixture
     def config(self, class_set: int) -> Dict[str, Any]:
         task_conf = OmegaConf.load(
-            os.path.join("conf", "task_defaults", "chesapeake_cvpr.yaml")
+            os.path.join("conf", "task_defaults", f"chesapeake_cvpr_{class_set}.yaml")
         )
         task_args = OmegaConf.to_object(task_conf.experiment.module)
         task_args = cast(Dict[str, Any], task_args)
-        task_args["num_classes"] = class_set
         return task_args
 
     @pytest.fixture

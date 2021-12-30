@@ -13,5 +13,7 @@ experiment:
     ignore_zeros: False
   datamodule:
     root_dir: "tests/data/sen12ms"
-    batch_size: 32
+    band_set: "all"
+    batch_size: 1
     num_workers: 0
+    seed: 0
