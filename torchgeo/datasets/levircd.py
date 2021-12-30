@@ -226,11 +226,7 @@ class LEVIRCDPlus(VisionDataset):
 
         .. versionadded:: 0.2
         """
-        image1, image2, mask = (
-            sample["image"][0, ...],
-            sample["image"][1, ...],
-            sample["mask"],
-        )
+        image1, image2, mask = (sample["image"][0], sample["image"][1], sample["mask"])
         ncols = 3
 
         if "prediction" in sample:
