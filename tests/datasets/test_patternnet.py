@@ -28,7 +28,7 @@ class TestPatternNet:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.patternnet, "download_url", download_url
         )
-        md5 = "5649754c78219a2c19074ff93666cc61"
+        md5 = "5649754c78219a2c19074ff93666cc62"
         monkeypatch.setattr(PatternNet, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "patternnet", "PatternNet.zip")
         monkeypatch.setattr(PatternNet, "url", url)  # type: ignore[attr-defined]
