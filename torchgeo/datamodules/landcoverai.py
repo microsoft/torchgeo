@@ -6,6 +6,7 @@
 from typing import Any, Dict, Optional
 
 import kornia.augmentation as K
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
@@ -158,3 +159,7 @@ class LandCoverAIDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=False,
         )
+
+    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+        """Run :meth:`torchgeo.datasets.LandCoverAI.plot`."""
+        return self.val_dataset.plot(*args, **kwargs)

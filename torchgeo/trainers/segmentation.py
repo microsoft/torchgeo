@@ -178,7 +178,7 @@ class SemanticSegmentationTask(LightningModule):
             try:
                 datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
                 sample = unbind_samples(batch)[0]
-                fig = datamodule.val_dataset.plot(sample)
+                fig = datamodule.plot(sample)
                 summary_writer = self.logger.experiment
                 summary_writer.add_figure(
                     f"image/{batch_idx}", fig, global_step=self.global_step
