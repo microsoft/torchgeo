@@ -185,6 +185,15 @@ class So2SatDataModule(pl.LightningDataModule):
                 So2Sat, temp_train + self.val_dataset + self.test_dataset
             )
 
+        # So2Sat dataset doesn't know how to plot any band set other than "all"
+        # TODO: move band selection to the Dataset level so that plot knows about it
+        if self.bands == "rgb":
+            # delattr doesn't work for some reason
+            # https://stackoverflow.com/a/1684219/5828163
+            def noattr() -> None:
+                raise AttributeError
+            self.val_dataset.plot = lambda *args, **kwargs: noattr()
+
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.
 
