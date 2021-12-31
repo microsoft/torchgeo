@@ -158,7 +158,7 @@ class PatternNet(VisionClassificationDataset):
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for figure
 
-        Returns;
+        Returns:
             a matplotlib Figure with the rendered sample
 
         .. versionadded:: 0.2
