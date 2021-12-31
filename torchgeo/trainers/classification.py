@@ -14,7 +14,6 @@ from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torch.utils.tensorboard import SummaryWriter  # type: ignore[attr-defined]
 from torchmetrics import Accuracy, FBeta, IoU, MetricCollection
 
 from ..datasets.utils import unbind_samples
@@ -181,6 +180,18 @@ class ClassificationTask(pl.LightningModule):
         self.log("val_loss", loss, on_step=False, on_epoch=True)
         self.val_metrics(y_hat_hard, y)
 
+        if batch_idx < 10:
+            try:
+                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                sample = unbind_samples(batch)[0]
+                fig = datamodule.val_dataset.plot(sample)
+                summary_writer = self.logger.experiment
+                summary_writer.add_figure(
+                    f"image/{batch_idx}", fig, global_step=self.global_step
+                )
+            except AttributeError:
+                pass
+
     def validation_epoch_end(self, outputs: Any) -> None:
         """Logs epoch level validation metrics.
 
@@ -336,12 +347,12 @@ class MultiLabelClassificationTask(ClassificationTask):
 
         if batch_idx < 10:
             try:
-                sample = unbind_samples(batch)[0]
                 datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                sample = unbind_samples(batch)[0]
                 fig = datamodule.val_dataset.plot(sample)
-                summary_writer: SummaryWriter = datamodule.logger.experiment
+                summary_writer = self.logger.experiment
                 summary_writer.add_figure(
-                    f"image/{batch_idx}", fig, global_step=datamodule.global_step
+                    f"image/{batch_idx}", fig, global_step=self.global_step
                 )
             except AttributeError:
                 pass

@@ -2,11 +2,13 @@
 # Licensed under the MIT License.
 
 import os
+from pathlib import Path
 from typing import Any, Dict, Type, cast
 
 import pytest
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
+from pytorch_lightning.loggers import TensorBoardLogger
 
 from torchgeo.datamodules import COWCCountingDataModule, CycloneDataModule
 from torchgeo.trainers import RegressionTask
@@ -17,7 +19,9 @@ class TestRegressionTask:
         "name,classname",
         [("cowc_counting", COWCCountingDataModule), ("cyclone", CycloneDataModule)],
     )
-    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
+    def test_trainer(
+        self, name: str, classname: Type[LightningDataModule], tmp_path: Path
+    ) -> None:
         conf = OmegaConf.load(os.path.join("conf", "task_defaults", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
         conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
@@ -31,7 +35,8 @@ class TestRegressionTask:
         model = RegressionTask(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1)
+        logger = TensorBoardLogger(str(tmp_path))
+        trainer = Trainer(logger=logger, fast_dev_run=True, log_every_n_steps=1)
         trainer.fit(model=model, datamodule=datamodule)
         trainer.test(model=model, datamodule=datamodule)
 
