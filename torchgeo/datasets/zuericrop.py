@@ -250,14 +250,14 @@ class ZueriCrop(VisionDataset):
         """Validate list of bands.
 
         Args:
-            bands: user-provided tuple of bands to load
+            bands: user-provided sequence of bands to load
         Raises:
-            AssertionError: if ``bands`` is not a tuple
+            AssertionError: if ``bands`` is not a sequence
             ValueError: if an invalid band name is provided
 
         .. versionadded:: 0.2
         """
-        assert isinstance(bands, Sequence), "The list of bands must be a sequence"
+        assert isinstance(bands, Sequence), "'bands' must be a sequence"
         for band in bands:
             if band not in self.band_names:
                 raise ValueError(f"'{band}' is an invalid band name.")
