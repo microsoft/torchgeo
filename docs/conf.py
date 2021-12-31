@@ -103,6 +103,7 @@ autodoc_typehints_description_target = "documented"
 # sphinx.ext.intersphinx
 intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org/stable/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
     "python": ("https://docs.python.org/3", None),
     "pytorch-lightning": ("https://pytorch-lightning.readthedocs.io/en/latest/", None),
     "rasterio": ("https://rasterio.readthedocs.io/en/latest/", None),
