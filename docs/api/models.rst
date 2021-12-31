@@ -23,7 +23,6 @@ Fully-convolutional Network (FCN)
 Fully Convolutional Siamese Networks for Change Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: FCEF
 .. autoclass:: FCSiamConc
 .. autoclass:: FCSiamDiff
 
