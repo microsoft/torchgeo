@@ -135,7 +135,7 @@ class NASAMarineDebris(VisionDataset):
         Returns:
             the target boxes
         """
-        array = np.load(path)  # type: ignore[no-untyped-call]
+        array = np.load(path)
         # boxes contain unecessary value of 1 after xyxy coords
         array = array[:, :4]
         tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]

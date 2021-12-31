@@ -144,7 +144,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
         with Image.open(filename) as img:
             if img.height != self.size or img.width != self.size:
                 img = img.resize(size=(self.size, self.size), resample=Image.BILINEAR)
-            array = np.array(img)
+            array: "np.typing.NDArray[np.int]" = np.array(img)
             if len(array.shape) == 3:
                 array = array[:, :, 0]
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]

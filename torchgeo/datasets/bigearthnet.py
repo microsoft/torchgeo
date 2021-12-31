@@ -393,7 +393,7 @@ class BigEarthNet(VisionDataset):
                     resampling=Resampling.bilinear,
                 )
                 images.append(array)
-        arrays = np.stack(images, axis=0)
+        arrays: "np.typing.NDArray[np.int]" = np.stack(images, axis=0)
         tensor: Tensor = torch.from_numpy(arrays)  # type: ignore[attr-defined]
         return tensor
 

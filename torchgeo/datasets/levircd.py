@@ -156,7 +156,7 @@ class LEVIRCDPlus(VisionDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array = np.array(img.convert("RGB"))
+            array: "np.typing.NDArray[np.int]" = np.array(img.convert("RGB"))
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
@@ -173,7 +173,7 @@ class LEVIRCDPlus(VisionDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array = np.array(img.convert("L"))
+            array: "np.typing.NDArray[np.int]" = np.array(img.convert("L"))
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             tensor = torch.clamp(tensor, min=0, max=1)  # type: ignore[attr-defined]
             tensor = tensor.to(torch.long)  # type: ignore[attr-defined]

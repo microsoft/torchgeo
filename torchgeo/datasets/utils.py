@@ -24,7 +24,6 @@ from typing import (
     Sequence,
     Tuple,
     Union,
-    cast,
     overload,
 )
 
@@ -517,7 +516,7 @@ def merge_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
     return collated
 
 
-def rasterio_loader(path: str) -> np.ndarray:  # type: ignore[type-arg]
+def rasterio_loader(path: str) -> np.ndarray:
     """Load an image file using rasterio.
 
     Args:
@@ -527,7 +526,7 @@ def rasterio_loader(path: str) -> np.ndarray:  # type: ignore[type-arg]
         the image
     """
     with rasterio.open(path) as f:
-        array: np.ndarray = f.read().astype(np.int32)  # type: ignore[type-arg]
+        array: np.ndarray = f.read().astype(np.int32)
         # VisionClassificationDataset expects images returned with channels last (HWC)
         array = array.transpose(1, 2, 0)
     return array
@@ -544,7 +543,7 @@ def sort_sentinel2_bands(x: str) -> str:
 
 def draw_semantic_segmentation_masks(
     image: Tensor, mask: Tensor, alpha: float = 0.5, colors: Optional[ColorMap] = None
-) -> np.ndarray:  # type: ignore[type-arg]
+) -> np.ndarray:
     """Overlay a semantic segmentation mask onto an image.
 
     Args:
@@ -566,8 +565,8 @@ def draw_semantic_segmentation_masks(
 
 
 def rgb_to_mask(
-    rgb: np.ndarray, colors: List[Tuple[int, int, int]]  # type: ignore[type-arg]
-) -> np.ndarray:  # type: ignore[type-arg]
+    rgb: np.ndarray, colors: List[Tuple[int, int, int]]
+) -> np.ndarray:
     """Converts an RGB colormap mask to a integer mask.
 
     Args:
@@ -578,7 +577,7 @@ def rgb_to_mask(
         integer array mask
     """
     h, w = rgb.shape[:2]
-    mask = np.zeros(shape=(h, w), dtype=np.uint8)
+    mask: "np.typing.NDArray[np.uint8]" = np.zeros(shape=(h, w), dtype=np.uint8)
     for i, c in enumerate(colors):
         cmask = rgb == c
         # Only update mask if class is present in mask
@@ -588,11 +587,11 @@ def rgb_to_mask(
 
 
 def percentile_normalization(
-    img: np.ndarray,  # type: ignore[type-arg]
+    img: np.ndarray,
     lower: float = 2,
     upper: float = 98,
     axis: Optional[Union[int, Sequence[int]]] = None,
-) -> np.ndarray:  # type: ignore[type-arg]
+) -> np.ndarray:
     """Applies percentile normalization to an input image.
 
     Specifically, this will rescale the values in the input such that values <= the
@@ -612,13 +611,13 @@ def percentile_normalization(
     .. versionadded:: 0.2
     """
     assert lower < upper
-    lower_percentile = np.percentile(  # type: ignore[no-untyped-call]
+    lower_percentile = np.percentile(
         img, lower, axis=axis
     )
-    upper_percentile = np.percentile(  # type: ignore[no-untyped-call]
+    upper_percentile = np.percentile(
         img, upper, axis=axis
     )
     img_normalized = np.clip(
         (img - lower_percentile) / (upper_percentile - lower_percentile), 0, 1
     )
-    return cast(np.ndarray, img_normalized)  # type: ignore[type-arg]
+    return img_normalized

@@ -146,7 +146,7 @@ class COWC(VisionDataset, abc.ABC):
         """
         filename = os.path.join(self.root, self.images[index])
         with Image.open(filename) as img:
-            array = np.array(img)
+            array: "np.typing.NDArray[np.int]" = np.array(img)
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))

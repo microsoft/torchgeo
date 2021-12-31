@@ -515,7 +515,7 @@ class RasterDataset(GeoDataset):
 
             # Only plot RGB bands
             if bands and self.rgb_bands:
-                indices = np.array([bands.index(band) for band in self.rgb_bands])
+                indices: "np.typing.NDArray[np.int]" = np.array([bands.index(band) for band in self.rgb_bands])
                 array = array[indices]
 
             # Convert from CxHxW to HxWxC
@@ -523,13 +523,13 @@ class RasterDataset(GeoDataset):
 
         if self.cmap:
             # Convert from class labels to RGBA values
-            cmap = np.array([self.cmap[i] for i in range(len(self.cmap))])
+            cmap: "np.typing.NDArray[np.int]" = np.array([self.cmap[i] for i in range(len(self.cmap))])
             array = cmap[array]
 
         if self.stretch:
             # Stretch to the range of 2nd to 98th percentile
-            per02 = np.percentile(array, 2)  # type: ignore[no-untyped-call]
-            per98 = np.percentile(array, 98)  # type: ignore[no-untyped-call]
+            per02 = np.percentile(array, 2)
+            per98 = np.percentile(array, 98)
             array = (array - per02) / (per98 - per02)
             array = np.clip(array, 0, 1)
 
@@ -794,7 +794,7 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
             the image class label
         """
         img, label = ImageFolder.__getitem__(self, index)
-        array = np.array(img)
+        array: "np.typing.NDArray[np.int]" = np.array(img)
         tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
         # Convert from HxWxC to CxHxW
         tensor = tensor.permute((2, 0, 1))
