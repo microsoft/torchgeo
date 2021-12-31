@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -82,3 +83,21 @@ class TestSEN12MS:
             ds = SEN12MS(root, bands=bands, checksum=False)
             x = ds[0]["image"]
             assert x.shape[0] == len(bands)
+
+    def test_invalid_bands(self) -> None:
+        with pytest.raises(ValueError):
+            SEN12MS(bands=("OK", "BK"))
+
+    def test_plot(self, dataset: SEN12MS) -> None:
+        dataset.plot(dataset[0], suptitle="Test")
+        plt.close()
+
+        sample = dataset[0]
+        sample["prediction"] = sample["mask"].clone()
+        dataset.plot(sample, suptitle="prediction")
+        plt.close()
+
+    def test_plot_rgb(self, dataset: SEN12MS) -> None:
+        dataset = SEN12MS(root=dataset.root, bands=("B03",))
+        with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
+            dataset.plot(dataset[0], suptitle="Single Band")
