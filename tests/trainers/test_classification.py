@@ -2,13 +2,11 @@
 # Licensed under the MIT License.
 
 import os
-from pathlib import Path
 from typing import Any, Dict, Type, cast
 
 import pytest
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
-from pytorch_lightning.loggers import TensorBoardLogger
 
 from torchgeo.datamodules import (
     BigEarthNetDataModule,
@@ -31,9 +29,7 @@ class TestClassificationTask:
             ("ucmerced", UCMercedDataModule),
         ],
     )
-    def test_trainer(
-        self, name: str, classname: Type[LightningDataModule], tmp_path: Path
-    ) -> None:
+    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
         if name == "so2sat":
             pytest.importorskip("h5py")
 
@@ -50,10 +46,26 @@ class TestClassificationTask:
         model = ClassificationTask(**model_kwargs)
 
         # Instantiate trainer
-        logger = TensorBoardLogger(str(tmp_path))
-        trainer = Trainer(logger=logger, fast_dev_run=True, log_every_n_steps=1)
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1)
         trainer.fit(model=model, datamodule=datamodule)
         trainer.test(model=model, datamodule=datamodule)
+
+    def test_no_logger(self) -> None:
+        conf = OmegaConf.load(os.path.join("conf", "task_defaults", "ucmerced.yaml"))
+        conf_dict = OmegaConf.to_object(conf.experiment)
+        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+
+        # Instantiate datamodule
+        datamodule_kwargs = conf_dict["datamodule"]
+        datamodule = UCMercedDataModule(**datamodule_kwargs)
+
+        # Instantiate model
+        model_kwargs = conf_dict["module"]
+        model = ClassificationTask(**model_kwargs)
+
+        # Instantiate trainer
+        trainer = Trainer(logger=None, fast_dev_run=True, log_every_n_steps=1)
+        trainer.fit(model=model, datamodule=datamodule)
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:
@@ -107,9 +119,7 @@ class TestMultiLabelClassificationTask:
             ("bigearthnet_s2", BigEarthNetDataModule),
         ],
     )
-    def test_trainer(
-        self, name: str, classname: Type[LightningDataModule], tmp_path: Path
-    ) -> None:
+    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
         conf = OmegaConf.load(os.path.join("conf", "task_defaults", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
         conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
@@ -123,10 +133,28 @@ class TestMultiLabelClassificationTask:
         model = MultiLabelClassificationTask(**model_kwargs)
 
         # Instantiate trainer
-        logger = TensorBoardLogger(str(tmp_path))
-        trainer = Trainer(logger=logger, fast_dev_run=True, log_every_n_steps=1)
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1)
         trainer.fit(model=model, datamodule=datamodule)
         trainer.test(model=model, datamodule=datamodule)
+
+    def test_no_logger(self) -> None:
+        conf = OmegaConf.load(
+            os.path.join("conf", "task_defaults", "bigearthnet_s1.yaml")
+        )
+        conf_dict = OmegaConf.to_object(conf.experiment)
+        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+
+        # Instantiate datamodule
+        datamodule_kwargs = conf_dict["datamodule"]
+        datamodule = BigEarthNetDataModule(**datamodule_kwargs)
+
+        # Instantiate model
+        model_kwargs = conf_dict["module"]
+        model = MultiLabelClassificationTask(**model_kwargs)
+
+        # Instantiate trainer
+        trainer = Trainer(logger=None, fast_dev_run=True, log_every_n_steps=1)
+        trainer.fit(model=model, datamodule=datamodule)
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:

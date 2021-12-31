@@ -192,7 +192,10 @@ class So2SatDataModule(pl.LightningDataModule):
             # https://stackoverflow.com/a/1684219/5828163
             def noattr() -> None:
                 raise AttributeError
-            self.val_dataset.plot = lambda *args, **kwargs: noattr()
+
+            self.val_dataset.plot = (  # type: ignore[assignment]
+                lambda *args, **kwargs: noattr()
+            )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.

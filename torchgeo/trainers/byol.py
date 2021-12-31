@@ -19,8 +19,6 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchvision.models import resnet18
 from torchvision.models.resnet import resnet50
 
-from ..datasets.utils import unbind_samples
-
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 Module.__module__ = "torch.nn"
@@ -453,18 +451,6 @@ class BYOLTask(LightningModule):
         )
 
         self.log("val_loss", loss, on_step=False, on_epoch=True)
-
-        if batch_idx < 10:
-            try:
-                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
-                sample = unbind_samples(batch)[0]
-                fig = datamodule.val_dataset.plot(sample)
-                summary_writer = self.logger.experiment
-                summary_writer.add_figure(
-                    f"image/{batch_idx}", fig, global_step=self.global_step
-                )
-            except AttributeError:
-                pass
 
     def test_step(self, *args: Any) -> None:  # type: ignore[override]
         """No-op, does nothing."""
