@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -61,3 +62,12 @@ class TestPatternNet:
         "to automaticaly download the dataset."
         with pytest.raises(RuntimeError, match=err):
             PatternNet(str(tmp_path))
+
+    def test_plot(self, dataset: PatternNet) -> None:
+        dataset.plot(dataset[0], suptitle="Test")
+        plt.close()
+
+        sample = dataset[0]
+        sample["prediction"] = sample["label"].clone()
+        dataset.plot(sample, suptitle="Prediction")
+        plt.close()
