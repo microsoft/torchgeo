@@ -526,7 +526,7 @@ def rasterio_loader(path: str) -> np.ndarray:
         the image
     """
     with rasterio.open(path) as f:
-        array: np.ndarray = f.read().astype(np.int32)
+        array: "np.typing.NDArray[int]" = f.read().astype(np.int32)
         # VisionClassificationDataset expects images returned with channels last (HWC)
         array = array.transpose(1, 2, 0)
     return array
@@ -564,9 +564,7 @@ def draw_semantic_segmentation_masks(
     return img  # type: ignore[no-any-return]
 
 
-def rgb_to_mask(
-    rgb: np.ndarray, colors: List[Tuple[int, int, int]]
-) -> np.ndarray:
+def rgb_to_mask(rgb: np.ndarray, colors: List[Tuple[int, int, int]]) -> np.ndarray:
     """Converts an RGB colormap mask to a integer mask.
 
     Args:
@@ -611,12 +609,8 @@ def percentile_normalization(
     .. versionadded:: 0.2
     """
     assert lower < upper
-    lower_percentile = np.percentile(
-        img, lower, axis=axis
-    )
-    upper_percentile = np.percentile(
-        img, upper, axis=axis
-    )
+    lower_percentile = np.percentile(img, lower, axis=axis)
+    upper_percentile = np.percentile(img, upper, axis=axis)
     img_normalized = np.clip(
         (img - lower_percentile) / (upper_percentile - lower_percentile), 0, 1
     )

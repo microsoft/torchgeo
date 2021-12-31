@@ -184,7 +184,7 @@ class Vaihingen2D(VisionDataset):
         """
         path = self.files[index]["image"]
         with Image.open(path) as img:
-            array: "np.typing.NDArray[np.int]" = np.array(img.convert("RGB"))
+            array: "np.typing.NDArray[int]" = np.array(img.convert("RGB"))
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
@@ -201,7 +201,7 @@ class Vaihingen2D(VisionDataset):
         """
         path = self.files[index]["mask"]
         with Image.open(path) as img:
-            array: "np.typing.NDArray[np.int]" = np.array(img.convert("RGB"))
+            array: "np.typing.NDArray[int]" = np.array(img.convert("RGB"))
             array = rgb_to_mask(array, self.colormap)
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             # Convert from HxWxC to CxHxW

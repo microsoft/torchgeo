@@ -562,7 +562,7 @@ def test_nonexisting_directory(tmp_path: Path) -> None:
 
 
 def test_percentile_normalization() -> None:
-    img: "np.typing.NDArray[np.int]" = np.array([[1, 2], [98, 100]])
+    img: "np.typing.NDArray[int]" = np.array([[1, 2], [98, 100]])
 
     img = percentile_normalization(img, 2, 98)
     assert img.min() == 0

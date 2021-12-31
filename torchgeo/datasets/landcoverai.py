@@ -153,7 +153,7 @@ class LandCoverAI(VisionDataset):
         """
         filename = os.path.join(self.root, "output", id_ + ".jpg")
         with Image.open(filename) as img:
-            array: "np.typing.NDArray[np.int]" = np.array(img)
+            array: "np.typing.NDArray[int]" = np.array(img)
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
@@ -171,7 +171,7 @@ class LandCoverAI(VisionDataset):
         """
         filename = os.path.join(self.root, "output", id_ + "_m.png")
         with Image.open(filename) as img:
-            array: "np.typing.NDArray[np.int]" = np.array(img.convert("L"))
+            array: "np.typing.NDArray[int]" = np.array(img.convert("L"))
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             return tensor
 
