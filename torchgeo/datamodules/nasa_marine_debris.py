@@ -5,7 +5,6 @@
 
 from typing import Any, Dict, List, Optional
 
-import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 from torch import Tensor
@@ -139,7 +138,3 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
             shuffle=False,
             collate_fn=collate_fn,
         )
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.NASAMarineDebris.plot`."""
-        return self.val_dataset.dataset.plot(*args, **kwargs)

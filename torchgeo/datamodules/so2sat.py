@@ -5,7 +5,6 @@
 
 from typing import Any, Dict, Optional, cast
 
-import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
@@ -224,12 +223,3 @@ class So2SatDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=False,
         )
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.NASAMarineDebris.plot`."""
-        # So2Sat dataset doesn't know how to plot any band set other than "all"
-        # TODO: move band selection to the Dataset level so that plot knows about it
-        if self.bands == "rgb":
-            raise AttributeError
-
-        return self.val_dataset.plot(*args, **kwargs)
