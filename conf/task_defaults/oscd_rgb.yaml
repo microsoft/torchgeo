@@ -18,7 +18,8 @@ experiment:
     num_workers: 0
     val_split_pct: 0.5
     bands: "rgb"
-    num_patches_per_tile: 1
     pad_size:
       - 64
       - 64
+    num_patches_per_tile: 1
+
