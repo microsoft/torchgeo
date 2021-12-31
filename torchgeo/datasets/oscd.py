@@ -198,7 +198,7 @@ class OSCD(VisionDataset):
         Returns:
             the image
         """
-        images = []
+        images: List["np.typing.NDArray[np.int_]"] = []
         for path in paths:
             with Image.open(path) as img:
                 images.append(np.array(img))

@@ -564,7 +564,9 @@ def draw_semantic_segmentation_masks(
     return img  # type: ignore[no-any-return]
 
 
-def rgb_to_mask(rgb: np.ndarray, colors: List[Tuple[int, int, int]]) -> "np.typing.NDArray[np.int_]":
+def rgb_to_mask(
+    rgb: "np.typing.NDArray[np.int_]", colors: List[Tuple[int, int, int]]
+) -> "np.typing.NDArray[np.int_]":
     """Converts an RGB colormap mask to a integer mask.
 
     Args:
@@ -588,7 +590,7 @@ def percentile_normalization(
     img: "np.typing.NDArray[np.int_]",
     lower: float = 2,
     upper: float = 98,
-    axis: Optional[Union[int, Sequence[np.int_]]] = None,
+    axis: Optional[Union[int, Sequence[int]]] = None,
 ) -> "np.typing.NDArray[np.int_]":
     """Applies percentile normalization to an input image.
 
@@ -611,7 +613,7 @@ def percentile_normalization(
     assert lower < upper
     lower_percentile = np.percentile(img, lower, axis=axis)
     upper_percentile = np.percentile(img, upper, axis=axis)
-    img_normalized = np.clip(
+    img_normalized: "np.typing.NDArray[np.int_]" = np.clip(
         (img - lower_percentile) / (upper_percentile - lower_percentile), 0, 1
     )
     return img_normalized
