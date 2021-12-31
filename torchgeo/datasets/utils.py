@@ -516,7 +516,7 @@ def merge_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
     return collated
 
 
-def rasterio_loader(path: str) -> np.ndarray:
+def rasterio_loader(path: str) -> "np.typing.NDArray[np.int_]":
     """Load an image file using rasterio.
 
     Args:
@@ -526,7 +526,7 @@ def rasterio_loader(path: str) -> np.ndarray:
         the image
     """
     with rasterio.open(path) as f:
-        array: "np.typing.NDArray[int]" = f.read().astype(np.int32)
+        array: "np.typing.NDArray[np.int_]" = f.read().astype(np.int32)
         # VisionClassificationDataset expects images returned with channels last (HWC)
         array = array.transpose(1, 2, 0)
     return array
@@ -543,7 +543,7 @@ def sort_sentinel2_bands(x: str) -> str:
 
 def draw_semantic_segmentation_masks(
     image: Tensor, mask: Tensor, alpha: float = 0.5, colors: Optional[ColorMap] = None
-) -> np.ndarray:
+) -> "np.typing.NDArray[np.int_]":
     """Overlay a semantic segmentation mask onto an image.
 
     Args:
@@ -564,7 +564,7 @@ def draw_semantic_segmentation_masks(
     return img  # type: ignore[no-any-return]
 
 
-def rgb_to_mask(rgb: np.ndarray, colors: List[Tuple[int, int, int]]) -> np.ndarray:
+def rgb_to_mask(rgb: np.ndarray, colors: List[Tuple[int, int, int]]) -> "np.typing.NDArray[np.int_]":
     """Converts an RGB colormap mask to a integer mask.
 
     Args:
@@ -585,11 +585,11 @@ def rgb_to_mask(rgb: np.ndarray, colors: List[Tuple[int, int, int]]) -> np.ndarr
 
 
 def percentile_normalization(
-    img: np.ndarray,
+    img: "np.typing.NDArray[np.int_]",
     lower: float = 2,
     upper: float = 98,
-    axis: Optional[Union[int, Sequence[int]]] = None,
-) -> np.ndarray:
+    axis: Optional[Union[int, Sequence[np.int_]]] = None,
+) -> "np.typing.NDArray[np.int_]":
     """Applies percentile normalization to an input image.
 
     Specifically, this will rescale the values in the input such that values <= the

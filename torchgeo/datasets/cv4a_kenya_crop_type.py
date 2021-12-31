@@ -233,11 +233,11 @@ class CV4AKenyaCropType(VisionDataset):
         )
 
         with Image.open(os.path.join(directory, "labels.tif")) as img:
-            array: "np.typing.NDArray[int]" = np.array(img)
+            array: "np.typing.NDArray[np.int_]" = np.array(img)
             labels: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
 
         with Image.open(os.path.join(directory, "field_ids.tif")) as img:
-            array: "np.typing.NDArray[int]" = np.array(img)
+            array = np.array(img)
             field_ids: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
 
         return (labels, field_ids)
@@ -333,7 +333,7 @@ class CV4AKenyaCropType(VisionDataset):
                 f"{band_name}.tif",
             )
             with Image.open(filepath) as band_img:
-                array: "np.typing.NDArray[int]" = np.array(band_img)
+                array: "np.typing.NDArray[np.int_]" = np.array(band_img)
                 img[band_index] = torch.from_numpy(array)  # type: ignore[attr-defined]
 
         return img
@@ -356,7 +356,7 @@ class CV4AKenyaCropType(VisionDataset):
 
         return images and targets
 
-    def get_splits(self) -> Tuple[List[int], List[int]]:
+    def get_splits(self) -> Tuple[List[np.int_], List[int]]:
         """Get the field_ids for the train/test splits from the dataset directory.
 
         Returns:

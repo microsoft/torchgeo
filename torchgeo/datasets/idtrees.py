@@ -254,7 +254,7 @@ class IDTReeS(VisionDataset):
         import laspy
 
         las = laspy.read(path)
-        array: "np.typing.NDArray[int]" = np.stack([las.x, las.y, las.z], axis=0)
+        array: "np.typing.NDArray[np.int_]" = np.stack([las.x, las.y, las.z], axis=0)
         tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
         return tensor
 
@@ -529,7 +529,7 @@ class IDTReeS(VisionDataset):
         path = self.images[index]
         path = path.replace("RGB", "LAS").replace(".tif", ".las")
         las = laspy.read(path)
-        points: "np.typing.NDArray[int]" = np.stack(
+        points: "np.typing.NDArray[np.int_]" = np.stack(
             [las.x, las.y, las.z], axis=0
         ).transpose((1, 0))
 
