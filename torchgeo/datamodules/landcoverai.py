@@ -53,7 +53,7 @@ class LandCoverAIDataModule(pl.LightningDataModule):
             if self.trainer.training:  # type: ignore[union-attr]
                 # Kornia expects masks to be floats with a channel dimension
                 x = batch["image"]
-                y = batch["mask"].float.unsqueeze(1)
+                y = batch["mask"].float().unsqueeze(1)
 
                 train_augmentations = K.AugmentationSequential(
                     K.RandomRotation(p=0.5, degrees=90),
