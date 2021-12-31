@@ -4,7 +4,7 @@
 """SEN12MS dataset."""
 
 import os
-from typing import Callable, Dict, Optional, Sequence
+from typing import Callable, Dict, Optional, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -63,7 +63,7 @@ class SEN12MS(VisionDataset):
        This download will likely take several hours.
     """  # noqa: E501
 
-    BAND_SETS: Dict[str, Sequence[str]] = {
+    BAND_SETS: Dict[str, Tuple[str, ...]] = {
         "all": (
             "VV",
             "VH",
