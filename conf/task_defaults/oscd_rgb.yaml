@@ -19,3 +19,6 @@ experiment:
     val_split_pct: 0.5
     bands: "rgb"
     num_patches_per_tile: 1
+    pad_size:
+      - 64
+      - 64
