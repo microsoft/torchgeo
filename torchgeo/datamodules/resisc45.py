@@ -63,6 +63,8 @@ class RESISC45DataModule(pl.LightningDataModule):
         """
         try:
             if self.trainer.training:  # type: ignore[union-attr]
+                x = batch["image"]
+
                 train_augmentations = K.AugmentationSequential(
                     K.RandomRotation(p=0.5, degrees=90),
                     K.RandomHorizontalFlip(p=0.5),
@@ -74,7 +76,9 @@ class RESISC45DataModule(pl.LightningDataModule):
                     ),
                     data_keys=["input"],
                 )
-                batch = train_augmentations(batch)
+                x = train_augmentations(x)
+
+                batch["image"] = x
         except AttributeError:
             pass
         return batch

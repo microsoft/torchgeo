@@ -51,6 +51,10 @@ class LandCoverAIDataModule(pl.LightningDataModule):
         """
         try:
             if self.trainer.training:  # type: ignore[union-attr]
+                # Kornia expects masks to be floats with a channel dimension
+                x = batch["image"]
+                y = batch["mask"].float.unsqueeze(1)
+
                 train_augmentations = K.AugmentationSequential(
                     K.RandomRotation(p=0.5, degrees=90),
                     K.RandomHorizontalFlip(p=0.5),
@@ -61,7 +65,11 @@ class LandCoverAIDataModule(pl.LightningDataModule):
                     ),
                     data_keys=["input", "mask"],
                 )
-                batch = train_augmentations(batch)
+                x, y = train_augmentations(x, y)
+
+                # torchmetrics expects masks to be longs without a channel dimension
+                batch["image"] = x
+                batch["mask"] = y.squeeze(1).long()
         except AttributeError:
             pass
         return batch
