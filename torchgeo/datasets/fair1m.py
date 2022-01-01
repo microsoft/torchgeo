@@ -218,7 +218,7 @@ class FAIR1M(VisionDataset):
         """
         path = os.path.join(self.root, self.image_root, path)
         with Image.open(path) as img:
-            array = np.array(img.convert("RGB"))
+            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))

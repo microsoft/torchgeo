@@ -201,7 +201,7 @@ class Potsdam2D(VisionDataset):
         """
         path = self.files[index]["mask"]
         with Image.open(path) as img:
-            array = np.array(img.convert("RGB"))
+            array: "np.typing.NDArray[np.uint8]" = np.array(img.convert("RGB"))
             array = rgb_to_mask(array, self.colormap)
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             # Convert from HxWxC to CxHxW
@@ -259,10 +259,7 @@ class Potsdam2D(VisionDataset):
         """
         ncols = 1
         image1 = draw_semantic_segmentation_masks(
-            sample["image"][:3],
-            sample["mask"],
-            alpha=alpha,
-            colors=self.colormap,  # type: ignore[arg-type]
+            sample["image"][:3], sample["mask"], alpha=alpha, colors=self.colormap
         )
         if "prediction" in sample:
             ncols += 1
@@ -270,7 +267,7 @@ class Potsdam2D(VisionDataset):
                 sample["image"][:3],
                 sample["prediction"],
                 alpha=alpha,
-                colors=self.colormap,  # type: ignore[arg-type]
+                colors=self.colormap,
             )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))

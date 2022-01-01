@@ -191,7 +191,7 @@ class GID15(VisionDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array = np.array(img.convert("RGB"))
+            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
@@ -208,7 +208,7 @@ class GID15(VisionDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array = np.array(img.convert("L"))
+            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("L"))
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             tensor = tensor.to(torch.long)  # type: ignore[attr-defined]
             return tensor

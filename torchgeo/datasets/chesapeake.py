@@ -511,12 +511,8 @@ class ChesapeakeCVPR(GeoDataset):
         else:
             raise IndexError(f"query: {query} spans multiple tiles which is not valid")
 
-        sample["image"] = np.concatenate(  # type: ignore[no-untyped-call]
-            sample["image"], axis=0
-        )
-        sample["mask"] = np.concatenate(  # type: ignore[no-untyped-call]
-            sample["mask"], axis=0
-        )
+        sample["image"] = np.concatenate(sample["image"], axis=0)
+        sample["mask"] = np.concatenate(sample["mask"], axis=0)
 
         sample["image"] = torch.from_numpy(  # type: ignore[attr-defined]
             sample["image"]
