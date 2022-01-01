@@ -23,7 +23,10 @@ _EPSILON = 1e-10
 
 
 class AppendNormalizedDifferenceIndex(Module):
-    """Append normalized difference index as channel to image tensor."""
+    """Append normalized difference index as channel to image tensor.
+    
+    .. versionadded:: 0.2
+    """
 
     def __init__(self, index_a: int, index_b: int) -> None:
         """Initialize a new transform instance.
@@ -31,8 +34,6 @@ class AppendNormalizedDifferenceIndex(Module):
         Args:
             index_a: reference band channel index
             index_b: difference band channel index
-
-        .. versionadded:: 0.2
         """
         super().__init__()
         self.dim = -3
