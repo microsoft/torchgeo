@@ -3,12 +3,20 @@
 
 """TorchGeo transforms."""
 
-from .indices import AppendNBR, AppendNDBI, AppendNDSI, AppendNDVI, AppendNDWI
+from .indices import (
+    AppendNBR,
+    AppendNDBI,
+    AppendNDSI,
+    AppendNDVI,
+    AppendNDWI,
+    AppendNormalizedDifferenceIndex,
+)
 from .transforms import AugmentationSequential
 
 __all__ = (
-    "AppendNDBI",
+    "AppendNormalizedDifferenceIndex",
     "AppendNBR",
+    "AppendNDBI",
     "AppendNDSI",
     "AppendNDVI",
     "AppendNDWI",
