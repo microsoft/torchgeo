@@ -177,6 +177,7 @@ class SemanticSegmentationTask(LightningModule):
         if batch_idx < 10:
             try:
                 datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                batch["prediction"] = y_hat
                 sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
                 summary_writer = self.logger.experiment
