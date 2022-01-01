@@ -242,6 +242,7 @@ def test_sequential_transforms_augmentations(
                     [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
                     [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
                     [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+                    [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
                 ]
             ],
             dtype=torch.float,  # type: ignore[attr-defined]
