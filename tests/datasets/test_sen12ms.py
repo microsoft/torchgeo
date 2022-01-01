@@ -22,18 +22,20 @@ class TestSEN12MS:
         self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
     ) -> SEN12MS:
         md5s = [
-            "7f14be13d3f62c09b4dd5b4d55c97fd6",
-            "48182d44b375360381f36d432956b225",
-            "96cf1b8405d4149c6fe61ad7100bd65d",
-            "ba8e7e10fba9eea6900ddc530c86025a",
-            "7ba7c51f2fb3a2074b7bbd3e24f9d70d",
-            "280c9be2d1e13e663824dccd85e1e42f",
-            "a5284baf48534d4bc77acb1b103ff16c",
-            "c6b176fed0cdd5033cb1835506e40ee4",
-            "adc672746b79be4c4edc8b1a564e3ff4",
-            "194fab4a4e067a0452824c4e39f61b77",
-            "7899c0c36c884ae8c991ab8518b0d177",
-            "ccfee543d4351bcc5aa68729e8cc795c",
+            "85650b52b6c5de282547f837275c0739",
+            "c6b181319295bc088883591dd549c065",
+            "7906ec529abad3f7d6f7dbb4517c6e2e",
+            "257b33b835223a9d033aae0dcd309e1a",
+            "26117a8c6f27838f98c8961ab35294e8",
+            "87933d453a15431437697f4701b4d8ed",
+            "9be07f30e582d11d5529afbd0c623c5a",
+            "73323197968407645ec155d91fcb4ce9",
+            "035c9f2edae2e9a0e37c8d63ed4baef3",
+            "164f940c205965c2b8e41794ccdeeaf5",
+            "b104631c369e98b96c11a5af5456e9ea",
+            "c00fc28dc0f36a2ee4a448e01701b58b",
+            "02d5128ac1fc2bf8762091b4f319762d",
+            "02d5128ac1fc2bf8762091b4f319762d",
         ]
 
         monkeypatch.setattr(SEN12MS, "md5s", md5s)  # type: ignore[attr-defined]
