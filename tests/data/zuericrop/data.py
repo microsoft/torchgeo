@@ -5,12 +5,13 @@
 
 import os
 import h5py
+from pathlib import Path
 
 import numpy as np
 
 
 # Sentinel-2 is 12-bit with range 0-4095
-SENTINEL2_MAX = 4095
+SENTINEL2_MAX = 4096
 
 NUM_SAMPLES = 2
 NUM_CHANNELS = 9
@@ -27,8 +28,7 @@ os.remove(data_file)
 os.remove(labels_file)
 
 # Create empty labels file
-with open(labels_file, "w") as f:
-    pass
+Path(labels_file).touch()
 
 # Create dataset file
 data = np.random.randint(
