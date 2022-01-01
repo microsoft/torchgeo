@@ -2,11 +2,14 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Type, cast
+from typing import Any, Dict, Generator, Type, cast
 
 import pytest
+import segmentation_models_pytorch as smp
+from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
+from torch.nn.modules import Module
 
 from torchgeo.datamodules import (
     ChesapeakeCVPRDataModule,
@@ -17,6 +20,12 @@ from torchgeo.datamodules import (
     SEN12MSDataModule,
 )
 from torchgeo.trainers import SemanticSegmentationTask
+
+from .test_utils import SegmentationTestModel
+
+
+def create_model(**kwargs: Any) -> Module:
+    return SegmentationTestModel(**kwargs)
 
 
 class TestSemanticSegmentationTask:
@@ -35,7 +44,12 @@ class TestSemanticSegmentationTask:
             ("sen12ms_s2_reduced", SEN12MSDataModule),
         ],
     )
-    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
+    def test_trainer(
+        self,
+        monkeypatch: Generator[MonkeyPatch, None, None],
+        name: str,
+        classname: Type[LightningDataModule],
+    ) -> None:
         conf = OmegaConf.load(os.path.join("conf", "task_defaults", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
         conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
@@ -45,6 +59,10 @@ class TestSemanticSegmentationTask:
         datamodule = classname(**datamodule_kwargs)
 
         # Instantiate model
+        monkeypatch.setattr(smp, "Unet", create_model)  # type: ignore[attr-defined]
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            smp, "DeepLabV3Plus", create_model
+        )
         model_kwargs = conf_dict["module"]
         model = SemanticSegmentationTask(**model_kwargs)
 

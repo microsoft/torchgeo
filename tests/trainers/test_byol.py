@@ -14,6 +14,8 @@ from torchgeo.datamodules import ChesapeakeCVPRDataModule
 from torchgeo.trainers import BYOLTask
 from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
 
+from .test_utils import ClassificationTestModel
+
 
 class TestBYOL:
     def test_custom_augment_fn(self) -> None:
@@ -52,6 +54,8 @@ class TestBYOLTask:
         # Instantiate model
         model_kwargs = conf_dict["module"]
         model = BYOLTask(**model_kwargs)
+
+        model.encoder = ClassificationTestModel(**model_kwargs)
 
         # Instantiate trainer
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1)
