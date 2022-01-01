@@ -3,7 +3,6 @@
 
 import os
 from pathlib import Path
-from typing import Any
 
 import pytest
 import torch
@@ -15,26 +14,6 @@ from torchgeo.trainers.utils import (
     load_state_dict,
     reinit_initial_conv_layer,
 )
-
-
-class FakeExperiment(object):
-    def add_figure(self, *args: Any, **kwargs: Any) -> None:
-        pass
-
-
-class FakeLogger(object):
-    def __init__(self) -> None:
-        self.experiment = FakeExperiment()
-
-
-class FakeTrainer(object):
-    def __init__(self) -> None:
-        self.logger = FakeLogger()
-        self.global_step = 1
-
-
-def mocked_log(*args: Any, **kwargs: Any) -> None:
-    pass
 
 
 def test_extract_encoder_unsupported_model(tmp_path: Path) -> None:

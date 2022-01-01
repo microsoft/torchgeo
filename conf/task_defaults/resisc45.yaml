@@ -7,7 +7,7 @@ experiment:
     learning_rate_schedule_patience: 6
     weights: "random"
     in_channels: 3
-    num_classes: 45
+    num_classes: 3
   datamodule:
     root_dir: "tests/data/resisc45"
     batch_size: 1

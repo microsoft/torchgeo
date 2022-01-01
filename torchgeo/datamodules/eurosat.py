@@ -5,6 +5,7 @@
 
 from typing import Any, Dict, Optional
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
@@ -146,3 +147,7 @@ class EuroSATDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=False,
         )
+
+    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+        """Run :meth:`torchgeo.datasets.EuroSAT.plot`."""
+        return self.val_dataset.plot(*args, **kwargs)
