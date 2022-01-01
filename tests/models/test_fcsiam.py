@@ -34,7 +34,7 @@ class TestFCSiamConc:
         assert y.shape == (b, classes, h, w)
 
     @torch.no_grad()  # type: ignore[misc]
-    def test_classification_head(self, b: int, classes: int) -> None:
+    def test_classification_head(self) -> None:
         b, t, c, h, w = 2, 2, 3, 64, 64
         classes = 2
         aux_params = {"classes": classes}
@@ -66,7 +66,7 @@ class TestFCSiamDiff:
         assert y.shape == (b, classes, h, w)
 
     @torch.no_grad()  # type: ignore[misc]
-    def test_classification_head(self, b: int, classes: int) -> None:
+    def test_classification_head(self) -> None:
         b, t, c, h, w = 2, 2, 3, 64, 64
         classes = 2
         aux_params = {"classes": classes}
