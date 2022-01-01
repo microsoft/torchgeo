@@ -31,7 +31,7 @@ class AppendNormalizedDifferenceIndex(Module):
         Args:
             index_a: reference band channel index
             index_b: difference band channel index
-            
+
         .. versionadded:: 0.2
         """
         super().__init__()
