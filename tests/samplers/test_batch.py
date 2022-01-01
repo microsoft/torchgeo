@@ -9,7 +9,7 @@ from _pytest.fixtures import SubRequest
 from rasterio.crs import CRS
 from torch.utils.data import DataLoader
 
-from torchgeo.datasets import BoundingBox, GeoDataset
+from torchgeo.datasets import BoundingBox, GeoDataset, stack_samples
 from torchgeo.samplers import BatchGeoSampler, RandomBatchGeoSampler
 
 
@@ -51,7 +51,9 @@ class TestBatchGeoSampler:
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(self, sampler: CustomBatchGeoSampler, num_workers: int) -> None:
         ds = CustomGeoDataset()
-        dl = DataLoader(ds, batch_sampler=sampler, num_workers=num_workers)
+        dl = DataLoader(
+            ds, batch_sampler=sampler, num_workers=num_workers, collate_fn=stack_samples
+        )
         for _ in dl:
             continue
 
