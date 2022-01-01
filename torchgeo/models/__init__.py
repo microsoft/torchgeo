@@ -5,8 +5,8 @@
 
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
 from .farseg import FarSeg
-from .fccd import FCSiamConc, FCSiamDiff
 from .fcn import FCN
+from .fcsiam import FCSiamConc, FCSiamDiff
 from .rcf import RCF
 from .resnet import resnet50
 
