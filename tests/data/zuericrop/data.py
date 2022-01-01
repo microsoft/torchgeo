@@ -24,8 +24,10 @@ data_file = "ZueriCrop.hdf5"
 labels_file = "labels.csv"
 
 # Remove old data
-os.remove(data_file)
-os.remove(labels_file)
+if os.path.exists(data_file):
+    os.remove(data_file)
+if os.path.exists(labels_file):
+    os.remove(labels_file)
 
 # Create empty labels file
 Path(labels_file).touch()
