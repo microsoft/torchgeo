@@ -26,6 +26,7 @@ meta = {
 }
 count = {"lc": 4, "s1": 2, "s2": 13}
 dtype = {"lc": np.uint16, "s1": np.float32, "s2": np.uint16}
+stop = {"lc": 11, "s1": np.iinfo(np.uint16).max, "s2": np.iinfo(np.uint16).max}
 
 file_list = []
 seasons = ["ROIs1158_spring", "ROIs1868_summer", "ROIs1970_fall", "ROIs2017_winter"]
@@ -51,9 +52,9 @@ for season in seasons:
             meta["dtype"] = dtype[source]
             with rasterio.open(os.path.join(directory, filename), "w", **meta) as f:
                 for j in range(1, count[source] + 1):
-                    data = np.random.randint(
-                        np.iinfo(np.uint16).max, size=(SIZE, SIZE)
-                    ).astype(dtype[source])
+                    data = np.random.randint(stop[source], size=(SIZE, SIZE)).astype(
+                        dtype[source]
+                    )
                     f.write(data, j)
 
             if source == "s2":
