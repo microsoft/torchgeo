@@ -262,7 +262,7 @@ class Vaihingen2D(VisionDataset):
             sample["image"][:3],
             sample["mask"],
             alpha=alpha,
-            colors=self.colormap,  # type: ignore[arg-type]
+            colors=self.colormap,
         )
         if "prediction" in sample:
             ncols += 1
@@ -270,7 +270,7 @@ class Vaihingen2D(VisionDataset):
                 sample["image"][:3],
                 sample["prediction"],
                 alpha=alpha,
-                colors=self.colormap,  # type: ignore[arg-type]
+                colors=self.colormap,
             )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))

@@ -242,13 +242,13 @@ class XView2(VisionDataset):
             sample["image"][0],
             sample["mask"][0],
             alpha=alpha,
-            colors=self.colormap,  # type: ignore[arg-type]
+            colors=self.colormap,
         )
         image2 = draw_semantic_segmentation_masks(
             sample["image"][1],
             sample["mask"][1],
             alpha=alpha,
-            colors=self.colormap,  # type: ignore[arg-type]
+            colors=self.colormap,
         )
         if "prediction" in sample:  # NOTE: this assumes predictions are made for post
             ncols += 1
@@ -256,7 +256,7 @@ class XView2(VisionDataset):
                 sample["image"][1],
                 sample["prediction"],
                 alpha=alpha,
-                colors=self.colormap,  # type: ignore[arg-type]
+                colors=self.colormap,
             )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
