@@ -24,6 +24,7 @@ from typing import (
     Sequence,
     Tuple,
     Union,
+    cast,
     overload,
 )
 
@@ -51,9 +52,6 @@ __all__ = (
     "rgb_to_mask",
     "percentile_normalization",
 )
-
-
-ColorMap = Union[List[Union[str, Tuple[int, int, int]]], str, Tuple[int, int, int]]
 
 
 class _rarfile:
@@ -542,17 +540,23 @@ def sort_sentinel2_bands(x: str) -> str:
 
 
 def draw_semantic_segmentation_masks(
-    image: Tensor, mask: Tensor, alpha: float = 0.5, colors: Optional[ColorMap] = None
-) -> "np.typing.NDArray[np.int_]":
+    image: Tensor,
+    mask: Tensor,
+    alpha: float = 0.5,
+    colors: Optional[Sequence[Union[str, Tuple[int, int, int]]]] = None,
+) -> "np.typing.NDArray[np.uint8]":
     """Overlay a semantic segmentation mask onto an image.
 
     Args:
-        image: tensor of shape (3, h, w)
-        mask: tensor of shape (h, w) with pixel values representing the classes
+        image: tensor of shape (3, h, w) and dtype uint8
+        mask: tensor of shape (h, w) with pixel values representing the classes and
+            dtype bool
         alpha: alpha blend factor
         colors: list of RGB int tuples, or color strings e.g. red, #FF00FF
+
     Returns:
-        a list of the subset datasets. Either [train, val] or [train, val, test]
+        a version of ``image`` overlayed with the colors given by ``mask`` and
+            ``colors``
     """
     classes = torch.unique(mask)  # type: ignore[attr-defined]
     classes = classes[1:]
@@ -560,8 +564,8 @@ def draw_semantic_segmentation_masks(
     img = draw_segmentation_masks(
         image=image, masks=class_masks, alpha=alpha, colors=colors
     )
-    img = img.permute((1, 2, 0)).numpy()
-    return img  # type: ignore[no-any-return]
+    img = img.permute((1, 2, 0)).numpy().astype(np.uint8)
+    return cast("np.typing.NDArray[np.uint8]", img)
 
 
 def rgb_to_mask(
