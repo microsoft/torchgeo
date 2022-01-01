@@ -157,7 +157,7 @@ class XView2(VisionDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array = np.array(img.convert("RGB"))
+            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
@@ -174,7 +174,7 @@ class XView2(VisionDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array = np.array(img.convert("L"))
+            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("L"))
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             tensor = tensor.to(torch.long)  # type: ignore[attr-defined]
             return tensor
@@ -239,16 +239,10 @@ class XView2(VisionDataset):
         """
         ncols = 2
         image1 = draw_semantic_segmentation_masks(
-            sample["image"][0],
-            sample["mask"][0],
-            alpha=alpha,
-            colors=self.colormap,  # type: ignore[arg-type]
+            sample["image"][0], sample["mask"][0], alpha=alpha, colors=self.colormap
         )
         image2 = draw_semantic_segmentation_masks(
-            sample["image"][1],
-            sample["mask"][1],
-            alpha=alpha,
-            colors=self.colormap,  # type: ignore[arg-type]
+            sample["image"][1], sample["mask"][1], alpha=alpha, colors=self.colormap
         )
         if "prediction" in sample:  # NOTE: this assumes predictions are made for post
             ncols += 1
@@ -256,7 +250,7 @@ class XView2(VisionDataset):
                 sample["image"][1],
                 sample["prediction"],
                 alpha=alpha,
-                colors=self.colormap,  # type: ignore[arg-type]
+                colors=self.colormap,
             )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))

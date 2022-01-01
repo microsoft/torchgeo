@@ -233,7 +233,7 @@ class CV4AKenyaCropType(VisionDataset):
         )
 
         with Image.open(os.path.join(directory, "labels.tif")) as img:
-            array = np.array(img)
+            array: "np.typing.NDArray[np.int_]" = np.array(img)
             labels: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
 
         with Image.open(os.path.join(directory, "field_ids.tif")) as img:
@@ -333,7 +333,7 @@ class CV4AKenyaCropType(VisionDataset):
                 f"{band_name}.tif",
             )
             with Image.open(filepath) as band_img:
-                array = np.array(band_img)
+                array: "np.typing.NDArray[np.int_]" = np.array(band_img)
                 img[band_index] = torch.from_numpy(array)  # type: ignore[attr-defined]
 
         return img
