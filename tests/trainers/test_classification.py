@@ -30,7 +30,7 @@ class TestClassificationTask:
         ],
     )
     def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
-        if name == "so2sat":
+        if name.startswith("so2sat"):
             pytest.importorskip("h5py")
 
         conf = OmegaConf.load(os.path.join("conf", "task_defaults", name + ".yaml"))
