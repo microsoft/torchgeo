@@ -39,12 +39,6 @@ def batch() -> Dict[str, Tensor]:
     }
 
 
-def test_index(sample: Dict[str, Tensor]) -> None:
-    index = indices._compute_index(swir=sample["image"], nir=sample["image"])
-    assert index.ndim == 3
-    assert index.shape[-2:] == sample["image"].shape[-2:]
-
-
 def test_append_index_sample(sample: Dict[str, Tensor]) -> None:
     c, h, w = sample["image"].shape
     tr = indices.AppendNormalizedDifferenceIndex(index_a=0, index_b=0)

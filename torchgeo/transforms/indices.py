@@ -63,10 +63,7 @@ class AppendNormalizedDifferenceIndex(Module):
                 band_a=sample["image"][..., self.index_a, :, :],
                 band_b=sample["image"][..., self.index_b, :, :],
             )
-
             index = index.unsqueeze(self.dim)
-            if sample["image"].ndim == 4:
-                index = index.unsqueeze(self.dim)
 
             sample["image"] = torch.cat(  # type: ignore[attr-defined]
                 [sample["image"], index], dim=self.dim
