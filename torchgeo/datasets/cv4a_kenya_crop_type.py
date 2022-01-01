@@ -356,7 +356,7 @@ class CV4AKenyaCropType(VisionDataset):
 
         return images and targets
 
-    def get_splits(self) -> Tuple[List[np.int_], List[int]]:
+    def get_splits(self) -> Tuple[List[int], List[int]]:
         """Get the field_ids for the train/test splits from the dataset directory.
 
         Returns:
