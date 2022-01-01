@@ -45,8 +45,15 @@ def test_index(sample: Dict[str, Tensor]) -> None:
     assert index.shape[-2:] == sample["image"].shape[-2:]
 
 
-def test_append_index(batch: Dict[str, Tensor]) -> None:
+def test_append_index_sample(sample: Dict[str, Tensor]) -> None:
+    c, h, w = sample["image"].shape
+    tr = indices.AppendNormalizedDifferenceIndex(index_a=0, index_b=0)
+    output = tr(sample)
+    assert output["image"].shape == (c + 1, h, w)
+
+
+def test_append_index_batch(batch: Dict[str, Tensor]) -> None:
     b, c, h, w = batch["image"].shape
-    tr = indices.AppendIndex(index_swir=0, index_nir=0)
+    tr = indices.AppendNormalizedDifferenceIndex(index_a=0, index_b=0)
     output = tr(batch)
     assert output["image"].shape == (b, c + 1, h, w)
