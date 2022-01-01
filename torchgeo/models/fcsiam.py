@@ -3,14 +3,14 @@
 
 """Fully convolutional change detection (FCCD) implementations."""
 
-from typing import List, Optional, Union
+from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
 
 import segmentation_models_pytorch as smp
 import torch
 from torch import Tensor
 
 
-class FCSiamConc(smp.base.SegmentationModel):
+class FCSiamConc(smp.base.SegmentationModel):  # type: ignore[misc]
     """Fully-convolutional Siamese Concatenation (FC-Siam-conc).
 
     'Fully Convolutional Siamese Networks for Change Detection', Daudt et al. (2018)
@@ -26,12 +26,12 @@ class FCSiamConc(smp.base.SegmentationModel):
         encoder_depth: int = 5,
         encoder_weights: Optional[str] = "imagenet",
         decoder_use_batchnorm: bool = True,
-        decoder_channels: List[int] = (256, 128, 64, 32, 16),
+        decoder_channels: Sequence[int] = (256, 128, 64, 32, 16),
         decoder_attention_type: Optional[str] = None,
         in_channels: int = 3,
         classes: int = 1,
-        activation: Optional[Union[str, callable]] = None,
-        aux_params: Optional[dict] = None,
+        activation: Optional[Union[str, Callable]] = None,
+        aux_params: Optional[Dict[str, Any]] = None,
     ):
         """Initialize a new FCSiamConc model.
 
@@ -63,17 +63,17 @@ class FCSiamConc(smp.base.SegmentationModel):
                 of channels of output mask)
             activation: An activation function to apply after the final convolution
                 n layer. Available options are **"sigmoid"**, **"softmax"**,
-                 **"logsoftmax"**, **"tanh"**, **"identity"**, **callable**
+                **"logsoftmax"**, **"tanh"**, **"identity"**, **callable**
                 and **None**. Default is **None**
             aux_params: Dictionary with parameters of the auxiliary output
                 (classification head). Auxiliary output is build
                 on top of encoder if **aux_params** is not **None** (default).
                 Supported params:
-                    - classes (int): A number of classes
-                    - pooling (str): One of "max", "avg". Default is "avg"
-                    - dropout (float): Dropout factor in [0, 1)
-                    - activation (str): An activation function to apply
-                      "sigmoid"/"softmax" (could be **None** to return logits)
+                * classes (int): A number of classes
+                * pooling (str): One of "max", "avg". Default is "avg"
+                * dropout (float): Dropout factor in [0, 1)
+                * activation (str): An activation function to apply
+                * "sigmoid"/"softmax" (could be **None** to return logits)
         """
         super().__init__()
         self.encoder = smp.encoders.get_encoder(
@@ -110,7 +110,7 @@ class FCSiamConc(smp.base.SegmentationModel):
         self.name = "u-{}".format(encoder_name)
         self.initialize()
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Union[Tuple[Tensor, Tensor], Tensor]:
         """Forward pass of the model.
 
         Args:
@@ -123,7 +123,7 @@ class FCSiamConc(smp.base.SegmentationModel):
         x2 = x[:, 1]
         features1, features2 = self.encoder(x1), self.encoder(x2)
         features = [
-            torch.cat([features2[i], features1[i]], dim=1)
+            torch.cat([features2[i], features1[i]], dim=1)  # type: ignore[attr-defined]
             for i in range(1, len(features1))
         ]
         features.insert(0, features2[0])
@@ -138,7 +138,7 @@ class FCSiamConc(smp.base.SegmentationModel):
         return masks
 
 
-class FCSiamDiff(smp.Unet):
+class FCSiamDiff(smp.Unet):  # type: ignore[misc]
     """Fully-convolutional Siamese Difference (FC-Siam-diff).
 
     'Fully Convolutional Siamese Networks for Change Detection', Daudt et al. (2018)
@@ -148,7 +148,7 @@ class FCSiamDiff(smp.Unet):
     * https://arxiv.org/abs/1810.08462
     """
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize a new FCSiamConc model.
 
         Args:
@@ -179,21 +179,21 @@ class FCSiamDiff(smp.Unet):
                 of channels of output mask)
             activation: An activation function to apply after the final convolution
                 n layer. Available options are **"sigmoid"**, **"softmax"**,
-                 **"logsoftmax"**, **"tanh"**, **"identity"**, **callable**
+                **"logsoftmax"**, **"tanh"**, **"identity"**, **callable**
                 and **None**. Default is **None**
             aux_params: Dictionary with parameters of the auxiliary output
                 (classification head). Auxiliary output is build
                 on top of encoder if **aux_params** is not **None** (default).
                 Supported params:
-                    - classes (int): A number of classes
-                    - pooling (str): One of "max", "avg". Default is "avg"
-                    - dropout (float): Dropout factor in [0, 1)
-                    - activation (str): An activation function to apply
-                      "sigmoid"/"softmax" (could be **None** to return logits)
+                * classes (int): A number of classes
+                * pooling (str): One of "max", "avg". Default is "avg"
+                * dropout (float): Dropout factor in [0, 1)
+                * activation (str): An activation function to apply
+                * "sigmoid"/"softmax" (could be **None** to return logits)
         """
         super().__init__(*args, **kwargs)
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: Tensor) -> Union[Tuple[Tensor, Tensor], Tensor]:
         """Forward pass of the model.
 
         Args:

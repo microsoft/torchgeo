@@ -19,7 +19,7 @@ class TestFCSiamConc:
     def test_in_channels(self, b: int, c: int) -> None:
         classes = 2
         t, h, w = 2, 64, 64
-        model = FCSiamConc(in_channels=c, t=t, classes=classes)
+        model = FCSiamConc(in_channels=c, classes=classes)
         x = torch.randn(b, t, c, h, w)
         y = model(x)
         assert y.shape == (b, classes, h, w)
@@ -28,7 +28,7 @@ class TestFCSiamConc:
     @pytest.mark.parametrize("b, classes", list(itertools.product(BATCH_SIZE, CLASSES)))
     def test_classes(self, b: int, classes: int) -> None:
         t, c, h, w = 2, 3, 64, 64
-        model = FCSiamConc(in_channels=3, t=t, classes=classes)
+        model = FCSiamConc(in_channels=3, classes=classes)
         x = torch.randn(b, t, c, h, w)
         y = model(x)
         assert y.shape == (b, classes, h, w)
@@ -40,7 +40,7 @@ class TestFCSiamDiff:
     def test_in_channels(self, b: int, c: int) -> None:
         classes = 2
         t, h, w = 2, 64, 64
-        model = FCSiamDiff(in_channels=c, t=t, classes=classes)
+        model = FCSiamDiff(in_channels=c, classes=classes)
         x = torch.randn(b, t, c, h, w)
         y = model(x)
         assert y.shape == (b, classes, h, w)
@@ -49,7 +49,7 @@ class TestFCSiamDiff:
     @pytest.mark.parametrize("b, classes", list(itertools.product(BATCH_SIZE, CLASSES)))
     def test_classes(self, b: int, classes: int) -> None:
         t, c, h, w = 2, 3, 64, 64
-        model = FCSiamDiff(in_channels=3, t=t, classes=classes)
+        model = FCSiamDiff(in_channels=3, classes=classes)
         x = torch.randn(b, t, c, h, w)
         y = model(x)
         assert y.shape == (b, classes, h, w)
