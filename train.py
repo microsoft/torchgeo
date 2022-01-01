@@ -35,10 +35,6 @@ from torchgeo.trainers import (
     RegressionTask,
     SemanticSegmentationTask,
 )
-from torchgeo.trainers.chesapeake import ChesapeakeCVPRSegmentationTask
-from torchgeo.trainers.landcoverai import LandCoverAISegmentationTask
-from torchgeo.trainers.naipchesapeake import NAIPChesapeakeSegmentationTask
-from torchgeo.trainers.resisc45 import RESISC45ClassificationTask
 
 TASK_TO_MODULES_MAPPING: Dict[
     str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
@@ -47,18 +43,18 @@ TASK_TO_MODULES_MAPPING: Dict[
     "bigearthnet_s1": (MultiLabelClassificationTask, BigEarthNetDataModule),
     "bigearthnet_s2": (MultiLabelClassificationTask, BigEarthNetDataModule),
     "byol": (BYOLTask, ChesapeakeCVPRDataModule),
-    "chesapeake_cvpr_5": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
-    "chesapeake_cvpr_7": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
-    "chesapeake_cvpr_prior": (ChesapeakeCVPRSegmentationTask, ChesapeakeCVPRDataModule),
+    "chesapeake_cvpr_5": (SemanticSegmentationTask, ChesapeakeCVPRDataModule),
+    "chesapeake_cvpr_7": (SemanticSegmentationTask, ChesapeakeCVPRDataModule),
+    "chesapeake_cvpr_prior": (SemanticSegmentationTask, ChesapeakeCVPRDataModule),
     "cowc_counting": (RegressionTask, COWCCountingDataModule),
     "cyclone": (RegressionTask, CycloneDataModule),
     "eurosat": (ClassificationTask, EuroSATDataModule),
     "etci2021": (SemanticSegmentationTask, ETCI2021DataModule),
-    "landcoverai": (LandCoverAISegmentationTask, LandCoverAIDataModule),
-    "naipchesapeake": (NAIPChesapeakeSegmentationTask, NAIPChesapeakeDataModule),
+    "landcoverai": (SemanticSegmentationTask, LandCoverAIDataModule),
+    "naipchesapeake": (SemanticSegmentationTask, NAIPChesapeakeDataModule),
     "oscd_all": (SemanticSegmentationTask, OSCDDataModule),
     "oscd_rgb": (SemanticSegmentationTask, OSCDDataModule),
-    "resisc45": (RESISC45ClassificationTask, RESISC45DataModule),
+    "resisc45": (ClassificationTask, RESISC45DataModule),
     "sen12ms_all": (SemanticSegmentationTask, SEN12MSDataModule),
     "sen12ms_s1": (SemanticSegmentationTask, SEN12MSDataModule),
     "sen12ms_s2_all": (SemanticSegmentationTask, SEN12MSDataModule),

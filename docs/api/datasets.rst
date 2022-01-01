@@ -270,3 +270,4 @@ Collation Functions
 .. autofunction:: stack_samples
 .. autofunction:: concat_samples
 .. autofunction:: merge_samples
+.. autofunction:: unbind_samples

@@ -53,6 +53,23 @@ class TestSemanticSegmentationTask:
         trainer.fit(model=model, datamodule=datamodule)
         trainer.test(model=model, datamodule=datamodule)
 
+    def test_no_logger(self) -> None:
+        conf = OmegaConf.load(os.path.join("conf", "task_defaults", "landcoverai.yaml"))
+        conf_dict = OmegaConf.to_object(conf.experiment)
+        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+
+        # Instantiate datamodule
+        datamodule_kwargs = conf_dict["datamodule"]
+        datamodule = LandCoverAIDataModule(**datamodule_kwargs)
+
+        # Instantiate model
+        model_kwargs = conf_dict["module"]
+        model = SemanticSegmentationTask(**model_kwargs)
+
+        # Instantiate trainer
+        trainer = Trainer(logger=None, fast_dev_run=True, log_every_n_steps=1)
+        trainer.fit(model=model, datamodule=datamodule)
+
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:
         return {

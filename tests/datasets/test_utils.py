@@ -31,6 +31,7 @@ from torchgeo.datasets.utils import (
     merge_samples,
     percentile_normalization,
     stack_samples,
+    unbind_samples,
     working_dir,
 )
 
@@ -457,7 +458,7 @@ class TestCollateFunctionsMatchingKeys:
             },
         ]
 
-    def test_stack_samples(self, samples: List[Dict[str, Any]]) -> None:
+    def test_stack_unbind_samples(self, samples: List[Dict[str, Any]]) -> None:
         sample = stack_samples(samples)
         assert sample["image"].size() == torch.Size(  # type: ignore[attr-defined]
             [2, 3]
@@ -467,6 +468,13 @@ class TestCollateFunctionsMatchingKeys:
             torch.tensor([[1, 2, 0], [0, 0, 3]]),  # type: ignore[attr-defined]
         )
         assert sample["crs"] == [CRS.from_epsg(2000), CRS.from_epsg(2001)]
+
+        new_samples = unbind_samples(sample)
+        for i in range(2):
+            assert torch.allclose(  # type: ignore[attr-defined]
+                samples[i]["image"], new_samples[i]["image"]
+            )
+            assert samples[i]["crs"] == new_samples[i]["crs"]
 
     def test_concat_samples(self, samples: List[Dict[str, Any]]) -> None:
         sample = concat_samples(samples)
@@ -500,7 +508,7 @@ class TestCollateFunctionsDifferingKeys:
             },
         ]
 
-    def test_stack_samples(self, samples: List[Dict[str, Any]]) -> None:
+    def test_stack_unbind_samples(self, samples: List[Dict[str, Any]]) -> None:
         sample = stack_samples(samples)
         assert sample["image"].size() == torch.Size(  # type: ignore[attr-defined]
             [1, 3]
@@ -514,6 +522,16 @@ class TestCollateFunctionsDifferingKeys:
         )
         assert sample["crs1"] == [CRS.from_epsg(2000)]
         assert sample["crs2"] == [CRS.from_epsg(2001)]
+
+        new_samples = unbind_samples(sample)
+        assert torch.allclose(  # type: ignore[attr-defined]
+            samples[0]["image"], new_samples[0]["image"]
+        )
+        assert samples[0]["crs1"] == new_samples[0]["crs1"]
+        assert torch.allclose(  # type: ignore[attr-defined]
+            samples[1]["mask"], new_samples[0]["mask"]
+        )
+        assert samples[1]["crs2"] == new_samples[0]["crs2"]
 
     def test_concat_samples(self, samples: List[Dict[str, Any]]) -> None:
         sample = concat_samples(samples)

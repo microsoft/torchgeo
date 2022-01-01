@@ -35,6 +35,23 @@ class TestRegressionTask:
         trainer.fit(model=model, datamodule=datamodule)
         trainer.test(model=model, datamodule=datamodule)
 
+    def test_no_logger(self) -> None:
+        conf = OmegaConf.load(os.path.join("conf", "task_defaults", "cyclone.yaml"))
+        conf_dict = OmegaConf.to_object(conf.experiment)
+        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+
+        # Instantiate datamodule
+        datamodule_kwargs = conf_dict["datamodule"]
+        datamodule = CycloneDataModule(**datamodule_kwargs)
+
+        # Instantiate model
+        model_kwargs = conf_dict["module"]
+        model = RegressionTask(**model_kwargs)
+
+        # Instantiate trainer
+        trainer = Trainer(logger=None, fast_dev_run=True, log_every_n_steps=1)
+        trainer.fit(model=model, datamodule=datamodule)
+
     def test_invalid_model(self) -> None:
         match = "Model type 'invalid_model' is not valid."
         with pytest.raises(ValueError, match=match):
