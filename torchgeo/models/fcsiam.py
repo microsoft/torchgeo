@@ -30,7 +30,7 @@ class FCSiamConc(smp.base.SegmentationModel):  # type: ignore[misc]
         decoder_attention_type: Optional[str] = None,
         in_channels: int = 3,
         classes: int = 1,
-        activation: Optional[Union[str, Callable]] = None,
+        activation: Optional[Union[str, Callable[[Tensor], Tensor]]] = None,
         aux_params: Optional[Dict[str, Any]] = None,
     ):
         """Initialize a new FCSiamConc model.
@@ -129,10 +129,10 @@ class FCSiamConc(smp.base.SegmentationModel):  # type: ignore[misc]
         features.insert(0, features2[0])
         decoder_output = self.decoder(*features)
 
-        masks = self.segmentation_head(decoder_output)
+        masks: Tensor = self.segmentation_head(decoder_output)
 
         if self.classification_head is not None:
-            labels = self.classification_head(features[-1])
+            labels: Tensor = self.classification_head(features[-1])
             return masks, labels
 
         return masks
@@ -209,10 +209,10 @@ class FCSiamDiff(smp.Unet):  # type: ignore[misc]
         features.insert(0, features2[0])
         decoder_output = self.decoder(*features)
 
-        masks = self.segmentation_head(decoder_output)
+        masks: Tensor = self.segmentation_head(decoder_output)
 
         if self.classification_head is not None:
-            labels = self.classification_head(features[-1])
+            labels: Tensor = self.classification_head(features[-1])
             return masks, labels
 
         return masks
