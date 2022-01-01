@@ -50,29 +50,31 @@ class LandCoverAIDataModule(pl.LightningDataModule):
         Returns:
             augmented mini-batch
         """
-        try:
-            if self.trainer.training:  # type: ignore[union-attr]
-                # Kornia expects masks to be floats with a channel dimension
-                x = batch["image"]
-                y = batch["mask"].float().unsqueeze(1)
+        if (
+            hasattr(self, "trainer")
+            and hasattr(self.trainer, "training")
+            and self.trainer.training  # type: ignore[union-attr]
+        ):
+            # Kornia expects masks to be floats with a channel dimension
+            x = batch["image"]
+            y = batch["mask"].float().unsqueeze(1)
 
-                train_augmentations = K.AugmentationSequential(
-                    K.RandomRotation(p=0.5, degrees=90),
-                    K.RandomHorizontalFlip(p=0.5),
-                    K.RandomVerticalFlip(p=0.5),
-                    K.RandomSharpness(p=0.5),
-                    K.ColorJitter(
-                        p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1
-                    ),
-                    data_keys=["input", "mask"],
-                )
-                x, y = train_augmentations(x, y)
+            train_augmentations = K.AugmentationSequential(
+                K.RandomRotation(p=0.5, degrees=90),
+                K.RandomHorizontalFlip(p=0.5),
+                K.RandomVerticalFlip(p=0.5),
+                K.RandomSharpness(p=0.5),
+                K.ColorJitter(
+                    p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1
+                ),
+                data_keys=["input", "mask"],
+            )
+            x, y = train_augmentations(x, y)
 
-                # torchmetrics expects masks to be longs without a channel dimension
-                batch["image"] = x
-                batch["mask"] = y.squeeze(1).long()
-        except AttributeError:
-            pass
+            # torchmetrics expects masks to be longs without a channel dimension
+            batch["image"] = x
+            batch["mask"] = y.squeeze(1).long()
+
         return batch
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:

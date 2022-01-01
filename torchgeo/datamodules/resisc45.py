@@ -62,26 +62,28 @@ class RESISC45DataModule(pl.LightningDataModule):
         Returns:
             augmented mini-batch
         """
-        try:
-            if self.trainer.training:  # type: ignore[union-attr]
-                x = batch["image"]
+        if (
+            hasattr(self, "trainer")
+            and hasattr(self.trainer, "training")
+            and self.trainer.training  # type: ignore[union-attr]
+        ):
+            x = batch["image"]
 
-                train_augmentations = K.AugmentationSequential(
-                    K.RandomRotation(p=0.5, degrees=90),
-                    K.RandomHorizontalFlip(p=0.5),
-                    K.RandomVerticalFlip(p=0.5),
-                    K.RandomSharpness(p=0.5),
-                    K.RandomErasing(p=0.1),
-                    K.ColorJitter(
-                        p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1
-                    ),
-                    data_keys=["input"],
-                )
-                x = train_augmentations(x)
+            train_augmentations = K.AugmentationSequential(
+                K.RandomRotation(p=0.5, degrees=90),
+                K.RandomHorizontalFlip(p=0.5),
+                K.RandomVerticalFlip(p=0.5),
+                K.RandomSharpness(p=0.5),
+                K.RandomErasing(p=0.1),
+                K.ColorJitter(
+                    p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1
+                ),
+                data_keys=["input"],
+            )
+            x = train_augmentations(x)
 
-                batch["image"] = x
-        except AttributeError:
-            pass
+            batch["image"] = x
+
         return batch
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
