@@ -71,6 +71,7 @@ class OSCDDataModule(pl.LightningDataModule):
         val_split_pct: float = 0.2,
         patch_size: Tuple[int, int] = (64, 64),
         num_patches_per_tile: int = 32,
+        pad_size: Tuple[int, int] = (1280, 1280),
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for OSCD based DataLoaders.
@@ -84,6 +85,7 @@ class OSCDDataModule(pl.LightningDataModule):
             val_split_pct: What percentage of the dataset to use as a validation set
             patch_size: Size of random patch from image and mask (height, width)
             num_patches_per_tile: number of random patches per sample
+            pad_size: size to pad images to during val/test steps
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
@@ -105,7 +107,7 @@ class OSCDDataModule(pl.LightningDataModule):
         self.rcrop = K.AugmentationSequential(
             K.RandomCrop(patch_size), data_keys=["input", "mask"], same_on_batch=True
         )
-        self.padto = K.PadTo((1280, 1280))
+        self.padto = K.PadTo(pad_size)
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
