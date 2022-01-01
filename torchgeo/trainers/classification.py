@@ -184,6 +184,8 @@ class ClassificationTask(pl.LightningModule):
             try:
                 datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
                 batch["prediction"] = y_hat_hard
+                for key in ["image", "label", "prediction"]:
+                    batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
                 summary_writer = self.logger.experiment
@@ -350,6 +352,8 @@ class MultiLabelClassificationTask(ClassificationTask):
             try:
                 datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
                 batch["prediction"] = y_hat_hard
+                for key in ["image", "label", "prediction"]:
+                    batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
                 summary_writer = self.logger.experiment
