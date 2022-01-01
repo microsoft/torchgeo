@@ -90,6 +90,8 @@ filterwarnings = [
     "ignore:Previous behaviour produces incorrect box coordinates:UserWarning",
     # pytorch-lightning warns us about using num_workers=0, but it's faster on macOS
     "ignore:The dataloader, .*, does not have many workers which may be a bottleneck:UserWarning",
+    # pytorch-lightning warns us if a GPU is available but isn't being used
+    "ignore:GPU available but not used:UserWarning",
 
     # Unexpected warnings, worth investigating
     # pytorch-lightning warns us not to use shuffle=True with val/test dataloader, but we aren't...
