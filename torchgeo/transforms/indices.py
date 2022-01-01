@@ -75,6 +75,26 @@ class AppendNormalizedDifferenceIndex(Module):
         return sample
 
 
+class AppendNBR(AppendNormalizedDifferenceIndex):
+    """Normalized Burn Ratio (NBR).
+
+    If you use this index in your research, please cite the following paper:
+
+    * https://www.sciencebase.gov/catalog/item/4f4e4b20e4b07f02db6abb36
+
+    .. versionadded:: 0.2.0
+    """
+
+    def __init__(self, index_nir: int, index_swir: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_nir: index of the Near Infrared (NIR) band in the image
+            index_swir: index of the Short-wave Infrared (SWIR) band in the image
+        """
+        super().__init__(index_a=index_nir, index_b=index_swir)
+
+
 class AppendNDBI(AppendNormalizedDifferenceIndex):
     """Normalized Difference Built-up Index (NDBI).
 
