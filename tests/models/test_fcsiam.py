@@ -33,17 +33,6 @@ class TestFCSiamConc:
         y = model(x)
         assert y.shape == (b, classes, h, w)
 
-    @torch.no_grad()  # type: ignore[misc]
-    def test_classification_head(self) -> None:
-        b, t, c, h, w = 2, 2, 3, 64, 64
-        classes = 2
-        aux_params = {"classes": classes}
-        model = FCSiamConc(in_channels=3, classes=classes, aux_params=aux_params)
-        x = torch.randn(b, t, c, h, w)
-        masks, labels = model(x)
-        assert masks.shape == (b, classes, h, w)
-        assert labels.shape == (b, classes)
-
 
 class TestFCSiamDiff:
     @torch.no_grad()  # type: ignore[misc]
@@ -64,14 +53,3 @@ class TestFCSiamDiff:
         x = torch.randn(b, t, c, h, w)
         y = model(x)
         assert y.shape == (b, classes, h, w)
-
-    @torch.no_grad()  # type: ignore[misc]
-    def test_classification_head(self) -> None:
-        b, t, c, h, w = 2, 2, 3, 64, 64
-        classes = 2
-        aux_params = {"classes": classes}
-        model = FCSiamDiff(in_channels=3, classes=classes, aux_params=aux_params)
-        x = torch.randn(b, t, c, h, w)
-        masks, labels = model(x)
-        assert masks.shape == (b, classes, h, w)
-        assert labels.shape == (b, classes)

@@ -3,7 +3,7 @@
 
 """Fully convolutional change detection (FCCD) implementations."""
 
-from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Optional, Sequence, Union
 
 import segmentation_models_pytorch as smp
 import torch
@@ -31,7 +31,6 @@ class FCSiamConc(smp.base.SegmentationModel):  # type: ignore[misc]
         in_channels: int = 3,
         classes: int = 1,
         activation: Optional[Union[str, Callable[[Tensor], Tensor]]] = None,
-        aux_params: Optional[Dict[str, Any]] = None,
     ):
         """Initialize a new FCSiamConc model.
 
@@ -65,15 +64,6 @@ class FCSiamConc(smp.base.SegmentationModel):  # type: ignore[misc]
                 n layer. Available options are **"sigmoid"**, **"softmax"**,
                 **"logsoftmax"**, **"tanh"**, **"identity"**, **callable**
                 and **None**. Default is **None**
-            aux_params: Dictionary with parameters of the auxiliary output
-                (classification head). Auxiliary output is build
-                on top of encoder if **aux_params** is not **None** (default).
-                Supported params:
-                * classes (int): A number of classes
-                * pooling (str): One of "max", "avg". Default is "avg"
-                * dropout (float): Dropout factor in [0, 1)
-                * activation (str): An activation function to apply
-                * "sigmoid"/"softmax" (could be **None** to return logits)
         """
         super().__init__()
         self.encoder = smp.encoders.get_encoder(
@@ -99,18 +89,11 @@ class FCSiamConc(smp.base.SegmentationModel):  # type: ignore[misc]
             activation=activation,
             kernel_size=3,
         )
-
-        if aux_params is not None:
-            self.classification_head = smp.base.ClassificationHead(
-                in_channels=self.encoder.out_channels[-1], **aux_params
-            )
-        else:
-            self.classification_head = None
-
+        self.classification_head = None
         self.name = "u-{}".format(encoder_name)
         self.initialize()
 
-    def forward(self, x: Tensor) -> Union[Tuple[Tensor, Tensor], Tensor]:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model.
 
         Args:
@@ -128,13 +111,7 @@ class FCSiamConc(smp.base.SegmentationModel):  # type: ignore[misc]
         ]
         features.insert(0, features2[0])
         decoder_output = self.decoder(*features)
-
         masks: Tensor = self.segmentation_head(decoder_output)
-
-        if self.classification_head is not None:
-            labels: Tensor = self.classification_head(features[-1])
-            return masks, labels
-
         return masks
 
 
@@ -181,19 +158,11 @@ class FCSiamDiff(smp.Unet):  # type: ignore[misc]
                 n layer. Available options are **"sigmoid"**, **"softmax"**,
                 **"logsoftmax"**, **"tanh"**, **"identity"**, **callable**
                 and **None**. Default is **None**
-            aux_params: Dictionary with parameters of the auxiliary output
-                (classification head). Auxiliary output is build
-                on top of encoder if **aux_params** is not **None** (default).
-                Supported params:
-                * classes (int): A number of classes
-                * pooling (str): One of "max", "avg". Default is "avg"
-                * dropout (float): Dropout factor in [0, 1)
-                * activation (str): An activation function to apply
-                * "sigmoid"/"softmax" (could be **None** to return logits)
         """
+        kwargs["aux_params"] = None
         super().__init__(*args, **kwargs)
 
-    def forward(self, x: Tensor) -> Union[Tuple[Tensor, Tensor], Tensor]:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model.
 
         Args:
@@ -208,11 +177,5 @@ class FCSiamDiff(smp.Unet):  # type: ignore[misc]
         features = [features2[i] - features1[i] for i in range(1, len(features1))]
         features.insert(0, features2[0])
         decoder_output = self.decoder(*features)
-
         masks: Tensor = self.segmentation_head(decoder_output)
-
-        if self.classification_head is not None:
-            labels: Tensor = self.classification_head(features[-1])
-            return masks, labels
-
         return masks
