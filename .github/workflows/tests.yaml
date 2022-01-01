@@ -2,10 +2,12 @@ name: tests
 on:
   push:
     branches:
-    - '**'
+    - main
+    - release**
   pull_request:
     branches:
-    - '**'
+    - main
+    - release**
 jobs:
   mypy:
     name: mypy

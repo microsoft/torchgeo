@@ -2,10 +2,10 @@ name: release
 on:
   push:
     branches:
-    - 'release**'
+    - release**
   pull_request:
     branches:
-    - 'release**'
+    - release**
 jobs:
   datasets:
     name: datasets
