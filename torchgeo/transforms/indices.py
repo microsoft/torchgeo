@@ -24,7 +24,7 @@ _EPSILON = 1e-10
 
 class AppendNormalizedDifferenceIndex(Module):
     """Append normalized difference index as channel to image tensor.
-    
+
     .. versionadded:: 0.2
     """
 
