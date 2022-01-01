@@ -566,7 +566,7 @@ def draw_semantic_segmentation_masks(
 
 def rgb_to_mask(
     rgb: "np.typing.NDArray[np.int_]", colors: List[Tuple[int, int, int]]
-) -> "np.typing.NDArray[np.int_]":
+) -> "np.typing.NDArray[np.uint8]":
     """Converts an RGB colormap mask to a integer mask.
 
     Args:
@@ -576,6 +576,9 @@ def rgb_to_mask(
     Returns:
         integer array mask
     """
+    assert len(colors) <= 256  # we currently return a uint8 array, so the largest value
+    # we can map is 255
+
     h, w = rgb.shape[:2]
     mask: "np.typing.NDArray[np.uint8]" = np.zeros(shape=(h, w), dtype=np.uint8)
     for i, c in enumerate(colors):
