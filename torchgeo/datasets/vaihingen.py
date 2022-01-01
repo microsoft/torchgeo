@@ -201,7 +201,7 @@ class Vaihingen2D(VisionDataset):
         """
         path = self.files[index]["mask"]
         with Image.open(path) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
+            array: "np.typing.NDArray[np.uint8]" = np.array(img.convert("RGB"))
             array = rgb_to_mask(array, self.colormap)
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             # Convert from HxWxC to CxHxW
