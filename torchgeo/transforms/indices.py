@@ -37,7 +37,7 @@ class AppendNormalizedDifferenceIndex(Module):
         self.index_a = index_a
         self.index_b = index_b
 
-    def _compute_index(band_a: Tensor, band_b: Tensor) -> Tensor:
+    def _compute_index(self, band_a: Tensor, band_b: Tensor) -> Tensor:
         """Compute normalized difference index.
 
         Args:
