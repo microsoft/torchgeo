@@ -3,6 +3,7 @@
 
 import os
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 import torch
@@ -14,6 +15,43 @@ from torchgeo.trainers.utils import (
     load_state_dict,
     reinit_initial_conv_layer,
 )
+
+
+class ClassificationTestModel(Module):
+    def __init__(
+        self, in_chans: int = 3, num_classes: int = 1000, **kwargs: Any
+    ) -> None:
+        super().__init__()
+        self.conv1 = nn.Conv2d(  # type: ignore[attr-defined]
+            in_channels=in_chans, out_channels=1, kernel_size=1
+        )
+        self.pool = nn.AdaptiveAvgPool2d((1, 1))  # type: ignore[attr-defined]
+        self.fc = nn.Linear(1, num_classes)  # type: ignore[attr-defined]
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.conv1(x)
+        x = self.pool(x)
+        x = torch.flatten(x, 1)  # type: ignore[attr-defined]
+        x = self.fc(x)
+        return x
+
+
+class RegressionTestModel(ClassificationTestModel):
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(in_chans=3, num_classes=1)
+
+
+class SegmentationTestModel(Module):
+    def __init__(
+        self, in_channels: int = 3, classes: int = 1000, **kwargs: Any
+    ) -> None:
+        super().__init__()
+        self.conv1 = nn.Conv2d(  # type: ignore[attr-defined]
+            in_channels=in_channels, out_channels=classes, kernel_size=1, padding=0
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return cast(torch.Tensor, self.conv1(x))
 
 
 def test_extract_encoder_unsupported_model(tmp_path: Path) -> None:

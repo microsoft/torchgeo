@@ -2,11 +2,14 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Type, cast
+from typing import Any, Dict, Generator, Type, cast
 
 import pytest
+import timm
+from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
+from torch.nn.modules import Module
 
 from torchgeo.datamodules import (
     BigEarthNetDataModule,
@@ -16,6 +19,12 @@ from torchgeo.datamodules import (
     UCMercedDataModule,
 )
 from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
+
+from .test_utils import ClassificationTestModel
+
+
+def create_model(*args: Any, **kwargs: Any) -> Module:
+    return ClassificationTestModel(**kwargs)
 
 
 class TestClassificationTask:
@@ -29,8 +38,13 @@ class TestClassificationTask:
             ("ucmerced", UCMercedDataModule),
         ],
     )
-    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
-        if name == "so2sat":
+    def test_trainer(
+        self,
+        monkeypatch: Generator[MonkeyPatch, None, None],
+        name: str,
+        classname: Type[LightningDataModule],
+    ) -> None:
+        if name.startswith("so2sat"):
             pytest.importorskip("h5py")
 
         conf = OmegaConf.load(os.path.join("conf", "task_defaults", name + ".yaml"))
@@ -42,6 +56,9 @@ class TestClassificationTask:
         datamodule = classname(**datamodule_kwargs)
 
         # Instantiate model
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            timm, "create_model", create_model
+        )
         model_kwargs = conf_dict["module"]
         model = ClassificationTask(**model_kwargs)
 
@@ -119,7 +136,12 @@ class TestMultiLabelClassificationTask:
             ("bigearthnet_s2", BigEarthNetDataModule),
         ],
     )
-    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
+    def test_trainer(
+        self,
+        monkeypatch: Generator[MonkeyPatch, None, None],
+        name: str,
+        classname: Type[LightningDataModule],
+    ) -> None:
         conf = OmegaConf.load(os.path.join("conf", "task_defaults", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
         conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
@@ -129,6 +151,9 @@ class TestMultiLabelClassificationTask:
         datamodule = classname(**datamodule_kwargs)
 
         # Instantiate model
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            timm, "create_model", create_model
+        )
         model_kwargs = conf_dict["module"]
         model = MultiLabelClassificationTask(**model_kwargs)
 

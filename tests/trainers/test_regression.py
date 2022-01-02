@@ -11,6 +11,8 @@ from pytorch_lightning import LightningDataModule, Trainer
 from torchgeo.datamodules import COWCCountingDataModule, CycloneDataModule
 from torchgeo.trainers import RegressionTask
 
+from .test_utils import RegressionTestModel
+
 
 class TestRegressionTask:
     @pytest.mark.parametrize(
@@ -29,6 +31,8 @@ class TestRegressionTask:
         # Instantiate model
         model_kwargs = conf_dict["module"]
         model = RegressionTask(**model_kwargs)
+
+        model.model = RegressionTestModel()
 
         # Instantiate trainer
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1)
