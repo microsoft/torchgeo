@@ -163,5 +163,8 @@ class LandCoverAIDataModule(pl.LightningDataModule):
         )
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.LandCoverAI.plot`."""
+        """Run :meth:`torchgeo.datasets.LandCoverAI.plot`.
+
+        .. versionadded:: 0.2
+        """
         return self.val_dataset.plot(*args, **kwargs)

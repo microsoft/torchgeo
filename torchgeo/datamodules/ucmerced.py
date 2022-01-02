@@ -126,5 +126,8 @@ class UCMercedDataModule(pl.LightningDataModule):
         )
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.UCMerced.plot`."""
+        """Run :meth:`torchgeo.datasets.UCMerced.plot`.
+
+        .. versionadded:: 0.2
+        """
         return self.val_dataset.plot(*args, **kwargs)

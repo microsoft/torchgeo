@@ -124,5 +124,8 @@ class COWCCountingDataModule(pl.LightningDataModule):
         )
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.COWC.plot`."""
+        """Run :meth:`torchgeo.datasets.COWC.plot`.
+
+        .. versionadded:: 0.2
+        """
         return self.val_dataset.dataset.plot(*args, **kwargs)

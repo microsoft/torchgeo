@@ -19,6 +19,8 @@ class LoveDADataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the LoveDA dataset.
 
     Uses the train/val/test splits from the dataset.
+
+    .. versionadded:: 0.2
     """
 
     def __init__(

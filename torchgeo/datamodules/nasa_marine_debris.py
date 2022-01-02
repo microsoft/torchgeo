@@ -35,7 +35,10 @@ def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
 
 
 class NASAMarineDebrisDataModule(pl.LightningDataModule):
-    """LightningDataModule implementation for the NASA Marine Debris dataset."""
+    """LightningDataModule implementation for the NASA Marine Debris dataset.
+
+    .. versionadded:: 0.2
+    """
 
     def __init__(
         self,

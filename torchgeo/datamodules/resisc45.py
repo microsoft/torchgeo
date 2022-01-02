@@ -161,5 +161,8 @@ class RESISC45DataModule(pl.LightningDataModule):
         )
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.RESISC45.plot`."""
+        """Run :meth:`torchgeo.datasets.RESISC45.plot`.
+
+        .. versionadded:: 0.2
+        """
         return self.val_dataset.plot(*args, **kwargs)

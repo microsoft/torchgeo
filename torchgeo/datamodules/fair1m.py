@@ -34,7 +34,10 @@ def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
 
 
 class FAIR1MDataModule(pl.LightningDataModule):
-    """LightningDataModule implementation for the FAIR1M dataset."""
+    """LightningDataModule implementation for the FAIR1M dataset.
+
+    .. versionadded:: 0.2
+    """
 
     def __init__(
         self,
