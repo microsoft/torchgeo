@@ -1,0 +1,12 @@
+experiment:
+  task: "resisc45"
+  module:
+    loss: "ce"
+    classification_model: "resnet18"
+    weights: "random"
+    in_channels: 3
+    num_classes: 3
+  datamodule:
+    root_dir: "tests/data/resisc45"
+    batch_size: 1
+    num_workers: 0

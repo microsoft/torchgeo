@@ -1,14 +1,12 @@
 experiment:
-  task: "ucmerced"
+  task: "eurosat"
   module:
     loss: "ce"
     classification_model: "resnet18"
     weights: "random"
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 6
-    in_channels: 3
+    in_channels: 13
     num_classes: 2
   datamodule:
-    root_dir: "tests/data/ucmerced"
+    root_dir: "tests/data/eurosat"
     batch_size: 1
     num_workers: 0

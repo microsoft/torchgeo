@@ -5,8 +5,6 @@ experiment:
     segmentation_model: "unet"
     encoder_name: "resnet18"
     encoder_weights: null
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 6
     verbose: false
     in_channels: 6
     num_classes: 2

@@ -15,7 +15,7 @@ class TestChesapeakeCVPRDataModule:
     @pytest.fixture(scope="class")
     def datamodule(self) -> ChesapeakeCVPRDataModule:
         conf = OmegaConf.load(
-            os.path.join("conf", "task_defaults", "chesapeake_cvpr_5.yaml")
+            os.path.join("tests", "conf", "chesapeake_cvpr_5.yaml")
         )
         kwargs = OmegaConf.to_object(conf.experiment.datamodule)
         kwargs = cast(Dict[str, Any], kwargs)
