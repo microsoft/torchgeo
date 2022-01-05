@@ -163,9 +163,7 @@ class TestMultiLabelClassificationTask:
         trainer.test(model=model, datamodule=datamodule)
 
     def test_no_logger(self) -> None:
-        conf = OmegaConf.load(
-            os.path.join("tests", "conf", "bigearthnet_s1.yaml")
-        )
+        conf = OmegaConf.load(os.path.join("tests", "conf", "bigearthnet_s1.yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
         conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
 

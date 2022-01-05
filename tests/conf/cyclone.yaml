@@ -2,6 +2,8 @@ experiment:
   task: "cyclone"
   module:
     model: "resnet18"
+    learning_rate: 1e-3
+    learning_rate_schedule_patience: 2
     pretrained: False
   datamodule:
     root_dir: "tests/data/cyclone"
