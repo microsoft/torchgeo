@@ -33,10 +33,11 @@ class TestChesapeake13:
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> Chesapeake13:
+        pytest.importorskip("zipfile_deflate64", minversion="0.2")
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.chesapeake, "download_url", download_url
         )
-        md5 = "9557b609e614a1f79dec6eb1bb3f3a06"
+        md5 = "911dfbd623b355c348b6d8f798e26af3"
         monkeypatch.setattr(Chesapeake13, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join(
             "tests", "data", "chesapeake", "BAYWIDE", "Baywide_13Class_20132014.zip"

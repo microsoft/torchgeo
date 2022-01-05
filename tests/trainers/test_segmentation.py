@@ -50,6 +50,9 @@ class TestSemanticSegmentationTask:
         name: str,
         classname: Type[LightningDataModule],
     ) -> None:
+        if name == "naipchesapeake":
+            pytest.importorskip("zipfile_deflate64", minversion="0.2")
+
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
         conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
