@@ -101,7 +101,7 @@ def test_extract_archive(src: str, tmp_path: Path) -> None:
     if src.endswith(".rar"):
         pytest.importorskip("rarfile", minversion="3")
     if src.startswith("chesapeake"):
-        pytest.importorskip("zipfile_deflate64", minversion="0.2")
+        pytest.importorskip("zipfile_deflate64")
     extract_archive(os.path.join("tests", "data", src), str(tmp_path))
 
 

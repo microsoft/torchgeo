@@ -33,7 +33,7 @@ class TestChesapeake13:
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> Chesapeake13:
-        pytest.importorskip("zipfile_deflate64", minversion="0.2")
+        pytest.importorskip("zipfile_deflate64")
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.chesapeake, "download_url", download_url
         )
