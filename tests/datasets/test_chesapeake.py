@@ -37,7 +37,7 @@ class TestChesapeake13:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.chesapeake, "download_url", download_url
         )
-        md5 = "911dfbd623b355c348b6d8f798e26af3"
+        md5 = "fe35a615b8e749b21270472aa98bb42c"
         monkeypatch.setattr(Chesapeake13, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join(
             "tests", "data", "chesapeake", "BAYWIDE", "Baywide_13Class_20132014.zip"

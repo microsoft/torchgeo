@@ -12,7 +12,7 @@ import rasterio
 from rasterio.crs import CRS
 from rasterio.transform import Affine
 
-SIZE = 64  # image width/height
+SIZE = 128  # image width/height
 NUM_CLASSES = 14
 
 np.random.seed(0)
