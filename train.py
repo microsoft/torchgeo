@@ -86,13 +86,20 @@ def set_up_omegaconf() -> DictConfig:
         FileNotFoundError: when ``config_file`` does not exist
         ValueError: when ``task.name`` is not a valid task
     """
+    conf = OmegaConf.load("conf/defaults.yaml")
     command_line_conf = OmegaConf.from_cli()
-    assert "config_file" in command_line_conf
-    config_fn = command_line_conf.config_file
-    if not os.path.isfile(config_fn):
-        raise FileNotFoundError(f"config_file={config_fn} is not a valid file")
 
-    conf = OmegaConf.load(config_fn)
+    if "config_file" in command_line_conf:
+        config_fn = command_line_conf.config_file
+        if not os.path.isfile(config_fn):
+            raise FileNotFoundError(f"config_file={config_fn} is not a valid file")
+
+        user_conf = OmegaConf.load(config_fn)
+        conf = OmegaConf.merge(conf, user_conf)
+
+    conf = OmegaConf.merge(  # Merge in any arguments passed via the command line
+        conf, command_line_conf
+    )
 
     # These OmegaConf structured configs enforce a schema at runtime, see:
     # https://omegaconf.readthedocs.io/en/2.0_branch/structured_config.html#merging-with-other-configs
