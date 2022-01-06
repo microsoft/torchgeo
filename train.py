@@ -91,11 +91,11 @@ def set_up_omegaconf() -> DictConfig:
 
     if "config_file" in command_line_conf:
         config_fn = command_line_conf.config_file
-        if os.path.isfile(config_fn):
-            user_conf = OmegaConf.load(config_fn)
-            conf = OmegaConf.merge(conf, user_conf)
-        else:
+        if not os.path.isfile(config_fn):
             raise FileNotFoundError(f"config_file={config_fn} is not a valid file")
+
+        user_conf = OmegaConf.load(config_fn)
+        conf = OmegaConf.merge(conf, user_conf)
 
     conf = OmegaConf.merge(  # Merge in any arguments passed via the command line
         conf, command_line_conf
@@ -189,7 +189,7 @@ def main(conf: DictConfig) -> None:
     trainer_args["default_root_dir"] = experiment_dir
     trainer = pl.Trainer(**trainer_args)
 
-    if trainer_args["auto_lr_find"]:
+    if trainer_args.get("auto_lr_find"):
         trainer.tune(model=task, datamodule=datamodule)
 
     ######################################
