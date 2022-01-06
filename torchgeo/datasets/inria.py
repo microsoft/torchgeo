@@ -100,13 +100,10 @@ class InriaBuildings(VisionDataset):
             labels = sorted(labels)
 
             for img, lbl in zip(images, labels):
-                imgpath = os.path.join(root_dir, "images", img)
-                lblpath = os.path.join(root_dir, "labels", lbl)
-                files.append({"image_path": imgpath, "label_path": lblpath})
+                files.append({"image_path": img, "label_path": lbl})
         else:
             for img in images:
-                imgpath = os.path.join(root_dir, "images", img)
-                files.append({"image_path": imgpath})
+                files.append({"image_path": img})
 
         return files
 
