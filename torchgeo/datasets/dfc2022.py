@@ -16,7 +16,7 @@ from rasterio.enums import Resampling
 from torch import Tensor
 
 from .geo import VisionDataset
-from .utils import check_integrity, extract_archive
+from .utils import check_integrity, extract_archive, percentile_normalization
 
 
 class DFC2022(VisionDataset):
@@ -168,7 +168,7 @@ class DFC2022(VisionDataset):
         files = self.files[index]
         image = self._load_image(files["image"])
         dem = self._load_image(files["dem"], shape=image.shape[1:])
-        image = torch.cat(tensors=[image, dem], dim=0)
+        image = torch.cat(tensors=[image, dem], dim=0)  # type: ignore[attr-defined]
 
         sample = {"image": image}
 
@@ -303,10 +303,11 @@ class DFC2022(VisionDataset):
         """
         ncols = 2
         image = sample["image"][:3]
-        image = image.to(torch.uint8).permute(1, 2, 0)
+        image = image.to(torch.uint8)  # type: ignore[attr-defined]
+        image = image.permute(1, 2, 0).numpy()
 
-        dem = sample["image"][-1]
-        dem = (dem - dem.min()) / (dem.max() - dem.min())
+        dem = sample["image"][-1].numpy()
+        dem = percentile_normalization(dem, lower=0, upper=100, axis=(0, 1))
 
         showing_mask = "mask" in sample
         showing_prediction = "prediction" in sample
@@ -314,10 +315,10 @@ class DFC2022(VisionDataset):
         cmap = colors.ListedColormap(self.colormap)
 
         if showing_mask:
-            mask = sample["mask"]
+            mask = sample["mask"].numpy()
             ncols += 1
         if showing_prediction:
-            pred = sample["prediction"]
+            pred = sample["prediction"].numpy()
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
@@ -327,13 +328,13 @@ class DFC2022(VisionDataset):
         axs[1].imshow(dem)
         axs[1].axis("off")
         if showing_mask:
-            axs[2].imshow(mask, cmap=cmap)
+            axs[2].imshow(mask, cmap=cmap, interpolation=None)
             axs[2].axis("off")
             if showing_prediction:
-                axs[3].imshow(pred, cmap=cmap)
+                axs[3].imshow(pred, cmap=cmap, interpolation=None)
                 axs[3].axis("off")
         elif showing_prediction:
-            axs[2].imshow(pred, cmap=cmap)
+            axs[2].imshow(pred, cmap=cmap, interpolation=None)
             axs[2].axis("off")
 
         if show_titles:
