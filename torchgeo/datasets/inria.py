@@ -23,7 +23,7 @@ from torchgeo.datasets.utils import (
 
 
 class InriaBuildings(VisionDataset):
-    """Inria Aerial Image Labeling Dataset.
+    r"""Inria Aerial Image Labeling Dataset.
 
     The `Inria Aerial Image Labeling
     <https://project.inria.fr/aerialimagelabeling/>`_ dataset is a building
@@ -32,7 +32,8 @@ class InriaBuildings(VisionDataset):
 
     Dataset features:
 
-    * Coverage of 810 km² (405 km² for training and 405 km² for testing)
+    * Coverage of 810 km\ :sup:`2`\  (405 km\ :sup:`2`\  for training and 405
+      km\ :sup:`2`\  for testing)
     * Aerial orthorectified color imagery with a spatial resolution of 0.3 m
     * Train cities: Austin, Chicago, Kitsap, West Tyrol, Vienna
     * Test cities: Bellingham, Bloomington, Innsbruck, San Francisco, East Tyrol
