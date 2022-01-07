@@ -219,6 +219,7 @@ class DFC2022(VisionDataset):
 
         Args:
             path: path to the image
+            shape: the (h, w) to resample the image to
 
         Returns:
             the image
@@ -316,7 +317,7 @@ class DFC2022(VisionDataset):
             mask = sample["mask"]
             ncols += 1
         if showing_prediction:
-            pred = sample["pred"]
+            pred = sample["prediction"]
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
