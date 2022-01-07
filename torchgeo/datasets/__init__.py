@@ -24,6 +24,7 @@ from .chesapeake import (
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCycloneWindEstimation
+from .dfc2022 import DFC2022
 from .etci2021 import ETCI2021
 from .eurosat import EuroSAT
 from .fair1m import FAIR1M
@@ -115,6 +116,7 @@ __all__ = (
     "COWCCounting",
     "COWCDetection",
     "CV4AKenyaCropType",
+    "DFC2022",
     "ETCI2021",
     "EuroSAT",
     "FAIR1M",
