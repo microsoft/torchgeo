@@ -195,11 +195,7 @@ class InriaBuildings(VisionDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        # image can be 1 channel or >3 channels
-        if sample["image"].shape[0] == 1:
-            image = np.rollaxis(sample["image"].numpy(), 0, 3)
-        else:
-            image = np.rollaxis(sample["image"][:3].numpy(), 0, 3)
+        image = np.rollaxis(sample["image"][:3].numpy(), 0, 3)
         image = percentile_normalization(image, axis=(0, 1))
 
         ncols = 1
