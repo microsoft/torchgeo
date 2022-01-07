@@ -1,10 +1,13 @@
 import os
+import shutil
 
 import numpy as np
 import numpy.typing as npt
 import rasterio as rio
 from rasterio.crs import CRS
 from rasterio.transform import Affine
+
+from torchvision.datasets.utils import calculate_md5
 
 
 def write_data(
@@ -25,7 +28,16 @@ def write_data(
             dst.write(img, i)
 
 
-def generate_test_data(root: str, n_samples: int = 2) -> None:
+def generate_test_data(root: str, n_samples: int = 2) -> str:
+    """Creates test data archive for InriaBuildings dataset and returns its md5 hash.
+
+    Args:
+        root (str): Path to store test data
+        n_samples (int, optional): Number of samples. Defaults to 2.
+
+    Returns:
+        str: md5 hash of created archive
+    """
     dtype = np.dtype("uint8")
     size = (64, 64)
 
@@ -33,9 +45,11 @@ def generate_test_data(root: str, n_samples: int = 2) -> None:
     transform = Affine(0.3, 0.0, 616500.0, 0.0, -0.3, 3345000.0)
     crs = CRS.from_epsg(26914)
 
-    img_dir = os.path.join(root, "AerialImageDataset", "train", "images")
-    lbl_dir = os.path.join(root, "AerialImageDataset", "train", "gt")
-    timg_dir = os.path.join(root, "AerialImageDataset", "test", "images")
+    folder_path = os.path.join(root, "AerialImageDataset")
+
+    img_dir = os.path.join(folder_path, "train", "images")
+    lbl_dir = os.path.join(folder_path, "train", "gt")
+    timg_dir = os.path.join(folder_path, "test", "images")
 
     if not os.path.exists(img_dir):
         os.makedirs(img_dir)
@@ -59,6 +73,10 @@ def generate_test_data(root: str, n_samples: int = 2) -> None:
         write_data(lbl_path, lbl, driver, crs, transform)
         write_data(timg_path, timg, driver, crs, transform)
 
-
-if __name__ == "__main__":
-    generate_test_data(".")
+    # Create archive
+    archive_path = os.path.join(root, "NEW2-AerialImageDataset")
+    shutil.make_archive(
+        archive_path, "zip", root_dir=root, base_dir="AerialImageDataset"
+    )
+    shutil.rmtree(folder_path)
+    return calculate_md5(archive_path + ".zip")

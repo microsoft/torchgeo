@@ -1,31 +1,34 @@
-import shutil
+from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
+from _pytest.monkeypatch import MonkeyPatch
 
 from torchgeo.datasets.inria import InriaBuildings
 
 from ..data.inria.data import generate_test_data
 
 TEST_DATA_DIR = "tests/data/inria"
-
-generate_test_data(TEST_DATA_DIR, 2)
-
-
-def download_url(url: str, root: str, *args: str) -> None:
-    shutil.copy(url, root)
+md5_hash = generate_test_data(TEST_DATA_DIR, 2)
 
 
 class TestInriaBuildings:
     @pytest.fixture(params=["train", "test"])
-    def dataset(self, request: SubRequest) -> InriaBuildings:
+    def dataset(
+        self, request: SubRequest, monkeypatch: Generator[MonkeyPatch, None, None]
+    ) -> InriaBuildings:
 
         root = TEST_DATA_DIR
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            InriaBuildings, "md5", md5_hash
+        )
         transforms = nn.Identity()  # type: ignore[attr-defined]
-        return InriaBuildings(root, split=request.param, transforms=transforms)
+        return InriaBuildings(
+            root, split=request.param, transforms=transforms, checksum=True
+        )
 
     def test_getitem(self, dataset: InriaBuildings) -> None:
         x = dataset[0]
