@@ -49,7 +49,7 @@ def generate_test_data(root: str, n_samples=2) -> None:
 
         img_path = os.path.join(img_dir, f"austin{i+1}.tif")
         lbl_path = os.path.join(lbl_dir, f"austin{i+1}.tif")
-        timg_path = os.path.join(timg_dir, f"chicago{i+1}.tif")
+        timg_path = os.path.join(timg_dir, f"austin{i+10}.tif")
 
         write_data(img_path, img, driver, crs, transform)
         write_data(lbl_path, lbl, driver, crs, transform)
