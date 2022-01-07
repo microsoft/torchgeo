@@ -2,7 +2,6 @@ import os
 import shutil
 
 import numpy as np
-import numpy.typing as npt
 import rasterio as rio
 from rasterio.crs import CRS
 from rasterio.transform import Affine
@@ -11,7 +10,7 @@ from torchvision.datasets.utils import calculate_md5
 
 
 def write_data(
-    path: str, img: npt.NDArray[np.uint8], driver: str, crs: CRS, transform: Affine
+    path: str, img: np.array, driver: str, crs: CRS, transform: Affine
 ) -> None:
     with rio.open(
         path,
