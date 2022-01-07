@@ -176,9 +176,16 @@ class InriaBuildings(VisionDataset):
 
         archive_path = os.path.join(self.root, self.archive_name)
         md5_hash = self.md5 if self.checksum else None
-        if check_integrity(archive_path, md5_hash):
-            print("Extracting...")
-            extract_archive(archive_path)
+        if not os.path.isfile(archive_path):
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` "
+                "either specify a different `root` directory "
+                "or download the dataset to this directory"
+            )
+        if not check_integrity(archive_path, md5_hash):
+            raise RuntimeError("Dataset corrupted")
+        print("Extracting...")
+        extract_archive(archive_path)
 
     def plot(
         self,
