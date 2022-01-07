@@ -61,7 +61,7 @@ def generate_test_data(root: str, n_samples: int = 2) -> str:
 
         dtype_max = np.iinfo(dtype).max
         img = np.random.randint(dtype_max, size=size, dtype=dtype)
-        lbl = np.random.randint(dtype_max, size=size, dtype=dtype)
+        lbl = np.random.randint(2, size=size, dtype=dtype)
         timg = np.random.randint(dtype_max, size=size, dtype=dtype)
 
         img_path = os.path.join(img_dir, f"austin{i+1}.tif")
