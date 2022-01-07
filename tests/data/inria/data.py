@@ -1,12 +1,15 @@
 import os
 
 import numpy as np
+import numpy.typing as npt
 import rasterio as rio
 from rasterio.crs import CRS
 from rasterio.transform import Affine
 
 
-def write_data(path, img, driver, crs, transform):
+def write_data(
+    path: str, img: npt.NDArray[np.uint8], driver: str, crs: CRS, transform: Affine
+) -> None:
     with rio.open(
         path,
         "w",
@@ -22,7 +25,7 @@ def write_data(path, img, driver, crs, transform):
             dst.write(img, i)
 
 
-def generate_test_data(root: str, n_samples=2) -> None:
+def generate_test_data(root: str, n_samples: int = 2) -> None:
     dtype = np.dtype("uint8")
     size = (64, 64)
 
@@ -43,9 +46,10 @@ def generate_test_data(root: str, n_samples=2) -> None:
 
     for i in range(n_samples):
 
-        img = np.random.randint(np.iinfo(dtype).max, size=size, dtype=dtype)
-        lbl = np.random.randint(np.iinfo(dtype).max, size=size, dtype=dtype)
-        timg = np.random.randint(np.iinfo(dtype).max, size=size, dtype=dtype)
+        dtype_max = np.iinfo(dtype).max
+        img = np.random.randint(dtype_max, size=size, dtype=dtype)
+        lbl = np.random.randint(dtype_max, size=size, dtype=dtype)
+        timg = np.random.randint(dtype_max, size=size, dtype=dtype)
 
         img_path = os.path.join(img_dir, f"austin{i+1}.tif")
         lbl_path = os.path.join(lbl_dir, f"austin{i+1}.tif")
