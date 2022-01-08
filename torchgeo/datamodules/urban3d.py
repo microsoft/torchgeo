@@ -18,7 +18,10 @@ DataLoader.__module__ = "torch.utils.data"
 
 
 class Urban3DChallengeDataModule(pl.LightningDataModule):
-    """LightningDataModule implementation for the Urban3DChallenge dataset."""
+    """LightningDataModule implementation for the Urban3DChallenge dataset.
+
+    .. versionadded:: 0.3
+    """
 
     # above to samples to [2, 98]
     band_mins = torch.tensor(  # type: ignore[attr-defined]

@@ -64,7 +64,7 @@ class Urban3DChallenge(VisionDataset):
           aws s3 sync s3://spacenet-dataset/Hosted-Datasets/Urban_3D_Challenge/02-Provisional_Test/ 02-Provisional_Test/
           aws s3 sync s3://spacenet-dataset/Hosted-Datasets/Urban_3D_Challenge/03-Sequestered_Test/ 03-Sequestered_Test/
 
-    .. versionadded:: 0.2
+    .. versionadded:: 0.3
     """  # noqa: E501
 
     directories = {
