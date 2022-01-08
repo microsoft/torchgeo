@@ -101,3 +101,6 @@ class TestDFC2022:
             x["prediction"] = x["mask"].clone()
             dataset.plot(x)
             plt.close()
+            del x["mask"]
+            dataset.plot(x)
+            plt.close()
