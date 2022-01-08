@@ -21,26 +21,16 @@ class TestDFC2022:
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
     ) -> DFC2022:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            DFC2022,
-            "metadata",
-            {
-                "train": {
-                    "filename": "labeled_train.zip",
-                    "md5": "6e380c4fa659d05ca93be71b50cacd90",
-                    "directory": "labeled_train",
-                },
-                "train-unlabeled": {
-                    "filename": "unlabeled_train.zip",
-                    "md5": "b2bf3839323d4eae636f198921442945",
-                    "directory": "unlabeled_train",
-                },
-                "val": {
-                    "filename": "val.zip",
-                    "md5": "e018dc6865bd3086738038fff27b818a",
-                    "directory": "val",
-                },
-            },
+        monkeypatch.setitem(  # type: ignore[attr-defined]
+            DFC2022.metadata["train"], "md5", "6e380c4fa659d05ca93be71b50cacd90"
+        )
+        monkeypatch.setitem(  # type: ignore[attr-defined]
+            DFC2022.metadata["train-unlabeled"],
+            "md5",
+            "b2bf3839323d4eae636f198921442945",
+        )
+        monkeypatch.setitem(  # type: ignore[attr-defined]
+            DFC2022.metadata["val"], "md5", "e018dc6865bd3086738038fff27b818a"
         )
         root = os.path.join("tests", "data", "dfc2022")
         split = request.param
