@@ -87,6 +87,7 @@ class Urban3DChallenge(VisionDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
         """
+        assert split in self.directories
         self.root = root
         self.split = split
         self.transforms = transforms

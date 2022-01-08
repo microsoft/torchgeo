@@ -23,7 +23,7 @@ class Urban3DChallengeDataModule(pl.LightningDataModule):
     .. versionadded:: 0.3
     """
 
-    # above to samples to [2, 98]
+    # global min/max values of train set
     band_mins = torch.tensor(  # type: ignore[attr-defined]
         [-48.0, -42.0, 1.0, 1.0, 1.0, 1.0]
     )
@@ -45,6 +45,8 @@ class Urban3DChallengeDataModule(pl.LightningDataModule):
         self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.mins = self.band_mins[:, None, None]
+        self.maxs = self.band_maxs[:, None, None]
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
