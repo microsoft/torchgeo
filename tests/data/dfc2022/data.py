@@ -13,7 +13,7 @@ import numpy as np
 
 from torchgeo.datasets import DFC2022
 
-ROOT = "/mnt/e/data/dfc2022/"
+ROOT = "/path/to/dataset"
 NUM_SAMPLES = 2
 SIZE = 32
 
