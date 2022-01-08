@@ -71,6 +71,7 @@ from .sentinel import Sentinel, Sentinel2
 from .so2sat import So2Sat
 from .spacenet import SpaceNet, SpaceNet1, SpaceNet2, SpaceNet4, SpaceNet5, SpaceNet7
 from .ucmerced import UCMerced
+from .urban3d import Urban3DChallenge
 from .utils import (
     BoundingBox,
     concat_samples,
@@ -78,8 +79,6 @@ from .utils import (
     stack_samples,
     unbind_samples,
 )
-from .urban3d import US3D
-from .urban3d import Urban3DChallenge
 from .vaihingen import Vaihingen2D
 from .xview import XView2
 from .zuericrop import ZueriCrop
