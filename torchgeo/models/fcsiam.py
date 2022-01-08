@@ -13,11 +13,9 @@ from torch import Tensor
 class FCSiamConc(smp.base.SegmentationModel):  # type: ignore[misc]
     """Fully-convolutional Siamese Concatenation (FC-Siam-conc).
 
-    'Fully Convolutional Siamese Networks for Change Detection', Daudt et al. (2018)
-
     If you use this model in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/1810.08462
+    * https://doi.org/10.1109/ICIP.2018.8451652
     """
 
     def __init__(
@@ -118,11 +116,9 @@ class FCSiamConc(smp.base.SegmentationModel):  # type: ignore[misc]
 class FCSiamDiff(smp.Unet):  # type: ignore[misc]
     """Fully-convolutional Siamese Difference (FC-Siam-diff).
 
-    'Fully Convolutional Siamese Networks for Change Detection', Daudt et al. (2018)
-
     If you use this model in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/1810.08462
+    * https://doi.org/10.1109/ICIP.2018.8451652
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
