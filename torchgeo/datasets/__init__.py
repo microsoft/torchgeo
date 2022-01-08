@@ -58,6 +58,12 @@ from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nwpu import VHR10
 from .oscd import OSCD
+from .pastis import (
+    PASTISInstanceSegmentation,
+    PASTISInstanceSegmentationDataModule,
+    PASTISSemanticSegmentation,
+    PASTISSemanticSegmentationDataModule,
+)
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
 from .resisc45 import RESISC45
