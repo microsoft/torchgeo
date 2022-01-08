@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import os
 import shutil
 
@@ -5,7 +10,6 @@ import numpy as np
 import rasterio as rio
 from rasterio.crs import CRS
 from rasterio.transform import Affine
-
 from torchvision.datasets.utils import calculate_md5
 
 
@@ -80,3 +84,8 @@ def generate_test_data(root: str, n_samples: int = 2) -> str:
     )
     shutil.rmtree(folder_path)
     return calculate_md5(archive_path + ".zip")
+
+
+if __name__ == "__main__":
+    md5_hash = generate_test_data(os.getcwd(), 2)
+    print(md5_hash)

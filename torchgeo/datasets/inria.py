@@ -80,7 +80,7 @@ class InriaAerialImageLabeling(VisionDataset):
         self.transforms = transforms
         self.checksum = checksum
 
-        self._check_integrity()
+        self._verify()
         self.files = self._load_files(root)
 
     def _load_files(self, root: str) -> List[Dict[str, str]]:
@@ -117,8 +117,7 @@ class InriaAerialImageLabeling(VisionDataset):
         Returns:
             the image
         """
-        filename = os.path.join(path)
-        with rio.open(filename) as img:
+        with rio.open(path) as img:
             array = img.read().astype(np.int32)
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             return tensor
@@ -132,8 +131,7 @@ class InriaAerialImageLabeling(VisionDataset):
         Returns:
             the target mask
         """
-        filename = os.path.join(path)
-        with rio.open(filename) as img:
+        with rio.open(path) as img:
             array = img.read().astype(np.int32)
             array = np.clip(array, 0, 1)
             mask: Tensor = torch.from_numpy(array[0])  # type: ignore[attr-defined]
@@ -169,7 +167,7 @@ class InriaAerialImageLabeling(VisionDataset):
 
         return sample
 
-    def _check_integrity(self) -> None:
+    def _verify(self) -> None:
         """Checks the integrity of the dataset structure."""
         if os.path.isdir(os.path.join(self.root, self.directory)):
             return

@@ -1,6 +1,8 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import os
 import shutil
-from pathlib import Path
 from typing import Generator
 
 import matplotlib.pyplot as plt
@@ -12,26 +14,21 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from torchgeo.datasets.inria import InriaAerialImageLabeling
 
-from ..data.inria.data import generate_test_data
-
 
 class TestInriaAerialImageLabeling:
     @pytest.fixture(params=["train", "test"])
     def dataset(
-        self,
-        request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
+        self, request: SubRequest, monkeypatch: Generator[MonkeyPatch, None, None]
     ) -> InriaAerialImageLabeling:
 
-        root = str(tmp_path)
-        test_md5 = generate_test_data(root, 2)
+        root = os.path.join("tests", "data", "inria")
+        test_md5 = "f23caf363389ef59de55fad11197c161"
         monkeypatch.setattr(  # type: ignore[attr-defined]
             InriaAerialImageLabeling, "md5", test_md5
         )
         transforms = nn.Identity()  # type: ignore[attr-defined]
         return InriaAerialImageLabeling(
-            root, split=request.param, transforms=transforms
+            root, split=request.param, transforms=transforms, checksum=True
         )
 
     def test_getitem(self, dataset: InriaAerialImageLabeling) -> None:

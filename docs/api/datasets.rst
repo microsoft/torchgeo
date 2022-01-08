@@ -122,8 +122,8 @@ IDTReeS
 
 .. autoclass:: IDTReeS
 
-InriaAerialImageLabeling
-^^^^^^^^^^^^^^^^^^^^^^^^
+Inria Aerial Image Labeling
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: InriaAerialImageLabeling
 
