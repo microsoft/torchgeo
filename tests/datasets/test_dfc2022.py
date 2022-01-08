@@ -27,17 +27,17 @@ class TestDFC2022:
             {
                 "train": {
                     "filename": "labeled_train.zip",
-                    "md5": "a794b2bb9cf3907d2e209966de0d6501",
+                    "md5": "6e380c4fa659d05ca93be71b50cacd90",
                     "directory": "labeled_train",
                 },
                 "train-unlabeled": {
                     "filename": "unlabeled_train.zip",
-                    "md5": "ca2417ce3c030842026afa095b0f0b1d",
+                    "md5": "b2bf3839323d4eae636f198921442945",
                     "directory": "unlabeled_train",
                 },
                 "val": {
                     "filename": "val.zip",
-                    "md5": "5ae50e2c0d3da12cf5ea3473bb4c3c3e",
+                    "md5": "e018dc6865bd3086738038fff27b818a",
                     "directory": "val",
                 },
             },
