@@ -108,10 +108,7 @@ intersphinx_mapping = {
     "pytorch-lightning": ("https://pytorch-lightning.readthedocs.io/en/latest/", None),
     "rasterio": ("https://rasterio.readthedocs.io/en/latest/", None),
     "rtree": ("https://rtree.readthedocs.io/en/latest/", None),
-    "segmentation_models_pytorch": (
-        "https://segmentation-modelspytorch.readthedocs.io/en/latest/",
-        None,
-    ),
+    "segmentation_models_pytorch": ("https://smp.readthedocs.io/en/latest/", None),
     "torch": ("https://pytorch.org/docs/stable", None),
     "torchvision": ("https://pytorch.org/vision/stable", None),
 }
