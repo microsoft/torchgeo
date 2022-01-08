@@ -77,6 +77,12 @@ from .nasa_marine_debris import NASAMarineDebris
 from .nlcd import NLCD
 from .openbuildings import OpenBuildings
 from .oscd import OSCD
+from .pastis import (
+    PASTISInstanceSegmentation,
+    PASTISInstanceSegmentationDataModule,
+    PASTISSemanticSegmentation,
+    PASTISSemanticSegmentationDataModule,
+)
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
 from .reforestree import ReforesTree
