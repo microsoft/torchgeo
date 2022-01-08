@@ -1,10 +1,5 @@
-trainer:
-  gpus: 1
-  min_epochs: 20
-  max_epochs: 100
-  benchmark: True
 experiment:
-  task: "landcoverai"
+  task: "etci2021"
   module:
     loss: "ce"
     segmentation_model: "unet"
@@ -12,11 +7,10 @@ experiment:
     encoder_weights: "imagenet"
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
-    in_channels: 3
-    num_classes: 6
-    num_filters: 256
-    ignore_zeros: False
+    in_channels: 7
+    num_classes: 2
+    ignore_zeros: True
   datamodule:
-    root_dir: "data/landcoverai"
+    root_dir: "data/etci2021"
     batch_size: 32
     num_workers: 4

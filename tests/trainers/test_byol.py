@@ -43,7 +43,7 @@ class TestBYOLTask:
         ],
     )
     def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
-        conf = OmegaConf.load(os.path.join("conf", "task_defaults", name + ".yaml"))
+        conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
         conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
 
