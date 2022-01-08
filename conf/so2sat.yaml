@@ -1,9 +1,8 @@
 trainer:
-  gpus: 1  # single GPU training
+  gpus: 1
   min_epochs: 10
   max_epochs: 40
   benchmark: True
-
 experiment:
   task: "so2sat"
   module:
@@ -11,8 +10,12 @@ experiment:
     classification_model: "resnet18"
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
+    weights: "random"
     in_channels: 3
+    num_classes: 17
   datamodule:
+    root_dir: "data/so2sat"
     batch_size: 128
-    num_workers: 6
+    num_workers: 4
     bands: "rgb"
+    unsupervised_mode: False

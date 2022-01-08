@@ -39,28 +39,19 @@ from torchgeo.trainers import (
 TASK_TO_MODULES_MAPPING: Dict[
     str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
 ] = {
-    "bigearthnet_all": (MultiLabelClassificationTask, BigEarthNetDataModule),
-    "bigearthnet_s1": (MultiLabelClassificationTask, BigEarthNetDataModule),
-    "bigearthnet_s2": (MultiLabelClassificationTask, BigEarthNetDataModule),
+    "bigearthnet": (MultiLabelClassificationTask, BigEarthNetDataModule),
     "byol": (BYOLTask, ChesapeakeCVPRDataModule),
-    "chesapeake_cvpr_5": (SemanticSegmentationTask, ChesapeakeCVPRDataModule),
-    "chesapeake_cvpr_7": (SemanticSegmentationTask, ChesapeakeCVPRDataModule),
-    "chesapeake_cvpr_prior": (SemanticSegmentationTask, ChesapeakeCVPRDataModule),
+    "chesapeake_cvpr": (SemanticSegmentationTask, ChesapeakeCVPRDataModule),
     "cowc_counting": (RegressionTask, COWCCountingDataModule),
     "cyclone": (RegressionTask, CycloneDataModule),
     "eurosat": (ClassificationTask, EuroSATDataModule),
     "etci2021": (SemanticSegmentationTask, ETCI2021DataModule),
     "landcoverai": (SemanticSegmentationTask, LandCoverAIDataModule),
     "naipchesapeake": (SemanticSegmentationTask, NAIPChesapeakeDataModule),
-    "oscd_all": (SemanticSegmentationTask, OSCDDataModule),
-    "oscd_rgb": (SemanticSegmentationTask, OSCDDataModule),
+    "oscd": (SemanticSegmentationTask, OSCDDataModule),
     "resisc45": (ClassificationTask, RESISC45DataModule),
-    "sen12ms_all": (SemanticSegmentationTask, SEN12MSDataModule),
-    "sen12ms_s1": (SemanticSegmentationTask, SEN12MSDataModule),
-    "sen12ms_s2_all": (SemanticSegmentationTask, SEN12MSDataModule),
-    "sen12ms_s2_reduced": (SemanticSegmentationTask, SEN12MSDataModule),
-    "so2sat_supervised": (ClassificationTask, So2SatDataModule),
-    "so2sat_unsupervised": (ClassificationTask, So2SatDataModule),
+    "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),
+    "so2sat": (ClassificationTask, So2SatDataModule),
     "ucmerced": (ClassificationTask, UCMercedDataModule),
 }
 
@@ -104,7 +95,7 @@ def set_up_omegaconf() -> DictConfig:
     # These OmegaConf structured configs enforce a schema at runtime, see:
     # https://omegaconf.readthedocs.io/en/2.0_branch/structured_config.html#merging-with-other-configs
     task_name = conf.experiment.task
-    task_config_fn = os.path.join("conf", "task_defaults", f"{task_name}.yaml")
+    task_config_fn = os.path.join("conf", f"{task_name}.yaml")
     if task_name == "test":
         task_conf = OmegaConf.create()
     elif os.path.exists(task_config_fn):

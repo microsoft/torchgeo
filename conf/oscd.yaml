@@ -3,7 +3,6 @@ trainer:
   min_epochs: 20
   max_epochs: 500
   benchmark: True
-
 experiment:
   task: "oscd"
   module:
@@ -16,11 +15,15 @@ experiment:
     verbose: false
     in_channels: 26
     num_classes: 2
-    num_filters: 128
+    num_filters: 256
     ignore_zeros: True
   datamodule:
-    train_batch_size: 2
-    num_workers: 6
+    root_dir: "data/oscd"
+    batch_size: 32
+    num_workers: 4
     val_split_pct: 0.1
     bands: "all"
+    pad_size:
+    - 1028
+    - 1028
     num_patches_per_tile: 128
