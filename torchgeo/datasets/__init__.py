@@ -38,7 +38,7 @@ from .geo import (
 )
 from .gid15 import GID15
 from .idtrees import IDTReeS
-from .inria import InriaBuildings
+from .inria import InriaAerialImageLabeling
 from .landcoverai import LandCoverAI
 from .landsat import (
     Landsat,
@@ -121,7 +121,7 @@ __all__ = (
     "FAIR1M",
     "GID15",
     "IDTReeS",
-    "InriaBuildings",
+    "InriaAerialImageLabeling",
     "LandCoverAI",
     "LEVIRCDPlus",
     "LoveDA",
