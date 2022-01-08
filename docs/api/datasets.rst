@@ -122,10 +122,10 @@ IDTReeS
 
 .. autoclass:: IDTReeS
 
-InriaBuildings
+InriaAerialImageLabeling
 ^^^^^^^^^^^^^^
 
-.. autoclass:: InriaBuildings
+.. autoclass:: InriaAerialImageLabeling
 
 LandCover.ai (Land Cover from Aerial Imagery)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

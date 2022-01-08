@@ -22,7 +22,7 @@ from torchgeo.datasets.utils import (
 )
 
 
-class InriaBuildings(VisionDataset):
+class InriaAerialImageLabeling(VisionDataset):
     r"""Inria Aerial Image Labeling Dataset.
 
     The `Inria Aerial Image Labeling
@@ -35,24 +35,24 @@ class InriaBuildings(VisionDataset):
     * Coverage of 810 km\ :sup:`2`\  (405 km\ :sup:`2`\  for training and 405
       km\ :sup:`2`\  for testing)
     * Aerial orthorectified color imagery with a spatial resolution of 0.3 m
+    * Number of images: 360 (train: 180, test: 180)
     * Train cities: Austin, Chicago, Kitsap, West Tyrol, Vienna
     * Test cities: Bellingham, Bloomington, Innsbruck, San Francisco, East Tyrol
 
     Dataset format:
 
-    * Imagery - Aerial GeoTIFFs
-    * Labels - Aerial GeoTIFFs
+    * Imagery - RGB aerial GeoTIFFs of shape 5000 x 5000
+    * Labels - RGB aerial GeoTIFFs of shape 5000 x 5000
 
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1109/IGARSS.2017.8127684
 
-
     .. versionadded:: 0.3
     """
 
-    foldername = "AerialImageDataset"
-    archive_name = "NEW2-AerialImageDataset.zip"
+    directory = "AerialImageDataset"
+    filename = "NEW2-AerialImageDataset.zip"
     md5 = "4b1acfe84ae9961edc1a6049f940380f"
 
     def __init__(
@@ -62,7 +62,7 @@ class InriaBuildings(VisionDataset):
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new InriaBuildings Dataset instance.
+        """Initialize a new InriaAerialImageLabeling Dataset instance.
 
         Args:
             root: root directory where dataset can be found
@@ -93,7 +93,7 @@ class InriaBuildings(VisionDataset):
             list of dicts containing paths for each pair of image and label
         """
         files = []
-        root_dir = os.path.join(root, self.foldername, self.split)
+        root_dir = os.path.join(root, self.directory, self.split)
         images = glob.glob(os.path.join(root_dir, "images", "*.tif"))
         images = sorted(images)
         if self.split == "train":
@@ -123,19 +123,19 @@ class InriaBuildings(VisionDataset):
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             return tensor
 
-    def _load_label(self, path: str) -> Tensor:
-        """Loads a single label.
+    def _load_target(self, path: str) -> Tensor:
+        """Loads the target mask.
 
         Args:
-            path: path to the label
+            path: path to the mask
 
         Returns:
-            the label
+            the target mask
         """
         filename = os.path.join(path)
         with rio.open(filename) as img:
             array = img.read().astype(np.int32)
-            array = array // 255
+            array = np.clip(array, 0, 1)
             mask: Tensor = torch.from_numpy(array[0])  # type: ignore[attr-defined]
             return mask
 
@@ -161,7 +161,7 @@ class InriaBuildings(VisionDataset):
         img = self._load_image(files["image_path"])
         sample["image"] = img
         if files.get("label_path"):
-            mask = self._load_label(files["label_path"])
+            mask = self._load_target(files["label_path"])
             sample["mask"] = mask
 
         if self.transforms is not None:
@@ -171,10 +171,10 @@ class InriaBuildings(VisionDataset):
 
     def _check_integrity(self) -> None:
         """Checks the integrity of the dataset structure."""
-        if os.path.isdir(os.path.join(self.root, self.foldername)):
+        if os.path.isdir(os.path.join(self.root, self.directory)):
             return
 
-        archive_path = os.path.join(self.root, self.archive_name)
+        archive_path = os.path.join(self.root, self.filename)
         md5_hash = self.md5 if self.checksum else None
         if not os.path.isfile(archive_path):
             raise RuntimeError(

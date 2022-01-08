@@ -10,7 +10,7 @@ from torchvision.datasets.utils import calculate_md5
 
 
 def write_data(
-    path: str, img: np.array, driver: str, crs: CRS, transform: Affine
+    path: str, img: np.ndarray, driver: str, crs: CRS, transform: Affine
 ) -> None:
     with rio.open(
         path,
@@ -28,7 +28,8 @@ def write_data(
 
 
 def generate_test_data(root: str, n_samples: int = 2) -> str:
-    """Creates test data archive for InriaBuildings dataset and returns its md5 hash.
+    """Creates test data archive for InriaAerialImageLabeling dataset and
+    returns its md5 hash.
 
     Args:
         root (str): Path to store test data
