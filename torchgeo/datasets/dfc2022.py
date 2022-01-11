@@ -148,6 +148,9 @@ class DFC2022(VisionDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            AssertionError: if ``split`` is invalid
         """
         assert split in self.metadata
         self.root = root
