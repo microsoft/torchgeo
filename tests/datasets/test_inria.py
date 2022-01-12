@@ -12,7 +12,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 
-from torchgeo.datasets.inria import InriaAerialImageLabeling
+from torchgeo.datasets import InriaAerialImageLabeling
 
 
 class TestInriaAerialImageLabeling:

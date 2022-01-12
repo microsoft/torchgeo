@@ -48,6 +48,8 @@ class InriaAerialImageLabeling(VisionDataset):
 
     * https://doi.org/10.1109/IGARSS.2017.8127684
 
+    Refer the dataset homepage to download the dataset.
+
     .. versionadded:: 0.3
     """
 
@@ -72,6 +74,7 @@ class InriaAerialImageLabeling(VisionDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
+            AssertionError: if ``split`` is invalid
             RuntimeError: if dataset is missing
         """
         self.root = root
