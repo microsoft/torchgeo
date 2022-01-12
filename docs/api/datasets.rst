@@ -97,6 +97,11 @@ CV4A Kenya Crop Type Competition
 
 .. autoclass:: CV4AKenyaCropType
 
+2022 IEEE GRSS Data Fusion Contest (DFC2022)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: DFC2022
+
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
