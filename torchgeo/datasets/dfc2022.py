@@ -36,11 +36,11 @@ class DFC2022(VisionDataset):
     * Masks at 0.5 m per pixel spatial resolution (~2,000x2,0000 px)
     * 16 land use/land cover categories
     * Images collected from the
-       `IGN BD ORTHO database <https://geoservices.ign.fr/documentation/donnees/ortho/bdortho/>`_
+      `IGN BD ORTHO database <https://geoservices.ign.fr/documentation/donnees/ortho/bdortho/>`_
     * DEMs collected from the
-       `IGN RGE ALTI database <https://geoservices.ign.fr/documentation/donnees/alti/rgealti/>`_
+      `IGN RGE ALTI database <https://geoservices.ign.fr/documentation/donnees/alti/rgealti/>`_
     * Labels collected from the
-       `UrbanAtlas 2012 database <https://land.copernicus.eu/local/urban-atlas/urban-atlas-2012/view/>`_
+      `UrbanAtlas 2012 database <https://land.copernicus.eu/local/urban-atlas/urban-atlas-2012/view/>`_
     * Data collected from 19 regions in France
 
     Dataset format:
