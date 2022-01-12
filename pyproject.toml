@@ -12,7 +12,7 @@ skip_magic_trailing_comma = true
 exclude = '''
 /(
     # TorchGeo
-    | data
+    | ./data
     | logo
     | logs
     | output
@@ -46,7 +46,7 @@ exclude_lines = [
 [tool.isort]
 profile = "black"
 known_first_party = ["docs", "tests", "torchgeo", "train"]
-extend_skip = [".spack-env/", "data", "logs", "output"]
+extend_skip = [".spack-env/", "./data", "logs", "output"]
 skip_gitignore = true
 color_output = true
 

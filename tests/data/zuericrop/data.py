@@ -4,11 +4,10 @@
 # Licensed under the MIT License.
 
 import os
-import h5py
 from pathlib import Path
 
+import h5py
 import numpy as np
-
 
 # Sentinel-2 is 12-bit with range 0-4095
 SENTINEL2_MAX = 4096
@@ -34,20 +33,12 @@ Path(labels_file).touch()
 
 # Create dataset file
 data = np.random.randint(
-    SENTINEL2_MAX,
-    size=(NUM_SAMPLES, 1, SIZE, SIZE, NUM_CHANNELS),
-    dtype=np.int16
+    SENTINEL2_MAX, size=(NUM_SAMPLES, 1, SIZE, SIZE, NUM_CHANNELS), dtype=np.int16
 )
 data = data.astype(np.float64)
-gt = np.random.randint(
-    NUM_CLASSES,
-    size=(NUM_SAMPLES, SIZE, SIZE, 1),
-    dtype=np.int16
-)
+gt = np.random.randint(NUM_CLASSES, size=(NUM_SAMPLES, SIZE, SIZE, 1), dtype=np.int16)
 gt_instance = np.random.randint(
-    NUM_CLASSES,
-    size=(NUM_SAMPLES, SIZE, SIZE, 1),
-    dtype=np.int32
+    NUM_CLASSES, size=(NUM_SAMPLES, SIZE, SIZE, 1), dtype=np.int32
 )
 
 with h5py.File(data_file, "w") as f:
