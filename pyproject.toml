@@ -9,31 +9,6 @@ build-backend = "setuptools.build_meta"
 target-version = ["py36", "py37", "py38", "py39"]
 color = true
 skip_magic_trailing_comma = true
-exclude = '''
-/(
-    # TorchGeo
-    | data
-    | logo
-    | logs
-    | output
-
-    # Spack
-    | \.spack-env
-
-    # Python
-    | build
-    | dist
-    | \.cache
-    | \.mypy_cache
-    | \.pytest_cache
-    |  __pycache__
-    | .*\.egg-info
-
-    # Git
-    | \.git
-    | \.github
-)/
-'''
 
 [tool.coverage.report]
 # Ignore warnings for overloads
@@ -46,7 +21,6 @@ exclude_lines = [
 [tool.isort]
 profile = "black"
 known_first_party = ["docs", "tests", "torchgeo", "train"]
-extend_skip = [".spack-env/", "data", "logs", "output"]
 skip_gitignore = true
 color_output = true
 

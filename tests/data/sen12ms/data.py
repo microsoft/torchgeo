@@ -9,8 +9,8 @@ import shutil
 
 import numpy as np
 import rasterio
-from rasterio.transform import Affine
 from rasterio.crs import CRS
+from rasterio.transform import Affine
 
 SIZE = 64  # image width/height
 
