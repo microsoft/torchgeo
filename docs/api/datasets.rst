@@ -127,6 +127,11 @@ IDTReeS
 
 .. autoclass:: IDTReeS
 
+Inria Aerial Image Labeling
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: InriaAerialImageLabeling
+
 LandCover.ai (Land Cover from Aerial Imagery)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
