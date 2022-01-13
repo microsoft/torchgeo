@@ -28,7 +28,8 @@ class InriaAerialImageLabeling(VisionDataset):
     The `Inria Aerial Image Labeling
     <https://project.inria.fr/aerialimagelabeling/>`_ dataset is a building
     detection dataset over dissimilar settlements ranging ranging from densely
-    populated areas to alpine towns.
+    populated areas to alpine towns. Refer the dataset homepage to download the
+    dataset.
 
     Dataset features:
 
@@ -47,8 +48,6 @@ class InriaAerialImageLabeling(VisionDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1109/IGARSS.2017.8127684
-
-    Refer the dataset homepage to download the dataset.
 
     .. versionadded:: 0.3
     """
