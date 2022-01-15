@@ -9,7 +9,7 @@ experiment:
     learning_rate: 1e-3
     learning_rate_schedule_patience: 2
     in_channels: 4
-    num_classes: 13
+    num_classes: 14
     num_filters: 1
     ignore_zeros: False
   datamodule:
