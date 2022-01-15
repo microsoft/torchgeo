@@ -11,7 +11,6 @@ import lzma
 import os
 import sys
 import tarfile
-import zipfile
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import (
@@ -77,6 +76,27 @@ class _rarfile:
             pass
 
 
+class _zipfile:
+    class ZipFile:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            self.args = args
+            self.kwargs = kwargs
+
+        def __enter__(self) -> Any:
+            try:
+                # Supports normal zip files, proprietary deflate64 compression algorithm
+                import zipfile_deflate64 as zipfile
+            except ImportError:
+                # Only supports normal zip files
+                # https://github.com/python/mypy/issues/1153
+                import zipfile  # type: ignore[no-redef]
+
+            return zipfile.ZipFile(*self.args, **self.kwargs)
+
+        def __exit__(self, exc_type: None, exc_value: None, traceback: None) -> None:
+            pass
+
+
 def extract_archive(src: str, dst: Optional[str] = None) -> None:
     """Extract an archive.
 
@@ -96,7 +116,7 @@ def extract_archive(src: str, dst: Optional[str] = None) -> None:
             (".tar", ".tar.gz", ".tar.bz2", ".tar.xz", ".tgz", ".tbz2", ".tbz", ".txz"),
             tarfile.open,
         ),
-        (".zip", zipfile.ZipFile),
+        (".zip", _zipfile.ZipFile),
     ]
 
     for suffix, extractor in suffix_and_extractor:
