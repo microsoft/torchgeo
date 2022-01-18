@@ -12,7 +12,7 @@ from pytorch_lightning.core.lightning import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
-from torchmetrics import Accuracy, IoU, MetricCollection
+from torchmetrics import Accuracy, JaccardIndex, MetricCollection
 
 from ..datasets.utils import unbind_samples
 from ..models import FCN
@@ -96,7 +96,7 @@ class SemanticSegmentationTask(LightningModule):
                     num_classes=self.hparams["num_classes"],
                     ignore_index=self.ignore_zeros,
                 ),
-                IoU(
+                JaccardIndex(
                     num_classes=self.hparams["num_classes"],
                     ignore_index=self.ignore_zeros,
                 ),
@@ -120,7 +120,7 @@ class SemanticSegmentationTask(LightningModule):
     def training_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> Tensor:
-        """Training step - reports average accuracy and average IoU.
+        """Training step - reports average accuracy and average JaccardIndex.
 
         Args:
             batch: Current batch
@@ -155,7 +155,7 @@ class SemanticSegmentationTask(LightningModule):
     def validation_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
-        """Validation step - reports average accuracy and average IoU.
+        """Validation step - reports average accuracy and average JaccardIndex.
 
         Logs the first 10 validation samples to tensorboard as images with 3 subplots
         showing the image, mask, and predictions.
