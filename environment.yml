@@ -45,5 +45,5 @@ dependencies:
     - setuptools>=42
     - sphinx>=4
     - timm>=0.2.1
-    - torchmetrics
+    - torchmetrics>=0.7
     - zipfile-deflate64>=0.2
