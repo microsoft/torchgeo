@@ -326,7 +326,7 @@ class ChesapeakeCVPR(GeoDataset):
     subdatasets = ["base", "prior_extension"]
     urls = {
         "base": "https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip",  # noqa: E501
-        "prior_extension": "https://zenodo.org/record/5652512/files/cvpr_chesapeake_landcover_prior_extension.zip?download=1",  # noqa: E501
+        "prior_extension": "https://zenodo.org/record/5866525/files/cvpr_chesapeake_landcover_prior_extension.zip?download=1",  # noqa: E501
     }
     filenames = {
         "base": "cvpr_chesapeake_landcover.zip",
@@ -334,7 +334,7 @@ class ChesapeakeCVPR(GeoDataset):
     }
     md5s = {
         "base": "1225ccbb9590e9396875f221e5031514",
-        "prior_extension": "8f43ec30e155274dd652e157c48d2598",
+        "prior_extension": "402f41d07823c8faf7ea6960d7c4e17a",
     }
 
     crs = CRS.from_epsg(3857)
