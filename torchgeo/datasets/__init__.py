@@ -56,6 +56,7 @@ from .landsat import (
 )
 from .levircd import LEVIRCDPlus
 from .loveda import LoveDA
+from .mosaiks import MOSAIKS
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nwpu import VHR10
@@ -127,6 +128,7 @@ __all__ = (
     "LandCoverAI",
     "LEVIRCDPlus",
     "LoveDA",
+    "MOSAIKS",
     "NASAMarineDebris",
     "OSCD",
     "PatternNet",
