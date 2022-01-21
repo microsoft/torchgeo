@@ -4,7 +4,7 @@
 from .utils import download_url
 
 
-class MOSAIKS:
+class USAVars:
     url_prefix = "https://files.codeocean.com/files/verified/fa908bbc-11f9-4421-8bd3-72a4bf00427f_v2.0/data/int/applications/"
 
     label_urls = {
