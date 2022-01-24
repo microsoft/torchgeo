@@ -8,7 +8,6 @@ import shapely
 
 from .utils import download_url
 
-
 class USAVars:
     url_prefix = "https://files.codeocean.com/files/verified/fa908bbc-11f9-4421-8bd3-72a4bf00427f_v2.0/data/int/applications/"
 
@@ -56,7 +55,6 @@ class USAVars:
             download_url(
                 self.NAIP_INDEX_BLOB_ROOT + fn,
                 self.root,
-                filename=fn,
             )
 
     def lookup_point(self, lat, lon):
@@ -107,6 +105,3 @@ class USAVars:
             raise IndexError("No tile intersections")
         else:
             return intersected_files
-
-
-
