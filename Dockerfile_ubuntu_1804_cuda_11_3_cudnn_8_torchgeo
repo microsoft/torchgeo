@@ -62,10 +62,6 @@ RUN tar -xf Python-3.7.4.tgz
 
 RUN cd Python-3.7.4 && ./configure --enable-optimizations && make -j 28 && make altinstall
 
-RUN mkdir KAUSTAV_TEST
-
-RUN touch KAUSTAV_TEST/a.txt
-
 CMD python3.7 --version
 
 RUN apt-get update && apt-get install -y \
