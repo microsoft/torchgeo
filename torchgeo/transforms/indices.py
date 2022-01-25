@@ -149,19 +149,20 @@ class AppendNDVI(AppendNormalizedDifferenceIndex):
         super().__init__(index_a=index_red, index_b=index_nir)
 
 
-class AppendNDWI(AppendNormalizedDifferenceIndex):
+class AppendMNDWI(AppendNormalizedDifferenceIndex):
+    
     """Normalized Difference Water Index (NDWI).
 
     If you use this index in your research, please cite the following paper:
 
-    * https://doi.org/10.1080/01431169608948714
+    * https://doi.org/10.1080/01431160600589179
     """
 
-    def __init__(self, index_green: int, index_nir: int) -> None:
+    def __init__(self, index_swi: int, index_green: int) -> None:
         """Initialize a new transform instance.
 
         Args:
             index_green: index of the Green band in the image
             index_nir: index of the Near Infrared (NIR) band in the image
         """
-        super().__init__(index_a=index_green, index_b=index_nir)
+        super().__init__(index_a=index_swi, index_b=index_green)
