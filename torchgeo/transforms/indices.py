@@ -157,11 +157,11 @@ class AppendSWI(AppendNormalizedDifferenceIndex):
     * https://ui.adsabs.harvard.edu/abs/2020ISPAn.5.3...33J/abstract#:~:text=Sentinel%2D2%20is%20a%20new,higher%20spatial%20and%20spectral%20resolution.&text=The%20results%20showed%20that%20overall,water%20for%20Sentinel%2D2%20data.
     """
     
-    def __init__(self, index_swir: int, index_red: int) -> None:
+    def __init__(self, index_red: int, index_swir: int) -> None:
         """Initialize a new transform instance.
 
         Args:
             index_green: index of the Green band in the image
             index_nir: index of the Near Infrared (NIR) band in the image
         """
-        super().__init__(index_a=index_swir, index_b=index_red)
+        super().__init__(index_a=index_red, index_b=index_swir)
