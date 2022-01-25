@@ -168,7 +168,7 @@ class AppendSWI(AppendNormalizedDifferenceIndex):
     """Standardized Water-Level Index (SWI) .
 
     If you use this index in your research, please cite the following paper:
-    * https://www.droughtmanagement.info/literature/ISPRS_Various_Drought_Indices_Monitoring_Drought_Condition_Aravalli_Terrain_India_2004.pdf.""""
+    * https://www.mdpi.com/2073-4441/13/12/1647/html""""
     
     def __init__(self, index_red: int, index_swir: int) -> None:
         """Initialize a new transform instance.
