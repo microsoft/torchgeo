@@ -174,7 +174,7 @@ class AppendSWI(AppendNormalizedDifferenceIndex):
         """Initialize a new transform instance.
 
         Args:
-            index_green: index of the vre1 band i.e. B5 in the image
-            index_nir: index of the swir2 B11 band in the image
+            index_red: index of the vre1 band i.e. B5 in the image
+            index_swir: index of the swir2 B11 band in the image
         """
         super().__init__(index_a=index_red, index_b=index_swir)
