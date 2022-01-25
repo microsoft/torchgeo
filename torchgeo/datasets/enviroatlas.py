@@ -15,6 +15,7 @@ import rasterio.mask
 import shapely.geometry
 import shapely.ops
 import torch
+from matplotlib.colors import ListedColormap
 from rasterio.crs import CRS
 
 from .geo import GeoDataset
@@ -38,29 +39,28 @@ class EnviroAtlas(GeoDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * TODO
+
+    .. versionadded:: 0.3
     """
 
     url = "https://zenodo.org/record/5778193/files/enviroatlas_lotp.zip?download=1"
-    filenames = "enviroatlas_lotp.zip"
-    md5s = "6142f8d1ebfc7f8ad888337f0683dc7a"
+    filename = "enviroatlas_lotp.zip"
+    md5 = "6142f8d1ebfc7f8ad888337f0683dc7a"
 
     crs = CRS.from_epsg(3857)
     res = 1
 
-    valid_prior_layers = [
-        "prior_from_cooccurrences_101_31",
-        "prior_from_cooccurrences_101_31_no_osm_no_buildings",
-    ]
+    valid_prior_layers = ["prior", "prior_no_osm_no_buildings"]
 
     valid_layers = [
-        "a_naip",
-        "b_nlcd",
-        "c_roads",
-        "d_water",
-        "d1_waterways",
-        "d2_waterbodies",
-        "e_buildings",
-        "h_highres_labels",
+        "naip",
+        "nlcd",
+        "roads",
+        "water",
+        "waterways",
+        "waterbodies",
+        "buildings",
+        "lc",
     ] + valid_prior_layers
 
     cities = [
@@ -218,7 +218,7 @@ class EnviroAtlas(GeoDataset):
         dtype=np.uint8,
     )
 
-    classes = [
+    highres_classes = [
         "Unclassified",
         "Water",
         "Impervious Surface",
@@ -231,12 +231,27 @@ class EnviroAtlas(GeoDataset):
         "Woody Wetlands",
         "Emergent Wetlands",
     ]
+    highres_cmap = ListedColormap(
+        [
+            [1.00000000, 1.00000000, 1.00000000],
+            [0.00000000, 0.77254902, 1.00000000],
+            [0.61176471, 0.61176471, 0.61176471],
+            [1.00000000, 0.66666667, 0.00000000],
+            [0.14901961, 0.45098039, 0.00000000],
+            [0.80000000, 0.72156863, 0.47450980],
+            [0.63921569, 1.00000000, 0.45098039],
+            [0.86274510, 0.85098039, 0.22352941],
+            [0.67058824, 0.42352941, 0.15686275],
+            [0.72156863, 0.85098039, 0.92156863],
+            [0.42352941, 0.62352941, 0.72156863],
+        ]
+    )
 
     def __init__(
         self,
         root: str = "data",
         splits: Sequence[str] = ["pittsburgh_pa-2010_1m-train"],
-        layers: List[str] = ["a_naip", "prior_whole_city_cooccurrences_101_31"],
+        layers: List[str] = ["naip", "prior"],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         prior_as_input: bool = False,
         cache: bool = True,
@@ -291,23 +306,23 @@ class EnviroAtlas(GeoDataset):
                         i,
                         coords,
                         {
-                            "a_naip": row["properties"]["a_naip"],
-                            "b_nlcd": row["properties"]["b_nlcd"],
-                            "c_roads": row["properties"]["c_roads"],
-                            "d_water": row["properties"]["d_water"],
-                            "d1_waterways": row["properties"]["d1_waterways"],
-                            "d2_waterbodies": row["properties"]["d2_waterbodies"],
-                            "e_buildings": row["properties"]["e_buildings"],
-                            "h_highres_labels": row["properties"]["h_highres_labels"],
-                            "prior_from_cooccurrences_101_31_no_osm_no_buildings": row[
-                                "properties"
-                            ]["a_naip"].replace(
+                            "naip": row["properties"]["naip"],
+                            "nlcd": row["properties"]["nlcd"],
+                            "roads": row["properties"]["roads"],
+                            "water": row["properties"]["water"],
+                            "waterways": row["properties"]["waterways"],
+                            "waterbodies": row["properties"]["waterbodies"],
+                            "buildings": row["properties"]["buildings"],
+                            "lc": row["properties"]["lc"],
+                            "prior_no_osm_no_buildings": row["properties"][
+                                "naip"
+                            ].replace(
                                 "a_naip",
                                 "prior_from_cooccurrences_101_31_no_osm_no_buildings",
                             ),
-                            "prior_from_cooccurrences_101_31": row["properties"][
-                                "a_naip"
-                            ].replace("a_naip", "prior_from_cooccurrences_101_31"),
+                            "prior": row["properties"]["naip"].replace(
+                                "a_naip", "prior_from_cooccurrences_101_31"
+                            ),
                         },
                     )
 
@@ -359,23 +374,20 @@ class EnviroAtlas(GeoDataset):
                     )
 
                 if layer in [
-                    "a_naip",
-                    "e_buildings",
-                    "c_roads",
-                    "d1_waterways",
-                    "d2_waterbodies",
-                    "d_water",
+                    "naip",
+                    "buildings",
+                    "roads",
+                    "waterways",
+                    "waterbodies",
+                    "water",
                 ]:
                     sample["image"].append(data)
-                elif layer in [
-                    "prior_from_cooccurrences_101_31",
-                    "prior_from_cooccurrences_101_31_no_osm_no_buildings",
-                ]:
+                elif layer in ["prior", "prior_no_osm_no_buildings"]:
                     if self.prior_as_input:
                         sample["image"].append(data)
                     else:
                         sample["mask"].append(data)
-                elif layer in ["h_highres_labels"]:
+                elif layer in ["lc"]:
                     data = self.raw_enviroatlas_to_idx_map[data]
                     sample["mask"].append(data)
         else:
