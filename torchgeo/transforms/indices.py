@@ -163,13 +163,12 @@ class AppendNDWI(AppendNormalizedDifferenceIndex):
         """
         super().__init__(index_a=index_green, index_b=index_nir)
 
+        
 class AppendSWI(AppendNormalizedDifferenceIndex):
     """Normalized Difference Water Index (NDWI).
 
     If you use this index in your research, please cite the following paper:
-
-    * https://ui.adsabs.harvard.edu/abs/2020ISPAn.5.3...33J/abstract#:~:text=Sentinel%2D2%20is%20a%20new,higher%20spatial%20and%20spectral%20resolution.&text=The%20results%20showed%20that%20overall,water%20for%20Sentinel%2D2%20data.
-    """
+    * https://www.droughtmanagement.info/literature/ISPRS_Various_Drought_Indices_Monitoring_Drought_Condition_Aravalli_Terrain_India_2004.pdf.""""
     
     def __init__(self, index_red: int, index_swir: int) -> None:
         """Initialize a new transform instance.
