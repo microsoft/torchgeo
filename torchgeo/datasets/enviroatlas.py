@@ -8,6 +8,7 @@ import sys
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
 import fiona
+import matplotlib.pyplot as plt
 import numpy as np
 import pyproj
 import rasterio
@@ -17,6 +18,7 @@ import shapely.ops
 import torch
 from matplotlib.colors import ListedColormap
 from rasterio.crs import CRS
+from torch import Tensor
 
 from .geo import GeoDataset
 from .utils import BoundingBox, download_url, extract_archive
@@ -443,3 +445,88 @@ class EnviroAtlas(GeoDataset):
     def _extract(self) -> None:
         """Extract the dataset."""
         extract_archive(os.path.join(self.root, self.filename))
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Note: only plots the "naip" and "lc" layers.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        Raises:
+            ValueError: if the NAIP layer isn't included in ``self.layers``
+        """
+        if "naip" not in self.layers or "lc" not in self.layers:
+            raise ValueError("The 'naip' and 'lc' layers must be included for plotting")
+
+        image_layers = []
+        mask_layers = []
+        for layer in self.layers:
+            if layer in [
+                "naip",
+                "buildings",
+                "roads",
+                "waterways",
+                "waterbodies",
+                "water",
+            ]:
+                image_layers.append(layer)
+            elif layer in ["prior", "prior_no_osm_no_buildings"]:
+                if self.prior_as_input:
+                    image_layers.append(layer)
+                else:
+                    mask_layers.append(layer)
+            elif layer in ["lc"]:
+                mask_layers.append(layer)
+
+        naip_index = image_layers.index("naip")
+        lc_index = mask_layers.index("lc")
+
+        image = np.rollaxis(
+            sample["image"][naip_index : naip_index + 3, :, :].numpy(), 0, 3
+        )
+        mask = sample["mask"][lc_index].numpy()
+
+        num_panels = 2
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            predictions = sample["prediction"].numpy()
+            num_panels += 1
+
+        fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
+        axs[0].imshow(image)
+        axs[0].axis("off")
+        axs[1].imshow(
+            mask, vmin=0, vmax=10, cmap=self.highres_cmap, interpolation="none"
+        )
+        axs[1].axis("off")
+        if show_titles:
+            axs[0].set_title("Image")
+            axs[1].set_title("Mask")
+
+        if showing_predictions:
+            axs[2].imshow(
+                predictions,
+                vmin=0,
+                vmax=10,
+                cmap=self.highres_cmap,
+                interpolation="none",
+            )
+            axs[2].axis("off")
+            if show_titles:
+                axs[2].set_title("Predictions")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig

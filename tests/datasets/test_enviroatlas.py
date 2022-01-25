@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -32,6 +33,7 @@ class TestEnviroAtlas:
         params=[
             (("naip", "prior", "lc"), False),
             (("naip", "prior", "buildings", "lc"), True),
+            (("naip", "prior"), False),
         ]
     )
     def dataset(
@@ -114,3 +116,19 @@ class TestEnviroAtlas:
             IndexError, match="query: .* spans multiple tiles which is not valid"
         ):
             ds[dataset.bounds]
+
+    def test_plot(self, dataset: EnviroAtlas) -> None:
+        sampler = RandomGeoSampler(dataset, size=16, length=1)
+        bb = next(iter(sampler))
+        x = dataset[bb]
+        if "naip" not in dataset.layers or "lc" not in dataset.layers:
+            with pytest.raises(ValueError, match="The 'naip' and"):
+                dataset.plot(x)
+        else:
+            dataset.plot(x, suptitle="Test")
+            plt.close()
+            dataset.plot(x, show_titles=False)
+            plt.close()
+            x["prediction"] = x["mask"][0].clone()
+            dataset.plot(x)
+            plt.close()
