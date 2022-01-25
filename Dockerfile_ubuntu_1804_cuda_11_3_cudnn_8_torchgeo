@@ -1,0 +1,164 @@
+FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu18.04
+
+LABEL maintainer="Kaustav Mukherjee <oracler4284@gmail.com>"
+
+USER root
+
+# Install some basic utilities
+RUN apt-get update && apt-get install -y \
+    curl \
+    ca-certificates \
+    sudo \
+    git \
+    bzip2 \
+    libx11-6 \
+ && rm -rf /var/lib/apt/lists/*
+
+# Create a working directory
+
+#RUN mkdir /data
+
+WORKDIR /data
+
+
+
+
+
+
+CMD echo python3 --version
+
+# All users can use /home/user as their home directory
+ENV HOME=/data
+#RUN chmod 777 /data
+
+
+
+WORKDIR /data
+
+# Install conda as jovyan and check the md5 sum provided on the download site
+ENV MINICONDA_VERSION=4.7.10 \
+    MINICONDA_MD5=1c945f2b3335c7b2b15130b1b2dc5cf4 \
+    CONDA_VERSION=4.7.12
+
+RUN apt-get update && apt-get install -y \
+    python3-pip
+
+
+# Install Torchnet, a high-level framework for PyTorch
+
+RUN pip3 install -U pip
+
+RUN pip3 install numpy
+
+RUN pip3 install jupyter
+
+RUN pip3 install ipykernel
+
+RUN apt-get update && apt-get install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libsqlite3-dev libreadline-dev libffi-dev wget libbz2-dev
+
+RUN wget https://www.python.org/ftp/python/3.7.4/Python-3.7.4.tgz
+
+RUN tar -xf Python-3.7.4.tgz
+
+RUN cd Python-3.7.4 && ./configure --enable-optimizations && make -j 28 && make altinstall
+
+RUN mkdir KAUSTAV_TEST
+
+RUN touch KAUSTAV_TEST/a.txt
+
+CMD python3.7 --version
+
+RUN apt-get update && apt-get install -y \
+    nano libsndfile1
+
+RUN export DEBIAN_FRONTEND=noninteractive
+
+RUN ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
+RUN apt-get install -y tzdata
+RUN dpkg-reconfigure --frontend noninteractive tzdata
+
+RUN  apt-get -y install \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release\
+    systemd
+
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+RUN echo \
+  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+RUN apt-get update
+
+
+
+RUN apt-get install -y libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev
+
+
+#RUN wget https://www.python.org/ftp/python/3.6.9/Python-3.6.9.tar.xz
+
+#RUN tar xvf Python-3.6.9.tar.xz
+
+#RUN cd Python-3.6.9 && ./configure --enable-optimizations && make -j 16 && make altinstall
+
+RUN apt-get install -y net-tools
+
+RUN pip3 install -U pip
+
+#COPY jupyter_config.tar.gz /data_stage 
+
+RUN apt install -y ffmpeg
+
+RUN apt install -y bzip2
+
+RUN apt install -y unzip
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        g++ \
+        make \
+        automake \
+        autoconf \
+        bzip2 \
+        unzip \
+        wget \
+        sox \
+        libtool \
+        git \
+        subversion \
+        python2.7 \
+        python3 \
+        zlib1g-dev \
+        gfortran \
+        ca-certificates \
+        patch \
+        ffmpeg \
+	vim && \
+    rm -rf /var/lib/apt/lists/*
+
+
+
+#RUN apt-get install  -y build-essential libssl-dev libffi-dev libsasl2-dev libldap2-dev
+
+#RUN apt-get install python3.6-venv
+
+RUN pip3 install superset
+
+RUN pip3 install flask
+
+RUN pip3 install flask_appbuilder
+
+RUN pip3 install flask_compress
+
+#RUN pip3 install celery 
+
+RUN pip3 install torchgeo
+
+RUN pip3 install torchgeo[datasets]
+
+RUN pip3 install torchgeo[style,tests]
+
+#CMD exec /bin/bash -c "trap : TERM INT; sleep infinity & wait"
