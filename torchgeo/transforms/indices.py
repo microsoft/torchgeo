@@ -155,7 +155,7 @@ class AppendSWI(AppendNormalizedDifferenceIndex):
 
     If you use this index in your research, please cite the following paper:
 
-    * https://doi.org/10.1080/01431160600589179
+    * https://ui.adsabs.harvard.edu/abs/2020ISPAn.5.3...33J/abstract#:~:text=Sentinel%2D2%20is%20a%20new,higher%20spatial%20and%20spectral%20resolution.&text=The%20results%20showed%20that%20overall,water%20for%20Sentinel%2D2%20data.
     """
 
     def __init__(self, index_swir: int, index_red: int) -> None:
