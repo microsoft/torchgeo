@@ -148,6 +148,7 @@ class AppendNDVI(AppendNormalizedDifferenceIndex):
         """
         super().__init__(index_a=index_red, index_b=index_nir)
         
+        
 class AppendNDWI(AppendNormalizedDifferenceIndex):
     """Normalized Difference Water Index (NDWI).
     If you use this index in your research, please cite the following paper:
