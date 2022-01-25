@@ -165,7 +165,7 @@ class AppendNDWI(AppendNormalizedDifferenceIndex):
 
         
 class AppendSWI(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Water Index (NDWI).
+    """Standardized Water-Level Index (SWI) .
 
     If you use this index in your research, please cite the following paper:
     * https://www.droughtmanagement.info/literature/ISPRS_Various_Drought_Indices_Monitoring_Drought_Condition_Aravalli_Terrain_India_2004.pdf.""""
@@ -174,7 +174,7 @@ class AppendSWI(AppendNormalizedDifferenceIndex):
         """Initialize a new transform instance.
 
         Args:
-            index_green: index of the Green band in the image
-            index_nir: index of the Near Infrared (NIR) band in the image
+            index_green: index of the vre1 band i.e. B5 in the image
+            index_nir: index of the swir2 B11 band in the image
         """
         super().__init__(index_a=index_red, index_b=index_swir)
