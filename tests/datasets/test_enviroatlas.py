@@ -28,7 +28,12 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestEnviroAtlas:
-    @pytest.fixture(params=[(("naip", "lc"), False), (("naip", "prior", "lc"), True)])
+    @pytest.fixture(
+        params=[
+            (("naip", "prior", "lc"), False),
+            (("naip", "prior", "buildings", "lc"), True),
+        ]
+    )
     def dataset(
         self,
         request: SubRequest,
