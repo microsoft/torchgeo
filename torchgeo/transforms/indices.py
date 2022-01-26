@@ -184,7 +184,7 @@ class AppendGNDVI(AppendNormalizedDifferenceIndex):
     """Green Normalized Difference Vegetation Index (GNDVI).
 
     If you use this index in your research, please cite the following paper:
-    * https://www.researchgate.net/publication/43268993_Use_of_Remote-Sensing_Imagery_to_Estimate_Corn_Grain_Yield"""
+    * https://doi.org/10.2134/agronj2001.933583x"""
     
     def __init__(self, index_nir: int, index_green: int) -> None:
         """Initialize a new transform instance.
