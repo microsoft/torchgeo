@@ -168,7 +168,7 @@ class AppendNDWI(AppendNormalizedDifferenceIndex):
 
         
 class AppendSWI(AppendNormalizedDifferenceIndex):
-    """Standardized Water-Level Index (SWI) .
+    """Standardized Water-Level Index (SWI).
 
     If you use this index in your research, please cite the following paper:
     
