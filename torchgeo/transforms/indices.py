@@ -178,3 +178,17 @@ class AppendSWI(AppendNormalizedDifferenceIndex):
             index_swir: index of the swir2 B11 band in the image
         """
         super().__init__(index_a=index_red, index_b=index_swir)
+        
+        
+class AppendGNDVI(AppendNormalizedDifferenceIndex):
+    """Green Normalized Difference Vegetation Index (GNDVI).
+    If you use this index in your research, please cite the following paper:
+    * https://doi.org/10.2134/agronj2001.933583x"""
+    
+    def __init__(self, index_nir: int, index_green: int) -> None:
+        """Initialize a new transform instance.
+        Args:
+            index_nir: index of the nir band i.e. B8 in the image
+            index_green: index of the green B3 band in the image
+        """
+        super().__init__(index_a=index_nir, index_b=index_green)
