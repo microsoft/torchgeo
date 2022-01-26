@@ -178,3 +178,103 @@ class AppendSWI(AppendNormalizedDifferenceIndex):
             index_swir: index of the swir2 B11 band in the image
         """
         super().__init__(index_a=index_red, index_b=index_swir)
+        
+        
+class AppendTriBandNormalizedDifferenceIndex(Module):
+    """Append normalized difference index as channel to image tensor using 3 bands.
+    .. versionadded:: 0.2
+    """
+
+    def __init__(self, index_a: int, index_b: int, index_c: int) -> None:
+        """Initialize a new transform instance.
+        Args:
+            index_a: reference band channel index
+            index_b: difference band channel index
+        """
+        super().__init__()
+        self.dim = -3
+        self.index_a = index_a
+        self.index_b = index_b
+        self.index_c = index_c
+
+    def _compute_index(self, band_a: Tensor, band_b: Tensor, band_c: Tensor) -> Tensor:
+        """Compute normalized difference index.
+        Args:
+            band_a: reference band tensor
+            band_b: difference band tensor
+        Returns:
+            the index
+        """
+        return (band_a - (band_b + band_c)) / ((band_a + band_b + band_c) + _EPSILON)
+
+    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+        """Compute and append normalized difference index to image.
+        Args:
+            sample: a sample or batch dict
+        Returns:
+            the transformed sample
+        """
+        if "image" in sample:
+            index = self._compute_index(
+                band_a=sample["image"][..., self.index_a, :, :],
+                band_b=sample["image"][..., self.index_b, :, :],
+                band_c=sample["image"][..., self.index_c, :, :],
+            )
+            index = index.unsqueeze(self.dim)
+
+            sample["image"] = torch.cat(  # type: ignore[attr-defined]
+                [sample["image"], index], dim=self.dim
+            )
+
+        return sample
+
+
+class AppendGreenRedNDVI(AppendTriBandNormalizedDifferenceIndex):
+    """GreenRedNDVI .
+    If you use this index in your research, please cite the following paper:
+    * https://doi.org/10.1016/S1672-6308(07)60027-4
+    .. versionadded:: 0.2.0
+    """
+
+    def __init__(self, index_nir: int, index_green: int, index_red: int) -> None:
+        """Initialize a new transform instance.
+        Args:
+            index_nir: index of the Near Infrared (NIR) band in the image
+            index_green: index of the green band in the image
+            index_red: index of the red band in the image
+        """
+        super().__init__(index_a=index_nir, index_b=index_green, index_b=index_red)
+        
+
+class AppendGreenBlueNDVI(AppendTriBandNormalizedDifferenceIndex):
+    """GreenBlueNDVI .
+    If you use this index in your research, please cite the following paper:
+    * https://doi.org/10.1016/S1672-6308(07)60027-4
+    .. versionadded:: 0.2.0
+    """
+
+    def __init__(self, index_nir: int, index_green: int, index_blue: int) -> None:
+        """Initialize a new transform instance.
+        Args:
+            index_nir: index of the Near Infrared (NIR) band in the image
+            index_green: index of the green band in the image
+            index_blue: index of the blue band in the image
+        """
+        super().__init__(index_a=index_nir, index_b=index_green, index_b=index_blue)
+        
+        
+class AppendRedBlueNDVI(AppendTriBandNormalizedDifferenceIndex):
+    """RedBlueNDVI .
+    If you use this index in your research, please cite the following paper:
+    * https://doi.org/10.1016/S1672-6308(07)60027-4
+    .. versionadded:: 0.2.0
+    """
+
+    def __init__(self, index_nir: int, index_red: int, index_blue: int) -> None:
+        """Initialize a new transform instance.
+        Args:
+            index_nir: index of the Near Infrared (NIR) band in the image
+            index_red: index of the green band in the image
+            index_blue: index of the blue band in the image
+        """
+        super().__init__(index_a=index_nir, index_b=index_red, index_b=index_blue)
