@@ -151,12 +151,15 @@ class AppendNDVI(AppendNormalizedDifferenceIndex):
         
 class AppendNDWI(AppendNormalizedDifferenceIndex):
     """Normalized Difference Water Index (NDWI).
+    
     If you use this index in your research, please cite the following paper:
+    
     * https://doi.org/10.1080/01431169608948714
     """
 
     def __init__(self, index_green: int, index_nir: int) -> None:
         """Initialize a new transform instance.
+        
         Args:
             index_green: index of the Green band in the image
             index_nir: index of the Near Infrared (NIR) band in the image
@@ -168,7 +171,9 @@ class AppendSWI(AppendNormalizedDifferenceIndex):
     """Standardized Water-Level Index (SWI) .
 
     If you use this index in your research, please cite the following paper:
-    * https://doi.org/10.3390/w13121647"""
+    
+    * https://doi.org/10.3390/w13121647
+    """
     
     def __init__(self, index_red: int, index_swir: int) -> None:
         """Initialize a new transform instance.
@@ -184,7 +189,9 @@ class AppendGNDVI(AppendNormalizedDifferenceIndex):
     """Green Normalized Difference Vegetation Index (GNDVI).
     
     If you use this index in your research, please cite the following paper:
-    * https://doi.org/10.2134/agronj2001.933583x"""
+    
+    * https://doi.org/10.2134/agronj2001.933583x
+    """
     
     def __init__(self, index_nir: int, index_green: int) -> None:
         """Initialize a new transform instance.
