@@ -5,7 +5,7 @@
 
 import os
 import sys
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Any, Callable, Dict, Optional, Sequence
 
 import fiona
 import matplotlib.pyplot as plt
@@ -40,7 +40,7 @@ class EnviroAtlas(GeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * TODO
+    * https://openreview.net/forum?id=AEa_UepnMDX
 
     .. versionadded:: 0.3
     """
@@ -253,7 +253,7 @@ class EnviroAtlas(GeoDataset):
         self,
         root: str = "data",
         splits: Sequence[str] = ["pittsburgh_pa-2010_1m-train"],
-        layers: List[str] = ["naip", "prior"],
+        layers: Sequence[str] = ["naip", "prior"],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         prior_as_input: bool = False,
         cache: bool = True,
@@ -279,6 +279,7 @@ class EnviroAtlas(GeoDataset):
         Raises:
             FileNotFoundError: if no files are found in ``root``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            AssertionError: if ``splits`` or ``layers`` are not valid
         """
         for split in splits:
             assert split in self.splits
@@ -297,7 +298,9 @@ class EnviroAtlas(GeoDataset):
         # Add all tiles into the index in epsg:3857 based on the included geojson
         mint: float = 0
         maxt: float = sys.maxsize
-        with fiona.open(os.path.join(root, "spatial_index.geojson"), "r") as f:
+        with fiona.open(
+            os.path.join(root, "enviroatlas_lotp", "spatial_index.geojson"), "r"
+        ) as f:
             for i, row in enumerate(f):
                 if row["properties"]["split"] in splits:
                     box = shapely.geometry.shape(row["geometry"])
@@ -360,7 +363,9 @@ class EnviroAtlas(GeoDataset):
 
                 fn = filenames[layer]
 
-                with rasterio.open(os.path.join(self.root, fn)) as f:
+                with rasterio.open(
+                    os.path.join(self.root, "enviroatlas_lotp", fn)
+                ) as f:
                     dst_crs = f.crs.to_string().lower()
 
                     if query_geom_transformed is None:
@@ -416,13 +421,13 @@ class EnviroAtlas(GeoDataset):
         """
         # Check if the extracted files already exist
         def exists(filename: str) -> bool:
-            return os.path.exists(os.path.join(self.root, filename))
+            return os.path.exists(os.path.join(self.root, "enviroatlas_lotp", filename))
 
         if all(map(exists, self.files)):
             return
 
         # Check if the zip files have already been downloaded
-        if exists(self.filename):
+        if os.path.exists(os.path.join(self.root, self.filename)):
             self._extract()
             return
 

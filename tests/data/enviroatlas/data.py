@@ -158,7 +158,7 @@ layer_data_profiles: Dict[str, Dict[Any, Any]] = {
         "data_type": "categorical",
         "vals": [10, 20, 30, 40, 70],
     },
-    "prior_from_cooccurrences_101_31": {  # noqa: E501
+    "prior_from_cooccurrences_101_31": {
         "profile": {
             "driver": "GTiff",
             "dtype": "uint8",
@@ -174,7 +174,7 @@ layer_data_profiles: Dict[str, Dict[Any, Any]] = {
         "data_type": "continuous",
         "vals": (0, 225),
     },
-    "prior_from_cooccurrences_101_31_no_osm_no_buildings": {  # noqa: E501
+    "prior_from_cooccurrences_101_31_no_osm_no_buildings": {
         "profile": {
             "driver": "GTiff",
             "dtype": "uint8",
@@ -294,7 +294,7 @@ def generate_test_data(root: str) -> str:
 
     # Create archive
     archive_path = os.path.join(root, "enviroatlas_lotp")
-    shutil.make_archive(archive_path, "zip", root_dir=folder_path)
+    shutil.make_archive(archive_path, "zip", root_dir=root, base_dir="enviroatlas_lotp")
     shutil.rmtree(folder_path)
     md5: str = calculate_md5(archive_path + ".zip")
     return md5

@@ -46,7 +46,7 @@ class TestEnviroAtlas:
             torchgeo.datasets.enviroatlas, "download_url", download_url
         )
         monkeypatch.setattr(  # type: ignore[attr-defined]
-            EnviroAtlas, "md5", "f6df18e411a12c9a92afae7a8ef7d09e"
+            EnviroAtlas, "md5", "071ec65c611e1d4915a5247bffb5ad87"
         )
         monkeypatch.setattr(  # type: ignore[attr-defined]
             EnviroAtlas,
