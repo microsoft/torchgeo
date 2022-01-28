@@ -6,7 +6,7 @@
 import abc
 import os
 import sys
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Any, Callable, Dict, Optional, Sequence
 
 import fiona
 import numpy as np
@@ -402,7 +402,7 @@ class ChesapeakeCVPR(GeoDataset):
         self,
         root: str = "data",
         splits: Sequence[str] = ["de-train"],
-        layers: List[str] = ["naip-new", "lc"],
+        layers: Sequence[str] = ["naip-new", "lc"],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
@@ -427,6 +427,7 @@ class ChesapeakeCVPR(GeoDataset):
         Raises:
             FileNotFoundError: if no files are found in ``root``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            AssertionError: if ``splits`` or ``layers`` are not valid
         """
         for split in splits:
             assert split in self.splits

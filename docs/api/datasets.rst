@@ -37,6 +37,11 @@ Cropland Data Layer (CDL)
 
 .. autoclass:: CDL
 
+EnviroAtlas
+^^^^^^^^^^^
+
+.. autoclass:: EnviroAtlas
+
 Landsat
 ^^^^^^^
 
