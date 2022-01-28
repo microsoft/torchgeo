@@ -26,12 +26,12 @@ class TestLandCoverAI:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LandCoverAI:
-        monkeypatch.setattr(torchgeo.datasets.landcoverai, "download_url", download_url)
-        md5 = "5bf4d2770deb41eb5c38784ab2c8a691"
+        monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
+        md5 = "46108372402292213789342d58929708"
         monkeypatch.setattr(LandCoverAI, "md5", md5)
         url = os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip")
         monkeypatch.setattr(LandCoverAI, "url", url)
-        sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        sha256 = "ce84fa0e8d89b461c66fba4e78aa5a860e2871722c4a9ca8c2384eae1521c7c8"
         monkeypatch.setattr(LandCoverAI, "sha256", sha256)
         root = str(tmp_path)
         split = request.param
