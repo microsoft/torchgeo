@@ -346,9 +346,7 @@ class TestBoundingBox:
         ],
     )
     def test_volume(
-        self,
-        test_input: Tuple[float, float, float, float, float, float],
-        expected: int,
+        self, test_input: Tuple[float, float, float, float, float, float], expected: int
     ) -> None:
         bbox = BoundingBox(*test_input)
         assert bbox.volume == expected
