@@ -352,6 +352,19 @@ class BoundingBox:
         except ValueError:
             raise ValueError(f"Bounding boxes {self} and {other} do not overlap")
 
+    @property
+    def volume(self) -> float:
+        """Volume of bounding box.
+
+        Returns:
+            volume
+
+        .. versionadded:: 0.3
+        """
+        return (
+            (self.maxx - self.minx) * (self.maxy - self.miny) * (self.maxt - self.mint)
+        )
+
     def intersects(self, other: "BoundingBox") -> bool:
         """Whether or not two bounding boxes intersect.
 
