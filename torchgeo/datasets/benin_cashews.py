@@ -240,8 +240,8 @@ class BeninSmallHolderCashews(VisionDataset):
         img = self._load_all_imagery(self.bands)
         labels = self._load_mask()
 
-        img = img[:, :, y: y + self.chip_size, x: x + self.chip_size]
-        labels = labels[y: y + self.chip_size, x: x + self.chip_size]
+        img = img[:, :, y : y + self.chip_size, x : x + self.chip_size]
+        labels = labels[y : y + self.chip_size, x : x + self.chip_size]
 
         sample = {
             "image": img,
