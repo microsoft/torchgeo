@@ -233,21 +233,23 @@ class BeninSmallHolderCashews(VisionDataset):
             index: index to return
 
         Returns:
-            image, mask, and metadata at that index
+            image, mask, geotransform, crs and metadata at that index
         """
         y, x = self.chips_metadata[index]
 
         img = self._load_all_imagery(self.bands)
         labels = self._load_mask()
 
-        img = img[:, :, y : y + self.chip_size, x : x + self.chip_size]
-        labels = labels[y : y + self.chip_size, x : x + self.chip_size]
+        img = img[:, :, y: y + self.chip_size, x: x + self.chip_size]
+        labels = labels[y: y + self.chip_size, x: x + self.chip_size]
 
         sample = {
             "image": img,
             "mask": labels,
             "x": torch.tensor(x),  # type: ignore[attr-defined]
             "y": torch.tensor(y),  # type: ignore[attr-defined]
+            "geotransform": self.tile_transform,
+            "crs": self.crs
         }
 
         if self.transforms is not None:
@@ -343,6 +345,7 @@ class BeninSmallHolderCashews(VisionDataset):
             )
             with rasterio.open(filepath) as src:
                 self.tile_transform = src.transform
+                self.crs = src.crs
                 array = src.read().astype(np.float32)
                 img[band_index] = torch.from_numpy(array)  # type: ignore[attr-defined]
 
