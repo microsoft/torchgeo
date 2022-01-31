@@ -26,6 +26,8 @@ def batch_gray() -> Dict[str, Tensor]:
             [[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]],
             dtype=torch.long,  # type: ignore[attr-defined]
         ),
+        # This is a list of 4 (y,x) points of the corners of a bounding box.
+        # kornia expects something with (B, 4, 2) shape
         "boxes": torch.tensor(  # type: ignore[attr-defined]
             [[[0, 0], [0, 1], [1, 1], [1, 0]]],
             dtype=torch.float,  # type: ignore[attr-defined]
