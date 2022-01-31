@@ -7,7 +7,16 @@ import pytest
 import torch
 from torch import Tensor
 
-from torchgeo.transforms import indices
+from torchgeo.transforms import (
+    AppendGNDVI,
+    AppendNBR,
+    AppendNDBI,
+    AppendNDSI,
+    AppendNDVI,
+    AppendNDWI,
+    AppendSWI,
+    indices,
+)
 
 
 @pytest.fixture
@@ -51,3 +60,16 @@ def test_append_index_batch(batch: Dict[str, Tensor]) -> None:
     tr = indices.AppendNormalizedDifferenceIndex(index_a=0, index_b=0)
     output = tr(batch)
     assert output["image"].shape == (b, c + 1, h, w)
+
+
+@pytest.mark.parametrize(
+    "index",
+    [AppendNBR, AppendNDBI, AppendNDSI, AppendNDVI, AppendNDWI, AppendSWI, AppendGNDVI],
+)
+def test_append_normalized_difference_indices(
+    sample: Dict[str, Tensor], index: indices.AppendNormalizedDifferenceIndex
+) -> None:
+    c, h, w = sample["image"].shape
+    tr = index(0, 0)
+    output = tr(sample)
+    assert output["image"].shape == (c + 1, h, w)
