@@ -12,22 +12,7 @@ from torch import Tensor
 from torchgeo.transforms import indices, transforms
 
 # Tests require newer version of Kornia for newer bounding box behavior
-pytest.importorskip("kornia", minversion="0.6.2")
-
-
-@pytest.fixture
-def sample() -> Dict[str, Tensor]:
-    return {
-        "image": torch.tensor(  # type: ignore[attr-defined]
-            [[[1, 2, 3], [4, 5, 6], [7, 8, 9]]]
-        ),
-        "mask": torch.tensor(  # type: ignore[attr-defined]
-            [[0, 0, 1], [0, 1, 1], [1, 1, 1]]
-        ),
-        "boxes": torch.tensor(  # type: ignore[attr-defined]
-            [[[0, 0, 2, 2], [1, 1, 3, 3]]]
-        ),
-    }
+pytest.importorskip("kornia", minversion="0.6.3")
 
 
 @pytest.fixture
@@ -42,7 +27,7 @@ def batch_gray() -> Dict[str, Tensor]:
             dtype=torch.long,  # type: ignore[attr-defined]
         ),
         "boxes": torch.tensor(  # type: ignore[attr-defined]
-            [[[0, 0, 0, 0], [1, 1, 2, 2]]],
+            [[[0, 0], [0, 1], [1, 1], [1, 0]]],
             dtype=torch.float,  # type: ignore[attr-defined]
         ),
         "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
@@ -67,7 +52,7 @@ def batch_rgb() -> Dict[str, Tensor]:
             dtype=torch.long,  # type: ignore[attr-defined]
         ),
         "boxes": torch.tensor(  # type: ignore[attr-defined]
-            [[[0, 0, 0, 0], [1, 1, 2, 2]]],
+            [[[0, 0], [0, 1], [1, 1], [1, 0]]],
             dtype=torch.float,  # type: ignore[attr-defined]
         ),
         "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
@@ -94,7 +79,7 @@ def batch_multispectral() -> Dict[str, Tensor]:
             dtype=torch.long,  # type: ignore[attr-defined]
         ),
         "boxes": torch.tensor(  # type: ignore[attr-defined]
-            [[[0, 0, 0, 0], [1, 1, 2, 2]]],
+            [[[0, 0], [0, 1], [1, 1], [1, 0]]],
             dtype=torch.float,  # type: ignore[attr-defined]
         ),
         "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
@@ -119,7 +104,7 @@ def test_augmentation_sequential_gray(batch_gray: Dict[str, Tensor]) -> None:
             dtype=torch.long,  # type: ignore[attr-defined]
         ),
         "boxes": torch.tensor(  # type: ignore[attr-defined]
-            [[[2, 0, 2, 0], [0, 1, 1, 2]]],
+            [[[1, 0], [2, 0], [2, 1], [1, 1]]],
             dtype=torch.float,  # type: ignore[attr-defined]
         ),
         "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
@@ -148,7 +133,7 @@ def test_augmentation_sequential_rgb(batch_rgb: Dict[str, Tensor]) -> None:
             dtype=torch.long,  # type: ignore[attr-defined]
         ),
         "boxes": torch.tensor(  # type: ignore[attr-defined]
-            [[[2, 0, 2, 0], [0, 1, 1, 2]]],
+            [[[1, 0], [2, 0], [2, 1], [1, 1]]],
             dtype=torch.float,  # type: ignore[attr-defined]
         ),
         "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
@@ -181,7 +166,7 @@ def test_augmentation_sequential_multispectral(
             dtype=torch.long,  # type: ignore[attr-defined]
         ),
         "boxes": torch.tensor(  # type: ignore[attr-defined]
-            [[[2, 0, 2, 0], [0, 1, 1, 2]]],
+            [[[1, 0], [2, 0], [2, 1], [1, 1]]],
             dtype=torch.float,  # type: ignore[attr-defined]
         ),
         "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
@@ -214,7 +199,7 @@ def test_augmentation_sequential_image_only(
             dtype=torch.long,  # type: ignore[attr-defined]
         ),
         "boxes": torch.tensor(  # type: ignore[attr-defined]
-            [[[0, 0, 0, 0], [1, 1, 2, 2]]],
+            [[[0, 0], [0, 1], [1, 1], [1, 0]]],
             dtype=torch.float,  # type: ignore[attr-defined]
         ),
         "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
@@ -252,7 +237,7 @@ def test_sequential_transforms_augmentations(
             dtype=torch.long,  # type: ignore[attr-defined]
         ),
         "boxes": torch.tensor(  # type: ignore[attr-defined]
-            [[[2, 0, 2, 0], [0, 1, 1, 2]]],
+            [[[1, 0], [2, 0], [2, 1], [1, 1]]],
             dtype=torch.float,  # type: ignore[attr-defined]
         ),
         "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
