@@ -179,8 +179,8 @@ class AppendSWI(AppendNormalizedDifferenceIndex):
         """Initialize a new transform instance.
 
         Args:
-            index_red: index of the vre1 band i.e. B5 in the image
-            index_swir: index of the swir2 B11 band in the image
+            index_red: index of the VRE1 band, e.g. B5 in Sentinel 2 imagery
+            index_swir: index of the SWIR2 band, e.g. B11 in Sentinel 2 imagery
         """
         super().__init__(index_a=index_red, index_b=index_swir)
 
@@ -197,7 +197,7 @@ class AppendGNDVI(AppendNormalizedDifferenceIndex):
         """Initialize a new transform instance.
 
         Args:
-            index_nir: index of the nir band i.e. B8 in the image
-            index_green: index of the green B3 band in the image
+            index_nir: index of the NIR band, e.g. B8 in Sentinel 2 imagery
+            index_green: index of the Green band, e.g. B3 in Sentinel 2 imagery
         """
         super().__init__(index_a=index_nir, index_b=index_green)
