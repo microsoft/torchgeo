@@ -165,3 +165,39 @@ class AppendNDWI(AppendNormalizedDifferenceIndex):
             index_nir: index of the Near Infrared (NIR) band in the image
         """
         super().__init__(index_a=index_green, index_b=index_nir)
+
+
+class AppendSWI(AppendNormalizedDifferenceIndex):
+    """Standardized Water-Level Index (SWI).
+
+    If you use this index in your research, please cite the following paper:
+
+    * https://doi.org/10.3390/w13121647
+    """
+
+    def __init__(self, index_red: int, index_swir: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_red: index of the VRE1 band, e.g. B5 in Sentinel 2 imagery
+            index_swir: index of the SWIR2 band, e.g. B11 in Sentinel 2 imagery
+        """
+        super().__init__(index_a=index_red, index_b=index_swir)
+
+
+class AppendGNDVI(AppendNormalizedDifferenceIndex):
+    """Green Normalized Difference Vegetation Index (GNDVI).
+
+    If you use this index in your research, please cite the following paper:
+
+    * https://doi.org/10.2134/agronj2001.933583x
+    """
+
+    def __init__(self, index_nir: int, index_green: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_nir: index of the NIR band, e.g. B8 in Sentinel 2 imagery
+            index_green: index of the Green band, e.g. B3 in Sentinel 2 imagery
+        """
+        super().__init__(index_a=index_nir, index_b=index_green)
