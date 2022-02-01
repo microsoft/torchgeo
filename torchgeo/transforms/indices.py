@@ -222,7 +222,7 @@ class AppendBNDVI(AppendNormalizedDifferenceIndex):
         
         
 class AppendNDRE(AppendNormalizedDifferenceIndex):
-    """Blue Normalized Difference Vegetation Index (BNDVI).
+    """Normalized Difference Red Edge Vegetation Index (NDRE).
     
     If you use this index in your research, please cite the following paper:
     
