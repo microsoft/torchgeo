@@ -8,6 +8,7 @@ import torch
 from torch import Tensor
 
 from torchgeo.transforms import (
+    AppendBNDVI,
     AppendGNDVI,
     AppendNBR,
     AppendNDBI,
@@ -64,7 +65,7 @@ def test_append_index_batch(batch: Dict[str, Tensor]) -> None:
 
 @pytest.mark.parametrize(
     "index",
-    [AppendNBR, AppendNDBI, AppendNDSI, AppendNDVI, AppendNDWI, AppendSWI, AppendGNDVI],
+    [AppendBNDVI, AppendNBR, AppendNDBI, AppendNDSI, AppendNDVI, AppendNDWI, AppendSWI, AppendGNDVI],
 )
 def test_append_normalized_difference_indices(
     sample: Dict[str, Tensor], index: AppendNormalizedDifferenceIndex
