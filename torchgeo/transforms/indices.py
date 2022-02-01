@@ -201,3 +201,21 @@ class AppendGNDVI(AppendNormalizedDifferenceIndex):
             index_green: index of the Green band, e.g. B3 in Sentinel 2 imagery
         """
         super().__init__(index_a=index_nir, index_b=index_green)
+        
+        
+class AppendBNDVI(AppendNormalizedDifferenceIndex):
+    """Blue Normalized Difference Vegetation Index (BNDVI).
+
+    If you use this index in your research, please cite the following paper:
+
+    * https://doi.org/10.1016/S1672-6308(07)60027-4
+    """
+
+    def __init__(self, index_nir: int, index_blue: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_nir: index of the NIR band, e.g. B8 in Sentinel 2 imagery
+            index_green: index of the Blue band, e.g. B2 in Sentinel 2 imagery
+        """
+        super().__init__(index_a=index_nir, index_b=index_blue)
