@@ -216,7 +216,7 @@ class AppendBNDVI(AppendNormalizedDifferenceIndex):
         
         Args:
             index_nir: index of the NIR band, e.g. B8 in Sentinel 2 imagery
-            index_green: index of the Blue band, e.g. B2 in Sentinel 2 imagery
+            index_blue: index of the Blue band, e.g. B2 in Sentinel 2 imagery
         """
         super().__init__(index_a=index_nir, index_b=index_blue)
         
