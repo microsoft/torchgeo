@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import rasterio.features
+from rasterio.crs import CRS
+
 import torch
 from torch import Tensor
 
@@ -240,8 +242,8 @@ class BeninSmallHolderCashews(VisionDataset):
         img, tile_transform, crs = self._load_all_imagery(self.bands)
         labels = self._load_mask(tile_transform)
 
-        img = img[:, :, y : y + self.chip_size, x : x + self.chip_size]
-        labels = labels[y : y + self.chip_size, x : x + self.chip_size]
+        img = img[:, :, y: y + self.chip_size, x: x + self.chip_size]
+        labels = labels[y: y + self.chip_size, x: x + self.chip_size]
 
         sample = {
             "image": img,
@@ -281,7 +283,7 @@ class BeninSmallHolderCashews(VisionDataset):
                 raise ValueError(f"'{band}' is an invalid band name.")
 
     @lru_cache(maxsize=128)
-    def _load_all_imagery(self, bands: Tuple[str, ...] = ALL_BANDS) -> Tensor:
+    def _load_all_imagery(self, bands: Tuple[str, ...] = ALL_BANDS) -> Tuple[Tensor, rasterio.Affine, CRS]:
         """Load all the imagery (across time) for the dataset.
 
         Optionally allows for subsetting of the bands that are loaded.
@@ -313,7 +315,7 @@ class BeninSmallHolderCashews(VisionDataset):
         return img, tile_transform, crs
 
     @lru_cache(maxsize=128)
-    def _load_single_scene(self, date: str, bands: Tuple[str, ...]) -> Tensor:
+    def _load_single_scene(self, date: str, bands: Tuple[str, ...]) -> Tuple[Tensor, rasterio.Affine, CRS]:
         """Load the imagery for a single date.
 
         Optionally allows for subsetting of the bands that are loaded.
@@ -357,7 +359,7 @@ class BeninSmallHolderCashews(VisionDataset):
         return img, tile_transform, crs
 
     @lru_cache()
-    def _load_mask(self, tile_transform) -> Tensor:
+    def _load_mask(self, tile_transform: rasterio.Affine) -> Tensor:
         """Rasterizes the dataset's labels (in geojson format)."""
         # Create a mask layer out of the geojson
         mask_geojson_fn = os.path.join(
