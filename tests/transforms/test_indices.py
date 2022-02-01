@@ -66,7 +66,17 @@ def test_append_index_batch(batch: Dict[str, Tensor]) -> None:
 
 @pytest.mark.parametrize(
     "index",
-    [AppendBNDVI, AppendNBR, AppendNDBI, AppendNDRE, AppendNDSI, AppendNDVI, AppendNDWI, AppendSWI, AppendGNDVI],
+    [
+        AppendBNDVI,
+        AppendNBR,
+        AppendNDBI,
+        AppendNDRE,
+        AppendNDSI,
+        AppendNDVI,
+        AppendNDWI,
+        AppendSWI,
+        AppendGNDVI,
+    ],
 )
 def test_append_normalized_difference_indices(
     sample: Dict[str, Tensor], index: AppendNormalizedDifferenceIndex
