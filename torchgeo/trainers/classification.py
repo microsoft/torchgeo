@@ -14,7 +14,7 @@ from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torchmetrics import Accuracy, FBeta, JaccardIndex, MetricCollection
+from torchmetrics import Accuracy, FBetaScore, JaccardIndex, MetricCollection
 
 from ..datasets.utils import unbind_samples
 from . import utils
@@ -106,7 +106,7 @@ class ClassificationTask(pl.LightningModule):
                     num_classes=self.hparams["num_classes"], average="macro"
                 ),
                 "JaccardIndex": JaccardIndex(num_classes=self.hparams["num_classes"]),
-                "F1Score": FBeta(
+                "F1Score": FBetaScore(
                     num_classes=self.hparams["num_classes"], beta=1.0, average="micro"
                 ),
             },
@@ -292,7 +292,7 @@ class MultiLabelClassificationTask(ClassificationTask):
                     average="macro",
                     multiclass=False,
                 ),
-                "F1Score": FBeta(
+                "F1Score": FBetaScore(
                     num_classes=self.hparams["num_classes"],
                     beta=1.0,
                     average="micro",
