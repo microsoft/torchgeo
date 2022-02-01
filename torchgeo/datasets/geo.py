@@ -461,7 +461,6 @@ class RasterDataset(GeoDataset):
             )
         else:
             dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res)
-        dest = dest.astype(np.int32)
 
         tensor: Tensor = torch.tensor(dest)  # type: ignore[attr-defined]
         return tensor
