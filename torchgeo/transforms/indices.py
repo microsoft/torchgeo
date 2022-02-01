@@ -234,6 +234,6 @@ class AppendNDRE(AppendNormalizedDifferenceIndex):
         
         Args:
             index_nir: index of the NIR band, e.g. B8 in Sentinel 2 imagery
-            index_vre1: index of the Vegetation Red Edge band, e.g. B5 in Sentinel 2 imagery
+            index_vre1: index of the Red Edge band, B5 in Sentinel 2 imagery
         """
         super().__init__(index_a=index_nir, index_b=index_vre1)
