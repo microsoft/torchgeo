@@ -93,7 +93,14 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         self.size = _to_tuple(size)
         self.batch_size = batch_size
         self.length = length
-        self.hits = list(self.index.intersection(tuple(self.roi), objects=True))
+        self.hits = []
+        for hit in self.index.intersection(tuple(self.roi), objects=True):
+            bounds = BoundingBox(*hit.bounds)
+            if (
+                bounds.maxx - bounds.minx > self.size[1]
+                and bounds.maxy - bounds.miny > self.size[0]
+            ):
+                self.hits.append(hit)
 
     def __iter__(self) -> Iterator[List[BoundingBox]]:
         """Return the indices of a dataset.

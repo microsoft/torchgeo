@@ -98,6 +98,14 @@ class TestRandomBatchGeoSampler:
             for query in batch:
                 assert query in roi
 
+    def test_small_area(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        ds.index.insert(1, (20, 21, 20, 21, 20, 21))
+        sampler = RandomBatchGeoSampler(ds, 2, 2, 10)
+        for _ in sampler:
+            continue
+
     @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(self, sampler: RandomBatchGeoSampler, num_workers: int) -> None:
