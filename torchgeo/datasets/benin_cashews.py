@@ -283,7 +283,8 @@ class BeninSmallHolderCashews(VisionDataset):
                 raise ValueError(f"'{band}' is an invalid band name.")
 
     @lru_cache(maxsize=128)
-    def _load_all_imagery(self, bands: Tuple[str, ...] = ALL_BANDS) -> Tuple[Tensor, rasterio.Affine, CRS]:
+    def _load_all_imagery(self, bands: Tuple[str, ...] = ALL_BANDS
+                          ) -> Tuple[Tensor, rasterio.Affine, CRS]:
         """Load all the imagery (across time) for the dataset.
 
         Optionally allows for subsetting of the bands that are loaded.
@@ -292,8 +293,8 @@ class BeninSmallHolderCashews(VisionDataset):
             bands: tuple of bands to load
 
         Returns:
-            imagery of shape (70, number of bands, 1186, 1122) where 70 is the number of
-                points in time, 1186 is the tile height, and 1122 is the tile width
+            imagery of shape (70, number of bands, 1186, 1122) where 70 is the number 
+                of points in time, 1186 is the tile height, and 1122 is the tile width
             rasterio affine transform, mapping pixel coordinates to geo coordinates
             coordinate reference system of tile_transform 
         """
@@ -309,13 +310,15 @@ class BeninSmallHolderCashews(VisionDataset):
         )
 
         for date_index, date in enumerate(self.dates):
-            single_scene, tile_transform, crs = self._load_single_scene(date, self.bands)
+            single_scene, tile_transform, crs = self._load_single_scene(
+                date, self.bands)
             img[date_index] = single_scene
 
         return img, tile_transform, crs
 
     @lru_cache(maxsize=128)
-    def _load_single_scene(self, date: str, bands: Tuple[str, ...]) -> Tuple[Tensor, rasterio.Affine, CRS]:
+    def _load_single_scene(self, date: str, bands: Tuple[str, ...]
+                           ) -> Tuple[Tensor, rasterio.Affine, CRS]:
         """Load the imagery for a single date.
 
         Optionally allows for subsetting of the bands that are loaded.
