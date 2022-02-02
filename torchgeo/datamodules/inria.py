@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+"""InriaAerialImageLabeling datamodule."""
+
 from typing import Any, Dict, List, Optional
 
 import kornia.augmentation as K
@@ -5,7 +10,7 @@ import pytorch_lightning as pl
 import torch
 import torchvision.transforms as T
 from einops import rearrange
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 from torch.utils.data._utils.collate import default_collate
 
 from torchgeo.datamodules.utils import dataset_split
@@ -18,8 +23,24 @@ DEFAULT_AUGS = K.AugmentationSequential(
 )
 
 
+def collate_wrapper(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Flatten wrapper."""
+    r_batch: Dict[str, Any] = default_collate(batch)  # type: ignore[no-untyped-call]
+    r_batch["image"] = torch.flatten(  # type: ignore[attr-defined]
+        r_batch["image"], 0, 1
+    )
+    r_batch["mask"] = torch.flatten(r_batch["mask"], 0, 1)  # type: ignore[attr-defined]
+    return r_batch
+
+
 class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
-    """Inria DataModule"""
+    """LightningDataModule implementation for the InriaAerialImageLabeling dataset.
+
+    Uses the train/test splits from the dataset and further splits
+    the train split into train/val splits.
+
+    .. versionadded:: 0.3
+    """
 
     def __init__(
         self,
@@ -27,15 +48,31 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         batch_size: int = 32,
         num_workers: int = 0,
         val_split_pct: float = 0.1,
+        test_split_pct: float = 0.1,
         patch_size: int = 512,
         num_patches_per_tile: int = 32,
-        augmentations=DEFAULT_AUGS,
-    ):
-        super().__init__()
+        augmentations: K.AugmentationSequential = DEFAULT_AUGS,
+    ) -> None:
+        """Initialize a LightningDataModule for InriaAerialImageLabeling based DataLoaders.
+
+        Args:
+            root_dir: The ``root`` arugment to pass to the InriaAerialImageLabeling
+                Dataset classes
+            batch_size: The batch size used in the train DataLoader
+                (val_batch_size == test_batch_size == 1)
+            num_workers: The number of workers to use in all created DataLoaders
+            val_split_pct: What percentage of the dataset to use as a validation set
+            test_split_pct: What percentage of the dataset to use as a test set
+            patch_size: Size of random patch from image and mask (height, width)
+            num_patches_per_tile: Number of random patches per sample
+            augmentations: Default augmentations applied
+        """
+        super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.val_split_pct = val_split_pct
+        self.test_split_pct = test_split_pct
         self.patch_size = patch_size
         self.num_patches_per_tile = num_patches_per_tile
         self.augmentations = augmentations
@@ -44,11 +81,13 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             data_keys=["input", "mask"],
         )
 
-    def preprocess(self, sample):
+    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Transform a single sample from the Dataset."""
         # RGB is int32 so divide by 255
-        # TODO: why int32? cant it be uint8
         sample["image"] = sample["image"] / 255.0
-        sample["image"] = torch.clip(sample["image"], min=0.0, max=1.0)
+        sample["image"] = torch.clip(  # type: ignore[attr-defined]
+            sample["image"], min=0.0, max=1.0
+        )
 
         # This is pointless since it will get squeezed out anyway
         if "mask" in sample:
@@ -56,22 +95,28 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
 
         return sample
 
-    def crop(self, sample):
-        sample["mask"] = sample["mask"].to(torch.float)
-        sample["image"], sample["mask"] = self.random_crop(
-            sample["image"], sample["mask"]
-        )
-        sample["mask"] = sample["mask"].to(torch.long)
-        sample["image"] = rearrange(sample["image"], "() c h w -> c h w")
-        sample["mask"] = rearrange(sample["mask"], "() c h w -> c h w")
-        return sample
+    # def crop(self, sample):
+    #     if "mask" in sample:
+    #         sample["mask"] = sample["mask"].to(torch.float)
+    #         sample["image"], sample["mask"] = self.random_crop(
+    #             sample["image"], sample["mask"]
+    #         )
+    #         sample["mask"] = sample["mask"].to(torch.long)
+    #         sample["image"] = rearrange(sample["image"], "() c h w -> c h w")
+    #         sample["mask"] = rearrange(sample["mask"], "() c h w -> c h w")
+    #     else:
+    #         sample["image"] = self.random_crop2(sample["image"])
+    #         sample["image"] = rearrange(sample["image"], "() c h w -> c h w")
 
-    def n_random_crop(self, sample):
+    #     return sample
+
+    def n_random_crop(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Get n random crops."""
         images, masks = [], []
         for _ in range(self.num_patches_per_tile):
             image, mask = sample["image"], sample["mask"]
             # RandomCrop needs image and mask to be in float
-            mask = mask.to(torch.float)
+            mask = mask.to(torch.float)  # type: ignore[attr-defined]
             image, mask = self.random_crop(image, mask)
             images.append(image.squeeze())
             masks.append(mask.squeeze(0).long())
@@ -79,51 +124,52 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         sample["mask"] = torch.stack(masks)  # (t, 1, h, w)
         return sample
 
-    def setup(self, stage=None):
-        # transforms = T.Compose([self.preprocess, self.crop])
+    def setup(self, stage: Optional[str] = None) -> None:
+        """Initialize the main ``Dataset`` objects.
+
+        This method is called once per GPU per run.
+        """
         train_transforms = T.Compose([self.preprocess, self.n_random_crop])
-        val_transforms = T.Compose([self.preprocess, self.crop])
         test_transforms = T.Compose([self.preprocess])
 
         train_dataset = InriaAerialImageLabeling(
             self.root_dir, split="train", transforms=train_transforms
         )
 
+        self.train_dataset: Dataset[Any]
+        self.val_dataset: Dataset[Any]
+        self.test_dataset: Dataset[Any]
+
         if self.val_split_pct > 0.0:
-            val_dataset = InriaAerialImageLabeling(
-                self.root_dir, split="train", transforms=val_transforms
-            )
-            self.train_dataset, self.val_dataset = dataset_split(
-                train_dataset, val_pct=self.val_split_pct
-            )
-            self.val_dataset.dataset = val_dataset
+            if self.test_split_pct > 0.0:
+                self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
+                    train_dataset,
+                    val_pct=self.val_split_pct,
+                    test_pct=self.test_split_pct,
+                )
+            else:
+                self.train_dataset, self.val_dataset = dataset_split(
+                    train_dataset, val_pct=self.val_split_pct
+                )
+                self.test_dataset = self.val_dataset
+            # val_dataset = InriaAerialImageLabeling(
+            #     self.root_dir, split="train", transforms=train_transforms
+            # )
+            # self.train_dataset, self.val_dataset = dataset_split(
+            #     train_dataset, val_pct=self.val_split_pct
+            # )
+            # self.val_dataset.dataset = val_dataset
         else:
             self.train_dataset = train_dataset
             self.val_dataset = train_dataset
+            self.test_dataset = train_dataset
 
-        self.test_dataset = InriaAerialImageLabeling(
+        self.predict_dataset = InriaAerialImageLabeling(
             self.root_dir, "test", transforms=test_transforms
         )
 
-        # self.predict_dataset = InriaAerialImageLabeling(
-        #     self.root_dir, self.predict_on, transforms=test_transforms
-        # )
-
-    def train_dataloader(self):
+    def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""
-
-        def collate_wrapper(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
-            r_batch: Dict[str, Any] = default_collate(  # type: ignore[no-untyped-call]
-                batch
-            )
-            r_batch["image"] = torch.flatten(  # type: ignore[attr-defined]
-                r_batch["image"], 0, 1
-            )
-            r_batch["mask"] = torch.flatten(  # type: ignore[attr-defined]
-                r_batch["mask"], 0, 1
-            )
-            return r_batch
-
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,
@@ -135,30 +181,53 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
     def val_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for validation."""
         return DataLoader(
-            self.val_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
+            self.val_dataset,
+            batch_size=1,
+            num_workers=self.num_workers,
+            collate_fn=collate_wrapper,
+            shuffle=False,
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing."""
         return DataLoader(
-            self.test_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
+            self.test_dataset,
+            batch_size=1,
+            num_workers=self.num_workers,
+            collate_fn=collate_wrapper,
+            shuffle=False,
         )
 
-    # def predict_dataloader(self):
-    #     return DataLoader(
-    #         self.predict_dataset,
-    #         batch_size=1,
-    #         num_workers=self.num_workers,
-    #         shuffle=False,
-    #     )
+    def predict_dataloader(self) -> DataLoader[Any]:
+        """Return a DataLoader for prediction."""
+        return DataLoader(
+            self.predict_dataset,
+            batch_size=1,
+            num_workers=self.num_workers,
+            shuffle=False,
+        )
 
-    def on_after_batch_transfer(self, batch, dataloader_idx):
-        if self.trainer.training and self.augmentations is not None:
-            batch["mask"] = batch["mask"].to(torch.float)
+    def on_after_batch_transfer(
+        self, batch: Dict[str, Any], dataloader_idx: int
+    ) -> Dict[str, Any]:
+        """Apply augmentations to batch after transferring to GPU.
+
+        Args:
+            batch (dict): A batch of data that needs to be altered or augmented.
+            dataloader_idx (int): The index of the dataloader to which the batch
+            belongs.
+
+        Returns:
+            dict: A batch of data
+        """
+        # Training
+        if self.trainer.training and self.augmentations is not None:  # type: ignore[union-attr] # noqa: E501
+            batch["mask"] = batch["mask"].to(torch.float)  # type: ignore[attr-defined]
             batch["image"], batch["mask"] = self.augmentations(
                 batch["image"], batch["mask"]
             )
-            batch["mask"] = batch["mask"].to(torch.long)
-
-        batch["mask"] = rearrange(batch["mask"], "b () h w -> b h w")
+            batch["mask"] = batch["mask"].to(torch.long)  # type: ignore[attr-defined]
+        # Validation
+        if "mask" in batch:
+            batch["mask"] = rearrange(batch["mask"], "b () h w -> b h w")
         return batch
