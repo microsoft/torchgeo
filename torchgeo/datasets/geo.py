@@ -467,7 +467,7 @@ class RasterDataset(GeoDataset):
             dest = dest.astype(np.int32)
         elif dest.dtype == np.uint32:
             dest = dest.astype(np.int64)
-        
+
         tensor: Tensor = torch.tensor(dest)  # type: ignore[attr-defined]
         return tensor
 
