@@ -85,7 +85,7 @@ class IDTReeS(VisionDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://doi.org/10.7717/peerj.5843
+    * https://doi.org/10.1101/2021.08.06.453503
 
     .. versionadded:: 0.2
     """
