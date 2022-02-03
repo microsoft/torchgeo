@@ -12,9 +12,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import rasterio.features
+import torch
 from rasterio.crs import CRS
 
-import torch
+
 from torch import Tensor
 
 from .geo import VisionDataset
@@ -242,8 +243,8 @@ class BeninSmallHolderCashews(VisionDataset):
         img, tile_transform, crs = self._load_all_imagery(self.bands)
         labels = self._load_mask(tile_transform)
 
-        img = img[:, :, y : y + self.chip_size, x : x + self.chip_size]
-        labels = labels[y : y + self.chip_size, x : x + self.chip_size]
+        img = img[:, :, y: y + self.chip_size, x: x + self.chip_size]
+        labels = labels[y: y + self.chip_size, x: x + self.chip_size]
 
         sample = {
             "image": img,
