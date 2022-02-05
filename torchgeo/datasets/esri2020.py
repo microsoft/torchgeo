@@ -58,8 +58,10 @@ class Esri2020(RasterDataset, abc.ABC):
     zipfile = "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip"
     md5 = "4932855fcd00735a34b74b1f87db3df0"
 
-    url = "https://ai4edataeuwest.blob.core.windows.net/io-lulc/ \
-    io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip"
+    url = (
+        "https://ai4edataeuwest.blob.core.windows.net/io-lulc/"
+        "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip"
+    )
 
     def __init__(
         self,
