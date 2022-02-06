@@ -17,32 +17,33 @@ from .utils import download_url, extract_archive
 class Esri2020(RasterDataset, abc.ABC):
     """Esri 2020 Land Cover Dataset.
 
-    The 'Esri 2020 Land Cover dataset
-    <https://www.arcgis.com/home/item.html?id=fc92d38533d440078f17678ebc20e8e2>'
+    The `Esri 2020 Land Cover dataset
+    <https://www.arcgis.com/home/item.html?id=fc92d38533d440078f17678ebc20e8e2>`_
     consists of a global single band land use/land cover map derived from ESA
     Sentinel-2 imagery at 10m resolution with a total of 10 classes.
     It was published in July 2021 and used the Universal Transverse Mercator (UTM)
     projection. This dataset only contains labels, no raw satellite imagery.
 
     The 10 classes are:
-    1 No Data
-    2 Water
-    3 Trees
-    4 Grass
-    5 Flooded Vegetation
-    6 Crops
-    7 Scrub/Shrub
-    8 Built Area
-    9 Bare Ground
-    10 Snow/Ice
-    11 Clouds
+
+    0. No Data
+    1. Water
+    2. Trees
+    3. Grass
+    4. Flooded Vegetation
+    5. Crops
+    6. Scrub/Shrub
+    7. Built Area
+    8. Bare Ground
+    9. Snow/Ice
+    10. Clouds
 
     A more detailed explanation of the invidual classes can be found
-    'here <https://www.arcgis.com/home/item.html?id=fc92d38533d440078f17678ebc20e8e2>'
+    `here <https://www.arcgis.com/home/item.html?id=fc92d38533d440078f17678ebc20e8e2>`_
 
     If you use this dataset please cite the following paper:
 
-    * <https://ieeexplore.ieee.org/document/9553499>
+    * https://ieeexplore.ieee.org/document/9553499
 
     .. versionadded:: 0.3
     """
@@ -107,7 +108,7 @@ class Esri2020(RasterDataset, abc.ABC):
         """
         # Check if the extracted file already exists
         pathname = os.path.join(self.root, "**", self.filename_glob)
-        if len(glob.glob(pathname)) != 0:
+        if glob.glob(pathname):
             return
 
         # Check if the zip files have already been downloaded
