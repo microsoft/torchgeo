@@ -32,6 +32,11 @@ Chesapeake Bay High-Resolution Land Cover Project
 .. autoclass:: ChesapeakeWV
 .. autoclass:: ChesapeakeCVPR
 
+CMS Global Mangrove Canopy Dataset
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: CMS_Global_Mangrove_Canopy
+
 Cropland Data Layer (CDL)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
