@@ -40,7 +40,11 @@ class TestCMS_Global_Mangrove_Canopy:
 
         root = os.path.join("tests", "data", "cms_mangrove_canopy")
         transforms = nn.Identity()  # type: ignore[attr-defined]
-        return CMS_Global_Mangrove_Canopy(root, transforms=transforms, checksum=True)
+        country = "Angola"
+
+        return CMS_Global_Mangrove_Canopy(
+            root, country=country, transforms=transforms, checksum=True
+        )
 
     def test_getitem(self, dataset: CMS_Global_Mangrove_Canopy) -> None:
         x = dataset[dataset.bounds]
@@ -54,7 +58,7 @@ class TestCMS_Global_Mangrove_Canopy:
 
     def test_invalid_country(self) -> None:
         with pytest.raises(AssertionError):
-            CMS_Global_Mangrove_Canopy(countries=["fakeCountry"])
+            CMS_Global_Mangrove_Canopy(country="fakeCountry")
 
     def test_invalid_measurement(self) -> None:
         with pytest.raises(AssertionError):

@@ -5,7 +5,7 @@
 
 import abc
 import os
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Optional
 
 from rasterio.crs import CRS
 
@@ -26,7 +26,7 @@ class CMS_Global_Mangrove_Canopy(RasterDataset, abc.ABC):
     """
 
     is_image = False
-    filename_glob = "Mangrove_*"
+
     filename_regex = r"""^
         (?P<mangrove>[A-Za-z]{8})
         _(?P<variable>[a-z0-9]*)
@@ -168,7 +168,7 @@ class CMS_Global_Mangrove_Canopy(RasterDataset, abc.ABC):
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         measurement: str = "agb",
-        countries: List[str] = all_countries,
+        country: str = all_countries[0],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         cache: bool = True,
         checksum: bool = False,
@@ -182,7 +182,7 @@ class CMS_Global_Mangrove_Canopy(RasterDataset, abc.ABC):
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
             measurement: which of the three measurements, 'agb', 'hba95', or 'hmax95'
-            countries: countries for which to retrieve data
+            country: country for which to retrieve data
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
@@ -195,13 +195,13 @@ class CMS_Global_Mangrove_Canopy(RasterDataset, abc.ABC):
         self.root = root
         self.checksum = checksum
 
-        assert isinstance(countries, List), "Countries argument must be a list."
-        assert set(countries).issubset(
-            self.all_countries
-        ), "You have entered an invalid country, only {} are available.".format(
+        assert isinstance(country, str), "Country argument must be a str."
+        assert (
+            country in self.all_countries
+        ), "You have selected an invalid country, please choose one of {}".format(
             self.all_countries
         )
-        self.countries = countries
+        self.country = country
 
         assert isinstance(measurement, str), "Measurement must be a string."
         assert (
@@ -210,6 +210,8 @@ class CMS_Global_Mangrove_Canopy(RasterDataset, abc.ABC):
             self.measurements
         )
         self.measurement = measurement
+
+        self.filename_glob = "Mangrove_{}_{}*".format(self.measurement, self.country)
 
         if not self._check_integrity():
             raise RuntimeError(
