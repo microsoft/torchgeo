@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 from typing import Any, Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -25,7 +26,6 @@ class TestADVANCE:
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> ADVANCE:
-        pytest.importorskip("scipy", minversion="0.9.0")
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.utils, "download_url", download_url
         )
@@ -57,6 +57,7 @@ class TestADVANCE:
         )
 
     def test_getitem(self, dataset: ADVANCE) -> None:
+        pytest.importorskip("scipy", minversion="0.9.0")
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
@@ -86,3 +87,13 @@ class TestADVANCE:
             match="scipy is not installed and is required to use this dataset",
         ):
             dataset[0]
+
+    def test_plot(self, dataset: ADVANCE) -> None:
+        x = dataset[0].copy()
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
+        x["prediction"] = x["label"].clone()
+        dataset.plot(x)
+        plt.close()

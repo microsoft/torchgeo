@@ -1,0 +1,29 @@
+experiment:
+  task: "chesapeake_cvpr"
+  module:
+    loss: "ce"
+    segmentation_model: "unet"
+    encoder_name: "resnet18"
+    encoder_weights: null
+    encoder_output_stride: 16
+    learning_rate: 1e-3
+    learning_rate_schedule_patience: 6
+    in_channels: 4
+    num_classes: 7
+    num_filters: 1
+    ignore_zeros: False
+    imagenet_pretraining: False
+  datamodule:
+    root_dir: "tests/data/chesapeake/cvpr"
+    train_splits:
+    - "de-test"
+    val_splits:
+    - "de-test"
+    test_splits:
+    - "de-test"
+    patches_per_tile: 2
+    patch_size: 64
+    batch_size: 2
+    num_workers: 0
+    class_set: ${experiment.module.num_classes}
+    use_prior_labels: False

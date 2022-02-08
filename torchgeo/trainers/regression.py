@@ -15,6 +15,8 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
 from torchvision import models
 
+from ..datasets.utils import unbind_samples
+
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 Conv2d.__module__ = "nn.Conv2d"
@@ -106,6 +108,21 @@ class RegressionTask(pl.LightningModule):
         loss = F.mse_loss(y_hat, y)
         self.log("val_loss", loss)
         self.val_metrics(y_hat, y)
+
+        if batch_idx < 10:
+            try:
+                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                batch["prediction"] = y_hat
+                for key in ["image", "label", "prediction"]:
+                    batch[key] = batch[key].cpu()
+                sample = unbind_samples(batch)[0]
+                fig = datamodule.plot(sample)
+                summary_writer = self.logger.experiment
+                summary_writer.add_figure(
+                    f"image/{batch_idx}", fig, global_step=self.global_step
+                )
+            except AttributeError:
+                pass
 
     def validation_epoch_end(self, outputs: Any) -> None:
         """Logs epoch level validation metrics.

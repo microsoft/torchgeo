@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+import pickle
 from pathlib import Path
 from typing import Dict
 
@@ -120,6 +121,14 @@ class TestGeoDataset:
         assert "type: GeoDataset" in out
         assert "bbox: BoundingBox" in out
         assert "size: 1" in out
+
+    def test_picklable(self, dataset: GeoDataset) -> None:
+        x = pickle.dumps(dataset)
+        y = pickle.loads(x)
+        assert dataset.crs == y.crs
+        assert dataset.res == y.res
+        assert len(dataset) == len(y)
+        assert dataset.bounds == y.bounds
 
     def test_abstract(self) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
@@ -324,17 +333,20 @@ class TestIntersectionDataset:
     def test_different_crs(self) -> None:
         ds1 = CustomGeoDataset(crs=CRS.from_epsg(3005))
         ds2 = CustomGeoDataset(crs=CRS.from_epsg(32616))
-        IntersectionDataset(ds1, ds2)
+        ds = IntersectionDataset(ds1, ds2)
+        assert len(ds) == 0
 
     def test_different_res(self) -> None:
         ds1 = CustomGeoDataset(res=1)
         ds2 = CustomGeoDataset(res=2)
-        IntersectionDataset(ds1, ds2)
+        ds = IntersectionDataset(ds1, ds2)
+        assert len(ds) == 1
 
     def test_no_overlap(self) -> None:
         ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
         ds2 = CustomGeoDataset(BoundingBox(6, 7, 8, 9, 10, 11))
-        IntersectionDataset(ds1, ds2)
+        ds = IntersectionDataset(ds1, ds2)
+        assert len(ds) == 0
 
     def test_invalid_query(self, dataset: IntersectionDataset) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
@@ -373,17 +385,20 @@ class TestUnionDataset:
     def test_different_crs(self) -> None:
         ds1 = CustomGeoDataset(crs=CRS.from_epsg(3005))
         ds2 = CustomGeoDataset(crs=CRS.from_epsg(32616))
-        UnionDataset(ds1, ds2)
+        ds = UnionDataset(ds1, ds2)
+        assert len(ds) == 2
 
     def test_different_res(self) -> None:
         ds1 = CustomGeoDataset(res=1)
         ds2 = CustomGeoDataset(res=2)
-        UnionDataset(ds1, ds2)
+        ds = UnionDataset(ds1, ds2)
+        assert len(ds) == 2
 
     def test_no_overlap(self) -> None:
         ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
         ds2 = CustomGeoDataset(BoundingBox(6, 7, 8, 9, 10, 11))
-        UnionDataset(ds1, ds2)
+        ds = UnionDataset(ds1, ds2)
+        assert len(ds) == 2
 
     def test_invalid_query(self, dataset: UnionDataset) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

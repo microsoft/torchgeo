@@ -6,21 +6,16 @@
 import abc
 import csv
 import os
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, cast
 
+import matplotlib.pyplot as plt
 import numpy as np
-import pytorch_lightning as pl
 import torch
 from PIL import Image
-from torch import Generator, Tensor  # type: ignore[attr-defined]
-from torch.utils.data import DataLoader, random_split
+from torch import Tensor
 
 from .geo import VisionDataset
 from .utils import check_integrity, download_and_extract_archive
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
 
 
 class COWC(VisionDataset, abc.ABC):
@@ -151,7 +146,7 @@ class COWC(VisionDataset, abc.ABC):
         """
         filename = os.path.join(self.root, self.images[index])
         with Image.open(filename) as img:
-            array = np.array(img)
+            array: "np.typing.NDArray[np.int_]" = np.array(img)
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
@@ -195,6 +190,48 @@ class COWC(VisionDataset, abc.ABC):
                 filename=filename,
                 md5=md5 if self.checksum else None,
             )
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        image = sample["image"]
+        label = cast(str, sample["label"].item())
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction = cast(str, sample["prediction"].item())
+        else:
+            prediction = None
+
+        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+        ax.imshow(image.permute(1, 2, 0))
+        ax.axis("off")
+
+        if show_titles:
+            title = f"Label: {label}"
+            if prediction is not None:
+                title += f"\nPrediction: {prediction}"
+            ax.set_title(title)
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
 
 
 class COWCCounting(COWC):
@@ -268,110 +305,3 @@ class COWCDetection(COWC):
 # 4. Unknown
 #
 # May need new abstract base class. Will need subclasses for different patch sizes.
-
-
-class COWCCountingDataModule(pl.LightningDataModule):
-    """LightningDataModule implementation for the COWC Counting dataset."""
-
-    def __init__(
-        self,
-        root_dir: str,
-        seed: int,
-        batch_size: int = 64,
-        num_workers: int = 0,
-        **kwargs: Any,
-    ) -> None:
-        """Initialize a LightningDataModule for COWC Counting based DataLoaders.
-
-        Args:
-            root_dir: The ``root`` arugment to pass to the COWCCounting Dataset class
-            seed: The seed value to use when doing the dataset random_split
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
-        """
-        super().__init__()  # type: ignore[no-untyped-call]
-        self.root_dir = root_dir
-        self.seed = seed
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-
-    def custom_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
-
-        Args:
-            sample: dictionary containing image and target
-
-        Returns:
-            preprocessed sample
-        """
-        sample["image"] = sample["image"] / 255.0  # scale to [0, 1]
-        sample["label"] = sample["label"].float()
-        return sample
-
-    def prepare_data(self) -> None:
-        """Initialize the main ``Dataset`` objects for use in :func:`setup`.
-
-        This includes optionally downloading the dataset. This is done once per node,
-        while :func:`setup` is done once per GPU.
-        """
-        COWCCounting(self.root_dir, download=False)
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Create the train/val/test splits based on the original Dataset objects.
-
-        The splits should be done here vs. in :func:`__init__` per the docs:
-        https://pytorch-lightning.readthedocs.io/en/latest/extensions/datamodules.html#setup.
-
-        Args:
-            stage: stage to set up
-        """
-        train_val_dataset = COWCCounting(
-            self.root_dir, split="train", transforms=self.custom_transform
-        )
-        self.test_dataset = COWCCounting(
-            self.root_dir, split="test", transforms=self.custom_transform
-        )
-        self.train_dataset, self.val_dataset = random_split(
-            train_val_dataset,
-            [len(train_val_dataset) - len(self.test_dataset), len(self.test_dataset)],
-            generator=Generator().manual_seed(self.seed),
-        )
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training.
-
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )

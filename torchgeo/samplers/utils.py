@@ -6,7 +6,7 @@
 import random
 from typing import Tuple, Union
 
-from torchgeo.datasets.utils import BoundingBox
+from ..datasets import BoundingBox
 
 from .constants import SIZE_IN_PIXELS, SIZE_IN_CRS_UNITS
 

@@ -2,21 +2,19 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Generator, cast
+from typing import Any, Dict, Type, cast
 
 import pytest
 import torch.nn as nn
-from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
-from pytorch_lightning.core.lightning import LightningModule
+from pytorch_lightning import LightningDataModule, Trainer
 from torchvision.models import resnet18
 
-from torchgeo.datasets import ChesapeakeCVPRDataModule
+from torchgeo.datamodules import ChesapeakeCVPRDataModule
 from torchgeo.trainers import BYOLTask
 from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
 
-from .test_utils import mocked_log
+from .test_utils import ClassificationTestModel
 
 
 class TestBYOL:
@@ -37,61 +35,39 @@ class TestBYOL:
 
 
 class TestBYOLTask:
-    @pytest.fixture(scope="class")
-    def datamodule(self) -> ChesapeakeCVPRDataModule:
-        dm = ChesapeakeCVPRDataModule(
-            os.path.join("tests", "data", "chesapeake", "cvpr"),
-            ["de-test"],
-            ["de-test"],
-            ["de-test"],
-            patch_size=4,
-            patches_per_tile=2,
-            batch_size=2,
-            num_workers=0,
-        )
-        dm.prepare_data()
-        dm.setup()
-        return dm
+    @pytest.mark.parametrize(
+        "name,classname",
+        [
+            ("chesapeake_cvpr_7", ChesapeakeCVPRDataModule),
+            ("chesapeake_cvpr_prior", ChesapeakeCVPRDataModule),
+        ],
+    )
+    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
+        conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
+        conf_dict = OmegaConf.to_object(conf.experiment)
+        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
 
-    @pytest.fixture(params=["resnet18", "resnet50"])
-    def config(self, request: SubRequest) -> Dict[str, Any]:
-        task_conf = OmegaConf.load(os.path.join("conf", "task_defaults", "byol.yaml"))
-        task_args = OmegaConf.to_object(task_conf.experiment.module)
-        task_args = cast(Dict[str, Any], task_args)
-        task_args["encoder"] = request.param
-        return task_args
+        # Instantiate datamodule
+        datamodule_kwargs = conf_dict["datamodule"]
+        datamodule = classname(**datamodule_kwargs)
 
-    @pytest.fixture
-    def task(
-        self, config: Dict[str, Any], monkeypatch: Generator[MonkeyPatch, None, None]
-    ) -> LightningModule:
-        task = BYOLTask(**config)
-        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
-        return task
+        # Instantiate model
+        model_kwargs = conf_dict["module"]
+        model = BYOLTask(**model_kwargs)
 
-    def test_configure_optimizers(self, task: BYOLTask) -> None:
-        out = task.configure_optimizers()
-        assert "optimizer" in out
-        assert "lr_scheduler" in out
+        model.encoder = ClassificationTestModel(**model_kwargs)
 
-    def test_training(
-        self, datamodule: ChesapeakeCVPRDataModule, task: BYOLTask
-    ) -> None:
-        batch = next(iter(datamodule.train_dataloader()))
-        task.training_step(batch, 0)
+        # Instantiate trainer
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1)
+        trainer.fit(model=model, datamodule=datamodule)
+        trainer.test(model=model, datamodule=datamodule)
 
-    def test_validation(
-        self, datamodule: ChesapeakeCVPRDataModule, task: BYOLTask
-    ) -> None:
-        batch = next(iter(datamodule.val_dataloader()))
-        task.validation_step(batch, 0)
-
-    def test_test(self, datamodule: ChesapeakeCVPRDataModule, task: BYOLTask) -> None:
-        batch = next(iter(datamodule.test_dataloader()))
-        task.test_step(batch, 0)
-
-    def test_invalid_encoder(self, config: Dict[str, Any]) -> None:
-        config["encoder"] = "invalid_encoder"
+    def test_invalid_encoder(self) -> None:
+        kwargs = {
+            "in_channels": 1,
+            "imagenet_pretraining": False,
+            "encoder_name": "invalid_encoder",
+        }
         error_message = "Encoder type 'invalid_encoder' is not valid."
         with pytest.raises(ValueError, match=error_message):
-            BYOLTask(**config)
+            BYOLTask(**kwargs)

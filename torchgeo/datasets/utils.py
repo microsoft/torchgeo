@@ -11,7 +11,6 @@ import lzma
 import os
 import sys
 import tarfile
-import zipfile
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import (
@@ -32,7 +31,6 @@ import numpy as np
 import rasterio
 import torch
 from torch import Tensor
-from torch.utils.data import Dataset, Subset, random_split
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
 
@@ -47,16 +45,13 @@ __all__ = (
     "stack_samples",
     "concat_samples",
     "merge_samples",
+    "unbind_samples",
     "rasterio_loader",
-    "dataset_split",
     "sort_sentinel2_bands",
     "draw_semantic_segmentation_masks",
     "rgb_to_mask",
     "percentile_normalization",
 )
-
-
-ColorMap = Union[List[Union[str, Tuple[int, int, int]]], str, Tuple[int, int, int]]
 
 
 class _rarfile:
@@ -81,6 +76,27 @@ class _rarfile:
             pass
 
 
+class _zipfile:
+    class ZipFile:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            self.args = args
+            self.kwargs = kwargs
+
+        def __enter__(self) -> Any:
+            try:
+                # Supports normal zip files, proprietary deflate64 compression algorithm
+                import zipfile_deflate64 as zipfile
+            except ImportError:
+                # Only supports normal zip files
+                # https://github.com/python/mypy/issues/1153
+                import zipfile  # type: ignore[no-redef]
+
+            return zipfile.ZipFile(*self.args, **self.kwargs)
+
+        def __exit__(self, exc_type: None, exc_value: None, traceback: None) -> None:
+            pass
+
+
 def extract_archive(src: str, dst: Optional[str] = None) -> None:
     """Extract an archive.
 
@@ -100,7 +116,7 @@ def extract_archive(src: str, dst: Optional[str] = None) -> None:
             (".tar", ".tar.gz", ".tar.bz2", ".tar.xz", ".tgz", ".tbz2", ".tbz", ".txz"),
             tarfile.open,
         ),
-        (".zip", zipfile.ZipFile),
+        (".zip", _zipfile.ZipFile),
     ]
 
     for suffix, extractor in suffix_and_extractor:
@@ -223,6 +239,8 @@ class BoundingBox:
         Raises:
             ValueError: if bounding box is invalid
                 (minx > maxx, miny > maxy, or mint > maxt)
+
+        .. versionadded:: 0.2
         """
         if self.minx > self.maxx:
             raise ValueError(
@@ -276,6 +294,8 @@ class BoundingBox:
 
         Returns:
             True if other is within this bounding box, else False
+
+        .. versionadded:: 0.2
         """
         return (
             (self.minx <= other.minx <= self.maxx)
@@ -294,6 +314,8 @@ class BoundingBox:
 
         Returns:
             the minimum bounding box that contains both self and other
+
+        .. versionadded:: 0.2
         """
         return BoundingBox(
             min(self.minx, other.minx),
@@ -315,6 +337,8 @@ class BoundingBox:
 
         Raises:
             ValueError: if self and other do not intersect
+
+        .. versionadded:: 0.2
         """
         try:
             return BoundingBox(
@@ -431,12 +455,34 @@ def _list_dict_to_dict_list(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, List
 
     Returns:
         a dictionary of lists
+
+    .. versionadded:: 0.2
     """
     collated = collections.defaultdict(list)
     for sample in samples:
         for key, value in sample.items():
             collated[key].append(value)
     return collated
+
+
+def _dict_list_to_list_dict(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
+    """Convert a dictionary of lists to a list of dictionaries.
+
+    Args:
+        sample: a dictionary of lists
+
+    Returns:
+        a list of dictionaries
+
+    .. versionadded:: 0.2
+    """
+    uncollated: List[Dict[Any, Any]] = [
+        {} for _ in range(max(map(len, sample.values())))
+    ]
+    for key, values in sample.items():
+        for i, value in enumerate(values):
+            uncollated[i][key] = value
+    return uncollated
 
 
 def stack_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
@@ -450,6 +496,8 @@ def stack_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
 
     Returns:
         a single sample
+
+    .. versionadded:: 0.2
     """
     collated: Dict[Any, Any] = _list_dict_to_dict_list(samples)
     for key, value in collated.items():
@@ -468,6 +516,8 @@ def concat_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
 
     Returns:
         a single sample
+
+    .. versionadded:: 0.2
     """
     collated: Dict[Any, Any] = _list_dict_to_dict_list(samples)
     for key, value in collated.items():
@@ -488,6 +538,8 @@ def merge_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
 
     Returns:
         a single sample
+
+    .. versionadded:: 0.2
     """
     collated: Dict[Any, Any] = {}
     for sample in samples:
@@ -503,7 +555,27 @@ def merge_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
     return collated
 
 
-def rasterio_loader(path: str) -> np.ndarray:  # type: ignore[type-arg]
+def unbind_samples(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
+    """Reverse of :func:`stack_samples`.
+
+    Useful for turning a mini-batch of samples into a list of samples. These individual
+    samples can then be plotted using a dataset's ``plot`` method.
+
+    Args:
+        sample: a mini-batch of samples
+
+    Returns:
+         list of samples
+
+    .. versionadded:: 0.2
+    """
+    for key, values in sample.items():
+        if isinstance(values, Tensor):
+            sample[key] = torch.unbind(values)
+    return _dict_list_to_list_dict(sample)
+
+
+def rasterio_loader(path: str) -> "np.typing.NDArray[np.int_]":
     """Load an image file using rasterio.
 
     Args:
@@ -513,35 +585,10 @@ def rasterio_loader(path: str) -> np.ndarray:  # type: ignore[type-arg]
         the image
     """
     with rasterio.open(path) as f:
-        array: np.ndarray = f.read().astype(np.int32)  # type: ignore[type-arg]
+        array: "np.typing.NDArray[np.int_]" = f.read().astype(np.int32)
         # VisionClassificationDataset expects images returned with channels last (HWC)
         array = array.transpose(1, 2, 0)
     return array
-
-
-def dataset_split(
-    dataset: Dataset[Any], val_pct: float, test_pct: Optional[float] = None
-) -> List[Subset[Any]]:
-    """Split a torch Dataset into train/val/test sets.
-
-    If ``test_pct`` is not set then only train and validation splits are returned.
-
-    Args:
-        dataset: dataset to be split into train/val or train/val/test subsets
-        val_pct: percentage of samples to be in validation set
-        test_pct: (Optional) percentage of samples to be in test set
-    Returns:
-        a list of the subset datasets. Either [train, val] or [train, val, test]
-    """
-    if test_pct is None:
-        val_length = int(len(dataset) * val_pct)
-        train_length = len(dataset) - val_length
-        return random_split(dataset, [train_length, val_length])
-    else:
-        val_length = int(len(dataset) * val_pct)
-        test_length = int(len(dataset) * test_pct)
-        train_length = len(dataset) - (val_length + test_length)
-        return random_split(dataset, [train_length, val_length, test_length])
 
 
 def sort_sentinel2_bands(x: str) -> str:
@@ -554,17 +601,23 @@ def sort_sentinel2_bands(x: str) -> str:
 
 
 def draw_semantic_segmentation_masks(
-    image: Tensor, mask: Tensor, alpha: float = 0.5, colors: Optional[ColorMap] = None
-) -> np.ndarray:  # type: ignore[type-arg]
+    image: Tensor,
+    mask: Tensor,
+    alpha: float = 0.5,
+    colors: Optional[Sequence[Union[str, Tuple[int, int, int]]]] = None,
+) -> "np.typing.NDArray[np.uint8]":
     """Overlay a semantic segmentation mask onto an image.
 
     Args:
-        image: tensor of shape (3, h, w)
-        mask: tensor of shape (h, w) with pixel values representing the classes
+        image: tensor of shape (3, h, w) and dtype uint8
+        mask: tensor of shape (h, w) with pixel values representing the classes and
+            dtype bool
         alpha: alpha blend factor
         colors: list of RGB int tuples, or color strings e.g. red, #FF00FF
+
     Returns:
-        a list of the subset datasets. Either [train, val] or [train, val, test]
+        a version of ``image`` overlayed with the colors given by ``mask`` and
+            ``colors``
     """
     classes = torch.unique(mask)  # type: ignore[attr-defined]
     classes = classes[1:]
@@ -572,13 +625,13 @@ def draw_semantic_segmentation_masks(
     img = draw_segmentation_masks(
         image=image, masks=class_masks, alpha=alpha, colors=colors
     )
-    img = img.permute((1, 2, 0)).numpy()
-    return img  # type: ignore[no-any-return]
+    img = img.permute((1, 2, 0)).numpy().astype(np.uint8)
+    return cast("np.typing.NDArray[np.uint8]", img)
 
 
 def rgb_to_mask(
-    rgb: np.ndarray, colors: List[Tuple[int, int, int]]  # type: ignore[type-arg]
-) -> np.ndarray:  # type: ignore[type-arg]
+    rgb: "np.typing.NDArray[np.uint8]", colors: List[Tuple[int, int, int]]
+) -> "np.typing.NDArray[np.uint8]":
     """Converts an RGB colormap mask to a integer mask.
 
     Args:
@@ -588,8 +641,11 @@ def rgb_to_mask(
     Returns:
         integer array mask
     """
+    assert len(colors) <= 256  # we currently return a uint8 array, so the largest value
+    # we can map is 255
+
     h, w = rgb.shape[:2]
-    mask = np.zeros(shape=(h, w), dtype=np.uint8)
+    mask: "np.typing.NDArray[np.uint8]" = np.zeros(shape=(h, w), dtype=np.uint8)
     for i, c in enumerate(colors):
         cmask = rgb == c
         # Only update mask if class is present in mask
@@ -599,11 +655,11 @@ def rgb_to_mask(
 
 
 def percentile_normalization(
-    img: np.ndarray,  # type: ignore[type-arg]
+    img: "np.typing.NDArray[np.int_]",
     lower: float = 2,
     upper: float = 98,
     axis: Optional[Union[int, Sequence[int]]] = None,
-) -> np.ndarray:  # type: ignore[type-arg]
+) -> "np.typing.NDArray[np.int_]":
     """Applies percentile normalization to an input image.
 
     Specifically, this will rescale the values in the input such that values <= the
@@ -623,13 +679,9 @@ def percentile_normalization(
     .. versionadded:: 0.2
     """
     assert lower < upper
-    lower_percentile = np.percentile(  # type: ignore[no-untyped-call]
-        img, lower, axis=axis
-    )
-    upper_percentile = np.percentile(  # type: ignore[no-untyped-call]
-        img, upper, axis=axis
-    )
-    img_normalized = np.clip(
+    lower_percentile = np.percentile(img, lower, axis=axis)
+    upper_percentile = np.percentile(img, upper, axis=axis)
+    img_normalized: "np.typing.NDArray[np.int_]" = np.clip(
         (img - lower_percentile) / (upper_percentile - lower_percentile), 0, 1
     )
-    return cast(np.ndarray, img_normalized)  # type: ignore[type-arg]
+    return img_normalized

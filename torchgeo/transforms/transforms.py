@@ -8,14 +8,14 @@ from typing import Dict, List, Union
 import kornia.augmentation as K
 import torch
 from torch import Tensor
-from torch.nn import Module  # type: ignore[attr-defined]
+from torch.nn.modules import Module
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 Module.__module__ = "torch.nn"
 
 
-class AugmentationSequential(Module):  # type: ignore[misc]
+class AugmentationSequential(Module):
     """Wrapper around kornia AugmentationSequential to handle input dicts."""
 
     def __init__(self, *args: Module, data_keys: List[str]) -> None:

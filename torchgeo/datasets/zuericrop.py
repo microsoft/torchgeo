@@ -4,13 +4,14 @@
 """ZueriCrop dataset."""
 
 import os
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, Optional, Sequence, Tuple
 
+import matplotlib.pyplot as plt
 import torch
 from torch import Tensor
 
 from .geo import VisionDataset
-from .utils import download_url
+from .utils import download_url, percentile_normalization
 
 
 class ZueriCrop(VisionDataset):
@@ -56,9 +57,13 @@ class ZueriCrop(VisionDataset):
     md5s = ["1635231df67f3d25f4f1e62c98e221a4", "5118398c7a5bbc246f5f6bb35d8d529b"]
     filenames = ["ZueriCrop.hdf5", "labels.csv"]
 
+    band_names = ("NIR", "B03", "B02", "B04", "B05", "B06", "B07", "B11", "B12")
+    RGB_BANDS = ["B04", "B03", "B02"]
+
     def __init__(
         self,
         root: str = "data",
+        bands: Sequence[str] = band_names,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -67,6 +72,7 @@ class ZueriCrop(VisionDataset):
 
         Args:
             root: root directory where dataset can be found
+            bands: the subset of bands to load
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -76,7 +82,13 @@ class ZueriCrop(VisionDataset):
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
+        self._validate_bands(bands)
+        self.band_indices = torch.tensor(  # type: ignore[attr-defined]
+            [self.band_names.index(b) for b in bands]
+        ).long()
+
         self.root = root
+        self.bands = bands
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
@@ -139,6 +151,9 @@ class ZueriCrop(VisionDataset):
         tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
         # Convert from TxHxWxC to TxCxHxW
         tensor = tensor.permute((0, 3, 1, 2))
+        tensor = torch.index_select(  # type: ignore[attr-defined]
+            tensor, dim=1, index=self.band_indices
+        )
         return tensor
 
     def _load_target(self, index: int) -> Tuple[Tensor, Tensor, Tensor]:
@@ -230,3 +245,84 @@ class ZueriCrop(VisionDataset):
                     filename=filename,
                     md5=md5 if self.checksum else None,
                 )
+
+    def _validate_bands(self, bands: Sequence[str]) -> None:
+        """Validate list of bands.
+
+        Args:
+            bands: user-provided sequence of bands to load
+        Raises:
+            AssertionError: if ``bands`` is not a sequence
+            ValueError: if an invalid band name is provided
+
+        .. versionadded:: 0.2
+        """
+        assert isinstance(bands, Sequence), "'bands' must be a sequence"
+        for band in bands:
+            if band not in self.band_names:
+                raise ValueError(f"'{band}' is an invalid band name.")
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        time_step: int = 0,
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            time_step: time step at which to access image, beginning with 0
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional suptitle to use for figure
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        rgb_indices = []
+        for band in self.RGB_BANDS:
+            if band in self.bands:
+                rgb_indices.append(self.bands.index(band))
+            else:
+                raise ValueError("Dataset doesn't contain some of the RGB bands")
+
+        ncols = 2
+        image, mask = sample["image"][time_step, rgb_indices], sample["mask"]
+
+        image = torch.tensor(  # type: ignore[attr-defined]
+            percentile_normalization(image.numpy()) * 255,
+            dtype=torch.uint8,  # type: ignore[attr-defined]
+        )
+
+        mask = torch.argmax(mask, dim=0)  # type: ignore[attr-defined]
+
+        if "prediction" in sample:
+            ncols += 1
+            preds = torch.argmax(  # type: ignore[attr-defined]
+                sample["prediction"], dim=0
+            )
+
+        fig, axs = plt.subplots(ncols=ncols, figsize=(10, 10 * ncols))
+
+        axs[0].imshow(image.permute(1, 2, 0))
+        axs[0].axis("off")
+        axs[1].imshow(mask)
+        axs[1].axis("off")
+
+        if show_titles:
+            axs[0].set_title("Image")
+            axs[1].set_title("Mask")
+
+        if "prediction" in sample:
+            axs[2].imshow(preds)
+            axs[2].axis("off")
+            if show_titles:
+                axs[2].set_title("Prediction")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig

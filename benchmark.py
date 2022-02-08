@@ -52,7 +52,7 @@ def set_up_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-b",
         "--batch-size",
-        default=2 ** 4,
+        default=2**4,
         type=int,
         help="number of samples in each mini-batch",
         metavar="SIZE",
@@ -167,7 +167,7 @@ def main(args: argparse.Namespace) -> None:
             dataloader = DataLoader(
                 dataset,
                 batch_size=args.batch_size,
-                sampler=sampler,  # type: ignore[arg-type]
+                sampler=sampler,
                 num_workers=args.num_workers,
                 collate_fn=stack_samples,
             )

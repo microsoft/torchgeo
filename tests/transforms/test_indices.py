@@ -7,7 +7,16 @@ import pytest
 import torch
 from torch import Tensor
 
-from torchgeo.transforms import indices
+from torchgeo.transforms import (
+    AppendGNDVI,
+    AppendNBR,
+    AppendNDBI,
+    AppendNDSI,
+    AppendNDVI,
+    AppendNDWI,
+    AppendNormalizedDifferenceIndex,
+    AppendSWI,
+)
 
 
 @pytest.fixture
@@ -39,53 +48,28 @@ def batch() -> Dict[str, Tensor]:
     }
 
 
-def test_ndbi(sample: Dict[str, Tensor]) -> None:
-    index = indices.ndbi(swir=sample["image"], nir=sample["image"])
-    assert index.ndim == 3
-    assert index.shape[-2:] == sample["image"].shape[-2:]
+def test_append_index_sample(sample: Dict[str, Tensor]) -> None:
+    c, h, w = sample["image"].shape
+    tr = AppendNormalizedDifferenceIndex(index_a=0, index_b=0)
+    output = tr(sample)
+    assert output["image"].shape == (c + 1, h, w)
 
 
-def test_ndsi(sample: Dict[str, Tensor]) -> None:
-    index = indices.ndsi(green=sample["image"], swir=sample["image"])
-    assert index.ndim == 3
-    assert index.shape[-2:] == sample["image"].shape[-2:]
-
-
-def test_ndvi(sample: Dict[str, Tensor]) -> None:
-    index = indices.ndvi(red=sample["image"], nir=sample["image"])
-    assert index.ndim == 3
-    assert index.shape[-2:] == sample["image"].shape[-2:]
-
-
-def test_ndwi(sample: Dict[str, Tensor]) -> None:
-    index = indices.ndwi(green=sample["image"], nir=sample["image"])
-    assert index.ndim == 3
-    assert index.shape[-2:] == sample["image"].shape[-2:]
-
-
-def test_append_ndbi(batch: Dict[str, Tensor]) -> None:
+def test_append_index_batch(batch: Dict[str, Tensor]) -> None:
     b, c, h, w = batch["image"].shape
-    tr = indices.AppendNDBI(index_swir=0, index_nir=0)
+    tr = AppendNormalizedDifferenceIndex(index_a=0, index_b=0)
     output = tr(batch)
     assert output["image"].shape == (b, c + 1, h, w)
 
 
-def test_append_ndsi(batch: Dict[str, Tensor]) -> None:
-    b, c, h, w = batch["image"].shape
-    tr = indices.AppendNDSI(index_green=0, index_swir=0)
-    output = tr(batch)
-    assert output["image"].shape == (b, c + 1, h, w)
-
-
-def test_append_ndvi(batch: Dict[str, Tensor]) -> None:
-    b, c, h, w = batch["image"].shape
-    tr = indices.AppendNDVI(index_red=0, index_nir=0)
-    output = tr(batch)
-    assert output["image"].shape == (b, c + 1, h, w)
-
-
-def test_append_ndwi(batch: Dict[str, Tensor]) -> None:
-    b, c, h, w = batch["image"].shape
-    tr = indices.AppendNDWI(index_green=0, index_nir=0)
-    output = tr(batch)
-    assert output["image"].shape == (b, c + 1, h, w)
+@pytest.mark.parametrize(
+    "index",
+    [AppendNBR, AppendNDBI, AppendNDSI, AppendNDVI, AppendNDWI, AppendSWI, AppendGNDVI],
+)
+def test_append_normalized_difference_indices(
+    sample: Dict[str, Tensor], index: AppendNormalizedDifferenceIndex
+) -> None:
+    c, h, w = sample["image"].shape
+    tr = index(0, 0)
+    output = tr(sample)
+    assert output["image"].shape == (c + 1, h, w)

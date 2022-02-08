@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -31,7 +32,7 @@ class TestLEVIRCDPlus:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.utils, "download_url", download_url
         )
-        md5 = "b61c300e9fd7146eb2c8e2512c0e9d39"
+        md5 = "1adf156f628aa32fb2e8fe6cada16c04"
         monkeypatch.setattr(LEVIRCDPlus, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "levircd", "LEVIR-CD+.zip")
         monkeypatch.setattr(LEVIRCDPlus, "url", url)  # type: ignore[attr-defined]
@@ -60,3 +61,12 @@ class TestLEVIRCDPlus:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             LEVIRCDPlus(str(tmp_path))
+
+    def test_plot(self, dataset: LEVIRCDPlus) -> None:
+        dataset.plot(dataset[0], suptitle="Test")
+        plt.close()
+
+        sample = dataset[0]
+        sample["prediction"] = sample["mask"].clone()
+        dataset.plot(sample, suptitle="Prediction")
+        plt.close()

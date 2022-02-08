@@ -14,6 +14,7 @@ from torchgeo.datasets.geo import GeoDataset
 from torchgeo.datasets.utils import BoundingBox
 
 from .constants import SIZE_IN_CRS_UNITS, SIZE_IN_PIXELS
+from ..datasets import BoundingBox, GeoDataset
 from .utils import _to_tuple, get_random_bounding_box
 
 # https://github.com/pytorch/pytorch/issues/60979
@@ -99,7 +100,14 @@ class RandomGeoSampler(GeoSampler):
         self.size = _to_tuple(size)
         self.length = length
         self.units = units
-        self.hits = list(self.index.intersection(tuple(self.roi), objects=True))
+        self.hits = []
+        for hit in self.index.intersection(tuple(self.roi), objects=True):
+            bounds = BoundingBox(*hit.bounds)
+            if (
+                bounds.maxx - bounds.minx > self.size[1]
+                and bounds.maxy - bounds.miny > self.size[0]
+            ):
+                self.hits.append(hit)
 
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
@@ -169,7 +177,14 @@ class GridGeoSampler(GeoSampler):
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
         self.stride = _to_tuple(stride)
-        self.hits = list(self.index.intersection(tuple(self.roi), objects=True))
+        self.hits = []
+        for hit in self.index.intersection(tuple(self.roi), objects=True):
+            bounds = BoundingBox(*hit.bounds)
+            if (
+                bounds.maxx - bounds.minx > self.size[1]
+                and bounds.maxy - bounds.miny > self.size[0]
+            ):
+                self.hits.append(hit)
 
         self.length: int = 0
         for hit in self.hits:

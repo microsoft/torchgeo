@@ -31,12 +31,16 @@ Chesapeake Bay High-Resolution Land Cover Project
 .. autoclass:: ChesapeakeVA
 .. autoclass:: ChesapeakeWV
 .. autoclass:: ChesapeakeCVPR
-.. autoclass:: ChesapeakeCVPRDataModule
 
 Cropland Data Layer (CDL)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: CDL
+
+EnviroAtlas
+^^^^^^^^^^^
+
+.. autoclass:: EnviroAtlas
 
 Landsat
 ^^^^^^^
@@ -57,7 +61,6 @@ National Agriculture Imagery Program (NAIP)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: NAIP
-.. autoclass:: NAIPChesapeakeDataModule
 
 Sentinel
 ^^^^^^^^
@@ -86,7 +89,6 @@ BigEarthNet
 ^^^^^^^^^^^
 
 .. autoclass:: BigEarthNet
-.. autoclass:: BigEarthNetDataModule
 
 Cars Overhead With Context (COWC)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -94,30 +96,31 @@ Cars Overhead With Context (COWC)
 .. autoclass:: COWC
 .. autoclass:: COWCCounting
 .. autoclass:: COWCDetection
-.. autoclass:: COWCCountingDataModule
 
 CV4A Kenya Crop Type Competition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: CV4AKenyaCropType
 
+2022 IEEE GRSS Data Fusion Contest (DFC2022)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: DFC2022
+
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: ETCI2021
-.. autoclass:: ETCI2021DataModule
 
 EuroSAT
-^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^
 
 .. autoclass:: EuroSAT
-.. autoclass:: EuroSATDataModule
 
 FAIR1M (Fine-grAined object recognItion in high-Resolution imagery)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: FAIR1M
-.. autoclass:: FAIR1MDataModule
 
 GID-15 (Gaofen Image Dataset)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -129,11 +132,15 @@ IDTReeS
 
 .. autoclass:: IDTReeS
 
+Inria Aerial Image Labeling
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: InriaAerialImageLabeling
+
 LandCover.ai (Land Cover from Aerial Imagery)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: LandCoverAI
-.. autoclass:: LandCoverAIDataModule
 
 LEVIR-CD+ (LEVIR Change Detection +)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -144,19 +151,16 @@ LoveDA (Land-cOVEr Domain Adaptive semantic segmentation)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: LoveDA
-.. autoclass:: LoveDADataModule
 
 NASA Marine Debris
 ^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: NASAMarineDebris
-.. autoclass:: NASAMarineDebrisDataModule
 
 OSCD (Onera Satellite Change Detection)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: OSCD
-.. autoclass:: OSCDDataModule
 
 PatternNet
 ^^^^^^^^^^
@@ -167,13 +171,11 @@ Potsdam
 ^^^^^^^
 
 .. autoclass:: Potsdam2D
-.. autoclass:: Potsdam2DDataModule
 
 RESISC45 (Remote Sensing Image Scene Classification)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: RESISC45
-.. autoclass:: RESISC45DataModule
 
 Seasonal Contrast
 ^^^^^^^^^^^^^^^^^
@@ -184,13 +186,11 @@ SEN12MS
 ^^^^^^^
 
 .. autoclass:: SEN12MS
-.. autoclass:: SEN12MSDataModule
 
 So2Sat
 ^^^^^^
 
 .. autoclass:: So2Sat
-.. autoclass:: So2SatDataModule
 
 SpaceNet
 ^^^^^^^^
@@ -206,30 +206,26 @@ Tropical Cyclone Wind Estimation Competition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: TropicalCycloneWindEstimation
-.. autoclass:: CycloneDataModule
+
+UC Merced
+^^^^^^^^^
+
+.. autoclass:: UCMerced
 
 Vaihingen
 ^^^^^^^^^
 
 .. autoclass:: Vaihingen2D
-.. autoclass:: Vaihingen2DDataModule
 
 NWPU VHR-10
 ^^^^^^^^^^^
 
 .. autoclass:: VHR10
 
-UC Merced
-^^^^^^^^^
-
-.. autoclass:: UCMerced
-.. autoclass:: UCMercedDataModule
-
 xView2
 ^^^^^^
 
 .. autoclass:: XView2
-.. autoclass:: XView2DataModule
 
 ZueriCrop
 ^^^^^^^^^
@@ -289,3 +285,4 @@ Collation Functions
 .. autofunction:: stack_samples
 .. autofunction:: concat_samples
 .. autofunction:: merge_samples
+.. autofunction:: unbind_samples

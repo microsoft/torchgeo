@@ -14,7 +14,7 @@ from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import ETCI2021, ETCI2021DataModule
+from torchgeo.datasets import ETCI2021
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -36,19 +36,19 @@ class TestETCI2021:
         metadata = {
             "train": {
                 "filename": "train.zip",
-                "md5": "50c10eb07d6db9aee3ba36401e4a2c45",
+                "md5": "ebbd2e65cd10621bc2e90a230b474b8b",
                 "directory": "train",
                 "url": os.path.join(data_dir, "train.zip"),
             },
             "val": {
                 "filename": "val_with_ref_labels.zip",
-                "md5": "3e8b5a3cb95e6029e0e2c2d4b4ec6fba",
+                "md5": "efdd1fe6c90f5dfd267c88b86b237c2b",
                 "directory": "test",
                 "url": os.path.join(data_dir, "val_with_ref_labels.zip"),
             },
             "test": {
                 "filename": "test_without_ref_labels.zip",
-                "md5": "c8ee1e5d3e478761cd00ebc6f28b0ae7",
+                "md5": "bf1180143de5705fe95fa8490835d6d1",
                 "directory": "test_internal",
                 "url": os.path.join(data_dir, "test_without_ref_labels.zip"),
             },
@@ -95,25 +95,3 @@ class TestETCI2021:
         x["prediction"] = x["mask"][0].clone()
         dataset.plot(x)
         plt.close()
-
-
-class TestETCI2021DataModule:
-    @pytest.fixture(scope="class")
-    def datamodule(self) -> ETCI2021DataModule:
-        root = os.path.join("tests", "data", "etci2021")
-        seed = 0
-        batch_size = 2
-        num_workers = 0
-        dm = ETCI2021DataModule(root, seed, batch_size, num_workers)
-        dm.prepare_data()
-        dm.setup()
-        return dm
-
-    def test_train_dataloader(self, datamodule: ETCI2021DataModule) -> None:
-        next(iter(datamodule.train_dataloader()))
-
-    def test_val_dataloader(self, datamodule: ETCI2021DataModule) -> None:
-        next(iter(datamodule.val_dataloader()))
-
-    def test_test_dataloader(self, datamodule: ETCI2021DataModule) -> None:
-        next(iter(datamodule.test_dataloader()))

@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -65,3 +66,18 @@ class TestGID15:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             GID15(str(tmp_path))
+
+    def test_plot(self, dataset: GID15) -> None:
+        dataset.plot(dataset[0], suptitle="Test")
+        plt.close()
+
+        if dataset.split != "test":
+            sample = dataset[0]
+            sample["prediction"] = torch.clone(  # type: ignore[attr-defined]
+                sample["mask"]
+            )
+            dataset.plot(sample, suptitle="Prediction")
+        else:
+            sample = dataset[0]
+            sample["prediction"] = torch.ones((1, 1))  # type: ignore[attr-defined]
+            dataset.plot(sample)
