@@ -44,26 +44,25 @@ def get_random_bounding_box(
     Args:
         bounds: the larger bounding box to sample from
         size: the size of the bounding box to sample
-        sample_mode: whether to sample in pixel space or CRS unit space
+        sample_mode: defines if `size` is in pixels or in CRS units.
 
     Returns:
         randomly sampled bounding box from the extent of the input
     """
     t_size: Tuple[float, float] = _to_tuple(size)
+    if sample_mode == SIZE_IN_PIXELS:
+        t_size[0] *= res
+        t_size[1] *= res
 
     width = (bounds.maxx - bounds.minx - t_size[1]) // res
     minx = random.randrange(int(width)) * res + bounds.minx
     if sample_mode == SIZE_IN_CRS_UNITS:
         maxx = minx + t_size[1]
-    elif sample_mode == SIZE_IN_PIXELS:
-        maxx = minx + t_size[1] * res
 
     height = (bounds.maxy - bounds.miny - t_size[0]) // res
     miny = random.randrange(int(height)) * res + bounds.miny
     if sample_mode == SIZE_IN_CRS_UNITS:
         maxy = miny + t_size[0]
-    elif sample_mode == SIZE_IN_PIXELS:
-        maxy = miny + t_size[1] * res
 
     mint = bounds.mint
     maxt = bounds.maxt
