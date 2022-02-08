@@ -76,7 +76,7 @@ class RandomGeoSampler(GeoSampler):
         size: Union[Tuple[float, float], float],
         length: int,
         roi: Optional[BoundingBox] = None,
-        sample_mode: int = SIZE_IN_PIXELS,
+        units: int = SIZE_IN_PIXELS,
     ) -> None:
         """Initialize a new Sampler instance.
 
@@ -93,12 +93,12 @@ class RandomGeoSampler(GeoSampler):
             length: number of random samples to draw per epoch
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
-            sample_mode: defines if `size` is in pixels or in CRS units.
+            units: defines if `size` is in pixels or in CRS units.
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
         self.length = length
-        self.sample_mode = sample_mode
+        self.units = units
         self.hits = list(self.index.intersection(tuple(self.roi), objects=True))
 
     def __iter__(self) -> Iterator[BoundingBox]:
@@ -114,7 +114,7 @@ class RandomGeoSampler(GeoSampler):
 
             # Choose a random index within that tile
             bounding_box = get_random_bounding_box(
-                bounds, self.size, self.res, self.sample_mode
+                bounds, self.size, self.res, self.units
             )
 
             yield bounding_box
