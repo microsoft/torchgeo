@@ -14,8 +14,6 @@ import rasterio
 import rasterio.features
 import torch
 from rasterio.crs import CRS
-
-
 from torch import Tensor
 
 from .geo import VisionDataset
@@ -236,7 +234,7 @@ class BeninSmallHolderCashews(VisionDataset):
             index: index to return
 
         Returns:
-            a dict containing image, mask, tile_transform, crs and metadata at that index
+            a dict containing image, mask, tile_transform, crs and metadata at index.
         """
         y, x = self.chips_metadata[index]
 
@@ -295,10 +293,10 @@ class BeninSmallHolderCashews(VisionDataset):
             bands: tuple of bands to load
 
         Returns:
-            imagery of shape (70, number of bands, 1186, 1122) where 70 is the number 
+            imagery of shape (70, number of bands, 1186, 1122) where 70 is the number
             of points in time, 1186 is the tile height, and 1122 is the tile width
             rasterio affine transform, mapping pixel coordinates to geo coordinates
-            coordinate reference system of tile_transform 
+            coordinate reference system of tile_transform
         """
         if self.verbose:
             print("Loading all imagery")
@@ -332,8 +330,8 @@ class BeninSmallHolderCashews(VisionDataset):
             bands: bands to load
 
         Returns:
-            Tensor containing a single image tile, rasterio affine transform, 
-            mapping pixel coordinates to geo coordinates, and coordinate 
+            Tensor containing a single image tile, rasterio affine transform,
+            mapping pixel coordinates to geo coordinates, and coordinate
             reference system of tile_transform.
 
         Raises:
