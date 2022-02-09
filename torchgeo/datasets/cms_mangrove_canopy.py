@@ -16,13 +16,25 @@ from .utils import check_integrity
 class CMS_Global_Mangrove_Canopy(RasterDataset, abc.ABC):
     """CMS Global Mangrove Canopy dataset.
 
-    The 'CMS Global Mangrove Canopy dataset
-    <https://daac.ornl.gov/cgi-bin/dsviewer.pl?ds_id=1665>'
+    The `CMS Global Mangrove Canopy dataset
+    <https://daac.ornl.gov/cgi-bin/dsviewer.pl?ds_id=1665>`_
     consists of a single band map at 30m resolution of either aboveground biomass (agb),
     basal area weighted height (hba95), or maximum canopy height (hmax95).
 
-    The dataset needs to be manually dowloaded from , where you can make an account
-    and subsequently download the dataset.
+    The dataset needs to be manually dowloaded from the above link, where you can make
+    an account and subsequently download the dataset.
+
+    Warning: there are three cases in the dataset for which the country name is
+    misspelled between the different measurements. Namely:
+
+    - agb_FrenchGuyana.tif, hmax95_FrenchGuyana.tif, but hba95_FrenchGuiana.tif
+    - agb_Newzealand.tif, hmax95_Newzealand.tif, but hba_95_NewZealand.tif
+    - agb_CoteDivoire.tif, hmax95_CoteDivoire.tif, but hba_95_CotedIvoire.tif
+
+    In these three cases, you can either rename the files manually after downloading
+    to access measurements consistently with one country name, or choose the appropriate
+    spelling for the specific measurement.
+
     """
 
     is_image = False
