@@ -44,7 +44,7 @@ class Sentinel2(Sentinel):
     filename_regex = r"""
         ^T(?P<tile>\d{2}[A-Z]{3})
         _(?P<date>\d{8}T\d{6})
-        _(?P<band>B\d{2})
+        _(?P<band>B[018][0123456789A])
         _(?P<resolution>\d{2}m)
         \..*$
     """
