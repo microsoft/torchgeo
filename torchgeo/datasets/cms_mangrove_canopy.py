@@ -3,17 +3,17 @@
 
 """CMS Global Mangrove Canopy dataset."""
 
-import abc
+import glob
 import os
 from typing import Any, Callable, Dict, Optional
 
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import check_integrity
+from .utils import extract_archive
 
 
-class CMS_Global_Mangrove_Canopy(RasterDataset, abc.ABC):
+class CMS_Global_Mangrove_Canopy(RasterDataset):
     """CMS Global Mangrove Canopy dataset.
 
     The `CMS Global Mangrove Canopy dataset
@@ -24,17 +24,7 @@ class CMS_Global_Mangrove_Canopy(RasterDataset, abc.ABC):
     The dataset needs to be manually dowloaded from the above link, where you can make
     an account and subsequently download the dataset.
 
-    Warning: there are three cases in the dataset for which the country name is
-    misspelled between the different measurements. Namely:
-
-    - agb_FrenchGuyana.tif, hmax95_FrenchGuyana.tif, but hba95_FrenchGuiana.tif
-    - agb_Newzealand.tif, hmax95_Newzealand.tif, but hba_95_NewZealand.tif
-    - agb_CoteDivoire.tif, hmax95_CoteDivoire.tif, but hba_95_CotedIvoire.tif
-
-    In these three cases, you can either rename the files manually after downloading
-    to access measurements consistently with one country name, or choose the appropriate
-    spelling for the specific measurement.
-
+    .. versionadded:: 0.3
     """
 
     is_image = False
@@ -223,24 +213,37 @@ class CMS_Global_Mangrove_Canopy(RasterDataset, abc.ABC):
         )
         self.measurement = measurement
 
-        self.filename_glob = "Mangrove_{}_{}*".format(self.measurement, self.country)
+        self.filename_glob = "**/Mangrove_{}_{}*".format(self.measurement, self.country)
 
-        if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                "Please ensure you have manually downloaded it."
-            )
+        self._verify()
 
         super().__init__(root, crs, res, transforms, cache)
 
-    def _check_integrity(self) -> bool:
-        """Check integrity of dataset.
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
 
-        Returns:
-            True if dataset files are found and/or MD5s match, else False
+        Raises:
+            RuntimeError: if dataset is not in root or was not downloaded manually
         """
-        integrity: bool = check_integrity(
-            os.path.join(self.root, self.zipfile), self.md5 if self.checksum else None
+        # Check if the extracted files already exist
+        pathname = os.path.join(self.root, "**", self.filename_glob)
+        if glob.glob(pathname):
+            return
+
+        # Check if the zip files have already been downloaded
+        pathname = os.path.join(self.root, self.zipfile)
+        if glob.glob(pathname):
+            self._extract()
+            return
+
+        raise RuntimeError(
+            f"Dataset not found in `root={self.root}` "
+            "either specify a different `root` directory or make sure you "
+            "have manually downloaded the dataset as instructed in the documentation."
         )
 
-        return integrity
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        pathname = os.path.join(self.root, self.zipfile)
+        for zipfile in glob.iglob(pathname):
+            extract_archive(zipfile)

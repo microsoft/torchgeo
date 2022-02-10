@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from pathlib import Path
 from typing import Generator
 
 import pytest
@@ -12,7 +13,6 @@ from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import (
-    BoundingBox,
     CMS_Global_Mangrove_Canopy,
     IntersectionDataset,
     UnionDataset,
@@ -26,14 +26,14 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestCMS_Global_Mangrove_Canopy:
     @pytest.fixture
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None]
+        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> CMS_Global_Mangrove_Canopy:
         zipfile = "CMS_Global_Map_Mangrove_Canopy_1665.zip"
         monkeypatch.setattr(  # type: ignore[attr-defined]
             CMS_Global_Mangrove_Canopy, "zipfile", zipfile
         )
 
-        md5 = "c41917ef6bb76264f5b0e01de20c728d"
+        md5 = "45d894d4516d91212b70fd9a803e28cd"
         monkeypatch.setattr(  # type: ignore[attr-defined]
             CMS_Global_Mangrove_Canopy, "md5", md5
         )
@@ -52,9 +52,20 @@ class TestCMS_Global_Mangrove_Canopy:
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
 
-    def test_integrity(self) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+    def test_no_dataset(self) -> None:
+        with pytest.raises(RuntimeError, match="Dataset not found in."):
             CMS_Global_Mangrove_Canopy(root="/test")
+
+    def test_already_downloaded(self, tmp_path: Path) -> None:
+        pathname = os.path.join(
+            "tests",
+            "data",
+            "cms_mangrove_canopy",
+            "CMS_Global_Map_Mangrove_Canopy_1665.zip",
+        )
+        root = str(tmp_path)
+        shutil.copy(pathname, root)
+        CMS_Global_Mangrove_Canopy(root, country="Angola")
 
     def test_invalid_country(self) -> None:
         with pytest.raises(AssertionError):
@@ -76,10 +87,3 @@ class TestCMS_Global_Mangrove_Canopy:
         query = dataset.bounds
         x = dataset[query]
         dataset.plot(x["mask"])
-
-    def test_invalid_query(self, dataset: CMS_Global_Mangrove_Canopy) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
-        with pytest.raises(
-            IndexError, match="query: .* not found in index with bounds:"
-        ):
-            dataset[query]
