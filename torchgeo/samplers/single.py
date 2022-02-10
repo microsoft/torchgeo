@@ -76,7 +76,7 @@ class RandomGeoSampler(GeoSampler):
         size: Union[Tuple[float, float], float],
         length: int,
         roi: Optional[BoundingBox] = None,
-        units: int = Units.PIXELS,
+        units: Union[Units, int] = Units.PIXELS,
     ) -> None:
         """Initialize a new Sampler instance.
 
