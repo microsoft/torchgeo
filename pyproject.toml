@@ -9,31 +9,6 @@ build-backend = "setuptools.build_meta"
 target-version = ["py36", "py37", "py38", "py39"]
 color = true
 skip_magic_trailing_comma = true
-exclude = '''
-/(
-    # TorchGeo
-    | data
-    | logo
-    | logs
-    | output
-
-    # Spack
-    | \.spack-env
-
-    # Python
-    | build
-    | dist
-    | \.cache
-    | \.mypy_cache
-    | \.pytest_cache
-    |  __pycache__
-    | .*\.egg-info
-
-    # Git
-    | \.git
-    | \.github
-)/
-'''
 
 [tool.coverage.report]
 # Ignore warnings for overloads
@@ -45,8 +20,7 @@ exclude_lines = [
 
 [tool.isort]
 profile = "black"
-known_first_party = ["docs", "tests", "torchgeo"]
-extend_skip = [".spack-env/", "data", "logs", "output"]
+known_first_party = ["docs", "tests", "torchgeo", "train"]
 skip_gitignore = true
 color_output = true
 
@@ -73,15 +47,32 @@ strict_equality = true
 
 [tool.pydocstyle]
 convention = "google"
-match_dir = "(datasets|models|samplers|torchgeo|trainers|transforms)"
+match_dir = "(datamodules|datasets|losses|models|samplers|torchgeo|trainers|transforms)"
 
 [tool.pytest.ini_options]
 # Skip slow tests by default
 addopts = "-m 'not slow'"
+# https://docs.pytest.org/en/latest/how-to/capture-warnings.html
 filterwarnings = [
-    "ignore:.*Create unlinked descriptors is going to go away.*:DeprecationWarning",
+    # Warnings raised by dependencies of dependencies, out of our control
     # https://github.com/tensorflow/tensorboard/pull/5138
-    "ignore:.*is a deprecated alias for the builtin.*:DeprecationWarning",
+    "ignore:.*is a deprecated alias for the builtin:DeprecationWarning",
+    "ignore:.*Create unlinked descriptors is going to go away:DeprecationWarning",
+
+    # Expected warnings
+    # Kornia fixed a bug in bbox handling, but there's no way to suppress the warning
+    "ignore:Previous behaviour produces incorrect box coordinates:UserWarning",
+    # pytorch-lightning warns us about using num_workers=0, but it's faster on macOS
+    "ignore:The dataloader, .*, does not have many workers which may be a bottleneck:UserWarning",
+    # pytorch-lightning warns us if a GPU is available but isn't being used
+    "ignore:GPU available but not used:UserWarning",
+
+    # Unexpected warnings, worth investigating
+    # pytorch-lightning warns us not to use shuffle=True with val/test dataloader, but we aren't...
+    # Warning only raised for GeoSamplers, need to investigate
+    "ignore:Your `.*_dataloader` has `shuffle=True`:UserWarning",
+    # pytorch-lightning is having trouble inferring the batch size for CycloneDataModule for some reason
+    "ignore:Trying to infer the `batch_size` from an ambiguous collection:UserWarning",
 ]
 markers = [
     "slow: marks tests as slow",

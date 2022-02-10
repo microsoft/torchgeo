@@ -117,7 +117,12 @@ class VHR10(VisionDataset):
 
         if split == "positive":
             # Must be installed to parse annotations file
-            from pycocotools.coco import COCO
+            try:
+                from pycocotools.coco import COCO  # noqa: F401
+            except ImportError:
+                raise ImportError(
+                    "pycocotools is not installed and is required to use this dataset"
+                )
 
             self.coco = COCO(
                 os.path.join(
@@ -169,7 +174,7 @@ class VHR10(VisionDataset):
             f"{id_:03d}.jpg",
         )
         with Image.open(filename) as img:
-            array = np.array(img)
+            array: "np.typing.NDArray[np.int_]" = np.array(img)
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))

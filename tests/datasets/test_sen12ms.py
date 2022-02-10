@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -12,7 +13,7 @@ from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import SEN12MS, SEN12MSDataModule
+from torchgeo.datasets import SEN12MS
 
 
 class TestSEN12MS:
@@ -21,18 +22,20 @@ class TestSEN12MS:
         self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
     ) -> SEN12MS:
         md5s = [
-            "7f14be13d3f62c09b4dd5b4d55c97fd6",
-            "48182d44b375360381f36d432956b225",
-            "96cf1b8405d4149c6fe61ad7100bd65d",
-            "ba8e7e10fba9eea6900ddc530c86025a",
-            "7ba7c51f2fb3a2074b7bbd3e24f9d70d",
-            "280c9be2d1e13e663824dccd85e1e42f",
-            "a5284baf48534d4bc77acb1b103ff16c",
-            "c6b176fed0cdd5033cb1835506e40ee4",
-            "adc672746b79be4c4edc8b1a564e3ff4",
-            "194fab4a4e067a0452824c4e39f61b77",
-            "7899c0c36c884ae8c991ab8518b0d177",
-            "ccfee543d4351bcc5aa68729e8cc795c",
+            "b7d9e183a460979e997b443517a78ded",
+            "7131dbb098c832fff84c2b8a0c8f1126",
+            "b1057fea6ced6d648e5b16efeac352ad",
+            "2da32111fcfb80939aea7b18c2250fa8",
+            "c688ad6475660dbdbc36f66a1dd07da7",
+            "2ecd0dce2a21372513955c604b07e24f",
+            "dbc84c03edf77a68f789a6f7d2ea66a9",
+            "3e42a7dc4bb1ecd8c588930bf49b5c2b",
+            "c29053cb8cf5d75e333b1b51d37f62fe",
+            "5b6880526bc6da488154092741392042",
+            "d1b51c39b1013f2779fecf1f362f6c28",
+            "078def1e13ce4e88632d65f5c73a6259",
+            "02d5128ac1fc2bf8762091b4f319762d",
+            "02d5128ac1fc2bf8762091b4f319762d",
         ]
 
         monkeypatch.setattr(SEN12MS, "md5s", md5s)  # type: ignore[attr-defined]
@@ -83,25 +86,20 @@ class TestSEN12MS:
             x = ds[0]["image"]
             assert x.shape[0] == len(bands)
 
+    def test_invalid_bands(self) -> None:
+        with pytest.raises(ValueError):
+            SEN12MS(bands=("OK", "BK"))
 
-class TestSEN12MSDataModule:
-    @pytest.fixture(scope="class", params=["all", "s1", "s2-all", "s2-reduced"])
-    def datamodule(self, request: SubRequest) -> SEN12MSDataModule:
-        root = os.path.join("tests", "data", "sen12ms")
-        seed = 0
-        bands = request.param
-        batch_size = 1
-        num_workers = 0
-        dm = SEN12MSDataModule(root, seed, bands, batch_size, num_workers)
-        dm.prepare_data()
-        dm.setup()
-        return dm
+    def test_plot(self, dataset: SEN12MS) -> None:
+        dataset.plot(dataset[0], suptitle="Test")
+        plt.close()
 
-    def test_train_dataloader(self, datamodule: SEN12MSDataModule) -> None:
-        next(iter(datamodule.train_dataloader()))
+        sample = dataset[0]
+        sample["prediction"] = sample["mask"].clone()
+        dataset.plot(sample, suptitle="prediction")
+        plt.close()
 
-    def test_val_dataloader(self, datamodule: SEN12MSDataModule) -> None:
-        next(iter(datamodule.val_dataloader()))
-
-    def test_test_dataloader(self, datamodule: SEN12MSDataModule) -> None:
-        next(iter(datamodule.test_dataloader()))
+    def test_plot_rgb(self, dataset: SEN12MS) -> None:
+        dataset = SEN12MS(root=dataset.root, bands=("B03",))
+        with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
+            dataset.plot(dataset[0], suptitle="Single Band")

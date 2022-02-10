@@ -4,22 +4,16 @@
 """SEN12MS dataset."""
 
 import os
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, Optional, Sequence, Tuple
 
+import matplotlib.pyplot as plt
 import numpy as np
-import pytorch_lightning as pl
 import rasterio
 import torch
-from sklearn.model_selection import GroupShuffleSplit
 from torch import Tensor
-from torch.utils.data import DataLoader, Subset
 
 from .geo import VisionDataset
-from .utils import check_integrity
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
+from .utils import check_integrity, percentile_normalization
 
 
 class SEN12MS(VisionDataset):
@@ -69,12 +63,62 @@ class SEN12MS(VisionDataset):
        This download will likely take several hours.
     """  # noqa: E501
 
-    BAND_SETS: Dict[str, List[int]] = {
-        "all": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
-        "s1": [0, 1],
-        "s2-all": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
-        "s2-reduced": [3, 4, 5, 9, 12, 13],
+    BAND_SETS: Dict[str, Tuple[str, ...]] = {
+        "all": (
+            "VV",
+            "VH",
+            "B01",
+            "B02",
+            "B03",
+            "B04",
+            "B05",
+            "B06",
+            "B07",
+            "B08",
+            "B8A",
+            "B09",
+            "B10",
+            "B11",
+            "B12",
+        ),
+        "s1": ("VV", "VH"),
+        "s2-all": (
+            "B01",
+            "B02",
+            "B03",
+            "B04",
+            "B05",
+            "B06",
+            "B07",
+            "B08",
+            "B8A",
+            "B09",
+            "B10",
+            "B11",
+            "B12",
+        ),
+        "s2-reduced": ("B02", "B03", "B04", "B08", "B10", "B11"),
     }
+
+    band_names = (
+        "VV",
+        "VH",
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B07",
+        "B08",
+        "B8A",
+        "B09",
+        "B10",
+        "B11",
+        "B12",
+    )
+
+    RGB_BANDS = ["B04", "B03", "B02"]
 
     filenames = [
         "ROIs1158_spring_lc.tar.gz",
@@ -121,7 +165,7 @@ class SEN12MS(VisionDataset):
         self,
         root: str = "data",
         split: str = "train",
-        bands: List[int] = BAND_SETS["all"],
+        bands: Sequence[str] = BAND_SETS["all"],
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
@@ -135,7 +179,7 @@ class SEN12MS(VisionDataset):
         Args:
             root: root directory where dataset can be found
             split: one of "train" or "test"
-            bands: a list of band indices to use where the indices correspond to the
+            bands: a sequence of band indices to use where the indices correspond to the
                 array index of combined Sentinel 1 and Sentinel 2
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
@@ -147,9 +191,14 @@ class SEN12MS(VisionDataset):
         """
         assert split in ["train", "test"]
 
+        self._validate_bands(bands)
+        self.band_indices = torch.tensor(  # type: ignore[attr-defined]
+            [self.band_names.index(b) for b in bands]
+        ).long()
+        self.bands = bands
+
         self.root = root
         self.split = split
-        self.bands = torch.tensor(bands).long()  # type: ignore[attr-defined]
         self.transforms = transforms
         self.checksum = checksum
 
@@ -180,7 +229,7 @@ class SEN12MS(VisionDataset):
 
         image = torch.cat(tensors=[s1, s2], dim=0)  # type: ignore[attr-defined]
         image = torch.index_select(  # type: ignore[attr-defined]
-            image, dim=0, index=self.bands
+            image, dim=0, index=self.band_indices
         )
 
         sample: Dict[str, Tensor] = {"image": image, "mask": lc}
@@ -223,6 +272,21 @@ class SEN12MS(VisionDataset):
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             return tensor
 
+    def _validate_bands(self, bands: Sequence[str]) -> None:
+        """Validate list of bands.
+
+        Args:
+            bands: user-provided sequence of bands to load
+
+        Raises:
+            AssertionError: if ``bands`` is not a sequence
+            ValueError: if an invalid band name is provided
+        """
+        assert isinstance(bands, tuple), "'bands' must be a sequence"
+        for band in bands:
+            if band not in self.band_names:
+                raise ValueError(f"'{band}' is an invalid band name.")
+
     def _check_integrity_light(self) -> bool:
         """Checks the integrity of the dataset structure.
 
@@ -247,187 +311,58 @@ class SEN12MS(VisionDataset):
                 return False
         return True
 
-
-class SEN12MSDataModule(pl.LightningDataModule):
-    """LightningDataModule implementation for the SEN12MS dataset.
-
-    Implements 80/20 geographic train/val splits and uses the test split from the
-    classification dataset definitions. See :func:`setup` for more details.
-
-    Uses the Simplified IGBP scheme defined in the 2020 Data Fusion Competition. See
-    https://arxiv.org/abs/2002.08254.
-    """
-
-    #: Mapping from the IGBP class definitions to the DFC2020, taken from the dataloader
-    #: here https://github.com/lukasliebel/dfc2020_baseline.
-    DFC2020_CLASS_MAPPING = torch.tensor(  # type: ignore[attr-defined]
-        [
-            0,  # maps 0s to 0
-            1,  # maps 1s to 1
-            1,  # maps 2s to 1
-            1,  # ...
-            1,
-            1,
-            2,
-            2,
-            3,
-            3,
-            4,
-            5,
-            6,
-            7,
-            6,
-            8,
-            9,
-            10,
-        ]
-    )
-
-    def __init__(
+    def plot(
         self,
-        root_dir: str,
-        seed: int,
-        band_set: str = "all",
-        batch_size: int = 64,
-        num_workers: int = 0,
-        **kwargs: Any,
-    ) -> None:
-        """Initialize a LightningDataModule for SEN12MS based DataLoaders.
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the SEN12MS Dataset classes
-            seed: The seed value to use when doing the sklearn based ShuffleSplit
-            band_set: The subset of S1/S2 bands to use. Options are: "all",
-                "s1", "s2-all", and "s2-reduced" where the "s2-reduced" set includes:
-                B2, B3, B4, B8, B11, and B12.
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
-        """
-        super().__init__()  # type: ignore[no-untyped-call]
-        assert band_set in SEN12MS.BAND_SETS.keys()
-
-        self.root_dir = root_dir
-        self.seed = seed
-        self.band_set = band_set
-        self.band_indices = SEN12MS.BAND_SETS[band_set]
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-
-    def custom_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
-
-        Args:
-            sample: dictionary containing image and mask
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional suptitle to use for figure
 
         Returns:
-            preprocessed sample
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
         """
-        sample["image"] = sample["image"].float()
+        rgb_indices = []
+        for band in self.RGB_BANDS:
+            if band in self.bands:
+                rgb_indices.append(self.bands.index(band))
+            else:
+                raise ValueError("Dataset doesn't contain some of the RGB bands")
 
-        if self.band_set == "all":
-            sample["image"][:2] = sample["image"][:2].clamp(-25, 0) / -25
-            sample["image"][2:] = sample["image"][2:].clamp(0, 10000) / 10000
-        elif self.band_set == "s1":
-            sample["image"][:2] = sample["image"][:2].clamp(-25, 0) / -25
-        else:
-            sample["image"][:] = sample["image"][:].clamp(0, 10000) / 10000
+        image, mask = sample["image"][rgb_indices].numpy(), sample["mask"][0]
+        image = percentile_normalization(image)
+        ncols = 2
 
-        sample["mask"] = sample["mask"][0, :, :].long()
-        sample["mask"] = torch.take(  # type: ignore[attr-defined]
-            self.DFC2020_CLASS_MAPPING, sample["mask"]
-        )
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction = sample["prediction"][0]
+            ncols += 1
 
-        return sample
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
 
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Create the train/val/test splits based on the original Dataset objects.
+        axs[0].imshow(np.transpose(image, (1, 2, 0)))
+        axs[0].axis("off")
+        axs[1].imshow(mask)
+        axs[1].axis("off")
 
-        The splits should be done here vs. in :func:`__init__` per the docs:
-        https://pytorch-lightning.readthedocs.io/en/latest/extensions/datamodules.html#setup.
+        if showing_predictions:
+            axs[2].imshow(prediction)
+            axs[2].axis("off")
 
-        We split samples between train and val geographically with proportions of 80/20.
-        This mimics the geographic test set split.
+        if show_titles:
+            axs[0].set_title("Image")
+            axs[1].set_title("Mask")
+            if showing_predictions:
+                axs[2].set_title("Prediction")
 
-        Args:
-            stage: stage to set up
-        """
-        season_to_int = {"winter": 0, "spring": 1000, "summer": 2000, "fall": 3000}
+        if suptitle is not None:
+            plt.suptitle(suptitle)
 
-        self.all_train_dataset = SEN12MS(
-            self.root_dir,
-            split="train",
-            bands=self.band_indices,
-            transforms=self.custom_transform,
-            checksum=False,
-        )
-
-        self.all_test_dataset = SEN12MS(
-            self.root_dir,
-            split="test",
-            bands=self.band_indices,
-            transforms=self.custom_transform,
-            checksum=False,
-        )
-
-        # A patch is a filename like: "ROIs{num}_{season}_s2_{scene_id}_p{patch_id}.tif"
-        # This patch will belong to the scene that is uniquelly identified by its
-        # (season, scene_id) tuple. Because the largest scene_id is 149, we can simply
-        # give each season a large number and representing a `unique_scene_id` as
-        # `season_id + scene_id`.
-        scenes = []
-        for scene_fn in self.all_train_dataset.ids:
-            parts = scene_fn.split("_")
-            season_id = season_to_int[parts[1]]
-            scene_id = int(parts[3])
-            scenes.append(season_id + scene_id)
-
-        train_indices, val_indices = next(
-            GroupShuffleSplit(test_size=0.2, n_splits=2, random_state=self.seed).split(
-                scenes, groups=scenes
-            )
-        )
-
-        self.train_dataset = Subset(self.all_train_dataset, train_indices)
-        self.val_dataset = Subset(self.all_train_dataset, val_indices)
-        self.test_dataset = Subset(
-            self.all_test_dataset, range(len(self.all_test_dataset))
-        )
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training.
-
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
+        return fig

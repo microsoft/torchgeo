@@ -18,13 +18,11 @@ import pytest
 import torch
 from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
-from torch.utils.data import TensorDataset
 
 import torchgeo.datasets.utils
 from torchgeo.datasets.utils import (
     BoundingBox,
     concat_samples,
-    dataset_split,
     disambiguate_timestamp,
     download_and_extract_archive,
     download_radiant_mlhub_collection,
@@ -33,6 +31,7 @@ from torchgeo.datasets.utils import (
     merge_samples,
     percentile_normalization,
     stack_samples,
+    unbind_samples,
     working_dir,
 )
 
@@ -42,7 +41,7 @@ def mock_missing_module(monkeypatch: Generator[MonkeyPatch, None, None]) -> None
     import_orig = builtins.__import__
 
     def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name in ["rarfile", "radiant_mlhub"]:
+        if name in ["radiant_mlhub", "rarfile", "zipfile_deflate64"]:
             raise ImportError()
         return import_orig(name, *args, **kwargs)
 
@@ -94,11 +93,15 @@ def test_mock_missing_module(mock_missing_module: None) -> None:
         os.path.join("cowc_detection", "COWC_test_list_detection.txt.bz2"),
         os.path.join("vhr10", "NWPU VHR-10 dataset.rar"),
         os.path.join("landcoverai", "landcover.ai.v1.zip"),
+        os.path.join("chesapeake", "BAYWIDE", "Baywide_13Class_20132014.zip"),
         os.path.join("sen12ms", "ROIs1158_spring_lc.tar.gz"),
     ],
 )
 def test_extract_archive(src: str, tmp_path: Path) -> None:
-    pytest.importorskip("rarfile")
+    if src.endswith(".rar"):
+        pytest.importorskip("rarfile", minversion="3")
+    if src.startswith("chesapeake"):
+        pytest.importorskip("zipfile_deflate64")
     extract_archive(os.path.join("tests", "data", src), str(tmp_path))
 
 
@@ -110,6 +113,11 @@ def test_missing_rarfile(mock_missing_module: None) -> None:
         extract_archive(
             os.path.join("tests", "data", "vhr10", "NWPU VHR-10 dataset.rar")
         )
+
+
+def test_missing_zipfile_deflate64(mock_missing_module: None) -> None:
+    # Should fallback on Python builtin zipfile
+    extract_archive(os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip"))
 
 
 def test_unsupported_scheme() -> None:
@@ -459,7 +467,7 @@ class TestCollateFunctionsMatchingKeys:
             },
         ]
 
-    def test_stack_samples(self, samples: List[Dict[str, Any]]) -> None:
+    def test_stack_unbind_samples(self, samples: List[Dict[str, Any]]) -> None:
         sample = stack_samples(samples)
         assert sample["image"].size() == torch.Size(  # type: ignore[attr-defined]
             [2, 3]
@@ -469,6 +477,13 @@ class TestCollateFunctionsMatchingKeys:
             torch.tensor([[1, 2, 0], [0, 0, 3]]),  # type: ignore[attr-defined]
         )
         assert sample["crs"] == [CRS.from_epsg(2000), CRS.from_epsg(2001)]
+
+        new_samples = unbind_samples(sample)
+        for i in range(2):
+            assert torch.allclose(  # type: ignore[attr-defined]
+                samples[i]["image"], new_samples[i]["image"]
+            )
+            assert samples[i]["crs"] == new_samples[i]["crs"]
 
     def test_concat_samples(self, samples: List[Dict[str, Any]]) -> None:
         sample = concat_samples(samples)
@@ -502,7 +517,7 @@ class TestCollateFunctionsDifferingKeys:
             },
         ]
 
-    def test_stack_samples(self, samples: List[Dict[str, Any]]) -> None:
+    def test_stack_unbind_samples(self, samples: List[Dict[str, Any]]) -> None:
         sample = stack_samples(samples)
         assert sample["image"].size() == torch.Size(  # type: ignore[attr-defined]
             [1, 3]
@@ -516,6 +531,16 @@ class TestCollateFunctionsDifferingKeys:
         )
         assert sample["crs1"] == [CRS.from_epsg(2000)]
         assert sample["crs2"] == [CRS.from_epsg(2001)]
+
+        new_samples = unbind_samples(sample)
+        assert torch.allclose(  # type: ignore[attr-defined]
+            samples[0]["image"], new_samples[0]["image"]
+        )
+        assert samples[0]["crs1"] == new_samples[0]["crs1"]
+        assert torch.allclose(  # type: ignore[attr-defined]
+            samples[1]["mask"], new_samples[0]["mask"]
+        )
+        assert samples[1]["crs2"] == new_samples[0]["crs2"]
 
     def test_concat_samples(self, samples: List[Dict[str, Any]]) -> None:
         sample = concat_samples(samples)
@@ -563,26 +588,8 @@ def test_nonexisting_directory(tmp_path: Path) -> None:
         assert subdir.cwd() == subdir
 
 
-def test_dataset_split() -> None:
-    num_samples = 24
-    x = torch.ones(num_samples, 5)  # type: ignore[attr-defined]
-    y = torch.randint(low=0, high=2, size=(num_samples,))  # type: ignore[attr-defined]
-    ds = TensorDataset(x, y)
-
-    # Test only train/val set split
-    train_ds, val_ds = dataset_split(ds, val_pct=1 / 2)
-    assert len(train_ds) == num_samples // 2
-    assert len(val_ds) == num_samples // 2
-
-    # Test train/val/test set split
-    train_ds, val_ds, test_ds = dataset_split(ds, val_pct=1 / 3, test_pct=1 / 3)
-    assert len(train_ds) == num_samples // 3
-    assert len(val_ds) == num_samples // 3
-    assert len(test_ds) == num_samples // 3
-
-
 def test_percentile_normalization() -> None:
-    img = np.array([[1, 2], [98, 100]])
+    img: "np.typing.NDArray[np.int_]" = np.array([[1, 2], [98, 100]])
 
     img = percentile_normalization(img, 2, 98)
     assert img.min() == 0

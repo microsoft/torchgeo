@@ -12,8 +12,9 @@ from pytorch_lightning.core.lightning import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
-from torchmetrics import Accuracy, IoU, MetricCollection
+from torchmetrics import Accuracy, JaccardIndex, MetricCollection
 
+from ..datasets.utils import unbind_samples
 from ..models import FCN
 
 # https://github.com/pytorch/pytorch/issues/60979
@@ -95,7 +96,7 @@ class SemanticSegmentationTask(LightningModule):
                     num_classes=self.hparams["num_classes"],
                     ignore_index=self.ignore_zeros,
                 ),
-                IoU(
+                JaccardIndex(
                     num_classes=self.hparams["num_classes"],
                     ignore_index=self.ignore_zeros,
                 ),
@@ -119,7 +120,7 @@ class SemanticSegmentationTask(LightningModule):
     def training_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> Tensor:
-        """Training step - reports average accuracy and average IoU.
+        """Training step - reports average accuracy and average JaccardIndex.
 
         Args:
             batch: Current batch
@@ -154,7 +155,7 @@ class SemanticSegmentationTask(LightningModule):
     def validation_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int
     ) -> None:
-        """Validation step - reports average accuracy and average IoU.
+        """Validation step - reports average accuracy and average JaccardIndex.
 
         Logs the first 10 validation samples to tensorboard as images with 3 subplots
         showing the image, mask, and predictions.
@@ -172,6 +173,21 @@ class SemanticSegmentationTask(LightningModule):
 
         self.log("val_loss", loss, on_step=False, on_epoch=True)
         self.val_metrics(y_hat_hard, y)
+
+        if batch_idx < 10:
+            try:
+                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                batch["prediction"] = y_hat_hard
+                for key in ["image", "mask", "prediction"]:
+                    batch[key] = batch[key].cpu()
+                sample = unbind_samples(batch)[0]
+                fig = datamodule.plot(sample)
+                summary_writer = self.logger.experiment
+                summary_writer.add_figure(
+                    f"image/{batch_idx}", fig, global_step=self.global_step
+                )
+            except AttributeError:
+                pass
 
     def validation_epoch_end(self, outputs: Any) -> None:
         """Logs epoch level validation metrics.

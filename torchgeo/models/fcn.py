@@ -23,7 +23,7 @@ class FCN(Module):
             classes: Number of filters in the final layer
             num_filters: Number of filters in each convolutional layer
         """
-        super(FCN, self).__init__()
+        super().__init__()
 
         conv1 = nn.modules.Conv2d(
             in_channels, num_filters, kernel_size=3, stride=1, padding=1

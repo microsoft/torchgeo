@@ -6,14 +6,54 @@
 """torchgeo model training script."""
 
 import os
-from typing import Any, Dict, cast
+from typing import Any, Dict, Tuple, Type, cast
 
 import pytorch_lightning as pl
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 
-from torchgeo import _TASK_TO_MODULES_MAPPING as TASK_TO_MODULES_MAPPING
+from torchgeo.datamodules import (
+    BigEarthNetDataModule,
+    ChesapeakeCVPRDataModule,
+    COWCCountingDataModule,
+    CycloneDataModule,
+    ETCI2021DataModule,
+    EuroSATDataModule,
+    LandCoverAIDataModule,
+    NAIPChesapeakeDataModule,
+    OSCDDataModule,
+    RESISC45DataModule,
+    SEN12MSDataModule,
+    So2SatDataModule,
+    UCMercedDataModule,
+)
+from torchgeo.trainers import (
+    BYOLTask,
+    ClassificationTask,
+    MultiLabelClassificationTask,
+    RegressionTask,
+    SemanticSegmentationTask,
+)
+
+TASK_TO_MODULES_MAPPING: Dict[
+    str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
+] = {
+    "bigearthnet": (MultiLabelClassificationTask, BigEarthNetDataModule),
+    "byol": (BYOLTask, ChesapeakeCVPRDataModule),
+    "chesapeake_cvpr": (SemanticSegmentationTask, ChesapeakeCVPRDataModule),
+    "cowc_counting": (RegressionTask, COWCCountingDataModule),
+    "cyclone": (RegressionTask, CycloneDataModule),
+    "eurosat": (ClassificationTask, EuroSATDataModule),
+    "etci2021": (SemanticSegmentationTask, ETCI2021DataModule),
+    "landcoverai": (SemanticSegmentationTask, LandCoverAIDataModule),
+    "naipchesapeake": (SemanticSegmentationTask, NAIPChesapeakeDataModule),
+    "oscd": (SemanticSegmentationTask, OSCDDataModule),
+    "resisc45": (ClassificationTask, RESISC45DataModule),
+    "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),
+    "so2sat": (ClassificationTask, So2SatDataModule),
+    "ucmerced": (ClassificationTask, UCMercedDataModule),
+}
 
 
 def set_up_omegaconf() -> DictConfig:
@@ -42,11 +82,11 @@ def set_up_omegaconf() -> DictConfig:
 
     if "config_file" in command_line_conf:
         config_fn = command_line_conf.config_file
-        if os.path.isfile(config_fn):
-            user_conf = OmegaConf.load(config_fn)
-            conf = OmegaConf.merge(conf, user_conf)
-        else:
+        if not os.path.isfile(config_fn):
             raise FileNotFoundError(f"config_file={config_fn} is not a valid file")
+
+        user_conf = OmegaConf.load(config_fn)
+        conf = OmegaConf.merge(conf, user_conf)
 
     conf = OmegaConf.merge(  # Merge in any arguments passed via the command line
         conf, command_line_conf
@@ -55,7 +95,7 @@ def set_up_omegaconf() -> DictConfig:
     # These OmegaConf structured configs enforce a schema at runtime, see:
     # https://omegaconf.readthedocs.io/en/2.0_branch/structured_config.html#merging-with-other-configs
     task_name = conf.experiment.task
-    task_config_fn = os.path.join("conf", "task_defaults", f"{task_name}.yaml")
+    task_config_fn = os.path.join("conf", f"{task_name}.yaml")
     if task_name == "test":
         task_conf = OmegaConf.create()
     elif os.path.exists(task_config_fn):
@@ -140,7 +180,7 @@ def main(conf: DictConfig) -> None:
     trainer_args["default_root_dir"] = experiment_dir
     trainer = pl.Trainer(**trainer_args)
 
-    if trainer_args["auto_lr_find"]:
+    if trainer_args.get("auto_lr_find"):
         trainer.tune(model=task, datamodule=datamodule)
 
     ######################################

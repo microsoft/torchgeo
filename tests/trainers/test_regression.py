@@ -2,73 +2,61 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Generator, cast
+from typing import Any, Dict, Type, cast
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
+from pytorch_lightning import LightningDataModule, Trainer
 
-from torchgeo.datasets import CycloneDataModule
+from torchgeo.datamodules import COWCCountingDataModule, CycloneDataModule
 from torchgeo.trainers import RegressionTask
 
-from .test_utils import mocked_log
+from .test_utils import RegressionTestModel
 
 
 class TestRegressionTask:
-    @pytest.fixture(scope="class")
-    def datamodule(self) -> CycloneDataModule:
-        root = os.path.join("tests", "data", "cyclone")
-        seed = 0
-        batch_size = 1
-        num_workers = 0
-        dm = CycloneDataModule(root, seed, batch_size, num_workers)
-        dm.prepare_data()
-        dm.setup()
-        return dm
+    @pytest.mark.parametrize(
+        "name,classname",
+        [("cowc_counting", COWCCountingDataModule), ("cyclone", CycloneDataModule)],
+    )
+    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
+        conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
+        conf_dict = OmegaConf.to_object(conf.experiment)
+        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
 
-    @pytest.fixture
-    def config(self) -> Dict[str, Any]:
-        task_conf = OmegaConf.load(
-            os.path.join("conf", "task_defaults", "cyclone.yaml")
-        )
-        task_args = OmegaConf.to_object(task_conf.experiment.module)
-        task_args = cast(Dict[str, Any], task_args)
-        return task_args
+        # Instantiate datamodule
+        datamodule_kwargs = conf_dict["datamodule"]
+        datamodule = classname(**datamodule_kwargs)
 
-    @pytest.fixture
-    def task(
-        self, config: Dict[str, Any], monkeypatch: Generator[MonkeyPatch, None, None]
-    ) -> RegressionTask:
-        task = RegressionTask(**config)
-        monkeypatch.setattr(task, "log", mocked_log)  # type: ignore[attr-defined]
-        return task
+        # Instantiate model
+        model_kwargs = conf_dict["module"]
+        model = RegressionTask(**model_kwargs)
 
-    def test_configure_optimizers(self, task: RegressionTask) -> None:
-        out = task.configure_optimizers()
-        assert "optimizer" in out
-        assert "lr_scheduler" in out
+        model.model = RegressionTestModel()
 
-    def test_training(
-        self, datamodule: CycloneDataModule, task: RegressionTask
-    ) -> None:
-        batch = next(iter(datamodule.train_dataloader()))
-        task.training_step(batch, 0)
-        task.training_epoch_end(0)
+        # Instantiate trainer
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1)
+        trainer.fit(model=model, datamodule=datamodule)
+        trainer.test(model=model, datamodule=datamodule)
 
-    def test_validation(
-        self, datamodule: CycloneDataModule, task: RegressionTask
-    ) -> None:
-        batch = next(iter(datamodule.val_dataloader()))
-        task.validation_step(batch, 0)
-        task.validation_epoch_end(0)
+    def test_no_logger(self) -> None:
+        conf = OmegaConf.load(os.path.join("tests", "conf", "cyclone.yaml"))
+        conf_dict = OmegaConf.to_object(conf.experiment)
+        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
 
-    def test_test(self, datamodule: CycloneDataModule, task: RegressionTask) -> None:
-        batch = next(iter(datamodule.test_dataloader()))
-        task.test_step(batch, 0)
-        task.test_epoch_end(0)
+        # Instantiate datamodule
+        datamodule_kwargs = conf_dict["datamodule"]
+        datamodule = CycloneDataModule(**datamodule_kwargs)
 
-    def test_invalid_model(self, config: Dict[str, Any]) -> None:
-        config["model"] = "invalid_model"
-        error_message = "Model type 'invalid_model' is not valid."
-        with pytest.raises(ValueError, match=error_message):
-            RegressionTask(**config)
+        # Instantiate model
+        model_kwargs = conf_dict["module"]
+        model = RegressionTask(**model_kwargs)
+
+        # Instantiate trainer
+        trainer = Trainer(logger=None, fast_dev_run=True, log_every_n_steps=1)
+        trainer.fit(model=model, datamodule=datamodule)
+
+    def test_invalid_model(self) -> None:
+        match = "Model type 'invalid_model' is not valid."
+        with pytest.raises(ValueError, match=match):
+            RegressionTask(model="invalid_model")

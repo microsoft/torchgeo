@@ -1,13 +1,25 @@
-program:  # These are experiment level arguments
-  experiment_name: naip_chesapeake_test
+program:
+  experiment_name: "naip_chesapeake_test"
   overwrite: True
-  naip_data_dir: data/naip
-  chesapeake_data_dir: data/chesapeake
-
-trainer:  # These are all the arguments that will be passed to the pl.Trainer
+trainer:
   min_epochs: 15
-
-task:  # These are all the arguments that will be used to create an appropriate task
-  name: naipchesapeake
-  learning_rate: 1e-3
-  learning_rate_schedule_patience: 2
+experiment:
+  task: "naipchesapeake"
+  module:
+    loss: "ce"
+    segmentation_model: "deeplabv3+"
+    encoder_name: "resnet34"
+    encoder_weights: "imagenet"
+    encoder_output_stride: 16
+    learning_rate: 1e-3
+    learning_rate_schedule_patience: 2
+    in_channels: 4
+    num_classes: 14
+    num_filters: 64
+    ignore_zeros: False
+  datamodule:
+    naip_root_dir: "data/naip"
+    chesapeake_root_dir: "data/chesapeake/BAYWIDE"
+    batch_size: 32
+    num_workers: 4
+    patch_size: 32

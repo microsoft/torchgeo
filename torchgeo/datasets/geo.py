@@ -134,6 +134,8 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
         Raises:
             ValueError: if other is not a :class:`GeoDataset`
+
+        .. versionadded:: 0.2
         """
         return IntersectionDataset(self, other)
 
@@ -148,6 +150,8 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
         Raises:
             ValueError: if other is not a :class:`GeoDataset`
+
+        .. versionadded:: 0.2
         """
         return UnionDataset(self, other)
 
@@ -157,7 +161,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         Returns:
             length of the dataset
         """
-        count: int = self.index.count(self.index.bounds)
+        count: int = self.index.get_size()
         return count
 
     def __str__(self) -> str:
@@ -171,6 +175,41 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     type: GeoDataset
     bbox: {self.bounds}
     size: {len(self)}"""
+
+    # NOTE: This hack should be removed once the following issue is fixed:
+    # https://github.com/Toblerity/rtree/issues/87
+
+    def __getstate__(
+        self,
+    ) -> Tuple[
+        Dict[Any, Any],
+        List[Tuple[int, Tuple[float, float, float, float, float, float], str]],
+    ]:
+        """Define how instances are pickled.
+
+        Returns:
+            the state necessary to unpickle the instance
+        """
+        objects = self.index.intersection(self.index.bounds, objects=True)
+        tuples = [(item.id, item.bounds, item.object) for item in objects]
+        return self.__dict__, tuples
+
+    def __setstate__(
+        self,
+        state: Tuple[
+            Dict[Any, Any],
+            List[Tuple[int, Tuple[float, float, float, float, float, float], str]],
+        ],
+    ) -> None:
+        """Define how to unpickle an instance.
+
+        Args:
+            state: the state of the instance when it was pickled
+        """
+        attrs, tuples = state
+        self.__dict__.update(attrs)
+        for item in tuples:
+            self.index.insert(*item)
 
     @property
     def bounds(self) -> BoundingBox:
@@ -187,6 +226,8 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
         Returns:
             the :term:`coordinate reference system (CRS)`
+
+        .. versionadded:: 0.2
         """
         return self._crs
 
@@ -198,6 +239,8 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
         Args:
             new_crs: new :term:`coordinate reference system (CRS)`
+
+        .. versionadded:: 0.2
         """
         if new_crs == self._crs:
             return
@@ -472,7 +515,9 @@ class RasterDataset(GeoDataset):
 
             # Only plot RGB bands
             if bands and self.rgb_bands:
-                indices = np.array([bands.index(band) for band in self.rgb_bands])
+                indices: "np.typing.NDArray[np.int_]" = np.array(
+                    [bands.index(band) for band in self.rgb_bands]
+                )
                 array = array[indices]
 
             # Convert from CxHxW to HxWxC
@@ -480,13 +525,15 @@ class RasterDataset(GeoDataset):
 
         if self.cmap:
             # Convert from class labels to RGBA values
-            cmap = np.array([self.cmap[i] for i in range(len(self.cmap))])
+            cmap: "np.typing.NDArray[np.int_]" = np.array(
+                [self.cmap[i] for i in range(len(self.cmap))]
+            )
             array = cmap[array]
 
         if self.stretch:
             # Stretch to the range of 2nd to 98th percentile
-            per02 = np.percentile(array, 2)  # type: ignore[no-untyped-call]
-            per98 = np.percentile(array, 98)  # type: ignore[no-untyped-call]
+            per02 = np.percentile(array, 2)
+            per98 = np.percentile(array, 98)
             array = (array - per02) / (per98 - per02)
             array = np.clip(array, 0, 1)
 
@@ -751,7 +798,7 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
             the image class label
         """
         img, label = ImageFolder.__getitem__(self, index)
-        array = np.array(img)
+        array: "np.typing.NDArray[np.int_]" = np.array(img)
         tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
         # Convert from HxWxC to CxHxW
         tensor = tensor.permute((2, 0, 1))
@@ -775,6 +822,8 @@ class IntersectionDataset(GeoDataset):
     .. code-block:: python
 
        dataset = landsat & cdl
+
+    .. versionadded:: 0.2
     """
 
     def __init__(
@@ -885,6 +934,8 @@ class UnionDataset(GeoDataset):
     .. code-block:: python
 
        dataset = landsat7 | landsat8
+
+    .. versionadded:: 0.2
     """
 
     def __init__(

@@ -7,8 +7,8 @@ on:
     branches:
     - release**
 jobs:
-  notebooks:
-    name: notebooks
+  datasets:
+    name: datasets
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
@@ -17,20 +17,12 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.9
-    - name: Install apt dependencies
-      run: |
-        sudo apt-add-repository ppa:ubuntugis/ubuntugis-unstable
-        sudo apt-get update
-        sudo apt-get install gdal-bin libgdal-dev
     - name: Install pip dependencies
       run: |
-        pip install gdal tqdm  # TODO: these deps shouldn't be needed
-        pip install .[datasets,tests,train]
-        pip install -r docs/requirements.txt
-    - name: Run notebook checks
-      env:
-        MLHUB_API_KEY: ${{ secrets.MLHUB_API_KEY }}
-      run: pytest --nbmake docs/tutorials
+        pip install cython numpy  # needed for pycocotools
+        pip install .[tests]
+    - name: Run pytest checks
+      run: pytest --cov=torchgeo --cov-report=xml
   integration:
     name: integration
     runs-on: ubuntu-latest
@@ -42,6 +34,24 @@ jobs:
       with:
         python-version: 3.9
     - name: Install pip dependencies
-      run: pip install .[datasets,tests,train]
+      run: pip install .[datasets,tests]
     - name: Run integration checks
       run: pytest -m slow
+  notebooks:
+    name: notebooks
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone repo
+      uses: actions/checkout@v2
+    - name: Set up python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install pip dependencies
+      run: |
+        pip install .[datasets,tests]
+        pip install -r docs/requirements.txt
+    - name: Run notebook checks
+      env:
+        MLHUB_API_KEY: ${{ secrets.MLHUB_API_KEY }}
+      run: pytest --nbmake docs/tutorials

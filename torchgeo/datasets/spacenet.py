@@ -16,16 +16,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio as rio
 import torch
-from affine import Affine
 from fiona.errors import FionaValueError
 from fiona.transform import transform_geom
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from rasterio.features import rasterize
+from rasterio.transform import Affine
 from torch import Tensor
 
-from torchgeo.datasets.geo import VisionDataset
-from torchgeo.datasets.utils import (
+from .geo import VisionDataset
+from .utils import (
     check_integrity,
     download_radiant_mlhub_collection,
     extract_archive,
@@ -319,11 +319,17 @@ class SpaceNet(VisionDataset, abc.ABC):
         image = percentile_normalization(image, axis=(0, 1))
 
         ncols = 1
-        show_mask = False
-        if "mask" in sample:
+        show_mask = "mask" in sample
+        show_predictions = "prediction" in sample
+
+        if show_mask:
             mask = sample["mask"].numpy()
             ncols += 1
-            show_mask = True
+
+        if show_predictions:
+            prediction = sample["prediction"].numpy()
+            ncols += 1
+
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 8, 8))
         if not isinstance(axs, np.ndarray):
             axs = [axs]
@@ -336,7 +342,13 @@ class SpaceNet(VisionDataset, abc.ABC):
             axs[1].imshow(mask, interpolation="none")
             axs[1].axis("off")
             if show_titles:
-                axs[1].set_title("Labels")
+                axs[1].set_title("Label")
+
+        if show_predictions:
+            axs[2].imshow(prediction, interpolation="none")
+            axs[2].axis("off")
+            if show_titles:
+                axs[2].set_title("Prediction")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
@@ -882,7 +894,7 @@ class SpaceNet5(SpaceNet):
         max_speed_bin = 65
         speed_arr_bin = np.arange(min_speed_bin, max_speed_bin + 1)
         bin_size_mph = 10.0
-        speed_cls_arr = np.array(
+        speed_cls_arr: "np.typing.NDArray[np.int_]" = np.array(
             [int(math.ceil(s / bin_size_mph)) for s in speed_arr_bin]
         )
 
@@ -953,24 +965,49 @@ class SpaceNet5(SpaceNet):
             image = np.rollaxis(sample["image"][:3].numpy(), 0, 3)
         image = percentile_normalization(image, axis=(0, 1))
 
-        ncols = 2
-        mask = sample["mask"].numpy()
-        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 8, 8))
+        ncols = 1
+        show_mask = "mask" in sample
+        show_predictions = "prediction" in sample
 
+        if show_mask:
+            mask = sample["mask"].numpy()
+            ncols += 1
+
+        if show_predictions:
+            prediction = sample["prediction"].numpy()
+            ncols += 1
+
+        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 8, 8))
+        if not isinstance(axs, np.ndarray):
+            axs = [axs]
         axs[0].imshow(image)
         axs[0].axis("off")
         if show_titles:
             axs[0].set_title("Image")
 
-        if self.speed_mask:
-            cmap = copy.copy(plt.get_cmap("autumn_r"))
-            cmap.set_under(color="black")
-            axs[1].imshow(mask, vmin=0.1, vmax=7, cmap=cmap, interpolation="none")
-        else:
-            axs[1].imshow(mask, cmap="Greys_r", interpolation="none")
-        axs[1].axis("off")
-        if show_titles:
-            axs[1].set_title("Labels")
+        if show_mask:
+            if self.speed_mask:
+                cmap = copy.copy(plt.get_cmap("autumn_r"))
+                cmap.set_under(color="black")
+                axs[1].imshow(mask, vmin=0.1, vmax=7, cmap=cmap, interpolation="none")
+            else:
+                axs[1].imshow(mask, cmap="Greys_r", interpolation="none")
+            axs[1].axis("off")
+            if show_titles:
+                axs[1].set_title("Label")
+
+        if show_predictions:
+            if self.speed_mask:
+                cmap = copy.copy(plt.get_cmap("autumn_r"))
+                cmap.set_under(color="black")
+                axs[2].imshow(
+                    prediction, vmin=0.1, vmax=7, cmap=cmap, interpolation="none"
+                )
+            else:
+                axs[2].imshow(prediction, cmap="Greys_r", interpolation="none")
+            axs[2].axis("off")
+            if show_titles:
+                axs[2].set_title("Prediction")
 
         if suptitle is not None:
             plt.suptitle(suptitle)

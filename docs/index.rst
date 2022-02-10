@@ -15,7 +15,9 @@ torchgeo
    :maxdepth: 2
    :caption: Package Reference
 
+   api/datamodules
    api/datasets
+   api/losses
    api/models
    api/samplers
    api/trainers
@@ -26,6 +28,7 @@ torchgeo
    :caption: Tutorials
 
    tutorials/getting_started
+   tutorials/custom_raster_dataset
    tutorials/transforms
    tutorials/indices
    tutorials/trainers

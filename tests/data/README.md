@@ -16,7 +16,8 @@ ROOT = "data/landsat8"
 FILENAME = "LC08_L2SP_023032_20210622_20210629_02_T1_SR_B1.TIF"
 
 src = rasterio.open(os.path.join(ROOT, FILENAME))
-Z = np.arange(4, dtype=src.read().dtype).reshape(2, 2)
+dtype = src.read().dtype
+Z = np.random.randint(np.iinfo(dtype).max, size=(64, 64), dtype=dtype)
 dst = rasterio.open(FILENAME, "w", driver=src.driver, height=Z.shape[0], width=Z.shape[1], count=src.count, dtype=Z.dtype, crs=src.crs, transform=src.transform)
 for i in range(1, dst.count + 1):
     dst.write(Z, i)
@@ -52,18 +53,28 @@ VisionDataset data can be created like so.
 ### RGB images
 
 ```python
+import numpy as np
 from PIL import Image
 
-img = Image.new("RGB", (1, 1))
+DTYPE = np.uint8
+SIZE = 64
+
+arr = np.random.randint(np.iinfo(DTYPE).max, size=(SIZE, SIZE, 3), dtype=DTYPE)
+img = Image.fromarray(arr)
 img.save("01.png")
 ```
 
 ### Grayscale images
 
 ```python
+import numpy as np
 from PIL import Image
 
-img = Image.new("L", (1, 1))
+DTYPE = np.uint8
+SIZE = 64
+
+arr = np.random.randint(np.iinfo(DTYPE).max, size=(SIZE, SIZE), dtype=DTYPE)
+img = Image.fromarray(arr)
 img.save("02.jpg")
 ```
 
@@ -83,14 +94,15 @@ wavfile.write("01.wav", rate=22050, data=audio)
 import h5py
 import numpy as np
 
-f = h5py.File("data.hdf5", "w")
+DTYPE = np.uint8
+SIZE = 64
+NUM_CLASSES = 10
 
-num_classes = 10
-images = np.random.randint(low=0, high=255, size=(1, 1, 3)).astype(np.uint8)
-masks = np.random.randint(low=0, high=num_classes, size=(1, 1)).astype(np.uint8)
-f.create_dataset("images", data=images)
-f.create_dataset("masks", data=masks)
-f.close()
+images = np.random.randint(np.iinfo(DTYPE).max, size=(SIZE, SIZE, 3), dtype=DTYPE)
+masks = np.random.randint(NUM_CLASSES, size=(SIZE, SIZE), dtype=DTYPE)
+with h5py.File("data.hdf5", "w") as f:
+    f.create_dataset("images", data=images)
+    f.create_dataset("masks", data=masks)
 ```
 
 ### LAS Point Cloud files

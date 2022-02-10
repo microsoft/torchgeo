@@ -6,23 +6,17 @@
 import glob
 import json
 import os
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
-import pytorch_lightning as pl
 import rasterio
 import torch
 from rasterio.enums import Resampling
 from torch import Tensor
-from torch.utils.data import DataLoader
-from torchvision.transforms import Compose
 
 from .geo import VisionDataset
 from .utils import download_url, extract_archive, sort_sentinel2_bands
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
 
 
 class BigEarthNet(VisionDataset):
@@ -125,74 +119,77 @@ class BigEarthNet(VisionDataset):
 
     """
 
-    classes_43 = [
-        "Agro-forestry areas",
-        "Airports",
-        "Annual crops associated with permanent crops",
-        "Bare rock",
-        "Beaches, dunes, sands",
-        "Broad-leaved forest",
-        "Burnt areas",
-        "Coastal lagoons",
-        "Complex cultivation patterns",
-        "Coniferous forest",
-        "Construction sites",
-        "Continuous urban fabric",
-        "Discontinuous urban fabric",
-        "Dump sites",
-        "Estuaries",
-        "Fruit trees and berry plantations",
-        "Green urban areas",
-        "Industrial or commercial units",
-        "Inland marshes",
-        "Intertidal flats",
-        "Land principally occupied by agriculture, with significant areas of "
-        "natural vegetation",
-        "Mineral extraction sites",
-        "Mixed forest",
-        "Moors and heathland",
-        "Natural grassland",
-        "Non-irrigated arable land",
-        "Olive groves",
-        "Pastures",
-        "Peatbogs",
-        "Permanently irrigated land",
-        "Port areas",
-        "Rice fields",
-        "Road and rail networks and associated land",
-        "Salines",
-        "Salt marshes",
-        "Sclerophyllous vegetation",
-        "Sea and ocean",
-        "Sparsely vegetated areas",
-        "Sport and leisure facilities",
-        "Transitional woodland/shrub",
-        "Vineyards",
-        "Water bodies",
-        "Water courses",
-    ]
-    classes_19 = [
-        "Urban fabric",
-        "Industrial or commercial units",
-        "Arable land",
-        "Permanent crops",
-        "Pastures",
-        "Complex cultivation patterns",
-        "Land principally occupied by agriculture, with significant areas of natural "
-        "vegetation",
-        "Agro-forestry areas",
-        "Broad-leaved forest",
-        "Coniferous forest",
-        "Mixed forest",
-        "Natural grassland and sparsely vegetated areas",
-        "Moors, heathland and sclerophyllous vegetation",
-        "Transitional woodland, shrub",
-        "Beaches, dunes, sands",
-        "Inland wetlands",
-        "Coastal wetlands",
-        "Inland waters",
-        "Marine waters",
-    ]
+    class_sets = {
+        19: [
+            "Urban fabric",
+            "Industrial or commercial units",
+            "Arable land",
+            "Permanent crops",
+            "Pastures",
+            "Complex cultivation patterns",
+            "Land principally occupied by agriculture, with significant areas of"
+            " natural vegetation",
+            "Agro-forestry areas",
+            "Broad-leaved forest",
+            "Coniferous forest",
+            "Mixed forest",
+            "Natural grassland and sparsely vegetated areas",
+            "Moors, heathland and sclerophyllous vegetation",
+            "Transitional woodland, shrub",
+            "Beaches, dunes, sands",
+            "Inland wetlands",
+            "Coastal wetlands",
+            "Inland waters",
+            "Marine waters",
+        ],
+        43: [
+            "Agro-forestry areas",
+            "Airports",
+            "Annual crops associated with permanent crops",
+            "Bare rock",
+            "Beaches, dunes, sands",
+            "Broad-leaved forest",
+            "Burnt areas",
+            "Coastal lagoons",
+            "Complex cultivation patterns",
+            "Coniferous forest",
+            "Construction sites",
+            "Continuous urban fabric",
+            "Discontinuous urban fabric",
+            "Dump sites",
+            "Estuaries",
+            "Fruit trees and berry plantations",
+            "Green urban areas",
+            "Industrial or commercial units",
+            "Inland marshes",
+            "Intertidal flats",
+            "Land principally occupied by agriculture, with significant areas of"
+            " natural vegetation",
+            "Mineral extraction sites",
+            "Mixed forest",
+            "Moors and heathland",
+            "Natural grassland",
+            "Non-irrigated arable land",
+            "Olive groves",
+            "Pastures",
+            "Peatbogs",
+            "Permanently irrigated land",
+            "Port areas",
+            "Rice fields",
+            "Road and rail networks and associated land",
+            "Salines",
+            "Salt marshes",
+            "Sclerophyllous vegetation",
+            "Sea and ocean",
+            "Sparsely vegetated areas",
+            "Sport and leisure facilities",
+            "Transitional woodland/shrub",
+            "Vineyards",
+            "Water bodies",
+            "Water courses",
+        ],
+    }
+
     label_converter = {
         0: 0,
         1: 0,
@@ -227,6 +224,7 @@ class BigEarthNet(VisionDataset):
         41: 18,
         42: 18,
     }
+
     splits_metadata = {
         "train": {
             "url": "https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/master/splits/train.csv?inline=false",  # noqa: E501
@@ -292,7 +290,7 @@ class BigEarthNet(VisionDataset):
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
-        self.class2idx = {c: i for i, c in enumerate(self.classes_43)}
+        self.class2idx = {c: i for i, c in enumerate(self.class_sets[43])}
         self._verify()
         self.folders = self._load_folders()
 
@@ -395,7 +393,7 @@ class BigEarthNet(VisionDataset):
                     resampling=Resampling.bilinear,
                 )
                 images.append(array)
-        arrays = np.stack(images, axis=0)
+        arrays: "np.typing.NDArray[np.int_]" = np.stack(images, axis=0)
         tensor: Tensor = torch.from_numpy(arrays)  # type: ignore[attr-defined]
         return tensor
 
@@ -512,163 +510,70 @@ class BigEarthNet(VisionDataset):
         if not filepath.endswith(".csv"):
             extract_archive(filepath)
 
-
-class BigEarthNetDataModule(pl.LightningDataModule):
-    """LightningDataModule implementation for the BigEarthNet dataset.
-
-    Uses the train/val/test splits from the dataset.
-    """
-
-    # (VV, VH, B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B11, B12)
-    # min/max band statistics computed on 100k random samples
-    band_mins_raw = torch.tensor(  # type: ignore[attr-defined]
-        [-70.0, -72.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0]
-    )
-    band_maxs_raw = torch.tensor(  # type: ignore[attr-defined]
-        [
-            31.0,
-            35.0,
-            18556.0,
-            20528.0,
-            18976.0,
-            17874.0,
-            16611.0,
-            16512.0,
-            16394.0,
-            16672.0,
-            16141.0,
-            16097.0,
-            15336.0,
-            15203.0,
-        ]
-    )
-
-    # min/max band statistics computed by percentile clipping the
-    # above to samples to [2, 98]
-    band_mins = torch.tensor(  # type: ignore[attr-defined]
-        [-48.0, -42.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-    )
-    band_maxs = torch.tensor(  # type: ignore[attr-defined]
-        [
-            6.0,
-            16.0,
-            9859.0,
-            12872.0,
-            13163.0,
-            14445.0,
-            12477.0,
-            12563.0,
-            12289.0,
-            15596.0,
-            12183.0,
-            9458.0,
-            5897.0,
-            5544.0,
-        ]
-    )
-
-    def __init__(
-        self,
-        root_dir: str,
-        bands: str = "all",
-        num_classes: int = 19,
-        batch_size: int = 64,
-        num_workers: int = 0,
-        **kwargs: Any,
-    ) -> None:
-        """Initialize a LightningDataModule for BigEarthNet based DataLoaders.
+    def _onehot_labels_to_names(
+        self, label_mask: "np.typing.NDArray[np.bool_]"
+    ) -> List[str]:
+        """Gets a list of class names given a label mask.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the BigEarthNet Dataset classes
-            bands: load Sentinel-1 bands, Sentinel-2, or both. one of {s1, s2, all}
-            num_classes: number of classes to load in target. one of {19, 43}
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
+            label_mask: a boolean mask corresponding to a set of labels or predictions
+
+        Returns
+            a list of class names corresponding to the input mask
         """
-        super().__init__()  # type: ignore[no-untyped-call]
-        self.root_dir = root_dir
-        self.bands = bands
-        self.num_classes = num_classes
-        self.batch_size = batch_size
-        self.num_workers = num_workers
+        labels = []
+        for i, mask in enumerate(label_mask):
+            if mask:
+                labels.append(self.class_sets[self.num_classes][i])
+        return labels
 
-        if bands == "all":
-            self.mins = self.band_mins[:, None, None]
-            self.maxs = self.band_maxs[:, None, None]
-        elif bands == "s1":
-            self.mins = self.band_mins[:2, None, None]
-            self.maxs = self.band_maxs[:2, None, None]
-        else:
-            self.mins = self.band_mins[2:, None, None]
-            self.maxs = self.band_maxs[2:, None, None]
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset."""
-        sample["image"] = sample["image"].float()
-        sample["image"] = (sample["image"] - self.mins) / (self.maxs - self.mins)
-        sample["image"] = torch.clip(  # type: ignore[attr-defined]
-            sample["image"], min=0.0, max=1.0
-        )
-        return sample
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
 
-    def prepare_data(self) -> None:
-        """Make sure that the dataset is downloaded.
+        Returns:
+            a matplotlib Figure with the rendered sample
 
-        This method is only called once per run.
+        Raises:
+            ValueError: if ``self.bands`` is "s1"
+
+        .. versionadded:: 0.2
         """
-        BigEarthNet(self.root_dir, split="train", bands=self.bands, checksum=False)
+        if self.bands == "s2":
+            image = np.rollaxis(sample["image"][[3, 2, 1]].numpy(), 0, 3)
+            image = np.clip(image / 2000, 0, 1)
+        elif self.bands == "all":
+            image = np.rollaxis(sample["image"][[5, 4, 3]].numpy(), 0, 3)
+            image = np.clip(image / 2000, 0, 1)
+        elif self.bands == "s1":
+            image = sample["image"][0].numpy()
 
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
+        label_mask = sample["label"].numpy().astype(np.bool_)
+        labels = self._onehot_labels_to_names(label_mask)
 
-        This method is called once per GPU per run.
-        """
-        transforms = Compose([self.preprocess])
-        self.train_dataset = BigEarthNet(
-            self.root_dir,
-            split="train",
-            bands=self.bands,
-            num_classes=self.num_classes,
-            transforms=transforms,
-        )
-        self.val_dataset = BigEarthNet(
-            self.root_dir,
-            split="val",
-            bands=self.bands,
-            num_classes=self.num_classes,
-            transforms=transforms,
-        )
-        self.test_dataset = BigEarthNet(
-            self.root_dir,
-            split="test",
-            bands=self.bands,
-            num_classes=self.num_classes,
-            transforms=transforms,
-        )
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction_mask = sample["prediction"].numpy().astype(np.bool_)
+            predictions = self._onehot_labels_to_names(prediction_mask)
 
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training."""
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-        )
+        fig, ax = plt.subplots(figsize=(4, 4))
+        ax.imshow(image)
+        ax.axis("off")
+        if show_titles:
+            title = f"Labels: {', '.join(labels)}"
+            if showing_predictions:
+                title += f"\nPredictions: {', '.join(predictions)}"
+            ax.set_title(title)
 
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation."""
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing."""
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig

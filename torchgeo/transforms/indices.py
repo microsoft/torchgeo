@@ -12,7 +12,7 @@ from typing import Dict
 
 import torch
 from torch import Tensor
-from torch.nn import Module  # type: ignore[attr-defined]
+from torch.nn.modules import Module
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -22,62 +22,83 @@ Module.__module__ = "torch.nn"
 _EPSILON = 1e-10
 
 
-def ndbi(swir: Tensor, nir: Tensor) -> Tensor:
-    """Compute Normalized Different Built-up Index (NDBI).
+class AppendNormalizedDifferenceIndex(Module):
+    """Append normalized difference index as channel to image tensor.
 
-    Args:
-        swir: tensor containing swir band
-        nir: tensor containing nir band
-
-    Returns:
-        tensor containing computed NDBI values
+    .. versionadded:: 0.2
     """
-    return (swir - nir) / ((swir + nir) + _EPSILON)
+
+    def __init__(self, index_a: int, index_b: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_a: reference band channel index
+            index_b: difference band channel index
+        """
+        super().__init__()
+        self.dim = -3
+        self.index_a = index_a
+        self.index_b = index_b
+
+    def _compute_index(self, band_a: Tensor, band_b: Tensor) -> Tensor:
+        """Compute normalized difference index.
+
+        Args:
+            band_a: reference band tensor
+            band_b: difference band tensor
+
+        Returns:
+            the index
+        """
+        return (band_a - band_b) / ((band_a + band_b) + _EPSILON)
+
+    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+        """Compute and append normalized difference index to image.
+
+        Args:
+            sample: a sample or batch dict
+
+        Returns:
+            the transformed sample
+        """
+        if "image" in sample:
+            index = self._compute_index(
+                band_a=sample["image"][..., self.index_a, :, :],
+                band_b=sample["image"][..., self.index_b, :, :],
+            )
+            index = index.unsqueeze(self.dim)
+
+            sample["image"] = torch.cat(  # type: ignore[attr-defined]
+                [sample["image"], index], dim=self.dim
+            )
+
+        return sample
 
 
-def ndsi(green: Tensor, swir: Tensor) -> Tensor:
-    """Compute Normalized Different Snow Index (NDSI).
+class AppendNBR(AppendNormalizedDifferenceIndex):
+    """Normalized Burn Ratio (NBR).
 
-    Args:
-        green: tensor containing green band
-        swir: tensor containing swir band
+    If you use this index in your research, please cite the following paper:
 
-    Returns:
-        tensor containing computed NDSI values
+    * https://www.sciencebase.gov/catalog/item/4f4e4b20e4b07f02db6abb36
+
+    .. versionadded:: 0.2.0
     """
-    return (green - swir) / ((green + swir) + _EPSILON)
+
+    def __init__(self, index_nir: int, index_swir: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_nir: index of the Near Infrared (NIR) band in the image
+            index_swir: index of the Short-wave Infrared (SWIR) band in the image
+        """
+        super().__init__(index_a=index_nir, index_b=index_swir)
 
 
-def ndvi(red: Tensor, nir: Tensor) -> Tensor:
-    """Compute Normalized Different Vegetation Index (NDVI).
-
-    Args:
-        red: tensor containing red band
-        nir: tensor containing nir band
-
-    Returns:
-        tensor containing computed NDVI values
-    """
-    return (nir - red) / ((nir + red) + _EPSILON)
-
-
-def ndwi(green: Tensor, nir: Tensor) -> Tensor:
-    """Compute Normalized Different Water Index (NDWI).
-
-    Args:
-        green: tensor containing green band
-        nir: tensor containing nir band
-
-    Returns:
-        tensor containing computed NDWI values
-    """
-    return (green - nir) / ((green + nir) + _EPSILON)
-
-
-class AppendNDBI(Module):  # type: ignore[misc,name-defined]
+class AppendNDBI(AppendNormalizedDifferenceIndex):
     """Normalized Difference Built-up Index (NDBI).
 
-    If you use this dataset in your research, please cite the following paper:
+    If you use this index in your research, please cite the following paper:
 
     * https://doi.org/10.1080/01431160304987
     """
@@ -89,37 +110,13 @@ class AppendNDBI(Module):  # type: ignore[misc,name-defined]
             index_swir: index of the Short-wave Infrared (SWIR) band in the image
             index_nir: index of the Near Infrared (NIR) band in the image
         """
-        super().__init__()
-        self.dim = -3
-        self.index_nir = index_nir
-        self.index_swir = index_swir
-
-    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        """Create a band for NDBI and append to image channels.
-
-        Args:
-            sample: a single data sample
-
-        Returns:
-            a sample where the image has an additional channel representing NDBI
-        """
-        if "image" in sample:
-            index = ndbi(
-                swir=sample["image"][:, self.index_swir],
-                nir=sample["image"][:, self.index_nir],
-            )
-            index = index.unsqueeze(self.dim)
-            sample["image"] = torch.cat(  # type: ignore[attr-defined]
-                [sample["image"], index], dim=self.dim
-            )
-
-        return sample
+        super().__init__(index_a=index_swir, index_b=index_nir)
 
 
-class AppendNDSI(Module):  # type: ignore[misc,name-defined]
+class AppendNDSI(AppendNormalizedDifferenceIndex):
     """Normalized Difference Snow Index (NDSI).
 
-    If you use this dataset in your research, please cite the following paper:
+    If you use this index in your research, please cite the following paper:
 
     * https://doi.org/10.1109/IGARSS.1994.399618
     """
@@ -131,37 +128,13 @@ class AppendNDSI(Module):  # type: ignore[misc,name-defined]
             index_green: index of the Green band in the image
             index_swir: index of the Short-wave Infrared (SWIR) band in the image
         """
-        super().__init__()
-        self.dim = -3
-        self.index_green = index_green
-        self.index_swir = index_swir
-
-    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        """Create a band for NDSI and append to image channels.
-
-        Args:
-            sample: a single data sample
-
-        Returns:
-            a sample where the image has an additional channel representing NDSI
-        """
-        if "image" in sample:
-            index = ndsi(
-                green=sample["image"][:, self.index_green],
-                swir=sample["image"][:, self.index_swir],
-            )
-            index = index.unsqueeze(self.dim)
-            sample["image"] = torch.cat(  # type: ignore[attr-defined]
-                [sample["image"], index], dim=self.dim
-            )
-
-        return sample
+        super().__init__(index_a=index_green, index_b=index_swir)
 
 
-class AppendNDVI(Module):  # type: ignore[misc,name-defined]
+class AppendNDVI(AppendNormalizedDifferenceIndex):
     """Normalized Difference Vegetation Index (NDVI).
 
-    If you use this dataset in your research, please cite the following paper:
+    If you use this index in your research, please cite the following paper:
 
     * https://doi.org/10.1016/0034-4257(79)90013-0
     """
@@ -173,37 +146,13 @@ class AppendNDVI(Module):  # type: ignore[misc,name-defined]
             index_red: index of the Red band in the image
             index_nir: index of the Near Infrared (NIR) band in the image
         """
-        super().__init__()
-        self.dim = -3
-        self.index_red = index_red
-        self.index_nir = index_nir
-
-    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        """Create a band for NDVI and append to image channels.
-
-        Args:
-            sample: a single data sample
-
-        Returns:
-            a sample where the image has an additional channel representing NDVI
-        """
-        if "image" in sample:
-            index = ndvi(
-                red=sample["image"][:, self.index_red],
-                nir=sample["image"][:, self.index_nir],
-            )
-            index = index.unsqueeze(self.dim)
-            sample["image"] = torch.cat(  # type: ignore[attr-defined]
-                [sample["image"], index], dim=self.dim
-            )
-
-        return sample
+        super().__init__(index_a=index_red, index_b=index_nir)
 
 
-class AppendNDWI(Module):  # type: ignore[misc,name-defined]
+class AppendNDWI(AppendNormalizedDifferenceIndex):
     """Normalized Difference Water Index (NDWI).
 
-    If you use this dataset in your research, please cite the following paper:
+    If you use this index in your research, please cite the following paper:
 
     * https://doi.org/10.1080/01431169608948714
     """
@@ -215,28 +164,40 @@ class AppendNDWI(Module):  # type: ignore[misc,name-defined]
             index_green: index of the Green band in the image
             index_nir: index of the Near Infrared (NIR) band in the image
         """
-        super().__init__()
-        self.dim = -3
-        self.index_green = index_green
-        self.index_nir = index_nir
+        super().__init__(index_a=index_green, index_b=index_nir)
 
-    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        """Create a band for NDWI and append to image channels.
+
+class AppendSWI(AppendNormalizedDifferenceIndex):
+    """Standardized Water-Level Index (SWI).
+
+    If you use this index in your research, please cite the following paper:
+
+    * https://doi.org/10.3390/w13121647
+    """
+
+    def __init__(self, index_red: int, index_swir: int) -> None:
+        """Initialize a new transform instance.
 
         Args:
-            sample: a single data sample
-
-        Returns:
-            a sample where the image has an additional channel representing NDWI
+            index_red: index of the VRE1 band, e.g. B5 in Sentinel 2 imagery
+            index_swir: index of the SWIR2 band, e.g. B11 in Sentinel 2 imagery
         """
-        if "image" in sample:
-            index = ndwi(
-                green=sample["image"][:, self.index_green],
-                nir=sample["image"][:, self.index_nir],
-            )
-            index = index.unsqueeze(self.dim)
-            sample["image"] = torch.cat(  # type: ignore[attr-defined]
-                [sample["image"], index], dim=self.dim
-            )
+        super().__init__(index_a=index_red, index_b=index_swir)
 
-        return sample
+
+class AppendGNDVI(AppendNormalizedDifferenceIndex):
+    """Green Normalized Difference Vegetation Index (GNDVI).
+
+    If you use this index in your research, please cite the following paper:
+
+    * https://doi.org/10.2134/agronj2001.933583x
+    """
+
+    def __init__(self, index_nir: int, index_green: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_nir: index of the NIR band, e.g. B8 in Sentinel 2 imagery
+            index_green: index of the Green band, e.g. B3 in Sentinel 2 imagery
+        """
+        super().__init__(index_a=index_nir, index_b=index_green)

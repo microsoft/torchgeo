@@ -15,7 +15,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import LandCoverAI, LandCoverAIDataModule
+from torchgeo.datasets import LandCoverAI
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -33,11 +33,11 @@ class TestLandCoverAI:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.utils, "download_url", download_url
         )
-        md5 = "5bf4d2770deb41eb5c38784ab2c8a691"
+        md5 = "46108372402292213789342d58929708"
         monkeypatch.setattr(LandCoverAI, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip")
         monkeypatch.setattr(LandCoverAI, "url", url)  # type: ignore[attr-defined]
-        sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        sha256 = "ce84fa0e8d89b461c66fba4e78aa5a860e2871722c4a9ca8c2384eae1521c7c8"
         monkeypatch.setattr(LandCoverAI, "sha256", sha256)  # type: ignore[attr-defined]
         root = str(tmp_path)
         split = request.param
@@ -78,24 +78,3 @@ class TestLandCoverAI:
         x["prediction"] = x["mask"].clone()
         dataset.plot(x)
         plt.close()
-
-
-class TestLandCoverAIDataModule:
-    @pytest.fixture(scope="class")
-    def datamodule(self) -> LandCoverAIDataModule:
-        root = os.path.join("tests", "data", "landcoverai")
-        batch_size = 2
-        num_workers = 0
-        dm = LandCoverAIDataModule(root, batch_size, num_workers)
-        dm.prepare_data()
-        dm.setup()
-        return dm
-
-    def test_train_dataloader(self, datamodule: LandCoverAIDataModule) -> None:
-        next(iter(datamodule.train_dataloader()))
-
-    def test_val_dataloader(self, datamodule: LandCoverAIDataModule) -> None:
-        next(iter(datamodule.val_dataloader()))
-
-    def test_test_dataloader(self, datamodule: LandCoverAIDataModule) -> None:
-        next(iter(datamodule.test_dataloader()))

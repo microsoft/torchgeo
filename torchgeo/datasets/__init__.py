@@ -5,7 +5,7 @@
 
 from .advance import ADVANCE
 from .benin_cashews import BeninSmallHolderCashews
-from .bigearthnet import BigEarthNet, BigEarthNetDataModule
+from .bigearthnet import BigEarthNet
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
 from .chesapeake import (
@@ -13,7 +13,6 @@ from .chesapeake import (
     Chesapeake7,
     Chesapeake13,
     ChesapeakeCVPR,
-    ChesapeakeCVPRDataModule,
     ChesapeakeDC,
     ChesapeakeDE,
     ChesapeakeMD,
@@ -22,12 +21,14 @@ from .chesapeake import (
     ChesapeakeVA,
     ChesapeakeWV,
 )
-from .cowc import COWC, COWCCounting, COWCCountingDataModule, COWCDetection
+from .cowc import COWC, COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
-from .cyclone import CycloneDataModule, TropicalCycloneWindEstimation
-from .etci2021 import ETCI2021, ETCI2021DataModule
-from .eurosat import EuroSAT, EuroSATDataModule
-from .fair1m import FAIR1M, FAIR1MDataModule
+from .cyclone import TropicalCycloneWindEstimation
+from .dfc2022 import DFC2022
+from .enviroatlas import EnviroAtlas
+from .etci2021 import ETCI2021
+from .eurosat import EuroSAT
+from .fair1m import FAIR1M
 from .geo import (
     GeoDataset,
     IntersectionDataset,
@@ -39,7 +40,8 @@ from .geo import (
 )
 from .gid15 import GID15
 from .idtrees import IDTReeS
-from .landcoverai import LandCoverAI, LandCoverAIDataModule
+from .inria import InriaAerialImageLabeling
+from .landcoverai import LandCoverAI
 from .landsat import (
     Landsat,
     Landsat1,
@@ -54,23 +56,29 @@ from .landsat import (
     Landsat9,
 )
 from .levircd import LEVIRCDPlus
-from .loveda import LoveDA, LoveDADataModule
-from .naip import NAIP, NAIPChesapeakeDataModule
-from .nasa_marine_debris import NASAMarineDebris, NASAMarineDebrisDataModule
+from .loveda import LoveDA
+from .naip import NAIP
+from .nasa_marine_debris import NASAMarineDebris
 from .nwpu import VHR10
-from .oscd import OSCD, OSCDDataModule
+from .oscd import OSCD
 from .patternnet import PatternNet
-from .potsdam import Potsdam2D, Potsdam2DDataModule
-from .resisc45 import RESISC45, RESISC45DataModule
+from .potsdam import Potsdam2D
+from .resisc45 import RESISC45
 from .seco import SeasonalContrastS2
-from .sen12ms import SEN12MS, SEN12MSDataModule
+from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel2
-from .so2sat import So2Sat, So2SatDataModule
+from .so2sat import So2Sat
 from .spacenet import SpaceNet, SpaceNet1, SpaceNet2, SpaceNet4, SpaceNet5, SpaceNet7
-from .ucmerced import UCMerced, UCMercedDataModule
-from .utils import BoundingBox, concat_samples, merge_samples, stack_samples
-from .vaihingen import Vaihingen2D, Vaihingen2DDataModule
-from .xview import XView2, XView2DataModule
+from .ucmerced import UCMerced
+from .utils import (
+    BoundingBox,
+    concat_samples,
+    merge_samples,
+    stack_samples,
+    unbind_samples,
+)
+from .vaihingen import Vaihingen2D
+from .xview import XView2
 from .zuericrop import ZueriCrop
 
 __all__ = (
@@ -88,7 +96,6 @@ __all__ = (
     "ChesapeakeVA",
     "ChesapeakeWV",
     "ChesapeakeCVPR",
-    "ChesapeakeCVPRDataModule",
     "Landsat",
     "Landsat1",
     "Landsat2",
@@ -101,46 +108,35 @@ __all__ = (
     "Landsat8",
     "Landsat9",
     "NAIP",
-    "NAIPChesapeakeDataModule",
     "Sentinel",
     "Sentinel2",
     # VisionDataset
     "ADVANCE",
     "BeninSmallHolderCashews",
     "BigEarthNet",
-    "BigEarthNetDataModule",
     "COWC",
     "COWCCounting",
     "COWCDetection",
-    "COWCCountingDataModule",
     "CV4AKenyaCropType",
+    "DFC2022",
+    "EnviroAtlas",
     "ETCI2021",
-    "ETCI2021DataModule",
     "EuroSAT",
-    "EuroSATDataModule",
     "FAIR1M",
-    "FAIR1MDataModule",
     "GID15",
     "IDTReeS",
+    "InriaAerialImageLabeling",
     "LandCoverAI",
-    "LandCoverAIDataModule",
     "LEVIRCDPlus",
     "LoveDA",
-    "LoveDADataModule",
     "NASAMarineDebris",
-    "NASAMarineDebrisDataModule",
     "OSCD",
-    "OSCDDataModule",
     "PatternNet",
     "Potsdam2D",
-    "Potsdam2DDataModule",
     "RESISC45",
-    "RESISC45DataModule",
     "SeasonalContrastS2",
     "SEN12MS",
-    "SEN12MSDataModule",
     "So2Sat",
-    "So2SatDataModule",
     "SpaceNet",
     "SpaceNet1",
     "SpaceNet2",
@@ -148,14 +144,10 @@ __all__ = (
     "SpaceNet5",
     "SpaceNet7",
     "TropicalCycloneWindEstimation",
-    "CycloneDataModule",
     "UCMerced",
-    "UCMercedDataModule",
     "Vaihingen2D",
-    "Vaihingen2DDataModule",
     "VHR10",
     "XView2",
-    "XView2DataModule",
     "ZueriCrop",
     # Base classes
     "GeoDataset",
@@ -170,6 +162,7 @@ __all__ = (
     "concat_samples",
     "merge_samples",
     "stack_samples",
+    "unbind_samples",
 )
 
 # https://stackoverflow.com/questions/40018681

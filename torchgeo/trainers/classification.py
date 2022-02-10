@@ -14,8 +14,9 @@ from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torchmetrics import Accuracy, FBeta, IoU, MetricCollection
+from torchmetrics import Accuracy, FBetaScore, JaccardIndex, MetricCollection
 
+from ..datasets.utils import unbind_samples
 from . import utils
 
 # https://github.com/pytorch/pytorch/issues/60979
@@ -104,8 +105,8 @@ class ClassificationTask(pl.LightningModule):
                 "AverageAccuracy": Accuracy(
                     num_classes=self.hparams["num_classes"], average="macro"
                 ),
-                "IoU": IoU(num_classes=self.hparams["num_classes"]),
-                "F1Score": FBeta(
+                "JaccardIndex": JaccardIndex(num_classes=self.hparams["num_classes"]),
+                "F1Score": FBetaScore(
                     num_classes=self.hparams["num_classes"], beta=1.0, average="micro"
                 ),
             },
@@ -178,6 +179,21 @@ class ClassificationTask(pl.LightningModule):
 
         self.log("val_loss", loss, on_step=False, on_epoch=True)
         self.val_metrics(y_hat_hard, y)
+
+        if batch_idx < 10:
+            try:
+                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                batch["prediction"] = y_hat_hard
+                for key in ["image", "label", "prediction"]:
+                    batch[key] = batch[key].cpu()
+                sample = unbind_samples(batch)[0]
+                fig = datamodule.plot(sample)
+                summary_writer = self.logger.experiment
+                summary_writer.add_figure(
+                    f"image/{batch_idx}", fig, global_step=self.global_step
+                )
+            except AttributeError:
+                pass
 
     def validation_epoch_end(self, outputs: Any) -> None:
         """Logs epoch level validation metrics.
@@ -276,7 +292,7 @@ class MultiLabelClassificationTask(ClassificationTask):
                     average="macro",
                     multiclass=False,
                 ),
-                "F1Score": FBeta(
+                "F1Score": FBetaScore(
                     num_classes=self.hparams["num_classes"],
                     beta=1.0,
                     average="micro",
@@ -331,6 +347,21 @@ class MultiLabelClassificationTask(ClassificationTask):
 
         self.log("val_loss", loss, on_step=False, on_epoch=True)
         self.val_metrics(y_hat_hard, y)
+
+        if batch_idx < 10:
+            try:
+                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                batch["prediction"] = y_hat_hard
+                for key in ["image", "label", "prediction"]:
+                    batch[key] = batch[key].cpu()
+                sample = unbind_samples(batch)[0]
+                fig = datamodule.plot(sample)
+                summary_writer = self.logger.experiment
+                summary_writer.add_figure(
+                    f"image/{batch_idx}", fig, global_step=self.global_step
+                )
+            except AttributeError:
+                pass
 
     def test_step(  # type: ignore[override]
         self, batch: Dict[str, Any], batch_idx: int

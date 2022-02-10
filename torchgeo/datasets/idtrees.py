@@ -85,7 +85,7 @@ class IDTReeS(VisionDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://doi.org/10.7717/peerj.5843
+    * https://doi.org/10.1101/2021.08.06.453503
 
     .. versionadded:: 0.2
     """
@@ -254,7 +254,7 @@ class IDTReeS(VisionDataset):
         import laspy
 
         las = laspy.read(path)
-        array = np.stack([las.x, las.y, las.z], axis=0)
+        array: "np.typing.NDArray[np.int_]" = np.stack([las.x, las.y, las.z], axis=0)
         tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
         return tensor
 
@@ -334,7 +334,7 @@ class IDTReeS(VisionDataset):
         else:
             directory = os.path.join(root, self.task)
             if self.task == "task1":
-                geoms = None  # type: ignore[assignment]
+                geoms = None
                 labels = None
             else:
                 geoms = self._load_geometries(directory)
@@ -342,7 +342,7 @@ class IDTReeS(VisionDataset):
 
         images = glob.glob(os.path.join(directory, "RemoteSensing", "RGB", "*.tif"))
 
-        return images, geoms, labels
+        return images, geoms, labels  # type: ignore[return-value]
 
     def _load_labels(self, directory: str) -> Any:
         """Load the csv files containing the labels.
@@ -522,14 +522,16 @@ class IDTReeS(VisionDataset):
             import open3d  # noqa: F401
         except ImportError:
             raise ImportError(
-                "open3d is not installed and is required to use this dataset"
+                "open3d is not installed and is required to plot point clouds"
             )
         import laspy
 
         path = self.images[index]
         path = path.replace("RGB", "LAS").replace(".tif", ".las")
         las = laspy.read(path)
-        points = np.stack([las.x, las.y, las.z], axis=0).transpose((1, 0))
+        points: "np.typing.NDArray[np.int_]" = np.stack(
+            [las.x, las.y, las.z], axis=0
+        ).transpose((1, 0))
 
         if colormap:
             cm = plt.cm.get_cmap(colormap)
