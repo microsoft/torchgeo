@@ -12,7 +12,7 @@ from torch.utils.data import Sampler
 
 from torchgeo.datasets.geo import GeoDataset
 from torchgeo.datasets.utils import BoundingBox
-from torchgeo.samplers.constants import SIZE_IN_CRS_UNITS, SIZE_IN_PIXELS
+from torchgeo.samplers.constants import Units
 
 from .utils import _to_tuple, get_random_bounding_box
 
@@ -74,7 +74,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         batch_size: int,
         length: int,
         roi: Optional[BoundingBox] = None,
-        units: int = SIZE_IN_PIXELS,
+        units: int = Units.PIXELS,
     ) -> None:
         """Initialize a new Sampler instance.
 

@@ -12,8 +12,8 @@ from torch.utils.data import Sampler
 
 from torchgeo.datasets.geo import GeoDataset
 from torchgeo.datasets.utils import BoundingBox
+from torchgeo.samplers.constants import Units
 
-from .constants import SIZE_IN_CRS_UNITS, SIZE_IN_PIXELS
 from .utils import _to_tuple, get_random_bounding_box
 
 # https://github.com/pytorch/pytorch/issues/60979
@@ -76,7 +76,7 @@ class RandomGeoSampler(GeoSampler):
         size: Union[Tuple[float, float], float],
         length: int,
         roi: Optional[BoundingBox] = None,
-        units: int = SIZE_IN_PIXELS,
+        units: int = Units.PIXELS,
     ) -> None:
         """Initialize a new Sampler instance.
 

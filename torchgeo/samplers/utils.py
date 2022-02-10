@@ -8,7 +8,7 @@ from typing import Tuple, Union
 
 from torchgeo.datasets.utils import BoundingBox
 
-from .constants import SIZE_IN_PIXELS, SIZE_IN_CRS_UNITS
+from .constants import Units
 
 
 def _to_tuple(value: Union[Tuple[float, float], float]) -> Tuple[float, float]:
@@ -27,10 +27,7 @@ def _to_tuple(value: Union[Tuple[float, float], float]) -> Tuple[float, float]:
 
 
 def get_random_bounding_box(
-    bounds: BoundingBox,
-    size: Union[Tuple[float, float], float],
-    res: float,
-    units: int,
+    bounds: BoundingBox, size: Union[Tuple[float, float], float], res: float, units: int
 ) -> BoundingBox:
     """Returns a random bounding box within a given bounding box.
 
@@ -50,19 +47,17 @@ def get_random_bounding_box(
         randomly sampled bounding box from the extent of the input
     """
     t_size: Tuple[float, float] = _to_tuple(size)
-    if units == SIZE_IN_PIXELS:
+    if units == Units.PIXELS:
         t_size[0] *= res
         t_size[1] *= res
 
     width = (bounds.maxx - bounds.minx - t_size[1]) // res
     minx = random.randrange(int(width)) * res + bounds.minx
-    if units == SIZE_IN_CRS_UNITS:
-        maxx = minx + t_size[1]
+    maxx = minx + t_size[1]
 
     height = (bounds.maxy - bounds.miny - t_size[0]) // res
     miny = random.randrange(int(height)) * res + bounds.miny
-    if units == SIZE_IN_CRS_UNITS:
-        maxy = miny + t_size[0]
+    maxy = miny + t_size[0]
 
     mint = bounds.mint
     maxt = bounds.maxt
