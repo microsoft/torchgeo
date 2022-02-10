@@ -1,4 +1,5 @@
 from torchgeo.datasets import neonspecies
+from matplotlib import pyplot as plt
 import pytest
 
 @pytest.fixture()
@@ -10,7 +11,10 @@ def dataset(tmpdir):
 def test_getitem(dataset):
     items = dataset.__getitem__(0)
     assert len(items) == 5
-    assert items.keys() == ["image","hsi","chm","points","label"]
-    
-    
+    assert list(items.keys()) == ["image","hsi","chm","metadata","label"]
+
+def test_plot(dataset):
+    items = dataset.__getitem__(0)    
+    fig = dataset.plot(items)
+    plt.close()
     

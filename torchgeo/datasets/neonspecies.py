@@ -6,14 +6,12 @@
 import glob
 import os
 from typing import Any, Callable, Dict, List, Optional, Tuple
-
-import fiona
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 import rasterio
 import torch
 from torch import Tensor
-from torchvision.utils import draw_bounding_boxes
+from PIL import Image, ImageColor, ImageDraw, ImageFont
 
 from .geo import VisionDataset
 from .utils import download_url, extract_archive
@@ -165,19 +163,13 @@ class NEONTreeSpecies(VisionDataset):
         self._verify()
 
         try:
-            import pandas as pd  # noqa: F401
+            import geopandas as gpd  # noqa: F401
         except ImportError:
             raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
-        try:
-            import laspy  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "laspy is not installed and is required to use this dataset"
+                "geopandas is not installed and is required to use this dataset"
             )
 
-        self.data, self.geometries, self.labels = self._load(root)
+        self.data, self.labels, self.metadata = self._load(root)
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
@@ -192,12 +184,11 @@ class NEONTreeSpecies(VisionDataset):
         image = self._load_image(path).to(torch.uint8)  # type:ignore[attr-defined]
         hsi = self._load_image(path.replace("RGB", "HSI"))
         chm = self._load_image(path.replace("RGB", "CHM"))
-        sample = {"image": image, "hsi": hsi, "chm": chm}
+        metadata = self.metadata.iloc[0]
+        
+        sample = {"image": image, "hsi": hsi, "chm": chm, "metadata":metadata}
 
-        if self.split == "test":
-            sample["points"] = self.geometries[index]
-        else:
-            sample["points"] = self.geometries[index]
+        if self.split == "train":
             sample["label"] = self.labels.label[index]
 
         if self.transforms is not None:
@@ -253,10 +244,10 @@ class NEONTreeSpecies(VisionDataset):
         data["RGB"] = RGB_images
         data["CHM"] = CHM_images
         data["HSI"] = HSI_images
+                
+        metadata = labels
         
-        geoms = labels.geometry
-        
-        return data, geoms, labels  # type: ignore[return-value]
+        return data, labels, metadata  # type: ignore[return-value]
 
     def _load_labels(self, directory: str) -> Any:
         """Load the csv files containing the labels.
@@ -318,7 +309,7 @@ class NEONTreeSpecies(VisionDataset):
         sample: Dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-        hsi_indices: Tuple[int, int, int] = (0, 1, 2),
+        hsi_indices: Tuple[int, int, int] = (55, 111, 170),
     ) -> plt.Figure:
         """Plot a sample from the dataset.
 
@@ -337,35 +328,11 @@ class NEONTreeSpecies(VisionDataset):
             return (x - x.min()) / (x.max() - x.min())
 
         ncols = 3
-
+        
         hsi = normalize(sample["hsi"][hsi_indices, :, :]).permute((1, 2, 0)).numpy()
         chm = normalize(sample["chm"]).permute((1, 2, 0)).numpy()
-
-        if "boxes" in sample:
-            labels = (
-                [self.idx2class[int(i)] for i in sample["label"]]
-                if "label" in sample
-                else None
-            )
-            image = draw_bounding_boxes(
-                image=sample["image"], boxes=sample["boxes"], labels=labels
-            )
-            image = image.permute((1, 2, 0)).numpy()
-        else:
-            image = sample["image"].permute((1, 2, 0)).numpy()
-
-        if "prediction_boxes" in sample:
-            ncols += 1
-            labels = (
-                [self.idx2class[int(i)] for i in sample["prediction_label"]]
-                if "prediction_label" in sample
-                else None
-            )
-            preds = draw_bounding_boxes(
-                image=sample["image"], boxes=sample["prediction_boxes"], labels=labels
-            )
-            preds = preds.permute((1, 2, 0)).numpy()
-
+        image = sample["image"].permute((1, 2, 0)).numpy()
+                    
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
         axs[0].imshow(image)
         axs[0].axis("off")
@@ -373,12 +340,9 @@ class NEONTreeSpecies(VisionDataset):
         axs[1].axis("off")
         axs[2].imshow(chm)
         axs[2].axis("off")
-        if ncols > 3:
-            axs[3].imshow(preds)
-            axs[3].axis("off")
 
         if show_titles:
-            axs[0].set_title("Ground Truth")
+            axs[0].set_title("RGB")
             axs[1].set_title("Hyperspectral False Color Image")
             axs[2].set_title("Canopy Height Model")
             if ncols > 3:
