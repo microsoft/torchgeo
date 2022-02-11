@@ -118,12 +118,12 @@ class NEONTreeSpecies(VisionDataset):
     metadata = {
         "train": {
             #temp use dropbox url
-            "url": "https://www.dropbox.com/sh/penv9hzzsmtk90v/AAA0BW_21m8nqxWEzZ5OvmNZa?dl=1",  # noqa: E501 
+            "url": "https://www.dropbox.com/sh/7hvacwqevxjxaa3/AAB9I-7NME-A7U2MBVyy_G3pa?dl=1",  # noqa: E501 
             "md5": None,
             "filename": "train.zip",
         },
         "test": {
-            "url": "https://www.dropbox.com/sh/z0pk5tzktlkptyl/AAB6R3e6_j6FPQTDjmHzq2VSa?dl=1",  # noqa: E501
+            "url": "https://www.dropbox.com/sh/iex5iy1czal5vlp/AAC174ERqPNhNyVWCrTz3wp8a?dl=1",  # noqa: E501
             "md5": None,
             "filename": "test.zip",
         },

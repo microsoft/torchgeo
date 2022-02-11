@@ -14,7 +14,7 @@ def test_getitem(dataset):
     assert list(items.keys()) == ["image","hsi","chm","metadata","label"]
 
 def test_plot(dataset):
-    items = dataset.__getitem__(0)    
+    items = dataset.__getitem__(10)    
     fig = dataset.plot(items)
     plt.close()
     
