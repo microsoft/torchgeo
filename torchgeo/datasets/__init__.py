@@ -40,6 +40,7 @@ from .geo import (
     VisionDataset,
 )
 from .gid15 import GID15
+from .globBiomass import GlobBiomass
 from .idtrees import IDTReeS
 from .inria import InriaAerialImageLabeling
 from .landcoverai import LandCoverAI
@@ -98,6 +99,7 @@ __all__ = (
     "ChesapeakeWV",
     "ChesapeakeCVPR",
     "Esri2020",
+    "GlobBiomass",
     "Landsat",
     "Landsat1",
     "Landsat2",
