@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, Optional
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import extract_archive
+from .utils import check_integrity, extract_archive
 
 
 class CMSGlobalMangroveCanopy(RasterDataset):
@@ -233,6 +233,8 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         # Check if the zip file has already been downloaded
         pathname = os.path.join(self.root, self.zipfile)
         if os.path.exists(pathname):
+            if self.checksum and not check_integrity(pathname, self.md5):
+                raise RuntimeError("Dataset found, but corrupted.")
             self._extract()
             return
 

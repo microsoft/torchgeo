@@ -63,6 +63,14 @@ class TestCMSGlobalMangroveCanopy:
         shutil.copy(pathname, root)
         CMSGlobalMangroveCanopy(root, country="Angola")
 
+    def test_corrupted(self, tmp_path: Path) -> None:
+        with open(
+            os.path.join(tmp_path, "CMS_Global_Map_Mangrove_Canopy_1665.zip"), "w"
+        ) as f:
+            f.write("bad")
+        with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
+            CMSGlobalMangroveCanopy(root=str(tmp_path), country="Angola", checksum=True)
+
     def test_invalid_country(self) -> None:
         with pytest.raises(AssertionError):
             CMSGlobalMangroveCanopy(country="fakeCountry")
