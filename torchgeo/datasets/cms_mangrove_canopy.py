@@ -13,7 +13,7 @@ from .geo import RasterDataset
 from .utils import extract_archive
 
 
-class CMS_Global_Mangrove_Canopy(RasterDataset):
+class CMSGlobalMangroveCanopy(RasterDataset):
     """CMS Global Mangrove Canopy dataset.
 
     The `CMS Global Mangrove Canopy dataset
@@ -230,9 +230,9 @@ class CMS_Global_Mangrove_Canopy(RasterDataset):
         if glob.glob(pathname):
             return
 
-        # Check if the zip files have already been downloaded
+        # Check if the zip file has already been downloaded
         pathname = os.path.join(self.root, self.zipfile)
-        if glob.glob(pathname):
+        if os.path.exists(pathname):
             self._extract()
             return
 
@@ -245,5 +245,4 @@ class CMS_Global_Mangrove_Canopy(RasterDataset):
     def _extract(self) -> None:
         """Extract the dataset."""
         pathname = os.path.join(self.root, self.zipfile)
-        for zipfile in glob.iglob(pathname):
-            extract_archive(zipfile)
+        extract_archive(pathname)

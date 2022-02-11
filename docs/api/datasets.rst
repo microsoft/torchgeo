@@ -35,7 +35,7 @@ Chesapeake Bay High-Resolution Land Cover Project
 CMS Global Mangrove Canopy Dataset
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: CMS_Global_Mangrove_Canopy
+.. autoclass:: CMSGlobalMangroveCanopy
 
 Cropland Data Layer (CDL)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
