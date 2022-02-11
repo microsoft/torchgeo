@@ -209,6 +209,8 @@ class AppendBNDVI(AppendNormalizedDifferenceIndex):
     If you use this index in your research, please cite the following paper:
 
     * https://doi.org/10.1016/S1672-6308(07)60027-4
+
+    .. versionadded:: 0.3.0
     """
 
     def __init__(self, index_nir: int, index_blue: int) -> None:
@@ -227,6 +229,8 @@ class AppendNDRE(AppendNormalizedDifferenceIndex):
     If you use this index in your research, please cite the following paper:
 
     * https://agris.fao.org/agris-search/search.do?recordID=US201300795763
+
+    .. versionadded:: 0.3.0
     """
 
     def __init__(self, index_nir: int, index_vre1: int) -> None:
