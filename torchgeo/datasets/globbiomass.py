@@ -9,10 +9,8 @@ from typing import Any, Callable, Dict, Optional
 
 from rasterio.crs import CRS
 
-from torchgeo.datasets import BoundingBox
-
 from .geo import RasterDataset
-from .utils import check_integrity, extract_archive
+from .utils import BoundingBox, check_integrity, extract_archive
 
 
 class GlobBiomass(RasterDataset):
@@ -215,7 +213,11 @@ class GlobBiomass(RasterDataset):
         # Check if the zip files have already been downloaded
         pathname = os.path.join(self.root, self.zipfile_glob)
         if glob.glob(pathname):
-            self._extract()
+            for zipfile in glob.iglob(pathname):
+                filename = os.path.basename(zipfile)
+                if self.checksum and not check_integrity(zipfile, self.md5s[filename]):
+                    raise RuntimeError("Dataset found, but corrupted.")
+                extract_archive(zipfile)
             return
 
         raise RuntimeError(
@@ -223,12 +225,3 @@ class GlobBiomass(RasterDataset):
             "either specify a different `root` directory or make sure you "
             "have manually downloaded the dataset as suggested in the documentation."
         )
-
-    def _extract(self) -> None:
-        """Extract the dataset files."""
-        pathname = os.path.join(self.root, self.zipfile_glob)
-        for zipfile in glob.iglob(pathname):
-            filename = os.path.basename(zipfile)
-            extract_archive(zipfile)
-            if self.checksum and not check_integrity(zipfile, self.md5s[filename]):
-                raise RuntimeError("Dataset found, but corrupted.")

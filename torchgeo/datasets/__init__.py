@@ -40,7 +40,7 @@ from .geo import (
     VisionDataset,
 )
 from .gid15 import GID15
-from .globBiomass import GlobBiomass
+from .globbiomass import GlobBiomass
 from .idtrees import IDTReeS
 from .inria import InriaAerialImageLabeling
 from .landcoverai import LandCoverAI
