@@ -18,12 +18,12 @@ class GlobBiomass(RasterDataset):
 
     The `GlobBiomass dataset<https://doi.pangaea.de/10.1594/PANGAEA.894711>
     consists of global pixel wise aboveground biomass (AGB) and growth stock
-    volume (GSV) maps. For an elaboration on the methodology, please refer to
+    volume (GSV) maps.
 
     Dataset features:
 
-    * estimates of AGB and GSV around the world at 100m per pixel resolution
-      (~px, ~px)
+    * estimates of AGB and GSV around the world at ~100m per pixel resolution
+      (45,000x45,0000 px)
     * standard error maps of respective measurement at same resolution
 
     Dataset format:
@@ -48,7 +48,6 @@ class GlobBiomass(RasterDataset):
         (?P<tile>[0-9A-Z]*)
         _(?P<measurement>[a-z]{3})
     """
-    separate_files = True
 
     measurements = ["agb", "gsv"]
 
@@ -139,7 +138,8 @@ class GlobBiomass(RasterDataset):
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            RuntimeError: if dataset is missing or checksum fails
+            AssertionError: if measurement argument is invalid, or not a str
         """
         self.root = root
         self.checksum = checksum
@@ -203,7 +203,7 @@ class GlobBiomass(RasterDataset):
         """Verify the integrity of the dataset.
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            RuntimeError: if dataset is missing or checksum fails
         """
         # Check if the extracted file already exists
         pathname = os.path.join(self.root, self.filename_glob)
