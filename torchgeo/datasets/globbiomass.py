@@ -166,7 +166,7 @@ class GlobBiomass(RasterDataset):
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
-            sample at index retrieving measurement mask with key 'mask',
+            sample at index consisting of measurement mask with key 'mask',
             standard error under 'error_mask' key, crs under 'crs' and
             query bbox under 'bbox'
 
