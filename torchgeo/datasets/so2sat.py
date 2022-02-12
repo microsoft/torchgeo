@@ -161,7 +161,7 @@ class So2Sat(VisionDataset):
         assert split in ["train", "validation", "test"]
 
         self._validate_bands(bands)
-        self.s1_band_indices = np.array(  # type: ignore
+        self.s1_band_indices: "np.typing.NDArray[np.int_]" = np.array(
             [
                 self.all_s1_band_names.index(b)
                 for b in bands
@@ -171,7 +171,7 @@ class So2Sat(VisionDataset):
 
         self.s1_band_names = [self.all_s1_band_names[i] for i in self.s1_band_indices]
 
-        self.s2_band_indices = np.array(  # type: ignore
+        self.s2_band_indices: "np.typing.NDArray[np.int_]" = np.array(
             [
                 self.all_s2_band_names.index(b)
                 for b in bands
@@ -285,6 +285,9 @@ class So2Sat(VisionDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        Raises:
+            ValueError: if RGB bands are not found in dataset
 
         .. versionadded:: 0.2
         """
