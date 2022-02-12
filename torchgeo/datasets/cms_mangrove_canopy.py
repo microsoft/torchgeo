@@ -192,7 +192,8 @@ class CMSGlobalMangroveCanopy(RasterDataset):
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            RuntimeError: if dataset is missing or checksum fails
+            AssertionError: if country or measurement arg are not str or invalid
         """
         self.root = root
         self.checksum = checksum
@@ -223,7 +224,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         """Verify the integrity of the dataset.
 
         Raises:
-            RuntimeError: if dataset is not in root or was not downloaded manually
+            RuntimeError: if dataset is missing or checksum fails
         """
         # Check if the extracted files already exist
         pathname = os.path.join(self.root, "**", self.filename_glob)
