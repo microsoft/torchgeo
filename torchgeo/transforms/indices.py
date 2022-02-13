@@ -210,7 +210,7 @@ class AppendBNDVI(AppendNormalizedDifferenceIndex):
 
     * https://doi.org/10.1016/S1672-6308(07)60027-4
 
-    .. versionadded:: 0.3.0
+    .. versionadded:: 0.3
     """
 
     def __init__(self, index_nir: int, index_blue: int) -> None:
