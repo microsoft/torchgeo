@@ -230,7 +230,7 @@ class AppendNDRE(AppendNormalizedDifferenceIndex):
 
     * https://agris.fao.org/agris-search/search.do?recordID=US201300795763
 
-    .. versionadded:: 0.3.0
+    .. versionadded:: 0.3
     """
 
     def __init__(self, index_nir: int, index_vre1: int) -> None:
