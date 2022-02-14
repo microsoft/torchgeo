@@ -61,6 +61,7 @@ from .loveda import LoveDA
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nwpu import VHR10
+from .openbuildings import OpenBuildings
 from .oscd import OSCD
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
@@ -110,6 +111,7 @@ __all__ = (
     "Landsat8",
     "Landsat9",
     "NAIP",
+    "OpenBuildings",
     "Sentinel",
     "Sentinel2",
     # VisionDataset
