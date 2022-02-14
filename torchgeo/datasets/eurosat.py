@@ -12,13 +12,7 @@ import torch
 from torch import Tensor
 
 from .geo import VisionClassificationDataset
-from .utils import (
-    check_integrity,
-    download_url,
-    extract_archive,
-    percentile_normalization,
-    rasterio_loader,
-)
+from .utils import check_integrity, download_url, extract_archive, rasterio_loader
 
 
 class EuroSAT(VisionClassificationDataset):
@@ -291,7 +285,7 @@ class EuroSAT(VisionClassificationDataset):
 
         image = np.take(sample["image"].numpy(), indices=rgb_indices, axis=0)
         image = np.rollaxis(image, 0, 3)
-        image = percentile_normalization(image, 0, 100)
+        image = np.clip(image / 3000, 0, 1)
 
         label = cast(int, sample["label"].item())
         label_class = self.classes[label]
