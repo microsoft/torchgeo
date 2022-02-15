@@ -302,7 +302,6 @@ class OpenBuildings(VectorDataset, abc.ABC):
         """
         hits = self.index.intersection(tuple(query), objects=True)
         filepaths = [hit.object for hit in hits]
-        print(filepaths)
 
         if not filepaths:
             raise IndexError(
@@ -321,10 +320,10 @@ class OpenBuildings(VectorDataset, abc.ABC):
             masks = rasterio.features.rasterize(
                 shapes, out_shape=(int(height), int(width)), transform=transform
             )
-            masks = torch.tensor(masks)  # type: ignore[attr-defined]
+            masks = torch.tensor(masks).unsqueeze(0)  # type: ignore[attr-defined]
         else:
             masks = torch.zeros(  # type: ignore[attr-defined]
-                size=(int(height), int(width))
+                size=(1, int(height), int(width))
             )
 
         sample = {"mask": masks, "crs": self.crs, "bbox": query}
@@ -425,23 +424,23 @@ class OpenBuildings(VectorDataset, abc.ABC):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`VisionClassificationDataset.__getitem__`
+            sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample["mask"]
+        mask = sample["mask"].permute(1, 2, 0)
 
         showing_predictions = "prediction" in sample
         if showing_predictions:
-            pred = sample["prediction"]
+            pred = sample["prediction"].permute(1, 2, 0)
             ncols = 2
         else:
             ncols = 1
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4, ncols * 4))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
 
         if showing_predictions:
             axs[0].imshow(mask)
