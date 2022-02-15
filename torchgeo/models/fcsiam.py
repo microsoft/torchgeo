@@ -11,8 +11,11 @@ from segmentation_models_pytorch.base.model import SegmentationModel
 from segmentation_models_pytorch.unet.model import Unet
 from torch import Tensor
 
+SegmentationModel.__module__ = "segmentation_models_pytorch.base.model"
+Unet.__module__ = "segmentation_models_pytorch.unet.model"
 
-class FCSiamConc(SegmentationModel):
+
+class FCSiamConc(SegmentationModel):  # type: ignore[misc]
     """Fully-convolutional Siamese Concatenation (FC-Siam-conc).
 
     If you use this model in your research, please cite the following paper:
@@ -115,7 +118,7 @@ class FCSiamConc(SegmentationModel):
         return masks
 
 
-class FCSiamDiff(Unet):
+class FCSiamDiff(Unet):  # type: ignore[misc]
     """Fully-convolutional Siamese Difference (FC-Siam-diff).
 
     If you use this model in your research, please cite the following paper:
