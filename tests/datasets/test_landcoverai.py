@@ -18,7 +18,7 @@ import torchgeo.datasets.utils
 from torchgeo.datasets import LandCoverAI
 
 
-def download_url(url: str, root: str, *args: str, **kwarsgs: str) -> None:
+def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
