@@ -27,6 +27,7 @@ from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCycloneWindEstimation
 from .dfc2022 import DFC2022
 from .enviroatlas import EnviroAtlas
+from .esri2020 import Esri2020
 from .etci2021 import ETCI2021
 from .eurosat import EuroSAT
 from .fair1m import FAIR1M
@@ -98,6 +99,7 @@ __all__ = (
     "ChesapeakeWV",
     "ChesapeakeCVPR",
     "CMSGlobalMangroveCanopy",
+    "Esri2020",
     "Landsat",
     "Landsat1",
     "Landsat2",
