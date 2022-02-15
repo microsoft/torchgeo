@@ -47,6 +47,11 @@ EnviroAtlas
 
 .. autoclass:: EnviroAtlas
 
+Esri2020
+^^^^^^^^
+
+.. autoclass:: Esri2020
+
 Landsat
 ^^^^^^^
 
