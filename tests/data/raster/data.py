@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+
 import numpy as np
 import rasterio
 import rasterio.transform
@@ -26,11 +27,11 @@ def generate_test_data(fn: str) -> str:
         "height": 4,
         "width": 4,
         "compress": "lzw",
-        "predictor": 2
+        "predictor": 2,
     }
 
     with rasterio.open(fn, "w", **profile) as f:
-        f.write(np.random.randint(0, 2**32-1, size=(1, 4, 4)))
+        f.write(np.random.randint(0, 2**32 - 1, size=(1, 4, 4)))
 
     md5: str = calculate_md5(fn)
     return md5
