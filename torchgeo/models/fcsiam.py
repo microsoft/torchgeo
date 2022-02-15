@@ -11,8 +11,7 @@ from segmentation_models_pytorch.base.model import SegmentationModel
 from segmentation_models_pytorch.unet.model import Unet
 from torch import Tensor
 
-SegmentationModel.__module__ = "segmentation_models_pytorch.base.model"
-Unet.__module__ = "segmentation_models_pytorch.unet.model"
+Unet.__module__ = "segmentation_models_pytorch"
 
 
 class FCSiamConc(SegmentationModel):  # type: ignore[misc]
