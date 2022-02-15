@@ -23,7 +23,13 @@ _EPSILON = 1e-10
 
 
 class AppendNormalizedDifferenceIndex(Module):
-    """Append normalized difference index as channel to image tensor.
+    r"""Append normalized difference index as channel to image tensor.
+
+    Computes the following index:
+
+    .. math::
+
+       NDI = \frac{A - B}{A + B}
 
     .. versionadded:: 0.2
     """
@@ -76,7 +82,13 @@ class AppendNormalizedDifferenceIndex(Module):
 
 
 class AppendNBR(AppendNormalizedDifferenceIndex):
-    """Normalized Burn Ratio (NBR).
+    r"""Normalized Burn Ratio (NBR).
+
+    Computes the following index:
+
+    .. math::
+
+       NBR = \frac{NIR - SWIR}{NIR + SWIR}
 
     If you use this index in your research, please cite the following paper:
 
@@ -96,7 +108,13 @@ class AppendNBR(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDBI(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Built-up Index (NDBI).
+    r"""Normalized Difference Built-up Index (NDBI).
+
+    Computes the following index:
+
+    .. math::
+
+       NDBI = \frac{SWIR - NIR}{SWIR + NIR}
 
     If you use this index in your research, please cite the following paper:
 
@@ -114,7 +132,13 @@ class AppendNDBI(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDSI(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Snow Index (NDSI).
+    r"""Normalized Difference Snow Index (NDSI).
+
+    Computes the following index:
+
+    .. math::
+
+       NDSI = \frac{G - SWIR}{G + SWIR}
 
     If you use this index in your research, please cite the following paper:
 
@@ -132,7 +156,13 @@ class AppendNDSI(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDVI(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Vegetation Index (NDVI).
+    r"""Normalized Difference Vegetation Index (NDVI).
+
+    Computes the following index:
+
+    .. math::
+
+       NDVI = \frac{R - NIR}{R + NIR}
 
     If you use this index in your research, please cite the following paper:
 
@@ -150,7 +180,13 @@ class AppendNDVI(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDWI(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Water Index (NDWI).
+    r"""Normalized Difference Water Index (NDWI).
+
+    Computes the following index:
+
+    .. math::
+
+       NDWI = \frac{G - NIR}{G + NIR}
 
     If you use this index in your research, please cite the following paper:
 
@@ -168,7 +204,13 @@ class AppendNDWI(AppendNormalizedDifferenceIndex):
 
 
 class AppendSWI(AppendNormalizedDifferenceIndex):
-    """Standardized Water-Level Index (SWI).
+    r"""Standardized Water-Level Index (SWI).
+
+    Computes the following index:
+
+    .. math::
+
+       SWI = \frac{R - SWIR}{R + SWIR}
 
     If you use this index in your research, please cite the following paper:
 
@@ -186,7 +228,13 @@ class AppendSWI(AppendNormalizedDifferenceIndex):
 
 
 class AppendGNDVI(AppendNormalizedDifferenceIndex):
-    """Green Normalized Difference Vegetation Index (GNDVI).
+    r"""Green Normalized Difference Vegetation Index (GNDVI).
+
+    Computes the following index:
+
+    .. math::
+
+       GNDVI = \frac{NIR - G}{NIR + G}
 
     If you use this index in your research, please cite the following paper:
 
@@ -204,7 +252,13 @@ class AppendGNDVI(AppendNormalizedDifferenceIndex):
 
 
 class AppendBNDVI(AppendNormalizedDifferenceIndex):
-    """Blue Normalized Difference Vegetation Index (BNDVI).
+    r"""Blue Normalized Difference Vegetation Index (BNDVI).
+
+    Computes the following index:
+
+    .. math::
+
+       BNDVI = \frac{NIR - B}{NIR + B}
 
     If you use this index in your research, please cite the following paper:
 
@@ -224,7 +278,13 @@ class AppendBNDVI(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDRE(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Red Edge Vegetation Index (NDRE).
+    r"""Normalized Difference Red Edge Vegetation Index (NDRE).
+
+    Computes the following index:
+
+    .. math::
+
+       NDRE = \frac{NIR - VRE1}{NIR + VRE1}
 
     If you use this index in your research, please cite the following paper:
 
