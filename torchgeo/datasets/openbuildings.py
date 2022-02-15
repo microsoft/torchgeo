@@ -3,6 +3,7 @@
 
 """Open Buildings datasets."""
 
+import abc
 import glob
 import json
 import os
@@ -11,19 +12,26 @@ from typing import Any, Callable, Dict, List, Optional
 
 import fiona
 import fiona.transform
+import matplotlib.pyplot as plt
+import pandas as pd
+import rasterio
+import shapely
+import shapely.wkt as wkt
+import torch
 from rasterio.crs import CRS
 from rtree.index import Index, Property
+from torch import Tensor
 
 from .geo import VectorDataset
-from .utils import check_integrity, extract_archive
+from .utils import BoundingBox, check_integrity
 
 
-class OpenBuildings(VectorDataset):
+class OpenBuildings(VectorDataset, abc.ABC):
     """OpenBuildings dataset.
 
     The `OpenBuildings
     <https://sites.research.google/open-buildings/#download>`_ dataset
-    consists of building detections across the African continent.
+    consists of computer generated building detections across the African continent.
 
     Dataset features:
     * 516M building detections
@@ -32,9 +40,17 @@ class OpenBuildings(VectorDataset):
     <https://maps.google.com/pluscodes/>`_ for each building
 
     Dataset format:
-    * csv files
+    * csv files compressed as csv.gz
+    * meta data geojson file
 
-    If you use this dataset in your research, please cite the following paper:
+    The data can be downloaded from `here
+    <https://sites.research.google/open-buildings/#download>`_. Additionally, the
+    `meta data geometry file
+    <https://sites.research.google/open-buildings/tiles.geojson>`_ also needs to be
+    placec in `root` as 'tiles.geojson'.
+
+    If you use this dataset in your research, please cite the following technical
+    report:
 
     * https://arxiv.org/abs/2107.12283
 
@@ -91,8 +107,8 @@ class OpenBuildings(VectorDataset):
         "129_buildings.csv.gz": "74f98346990a1d1e41241ce8f4bb201a",
         "12f_buildings.csv.gz": "b1b0777296df2bfef512df0945ca3e14",
         "131_buildings.csv.gz": "8362825b10c9396ecbb85c49cd210bc6",
-        # "137_buildings.csv.gz": "96da7389df820405b0010db4a6c98c61",
-        # "139_buildings.csv.gz": "c41e26fc6f3565c3d7c66ab977dc8159",
+        "137_buildings.csv.gz": "96da7389df820405b0010db4a6c98c61",
+        "139_buildings.csv.gz": "c41e26fc6f3565c3d7c66ab977dc8159",
         "13b_buildings.csv.gz": "981d4ccb0f41a103bdad8ef949eb4ffe",
         "13d_buildings.csv.gz": "d15585d06ee74b0095842dd887197035",
         "141_buildings.csv.gz": "ae0bf17778d45119c74e50e06a04020d",
@@ -164,13 +180,13 @@ class OpenBuildings(VectorDataset):
         "21f_buildings.csv.gz": "06325c8b0a8f6ed598b7dc6f0bb5adf2",
         "221_buildings.csv.gz": "a354ffc1f7226d525c7cf53848975da1",
         "223_buildings.csv.gz": "3bda1339d561b3bc749220877f1384d9",
-        # "225_buildings.csv.gz": "8eb02ad77919d9e551138a14d3ad1bbc",
+        "225_buildings.csv.gz": "8eb02ad77919d9e551138a14d3ad1bbc",
         "227_buildings.csv.gz": "c07aceb7c81f83a653810befa0695b61",
         "22f_buildings.csv.gz": "97d63e30e008ec4424f6b0641b75377c",
         "231_buildings.csv.gz": "f4bc384ed74552ddcfe2e69107b91345",
-        # "233_buildings.csv.gz": "081756e7bdcfdc2aee9114c4cfe62bd8",
+        "233_buildings.csv.gz": "081756e7bdcfdc2aee9114c4cfe62bd8",
         "23b_buildings.csv.gz": "75776d3dcbc90cf3a596664747880134",
-        # "23d_buildings.csv.gz": "e5d0b9b7b14601f58cfdb9ea170e9520",
+        "23d_buildings.csv.gz": "e5d0b9b7b14601f58cfdb9ea170e9520",
         "23f_buildings.csv.gz": "77f38466419b4d391be8e4f05207fdf5",
         "3d1_buildings.csv.gz": "6659c97bd765250b0dee4b1b7ff583a9",
         "3d5_buildings.csv.gz": "c27d8f6b2808549606f00bc04d8b42bc",
@@ -180,16 +196,19 @@ class OpenBuildings(VectorDataset):
         "b5b_buildings.csv.gz": "5e5f59cb17b81137d89c4bab8107e837",
     }
 
-    filename_glob = ""
-    zipfile_glob = ""
+    filename_glob = "*_buildings.csv"
+    zipfile_glob = "*_buildings.csv.gz"
+
+    meta_data_url = "https://sites.research.google/open-buildings/tiles.geojson"
+    meta_data_filename = "tiles.geojson"
 
     def __init__(
         self,
         root: str = "data",
         crs: Optional[CRS] = None,
         res: float = 0.0001,
-        conf_thresh: float = 0.9,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        checksum: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -198,53 +217,45 @@ class OpenBuildings(VectorDataset):
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
-            conf_thresh:
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
         """
-        # super().__init__(transforms)
-
         self.root = root
         self.res = res
+        self.checksum = checksum
+        self.root = root
+        self.res = res
+        self.transforms = transforms
 
         self._verify()
 
-        self.root = root
-        self.res = res
-
-        # Create an R-tree to index the dataset
+        # Create an R-tree to index the dataset using the polygon centroid as bounds
         self.index = Index(interleaved=False, properties=Property(dimension=3))
-        # Populate the dataset index
-        i = 0
-        filepath = "data/polygons_s2_level_4_gzip/tiles.geojson"
 
-        with open(filepath) as f:
+        with open(os.path.join(root, "tiles.geojson")) as f:
             data = json.load(f)
 
         features = data["features"]
+        features_filenames = [
+            f["properties"]["tile_url"].split("/")[-1] for f in features
+        ]  # get csv filename
 
-        # import pdb
-        # pdb.set_trace()
-        # self.test_index = Index(interleaved=False, properties=Property(dimension=3))
-        # with fiona.open(filepath) as src:
-        #     if crs is None:
-        #         crs = CRS.from_dict(src.crs)
+        polygon_files = glob.glob(os.path.join(self.root, self.zipfile_glob))
+        polygon_filenames = [f.split("/")[-1] for f in polygon_files]
 
-        #     minx, miny, maxx, maxy = src.bounds
-        #     (minx, maxx), (miny, maxy) = fiona.transform.transform(
-        #         src.crs, crs.to_dict(), [minx, maxx], [miny, maxy]
-        #     )
-        #     mint = 0
-        #     maxt = sys.maxsize
-        #     coords = (minx, maxx, miny, maxy, mint, maxt)
-        #     self.test_index.insert(i, coords, filepath)
+        matched_features = [
+            feature
+            for file, feature in zip(features_filenames, features)
+            if file in polygon_filenames
+        ]
 
+        i = 0
         source_crs = CRS.from_dict({"init": "epsg:4326"})
-        for f in features:
-
+        for f in matched_features:
             if crs is None:
                 crs = CRS.from_dict(source_crs)
 
@@ -264,44 +275,189 @@ class OpenBuildings(VectorDataset):
             filepath = os.path.join(
                 self.root, f["properties"]["tile_url"].split("/")[-1]  # type: ignore
             )
-            self.index.insert(i, coords, os.path.join(root, filepath))
-
+            self.index.insert(i, coords, filepath)
             i += 1
-        import pdb
 
-        pdb.set_trace()
         if i == 0:
             raise FileNotFoundError(
-                f"No {self.__class__.__name__} data was found in '{root}'"
+                f"No {self.__class__.__name__} data was found in '{self.root}'"
             )
 
         self._crs = crs
+        self._source_crs = source_crs
+
+    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+        """Retrieve image/mask and metadata indexed by query.
+
+        Args:
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+
+        Returns:
+            sample of image/mask and metadata for the given query. If there are
+            not matching shapes found within the query, an empty raster is returned
+
+
+        Raises:
+            IndexError: if query is not found in the index
+        """
+        hits = self.index.intersection(tuple(query), objects=True)
+        filepaths = [hit.object for hit in hits]
+        print(filepaths)
+
+        if not filepaths:
+            raise IndexError(
+                f"query: {query} not found in index with bounds: {self.bounds}"
+            )
+
+        shapes = self._filter_geometries(query, filepaths)
+
+        # Rasterize geometries
+        width = (query.maxx - query.minx) / self.res
+        height = (query.maxy - query.miny) / self.res
+        transform = rasterio.transform.from_bounds(
+            query.minx, query.miny, query.maxx, query.maxy, width, height
+        )
+        if shapes:
+            masks = rasterio.features.rasterize(
+                shapes, out_shape=(int(height), int(width)), transform=transform
+            )
+            masks = torch.tensor(masks)  # type: ignore[attr-defined]
+        else:
+            masks = torch.zeros(  # type: ignore[attr-defined]
+                size=(int(height), int(width))
+            )
+
+        sample = {"mask": masks, "crs": self.crs, "bbox": query}
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+    def _filter_geometries(
+        self, query: BoundingBox, filepaths: List[str]
+    ) -> List[Dict[str, Any]]:
+        """Filters a df read from the polygon csv file based on query and conf thresh.
+
+        Args:
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            filepaths: filepaths to files that were hits from rmtree index
+
+        Returns:
+            List with all polygons from all hit filepaths
+
+        """
+        # We need to know the bounding box of the query in the source CRS
+        (minx, maxx), (miny, maxy) = fiona.transform.transform(
+            self._crs.to_dict(),
+            self._source_crs.to_dict(),
+            [query.minx, query.maxx],
+            [query.miny, query.maxy],
+        )
+        df_query = (
+            "longitude >= {} & longitude <= {} & " "latitude >= {} & latitude <= {}"
+        ).format(minx, maxx, miny, maxy)
+        shapes = []
+        for f in filepaths:
+            csv_chunks = pd.read_csv(f, chunksize=200000, compression="gzip")
+            for chunk in csv_chunks:
+                df = chunk.query(df_query)
+                # Warp geometries to requested CRS
+                polygon_series = df["geometry"].map(self._wkt_fiona_geom_transform)
+                shapes.extend(polygon_series.values.tolist())
+
+        return shapes
+
+    def _wkt_fiona_geom_transform(self, x: str) -> Any:
+        """Function to transform a geometry string into new crs.
+
+        Args:
+            x: Polygon string
+
+        Returns:
+            transformed geometry in geojson format
+
+        """
+        x = json.dumps(shapely.geometry.mapping(wkt.loads(x)))
+        x = json.loads(x.replace("'", '"'))
+        return fiona.transform.transform_geom(
+            self._source_crs.to_dict(), self.crs.to_dict(), x
+        )
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
 
         Raises:
             RuntimeError: if dataset is missing or checksum fails
+            FileNotFoundError: if metadata file is not found in root
         """
-        # Check if the extracted file already exists
-        pathname = os.path.join(self.root, self.filename_glob)
-        if glob.glob(pathname):
+        # Check if the zip files have already been downloaded and checksum
+        pathname = os.path.join(self.root, self.zipfile_glob)
+        i = 0
+        for zipfile in glob.iglob(pathname):
+            filename = os.path.basename(zipfile)
+            if self.checksum and not check_integrity(zipfile, self.md5s[filename]):
+                raise RuntimeError("Dataset found, but corrupted: {}.".format(filename))
+            i += 1
+
+        if i != 0:
             return
 
-        # Check if the zip files have already been downloaded
-        pathname = os.path.join(self.root, self.zipfile_glob)
-        if glob.glob(pathname):
-            for zipfile in glob.iglob(pathname):
-                filename = os.path.basename(zipfile)
-                if self.checksum and not check_integrity(zipfile, self.md5s[filename]):
-                    raise RuntimeError(
-                        "Dataset found, but corrupted: {}.".format(filename)
-                    )
-                extract_archive(zipfile)
-            return
+        # check if the metadata file has been downloaded
+        if not os.path.exists(os.path.join(self.root, self.meta_data_filename)):
+            raise FileNotFoundError(
+                f"Meta data file {self.meta_data_filename} "
+                f"not found in in `root={self.root}`."
+            )
 
         raise RuntimeError(
             f"Dataset not found in `root={self.root}` "
             "either specify a different `root` directory or make sure you "
             "have manually downloaded the dataset as suggested in the documentation."
         )
+
+    def plot(  # type: ignore[override]
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`VisionClassificationDataset.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        mask = sample["mask"]
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            pred = sample["prediction"]
+            ncols = 2
+        else:
+            ncols = 1
+
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4, ncols * 4))
+
+        if showing_predictions:
+            axs[0].imshow(mask)
+            axs[0].axis("off")
+            axs[1].imshow(pred)
+            axs[1].axis("off")
+            if show_titles:
+                axs[0].set_title("Mask")
+                axs[1].set_title("Prediction")
+        else:
+            axs.imshow(mask)
+            axs.axis("off")
+            if show_titles:
+                axs.set_title("Mask")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
