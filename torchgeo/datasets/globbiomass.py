@@ -7,7 +7,9 @@ import glob
 import os
 from typing import Any, Callable, Dict, Optional
 
+import matplotlib.pyplot as plt
 from rasterio.crs import CRS
+from torch import Tensor
 
 from .geo import RasterDataset
 from .utils import BoundingBox, check_integrity, extract_archive
@@ -16,7 +18,7 @@ from .utils import BoundingBox, check_integrity, extract_archive
 class GlobBiomass(RasterDataset):
     """GlobBiomass dataset.
 
-    The `GlobBiomass dataset<https://doi.pangaea.de/10.1594/PANGAEA.894711>
+    The `GlobBiomass dataset<https://doi.pangaea.de/10.1594/PANGAEA.894711>`_
     consists of global pixel wise aboveground biomass (AGB) and growth stock
     volume (GSV) maps.
 
@@ -225,3 +227,56 @@ class GlobBiomass(RasterDataset):
             "either specify a different `root` directory or make sure you "
             "have manually downloaded the dataset as suggested in the documentation."
         )
+
+    def plot(  # type: ignore[override]
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        mask = sample["mask"].permute(1, 2, 0)
+        error_mask = sample["error_mask"].permute(1, 2, 0)
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            pred = sample["prediction"].permute(1, 2, 0)
+            ncols = 3
+        else:
+            ncols = 2
+
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4, ncols * 4))
+
+        if showing_predictions:
+            axs[0].imshow(mask)
+            axs[0].axis("off")
+            axs[1].imshow(error_mask)
+            axs[1].axis("off")
+            axs[2].imshow(pred)
+            axs[2].axis("off")
+            if show_titles:
+                axs[0].set_title("Mask")
+                axs[1].set_title("Uncertainty Mask")
+                axs[2].set_title("Prediction")
+        else:
+            axs[0].imshow(mask)
+            axs[0].axis("off")
+            axs[1].imshow(error_mask)
+            axs[1].axis("off")
+            if show_titles:
+                axs[0].set_title("Mask")
+                axs[1].set_title("Uncertainty Mask")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig

@@ -67,8 +67,13 @@ class TestGlobBiomass:
     def test_plot(self, dataset: GlobBiomass) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x["mask"])
-        dataset.plot(x["error_mask"])
+        dataset.plot(x, suptitle="Test")
+
+    def test_plot_prediction(self, dataset: GlobBiomass) -> None:
+        query = dataset.bounds
+        x = dataset[query]
+        x["prediction"] = x["mask"].clone()
+        dataset.plot(x, suptitle="Prediction")
 
     def test_invalid_query(self, dataset: GlobBiomass) -> None:
         query = BoundingBox(100, 100, 100, 100, 0, 0)
