@@ -254,7 +254,7 @@ class GlobBiomass(RasterDataset):
         else:
             ncols = 2
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4, ncols * 4))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
 
         if showing_predictions:
             axs[0].imshow(mask)
