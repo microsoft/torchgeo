@@ -29,7 +29,7 @@ class AppendNormalizedDifferenceIndex(Module):
 
     .. math::
 
-       NDI = \frac{A - B}{A + B}
+       \text{NDI} = \frac{A - B}{A + B}
 
     .. versionadded:: 0.2
     """
@@ -88,7 +88,7 @@ class AppendNBR(AppendNormalizedDifferenceIndex):
 
     .. math::
 
-       NBR = \frac{NIR - SWIR}{NIR + SWIR}
+       \text{NBR} = \frac{\text{NIR} - \text{SWIR}}{\text{NIR} + \text{SWIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -114,7 +114,7 @@ class AppendNDBI(AppendNormalizedDifferenceIndex):
 
     .. math::
 
-       NDBI = \frac{SWIR - NIR}{SWIR + NIR}
+       \text{NDBI} = \frac{\text{SWIR} - \text{NIR}}{\text{SWIR} + \text{NIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -138,7 +138,7 @@ class AppendNDSI(AppendNormalizedDifferenceIndex):
 
     .. math::
 
-       NDSI = \frac{G - SWIR}{G + SWIR}
+       \text{NDSI} = \frac{\text{G} - \text{SWIR}}{\text{G} + \text{SWIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -162,7 +162,7 @@ class AppendNDVI(AppendNormalizedDifferenceIndex):
 
     .. math::
 
-       NDVI = \frac{R - NIR}{R + NIR}
+       \text{NDVI} = \frac{\text{R} - \text{NIR}}{\text{R} + \text{NIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -186,7 +186,7 @@ class AppendNDWI(AppendNormalizedDifferenceIndex):
 
     .. math::
 
-       NDWI = \frac{G - NIR}{G + NIR}
+       \text{NDWI} = \frac{\text{G} - \text{NIR}}{\text{G} + \text{NIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -210,7 +210,7 @@ class AppendSWI(AppendNormalizedDifferenceIndex):
 
     .. math::
 
-       SWI = \frac{R - SWIR}{R + SWIR}
+       \text{SWI} = \frac{\text{R} - \text{SWIR}}{\text{R} + \text{SWIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -234,7 +234,7 @@ class AppendGNDVI(AppendNormalizedDifferenceIndex):
 
     .. math::
 
-       GNDVI = \frac{NIR - G}{NIR + G}
+       \text{GNDVI} = \frac{\text{NIR} - \text{G}}{\text{NIR} + \text{G}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -258,7 +258,7 @@ class AppendBNDVI(AppendNormalizedDifferenceIndex):
 
     .. math::
 
-       BNDVI = \frac{NIR - B}{NIR + B}
+       \text{BNDVI} = \frac{\text{NIR} - \text{B}}{\text{NIR} + \text{B}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -284,7 +284,7 @@ class AppendNDRE(AppendNormalizedDifferenceIndex):
 
     .. math::
 
-       NDRE = \frac{NIR - VRE1}{NIR + VRE1}
+       \text{NDRE} = \frac{\text{NIR} - \text{VRE1}}{\text{NIR} + \text{VRE1}}
 
     If you use this index in your research, please cite the following paper:
 
