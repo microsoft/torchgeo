@@ -3,6 +3,7 @@
 
 """LandCover.ai dataset."""
 
+import glob
 import hashlib
 import os
 from functools import lru_cache
@@ -16,7 +17,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import VisionDataset
-from .utils import check_integrity, download_and_extract_archive, working_dir
+from .utils import download_url, extract_archive, working_dir
 
 
 class LandCoverAI(VisionDataset):
@@ -102,16 +103,10 @@ class LandCoverAI(VisionDataset):
         self.root = root
         self.split = split
         self.transforms = transforms
+        self.download = download
         self.checksum = checksum
 
-        if download:
-            self._download()
-
-        if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+        self._verify()
 
         with open(os.path.join(self.root, split + ".txt")) as f:
             self.ids = f.readlines()
@@ -175,34 +170,47 @@ class LandCoverAI(VisionDataset):
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
             return tensor
 
-    def _check_integrity(self) -> bool:
-        """Check integrity of dataset.
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
 
-        Returns:
-            True if dataset files are found and/or MD5s match, else False
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        integrity: bool = check_integrity(
-            os.path.join(self.root, self.filename), self.md5 if self.checksum else None
-        )
+        # Check if the extracted files already exist
+        jpg = os.path.join(self.root, "output", "*_*.jpg")
+        png = os.path.join(self.root, "output", "*_*_m.png")
+        if glob.glob(jpg) and glob.glob(png):
+            return
 
-        return integrity
+        # Check if the zip file has already been downloaded
+        pathname = os.path.join(self.root, self.filename)
+        if os.path.exists(pathname):
+            self._extract()
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automaticaly download the dataset."
+            )
+
+        # Download the dataset
+        self._download()
+        self._extract()
 
     def _download(self) -> None:
-        """Download the dataset and extract it.
+        """Download the dataset."""
+        download_url(self.url, self.root, md5=self.md5 if self.checksum else None)
+
+    def _extract(self) -> None:
+        """Extract the dataset.
 
         Raises:
             AssertionError: if the checksum of split.py does not match
         """
-        if self._check_integrity():
-            print("Files already downloaded and verified")
-            return
-
-        download_and_extract_archive(
-            self.url,
-            self.root,
-            filename=self.filename,
-            md5=self.md5 if self.checksum else None,
-        )
+        extract_archive(os.path.join(self.root, self.filename))
 
         # Generate train/val/test splits
         # Always check the sha256 of this file before executing
