@@ -61,6 +61,7 @@ nitpick_ignore = [
     ("py:class", "LightningDataModule"),
     # Undocumented class
     ("py:class", "torchvision.models.resnet.ResNet"),
+    ("py:class", "segmentation_models_pytorch.base.model.SegmentationModel"),
 ]
 
 
@@ -108,6 +109,7 @@ intersphinx_mapping = {
     "pytorch-lightning": ("https://pytorch-lightning.readthedocs.io/en/latest/", None),
     "rasterio": ("https://rasterio.readthedocs.io/en/latest/", None),
     "rtree": ("https://rtree.readthedocs.io/en/latest/", None),
+    "segmentation_models_pytorch": ("https://smp.readthedocs.io/en/latest/", None),
     "torch": ("https://pytorch.org/docs/stable", None),
     "torchvision": ("https://pytorch.org/vision/stable", None),
 }
