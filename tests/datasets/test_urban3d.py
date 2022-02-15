@@ -29,15 +29,15 @@ class TestUrban3DChallenge:
         assert x["image"].dtype == torch.float  # type: ignore[attr-defined]
         assert x["mask"].dtype == torch.long  # type: ignore[attr-defined]
         assert x["image"].ndim == 3
-        assert x["image"].shape[0] == 6
+        assert x["image"].shape[0] == 5
         assert x["mask"].ndim == 2
 
     def test_len(self, dataset: Urban3DChallenge) -> None:
-        assert len(dataset) == 2
+        assert len(dataset) == 4
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = "Dataset not found in `root` directory, "
-        "specify a different `root` directory."
+        err = f"Dataset not found in {str(tmp_path)} directory, "
+        f"specify a different {str(tmp_path)} directory."
         with pytest.raises(RuntimeError, match=err):
             Urban3DChallenge(str(tmp_path))
 

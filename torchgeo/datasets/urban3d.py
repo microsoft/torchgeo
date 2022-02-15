@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Urban3DChallenge dataset."""
+"""Urban 3D Challenge dataset."""
 
 import glob
 import os
@@ -12,24 +12,19 @@ import numpy as np
 import rasterio
 import torch
 from torch import Tensor
-from torch.utils.data import DataLoader
 from torchvision.utils import draw_segmentation_masks
 
 from torchgeo.datasets.utils import percentile_normalization
 
 from .geo import VisionDataset
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class Urban3DChallenge(VisionDataset):
-    """Urban3DChallenge dataset.
+    """Urban 3D Challenge dataset.
 
     The `Urban 3D Challenge <https://spacenet.ai/the-ussocom-urban-3d-competition/>`_
     dataset is a dataset for semantic/instance segmentation of building footprints in
-    2D RGB imagery and 3D digital surface & terrain models
+    2D RGB imagery and 3D digital surface and terrain models.
 
     Dataset features:
 
@@ -86,6 +81,9 @@ class Urban3DChallenge(VisionDataset):
             split: one of "train", "val", or "test"
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
+
+        Raises:
+            AssertionError: if ``split`` is invalid
         """
         assert split in self.directories
         self.root = root
@@ -115,8 +113,7 @@ class Urban3DChallenge(VisionDataset):
         rgb = self._load_image(files["rgb"])
         dtm = self._load_image(files["dtm"])
         dsm = self._load_image(files["dsm"])
-        ndsm = dsm - dtm
-        image = torch.cat([rgb, dtm, dsm, ndsm], dim=0)  # type: ignore[attr-defined]
+        image = torch.cat([rgb, dtm, dsm], dim=0)  # type: ignore[attr-defined]
 
         mask = self._load_target(files["binary_mask"])
         mask = mask.to(torch.long)  # type: ignore[attr-defined]
@@ -200,8 +197,8 @@ class Urban3DChallenge(VisionDataset):
             return
 
         raise RuntimeError(
-            "Dataset not found in `root` directory, "
-            "specify a different `root` directory."
+            f"Dataset not found in {self.root} directory, "
+            f"specify a different {self.root} directory."
         )
 
     def plot(
@@ -214,21 +211,20 @@ class Urban3DChallenge(VisionDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample return by :meth:`__getitem__`
+            sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for figure
             alpha: opacity with which to render predictions on top of the imagery
 
-        Returns;
+        Returns:
             a matplotlib Figure with the rendered sample
         """
-        ncols = 5
+        ncols = 4
         image = sample["image"][:3].permute(1, 2, 0).numpy()
         image = percentile_normalization(image, axis=(0, 1))
         image = (image * 255).astype(np.uint8)
         dtm = percentile_normalization(sample["image"][3].numpy(), lower=0, upper=99)
         dsm = percentile_normalization(sample["image"][4].numpy(), lower=0, upper=99)
-        ndsm = percentile_normalization(sample["image"][5].numpy(), lower=0, upper=99)
         tensor = torch.from_numpy(image).permute(2, 0, 1)  # type: ignore[attr-defined]
         mask = draw_segmentation_masks(
             image=tensor,
@@ -248,30 +244,22 @@ class Urban3DChallenge(VisionDataset):
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
-        axs[0].imshow(image)
-        axs[0].axis("off")
-        axs[1].imshow(dtm)
-        axs[1].axis("off")
-        axs[2].imshow(dsm)
-        axs[2].axis("off")
-        axs[3].imshow(ndsm)
-        axs[3].axis("off")
-        axs[4].imshow(mask)
-        axs[4].axis("off")
+        for ax, data in zip(axs, [image, dtm, dsm, mask]):
+            ax.imshow(data)
+            ax.axis("off")
 
         if show_titles:
             axs[0].set_title("Image")
             axs[1].set_title("Digital Terrain Model (DTM)")
             axs[2].set_title("Digital Surface Model (DSM)")
-            axs[3].set_title("Normalized Digital Surface Model (nDSM)")
-            axs[4].set_title("Ground Truth")
+            axs[3].set_title("Ground Truth")
 
         if showing_predictions:
-            axs[5].imshow(preds)
-            axs[5].axis("off")
+            axs[4].imshow(preds)
+            axs[4].axis("off")
 
             if show_titles:
-                axs[5].set_title("Prediction")
+                axs[4].set_title("Prediction")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
