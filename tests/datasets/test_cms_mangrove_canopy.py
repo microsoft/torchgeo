@@ -29,7 +29,7 @@ class TestCMSGlobalMangroveCanopy:
             CMSGlobalMangroveCanopy, "zipfile", zipfile
         )
 
-        md5 = "45d894d4516d91212b70fd9a803e28cd"
+        md5 = "d6894fa6293cc9c0f3f95a810e842de5"
         monkeypatch.setattr(  # type: ignore[attr-defined]
             CMSGlobalMangroveCanopy, "md5", md5
         )
