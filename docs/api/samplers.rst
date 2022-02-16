@@ -3,6 +3,14 @@ torchgeo.samplers
 
 .. module:: torchgeo.samplers
 
+Constants and Enums
+--------
+
+When sampling imagery, the Samplers below can sample tiles in one of two units: 1) the units specified by the CRS of the rasters, or 2) pixels.
+
+The Units enum within :module:`~torchgeo.samplers.constants` specifies these two sampling modes. By default, the Samplers use Units.PIXELS.
+
+
 Samplers
 --------
 
@@ -14,9 +22,10 @@ Samplers are used to index a dataset, retrieving a single query at a time. For :
 
    from torchgeo.datasets import Landsat
    from torchgeo.samplers import RandomGeoSampler
+   from torchgeo.samplers.constants import Units
 
    dataset = Landsat(...)
-   sampler = RandomGeoSampler(dataset, size=1000, length=100)
+   sampler = RandomGeoSampler(dataset, size=1000, length=100, units=Units.PIXELS)
    dataloader = DataLoader(dataset, sampler=sampler)
 
 
@@ -41,9 +50,10 @@ When working with large tile-based datasets, randomly sampling patches from each
 
    from torchgeo.datasets import Landsat
    from torchgeo.samplers import RandomBatchGeoSampler
+   from torchgeo.samplers.constants import Units
 
    dataset = Landsat(...)
-   sampler = RandomBatchGeoSampler(dataset, size=1000, batch_size=10, length=100)
+   sampler = RandomBatchGeoSampler(dataset, size=1000, batch_size=10, length=100, units=Units.PIXELS)
    dataloader = DataLoader(dataset, batch_sampler=sampler)
 
 
