@@ -18,7 +18,7 @@ from .utils import BoundingBox, check_integrity, extract_archive
 class GlobBiomass(RasterDataset):
     """GlobBiomass dataset.
 
-    The `GlobBiomass dataset<https://doi.pangaea.de/10.1594/PANGAEA.894711>`_
+    The `GlobBiomass dataset <https://doi.pangaea.de/10.1594/PANGAEA.894711>`_
     consists of global pixel wise aboveground biomass (AGB) and growth stock
     volume (GSV) maps.
 
@@ -35,12 +35,12 @@ class GlobBiomass(RasterDataset):
 
     The data can be manually downloaded from `this website
     <https://globbiomass.org/wp-content/uploads/GB_Maps/
-    Globbiomass_global_dataset.html>`.
+    Globbiomass_global_dataset.html>`_.
 
     If you use this dataset please cite it with the following citation:
 
     * Santoro, M. et al. (2018): GlobBiomass - global datasets of forest biomass.
-        PANGAEA, https://doi.org/10.1594/PANGAEA.894711
+      PANGAEA, https://doi.org/10.1594/PANGAEA.894711
 
     .. versionadded:: 0.3
     """
