@@ -17,23 +17,23 @@ from .geo import RasterDataset
 class AsterGDEM(RasterDataset):
     """AsterGDEM Dataset.
 
-        The `AsterGDEM
-        <https://lpdaac.usgs.gov/products/astgtmv003/>`_
-        dataset is a Digital Elevation Model of reference on a global scale.
-        The dataset can be downloaded from the `Earth Data website
-        <https://search.earthdata.nasa.gov/search/`_ after making an account.
+    The `AsterGDEM
+    <https://lpdaac.usgs.gov/products/astgtmv003/>`_
+    dataset is a Digital Elevation Model of reference on a global scale.
+    The dataset can be downloaded from the `Earth Data website
+    <https://search.earthdata.nasa.gov/search/`_ after making an account.
 
-        Dataset features:
+    Dataset features:
 
-        * DEMs at 30 m per pixel spatial resolution (3601x3601 px)
-        * data collected from `Aster
-          <https://terra.nasa.gov/about/terra-instruments/aster>`_ instrument
+    * DEMs at 30 m per pixel spatial resolution (3601x3601 px)
+    * data collected from `Aster
+      <https://terra.nasa.gov/about/terra-instruments/aster>`_ instrument
 
-        Dataset format:
+    Dataset format:
 
-        * DEMs are single-channel tif files
-    n
-        .. versionadded:: 0.3
+    * DEMs are single-channel tif files
+
+    .. versionadded:: 0.3
     """
 
     is_image = False
