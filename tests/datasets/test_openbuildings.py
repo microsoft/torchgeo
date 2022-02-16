@@ -22,7 +22,7 @@ from torchgeo.datasets import (
 )
 
 
-class TestCanadianBuildingFootprints:
+class TestOpenBuildings:
     @pytest.fixture
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
