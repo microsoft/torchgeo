@@ -34,13 +34,15 @@ class OpenBuildings(VectorDataset, abc.ABC):
     consists of computer generated building detections across the African continent.
 
     Dataset features:
-    * 516M building detections
+
+    * 516M building detections as polygons with centroid lat/long
     * covering area of 19.4M km^2 (64% of the African continent)
-    * polygon, confidence score of being a building and `Plus Code
-    <https://maps.google.com/pluscodes/>`_ for each building
+    * confidence score and
+      `Plus Code <https://maps.google.com/pluscodes/>`_
 
     Dataset format:
-    * csv files compressed as csv.gz
+
+    * csv files containing building detections compressed as csv.gz
     * meta data geojson file
 
     The data can be downloaded from `here
