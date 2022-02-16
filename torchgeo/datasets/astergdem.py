@@ -7,7 +7,9 @@ import glob
 import os
 from typing import Any, Callable, Dict, Optional
 
+import matplotlib.pyplot as plt
 from rasterio.crs import CRS
+from torch import Tensor
 
 from .geo import RasterDataset
 
@@ -15,21 +17,23 @@ from .geo import RasterDataset
 class AsterGDEM(RasterDataset):
     """AsterGDEM Dataset.
 
-    The `AsterGDEM
-    <https://lpdaac.usgs.gov/products/astgtmv003/>`_
-    dataset is a Digital Elevation Model of reference on a global scale.
-    The dataset can be downloaded from the `Earth Data website
-    <https://search.earthdata.nasa.gov/search/`_ after making an account.
+        The `AsterGDEM
+        <https://lpdaac.usgs.gov/products/astgtmv003/>`_
+        dataset is a Digital Elevation Model of reference on a global scale.
+        The dataset can be downloaded from the `Earth Data website
+        <https://search.earthdata.nasa.gov/search/`_ after making an account.
 
-    Dataset features:
-    * DEMs at 30 m per pixel spatial resolution (3601x3601 px)
-    * data collected from `Aster
-    <https://terra.nasa.gov/about/terra-instruments/aster>`_ instrument
+        Dataset features:
 
-    Dataset format:
-    * DEMs are single-channel tif files
+        * DEMs at 30 m per pixel spatial resolution (3601x3601 px)
+        * data collected from `Aster
+          <https://terra.nasa.gov/about/terra-instruments/aster>`_ instrument
 
-    .. versionadded:: 0.3
+        Dataset format:
+
+        * DEMs are single-channel tif files
+    n
+        .. versionadded:: 0.3
     """
 
     is_image = False
@@ -75,7 +79,7 @@ class AsterGDEM(RasterDataset):
         Raises:
             RuntimeError: if dataset is missing
         """
-        # Check if the extracted file already exists
+        # Check if the extracted files already exists
         pathname = os.path.join(self.root, self.filename_glob)
         if glob.glob(pathname):
             return
@@ -85,3 +89,48 @@ class AsterGDEM(RasterDataset):
             "either specify a different `root` directory or make sure you "
             "have manually downloaded dataset tiles as suggested in the documentation."
         )
+
+    def plot(  # type: ignore[override]
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`RasterDataset.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        mask = sample["mask"].squeeze()
+        ncols = 1
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction = sample["prediction"].squeeze()
+            ncols = 2
+
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4 * ncols, 4))
+
+        if showing_predictions:
+            axs[0].imshow(mask)
+            axs[0].axis("off")
+            axs[1].imshow(prediction)
+            axs[1].axis("off")
+            if show_titles:
+                axs[0].set_title("Mask")
+                axs[1].set_title("Prediction")
+        else:
+            axs.imshow(mask)
+            axs.axis("off")
+            if show_titles:
+                axs.set_title("Mask")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig

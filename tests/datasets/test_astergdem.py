@@ -45,7 +45,13 @@ class TestAsterGDEM:
     def test_plot(self, dataset: AsterGDEM) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x["mask"])
+        dataset.plot(x, suptitle="Test")
+
+    def test_plot_prediction(self, dataset: AsterGDEM) -> None:
+        query = dataset.bounds
+        x = dataset[query]
+        x["prediction"] = x["mask"].clone()
+        dataset.plot(x, suptitle="Prediction")
 
     def test_invalid_query(self, dataset: AsterGDEM) -> None:
         query = BoundingBox(100, 100, 100, 100, 0, 0)
