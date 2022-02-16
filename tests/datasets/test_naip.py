@@ -42,7 +42,7 @@ class TestNAIP:
     def test_plot(self, dataset: NAIP) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x["image"])
+        dataset.plot(x, suptitle="Test")
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="No NAIP data was found in "):

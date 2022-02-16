@@ -3,6 +3,11 @@
 
 """National Agriculture Imagery Program (NAIP) dataset."""
 
+from typing import Dict, Optional
+
+import matplotlib.pyplot as plt
+from torch import Tensor
+
 from .geo import RasterDataset
 
 
@@ -10,7 +15,7 @@ class NAIP(RasterDataset):
     """National Agriculture Imagery Program (NAIP) dataset.
 
     The `National Agriculture Imagery Program (NAIP)
-    <https://www.fsa.usda.gov/programs-and-services/aerial-photography/imagery-programs/naip-imagery/>`_
+    <https://www.fsa.usda.gov/programs-and-services/aerial-photography/imagery-programs/naip-imagery>`_
     acquires aerial imagery during the agricultural growing seasons in the continental
     U.S. A primary goal of the NAIP program is to make digital ortho photography
     available to governmental agencies and the public within a year of acquisition.
@@ -42,3 +47,33 @@ class NAIP(RasterDataset):
     # Plotting
     all_bands = ["R", "G", "B", "NIR"]
     rgb_bands = ["R", "G", "B"]
+
+    def plot(  # type: ignore[override]
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`RasterDataset.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        image = sample["image"][0:3, :, :].permute(1, 2, 0)
+
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(4, 4))
+
+        ax.imshow(image)
+        ax.axis("off")
+        if show_titles:
+            ax.set_title("Image")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
