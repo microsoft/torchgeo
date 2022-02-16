@@ -20,8 +20,9 @@ class AsterGDEM(RasterDataset):
     The `AsterGDEM
     <https://lpdaac.usgs.gov/products/astgtmv003/>`_
     dataset is a Digital Elevation Model of reference on a global scale.
-    The dataset can be downloaded from the `Earth Data website
-    <https://search.earthdata.nasa.gov/search/`_ after making an account.
+    The dataset can be downloaded from the
+    `Earth Data website <https://search.earthdata.nasa.gov/search/>`_
+    after making an account.
 
     Dataset features:
 
