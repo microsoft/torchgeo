@@ -63,6 +63,8 @@ class NAIP(RasterDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.3
         """
         image = sample["image"][0:3, :, :].permute(1, 2, 0)
 
