@@ -15,7 +15,7 @@ class NAIP(RasterDataset):
     """National Agriculture Imagery Program (NAIP) dataset.
 
     The `National Agriculture Imagery Program (NAIP)
-    <https://www.fsa.usda.gov/programs-and-services/aerial-photography/imagery-programs/naip-imagery>`_
+    <https://www.fsa.usda.gov/programs-and-services/aerial-photography/imagery-programs/naip-imagery/>`_
     acquires aerial imagery during the agricultural growing seasons in the continental
     U.S. A primary goal of the NAIP program is to make digital ortho photography
     available to governmental agencies and the public within a year of acquisition.
