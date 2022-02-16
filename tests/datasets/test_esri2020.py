@@ -32,7 +32,7 @@ class TestEsri2020:
         zipfile = "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip"
         monkeypatch.setattr(Esri2020, "zipfile", zipfile)  # type: ignore[attr-defined]
 
-        md5 = "4932855fcd00735a34b74b1f87db3df0"
+        md5 = "d04dd60e0831c44b85ca78a85928780c"
         monkeypatch.setattr(Esri2020, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join(
             "tests",
@@ -46,14 +46,14 @@ class TestEsri2020:
         return Esri2020(root, transforms=transforms, download=True, checksum=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        url = os.path.join(
-            "tests",
-            "data",
-            "esri2020",
-            "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip",
-        )
+        filename = "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01"
+        url = os.path.join("tests", "data", "esri2020", filename + ".zip")
         root = str(tmp_path)
-        shutil.copy(url, root)
+        download_url(url, root)
+        new_zip_path = os.path.join(root, filename + ".zip")
+        dest = os.path.join(root, filename)
+        os.makedirs(dest)
+        shutil.unpack_archive(new_zip_path, dest)
         Esri2020(root)
 
     def test_getitem(self, dataset: Esri2020) -> None:
@@ -80,7 +80,14 @@ class TestEsri2020:
     def test_plot(self, dataset: Esri2020) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x["mask"])
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+
+    def test_plot_prediction(self, dataset: Esri2020) -> None:
+        query = dataset.bounds
+        x = dataset[query]
+        x["prediction"] = x["mask"].clone()
+        dataset.plot(x, suptitle="Prediction")
         plt.close()
 
     def test_url(self) -> None:

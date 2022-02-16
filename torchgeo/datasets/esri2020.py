@@ -8,7 +8,9 @@ import glob
 import os
 from typing import Any, Callable, Dict, Optional
 
+import matplotlib.pyplot as plt
 from rasterio.crs import CRS
+from torch import Tensor
 
 from .geo import RasterDataset
 from .utils import download_url, extract_archive
@@ -39,7 +41,7 @@ class Esri2020(RasterDataset, abc.ABC):
     10. Clouds
 
     A more detailed explanation of the invidual classes can be found
-    `here <https://www.arcgis.com/home/item.html?id=fc92d38533d440078f17678ebc20e8e2>`_.
+    `here <https://www.arcgis.com/home/item.html?id=fc92d38533d440078f17678ebc20e8e2>`_
 
     If you use this dataset please cite the following paper:
 
@@ -136,3 +138,48 @@ class Esri2020(RasterDataset, abc.ABC):
     def _extract(self) -> None:
         """Extract the dataset."""
         extract_archive(os.path.join(self.root, self.zipfile))
+
+    def plot(  # type: ignore[override]
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`RasterDataset.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        mask = sample["mask"].squeeze()
+        ncols = 1
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction = sample["prediction"].squeeze()
+            ncols = 2
+
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4 * ncols, 4))
+
+        if showing_predictions:
+            axs[0].imshow(mask)
+            axs[0].axis("off")
+            axs[1].imshow(prediction)
+            axs[1].axis("off")
+            if show_titles:
+                axs[0].set_title("Mask")
+                axs[1].set_title("Prediction")
+        else:
+            axs.imshow(mask)
+            axs.axis("off")
+            if show_titles:
+                axs.set_title("Mask")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
