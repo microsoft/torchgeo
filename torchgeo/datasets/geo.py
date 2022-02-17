@@ -461,7 +461,12 @@ class RasterDataset(GeoDataset):
             )
         else:
             dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res)
-        dest = dest.astype(np.int32)
+
+        # fix numpy dtypes which are not supported by pytorch tensors
+        if dest.dtype == np.uint16:
+            dest = dest.astype(np.int32)
+        elif dest.dtype == np.uint32:
+            dest = dest.astype(np.int64)
 
         tensor: Tensor = torch.tensor(dest)  # type: ignore[attr-defined]
         return tensor
