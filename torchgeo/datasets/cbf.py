@@ -6,7 +6,9 @@
 import os
 from typing import Any, Callable, Dict, Optional
 
+import matplotlib.pyplot as plt
 from rasterio.crs import CRS
+from torch import Tensor
 
 from .geo import VectorDataset
 from .utils import check_integrity, download_and_extract_archive
@@ -120,3 +122,50 @@ class CanadianBuildingFootprints(VectorDataset):
                 self.root,
                 md5=md5 if self.checksum else None,
             )
+
+    def plot(  # type: ignore[override]
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`VectorDataset.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.3
+        """
+        image = sample["mask"].squeeze(0)
+        ncols = 1
+
+        showing_prediction = "prediction" in sample
+        if showing_prediction:
+            pred = sample["prediction"].squeeze(0)
+            ncols = 2
+
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4, 4))
+
+        if showing_prediction:
+            axs[0].imshow(image)
+            axs[0].axis("off")
+            axs[1].imshow(pred)
+            axs[1].axis("off")
+            if show_titles:
+                axs[0].set_title("Mask")
+                axs[1].set_title("Prediction")
+        else:
+            axs.imshow(image)
+            axs.axis("off")
+            if show_titles:
+                axs.set_title("Mask")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig

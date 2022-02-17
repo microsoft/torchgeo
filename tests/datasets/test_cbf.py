@@ -76,7 +76,13 @@ class TestCanadianBuildingFootprints:
     def test_plot(self, dataset: CanadianBuildingFootprints) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x["mask"])
+        dataset.plot(x, suptitle="Test")
+
+    def test_plot_prediction(self, dataset: CanadianBuildingFootprints) -> None:
+        query = dataset.bounds
+        x = dataset[query]
+        x["prediction"] = x["mask"].clone()
+        dataset.plot(x, suptitle="Prediction")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
