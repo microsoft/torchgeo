@@ -4,6 +4,7 @@
 """Base classes for all :mod:`torchgeo` datasets."""
 
 import abc
+import collections
 import functools
 import glob
 import os
@@ -36,6 +37,11 @@ from .utils import BoundingBox, concat_samples, disambiguate_timestamp, merge_sa
 # https://github.com/pytorch/pytorch/pull/61045
 Dataset.__module__ = "torch.utils.data"
 ImageFolder.__module__ = "torchvision.datasets"
+
+# A namedtuple class for metadata to be stored in the rtree index
+GeoMetaData = collections.namedtuple(
+    typename="GeoMetaData", field_names=["filepath", "crs"]
+)
 
 
 class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
@@ -371,7 +377,11 @@ class RasterDataset(GeoDataset):
                         mint, maxt = disambiguate_timestamp(date, self.date_format)
 
                     coords = (minx, maxx, miny, maxy, mint, maxt)
-                    self.index.insert(i, coords, filepath)
+                    self.index.insert(
+                        id=i,
+                        coordinates=coords,
+                        obj=GeoMetaData(filepath=filepath, crs=crs),
+                    )
                     i += 1
 
         if i == 0:
@@ -395,7 +405,7 @@ class RasterDataset(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object for hit in hits]
+        filepaths = [hit.object.filepath for hit in hits]
 
         if not filepaths:
             raise IndexError(
@@ -605,7 +615,11 @@ class VectorDataset(GeoDataset):
                 mint = 0
                 maxt = sys.maxsize
                 coords = (minx, maxx, miny, maxy, mint, maxt)
-                self.index.insert(i, coords, filepath)
+                self.index.insert(
+                    id=i,
+                    coordinates=coords,
+                    obj=GeoMetaData(filepath=filepath, crs=crs),
+                )
                 i += 1
 
         if i == 0:
@@ -628,7 +642,7 @@ class VectorDataset(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object for hit in hits]
+        filepaths = [hit.object.filepath for hit in hits]
 
         if not filepaths:
             raise IndexError(
