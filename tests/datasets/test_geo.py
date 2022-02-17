@@ -159,6 +159,11 @@ class TestRasterDataset:
         cache = request.param
         return Sentinel2(root, bands=bands, transforms=transforms, cache=cache)
 
+    @pytest.fixture()
+    def custom_dtype_ds(self) -> RasterDataset:
+        root = os.path.join("tests", "data", "raster")
+        return RasterDataset(root)
+
     def test_getitem_single_file(self, naip: NAIP) -> None:
         x = naip[naip.bounds]
         assert isinstance(x, dict)
@@ -170,6 +175,12 @@ class TestRasterDataset:
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["image"], torch.Tensor)
+
+    def test_getitem_uint_dtype(self, custom_dtype_ds: RasterDataset) -> None:
+        x = custom_dtype_ds[custom_dtype_ds.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x["image"], torch.Tensor)
+        assert x["image"].dtype == torch.int64  # type: ignore[attr-defined]
 
     def test_invalid_query(self, sentinel: Sentinel2) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
