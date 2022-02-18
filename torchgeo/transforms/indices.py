@@ -241,7 +241,7 @@ class AppendNDRE(AppendNormalizedDifferenceIndex):
             index_vre1: index of the Red Edge band, B5 in Sentinel 2 imagery
         """
         super().__init__(index_a=index_nir, index_b=index_vre1)
-        
+
 
 class AppendTribandNormalizedDifferenceIndex(Module):
     """Append normalized difference index as channel to image tensor.
