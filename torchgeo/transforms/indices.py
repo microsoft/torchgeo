@@ -241,3 +241,55 @@ class AppendNDRE(AppendNormalizedDifferenceIndex):
             index_vre1: index of the Red Edge band, B5 in Sentinel 2 imagery
         """
         super().__init__(index_a=index_nir, index_b=index_vre1)
+        
+
+class AppendTribandNormalizedDifferenceIndex(Module):
+    """Append normalized difference index as channel to image tensor.
+
+    .. versionadded:: 0.3
+    """
+
+    def __init__(self, index_a: int, index_b: int, index_c: int) -> None:
+        """Initialize a new transform instance.
+        
+        Args:
+            index_a: reference band channel index
+            index_b: difference band channel index
+        """
+        super().__init__()
+        self.dim = -3
+        self.index_a = index_a
+        self.index_b = index_b
+        self.index_c = index_c
+
+    def _compute_index(self, band_a: Tensor, band_b: Tensor, band_c: Tensor) -> Tensor:
+        """Compute normalized difference index.
+        
+        Args:
+            band_a: reference band tensor
+            band_b: difference band tensor
+        Returns:
+            the index
+        """
+        return (band_a - (band_b + band_c)) / ((band_a + band_b + band_c) + _EPSILON)
+
+    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+        """Compute and append normalized difference index to image.
+        Args:
+            sample: a sample or batch dict
+        Returns:
+            the transformed sample
+        """
+        if "image" in sample:
+            index = self._compute_index(
+                band_a=sample["image"][..., self.index_a, :, :],
+                band_b=sample["image"][..., self.index_b, :, :],
+                band_c=sample["image"][..., self.index_c, :, :],
+            )
+            index = index.unsqueeze(self.dim)
+
+            sample["image"] = torch.cat(  # type: ignore[attr-defined]
+                [sample["image"], index], dim=self.dim
+            )
+
+        return sample
