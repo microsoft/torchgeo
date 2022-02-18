@@ -4,7 +4,6 @@
 """Base classes for all :mod:`torchgeo` datasets."""
 
 import abc
-import collections
 import functools
 import glob
 import os
