@@ -268,6 +268,7 @@ class AppendTribandNormalizedDifferenceIndex(Module):
         Args:
             band_a: reference band tensor
             band_b: difference band tensor
+        
         Returns:
             the index
         """
@@ -275,8 +276,10 @@ class AppendTribandNormalizedDifferenceIndex(Module):
 
     def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
         """Compute and append normalized difference index to image.
+        
         Args:
             sample: a sample or batch dict
+        
         Returns:
             the transformed sample
         """
