@@ -254,7 +254,8 @@ class AppendTribandNormalizedDifferenceIndex(Module):
         
         Args:
             index_a: reference band channel index
-            index_b: difference band channel index
+            index_b: difference band channel index of component 1
+            index_c: difference band channel index of component 2
         """
         super().__init__()
         self.dim = -3
@@ -267,7 +268,8 @@ class AppendTribandNormalizedDifferenceIndex(Module):
         
         Args:
             band_a: reference band tensor
-            band_b: difference band tensor
+            band_b: difference band tensor component 1
+            band_c: difference band tensor component 2
         
         Returns:
             the index
