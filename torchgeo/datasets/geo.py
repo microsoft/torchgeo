@@ -10,7 +10,17 @@ import glob
 import os
 import re
 import sys
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Tuple,
+    cast,
+)
 
 import fiona
 import fiona.transform
@@ -38,10 +48,12 @@ from .utils import BoundingBox, concat_samples, disambiguate_timestamp, merge_sa
 Dataset.__module__ = "torch.utils.data"
 ImageFolder.__module__ = "torchvision.datasets"
 
-# A namedtuple class for metadata to be stored in the rtree index
-GeoMetaData = collections.namedtuple(
-    typename="GeoMetaData", field_names=["filepath", "crs"]
-)
+
+class GeoMetaData(NamedTuple):
+    """A namedtuple class for metadata to be stored in the rtree index."""
+
+    filepath: str
+    crs: CRS
 
 
 class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
