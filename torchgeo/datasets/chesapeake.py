@@ -44,8 +44,6 @@ class Chesapeake(RasterDataset, abc.ABC):
       <https://chesapeakeconservancy.org/wp-content/uploads/2017/01/Chesapeake_Conservancy_Accuracy_Assessment_Methodology.pdf>`_
     """
 
-    # TODO: this shouldn't be needed, but .tif.ovr file is getting picked up
-    filename_glob = "*.tif"
     is_image = False
 
     @property
@@ -67,6 +65,11 @@ class Chesapeake(RasterDataset, abc.ABC):
     @abc.abstractmethod
     def md5(self) -> str:
         """MD5 checksum to verify integrity of dataset."""
+
+    @property
+    def filename_glob(self) -> str:
+        """Glob expression used to search for files."""
+        return self.filename
 
     @property
     def url(self) -> str:
