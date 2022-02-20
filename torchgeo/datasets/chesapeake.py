@@ -44,8 +44,6 @@ class Chesapeake(RasterDataset, abc.ABC):
       <https://chesapeakeconservancy.org/wp-content/uploads/2017/01/Chesapeake_Conservancy_Accuracy_Assessment_Methodology.pdf>`_
     """
 
-    # TODO: this shouldn't be needed, but .tif.ovr file is getting picked up
-    filename_glob = "*.tif"
     is_image = False
 
     @property
@@ -164,6 +162,7 @@ class Chesapeake7(Chesapeake):
 
     base_folder = "BAYWIDE"
     filename = "Baywide_7class_20132014.tif"
+    filename_glob = filename
     zipfile = "Baywide_7Class_20132014.zip"
     md5 = "61a4e948fb2551840b6557ef195c2084"
 
@@ -210,6 +209,7 @@ class Chesapeake13(Chesapeake):
 
     base_folder = "BAYWIDE"
     filename = "Baywide_13Class_20132014.tif"
+    filename_glob = filename
     zipfile = "Baywide_13Class_20132014.zip"
     md5 = "7e51118923c91e80e6e268156d25a4b9"
 
@@ -219,6 +219,7 @@ class ChesapeakeDC(Chesapeake):
 
     base_folder = "DC"
     filename = os.path.join("DC_11001", "DC_11001.img")
+    filename_glob = filename
     zipfile = "DC_11001.zip"
     md5 = "ed06ba7570d2955e8857d7d846c53b06"
 
@@ -228,6 +229,7 @@ class ChesapeakeDE(Chesapeake):
 
     base_folder = "DE"
     filename = "DE_STATEWIDE.tif"
+    filename_glob = filename
     zipfile = "_DE_STATEWIDE.zip"
     md5 = "5e12eff3b6950c01092c7e480b38e544"
 
@@ -245,6 +247,7 @@ class ChesapeakeMD(Chesapeake):
 
     base_folder = "MD"
     filename = "MD_STATEWIDE.tif"
+    filename_glob = filename
     zipfile = "_MD_STATEWIDE.zip"
     md5 = "40c7cd697a887f2ffdb601b5c114e567"
 
@@ -262,6 +265,7 @@ class ChesapeakeNY(Chesapeake):
 
     base_folder = "NY"
     filename = "NY_STATEWIDE.tif"
+    filename_glob = filename
     zipfile = "_NY_STATEWIDE.zip"
     md5 = "1100078c526616454ef2e508affda915"
 
@@ -271,6 +275,7 @@ class ChesapeakePA(Chesapeake):
 
     base_folder = "PA"
     filename = "PA_STATEWIDE.tif"
+    filename_glob = filename
     zipfile = "_PA_STATEWIDE.zip"
     md5 = "20a2a857c527a4dbadd6beed8b47e5ab"
 
@@ -288,6 +293,7 @@ class ChesapeakeVA(Chesapeake):
 
     base_folder = "VA"
     filename = "CIC2014_VA_STATEWIDE.tif"
+    filename_glob = filename
     zipfile = "_VA_STATEWIDE.zip"
     md5 = "6f2c97deaf73bb3e1ea9b21bd7a3fc8e"
 
@@ -297,6 +303,7 @@ class ChesapeakeWV(Chesapeake):
 
     base_folder = "WV"
     filename = "WV_STATEWIDE.tif"
+    filename_glob = filename
     zipfile = "_WV_STATEWIDE.zip"
     md5 = "350621ea293651fbc557a1c3e3c64cc3"
 
