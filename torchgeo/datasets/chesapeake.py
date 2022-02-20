@@ -9,6 +9,7 @@ import sys
 from typing import Any, Callable, Dict, Optional, Sequence
 
 import fiona
+from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
 import numpy as np
 import pyproj
@@ -46,9 +47,25 @@ class Chesapeake(RasterDataset, abc.ABC):
       <https://chesapeakeconservancy.org/wp-content/uploads/2017/01/Chesapeake_Conservancy_Accuracy_Assessment_Methodology.pdf>`_
     """
 
-    # TODO: this shouldn't be needed, but .tif.ovr file is getting picked up
-    filename_glob = "*.tif"
     is_image = False
+
+    # subclasses use the 13 class cmap by default
+    cmap = {
+        0: (0, 0, 0, 0),
+        1: (0, 197, 255, 255),
+        2: (0, 168, 132, 255),
+        3: (38, 115, 0, 255),
+        4: (76, 230, 0, 255),
+        5: (163, 255, 115, 255),
+        6: (255, 170, 0, 255),
+        7: (255, 0, 0, 255),
+        8: (156, 156, 156, 255),
+        9: (0, 0, 0, 255),
+        10: (115, 115, 0, 255),
+        11: (230, 230, 0, 255),
+        12: (255, 255, 115, 255),
+        13: (197, 0, 255, 255),
+    }
 
     @property
     @abc.abstractmethod
@@ -110,6 +127,17 @@ class Chesapeake(RasterDataset, abc.ABC):
         self.checksum = checksum
 
         self._verify()
+
+        colors = []
+        for i in range(len(self.cmap)):
+            colors.append(
+                (
+                    self.cmap[i][0] / 255.0,
+                    self.cmap[i][1] / 255.0,
+                    self.cmap[i][2] / 255.0,
+                )
+            )
+        self._cmap = ListedColormap(colors)
 
         super().__init__(root, crs, res, transforms, cache)
 
@@ -177,16 +205,34 @@ class Chesapeake(RasterDataset, abc.ABC):
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4 * ncols, 4))
 
         if showing_predictions:
-            axs[0].imshow(mask)
+            axs[0].imshow(
+                mask,
+                vmin=0,
+                vmax=self._cmap.N - 1,
+                cmap=self._cmap,
+                interpolation="none",
+            )
             axs[0].axis("off")
-            axs[1].imshow(pred)
+            axs[1].imshow(
+                pred,
+                vmin=0,
+                vmax=self._cmap.N - 1,
+                cmap=self._cmap,
+                interpolation="none",
+            )
             axs[1].axis("off")
             if show_titles:
                 axs[0].set_title("Mask")
                 axs[1].set_title("Prediction")
 
         else:
-            axs.imshow(mask)
+            axs.imshow(
+                mask,
+                vmin=0,
+                vmax=self._cmap.N - 1,
+                cmap=self._cmap,
+                interpolation="none",
+            )
             axs.axis("off")
             if show_titles:
                 axs.set_title("Mask")
@@ -214,6 +260,7 @@ class Chesapeake7(Chesapeake):
 
     base_folder = "BAYWIDE"
     filename = "Baywide_7class_20132014.tif"
+    filename_glob = "Baywide_7class_20132014.tif"
     zipfile = "Baywide_7Class_20132014.zip"
     md5 = "61a4e948fb2551840b6557ef195c2084"
 
@@ -226,14 +273,6 @@ class Chesapeake7(Chesapeake):
         5: (156, 156, 156, 255),
         6: (0, 0, 0, 255),
         7: (197, 0, 255, 255),
-        8: (0, 0, 0, 0),
-        9: (0, 0, 0, 0),
-        10: (0, 0, 0, 0),
-        11: (0, 0, 0, 0),
-        12: (0, 0, 0, 0),
-        13: (0, 0, 0, 0),
-        14: (0, 0, 0, 0),
-        15: (0, 0, 0, 0),
     }
 
 
@@ -260,6 +299,7 @@ class Chesapeake13(Chesapeake):
 
     base_folder = "BAYWIDE"
     filename = "Baywide_13Class_20132014.tif"
+    filename_glob = "Baywide_13Class_20132014.tif"
     zipfile = "Baywide_13Class_20132014.zip"
     md5 = "7e51118923c91e80e6e268156d25a4b9"
 
@@ -269,6 +309,7 @@ class ChesapeakeDC(Chesapeake):
 
     base_folder = "DC"
     filename = os.path.join("DC_11001", "DC_11001.img")
+    filename_glob = os.path.join("DC_11001", "DC_11001.img")
     zipfile = "DC_11001.zip"
     md5 = "ed06ba7570d2955e8857d7d846c53b06"
 
@@ -278,6 +319,7 @@ class ChesapeakeDE(Chesapeake):
 
     base_folder = "DE"
     filename = "DE_STATEWIDE.tif"
+    filename_glob = "DE_STATEWIDE.tif"
     zipfile = "_DE_STATEWIDE.zip"
     md5 = "5e12eff3b6950c01092c7e480b38e544"
 
@@ -295,6 +337,7 @@ class ChesapeakeMD(Chesapeake):
 
     base_folder = "MD"
     filename = "MD_STATEWIDE.tif"
+    filename_glob = "MD_STATEWIDE.tif"
     zipfile = "_MD_STATEWIDE.zip"
     md5 = "40c7cd697a887f2ffdb601b5c114e567"
 
@@ -312,6 +355,7 @@ class ChesapeakeNY(Chesapeake):
 
     base_folder = "NY"
     filename = "NY_STATEWIDE.tif"
+    filename_glob = "NY_STATEWIDE.tif"
     zipfile = "_NY_STATEWIDE.zip"
     md5 = "1100078c526616454ef2e508affda915"
 
@@ -321,6 +365,7 @@ class ChesapeakePA(Chesapeake):
 
     base_folder = "PA"
     filename = "PA_STATEWIDE.tif"
+    filename_glob = "PA_STATEWIDE.tif"
     zipfile = "_PA_STATEWIDE.zip"
     md5 = "20a2a857c527a4dbadd6beed8b47e5ab"
 
@@ -338,6 +383,7 @@ class ChesapeakeVA(Chesapeake):
 
     base_folder = "VA"
     filename = "CIC2014_VA_STATEWIDE.tif"
+    filename_glob = "CIC2014_VA_STATEWIDE.tif"
     zipfile = "_VA_STATEWIDE.zip"
     md5 = "6f2c97deaf73bb3e1ea9b21bd7a3fc8e"
 
@@ -347,6 +393,7 @@ class ChesapeakeWV(Chesapeake):
 
     base_folder = "WV"
     filename = "WV_STATEWIDE.tif"
+    filename_glob = "WV_STATEWIDE.tif"
     zipfile = "_WV_STATEWIDE.zip"
     md5 = "350621ea293651fbc557a1c3e3c64cc3"
 
