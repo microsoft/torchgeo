@@ -9,7 +9,6 @@ import sys
 from typing import Any, Callable, Dict, Optional, Sequence
 
 import fiona
-from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
 import numpy as np
 import pyproj
@@ -18,6 +17,7 @@ import rasterio.mask
 import shapely.geometry
 import shapely.ops
 import torch
+from matplotlib.colors import ListedColormap
 from rasterio.crs import CRS
 from torch import Tensor
 
