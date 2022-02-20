@@ -9,6 +9,7 @@ import sys
 from typing import Any, Callable, Dict, Optional, Sequence
 
 import fiona
+import matplotlib.pyplot as plt
 import numpy as np
 import pyproj
 import rasterio
@@ -17,6 +18,7 @@ import shapely.geometry
 import shapely.ops
 import torch
 from rasterio.crs import CRS
+from torch import Tensor
 
 from .geo import GeoDataset, RasterDataset
 from .utils import BoundingBox, download_url, extract_archive
@@ -145,6 +147,54 @@ class Chesapeake(RasterDataset, abc.ABC):
     def _extract(self) -> None:
         """Extract the dataset."""
         extract_archive(os.path.join(self.root, self.zipfile))
+
+    def plot(  # type: ignore[override]
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`RasterDataset.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional suptitle to use for figure
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.3
+        """
+        mask = sample["mask"].squeeze(0)
+        ncols = 1
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            pred = sample["prediction"].squeeze(0)
+            ncols = 2
+
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figisze=(4 * ncols, 4))
+
+        if showing_predictions:
+            axs[0].imshow(mask)
+            axs[0].axis("off")
+            axs[1].imshow(pred)
+            axs[1].axis("off")
+            if show_titles:
+                axs[0].set_title("Mask")
+                axs[1].set_title("Prediction")
+
+        else:
+            axs.imshow(mask)
+            axs.axis("off")
+            if show_titles:
+                axs.set_title("Mask")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
 
 
 class Chesapeake7(Chesapeake):
