@@ -243,8 +243,8 @@ class AppendNDRE(AppendNormalizedDifferenceIndex):
         super().__init__(index_a=index_nir, index_b=index_vre1)
 
 
-class AppendTribandNormalizedDifferenceIndex(Module):
-    """Append normalized difference index involving 3 bands as channel to image tensor.
+class AppendTriBandNormalizedDifferenceIndex(Module):
+    """Append normalized difference index involving 3 bands as channel to image tensor e.g. (band_a - (band_b + band_c)) / (band_a + band_b + band_c).
 
     .. versionadded:: 0.3
     """
@@ -264,7 +264,7 @@ class AppendTribandNormalizedDifferenceIndex(Module):
         self.index_c = index_c
 
     def _compute_index(self, band_a: Tensor, band_b: Tensor, band_c: Tensor) -> Tensor:
-        """Compute normalized difference index.
+        """Compute tri-band normalized difference index.
 
         Args:
             band_a: reference band tensor
@@ -277,7 +277,7 @@ class AppendTribandNormalizedDifferenceIndex(Module):
         return (band_a - (band_b + band_c)) / ((band_a + band_b + band_c) + _EPSILON)
 
     def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        """Compute and append normalized difference index to image.
+        """Compute and append tri-band normalized difference index to image.
 
         Args:
             sample: a sample or batch dict
