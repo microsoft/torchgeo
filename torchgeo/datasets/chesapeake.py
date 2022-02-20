@@ -174,7 +174,7 @@ class Chesapeake(RasterDataset, abc.ABC):
             pred = sample["prediction"].squeeze(0)
             ncols = 2
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figisze=(4 * ncols, 4))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4 * ncols, 4))
 
         if showing_predictions:
             axs[0].imshow(mask)
