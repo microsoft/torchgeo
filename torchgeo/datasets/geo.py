@@ -349,8 +349,7 @@ class RasterDataset(GeoDataset):
                     with rasterio.open(filepath) as src:
                         # See if file has a color map
                         try:
-                            if len(self.cmap) == 0:
-                                self.cmap = src.colormap(1)
+                            self.cmap = src.colormap(1)
                         except ValueError:
                             pass
 
