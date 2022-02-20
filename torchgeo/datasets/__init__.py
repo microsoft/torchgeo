@@ -21,6 +21,7 @@ from .chesapeake import (
     ChesapeakeVA,
     ChesapeakeWV,
 )
+from .cms_mangrove_canopy import CMSGlobalMangroveCanopy
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCycloneWindEstimation
@@ -97,6 +98,7 @@ __all__ = (
     "ChesapeakeVA",
     "ChesapeakeWV",
     "ChesapeakeCVPR",
+    "CMSGlobalMangroveCanopy",
     "Esri2020",
     "Landsat",
     "Landsat1",
