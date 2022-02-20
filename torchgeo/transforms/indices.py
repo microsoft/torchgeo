@@ -23,7 +23,13 @@ _EPSILON = 1e-10
 
 
 class AppendNormalizedDifferenceIndex(Module):
-    """Append normalized difference index as channel to image tensor.
+    r"""Append normalized difference index as channel to image tensor.
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDI} = \frac{A - B}{A + B}
 
     .. versionadded:: 0.2
     """
@@ -76,7 +82,13 @@ class AppendNormalizedDifferenceIndex(Module):
 
 
 class AppendNBR(AppendNormalizedDifferenceIndex):
-    """Normalized Burn Ratio (NBR).
+    r"""Normalized Burn Ratio (NBR).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NBR} = \frac{\text{NIR} - \text{SWIR}}{\text{NIR} + \text{SWIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -96,7 +108,13 @@ class AppendNBR(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDBI(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Built-up Index (NDBI).
+    r"""Normalized Difference Built-up Index (NDBI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDBI} = \frac{\text{SWIR} - \text{NIR}}{\text{SWIR} + \text{NIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -114,7 +132,13 @@ class AppendNDBI(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDSI(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Snow Index (NDSI).
+    r"""Normalized Difference Snow Index (NDSI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDSI} = \frac{\text{G} - \text{SWIR}}{\text{G} + \text{SWIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -132,7 +156,13 @@ class AppendNDSI(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDVI(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Vegetation Index (NDVI).
+    r"""Normalized Difference Vegetation Index (NDVI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDVI} = \frac{\text{R} - \text{NIR}}{\text{R} + \text{NIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -150,7 +180,13 @@ class AppendNDVI(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDWI(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Water Index (NDWI).
+    r"""Normalized Difference Water Index (NDWI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDWI} = \frac{\text{G} - \text{NIR}}{\text{G} + \text{NIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -168,7 +204,13 @@ class AppendNDWI(AppendNormalizedDifferenceIndex):
 
 
 class AppendSWI(AppendNormalizedDifferenceIndex):
-    """Standardized Water-Level Index (SWI).
+    r"""Standardized Water-Level Index (SWI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{SWI} = \frac{\text{R} - \text{SWIR}}{\text{R} + \text{SWIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -186,7 +228,13 @@ class AppendSWI(AppendNormalizedDifferenceIndex):
 
 
 class AppendGNDVI(AppendNormalizedDifferenceIndex):
-    """Green Normalized Difference Vegetation Index (GNDVI).
+    r"""Green Normalized Difference Vegetation Index (GNDVI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{GNDVI} = \frac{\text{NIR} - \text{G}}{\text{NIR} + \text{G}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -204,7 +252,13 @@ class AppendGNDVI(AppendNormalizedDifferenceIndex):
 
 
 class AppendBNDVI(AppendNormalizedDifferenceIndex):
-    """Blue Normalized Difference Vegetation Index (BNDVI).
+    r"""Blue Normalized Difference Vegetation Index (BNDVI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{BNDVI} = \frac{\text{NIR} - \text{B}}{\text{NIR} + \text{B}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -224,7 +278,13 @@ class AppendBNDVI(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDRE(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Red Edge Vegetation Index (NDRE).
+    r"""Normalized Difference Red Edge Vegetation Index (NDRE).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDRE} = \frac{\text{NIR} - \text{VRE1}}{\text{NIR} + \text{VRE1}}
 
     If you use this index in your research, please cite the following paper:
 
