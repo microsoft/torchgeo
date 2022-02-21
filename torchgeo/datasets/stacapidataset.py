@@ -3,17 +3,15 @@
 
 """STACAPIDataset."""
 
-import abc
 import sys
-import time
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
-import fiona
 import matplotlib.pyplot as plt
 import numpy as np
 import planetary_computer as pc
 import stackstac
 import torch
+from pyproj import Transformer
 from pystac.item import Item
 from pystac_client import Client
 from rasterio.crs import CRS
@@ -24,13 +22,13 @@ from torch import Tensor
 # from torch.utils.data import DataLoader
 from xarray.core.dataarray import DataArray
 
-from torchgeo.datasets.geo import RasterDataset
+from torchgeo.datasets.geo import GeoDataset
 from torchgeo.datasets.utils import BoundingBox
 
 # from torchgeo.samplers import RandomGeoSampler
 
 
-class STACAPIDataset(RasterDataset, abc.ABC):
+class STACAPIDataset(GeoDataset):
     """STACApiDataset.
 
     SpatioTemporal Asset Catalogs (`STACs <https://stacspec.org/>`_) are a way
@@ -62,6 +60,7 @@ class STACAPIDataset(RasterDataset, abc.ABC):
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Sequence[str] = sentinel_bands,
+        is_image: bool = True,
         api_endpoint: str = "https://planetarycomputer.microsoft.com/api/stac/v1",
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         **query_parameters,
@@ -75,6 +74,8 @@ class STACAPIDataset(RasterDataset, abc.ABC):
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
             bands: sequence of of stac asset band names
+            is_image: if true, :meth:`__getitem__` uses `image` as sample key, `mask`
+                otherwise
             api_endpoint: api for pystac Client to access
             transforms: a function/transform that takes an input sample
                 and returns a transformed versio
@@ -84,21 +85,16 @@ class STACAPIDataset(RasterDataset, abc.ABC):
         self.root = root
         self.api_endpoint = api_endpoint
         self.bands = bands
+        self.is_image = is_image
 
         # Create an R-tree to index the dataset
         self.index = Index(interleaved=False, properties=Property(dimension=3))
 
         catalog = Client.open(api_endpoint)
 
-        start = time.time()
         search = catalog.search(**query_parameters)
 
         items = list(search.get_items())
-
-        end = time.time()
-        print(
-            "Elapsed time Catalog search get items: {:0.4f} seconds".format(end - start)
-        )
 
         if not items:
             raise RuntimeError(
@@ -111,23 +107,20 @@ class STACAPIDataset(RasterDataset, abc.ABC):
         if crs is None:
             crs = CRS.from_dict(crs_dict)
 
-        start = time.time()
-
         for i, item in enumerate(items):
             minx, miny, maxx, maxy = item.bbox
 
-            (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                src_crs.to_dict(), crs.to_dict(), [minx, maxx], [miny, maxy]
+            transformer = Transformer.from_crs(src_crs.to_epsg(), crs.to_epsg())
+            (minx, maxx), (miny, maxy) = transformer.transform(
+                [minx, maxx], [miny, maxy]
             )
             mint = 0
             maxt = sys.maxsize
             coords = (minx, maxx, miny, maxy, mint, maxt)
             self.index.insert(i, coords, item)
 
-        end = time.time()
-        print("Elapsed time populate index search: {:0.4f} seconds".format(end - start))
         self._crs = crs
-        self.res = cast(float, res)
+        self.res = 10
         self.transforms = transforms
         self.items = items
 
@@ -144,9 +137,9 @@ class STACAPIDataset(RasterDataset, abc.ABC):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object for hit in hits]
+        items = [hit.object for hit in hits]
 
-        if not filepaths:
+        if not items:
             raise IndexError(
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
@@ -154,17 +147,37 @@ class STACAPIDataset(RasterDataset, abc.ABC):
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
 
         raster_list = []
-        for item in filepaths:
+        for item in items:
             raster_list.append(self._snap_to_single_raster(item, bounds))
 
         # merge single rasters
         data = self._merge_rasters(raster_list)
 
         # if only single time step then squeeze out time dimenstion
-        data = data.squeeze(0)
+        image = data.squeeze(0)
+
+        # suggested #
+        signed_items = [pc.sign(item).to_dict() for item in items]
+
+        stack = stackstac.stack(
+            signed_items,
+            assets=self.bands,
+            resolution=self.res,
+            epsg=self._crs.to_epsg(),
+        )
+
+        aoi = stack.loc[
+            ..., query.maxy : query.miny, query.minx : query.maxx  # type: ignore[misc]
+        ]
+
+        suggested_data = aoi.compute(scheduler="single-threaded")
+        suggested_image = suggested_data.data
+        # end suggested #
+
+        assert suggested_image.shape == image.shape
 
         key = "image" if self.is_image else "mask"
-        sample = {key: data, "crs": self.crs, "bbox": query}
+        sample = {key: image, "crs": self.crs, "bbox": query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -183,17 +196,17 @@ class STACAPIDataset(RasterDataset, abc.ABC):
         Returns:
             computed data array from stac
         """
-        start = time.time()
-
         signed_items = pc.sign(item).to_dict()
 
         aoi = stackstac.stack(
-            signed_items, assets=self.bands, bounds_latlon=bounds, resolution=10
+            signed_items,
+            assets=self.bands,
+            bounds_latlon=bounds,
+            resolution=self.res,
+            epsg=self._crs.to_epsg(),
         )
 
         dest = aoi.compute(scheduler="single-threaded")
-        end = time.time()
-        print("Elapsed time compute AoI: {:0.4f} seconds".format(end - start))
         return dest
 
     def _merge_rasters(self, raster_list: List[DataArray]) -> Tensor:
@@ -205,8 +218,6 @@ class STACAPIDataset(RasterDataset, abc.ABC):
         Returns:
             Tensor of merged xarray data.
         """
-        start = time.time()
-
         time_dim = raster_list[0].shape[0]
 
         # rioxarray only supports merges for 2D and 3D arrays so merge per time_step
@@ -218,11 +229,10 @@ class STACAPIDataset(RasterDataset, abc.ABC):
 
         data: "np.typing.NDArray[np.float_]" = np.stack(merged_rasters)
         tensor: Tensor = torch.tensor(data)  # type: ignore[attr-defined]
-        end = time.time()
-        print("Elapsed time merge rasters: {:0.4f} seconds".format(end - start))
+
         return tensor
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Tensor],
         show_titles: bool = True,
