@@ -41,7 +41,7 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
 
 if __name__ == "__main__":
     zipfilename = "N00E020_agb.zip"
-    filesToZip = []
+    files_to_zip = []
 
     for file_dict in files:
         path = file_dict["image"]
@@ -50,11 +50,11 @@ if __name__ == "__main__":
             os.remove(path)
         # Create mask file
         create_file(path, dtype="int32", num_channels=1)
-        filesToZip.append(path)
+        files_to_zip.append(path)
 
     # Compress data
     with zipfile.ZipFile(zipfilename, "w") as zip:
-        for file in filesToZip:
+        for file in files_to_zip:
             zip.write(file, arcname=file)
 
     # Compute checksums
