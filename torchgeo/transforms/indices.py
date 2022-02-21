@@ -244,7 +244,8 @@ class AppendNDRE(AppendNormalizedDifferenceIndex):
 
 
 class AppendTriBandNormalizedDifferenceIndex(Module):
-    """Append normalized difference index involving 3 bands as channel to image tensor e.g. (band_a - (band_b + band_c)) / (band_a + band_b + band_c).
+    """Append normalized difference index involving 3 bands as channel to image tensor
+       e.g. (band_a - (band_b + band_c)) / (band_a + band_b + band_c).
 
     .. versionadded:: 0.3
     """
