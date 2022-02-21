@@ -27,7 +27,7 @@ from .utils import BoundingBox, check_integrity
 
 
 class OpenBuildings(VectorDataset, abc.ABC):
-    """OpenBuildings dataset.
+    r"""OpenBuildings dataset.
 
     The `OpenBuildings
     <https://sites.research.google/open-buildings/#download>`_ dataset
@@ -36,7 +36,7 @@ class OpenBuildings(VectorDataset, abc.ABC):
     Dataset features:
 
     * 516M building detections as polygons with centroid lat/long
-    * covering area of 19.4M km^2 (64% of the African continent)
+    * covering area of 19.4M km\ :sup:`2`\  (64% of the African continent)
     * confidence score and
       `Plus Code <https://maps.google.com/pluscodes/>`_
 
@@ -49,7 +49,7 @@ class OpenBuildings(VectorDataset, abc.ABC):
     <https://sites.research.google/open-buildings/#download>`_. Additionally, the
     `meta data geometry file
     <https://sites.research.google/open-buildings/tiles.geojson>`_ also needs to be
-    placec in `root` as 'tiles.geojson'.
+    placed in `root` as `tiles.geojson`.
 
     If you use this dataset in your research, please cite the following technical
     report:
