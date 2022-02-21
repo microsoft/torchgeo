@@ -53,6 +53,19 @@ class TestSentinel2:
         with pytest.raises(FileNotFoundError, match="No Sentinel2 data was found in "):
             Sentinel2(str(tmp_path))
 
+    def test_plot(self, dataset: Sentinel2) -> None:
+        x = dataset[dataset.bounds]
+        dataset.plot(x, suptitle="Test")
+
+    def test_plot_wrong_bands(self, dataset: Sentinel2) -> None:
+        bands = ("B01",)
+        ds = Sentinel2(root=dataset.root, bands=bands)
+        x = dataset[dataset.bounds]
+        with pytest.raises(
+            ValueError, match="Dataset doesn't contain some of the RGB bands"
+        ):
+            ds.plot(x)
+
     def test_invalid_query(self, dataset: Sentinel2) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
