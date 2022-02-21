@@ -29,7 +29,7 @@ class TestGlobBiomass:
 
         shutil.copy(os.path.join("tests", "data", "globbiomass", zipfile), tmp_path)
 
-        md5s = {zipfile: "bda282c7e5c9417397ac0463e361208b"}
+        md5s = {zipfile: "7b7b981149aa31a099f453fef32b644f"}
 
         monkeypatch.setattr(GlobBiomass, "md5s", md5s)  # type: ignore[attr-defined]
         root = str(tmp_path)

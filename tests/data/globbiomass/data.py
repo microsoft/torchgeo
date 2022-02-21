@@ -29,6 +29,8 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
     profile["transform"] = rasterio.transform.from_bounds(0, 0, 1, 1, 1, 1)
     profile["height"] = SIZE
     profile["width"] = SIZE
+    profile["compress"] = "lzw"
+    profile["predictor"] = 2
 
     Z = np.random.randint(
         np.iinfo(profile["dtype"]).max, size=(1, SIZE, SIZE), dtype=profile["dtype"]
