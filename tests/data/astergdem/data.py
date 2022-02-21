@@ -29,6 +29,8 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
     profile["transform"] = rasterio.transform.from_bounds(0, 0, 1, 1, 1, 1)
     profile["height"] = SIZE
     profile["width"] = SIZE
+    profile["compress"] = "lzw"
+    profile["predictor"] = 2
 
     Z = np.random.randint(
         np.iinfo(profile["dtype"]).max, size=(1, SIZE, SIZE), dtype=profile["dtype"]
@@ -39,7 +41,7 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
 
 if __name__ == "__main__":
     zipfilename = "astergdem.zip"
-    filesToZip = []
+    files_to_zip = []
 
     for file_dict in files:
         path = file_dict["image"]
@@ -48,11 +50,11 @@ if __name__ == "__main__":
             os.remove(path)
         # Create mask file
         create_file(path, dtype="int32", num_channels=1)
-        filesToZip.append(path)
+        files_to_zip.append(path)
 
     # Compress data
     with zipfile.ZipFile(zipfilename, "w") as zip:
-        for file in filesToZip:
+        for file in files_to_zip:
             zip.write(file, arcname=file)
 
     # Compute checksums
