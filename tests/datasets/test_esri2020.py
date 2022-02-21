@@ -32,7 +32,7 @@ class TestEsri2020:
         zipfile = "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip"
         monkeypatch.setattr(Esri2020, "zipfile", zipfile)  # type: ignore[attr-defined]
 
-        md5 = "d04dd60e0831c44b85ca78a85928780c"
+        md5 = "d3aa0fc0af9ca1b0bd76465995874598"
         monkeypatch.setattr(Esri2020, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join(
             "tests",
