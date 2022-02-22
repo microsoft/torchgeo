@@ -139,7 +139,9 @@ class CanadianBuildingFootprints(VectorDataset):
         Returns:
             a matplotlib Figure with the rendered sample
 
-        .. versionadded:: 0.3
+        .. versionchanged:: 0.3
+            Method now takes a sample dict, not a Tensor. Additionally, possible to
+            show subplot titles and/or use a custom suptitle.
         """
         image = sample["mask"].squeeze(0)
         ncols = 1
