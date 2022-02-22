@@ -35,6 +35,10 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
     * geojson file that contains download links to tif files
     * single-channel geotiffs with the pixel values representing biomass density
 
+    If you use this dataset in your research, please give credit to:
+
+    * `Global Forest Watch <https://data.globalforestwatch.org/>`_
+
     .. versionadded:: 0.3
     """
 
