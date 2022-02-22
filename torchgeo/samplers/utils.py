@@ -7,7 +7,6 @@ import random
 from typing import Tuple, Union
 
 from ..datasets import BoundingBox
-from .constants import Units
 
 
 def _to_tuple(value: Union[Tuple[float, float], float]) -> Tuple[float, float]:
