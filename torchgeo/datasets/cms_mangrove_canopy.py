@@ -7,7 +7,9 @@ import glob
 import os
 from typing import Any, Callable, Dict, Optional
 
+import matplotlib.pyplot as plt
 from rasterio.crs import CRS
+from torch import Tensor
 
 from .geo import RasterDataset
 from .utils import check_integrity, extract_archive
@@ -249,3 +251,48 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         """Extract the dataset."""
         pathname = os.path.join(self.root, self.zipfile)
         extract_archive(pathname)
+
+    def plot(  # type: ignore[override]
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`RasterDataset.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        mask = sample["mask"].squeeze()
+        ncols = 1
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            pred = sample["prediction"].squeeze()
+            ncols = 2
+
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
+
+        if showing_predictions:
+            axs[0].imshow(mask)
+            axs[0].axis("off")
+            axs[1].imshow(pred)
+            axs[1].axis("off")
+            if show_titles:
+                axs[0].set_title("Mask")
+                axs[1].set_title("Prediction")
+        else:
+            axs.imshow(mask)
+            axs.axis("off")
+            if show_titles:
+                axs.set_title("Mask")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return
