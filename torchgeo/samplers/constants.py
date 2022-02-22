@@ -3,11 +3,15 @@
 
 """Common sampler constants."""
 
-from enum import Enum
+from enum import Enum, auto
 
 
 class Units(Enum):
-    """Enumeration to define units of `size` used for GeoSampler."""
+    """Enumeration defining units of ``size`` parameter.
 
-    PIXELS = 0
-    CRS = 1
+    Used by :class:`~torchgeo.sampler.GeoSampler` and
+    :class:`~torchgeo.sampler.BatchGeoSampler`.
+    """
+
+    PIXELS = auto()
+    CRS = auto()

@@ -26,10 +26,7 @@ def _to_tuple(value: Union[Tuple[float, float], float]) -> Tuple[float, float]:
 
 
 def get_random_bounding_box(
-    bounds: BoundingBox,
-    size: Union[Tuple[float, float], float],
-    res: float,
-    units: Units,
+    bounds: BoundingBox, size: Union[Tuple[float, float], float], res: float
 ) -> BoundingBox:
     """Returns a random bounding box within a given bounding box.
 
@@ -43,15 +40,11 @@ def get_random_bounding_box(
     Args:
         bounds: the larger bounding box to sample from
         size: the size of the bounding box to sample
-        units: defines if `size` is in pixels or in CRS units.
 
     Returns:
         randomly sampled bounding box from the extent of the input
     """
-    t_size: Tuple[float, float] = _to_tuple(size)
-    if units == Units.PIXELS:
-        # We have to re-assign t_size because tuples are immutable
-        t_size = (t_size[0] * res, t_size[1] * res)
+    t_size = _to_tuple(size)
 
     width = (bounds.maxx - bounds.minx - t_size[1]) // res
     minx = random.randrange(int(width)) * res + bounds.minx

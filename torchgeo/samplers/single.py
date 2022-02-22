@@ -92,11 +92,17 @@ class RandomGeoSampler(GeoSampler):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units
+
+        .. versionchanged:: 0.3
+           Added ``units`` parameter, changed default to pixel units
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
+
+        if units == Units.PIXELS:
+            self.size = (self.size[0] * self.res, self.size[1] * self.res)
+
         self.length = length
-        self.units = units
         self.hits = []
         for hit in self.index.intersection(tuple(self.roi), objects=True):
             bounds = BoundingBox(*hit.bounds)
@@ -118,9 +124,7 @@ class RandomGeoSampler(GeoSampler):
             bounds = BoundingBox(*hit.bounds)
 
             # Choose a random index within that tile
-            bounding_box = get_random_bounding_box(
-                bounds, self.size, self.res, self.units
-            )
+            bounding_box = get_random_bounding_box(bounds, self.size, self.res)
 
             yield bounding_box
 
@@ -154,6 +158,7 @@ class GridGeoSampler(GeoSampler):
         size: Union[Tuple[float, float], float],
         stride: Union[Tuple[float, float], float],
         roi: Optional[BoundingBox] = None,
+        units: Units = Units.PIXELS,
     ) -> None:
         """Initialize a new Sampler instance.
 
@@ -166,14 +171,23 @@ class GridGeoSampler(GeoSampler):
 
         Args:
             dataset: dataset to index from
-            size: dimensions of each :term:`patch` in units of CRS
+            size: dimensions of each :term:`patch`
             stride: distance to skip between each patch
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
+            units: defines if ``size`` and ``stride`` are in pixel or CRS units
+
+        .. versionchanged:: 0.3
+           Added ``units`` parameter, changed default to pixel units
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
         self.stride = _to_tuple(stride)
+
+        if units == Units.PIXELS:
+            self.size = (self.size[0] * self.res, self.size[1] * self.res)
+            self.stride = (self.stride[0] * self.res, self.stride[1] * self.res)
+
         self.hits = []
         for hit in self.index.intersection(tuple(self.roi), objects=True):
             bounds = BoundingBox(*hit.bounds)

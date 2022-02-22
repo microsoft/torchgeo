@@ -91,12 +91,18 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units
+
+        .. versionchanged:: 0.3
+           Added ``units`` parameter, changed default to pixel units
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
+
+        if units == Units.PIXELS:
+            self.size = (self.size[0] * self.res, self.size[1] * self.res)
+
         self.batch_size = batch_size
         self.length = length
-        self.units = units
         self.hits = []
         for hit in self.index.intersection(tuple(self.roi), objects=True):
             bounds = BoundingBox(*hit.bounds)
@@ -121,9 +127,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             batch = []
             for _ in range(self.batch_size):
 
-                bounding_box = get_random_bounding_box(
-                    bounds, self.size, self.res, self.units
-                )
+                bounding_box = get_random_bounding_box(bounds, self.size, self.res)
                 batch.append(bounding_box)
 
             yield batch
