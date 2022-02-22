@@ -334,6 +334,46 @@ class TestBoundingBox:
     @pytest.mark.parametrize(
         "test_input,expected",
         [
+            # Rectangular prism
+            ((0, 1, 0, 1, 0, 1), 1),
+            ((0, 2, 0, 3, 0, 4), 6),
+            # Plane
+            ((0, 0, 0, 1, 0, 1), 0),
+            # Line
+            ((0, 0, 0, 0, 0, 1), 0),
+            # Point
+            ((0, 0, 0, 0, 0, 0), 0),
+        ],
+    )
+    def test_area(
+        self, test_input: Tuple[float, float, float, float, float, float], expected: int
+    ) -> None:
+        bbox = BoundingBox(*test_input)
+        assert bbox.area == expected
+
+    @pytest.mark.parametrize(
+        "test_input,expected",
+        [
+            # Rectangular prism
+            ((0, 1, 0, 1, 0, 1), 1),
+            ((0, 2, 0, 3, 0, 4), 24),
+            # Plane
+            ((0, 0, 0, 1, 0, 1), 0),
+            # Line
+            ((0, 0, 0, 0, 0, 1), 0),
+            # Point
+            ((0, 0, 0, 0, 0, 0), 0),
+        ],
+    )
+    def test_volume(
+        self, test_input: Tuple[float, float, float, float, float, float], expected: int
+    ) -> None:
+        bbox = BoundingBox(*test_input)
+        assert bbox.volume == expected
+
+    @pytest.mark.parametrize(
+        "test_input,expected",
+        [
             # Same box
             ((0, 1, 0, 1, 0, 1), True),
             ((0.0, 1.0, 0.0, 1.0, 0.0, 1.0), True),

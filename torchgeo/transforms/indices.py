@@ -23,7 +23,13 @@ _EPSILON = 1e-10
 
 
 class AppendNormalizedDifferenceIndex(Module):
-    """Append normalized difference index as channel to image tensor.
+    r"""Append normalized difference index as channel to image tensor.
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDI} = \frac{A - B}{A + B}
 
     .. versionadded:: 0.2
     """
@@ -76,7 +82,13 @@ class AppendNormalizedDifferenceIndex(Module):
 
 
 class AppendNBR(AppendNormalizedDifferenceIndex):
-    """Normalized Burn Ratio (NBR).
+    r"""Normalized Burn Ratio (NBR).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NBR} = \frac{\text{NIR} - \text{SWIR}}{\text{NIR} + \text{SWIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -96,7 +108,13 @@ class AppendNBR(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDBI(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Built-up Index (NDBI).
+    r"""Normalized Difference Built-up Index (NDBI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDBI} = \frac{\text{SWIR} - \text{NIR}}{\text{SWIR} + \text{NIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -114,7 +132,13 @@ class AppendNDBI(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDSI(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Snow Index (NDSI).
+    r"""Normalized Difference Snow Index (NDSI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDSI} = \frac{\text{G} - \text{SWIR}}{\text{G} + \text{SWIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -132,7 +156,13 @@ class AppendNDSI(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDVI(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Vegetation Index (NDVI).
+    r"""Normalized Difference Vegetation Index (NDVI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDVI} = \frac{\text{R} - \text{NIR}}{\text{R} + \text{NIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -150,7 +180,13 @@ class AppendNDVI(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDWI(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Water Index (NDWI).
+    r"""Normalized Difference Water Index (NDWI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDWI} = \frac{\text{G} - \text{NIR}}{\text{G} + \text{NIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -165,3 +201,103 @@ class AppendNDWI(AppendNormalizedDifferenceIndex):
             index_nir: index of the Near Infrared (NIR) band in the image
         """
         super().__init__(index_a=index_green, index_b=index_nir)
+
+
+class AppendSWI(AppendNormalizedDifferenceIndex):
+    r"""Standardized Water-Level Index (SWI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{SWI} = \frac{\text{R} - \text{SWIR}}{\text{R} + \text{SWIR}}
+
+    If you use this index in your research, please cite the following paper:
+
+    * https://doi.org/10.3390/w13121647
+    """
+
+    def __init__(self, index_red: int, index_swir: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_red: index of the VRE1 band, e.g. B5 in Sentinel 2 imagery
+            index_swir: index of the SWIR2 band, e.g. B11 in Sentinel 2 imagery
+        """
+        super().__init__(index_a=index_red, index_b=index_swir)
+
+
+class AppendGNDVI(AppendNormalizedDifferenceIndex):
+    r"""Green Normalized Difference Vegetation Index (GNDVI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{GNDVI} = \frac{\text{NIR} - \text{G}}{\text{NIR} + \text{G}}
+
+    If you use this index in your research, please cite the following paper:
+
+    * https://doi.org/10.2134/agronj2001.933583x
+    """
+
+    def __init__(self, index_nir: int, index_green: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_nir: index of the NIR band, e.g. B8 in Sentinel 2 imagery
+            index_green: index of the Green band, e.g. B3 in Sentinel 2 imagery
+        """
+        super().__init__(index_a=index_nir, index_b=index_green)
+
+
+class AppendBNDVI(AppendNormalizedDifferenceIndex):
+    r"""Blue Normalized Difference Vegetation Index (BNDVI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{BNDVI} = \frac{\text{NIR} - \text{B}}{\text{NIR} + \text{B}}
+
+    If you use this index in your research, please cite the following paper:
+
+    * https://doi.org/10.1016/S1672-6308(07)60027-4
+
+    .. versionadded:: 0.3
+    """
+
+    def __init__(self, index_nir: int, index_blue: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_nir: index of the NIR band, e.g. B8 in Sentinel 2 imagery
+            index_blue: index of the Blue band, e.g. B2 in Sentinel 2 imagery
+        """
+        super().__init__(index_a=index_nir, index_b=index_blue)
+
+
+class AppendNDRE(AppendNormalizedDifferenceIndex):
+    r"""Normalized Difference Red Edge Vegetation Index (NDRE).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDRE} = \frac{\text{NIR} - \text{VRE1}}{\text{NIR} + \text{VRE1}}
+
+    If you use this index in your research, please cite the following paper:
+
+    * https://agris.fao.org/agris-search/search.do?recordID=US201300795763
+
+    .. versionadded:: 0.3
+    """
+
+    def __init__(self, index_nir: int, index_vre1: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_nir: index of the NIR band, e.g. B8 in Sentinel 2 imagery
+            index_vre1: index of the Red Edge band, B5 in Sentinel 2 imagery
+        """
+        super().__init__(index_a=index_nir, index_b=index_vre1)

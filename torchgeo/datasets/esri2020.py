@@ -1,8 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""CDL dataset."""
+"""Esri 2020 Land Cover Dataset."""
 
+import abc
 import glob
 import os
 from typing import Any, Callable, Dict, Optional
@@ -13,50 +14,55 @@ from .geo import RasterDataset
 from .utils import download_url, extract_archive
 
 
-class CDL(RasterDataset):
-    """Cropland Data Layer (CDL) dataset.
+class Esri2020(RasterDataset, abc.ABC):
+    """Esri 2020 Land Cover Dataset.
 
-    The `Cropland Data Layer
-    <https://data.nal.usda.gov/dataset/cropscape-cropland-data-layer>`_, hosted on
-    `CropScape <https://nassgeodata.gmu.edu/CropScape/>`_, provides a raster,
-    geo-referenced, crop-specific land cover map for the continental United States. The
-    CDL also includes a crop mask layer and planting frequency layers, as well as
-    boundary, water and road layers. The Boundary Layer options provided are County,
-    Agricultural Statistics Districts (ASD), State, and Region. The data is created
-    annually using moderate resolution satellite imagery and extensive agricultural
-    ground truth.
+    The `Esri 2020 Land Cover dataset
+    <https://www.arcgis.com/home/item.html?id=fc92d38533d440078f17678ebc20e8e2>`_
+    consists of a global single band land use/land cover map derived from ESA
+    Sentinel-2 imagery at 10m resolution with a total of 10 classes.
+    It was published in July 2021 and used the Universal Transverse Mercator (UTM)
+    projection. This dataset only contains labels, no raw satellite imagery.
 
-    If you use this dataset in your research, please cite it using the following format:
+    The 10 classes are:
 
-    * https://www.nass.usda.gov/Research_and_Science/Cropland/sarsfaqs2.php#Section1_14.0
-    """  # noqa: E501
+    0. No Data
+    1. Water
+    2. Trees
+    3. Grass
+    4. Flooded Vegetation
+    5. Crops
+    6. Scrub/Shrub
+    7. Built Area
+    8. Bare Ground
+    9. Snow/Ice
+    10. Clouds
 
-    filename_glob = "*_30m_cdls.*"
-    filename_regex = r"""
-        ^(?P<date>\d+)
-        _30m_cdls\..*$
+    A more detailed explanation of the invidual classes can be found
+    `here <https://www.arcgis.com/home/item.html?id=fc92d38533d440078f17678ebc20e8e2>`_.
+
+    If you use this dataset please cite the following paper:
+
+    * https://ieeexplore.ieee.org/document/9553499
+
+    .. versionadded:: 0.3
     """
-    zipfile_glob = "*_30m_cdls.zip"
-    date_format = "%Y"
-    is_image = False
 
-    url = "https://www.nass.usda.gov/Research_and_Science/Cropland/Release/datasets/{}_30m_cdls.zip"  # noqa: E501
-    md5s = [
-        (2021, "27606eab08fe975aa138baad3e5dfcd8"),
-        (2020, "97b3b5fd62177c9ed857010bca146f36"),
-        (2019, "49d8052168c15c18f8b81ee21397b0bb"),
-        (2018, "c7a3061585131ef049bec8d06c6d521e"),
-        (2017, "dc8c1d7b255c9258d332dd8b23546c93"),
-        (2016, "bb4df1b2ee6cedcc12a7e5a4527fcf1b"),
-        (2015, "d17b4bb6ee7940af2c45d6854dafec09"),
-        (2014, "6e0fcc800bd9f090f543104db93bead8"),
-        (2013, "38df780d8b504659d837b4c53a51b3f7"),
-        (2012, "2f3b46e6e4d91c3b7e2a049ba1531abc"),
-        (2011, "dac7fe435c3c5a65f05846c715315460"),
-        (2010, "18c9a00f5981d5d07ace69e3e33ea105"),
-        (2009, "81a20629a4713de6efba2698ccb2aa3d"),
-        (2008, "e6aa3967e379b98fd30c26abe9696053"),
-    ]
+    is_image = False
+    filename_glob = "*_20200101-20210101.*"
+    filename_regex = r"""^
+        (?P<id>[0-9][0-9][A-Z])
+        _(?P<date>\d{8})
+        -(?P<processing_date>\d{8})
+    """
+
+    zipfile = "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip"
+    md5 = "4932855fcd00735a34b74b1f87db3df0"
+
+    url = (
+        "https://ai4edataeuwest.blob.core.windows.net/io-lulc/"
+        "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip"
+    )
 
     def __init__(
         self,
@@ -80,7 +86,7 @@ class CDL(RasterDataset):
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 after downloading files (may be slow)
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
@@ -100,14 +106,13 @@ class CDL(RasterDataset):
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        # Check if the extracted files already exist
+        # Check if the extracted file already exists
         pathname = os.path.join(self.root, "**", self.filename_glob)
-        for fname in glob.iglob(pathname, recursive=True):
-            if not fname.endswith(".zip"):
-                return
+        if glob.glob(pathname):
+            return
 
         # Check if the zip files have already been downloaded
-        pathname = os.path.join(self.root, self.zipfile_glob)
+        pathname = os.path.join(self.root, self.zipfile)
         if glob.glob(pathname):
             self._extract()
             return
@@ -126,13 +131,8 @@ class CDL(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        for year, md5 in self.md5s:
-            download_url(
-                self.url.format(year), self.root, md5=md5 if self.checksum else None
-            )
+        download_url(self.url, self.root, filename=self.zipfile, md5=self.md5)
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        pathname = os.path.join(self.root, self.zipfile_glob)
-        for zipfile in glob.iglob(pathname):
-            extract_archive(zipfile)
+        extract_archive(os.path.join(self.root, self.zipfile))
