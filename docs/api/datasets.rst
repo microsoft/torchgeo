@@ -16,7 +16,7 @@ Aster Global Digital Evaluation Model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: AsterGDEM
-    
+
 Canadian Building Footprints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -57,8 +57,14 @@ Esri2020
 
 .. autoclass:: Esri2020
 
+EUDEM
+^^^^^
+
+.. autoclass:: EUDEM
+
 GlobBiomass
 ^^^^^^^^^^^
+
 .. autoclass:: GlobBiomass
 
 Landsat

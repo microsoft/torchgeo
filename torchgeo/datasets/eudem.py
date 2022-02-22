@@ -7,7 +7,9 @@ import glob
 import os
 from typing import Any, Callable, Dict, Optional
 
+import matplotlib.pyplot as plt
 from rasterio.crs import CRS
+from torch import Tensor
 
 from .geo import RasterDataset
 from .utils import check_integrity, extract_archive
@@ -25,21 +27,27 @@ class EUDEM(RasterDataset):
     `here <https://land.copernicus.eu/user-corner/publications/eu-dem-flyer/view>`_.
 
     Dataset features:
+
     * DEMs at 25 m per pixel spatial resolution (~40,000x40,0000 px)
     * vertical accuracy of +/- 7 m RMSE
     * data fused from `ASTER GDEM
-     <https://lpdaac.usgs.gov/news/nasa-and-meti-release-aster-global-dem-version-3/>`_,
-     `SRTM <https://www2.jpl.nasa.gov/srtm/>`_ and Russian topomaps
+      <https://lpdaac.usgs.gov/news/nasa-and-meti-release-aster-global-dem-version-3/>`_,
+      `SRTM <https://www2.jpl.nasa.gov/srtm/>`_ and Russian topomaps
 
     Dataset format:
+
     * DEMs are single-channel tif files
+
+    If you use this dataset in your research, please give credit to:
+
+    * `Copernicus <https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1>`_
 
     .. versionadded:: 0.3
     """
 
     is_image = False
     filename_glob = "eu_dem_v11_*.TIF"
-    zipfile_glob = "eu_dem_v11_*[0-9].zip"
+    zipfile_glob = "eu_dem_v11_*[A-Z0-9].zip"
     filename_regex = r"""(?P<name>[eudem_v11]{10})_(?P<id>[A-Z0-9]{6})"""
 
     md5s = {
@@ -131,3 +139,48 @@ class EUDEM(RasterDataset):
             "either specify a different `root` directory or make sure you "
             "have manually downloaded the dataset as suggested in the documentation."
         )
+
+    def plot(  # type: ignore[override]
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`RasterDataset.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        mask = sample["mask"].squeeze()
+        ncols = 1
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            pred = sample["prediction"].squeeze()
+            ncols = 2
+
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
+
+        if showing_predictions:
+            axs[0].imshow(mask)
+            axs[0].axis("off")
+            axs[1].imshow(pred)
+            axs[1].axis("off")
+            if show_titles:
+                axs[0].set_title("Mask")
+                axs[1].set_title("Prediction")
+        else:
+            axs.imshow(mask)
+            axs.axis("off")
+            if show_titles:
+                axs.set_title("Mask")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
