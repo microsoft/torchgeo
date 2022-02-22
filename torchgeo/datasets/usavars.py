@@ -3,8 +3,9 @@
 
 import glob
 import os
-import pickle
-import shapely
+import pandas as pd
+
+from typing import Any, Dict, List
 
 from .utils import (
     download_url,
@@ -45,6 +46,37 @@ class USAVars:
 
         self._verify()
 
+        self.files = self._load_files()
+
+    def __len__(self) -> int:
+        """Return the number of data points in the dataset.
+        Returns:
+            length of the dataset
+        """
+        return len(self.files)
+
+    def _load_files(self) -> List[Dict[str, Any]]:
+        file_path = os.path.join(self.root, self.dirname, "uar")
+        files = os.listdir(file_path)
+
+        files = files[:10] # TODO: remove this, keeping temporarily because this func is very slow
+
+        # csvs = self.label_urls.keys() # only uar for now
+        csvs = ["treecover", "elevation", "population"]
+        labels_ds = [(lab, pd.read_csv(os.path.join(self.root, lab + ".csv"))) for lab in csvs]
+        samples = []
+        for f in files:
+            img_path = os.path.join(file_path, f)
+            samp = {"image": img_path}
+
+            id_ = f[5:-4]
+
+            for lab, ds in labels_ds:
+                samp[lab] = ds[ds["ID"] == id_][lab].values[0]
+
+            samples.append(samp)
+        return samples
+
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
         Raises:
@@ -83,7 +115,7 @@ class USAVars:
         download_url(
                 self.data_url,
                 self.root,
-                filename=self.zipfile
+                filename=self.zipfile,
                 md5=self.md5 if self.checksum else None,
         )
 
