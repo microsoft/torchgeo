@@ -14,15 +14,12 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import VisionDataset
-from .utils import (
-    download_url,
-    extract_archive,
-)
+from .utils import download_url, extract_archive
+
 
 class USAVars(VisionDataset):
     # TODO: complete this
-    """
-    """
+    """ """
     csv_prefix = "https://files.codeocean.com/files/verified/fa908bbc-11f9-4421-8bd3-72a4bf00427f_v2.0/data/int/applications/"
 
     data_url = "https://mosaiks.blob.core.windows.net/datasets/uar.zip"
@@ -32,23 +29,26 @@ class USAVars(VisionDataset):
     md5 = "677e89fd20e5dd0fe4d29b61827c2456"
 
     label_urls = {
-        "housing": csv_prefix + "housing/outcomes_sampled_housing_CONTUS_16_640_POP_100000_0.csv?download",
-        "income": csv_prefix + "income/outcomes_sampled_income_CONTUS_16_640_POP_100000_0.csv?download",
-        "roads": csv_prefix + "roads/outcomes_sampled_roads_CONTUS_16_640_POP_100000_0.csv?download",
-        "nightligths": csv_prefix + "nightlights/outcomes_sampled_nightlights_CONTUS_16_640_POP_100000_0.csv?download",
-        "population": csv_prefix + "population/outcomes_sampled_population_CONTUS_16_640_UAR_100000_0.csv?download",
-        "elevation": csv_prefix + "elevation/outcomes_sampled_elevation_CONTUS_16_640_UAR_100000_0.csv?download",
-        "treecover": csv_prefix + "treecover/outcomes_sampled_treecover_CONTUS_16_640_UAR_100000_0.csv?download",
+        "housing": csv_prefix
+        + "housing/outcomes_sampled_housing_CONTUS_16_640_POP_100000_0.csv?download",
+        "income": csv_prefix
+        + "income/outcomes_sampled_income_CONTUS_16_640_POP_100000_0.csv?download",
+        "roads": csv_prefix
+        + "roads/outcomes_sampled_roads_CONTUS_16_640_POP_100000_0.csv?download",
+        "nightligths": csv_prefix
+        + "nightlights/outcomes_sampled_nightlights_CONTUS_16_640_POP_100000_0.csv?download",
+        "population": csv_prefix
+        + "population/outcomes_sampled_population_CONTUS_16_640_UAR_100000_0.csv?download",
+        "elevation": csv_prefix
+        + "elevation/outcomes_sampled_elevation_CONTUS_16_640_UAR_100000_0.csv?download",
+        "treecover": csv_prefix
+        + "treecover/outcomes_sampled_treecover_CONTUS_16_640_UAR_100000_0.csv?download",
     }
 
     def __init__(
-        self,
-        root: str = "data",
-        download: bool = False,
-        checksum: bool = False,
+        self, root: str = "data", download: bool = False, checksum: bool = False
     ) -> None:
-        """Initialize a new USAVars dataset instance.
-        """
+        """Initialize a new USAVars dataset instance."""
 
         self.root = root
         self.download = download
@@ -83,11 +83,15 @@ class USAVars(VisionDataset):
         file_path = os.path.join(self.root, self.dirname, "uar")
         files = os.listdir(file_path)
 
-        files = files[:10] # TODO: remove this, keeping temporarily because this func is very slow
+        files = files[
+            :10
+        ]  # TODO: remove this, keeping temporarily because this func is very slow
 
         # csvs = self.label_urls.keys() # only uar for now
         csvs = ["treecover", "elevation", "population"]
-        labels_ds = [(lab, pd.read_csv(os.path.join(self.root, lab + ".csv"))) for lab in csvs]
+        labels_ds = [
+            (lab, pd.read_csv(os.path.join(self.root, lab + ".csv"))) for lab in csvs
+        ]
         samples = []
         for f in files:
             img_path = os.path.join(file_path, f)
@@ -137,23 +141,18 @@ class USAVars(VisionDataset):
 
     def _download(self) -> None:
         for f_name in self.label_urls:
-            download_url(
-                self.label_urls[f_name],
-                self.root,
-                filename=f_name + ".csv",
-            )
+            download_url(self.label_urls[f_name], self.root, filename=f_name + ".csv")
         download_url(
-                self.data_url,
-                self.root,
-                filename=self.zipfile,
-                md5=self.md5 if self.checksum else None,
+            self.data_url,
+            self.root,
+            filename=self.zipfile,
+            md5=self.md5 if self.checksum else None,
         )
 
     def _extract(self) -> None:
         src = os.path.join(self.root, self.zipfile)
         dst = os.path.join(self.root, self.dirname)
         extract_archive(src, dst)
-
 
     def plot(
         self,
@@ -172,9 +171,9 @@ class USAVars(VisionDataset):
             a matplotlib Figure with the rendered sample
         """
 
-        image = sample["image"][:3].numpy() # get RGB inds
+        image = sample["image"][:3].numpy()  # get RGB inds
         image = np.moveaxis(image, 0, 2)
-        
+
         fig, axs = plt.subplots(figsize=(10, 10))
         axs.imshow(image)
         axs.axis("off")
