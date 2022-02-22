@@ -3,16 +3,26 @@
 
 import glob
 import os
+from typing import Any, Dict, List, Optional, Union
+
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import rasterio
+import torch
+from matplotlib.figure import Figure
+from torch import Tensor
 
-from typing import Any, Dict, List
-
+from .geo import VisionDataset
 from .utils import (
     download_url,
     extract_archive,
 )
 
-class USAVars:
+class USAVars(VisionDataset):
+    # TODO: complete this
+    """
+    """
     csv_prefix = "https://files.codeocean.com/files/verified/fa908bbc-11f9-4421-8bd3-72a4bf00427f_v2.0/data/int/applications/"
 
     data_url = "https://mosaiks.blob.core.windows.net/datasets/uar.zip"
@@ -48,8 +58,22 @@ class USAVars:
 
         self.files = self._load_files()
 
+    def __getitem__(self, index: int) -> Dict[str, Union[Tensor, float]]:
+        """Return an index within the dataset.
+
+        Args:
+            index: index to return
+
+        Returns:
+            data and label at that index
+        """
+        sample = self.files[index]
+        sample["image"] = self._load_image(sample["image"])
+        return sample
+
     def __len__(self) -> int:
         """Return the number of data points in the dataset.
+
         Returns:
             length of the dataset
         """
@@ -76,6 +100,12 @@ class USAVars:
 
             samples.append(samp)
         return samples
+
+    def _load_image(self, path: str) -> Tensor:
+        with rasterio.open(path) as f:
+            array: "np.typing.NDArray[np.int_]" = f.read()
+            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            return tensor
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
@@ -123,3 +153,41 @@ class USAVars:
         src = os.path.join(self.root, self.zipfile)
         dst = os.path.join(self.root, self.dirname)
         extract_archive(src, dst)
+
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_labels: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_labels: flag indicating whether to show labels above panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+
+        image = sample["image"][:3].numpy() # get RGB inds
+        image = np.moveaxis(image, 0, 2)
+        
+        fig, axs = plt.subplots(figsize=(10, 10))
+        axs.imshow(image)
+        axs.axis("off")
+
+        if show_labels:
+            labels = [(lab, val) for lab, val in sample.items() if lab != "image"]
+            label_string = ""
+            for l, v in labels:
+                label_string += f"{l}={v} "
+
+            axs.set_title(label_string)
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
