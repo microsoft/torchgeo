@@ -18,6 +18,7 @@ class USAVars:
     dirname = "usavars"
     zipfile = dirname + ".zip"
 
+    md5 = "677e89fd20e5dd0fe4d29b61827c2456"
 
     label_urls = {
         "housing": csv_prefix + "housing/outcomes_sampled_housing_CONTUS_16_640_POP_100000_0.csv?download",
@@ -83,6 +84,7 @@ class USAVars:
                 self.data_url,
                 self.root,
                 filename=self.zipfile
+                md5=self.md5 if self.checksum else None,
         )
 
     def _extract(self) -> None:
