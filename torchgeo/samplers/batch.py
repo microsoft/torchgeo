@@ -10,10 +10,8 @@ from typing import Iterator, List, Optional, Tuple, Union
 from rtree.index import Index, Property
 from torch.utils.data import Sampler
 
-from torchgeo.datasets.geo import GeoDataset
-from torchgeo.datasets.utils import BoundingBox
-from torchgeo.samplers.constants import Units
-
+from ..datasets import BoundingBox, GeoDataset
+from .constants import Units
 from .utils import _to_tuple, get_random_bounding_box
 
 # https://github.com/pytorch/pytorch/issues/60979
@@ -74,7 +72,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         batch_size: int,
         length: int,
         roi: Optional[BoundingBox] = None,
-        units: Union[Units, int] = Units.PIXELS,
+        units: Units = Units.PIXELS,
     ) -> None:
         """Initialize a new Sampler instance.
 
@@ -87,12 +85,12 @@ class RandomBatchGeoSampler(BatchGeoSampler):
 
         Args:
             dataset: dataset to index from
-            size: dimensions of each :term:`patch` in units of CRS
+            size: dimensions of each :term:`patch`
             batch_size: number of samples per batch
             length: number of samples per epoch
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
-            units: defines if `size` is in pixels or in CRS units.
+            units: defines if ``size`` is in pixel or CRS units
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)

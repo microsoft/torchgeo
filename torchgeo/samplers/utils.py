@@ -6,8 +6,8 @@
 import random
 from typing import Tuple, Union
 
-from torchgeo.datasets.utils import BoundingBox
-from torchgeo.samplers.constants import Units
+from ..datasets import BoundingBox
+from .constants import Units
 
 
 def _to_tuple(value: Union[Tuple[float, float], float]) -> Tuple[float, float]:
@@ -29,7 +29,7 @@ def get_random_bounding_box(
     bounds: BoundingBox,
     size: Union[Tuple[float, float], float],
     res: float,
-    units: Union[Units, int],
+    units: Units,
 ) -> BoundingBox:
     """Returns a random bounding box within a given bounding box.
 
