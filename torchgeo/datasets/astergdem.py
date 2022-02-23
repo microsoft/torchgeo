@@ -15,9 +15,9 @@ from .geo import RasterDataset
 
 
 class AsterGDEM(RasterDataset):
-    """AsterGDEM Dataset.
+    """Aster Global Digital Evaluation Model Dataset.
 
-    The `AsterGDEM
+    The `Aster Global Digital Evaluation Model
     <https://lpdaac.usgs.gov/products/astgtmv003/>`_
     dataset is a Digital Elevation Model (DEM) on a global scale.
     The dataset can be downloaded from the
