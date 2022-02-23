@@ -19,7 +19,7 @@ from .utils import download_url, extract_archive
 
 class USAVars(VisionDataset):
     """USAVars dataset.
-        
+
     Dataset format:
     * images are 4-channel tifs
     * labels are singular float values
@@ -32,11 +32,12 @@ class USAVars(VisionDataset):
     - income per houshold
     - road length
     - housing price
-        
+
     .. versionadded:: 0.3
     """
+
     csv_prefix = "https://files.codeocean.com/files/verified/"
-    + "fa908bbc-11f9-4421-8bd3-72a4bf00427f_v2.0/data/int/applications/"
+    +"fa908bbc-11f9-4421-8bd3-72a4bf00427f_v2.0/data/int/applications/"
 
     data_url = "https://mosaiks.blob.core.windows.net/datasets/uar.zip"
     dirname = "usavars"
