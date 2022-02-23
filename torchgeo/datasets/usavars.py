@@ -65,10 +65,14 @@ class USAVars(VisionDataset):
     }
 
     def __init__(
-        self, root: str = "data", download: bool = False, checksum: bool = False
+        self, root: str = "data",
+        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        download: bool = False,
+        checksum: bool = False
     ) -> None:
         """Initialize a new USAVars dataset instance."""
         self.root = root
+        self.transforms = transforms
         self.download = download
         self.checksum = checksum
 
@@ -87,6 +91,10 @@ class USAVars(VisionDataset):
         """
         sample = self.files[index]
         sample["image"] = self._load_image(sample["image"])
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
         return sample
 
     def __len__(self) -> int:
