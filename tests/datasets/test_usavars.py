@@ -14,7 +14,9 @@ from _pytest.monkeypatch import MonkeyPatch
 from matplotlib import pyplot as plt
 from torch.utils.data import ConcatDataset
 
+import torchgeo.datasets.utils
 from torchgeo.datasets import USAVars
+
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
@@ -39,41 +41,28 @@ class TestUSAVars:
         monkeypatch.setattr(USAVars, "data_url", data_url)  # type: ignore[attr-defined]
 
         label_urls = {
-            "elevation": os.path.join(
-                "tests",
-                "data",
-                "usavars",
-                "elevation.csv",
-            ),
-            "population": os.path.join(
-                "tests",
-                "data",
-                "usavars",
-                "population.csv",
-            ),
-            "treecover": os.path.join(
-                "tests",
-                "data",
-                "usavars",
-                "treecover.csv",
-            ),
+            "elevation": os.path.join("tests", "data", "usavars", "elevation.csv"),
+            "population": os.path.join("tests", "data", "usavars", "population.csv"),
+            "treecover": os.path.join("tests", "data", "usavars", "treecover.csv"),
         }
-        monkeypatch.setattr(USAVars, "label_urls", label_urls)  # type: ignore[attr-defined]
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+                USAVars,
+                "label_urls",
+                label_urls,
+        )
 
         root = str(tmp_path)
         transforms = nn.Identity()  # type: ignore[attr-defined]
 
-        return USAVars(
-            root, transforms=transformsdownload=True, checksum=True
-        )
+        return USAVars(root, transforms=transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: USAVars) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert x["image"].ndim == 4
-	assert len(x.keys()) == 4 # image, elevation, population, treecover
-	assert x["image"].shape[0] == 4 # R, G, B, Inf
+        assert len(x.keys()) == 4  # image, elevation, population, treecover
+        assert x["image"].shape[0] == 4  # R, G, B, Inf
 
     def test_len(self, dataset: USAVars) -> None:
         assert len(dataset) == 2
@@ -81,7 +70,7 @@ class TestUSAVars:
     def test_add(self, dataset: USAVars) -> None:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
-    
+
     def test_already_extracted(self, dataset: USAVars) -> None:
         USAVars(root=dataset.root, download=True)
 
