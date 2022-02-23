@@ -67,8 +67,8 @@ National Agriculture Imagery Program (NAIP)
 
 .. autoclass:: NAIP
 
-OpenBuildings
-^^^^^^^^^^^^^
+Open Buildings
+^^^^^^^^^^^^^^
 
 .. autoclass:: OpenBuildings
     

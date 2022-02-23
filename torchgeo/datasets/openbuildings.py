@@ -3,7 +3,6 @@
 
 """Open Buildings datasets."""
 
-import abc
 import glob
 import json
 import os
@@ -26,10 +25,10 @@ from .geo import VectorDataset
 from .utils import BoundingBox, check_integrity
 
 
-class OpenBuildings(VectorDataset, abc.ABC):
-    r"""OpenBuildings dataset.
+class OpenBuildings(VectorDataset):
+    r"""Open Buildings dataset.
 
-    The `OpenBuildings
+    The `Open Buildings
     <https://sites.research.google/open-buildings/#download>`_ dataset
     consists of computer generated building detections across the African continent.
 
@@ -297,7 +296,6 @@ class OpenBuildings(VectorDataset, abc.ABC):
         Returns:
             sample of image/mask and metadata for the given query. If there are
             not matching shapes found within the query, an empty raster is returned
-
 
         Raises:
             IndexError: if query is not found in the index
