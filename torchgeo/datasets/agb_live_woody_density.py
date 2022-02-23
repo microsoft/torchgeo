@@ -17,7 +17,7 @@ from .utils import download_url
 
 
 class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
-    """AbovegroundLiveWoodyBiomassDensity dataset.
+    """Aboveground Live Woody Biomass Density dataset.
 
     The `AbovegroundLiveWoodyBiomassDensity dataset
     <https://data.globalforestwatch.org/datasets/gfw::aboveground-live-woody
