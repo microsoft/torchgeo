@@ -234,7 +234,7 @@ class BeninSmallHolderCashews(VisionDataset):
             index: index to return
 
         Returns:
-            a dict containing image, mask, tile_transform, crs and metadata at index.
+            a dict containing image, mask, tile_transform, crs, and metadata at index.
         """
         y, x = self.chips_metadata[index]
 
