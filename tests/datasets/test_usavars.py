@@ -17,6 +17,8 @@ from torch.utils.data import ConcatDataset
 import torchgeo.datasets.utils
 from torchgeo.datasets import USAVars
 
+pytest.importorskip("pandas", minversion="0.19.1")
+
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
