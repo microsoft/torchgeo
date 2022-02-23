@@ -40,8 +40,8 @@ class AsterGDEM(RasterDataset):
     is_image = False
     filename_glob = "ASTGTMV003_*_dem*"
     filename_regex = r"""(
-        ?P<name>[ASTGTMV003]{10})
-        _(?P<id>[A-Z0-9]{7}
+        (?P<name>[ASTGTMV003]{10})
+        _(?P<id>[A-Z0-9]{7})
         _(?P<data>[a-z]{3})*)"""
 
     def __init__(
