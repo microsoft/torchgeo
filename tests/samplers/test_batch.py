@@ -76,7 +76,7 @@ class TestBatchGeoSampler:
 
 class TestRandomBatchGeoSampler:
     @pytest.fixture(scope="class")
-    def dataset(self):
+    def dataset(self) -> CustomGeoDataset:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 100, 200, 300, 400, 500))
         ds.index.insert(1, (0, 100, 200, 300, 400, 500))
