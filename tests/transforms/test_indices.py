@@ -93,4 +93,3 @@ def test_append_normalized_difference_indices(
     tr = index(0, 0)
     output = tr(sample)
     assert output["image"].shape == (c + 1, h, w)
-
