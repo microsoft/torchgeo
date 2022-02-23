@@ -65,7 +65,7 @@ def test_append_index_batch(batch: Dict[str, Tensor]) -> None:
     assert output["image"].shape == (b, c + 1, h, w)
 
 
-def test_append_index_batch(batch: Dict[str, Tensor]) -> None:
+def test_append_triband_index_batch(batch: Dict[str, Tensor]) -> None:
     b, c, h, w = batch["image"].shape
     tr = AppendTriBandNormalizedDifferenceIndex(index_a=0, index_b=0, index_c=0)
     output = tr(batch)
@@ -93,3 +93,4 @@ def test_append_normalized_difference_indices(
     tr = index(0, 0)
     output = tr(sample)
     assert output["image"].shape == (c + 1, h, w)
+
