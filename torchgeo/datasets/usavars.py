@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -81,7 +81,7 @@ class USAVars(VisionDataset):
 
         self.files = self._load_files()
 
-    def __getitem__(self, index: int) -> Dict[str, Union[Tensor, float]]:
+    def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -91,12 +91,17 @@ class USAVars(VisionDataset):
             data and label at that index
         """
         sample = self.files[index]
-        sample["image"] = self._load_image(sample["image"])
+        tensor_sample = {}
+        tensor_sample["image"] = self._load_image(sample["image"])
+
+        keys = [key for key in sample.keys() if key != "image"]
+        for key in keys:
+            tensor_sample[key] = Tensor([sample[key]])
 
         if self.transforms is not None:
-            sample = self.transforms(sample)
+            tensor_sample = self.transforms(tensor_sample)
 
-        return sample
+        return tensor_sample
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.
@@ -183,7 +188,7 @@ class USAVars(VisionDataset):
 
     def plot(
         self,
-        sample: Dict[str, Union[Tensor, float]],
+        sample: Dict[str, Tensor],
         show_labels: bool = True,
         suptitle: Optional[str] = None,
     ) -> Figure:
@@ -197,8 +202,7 @@ class USAVars(VisionDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image: Tensor = torch.Tensor(sample["image"])
-        image = image[:3].numpy()  # get RGB inds
+        image = sample["image"][:3].numpy()  # get RGB inds
         image = np.moveaxis(image, 0, 2)
 
         fig, axs = plt.subplots(figsize=(10, 10))

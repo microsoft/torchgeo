@@ -23,6 +23,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestUSAVars:
+    @pytest.fixture()
     def dataset(
         self,
         monkeypatch: Generator[MonkeyPatch, None, None],
@@ -58,7 +59,7 @@ class TestUSAVars:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
-        assert x["image"].ndim == 4
+        assert x["image"].ndim == 3
         assert len(x.keys()) == 4  # image, elevation, population, treecover
         assert x["image"].shape[0] == 4  # R, G, B, Inf
 
@@ -76,6 +77,9 @@ class TestUSAVars:
         pathname = os.path.join("tests", "data", "usavars", "usavars.zip")
         root = str(tmp_path)
         shutil.copy(pathname, root)
+        for csv in ["elevation.csv", "population.csv", "treecover.csv"]:
+            shutil.copy(os.path.join("tests", "data", "usavars", csv), root)
+
         USAVars(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
