@@ -221,10 +221,7 @@ class USAVars(VisionDataset):
             labels = [(lab, val) for lab, val in sample.items() if lab != "image"]
             label_string = ""
             for lab, val in labels:
-                print(round(val[0].item(), 2))
-
-                label_string += f"{lab}={val} "
-
+                label_string += f"{lab}={round(val[0].item(), 2)} "
             axs.set_title(label_string)
 
         if suptitle is not None:
