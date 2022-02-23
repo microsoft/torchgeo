@@ -153,7 +153,7 @@ class Esri2020(RasterDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
-            
+
         .. versionchanged:: 0.3
             Method now takes a sample dict, not a Tensor. Additionally, it is possible
             to show subplot titles and/or use a custom suptitle.
