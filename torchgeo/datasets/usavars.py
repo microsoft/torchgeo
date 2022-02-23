@@ -79,6 +79,13 @@ class USAVars(VisionDataset):
 
         self._verify()
 
+        try:
+            import pandas as pd  # noqa: F401
+        except ImportError:
+            raise ImportError(
+                "pandas is not installed and is required to use this dataset"
+            )
+
         self.files = self._load_files()
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
@@ -213,6 +220,8 @@ class USAVars(VisionDataset):
             labels = [(lab, val) for lab, val in sample.items() if lab != "image"]
             label_string = ""
             for lab, val in labels:
+                print(val[0].item())
+
                 label_string += f"{lab}={val} "
 
             axs.set_title(label_string)
