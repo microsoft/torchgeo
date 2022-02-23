@@ -10,8 +10,6 @@ python:
    - requirements: docs/requirements.txt
    - method: pip
      path: .
-     extra_requirements:
-     - train
 
 # Configuration for Sphinx documentation
 sphinx:
