@@ -9,7 +9,6 @@ from typing import Any, Callable, Dict, List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import rasterio
 import torch
 from matplotlib.figure import Figure
