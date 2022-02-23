@@ -183,7 +183,7 @@ class USAVars(VisionDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Union[Tensor, float]],
         show_labels: bool = True,
         suptitle: Optional[str] = None,
     ) -> Figure:
@@ -197,7 +197,8 @@ class USAVars(VisionDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = sample["image"][:3].numpy()  # get RGB inds
+        image: Tensor = torch.Tensor(sample["image"])
+        image = image[:3].numpy()  # get RGB inds
         image = np.moveaxis(image, 0, 2)
 
         fig, axs = plt.subplots(figsize=(10, 10))
