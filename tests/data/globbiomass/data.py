@@ -17,7 +17,10 @@ random.seed(0)
 SIZE = 64
 
 
-files = [{"image": "N00E020_agb.tif"}, {"image": "N00E020_agb_err.tif"}]
+files = {
+    "agb": ["N00E020_agb.tif", "N00E020_agb_err.tif"],
+    "gsv": ["N00E020_gsv.tif", "N00E020_gsv_err.tif"],
+}
 
 
 def create_file(path: str, dtype: str, num_channels: int) -> None:
@@ -40,24 +43,24 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
 
 
 if __name__ == "__main__":
-    zipfilename = "N00E020_agb.zip"
-    files_to_zip = []
 
-    for file_dict in files:
-        path = file_dict["image"]
-        # remove old data
-        if os.path.exists(path):
-            os.remove(path)
-        # Create mask file
-        create_file(path, dtype="int32", num_channels=1)
-        files_to_zip.append(path)
+    for measurement, file_paths in files.items():
+        zipfilename = "N00E020_{}.zip".format(measurement)
+        files_to_zip = []
+        for path in file_paths:
+            # remove old data
+            if os.path.exists(path):
+                os.remove(path)
+            # Create mask file
+            create_file(path, dtype="int32", num_channels=1)
+            files_to_zip.append(path)
 
-    # Compress data
-    with zipfile.ZipFile(zipfilename, "w") as zip:
-        for file in files_to_zip:
-            zip.write(file, arcname=file)
+        # Compress data
+        with zipfile.ZipFile(zipfilename, "w") as zip:
+            for file in files_to_zip:
+                zip.write(file, arcname=file)
 
-    # Compute checksums
-    with open(zipfilename, "rb") as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f"{zipfilename}: {md5}")
+        # Compute checksums
+        with open(zipfilename, "rb") as f:
+            md5 = hashlib.md5(f.read()).hexdigest()
+            print(f"{zipfilename}: {md5}")

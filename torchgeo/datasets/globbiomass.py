@@ -154,7 +154,7 @@ class GlobBiomass(RasterDataset):
         )
         self.measurement = measurement
 
-        self.filename_glob = "*0_{}*[!zip]".format(self.measurement)
+        self.filename_glob = "*0_{}*.tif".format(self.measurement)
         self.zipfile_glob = "*0_{}.zip".format(self.measurement)
 
         self._verify()

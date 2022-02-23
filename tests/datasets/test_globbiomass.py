@@ -25,11 +25,17 @@ class TestGlobBiomass:
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> GlobBiomass:
-        zipfile = "N00E020_agb.zip"
+        shutil.copy(
+            os.path.join("tests", "data", "globbiomass", "N00E020_agb.zip"), tmp_path
+        )
+        shutil.copy(
+            os.path.join("tests", "data", "globbiomass", "N00E020_gsv.zip"), tmp_path
+        )
 
-        shutil.copy(os.path.join("tests", "data", "globbiomass", zipfile), tmp_path)
-
-        md5s = {zipfile: "7b7b981149aa31a099f453fef32b644f"}
+        md5s = {
+            "N00E020_agb.zip": "22e11817ede672a2a76b8a5588bc4bf4",
+            "N00E020_gsv.zip": "e79bf051ac5d659cb21c566c53ce7b98",
+        }
 
         monkeypatch.setattr(GlobBiomass, "md5s", md5s)  # type: ignore[attr-defined]
         root = str(tmp_path)
