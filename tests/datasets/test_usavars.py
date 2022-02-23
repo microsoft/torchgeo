@@ -88,6 +88,18 @@ class TestUSAVars:
         with pytest.raises(RuntimeError, match="Dataset not found"):
             USAVars(str(tmp_path))
 
+    @pytest.fixture(params=["pandas"])
+    def test_mock_missing_module(
+        self, dataset: USAVars, mock_missing_module: str
+    ) -> None:
+        package = mock_missing_module
+        if package == "pandas":
+            with pytest.raises(
+                ImportError,
+                match=f"{package} is not installed and is required to use this dataset",
+            ):
+                USAVars(dataset.root)
+
     def test_plot(self, dataset: USAVars) -> None:
         dataset.plot(dataset[0], suptitle="Test")
         plt.close()
