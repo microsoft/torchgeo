@@ -18,9 +18,25 @@ from .utils import download_url, extract_archive
 
 
 class USAVars(VisionDataset):
-    # TODO: complete this
-    """ """
-    csv_prefix = "https://files.codeocean.com/files/verified/fa908bbc-11f9-4421-8bd3-72a4bf00427f_v2.0/data/int/applications/"
+    """USAVars dataset.
+        
+    Dataset format:
+    * images are 4-channel tifs
+    * labels are singular float values
+
+    Dataset labels:
+    - tree cover
+    - elevation
+    - population density
+    - nighttime lights
+    - income per houshold
+    - road length
+    - housing price
+        
+    .. versionadded:: 0.3
+    """
+    csv_prefix = "https://files.codeocean.com/files/verified/"
+    + "fa908bbc-11f9-4421-8bd3-72a4bf00427f_v2.0/data/int/applications/"
 
     data_url = "https://mosaiks.blob.core.windows.net/datasets/uar.zip"
     dirname = "usavars"
