@@ -37,30 +37,26 @@ class USAVars(VisionDataset):
     .. versionadded:: 0.3
     """
 
-    csv_prefix = (
+    url_prefix = (
         "https://files.codeocean.com/files/verified/"
-        + "fa908bbc-11f9-4421-8bd3-72a4bf00427f_v2.0/data/int/applications/"
+        + "fa908bbc-11f9-4421-8bd3-72a4bf00427f_v2.0/data/int/applications"
     )
-    csv_postfix = "_CONTUS_16_640_POP_100000_0.csv?download"
+    pop_csv_suffix = "CONTUS_16_640_POP_100000_0.csv?download"
 
     data_url = "https://mosaiks.blob.core.windows.net/datasets/uar.zip"
     dirname = "usavars"
-    zipfile = dirname + ".zip"
+    zipfile = "uar.zip"
 
     md5 = "677e89fd20e5dd0fe4d29b61827c2456"
 
     label_urls = {
-        "housing": csv_prefix + "housing/outcomes_sampled_housing" + csv_postfix,
-        "income": csv_prefix + "income/outcomes_sampled_income" + csv_postfix,
-        "roads": csv_prefix + "roads/outcomes_sampled_roads" + csv_postfix,
-        "nightligths": csv_prefix
-        + "nightlights/outcomes_sampled_nightlights"
-        + csv_postfix,
-        "population": csv_prefix
-        + "population/outcomes_sampled_population"
-        + csv_postfix,
-        "elevation": csv_prefix + "elevation/outcomes_sampled_elevation" + csv_postfix,
-        "treecover": csv_prefix + "treecover/outcomes_sampled_treecover" + csv_postfix,
+        "housing": f"{url_prefix}/housing/outcomes_sampled_housing_{pop_csv_suffix}",
+        "income": f"{url_prefix}/income/outcomes_sampled_income_{pop_csv_suffix}",
+        "roads": f"{url_prefix}/roads/outcomes_sampled_roads_{pop_csv_suffix}",
+        "nightligths": f"{url_prefix}/nightlights/outcomes_sampled_nightlights_{pop_csv_suffix}",
+        "population": f"{url_prefix}/population/outcomes_sampled_population_{pop_csv_suffix}",
+        "elevation": f"{url_prefix}/elevation/outcomes_sampled_elevation_{pop_csv_suffix}",
+        "treecover": f"{url_prefix}/treecover/outcomes_sampled_treecover_{pop_csv_suffix}",
     }
 
     def __init__(
@@ -182,6 +178,7 @@ class USAVars(VisionDataset):
     def _download(self) -> None:
         for f_name in self.label_urls:
             download_url(self.label_urls[f_name], self.root, filename=f_name + ".csv")
+
         download_url(
             self.data_url,
             self.root,
