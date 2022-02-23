@@ -38,6 +38,7 @@ class USAVars(VisionDataset):
 
     csv_prefix = "https://files.codeocean.com/files/verified/"
     +"fa908bbc-11f9-4421-8bd3-72a4bf00427f_v2.0/data/int/applications/"
+    csv_postfix = "_CONTUS_16_640_POP_100000_0.csv?download"
 
     data_url = "https://mosaiks.blob.core.windows.net/datasets/uar.zip"
     dirname = "usavars"
@@ -46,20 +47,17 @@ class USAVars(VisionDataset):
     md5 = "677e89fd20e5dd0fe4d29b61827c2456"
 
     label_urls = {
-        "housing": csv_prefix
-        + "housing/outcomes_sampled_housing_CONTUS_16_640_POP_100000_0.csv?download",
-        "income": csv_prefix
-        + "income/outcomes_sampled_income_CONTUS_16_640_POP_100000_0.csv?download",
-        "roads": csv_prefix
-        + "roads/outcomes_sampled_roads_CONTUS_16_640_POP_100000_0.csv?download",
+        "housing": csv_prefix + "housing/outcomes_sampled_housing" + csv_postfix,
+        "income": csv_prefix + "income/outcomes_sampled_income" + csv_postfix,
+        "roads": csv_prefix + "roads/outcomes_sampled_roads" + csv_postfix,
         "nightligths": csv_prefix
-        + "nightlights/outcomes_sampled_nightlights_CONTUS_16_640_POP_100000_0.csv?download",
+        + "nightlights/outcomes_sampled_nightlights"
+        + csv_postfix,
         "population": csv_prefix
-        + "population/outcomes_sampled_population_CONTUS_16_640_UAR_100000_0.csv?download",
-        "elevation": csv_prefix
-        + "elevation/outcomes_sampled_elevation_CONTUS_16_640_UAR_100000_0.csv?download",
-        "treecover": csv_prefix
-        + "treecover/outcomes_sampled_treecover_CONTUS_16_640_UAR_100000_0.csv?download",
+        + "population/outcomes_sampled_population"
+        + csv_postfix,
+        "elevation": csv_prefix + "elevation/outcomes_sampled_elevation" + csv_postfix,
+        "treecover": csv_prefix + "treecover/outcomes_sampled_treecover" + csv_postfix,
     }
 
     def __init__(
@@ -198,8 +196,8 @@ class USAVars(VisionDataset):
         if show_labels:
             labels = [(lab, val) for lab, val in sample.items() if lab != "image"]
             label_string = ""
-            for l, v in labels:
-                label_string += f"{l}={v} "
+            for lab, val in labels:
+                label_string += f"{lab}={val} "
 
             axs.set_title(label_string)
 
