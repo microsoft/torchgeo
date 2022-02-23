@@ -1,10 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import builtins
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
+from typing import Any, Generator
 
 import pytest
 import torch
@@ -89,6 +90,22 @@ class TestUSAVars:
             USAVars(str(tmp_path))
 
     @pytest.fixture(params=["pandas"])
+    def mock_missing_module(
+        self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
+    ) -> str:
+        import_orig = builtins.__import__
+        package = str(request.param)
+
+        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
+            if name == package:
+                raise ImportError()
+            return import_orig(name, *args, **kwargs)
+
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            builtins, "__import__", mocked_import
+        )
+        return package
+
     def test_mock_missing_module(
         self, dataset: USAVars, mock_missing_module: str
     ) -> None:
