@@ -38,8 +38,8 @@ class USAVars(VisionDataset):
     .. versionadded:: 0.3
     """
 
-    csv_prefix = "https://files.codeocean.com/files/verified/"
-    +"fa908bbc-11f9-4421-8bd3-72a4bf00427f_v2.0/data/int/applications/"
+    csv_prefix = ("https://files.codeocean.com/files/verified/" +
+    "fa908bbc-11f9-4421-8bd3-72a4bf00427f_v2.0/data/int/applications/")
     csv_postfix = "_CONTUS_16_640_POP_100000_0.csv?download"
 
     data_url = "https://mosaiks.blob.core.windows.net/datasets/uar.zip"
