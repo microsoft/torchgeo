@@ -13,5 +13,8 @@ class Units(Enum):
     :class:`~torchgeo.samplers.BatchGeoSampler`.
     """
 
+    #: Units in number of pixels
     PIXELS = auto()
+
+    #: Units of :term:`coordinate reference system (CRS)`
     CRS = auto()
