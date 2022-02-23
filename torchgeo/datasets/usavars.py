@@ -118,6 +118,8 @@ class USAVars(VisionDataset):
         return len(self.files)
 
     def _load_files(self) -> List[Dict[str, Any]]:
+        import pandas as pd
+
         file_path = os.path.join(self.root, self.dirname, "uar")
         files = os.listdir(file_path)
 
@@ -219,7 +221,7 @@ class USAVars(VisionDataset):
             labels = [(lab, val) for lab, val in sample.items() if lab != "image"]
             label_string = ""
             for lab, val in labels:
-                print(val[0].item())
+                print(round(val[0].item(), 2))
 
                 label_string += f"{lab}={val} "
 
