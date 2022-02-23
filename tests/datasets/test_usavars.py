@@ -74,7 +74,7 @@ class TestUSAVars:
         USAVars(root=dataset.root, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join("tests", "data", "usavars", "savars.zip")
+        pathname = os.path.join("tests", "data", "usavars", "usavars.zip")
         root = str(tmp_path)
         shutil.copy(pathname, root)
         for csv in ["elevation.csv", "population.csv", "treecover.csv"]:
