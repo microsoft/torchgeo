@@ -45,7 +45,7 @@ class USAVars(VisionDataset):
 
     data_url = "https://mosaiks.blob.core.windows.net/datasets/uar.zip"
     dirname = "usavars"
-    zipfile = "uar.zip"
+    zipfile = "usavars.zip"
 
     md5 = "677e89fd20e5dd0fe4d29b61827c2456"
 
