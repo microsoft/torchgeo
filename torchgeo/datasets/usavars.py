@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+"""USAVars dataset."""
+
 import glob
 import os
 from typing import Any, Dict, List, Optional, Union
@@ -64,7 +66,6 @@ class USAVars(VisionDataset):
         self, root: str = "data", download: bool = False, checksum: bool = False
     ) -> None:
         """Initialize a new USAVars dataset instance."""
-
         self.root = root
         self.download = download
         self.checksum = checksum
@@ -128,10 +129,10 @@ class USAVars(VisionDataset):
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
+
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-
         # Check if the extracted files already exist
         pathname = os.path.join(self.root, self.dirname)
         if glob.glob(pathname):
@@ -185,7 +186,6 @@ class USAVars(VisionDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-
         image = sample["image"][:3].numpy()  # get RGB inds
         image = np.moveaxis(image, 0, 2)
 
