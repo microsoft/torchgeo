@@ -46,9 +46,7 @@ class TestUSAVars:
             "treecover": os.path.join("tests", "data", "usavars", "treecover.csv"),
         }
         monkeypatch.setattr(  # type: ignore[attr-defined]
-                USAVars,
-                "label_urls",
-                label_urls,
+            USAVars, "label_urls", label_urls
         )
 
         root = str(tmp_path)
