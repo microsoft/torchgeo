@@ -42,19 +42,19 @@ class CDL(RasterDataset):
 
     url = "https://www.nass.usda.gov/Research_and_Science/Cropland/Release/datasets/{}_30m_cdls.zip"  # noqa: E501
     md5s = [
-        (2020, "97b3b5fd62177c9ed857010bca146f36"),
-        (2019, "49d8052168c15c18f8b81ee21397b0bb"),
-        (2018, "c7a3061585131ef049bec8d06c6d521e"),
-        (2017, "dc8c1d7b255c9258d332dd8b23546c93"),
-        (2016, "bb4df1b2ee6cedcc12a7e5a4527fcf1b"),
-        (2015, "d17b4bb6ee7940af2c45d6854dafec09"),
-        (2014, "6e0fcc800bd9f090f543104db93bead8"),
-        (2013, "38df780d8b504659d837b4c53a51b3f7"),
-        (2012, "2f3b46e6e4d91c3b7e2a049ba1531abc"),
-        (2011, "dac7fe435c3c5a65f05846c715315460"),
-        (2010, "18c9a00f5981d5d07ace69e3e33ea105"),
-        (2009, "81a20629a4713de6efba2698ccb2aa3d"),
-        (2008, "e6aa3967e379b98fd30c26abe9696053"),
+        (2020, "483ee48c503aa81b684225179b402d42"),
+        (2019, "a5168a2fc93acbeaa93e24eee3d8c696"),
+        (2018, "4ad0d7802a9bb751685eb239b0fa8609"),
+        (2017, "d173f942a70f94622f9b8290e7548684"),
+        (2016, "fddc5dff0bccc617d70a12864c993e51"),
+        (2015, "2e92038ab62ba75e1687f60eecbdd055"),
+        (2014, "50bdf9da84ebd0457ddd9e0bf9bbcc1f"),
+        (2013, "7be66c650416dc7c4a945dd7fd93c5b7"),
+        (2012, "286504ff0512e9fe1a1975c635a1bec2"),
+        (2011, "517bad1a99beec45d90abb651fb1f0e3"),
+        (2010, "98d354c5a62c9e3e40ccadce265c721c"),
+        (2009, "663c8a5fdd92ebfc0d6bee008586d19a"),
+        (2008, "0610f2f17ab60a9fbb3baeb7543993a4"),
     ]
 
     def __init__(
