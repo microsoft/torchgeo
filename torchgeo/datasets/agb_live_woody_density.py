@@ -19,7 +19,7 @@ from .utils import download_url
 class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
     """Aboveground Live Woody Biomass Density dataset.
 
-    The `AbovegroundLiveWoodyBiomassDensity dataset
+    The `Aboveground Live Woody Biomass Density dataset
     <https://data.globalforestwatch.org/datasets/gfw::aboveground-live-woody
     -biomass-density/about>`_
     is a global-scale, wall-to-wall map of aboveground biomass at ~30m resolution
