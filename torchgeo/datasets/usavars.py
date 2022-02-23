@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -65,10 +65,11 @@ class USAVars(VisionDataset):
     }
 
     def __init__(
-        self, root: str = "data",
+        self,
+        root: str = "data",
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
-        checksum: bool = False
+        checksum: bool = False,
     ) -> None:
         """Initialize a new USAVars dataset instance."""
         self.root = root
