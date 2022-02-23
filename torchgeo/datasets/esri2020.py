@@ -3,7 +3,6 @@
 
 """Esri 2020 Land Cover Dataset."""
 
-import abc
 import glob
 import os
 from typing import Any, Callable, Dict, Optional
@@ -16,7 +15,7 @@ from .geo import RasterDataset
 from .utils import download_url, extract_archive
 
 
-class Esri2020(RasterDataset, abc.ABC):
+class Esri2020(RasterDataset):
     """Esri 2020 Land Cover Dataset.
 
     The `Esri 2020 Land Cover dataset
@@ -154,6 +153,10 @@ class Esri2020(RasterDataset, abc.ABC):
 
         Returns:
             a matplotlib Figure with the rendered sample
+            
+        .. versionchanged:: 0.3
+            Method now takes a sample dict, not a Tensor. Additionally, it is possible
+            to show subplot titles and/or use a custom suptitle.
         """
         mask = sample["mask"].squeeze()
         ncols = 1
