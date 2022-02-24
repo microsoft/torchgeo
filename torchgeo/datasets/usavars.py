@@ -45,7 +45,6 @@ class USAVars(VisionDataset):
     uar_csv_suffix = "CONTUS_16_640_UAR_100000_0.csv?download"
 
     data_url = "https://mosaiks.blob.core.windows.net/datasets/uar.zip"
-    dirname = "usavars"
     zipfile = "usavars.zip"
 
     md5 = "677e89fd20e5dd0fe4d29b61827c2456"
@@ -117,7 +116,7 @@ class USAVars(VisionDataset):
     def _load_files(self) -> List[Dict[str, Any]]:
         import pandas as pd
 
-        file_path = os.path.join(self.root, self.dirname, "uar")
+        file_path = os.path.join(self.root, "uar")
         files = os.listdir(file_path)
 
         files = files[
@@ -156,7 +155,7 @@ class USAVars(VisionDataset):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         # Check if the extracted files already exist
-        pathname = os.path.join(self.root, self.dirname)
+        pathname = os.path.join(self.root, "uar")
         if glob.glob(pathname):
             return
 
@@ -189,9 +188,7 @@ class USAVars(VisionDataset):
         )
 
     def _extract(self) -> None:
-        src = os.path.join(self.root, self.zipfile)
-        dst = os.path.join(self.root, self.dirname)
-        extract_archive(src, dst)
+        extract_archive(os.path.join(self.root, self.zipfile))
 
     def plot(
         self,
