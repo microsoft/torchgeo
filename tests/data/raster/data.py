@@ -31,7 +31,7 @@ def generate_test_data(fn: str) -> str:
     }
 
     with rasterio.open(fn, "w", **profile) as f:
-        f.write(np.random.randint(0, 2**32 - 1, size=(1, 4, 4)))
+        f.write(np.random.randint(0, 256, size=(1, 4, 4)))
 
     md5: str = calculate_md5(fn)
     return md5
