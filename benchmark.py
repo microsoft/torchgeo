@@ -77,15 +77,16 @@ def set_up_parser() -> argparse.ArgumentParser:
         "--patch-size",
         default=224,
         type=int,
-        help="height/width of each patch",
-        metavar="SIZE",
+        help="height/width of each patch in pixels",
+        metavar="PIXELS",
     )
     parser.add_argument(
         "-s",
         "--stride",
         default=112,
         type=int,
-        help="sampling stride for GridGeoSampler",
+        help="sampling stride for GridGeoSampler in pixels",
+        metavar="PIXELS",
     )
     parser.add_argument(
         "-w",
@@ -139,15 +140,11 @@ def main(args: argparse.Namespace) -> None:
         length = args.num_batches * args.batch_size
         num_batches = args.num_batches
 
-    # Convert from pixel coords to CRS coords
-    size = args.patch_size * cdl.res
-    stride = args.stride * cdl.res
-
     samplers = [
-        RandomGeoSampler(landsat, size=size, length=length),
-        GridGeoSampler(landsat, size=size, stride=stride),
+        RandomGeoSampler(landsat, size=args.patch_size, length=length),
+        GridGeoSampler(landsat, size=args.patch_size, stride=args.stride),
         RandomBatchGeoSampler(
-            landsat, size=size, batch_size=args.batch_size, length=length
+            landsat, size=args.patch_size, batch_size=args.batch_size, length=length
         ),
     ]
 
