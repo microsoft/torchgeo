@@ -87,6 +87,12 @@ class USAVars(VisionDataset):
 
         self.files = self._load_files()
 
+        # csvs = self.label_urls.keys() # only uar for now
+        csvs = ["treecover", "elevation", "population"]
+        self.label_dfs = [
+            (lab, pd.read_csv(os.path.join(self.root, lab + ".csv"))) for lab in csvs
+        ]
+
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
 
@@ -96,18 +102,18 @@ class USAVars(VisionDataset):
         Returns:
             data and label at that index
         """
-        sample = self.files[index]
-        tensor_sample = {}
-        tensor_sample["image"] = self._load_image(sample["image"])
+        tif_file = self.files[index]
+        id_ = tif_file[5:-4]
 
-        keys = [key for key in sample.keys() if key != "image"]
-        for key in keys:
-            tensor_sample[key] = Tensor([sample[key]])
+        sample = {}
+        for lab, ds in self.label_dfs:
+            sample[lab] = Tensor([ds[ds["ID"] == id_][lab].values[0]])
+        sample["image"] = self._load_image(os.path.join(self.root, "uar", tif_file))
 
         if self.transforms is not None:
-            tensor_sample = self.transforms(tensor_sample)
+            sample = self.transforms(sample)
 
-        return tensor_sample
+        return sample
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.
@@ -117,34 +123,10 @@ class USAVars(VisionDataset):
         """
         return len(self.files)
 
-    def _load_files(self) -> List[Dict[str, Any]]:
-        import pandas as pd
-
+    def _load_files(self) -> List[str]:
         file_path = os.path.join(self.root, "uar")
         files = os.listdir(file_path)
-
-        files = files[
-            :10
-        ]  # TODO: remove this, keeping temporarily because this func is very slow
-
-        # csvs = self.label_urls.keys() # only uar for now
-        csvs = ["treecover", "elevation", "population"]
-        labels_ds = [
-            (lab, pd.read_csv(os.path.join(self.root, lab + ".csv"))) for lab in csvs
-        ]
-
-        samples = []
-        for f in files:
-            img_path = os.path.join(file_path, f)
-            samp = {"image": img_path}
-
-            id_ = f[5:-4]
-
-            for lab, ds in labels_ds:
-                samp[lab] = ds[ds["ID"] == id_][lab].values[0]
-
-            samples.append(samp)
-        return samples
+        return files
 
     def _load_image(self, path: str) -> Tensor:
         with rasterio.open(path) as f:
