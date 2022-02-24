@@ -53,10 +53,14 @@ class USAVars(VisionDataset):
         "housing": f"{url_prefix}/housing/outcomes_sampled_housing_{pop_csv_suffix}",
         "income": f"{url_prefix}/income/outcomes_sampled_income_{pop_csv_suffix}",
         "roads": f"{url_prefix}/roads/outcomes_sampled_roads_{pop_csv_suffix}",
-        "nightligths": f"{url_prefix}/nightlights/outcomes_sampled_nightlights_{pop_csv_suffix}",
-        "population": f"{url_prefix}/population/outcomes_sampled_population_{uar_csv_suffix}",
-        "elevation": f"{url_prefix}/elevation/outcomes_sampled_elevation_{uar_csv_suffix}",
-        "treecover": f"{url_prefix}/treecover/outcomes_sampled_treecover_{uar_csv_suffix}",
+        "nightligths": f"{url_prefix}/nightlights/"
+        + f"outcomes_sampled_nightlights_{pop_csv_suffix}",
+        "population": f"{url_prefix}/population/"
+        + f"outcomes_sampled_population_{uar_csv_suffix}",
+        "elevation": f"{url_prefix}/elevation/"
+        + f"outcomes_sampled_elevation_{uar_csv_suffix}",
+        "treecover": f"{url_prefix}/treecover/"
+        + f"outcomes_sampled_treecover_{uar_csv_suffix}",
     }
 
     def __init__(
