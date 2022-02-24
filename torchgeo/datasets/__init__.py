@@ -4,6 +4,7 @@
 """TorchGeo datasets."""
 
 from .advance import ADVANCE
+from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
 from .cbf import CanadianBuildingFootprints
@@ -85,6 +86,7 @@ from .zuericrop import ZueriCrop
 
 __all__ = (
     # GeoDataset
+    "AsterGDEM",
     "CanadianBuildingFootprints",
     "CDL",
     "Chesapeake",
