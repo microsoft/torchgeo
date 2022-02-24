@@ -234,12 +234,12 @@ class BeninSmallHolderCashews(VisionDataset):
             index: index to return
 
         Returns:
-            a dict containing image, mask, tile_transform, crs, and metadata at index.
+            a dict containing image, mask, transform, crs, and metadata at index.
         """
         y, x = self.chips_metadata[index]
 
-        img, tile_transform, crs = self._load_all_imagery(self.bands)
-        labels = self._load_mask(tile_transform)
+        img, transform, crs = self._load_all_imagery(self.bands)
+        labels = self._load_mask(transform)
 
         img = img[:, :, y : y + self.chip_size, x : x + self.chip_size]
         labels = labels[y : y + self.chip_size, x : x + self.chip_size]
@@ -249,7 +249,7 @@ class BeninSmallHolderCashews(VisionDataset):
             "mask": labels,
             "x": torch.tensor(x),  # type: ignore[attr-defined]
             "y": torch.tensor(y),  # type: ignore[attr-defined]
-            "tile_transform": tile_transform,
+            "transform": transform,
             "crs": crs,
         }
 
@@ -296,7 +296,7 @@ class BeninSmallHolderCashews(VisionDataset):
             imagery of shape (70, number of bands, 1186, 1122) where 70 is the number
             of points in time, 1186 is the tile height, and 1122 is the tile width
             rasterio affine transform, mapping pixel coordinates to geo coordinates
-            coordinate reference system of tile_transform
+            coordinate reference system of transform
         """
         if self.verbose:
             print("Loading all imagery")
@@ -310,12 +310,10 @@ class BeninSmallHolderCashews(VisionDataset):
         )
 
         for date_index, date in enumerate(self.dates):
-            single_scene, tile_transform, crs = self._load_single_scene(
-                date, self.bands
-            )
+            single_scene, transform, crs = self._load_single_scene(date, self.bands)
             img[date_index] = single_scene
 
-        return img, tile_transform, crs
+        return img, transform, crs
 
     @lru_cache(maxsize=128)
     def _load_single_scene(
@@ -332,7 +330,7 @@ class BeninSmallHolderCashews(VisionDataset):
         Returns:
             Tensor containing a single image tile, rasterio affine transform,
             mapping pixel coordinates to geo coordinates, and coordinate
-            reference system of tile_transform.
+            reference system of transform.
 
         Raises:
             AssertionError: if  ``date`` is invalid
@@ -356,15 +354,15 @@ class BeninSmallHolderCashews(VisionDataset):
                 f"{band_name}.tif",
             )
             with rasterio.open(filepath) as src:
-                tile_transform = src.transform  # same transform for every bands
+                transform = src.transform  # same transform for every bands
                 crs = src.crs
                 array = src.read().astype(np.float32)
                 img[band_index] = torch.from_numpy(array)  # type: ignore[attr-defined]
 
-        return img, tile_transform, crs
+        return img, transform, crs
 
     @lru_cache()
-    def _load_mask(self, tile_transform: rasterio.Affine) -> Tensor:
+    def _load_mask(self, transform: rasterio.Affine) -> Tensor:
         """Rasterizes the dataset's labels (in geojson format)."""
         # Create a mask layer out of the geojson
         mask_geojson_fn = os.path.join(
@@ -382,7 +380,7 @@ class BeninSmallHolderCashews(VisionDataset):
             labels,
             out_shape=(self.tile_height, self.tile_width),
             fill=0,  # nodata value
-            transform=tile_transform,
+            transform=transform,
             all_touched=False,
             dtype=np.uint8,
         )
