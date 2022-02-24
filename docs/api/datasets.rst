@@ -12,6 +12,11 @@ Geospatial Datasets
 
 :class:`GeoDataset` is designed for datasets that contain geospatial information, like latitude, longitude, coordinate system, and projection. Datasets containing this kind of information can be combined using :class:`IntersectionDataset` and :class:`UnionDataset`.
 
+Aster Global Digital Evaluation Model
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: AsterGDEM
+    
 Canadian Building Footprints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
