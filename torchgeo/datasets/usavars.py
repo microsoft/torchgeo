@@ -42,6 +42,7 @@ class USAVars(VisionDataset):
         + "fa908bbc-11f9-4421-8bd3-72a4bf00427f_v2.0/data/int/applications"
     )
     pop_csv_suffix = "CONTUS_16_640_POP_100000_0.csv?download"
+    uar_csv_suffix = "CONTUS_16_640_UAR_100000_0.csv?download"
 
     data_url = "https://mosaiks.blob.core.windows.net/datasets/uar.zip"
     dirname = "usavars"
@@ -54,9 +55,9 @@ class USAVars(VisionDataset):
         "income": f"{url_prefix}/income/outcomes_sampled_income_{pop_csv_suffix}",
         "roads": f"{url_prefix}/roads/outcomes_sampled_roads_{pop_csv_suffix}",
         "nightligths": f"{url_prefix}/nightlights/outcomes_sampled_nightlights_{pop_csv_suffix}",
-        "population": f"{url_prefix}/population/outcomes_sampled_population_{pop_csv_suffix}",
-        "elevation": f"{url_prefix}/elevation/outcomes_sampled_elevation_{pop_csv_suffix}",
-        "treecover": f"{url_prefix}/treecover/outcomes_sampled_treecover_{pop_csv_suffix}",
+        "population": f"{url_prefix}/population/outcomes_sampled_population_{uar_csv_suffix}",
+        "elevation": f"{url_prefix}/elevation/outcomes_sampled_elevation_{uar_csv_suffix}",
+        "treecover": f"{url_prefix}/treecover/outcomes_sampled_treecover_{uar_csv_suffix}",
     }
 
     def __init__(
@@ -128,6 +129,7 @@ class USAVars(VisionDataset):
         labels_ds = [
             (lab, pd.read_csv(os.path.join(self.root, lab + ".csv"))) for lab in csvs
         ]
+
         samples = []
         for f in files:
             img_path = os.path.join(file_path, f)
