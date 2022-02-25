@@ -16,6 +16,7 @@ data_dir = "uar"
 labels = ["elevation", "population", "treecover"]
 SIZE = 3
 
+
 def create_file(path: str, dtype: str, num_channels: int) -> None:
     profile = {}
     profile["driver"] = "GTiff"
@@ -33,6 +34,7 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
     )
     src = rasterio.open(path, "w", **profile)
     src.write(Z)
+
 
 # Remove old data
 filename = f"{data_dir}.zip"
@@ -55,7 +57,7 @@ columns = [["ID", "lon", "lat", lab] for lab in labels]
 fake_vals = [["0,0", 0.0, 0.0, 0.0], ["0,1", 0.1, 0.1, 1.0]]
 for lab, cols in zip(labels, columns):
     df = pd.DataFrame(fake_vals, columns=cols)
-    df.to_csv(lab+".csv")
+    df.to_csv(lab + ".csv")
 
 # Compress data
 shutil.make_archive(data_dir, "zip", ".", data_dir)
