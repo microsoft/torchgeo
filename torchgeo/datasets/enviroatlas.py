@@ -47,7 +47,7 @@ class EnviroAtlas(GeoDataset):
 
     url = "https://zenodo.org/record/5778193/files/enviroatlas_lotp.zip?download=1"
     filename = "enviroatlas_lotp.zip"
-    md5 = "6142f8d1ebfc7f8ad888337f0683dc7a"
+    md5 = "bfe601be21c7c001315fc6154be8ef14"
 
     crs = CRS.from_epsg(3857)
     res = 1
