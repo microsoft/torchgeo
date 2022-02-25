@@ -8,7 +8,6 @@ from typing import Any, Callable, Dict, Optional
 
 import matplotlib.pyplot as plt
 from rasterio.crs import CRS
-from torch import Tensor
 
 from .geo import VectorDataset
 from .utils import check_integrity, download_and_extract_archive
@@ -125,7 +124,7 @@ class CanadianBuildingFootprints(VectorDataset):
 
     def plot(  # type: ignore[override]
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
