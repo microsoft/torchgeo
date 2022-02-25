@@ -9,7 +9,6 @@ from typing import Any, Callable, Dict, Optional
 
 import matplotlib.pyplot as plt
 from rasterio.crs import CRS
-from torch import Tensor
 
 from .geo import RasterDataset
 from .utils import download_url, extract_archive
@@ -140,7 +139,7 @@ class Esri2020(RasterDataset):
 
     def plot(  # type: ignore[override]
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
@@ -153,10 +152,6 @@ class Esri2020(RasterDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
-
-        .. versionchanged:: 0.3
-            Method now takes a sample dict, not a Tensor. Additionally, it is possible
-            to show subplot titles and/or use a custom suptitle.
         """
         mask = sample["mask"].squeeze()
         ncols = 1

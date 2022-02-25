@@ -32,7 +32,7 @@ class TestEsri2020:
         zipfile = "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip"
         monkeypatch.setattr(Esri2020, "zipfile", zipfile)  # type: ignore[attr-defined]
 
-        md5 = "d3aa0fc0af9ca1b0bd76465995874598"
+        md5 = "34aec55538694171c7b605b0cc0d0138"
         monkeypatch.setattr(Esri2020, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join(
             "tests",
@@ -44,17 +44,6 @@ class TestEsri2020:
         root = str(tmp_path)
         transforms = nn.Identity()  # type: ignore[attr-defined]
         return Esri2020(root, transforms=transforms, download=True, checksum=True)
-
-    def test_already_downloaded(self, tmp_path: Path) -> None:
-        filename = "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01"
-        url = os.path.join("tests", "data", "esri2020", filename + ".zip")
-        root = str(tmp_path)
-        download_url(url, root)
-        new_zip_path = os.path.join(root, filename + ".zip")
-        dest = os.path.join(root, filename)
-        os.makedirs(dest)
-        shutil.unpack_archive(new_zip_path, dest)
-        Esri2020(root)
 
     def test_getitem(self, dataset: Esri2020) -> None:
         x = dataset[dataset.bounds]
