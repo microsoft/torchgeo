@@ -1,16 +1,18 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import builtins
 import json
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
+from typing import Any, Generator
 
 import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
+from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 
@@ -41,6 +43,34 @@ class TestOpenBuildings:
         monkeypatch.setattr(OpenBuildings, "md5s", md5s)  # type: ignore[attr-defined]
         transforms = nn.Identity()  # type: ignore[attr-defined]
         return OpenBuildings(root=root, transforms=transforms)
+
+    @pytest.fixture(params=["pandas"])
+    def mock_missing_module(
+        self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
+    ) -> str:
+        import_orig = builtins.__import__
+        package = str(request.param)
+
+        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
+            if name == package:
+                raise ImportError()
+            return import_orig(name, *args, **kwargs)
+
+        monkeypatch.setattr(  # type: ignore[attr-defined]
+            builtins, "__import__", mocked_import
+        )
+        return package
+
+    def test_mock_missing_module(
+        self, dataset: OpenBuildings, mock_missing_module: str
+    ) -> None:
+        package = mock_missing_module
+
+        with pytest.raises(
+            ImportError,
+            match=f"{package} is not installed and is required to use this dataset",
+        ):
+            OpenBuildings(root=dataset.root)
 
     def test_no_shapes_to_rasterize(
         self, dataset: OpenBuildings, tmp_path: Path

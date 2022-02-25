@@ -12,14 +12,12 @@ from typing import Any, Callable, Dict, List, Optional
 import fiona
 import fiona.transform
 import matplotlib.pyplot as plt
-import pandas as pd
 import rasterio
 import shapely
 import shapely.wkt as wkt
 import torch
 from rasterio.crs import CRS
 from rtree.index import Index, Property
-from torch import Tensor
 
 from .geo import VectorDataset
 from .utils import BoundingBox, check_integrity
@@ -234,6 +232,13 @@ class OpenBuildings(VectorDataset):
 
         self._verify()
 
+        try:
+            import pandas as pd  # noqa: F401
+        except ImportError:
+            raise ImportError(
+                "pandas is not installed and is required to use this dataset"
+            )
+
         # Create an R-tree to index the dataset using the polygon centroid as bounds
         self.index = Index(interleaved=False, properties=Property(dimension=3))
 
@@ -346,6 +351,8 @@ class OpenBuildings(VectorDataset):
             List with all polygons from all hit filepaths
 
         """
+        import pandas as pd
+
         # We need to know the bounding box of the query in the source CRS
         (minx, maxx), (miny, maxy) = fiona.transform.transform(
             self._crs.to_dict(),
@@ -380,7 +387,7 @@ class OpenBuildings(VectorDataset):
         x = json.dumps(shapely.geometry.mapping(wkt.loads(x)))
         x = json.loads(x.replace("'", '"'))
         return fiona.transform.transform_geom(
-            self._source_crs.to_dict(), self.crs.to_dict(), x
+            self._source_crs.to_dict(), self._crs.to_dict(), x
         )
 
     def _verify(self) -> None:
@@ -417,7 +424,7 @@ class OpenBuildings(VectorDataset):
 
     def plot(  # type: ignore[override]
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
