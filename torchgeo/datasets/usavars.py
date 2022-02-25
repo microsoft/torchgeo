@@ -70,7 +70,19 @@ class USAVars(VisionDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new USAVars dataset instance."""
+        """Initialize a new USAVars dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            download: if True, download dataset and store it in the root directory
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
+        """
         self.root = root
         self.transforms = transforms
         self.download = download
