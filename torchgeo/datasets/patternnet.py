@@ -4,7 +4,7 @@
 """PatternNet dataset."""
 
 import os
-from typing import Callable, Dict, Optional, cast
+from typing import Any, Callable, Dict, Optional, cast
 
 import matplotlib.pyplot as plt
 from torch import Tensor
@@ -147,7 +147,7 @@ class PatternNet(VisionClassificationDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

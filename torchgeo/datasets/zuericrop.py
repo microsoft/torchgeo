@@ -4,7 +4,7 @@
 """ZueriCrop dataset."""
 
 import os
-from typing import Callable, Dict, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, Optional, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import torch
@@ -264,7 +264,7 @@ class ZueriCrop(VisionDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Any],
         time_step: int = 0,
         show_titles: bool = True,
         suptitle: Optional[str] = None,
