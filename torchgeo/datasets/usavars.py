@@ -21,6 +21,10 @@ from .utils import download_url, extract_archive
 class USAVars(VisionDataset):
     """USAVars dataset.
 
+    The USAVars dataset is a compilation of regression tasks
+    on NAIP imagery at lon, lat points sourced from:
+    https://doi.org/10.1038/s41467-021-24638-z
+
     Dataset format:
     * images are 4-channel tifs
     * labels are singular float values
