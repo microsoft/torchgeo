@@ -176,7 +176,7 @@ class USAVars(VisionDataset):
             return
 
         # Check if the zip files have already been downloaded
-        pathname = os.path.join(self.root, self.dirname+".zip")
+        pathname = os.path.join(self.root, self.dirname + ".zip")
         # if glob.glob(pathname) and len(glob.glob(csv_pathname)) == 7:
         if glob.glob(pathname) and len(glob.glob(csv_pathname)) == 3:
             self._extract()
@@ -197,14 +197,10 @@ class USAVars(VisionDataset):
         for f_name in self.label_urls:
             download_url(self.label_urls[f_name], self.root, filename=f_name + ".csv")
 
-        download_url(
-            self.data_url,
-            self.root,
-            md5=self.md5 if self.checksum else None,
-        )
+        download_url(self.data_url, self.root, md5=self.md5 if self.checksum else None)
 
     def _extract(self) -> None:
-        extract_archive(os.path.join(self.root, self.dirname+".zip"))
+        extract_archive(os.path.join(self.root, self.dirname + ".zip"))
 
     def plot(
         self,
