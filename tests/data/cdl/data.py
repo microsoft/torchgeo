@@ -37,7 +37,7 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
 
 
 directories = ["2020_30m_cdls", "2021_30m_cdls"]
-raster_extensions = [[".img"], [".tif", ".tif.ovr"]]
+raster_extensions = [[".tif", ".tif.ovr"], [".tif", ".tif.ovr"]]
 
 
 if __name__ == "__main__":
