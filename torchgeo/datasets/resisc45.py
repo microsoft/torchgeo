@@ -4,7 +4,7 @@
 """RESISC45 dataset."""
 
 import os
-from typing import Callable, Dict, Optional, cast
+from typing import Any, Callable, Dict, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -243,7 +243,7 @@ class RESISC45(VisionClassificationDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
