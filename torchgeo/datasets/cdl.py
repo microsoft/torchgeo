@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Tuple
 
 from rasterio.crs import CRS
 
@@ -56,6 +56,8 @@ class CDL(RasterDataset):
         (2009, "663c8a5fdd92ebfc0d6bee008586d19a"),
         (2008, "0610f2f17ab60a9fbb3baeb7543993a4"),
     ]
+
+    cmap: Dict[int, Tuple[int, int, int, int]] = {}
 
     def __init__(
         self,
