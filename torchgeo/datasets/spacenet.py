@@ -295,7 +295,7 @@ class SpaceNet(VisionDataset, abc.ABC):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> Figure:
@@ -942,7 +942,7 @@ class SpaceNet5(SpaceNet):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> Figure:
