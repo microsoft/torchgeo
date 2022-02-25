@@ -57,8 +57,8 @@ Esri2020
 
 .. autoclass:: Esri2020
 
-EUDEM
-^^^^^
+EU-DEM
+^^^^^^
 
 .. autoclass:: EUDEM
 
