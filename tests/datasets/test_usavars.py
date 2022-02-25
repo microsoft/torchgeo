@@ -41,7 +41,7 @@ class TestUSAVars:
         md5 = "b504580a00bdc27097d5421dec50481b"
         monkeypatch.setattr(USAVars, "md5", md5)  # type: ignore[attr-defined]
 
-        data_url = os.path.join("tests", "data", "usavars", "usavars.zip")
+        data_url = os.path.join("tests", "data", "usavars", "uar.zip")
         monkeypatch.setattr(USAVars, "data_url", data_url)  # type: ignore[attr-defined]
 
         label_urls = {
@@ -77,7 +77,7 @@ class TestUSAVars:
         USAVars(root=dataset.root, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join("tests", "data", "usavars", "usavars.zip")
+        pathname = os.path.join("tests", "data", "usavars", "uar.zip")
         root = str(tmp_path)
         shutil.copy(pathname, root)
         for csv in ["elevation.csv", "population.csv", "treecover.csv"]:
