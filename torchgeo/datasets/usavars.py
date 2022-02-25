@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -63,9 +63,13 @@ class USAVars(VisionDataset):
         + f"outcomes_sampled_treecover_{uar_csv_suffix}",
     }
 
+    # ALL_LABELS = label_urls.keys()
+    ALL_LABELS = ["treecover", "elevation", "population"]
+
     def __init__(
         self,
         root: str = "data",
+        labels: Sequence[str] = ALL_LABELS,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -84,6 +88,7 @@ class USAVars(VisionDataset):
                 don't match
         """
         self.root = root
+        self.labels = labels
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
@@ -99,12 +104,15 @@ class USAVars(VisionDataset):
 
         self.files = self._load_files()
 
-        # csvs = self.label_urls.keys() # only uar for now
-        csvs = ["treecover", "elevation", "population"]
-        self.label_dfs = [
-            (lab, pd.read_csv(os.path.join(self.root, lab + ".csv"), index_col="ID"))
-            for lab in csvs
-        ]
+        self.label_dfs = dict(
+            [
+                (
+                    lab,
+                    pd.read_csv(os.path.join(self.root, lab + ".csv"), index_col="ID"),
+                )
+                for lab in self.labels
+            ]
+        )
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
@@ -118,10 +126,12 @@ class USAVars(VisionDataset):
         tif_file = self.files[index]
         id_ = tif_file[5:-4]
 
-        sample = {}
-        for lab, ds in self.label_dfs:
-            sample[lab] = Tensor([ds.loc[id_][lab]])
-        sample["image"] = self._load_image(os.path.join(self.root, "uar", tif_file))
+        sample = {
+            "labels": Tensor(
+                [self.label_dfs[lab].loc[id_][lab] for lab in self.labels]
+            ),
+            "image": self._load_image(os.path.join(self.root, "uar", tif_file)),
+        }
 
         if self.transforms is not None:
             sample = self.transforms(sample)
