@@ -17,7 +17,7 @@ from .utils import check_integrity, extract_archive
 class EUDEM(RasterDataset):
     """European Digital Elevation Model (EU-DEM) Dataset.
 
-    The `EUDEM
+    The `EU-DEM
     <https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1?tab=mapview>`_
     dataset is a Digital Elevation Model of reference for the entire European region.
     The dataset can be downloaded from this `website
