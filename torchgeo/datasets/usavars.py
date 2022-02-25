@@ -102,7 +102,8 @@ class USAVars(VisionDataset):
         # csvs = self.label_urls.keys() # only uar for now
         csvs = ["treecover", "elevation", "population"]
         self.label_dfs = [
-            (lab, pd.read_csv(os.path.join(self.root, lab + ".csv"))) for lab in csvs
+            (lab, pd.read_csv(os.path.join(self.root, lab + ".csv"), index_col="ID"))
+            for lab in csvs
         ]
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
@@ -119,7 +120,7 @@ class USAVars(VisionDataset):
 
         sample = {}
         for lab, ds in self.label_dfs:
-            sample[lab] = Tensor([ds[ds["ID"] == id_][lab].values[0]])
+            sample[lab] = Tensor([ds.loc[id_][lab]])
         sample["image"] = self._load_image(os.path.join(self.root, "uar", tif_file))
 
         if self.transforms is not None:
