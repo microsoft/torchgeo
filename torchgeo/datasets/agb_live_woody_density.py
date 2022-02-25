@@ -135,7 +135,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
     def plot(  # type: ignore[override]
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
