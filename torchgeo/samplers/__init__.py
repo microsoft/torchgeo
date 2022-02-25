@@ -4,6 +4,7 @@
 """TorchGeo samplers."""
 
 from .batch import BatchGeoSampler, RandomBatchGeoSampler
+from .constants import Units
 from .single import GeoSampler, GridGeoSampler, RandomGeoSampler
 
 __all__ = (
@@ -15,6 +16,8 @@ __all__ = (
     # Base classes
     "GeoSampler",
     "BatchGeoSampler",
+    # Constants
+    "Units",
 )
 
 # https://stackoverflow.com/questions/40018681

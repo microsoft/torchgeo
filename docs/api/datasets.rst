@@ -17,6 +17,11 @@ Aboveground Live Woody Biomass Density
 
 .. autoclass:: AbovegroundLiveWoodyBiomassDensity
 
+Aster Global Digital Evaluation Model
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: AsterGDEM
+
 Canadian Building Footprints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
