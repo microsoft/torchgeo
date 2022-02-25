@@ -63,7 +63,7 @@ class TestUSAVars:
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert x["image"].ndim == 3
-        assert len(x.keys()) == 4  # image, elevation, population, treecover
+        assert len(x.keys()) == 2  # image, elevation, population, treecover
         assert x["image"].shape[0] == 4  # R, G, B, Inf
 
     def test_len(self, dataset: USAVars) -> None:
