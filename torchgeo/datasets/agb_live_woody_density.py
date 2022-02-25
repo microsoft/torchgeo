@@ -10,7 +10,6 @@ from typing import Any, Callable, Dict, Optional
 
 import matplotlib.pyplot as plt
 from rasterio.crs import CRS
-from torch import Tensor
 
 from .geo import RasterDataset
 from .utils import download_url
