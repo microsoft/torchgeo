@@ -47,7 +47,6 @@ class TestGlobBiomass:
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
-        assert isinstance(x["error_mask"], torch.Tensor)
 
     def test_already_extracted(self, dataset: GlobBiomass) -> None:
         GlobBiomass(root=dataset.root)

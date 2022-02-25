@@ -8,8 +8,8 @@ import os
 from typing import Any, Callable, Dict, Optional
 
 import matplotlib.pyplot as plt
+import torch
 from rasterio.crs import CRS
-from torch import Tensor
 
 from .geo import RasterDataset
 from .utils import BoundingBox, check_integrity, extract_archive
@@ -46,6 +46,7 @@ class GlobBiomass(RasterDataset):
     """
 
     is_image = False
+
     filename_regex = r"""^
         (?P<tile>[0-9A-Z]*)
         _(?P<measurement>[a-z]{3})
@@ -168,9 +169,8 @@ class GlobBiomass(RasterDataset):
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
-            sample at index consisting of measurement mask with key 'mask',
-            standard error under 'error_mask' key, crs under 'crs' and
-            query bbox under 'bbox'
+            sample at index consisting of measurement mask with 2 channels,
+            where the first is the measurement and the second the error map
 
         Raises:
             IndexError: if query is not found in the index
@@ -189,12 +189,9 @@ class GlobBiomass(RasterDataset):
         std_error_paths = [f for f in filepaths if "err" in f]
         std_err_mask = self._merge_files(std_error_paths, query)
 
-        sample = {
-            "mask": mask,
-            "error_mask": std_err_mask,
-            "crs": self.crs,
-            "bbox": query,
-        }
+        mask = torch.cat((mask, std_err_mask), dim=0)  # type: ignore[attr-defined]
+
+        sample = {"mask": mask, "crs": self.crs, "bbox": query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -230,7 +227,7 @@ class GlobBiomass(RasterDataset):
 
     def plot(  # type: ignore[override]
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
@@ -244,12 +241,13 @@ class GlobBiomass(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample["mask"].permute(1, 2, 0)
-        error_mask = sample["error_mask"].permute(1, 2, 0)
+        tensor = sample["mask"]
+        mask = tensor[0, ...]
+        error_mask = tensor[1, ...]
 
         showing_predictions = "prediction" in sample
         if showing_predictions:
-            pred = sample["prediction"].permute(1, 2, 0)
+            pred = sample["prediction"][0, ...]
             ncols = 3
         else:
             ncols = 2
