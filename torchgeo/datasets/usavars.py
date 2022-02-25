@@ -49,7 +49,7 @@ class USAVars(VisionDataset):
     uar_csv_suffix = "CONTUS_16_640_UAR_100000_0.csv?download"
 
     data_url = "https://mosaiks.blob.core.windows.net/datasets/uar.zip"
-    zipfile = "usavars.zip"
+    dirname = "uar"
 
     md5 = "677e89fd20e5dd0fe4d29b61827c2456"
 
@@ -176,7 +176,7 @@ class USAVars(VisionDataset):
             return
 
         # Check if the zip files have already been downloaded
-        pathname = os.path.join(self.root, self.zipfile)
+        pathname = os.path.join(self.root, self.dirname+".zip")
         # if glob.glob(pathname) and len(glob.glob(csv_pathname)) == 7:
         if glob.glob(pathname) and len(glob.glob(csv_pathname)) == 3:
             self._extract()
@@ -200,12 +200,11 @@ class USAVars(VisionDataset):
         download_url(
             self.data_url,
             self.root,
-            filename=self.zipfile,
             md5=self.md5 if self.checksum else None,
         )
 
     def _extract(self) -> None:
-        extract_archive(os.path.join(self.root, self.zipfile))
+        extract_archive(os.path.join(self.root, self.dirname+".zip"))
 
     def plot(
         self,
