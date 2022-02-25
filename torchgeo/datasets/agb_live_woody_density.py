@@ -52,9 +52,10 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
     base_filename = "Aboveground_Live_Woody_Biomass_Density.geojson"
 
     filename_glob = "*N_*E.*"
-    filename_regex = (
-        r"""^(?P<latitude>[0-9][0-9][A-Z])_(?P<longitude>[0-9][0-9][0-9][A-Z])*"""
-    )
+    filename_regex = r"""^
+    (?P<latitude>[0-9][0-9][A-Z])_
+    (?P<longitude>[0-9][0-9][0-9][A-Z])*
+    """
 
     def __init__(
         self,
