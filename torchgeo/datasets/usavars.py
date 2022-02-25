@@ -34,6 +34,10 @@ class USAVars(VisionDataset):
     - road length
     - housing price
 
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://doi.org/10.1038/s41467-021-24638-z
+
     .. versionadded:: 0.3
     """
 
