@@ -23,7 +23,7 @@ class EUDEM(RasterDataset):
     The dataset can be downloaded from this `website
     <https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1?tab=mapview>`_
     after making an account. A dataset factsheet is available
-    `here <https://land.copernicus.eu/user-corner/publications/eu-dem-flyer/view>`_.
+    `here <https://land.copernicus.eu/user-corner/publications/eu-dem-flyer/view>`__.
 
     Dataset features:
 
