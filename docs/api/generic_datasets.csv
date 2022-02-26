@@ -1,0 +1,7 @@
+Dataset,Type
+Landsat,Imagery
+Sentinel,Imagery
+NAIP,Imagery
+Cropland Data Layer,Labels
+Chesapeake Land Cover,Labels
+Canadian Buildings Footprints,Labels
