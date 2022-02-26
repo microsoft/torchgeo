@@ -31,7 +31,7 @@ class CDL(RasterDataset):
     * https://www.nass.usda.gov/Research_and_Science/Cropland/sarsfaqs2.php#Section1_14.0
     """  # noqa: E501
 
-    filename_glob = "*_30m_cdls.*"
+    filename_glob = "*_30m_cdls.tif"
     filename_regex = r"""
         ^(?P<date>\d+)
         _30m_cdls\..*$
