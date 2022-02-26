@@ -122,7 +122,7 @@ class CanadianBuildingFootprints(VectorDataset):
                 md5=md5 if self.checksum else None,
             )
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Any],
         show_titles: bool = True,
