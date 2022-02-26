@@ -23,7 +23,7 @@ class EUDEM(RasterDataset):
     The dataset can be downloaded from this `website
     <https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1?tab=mapview>`_
     after making an account. A dataset factsheet is available
-    `here <https://land.copernicus.eu/user-corner/publications/eu-dem-flyer/view>`.
+    `here <https://land.copernicus.eu/user-corner/publications/eu-dem-flyer/view>`_.
 
     Dataset features:
 
@@ -47,7 +47,7 @@ class EUDEM(RasterDataset):
     is_image = False
     filename_glob = "eu_dem_v11_*.TIF"
     zipfile_glob = "eu_dem_v11_*[A-Z0-9].zip"
-    filename_regex = r"""(?P<name>[eudem_v11]{10})_(?P<id>[A-Z0-9]{6})"""
+    filename_regex = "(?P<name>[eudem_v11]{10})_(?P<id>[A-Z0-9]{6})"
 
     md5s = {
         "eu_dem_v11_E00N20.zip": "96edc7e11bc299b994e848050d6be591",
