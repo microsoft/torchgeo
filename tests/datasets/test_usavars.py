@@ -48,6 +48,10 @@ class TestUSAVars:
             "elevation": os.path.join("tests", "data", "usavars", "elevation.csv"),
             "population": os.path.join("tests", "data", "usavars", "population.csv"),
             "treecover": os.path.join("tests", "data", "usavars", "treecover.csv"),
+            "income": os.path.join("tests", "data", "usavars", "income.csv"),
+            "nightlights": os.path.join("tests", "data", "usavars", "nightlights.csv"),
+            "roads": os.path.join("tests", "data", "usavars", "roads.csv"),
+            "housing": os.path.join("tests", "data", "usavars", "housing.csv"),
         }
         monkeypatch.setattr(  # type: ignore[attr-defined]
             USAVars, "label_urls", label_urls
@@ -80,7 +84,16 @@ class TestUSAVars:
         pathname = os.path.join("tests", "data", "usavars", "uar.zip")
         root = str(tmp_path)
         shutil.copy(pathname, root)
-        for csv in ["elevation.csv", "population.csv", "treecover.csv"]:
+        csvs = [
+            "elevation.csv",
+            "population.csv",
+            "treecover.csv",
+            "income.csv",
+            "nightlights.csv",
+            "roads.csv",
+            "housing.csv",
+        ]
+        for csv in csvs:
             shutil.copy(os.path.join("tests", "data", "usavars", csv), root)
 
         USAVars(root)

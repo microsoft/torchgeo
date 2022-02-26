@@ -13,7 +13,15 @@ import pandas as pd
 import rasterio
 
 data_dir = "uar"
-labels = ["elevation", "population", "treecover"]
+labels = [
+    "elevation",
+    "population",
+    "treecover",
+    "income",
+    "nightlights",
+    "housing",
+    "roads",
+]
 SIZE = 3
 
 

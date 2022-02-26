@@ -176,14 +176,12 @@ class USAVars(VisionDataset):
         pathname = os.path.join(self.root, "uar")
         csv_pathname = os.path.join(self.root, "*.csv")
 
-        # if glob.glob(pathname) and len(glob.glob(csv_pathname)) == 7:
-        if glob.glob(pathname) and len(glob.glob(csv_pathname)) == 3:
+        if glob.glob(pathname) and len(glob.glob(csv_pathname)) == 7:
             return
 
         # Check if the zip files have already been downloaded
         pathname = os.path.join(self.root, self.dirname + ".zip")
-        # if glob.glob(pathname) and len(glob.glob(csv_pathname)) == 7:
-        if glob.glob(pathname) and len(glob.glob(csv_pathname)) == 3:
+        if glob.glob(pathname) and len(glob.glob(csv_pathname)) == 7:
             self._extract()
             return
 
