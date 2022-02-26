@@ -21,9 +21,9 @@ from .utils import download_url, extract_archive
 class USAVars(VisionDataset):
     """USAVars dataset.
 
-    The USAVars dataset is reproduction of the dataset used in the paper `"A
+    The USAVars dataset is reproduction of the dataset used in the paper "`A
     generalizable and accessible approach to machine learning with global satellite
-    imagery<https://doi.org/10.1038/s41467-021-24638-z>`_. Specifically, this dataset
+    imagery <https://doi.org/10.1038/s41467-021-24638-z>`_". Specifically, this dataset
     includes 1 sq km. crops of NAIP imagery resampled to 4m/px cenetered on ~100k points
     that are sampled randomly from the contiguous states in the USA. Each point contains
     three continous valued labels (taken from the dataset released in the paper): tree
