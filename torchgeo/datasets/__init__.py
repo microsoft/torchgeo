@@ -30,6 +30,7 @@ from .dfc2022 import DFC2022
 from .enviroatlas import EnviroAtlas
 from .esri2020 import Esri2020
 from .etci2021 import ETCI2021
+from .eudem import EUDEM
 from .eurosat import EuroSAT
 from .fair1m import FAIR1M
 from .geo import (
@@ -103,6 +104,7 @@ __all__ = (
     "ChesapeakeCVPR",
     "CMSGlobalMangroveCanopy",
     "Esri2020",
+    "EUDEM",
     "GlobBiomass",
     "Landsat",
     "Landsat1",
