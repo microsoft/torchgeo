@@ -430,7 +430,7 @@ class IDTReeS(VisionDataset):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: Dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
         hsi_indices: Tuple[int, int, int] = (0, 1, 2),

@@ -942,7 +942,7 @@ class SpaceNet5(SpaceNet):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: Dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> Figure:

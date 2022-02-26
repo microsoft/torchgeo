@@ -6,7 +6,7 @@
 import json
 import os
 from functools import lru_cache
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -428,7 +428,7 @@ class BeninSmallHolderCashews(VisionDataset):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: Dict[str, Tensor],
         show_titles: bool = True,
         time_step: int = 0,
         suptitle: Optional[str] = None,

@@ -7,7 +7,7 @@ import glob
 import hashlib
 import os
 from functools import lru_cache
-from typing import Any, Callable, Dict, Optional
+from typing import Callable, Dict, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -223,7 +223,7 @@ class LandCoverAI(VisionDataset):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: Dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
