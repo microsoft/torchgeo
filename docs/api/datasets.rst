@@ -90,6 +90,12 @@ Non-geospatial Datasets
 
 :class:`VisionDataset` is designed for datasets that lack geospatial information. These datasets can still be combined using :class:`ConcatDataset <torch.utils.data.ConcatDataset>`.
 
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, D = change detection
+   :widths: 15 7 15 12 11 12 15 13
+   :header-rows: 1
+   :align: center
+   :file: vision_datasets.csv
+
 ADVANCE (AuDio Visual Aerial sceNe reCognition datasEt)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
