@@ -14,6 +14,7 @@ from .indices import (
     AppendNDWI,
     AppendNormalizedDifferenceIndex,
     AppendSWI,
+    AppendTriBandNormalizedDifferenceIndex,
 )
 from .transforms import AugmentationSequential
 
@@ -29,6 +30,7 @@ __all__ = (
     "AppendNDWI",
     "AppendSWI",
     "AugmentationSequential",
+    "AppendTriBandNormalizedDifferenceIndex",
 )
 
 # https://stackoverflow.com/questions/40018681
