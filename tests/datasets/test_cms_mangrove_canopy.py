@@ -90,4 +90,10 @@ class TestCMSGlobalMangroveCanopy:
     def test_plot(self, dataset: CMSGlobalMangroveCanopy) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x["mask"])
+        dataset.plot(x, suptitle="Test")
+
+    def test_plot_prediction(self, dataset: CMSGlobalMangroveCanopy) -> None:
+        query = dataset.bounds
+        x = dataset[query]
+        x["prediction"] = x["mask"].clone()
+        dataset.plot(x, suptitle="Prediction")
