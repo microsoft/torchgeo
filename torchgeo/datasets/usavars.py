@@ -86,6 +86,7 @@ class USAVars(VisionDataset):
 
         Args:
             root: root directory where dataset can be found
+            labels: list of labels to include
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
