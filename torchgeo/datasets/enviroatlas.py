@@ -18,7 +18,6 @@ import shapely.ops
 import torch
 from matplotlib.colors import ListedColormap
 from rasterio.crs import CRS
-from torch import Tensor
 
 from .geo import GeoDataset
 from .utils import BoundingBox, download_url, extract_archive
@@ -453,7 +452,7 @@ class EnviroAtlas(GeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
