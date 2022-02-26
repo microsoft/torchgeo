@@ -4,7 +4,7 @@
 """EuroSAT dataset."""
 
 import os
-from typing import Any, Callable, Dict, Optional, Sequence, cast
+from typing import Callable, Dict, Optional, Sequence, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -257,7 +257,7 @@ class EuroSAT(VisionClassificationDataset):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: Dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

@@ -4,7 +4,7 @@
 """Potsdam dataset."""
 
 import os
-from typing import Any, Callable, Dict, Optional
+from typing import Callable, Dict, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -241,7 +241,7 @@ class Potsdam2D(VisionDataset):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: Dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
         alpha: float = 0.5,

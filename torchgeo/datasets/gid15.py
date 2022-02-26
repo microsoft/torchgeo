@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -242,7 +242,7 @@ class GID15(VisionDataset):
         )
 
     def plot(
-        self, sample: Dict[str, Any], suptitle: Optional[str] = None
+        self, sample: Dict[str, Tensor], suptitle: Optional[str] = None
     ) -> plt.Figure:
         """Plot a sample from the dataset.
 
