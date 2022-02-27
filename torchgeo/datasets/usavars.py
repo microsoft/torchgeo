@@ -197,12 +197,14 @@ class USAVars(VisionDataset):
         self._extract()
 
     def _download(self) -> None:
+        """Download the dataset."""
         for f_name in self.label_urls:
             download_url(self.label_urls[f_name], self.root, filename=f_name + ".csv")
 
         download_url(self.data_url, self.root, md5=self.md5 if self.checksum else None)
 
     def _extract(self) -> None:
+        """Extract the dataset."""
         extract_archive(os.path.join(self.root, self.dirname + ".zip"))
 
     def plot(
