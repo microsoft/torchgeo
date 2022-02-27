@@ -92,6 +92,8 @@ class USAVars(VisionDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
+            AssertionError: if invalid labels are provided
+            ImportError: if pandas is not installed
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
