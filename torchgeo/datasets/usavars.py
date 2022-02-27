@@ -165,7 +165,7 @@ class USAVars(VisionDataset):
         return files
 
     def _load_image(self, path: str) -> Tensor:
-        """Load a single image
+        """Load a single image.
 
         Args:
             path: path to the image
