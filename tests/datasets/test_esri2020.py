@@ -54,6 +54,16 @@ class TestEsri2020:
     def test_already_extracted(self, dataset: Esri2020) -> None:
         Esri2020(root=dataset.root, download=True)
 
+    def test_not_extracted(self, tmp_path: Path) -> None:
+        url = os.path.join(
+            "tests",
+            "data",
+            "esri2020",
+            "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip",
+        )
+        shutil.copy(url, tmp_path)
+        Esri2020(root=str(tmp_path))
+
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):
             Esri2020(str(tmp_path), checksum=True)
