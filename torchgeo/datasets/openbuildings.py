@@ -251,7 +251,7 @@ class OpenBuildings(VectorDataset):
         ]  # get csv filename
 
         polygon_files = glob.glob(os.path.join(self.root, self.zipfile_glob))
-        polygon_filenames = [f.split("/")[-1] for f in polygon_files]
+        polygon_filenames = [f.split(os.sep)[-1] for f in polygon_files]
 
         matched_features = [
             feature
