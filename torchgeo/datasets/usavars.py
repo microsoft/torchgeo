@@ -71,8 +71,7 @@ class USAVars(VisionDataset):
         + f"outcomes_sampled_treecover_{uar_csv_suffix}",
     }
 
-    # ALL_LABELS = label_urls.keys()
-    ALL_LABELS = ["treecover", "elevation", "population"]
+    ALL_LABELS = label_urls.keys()
 
     def __init__(
         self,
@@ -97,6 +96,10 @@ class USAVars(VisionDataset):
                 don't match
         """
         self.root = root
+
+        for lab in labels:
+            assert lab in self.ALL_LABLES
+
         self.labels = labels
         self.transforms = transforms
         self.download = download
