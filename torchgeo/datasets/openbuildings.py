@@ -247,7 +247,7 @@ class OpenBuildings(VectorDataset):
 
         features = data["features"]
         features_filenames = [
-            f["properties"]["tile_url"].split("/")[-1] for f in features
+            feature["properties"]["tile_url"].split("/")[-1] for feature in features
         ]  # get csv filename
 
         polygon_files = glob.glob(os.path.join(self.root, self.zipfile_glob))
@@ -255,17 +255,17 @@ class OpenBuildings(VectorDataset):
 
         matched_features = [
             feature
-            for file, feature in zip(features_filenames, features)
-            if file in polygon_filenames
+            for filename, feature in zip(features_filenames, features)
+            if filename in polygon_filenames
         ]
 
         i = 0
         source_crs = CRS.from_dict({"init": "epsg:4326"})
-        for f in matched_features:
+        for feature in matched_features:
             if crs is None:
                 crs = CRS.from_dict(source_crs)
 
-            c: List[Any] = f["geometry"]["coordinates"][0]  # type: ignore
+            c = feature["geometry"]["coordinates"][0]
             xs = [x[0] for x in c]
             ys = [x[1] for x in c]
 
@@ -279,7 +279,7 @@ class OpenBuildings(VectorDataset):
             coords = (minx, maxx, miny, maxy, mint, maxt)
 
             filepath = os.path.join(
-                self.root, f["properties"]["tile_url"].split("/")[-1]  # type: ignore
+                self.root, feature["properties"]["tile_url"].split("/")[-1]
             )
             self.index.insert(i, coords, filepath)
             i += 1
