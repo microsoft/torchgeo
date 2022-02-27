@@ -71,7 +71,7 @@ class USAVars(VisionDataset):
         + f"outcomes_sampled_treecover_{uar_csv_suffix}",
     }
 
-    ALL_LABELS = label_urls.keys()
+    ALL_LABELS = list(label_urls.keys())
 
     def __init__(
         self,
