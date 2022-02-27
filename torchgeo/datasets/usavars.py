@@ -61,7 +61,7 @@ class USAVars(VisionDataset):
         "housing": f"{url_prefix}/housing/outcomes_sampled_housing_{pop_csv_suffix}",
         "income": f"{url_prefix}/income/outcomes_sampled_income_{pop_csv_suffix}",
         "roads": f"{url_prefix}/roads/outcomes_sampled_roads_{pop_csv_suffix}",
-        "nightligths": f"{url_prefix}/nightlights/"
+        "nightlights": f"{url_prefix}/nightlights/"
         + f"outcomes_sampled_nightlights_{pop_csv_suffix}",
         "population": f"{url_prefix}/population/"
         + f"outcomes_sampled_population_{uar_csv_suffix}",
@@ -98,7 +98,7 @@ class USAVars(VisionDataset):
         self.root = root
 
         for lab in labels:
-            assert lab in self.ALL_LABLES
+            assert lab in self.ALL_LABELS
 
         self.labels = labels
         self.transforms = transforms
