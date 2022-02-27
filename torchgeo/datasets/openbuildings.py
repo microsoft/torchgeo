@@ -43,7 +43,7 @@ class OpenBuildings(VectorDataset):
     * meta data geojson file
 
     The data can be downloaded from `here
-    <https://sites.research.google/open-buildings/#download>`_. Additionally, the
+    <https://sites.research.google/open-buildings/#download>`__. Additionally, the
     `meta data geometry file
     <https://sites.research.google/open-buildings/tiles.geojson>`_ also needs to be
     placed in `root` as `tiles.geojson`.
@@ -374,7 +374,7 @@ class OpenBuildings(VectorDataset):
 
         return shapes
 
-    def _wkt_fiona_geom_transform(self, x: str) -> Any:
+    def _wkt_fiona_geom_transform(self, x: str) -> Dict[str, Any]:
         """Function to transform a geometry string into new crs.
 
         Args:
@@ -386,9 +386,10 @@ class OpenBuildings(VectorDataset):
         """
         x = json.dumps(shapely.geometry.mapping(wkt.loads(x)))
         x = json.loads(x.replace("'", '"'))
-        return fiona.transform.transform_geom(
+        transformed: Dict[str, Any] = fiona.transform.transform_geom(
             self._source_crs.to_dict(), self._crs.to_dict(), x
         )
+        return transformed
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.

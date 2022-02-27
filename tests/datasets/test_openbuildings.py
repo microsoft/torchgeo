@@ -23,6 +23,8 @@ from torchgeo.datasets import (
     UnionDataset,
 )
 
+pytest.importorskip("pandas", minversion="0.19.1")
+
 
 class TestOpenBuildings:
     @pytest.fixture
