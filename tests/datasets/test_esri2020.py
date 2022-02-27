@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -80,6 +81,7 @@ class TestEsri2020:
         query = dataset.bounds
         x = dataset[query]
         dataset.plot(x["mask"])
+        plt.close()
 
     def test_url(self) -> None:
         ds = Esri2020(os.path.join("tests", "data", "esri2020"))

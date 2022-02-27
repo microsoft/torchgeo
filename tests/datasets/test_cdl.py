@@ -91,6 +91,7 @@ class TestCDL:
         query = dataset.bounds
         x = dataset[query]
         dataset.plot(x["mask"])
+        plt.close()
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):

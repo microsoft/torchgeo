@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -73,12 +74,14 @@ class TestGlobBiomass:
         query = dataset.bounds
         x = dataset[query]
         dataset.plot(x, suptitle="Test")
+        plt.close()
 
     def test_plot_prediction(self, dataset: GlobBiomass) -> None:
         query = dataset.bounds
         x = dataset[query]
         x["prediction"] = x["mask"].clone()
         dataset.plot(x, suptitle="Prediction")
+        plt.close()
 
     def test_invalid_query(self, dataset: GlobBiomass) -> None:
         query = BoundingBox(100, 100, 100, 100, 0, 0)
