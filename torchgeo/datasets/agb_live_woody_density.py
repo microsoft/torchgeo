@@ -99,12 +99,6 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
         if glob.glob(pathname):
             return
 
-        # Check if the downloaded base file already exist
-        pathname = os.path.join(self.root, self.base_filename)
-        if glob.glob(pathname):
-            self._extract()
-            return
-
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
@@ -115,13 +109,11 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
         # Download the dataset
         self._download()
-        self._extract()
 
     def _download(self) -> None:
         """Download the dataset."""
         download_url(self.url, self.root, self.base_filename)
 
-    def _extract(self) -> None:
         with open(os.path.join(self.root, self.base_filename), "r") as f:
             content = json.load(f)
 

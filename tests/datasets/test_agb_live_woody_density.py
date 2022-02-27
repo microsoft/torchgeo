@@ -59,26 +59,10 @@ class TestAbovegroundLiveWoodyBiomassDensity:
         with pytest.raises(RuntimeError, match="Dataset not found in."):
             AbovegroundLiveWoodyBiomassDensity(root="/test")
 
-    def test_no_basefile(
-        self, dataset: AbovegroundLiveWoodyBiomassDensity, tmp_path: Path
+    def test_already_downloaded(
+        self, dataset: AbovegroundLiveWoodyBiomassDensity
     ) -> None:
-        os.remove(os.path.join(str(tmp_path), "00N_000E.tif"))
         AbovegroundLiveWoodyBiomassDensity(dataset.root)
-
-    def test_already_downloaded(self, tmp_path: Path) -> None:
-        base_file_path = os.path.join(
-            "tests",
-            "data",
-            "agb_live_woody_density",
-            "Aboveground_Live_Woody_Biomass_Density.geojson",
-        )
-        tif_pathname = os.path.join(
-            "tests", "data", "agb_live_woody_density", "00N_000E.tif"
-        )
-        root = str(tmp_path)
-        shutil.copy(base_file_path, root)
-        shutil.copy(tif_pathname, root)
-        AbovegroundLiveWoodyBiomassDensity(root)
 
     def test_and(self, dataset: AbovegroundLiveWoodyBiomassDensity) -> None:
         ds = dataset & dataset
