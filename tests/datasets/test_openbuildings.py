@@ -8,6 +8,7 @@ import shutil
 from pathlib import Path
 from typing import Any, Generator
 
+import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 import torch
@@ -146,8 +147,10 @@ class TestOpenBuildings:
     def test_plot(self, dataset: OpenBuildings) -> None:
         x = dataset[dataset.bounds]
         dataset.plot(x, suptitle="test")
+        plt.close()
 
     def test_plot_prediction(self, dataset: OpenBuildings) -> None:
         x = dataset[dataset.bounds]
         x["prediction"] = x["mask"].clone()
         dataset.plot(x, suptitle="Prediction")
+        plt.close()
