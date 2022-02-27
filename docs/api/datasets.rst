@@ -92,6 +92,11 @@ National Agriculture Imagery Program (NAIP)
 
 .. autoclass:: NAIP
 
+Open Buildings
+^^^^^^^^^^^^^^
+
+.. autoclass:: OpenBuildings
+    
 Sentinel
 ^^^^^^^^
 
