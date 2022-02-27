@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -91,9 +92,11 @@ class TestCMSGlobalMangroveCanopy:
         query = dataset.bounds
         x = dataset[query]
         dataset.plot(x, suptitle="Test")
+        plt.close()
 
     def test_plot_prediction(self, dataset: CMSGlobalMangroveCanopy) -> None:
         query = dataset.bounds
         x = dataset[query]
         x["prediction"] = x["mask"].clone()
         dataset.plot(x, suptitle="Prediction")
+        plt.close()
