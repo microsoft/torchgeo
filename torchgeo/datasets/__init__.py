@@ -75,6 +75,7 @@ from .sentinel import Sentinel, Sentinel2
 from .so2sat import So2Sat
 from .spacenet import SpaceNet, SpaceNet1, SpaceNet2, SpaceNet4, SpaceNet5, SpaceNet7
 from .ucmerced import UCMerced
+from .usavars import USAVars
 from .utils import (
     BoundingBox,
     concat_samples,
@@ -155,6 +156,7 @@ __all__ = (
     "SpaceNet7",
     "TropicalCycloneWindEstimation",
     "UCMerced",
+    "USAVars",
     "Vaihingen2D",
     "VHR10",
     "XView2",
