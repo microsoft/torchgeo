@@ -156,11 +156,20 @@ class USAVars(VisionDataset):
         return len(self.files)
 
     def _load_files(self) -> List[str]:
+        """Loads file names."""
         file_path = os.path.join(self.root, "uar")
         files = os.listdir(file_path)
         return files
 
     def _load_image(self, path: str) -> Tensor:
+        """Load a single image
+
+        Args:
+            path: path to the image
+
+        Returns:
+            the image
+        """
         with rasterio.open(path) as f:
             array: "np.typing.NDArray[np.int_]" = f.read()
             tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
