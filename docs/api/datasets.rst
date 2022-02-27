@@ -237,6 +237,11 @@ UC Merced
 
 .. autoclass:: UCMerced
 
+USAVars
+^^^^^^^
+
+.. autoclass:: USAVars
+
 Vaihingen
 ^^^^^^^^^
 
