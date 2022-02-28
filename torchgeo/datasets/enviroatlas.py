@@ -343,7 +343,7 @@ class EnviroAtlas(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object.filepath for hit in hits]
+        filepaths = [hit.object for hit in hits]
 
         sample = {"image": [], "mask": [], "crs": self.crs, "bbox": query}
 
