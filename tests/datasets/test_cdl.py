@@ -31,21 +31,10 @@ class TestCDL:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.cdl, "download_url", download_url
         )
-        cmap = {
-            0: (0, 0, 0, 0),
-            1: (255, 211, 0, 255),
-            2: (255, 38, 38, 255),
-            3: (0, 168, 228, 255),
-            4: (255, 158, 11, 255),
-            5: (38, 112, 0, 255),
-            6: (255, 255, 0, 255),
-            7: (0, 0, 0, 255),
-            8: (0, 0, 0, 255),
-        }
-        monkeypatch.setattr(CDL, "cmap", cmap)  # type: ignore[attr-defined]
+
         md5s = [
-            (2021, "4618f054004110ea11b19541b4b9f734"),
-            (2020, "593a86e62e3dd44438d536dc2442c082"),
+            (2021, "083a4dd5e974c364f55d9fb8901c94f5"),
+            (2020, "5e787436de2345eb4aebfae72862f363"),
         ]
         monkeypatch.setattr(CDL, "md5s", md5s)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "cdl", "{}_30m_cdls.zip")
@@ -90,7 +79,14 @@ class TestCDL:
     def test_plot(self, dataset: CDL) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x["mask"])
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+
+    def test_plot_prediction(self, dataset: CDL) -> None:
+        query = dataset.bounds
+        x = dataset[query]
+        x["prediction"] = x["mask"].clone()
+        dataset.plot(x, suptitle="Prediction")
         plt.close()
 
     def test_not_downloaded(self, tmp_path: Path) -> None:

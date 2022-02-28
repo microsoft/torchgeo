@@ -37,12 +37,12 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
 
 
 directories = ["2020_30m_cdls", "2021_30m_cdls"]
-raster_extensions = [[".tif", ".tif.ovr"], [".tif", ".tif.ovr"]]
+raster_extensions = [".tif", ".tif.ovr"]
 
 
 if __name__ == "__main__":
 
-    for dir, extensions in zip(directories, raster_extensions):
+    for dir in directories:
         filename = dir + ".zip"
 
         # Remove old data
@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
         os.makedirs(os.path.join(os.getcwd(), dir))
 
-        for e in extensions:
+        for e in raster_extensions:
             create_file(
                 os.path.join(dir, filename.replace(".zip", e)),
                 dtype="int8",
