@@ -3,10 +3,9 @@
 
 """National Agriculture Imagery Program (NAIP) dataset."""
 
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 import matplotlib.pyplot as plt
-from torch import Tensor
 
 from .geo import RasterDataset
 
@@ -50,7 +49,7 @@ class NAIP(RasterDataset):
 
     def plot(  # type: ignore[override]
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

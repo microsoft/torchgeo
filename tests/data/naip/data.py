@@ -9,7 +9,7 @@ import random
 import numpy as np
 import rasterio
 
-SIZE = 256
+SIZE = 64
 
 np.random.seed(0)
 random.seed(0)
