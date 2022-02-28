@@ -33,7 +33,7 @@ class TestSo2Sat:
         root = os.path.join("tests", "data", "so2sat")
         split = request.param
         transforms = nn.Identity()  # type: ignore[attr-defined]
-        return So2Sat(root, split, transforms, checksum=True)
+        return So2Sat(root=root, split=split, transforms=transforms, checksum=True)
 
     @pytest.fixture
     def mock_missing_module(
@@ -69,6 +69,10 @@ class TestSo2Sat:
         with pytest.raises(AssertionError):
             So2Sat(split="foo")
 
+    def test_invalid_bands(self) -> None:
+        with pytest.raises(ValueError):
+            So2Sat(bands=("OK", "BK"))
+
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             So2Sat(str(tmp_path))
@@ -82,6 +86,11 @@ class TestSo2Sat:
         x["prediction"] = x["label"].clone()
         dataset.plot(x)
         plt.close()
+
+    def test_plot_rgb(self, dataset: So2Sat) -> None:
+        dataset = So2Sat(root=dataset.root, bands=("B03",))
+        with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
+            dataset.plot(dataset[0], suptitle="Single Band")
 
     def test_mock_missing_module(
         self, dataset: So2Sat, mock_missing_module: None

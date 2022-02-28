@@ -58,13 +58,23 @@ class TestEuroSAT:
         root = str(tmp_path)
         split = request.param
         transforms = nn.Identity()  # type: ignore[attr-defined]
-        return EuroSAT(root, split, transforms, download=True, checksum=True)
+        return EuroSAT(
+            root=root, split=split, transforms=transforms, download=True, checksum=True
+        )
 
     def test_getitem(self, dataset: EuroSAT) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["label"], torch.Tensor)
+
+    def test_invalid_split(self) -> None:
+        with pytest.raises(AssertionError):
+            EuroSAT(split="foo")
+
+    def test_invalid_bands(self) -> None:
+        with pytest.raises(ValueError):
+            EuroSAT(bands=("OK", "BK"))
 
     def test_len(self, dataset: EuroSAT) -> None:
         assert len(dataset) == 2
@@ -100,3 +110,8 @@ class TestEuroSAT:
         x["prediction"] = x["label"].clone()
         dataset.plot(x)
         plt.close()
+
+    def test_plot_rgb(self, dataset: EuroSAT, tmp_path: Path) -> None:
+        dataset = EuroSAT(root=str(tmp_path), bands=("B03",))
+        with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
+            dataset.plot(dataset[0], suptitle="Single Band")

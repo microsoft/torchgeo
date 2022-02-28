@@ -81,3 +81,4 @@ class TestGID15:
             sample = dataset[0]
             sample["prediction"] = torch.ones((1, 1))  # type: ignore[attr-defined]
             dataset.plot(sample)
+        plt.close()

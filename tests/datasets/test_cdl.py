@@ -31,9 +31,21 @@ class TestCDL:
         monkeypatch.setattr(  # type: ignore[attr-defined]
             torchgeo.datasets.cdl, "download_url", download_url
         )
+        cmap = {
+            0: (0, 0, 0, 0),
+            1: (255, 211, 0, 255),
+            2: (255, 38, 38, 255),
+            3: (0, 168, 228, 255),
+            4: (255, 158, 11, 255),
+            5: (38, 112, 0, 255),
+            6: (255, 255, 0, 255),
+            7: (0, 0, 0, 255),
+            8: (0, 0, 0, 255),
+        }
+        monkeypatch.setattr(CDL, "cmap", cmap)  # type: ignore[attr-defined]
         md5s = [
-            (2021, "0693f0bb10deb79c69bcafe4aa1635b7"),
-            (2020, "7695292902a8672d16ac034d4d560d84"),
+            (2021, "4618f054004110ea11b19541b4b9f734"),
+            (2020, "593a86e62e3dd44438d536dc2442c082"),
         ]
         monkeypatch.setattr(CDL, "md5s", md5s)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "cdl", "{}_30m_cdls.zip")
@@ -79,6 +91,7 @@ class TestCDL:
         query = dataset.bounds
         x = dataset[query]
         dataset.plot(x["mask"])
+        plt.close()
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):

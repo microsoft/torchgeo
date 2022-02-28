@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -31,7 +32,7 @@ class TestEsri2020:
         zipfile = "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip"
         monkeypatch.setattr(Esri2020, "zipfile", zipfile)  # type: ignore[attr-defined]
 
-        md5 = "4932855fcd00735a34b74b1f87db3df0"
+        md5 = "34aec55538694171c7b605b0cc0d0138"
         monkeypatch.setattr(Esri2020, "md5", md5)  # type: ignore[attr-defined]
         url = os.path.join(
             "tests",
@@ -44,17 +45,6 @@ class TestEsri2020:
         transforms = nn.Identity()  # type: ignore[attr-defined]
         return Esri2020(root, transforms=transforms, download=True, checksum=True)
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
-        url = os.path.join(
-            "tests",
-            "data",
-            "esri2020",
-            "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip",
-        )
-        root = str(tmp_path)
-        shutil.copy(url, root)
-        Esri2020(root)
-
     def test_getitem(self, dataset: Esri2020) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
@@ -63,6 +53,16 @@ class TestEsri2020:
 
     def test_already_extracted(self, dataset: Esri2020) -> None:
         Esri2020(root=dataset.root, download=True)
+
+    def test_not_extracted(self, tmp_path: Path) -> None:
+        url = os.path.join(
+            "tests",
+            "data",
+            "esri2020",
+            "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip",
+        )
+        shutil.copy(url, tmp_path)
+        Esri2020(root=str(tmp_path))
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):
@@ -79,7 +79,15 @@ class TestEsri2020:
     def test_plot(self, dataset: Esri2020) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x["mask"])
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+
+    def test_plot_prediction(self, dataset: Esri2020) -> None:
+        query = dataset.bounds
+        x = dataset[query]
+        x["prediction"] = x["mask"].clone()
+        dataset.plot(x, suptitle="Prediction")
+        plt.close()
 
     def test_url(self) -> None:
         ds = Esri2020(os.path.join("tests", "data", "esri2020"))

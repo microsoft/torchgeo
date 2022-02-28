@@ -43,7 +43,7 @@ def get_random_bounding_box(
     Returns:
         randomly sampled bounding box from the extent of the input
     """
-    t_size: Tuple[float, float] = _to_tuple(size)
+    t_size = _to_tuple(size)
 
     width = (bounds.maxx - bounds.minx - t_size[1]) // res
     minx = random.randrange(int(width)) * res + bounds.minx
