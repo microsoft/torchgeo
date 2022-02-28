@@ -9,9 +9,11 @@ import os
 from typing import Any, Dict, Tuple, Type, cast
 
 import pytorch_lightning as pl
+import rasterio as rio
+import torch
 from omegaconf import DictConfig, OmegaConf
-from pytorch_lightning import loggers as pl_loggers
-from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+from rasterio.crs import CRS
+from rasterio.transform import Affine
 
 from torchgeo.datamodules import (
     BigEarthNetDataModule,
@@ -113,6 +115,17 @@ def set_up_omegaconf() -> DictConfig:
     return conf
 
 
+def write_mask(
+    mask: torch.Tensor, output_path: str, tfm: Affine = None, crs: CRS = None
+) -> None:
+    """Write mask to specified output path."""
+    mask = mask.cpu().numpy()
+    meta = {"count": mask.shape[-3], "transform": tfm, "dtype": "uint8", "crs": crs}
+    meta["width"], meta["height"] = mask.shape[-1], mask.shape[-2]
+    with rio.open(output_path, "w", **meta) as ds:
+        ds.write(mask)
+
+
 def main(conf: DictConfig) -> None:
     """Main inference loop."""
     ######################################
@@ -123,33 +136,9 @@ def main(conf: DictConfig) -> None:
     task_name = conf.experiment.task
     if os.path.isfile(conf.program.output_dir):
         raise NotADirectoryError("`program.output_dir` must be a directory")
-    # Directories should already exist
-    # os.makedirs(conf.program.output_dir, exist_ok=True)
 
     experiment_dir = os.path.join(conf.program.output_dir, experiment_name)
-    # Directories should already exist
-    # os.makedirs(experiment_dir, exist_ok=True)
 
-    # if len(os.listdir(experiment_dir)) > 0:
-    #     if conf.program.overwrite:
-    #         print(
-    #             f"WARNING! The experiment directory, {experiment_dir}, already exists, "
-    #             + "we might overwrite data in it!"
-    #         )
-    #     else:
-    #         raise FileExistsError(
-    #             f"The experiment directory, {experiment_dir}, already exists and isn't "
-    #             + "empty. We don't want to overwrite any existing results, exiting..."
-    #         )
-
-    # with open(os.path.join(experiment_dir, "experiment_config.yaml"), "w") as f:
-    #     OmegaConf.save(config=conf, f=f)
-
-    ######################################
-    # Choose task to run based on arguments or configuration
-    ######################################
-    # Convert the DictConfig into a dictionary so that we can pass as kwargs.
-    task_args = cast(Dict[str, Any], OmegaConf.to_object(conf.experiment.module))
     datamodule_args = cast(
         Dict[str, Any], OmegaConf.to_object(conf.experiment.datamodule)
     )
@@ -162,7 +151,7 @@ def main(conf: DictConfig) -> None:
         )
 
     task_class, datamodule_class = TASK_TO_MODULES_MAPPING[task_name]
-    ckpt = os.path.join(conf.program.output_dir, conf.experiment.name, "last.ckpt")
+    ckpt = os.path.join(experiment_dir, "last.ckpt")
     task = task_class.load_from_checkpoint(ckpt)
     task = task.to("cuda")
     datamodule = datamodule_class(**datamodule_args)
@@ -173,16 +162,29 @@ def main(conf: DictConfig) -> None:
         raise NotImplementedError
 
     for i, batch in enumerate(dataloader):
-        import pdb
+        tfm = batch["transform"] if "transform" in batch else None
+        crs = batch["crs"] if "crs" in batch else None
 
-        pdb.set_trace()
         x = batch["image"].to("cuda")
-        h, w = x.shape[-2:]
-        mask = task(x)
-        mask = mask[0, :, :h, :w]
-        mask = mask.argmax(dim=0).cpu().numpy()
-        filename = datamodule.predict_dataset.files[i]["image"]
-        # write_mask(mask, filename, output_directory)
+        masks = []
+        for tile in x:
+            mask = task(tile)
+            mask = mask.argmax(dim=1)
+            masks.append(mask)
+
+        masks_arr = torch.stack(masks, dim=0)
+        masks_arr = masks_arr.unsqueeze(0)
+
+        if hasattr(datamodule, "patch_combine"):
+            masks_combined = datamodule.patch_combine(masks_arr)[0]
+            filename = datamodule.predict_dataset.files[i]["image"]
+            output_path = os.path.join(
+                conf.program.output_dir, os.path.basename(filename)
+            )
+            write_mask(masks_combined, output_path, tfm, crs)
+        else:
+            raise NotImplementedError
+        break
 
 
 if __name__ == "__main__":

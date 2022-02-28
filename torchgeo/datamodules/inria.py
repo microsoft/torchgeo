@@ -10,6 +10,9 @@ import pytorch_lightning as pl
 import torch
 import torchvision.transforms as T
 from einops import rearrange
+from kornia.contrib import CombineTensorPatches, ExtractTensorPatches
+from rasterio.crs import CRS
+from rasterio.transform import Affine
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data._utils.collate import default_collate
 
@@ -29,7 +32,20 @@ def collate_wrapper(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
     r_batch["image"] = torch.flatten(  # type: ignore[attr-defined]
         r_batch["image"], 0, 1
     )
-    r_batch["mask"] = torch.flatten(r_batch["mask"], 0, 1)  # type: ignore[attr-defined]
+    if "mask" in r_batch:
+        r_batch["mask"] = torch.flatten(  # type: ignore[attr-defined]
+            r_batch["mask"], 0, 1
+        )
+
+    if "transform" in r_batch:
+        # Transform is expected to be in gdal format
+        tfm_gdal = [float(i) for i in r_batch["transform"]]
+        r_batch["transform"] = Affine.from_gdal(*tfm_gdal)
+
+    if "crs" in r_batch:
+        r_batch["crs"]["init"] = r_batch["crs"]["init"][0]
+        r_batch["crs"] = CRS(r_batch["crs"])
+
     return r_batch
 
 
@@ -81,6 +97,22 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             data_keys=["input", "mask"],
         )
 
+    def patch_sample(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract patches from signle sample."""
+        _, h, w = sample["image"].shape
+        h_pad = (self.patch_size - (h % self.patch_size)) // 2
+        w_pad = (self.patch_size - (w % self.patch_size)) // 2
+
+        self.patch_extract = ExtractTensorPatches(
+            window_size=self.patch_size, stride=self.patch_size, padding=(h_pad, w_pad)
+        )
+        self.patch_combine = CombineTensorPatches(
+            original_size=(h, w), window_size=self.patch_size, unpadding=(h_pad, w_pad)
+        )
+        sample["image"] = self.patch_extract(sample["image"].unsqueeze(0).cuda())
+        sample["image"] = rearrange(sample["image"], "() t c h w -> t () c h w")
+        return sample
+
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         # RGB is int32 so divide by 255
@@ -94,21 +126,6 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             sample["mask"] = rearrange(sample["mask"], "h w -> () h w")
 
         return sample
-
-    # def crop(self, sample):
-    #     if "mask" in sample:
-    #         sample["mask"] = sample["mask"].to(torch.float)
-    #         sample["image"], sample["mask"] = self.random_crop(
-    #             sample["image"], sample["mask"]
-    #         )
-    #         sample["mask"] = sample["mask"].to(torch.long)
-    #         sample["image"] = rearrange(sample["image"], "() c h w -> c h w")
-    #         sample["mask"] = rearrange(sample["mask"], "() c h w -> c h w")
-    #     else:
-    #         sample["image"] = self.random_crop2(sample["image"])
-    #         sample["image"] = rearrange(sample["image"], "() c h w -> c h w")
-
-    #     return sample
 
     def n_random_crop(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Get n random crops."""
@@ -130,7 +147,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         This method is called once per GPU per run.
         """
         train_transforms = T.Compose([self.preprocess, self.n_random_crop])
-        test_transforms = T.Compose([self.preprocess])
+        test_transforms = T.Compose([self.preprocess, self.patch_sample])
 
         train_dataset = InriaAerialImageLabeling(
             self.root_dir, split="train", transforms=train_transforms
@@ -204,6 +221,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             self.predict_dataset,
             batch_size=1,
             num_workers=self.num_workers,
+            collate_fn=collate_wrapper,
             shuffle=False,
         )
 
