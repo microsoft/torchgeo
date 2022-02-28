@@ -176,7 +176,7 @@ class GlobBiomass(RasterDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object for hit in hits]
+        filepaths = [hit.object.filepath for hit in hits]
 
         if not filepaths:
             raise IndexError(
