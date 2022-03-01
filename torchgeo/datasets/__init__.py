@@ -64,6 +64,7 @@ from .landsat import (
 from .levircd import LEVIRCDPlus
 from .loveda import LoveDA
 from .naip import NAIP
+from .naip_cluster import NAIPCluster
 from .nasa_marine_debris import NASAMarineDebris
 from .nwpu import VHR10
 from .openbuildings import OpenBuildings
@@ -145,6 +146,7 @@ __all__ = (
     "LEVIRCDPlus",
     "LoveDA",
     "NASAMarineDebris",
+    "NAIPCluster",
     "OSCD",
     "PatternNet",
     "Potsdam2D",
