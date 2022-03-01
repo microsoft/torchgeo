@@ -33,8 +33,8 @@ class TestCDL:
         )
 
         md5s = [
-            (2021, "083a4dd5e974c364f55d9fb8901c94f5"),
-            (2020, "5e787436de2345eb4aebfae72862f363"),
+            (2021, "e929beb9c8e59fa1d7b7f82e64edaae1"),
+            (2020, "e95c2d40ce0c261ed6ee0bd00b49e4b6"),
         ]
         monkeypatch.setattr(CDL, "md5s", md5s)  # type: ignore[attr-defined]
         url = os.path.join("tests", "data", "cdl", "{}_30m_cdls.zip")
