@@ -3,7 +3,10 @@
 
 """USAVars datamodule."""
 
+from typing import Any, Optional, Sequence
+
 import pytorch_lightning as pl
+from torch.utils.data import DataLoader
 
 from ..datasets import USAVars
 from .utils import dataset_split
@@ -26,8 +29,8 @@ class USAVarsDataModule(pl.LightningModule):
         """Initialize a LightningDataModule for USAVars based DataLoaders.
 
         Args:
-            root_dir: The root argument passed to the OSCD Dataset classes
-            labels: The labels argument passed to the OSCD Dataset classes
+            root_dir: The root argument passed to the USAVars Dataset classes
+            labels: The labels argument passed to the USAVars Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
         """
@@ -50,7 +53,7 @@ class USAVarsDataModule(pl.LightningModule):
         This method is called once per GPU per run.
         """
 
-        dataset = OSCD(self.root_dir, self.labels)
+        dataset = USAVars(self.root_dir, self.labels)
         self.train_dataset = dataset
         self.val_dataset = dataset
         self.test_dataset = dataset
