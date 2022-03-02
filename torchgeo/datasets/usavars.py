@@ -15,7 +15,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import VisionDataset
-from .utils import download_url, extract_archive
+from .utils import download_url, extract_archive, BoundingBox
 
 
 class USAVars(VisionDataset):
@@ -78,6 +78,7 @@ class USAVars(VisionDataset):
         root: str = "data",
         labels: Sequence[str] = ALL_LABELS,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        limit_box: BoundingBox = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -88,6 +89,7 @@ class USAVars(VisionDataset):
             labels: list of labels to include
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
+            limit_box: only include points whose longitude and latitude are within this box
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
@@ -104,6 +106,7 @@ class USAVars(VisionDataset):
 
         self.labels = labels
         self.transforms = transforms
+        self.limit_box = limit_box
         self.download = download
         self.checksum = checksum
 
@@ -164,6 +167,19 @@ class USAVars(VisionDataset):
         """Loads file names."""
         file_path = os.path.join(self.root, "uar")
         files = os.listdir(file_path)
+
+        # TODO: find workaround (this will be very slow)
+        if self.limit_box is not None:
+            valid_files = []
+            for f in files:
+                id_ = f[5:-4]
+                # TODO: cant just use "elevation"
+                lon = self.label_dfs["elevation"].loc[id_]["lon"]
+                lat = self.label_dfs["elevation"].loc[id_]["lat"]
+                if BoundingBox(lon, lon, lat, lat, 0, 0) in self.limit_box:
+                    valid_files.append(f)
+            files = valid_files
+
         return files
 
     def _load_image(self, path: str) -> Tensor:
