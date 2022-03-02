@@ -10,6 +10,9 @@ from torch import Tensor
 from torchgeo.transforms import (
     AppendBNDVI,
     AppendGNDVI,
+    AppendRBNDVI,
+    AppendGBNDVI,
+    AppendGRNDVI,
     AppendNBR,
     AppendNDBI,
     AppendNDRE,
@@ -72,6 +75,9 @@ def test_append_triband_index_batch(batch: Dict[str, Tensor]) -> None:
         AppendNDWI,
         AppendSWI,
         AppendGNDVI,
+        AppendGBNDVI,
+        AppendGRNDVI,
+        AppendRBNDVI,
     ],
 )
 def test_append_normalized_difference_indices(
