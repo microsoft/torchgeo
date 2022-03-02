@@ -9,9 +9,9 @@ import pytorch_lightning as pl
 from torch import Tensor
 from torch.utils.data import DataLoader
 
-
 from ..datasets import USAVars
 from .utils import dataset_split
+
 
 class USAVarsDataModule(pl.LightningModule):
     """LightningDataModule implementation for the USAVars dataset.
@@ -71,6 +71,7 @@ class USAVarsDataModule(pl.LightningModule):
             num_workers=self.num_workers,
             shuffle=True,
         )
+
     def val_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for validation."""
         return DataLoader(
@@ -79,6 +80,7 @@ class USAVarsDataModule(pl.LightningModule):
             num_workers=self.num_workers,
             shuffle=False,
         )
+
     def test_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for testing."""
         return DataLoader(
