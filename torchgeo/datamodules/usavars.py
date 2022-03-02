@@ -38,7 +38,7 @@ class USAVarsDataModule(pl.LightningModule):
             labels: The labels argument passed to the USAVars Dataset classes
             transforms: a function/transform that takes input sample and its target as
                             entry and returns a transformed version
-            fixed_shuffle: always shuffles DataLoader to same order 
+            fixed_shuffle: always shuffles DataLoader to same order
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
         """
