@@ -74,7 +74,6 @@ class USAVarsDataModule(pl.LightningModule):
         dataset = USAVars(self.root_dir, self.labels, transforms=self.transforms)
         self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
             dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
-
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
