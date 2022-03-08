@@ -455,35 +455,50 @@ class ChesapeakeCVPR(GeoDataset):
     )
 
     # these are used to check the integrity of the dataset
-    files = [
-        "de_1m_2013_extended-debuffered-test_tiles",
-        "de_1m_2013_extended-debuffered-train_tiles",
-        "de_1m_2013_extended-debuffered-val_tiles",
-        "md_1m_2013_extended-debuffered-test_tiles",
-        "md_1m_2013_extended-debuffered-train_tiles",
-        "md_1m_2013_extended-debuffered-val_tiles",
-        "ny_1m_2013_extended-debuffered-test_tiles",
-        "ny_1m_2013_extended-debuffered-train_tiles",
-        "ny_1m_2013_extended-debuffered-val_tiles",
-        "pa_1m_2013_extended-debuffered-test_tiles",
-        "pa_1m_2013_extended-debuffered-train_tiles",
-        "pa_1m_2013_extended-debuffered-val_tiles",
-        "va_1m_2014_extended-debuffered-test_tiles",
-        "va_1m_2014_extended-debuffered-train_tiles",
-        "va_1m_2014_extended-debuffered-val_tiles",
-        "wv_1m_2014_extended-debuffered-test_tiles",
-        "wv_1m_2014_extended-debuffered-train_tiles",
-        "wv_1m_2014_extended-debuffered-val_tiles",
-        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_buildings.tif",
-        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-off.tif",  # noqa: E501
-        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-on.tif",  # noqa: E501
-        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_lc.tif",
-        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-new.tif",
-        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-old.tif",
-        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_nlcd.tif",
-        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif",  # noqa: E501
-        "spatial_index.geojson",
-    ]
+    files = {
+        "de": [
+            "de_1m_2013_extended-debuffered-test_tiles",
+            "de_1m_2013_extended-debuffered-train_tiles",
+            "de_1m_2013_extended-debuffered-val_tiles",
+        ],
+        "md": [
+            "md_1m_2013_extended-debuffered-test_tiles",
+            "md_1m_2013_extended-debuffered-train_tiles",
+            "md_1m_2013_extended-debuffered-val_tiles",
+        ],
+        "ny": [
+            "ny_1m_2013_extended-debuffered-test_tiles",
+            "ny_1m_2013_extended-debuffered-train_tiles",
+            "ny_1m_2013_extended-debuffered-val_tiles",
+        ],
+        "pa": [
+            "pa_1m_2013_extended-debuffered-test_tiles",
+            "pa_1m_2013_extended-debuffered-train_tiles",
+            "pa_1m_2013_extended-debuffered-val_tiles",
+        ],
+        "va": [
+            "va_1m_2014_extended-debuffered-test_tiles",
+            "va_1m_2014_extended-debuffered-train_tiles",
+            "va_1m_2014_extended-debuffered-val_tiles",
+        ],
+        "wv": [
+            "wv_1m_2014_extended-debuffered-test_tiles",
+            "wv_1m_2014_extended-debuffered-train_tiles",
+            "wv_1m_2014_extended-debuffered-val_tiles",
+            "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_buildings.tif",
+            "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-off.tif",  # noqa: E501
+            "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-on.tif",  # noqa: E501
+            "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_lc.tif",
+            "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-new.tif",
+            "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-old.tif",
+            "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_nlcd.tif",
+            (
+                "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1"
+                "_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif"
+            ),
+        ],
+        "spatial_index": ["spatial_index.geojson"],
+    }
 
     p_src_crs = pyproj.CRS("epsg:3857")
     p_transformers = {
