@@ -37,6 +37,22 @@ def collate_wrapper(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
             r_batch["mask"], 0, 1
         )
 
+    r_batch.pop("transform", None)
+    r_batch.pop("crs", None)
+    return r_batch
+
+
+def collate_predict_wrapper(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Flatten wrapper."""
+    r_batch: Dict[str, Any] = default_collate(batch)  # type: ignore[no-untyped-call]
+    r_batch["image"] = torch.flatten(  # type: ignore[attr-defined]
+        r_batch["image"], 0, 1
+    )
+    if "mask" in r_batch:
+        r_batch["mask"] = torch.flatten(  # type: ignore[attr-defined]
+            r_batch["mask"], 0, 1
+        )
+
     if "transform" in r_batch:
         # Transform is expected to be in gdal format
         tfm_gdal = [float(i) for i in r_batch["transform"]]
@@ -109,7 +125,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         self.patch_combine = CombineTensorPatches(
             original_size=(h, w), window_size=self.patch_size, unpadding=(h_pad, w_pad)
         )
-        sample["image"] = self.patch_extract(sample["image"].unsqueeze(0).cuda())
+        sample["image"] = self.patch_extract(sample["image"].unsqueeze(0))
         sample["image"] = rearrange(sample["image"], "() t c h w -> t () c h w")
         return sample
 
@@ -221,7 +237,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             self.predict_dataset,
             batch_size=1,
             num_workers=self.num_workers,
-            collate_fn=collate_wrapper,
+            collate_fn=collate_predict_wrapper,
             shuffle=False,
         )
 
