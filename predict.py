@@ -139,6 +139,22 @@ def main(conf: DictConfig) -> None:
 
     experiment_dir = os.path.join(conf.program.output_dir, experiment_name)
 
+    # Directory to store predictions
+    pred_dir = os.path.join(experiment_dir, "predictions")
+    os.makedirs(pred_dir, exist_ok=True)
+
+    if len(os.listdir(pred_dir)) > 0:
+        if conf.program.overwrite:
+            print(
+                f"WARNING! The predictions directory, {pred_dir}, already exists, "
+                + "we will overwrite data in it!"
+            )
+        else:
+            raise FileExistsError(
+                f"The predictions directory, {pred_dir}, already exists and isn't "
+                + "empty. We don't want to overwrite any existing results, exiting..."
+            )
+
     datamodule_args = cast(
         Dict[str, Any], OmegaConf.to_object(conf.experiment.datamodule)
     )
@@ -165,26 +181,30 @@ def main(conf: DictConfig) -> None:
         tfm = batch["transform"] if "transform" in batch else None
         crs = batch["crs"] if "crs" in batch else None
 
-        x = batch["image"].to("cuda")
-        masks = []
-        for tile in x:
-            mask = task(tile)
-            mask = mask.argmax(dim=1)
-            masks.append(mask)
+        x = batch["image"].to("cuda")  # (N, B, C, H, W)
+        assert len(x.shape) in {4, 5}
+        if len(x.shape) == 5:
+            masks = []
+            for tile in x:
+                mask = task(tile)
+                mask = mask.argmax(dim=1)
+                masks.append(mask)
 
-        masks_arr = torch.stack(masks, dim=0)
-        masks_arr = masks_arr.unsqueeze(0)
+            masks_arr = torch.stack(masks, dim=0)
+            masks_arr = masks_arr.unsqueeze(0)
 
-        if hasattr(datamodule, "patch_combine"):
+            if not hasattr(datamodule, "patch_combine"):
+                raise NotImplementedError
             masks_combined = datamodule.patch_combine(masks_arr)[0]
             filename = datamodule.predict_dataset.files[i]["image"]
-            output_path = os.path.join(
-                conf.program.output_dir, os.path.basename(filename)
-            )
+            output_path = os.path.join(pred_dir, os.path.basename(filename))
             write_mask(masks_combined, output_path, tfm, crs)
         else:
-            raise NotImplementedError
-        break
+            mask = task(tile)
+            mask = mask.argmax(dim=1)
+            filename = datamodule.predict_dataset.files[i]["image"]
+            output_path = os.path.join(pred_dir, os.path.basename(filename))
+            write_mask(mask, output_path, tfm, crs)
 
 
 if __name__ == "__main__":

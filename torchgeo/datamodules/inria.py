@@ -113,18 +113,18 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             data_keys=["input", "mask"],
         )
 
-    def patch_sample(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Extract patches from signle sample."""
-        _, h, w = sample["image"].shape
+        h, w = 5000, 5000
         h_pad = (self.patch_size - (h % self.patch_size)) // 2
         w_pad = (self.patch_size - (w % self.patch_size)) // 2
-
         self.patch_extract = ExtractTensorPatches(
             window_size=self.patch_size, stride=self.patch_size, padding=(h_pad, w_pad)
         )
         self.patch_combine = CombineTensorPatches(
             original_size=(h, w), window_size=self.patch_size, unpadding=(h_pad, w_pad)
         )
+
+    def patch_sample(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract patches from signle sample."""
         sample["image"] = self.patch_extract(sample["image"].unsqueeze(0))
         sample["image"] = rearrange(sample["image"], "() t c h w -> t () c h w")
         return sample
