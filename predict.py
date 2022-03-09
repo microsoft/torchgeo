@@ -178,8 +178,8 @@ def main(conf: DictConfig) -> None:
         raise NotImplementedError
 
     for i, batch in enumerate(dataloader):
-        tfm = batch["transform"] if "transform" in batch else None
-        crs = batch["crs"] if "crs" in batch else None
+        tfm = batch.get("transform")
+        crs = batch.get("crs")
 
         x = batch["image"].to("cuda")  # (N, B, C, H, W)
         assert len(x.shape) in {4, 5}
