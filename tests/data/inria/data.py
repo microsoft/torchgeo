@@ -87,5 +87,5 @@ def generate_test_data(root: str, n_samples: int = 2) -> str:
 
 
 if __name__ == "__main__":
-    md5_hash = generate_test_data(os.getcwd(), 10)
+    md5_hash = generate_test_data(os.getcwd(), 5)
     print(md5_hash)

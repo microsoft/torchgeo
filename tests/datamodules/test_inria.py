@@ -12,7 +12,7 @@ from torchgeo.datamodules import InriaAerialImageLabelingDataModule
 
 
 class TestInriaAerialImageLabelingDataModule:
-    @pytest.fixture(params=zip([0.1, 0.1, 0.0], [0.1, 0.0, 0.0]))
+    @pytest.fixture(params=zip([0.2, 0.2, 0.0], [0.2, 0.0, 0.0]))
     def datamodule(
         self, request: SubRequest, monkeypatch: Generator[MonkeyPatch, None, None]
     ) -> InriaAerialImageLabelingDataModule:
