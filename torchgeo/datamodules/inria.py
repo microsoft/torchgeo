@@ -3,7 +3,7 @@
 
 """InriaAerialImageLabeling datamodule."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import kornia.augmentation as K
 import pytorch_lightning as pl
@@ -13,6 +13,7 @@ from einops import rearrange
 from kornia.contrib import CombineTensorPatches, ExtractTensorPatches
 from rasterio.crs import CRS
 from rasterio.transform import Affine
+from torch.nn.modules.utils import _pair
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data._utils.collate import default_collate
 
@@ -24,6 +25,23 @@ DEFAULT_AUGS = K.AugmentationSequential(
     K.RandomVerticalFlip(p=0.5),
     data_keys=["input", "mask"],
 )
+
+
+# Maybe this can be moved to utils?
+def compute_padding(
+    h: int, w: int, window_size: Union[int, Tuple[int, int]]
+) -> Tuple[int, int]:
+    """Compute required padding."""
+    window_size = cast(Tuple[int, int], _pair(window_size))
+    if (h % window_size[0]) == 0:
+        h_pad = 0
+    else:
+        h_pad = (window_size[0] - (h % window_size[0])) // 2
+    if (w % window_size[1]) == 0:
+        w_pad = 0
+    else:
+        w_pad = (window_size[1] - (w % window_size[1])) // 2
+    return (h_pad, w_pad)
 
 
 def collate_wrapper(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -48,10 +66,6 @@ def collate_predict_wrapper(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
     r_batch["image"] = torch.flatten(  # type: ignore[attr-defined]
         r_batch["image"], 0, 1
     )
-    if "mask" in r_batch:
-        r_batch["mask"] = torch.flatten(  # type: ignore[attr-defined]
-            r_batch["mask"], 0, 1
-        )
 
     if "transform" in r_batch:
         # Transform is expected to be in gdal format
@@ -74,6 +88,8 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
     .. versionadded:: 0.3
     """
 
+    h, w = 5000, 5000
+
     def __init__(
         self,
         root_dir: str,
@@ -81,7 +97,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         num_workers: int = 0,
         val_split_pct: float = 0.1,
         test_split_pct: float = 0.1,
-        patch_size: int = 512,
+        patch_size: Union[int, Tuple[int, int]] = 512,
         num_patches_per_tile: int = 32,
         augmentations: K.AugmentationSequential = DEFAULT_AUGS,
     ) -> None:
@@ -105,22 +121,21 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
-        self.patch_size = patch_size
+        self.patch_size = cast(Tuple[int, int], _pair(patch_size))
         self.num_patches_per_tile = num_patches_per_tile
         self.augmentations = augmentations
         self.random_crop = K.AugmentationSequential(
-            K.RandomCrop((self.patch_size, self.patch_size), p=1.0, keepdim=False),
+            K.RandomCrop(self.patch_size, p=1.0, keepdim=False),
             data_keys=["input", "mask"],
         )
-
-        h, w = 5000, 5000
-        h_pad = (self.patch_size - (h % self.patch_size)) // 2
-        w_pad = (self.patch_size - (w % self.patch_size)) // 2
+        padding = compute_padding(self.h, self.w, self.patch_size)
         self.patch_extract = ExtractTensorPatches(
-            window_size=self.patch_size, stride=self.patch_size, padding=(h_pad, w_pad)
+            window_size=self.patch_size, stride=self.patch_size, padding=padding
         )
         self.patch_combine = CombineTensorPatches(
-            original_size=(h, w), window_size=self.patch_size, unpadding=(h_pad, w_pad)
+            original_size=(self.h, self.w),
+            window_size=self.patch_size,
+            unpadding=padding,
         )
 
     def patch_sample(self, sample: Dict[str, Any]) -> Dict[str, Any]:

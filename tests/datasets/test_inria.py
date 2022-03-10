@@ -21,7 +21,7 @@ class TestInriaAerialImageLabeling:
     ) -> InriaAerialImageLabeling:
 
         root = os.path.join("tests", "data", "inria")
-        test_md5 = "f23caf363389ef59de55fad11197c161"
+        test_md5 = "88454a077105b61811d9b01483e10cf3"
         monkeypatch.setattr(InriaAerialImageLabeling, "md5", test_md5)
         transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return InriaAerialImageLabeling(
@@ -39,7 +39,7 @@ class TestInriaAerialImageLabeling:
         assert x["image"].ndim == 3
 
     def test_len(self, dataset: InriaAerialImageLabeling) -> None:
-        assert len(dataset) == 2
+        assert len(dataset) == 10
 
     def test_already_downloaded(self, dataset: InriaAerialImageLabeling) -> None:
         InriaAerialImageLabeling(root=dataset.root)
