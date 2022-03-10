@@ -172,10 +172,7 @@ def main(conf: DictConfig) -> None:
     task = task.to("cuda")
     datamodule = datamodule_class(**datamodule_args)
     datamodule.setup()
-    if hasattr(datamodule, "predict_dataloader"):
-        dataloader = datamodule.predict_dataloader()
-    else:
-        raise NotImplementedError
+    dataloader = datamodule.predict_dataloader()
 
     for i, batch in enumerate(dataloader):
         tfm = batch.get("transform")
@@ -200,7 +197,7 @@ def main(conf: DictConfig) -> None:
             output_path = os.path.join(pred_dir, os.path.basename(filename))
             write_mask(masks_combined, output_path, tfm, crs)
         else:
-            mask = task(tile)
+            mask = task(x)
             mask = mask.argmax(dim=1)
             filename = datamodule.predict_dataset.files[i]["image"]
             output_path = os.path.join(pred_dir, os.path.basename(filename))
