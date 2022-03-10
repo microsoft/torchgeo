@@ -34,6 +34,7 @@ from .etci2021 import ETCI2021
 from .eudem import EUDEM
 from .eurosat import EuroSAT
 from .fair1m import FAIR1M
+from .forestdamage import ForestDamage
 from .geo import (
     GeoDataset,
     IntersectionDataset,
@@ -138,6 +139,7 @@ __all__ = (
     "ETCI2021",
     "EuroSAT",
     "FAIR1M",
+    "ForestDamage",
     "GID15",
     "IDTReeS",
     "InriaAerialImageLabeling",
