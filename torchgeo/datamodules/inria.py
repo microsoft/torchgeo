@@ -200,13 +200,6 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
                     train_dataset, val_pct=self.val_split_pct
                 )
                 self.test_dataset = self.val_dataset
-            # val_dataset = InriaAerialImageLabeling(
-            #     self.root_dir, split="train", transforms=train_transforms
-            # )
-            # self.train_dataset, self.val_dataset = dataset_split(
-            #     train_dataset, val_pct=self.val_split_pct
-            # )
-            # self.val_dataset.dataset = val_dataset
         else:
             self.train_dataset = train_dataset
             self.val_dataset = train_dataset
