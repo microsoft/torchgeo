@@ -23,6 +23,7 @@ from torchgeo.datasets import (
     Sentinel2,
     UnionDataset,
     VectorDataset,
+    VectorShapesDataset,
     VisionClassificationDataset,
     VisionDataset,
 )
@@ -223,6 +224,37 @@ class TestVectorDataset:
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="No VectorDataset data was found"):
             VectorDataset(str(tmp_path))
+
+
+class TestVectorShapesDataset:
+    @pytest.fixture
+    def dataset(self) -> VectorShapesDataset:
+        root = os.path.join("tests", "data", "cbf")
+        transforms = nn.Identity()  # type: ignore[attr-defined]
+        return VectorShapesDataset(root, transforms=transforms)
+
+    def test_getitem(self, dataset: VectorShapesDataset) -> None:
+        x = dataset[dataset.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x["crs"], CRS)
+        assert isinstance(x["shapes"], list)
+        assert x["shapes"][0]["type"] == "Polygon"
+        assert x["shapes"][-1]["coordinates"] == [
+            [(0.0, 0.0), (0.0, 1.0), (1.0, 1.0), (1.0, 0.0), (0.0, 0.0)]
+        ]
+
+    def test_invalid_query(self, dataset: VectorShapesDataset) -> None:
+        query = BoundingBox(2, 2, 2, 2, 2, 2)
+        with pytest.raises(
+            IndexError, match="query: .* not found in index with bounds:"
+        ):
+            dataset[query]
+
+    def test_no_data(self, tmp_path: Path) -> None:
+        with pytest.raises(
+            FileNotFoundError, match="No VectorShapesDataset data was found"
+        ):
+            VectorShapesDataset(str(tmp_path))
 
 
 class TestVisionDataset:

@@ -40,6 +40,7 @@ from .geo import (
     RasterDataset,
     UnionDataset,
     VectorDataset,
+    VectorShapesDataset,
     VisionClassificationDataset,
     VisionDataset,
 )
@@ -171,6 +172,7 @@ __all__ = (
     "RasterDataset",
     "UnionDataset",
     "VectorDataset",
+    "VectorShapesDataset",
     "VisionDataset",
     "VisionClassificationDataset",
     # Utilities
