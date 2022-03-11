@@ -16,6 +16,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import VisionDataset
+from .utils import check_integrity, download_and_extract_archive, extract_archive
 
 
 def parse_pascal_voc(path: str) -> Dict[str, Any]:
@@ -65,18 +66,33 @@ class ForestDamage(VisionDataset):
 
     * images are three-channel jpgs
     * annotations are in `Pascal VOC XML format
-      <https://roboflow.com/formats/pascal-voc-xml#w-tabs-0-data-w-pane-3>`_n
+      <https://roboflow.com/formats/pascal-voc-xml#w-tabs-0-data-w-pane-3>`_
+
+    Dataset Classes:
+
+    * other (0)
+    * healthy (1)
+    * light damage (2)
+    * high damage (3)
+
+    If the download fails or takes too long, it is recommended to try azcopy
+    as suggested `here <https://lila.science/faq>`_. It is expected that the
+    downloaded data file with name `Data_Set_Larch_Casebearer`
+    can be found in `root`.
 
     If you use this dataset in your research, please use the following citation:
 
-    * Swedish Forest Agency (2021): Forest Damages – Larch Casebearer 1.0.
+    * Swedish Forest Agency (2021): Forest Damages - Larch Casebearer 1.0.
       National Forest Data Lab. Dataset.
 
     .. versionadded:: 0.3
     """
 
-    classes = ["H", "LD", "HD", "other"]
-
+    classes = ["other", "H", "LD", "HD"]
+    url = (
+        "https://lilablobssc.blob.core.windows.net/larch-casebearer/"
+        "Data_Set_Larch_Casebearer.zip"
+    )
     data_dir = "Data_Set_Larch_Casebearer"
     md5 = "907815bcc739bff89496fac8f8ce63d7"
 
@@ -104,6 +120,8 @@ class ForestDamage(VisionDataset):
         self.transforms = transforms
         self.checksum = checksum
         self.download = download
+
+        self._verify()
 
         self.files = self._load_files(self.root)
 
@@ -146,7 +164,7 @@ class ForestDamage(VisionDataset):
             root: root dir of dataset
 
         Returns:
-            list of dicts containing paths for each pair of image, audio, label
+            list of dicts containing paths for each pair of image, annotation
         """
         images = sorted(
             glob.glob(os.path.join(root, self.data_dir, "**", "Images", "*.JPG"))
@@ -194,6 +212,47 @@ class ForestDamage(VisionDataset):
         boxes = torch.tensor(bboxes).to(torch.float)  # type: ignore[attr-defined]
         labels = torch.tensor(labels_list)  # type: ignore[attr-defined]
         return boxes, cast(Tensor, labels)
+
+    def _verify(self) -> None:
+        """Checks the integrity of the dataset structure.
+
+        Returns:
+            True if the dataset directories are found, else False
+        """
+        filepath = os.path.join(self.root, self.data_dir)
+        if os.path.isdir(filepath):
+            return
+
+        filepath = os.path.join(self.root, self.data_dir + ".zip")
+        if os.path.isfile(filepath):
+            if self.checksum and not check_integrity(filepath, self.md5):
+                raise RuntimeError("Dataset found, but corrupted.")
+            extract_archive(filepath)
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise RuntimeError(
+                "Dataset not found in `root` directory, either specify a different"
+                + " `root` directory or manually download "
+                + "the dataset to this directory."
+            )
+
+        # else download the dataset
+        self._download()
+
+    def _download(self) -> None:
+        """Download the dataset and extract it.
+
+        Raises:
+            AssertionError: if the checksum does not match
+        """
+        download_and_extract_archive(
+            self.url,
+            self.root,
+            filename=self.data_dir + ".zip",
+            md5=self.md5 if self.checksum else None,
+        )
 
     def plot(
         self,
