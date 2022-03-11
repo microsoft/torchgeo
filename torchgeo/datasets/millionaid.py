@@ -274,16 +274,16 @@ class MillionAID(VisionDataset):
             glob.glob(os.path.join(root, self.split, "**", "**", "**", "*.jpg"))
         )
 
-        scenes = [p.split("/")[-3] for p in imgs_no_subcat] + [
-            p.split("/")[-4] for p in imgs_subcat
+        scenes = [p.split(os.sep)[-3] for p in imgs_no_subcat] + [
+            p.split(os.sep)[-4] for p in imgs_subcat
         ]
 
         subcategories = ["Missing" for p in imgs_no_subcat] + [
-            p.split("/")[-3] for p in imgs_subcat
+            p.split(os.sep)[-3] for p in imgs_subcat
         ]
 
-        classes = [p.split("/")[-2] for p in imgs_no_subcat] + [
-            p.split("/")[-2] for p in imgs_subcat
+        classes = [p.split(os.sep)[-2] for p in imgs_no_subcat] + [
+            p.split(os.sep)[-2] for p in imgs_subcat
         ]
 
         if self.task == "multi-label":
