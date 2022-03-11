@@ -628,6 +628,37 @@ class VectorDataset(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
+        shapes = self._load_shapes(query=query)
+
+        # Rasterize geometries
+        width = (query.maxx - query.minx) / self.res
+        height = (query.maxy - query.miny) / self.res
+        transform = rasterio.transform.from_bounds(
+            query.minx, query.miny, query.maxx, query.maxy, width, height
+        )
+        masks = rasterio.features.rasterize(
+            shapes, out_shape=(int(height), int(width)), transform=transform
+        )
+
+        sample = {
+            "mask": torch.tensor(masks),  # type: ignore[attr-defined]
+            "crs": self.crs,
+            "bbox": query,
+        }
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+    def _load_shapes(self, query: BoundingBox) -> List[Dict[str, Any]]:
+        """Load a collection of geometry shapes.
+
+        Args:
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+        Returns:
+            list of geometry shapes
+        """
         hits = self.index.intersection(tuple(query), objects=True)
         filepaths = [hit.object for hit in hits]
 
@@ -654,27 +685,7 @@ class VectorDataset(GeoDataset):
                         src.crs, self.crs.to_dict(), feature["geometry"]
                     )
                     shapes.append(shape)
-
-        # Rasterize geometries
-        width = (query.maxx - query.minx) / self.res
-        height = (query.maxy - query.miny) / self.res
-        transform = rasterio.transform.from_bounds(
-            query.minx, query.miny, query.maxx, query.maxy, width, height
-        )
-        masks = rasterio.features.rasterize(
-            shapes, out_shape=(int(height), int(width)), transform=transform
-        )
-
-        sample = {
-            "mask": torch.tensor(masks),  # type: ignore[attr-defined]
-            "crs": self.crs,
-            "bbox": query,
-        }
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
+        return shapes
 
     def plot(self, data: Tensor) -> None:
         """Plot a data sample.
