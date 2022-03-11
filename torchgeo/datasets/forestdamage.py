@@ -78,6 +78,7 @@ class ForestDamage(VisionDataset):
     classes = ["H", "LD", "HD", "other"]
 
     data_dir = "Data_Set_Larch_Casebearer"
+    md5 = "907815bcc739bff89496fac8f8ce63d7"
 
     def __init__(
         self,
