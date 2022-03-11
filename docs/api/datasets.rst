@@ -294,6 +294,11 @@ VectorDataset
 
 .. autoclass:: VectorDataset
 
+VectorShapesDataset
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: VectorShapesDataset
+
 VisionDataset
 ^^^^^^^^^^^^^
 

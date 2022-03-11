@@ -703,6 +703,58 @@ class VectorDataset(GeoDataset):
         plt.close()
 
 
+class VectorShapesDataset(VectorDataset):
+    """Abstract base class for polygon geometries stored in vector files.
+
+    This base class is designed for object detection datasets with geometries
+    stored inside of geopackages, geojson, shapefiles, or other vector file
+    formats.
+    """
+
+    def __init__(
+        self,
+        root: str = "data",
+        crs: Optional[CRS] = None,
+        res: float = 0.0001,
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+    ) -> None:
+        """Initialize a new VectorShapesDataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
+            res: resolution of the dataset in units of CRS
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+
+        Raises:
+            FileNotFoundError: if no files are found in ``root``
+        """
+        super().__init__(root, crs, res, transforms)
+
+    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+        """Retrieve geometry shapes indexed by query.
+
+        Args:
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+
+        Returns:
+            sample of geometry shapes at that index
+
+        Raises:
+            IndexError: if query is not found in the index
+        """
+        shapes = self._load_shapes(query=query)
+
+        sample = {"shapes": shapes, "crs": self.crs, "bbox": query}
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+
 class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):
     """Abstract base class for datasets lacking geospatial information.
 
