@@ -38,10 +38,10 @@ class TestSEN12MS:
             "02d5128ac1fc2bf8762091b4f319762d",
         ]
 
-        monkeypatch.setattr(SEN12MS, "md5s", md5s)  # type: ignore[attr-defined]
+        monkeypatch.setattr(SEN12MS, "md5s", md5s)
         root = os.path.join("tests", "data", "sen12ms")
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return SEN12MS(root, split, transforms=transforms, checksum=True)
 
     def test_getitem(self, dataset: SEN12MS) -> None:

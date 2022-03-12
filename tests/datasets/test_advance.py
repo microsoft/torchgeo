@@ -26,19 +26,17 @@ class TestADVANCE:
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> ADVANCE:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.utils, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "advance")
         urls = [
             os.path.join(data_dir, "ADVANCE_vision.zip"),
             os.path.join(data_dir, "ADVANCE_sound.zip"),
         ]
         md5s = ["43acacecebecd17a82bc2c1e719fd7e4", "039b7baa47879a8a4e32b9dd8287f6ad"]
-        monkeypatch.setattr(ADVANCE, "urls", urls)  # type: ignore[attr-defined]
-        monkeypatch.setattr(ADVANCE, "md5s", md5s)  # type: ignore[attr-defined]
+        monkeypatch.setattr(ADVANCE, "urls", urls)
+        monkeypatch.setattr(ADVANCE, "md5s", md5s)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return ADVANCE(root, transforms, download=True, checksum=True)
 
     @pytest.fixture
@@ -52,9 +50,7 @@ class TestADVANCE:
                 raise ImportError()
             return import_orig(name, *args, **kwargs)
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            builtins, "__import__", mocked_import
-        )
+        monkeypatch.setattr(builtins, "__import__", mocked_import)
 
     def test_getitem(self, dataset: ADVANCE) -> None:
         pytest.importorskip("scipy", minversion="0.9.0")

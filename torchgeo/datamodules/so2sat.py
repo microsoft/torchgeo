@@ -23,7 +23,7 @@ class So2SatDataModule(pl.LightningDataModule):
     Uses the train/val/test splits from the dataset.
     """
 
-    band_means = torch.tensor(  # type: ignore[attr-defined]
+    band_means = torch.tensor(
         [
             -3.591224256609313e-05,
             -7.658561276843396e-06,
@@ -46,7 +46,7 @@ class So2SatDataModule(pl.LightningDataModule):
         ]
     ).reshape(18, 1, 1)
 
-    band_stds = torch.tensor(  # type: ignore[attr-defined]
+    band_stds = torch.tensor(
         [
             0.17555201137417686,
             0.17556463274968204,

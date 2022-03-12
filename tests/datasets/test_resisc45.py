@@ -33,14 +33,12 @@ class TestRESISC45:
     ) -> RESISC45:
         pytest.importorskip("rarfile", minversion="3")
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.resisc45, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.resisc45, "download_url", download_url)
         md5 = "5895dea3757ba88707d52f5521c444d3"
-        monkeypatch.setattr(RESISC45, "md5", md5)  # type: ignore[attr-defined]
+        monkeypatch.setattr(RESISC45, "md5", md5)
         url = os.path.join("tests", "data", "resisc45", "NWPU-RESISC45.rar")
-        monkeypatch.setattr(RESISC45, "url", url)  # type: ignore[attr-defined]
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        monkeypatch.setattr(RESISC45, "url", url)
+        monkeypatch.setattr(
             RESISC45,
             "split_urls",
             {
@@ -51,7 +49,7 @@ class TestRESISC45:
                 "test": os.path.join("tests", "data", "resisc45", "resisc45-test.txt"),
             },
         )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        monkeypatch.setattr(
             RESISC45,
             "split_md5s",
             {
@@ -62,7 +60,7 @@ class TestRESISC45:
         )
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return RESISC45(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: RESISC45) -> None:

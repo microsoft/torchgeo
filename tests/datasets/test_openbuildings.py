@@ -43,8 +43,8 @@ class TestOpenBuildings:
 
         md5s = {"000_buildings.csv.gz": "20aeeec9d45a0ce4d772a26e0bcbc25f"}
 
-        monkeypatch.setattr(OpenBuildings, "md5s", md5s)  # type: ignore[attr-defined]
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        monkeypatch.setattr(OpenBuildings, "md5s", md5s)
+        transforms = nn.Identity()
         return OpenBuildings(root=root, transforms=transforms)
 
     @pytest.fixture(params=["pandas"])
@@ -59,9 +59,7 @@ class TestOpenBuildings:
                 raise ImportError()
             return import_orig(name, *args, **kwargs)
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            builtins, "__import__", mocked_import
-        )
+        monkeypatch.setattr(builtins, "__import__", mocked_import)
         return package
 
     def test_mock_missing_module(

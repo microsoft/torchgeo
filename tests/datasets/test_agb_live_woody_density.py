@@ -31,8 +31,8 @@ class TestAbovegroundLiveWoodyBiomassDensity:
         self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> AbovegroundLiveWoodyBiomassDensity:
 
-        transforms = nn.Identity()  # type: ignore[attr-defined]
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        transforms = nn.Identity()
+        monkeypatch.setattr(
             torchgeo.datasets.agb_live_woody_density, "download_url", download_url
         )
         url = os.path.join(
@@ -41,9 +41,7 @@ class TestAbovegroundLiveWoodyBiomassDensity:
             "agb_live_woody_density",
             "Aboveground_Live_Woody_Biomass_Density.geojson",
         )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            AbovegroundLiveWoodyBiomassDensity, "url", url
-        )
+        monkeypatch.setattr(AbovegroundLiveWoodyBiomassDensity, "url", url)
 
         root = str(tmp_path)
         return AbovegroundLiveWoodyBiomassDensity(

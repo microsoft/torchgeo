@@ -29,9 +29,7 @@ class TestETCI2021:
         tmp_path: Path,
         request: SubRequest,
     ) -> ETCI2021:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.utils, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "etci2021")
         metadata = {
             "train": {
@@ -53,10 +51,10 @@ class TestETCI2021:
                 "url": os.path.join(data_dir, "test_without_ref_labels.zip"),
             },
         }
-        monkeypatch.setattr(ETCI2021, "metadata", metadata)  # type: ignore[attr-defined]   # noqa: E501
+        monkeypatch.setattr(ETCI2021, "metadata", metadata)  # noqa: E501
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return ETCI2021(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: ETCI2021) -> None:

@@ -53,7 +53,7 @@ class SemanticSegmentationTask(LightningModule):
             )
 
         if self.hparams["loss"] == "ce":
-            self.loss = nn.CrossEntropyLoss(  # type: ignore[attr-defined]
+            self.loss = nn.CrossEntropyLoss(
                 ignore_index=-1000 if self.ignore_zeros is None else 0
             )
         elif self.hparams["loss"] == "jaccard":
@@ -106,7 +106,7 @@ class SemanticSegmentationTask(LightningModule):
         self.val_metrics = self.train_metrics.clone(prefix="val_")
         self.test_metrics = self.train_metrics.clone(prefix="test_")
 
-    def forward(self, x: Tensor) -> Any:  # type: ignore[override]
+    def forward(self, x) -> Any:  # type: ignore[override]
         """Forward pass of the model.
 
         Args:
@@ -176,7 +176,7 @@ class SemanticSegmentationTask(LightningModule):
 
         if batch_idx < 10:
             try:
-                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                datamodule = self.trainer.datamodule
                 batch["prediction"] = y_hat_hard
                 for key in ["image", "mask", "prediction"]:
                     batch[key] = batch[key].cpu()

@@ -18,12 +18,10 @@ from torchgeo.datasets import BoundingBox, IntersectionDataset, Landsat8, UnionD
 class TestLandsat8:
     @pytest.fixture
     def dataset(self, monkeypatch: Generator[MonkeyPatch, None, None]) -> Landsat8:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            plt, "show", lambda *args: None
-        )
+        monkeypatch.setattr(plt, "show", lambda *args: None)
         root = os.path.join("tests", "data", "landsat8")
         bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7"]
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return Landsat8(root, bands=bands, transforms=transforms)
 
     def test_separate_files(self, dataset: Landsat8) -> None:

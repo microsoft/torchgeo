@@ -26,11 +26,11 @@ class TestPotsdam2D:
             "train": ["top_potsdam_2_10", "top_potsdam_2_11"],
             "test": ["top_potsdam_5_15", "top_potsdam_6_15"],
         }
-        monkeypatch.setattr(Potsdam2D, "md5s", md5s)  # type: ignore[attr-defined]
-        monkeypatch.setattr(Potsdam2D, "splits", splits)  # type: ignore[attr-defined]
+        monkeypatch.setattr(Potsdam2D, "md5s", md5s)
+        monkeypatch.setattr(Potsdam2D, "splits", splits)
         root = os.path.join("tests", "data", "potsdam")
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return Potsdam2D(root, split, transforms, checksum=True)
 
     def test_getitem(self, dataset: Potsdam2D) -> None:

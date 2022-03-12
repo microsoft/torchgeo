@@ -158,7 +158,7 @@ class XView2(VisionDataset):
         filename = os.path.join(path)
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -175,8 +175,8 @@ class XView2(VisionDataset):
         filename = os.path.join(path)
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("L"))
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
-            tensor = tensor.to(torch.long)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
+            tensor = tensor.to(torch.long)
             return tensor
 
     def _verify(self) -> None:

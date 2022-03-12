@@ -175,7 +175,7 @@ class DFC2022(VisionDataset):
         files = self.files[index]
         image = self._load_image(files["image"])
         dem = self._load_image(files["dem"], shape=image.shape[1:])
-        image = torch.cat(tensors=[image, dem], dim=0)  # type: ignore[attr-defined]
+        image = torch.cat(tensors=[image, dem], dim=0)
 
         sample = {"image": image}
 
@@ -235,7 +235,7 @@ class DFC2022(VisionDataset):
             array: "np.typing.NDArray[np.float_]" = f.read(
                 out_shape=shape, out_dtype="float32", resampling=Resampling.bilinear
             )
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             return tensor
 
     def _load_target(self, path: str) -> Tensor:
@@ -251,8 +251,8 @@ class DFC2022(VisionDataset):
             array: "np.typing.NDArray[np.int_]" = f.read(
                 indexes=1, out_dtype="int32", resampling=Resampling.bilinear
             )
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
-            tensor = tensor.to(torch.long)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
+            tensor = tensor.to(torch.long)
             return tensor
 
     def _verify(self) -> None:
@@ -310,7 +310,7 @@ class DFC2022(VisionDataset):
         """
         ncols = 2
         image = sample["image"][:3]
-        image = image.to(torch.uint8)  # type: ignore[attr-defined]
+        image = image.to(torch.uint8)
         image = image.permute(1, 2, 0).numpy()
 
         dem = sample["image"][-1].numpy()

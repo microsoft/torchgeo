@@ -46,7 +46,7 @@ class AppendNormalizedDifferenceIndex(Module):
         self.index_a = index_a
         self.index_b = index_b
 
-    def _compute_index(self, band_a: Tensor, band_b: Tensor) -> Tensor:
+    def _compute_index(self, band_a, band_b) -> Tensor:
         """Compute normalized difference index.
 
         Args:
@@ -74,9 +74,7 @@ class AppendNormalizedDifferenceIndex(Module):
             )
             index = index.unsqueeze(self.dim)
 
-            sample["image"] = torch.cat(  # type: ignore[attr-defined]
-                [sample["image"], index], dim=self.dim
-            )
+            sample["image"] = torch.cat([sample["image"], index], dim=self.dim)
 
         return sample
 
@@ -329,7 +327,7 @@ class AppendTriBandNormalizedDifferenceIndex(Module):
         self.index_b = index_b
         self.index_c = index_c
 
-    def _compute_index(self, band_a: Tensor, band_b: Tensor, band_c: Tensor) -> Tensor:
+    def _compute_index(self, band_a, band_b, band_c) -> Tensor:
         """Compute tri-band normalized difference index.
 
         Args:
@@ -359,8 +357,6 @@ class AppendTriBandNormalizedDifferenceIndex(Module):
             )
             index = index.unsqueeze(self.dim)
 
-            sample["image"] = torch.cat(  # type: ignore[attr-defined]
-                [sample["image"], index], dim=self.dim
-            )
+            sample["image"] = torch.cat([sample["image"], index], dim=self.dim)
 
         return sample

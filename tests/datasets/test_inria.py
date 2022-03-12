@@ -23,10 +23,8 @@ class TestInriaAerialImageLabeling:
 
         root = os.path.join("tests", "data", "inria")
         test_md5 = "f23caf363389ef59de55fad11197c161"
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            InriaAerialImageLabeling, "md5", test_md5
-        )
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        monkeypatch.setattr(InriaAerialImageLabeling, "md5", test_md5)
+        transforms = nn.Identity()
         return InriaAerialImageLabeling(
             root, split=request.param, transforms=transforms, checksum=True
         )

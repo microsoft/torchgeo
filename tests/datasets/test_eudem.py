@@ -23,11 +23,11 @@ class TestEUDEM:
     ) -> EUDEM:
 
         md5s = {"eu_dem_v11_E30N10.zip": "ef148466c02197a08be169eaad186591"}
-        monkeypatch.setattr(EUDEM, "md5s", md5s)  # type: ignore[attr-defined]
+        monkeypatch.setattr(EUDEM, "md5s", md5s)
         zipfile = os.path.join("tests", "data", "eudem", "eu_dem_v11_E30N10.zip")
         shutil.copy(zipfile, tmp_path)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return EUDEM(root, transforms=transforms)
 
     def test_getitem(self, dataset: EUDEM) -> None:

@@ -239,7 +239,7 @@ class IDTReeS(VisionDataset):
         """
         with rasterio.open(path) as f:
             array = f.read(out_shape=self.image_size, resampling=Resampling.bilinear)
-        tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+        tensor = torch.from_numpy(array)
         return tensor
 
     def _load_las(self, path: str) -> Tensor:
@@ -255,7 +255,7 @@ class IDTReeS(VisionDataset):
 
         las = laspy.read(path)
         array: "np.typing.NDArray[np.int_]" = np.stack([las.x, las.y, las.z], axis=0)
-        tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+        tensor = torch.from_numpy(array)
         return tensor
 
     def _load_boxes(self, path: str) -> Tensor:
@@ -294,7 +294,7 @@ class IDTReeS(VisionDataset):
                 ymax = max([coord[1] for coord in coords])
                 boxes.append([xmin, ymin, xmax, ymax])
 
-        tensor: Tensor = torch.tensor(boxes)  # type: ignore[attr-defined]
+        tensor = torch.tensor(boxes)
         return tensor
 
     def _load_target(self, path: str) -> Tensor:
@@ -313,7 +313,7 @@ class IDTReeS(VisionDataset):
         # Load object labels
         classes = self.labels[indices]["taxonID"].tolist()
         labels = [self.class2idx[c] for c in classes]
-        tensor: Tensor = torch.tensor(labels)  # type: ignore[attr-defined]
+        tensor = torch.tensor(labels)
         return tensor
 
     def _load(self, root: str) -> Tuple[List[str], Dict[int, Dict[str, Any]], Any]:
@@ -448,7 +448,7 @@ class IDTReeS(VisionDataset):
         """
         assert len(hsi_indices) == 3
 
-        def normalize(x: Tensor) -> Tensor:
+        def normalize(x) -> Tensor:
             return (x - x.min()) / (x.max() - x.min())
 
         ncols = 3

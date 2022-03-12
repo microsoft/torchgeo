@@ -208,17 +208,15 @@ def main(args: argparse.Namespace) -> None:
     # Benchmark model
     model = resnet34()
     # Change number of input channels to match Landsat
-    model.conv1 = nn.Conv2d(  # type: ignore[attr-defined]
+    model.conv1 = nn.Conv2d(
         len(bands), 64, kernel_size=7, stride=2, padding=3, bias=False
     )
 
-    criterion = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
+    criterion = nn.CrossEntropyLoss()
     params = model.parameters()
     optimizer = optim.SGD(params, lr=0.0001)
 
-    device = torch.device(  # type: ignore[attr-defined]
-        "cuda" if torch.cuda.is_available() else "cpu", args.device
-    )
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu", args.device)
     model = model.to(device)
 
     tic = time.time()
@@ -227,7 +225,7 @@ def main(args: argparse.Namespace) -> None:
         num_total_patches += args.batch_size
         x = torch.rand(args.batch_size, len(bands), args.patch_size, args.patch_size)
         # y = torch.randint(0, 256, (args.batch_size, args.patch_size, args.patch_size))
-        y = torch.randint(0, 256, (args.batch_size,))  # type: ignore[attr-defined]
+        y = torch.randint(0, 256, (args.batch_size,))
         x = x.to(device)
         y = y.to(device)
 

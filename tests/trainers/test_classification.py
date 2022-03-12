@@ -56,9 +56,7 @@ class TestClassificationTask:
         datamodule = classname(**datamodule_kwargs)
 
         # Instantiate model
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            timm, "create_model", create_model
-        )
+        monkeypatch.setattr(timm, "create_model", create_model)
         model_kwargs = conf_dict["module"]
         model = ClassificationTask(**model_kwargs)
 
@@ -151,9 +149,7 @@ class TestMultiLabelClassificationTask:
         datamodule = classname(**datamodule_kwargs)
 
         # Instantiate model
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            timm, "create_model", create_model
-        )
+        monkeypatch.setattr(timm, "create_model", create_model)
         model_kwargs = conf_dict["module"]
         model = MultiLabelClassificationTask(**model_kwargs)
 

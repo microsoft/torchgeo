@@ -325,11 +325,9 @@ class OpenBuildings(VectorDataset):
             masks = rasterio.features.rasterize(
                 shapes, out_shape=(int(height), int(width)), transform=transform
             )
-            masks = torch.tensor(masks).unsqueeze(0)  # type: ignore[attr-defined]
+            masks = torch.tensor(masks).unsqueeze(0)
         else:
-            masks = torch.zeros(  # type: ignore[attr-defined]
-                size=(1, int(height), int(width))
-            )
+            masks = torch.zeros(size=(1, int(height), int(width)))
 
         sample = {"mask": masks, "crs": self.crs, "bbox": query}
 

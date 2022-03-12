@@ -55,9 +55,7 @@ class RCF(Module):
         if seed is None:
             generator = None
         else:
-            generator = torch.Generator().manual_seed(  # type: ignore[attr-defined]
-                seed
-            )
+            generator = torch.Generator().manual_seed(seed)
 
         # We register the weight and bias tensors as "buffers". This does two things:
         # makes them behave correctly when we call .to(...) on the module, and makes
@@ -75,14 +73,10 @@ class RCF(Module):
             ),
         )
         self.register_buffer(
-            "biases",
-            torch.zeros(  # type: ignore[attr-defined]
-                features // 2, requires_grad=False
-            )
-            + bias,
+            "biases", torch.zeros(features // 2, requires_grad=False) + bias
         )
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x) -> Tensor:
         """Forward pass of the RCF model.
 
         Args:
@@ -104,9 +98,9 @@ class RCF(Module):
         x1b = F.adaptive_avg_pool2d(x1b, (1, 1)).squeeze()
 
         if len(x1a.shape) == 1:  # case where we passed a single input
-            output = torch.cat((x1a, x1b), dim=0)  # type: ignore[attr-defined]
+            output = torch.cat((x1a, x1b), dim=0)
             return cast(Tensor, output)
         else:  # case where we passed a batch of > 1 inputs
             assert len(x1a.shape) == 2
-            output = torch.cat((x1a, x1b), dim=1)  # type: ignore[attr-defined]
+            output = torch.cat((x1a, x1b), dim=1)
             return cast(Tensor, output)

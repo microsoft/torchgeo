@@ -34,22 +34,14 @@ class TestBeninSmallHolderCashews:
         self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> BeninSmallHolderCashews:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            radiant_mlhub.Dataset, "fetch", fetch
-        )
+        monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch)
         source_md5 = "255efff0f03bc6322470949a09bc76db"
         labels_md5 = "ed2195d93ca6822d48eb02bc3e81c127"
-        monkeypatch.setitem(  # type: ignore[attr-defined]
-            BeninSmallHolderCashews.image_meta, "md5", source_md5
-        )
-        monkeypatch.setitem(  # type: ignore[attr-defined]
-            BeninSmallHolderCashews.target_meta, "md5", labels_md5
-        )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            BeninSmallHolderCashews, "dates", ("2019_11_05",)
-        )
+        monkeypatch.setitem(BeninSmallHolderCashews.image_meta, "md5", source_md5)
+        monkeypatch.setitem(BeninSmallHolderCashews.target_meta, "md5", labels_md5)
+        monkeypatch.setattr(BeninSmallHolderCashews, "dates", ("2019_11_05",))
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         bands = BeninSmallHolderCashews.ALL_BANDS
 
         return BeninSmallHolderCashews(

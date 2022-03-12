@@ -29,10 +29,10 @@ class TestSo2Sat:
             "test": "9a3bbe181b038d4e51f122c4be3c569e",
         }
 
-        monkeypatch.setattr(So2Sat, "md5s", md5s)  # type: ignore[attr-defined]
+        monkeypatch.setattr(So2Sat, "md5s", md5s)
         root = os.path.join("tests", "data", "so2sat")
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return So2Sat(root=root, split=split, transforms=transforms, checksum=True)
 
     @pytest.fixture
@@ -46,9 +46,7 @@ class TestSo2Sat:
                 raise ImportError()
             return import_orig(name, *args, **kwargs)
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            builtins, "__import__", mocked_import
-        )
+        monkeypatch.setattr(builtins, "__import__", mocked_import)
 
     def test_getitem(self, dataset: So2Sat) -> None:
         x = dataset[0]

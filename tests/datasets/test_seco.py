@@ -31,10 +31,8 @@ class TestSeasonalContrastS2:
         tmp_path: Path,
         request: SubRequest,
     ) -> SeasonalContrastS2:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.seco, "download_url", download_url
-        )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        monkeypatch.setattr(torchgeo.datasets.seco, "download_url", download_url)
+        monkeypatch.setattr(
             SeasonalContrastS2,
             "md5s",
             {
@@ -42,7 +40,7 @@ class TestSeasonalContrastS2:
                 "1m": "3bb3fcf90f5de7d5781ce0cb85fd20af",
             },
         )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        monkeypatch.setattr(
             SeasonalContrastS2,
             "urls",
             {
@@ -52,7 +50,7 @@ class TestSeasonalContrastS2:
         )
         root = str(tmp_path)
         version, bands = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return SeasonalContrastS2(
             root, version, bands, transforms, download=True, checksum=True
         )
@@ -105,5 +103,5 @@ class TestSeasonalContrastS2:
             plt.close()
 
             with pytest.raises(ValueError, match="doesn't support plotting"):
-                x["prediction"] = torch.tensor(1)  # type: ignore[attr-defined]
+                x["prediction"] = torch.tensor(1)
                 dataset.plot(x)

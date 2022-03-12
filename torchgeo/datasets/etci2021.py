@@ -138,7 +138,7 @@ class ETCI2021(VisionDataset):
         else:
             mask = water_mask.unsqueeze(0)
 
-        image = torch.cat(tensors=[vv, vh], dim=0)  # type: ignore[attr-defined]
+        image = torch.cat(tensors=[vv, vh], dim=0)
         sample = {"image": image, "mask": mask}
 
         if self.transforms is not None:
@@ -205,7 +205,7 @@ class ETCI2021(VisionDataset):
         filename = os.path.join(path)
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -222,9 +222,9 @@ class ETCI2021(VisionDataset):
         filename = os.path.join(path)
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("L"))
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
-            tensor = torch.clamp(tensor, min=0, max=1)  # type: ignore[attr-defined]
-            tensor = tensor.to(torch.long)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
+            tensor = torch.clamp(tensor, min=0, max=1)
+            tensor = tensor.to(torch.long)
             return tensor
 
     def _check_integrity(self) -> bool:

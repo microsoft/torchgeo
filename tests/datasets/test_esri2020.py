@@ -26,23 +26,21 @@ class TestEsri2020:
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> Esri2020:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.esri2020, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.esri2020, "download_url", download_url)
         zipfile = "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip"
-        monkeypatch.setattr(Esri2020, "zipfile", zipfile)  # type: ignore[attr-defined]
+        monkeypatch.setattr(Esri2020, "zipfile", zipfile)
 
         md5 = "34aec55538694171c7b605b0cc0d0138"
-        monkeypatch.setattr(Esri2020, "md5", md5)  # type: ignore[attr-defined]
+        monkeypatch.setattr(Esri2020, "md5", md5)
         url = os.path.join(
             "tests",
             "data",
             "esri2020",
             "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip",
         )
-        monkeypatch.setattr(Esri2020, "url", url)  # type: ignore[attr-defined]
+        monkeypatch.setattr(Esri2020, "url", url)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return Esri2020(root, transforms=transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: Esri2020) -> None:

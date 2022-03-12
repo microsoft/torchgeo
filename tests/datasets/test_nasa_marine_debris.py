@@ -33,15 +33,11 @@ class TestNASAMarineDebris:
         self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> NASAMarineDebris:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            radiant_mlhub.Dataset, "fetch", fetch
-        )
+        monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch)
         md5s = ["fe8698d1e68b3f24f0b86b04419a797d", "d8084f5a72778349e07ac90ec1e1d990"]
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            NASAMarineDebris, "md5s", md5s
-        )
+        monkeypatch.setattr(NASAMarineDebris, "md5s", md5s)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return NASAMarineDebris(root, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: NASAMarineDebris) -> None:

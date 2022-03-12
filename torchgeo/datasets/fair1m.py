@@ -219,7 +219,7 @@ class FAIR1M(VisionDataset):
         path = os.path.join(self.root, self.image_root, path)
         with Image.open(path) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -237,8 +237,8 @@ class FAIR1M(VisionDataset):
             the target bounding boxes and labels
         """
         labels_list = [self.classes[label]["id"] for label in labels]
-        boxes = torch.tensor(points).to(torch.float)  # type: ignore[attr-defined]
-        labels = torch.tensor(labels_list)  # type: ignore[attr-defined]
+        boxes = torch.tensor(points).to(torch.float)
+        labels = torch.tensor(labels_list)
         return boxes, cast(Tensor, labels)
 
     def _verify(self) -> None:

@@ -38,9 +38,9 @@ class TestGlobBiomass:
             "N00E020_gsv.zip": "e79bf051ac5d659cb21c566c53ce7b98",
         }
 
-        monkeypatch.setattr(GlobBiomass, "md5s", md5s)  # type: ignore[attr-defined]
+        monkeypatch.setattr(GlobBiomass, "md5s", md5s)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return GlobBiomass(root, transforms=transforms, checksum=True)
 
     def test_getitem(self, dataset: GlobBiomass) -> None:

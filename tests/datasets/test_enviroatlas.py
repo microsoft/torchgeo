@@ -42,24 +42,20 @@ class TestEnviroAtlas:
         monkeypatch: Generator[MonkeyPatch, None, None],
         tmp_path: Path,
     ) -> EnviroAtlas:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.enviroatlas, "download_url", download_url
-        )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            EnviroAtlas, "md5", "071ec65c611e1d4915a5247bffb5ad87"
-        )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        monkeypatch.setattr(torchgeo.datasets.enviroatlas, "download_url", download_url)
+        monkeypatch.setattr(EnviroAtlas, "md5", "071ec65c611e1d4915a5247bffb5ad87")
+        monkeypatch.setattr(
             EnviroAtlas,
             "url",
             os.path.join("tests", "data", "enviroatlas", "enviroatlas_lotp.zip"),
         )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        monkeypatch.setattr(
             EnviroAtlas,
             "files",
             ["pittsburgh_pa-2010_1m-train_tiles-debuffered", "spatial_index.geojson"],
         )
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return EnviroAtlas(
             root,
             layers=request.param[0],

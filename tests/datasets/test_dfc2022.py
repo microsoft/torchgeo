@@ -21,20 +21,20 @@ class TestDFC2022:
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
     ) -> DFC2022:
-        monkeypatch.setitem(  # type: ignore[attr-defined]
+        monkeypatch.setitem(
             DFC2022.metadata["train"], "md5", "6e380c4fa659d05ca93be71b50cacd90"
         )
-        monkeypatch.setitem(  # type: ignore[attr-defined]
+        monkeypatch.setitem(
             DFC2022.metadata["train-unlabeled"],
             "md5",
             "b2bf3839323d4eae636f198921442945",
         )
-        monkeypatch.setitem(  # type: ignore[attr-defined]
+        monkeypatch.setitem(
             DFC2022.metadata["val"], "md5", "e018dc6865bd3086738038fff27b818a"
         )
         root = os.path.join("tests", "data", "dfc2022")
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return DFC2022(root, split, transforms, checksum=True)
 
     def test_getitem(self, dataset: DFC2022) -> None:

@@ -35,9 +35,7 @@ class TestIDTReeS:
         tmp_path: Path,
         request: SubRequest,
     ) -> IDTReeS:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.idtrees, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.idtrees, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "idtrees")
         metadata = {
             "train": {
@@ -52,9 +50,9 @@ class TestIDTReeS:
             },
         }
         split, task = request.param
-        monkeypatch.setattr(IDTReeS, "metadata", metadata)  # type: ignore[attr-defined]
+        monkeypatch.setattr(IDTReeS, "metadata", metadata)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return IDTReeS(root, split, task, transforms, download=True, checksum=True)
 
     @pytest.fixture(params=["pandas", "laspy", "open3d"])
@@ -69,9 +67,7 @@ class TestIDTReeS:
                 raise ImportError()
             return import_orig(name, *args, **kwargs)
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            builtins, "__import__", mocked_import
-        )
+        monkeypatch.setattr(builtins, "__import__", mocked_import)
         return package
 
     def test_getitem(self, dataset: IDTReeS) -> None:

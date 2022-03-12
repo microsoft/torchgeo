@@ -424,7 +424,7 @@ class RasterDataset(GeoDataset):
                     filepath = glob.glob(os.path.join(directory, filename))[0]
                     band_filepaths.append(filepath)
                 data_list.append(self._merge_files(band_filepaths, query))
-            data = torch.cat(data_list)  # type: ignore[attr-defined]
+            data = torch.cat(data_list)
         else:
             data = self._merge_files(filepaths, query)
 
@@ -469,7 +469,7 @@ class RasterDataset(GeoDataset):
         elif dest.dtype == np.uint32:
             dest = dest.astype(np.int64)
 
-        tensor: Tensor = torch.tensor(dest)  # type: ignore[attr-defined]
+        tensor = torch.tensor(dest)
         return tensor
 
     @functools.lru_cache(maxsize=128)
@@ -503,7 +503,7 @@ class RasterDataset(GeoDataset):
         else:
             return src
 
-    def plot(self, data: Tensor) -> None:
+    def plot(self, data) -> None:
         """Plot a data sample.
 
         Args:
@@ -665,18 +665,14 @@ class VectorDataset(GeoDataset):
             shapes, out_shape=(int(height), int(width)), transform=transform
         )
 
-        sample = {
-            "mask": torch.tensor(masks),  # type: ignore[attr-defined]
-            "crs": self.crs,
-            "bbox": query,
-        }
+        sample = {"mask": torch.tensor(masks), "crs": self.crs, "bbox": query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
 
         return sample
 
-    def plot(self, data: Tensor) -> None:
+    def plot(self, data) -> None:
         """Plot a data sample.
 
         Args:
@@ -805,10 +801,10 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
         """
         img, label = ImageFolder.__getitem__(self, index)
         array: "np.typing.NDArray[np.int_]" = np.array(img)
-        tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+        tensor = torch.from_numpy(array)
         # Convert from HxWxC to CxHxW
         tensor = tensor.permute((2, 0, 1))
-        label = torch.tensor(label)  # type: ignore[attr-defined]
+        label = torch.tensor(label)
         return tensor, label
 
 

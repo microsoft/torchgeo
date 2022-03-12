@@ -62,10 +62,8 @@ class TestSemanticSegmentationTask:
         datamodule = classname(**datamodule_kwargs)
 
         # Instantiate model
-        monkeypatch.setattr(smp, "Unet", create_model)  # type: ignore[attr-defined]
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            smp, "DeepLabV3Plus", create_model
-        )
+        monkeypatch.setattr(smp, "Unet", create_model)
+        monkeypatch.setattr(smp, "DeepLabV3Plus", create_model)
         model_kwargs = conf_dict["module"]
         model = SemanticSegmentationTask(**model_kwargs)
 

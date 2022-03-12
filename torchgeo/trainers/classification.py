@@ -75,7 +75,7 @@ class ClassificationTask(pl.LightningModule):
         self.config_model()
 
         if self.hparams["loss"] == "ce":
-            self.loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
+            self.loss = nn.CrossEntropyLoss()
         elif self.hparams["loss"] == "jaccard":
             self.loss = JaccardLoss(mode="multiclass")
         elif self.hparams["loss"] == "focal":
@@ -115,7 +115,7 @@ class ClassificationTask(pl.LightningModule):
         self.val_metrics = self.train_metrics.clone(prefix="val_")
         self.test_metrics = self.train_metrics.clone(prefix="test_")
 
-    def forward(self, x: Tensor) -> Any:  # type: ignore[override]
+    def forward(self, x) -> Any:  # type: ignore[override]
         """Forward pass of the model.
 
         Args:
@@ -182,7 +182,7 @@ class ClassificationTask(pl.LightningModule):
 
         if batch_idx < 10:
             try:
-                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                datamodule = self.trainer.datamodule
                 batch["prediction"] = y_hat_hard
                 for key in ["image", "label", "prediction"]:
                     batch[key] = batch[key].cpu()
@@ -262,7 +262,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         self.config_model()
 
         if self.hparams["loss"] == "bce":
-            self.loss = nn.BCEWithLogitsLoss()  # type: ignore[attr-defined]
+            self.loss = nn.BCEWithLogitsLoss()
         else:
             raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
 
@@ -318,9 +318,9 @@ class MultiLabelClassificationTask(ClassificationTask):
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
-        y_hat_hard = torch.softmax(y_hat, dim=-1)  # type: ignore[attr-defined]
+        y_hat_hard = torch.softmax(y_hat, dim=-1)
 
-        loss = self.loss(y_hat, y.to(torch.float))  # type: ignore[attr-defined]
+        loss = self.loss(y_hat, y.to(torch.float))
 
         # by default, the train step logs every `log_every_n_steps` steps where
         # `log_every_n_steps` is a parameter to the `Trainer` object
@@ -341,16 +341,16 @@ class MultiLabelClassificationTask(ClassificationTask):
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
-        y_hat_hard = torch.softmax(y_hat, dim=-1)  # type: ignore[attr-defined]
+        y_hat_hard = torch.softmax(y_hat, dim=-1)
 
-        loss = self.loss(y_hat, y.to(torch.float))  # type: ignore[attr-defined]
+        loss = self.loss(y_hat, y.to(torch.float))
 
         self.log("val_loss", loss, on_step=False, on_epoch=True)
         self.val_metrics(y_hat_hard, y)
 
         if batch_idx < 10:
             try:
-                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                datamodule = self.trainer.datamodule
                 batch["prediction"] = y_hat_hard
                 for key in ["image", "label", "prediction"]:
                     batch[key] = batch[key].cpu()
@@ -375,9 +375,9 @@ class MultiLabelClassificationTask(ClassificationTask):
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
-        y_hat_hard = torch.softmax(y_hat, dim=-1)  # type: ignore[attr-defined]
+        y_hat_hard = torch.softmax(y_hat, dim=-1)
 
-        loss = self.loss(y_hat, y.to(torch.float))  # type: ignore[attr-defined]
+        loss = self.loss(y_hat, y.to(torch.float))
 
         # by default, the test and validation steps only log per *epoch*
         self.log("test_loss", loss, on_step=False, on_epoch=True)

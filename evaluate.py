@@ -179,7 +179,7 @@ def main(args: argparse.Namespace) -> None:
         raise ValueError(f"{TASK} is not supported")
 
     # Compute metrics
-    device = torch.device("cuda:%d" % (args.gpu))  # type: ignore[attr-defined]
+    device = torch.device("cuda:%d" % (args.gpu))
     model = model.to(device)
 
     if args.task == "etci2021":  # Custom metric setup for testing ETCI2021

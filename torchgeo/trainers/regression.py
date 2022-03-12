@@ -31,9 +31,7 @@ class RegressionTask(pl.LightningModule):
         if self.hparams["model"] == "resnet18":
             self.model = models.resnet18(pretrained=self.hparams["pretrained"])
             in_features = self.model.fc.in_features
-            self.model.fc = nn.Linear(  # type: ignore[attr-defined]
-                in_features, out_features=1
-            )
+            self.model.fc = nn.Linear(in_features, out_features=1)
         else:
             raise ValueError(f"Model type '{self.hparams['model']}' is not valid.")
 
@@ -56,7 +54,7 @@ class RegressionTask(pl.LightningModule):
         self.val_metrics = self.train_metrics.clone(prefix="val_")
         self.test_metrics = self.train_metrics.clone(prefix="test_")
 
-    def forward(self, x: Tensor) -> Any:  # type: ignore[override]
+    def forward(self, x) -> Any:  # type: ignore[override]
         """Forward pass of the model."""
         return self.model(x)
 
@@ -111,7 +109,7 @@ class RegressionTask(pl.LightningModule):
 
         if batch_idx < 10:
             try:
-                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                datamodule = self.trainer.datamodule
                 batch["prediction"] = y_hat
                 for key in ["image", "label", "prediction"]:
                     batch[key] = batch[key].cpu()

@@ -28,22 +28,18 @@ class TestCDL:
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> CDL:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.cdl, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.cdl, "download_url", download_url)
 
         md5s = [
             (2021, "e929beb9c8e59fa1d7b7f82e64edaae1"),
             (2020, "e95c2d40ce0c261ed6ee0bd00b49e4b6"),
         ]
-        monkeypatch.setattr(CDL, "md5s", md5s)  # type: ignore[attr-defined]
+        monkeypatch.setattr(CDL, "md5s", md5s)
         url = os.path.join("tests", "data", "cdl", "{}_30m_cdls.zip")
-        monkeypatch.setattr(CDL, "url", url)  # type: ignore[attr-defined]
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            plt, "show", lambda *args: None
-        )
+        monkeypatch.setattr(CDL, "url", url)
+        monkeypatch.setattr(plt, "show", lambda *args: None)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return CDL(root, transforms=transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: CDL) -> None:

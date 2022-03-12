@@ -24,7 +24,7 @@ from torchvision.models.resnet import resnet50
 Module.__module__ = "torch.nn"
 
 
-def normalized_mse(x: Tensor, y: Tensor) -> Tensor:
+def normalized_mse(x, y) -> Tensor:
     """Computes the normalized mean squared error between x and y.
 
     Args:
@@ -36,7 +36,7 @@ def normalized_mse(x: Tensor, y: Tensor) -> Tensor:
     """
     x = F.normalize(x, dim=-1)
     y = F.normalize(y, dim=-1)
-    mse = torch.mean(2 - 2 * (x * y).sum(dim=-1))  # type: ignore[attr-defined]
+    mse = torch.mean(2 - 2 * (x * y).sum(dim=-1))
     return cast(Tensor, mse)
 
 
@@ -55,7 +55,7 @@ class RandomApply(Module):
         self.augm = augm
         self.p = p
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x) -> Tensor:
         """Applies an augmentation to the input with some probability.
 
         Args:
@@ -89,9 +89,7 @@ class SimCLRAugmentation(Module):
         self.size = image_size
 
         self.augmentation = Sequential(
-            KorniaTransform.Resize(  # type: ignore[attr-defined]
-                size=image_size, align_corners=False
-            ),
+            KorniaTransform.Resize(size=image_size, align_corners=False),
             # Not suitable for multispectral adapt
             # RandomApply(K.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.8),
             # K.RandomGrayscale(p=0.2),
@@ -100,7 +98,7 @@ class SimCLRAugmentation(Module):
             K.RandomResizedCrop(size=image_size),
         )
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x) -> Tensor:
         """Applys SimCLR augmentations to the input tensor.
 
         Args:
@@ -133,7 +131,7 @@ class MLP(Module):
             Linear(hidden_size, projection_size),
         )
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x) -> Tensor:
         """Forward pass of the MLP model.
 
         Args:
@@ -180,7 +178,7 @@ class EncoderWrapper(Module):
 
         self._projector: Optional[Module] = None
         self._projector_dim: Optional[int] = None
-        self._encoded = torch.empty(0)  # type: ignore[attr-defined]
+        self._encoded = torch.empty(0)
         self._register_hook()
 
     @property
@@ -193,7 +191,7 @@ class EncoderWrapper(Module):
             )
         return self._projector
 
-    def _hook(self, module: Any, input: Any, output: Tensor) -> None:
+    def _hook(self, module: Any, input: Any, output) -> None:
         """Hook to record the activations at the projection layer.
 
         See the following docs page for more details on hooks:
@@ -218,7 +216,7 @@ class EncoderWrapper(Module):
         layer = list(self.model.children())[self.layer]  # type: ignore[index]
         layer.register_forward_hook(self._hook)
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x) -> Tensor:
         """Pass through the model, and collect the representation from our forward hook.
 
         Args:
@@ -287,11 +285,9 @@ class BYOL(Module):
         )
 
         # Perform a single forward pass to initialize the wrapper correctly
-        self.encoder(
-            torch.zeros(2, self.in_channels, *image_size)  # type: ignore[attr-defined]
-        )
+        self.encoder(torch.zeros(2, self.in_channels, *image_size))
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x) -> Tensor:
         """Forward pass of the encoder model through the MLP and prediction head.
 
         Args:
@@ -372,7 +368,7 @@ class BYOLTask(LightningModule):
 
         self.config_task()
 
-    def forward(self, x: Tensor) -> Any:  # type: ignore[override]
+    def forward(self, x) -> Any:  # type: ignore[override]
         """Forward pass of the model.
 
         Args:
@@ -424,9 +420,7 @@ class BYOLTask(LightningModule):
         pred1, pred2 = self.forward(x1), self.forward(x2)
         with torch.no_grad():
             targ1, targ2 = self.model.target(x1), self.model.target(x2)
-        loss = torch.mean(  # type: ignore[attr-defined]
-            normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1)
-        )
+        loss = torch.mean(normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1))
 
         self.log("train_loss", loss, on_step=True, on_epoch=False)
         self.model.update_target()
@@ -446,9 +440,7 @@ class BYOLTask(LightningModule):
         x1, x2 = self.model.augment(x), self.model.augment(x)
         pred1, pred2 = self.forward(x1), self.forward(x2)
         targ1, targ2 = self.model.target(x1), self.model.target(x2)
-        loss = torch.mean(  # type: ignore[attr-defined]
-            normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1)
-        )
+        loss = torch.mean(normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1))
 
         self.log("val_loss", loss, on_step=False, on_epoch=True)
 

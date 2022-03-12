@@ -95,7 +95,7 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
         self.name = "u-{}".format(encoder_name)
         self.initialize()
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x) -> Tensor:
         """Forward pass of the model.
 
         Args:
@@ -108,12 +108,12 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
         x2 = x[:, 1]
         features1, features2 = self.encoder(x1), self.encoder(x2)
         features = [
-            torch.cat([features2[i], features1[i]], dim=1)  # type: ignore[attr-defined]
+            torch.cat([features2[i], features1[i]], dim=1)
             for i in range(1, len(features1))
         ]
         features.insert(0, features2[0])
         decoder_output = self.decoder(*features)
-        masks: Tensor = self.segmentation_head(decoder_output)
+        masks = self.segmentation_head(decoder_output)
         return masks
 
 
@@ -162,7 +162,7 @@ class FCSiamDiff(Unet):  # type: ignore[misc]
         kwargs["aux_params"] = None
         super().__init__(*args, **kwargs)
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x) -> Tensor:
         """Forward pass of the model.
 
         Args:
@@ -177,5 +177,5 @@ class FCSiamDiff(Unet):  # type: ignore[misc]
         features = [features2[i] - features1[i] for i in range(1, len(features1))]
         features.insert(0, features2[0])
         decoder_output = self.decoder(*features)
-        masks: Tensor = self.segmentation_head(decoder_output)
+        masks = self.segmentation_head(decoder_output)
         return masks

@@ -18,11 +18,9 @@ from torchgeo.datasets import NAIP, BoundingBox, IntersectionDataset, UnionDatas
 class TestNAIP:
     @pytest.fixture
     def dataset(self, monkeypatch: Generator[MonkeyPatch, None, None]) -> NAIP:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            plt, "show", lambda *args: None
-        )
+        monkeypatch.setattr(plt, "show", lambda *args: None)
         root = os.path.join("tests", "data", "naip")
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return NAIP(root, transforms=transforms)
 
     def test_getitem(self, dataset: NAIP) -> None:

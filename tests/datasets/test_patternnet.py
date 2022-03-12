@@ -25,15 +25,13 @@ class TestPatternNet:
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> PatternNet:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.patternnet, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.patternnet, "download_url", download_url)
         md5 = "5649754c78219a2c19074ff93666cc61"
-        monkeypatch.setattr(PatternNet, "md5", md5)  # type: ignore[attr-defined]
+        monkeypatch.setattr(PatternNet, "md5", md5)
         url = os.path.join("tests", "data", "patternnet", "PatternNet.zip")
-        monkeypatch.setattr(PatternNet, "url", url)  # type: ignore[attr-defined]
+        monkeypatch.setattr(PatternNet, "url", url)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return PatternNet(root, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: PatternNet) -> None:

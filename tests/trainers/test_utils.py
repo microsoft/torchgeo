@@ -22,16 +22,14 @@ class ClassificationTestModel(Module):
         self, in_chans: int = 3, num_classes: int = 1000, **kwargs: Any
     ) -> None:
         super().__init__()
-        self.conv1 = nn.Conv2d(  # type: ignore[attr-defined]
-            in_channels=in_chans, out_channels=1, kernel_size=1
-        )
-        self.pool = nn.AdaptiveAvgPool2d((1, 1))  # type: ignore[attr-defined]
-        self.fc = nn.Linear(1, num_classes)  # type: ignore[attr-defined]
+        self.conv1 = nn.Conv2d(in_channels=in_chans, out_channels=1, kernel_size=1)
+        self.pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(1, num_classes)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.conv1(x)
         x = self.pool(x)
-        x = torch.flatten(x, 1)  # type: ignore[attr-defined]
+        x = torch.flatten(x, 1)
         x = self.fc(x)
         return x
 
@@ -46,7 +44,7 @@ class SegmentationTestModel(Module):
         self, in_channels: int = 3, classes: int = 1000, **kwargs: Any
     ) -> None:
         super().__init__()
-        self.conv1 = nn.Conv2d(  # type: ignore[attr-defined]
+        self.conv1 = nn.Conv2d(
             in_channels=in_channels, out_channels=classes, kernel_size=1, padding=0
         )
 
@@ -80,7 +78,7 @@ def test_load_state_dict_unequal_input_channels(checkpoint: str, model: Module) 
     expected_in_channels = state_dict["conv1.weight"].shape[1]
 
     in_channels = 7
-    model.conv1 = nn.Conv2d(  # type: ignore[attr-defined]
+    model.conv1 = nn.Conv2d(
         in_channels, out_channels=64, kernel_size=7, stride=1, padding=2, bias=False
     )
 
@@ -98,9 +96,7 @@ def test_load_state_dict_unequal_classes(checkpoint: str, model: Module) -> None
 
     num_classes = 10
     in_features = model.fc.in_features  # type: ignore[union-attr]
-    model.fc = nn.Linear(  # type: ignore[attr-defined]
-        in_features, out_features=num_classes
-    )
+    model.fc = nn.Linear(in_features, out_features=num_classes)
 
     warning = (
         f"num classes {num_classes} != num classes in pretrained model"
@@ -111,17 +107,13 @@ def test_load_state_dict_unequal_classes(checkpoint: str, model: Module) -> None
 
 
 def test_reinit_initial_conv_layer() -> None:
-    conv_layer = nn.Conv2d(  # type: ignore[attr-defined]
-        3, 5, kernel_size=3, stride=2, padding=1, bias=True
-    )
+    conv_layer = nn.Conv2d(3, 5, kernel_size=3, stride=2, padding=1, bias=True)
     initial_weights = conv_layer.weight.data.clone()
 
     new_conv_layer = reinit_initial_conv_layer(conv_layer, 4, keep_rgb_weights=True)
 
     out_channels, in_channels, k1, k2 = new_conv_layer.weight.shape
-    assert torch.allclose(  # type: ignore[attr-defined]
-        initial_weights, new_conv_layer.weight.data[:, :3, :, :]
-    )
+    assert torch.allclose(initial_weights, new_conv_layer.weight.data[:, :3, :, :])
     assert out_channels == 5
     assert in_channels == 4
     assert k1 == 3 and k2 == 3

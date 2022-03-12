@@ -30,14 +30,12 @@ class TestEuroSAT:
         tmp_path: Path,
         request: SubRequest,
     ) -> EuroSAT:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.eurosat, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.eurosat, "download_url", download_url)
         md5 = "aa051207b0547daba0ac6af57808d68e"
-        monkeypatch.setattr(EuroSAT, "md5", md5)  # type: ignore[attr-defined]
+        monkeypatch.setattr(EuroSAT, "md5", md5)
         url = os.path.join("tests", "data", "eurosat", "EuroSATallBands.zip")
-        monkeypatch.setattr(EuroSAT, "url", url)  # type: ignore[attr-defined]
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        monkeypatch.setattr(EuroSAT, "url", url)
+        monkeypatch.setattr(
             EuroSAT,
             "split_urls",
             {
@@ -46,7 +44,7 @@ class TestEuroSAT:
                 "test": os.path.join("tests", "data", "eurosat", "eurosat-test.txt"),
             },
         )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        monkeypatch.setattr(
             EuroSAT,
             "split_md5s",
             {
@@ -57,7 +55,7 @@ class TestEuroSAT:
         )
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return EuroSAT(
             root=root, split=split, transforms=transforms, download=True, checksum=True
         )

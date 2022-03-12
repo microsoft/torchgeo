@@ -28,19 +28,17 @@ class TestZueriCrop:
     def dataset(
         self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
     ) -> ZueriCrop:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.zuericrop, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.zuericrop, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "zuericrop")
         urls = [
             os.path.join(data_dir, "ZueriCrop.hdf5"),
             os.path.join(data_dir, "labels.csv"),
         ]
         md5s = ["1635231df67f3d25f4f1e62c98e221a4", "5118398c7a5bbc246f5f6bb35d8d529b"]
-        monkeypatch.setattr(ZueriCrop, "urls", urls)  # type: ignore[attr-defined]
-        monkeypatch.setattr(ZueriCrop, "md5s", md5s)  # type: ignore[attr-defined]
+        monkeypatch.setattr(ZueriCrop, "urls", urls)
+        monkeypatch.setattr(ZueriCrop, "md5s", md5s)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return ZueriCrop(root=root, transforms=transforms, download=True, checksum=True)
 
     @pytest.fixture
@@ -54,9 +52,7 @@ class TestZueriCrop:
                 raise ImportError()
             return import_orig(name, *args, **kwargs)
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            builtins, "__import__", mocked_import
-        )
+        monkeypatch.setattr(builtins, "__import__", mocked_import)
 
     def test_getitem(self, dataset: ZueriCrop) -> None:
         x = dataset[0]

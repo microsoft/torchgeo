@@ -32,7 +32,7 @@ def extract_encoder(path: str) -> Tuple[str, Dict[str, Tensor]]:
             checkpoint['hyper_parameters']
     """
     checkpoint = torch.load(  # type: ignore[no-untyped-call]
-        path, map_location=torch.device("cpu")  # type: ignore[attr-defined]
+        path, map_location=torch.device("cpu")
     )
 
     if "classification_model" in checkpoint["hyper_parameters"]:

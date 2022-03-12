@@ -26,11 +26,11 @@ class TestVaihingen2D:
             "train": ["top_mosaic_09cm_area1.tif", "top_mosaic_09cm_area11.tif"],
             "test": ["top_mosaic_09cm_area6.tif", "top_mosaic_09cm_area24.tif"],
         }
-        monkeypatch.setattr(Vaihingen2D, "md5s", md5s)  # type: ignore[attr-defined]
-        monkeypatch.setattr(Vaihingen2D, "splits", splits)  # type: ignore[attr-defined]
+        monkeypatch.setattr(Vaihingen2D, "md5s", md5s)
+        monkeypatch.setattr(Vaihingen2D, "splits", splits)
         root = os.path.join("tests", "data", "vaihingen")
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return Vaihingen2D(root, split, transforms, checksum=True)
 
     def test_getitem(self, dataset: Vaihingen2D) -> None:

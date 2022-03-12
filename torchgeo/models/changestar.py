@@ -68,7 +68,7 @@ class ChangeMixin(Module):
 
         self.convs = nn.modules.Sequential(*layers)
 
-    def forward(self, bi_feature: Tensor) -> List[Tensor]:
+    def forward(self, bi_feature) -> List[Tensor]:
         """Forward pass of the model.
 
         Args:
@@ -78,14 +78,10 @@ class ChangeMixin(Module):
             a list of bidirected output predictions
         """
         batch_size = bi_feature.size(0)
-        t1t2 = torch.cat(  # type: ignore[attr-defined]
-            [bi_feature[:, 0, :, :, :], bi_feature[:, 1, :, :, :]], dim=1
-        )
-        t2t1 = torch.cat(  # type: ignore[attr-defined]
-            [bi_feature[:, 1, :, :, :], bi_feature[:, 0, :, :, :]], dim=1
-        )
+        t1t2 = torch.cat([bi_feature[:, 0, :, :, :], bi_feature[:, 1, :, :, :]], dim=1)
+        t2t1 = torch.cat([bi_feature[:, 1, :, :, :], bi_feature[:, 0, :, :, :]], dim=1)
 
-        c1221 = self.convs(torch.cat([t1t2, t2t1], dim=0))  # type: ignore[attr-defined]
+        c1221 = self.convs(torch.cat([t1t2, t2t1], dim=0))
         c12, c21 = torch.split(
             c1221, batch_size, dim=0
         )  # type: ignore[no-untyped-call]
@@ -139,7 +135,7 @@ class ChangeStar(Module):
             raise ValueError(f"Unknown inference_mode: {inference_mode}")
         self.inference_mode = inference_mode
 
-    def forward(self, x: Tensor) -> Dict[str, Tensor]:
+    def forward(self, x) -> Dict[str, Tensor]:
         """Forward pass of the model.
 
         Args:
