@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, Tuple, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple
 from xml.etree import ElementTree
 
 import matplotlib.patches as patches
@@ -238,8 +238,8 @@ class FAIR1M(VisionDataset):
         """
         labels_list = [self.classes[label]["id"] for label in labels]
         boxes = torch.tensor(points).to(torch.float)
-        labels = torch.tensor(labels_list)
-        return boxes, cast(Tensor, labels)
+        labels_tensor = torch.tensor(labels_list)
+        return boxes, labels_tensor
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.

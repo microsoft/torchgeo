@@ -3,7 +3,7 @@
 
 """Implementation of a random convolutional feature projection model."""
 
-from typing import Optional, cast
+from typing import Optional
 
 import torch
 import torch.nn.functional as F
@@ -76,7 +76,7 @@ class RCF(Module):
             "biases", torch.zeros(features // 2, requires_grad=False) + bias
         )
 
-    def forward(self, x) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the RCF model.
 
         Args:
@@ -99,8 +99,8 @@ class RCF(Module):
 
         if len(x1a.shape) == 1:  # case where we passed a single input
             output = torch.cat((x1a, x1b), dim=0)
-            return cast(Tensor, output)
+            return output
         else:  # case where we passed a batch of > 1 inputs
             assert len(x1a.shape) == 2
             output = torch.cat((x1a, x1b), dim=1)
-            return cast(Tensor, output)
+            return output

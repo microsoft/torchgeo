@@ -95,7 +95,7 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
         self.name = "u-{}".format(encoder_name)
         self.initialize()
 
-    def forward(self, x) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model.
 
         Args:
@@ -162,7 +162,7 @@ class FCSiamDiff(Unet):  # type: ignore[misc]
         kwargs["aux_params"] = None
         super().__init__(*args, **kwargs)
 
-    def forward(self, x) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model.
 
         Args:

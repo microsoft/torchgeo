@@ -448,7 +448,7 @@ class IDTReeS(VisionDataset):
         """
         assert len(hsi_indices) == 3
 
-        def normalize(x) -> Tensor:
+        def normalize(x: Tensor) -> Tensor:
             return (x - x.min()) / (x.max() - x.min())
 
         ncols = 3

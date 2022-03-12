@@ -503,7 +503,7 @@ class RasterDataset(GeoDataset):
         else:
             return src
 
-    def plot(self, data) -> None:
+    def plot(self, data: Tensor) -> None:
         """Plot a data sample.
 
         Args:
@@ -672,7 +672,7 @@ class VectorDataset(GeoDataset):
 
         return sample
 
-    def plot(self, data) -> None:
+    def plot(self, data: Tensor) -> None:
         """Plot a data sample.
 
         Args:

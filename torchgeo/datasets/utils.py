@@ -625,8 +625,8 @@ def sort_sentinel2_bands(x: str) -> str:
 
 
 def draw_semantic_segmentation_masks(
-    image,
-    mask,
+    image: Tensor,
+    mask: Tensor,
     alpha: float = 0.5,
     colors: Optional[Sequence[Union[str, Tuple[int, int, int]]]] = None,
 ) -> "np.typing.NDArray[np.uint8]":

@@ -68,7 +68,7 @@ class ChangeMixin(Module):
 
         self.convs = nn.modules.Sequential(*layers)
 
-    def forward(self, bi_feature) -> List[Tensor]:
+    def forward(self, bi_feature: Tensor) -> List[Tensor]:
         """Forward pass of the model.
 
         Args:
@@ -135,7 +135,7 @@ class ChangeStar(Module):
             raise ValueError(f"Unknown inference_mode: {inference_mode}")
         self.inference_mode = inference_mode
 
-    def forward(self, x) -> Dict[str, Tensor]:
+    def forward(self, x: Tensor) -> Dict[str, Tensor]:
         """Forward pass of the model.
 
         Args:

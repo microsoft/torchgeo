@@ -158,7 +158,7 @@ def main(args: argparse.Namespace) -> None:
             "loss": model.hparams["loss"],
         }
     elif issubclass(TASK, SemanticSegmentationTask):
-        val_row: Dict[str, Union[str, float]] = {  # type: ignore[no-redef]
+        val_row = {
             "split": "val",
             "segmentation_model": model.hparams["segmentation_model"],
             "encoder_name": model.hparams["encoder_name"],
@@ -167,7 +167,7 @@ def main(args: argparse.Namespace) -> None:
             "loss": model.hparams["loss"],
         }
 
-        test_row: Dict[str, Union[str, float]] = {  # type: ignore[no-redef]
+        test_row = {
             "split": "test",
             "segmentation_model": model.hparams["segmentation_model"],
             "encoder_name": model.hparams["encoder_name"],

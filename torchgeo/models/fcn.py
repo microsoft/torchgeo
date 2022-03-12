@@ -58,7 +58,7 @@ class FCN(Module):
             num_filters, classes, kernel_size=1, stride=1, padding=0
         )
 
-    def forward(self, x) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model."""
         x = self.backbone(x)
         x = self.last(x)

@@ -80,7 +80,7 @@ class FarSeg(Module):
         self.fsr = _FSRelation(max_channels, [256] * 4, 256)
         self.decoder = _LightWeightDecoder(256, 128, classes)
 
-    def forward(self, x) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model.
 
         Args:
@@ -162,7 +162,7 @@ class _FSRelation(Module):
 
         self.normalizer = Sigmoid()
 
-    def forward(self, scene_feature, features: List[Tensor]) -> List[Tensor]:
+    def forward(self, scene_feature: Tensor, features: List[Tensor]) -> List[Tensor]:
         """Forward pass of the model."""
         # [N, C, H, W]
         content_feats = [
