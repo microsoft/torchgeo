@@ -29,7 +29,7 @@ class TestUSAVars:
     @pytest.fixture()
     def dataset(
         self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         tmp_path: Path,
         request: SubRequest,
     ) -> USAVars:
@@ -100,7 +100,7 @@ class TestUSAVars:
 
     @pytest.fixture(params=["pandas"])
     def mock_missing_module(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
+        self, monkeypatch: MonkeyPatch, request: SubRequest
     ) -> str:
         import_orig = builtins.__import__
         package = str(request.param)

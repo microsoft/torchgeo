@@ -33,7 +33,7 @@ class TestCOWCCounting:
     @pytest.fixture(params=["train", "test"])
     def dataset(
         self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         tmp_path: Path,
         request: SubRequest,
     ) -> COWC:
@@ -100,7 +100,7 @@ class TestCOWCDetection:
     @pytest.fixture(params=["train", "test"])
     def dataset(
         self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         tmp_path: Path,
         request: SubRequest,
     ) -> COWC:

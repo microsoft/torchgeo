@@ -27,7 +27,7 @@ class TestOSCD:
     @pytest.fixture(params=zip(["all", "rgb"], ["train", "test"]))
     def dataset(
         self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         tmp_path: Path,
         request: SubRequest,
     ) -> OSCD:

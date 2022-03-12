@@ -30,7 +30,7 @@ pytest.importorskip("pandas", minversion="0.19.1")
 class TestOpenBuildings:
     @pytest.fixture
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> OpenBuildings:
 
         root = str(tmp_path)
@@ -49,7 +49,7 @@ class TestOpenBuildings:
 
     @pytest.fixture(params=["pandas"])
     def mock_missing_module(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
+        self, monkeypatch: MonkeyPatch, request: SubRequest
     ) -> str:
         import_orig = builtins.__import__
         package = str(request.param)

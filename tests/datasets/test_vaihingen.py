@@ -19,7 +19,7 @@ from torchgeo.datasets import Vaihingen2D
 class TestVaihingen2D:
     @pytest.fixture(params=["train", "test"])
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
+        self, monkeypatch: MonkeyPatch, request: SubRequest
     ) -> Vaihingen2D:
         md5s = ["c15fbff78d307e51c73f609c0859afc3", "ec2c0a5149f2371479b38cf8cfbab961"]
         splits = {

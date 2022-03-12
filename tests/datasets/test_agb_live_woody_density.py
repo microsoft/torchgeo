@@ -28,7 +28,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestAbovegroundLiveWoodyBiomassDensity:
     @pytest.fixture
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> AbovegroundLiveWoodyBiomassDensity:
 
         transforms = nn.Identity()

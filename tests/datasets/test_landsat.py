@@ -17,7 +17,7 @@ from torchgeo.datasets import BoundingBox, IntersectionDataset, Landsat8, UnionD
 
 class TestLandsat8:
     @pytest.fixture
-    def dataset(self, monkeypatch: Generator[MonkeyPatch, None, None]) -> Landsat8:
+    def dataset(self, monkeypatch: MonkeyPatch) -> Landsat8:
         monkeypatch.setattr(plt, "show", lambda *args: None)
         root = os.path.join("tests", "data", "landsat8")
         bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7"]

@@ -18,7 +18,7 @@ from torchgeo.datasets import InriaAerialImageLabeling
 class TestInriaAerialImageLabeling:
     @pytest.fixture(params=["train", "test"])
     def dataset(
-        self, request: SubRequest, monkeypatch: Generator[MonkeyPatch, None, None]
+        self, request: SubRequest, monkeypatch: MonkeyPatch
     ) -> InriaAerialImageLabeling:
 
         root = os.path.join("tests", "data", "inria")

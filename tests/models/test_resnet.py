@@ -32,7 +32,7 @@ def load_state_dict_from_file(
     [(resnet50, "sentinel2", "all", 10, 17)],
 )
 def test_resnet(
-    monkeypatch: Generator[MonkeyPatch, None, None],
+    monkeypatch: MonkeyPatch,
     tmp_path: Path,
     model_class: Module,
     sensor: str,

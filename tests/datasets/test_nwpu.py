@@ -31,7 +31,7 @@ class TestVHR10:
     @pytest.fixture(params=["positive", "negative"])
     def dataset(
         self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         tmp_path: Path,
         request: SubRequest,
     ) -> VHR10:
@@ -53,7 +53,7 @@ class TestVHR10:
 
     @pytest.fixture
     def mock_missing_module(
-        self, monkeypatch: Generator[MonkeyPatch, None, None]
+        self, monkeypatch: MonkeyPatch
     ) -> None:
         import_orig = builtins.__import__
 

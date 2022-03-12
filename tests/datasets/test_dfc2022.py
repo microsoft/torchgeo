@@ -19,7 +19,7 @@ from torchgeo.datasets import DFC2022
 class TestDFC2022:
     @pytest.fixture(params=["train", "train-unlabeled", "val"])
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
+        self, monkeypatch: MonkeyPatch, request: SubRequest
     ) -> DFC2022:
         monkeypatch.setitem(
             DFC2022.metadata["train"], "md5", "6e380c4fa659d05ca93be71b50cacd90"

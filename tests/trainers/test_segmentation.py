@@ -46,7 +46,7 @@ class TestSemanticSegmentationTask:
     )
     def test_trainer(
         self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         name: str,
         classname: Type[LightningDataModule],
     ) -> None:

@@ -37,7 +37,7 @@ from torchgeo.datasets.utils import (
 
 
 @pytest.fixture
-def mock_missing_module(monkeypatch: Generator[MonkeyPatch, None, None]) -> None:
+def mock_missing_module(monkeypatch: MonkeyPatch) -> None:
     import_orig = builtins.__import__
 
     def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
@@ -126,7 +126,7 @@ def test_unsupported_scheme() -> None:
 
 
 def test_download_and_extract_archive(
-    tmp_path: Path, monkeypatch: Generator[MonkeyPatch, None, None]
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ) -> None:
     monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
     download_and_extract_archive(
@@ -136,7 +136,7 @@ def test_download_and_extract_archive(
 
 
 def test_download_radiant_mlhub_dataset(
-    tmp_path: Path, monkeypatch: Generator[MonkeyPatch, None, None]
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ) -> None:
     radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
     monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch_dataset)
@@ -144,7 +144,7 @@ def test_download_radiant_mlhub_dataset(
 
 
 def test_download_radiant_mlhub_collection(
-    tmp_path: Path, monkeypatch: Generator[MonkeyPatch, None, None]
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ) -> None:
     radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
     monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)

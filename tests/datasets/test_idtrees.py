@@ -31,7 +31,7 @@ class TestIDTReeS:
     @pytest.fixture(params=zip(["train", "test", "test"], ["task1", "task1", "task2"]))
     def dataset(
         self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         tmp_path: Path,
         request: SubRequest,
     ) -> IDTReeS:
@@ -57,7 +57,7 @@ class TestIDTReeS:
 
     @pytest.fixture(params=["pandas", "laspy", "open3d"])
     def mock_missing_module(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
+        self, monkeypatch: MonkeyPatch, request: SubRequest
     ) -> str:
         import_orig = builtins.__import__
         package = str(request.param)

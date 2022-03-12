@@ -31,7 +31,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestChesapeake13:
     @pytest.fixture
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> Chesapeake13:
         pytest.importorskip("zipfile_deflate64")
         monkeypatch.setattr(torchgeo.datasets.chesapeake, "download_url", download_url)
@@ -112,7 +112,7 @@ class TestChesapeakeCVPR:
     def dataset(
         self,
         request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         tmp_path: Path,
     ) -> ChesapeakeCVPR:
         monkeypatch.setattr(torchgeo.datasets.chesapeake, "download_url", download_url)

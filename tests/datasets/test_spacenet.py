@@ -39,7 +39,7 @@ class TestSpaceNet1:
     def dataset(
         self,
         request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         tmp_path: Path,
     ) -> SpaceNet1:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
@@ -88,7 +88,7 @@ class TestSpaceNet2:
     def dataset(
         self,
         request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         tmp_path: Path,
     ) -> SpaceNet2:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
@@ -154,7 +154,7 @@ class TestSpaceNet4:
     def dataset(
         self,
         request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         tmp_path: Path,
     ) -> SpaceNet4:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
@@ -222,7 +222,7 @@ class TestSpaceNet5:
     def dataset(
         self,
         request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         tmp_path: Path,
     ) -> SpaceNet5:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
@@ -290,7 +290,7 @@ class TestSpaceNet7:
     def dataset(
         self,
         request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         tmp_path: Path,
     ) -> SpaceNet7:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")

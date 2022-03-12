@@ -23,7 +23,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestCMSGlobalMangroveCanopy:
     @pytest.fixture
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> CMSGlobalMangroveCanopy:
         zipfile = "CMS_Global_Map_Mangrove_Canopy_1665.zip"
         monkeypatch.setattr(CMSGlobalMangroveCanopy, "zipfile", zipfile)

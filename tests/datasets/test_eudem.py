@@ -19,7 +19,7 @@ from torchgeo.datasets import EUDEM, BoundingBox, IntersectionDataset, UnionData
 class TestEUDEM:
     @pytest.fixture
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> EUDEM:
 
         md5s = {"eu_dem_v11_E30N10.zip": "ef148466c02197a08be169eaad186591"}

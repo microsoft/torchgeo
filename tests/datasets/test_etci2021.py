@@ -25,7 +25,7 @@ class TestETCI2021:
     @pytest.fixture(params=["train", "val", "test"])
     def dataset(
         self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         tmp_path: Path,
         request: SubRequest,
     ) -> ETCI2021:

@@ -39,7 +39,7 @@ class TestEnviroAtlas:
     def dataset(
         self,
         request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         tmp_path: Path,
     ) -> EnviroAtlas:
         monkeypatch.setattr(torchgeo.datasets.enviroatlas, "download_url", download_url)

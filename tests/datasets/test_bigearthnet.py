@@ -27,7 +27,7 @@ class TestBigEarthNet:
     )
     def dataset(
         self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         tmp_path: Path,
         request: SubRequest,
     ) -> BigEarthNet:

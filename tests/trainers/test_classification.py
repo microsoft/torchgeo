@@ -40,7 +40,7 @@ class TestClassificationTask:
     )
     def test_trainer(
         self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         name: str,
         classname: Type[LightningDataModule],
     ) -> None:
@@ -136,7 +136,7 @@ class TestMultiLabelClassificationTask:
     )
     def test_trainer(
         self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         name: str,
         classname: Type[LightningDataModule],
     ) -> None:

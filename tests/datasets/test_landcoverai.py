@@ -26,7 +26,7 @@ class TestLandCoverAI:
     @pytest.fixture(params=["train", "val", "test"])
     def dataset(
         self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
+        monkeypatch: MonkeyPatch,
         tmp_path: Path,
         request: SubRequest,
     ) -> LandCoverAI:
@@ -60,7 +60,7 @@ class TestLandCoverAI:
         LandCoverAI(root=dataset.root, download=True)
 
     def test_already_downloaded(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> None:
         sha256 = "ce84fa0e8d89b461c66fba4e78aa5a860e2871722c4a9ca8c2384eae1521c7c8"
         monkeypatch.setattr(LandCoverAI, "sha256", sha256)
