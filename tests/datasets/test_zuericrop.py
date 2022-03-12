@@ -25,9 +25,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 class TestZueriCrop:
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path
-    ) -> ZueriCrop:
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ZueriCrop:
         monkeypatch.setattr(torchgeo.datasets.zuericrop, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "zuericrop")
         urls = [
@@ -42,9 +40,7 @@ class TestZueriCrop:
         return ZueriCrop(root=root, transforms=transforms, download=True, checksum=True)
 
     @pytest.fixture
-    def mock_missing_module(
-        self, monkeypatch: MonkeyPatch
-    ) -> None:
+    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
         import_orig = builtins.__import__
 
         def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:

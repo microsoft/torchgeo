@@ -25,10 +25,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestLandCoverAI:
     @pytest.fixture(params=["train", "val", "test"])
     def dataset(
-        self,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LandCoverAI:
         monkeypatch.setattr(torchgeo.datasets.landcoverai, "download_url", download_url)
         md5 = "46108372402292213789342d58929708"
@@ -59,9 +56,7 @@ class TestLandCoverAI:
     def test_already_extracted(self, dataset: LandCoverAI) -> None:
         LandCoverAI(root=dataset.root, download=True)
 
-    def test_already_downloaded(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path
-    ) -> None:
+    def test_already_downloaded(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
         sha256 = "ce84fa0e8d89b461c66fba4e78aa5a860e2871722c4a9ca8c2384eae1521c7c8"
         monkeypatch.setattr(LandCoverAI, "sha256", sha256)
         url = os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip")

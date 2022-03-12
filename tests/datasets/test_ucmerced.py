@@ -25,10 +25,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestUCMerced:
     @pytest.fixture(params=["train", "val", "test"])
     def dataset(
-        self,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> UCMerced:
         monkeypatch.setattr(torchgeo.datasets.ucmerced, "download_url", download_url)
         md5 = "a42ef8779469d196d8f2971ee135f030"

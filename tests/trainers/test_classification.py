@@ -39,10 +39,7 @@ class TestClassificationTask:
         ],
     )
     def test_trainer(
-        self,
-        monkeypatch: MonkeyPatch,
-        name: str,
-        classname: Type[LightningDataModule],
+        self, monkeypatch: MonkeyPatch, name: str, classname: Type[LightningDataModule]
     ) -> None:
         if name.startswith("so2sat"):
             pytest.importorskip("h5py")
@@ -135,10 +132,7 @@ class TestMultiLabelClassificationTask:
         ],
     )
     def test_trainer(
-        self,
-        monkeypatch: MonkeyPatch,
-        name: str,
-        classname: Type[LightningDataModule],
+        self, monkeypatch: MonkeyPatch, name: str, classname: Type[LightningDataModule]
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)

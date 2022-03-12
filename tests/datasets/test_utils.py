@@ -125,9 +125,7 @@ def test_unsupported_scheme() -> None:
         extract_archive("foo.bar")
 
 
-def test_download_and_extract_archive(
-    tmp_path: Path, monkeypatch: MonkeyPatch
-) -> None:
+def test_download_and_extract_archive(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
     download_and_extract_archive(
         os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip"),

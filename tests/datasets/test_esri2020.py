@@ -23,9 +23,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 class TestEsri2020:
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path
-    ) -> Esri2020:
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> Esri2020:
         monkeypatch.setattr(torchgeo.datasets.esri2020, "download_url", download_url)
         zipfile = "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip"
         monkeypatch.setattr(Esri2020, "zipfile", zipfile)

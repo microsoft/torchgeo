@@ -18,9 +18,7 @@ from torchgeo.datasets import SEN12MS
 
 class TestSEN12MS:
     @pytest.fixture(params=["train", "test"])
-    def dataset(
-        self, monkeypatch: MonkeyPatch, request: SubRequest
-    ) -> SEN12MS:
+    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> SEN12MS:
         md5s = [
             "b7d9e183a460979e997b443517a78ded",
             "7131dbb098c832fff84c2b8a0c8f1126",

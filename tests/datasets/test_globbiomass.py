@@ -23,9 +23,7 @@ from torchgeo.datasets import (
 
 class TestGlobBiomass:
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path
-    ) -> GlobBiomass:
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> GlobBiomass:
         shutil.copy(
             os.path.join("tests", "data", "globbiomass", "N00E020_agb.zip"), tmp_path
         )

@@ -26,10 +26,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestSeasonalContrastS2:
     @pytest.fixture(params=zip(["100k", "1m"], [["B1"], SeasonalContrastS2.ALL_BANDS]))
     def dataset(
-        self,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SeasonalContrastS2:
         monkeypatch.setattr(torchgeo.datasets.seco, "download_url", download_url)
         monkeypatch.setattr(

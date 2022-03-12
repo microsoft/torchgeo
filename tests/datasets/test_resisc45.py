@@ -26,10 +26,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestRESISC45:
     @pytest.fixture(params=["train", "val", "test"])
     def dataset(
-        self,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> RESISC45:
         pytest.importorskip("rarfile", minversion="3")
 

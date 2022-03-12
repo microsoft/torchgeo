@@ -24,10 +24,7 @@ def download_url(url: str, root: str, *args: str) -> None:
 class TestETCI2021:
     @pytest.fixture(params=["train", "val", "test"])
     def dataset(
-        self,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> ETCI2021:
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "etci2021")

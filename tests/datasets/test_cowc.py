@@ -32,10 +32,7 @@ class TestCOWC:
 class TestCOWCCounting:
     @pytest.fixture(params=["train", "test"])
     def dataset(
-        self,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> COWC:
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         base_url = os.path.join("tests", "data", "cowc_counting") + os.sep
@@ -99,10 +96,7 @@ class TestCOWCCounting:
 class TestCOWCDetection:
     @pytest.fixture(params=["train", "test"])
     def dataset(
-        self,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> COWC:
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         base_url = os.path.join("tests", "data", "cowc_detection") + os.sep

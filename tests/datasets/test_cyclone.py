@@ -31,10 +31,7 @@ def fetch(collection_id: str, **kwargs: str) -> Dataset:
 class TestTropicalCycloneWindEstimation:
     @pytest.fixture(params=["train", "test"])
     def dataset(
-        self,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> TropicalCycloneWindEstimation:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch)

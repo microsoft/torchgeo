@@ -25,10 +25,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestEuroSAT:
     @pytest.fixture(params=["train", "val", "test"])
     def dataset(
-        self,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> EuroSAT:
         monkeypatch.setattr(torchgeo.datasets.eurosat, "download_url", download_url)
         md5 = "aa051207b0547daba0ac6af57808d68e"

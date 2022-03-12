@@ -18,9 +18,7 @@ from torchgeo.datasets import EUDEM, BoundingBox, IntersectionDataset, UnionData
 
 class TestEUDEM:
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path
-    ) -> EUDEM:
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> EUDEM:
 
         md5s = {"eu_dem_v11_E30N10.zip": "ef148466c02197a08be169eaad186591"}
         monkeypatch.setattr(EUDEM, "md5s", md5s)

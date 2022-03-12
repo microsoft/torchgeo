@@ -30,10 +30,7 @@ def download_url(url: str, root: str, *args: str) -> None:
 class TestVHR10:
     @pytest.fixture(params=["positive", "negative"])
     def dataset(
-        self,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> VHR10:
         pytest.importorskip("rarfile", minversion="3")
         monkeypatch.setattr(torchgeo.datasets.nwpu, "download_url", download_url)
@@ -52,9 +49,7 @@ class TestVHR10:
         return VHR10(root, split, transforms, download=True, checksum=True)
 
     @pytest.fixture
-    def mock_missing_module(
-        self, monkeypatch: MonkeyPatch
-    ) -> None:
+    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
         import_orig = builtins.__import__
 
         def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:

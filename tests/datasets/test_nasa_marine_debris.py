@@ -29,9 +29,7 @@ def fetch(dataset_id: str, **kwargs: str) -> Dataset:
 
 class TestNASAMarineDebris:
     @pytest.fixture()
-    def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path
-    ) -> NASAMarineDebris:
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> NASAMarineDebris:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch)
         md5s = ["fe8698d1e68b3f24f0b86b04419a797d", "d8084f5a72778349e07ac90ec1e1d990"]

@@ -24,10 +24,7 @@ def download_url(url: str, root: str, *args: str) -> None:
 class TestLEVIRCDPlus:
     @pytest.fixture(params=["train", "test"])
     def dataset(
-        self,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LEVIRCDPlus:
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         md5 = "1adf156f628aa32fb2e8fe6cada16c04"

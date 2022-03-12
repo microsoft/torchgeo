@@ -37,10 +37,7 @@ def fetch_collection(collection_id: str, **kwargs: str) -> Collection:
 class TestSpaceNet1:
     @pytest.fixture(params=["rgb", "8band"])
     def dataset(
-        self,
-        request: SubRequest,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
+        self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet1:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
@@ -86,10 +83,7 @@ class TestSpaceNet1:
 class TestSpaceNet2:
     @pytest.fixture(params=["PAN", "MS", "PS-MS", "PS-RGB"])
     def dataset(
-        self,
-        request: SubRequest,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
+        self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet2:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
@@ -152,10 +146,7 @@ class TestSpaceNet2:
 class TestSpaceNet4:
     @pytest.fixture(params=["PAN", "MS", "PS-RGBNIR"])
     def dataset(
-        self,
-        request: SubRequest,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
+        self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet4:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
@@ -220,10 +211,7 @@ class TestSpaceNet5:
         params=itertools.product(["PAN", "MS", "PS-MS", "PS-RGB"], [False, True])
     )
     def dataset(
-        self,
-        request: SubRequest,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
+        self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet5:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
@@ -288,10 +276,7 @@ class TestSpaceNet5:
 class TestSpaceNet7:
     @pytest.fixture(params=["train", "test"])
     def dataset(
-        self,
-        request: SubRequest,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
+        self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet7:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)

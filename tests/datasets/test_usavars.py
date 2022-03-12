@@ -28,10 +28,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestUSAVars:
     @pytest.fixture()
     def dataset(
-        self,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> USAVars:
 
         monkeypatch.setattr(torchgeo.datasets.usavars, "download_url", download_url)
@@ -99,9 +96,7 @@ class TestUSAVars:
             USAVars(str(tmp_path))
 
     @pytest.fixture(params=["pandas"])
-    def mock_missing_module(
-        self, monkeypatch: MonkeyPatch, request: SubRequest
-    ) -> str:
+    def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:
         import_orig = builtins.__import__
         package = str(request.param)
 

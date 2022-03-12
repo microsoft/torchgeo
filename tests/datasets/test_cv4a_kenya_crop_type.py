@@ -32,9 +32,7 @@ def fetch(dataset_id: str, **kwargs: str) -> Dataset:
 
 class TestCV4AKenyaCropType:
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path
-    ) -> CV4AKenyaCropType:
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CV4AKenyaCropType:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch)
         source_md5 = "7f4dcb3f33743dddd73f453176308bfb"

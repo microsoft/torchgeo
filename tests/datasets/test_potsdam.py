@@ -18,9 +18,7 @@ from torchgeo.datasets import Potsdam2D
 
 class TestPotsdam2D:
     @pytest.fixture(params=["train", "test"])
-    def dataset(
-        self, monkeypatch: MonkeyPatch, request: SubRequest
-    ) -> Potsdam2D:
+    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> Potsdam2D:
         md5s = ["e47175da529c5844052c7d483b483a30", "0cb795003a01154a72db7efaabbc76ae"]
         splits = {
             "train": ["top_potsdam_2_10", "top_potsdam_2_11"],

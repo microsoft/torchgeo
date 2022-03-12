@@ -23,9 +23,7 @@ def download_url(url: str, root: str, *args: str) -> None:
 
 class TestADVANCE:
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path
-    ) -> ADVANCE:
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ADVANCE:
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "advance")
         urls = [
@@ -40,9 +38,7 @@ class TestADVANCE:
         return ADVANCE(root, transforms, download=True, checksum=True)
 
     @pytest.fixture
-    def mock_missing_module(
-        self, monkeypatch: MonkeyPatch
-    ) -> None:
+    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
         import_orig = builtins.__import__
 
         def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:

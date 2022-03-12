@@ -26,10 +26,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestOSCD:
     @pytest.fixture(params=zip(["all", "rgb"], ["train", "test"]))
     def dataset(
-        self,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> OSCD:
         monkeypatch.setattr(torchgeo.datasets.oscd, "download_url", download_url)
         md5s = {

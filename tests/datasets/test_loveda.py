@@ -24,10 +24,7 @@ def download_url(url: str, root: str, *args: str) -> None:
 class TestLoveDA:
     @pytest.fixture(params=["train", "val", "test"])
     def dataset(
-        self,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LoveDA:
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         md5 = "3d5b1373ef9a3084ec493b9b2056fe07"

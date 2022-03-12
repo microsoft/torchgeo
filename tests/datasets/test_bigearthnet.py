@@ -26,10 +26,7 @@ class TestBigEarthNet:
         params=zip(["all", "s1", "s2"], [43, 19, 19], ["train", "val", "test"])
     )
     def dataset(
-        self,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> BigEarthNet:
         monkeypatch.setattr(torchgeo.datasets.bigearthnet, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "bigearthnet")

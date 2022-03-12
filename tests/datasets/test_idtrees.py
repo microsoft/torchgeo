@@ -30,10 +30,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestIDTReeS:
     @pytest.fixture(params=zip(["train", "test", "test"], ["task1", "task1", "task2"]))
     def dataset(
-        self,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> IDTReeS:
         monkeypatch.setattr(torchgeo.datasets.idtrees, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "idtrees")
@@ -56,9 +53,7 @@ class TestIDTReeS:
         return IDTReeS(root, split, task, transforms, download=True, checksum=True)
 
     @pytest.fixture(params=["pandas", "laspy", "open3d"])
-    def mock_missing_module(
-        self, monkeypatch: MonkeyPatch, request: SubRequest
-    ) -> str:
+    def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:
         import_orig = builtins.__import__
         package = str(request.param)
 

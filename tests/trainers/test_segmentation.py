@@ -45,10 +45,7 @@ class TestSemanticSegmentationTask:
         ],
     )
     def test_trainer(
-        self,
-        monkeypatch: MonkeyPatch,
-        name: str,
-        classname: Type[LightningDataModule],
+        self, monkeypatch: MonkeyPatch, name: str, classname: Type[LightningDataModule]
     ) -> None:
         if name == "naipchesapeake":
             pytest.importorskip("zipfile_deflate64")

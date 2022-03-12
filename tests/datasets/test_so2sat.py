@@ -20,9 +20,7 @@ pytest.importorskip("h5py")
 
 class TestSo2Sat:
     @pytest.fixture(params=["train", "validation", "test"])
-    def dataset(
-        self, monkeypatch: MonkeyPatch, request: SubRequest
-    ) -> So2Sat:
+    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> So2Sat:
         md5s = {
             "train": "82e0f2d51766b89cb905dbaf8275eb5b",
             "validation": "bf292ae4737c1698b1a3c6f5e742e0e1",
@@ -36,9 +34,7 @@ class TestSo2Sat:
         return So2Sat(root=root, split=split, transforms=transforms, checksum=True)
 
     @pytest.fixture
-    def mock_missing_module(
-        self, monkeypatch: MonkeyPatch
-    ) -> None:
+    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
         import_orig = builtins.__import__
 
         def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:

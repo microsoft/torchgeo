@@ -25,9 +25,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 class TestCDL:
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path
-    ) -> CDL:
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CDL:
         monkeypatch.setattr(torchgeo.datasets.cdl, "download_url", download_url)
 
         md5s = [

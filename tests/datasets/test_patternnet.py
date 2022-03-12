@@ -22,9 +22,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 class TestPatternNet:
     @pytest.fixture(params=["train", "test"])
-    def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path
-    ) -> PatternNet:
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> PatternNet:
         monkeypatch.setattr(torchgeo.datasets.patternnet, "download_url", download_url)
         md5 = "5649754c78219a2c19074ff93666cc61"
         monkeypatch.setattr(PatternNet, "md5", md5)
