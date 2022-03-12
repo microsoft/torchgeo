@@ -29,7 +29,7 @@ class TestPatternNet:
         url = os.path.join("tests", "data", "patternnet", "PatternNet.zip")
         monkeypatch.setattr(PatternNet, "url", url)
         root = str(tmp_path)
-        transforms = nn.Identity()
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return PatternNet(root, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: PatternNet) -> None:

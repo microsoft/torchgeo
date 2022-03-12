@@ -41,7 +41,7 @@ class TestBeninSmallHolderCashews:
         monkeypatch.setitem(BeninSmallHolderCashews.target_meta, "md5", labels_md5)
         monkeypatch.setattr(BeninSmallHolderCashews, "dates", ("2019_11_05",))
         root = str(tmp_path)
-        transforms = nn.Identity()
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         bands = BeninSmallHolderCashews.ALL_BANDS
 
         return BeninSmallHolderCashews(

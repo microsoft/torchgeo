@@ -51,7 +51,7 @@ class TestUSAVars:
         monkeypatch.setattr(USAVars, "label_urls", label_urls)
 
         root = str(tmp_path)
-        transforms = nn.Identity()
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
 
         return USAVars(root, transforms=transforms, download=True, checksum=True)
 

@@ -50,7 +50,7 @@ class TestCOWCCounting:
         monkeypatch.setattr(COWCCounting, "md5s", md5s)
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return COWCCounting(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: COWC) -> None:
@@ -114,7 +114,7 @@ class TestCOWCDetection:
         monkeypatch.setattr(COWCDetection, "md5s", md5s)
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return COWCDetection(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: COWC) -> None:

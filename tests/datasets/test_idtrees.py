@@ -49,7 +49,7 @@ class TestIDTReeS:
         split, task = request.param
         monkeypatch.setattr(IDTReeS, "metadata", metadata)
         root = str(tmp_path)
-        transforms = nn.Identity()
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return IDTReeS(root, split, task, transforms, download=True, checksum=True)
 
     @pytest.fixture(params=["pandas", "laspy", "open3d"])

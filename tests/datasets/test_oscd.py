@@ -65,7 +65,7 @@ class TestOSCD:
 
         bands, split = request.param
         root = str(tmp_path)
-        transforms = nn.Identity()
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return OSCD(
             root, split, bands, transforms=transforms, download=True, checksum=True
         )

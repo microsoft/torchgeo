@@ -24,7 +24,7 @@ class TestInriaAerialImageLabeling:
         root = os.path.join("tests", "data", "inria")
         test_md5 = "f23caf363389ef59de55fad11197c161"
         monkeypatch.setattr(InriaAerialImageLabeling, "md5", test_md5)
-        transforms = nn.Identity()
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return InriaAerialImageLabeling(
             root, split=request.param, transforms=transforms, checksum=True
         )

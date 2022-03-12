@@ -49,7 +49,7 @@ class TestTropicalCycloneWindEstimation:
         monkeypatch.setattr(TropicalCycloneWindEstimation, "size", 1)
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return TropicalCycloneWindEstimation(
             root, split, transforms, download=True, api_key="", checksum=True
         )

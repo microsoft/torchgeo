@@ -21,7 +21,7 @@ class TestLandsat8:
         monkeypatch.setattr(plt, "show", lambda *args: None)
         root = os.path.join("tests", "data", "landsat8")
         bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7"]
-        transforms = nn.Identity()
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return Landsat8(root, bands=bands, transforms=transforms)
 
     def test_separate_files(self, dataset: Landsat8) -> None:

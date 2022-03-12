@@ -35,7 +35,7 @@ class TestNASAMarineDebris:
         md5s = ["fe8698d1e68b3f24f0b86b04419a797d", "d8084f5a72778349e07ac90ec1e1d990"]
         monkeypatch.setattr(NASAMarineDebris, "md5s", md5s)
         root = str(tmp_path)
-        transforms = nn.Identity()
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return NASAMarineDebris(root, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: NASAMarineDebris) -> None:

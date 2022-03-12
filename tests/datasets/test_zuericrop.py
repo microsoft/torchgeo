@@ -36,7 +36,7 @@ class TestZueriCrop:
         monkeypatch.setattr(ZueriCrop, "urls", urls)
         monkeypatch.setattr(ZueriCrop, "md5s", md5s)
         root = str(tmp_path)
-        transforms = nn.Identity()
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return ZueriCrop(root=root, transforms=transforms, download=True, checksum=True)
 
     @pytest.fixture

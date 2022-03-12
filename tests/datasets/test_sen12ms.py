@@ -39,7 +39,7 @@ class TestSEN12MS:
         monkeypatch.setattr(SEN12MS, "md5s", md5s)
         root = os.path.join("tests", "data", "sen12ms")
         split = request.param
-        transforms = nn.Identity()
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return SEN12MS(root, split, transforms=transforms, checksum=True)
 
     def test_getitem(self, dataset: SEN12MS) -> None:

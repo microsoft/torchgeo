@@ -20,7 +20,7 @@ class TestNAIP:
     def dataset(self, monkeypatch: MonkeyPatch) -> NAIP:
         monkeypatch.setattr(plt, "show", lambda *args: None)
         root = os.path.join("tests", "data", "naip")
-        transforms = nn.Identity()
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return NAIP(root, transforms=transforms)
 
     def test_getitem(self, dataset: NAIP) -> None:
