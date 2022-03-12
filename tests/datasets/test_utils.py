@@ -11,7 +11,7 @@ import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import pytest

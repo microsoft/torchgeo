@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Generator, Type, cast
+from typing import Any, Dict, Type, cast
 
 import pytest
 import segmentation_models_pytorch as smp

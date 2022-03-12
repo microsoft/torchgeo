@@ -6,7 +6,7 @@ import os
 import shutil
 import sys
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import pytest
 import torch

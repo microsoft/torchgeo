@@ -3,7 +3,7 @@
 
 import os
 import shutil
-from typing import Generator
+
 
 import matplotlib.pyplot as plt
 import pytest

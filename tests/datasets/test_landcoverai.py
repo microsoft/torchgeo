@@ -4,7 +4,7 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
+
 
 import matplotlib.pyplot as plt
 import pytest

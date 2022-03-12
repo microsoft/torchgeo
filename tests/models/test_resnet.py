@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, Generator, Optional
+from typing import Any, Optional
 
 import pytest
 import torch
