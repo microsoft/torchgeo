@@ -74,9 +74,9 @@ def load_state_dict(model: Module, state_dict: Dict[str, Tensor]) -> Module:
         If input channels in model != pretrained model input channels
         If num output classes in model != pretrained model num classes
     """
-    in_channels = model.conv1.in_channels  # type: ignore[union-attr]
+    in_channels = model.conv1.in_channels
     expected_in_channels = state_dict["conv1.weight"].shape[1]
-    num_classes = model.fc.out_features  # type: ignore[union-attr]
+    num_classes = model.fc.out_features
     expected_num_classes = state_dict["fc.weight"].shape[0]
 
     if in_channels != expected_in_channels:
@@ -127,7 +127,7 @@ def reinit_initial_conv_layer(
         w_old = layer.weight.data[:, :3, :, :].clone()
         if use_bias:
             # mypy doesn't realize that bias isn't None here...
-            b_old = layer.bias.data.clone()  # type: ignore[union-attr]
+            b_old = layer.bias.data.clone()
 
     updated_stride = layer.stride if new_stride is None else new_stride
     updated_padding = layer.padding if new_padding is None else new_padding
@@ -150,6 +150,6 @@ def reinit_initial_conv_layer(
     if keep_rgb_weights:
         new_layer.weight.data[:, :3, :, :] = w_old
         if use_bias:
-            new_layer.bias.data = b_old  # type: ignore[union-attr]
+            new_layer.bias.data = b_old
 
     return new_layer

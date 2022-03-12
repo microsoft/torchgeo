@@ -25,6 +25,9 @@ class RCF(Module):
         This Module is *not* trainable. It is only used as a feature extractor.
     """
 
+    weights: Tensor
+    biases: Tensor
+
     def __init__(
         self,
         in_channels: int = 4,

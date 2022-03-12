@@ -61,7 +61,7 @@ class RESISC45DataModule(pl.LightningDataModule):
         if (
             hasattr(self, "trainer")
             and hasattr(self.trainer, "training")
-            and self.trainer.training  # type: ignore[union-attr]
+            and self.trainer.training
         ):
             x = batch["image"]
 
