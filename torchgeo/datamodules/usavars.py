@@ -5,9 +5,7 @@
 
 from typing import Any, Callable, Dict, Optional, Sequence
 
-import numpy as np
 import pytorch_lightning as pl
-import torch
 from torch import Tensor
 from torch.utils.data import DataLoader
 
@@ -28,11 +26,8 @@ class USAVarsDataModule(pl.LightningModule):
         root_dir: str,
         labels: Sequence[str] = USAVars.ALL_LABELS,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
-        fixed_shuffle: bool = False,
         batch_size: int = 64,
         num_workers: int = 0,
-        val_split_pct: float = 0.2,
-        test_split_pct: float = 0.1,
     ) -> None:
         """Initialize a LightningDataModule for USAVars based DataLoaders.
 
@@ -41,26 +36,15 @@ class USAVarsDataModule(pl.LightningModule):
             labels: The labels argument passed to the USAVars Dataset classes
             transforms: a function/transform that takes input sample and its target as
                             entry and returns a transformed version
-            fixed_shuffle: always shuffles DataLoader to same order
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
-            val_split_pct: What percentage of the dataset to use as a validation set
-            test_split_pct: What percentage of the dataset to use as a test set
         """
         super().__init__()
         self.root_dir = root_dir
         self.labels = labels
         self.transforms = transforms
-        self.fixed_shuffle = fixed_shuffle
         self.batch_size = batch_size
         self.num_workers = num_workers
-        assert val_split_pct + test_split_pct <= 1.0
-        self.val_split_pct = val_split_pct
-        self.test_split_pct = test_split_pct
-
-        if fixed_shuffle:
-            torch.manual_seed(0)
-            np.random.seed(0)
 
     def prepare_data(self) -> None:
         """Make sure that the dataset is downloaded.
