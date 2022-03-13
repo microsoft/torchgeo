@@ -12,7 +12,7 @@ from typing import Any, Dict, Union
 
 import pytorch_lightning as pl
 import torch
-from torchmetrics import Accuracy, JaccardIndex, Metric, MetricCollection
+from torchmetrics import Accuracy, JaccardIndex, MetricCollection
 
 from torchgeo.trainers import ClassificationTask, SemanticSegmentationTask
 from train import TASK_TO_MODULES_MAPPING
@@ -85,8 +85,8 @@ def set_up_parser() -> argparse.ArgumentParser:
 def run_eval_loop(
     model: pl.LightningModule,
     dataloader: Any,
-    device: torch.device,  # type: ignore[name-defined]
-    metrics: Metric,
+    device: torch.device,
+    metrics: MetricCollection,
 ) -> Any:
     """Runs a standard test loop over a dataloader and records metrics.
 
@@ -94,10 +94,11 @@ def run_eval_loop(
         model: the model used for inference
         dataloader: the dataloader to get samples from
         device: the device to put data on
-        metrics: a torchmetrics compatible Metric to score the output from the model
+        metrics: a torchmetrics compatible metric collection to score the output
+            from the model
 
     Returns:
-        the result of ``metric.compute()``
+        the result of ``metrics.compute()``
     """
     for batch in dataloader:
         x = batch["image"].to(device)

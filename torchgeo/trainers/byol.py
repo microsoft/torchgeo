@@ -24,7 +24,7 @@ from torchvision.models.resnet import resnet50
 Module.__module__ = "torch.nn"
 
 
-def normalized_mse(x, y) -> Tensor:
+def normalized_mse(x: Tensor, y: Tensor) -> Tensor:
     """Computes the normalized mean squared error between x and y.
 
     Args:
@@ -37,7 +37,7 @@ def normalized_mse(x, y) -> Tensor:
     x = F.normalize(x, dim=-1)
     y = F.normalize(y, dim=-1)
     mse = torch.mean(2 - 2 * (x * y).sum(dim=-1))
-    return cast(Tensor, mse)
+    return mse
 
 
 # TODO: Move this to transforms
@@ -55,7 +55,7 @@ class RandomApply(Module):
         self.augm = augm
         self.p = p
 
-    def forward(self, x) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Applies an augmentation to the input with some probability.
 
         Args:
@@ -98,7 +98,7 @@ class SimCLRAugmentation(Module):
             K.RandomResizedCrop(size=image_size),
         )
 
-    def forward(self, x) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Applys SimCLR augmentations to the input tensor.
 
         Args:
@@ -131,7 +131,7 @@ class MLP(Module):
             Linear(hidden_size, projection_size),
         )
 
-    def forward(self, x) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the MLP model.
 
         Args:
@@ -191,7 +191,7 @@ class EncoderWrapper(Module):
             )
         return self._projector
 
-    def _hook(self, module: Any, input: Any, output) -> None:
+    def _hook(self, module: Any, input: Any, output: Tensor) -> None:
         """Hook to record the activations at the projection layer.
 
         See the following docs page for more details on hooks:
@@ -216,7 +216,7 @@ class EncoderWrapper(Module):
         layer = list(self.model.children())[self.layer]  # type: ignore[index]
         layer.register_forward_hook(self._hook)
 
-    def forward(self, x) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Pass through the model, and collect the representation from our forward hook.
 
         Args:
@@ -226,7 +226,7 @@ class EncoderWrapper(Module):
             output from the model
         """
         _ = self.model(x)
-        return cast(Tensor, self._encoded)
+        return self._encoded
 
 
 class BYOL(Module):
@@ -287,7 +287,7 @@ class BYOL(Module):
         # Perform a single forward pass to initialize the wrapper correctly
         self.encoder(torch.zeros(2, self.in_channels, *image_size))
 
-    def forward(self, x) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the encoder model through the MLP and prediction head.
 
         Args:
@@ -309,18 +309,17 @@ class BYOLTask(LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
-        in_channels = self.hparams["in_channels"]
-        pretrained = self.hparams["imagenet_pretraining"]
+        hparams = cast(Dict[str, Any], self.hparams)
+        in_channels = hparams["in_channels"]
+        pretrained = hparams["imagenet_pretraining"]
         encoder = None
 
-        if self.hparams["encoder_name"] == "resnet18":
+        if hparams["encoder_name"] == "resnet18":
             encoder = resnet18(pretrained=pretrained)
-        elif self.hparams["encoder_name"] == "resnet50":
+        elif hparams["encoder_name"] == "resnet50":
             encoder = resnet50(pretrained=pretrained)
         else:
-            raise ValueError(
-                f"Encoder type '{self.hparams['encoder_name']}' is not valid."
-            )
+            raise ValueError(f"Encoder type '{hparams['encoder_name']}' is not valid.")
 
         layer = encoder.conv1
         # Creating new Conv2d layer
@@ -364,11 +363,13 @@ class BYOLTask(LightningModule):
             ValueError: if kwargs arguments are invalid
         """
         super().__init__()
-        self.save_hyperparameters()  # creates `self.hparams` from kwargs
+
+        # Creates `self.hparams` from kwargs
+        self.save_hyperparameters()  # type: ignore[operator]
 
         self.config_task()
 
-    def forward(self, x) -> Any:  # type: ignore[override]
+    def forward(self, *args: Any, **kwargs: Any) -> Any:
         """Forward pass of the model.
 
         Args:
@@ -377,7 +378,7 @@ class BYOLTask(LightningModule):
         Returns:
             output from the model
         """
-        return self.model(x)
+        return self.model(*args, **kwargs)
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
@@ -386,24 +387,23 @@ class BYOLTask(LightningModule):
             a "lr dict" according to the pytorch lightning documentation --
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
-        optimizer_class = getattr(optim, self.hparams.get("optimizer", "Adam"))
-        lr = self.hparams.get("lr", 1e-4)
-        weight_decay = self.hparams.get("weight_decay", 1e-6)
+        hparams = cast(Dict[str, Any], self.hparams)
+        optimizer_class = getattr(optim, hparams.get("optimizer", "Adam"))
+        lr = hparams.get("lr", 1e-4)
+        weight_decay = hparams.get("weight_decay", 1e-6)
         optimizer = optimizer_class(self.parameters(), lr=lr, weight_decay=weight_decay)
 
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
+                    optimizer, patience=hparams["learning_rate_schedule_patience"]
                 ),
                 "monitor": "val_loss",
             },
         }
 
-    def training_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> Tensor:
+    def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
         """Training step - reports BYOL loss.
 
         Args:
@@ -413,6 +413,7 @@ class BYOLTask(LightningModule):
         Returns:
             training loss
         """
+        batch, batch_idx = args
         x = batch["image"]
         with torch.no_grad():
             x1, x2 = self.model.augment(x), self.model.augment(x)
@@ -425,17 +426,16 @@ class BYOLTask(LightningModule):
         self.log("train_loss", loss, on_step=True, on_epoch=False)
         self.model.update_target()
 
-        return cast(Tensor, loss)
+        return loss
 
-    def validation_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
+    def validation_step(self, *args: Any, **kwargs: Any) -> None:
         """Logs iteration level validation loss.
 
         Args:
             batch: current batch
             batch_idx: index of current batch
         """
+        batch, batch_idx = args
         x = batch["image"]
         x1, x2 = self.model.augment(x), self.model.augment(x)
         pred1, pred2 = self.forward(x1), self.forward(x2)
@@ -444,5 +444,5 @@ class BYOLTask(LightningModule):
 
         self.log("val_loss", loss, on_step=False, on_epoch=True)
 
-    def test_step(self, *args: Any) -> None:  # type: ignore[override]
+    def test_step(self, *args: Any, **kwargs: Any) -> Any:
         """No-op, does nothing."""

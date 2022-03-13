@@ -235,7 +235,7 @@ class TestSpaceNet5:
 
     def test_getitem(self, dataset: SpaceNet5) -> None:
         # Iterate over all elements to maximize coverage
-        samples = [i for i in dataset]
+        samples = [dataset[i] for i in range(len(dataset))]
         x = samples[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)

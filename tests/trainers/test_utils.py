@@ -95,7 +95,7 @@ def test_load_state_dict_unequal_classes(checkpoint: str, model: Module) -> None
     expected_num_classes = state_dict["fc.weight"].shape[0]
 
     num_classes = 10
-    in_features = model.fc.in_features
+    in_features = cast(int, cast(nn.Module, model.fc).in_features)
     model.fc = nn.Linear(in_features, out_features=num_classes)
 
     warning = (

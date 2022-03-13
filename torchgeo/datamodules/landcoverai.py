@@ -52,6 +52,7 @@ class LandCoverAIDataModule(pl.LightningDataModule):
         """
         if (
             hasattr(self, "trainer")
+            and self.trainer is not None
             and hasattr(self.trainer, "training")
             and self.trainer.training
         ):

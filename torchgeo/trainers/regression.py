@@ -3,7 +3,7 @@
 
 """Regression tasks."""
 
-from typing import Any, Dict
+from typing import Any, Dict, cast
 
 import pytorch_lightning as pl
 import torch
@@ -28,12 +28,13 @@ class RegressionTask(pl.LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters."""
-        if self.hparams["model"] == "resnet18":
-            self.model = models.resnet18(pretrained=self.hparams["pretrained"])
+        hparams = cast(Dict[str, Any], self.hparams)
+        if hparams["model"] == "resnet18":
+            self.model = models.resnet18(pretrained=hparams["pretrained"])
             in_features = self.model.fc.in_features
             self.model.fc = nn.Linear(in_features, out_features=1)
         else:
-            raise ValueError(f"Model type '{self.hparams['model']}' is not valid.")
+            raise ValueError(f"Model type '{hparams['model']}' is not valid.")
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize a new LightningModule for training simple regression models.
@@ -44,7 +45,9 @@ class RegressionTask(pl.LightningModule):
             learning_rate_schedule_patience: Patience parameter for the LR scheduler
         """
         super().__init__()
-        self.save_hyperparameters()  # creates `self.hparams` from kwargs
+
+        # Creates `self.hparams` from kwargs
+        self.save_hyperparameters()  # type: ignore[operator]
         self.config_task()
 
         self.train_metrics = MetricCollection(
@@ -54,13 +57,18 @@ class RegressionTask(pl.LightningModule):
         self.val_metrics = self.train_metrics.clone(prefix="val_")
         self.test_metrics = self.train_metrics.clone(prefix="test_")
 
-    def forward(self, x) -> Any:  # type: ignore[override]
-        """Forward pass of the model."""
-        return self.model(x)
+    def forward(self, *args: Any, **kwargs: Any) -> Any:
+        """Forward pass of the model.
 
-    def training_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> Tensor:
+        Args:
+            x: tensor of data to run through the model
+
+        Returns:
+            output from the model
+        """
+        return self.model(*args, **kwargs)
+
+    def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
         """Training step with an MSE loss.
 
         Args:
@@ -70,6 +78,7 @@ class RegressionTask(pl.LightningModule):
         Returns:
             training loss
         """
+        batch, batch_idx = args
         x = batch["image"]
         y = batch["label"].view(-1, 1)
         y_hat = self.forward(x)
@@ -90,15 +99,14 @@ class RegressionTask(pl.LightningModule):
         self.log_dict(self.train_metrics.compute())
         self.train_metrics.reset()
 
-    def validation_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
+    def validation_step(self, *args: Any, **kwargs: Any) -> None:
         """Validation step.
 
         Args:
             batch: Current batch
             batch_idx: Index of current batch
         """
+        batch, batch_idx = args
         x = batch["image"]
         y = batch["label"].view(-1, 1)
         y_hat = self.forward(x)
@@ -109,7 +117,7 @@ class RegressionTask(pl.LightningModule):
 
         if batch_idx < 10:
             try:
-                datamodule = self.trainer.datamodule
+                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
                 batch["prediction"] = y_hat
                 for key in ["image", "label", "prediction"]:
                     batch[key] = batch[key].cpu()
@@ -131,15 +139,14 @@ class RegressionTask(pl.LightningModule):
         self.log_dict(self.val_metrics.compute())
         self.val_metrics.reset()
 
-    def test_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
+    def test_step(self, *args: Any, **kwargs: Any) -> None:
         """Test step.
 
         Args:
             batch: Current batch
             batch_idx: Index of current batch
         """
+        batch, batch_idx = args
         x = batch["image"]
         y = batch["label"].view(-1, 1)
         y_hat = self.forward(x)
@@ -164,14 +171,15 @@ class RegressionTask(pl.LightningModule):
             a "lr dict" according to the pytorch lightning documentation --
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
+        hparams = cast(Dict[str, Any], self.hparams)
         optimizer = torch.optim.AdamW(
-            self.model.parameters(), lr=self.hparams["learning_rate"]
+            self.model.parameters(), lr=hparams["learning_rate"]
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
+                    optimizer, patience=hparams["learning_rate_schedule_patience"]
                 ),
                 "monitor": "val_loss",
             },

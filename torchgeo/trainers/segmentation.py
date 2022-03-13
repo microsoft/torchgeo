@@ -27,45 +27,46 @@ class SemanticSegmentationTask(LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
-        if self.hparams["segmentation_model"] == "unet":
+        hparams = cast(Dict[str, Any], self.hparams)
+        if hparams["segmentation_model"] == "unet":
             self.model = smp.Unet(
-                encoder_name=self.hparams["encoder_name"],
-                encoder_weights=self.hparams["encoder_weights"],
-                in_channels=self.hparams["in_channels"],
-                classes=self.hparams["num_classes"],
+                encoder_name=hparams["encoder_name"],
+                encoder_weights=hparams["encoder_weights"],
+                in_channels=hparams["in_channels"],
+                classes=hparams["num_classes"],
             )
-        elif self.hparams["segmentation_model"] == "deeplabv3+":
+        elif hparams["segmentation_model"] == "deeplabv3+":
             self.model = smp.DeepLabV3Plus(
-                encoder_name=self.hparams["encoder_name"],
-                encoder_weights=self.hparams["encoder_weights"],
-                in_channels=self.hparams["in_channels"],
-                classes=self.hparams["num_classes"],
+                encoder_name=hparams["encoder_name"],
+                encoder_weights=hparams["encoder_weights"],
+                in_channels=hparams["in_channels"],
+                classes=hparams["num_classes"],
             )
-        elif self.hparams["segmentation_model"] == "fcn":
+        elif hparams["segmentation_model"] == "fcn":
             self.model = FCN(
-                in_channels=self.hparams["in_channels"],
-                classes=self.hparams["num_classes"],
-                num_filters=self.hparams["num_filters"],
+                in_channels=hparams["in_channels"],
+                classes=hparams["num_classes"],
+                num_filters=hparams["num_filters"],
             )
         else:
             raise ValueError(
-                f"Model type '{self.hparams['segmentation_model']}' is not valid."
+                f"Model type '{hparams['segmentation_model']}' is not valid."
             )
 
-        if self.hparams["loss"] == "ce":
+        if hparams["loss"] == "ce":
             self.loss = nn.CrossEntropyLoss(
                 ignore_index=-1000 if self.ignore_zeros is None else 0
             )
-        elif self.hparams["loss"] == "jaccard":
+        elif hparams["loss"] == "jaccard":
             self.loss = smp.losses.JaccardLoss(
-                mode="multiclass", classes=self.hparams["num_classes"]
+                mode="multiclass", classes=hparams["num_classes"]
             )
-        elif self.hparams["loss"] == "focal":
+        elif hparams["loss"] == "focal":
             self.loss = smp.losses.FocalLoss(
                 "multiclass", ignore_index=self.ignore_zeros, normalized=True
             )
         else:
-            raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
+            raise ValueError(f"Loss type '{hparams['loss']}' is not valid.")
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
@@ -84,21 +85,22 @@ class SemanticSegmentationTask(LightningModule):
             ValueError: if kwargs arguments are invalid
         """
         super().__init__()
-        self.save_hyperparameters()  # creates `self.hparams` from kwargs
+
+        # Creates `self.hparams` from kwargs
+        self.save_hyperparameters()  # type: ignore[operator]
 
         self.ignore_zeros = None if kwargs["ignore_zeros"] else 0
 
         self.config_task()
 
+        hparams = cast(Dict[str, Any], self.hparams)
         self.train_metrics = MetricCollection(
             [
                 Accuracy(
-                    num_classes=self.hparams["num_classes"],
-                    ignore_index=self.ignore_zeros,
+                    num_classes=hparams["num_classes"], ignore_index=self.ignore_zeros
                 ),
                 JaccardIndex(
-                    num_classes=self.hparams["num_classes"],
-                    ignore_index=self.ignore_zeros,
+                    num_classes=hparams["num_classes"], ignore_index=self.ignore_zeros
                 ),
             ],
             prefix="train_",
@@ -106,7 +108,7 @@ class SemanticSegmentationTask(LightningModule):
         self.val_metrics = self.train_metrics.clone(prefix="val_")
         self.test_metrics = self.train_metrics.clone(prefix="test_")
 
-    def forward(self, x) -> Any:  # type: ignore[override]
+    def forward(self, *args: Any, **kwargs: Any) -> Any:
         """Forward pass of the model.
 
         Args:
@@ -115,11 +117,9 @@ class SemanticSegmentationTask(LightningModule):
         Returns:
             output from the model
         """
-        return self.model(x)
+        return self.model(*args, **kwargs)
 
-    def training_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> Tensor:
+    def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
         """Training step - reports average accuracy and average JaccardIndex.
 
         Args:
@@ -129,6 +129,7 @@ class SemanticSegmentationTask(LightningModule):
         Returns:
             training loss
         """
+        batch, batch_idx = args
         x = batch["image"]
         y = batch["mask"]
         y_hat = self.forward(x)
@@ -152,9 +153,7 @@ class SemanticSegmentationTask(LightningModule):
         self.log_dict(self.train_metrics.compute())
         self.train_metrics.reset()
 
-    def validation_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
+    def validation_step(self, *args: Any, **kwargs: Any) -> None:
         """Validation step - reports average accuracy and average JaccardIndex.
 
         Logs the first 10 validation samples to tensorboard as images with 3 subplots
@@ -164,6 +163,7 @@ class SemanticSegmentationTask(LightningModule):
             batch: Current batch
             batch_idx: Index of current batch
         """
+        batch, batch_idx = args
         x = batch["image"]
         y = batch["mask"]
         y_hat = self.forward(x)
@@ -176,7 +176,7 @@ class SemanticSegmentationTask(LightningModule):
 
         if batch_idx < 10:
             try:
-                datamodule = self.trainer.datamodule
+                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
                 batch["prediction"] = y_hat_hard
                 for key in ["image", "mask", "prediction"]:
                     batch[key] = batch[key].cpu()
@@ -198,15 +198,14 @@ class SemanticSegmentationTask(LightningModule):
         self.log_dict(self.val_metrics.compute())
         self.val_metrics.reset()
 
-    def test_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
+    def test_step(self, *args: Any, **kwargs: Any) -> None:
         """Test step identical to the validation step.
 
         Args:
             batch: Current batch
             batch_idx: Index of current batch
         """
+        batch, batch_idx = args
         x = batch["image"]
         y = batch["mask"]
         y_hat = self.forward(x)
@@ -234,14 +233,15 @@ class SemanticSegmentationTask(LightningModule):
             a "lr dict" according to the pytorch lightning documentation --
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
+        hparams = cast(Dict[str, Any], self.hparams)
         optimizer = torch.optim.Adam(
-            self.model.parameters(), lr=self.hparams["learning_rate"]
+            self.model.parameters(), lr=hparams["learning_rate"]
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
+                    optimizer, patience=hparams["learning_rate_schedule_patience"]
                 ),
                 "monitor": "val_loss",
             },

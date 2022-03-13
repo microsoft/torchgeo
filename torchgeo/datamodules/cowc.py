@@ -128,4 +128,4 @@ class COWCCountingDataModule(pl.LightningDataModule):
 
         .. versionadded:: 0.2
         """
-        return self.val_dataset.dataset.plot(*args, **kwargs)
+        return self.test_dataset.plot(*args, **kwargs)

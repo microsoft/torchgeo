@@ -202,7 +202,7 @@ class IDTReeS(VisionDataset):
             data and label at that index
         """
         path = self.images[index]
-        image = self._load_image(path).to(torch.uint8)  # type:ignore[attr-defined]
+        image = self._load_image(path).to(torch.uint8)
         hsi = self._load_image(path.replace("RGB", "HSI"))
         chm = self._load_image(path.replace("RGB", "CHM"))
         las = self._load_las(path.replace("RGB", "LAS").replace(".tif", ".las"))

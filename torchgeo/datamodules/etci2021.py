@@ -151,4 +151,4 @@ class ETCI2021DataModule(pl.LightningDataModule):
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
         """Run :meth:`torchgeo.datasets.ETCI2021.plot`."""
-        return self.val_dataset.plot(*args, **kwargs)
+        return self.test_dataset.plot(*args, **kwargs)
