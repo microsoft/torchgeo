@@ -80,12 +80,12 @@ class USAVars(VisionDataset):
         "val": {
             "url": "https://mosaiks.blob.core.windows.net/datasets/val_split.txt",
             "filename": "val_split.txt",
-            "md5": "bca7183b132b919dec0fc24fb11662a0"
+            "md5": "bca7183b132b919dec0fc24fb11662a0",
         },
         "test": {
             "url": "https://mosaiks.blob.core.windows.net/datasets/test_split.txt",
             "filename": "test_split.txt",
-            "md5": "97bb36bc003ae0bf556a8d6e8f77141a"
+            "md5": "97bb36bc003ae0bf556a8d6e8f77141a",
         },
     }
 
