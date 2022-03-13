@@ -50,6 +50,7 @@ class USAVarsDataModule(pl.LightningModule):
         self.root_dir = root_dir
         self.labels = labels
         self.transforms = transforms
+        self.fixed_shuffle = fixed_shuffle
         self.batch_size = batch_size
         self.num_workers = num_workers
         assert val_split_pct + test_split_pct <= 1.0
