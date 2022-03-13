@@ -5,6 +5,10 @@
 
 from typing import Any, Callable, Dict, Optional, Sequence
 
+
+import random
+import numpy as np
+
 import pytorch_lightning as pl
 import torch
 from torch import Tensor
@@ -59,6 +63,8 @@ class USAVarsDataModule(pl.LightningModule):
 
         if fixed_shuffle:
             torch.manual_seed(0)
+            random.seed(0)
+            np.random.seed(0)
 
     def prepare_data(self) -> None:
         """Make sure that the dataset is downloaded.
