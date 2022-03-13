@@ -32,9 +32,9 @@ class TestUSAVars:
             [
                 ["elevation", "population", "treecover"],
                 ["elevation", "population"],
-                ["treecover"]
+                ["treecover"],
             ],
-        ),
+        )
     )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
@@ -84,7 +84,9 @@ class TestUSAVars:
         split, labels = request.param
         transforms = nn.Identity()  # type: ignore[no-untyped-call]
 
-        return USAVars(root, split, labels, transforms=transforms, download=True, checksum=True)
+        return USAVars(
+            root, split, labels, transforms=transforms, download=True, checksum=True
+        )
 
     def test_getitem(self, dataset: USAVars) -> None:
         x = dataset[0]
@@ -125,11 +127,7 @@ class TestUSAVars:
         ]
         for csv in csvs:
             shutil.copy(os.path.join("tests", "data", "usavars", csv), root)
-        splits = [
-            "train_split.txt",
-            "val_split.txt",
-            "test_split.txt",
-        ]
+        splits = ["train_split.txt", "val_split.txt", "test_split.txt"]
         for split in splits:
             shutil.copy(os.path.join("tests", "data", "usavars", split), root)
 
