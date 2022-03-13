@@ -4,7 +4,7 @@
 """BYOL tasks."""
 
 import random
-from typing import Any, Callable, Dict, Optional, Tuple, Union, cast
+from typing import Any, Callable, Dict, Optional, Tuple, cast
 
 import torch
 import torch.nn.functional as F
@@ -159,7 +159,7 @@ class EncoderWrapper(Module):
         model: Module,
         projection_size: int = 256,
         hidden_size: int = 4096,
-        layer: Union[str, int] = -2,
+        layer: int = -2,
     ) -> None:
         """Initializes EncoderWrapper.
 
@@ -213,7 +213,7 @@ class EncoderWrapper(Module):
 
     def _register_hook(self) -> None:
         """Register a hook for layer that we will extract features from."""
-        layer = list(self.model.children())[self.layer]  # type: ignore[index]
+        layer = list(self.model.children())[self.layer]
         layer.register_forward_hook(self._hook)
 
     def forward(self, x: Tensor) -> Tensor:
@@ -244,7 +244,7 @@ class BYOL(Module):
         self,
         model: Module,
         image_size: Tuple[int, int] = (256, 256),
-        hidden_layer: Union[str, int] = -2,
+        hidden_layer: int = -2,
         in_channels: int = 4,
         projection_size: int = 256,
         hidden_size: int = 4096,
@@ -334,15 +334,13 @@ class BYOLTask(LightningModule):
         # initialize the weights from new channel with the red channel weights
         copy_weights = 0
         # Copying the weights from the old to the new layer
-        new_layer.weight[:, : layer.in_channels, :, :].data[
-            ...  # type: ignore[index]
-        ] = Variable(layer.weight.clone(), requires_grad=True)
+        new_layer.weight[:, : layer.in_channels, :, :].data[:] = Variable(
+            layer.weight.clone(), requires_grad=True
+        )
         # Copying the weights of the old layer to the extra channels
         for i in range(in_channels - layer.in_channels):
             channel = layer.in_channels + i
-            new_layer.weight[:, channel : channel + 1, :, :].data[
-                ...  # type: ignore[index]
-            ] = Variable(
+            new_layer.weight[:, channel : channel + 1, :, :].data[:] = Variable(
                 layer.weight[:, copy_weights : copy_weights + 1, ::].clone(),
                 requires_grad=True,
             )

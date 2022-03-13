@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 
 import fiona
 import matplotlib.pyplot as plt
@@ -268,20 +268,21 @@ class IDTReeS(VisionDataset):
             the bounding boxes
         """
         base_path = os.path.basename(path)
+        geometries = cast(Dict[int, Dict[str, Any]], self.geometries)
 
         # Find object ids and geometries
         if self.split == "train":
             indices = self.labels["rsFile"] == base_path
             ids = self.labels[indices]["id"].tolist()
-            geoms = [self.geometries[i]["geometry"]["coordinates"][0][:4] for i in ids]
+            geoms = [geometries[i]["geometry"]["coordinates"][0][:4] for i in ids]
         # Test set - Task 2 has no mapping csv. Mapping is inside of geometry
         else:
             ids = [
                 k
-                for k, v in self.geometries.items()
+                for k, v in geometries.items()
                 if v["properties"]["plotID"] == base_path
             ]
-            geoms = [self.geometries[i]["geometry"]["coordinates"][0][:4] for i in ids]
+            geoms = [geometries[i]["geometry"]["coordinates"][0][:4] for i in ids]
 
         # Convert to pixel coords
         boxes = []
@@ -316,7 +317,9 @@ class IDTReeS(VisionDataset):
         tensor = torch.tensor(labels)
         return tensor
 
-    def _load(self, root: str) -> Tuple[List[str], Dict[int, Dict[str, Any]], Any]:
+    def _load(
+        self, root: str
+    ) -> Tuple[List[str], Optional[Dict[int, Dict[str, Any]]], Any]:
         """Load files, geometries, and labels.
 
         Args:
@@ -342,7 +345,7 @@ class IDTReeS(VisionDataset):
 
         images = glob.glob(os.path.join(directory, "RemoteSensing", "RGB", "*.tif"))
 
-        return images, geoms, labels  # type: ignore[return-value]
+        return images, geoms, labels
 
     def _load_labels(self, directory: str) -> Any:
         """Load the csv files containing the labels.

@@ -420,9 +420,7 @@ class BigEarthNet(VisionDataset):
 
         # Map 43 to 19 class labels
         if self.num_classes == 19:
-            indices = [
-                self.label_converter.get(idx) for idx in indices  # type: ignore[misc]
-            ]
+            indices = [self.label_converter[idx] for idx in indices]
             indices = [idx for idx in indices if idx is not None]
 
         target = torch.zeros(self.num_classes, dtype=torch.long)

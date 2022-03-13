@@ -4,8 +4,7 @@
 """Common trainer utilities."""
 
 import warnings
-from collections import OrderedDict
-from typing import Dict, Optional, Tuple, Union, cast
+from typing import Optional, OrderedDict, Tuple, Union, cast
 
 import torch
 import torch.nn as nn
@@ -18,7 +17,7 @@ Module.__module__ = "nn.Module"
 Conv2d.__module__ = "nn.Conv2d"
 
 
-def extract_encoder(path: str) -> Tuple[str, Dict[str, Tensor]]:
+def extract_encoder(path: str) -> Tuple[str, OrderedDict[str, Tensor]]:
     """Extracts an encoder from a pytorch lightning checkpoint file.
 
     Args:
@@ -60,7 +59,7 @@ def extract_encoder(path: str) -> Tuple[str, Dict[str, Tensor]]:
     return name, state_dict
 
 
-def load_state_dict(model: Module, state_dict: Dict[str, Tensor]) -> Module:
+def load_state_dict(model: Module, state_dict: OrderedDict[str, Tensor]) -> Module:
     """Load pretrained resnet weights to a model.
 
     Args:
@@ -93,7 +92,7 @@ def load_state_dict(model: Module, state_dict: Dict[str, Tensor]) -> Module:
         )
         del state_dict["fc.weight"], state_dict["fc.bias"]
 
-    model.load_state_dict(state_dict, strict=False)  # type: ignore[arg-type]
+    model.load_state_dict(state_dict, strict=False)
 
     return model
 
