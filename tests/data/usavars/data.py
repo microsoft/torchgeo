@@ -67,6 +67,14 @@ for lab, cols in zip(labels, columns):
     df = pd.DataFrame(fake_vals, columns=cols)
     df.to_csv(lab + ".csv")
 
+# Create splits:
+with open("train_split.txt", "w") as f:
+    f.write("tile_0,0.tif")
+with open("val_split.txt", "w") as f:
+    f.write("tile_0,1.tif")
+with open("test_split.txt", "w") as f:
+    pass
+
 # Compress data
 shutil.make_archive(data_dir, "zip", ".", data_dir)
 
