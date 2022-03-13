@@ -8,14 +8,17 @@ import torch
 from torch import Tensor
 
 from torchgeo.transforms import (
+    AppendBNDVI,
     AppendGNDVI,
     AppendNBR,
     AppendNDBI,
+    AppendNDRE,
     AppendNDSI,
     AppendNDVI,
     AppendNDWI,
     AppendNormalizedDifferenceIndex,
     AppendSWI,
+    AppendTriBandNormalizedDifferenceIndex,
 )
 
 
@@ -62,9 +65,26 @@ def test_append_index_batch(batch: Dict[str, Tensor]) -> None:
     assert output["image"].shape == (b, c + 1, h, w)
 
 
+def test_append_triband_index_batch(batch: Dict[str, Tensor]) -> None:
+    b, c, h, w = batch["image"].shape
+    tr = AppendTriBandNormalizedDifferenceIndex(index_a=0, index_b=0, index_c=0)
+    output = tr(batch)
+    assert output["image"].shape == (b, c + 1, h, w)
+
+
 @pytest.mark.parametrize(
     "index",
-    [AppendNBR, AppendNDBI, AppendNDSI, AppendNDVI, AppendNDWI, AppendSWI, AppendGNDVI],
+    [
+        AppendBNDVI,
+        AppendNBR,
+        AppendNDBI,
+        AppendNDRE,
+        AppendNDSI,
+        AppendNDVI,
+        AppendNDWI,
+        AppendSWI,
+        AppendGNDVI,
+    ],
 )
 def test_append_normalized_difference_indices(
     sample: Dict[str, Tensor], index: AppendNormalizedDifferenceIndex

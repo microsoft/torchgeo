@@ -4,6 +4,8 @@
 """TorchGeo datasets."""
 
 from .advance import ADVANCE
+from .agb_live_woody_density import AbovegroundLiveWoodyBiomassDensity
+from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
 from .cbf import CanadianBuildingFootprints
@@ -21,6 +23,7 @@ from .chesapeake import (
     ChesapeakeVA,
     ChesapeakeWV,
 )
+from .cms_mangrove_canopy import CMSGlobalMangroveCanopy
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCycloneWindEstimation
@@ -28,6 +31,7 @@ from .dfc2022 import DFC2022
 from .enviroatlas import EnviroAtlas
 from .esri2020 import Esri2020
 from .etci2021 import ETCI2021
+from .eudem import EUDEM
 from .eurosat import EuroSAT
 from .fair1m import FAIR1M
 from .geo import (
@@ -40,6 +44,7 @@ from .geo import (
     VisionDataset,
 )
 from .gid15 import GID15
+from .globbiomass import GlobBiomass
 from .idtrees import IDTReeS
 from .inria import InriaAerialImageLabeling
 from .landcoverai import LandCoverAI
@@ -61,6 +66,7 @@ from .loveda import LoveDA
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nwpu import VHR10
+from .openbuildings import OpenBuildings
 from .oscd import OSCD
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
@@ -71,6 +77,7 @@ from .sentinel import Sentinel, Sentinel2
 from .so2sat import So2Sat
 from .spacenet import SpaceNet, SpaceNet1, SpaceNet2, SpaceNet4, SpaceNet5, SpaceNet7
 from .ucmerced import UCMerced
+from .usavars import USAVars
 from .utils import (
     BoundingBox,
     concat_samples,
@@ -84,6 +91,8 @@ from .zuericrop import ZueriCrop
 
 __all__ = (
     # GeoDataset
+    "AbovegroundLiveWoodyBiomassDensity",
+    "AsterGDEM",
     "CanadianBuildingFootprints",
     "CDL",
     "Chesapeake",
@@ -97,7 +106,10 @@ __all__ = (
     "ChesapeakeVA",
     "ChesapeakeWV",
     "ChesapeakeCVPR",
+    "CMSGlobalMangroveCanopy",
     "Esri2020",
+    "EUDEM",
+    "GlobBiomass",
     "Landsat",
     "Landsat1",
     "Landsat2",
@@ -110,6 +122,7 @@ __all__ = (
     "Landsat8",
     "Landsat9",
     "NAIP",
+    "OpenBuildings",
     "Sentinel",
     "Sentinel2",
     # VisionDataset
@@ -147,6 +160,7 @@ __all__ = (
     "SpaceNet7",
     "TropicalCycloneWindEstimation",
     "UCMerced",
+    "USAVars",
     "Vaihingen2D",
     "VHR10",
     "XView2",

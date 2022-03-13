@@ -12,6 +12,16 @@ Geospatial Datasets
 
 :class:`GeoDataset` is designed for datasets that contain geospatial information, like latitude, longitude, coordinate system, and projection. Datasets containing this kind of information can be combined using :class:`IntersectionDataset` and :class:`UnionDataset`.
 
+Aboveground Live Woody Biomass Density
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: AbovegroundLiveWoodyBiomassDensity
+
+Aster Global Digital Evaluation Model
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: AsterGDEM
+
 Canadian Building Footprints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -32,6 +42,11 @@ Chesapeake Bay High-Resolution Land Cover Project
 .. autoclass:: ChesapeakeWV
 .. autoclass:: ChesapeakeCVPR
 
+CMS Global Mangrove Canopy Dataset
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: CMSGlobalMangroveCanopy
+
 Cropland Data Layer (CDL)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -46,6 +61,16 @@ Esri2020
 ^^^^^^^^
 
 .. autoclass:: Esri2020
+
+EU-DEM
+^^^^^^
+
+.. autoclass:: EUDEM
+
+GlobBiomass
+^^^^^^^^^^^
+
+.. autoclass:: GlobBiomass
 
 Landsat
 ^^^^^^^
@@ -67,6 +92,11 @@ National Agriculture Imagery Program (NAIP)
 
 .. autoclass:: NAIP
 
+Open Buildings
+^^^^^^^^^^^^^^
+
+.. autoclass:: OpenBuildings
+    
 Sentinel
 ^^^^^^^^
 
@@ -216,6 +246,11 @@ UC Merced
 ^^^^^^^^^
 
 .. autoclass:: UCMerced
+
+USAVars
+^^^^^^^
+
+.. autoclass:: USAVars
 
 Vaihingen
 ^^^^^^^^^

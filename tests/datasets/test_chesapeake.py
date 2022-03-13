@@ -82,7 +82,15 @@ class TestChesapeake13:
     def test_plot(self, dataset: Chesapeake13) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x["mask"])
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+
+    def test_plot_prediction(self, dataset: Chesapeake13) -> None:
+        query = dataset.bounds
+        x = dataset[query]
+        x["prediction"] = x["mask"].clone()
+        dataset.plot(x, suptitle="Prediction")
+        plt.close()
 
     def test_url(self) -> None:
         ds = Chesapeake13(os.path.join("tests", "data", "chesapeake", "BAYWIDE"))
