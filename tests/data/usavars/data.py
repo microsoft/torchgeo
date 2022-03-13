@@ -22,11 +22,7 @@ labels = [
     "housing",
     "roads",
 ]
-splits = [
-    "train",
-    "val",
-    "test",
-]
+splits = ["train", "val", "test"]
 
 SIZE = 3
 
@@ -78,14 +74,14 @@ for lab, cols in zip(labels, columns):
 
 # Create splits:
 with open("train_split.txt", "w") as f:
-    f.write("tile_0,0.tif" + '\n')
-    f.write("tile_0,0.tif" + '\n')
-    f.write("tile_0,0.tif" + '\n')
+    f.write("tile_0,0.tif" + "\n")
+    f.write("tile_0,0.tif" + "\n")
+    f.write("tile_0,0.tif" + "\n")
 with open("val_split.txt", "w") as f:
-    f.write("tile_0,1.tif" + '\n')
-    f.write("tile_0,1.tif" + '\n')
+    f.write("tile_0,1.tif" + "\n")
+    f.write("tile_0,1.tif" + "\n")
 with open("test_split.txt", "w") as f:
-    f.write("tile_0,0.tif" + '\n')
+    f.write("tile_0,0.tif" + "\n")
 
 # Compress data
 shutil.make_archive(data_dir, "zip", ".", data_dir)
