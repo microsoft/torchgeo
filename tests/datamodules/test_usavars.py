@@ -4,18 +4,19 @@
 import os
 
 import pytest
-import torch
 from _pytest.fixtures import SubRequest
 
 from torchgeo.datamodules import USAVarsDataModule
 
 
 class TestUSAVarsDataModule:
-    @pytest.fixture(scope="class", params=zip(
+    @pytest.fixture(
+        scope="class",
+        params=zip(
             [["elevation", "population"], ["treecover"]],
             [True, False],
             [(0.5, 0.0), (0.0, 0.5)],
-        )
+        ),
     )
     def datamodule(self, request: SubRequest) -> USAVarsDataModule:
         labels, fixed_shuffle, split = request.param
@@ -23,7 +24,6 @@ class TestUSAVarsDataModule:
         root = os.path.join("tests", "data", "usavars")
         batch_size = 1
         num_workers = 0
-
 
         dm = USAVarsDataModule(
             root,
@@ -44,7 +44,7 @@ class TestUSAVarsDataModule:
         sample = next(iter(datamodule.train_dataloader()))
         assert sample["labels"].shape[1] == len(datamodule.labels)
         if datamodule.fixed_shuffle:
-            assert sample["labels"][0].tolist() == [1.0, 1.0]
+            assert sample["labels"][0, 0] == 1.0
 
     def test_val_dataloader(self, datamodule: USAVarsDataModule) -> None:
         if datamodule.val_split_pct == 0.5:
@@ -52,7 +52,7 @@ class TestUSAVarsDataModule:
             sample = next(iter(datamodule.val_dataloader()))
             assert sample["labels"].shape[1] == len(datamodule.labels)
             if datamodule.fixed_shuffle:
-                assert sample["labels"][0].tolist() == [0.0, 0.0]
+                assert sample["labels"][0, 0] == 0.0
         else:
             assert len(datamodule.val_dataloader()) == 0
 
@@ -62,6 +62,6 @@ class TestUSAVarsDataModule:
             sample = next(iter(datamodule.test_dataloader()))
             assert sample["labels"].shape[1] == len(datamodule.labels)
             if datamodule.fixed_shuffle:
-                assert sample["labels"][0].tolist() == [0.0, 0.0]
+                assert sample["labels"][0, 0] == 0.0
         else:
             assert len(datamodule.test_dataloader()) == 0
