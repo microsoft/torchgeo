@@ -6,6 +6,7 @@
 import glob
 import os
 from typing import Any, Callable, Dict, List, Optional, Tuple
+
 import matplotlib.pyplot as plt
 import rasterio
 import torch
@@ -263,6 +264,7 @@ class NEONTreeSpecies(VisionDataset):
             a pandas DataFrame containing the labels for each image
         """
         import geopandas as gpd
+
         path = os.path.join(directory, "label.shp")
         gdf = gpd.read_file(path)
 

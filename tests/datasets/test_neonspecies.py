@@ -1,6 +1,7 @@
-from torchgeo.datasets import neonspecies
-from matplotlib import pyplot as plt
 import pytest
+from matplotlib import pyplot as plt
+
+from torchgeo.datasets import neonspecies
 
 
 @pytest.fixture()
