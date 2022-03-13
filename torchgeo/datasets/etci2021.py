@@ -274,14 +274,17 @@ class ETCI2021(VisionDataset):
         """
         vv = np.rollaxis(sample["image"][:3].numpy(), 0, 3)
         vh = np.rollaxis(sample["image"][3:].numpy(), 0, 3)
-        water_mask = sample["mask"][0].numpy()
+        mask = sample["mask"].squeeze(0)
 
-        showing_flood_mask = sample["mask"].shape[0] > 1
+        showing_flood_mask = mask.shape[0] == 2
         showing_predictions = "prediction" in sample
         num_panels = 3
         if showing_flood_mask:
-            flood_mask = sample["mask"][1].numpy()
+            water_mask = mask[0].numpy()
+            flood_mask = mask[1].numpy()
             num_panels += 1
+        else:
+            water_mask = mask.numpy()
 
         if showing_predictions:
             predictions = sample["prediction"].numpy()
