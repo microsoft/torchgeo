@@ -47,7 +47,7 @@ class TestETCI2021:
                 "url": os.path.join(data_dir, "test_without_ref_labels.zip"),
             },
         }
-        monkeypatch.setattr(ETCI2021, "metadata", metadata)  # noqa: E501
+        monkeypatch.setattr(ETCI2021, "metadata", metadata)
         root = str(tmp_path)
         split = request.param
         transforms = nn.Identity()  # type: ignore[no-untyped-call]
