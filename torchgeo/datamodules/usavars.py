@@ -10,7 +10,6 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 
 from ..datasets import USAVars
-from .utils import dataset_split
 
 
 class USAVarsDataModule(pl.LightningModule):
@@ -51,16 +50,21 @@ class USAVarsDataModule(pl.LightningModule):
 
         This method is only called once per run.
         """
-        USAVars(self.root_dir, self.labels, checksum=False)
+        USAVars(self.root_dir, labels=self.labels, checksum=False)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main Dataset objects.
 
         This method is called once per GPU per run.
         """
-        dataset = USAVars(self.root_dir, self.labels, transforms=self.transforms)
-        self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-            dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
+        self.train_dataset = USAVars(
+            self.root_dir, "train", self.labels, transforms=self.transforms
+        )
+        self.val_dataset = USAVars(
+            self.root_dir, "val", self.labels, transforms=self.transforms
+        )
+        self.test_dataset = USAVars(
+            self.root_dir, "test", self.labels, transforms=self.transforms
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
@@ -69,7 +73,7 @@ class USAVarsDataModule(pl.LightningModule):
             self.train_dataset,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
-            shuffle=True,
+            shuffle=False,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
