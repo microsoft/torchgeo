@@ -18,7 +18,7 @@ Module.__module__ = "nn.Module"
 Conv2d.__module__ = "nn.Conv2d"
 
 
-def extract_encoder(path: str) -> Tuple[str, "OrderedDict"[str, Tensor]]:
+def extract_encoder(path: str) -> Tuple[str, "OrderedDict[str, Tensor]"]:
     """Extracts an encoder from a pytorch lightning checkpoint file.
 
     Args:
@@ -60,7 +60,7 @@ def extract_encoder(path: str) -> Tuple[str, "OrderedDict"[str, Tensor]]:
     return name, state_dict
 
 
-def load_state_dict(model: Module, state_dict: "OrderedDict"[str, Tensor]) -> Module:
+def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Module:
     """Load pretrained resnet weights to a model.
 
     Args:
