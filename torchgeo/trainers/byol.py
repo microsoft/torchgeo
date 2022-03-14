@@ -309,17 +309,18 @@ class BYOLTask(LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
-        hparams = cast(Dict[str, Any], self.hparams)
-        in_channels = hparams["in_channels"]
-        pretrained = hparams["imagenet_pretraining"]
+        in_channels = self.hyperparams["in_channels"]
+        pretrained = self.hyperparams["imagenet_pretraining"]
         encoder = None
 
-        if hparams["encoder_name"] == "resnet18":
+        if self.hyperparams["encoder_name"] == "resnet18":
             encoder = resnet18(pretrained=pretrained)
-        elif hparams["encoder_name"] == "resnet50":
+        elif self.hyperparams["encoder_name"] == "resnet50":
             encoder = resnet50(pretrained=pretrained)
         else:
-            raise ValueError(f"Encoder type '{hparams['encoder_name']}' is not valid.")
+            raise ValueError(
+                f"Encoder type '{self.hyperparams['encoder_name']}' is not valid."
+            )
 
         layer = encoder.conv1
         # Creating new Conv2d layer
@@ -364,6 +365,7 @@ class BYOLTask(LightningModule):
 
         # Creates `self.hparams` from kwargs
         self.save_hyperparameters()  # type: ignore[operator]
+        self.hyperparams = cast(Dict[str, Any], self.hparams)
 
         self.config_task()
 
@@ -385,17 +387,17 @@ class BYOLTask(LightningModule):
             a "lr dict" according to the pytorch lightning documentation --
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
-        hparams = cast(Dict[str, Any], self.hparams)
-        optimizer_class = getattr(optim, hparams.get("optimizer", "Adam"))
-        lr = hparams.get("lr", 1e-4)
-        weight_decay = hparams.get("weight_decay", 1e-6)
+        optimizer_class = getattr(optim, self.hyperparams.get("optimizer", "Adam"))
+        lr = self.hyperparams.get("lr", 1e-4)
+        weight_decay = self.hyperparams.get("weight_decay", 1e-6)
         optimizer = optimizer_class(self.parameters(), lr=lr, weight_decay=weight_decay)
 
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer, patience=hparams["learning_rate_schedule_patience"]
+                    optimizer,
+                    patience=self.hyperparams["learning_rate_schedule_patience"],
                 ),
                 "monitor": "val_loss",
             },

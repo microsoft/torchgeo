@@ -28,13 +28,12 @@ class RegressionTask(pl.LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters."""
-        hparams = cast(Dict[str, Any], self.hparams)
-        if hparams["model"] == "resnet18":
-            self.model = models.resnet18(pretrained=hparams["pretrained"])
+        if self.hyperparams["model"] == "resnet18":
+            self.model = models.resnet18(pretrained=self.hyperparams["pretrained"])
             in_features = self.model.fc.in_features
             self.model.fc = nn.Linear(in_features, out_features=1)
         else:
-            raise ValueError(f"Model type '{hparams['model']}' is not valid.")
+            raise ValueError(f"Model type '{self.hyperparams['model']}' is not valid.")
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize a new LightningModule for training simple regression models.
@@ -48,6 +47,7 @@ class RegressionTask(pl.LightningModule):
 
         # Creates `self.hparams` from kwargs
         self.save_hyperparameters()  # type: ignore[operator]
+        self.hyperparams = cast(Dict[str, Any], self.hparams)
         self.config_task()
 
         self.train_metrics = MetricCollection(
@@ -170,15 +170,15 @@ class RegressionTask(pl.LightningModule):
             a "lr dict" according to the pytorch lightning documentation --
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
-        hparams = cast(Dict[str, Any], self.hparams)
         optimizer = torch.optim.AdamW(
-            self.model.parameters(), lr=hparams["learning_rate"]
+            self.model.parameters(), lr=self.hyperparams["learning_rate"]
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer, patience=hparams["learning_rate_schedule_patience"]
+                    optimizer,
+                    patience=self.hyperparams["learning_rate_schedule_patience"],
                 ),
                 "monitor": "val_loss",
             },

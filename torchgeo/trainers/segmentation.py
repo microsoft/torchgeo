@@ -27,46 +27,45 @@ class SemanticSegmentationTask(LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
-        hparams = cast(Dict[str, Any], self.hparams)
-        if hparams["segmentation_model"] == "unet":
+        if self.hyperparams["segmentation_model"] == "unet":
             self.model = smp.Unet(
-                encoder_name=hparams["encoder_name"],
-                encoder_weights=hparams["encoder_weights"],
-                in_channels=hparams["in_channels"],
-                classes=hparams["num_classes"],
+                encoder_name=self.hyperparams["encoder_name"],
+                encoder_weights=self.hyperparams["encoder_weights"],
+                in_channels=self.hyperparams["in_channels"],
+                classes=self.hyperparams["num_classes"],
             )
-        elif hparams["segmentation_model"] == "deeplabv3+":
+        elif self.hyperparams["segmentation_model"] == "deeplabv3+":
             self.model = smp.DeepLabV3Plus(
-                encoder_name=hparams["encoder_name"],
-                encoder_weights=hparams["encoder_weights"],
-                in_channels=hparams["in_channels"],
-                classes=hparams["num_classes"],
+                encoder_name=self.hyperparams["encoder_name"],
+                encoder_weights=self.hyperparams["encoder_weights"],
+                in_channels=self.hyperparams["in_channels"],
+                classes=self.hyperparams["num_classes"],
             )
-        elif hparams["segmentation_model"] == "fcn":
+        elif self.hyperparams["segmentation_model"] == "fcn":
             self.model = FCN(
-                in_channels=hparams["in_channels"],
-                classes=hparams["num_classes"],
-                num_filters=hparams["num_filters"],
+                in_channels=self.hyperparams["in_channels"],
+                classes=self.hyperparams["num_classes"],
+                num_filters=self.hyperparams["num_filters"],
             )
         else:
             raise ValueError(
-                f"Model type '{hparams['segmentation_model']}' is not valid."
+                f"Model type '{self.hyperparams['segmentation_model']}' is not valid."
             )
 
-        if hparams["loss"] == "ce":
+        if self.hyperparams["loss"] == "ce":
             self.loss = nn.CrossEntropyLoss(
                 ignore_index=-1000 if self.ignore_zeros is None else 0
             )
-        elif hparams["loss"] == "jaccard":
+        elif self.hyperparams["loss"] == "jaccard":
             self.loss = smp.losses.JaccardLoss(
-                mode="multiclass", classes=hparams["num_classes"]
+                mode="multiclass", classes=self.hyperparams["num_classes"]
             )
-        elif hparams["loss"] == "focal":
+        elif self.hyperparams["loss"] == "focal":
             self.loss = smp.losses.FocalLoss(
                 "multiclass", ignore_index=self.ignore_zeros, normalized=True
             )
         else:
-            raise ValueError(f"Loss type '{hparams['loss']}' is not valid.")
+            raise ValueError(f"Loss type '{self.hyperparams['loss']}' is not valid.")
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
@@ -88,19 +87,21 @@ class SemanticSegmentationTask(LightningModule):
 
         # Creates `self.hparams` from kwargs
         self.save_hyperparameters()  # type: ignore[operator]
+        self.hyperparams = cast(Dict[str, Any], self.hparams)
 
         self.ignore_zeros = None if kwargs["ignore_zeros"] else 0
 
         self.config_task()
 
-        hparams = cast(Dict[str, Any], self.hparams)
         self.train_metrics = MetricCollection(
             [
                 Accuracy(
-                    num_classes=hparams["num_classes"], ignore_index=self.ignore_zeros
+                    num_classes=self.hyperparams["num_classes"],
+                    ignore_index=self.ignore_zeros,
                 ),
                 JaccardIndex(
-                    num_classes=hparams["num_classes"], ignore_index=self.ignore_zeros
+                    num_classes=self.hyperparams["num_classes"],
+                    ignore_index=self.ignore_zeros,
                 ),
             ],
             prefix="train_",
@@ -229,15 +230,15 @@ class SemanticSegmentationTask(LightningModule):
             a "lr dict" according to the pytorch lightning documentation --
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
-        hparams = cast(Dict[str, Any], self.hparams)
         optimizer = torch.optim.Adam(
-            self.model.parameters(), lr=hparams["learning_rate"]
+            self.model.parameters(), lr=self.hyperparams["learning_rate"]
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer, patience=hparams["learning_rate_schedule_patience"]
+                    optimizer,
+                    patience=self.hyperparams["learning_rate_schedule_patience"],
                 ),
                 "monitor": "val_loss",
             },

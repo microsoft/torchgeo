@@ -30,17 +30,20 @@ class ClassificationTask(pl.LightningModule):
 
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor."""
-        hparams = cast(Dict[str, Any], self.hparams)
-        in_channels = hparams["in_channels"]
-        classification_model = hparams["classification_model"]
+        in_channels = self.hyperparams["in_channels"]
+        classification_model = self.hyperparams["classification_model"]
 
         imagenet_pretrained = False
         custom_pretrained = False
-        if hparams["weights"] and not os.path.exists(hparams["weights"]):
-            if hparams["weights"] not in ["imagenet", "random"]:
-                raise ValueError(f"Weight type '{hparams['weights']}' is not valid.")
+        if self.hyperparams["weights"] and not os.path.exists(
+            self.hyperparams["weights"]
+        ):
+            if self.hyperparams["weights"] not in ["imagenet", "random"]:
+                raise ValueError(
+                    f"Weight type '{self.hyperparams['weights']}' is not valid."
+                )
             else:
-                imagenet_pretrained = hparams["weights"] == "imagenet"
+                imagenet_pretrained = self.hyperparams["weights"] == "imagenet"
             custom_pretrained = False
         else:
             custom_pretrained = True
@@ -50,7 +53,7 @@ class ClassificationTask(pl.LightningModule):
         if classification_model in valid_models:
             self.model = timm.create_model(
                 classification_model,
-                num_classes=hparams["num_classes"],
+                num_classes=self.hyperparams["num_classes"],
                 in_chans=in_channels,
                 pretrained=imagenet_pretrained,
             )
@@ -60,12 +63,12 @@ class ClassificationTask(pl.LightningModule):
             )
 
         if custom_pretrained:
-            name, state_dict = utils.extract_encoder(hparams["weights"])
+            name, state_dict = utils.extract_encoder(self.hyperparams["weights"])
 
-            if hparams["classification_model"] != name:
+            if self.hyperparams["classification_model"] != name:
                 raise ValueError(
                     f"Trying to load {name} weights into a "
-                    f"{hparams['classification_model']}"
+                    f"{self.hyperparams['classification_model']}"
                 )
             self.model = utils.load_state_dict(self.model, state_dict)
 
@@ -73,15 +76,14 @@ class ClassificationTask(pl.LightningModule):
         """Configures the task based on kwargs parameters passed to the constructor."""
         self.config_model()
 
-        hparams = cast(Dict[str, Any], self.hparams)
-        if hparams["loss"] == "ce":
+        if self.hyperparams["loss"] == "ce":
             self.loss: nn.Module = nn.CrossEntropyLoss()
-        elif hparams["loss"] == "jaccard":
+        elif self.hyperparams["loss"] == "jaccard":
             self.loss = JaccardLoss(mode="multiclass")
-        elif hparams["loss"] == "focal":
+        elif self.hyperparams["loss"] == "focal":
             self.loss = FocalLoss(mode="multiclass", normalized=True)
         else:
-            raise ValueError(f"Loss type '{hparams['loss']}' is not valid.")
+            raise ValueError(f"Loss type '{self.hyperparams['loss']}' is not valid.")
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
@@ -96,21 +98,25 @@ class ClassificationTask(pl.LightningModule):
 
         # Creates `self.hparams` from kwargs
         self.save_hyperparameters()  # type: ignore[operator]
+        self.hyperparams = cast(Dict[str, Any], self.hparams)
 
         self.config_task()
 
-        hparams = cast(Dict[str, Any], self.hparams)
         self.train_metrics = MetricCollection(
             {
                 "OverallAccuracy": Accuracy(
-                    num_classes=hparams["num_classes"], average="micro"
+                    num_classes=self.hyperparams["num_classes"], average="micro"
                 ),
                 "AverageAccuracy": Accuracy(
-                    num_classes=hparams["num_classes"], average="macro"
+                    num_classes=self.hyperparams["num_classes"], average="macro"
                 ),
-                "JaccardIndex": JaccardIndex(num_classes=hparams["num_classes"]),
+                "JaccardIndex": JaccardIndex(
+                    num_classes=self.hyperparams["num_classes"]
+                ),
                 "F1Score": FBetaScore(
-                    num_classes=hparams["num_classes"], beta=1.0, average="micro"
+                    num_classes=self.hyperparams["num_classes"],
+                    beta=1.0,
+                    average="micro",
                 ),
             },
             prefix="train_",
@@ -239,15 +245,15 @@ class ClassificationTask(pl.LightningModule):
             a "lr dict" according to the pytorch lightning documentation --
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
-        hparams = cast(Dict[str, Any], self.hparams)
         optimizer = torch.optim.AdamW(
-            self.model.parameters(), lr=hparams["learning_rate"]
+            self.model.parameters(), lr=self.hyperparams["learning_rate"]
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer, patience=hparams["learning_rate_schedule_patience"]
+                    optimizer,
+                    patience=self.hyperparams["learning_rate_schedule_patience"],
                 ),
                 "monitor": "val_loss",
             },
@@ -261,11 +267,10 @@ class MultiLabelClassificationTask(ClassificationTask):
         """Configures the task based on kwargs parameters passed to the constructor."""
         self.config_model()
 
-        hparams = cast(Dict[str, Any], self.hparams)
-        if hparams["loss"] == "bce":
+        if self.hyperparams["loss"] == "bce":
             self.loss = nn.BCEWithLogitsLoss()
         else:
-            raise ValueError(f"Loss type '{hparams['loss']}' is not valid.")
+            raise ValueError(f"Loss type '{self.hyperparams['loss']}' is not valid.")
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
@@ -280,24 +285,24 @@ class MultiLabelClassificationTask(ClassificationTask):
 
         # Creates `self.hparams` from kwargs
         self.save_hyperparameters()  # type: ignore[operator]
+        self.hyperparams = cast(Dict[str, Any], self.hparams)
 
         self.config_task()
 
-        hparams = cast(Dict[str, Any], self.hparams)
         self.train_metrics = MetricCollection(
             {
                 "OverallAccuracy": Accuracy(
-                    num_classes=hparams["num_classes"],
+                    num_classes=self.hyperparams["num_classes"],
                     average="micro",
                     multiclass=False,
                 ),
                 "AverageAccuracy": Accuracy(
-                    num_classes=hparams["num_classes"],
+                    num_classes=self.hyperparams["num_classes"],
                     average="macro",
                     multiclass=False,
                 ),
                 "F1Score": FBetaScore(
-                    num_classes=hparams["num_classes"],
+                    num_classes=self.hyperparams["num_classes"],
                     beta=1.0,
                     average="micro",
                     multiclass=False,
