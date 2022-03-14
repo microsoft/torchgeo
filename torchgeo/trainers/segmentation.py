@@ -120,16 +120,17 @@ class SemanticSegmentationTask(LightningModule):
         return self.model(*args, **kwargs)
 
     def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
-        """Training step - reports average accuracy and average JaccardIndex.
+        """Compute and return the training loss.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: the output of your DataLoader
+            batch_idx: the index of this batch
 
         Returns:
             training loss
         """
-        batch, batch_idx = args
+        batch = args[0]
+        batch_idx = args[1]
         x = batch["image"]
         y = batch["mask"]
         y_hat = self.forward(x)
@@ -154,16 +155,14 @@ class SemanticSegmentationTask(LightningModule):
         self.train_metrics.reset()
 
     def validation_step(self, *args: Any, **kwargs: Any) -> None:
-        """Validation step - reports average accuracy and average JaccardIndex.
-
-        Logs the first 10 validation samples to tensorboard as images with 3 subplots
-        showing the image, mask, and predictions.
+        """Compute validation loss and log example predictions.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: the output of your DataLoader
+            batch_idx: the index of this batch
         """
-        batch, batch_idx = args
+        batch = args[0]
+        batch_idx = args[1]
         x = batch["image"]
         y = batch["mask"]
         y_hat = self.forward(x)
@@ -199,13 +198,14 @@ class SemanticSegmentationTask(LightningModule):
         self.val_metrics.reset()
 
     def test_step(self, *args: Any, **kwargs: Any) -> None:
-        """Test step identical to the validation step.
+        """Compute test loss.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: the output of your DataLoader
+            batch_idx: the index of this batch
         """
-        batch, batch_idx = args
+        batch = args[0]
+        batch_idx = args[1]
         x = batch["image"]
         y = batch["mask"]
         y_hat = self.forward(x)

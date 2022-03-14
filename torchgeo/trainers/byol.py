@@ -402,16 +402,17 @@ class BYOLTask(LightningModule):
         }
 
     def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
-        """Training step - reports BYOL loss.
+        """Compute and return the training loss.
 
         Args:
-            batch: current batch
-            batch_idx: index of current batch
+            batch: the output of your DataLoader
+            batch_idx: the index of this batch
 
         Returns:
             training loss
         """
-        batch, batch_idx = args
+        batch = args[0]
+        batch_idx = args[1]
         x = batch["image"]
         with torch.no_grad():
             x1, x2 = self.model.augment(x), self.model.augment(x)
@@ -427,13 +428,14 @@ class BYOLTask(LightningModule):
         return loss
 
     def validation_step(self, *args: Any, **kwargs: Any) -> None:
-        """Logs iteration level validation loss.
+        """Compute validation loss.
 
         Args:
-            batch: current batch
-            batch_idx: index of current batch
+            batch: the output of your DataLoader
+            batch_idx: the index of this batch
         """
-        batch, batch_idx = args
+        batch = args[0]
+        batch_idx = args[1]
         x = batch["image"]
         x1, x2 = self.model.augment(x), self.model.augment(x)
         pred1, pred2 = self.forward(x1), self.forward(x2)

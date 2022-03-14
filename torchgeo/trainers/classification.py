@@ -130,16 +130,17 @@ class ClassificationTask(pl.LightningModule):
         return self.model(*args, **kwargs)
 
     def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
-        """Training step.
+        """Compute and return the training loss.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: the output of your DataLoader
+            batch_idx: the index of this batch
 
         Returns:
             training loss
         """
-        batch, batch_idx = args
+        batch = args[0]
+        batch_idx = args[1]
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
@@ -164,13 +165,14 @@ class ClassificationTask(pl.LightningModule):
         self.train_metrics.reset()
 
     def validation_step(self, *args: Any, **kwargs: Any) -> None:
-        """Validation step.
+        """Compute validation loss and log example predictions.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: the output of your DataLoader
+            batch_idx: the index of this batch
         """
-        batch, batch_idx = args
+        batch = args[0]
+        batch_idx = args[1]
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
@@ -206,13 +208,14 @@ class ClassificationTask(pl.LightningModule):
         self.val_metrics.reset()
 
     def test_step(self, *args: Any, **kwargs: Any) -> None:
-        """Test step.
+        """Compute test loss.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: the output of your DataLoader
+            batch_idx: the index of this batch
         """
-        batch, batch_idx = args
+        batch = args[0]
+        batch_idx = args[1]
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
@@ -310,16 +313,17 @@ class MultiLabelClassificationTask(ClassificationTask):
         self.test_metrics = self.train_metrics.clone(prefix="test_")
 
     def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
-        """Training step.
+        """Compute and return the training loss.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: the output of your DataLoader
+            batch_idx: the index of this batch
 
         Returns:
             training loss
         """
-        batch, batch_idx = args
+        batch = args[0]
+        batch_idx = args[1]
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
@@ -335,13 +339,14 @@ class MultiLabelClassificationTask(ClassificationTask):
         return cast(Tensor, loss)
 
     def validation_step(self, *args: Any, **kwargs: Any) -> None:
-        """Validation step.
+        """Compute validation loss and log example predictions.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: the output of your DataLoader
+            batch_idx: the index of this batch
         """
-        batch, batch_idx = args
+        batch = args[0]
+        batch_idx = args[1]
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
@@ -368,13 +373,14 @@ class MultiLabelClassificationTask(ClassificationTask):
                 pass
 
     def test_step(self, *args: Any, **kwargs: Any) -> None:
-        """Test step.
+        """Compute test loss.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: the output of your DataLoader
+            batch_idx: the index of this batch
         """
-        batch, batch_idx = args
+        batch = args[0]
+        batch_idx = args[1]
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
