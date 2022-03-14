@@ -162,20 +162,15 @@ class So2Sat(VisionDataset):
             s1 = f["sen1"][index].astype(np.float64)  # convert from <f8 to float64
             s2 = f["sen2"][index].astype(np.float64)  # convert from <f8 to float64
             # convert one-hot encoding to int64 then torch int
-            label = torch.tensor(  # type: ignore[attr-defined]
-                f["label"][index].argmax()
-            )
+            label = torch.tensor(f["label"][index].argmax())
 
             s1 = np.rollaxis(s1, 2, 0)  # convert to CxHxW format
             s2 = np.rollaxis(s2, 2, 0)  # convert to CxHxW format
 
-            s1 = torch.from_numpy(s1)  # type: ignore[attr-defined]
-            s2 = torch.from_numpy(s2)  # type: ignore[attr-defined]
+            s1 = torch.from_numpy(s1)
+            s2 = torch.from_numpy(s2)
 
-        sample = {
-            "image": torch.cat([s1, s2]),  # type: ignore[attr-defined]
-            "label": label,
-        }
+        sample = {"image": torch.cat([s1, s2]), "label": label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)

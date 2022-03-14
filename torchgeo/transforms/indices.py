@@ -68,9 +68,7 @@ class AppendNormalizedDifferenceIndex(Module):
             )
             index = index.unsqueeze(self.dim)
 
-            sample["image"] = torch.cat(  # type: ignore[attr-defined]
-                [sample["image"], index], dim=self.dim
-            )
+            sample["image"] = torch.cat([sample["image"], index], dim=self.dim)
 
         return sample
 

@@ -4,7 +4,6 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -29,11 +28,9 @@ def download_url(url: str, root: str, *args: str) -> None:
 class TestCanadianBuildingFootprints:
     @pytest.fixture
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> CanadianBuildingFootprints:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.utils, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         md5s = [
             "8a4a0a57367f67c69608d1452e30df13",
             "1829f4054a9a81bb23871ca797a3895c",
@@ -49,18 +46,12 @@ class TestCanadianBuildingFootprints:
             "067664d066c4152fb96a5c129cbabadf",
             "474bc084bc41b124aa4919e7a37a9648",
         ]
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            CanadianBuildingFootprints, "md5s", md5s
-        )
+        monkeypatch.setattr(CanadianBuildingFootprints, "md5s", md5s)
         url = os.path.join("tests", "data", "cbf") + os.sep
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            CanadianBuildingFootprints, "url", url
-        )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            plt, "show", lambda *args: None
-        )
+        monkeypatch.setattr(CanadianBuildingFootprints, "url", url)
+        monkeypatch.setattr(plt, "show", lambda *args: None)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return CanadianBuildingFootprints(
             root, res=0.1, transforms=transforms, download=True, checksum=True
         )

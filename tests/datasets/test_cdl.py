@@ -6,7 +6,6 @@ import os
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -25,36 +24,19 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 class TestCDL:
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
-    ) -> CDL:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.cdl, "download_url", download_url
-        )
-        cmap = {
-            0: (0, 0, 0, 0),
-            1: (255, 211, 0, 255),
-            2: (255, 38, 38, 255),
-            3: (0, 168, 228, 255),
-            4: (255, 158, 11, 255),
-            5: (38, 112, 0, 255),
-            6: (255, 255, 0, 255),
-            7: (0, 0, 0, 255),
-            8: (0, 0, 0, 255),
-        }
-        monkeypatch.setattr(CDL, "cmap", cmap)  # type: ignore[attr-defined]
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CDL:
+        monkeypatch.setattr(torchgeo.datasets.cdl, "download_url", download_url)
+
         md5s = [
             (2021, "4618f054004110ea11b19541b4b9f734"),
             (2020, "593a86e62e3dd44438d536dc2442c082"),
         ]
-        monkeypatch.setattr(CDL, "md5s", md5s)  # type: ignore[attr-defined]
+        monkeypatch.setattr(CDL, "md5s", md5s)
         url = os.path.join("tests", "data", "cdl", "{}_30m_cdls.zip")
-        monkeypatch.setattr(CDL, "url", url)  # type: ignore[attr-defined]
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            plt, "show", lambda *args: None
-        )
+        monkeypatch.setattr(CDL, "url", url)
+        monkeypatch.setattr(plt, "show", lambda *args: None)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return CDL(root, transforms=transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: CDL) -> None:

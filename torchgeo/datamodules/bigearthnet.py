@@ -26,10 +26,10 @@ class BigEarthNetDataModule(pl.LightningDataModule):
 
     # (VV, VH, B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B11, B12)
     # min/max band statistics computed on 100k random samples
-    band_mins_raw = torch.tensor(  # type: ignore[attr-defined]
+    band_mins_raw = torch.tensor(
         [-70.0, -72.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0]
     )
-    band_maxs_raw = torch.tensor(  # type: ignore[attr-defined]
+    band_maxs_raw = torch.tensor(
         [
             31.0,
             35.0,
@@ -50,10 +50,10 @@ class BigEarthNetDataModule(pl.LightningDataModule):
 
     # min/max band statistics computed by percentile clipping the
     # above to samples to [2, 98]
-    band_mins = torch.tensor(  # type: ignore[attr-defined]
+    band_mins = torch.tensor(
         [-48.0, -42.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
     )
-    band_maxs = torch.tensor(  # type: ignore[attr-defined]
+    band_maxs = torch.tensor(
         [
             6.0,
             16.0,
@@ -111,9 +111,7 @@ class BigEarthNetDataModule(pl.LightningDataModule):
         """Transform a single sample from the Dataset."""
         sample["image"] = sample["image"].float()
         sample["image"] = (sample["image"] - self.mins) / (self.maxs - self.mins)
-        sample["image"] = torch.clip(  # type: ignore[attr-defined]
-            sample["image"], min=0.0, max=1.0
-        )
+        sample["image"] = torch.clip(sample["image"], min=0.0, max=1.0)
         return sample
 
     def prepare_data(self) -> None:

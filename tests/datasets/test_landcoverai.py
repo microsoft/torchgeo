@@ -4,7 +4,6 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -25,23 +24,18 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestLandCoverAI:
     @pytest.fixture(params=["train", "val", "test"])
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LandCoverAI:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.landcoverai, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.landcoverai, "download_url", download_url)
         md5 = "5bf4d2770deb41eb5c38784ab2c8a691"
-        monkeypatch.setattr(LandCoverAI, "md5", md5)  # type: ignore[attr-defined]
+        monkeypatch.setattr(LandCoverAI, "md5", md5)
         url = os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip")
-        monkeypatch.setattr(LandCoverAI, "url", url)  # type: ignore[attr-defined]
+        monkeypatch.setattr(LandCoverAI, "url", url)
         sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        monkeypatch.setattr(LandCoverAI, "sha256", sha256)  # type: ignore[attr-defined]
+        monkeypatch.setattr(LandCoverAI, "sha256", sha256)
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return LandCoverAI(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: LandCoverAI) -> None:
@@ -61,11 +55,9 @@ class TestLandCoverAI:
     def test_already_extracted(self, dataset: LandCoverAI) -> None:
         LandCoverAI(root=dataset.root, download=True)
 
-    def test_already_downloaded(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
-    ) -> None:
+    def test_already_downloaded(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
         sha256 = "ce84fa0e8d89b461c66fba4e78aa5a860e2871722c4a9ca8c2384eae1521c7c8"
-        monkeypatch.setattr(LandCoverAI, "sha256", sha256)  # type: ignore[attr-defined]
+        monkeypatch.setattr(LandCoverAI, "sha256", sha256)
         url = os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip")
         root = str(tmp_path)
         shutil.copy(url, root)

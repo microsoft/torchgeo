@@ -27,17 +27,10 @@ class TestChesapeakeCVPRDataModule:
 
     def test_nodata_check(self, datamodule: ChesapeakeCVPRDataModule) -> None:
         nodata_check = datamodule.nodata_check(4)
-        sample = {
-            "image": torch.ones(1, 2, 2),  # type: ignore[attr-defined]
-            "mask": torch.ones(2, 2),  # type: ignore[attr-defined]
-        }
+        sample = {"image": torch.ones(1, 2, 2), "mask": torch.ones(2, 2)}
         out = nodata_check(sample)
-        assert torch.equal(  # type: ignore[attr-defined]
-            out["image"], torch.zeros(1, 4, 4)  # type: ignore[attr-defined]
-        )
-        assert torch.equal(  # type: ignore[attr-defined]
-            out["mask"], torch.zeros(4, 4)  # type: ignore[attr-defined]
-        )
+        assert torch.equal(out["image"], torch.zeros(1, 4, 4))
+        assert torch.equal(out["mask"], torch.zeros(4, 4))
 
     def test_invalid_param_config(self) -> None:
         with pytest.raises(ValueError, match="The pre-generated prior labels"):

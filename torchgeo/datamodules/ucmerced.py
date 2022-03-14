@@ -25,9 +25,9 @@ class UCMercedDataModule(pl.LightningDataModule):
     Uses random train/val/test splits.
     """
 
-    band_means = torch.tensor([0, 0, 0])  # type: ignore[attr-defined]
+    band_means = torch.tensor([0, 0, 0])
 
-    band_stds = torch.tensor([1, 1, 1])  # type: ignore[attr-defined]
+    band_stds = torch.tensor([1, 1, 1])
 
     def __init__(
         self, root_dir: str, batch_size: int = 64, num_workers: int = 0, **kwargs: Any

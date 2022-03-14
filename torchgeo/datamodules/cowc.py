@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-from torch import Generator  # type: ignore[attr-defined]
+from torch import Generator
 from torch.utils.data import DataLoader, random_split
 
 from ..datasets import COWCCounting
@@ -125,4 +125,4 @@ class COWCCountingDataModule(pl.LightningDataModule):
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
         """Run :meth:`torchgeo.datasets.COWC.plot`."""
-        return self.val_dataset.dataset.plot(*args, **kwargs)
+        return self.test_dataset.plot(*args, **kwargs)

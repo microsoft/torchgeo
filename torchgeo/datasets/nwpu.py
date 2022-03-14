@@ -175,7 +175,7 @@ class VHR10(VisionDataset):
         )
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img)
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor

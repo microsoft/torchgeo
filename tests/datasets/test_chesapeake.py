@@ -4,7 +4,6 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -30,24 +29,18 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 class TestChesapeake13:
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
-    ) -> Chesapeake13:
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> Chesapeake13:
         pytest.importorskip("zipfile_deflate64")
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.chesapeake, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.chesapeake, "download_url", download_url)
         md5 = "fe35a615b8e749b21270472aa98bb42c"
-        monkeypatch.setattr(Chesapeake13, "md5", md5)  # type: ignore[attr-defined]
+        monkeypatch.setattr(Chesapeake13, "md5", md5)
         url = os.path.join(
             "tests", "data", "chesapeake", "BAYWIDE", "Baywide_13Class_20132014.zip"
         )
-        monkeypatch.setattr(Chesapeake13, "url", url)  # type: ignore[attr-defined]
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            plt, "show", lambda *args: None
-        )
+        monkeypatch.setattr(Chesapeake13, "url", url)
+        monkeypatch.setattr(plt, "show", lambda *args: None)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return Chesapeake13(root, transforms=transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: Chesapeake13) -> None:
@@ -106,15 +99,10 @@ class TestChesapeakeCVPR:
         ]
     )
     def dataset(
-        self,
-        request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
+        self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> ChesapeakeCVPR:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.chesapeake, "download_url", download_url
-        )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        monkeypatch.setattr(torchgeo.datasets.chesapeake, "download_url", download_url)
+        monkeypatch.setattr(
             ChesapeakeCVPR,
             "md5s",
             {
@@ -122,7 +110,7 @@ class TestChesapeakeCVPR:
                 "prior_extension": "677446c486f3145787938b14ee3da13f",
             },
         )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        monkeypatch.setattr(
             ChesapeakeCVPR,
             "urls",
             {
@@ -142,13 +130,13 @@ class TestChesapeakeCVPR:
                 ),
             },
         )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        monkeypatch.setattr(
             ChesapeakeCVPR,
             "files",
             ["de_1m_2013_extended-debuffered-test_tiles", "spatial_index.geojson"],
         )
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return ChesapeakeCVPR(
             root,
             splits=["de-test"],

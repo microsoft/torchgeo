@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Generator, Type, cast
+from typing import Any, Dict, Type, cast
 
 import pytest
 import timm
@@ -39,10 +39,7 @@ class TestClassificationTask:
         ],
     )
     def test_trainer(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        name: str,
-        classname: Type[LightningDataModule],
+        self, monkeypatch: MonkeyPatch, name: str, classname: Type[LightningDataModule]
     ) -> None:
         if name.startswith("so2sat"):
             pytest.importorskip("h5py")
@@ -56,9 +53,7 @@ class TestClassificationTask:
         datamodule = classname(**datamodule_kwargs)
 
         # Instantiate model
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            timm, "create_model", create_model
-        )
+        monkeypatch.setattr(timm, "create_model", create_model)
         model_kwargs = conf_dict["module"]
         model = ClassificationTask(**model_kwargs)
 
@@ -137,10 +132,7 @@ class TestMultiLabelClassificationTask:
         ],
     )
     def test_trainer(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        name: str,
-        classname: Type[LightningDataModule],
+        self, monkeypatch: MonkeyPatch, name: str, classname: Type[LightningDataModule]
     ) -> None:
         conf = OmegaConf.load(os.path.join("conf", "task_defaults", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
@@ -151,9 +143,7 @@ class TestMultiLabelClassificationTask:
         datamodule = classname(**datamodule_kwargs)
 
         # Instantiate model
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            timm, "create_model", create_model
-        )
+        monkeypatch.setattr(timm, "create_model", create_model)
         model_kwargs = conf_dict["module"]
         model = MultiLabelClassificationTask(**model_kwargs)
 

@@ -13,29 +13,17 @@ from torchgeo.transforms import indices
 @pytest.fixture
 def sample() -> Dict[str, Tensor]:
     return {
-        "image": torch.tensor(  # type: ignore[attr-defined]
-            [[[1, 2, 3], [4, 5, 6], [7, 8, 9]]],
-            dtype=torch.float,  # type: ignore[attr-defined]
-        ),
-        "mask": torch.tensor(  # type: ignore[attr-defined]
-            [[0, 0, 1], [0, 1, 1], [1, 1, 1]],
-            dtype=torch.long,  # type: ignore[attr-defined]
-        ),
+        "image": torch.tensor([[[1, 2, 3], [4, 5, 6], [7, 8, 9]]], dtype=torch.float),
+        "mask": torch.tensor([[0, 0, 1], [0, 1, 1], [1, 1, 1]], dtype=torch.long),
     }
 
 
 @pytest.fixture
 def batch() -> Dict[str, Tensor]:
     return {
-        "image": torch.tensor(  # type: ignore[attr-defined]
-            [[[[1, 2, 3], [4, 5, 6], [7, 8, 9]]]],
-            dtype=torch.float,  # type: ignore[attr-defined]
-        ),
-        "mask": torch.tensor(  # type: ignore[attr-defined]
-            [[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]],
-            dtype=torch.long,  # type: ignore[attr-defined]
-        ),
-        "labels": torch.tensor([[0, 1]]),  # type: ignore[attr-defined]
+        "image": torch.tensor([[[[1, 2, 3], [4, 5, 6], [7, 8, 9]]]], dtype=torch.float),
+        "mask": torch.tensor([[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]], dtype=torch.long),
+        "labels": torch.tensor([[0, 1]]),
     }
 
 

@@ -150,7 +150,7 @@ class SpaceNet(VisionDataset, abc.ABC):
         filename = os.path.join(path)
         with rio.open(filename) as img:
             array = img.read().astype(np.int32)
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             return tensor, img.transform, img.crs
 
     def _load_mask(
@@ -195,7 +195,7 @@ class SpaceNet(VisionDataset, abc.ABC):
                 dtype=np.uint8,
             )
 
-        mask: Tensor = torch.from_numpy(mask_data).long()  # type: ignore[attr-defined]
+        mask = torch.from_numpy(mask_data).long()
 
         return mask
 
@@ -937,7 +937,7 @@ class SpaceNet5(SpaceNet):
                 dtype=np.uint8,
             )
 
-        mask: Tensor = torch.from_numpy(mask_data).long()  # type: ignore[attr-defined]
+        mask = torch.from_numpy(mask_data).long()
         return mask
 
     def plot(

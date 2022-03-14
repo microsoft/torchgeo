@@ -246,8 +246,8 @@ class BeninSmallHolderCashews(VisionDataset):
         sample = {
             "image": img,
             "mask": labels,
-            "x": torch.tensor(x),  # type: ignore[attr-defined]
-            "y": torch.tensor(y),  # type: ignore[attr-defined]
+            "x": torch.tensor(x),
+            "y": torch.tensor(y),
         }
 
         if self.transforms is not None:
@@ -294,12 +294,12 @@ class BeninSmallHolderCashews(VisionDataset):
         if self.verbose:
             print("Loading all imagery")
 
-        img: Tensor = torch.zeros(  # type: ignore[attr-defined]
+        img = torch.zeros(
             len(self.dates),
             len(bands),
             self.tile_height,
             self.tile_width,
-            dtype=torch.float32,  # type: ignore[attr-defined]
+            dtype=torch.float32,
         )
 
         for date_index, date in enumerate(self.dates):
@@ -328,11 +328,8 @@ class BeninSmallHolderCashews(VisionDataset):
         if self.verbose:
             print(f"Loading imagery at {date}")
 
-        img: Tensor = torch.zeros(  # type: ignore[attr-defined]
-            len(bands),
-            self.tile_height,
-            self.tile_width,
-            dtype=torch.float32,  # type: ignore[attr-defined]
+        img = torch.zeros(
+            len(bands), self.tile_height, self.tile_width, dtype=torch.float32
         )
         for band_index, band_name in enumerate(self.bands):
             filepath = os.path.join(
@@ -344,7 +341,7 @@ class BeninSmallHolderCashews(VisionDataset):
             with rasterio.open(filepath) as src:
                 self.tile_transform = src.transform
                 array = src.read().astype(np.float32)
-                img[band_index] = torch.from_numpy(array)  # type: ignore[attr-defined]
+                img[band_index] = torch.from_numpy(array)
 
         return img
 
@@ -372,7 +369,7 @@ class BeninSmallHolderCashews(VisionDataset):
             dtype=np.uint8,
         )
 
-        mask: Tensor = torch.from_numpy(mask_data).long()  # type: ignore[attr-defined]
+        mask = torch.from_numpy(mask_data).long()
         return mask
 
     def _check_integrity(self) -> bool:

@@ -21,7 +21,7 @@ class TestBYOL:
     def test_custom_augment_fn(self) -> None:
         encoder = resnet18()
         layer = encoder.conv1
-        new_layer = nn.Conv2d(  # type: ignore[attr-defined]
+        new_layer = nn.Conv2d(
             in_channels=4,
             out_channels=layer.out_channels,
             kernel_size=layer.kernel_size,
