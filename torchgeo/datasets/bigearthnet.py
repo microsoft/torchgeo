@@ -394,7 +394,7 @@ class BigEarthNet(VisionDataset):
                 )
                 images.append(array)
         arrays: "np.typing.NDArray[np.int_]" = np.stack(images, axis=0)
-        tensor: Tensor = torch.from_numpy(arrays)  # type: ignore[attr-defined]
+        tensor = torch.from_numpy(arrays)
         return tensor
 
     def _load_target(self, index: int) -> Tensor:
@@ -420,14 +420,10 @@ class BigEarthNet(VisionDataset):
 
         # Map 43 to 19 class labels
         if self.num_classes == 19:
-            indices = [
-                self.label_converter.get(idx) for idx in indices  # type: ignore[misc]
-            ]
-            indices = [idx for idx in indices if idx is not None]
+            indices_optional = [self.label_converter.get(idx) for idx in indices]
+            indices = [idx for idx in indices_optional if idx is not None]
 
-        target: Tensor = torch.zeros(  # type: ignore[attr-defined]
-            self.num_classes, dtype=torch.long  # type: ignore[attr-defined]
-        )
+        target = torch.zeros(self.num_classes, dtype=torch.long)
         target[indices] = 1
         return target
 

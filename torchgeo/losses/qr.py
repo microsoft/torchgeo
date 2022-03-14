@@ -32,10 +32,10 @@ class QRLoss(Module):
         """
         q = probs
         q_bar = q.mean(dim=(0, 2, 3))
-        qbar_log_S = (q_bar * torch.log(q_bar)).sum()  # type: ignore[attr-defined]
+        qbar_log_S = (q_bar * torch.log(q_bar)).sum()
 
-        q_log_p = torch.einsum(  # type: ignore[attr-defined]
-            "bcxy,bcxy->bxy", q, torch.log(target)  # type: ignore[attr-defined]
+        q_log_p = torch.einsum(  # type: ignore[no-untyped-call]
+            "bcxy,bcxy->bxy", q, torch.log(target)
         ).mean()
 
         loss = qbar_log_S - q_log_p
@@ -69,10 +69,8 @@ class RQLoss(Module):
         ).clamp_min(1e-12).expand_as(q)
         r = F.normalize(z * target, p=1, dim=1)
 
-        loss = torch.einsum(  # type: ignore[attr-defined]
-            "bcxy,bcxy->bxy",
-            r,
-            torch.log(r) - torch.log(q),  # type: ignore[attr-defined]
+        loss = torch.einsum(  # type: ignore[no-untyped-call]
+            "bcxy,bcxy->bxy", r, torch.log(r) - torch.log(q)
         ).mean()
 
         return cast(torch.Tensor, loss)
