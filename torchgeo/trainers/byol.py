@@ -406,13 +406,11 @@ class BYOLTask(LightningModule):
 
         Args:
             batch: the output of your DataLoader
-            batch_idx: the index of this batch
 
         Returns:
             training loss
         """
         batch = args[0]
-        batch_idx = args[1]
         x = batch["image"]
         with torch.no_grad():
             x1, x2 = self.model.augment(x), self.model.augment(x)
@@ -432,10 +430,8 @@ class BYOLTask(LightningModule):
 
         Args:
             batch: the output of your DataLoader
-            batch_idx: the index of this batch
         """
         batch = args[0]
-        batch_idx = args[1]
         x = batch["image"]
         x1, x2 = self.model.augment(x), self.model.augment(x)
         pred1, pred2 = self.forward(x1), self.forward(x2)

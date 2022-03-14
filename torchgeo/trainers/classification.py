@@ -134,13 +134,11 @@ class ClassificationTask(pl.LightningModule):
 
         Args:
             batch: the output of your DataLoader
-            batch_idx: the index of this batch
 
         Returns:
             training loss
         """
         batch = args[0]
-        batch_idx = args[1]
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
@@ -212,10 +210,8 @@ class ClassificationTask(pl.LightningModule):
 
         Args:
             batch: the output of your DataLoader
-            batch_idx: the index of this batch
         """
         batch = args[0]
-        batch_idx = args[1]
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
@@ -317,13 +313,11 @@ class MultiLabelClassificationTask(ClassificationTask):
 
         Args:
             batch: the output of your DataLoader
-            batch_idx: the index of this batch
 
         Returns:
             training loss
         """
         batch = args[0]
-        batch_idx = args[1]
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
@@ -377,10 +371,8 @@ class MultiLabelClassificationTask(ClassificationTask):
 
         Args:
             batch: the output of your DataLoader
-            batch_idx: the index of this batch
         """
         batch = args[0]
-        batch_idx = args[1]
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
