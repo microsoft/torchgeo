@@ -15,7 +15,7 @@ from ..datasets import USAVars
 class USAVarsDataModule(pl.LightningModule):
     """LightningDataModule implementation for the USAVars dataset.
 
-    Finish this.
+    Uses random train/val/test splits.
 
     .. versionadded:: 0.3
     """
