@@ -5,7 +5,6 @@ import glob
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -31,15 +30,10 @@ def fetch(collection_id: str, **kwargs: str) -> Dataset:
 class TestTropicalCycloneWindEstimation:
     @pytest.fixture(params=["train", "test"])
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> TropicalCycloneWindEstimation:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            radiant_mlhub.Dataset, "fetch", fetch
-        )
+        monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch)
         md5s = {
             "train": {
                 "source": "2b818e0a0873728dabf52c7054a0ce4c",
@@ -50,15 +44,11 @@ class TestTropicalCycloneWindEstimation:
                 "labels": "3ca4243eff39b87c73e05ec8db1824bf",
             },
         }
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            TropicalCycloneWindEstimation, "md5s", md5s
-        )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            TropicalCycloneWindEstimation, "size", 1
-        )
+        monkeypatch.setattr(TropicalCycloneWindEstimation, "md5s", md5s)
+        monkeypatch.setattr(TropicalCycloneWindEstimation, "size", 1)
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return TropicalCycloneWindEstimation(
             root, split, transforms, download=True, api_key="", checksum=True
         )
@@ -98,8 +88,6 @@ class TestTropicalCycloneWindEstimation:
         plt.close()
 
         sample = dataset[0]
-        sample["prediction"] = torch.tensor(  # type: ignore[attr-defined]
-            sample["label"]
-        )
+        sample["prediction"] = torch.tensor(sample["label"])
         dataset.plot(sample)
         plt.close()

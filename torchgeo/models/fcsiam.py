@@ -108,7 +108,7 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
         x2 = x[:, 1]
         features1, features2 = self.encoder(x1), self.encoder(x2)
         features = [
-            torch.cat([features2[i], features1[i]], dim=1)  # type: ignore[attr-defined]
+            torch.cat([features2[i], features1[i]], dim=1)
             for i in range(1, len(features1))
         ]
         features.insert(0, features2[0])
