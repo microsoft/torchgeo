@@ -219,11 +219,11 @@ class GridGeoSampler(GeoSampler):
                 + 1
             )
             cols = (
-                    int(
-                        (bounds.maxx - bounds.minx - self.size[1] + self.stride[1])
-                        // self.stride[1]
-                    )
-                    + 1
+                int(
+                    (bounds.maxx - bounds.minx - self.size[1] + self.stride[1])
+                    // self.stride[1]
+                )
+                + 1
             )
             self.length += rows * cols
 
@@ -238,18 +238,18 @@ class GridGeoSampler(GeoSampler):
             bounds = BoundingBox(*hit.bounds)
 
             rows = (
-                    int(
-                        (bounds.maxy - bounds.miny - self.size[0] + self.stride[0])
-                        // self.stride[0]
-                    )
-                    + 1
+                int(
+                    (bounds.maxy - bounds.miny - self.size[0] + self.stride[0])
+                    // self.stride[0]
+                )
+                + 1
             )
             cols = (
-                    int(
-                        (bounds.maxx - bounds.minx - self.size[1] + self.stride[1])
-                        // self.stride[1]
-                    )
-                    + 1
+                int(
+                    (bounds.maxx - bounds.minx - self.size[1] + self.stride[1])
+                    // self.stride[1]
+                )
+                + 1
             )
 
             mint = bounds.mint
@@ -261,7 +261,7 @@ class GridGeoSampler(GeoSampler):
                 maxy = miny + self.size[0]
                 if maxy > bounds.maxy:
                     last_stride_y = self.stride[0] - (
-                            miny - (bounds.maxy - self.size[0])
+                        miny - (bounds.maxy - self.size[0])
                     )
                     maxy = bounds.maxy
                     miny = bounds.maxy - self.size[0]
@@ -279,7 +279,7 @@ class GridGeoSampler(GeoSampler):
                     maxx = minx + self.size[1]
                     if maxx > bounds.maxx:
                         last_stride_x = self.stride[1] - (
-                                minx - (bounds.maxx - self.size[1])
+                            minx - (bounds.maxx - self.size[1])
                         )
                         maxx = bounds.maxx
                         minx = bounds.maxx - self.size[1]
