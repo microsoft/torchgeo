@@ -51,12 +51,10 @@ class AugmentationSequential(Module):
         # Kornia augmentations require masks & boxes to be float
         if "mask" in self.data_keys:
             mask_dtype = sample["mask"].dtype
-            sample["mask"] = sample["mask"].to(torch.float)  # type:ignore[attr-defined]
+            sample["mask"] = sample["mask"].to(torch.float)
         if "boxes" in self.data_keys:
             boxes_dtype = sample["boxes"].dtype
-            sample["boxes"] = sample["boxes"].to(
-                torch.float  # type:ignore[attr-defined]
-            )
+            sample["boxes"] = sample["boxes"].to(torch.float)
 
         inputs = [sample[k] for k in self.data_keys]
         outputs_list: Union[Tensor, List[Tensor]] = self.augs(*inputs)

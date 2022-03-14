@@ -4,7 +4,7 @@
 import builtins
 import os
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import matplotlib.pyplot as plt
 import pytest
@@ -20,25 +20,21 @@ pytest.importorskip("h5py")
 
 class TestSo2Sat:
     @pytest.fixture(params=["train", "validation", "test"])
-    def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
-    ) -> So2Sat:
+    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> So2Sat:
         md5s = {
             "train": "82e0f2d51766b89cb905dbaf8275eb5b",
             "validation": "bf292ae4737c1698b1a3c6f5e742e0e1",
             "test": "9a3bbe181b038d4e51f122c4be3c569e",
         }
 
-        monkeypatch.setattr(So2Sat, "md5s", md5s)  # type: ignore[attr-defined]
+        monkeypatch.setattr(So2Sat, "md5s", md5s)
         root = os.path.join("tests", "data", "so2sat")
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return So2Sat(root=root, split=split, transforms=transforms, checksum=True)
 
     @pytest.fixture
-    def mock_missing_module(
-        self, monkeypatch: Generator[MonkeyPatch, None, None]
-    ) -> None:
+    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
         import_orig = builtins.__import__
 
         def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
@@ -46,9 +42,7 @@ class TestSo2Sat:
                 raise ImportError()
             return import_orig(name, *args, **kwargs)
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            builtins, "__import__", mocked_import
-        )
+        monkeypatch.setattr(builtins, "__import__", mocked_import)
 
     def test_getitem(self, dataset: So2Sat) -> None:
         x = dataset[0]

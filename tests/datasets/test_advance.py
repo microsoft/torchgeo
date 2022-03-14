@@ -5,7 +5,7 @@ import builtins
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import matplotlib.pyplot as plt
 import pytest
@@ -23,28 +23,22 @@ def download_url(url: str, root: str, *args: str) -> None:
 
 class TestADVANCE:
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
-    ) -> ADVANCE:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.utils, "download_url", download_url
-        )
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ADVANCE:
+        monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "advance")
         urls = [
             os.path.join(data_dir, "ADVANCE_vision.zip"),
             os.path.join(data_dir, "ADVANCE_sound.zip"),
         ]
         md5s = ["43acacecebecd17a82bc2c1e719fd7e4", "039b7baa47879a8a4e32b9dd8287f6ad"]
-        monkeypatch.setattr(ADVANCE, "urls", urls)  # type: ignore[attr-defined]
-        monkeypatch.setattr(ADVANCE, "md5s", md5s)  # type: ignore[attr-defined]
+        monkeypatch.setattr(ADVANCE, "urls", urls)
+        monkeypatch.setattr(ADVANCE, "md5s", md5s)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return ADVANCE(root, transforms, download=True, checksum=True)
 
     @pytest.fixture
-    def mock_missing_module(
-        self, monkeypatch: Generator[MonkeyPatch, None, None]
-    ) -> None:
+    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
         import_orig = builtins.__import__
 
         def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
@@ -52,9 +46,7 @@ class TestADVANCE:
                 raise ImportError()
             return import_orig(name, *args, **kwargs)
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            builtins, "__import__", mocked_import
-        )
+        monkeypatch.setattr(builtins, "__import__", mocked_import)
 
     def test_getitem(self, dataset: ADVANCE) -> None:
         pytest.importorskip("scipy", minversion="0.9.0")

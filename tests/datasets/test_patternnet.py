@@ -4,7 +4,6 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -22,18 +21,14 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 class TestPatternNet:
     @pytest.fixture(params=["train", "test"])
-    def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
-    ) -> PatternNet:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.patternnet, "download_url", download_url
-        )
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> PatternNet:
+        monkeypatch.setattr(torchgeo.datasets.patternnet, "download_url", download_url)
         md5 = "5649754c78219a2c19074ff93666cc61"
-        monkeypatch.setattr(PatternNet, "md5", md5)  # type: ignore[attr-defined]
+        monkeypatch.setattr(PatternNet, "md5", md5)
         url = os.path.join("tests", "data", "patternnet", "PatternNet.zip")
-        monkeypatch.setattr(PatternNet, "url", url)  # type: ignore[attr-defined]
+        monkeypatch.setattr(PatternNet, "url", url)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return PatternNet(root, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: PatternNet) -> None:

@@ -25,13 +25,9 @@ class RESISC45DataModule(pl.LightningDataModule):
     Uses the train/val/test splits from the dataset.
     """
 
-    band_means = torch.tensor(  # type: ignore[attr-defined]
-        [0.36820969, 0.38083247, 0.34341029]
-    )
+    band_means = torch.tensor([0.36820969, 0.38083247, 0.34341029])
 
-    band_stds = torch.tensor(  # type: ignore[attr-defined]
-        [0.20339924, 0.18524736, 0.18455448]
-    )
+    band_stds = torch.tensor([0.20339924, 0.18524736, 0.18455448])
 
     def __init__(
         self, root_dir: str, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
@@ -64,8 +60,9 @@ class RESISC45DataModule(pl.LightningDataModule):
         """
         if (
             hasattr(self, "trainer")
+            and self.trainer is not None
             and hasattr(self.trainer, "training")
-            and self.trainer.training  # type: ignore[union-attr]
+            and self.trainer.training
         ):
             x = batch["image"]
 
