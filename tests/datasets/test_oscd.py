@@ -5,7 +5,6 @@ import glob
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import pytest
 import torch
@@ -26,14 +25,9 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestOSCD:
     @pytest.fixture(params=zip(["all", "rgb"], ["train", "test"]))
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> OSCD:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.oscd, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.oscd, "download_url", download_url)
         md5s = {
             "Onera Satellite Change Detection dataset - Images.zip": (
                 "fb4e3f54c3a31fd3f21f98cad4ddfb74"
@@ -45,7 +39,7 @@ class TestOSCD:
                 "ca0ba73ba66d06fa4903e269ef12eb50"
             ),
         }
-        monkeypatch.setattr(OSCD, "md5s", md5s)  # type: ignore[attr-defined]
+        monkeypatch.setattr(OSCD, "md5s", md5s)
         urls = {
             "Onera Satellite Change Detection dataset - Images.zip": os.path.join(
                 "tests",
@@ -66,11 +60,11 @@ class TestOSCD:
                 "Onera Satellite Change Detection dataset - Test Labels.zip",
             ),
         }
-        monkeypatch.setattr(OSCD, "urls", urls)  # type: ignore[attr-defined]
+        monkeypatch.setattr(OSCD, "urls", urls)
 
         bands, split = request.param
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return OSCD(
             root, split, bands, transforms=transforms, download=True, checksum=True
         )

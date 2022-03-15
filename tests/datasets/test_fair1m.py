@@ -4,7 +4,6 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -17,11 +16,11 @@ from torchgeo.datasets import FAIR1M
 
 class TestFAIR1M:
     @pytest.fixture
-    def dataset(self, monkeypatch: Generator[MonkeyPatch, None, None]) -> FAIR1M:
+    def dataset(self, monkeypatch: MonkeyPatch) -> FAIR1M:
         md5s = ["f278aba757de9079225db42107e09e30", "aca59017207141951b53e91795d8179e"]
-        monkeypatch.setattr(FAIR1M, "md5s", md5s)  # type: ignore[attr-defined]
+        monkeypatch.setattr(FAIR1M, "md5s", md5s)
         root = os.path.join("tests", "data", "fair1m")
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return FAIR1M(root, transforms)
 
     def test_getitem(self, dataset: FAIR1M) -> None:

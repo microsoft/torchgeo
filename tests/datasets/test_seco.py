@@ -5,7 +5,6 @@ import glob
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -26,15 +25,10 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestSeasonalContrastS2:
     @pytest.fixture(params=zip(["100k", "1m"], [["B1"], SeasonalContrastS2.ALL_BANDS]))
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SeasonalContrastS2:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.seco, "download_url", download_url
-        )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        monkeypatch.setattr(torchgeo.datasets.seco, "download_url", download_url)
+        monkeypatch.setattr(
             SeasonalContrastS2,
             "md5s",
             {
@@ -42,7 +36,7 @@ class TestSeasonalContrastS2:
                 "1m": "3bb3fcf90f5de7d5781ce0cb85fd20af",
             },
         )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        monkeypatch.setattr(
             SeasonalContrastS2,
             "urls",
             {
@@ -52,7 +46,7 @@ class TestSeasonalContrastS2:
         )
         root = str(tmp_path)
         version, bands = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return SeasonalContrastS2(
             root, version, bands, transforms, download=True, checksum=True
         )
@@ -105,5 +99,5 @@ class TestSeasonalContrastS2:
             plt.close()
 
             with pytest.raises(ValueError, match="doesn't support plotting"):
-                x["prediction"] = torch.tensor(1)  # type: ignore[attr-defined]
+                x["prediction"] = torch.tensor(1)
                 dataset.plot(x)
