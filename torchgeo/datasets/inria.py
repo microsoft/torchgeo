@@ -5,14 +5,13 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio as rio
 import torch
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
 from torch import Tensor
 
 from torchgeo.datasets.geo import VisionDataset
@@ -111,9 +110,7 @@ class InriaAerialImageLabeling(VisionDataset):
 
         return files
 
-    def _load_image(
-        self, path: str
-    ) -> Tuple[Tensor, Tuple[float, float, float, float, float, float], CRS]:
+    def _load_image(self, path: str) -> Tensor:
         """Load a single image.
 
         Args:
@@ -160,8 +157,8 @@ class InriaAerialImageLabeling(VisionDataset):
             data and label at that index
         """
         files = self.files[index]
-        img, tfm, crs = self._load_image(files["image"])
-        sample = {"image": img, "transform": tfm, "crs": crs}
+        img = self._load_image(files["image"])
+        sample = {"image": img}
         if files.get("label"):
             mask = self._load_target(files["label"])
             sample["mask"] = mask

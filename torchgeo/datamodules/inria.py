@@ -3,6 +3,7 @@
 
 """InriaAerialImageLabeling datamodule."""
 
+import os
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import kornia.augmentation as K
@@ -11,14 +12,13 @@ import torch
 import torchvision.transforms as T
 from einops import rearrange
 from kornia.contrib import CombineTensorPatches, ExtractTensorPatches
-from rasterio.crs import CRS
-from rasterio.transform import Affine
 from torch.nn.modules.utils import _pair
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data._utils.collate import default_collate
 
 from torchgeo.datamodules.utils import dataset_split
 from torchgeo.datasets import InriaAerialImageLabeling
+from torchgeo.datasets.utils import PredictDataset
 
 DEFAULT_AUGS = K.AugmentationSequential(
     K.RandomHorizontalFlip(p=0.5),
@@ -47,34 +47,9 @@ def compute_padding(
 def collate_wrapper(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Flatten wrapper."""
     r_batch: Dict[str, Any] = default_collate(batch)  # type: ignore[no-untyped-call]
-    r_batch["image"] = torch.flatten(  # type: ignore[attr-defined]
-        r_batch["image"], 0, 1
-    )
+    r_batch["image"] = torch.flatten(r_batch["image"], 0, 1)
     if "mask" in r_batch:
-        r_batch["mask"] = torch.flatten(  # type: ignore[attr-defined]
-            r_batch["mask"], 0, 1
-        )
-
-    r_batch.pop("transform", None)
-    r_batch.pop("crs", None)
-    return r_batch
-
-
-def collate_predict_wrapper(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Flatten wrapper."""
-    r_batch: Dict[str, Any] = default_collate(batch)  # type: ignore[no-untyped-call]
-    r_batch["image"] = torch.flatten(  # type: ignore[attr-defined]
-        r_batch["image"], 0, 1
-    )
-
-    if "transform" in r_batch:
-        # Transform is expected to be in gdal format
-        tfm_gdal = [float(i) for i in r_batch["transform"]]
-        r_batch["transform"] = Affine.from_gdal(*tfm_gdal)
-
-    if "crs" in r_batch:
-        r_batch["crs"]["init"] = r_batch["crs"]["init"][0]
-        r_batch["crs"] = CRS(r_batch["crs"])
+        r_batch["mask"] = torch.flatten(r_batch["mask"], 0, 1)
 
     return r_batch
 
@@ -100,6 +75,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         patch_size: Union[int, Tuple[int, int]] = 512,
         num_patches_per_tile: int = 32,
         augmentations: K.AugmentationSequential = DEFAULT_AUGS,
+        predict_on: str = "test",
     ) -> None:
         """Initialize a LightningDataModule for InriaAerialImageLabeling based DataLoaders.
 
@@ -114,6 +90,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             patch_size: Size of random patch from image and mask (height, width)
             num_patches_per_tile: Number of random patches per sample
             augmentations: Default augmentations applied
+            predict_on: Directory of images to run inference on
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
@@ -124,6 +101,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         self.patch_size = cast(Tuple[int, int], _pair(patch_size))
         self.num_patches_per_tile = num_patches_per_tile
         self.augmentations = augmentations
+        self.predict_on = predict_on
         self.random_crop = K.AugmentationSequential(
             K.RandomCrop(self.patch_size, p=1.0, keepdim=False),
             data_keys=["input", "mask"],
@@ -148,9 +126,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         """Transform a single sample from the Dataset."""
         # RGB is int32 so divide by 255
         sample["image"] = sample["image"] / 255.0
-        sample["image"] = torch.clip(  # type: ignore[attr-defined]
-            sample["image"], min=0.0, max=1.0
-        )
+        sample["image"] = torch.clip(sample["image"], min=0.0, max=1.0)
 
         # This is pointless since it will get squeezed out anyway
         if "mask" in sample:
@@ -164,7 +140,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         for _ in range(self.num_patches_per_tile):
             image, mask = sample["image"], sample["mask"]
             # RandomCrop needs image and mask to be in float
-            mask = mask.to(torch.float)  # type: ignore[attr-defined]
+            mask = mask.to(torch.float)
             image, mask = self.random_crop(image, mask)
             images.append(image.squeeze())
             masks.append(mask.squeeze(0).long())
@@ -205,9 +181,15 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             self.val_dataset = train_dataset
             self.test_dataset = train_dataset
 
-        self.predict_dataset = InriaAerialImageLabeling(
-            self.root_dir, "test", transforms=test_transforms
-        )
+        if os.path.isdir(self.predict_on):
+            self.predict_dataset = PredictDataset(
+                self.predict_on, transforms=test_transforms
+            )
+        else:
+            assert self.predict_on == "test"
+            self.predict_dataset = InriaAerialImageLabeling(  # type: ignore[assignment]
+                self.root_dir, self.predict_on, transforms=test_transforms
+            )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""
@@ -245,7 +227,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             self.predict_dataset,
             batch_size=1,
             num_workers=self.num_workers,
-            collate_fn=collate_predict_wrapper,
+            collate_fn=collate_wrapper,
             shuffle=False,
         )
 
@@ -264,11 +246,11 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         """
         # Training
         if self.trainer.training and self.augmentations is not None:  # type: ignore[union-attr] # noqa: E501
-            batch["mask"] = batch["mask"].to(torch.float)  # type: ignore[attr-defined]
+            batch["mask"] = batch["mask"].to(torch.float)
             batch["image"], batch["mask"] = self.augmentations(
                 batch["image"], batch["mask"]
             )
-            batch["mask"] = batch["mask"].to(torch.long)  # type: ignore[attr-defined]
+            batch["mask"] = batch["mask"].to(torch.long)
         # Validation
         if "mask" in batch:
             batch["mask"] = rearrange(batch["mask"], "b () h w -> b h w")

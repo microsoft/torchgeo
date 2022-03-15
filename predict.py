@@ -5,15 +5,14 @@
 
 """torchgeo model inference script."""
 
+import argparse
 import os
-from typing import Any, Dict, Tuple, Type, cast
+from typing import Dict, Tuple, Type
 
 import pytorch_lightning as pl
 import rasterio as rio
 import torch
-from omegaconf import DictConfig, OmegaConf
-from rasterio.crs import CRS
-from rasterio.transform import Affine
+from omegaconf import OmegaConf
 
 from torchgeo.datamodules import (
     BigEarthNetDataModule,
@@ -60,125 +59,59 @@ TASK_TO_MODULES_MAPPING: Dict[
 }
 
 
-def set_up_omegaconf() -> DictConfig:
-    """Loads program arguments from either YAML config files or command line arguments.
-
-    This method loads defaults/a schema from "conf/defaults.yaml" as well as potential
-    arguments from the command line. If one of the command line arguments is
-    "config_file", then we additionally read arguments from that YAML file. One of the
-    config file based arguments or command line arguments must specify task.name. The
-    task.name value is used to grab a task specific defaults from its respective
-    trainer. The final configuration is given as merge(task_defaults, defaults,
-    config file, command line). The merge() works from the first argument to the last,
-    replacing existing values with newer values. Additionally, if any values are
-    merged into task_defaults without matching types, then there will be a runtime
-    error.
-
-    Returns:
-        an OmegaConf DictConfig containing all the validated program arguments
-
-    Raises:
-        FileNotFoundError: when ``config_file`` does not exist
-        ValueError: when ``task.name`` is not a valid task
-    """
-    conf = OmegaConf.load("conf/defaults.yaml")
-    command_line_conf = OmegaConf.from_cli()
-
-    if "config_file" in command_line_conf:
-        config_fn = command_line_conf.config_file
-        if not os.path.isfile(config_fn):
-            raise FileNotFoundError(f"config_file={config_fn} is not a valid file")
-
-        user_conf = OmegaConf.load(config_fn)
-        conf = OmegaConf.merge(conf, user_conf)
-
-    conf = OmegaConf.merge(  # Merge in any arguments passed via the command line
-        conf, command_line_conf
-    )
-
-    # These OmegaConf structured configs enforce a schema at runtime, see:
-    # https://omegaconf.readthedocs.io/en/2.0_branch/structured_config.html#merging-with-other-configs
-    task_name = conf.experiment.task
-    task_config_fn = os.path.join("conf", f"{task_name}.yaml")
-    if task_name == "test":
-        task_conf = OmegaConf.create()
-    elif os.path.exists(task_config_fn):
-        task_conf = cast(DictConfig, OmegaConf.load(task_config_fn))
-    else:
-        raise ValueError(
-            f"experiment.task={task_name} is not recognized as a valid task"
-        )
-
-    conf = OmegaConf.merge(task_conf, conf)
-    conf = cast(DictConfig, conf)  # convince mypy that everything is alright
-
-    return conf
-
-
-def write_mask(
-    mask: torch.Tensor, output_path: str, tfm: Affine = None, crs: CRS = None
-) -> None:
-    """Write mask to specified output path."""
+def write_mask(mask: torch.Tensor, output_dir: str, input_filename: str) -> None:
+    """Write mask to specified output directory."""
+    output_path = os.path.join(output_dir, os.path.basename(input_filename))
+    with rio.open(input_filename) as src:
+        profile = src.profile
+    profile["count"] = 1
+    profile["dtype"] = "uint8"
     mask = mask.cpu().numpy()
-    meta = {"count": mask.shape[-3], "transform": tfm, "dtype": "uint8", "crs": crs}
-    meta["width"], meta["height"] = mask.shape[-1], mask.shape[-2]
-    with rio.open(output_path, "w", **meta) as ds:
+    with rio.open(output_path, "w", **profile) as ds:
         ds.write(mask)
 
 
-def main(conf: DictConfig) -> None:
+def main(config_dir: str, predict_on: str, output_dir: str, device: str) -> None:
     """Main inference loop."""
-    ######################################
-    # Setup output directory
-    ######################################
+    os.makedirs(output_dir, exist_ok=True)
 
-    experiment_name = conf.experiment.name
+    # Load checkpoint and config
+    conf = OmegaConf.load(os.path.join(config_dir, "experiment_config.yaml"))
+    ckpt = os.path.join(config_dir, "last.ckpt")
+
+    # Load model
     task_name = conf.experiment.task
-    if os.path.isfile(conf.program.output_dir):
-        raise NotADirectoryError("`program.output_dir` must be a directory")
-
-    experiment_dir = os.path.join(conf.program.output_dir, experiment_name)
-
-    # Directory to store predictions
-    pred_dir = os.path.join(experiment_dir, "predictions")
-    os.makedirs(pred_dir, exist_ok=True)
-
-    if len(os.listdir(pred_dir)) > 0:
-        if conf.program.overwrite:
-            print(
-                f"WARNING! The predictions directory, {pred_dir}, already exists, "
-                + "we will overwrite data in it!"
-            )
-        else:
-            raise FileExistsError(
-                f"The predictions directory, {pred_dir}, already exists and isn't "
-                + "empty. We don't want to overwrite any existing results, exiting..."
-            )
-
-    datamodule_args = cast(
-        Dict[str, Any], OmegaConf.to_object(conf.experiment.datamodule)
-    )
-
     datamodule: pl.LightningDataModule
     task: pl.LightningModule
     if task_name not in TASK_TO_MODULES_MAPPING:
         raise ValueError(
             f"experiment.task={task_name} is not recognized as a valid task"
         )
-
     task_class, datamodule_class = TASK_TO_MODULES_MAPPING[task_name]
-    ckpt = os.path.join(experiment_dir, "last.ckpt")
     task = task_class.load_from_checkpoint(ckpt)
-    task = task.to("cuda")
-    datamodule = datamodule_class(**datamodule_args)
+    task = task.to(device)
+    task.eval()
+
+    # Load datamodule and dataloader
+    conf.experiment.datamodule["predict_on"] = predict_on
+    datamodule = datamodule_class(**conf.experiment.datamodule)
     datamodule.setup()
     dataloader = datamodule.predict_dataloader()
 
-    for i, batch in enumerate(dataloader):
-        tfm = batch.get("transform")
-        crs = batch.get("crs")
+    if len(os.listdir(output_dir)) > 0:
+        if conf.program.overwrite:
+            print(
+                f"WARNING! The output directory, {output_dir}, already exists, "
+                + "we will overwrite data in it!"
+            )
+        else:
+            raise FileExistsError(
+                f"The predictions directory, {output_dir}, already exists and isn't "
+                + "empty. We don't want to overwrite any existing results, exiting..."
+            )
 
-        x = batch["image"].to("cuda")  # (N, B, C, H, W)
+    for i, batch in enumerate(dataloader):
+        x = batch["image"].to(device)  # (N, B, C, H, W)
         assert len(x.shape) in {4, 5}
         if len(x.shape) == 5:
             masks = []
@@ -194,14 +127,12 @@ def main(conf: DictConfig) -> None:
                 raise NotImplementedError
             masks_combined = datamodule.patch_combine(masks_arr)[0]
             filename = datamodule.predict_dataset.files[i]["image"]
-            output_path = os.path.join(pred_dir, os.path.basename(filename))
-            write_mask(masks_combined, output_path, tfm, crs)
+            write_mask(masks_combined, output_dir, filename)
         else:
             mask = task(x)
             mask = mask.argmax(dim=1)
             filename = datamodule.predict_dataset.files[i]["image"]
-            output_path = os.path.join(pred_dir, os.path.basename(filename))
-            write_mask(mask, output_path, tfm, crs)
+            write_mask(mask, output_dir, filename)
 
 
 if __name__ == "__main__":
@@ -215,11 +146,28 @@ if __name__ == "__main__":
     }
     os.environ.update(_rasterio_best_practices)
 
-    conf = set_up_omegaconf()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--config-dir",
+        type=str,
+        required=True,
+        help="Path to config-dir to load config and ckpt",
+    )
 
-    # Set random seed for reproducibility
-    # https://pytorch-lightning.readthedocs.io/en/latest/api/pytorch_lightning.utilities.seed.html#pytorch_lightning.utilities.seed.seed_everything
-    pl.seed_everything(conf.program.seed)
+    parser.add_argument(
+        "--predict_on",
+        type=str,
+        required=True,
+        help="Directory/Dataset to run inference on",
+    )
 
-    # Main inference procedure
-    main(conf)
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        required=True,
+        help="Path to output_directory to save predicted mask geotiffs",
+    )
+
+    parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
+    args = parser.parse_args()
+    main(args.config_dir, args.predict_on, args.output_dir, args.device)
