@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Generator
 
 import pytest
 from _pytest.fixtures import SubRequest
@@ -10,24 +9,25 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from torchgeo.datamodules import InriaAerialImageLabelingDataModule
 
+TEST_DATA_DIR = os.path.join("tests", "data", "inria")
+PREDICT_DATA_DIR = os.path.join(TEST_DATA_DIR, "AerialImageDataset", "test", "images")
+
 
 class TestInriaAerialImageLabelingDataModule:
-    @pytest.fixture(params=zip([0.2, 0.2, 0.0], [0.2, 0.0, 0.0]))
+    @pytest.fixture(
+        params=zip([0.2, 0.2, 0.0], [0.2, 0.0, 0.0], ["test", PREDICT_DATA_DIR, "test"])
+    )
     def datamodule(
-        self, request: SubRequest, monkeypatch: Generator[MonkeyPatch, None, None]
+        self, request: SubRequest, monkeypatch: MonkeyPatch
     ) -> InriaAerialImageLabelingDataModule:
-        val_split_pct, test_split_pct = request.param
+        val_split_pct, test_split_pct, predict_on = request.param
         patch_size = 2  # (2,2)
         num_patches_per_tile = 2
-        root = os.path.join("tests", "data", "inria")
+        root = TEST_DATA_DIR
         batch_size = 1
         num_workers = 0
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            InriaAerialImageLabelingDataModule, "h", 8
-        )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            InriaAerialImageLabelingDataModule, "w", 8
-        )
+        monkeypatch.setattr(InriaAerialImageLabelingDataModule, "h", 8)
+        monkeypatch.setattr(InriaAerialImageLabelingDataModule, "w", 8)
         dm = InriaAerialImageLabelingDataModule(
             root,
             batch_size,
@@ -36,6 +36,7 @@ class TestInriaAerialImageLabelingDataModule:
             test_split_pct,
             patch_size,
             num_patches_per_tile,
+            predict_on=predict_on,
         )
         dm.prepare_data()
         dm.setup()
@@ -73,5 +74,3 @@ class TestInriaAerialImageLabelingDataModule:
         assert len(sample["image"].shape) == 5
         assert sample["image"].shape[-2:] == (2, 2)
         assert sample["image"].shape[2] == 3
-        assert "transform" in sample
-        assert "crs" in sample
