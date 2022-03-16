@@ -11,37 +11,20 @@ import pytorch_lightning as pl
 import torch
 import torchvision.transforms as T
 from einops import rearrange
-from kornia.contrib import CombineTensorPatches, ExtractTensorPatches
+from kornia.contrib import extract_tensor_patches
 from torch.nn.modules.utils import _pair
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data._utils.collate import default_collate
 
 from torchgeo.datamodules.utils import dataset_split
 from torchgeo.datasets import InriaAerialImageLabeling
-from torchgeo.datasets.utils import PredictDataset
+from torchgeo.datasets.utils import PredictDataset, compute_padding
 
 DEFAULT_AUGS = K.AugmentationSequential(
     K.RandomHorizontalFlip(p=0.5),
     K.RandomVerticalFlip(p=0.5),
     data_keys=["input", "mask"],
 )
-
-
-# Maybe this can be moved to utils?
-def compute_padding(
-    h: int, w: int, window_size: Union[int, Tuple[int, int]]
-) -> Tuple[int, int]:
-    """Compute required padding."""
-    window_size = cast(Tuple[int, int], _pair(window_size))
-    if (h % window_size[0]) == 0:
-        h_pad = 0
-    else:
-        h_pad = (window_size[0] - (h % window_size[0])) // 2
-    if (w % window_size[1]) == 0:
-        w_pad = 0
-    else:
-        w_pad = (window_size[1] - (w % window_size[1])) // 2
-    return (h_pad, w_pad)
 
 
 def collate_wrapper(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -106,19 +89,22 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             K.RandomCrop(self.patch_size, p=1.0, keepdim=False),
             data_keys=["input", "mask"],
         )
-        padding = compute_padding(self.h, self.w, self.patch_size)
-        self.patch_extract = ExtractTensorPatches(
-            window_size=self.patch_size, stride=self.patch_size, padding=padding
-        )
-        self.patch_combine = CombineTensorPatches(
-            original_size=(self.h, self.w),
-            window_size=self.patch_size,
-            unpadding=padding,
-        )
 
     def patch_sample(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Extract patches from signle sample."""
-        sample["image"] = self.patch_extract(sample["image"].unsqueeze(0))
+        """Extract patches from single sample."""
+        assert sample["image"].ndim == 3
+        _, h, w = sample["image"].shape
+
+        padding = compute_padding((h, w), self.patch_size)
+        sample["original_shape"] = (h, w)
+        sample["patch_shape"] = self.patch_size
+        sample["padding"] = padding
+        sample["image"] = extract_tensor_patches(
+            sample["image"].unsqueeze(0),
+            self.patch_size,
+            self.patch_size,
+            padding=padding,
+        )
         sample["image"] = rearrange(sample["image"], "() t c h w -> t () c h w")
         return sample
 
@@ -155,6 +141,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         """
         train_transforms = T.Compose([self.preprocess, self.n_random_crop])
         test_transforms = T.Compose([self.preprocess, self.patch_sample])
+        predict_transforms = T.Compose([self.preprocess])
 
         train_dataset = InriaAerialImageLabeling(
             self.root_dir, split="train", transforms=train_transforms
@@ -183,7 +170,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
 
         if os.path.isdir(self.predict_on):
             self.predict_dataset = PredictDataset(
-                self.predict_on, transforms=test_transforms
+                self.predict_on, self.patch_size, transforms=predict_transforms
             )
         else:
             assert self.predict_on == "test"

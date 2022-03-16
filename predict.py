@@ -12,6 +12,7 @@ from typing import Dict, Tuple, Type
 import pytorch_lightning as pl
 import rasterio as rio
 import torch
+from kornia.contrib import CombineTensorPatches
 from omegaconf import OmegaConf
 
 from torchgeo.datamodules import (
@@ -115,6 +116,19 @@ def main(config_dir: str, predict_on: str, output_dir: str, device: str) -> None
         assert len(x.shape) in {4, 5}
         if len(x.shape) == 5:
             masks = []
+
+            def tensor_to_int(
+                tensor_tuple: Tuple[torch.Tensor, torch.Tensor]
+            ) -> Tuple[int, ...]:
+                """Convert tuple of tensors to tuple of ints."""
+                return tuple(int(i.item()) for i in tensor_tuple)
+
+            original_shape = tensor_to_int(batch["original_shape"])
+            patch_shape = tensor_to_int(batch["patch_shape"])
+            padding = tensor_to_int(batch["padding"])
+            patch_combine = CombineTensorPatches(
+                original_size=original_shape, window_size=patch_shape, unpadding=padding
+            )
             for tile in x:
                 mask = task(tile)
                 mask = mask.argmax(dim=1)
@@ -122,10 +136,7 @@ def main(config_dir: str, predict_on: str, output_dir: str, device: str) -> None
 
             masks_arr = torch.stack(masks, dim=0)
             masks_arr = masks_arr.unsqueeze(0)
-
-            if not hasattr(datamodule, "patch_combine"):
-                raise NotImplementedError
-            masks_combined = datamodule.patch_combine(masks_arr)[0]
+            masks_combined = patch_combine(masks_arr)[0]
             filename = datamodule.predict_dataset.files[i]["image"]
             write_mask(masks_combined, output_dir, filename)
         else:

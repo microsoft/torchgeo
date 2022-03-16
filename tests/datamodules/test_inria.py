@@ -5,7 +5,6 @@ import os
 
 import pytest
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
 
 from torchgeo.datamodules import InriaAerialImageLabelingDataModule
 
@@ -17,17 +16,13 @@ class TestInriaAerialImageLabelingDataModule:
     @pytest.fixture(
         params=zip([0.2, 0.2, 0.0], [0.2, 0.0, 0.0], ["test", PREDICT_DATA_DIR, "test"])
     )
-    def datamodule(
-        self, request: SubRequest, monkeypatch: MonkeyPatch
-    ) -> InriaAerialImageLabelingDataModule:
+    def datamodule(self, request: SubRequest) -> InriaAerialImageLabelingDataModule:
         val_split_pct, test_split_pct, predict_on = request.param
         patch_size = 2  # (2,2)
         num_patches_per_tile = 2
         root = TEST_DATA_DIR
         batch_size = 1
         num_workers = 0
-        monkeypatch.setattr(InriaAerialImageLabelingDataModule, "h", 8)
-        monkeypatch.setattr(InriaAerialImageLabelingDataModule, "w", 8)
         dm = InriaAerialImageLabelingDataModule(
             root,
             batch_size,
