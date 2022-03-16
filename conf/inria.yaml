@@ -4,12 +4,9 @@ program:
   
 trainer:
   gpus: 1
-  min_epochs: 1
-  max_epochs: 10
-  # precision: 16
-  # min_epochs: 5
-  # max_epochs: 100
-  # benchmark: True
+  min_epochs: 5
+  max_epochs: 100
+  benchmark: True
   log_every_n_steps: 2
 
 experiment:
