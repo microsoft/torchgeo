@@ -90,7 +90,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             patch_size: Size of random patch from image and mask (height, width)
             num_patches_per_tile: Number of random patches per sample
             augmentations: Default augmentations applied
-            predict_on: Directory of images to run inference on
+            predict_on: Directory/Dataset of images to run inference on
         """
         super().__init__()  # type: ignore[no-untyped-call]
         self.root_dir = root_dir
