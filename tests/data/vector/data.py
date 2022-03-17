@@ -5,7 +5,6 @@
 
 import json
 
-
 # Create an L shape:
 #
 # +--+
