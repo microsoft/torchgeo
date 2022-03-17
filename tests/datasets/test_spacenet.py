@@ -87,7 +87,7 @@ class TestSpaceNet2:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
         test_md5 = {
-            "sn2_AOI_2_Vegas": "b3236f58604a9d746c4e09b3e487e427",
+            "sn2_AOI_2_Vegas": "6ceae7ff8c557346e8a4c8b6c61cc1b9",
             "sn2_AOI_3_Paris": "811e6a26fdeb8be445fed99769fa52c5",
             "sn2_AOI_4_Shanghai": "139d1627d184c74426a85ad0222f7355",
             "sn2_AOI_5_Khartoum": "435535120414b74165aa87f051c3a2b3",
