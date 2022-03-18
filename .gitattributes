@@ -1,4 +1,4 @@
 # Do not change line endings on test data, it will change the MD5
-/tests/data/*/** binary
+/tests/data/*/** -text
 # Test data generation files are fine though
-/tests/data/**/data.py text diff
+/tests/data/**/data.py text
