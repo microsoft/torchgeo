@@ -16,7 +16,6 @@ from torch.utils.data import ConcatDataset
 from torchgeo.datasets import (
     NAIP,
     BoundingBox,
-    CanadianBuildingFootprints,
     GeoDataset,
     IntersectionDataset,
     RasterDataset,
@@ -42,6 +41,10 @@ class CustomGeoDataset(GeoDataset):
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, BoundingBox]:
         return {"index": query}
+
+
+class CustomVectorDataset(VectorDataset):
+    filename_glob = "*.geojson"
 
 
 class CustomVisionDataset(VisionDataset):
@@ -195,20 +198,25 @@ class TestRasterDataset:
 
 
 class TestVectorDataset:
-    @pytest.fixture
-    def dataset(self) -> CanadianBuildingFootprints:
-        root = os.path.join("tests", "data", "cbf")
+    @pytest.fixture(scope="class")
+    def dataset(self) -> CustomVectorDataset:
+        root = os.path.join("tests", "data", "vector")
         transforms = nn.Identity()  # type: ignore[no-untyped-call]
-        return CanadianBuildingFootprints(root, res=0.1, transforms=transforms)
+        return CustomVectorDataset(root, res=0.1, transforms=transforms)
 
-    def test_getitem(self, dataset: CanadianBuildingFootprints) -> None:
+    def test_getitem(self, dataset: CustomVectorDataset) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
 
-    def test_invalid_query(self, dataset: CanadianBuildingFootprints) -> None:
-        query = BoundingBox(2, 2, 2, 2, 2, 2)
+    def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
+        query = BoundingBox(1.1, 1.9, 1.1, 1.9, 0, 0)
+        x = dataset[query]
+        assert torch.equal(x["mask"], torch.zeros(7, 7, dtype=torch.uint8))
+
+    def test_invalid_query(self, dataset: CustomVectorDataset) -> None:
+        query = BoundingBox(3, 3, 3, 3, 0, 0)
         with pytest.raises(
             IndexError, match="query: .* not found in index with bounds:"
         ):

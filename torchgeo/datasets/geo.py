@@ -661,9 +661,14 @@ class VectorDataset(GeoDataset):
         transform = rasterio.transform.from_bounds(
             query.minx, query.miny, query.maxx, query.maxy, width, height
         )
-        masks = rasterio.features.rasterize(
-            shapes, out_shape=(int(height), int(width)), transform=transform
-        )
+        if shapes:
+            masks = rasterio.features.rasterize(
+                shapes, out_shape=(int(height), int(width)), transform=transform
+            )
+        else:
+            # If no features are found in this query, return an empty mask
+            # with the default fill value and dtype used by rasterize
+            masks = np.zeros((int(height), int(width)), dtype=np.uint8)
 
         sample = {"mask": torch.tensor(masks), "crs": self.crs, "bbox": query}
 
