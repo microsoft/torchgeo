@@ -51,6 +51,7 @@ class TestBatchGeoSampler:
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(self, sampler: CustomBatchGeoSampler, num_workers: int) -> None:
         ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 100, 200, 300, 400, 500))
         dl = DataLoader(
             ds, batch_sampler=sampler, num_workers=num_workers, collate_fn=stack_samples
         )
