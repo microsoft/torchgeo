@@ -52,7 +52,7 @@ def set_up_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-b",
         "--batch-size",
-        default=2 ** 4,
+        default=2**4,
         type=int,
         help="number of samples in each mini-batch",
         metavar="SIZE",

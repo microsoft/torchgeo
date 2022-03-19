@@ -57,9 +57,9 @@ class ConvBlock(Module):
         self.model = Sequential(*layers)
 
         if pool:
-            self.pool = nn.modules.MaxPool2d(kernel_size=2)
+            self.pool: nn.Module = nn.modules.MaxPool2d(kernel_size=2)
         else:
-            self.pool = nn.Identity()  # type: ignore[attr-defined]
+            self.pool = nn.Identity()  # type: ignore[no-untyped-call]
 
     def forward(self, x: Tensor) -> Tuple[Tensor, Tensor]:
         """Forward pass of the model.
@@ -307,7 +307,7 @@ class FCSiamConc(Module):
 
         for block, upsample, skip in zip(self.decoder, self.upsample, reversed(skips)):
             x = upsample(x)
-            x = torch.cat([x, skip], dim=1)  # type: ignore[attr-defined]
+            x = torch.cat([x, skip], dim=1)
             x = block(x)
 
         return x
@@ -361,7 +361,7 @@ class FCSiamDiff(nn.modules.Module):
         for skip in skips:
             diff, xt = skip[:, 0, ...], skip[:, 1:, ...]
             for i in range(t - 1):
-                diff = torch.abs(diff - xt[:, i, ...])  # type: ignore[attr-defined]
+                diff = torch.abs(diff - xt[:, i, ...])
             diffs.append(diff)
 
         # Only first input encoding is passed directly to decoder
@@ -371,7 +371,7 @@ class FCSiamDiff(nn.modules.Module):
 
         for block, upsample, skip in zip(self.decoder, self.upsample, reversed(diffs)):
             x = upsample(x)
-            x = torch.cat([x, skip], dim=1)  # type: ignore[attr-defined]
+            x = torch.cat([x, skip], dim=1)
             x = block(x)
 
         return x
