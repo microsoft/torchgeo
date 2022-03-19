@@ -26,7 +26,7 @@ class TestLandCoverAI:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LandCoverAI:
-        monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
+        monkeypatch.setattr(torchgeo.datasets.landcoverai, "download_url", download_url)
         md5 = "46108372402292213789342d58929708"
         monkeypatch.setattr(LandCoverAI, "md5", md5)
         url = os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip")
