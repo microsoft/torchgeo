@@ -677,21 +677,6 @@ class VectorDataset(GeoDataset):
 
         return sample
 
-    def plot(self, data: Tensor) -> None:
-        """Plot a data sample.
-
-        Args:
-            data: the data to plot
-        """
-        array = data.squeeze().numpy()
-
-        # Plot the image
-        ax = plt.axes()
-        ax.imshow(array)
-        ax.axis("off")
-        plt.show()
-        plt.close()
-
 
 class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):
     """Abstract base class for datasets lacking geospatial information.
