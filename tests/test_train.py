@@ -16,7 +16,7 @@ def test_required_args() -> None:
     args = [sys.executable, "train.py"]
     ps = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert ps.returncode != 0
-    assert b"MissingMandatoryValue" in ps.stderr
+    assert b"ConfigKeyError" in ps.stderr
 
 
 def test_output_file(tmp_path: Path) -> None:
@@ -81,15 +81,14 @@ def test_overwrite_experiment_dir(tmp_path: Path) -> None:
     )
 
 
-@pytest.mark.parametrize("task", ["test", "foo"])
-def test_invalid_task(task: str, tmp_path: Path) -> None:
+def test_invalid_task(tmp_path: Path) -> None:
     output_dir = tmp_path / "output"
     args = [
         sys.executable,
         "train.py",
-        "experiment.name=test",
+        "experiment.name=foo",
         "program.output_dir=" + str(output_dir),
-        "experiment.task=" + task,
+        "experiment.task=foo",
     ]
     ps = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert ps.returncode != 0
