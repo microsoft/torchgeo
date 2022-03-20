@@ -196,12 +196,6 @@ class TestRasterDataset:
         with pytest.raises(FileNotFoundError, match="No RasterDataset data was found"):
             RasterDataset(str(tmp_path))
 
-    def test_plot_with_cmap(self, custom_dtype_ds: RasterDataset) -> None:
-        custom_dtype_ds.cmap = {i: (0, 0, 0, 255) for i in range(256)}
-        custom_dtype_ds.is_image = False
-        x = custom_dtype_ds[custom_dtype_ds.bounds]
-        custom_dtype_ds.plot(x["mask"])
-
 
 class TestVectorDataset:
     @pytest.fixture(scope="class")
