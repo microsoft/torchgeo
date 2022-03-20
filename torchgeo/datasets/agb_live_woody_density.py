@@ -124,7 +124,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
                 item["properties"]["tile_id"] + ".tif",
             )
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Any],
         show_titles: bool = True,

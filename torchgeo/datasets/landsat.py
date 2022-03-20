@@ -46,7 +46,6 @@ class Landsat(RasterDataset, abc.ABC):
     rgb_bands: List[str] = []
 
     separate_files = True
-    stretch = True
 
     def __init__(
         self,
