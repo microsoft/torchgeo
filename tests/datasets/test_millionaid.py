@@ -53,7 +53,7 @@ class TestMillionAID:
         monkeypatch.setattr(MillionAID, "md5s", md5s)  # type: ignore[attr-defined]
         root = str(tmp_path)
         split, task = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return MillionAID(
             root=root,
             split=split,
