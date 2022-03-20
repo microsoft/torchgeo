@@ -31,12 +31,12 @@ class TestCanadianBuildingFootprints:
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> CanadianBuildingFootprints:
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
-        monkeypatch.setattr(CanadianBuildingFootprints, "provinces_territories", [
-            "Alberta"
-        ])
-        monkeypatch.setattr(CanadianBuildingFootprints, "md5s", [
-            "25091d1f051baa30d8f2026545cfb696"
-        ])
+        monkeypatch.setattr(
+            CanadianBuildingFootprints, "provinces_territories", ["Alberta"]
+        )
+        monkeypatch.setattr(
+            CanadianBuildingFootprints, "md5s", ["25091d1f051baa30d8f2026545cfb696"]
+        )
         url = os.path.join("tests", "data", "cbf") + os.sep
         monkeypatch.setattr(CanadianBuildingFootprints, "url", url)
         monkeypatch.setattr(plt, "show", lambda *args: None)
