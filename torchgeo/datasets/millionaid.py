@@ -249,7 +249,7 @@ class MillionAID(VisionDataset):
         files = self.files[index]
         image = self._load_image(files["image"])
         cls_label = [self.class_to_idx[label] for label in files["label"]]
-        label = torch.tensor(cls_label, dtype=torch.long)  # type: ignore[attr-defined]
+        label = torch.tensor(cls_label, dtype=torch.long)
         sample = {"image": image, "label": label}
 
         if self.transforms is not None:
@@ -311,7 +311,7 @@ class MillionAID(VisionDataset):
         """
         with Image.open(path) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor: Tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
