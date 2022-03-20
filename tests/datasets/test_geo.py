@@ -4,13 +4,12 @@
 import os
 import pickle
 from pathlib import Path
-from typing import Dict, Generator
+from typing import Dict
 
 import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 from torch.utils.data import ConcatDataset
 
