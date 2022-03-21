@@ -76,7 +76,7 @@ class ForestDamage(VisionDataset):
     * high damage (3)
 
     If the download fails or stalls, it is recommended to try azcopy
-    as suggested `here <https://lila.science/faq>`_. It is expected that the
+    as suggested `here <https://lila.science/faq>`__. It is expected that the
     downloaded data file with name `Data_Set_Larch_Casebearer`
     can be found in `root`.
 
