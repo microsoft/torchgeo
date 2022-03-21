@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, Tuple, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple
 from xml.etree import ElementTree
 
 import matplotlib.patches as patches
@@ -191,27 +191,26 @@ class ForestDamage(VisionDataset):
         """
         with Image.open(path) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor: Tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
     def _load_target(
-        self, bboxes: List[List[int]], labels: List[str]
+        self, bboxes: List[List[int]], labels_list: List[str]
     ) -> Tuple[Tensor, Tensor]:
         """Load the target mask for a single image.
 
         Args:
             bboxes: list of bbox coordinats [xmin, ymin, xmax, ymax]
-            labels: list of class labels
+            labels_list: list of class labels
 
         Returns:
             the target bounding boxes and labels
         """
-        labels_list = [self.class_to_idx[label] for label in labels]
-        boxes = torch.tensor(bboxes).to(torch.float)  # type: ignore[attr-defined]
-        labels = torch.tensor(labels_list)  # type: ignore[attr-defined]
-        return boxes, cast(Tensor, labels)
+        labels = torch.tensor([self.class_to_idx[label] for label in labels_list])
+        boxes = torch.tensor(bboxes).to(torch.float)
+        return boxes, labels
 
     def _verify(self) -> None:
         """Checks the integrity of the dataset structure.

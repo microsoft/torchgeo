@@ -37,7 +37,7 @@ class TestForestDamage:
         monkeypatch.setattr(ForestDamage, "url", url)  # type: ignore[attr-defined]
         monkeypatch.setattr(ForestDamage, "md5", md5)  # type: ignore[attr-defined]
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return ForestDamage(
             root=root, transforms=transforms, download=True, checksum=True
         )
