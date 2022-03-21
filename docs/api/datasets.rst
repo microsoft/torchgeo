@@ -155,7 +155,7 @@ EuroSAT
 FAIR1M (Fine-grAined object recognItion in high-Resolution imagery)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: FAIR1Ms
+.. autoclass:: FAIR1M
 
 Forest Damage
 ^^^^^^^^^^^^^
