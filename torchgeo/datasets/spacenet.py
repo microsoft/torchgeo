@@ -248,7 +248,7 @@ class SpaceNet(VisionDataset, abc.ABC):
 
         to_be_downloaded = []
         for collection in missing_collections:
-            archive_path = os.path.join(self.root, collection + ".tar.gz")
+            archive_path = os.path.join(self.root, f"{collection}.tar.gz")
             if os.path.exists(archive_path):
                 print(f"Found {collection} archive")
                 if (
@@ -554,191 +554,25 @@ class SpaceNet2(SpaceNet):
         )
 
 
-class SpaceNet4(SpaceNet):
-    """SpaceNet 4: Off-Nadir Buildings Dataset.
+class SpaceNet3(SpaceNet):
+    r"""SpaceNet 3: Road Network Detection.
 
-    `SpaceNet 4 <https://spacenet.ai/off-nadir-building-detection/>`_ is a
-    dataset of 27 WV-2 imagery captured at varying off-nadir angles and
-    associated building footprints over the city of Atlanta. The off-nadir angle
-    ranges from 7 degrees to 54 degrees.
-
-    Dataset features:
-
-    * No. of chipped images: 28,728 (PAN/MS/PS-RGBNIR)
-    * No. of label files: 1064
-    * No. of building footprints: >120,000
-    * Area Coverage: 665 sq km
-    * Chip size: 225 x 225 (MS), 900 x 900 (PAN/PS-RGBNIR)
-
-    Dataset format:
-
-    * Imagery - Worldview-2 GeoTIFFs
-
-        * PAN.tif (Panchromatic)
-        * MS.tif (Multispectral)
-        * PS-RGBNIR (Pansharpened RGBNIR)
-
-    * Labels - GeoJSON
-
-        * labels.geojson
-
-    If you use this dataset in your research, please cite the following paper:
-
-    * https://arxiv.org/abs/1903.12239
-
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-         imagery and labels from the Radiant Earth MLHub
-
-    """
-
-    dataset_id = "spacenet4"
-    collection_md5_dict = {"sn4_AOI_6_Atlanta": "c597d639cba5257927a97e3eff07b753"}
-
-    imagery = {"MS": "MS.tif", "PAN": "PAN.tif", "PS-RGBNIR": "PS-RGBNIR.tif"}
-    chip_size = {"MS": (225, 225), "PAN": (900, 900), "PS-RGBNIR": (900, 900)}
-    label_glob = "labels.geojson"
-
-    angle_catalog_map = {
-        "nadir": [
-            "1030010003D22F00",
-            "10300100023BC100",
-            "1030010003993E00",
-            "1030010003CAF100",
-            "1030010002B7D800",
-            "10300100039AB000",
-            "1030010002649200",
-            "1030010003C92000",
-            "1030010003127500",
-            "103001000352C200",
-            "103001000307D800",
-        ],
-        "off-nadir": [
-            "1030010003472200",
-            "1030010003315300",
-            "10300100036D5200",
-            "103001000392F600",
-            "1030010003697400",
-            "1030010003895500",
-            "1030010003832800",
-        ],
-        "very-off-nadir": [
-            "10300100035D1B00",
-            "1030010003CCD700",
-            "1030010003713C00",
-            "10300100033C5200",
-            "1030010003492700",
-            "10300100039E6200",
-            "1030010003BDDC00",
-            "1030010003CD4300",
-            "1030010003193D00",
-        ],
-    }
-
-    def __init__(
-        self,
-        root: str,
-        image: str = "PS-RGBNIR",
-        angles: List[str] = [],
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
-        download: bool = False,
-        api_key: Optional[str] = None,
-        checksum: bool = False,
-    ) -> None:
-        """Initialize a new SpaceNet 4 Dataset instance.
-
-        Args:
-            root: root directory where dataset can be found
-            image: image selection which must be in ["MS", "PAN", "PS-RGBNIR"]
-            angles: angle selection which must be in ["nadir", "off-nadir",
-                "very-off-nadir"]
-            transforms: a function/transform that takes input sample and its target as
-                entry and returns a transformed version
-            download: if True, download dataset and store it in the root directory.
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing
-        """
-        collections = ["sn4_AOI_6_Atlanta"]
-        assert image in {"MS", "PAN", "PS-RGBNIR"}
-        self.angles = angles
-        if self.angles:
-            for angle in self.angles:
-                assert angle in self.angle_catalog_map.keys()
-        super().__init__(
-            root, image, collections, transforms, download, api_key, checksum
-        )
-
-    def _load_files(self, root: str) -> List[Dict[str, str]]:
-        """Return the paths of the files in the dataset.
-
-        Args:
-            root: root dir of dataset
-
-        Returns:
-            list of dicts containing paths for each pair of image and label
-        """
-        files = []
-        nadir = []
-        offnadir = []
-        veryoffnadir = []
-        images = glob.glob(os.path.join(root, self.collections[0], "*", self.filename))
-        images = sorted(images)
-
-        catalog_id_pattern = re.compile(r"(_[A-Z0-9])\w+$")
-        for imgpath in images:
-            imgdir = os.path.basename(os.path.dirname(imgpath))
-            match = catalog_id_pattern.search(imgdir)
-            assert match is not None, "Invalid image directory"
-            catalog_id = match.group()[1:]
-
-            lbl_dir = os.path.dirname(imgpath).split("-nadir")[0]
-
-            lbl_path = os.path.join(lbl_dir + "-labels", self.label_glob)
-            assert os.path.exists(lbl_path)
-
-            _file = {"image_path": imgpath, "label_path": lbl_path}
-            if catalog_id in self.angle_catalog_map["very-off-nadir"]:
-                veryoffnadir.append(_file)
-            elif catalog_id in self.angle_catalog_map["off-nadir"]:
-                offnadir.append(_file)
-            elif catalog_id in self.angle_catalog_map["nadir"]:
-                nadir.append(_file)
-
-        angle_file_map = {
-            "nadir": nadir,
-            "off-nadir": offnadir,
-            "very-off-nadir": veryoffnadir,
-        }
-
-        if not self.angles:
-            files.extend(nadir + offnadir + veryoffnadir)
-        else:
-            for angle in self.angles:
-                files.extend(angle_file_map[angle])
-        return files
-
-
-class SpaceNet5(SpaceNet):
-    r"""SpaceNet 5: Automated Road Network Extraction and Route Travel Time Estimation.
-
-    `SpaceNet 5 <https://spacenet.ai/sn5-challenge/>`_
-    is a dataset of road networks over the cities of Moscow, Mumbai and San
-    Juan (unavailable).
+    `SpaceNet 3 <https://spacenet.ai/spacenet-roads-dataset/>`_
+    is a dataset of road networks over the cities of Vegas, Paris, Shanghai.
+    and Khartoum.
 
     Collection features:
 
     +------------+---------------------+------------+---------------------------+
     |    AOI     | Area (km\ :sup:`2`\)| # Images   | # Road Network Labels (km)|
     +============+=====================+============+===========================+
-    | Moscow     |    1353             |   1353     |         3066              |
+    | Vegas      |    216              |   1353     |         3685              |
     +------------+---------------------+------------+---------------------------+
-    | Mumbai     |    1021             |   1016     |         1951              |
+    | Paris      |    1030             |   257      |         425               |
+    +------------+---------------------+------------+---------------------------+
+    | Shanghai   |    1000             |   1016     |         3537              |
+    +------------+---------------------+------------+---------------------------+
+    | Khartoum   |    765              |   283      |         1030              |
     +------------+---------------------+------------+---------------------------+
 
     Imagery features:
@@ -777,11 +611,9 @@ class SpaceNet5(SpaceNet):
 
         * labels.geojson
 
-    If you use this dataset in your research, please use the following citation:
+    If you use this dataset in your research, please cite the following paper:
 
-    * The SpaceNet Partners, “SpaceNet5: Automated Road Network Extraction and
-      Route Travel Time Estimation from Satellite Imagery”,
-      https://spacenet.ai/sn5-challenge/
+    * https://arxiv.org/abs/1807.01232
 
     .. note::
 
@@ -790,13 +622,13 @@ class SpaceNet5(SpaceNet):
        * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
          imagery and labels from the Radiant Earth MLHub
 
-    .. versionadded:: 0.2
+    .. versionadded:: 0.3
     """
 
-    dataset_id = "spacenet5"
+    dataset_id = "spacenet3"
     collection_md5_dict = {
-        "sn5_AOI_7_Moscow": "b18107f878152fe7e75444373c320cba",
-        "sn5_AOI_8_Mumbai": "1f1e2b3c26fbd15bfbcdbb6b02ae051c",
+        "sn3_AOI_3_Paris": "90b9ebd64cd83dc8d3d4773f45050d8f",
+        "sn3_AOI_5_Khartoum": "b8d549ac9a6d7456c0f7a8e6de23d9f9",
     }
 
     imagery = {
@@ -824,7 +656,7 @@ class SpaceNet5(SpaceNet):
         api_key: Optional[str] = None,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new SpaceNet 5 Dataset instance.
+        """Initialize a new SpaceNet 3 Dataset instance.
 
         Args:
             root: root directory where dataset can be found
@@ -832,7 +664,8 @@ class SpaceNet5(SpaceNet):
             speed_mask: use multi-class speed mask (created by binning roads at
                 10 mph increments) as label if true, else use binary mask
             collections: collection selection which must be a subset of:
-                         [sn5_AOI_7_Moscow, sn5_AOI_8_Mumbai]
+                         [sn3_AOI_2_Vegas, sn3_AOI_3_Paris, sn3_AOI_4_Shanghai,
+                         sn3_AOI_5_Khartoum]
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory.
@@ -985,6 +818,306 @@ class SpaceNet5(SpaceNet):
         return fig
 
 
+class SpaceNet4(SpaceNet):
+    """SpaceNet 4: Off-Nadir Buildings Dataset.
+
+    `SpaceNet 4 <https://spacenet.ai/off-nadir-building-detection/>`_ is a
+    dataset of 27 WV-2 imagery captured at varying off-nadir angles and
+    associated building footprints over the city of Atlanta. The off-nadir angle
+    ranges from 7 degrees to 54 degrees.
+
+    Dataset features:
+
+    * No. of chipped images: 28,728 (PAN/MS/PS-RGBNIR)
+    * No. of label files: 1064
+    * No. of building footprints: >120,000
+    * Area Coverage: 665 sq km
+    * Chip size: 225 x 225 (MS), 900 x 900 (PAN/PS-RGBNIR)
+
+    Dataset format:
+
+    * Imagery - Worldview-2 GeoTIFFs
+
+        * PAN.tif (Panchromatic)
+        * MS.tif (Multispectral)
+        * PS-RGBNIR (Pansharpened RGBNIR)
+
+    * Labels - GeoJSON
+
+        * labels.geojson
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/1903.12239
+
+    .. note::
+
+       This dataset requires the following additional library to be installed:
+
+       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
+         imagery and labels from the Radiant Earth MLHub
+
+    """
+
+    dataset_id = "spacenet4"
+    collection_md5_dict = {"sn4_AOI_6_Atlanta": "c597d639cba5257927a97e3eff07b753"}
+
+    imagery = {"MS": "MS.tif", "PAN": "PAN.tif", "PS-RGBNIR": "PS-RGBNIR.tif"}
+    chip_size = {"MS": (225, 225), "PAN": (900, 900), "PS-RGBNIR": (900, 900)}
+    label_glob = "labels.geojson"
+
+    angle_catalog_map = {
+        "nadir": [
+            "1030010003D22F00",
+            "10300100023BC100",
+            "1030010003993E00",
+            "1030010003CAF100",
+            "1030010002B7D800",
+            "10300100039AB000",
+            "1030010002649200",
+            "1030010003C92000",
+            "1030010003127500",
+            "103001000352C200",
+            "103001000307D800",
+        ],
+        "off-nadir": [
+            "1030010003472200",
+            "1030010003315300",
+            "10300100036D5200",
+            "103001000392F600",
+            "1030010003697400",
+            "1030010003895500",
+            "1030010003832800",
+        ],
+        "very-off-nadir": [
+            "10300100035D1B00",
+            "1030010003CCD700",
+            "1030010003713C00",
+            "10300100033C5200",
+            "1030010003492700",
+            "10300100039E6200",
+            "1030010003BDDC00",
+            "1030010003CD4300",
+            "1030010003193D00",
+        ],
+    }
+
+    def __init__(
+        self,
+        root: str,
+        image: str = "PS-RGBNIR",
+        angles: List[str] = [],
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        download: bool = False,
+        api_key: Optional[str] = None,
+        checksum: bool = False,
+    ) -> None:
+        """Initialize a new SpaceNet 4 Dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            image: image selection which must be in ["MS", "PAN", "PS-RGBNIR"]
+            angles: angle selection which must be in ["nadir", "off-nadir",
+                "very-off-nadir"]
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            download: if True, download dataset and store it in the root directory.
+            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing
+        """
+        collections = ["sn4_AOI_6_Atlanta"]
+        assert image in {"MS", "PAN", "PS-RGBNIR"}
+        self.angles = angles
+        if self.angles:
+            for angle in self.angles:
+                assert angle in self.angle_catalog_map.keys()
+        super().__init__(
+            root, image, collections, transforms, download, api_key, checksum
+        )
+
+    def _load_files(self, root: str) -> List[Dict[str, str]]:
+        """Return the paths of the files in the dataset.
+
+        Args:
+            root: root dir of dataset
+
+        Returns:
+            list of dicts containing paths for each pair of image and label
+        """
+        files = []
+        nadir = []
+        offnadir = []
+        veryoffnadir = []
+        images = glob.glob(os.path.join(root, self.collections[0], "*", self.filename))
+        images = sorted(images)
+
+        catalog_id_pattern = re.compile(r"(_[A-Z0-9])\w+$")
+        for imgpath in images:
+            imgdir = os.path.basename(os.path.dirname(imgpath))
+            match = catalog_id_pattern.search(imgdir)
+            assert match is not None, "Invalid image directory"
+            catalog_id = match.group()[1:]
+
+            lbl_dir = os.path.dirname(imgpath).split("-nadir")[0]
+
+            lbl_path = os.path.join(f"{lbl_dir}-labels", self.label_glob)
+            assert os.path.exists(lbl_path)
+
+            _file = {"image_path": imgpath, "label_path": lbl_path}
+            if catalog_id in self.angle_catalog_map["very-off-nadir"]:
+                veryoffnadir.append(_file)
+            elif catalog_id in self.angle_catalog_map["off-nadir"]:
+                offnadir.append(_file)
+            elif catalog_id in self.angle_catalog_map["nadir"]:
+                nadir.append(_file)
+
+        angle_file_map = {
+            "nadir": nadir,
+            "off-nadir": offnadir,
+            "very-off-nadir": veryoffnadir,
+        }
+
+        if not self.angles:
+            files.extend(nadir + offnadir + veryoffnadir)
+        else:
+            for angle in self.angles:
+                files.extend(angle_file_map[angle])
+        return files
+
+
+class SpaceNet5(SpaceNet3):
+    r"""SpaceNet 5: Automated Road Network Extraction and Route Travel Time Estimation.
+
+    `SpaceNet 5 <https://spacenet.ai/sn5-challenge/>`_
+    is a dataset of road networks over the cities of Moscow, Mumbai and San
+    Juan (unavailable).
+
+    Collection features:
+
+    +------------+---------------------+------------+---------------------------+
+    |    AOI     | Area (km\ :sup:`2`\)| # Images   | # Road Network Labels (km)|
+    +============+=====================+============+===========================+
+    | Moscow     |    1353             |   1353     |         3066              |
+    +------------+---------------------+------------+---------------------------+
+    | Mumbai     |    1021             |   1016     |         1951              |
+    +------------+---------------------+------------+---------------------------+
+
+    Imagery features:
+
+    .. list-table::
+        :widths: 10 10 10 10 10
+        :header-rows: 1
+        :stub-columns: 1
+
+        *   -
+            - PAN
+            - MS
+            - PS-MS
+            - PS-RGB
+        *   - GSD (m)
+            - 0.31
+            - 1.24
+            - 0.30
+            - 0.30
+        *   - Chip size (px)
+            - 1300 x 1300
+            - 325 x 325
+            - 1300 x 1300
+            - 1300 x 1300
+
+    Dataset format:
+
+    * Imagery - Worldview-3 GeoTIFFs
+
+        * PAN.tif (Panchromatic)
+        * MS.tif (Multispectral)
+        * PS-MS (Pansharpened Multispectral)
+        * PS-RGB (Pansharpened RGB)
+
+    * Labels - GeoJSON
+
+        * labels.geojson
+
+    If you use this dataset in your research, please use the following citation:
+
+    * The SpaceNet Partners, “SpaceNet5: Automated Road Network Extraction and
+      Route Travel Time Estimation from Satellite Imagery”,
+      https://spacenet.ai/sn5-challenge/
+
+    .. note::
+
+       This dataset requires the following additional library to be installed:
+
+       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
+         imagery and labels from the Radiant Earth MLHub
+
+    .. versionadded:: 0.2
+    """
+
+    dataset_id = "spacenet5"
+    collection_md5_dict = {
+        "sn5_AOI_7_Moscow": "b18107f878152fe7e75444373c320cba",
+        "sn5_AOI_8_Mumbai": "1f1e2b3c26fbd15bfbcdbb6b02ae051c",
+    }
+
+    imagery = {
+        "MS": "MS.tif",
+        "PAN": "PAN.tif",
+        "PS-MS": "PS-MS.tif",
+        "PS-RGB": "PS-RGB.tif",
+    }
+    chip_size = {
+        "MS": (325, 325),
+        "PAN": (1300, 1300),
+        "PS-MS": (1300, 1300),
+        "PS-RGB": (1300, 1300),
+    }
+    label_glob = "labels.geojson"
+
+    def __init__(
+        self,
+        root: str,
+        image: str = "PS-RGB",
+        speed_mask: Optional[bool] = False,
+        collections: List[str] = [],
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        download: bool = False,
+        api_key: Optional[str] = None,
+        checksum: bool = False,
+    ) -> None:
+        """Initialize a new SpaceNet 5 Dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            image: image selection which must be in ["MS", "PAN", "PS-MS", "PS-RGB"]
+            speed_mask: use multi-class speed mask (created by binning roads at
+                10 mph increments) as label if true, else use binary mask
+            collections: collection selection which must be a subset of:
+                         [sn5_AOI_7_Moscow, sn5_AOI_8_Mumbai]
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            download: if True, download dataset and store it in the root directory.
+            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing
+        """
+        super().__init__(
+            root,
+            image,
+            speed_mask,
+            collections,
+            transforms,
+            download,
+            api_key,
+            checksum,
+        )
+
+
 class SpaceNet7(SpaceNet):
     """SpaceNet 7: Multi-Temporal Urban Development Challenge.
 
@@ -1126,13 +1259,12 @@ class SpaceNet7(SpaceNet):
         Returns:
             data at that index
         """
-        sample = {}
         files = self.files[index]
         img, tfm, raster_crs = self._load_image(files["image_path"])
         h, w = img.shape[1:]
 
         ch, cw = self.chip_size["img"]
-        sample["image"] = img[:, :ch, :cw]
+        sample = {"image": img[:, :ch, :cw]}
         if self.split == "train":
             mask = self._load_mask(files["label_path"], tfm, raster_crs, (h, w))
             sample["mask"] = mask[:ch, :cw]
