@@ -46,11 +46,19 @@ def get_random_bounding_box(
     t_size = _to_tuple(size)
 
     width = (bounds.maxx - bounds.minx - t_size[1]) // res
-    minx = random.randrange(int(width)) * res + bounds.minx
-    maxx = minx + t_size[1]
-
     height = (bounds.maxy - bounds.miny - t_size[0]) // res
-    miny = random.randrange(int(height)) * res + bounds.miny
+
+    # random.randrange crashes for inputs <= 0
+    if width > 0:
+        minx = random.randrange(int(width)) * res + bounds.minx
+    else:
+        minx = bounds.minx
+    if height > 0:
+        miny = random.randrange(int(height)) * res + bounds.miny
+    else:
+        miny = bounds.miny
+
+    maxx = minx + t_size[1]
     maxy = miny + t_size[0]
 
     mint = bounds.mint

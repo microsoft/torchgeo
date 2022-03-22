@@ -116,6 +116,22 @@ class TestRandomGeoSampler:
         for _ in sampler:
             continue
 
+    def test_point_data(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 0, 0, 0, 0, 0))
+        ds.index.insert(1, (1, 1, 1, 1, 1, 1))
+        sampler = RandomGeoSampler(ds, 0, 10)
+        for _ in sampler:
+            continue
+
+    def test_weighted_sampling(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 0, 0, 0, 0, 0))
+        ds.index.insert(1, (0, 10, 0, 10, 0, 10))
+        sampler = RandomGeoSampler(ds, 1, 10)
+        for bbox in sampler:
+            assert bbox == BoundingBox(0, 10, 0, 10, 0, 10)
+
     @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(
