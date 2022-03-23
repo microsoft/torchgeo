@@ -240,3 +240,53 @@ class GridGeoSampler(GeoSampler):
             number of patches that will be sampled
         """
         return self.length
+
+
+class PreChippedGeoSampler(GeoSampler):
+    """Samples entire files at a time.
+
+    This is particularly useful for datasets that contain geospatial metadata
+    and subclass :class:`~torchgeo.datasets.GeoDataset` but have already been
+    pre-processed into :term:`chips <chip>`.
+
+    This sampler should not be used with :class:`~torchgeo.datasets.VisionDataset`.
+    You may encounter problems when using an :term:`ROI <region of interest (ROI)>`
+    that partially intersects with one of the file bounding boxes, or when using an
+    :class:`~torchgeo.datasets.IntersectionDataset`. These issues can be solved by
+    adding padding.
+    """
+
+    def __init__(
+        self,
+        dataset: GeoDataset,
+        roi: Optional[BoundingBox] = None,
+    ) -> None:
+        """Initialize a new Sampler instance.
+
+        Args:
+            dataset: dataset to index from
+            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+                (defaults to the bounds of ``dataset.index``)
+
+        .. versionadded:: 0.3
+        """
+        super().__init__(dataset, roi)
+
+    def __iter__(self) -> Iterator[BoundingBox]:
+        """Return the index of a dataset.
+
+        Returns:
+            (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
+        """
+        # For each tile...
+        for hit in self.index.intersection(tuple(self.roi), objects=True):
+            yield BoundingBox(*hit.bounds)
+
+    def __len__(self) -> int:
+        """Return the number of samples over the ROI.
+
+        Returns:
+            number of patches that will be sampled
+        """
+        count: int = self.index.get_size()
+        return count
