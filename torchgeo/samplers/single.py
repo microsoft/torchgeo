@@ -5,7 +5,7 @@
 
 import abc
 import random
-from typing import Iterator, Optional, Tuple, Union
+from typing import Callable, Iterable, Iterator, Optional, Tuple, Union
 
 import torch
 from rtree.index import Index, Property
@@ -286,7 +286,7 @@ class PreChippedGeoSampler(GeoSampler):
         Returns:
             (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
-        generator = range
+        generator: Callable[[int], Iterable[int]] = range
         if self.shuffle:
             generator = torch.randperm
 

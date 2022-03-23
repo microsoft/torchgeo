@@ -207,7 +207,7 @@ class TestPreChippedGeoSampler:
 
     @pytest.fixture(scope="function")
     def sampler(self, dataset: CustomGeoDataset) -> PreChippedGeoSampler:
-        return PreChippedGeoSampler(dataset)
+        return PreChippedGeoSampler(dataset, shuffle=True)
 
     def test_iter(self, sampler: GridGeoSampler) -> None:
         for _ in sampler:
