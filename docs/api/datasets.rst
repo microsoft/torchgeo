@@ -7,6 +7,12 @@ In :mod:`torchgeo`, we define two types of datasets: :ref:`Geospatial Datasets` 
 
 .. _Geospatial Datasets:
 
+.. csv-table:: Geospatial Datasets
+   :widths: 30 20 20 15 15
+   :header-rows: 1
+   :align: center
+   :file: generic_datasets.csv
+
 Geospatial Datasets
 -------------------
 
@@ -96,7 +102,7 @@ Open Buildings
 ^^^^^^^^^^^^^^
 
 .. autoclass:: OpenBuildings
-    
+
 Sentinel
 ^^^^^^^^
 
@@ -109,6 +115,12 @@ Non-geospatial Datasets
 -----------------------
 
 :class:`VisionDataset` is designed for datasets that lack geospatial information. These datasets can still be combined using :class:`ConcatDataset <torch.utils.data.ConcatDataset>`.
+
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection
+   :widths: 15 7 15 12 11 12 15 13
+   :header-rows: 1
+   :align: center
+   :file: vision_datasets.csv
 
 ADVANCE (AuDio Visual Aerial sceNe reCognition datasEt)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

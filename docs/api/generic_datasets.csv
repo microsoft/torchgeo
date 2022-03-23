@@ -1,0 +1,15 @@
+Dataset,Type,Source,Size (px),Resolution (m)
+Aboveground Live Woody Biomass Density,Mask,"Landsat, LiDAR","~40,000x40,000",~30
+Aster Global Digital Evaluation Model,Mask,Aster,"3,601x3,601",30
+Canadian Buildings Footprints,Labels,Generated,,-
+Chesapeake Land Cover,"Imagery, Labels",,,1
+CMS Global Mangrove Canopy Dataset,Mask,Generated,,3
+Cropland Data Layer,Labels,Aerial,,
+EnviroAtlas,"Imagery, Labels",Aerial,,1
+Esri2020,Labels,Sentinel-2,,10
+EU-DEM,Labels,"Aster, SRTM, Russian Topomaps",,25
+GlobBiomass,Labels,Landsat,"45,000x45,000",~100
+Landsat,Imagery,Landsat,,30
+NAIP,Imagery,Aerial,,1
+Open Buildings,Labels,Generated,,-
+Sentinel,Imagery,Sentinel,,10
