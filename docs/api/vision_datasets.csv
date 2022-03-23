@@ -1,0 +1,25 @@
+Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands
+ADVANCE,C,"Google Earth, Freesound","5,075",13,512x512,0.5,RGB
+BigEarthNet,C,Sentinel-1/2,"590,326",19--43,120x120,10,"SAR, MSI"
+EuroSAT,C,Sentinel-2,"27,000",10,64x64,10,MSI
+PatternNet,C,Google Earth,"30,400",38,256x256,0.06--5,RGB
+RESISC45,C,Google Earth,"31,500",45,256x256,0.2--30,RGB
+So2Sat,C,Sentinel-1/2,"400,673",17,32x32,10,"SAR, MSI"
+UC Merced,C,USGS National Map,"21,000",21,256x256,0.3,RGB
+COWC,"C, R","CSUAV AFRL, ISPRS, LINZ, AGRC","388,435",2,256x256,0.15,RGB
+Tropical Cyclone Wind Estimation,R,GOES 8--16,"108,110",-,256x256,4K--8K,MSI
+SEN12MS,S,"Sentinel-1/2, MODIS","180,662",33,256x256,10,"SAR, MSI"
+CV4A Kenya Crop Type,S,Sentinel-2,"4,688",7,"3,035x2,016",10,MSI
+ETCI 2021 Flood Detection,S,Sentinel-1,"66,810",2,256x256,5--20,SAR
+GID-15,S,Gaofen-2,150,15,"6,800x7,200",3,RGB
+LandCover.ai,S,Aerial,"10,674",5,512x512,0.25--0.5,RGB
+Smallholder Cashew Plantations in Benin,S,Airbus Pléiades,70,6,"1,186x1,122",0.5,MSI
+ISPRS Potsdam,S,Aerial,38,6,"6,000x6,000",0.05,MSI
+ISPRS Vaihingen,S,Aerial,33,6,"1,281--3,816",0.09,RGB
+NWPU VHR-10,I,"Google Earth, Vaihingen",800,10,"358--1,728",0.08--2,RGB
+"SpaceNet 1, 2, 4, 7",I,WorldView-2/3 Planet Lab Dove,"1,889--28,728",2,102--900,0.5--4,MSI
+ZueriCrop,"I, T",Sentinel-2,116K,48,24x24,10,MSI
+Seasonal Contrast,T,Sentinel-2,100K--1M,-,264x264,10,MSI
+LEVIR-CD+,D,Google Earth,985,2,"1,024x1,024",0.5,RGB
+OSCD,D,Sentinel-2,24,2,"40--1,180",60,MSI
+xView2,D,Maxar,"3,732",4,"1,024x1,024",0.8,RGB
