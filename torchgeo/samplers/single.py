@@ -7,6 +7,7 @@ import abc
 import random
 from typing import Iterator, Optional, Tuple, Union
 
+import torch
 from rtree.index import Index, Property
 from torch.utils.data import Sampler
 
@@ -260,6 +261,7 @@ class PreChippedGeoSampler(GeoSampler):
         self,
         dataset: GeoDataset,
         roi: Optional[BoundingBox] = None,
+        shuffle: bool = False,
     ) -> None:
         """Initialize a new Sampler instance.
 
@@ -267,10 +269,16 @@ class PreChippedGeoSampler(GeoSampler):
             dataset: dataset to index from
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
+            shuffle: if True, reshuffle data at every epoch
 
         .. versionadded:: 0.3
         """
         super().__init__(dataset, roi)
+        self.shuffle = shuffle
+
+        self.hits = []
+        for hit in self.index.intersection(tuple(self.roi), objects=True):
+            self.hits.append(hit)
 
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
@@ -278,9 +286,12 @@ class PreChippedGeoSampler(GeoSampler):
         Returns:
             (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
-        # For each tile...
-        for hit in self.index.intersection(tuple(self.roi), objects=True):
-            yield BoundingBox(*hit.bounds)
+        generator = range
+        if self.shuffle:
+            generator = torch.randperm
+
+        for idx in generator(len(self)):
+            yield BoundingBox(*self.hits[idx].bounds)
 
     def __len__(self) -> int:
         """Return the number of samples over the ROI.
@@ -288,5 +299,4 @@ class PreChippedGeoSampler(GeoSampler):
         Returns:
             number of patches that will be sampled
         """
-        count: int = self.index.get_size()
-        return count
+        return len(self.hits)
