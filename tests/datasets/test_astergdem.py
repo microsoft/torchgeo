@@ -5,6 +5,7 @@ import os
 import shutil
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -19,7 +20,7 @@ class TestAsterGDEM:
         zipfile = os.path.join("tests", "data", "astergdem", "astergdem.zip")
         shutil.unpack_archive(zipfile, tmp_path, "zip")
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return AsterGDEM(root, transforms=transforms)
 
     def test_datasetmissing(self, tmp_path: Path) -> None:
@@ -46,12 +47,14 @@ class TestAsterGDEM:
         query = dataset.bounds
         x = dataset[query]
         dataset.plot(x, suptitle="Test")
+        plt.close()
 
     def test_plot_prediction(self, dataset: AsterGDEM) -> None:
         query = dataset.bounds
         x = dataset[query]
         x["prediction"] = x["mask"].clone()
         dataset.plot(x, suptitle="Prediction")
+        plt.close()
 
     def test_invalid_query(self, dataset: AsterGDEM) -> None:
         query = BoundingBox(100, 100, 100, 100, 0, 0)

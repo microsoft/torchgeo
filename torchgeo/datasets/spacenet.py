@@ -150,7 +150,7 @@ class SpaceNet(VisionDataset, abc.ABC):
         filename = os.path.join(path)
         with rio.open(filename) as img:
             array = img.read().astype(np.int32)
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             return tensor, img.transform, img.crs
 
     def _load_mask(
@@ -195,7 +195,7 @@ class SpaceNet(VisionDataset, abc.ABC):
                 dtype=np.uint8,
             )
 
-        mask: Tensor = torch.from_numpy(mask_data).long()  # type: ignore[attr-defined]
+        mask = torch.from_numpy(mask_data).long()
 
         return mask
 
@@ -501,7 +501,7 @@ class SpaceNet2(SpaceNet):
 
     dataset_id = "spacenet2"
     collection_md5_dict = {
-        "sn2_AOI_2_Vegas": "cdc5df70920adca870a9fd0dfc4cca26",
+        "sn2_AOI_2_Vegas": "a5a8de355290783b88ac4d69c7ef0694",
         "sn2_AOI_3_Paris": "8299186b7bbfb9a256d515bad1b7f146",
         "sn2_AOI_4_Shanghai": "4e3e80f2f437faca10ca2e6e6df0ef99",
         "sn2_AOI_5_Khartoum": "8070ff9050f94cd9f0efe9417205d7c3",
@@ -552,35 +552,6 @@ class SpaceNet2(SpaceNet):
         super().__init__(
             root, image, collections, transforms, download, api_key, checksum
         )
-
-    # TODO: Remove this once radiantearth/radiant-mlhub#65 is fixed
-    def _load_files(self, root: str) -> List[Dict[str, str]]:
-        """Return the paths of the files in the dataset.
-
-        Args:
-            root: root dir of dataset
-
-        Returns:
-            list of dicts containing paths for each pair of image and label
-        """
-        files = []
-        pat = re.compile("img1" + re.escape(os.sep))
-        for collection in self.collections:
-            images = glob.glob(os.path.join(root, collection, "*", self.filename))
-            images = sorted(images)
-            for imgpath in images:
-                if collection == "sn2_AOI_2_Vegas" and pat.search(imgpath):
-                    lbl_path = os.path.join(
-                        os.path.dirname(os.path.dirname(imgpath)),
-                        "_common",
-                        "labels.geojson",
-                    )
-                else:
-                    lbl_path = os.path.join(
-                        os.path.dirname(imgpath) + "-labels", self.label_glob
-                    )
-                files.append({"image_path": imgpath, "label_path": lbl_path})
-        return files
 
 
 class SpaceNet4(SpaceNet):
@@ -937,7 +908,7 @@ class SpaceNet5(SpaceNet):
                 dtype=np.uint8,
             )
 
-        mask: Tensor = torch.from_numpy(mask_data).long()  # type: ignore[attr-defined]
+        mask = torch.from_numpy(mask_data).long()
         return mask
 
     def plot(

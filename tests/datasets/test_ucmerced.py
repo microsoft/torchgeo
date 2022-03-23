@@ -4,7 +4,6 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -25,19 +24,14 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestUCMerced:
     @pytest.fixture(params=["train", "val", "test"])
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> UCMerced:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.ucmerced, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.ucmerced, "download_url", download_url)
         md5 = "a42ef8779469d196d8f2971ee135f030"
-        monkeypatch.setattr(UCMerced, "md5", md5)  # type: ignore[attr-defined]
+        monkeypatch.setattr(UCMerced, "md5", md5)
         url = os.path.join("tests", "data", "ucmerced", "UCMerced_LandUse.zip")
-        monkeypatch.setattr(UCMerced, "url", url)  # type: ignore[attr-defined]
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        monkeypatch.setattr(UCMerced, "url", url)
+        monkeypatch.setattr(
             UCMerced,
             "split_urls",
             {
@@ -48,7 +42,7 @@ class TestUCMerced:
                 "test": os.path.join("tests", "data", "ucmerced", "uc_merced-test.txt"),
             },
         )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        monkeypatch.setattr(
             UCMerced,
             "split_md5s",
             {
@@ -59,7 +53,7 @@ class TestUCMerced:
         )
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return UCMerced(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: UCMerced) -> None:

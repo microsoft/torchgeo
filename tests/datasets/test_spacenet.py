@@ -6,7 +6,6 @@ import itertools
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -37,23 +36,16 @@ def fetch_collection(collection_id: str, **kwargs: str) -> Collection:
 class TestSpaceNet1:
     @pytest.fixture(params=["rgb", "8band"])
     def dataset(
-        self,
-        request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
+        self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet1:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            radiant_mlhub.Collection, "fetch", fetch_collection
-        )
+        monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
         test_md5 = {"sn1_AOI_1_RIO": "829652022c2df4511ee4ae05bc290250"}
 
         # Refer https://github.com/python/mypy/issues/1032
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            SpaceNet1, "collection_md5_dict", test_md5
-        )
+        monkeypatch.setattr(SpaceNet1, "collection_md5_dict", test_md5)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return SpaceNet1(
             root, image=request.param, transforms=transforms, download=True, api_key=""
         )
@@ -90,27 +82,20 @@ class TestSpaceNet1:
 class TestSpaceNet2:
     @pytest.fixture(params=["PAN", "MS", "PS-MS", "PS-RGB"])
     def dataset(
-        self,
-        request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
+        self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet2:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            radiant_mlhub.Collection, "fetch", fetch_collection
-        )
+        monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
         test_md5 = {
-            "sn2_AOI_2_Vegas": "b3236f58604a9d746c4e09b3e487e427",
+            "sn2_AOI_2_Vegas": "6ceae7ff8c557346e8a4c8b6c61cc1b9",
             "sn2_AOI_3_Paris": "811e6a26fdeb8be445fed99769fa52c5",
             "sn2_AOI_4_Shanghai": "139d1627d184c74426a85ad0222f7355",
             "sn2_AOI_5_Khartoum": "435535120414b74165aa87f051c3a2b3",
         }
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            SpaceNet2, "collection_md5_dict", test_md5
-        )
+        monkeypatch.setattr(SpaceNet2, "collection_md5_dict", test_md5)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return SpaceNet2(
             root,
             image=request.param,
@@ -160,24 +145,17 @@ class TestSpaceNet2:
 class TestSpaceNet4:
     @pytest.fixture(params=["PAN", "MS", "PS-RGBNIR"])
     def dataset(
-        self,
-        request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
+        self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet4:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            radiant_mlhub.Collection, "fetch", fetch_collection
-        )
+        monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
         test_md5 = {"sn4_AOI_6_Atlanta": "ea37c2d87e2c3a1d8b2a7c2230080d46"}
 
         test_angles = ["nadir", "off-nadir", "very-off-nadir"]
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            SpaceNet4, "collection_md5_dict", test_md5
-        )
+        monkeypatch.setattr(SpaceNet4, "collection_md5_dict", test_md5)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return SpaceNet4(
             root,
             image=request.param,
@@ -232,25 +210,18 @@ class TestSpaceNet5:
         params=itertools.product(["PAN", "MS", "PS-MS", "PS-RGB"], [False, True])
     )
     def dataset(
-        self,
-        request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
+        self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet5:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            radiant_mlhub.Collection, "fetch", fetch_collection
-        )
+        monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
         test_md5 = {
             "sn5_AOI_7_Moscow": "e0d5f41f1b6b0ee7696c15e5ff3141f5",
             "sn5_AOI_8_Mumbai": "ab898700ee586a137af492b84a08e662",
         }
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            SpaceNet5, "collection_md5_dict", test_md5
-        )
+        monkeypatch.setattr(SpaceNet5, "collection_md5_dict", test_md5)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return SpaceNet5(
             root,
             image=request.param[0],
@@ -263,7 +234,7 @@ class TestSpaceNet5:
 
     def test_getitem(self, dataset: SpaceNet5) -> None:
         # Iterate over all elements to maximize coverage
-        samples = [i for i in dataset]  # type: ignore[attr-defined]
+        samples = [dataset[i] for i in range(len(dataset))]
         x = samples[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
@@ -304,26 +275,19 @@ class TestSpaceNet5:
 class TestSpaceNet7:
     @pytest.fixture(params=["train", "test"])
     def dataset(
-        self,
-        request: SubRequest,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
+        self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet7:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            radiant_mlhub.Collection, "fetch", fetch_collection
-        )
+        monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
         test_md5 = {
             "sn7_train_source": "254fd6b16e350b071137b2658332091f",
             "sn7_train_labels": "05befe86b037a3af75c7143553033664",
             "sn7_test_source": "37d98d44a9da39657ed4b7beee22a21e",
         }
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            SpaceNet7, "collection_md5_dict", test_md5
-        )
+        monkeypatch.setattr(SpaceNet7, "collection_md5_dict", test_md5)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return SpaceNet7(
             root, split=request.param, transforms=transforms, download=True, api_key=""
         )

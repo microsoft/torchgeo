@@ -16,7 +16,6 @@ from torch.utils.data import ConcatDataset
 from torchgeo.datasets import (
     NAIP,
     BoundingBox,
-    CanadianBuildingFootprints,
     GeoDataset,
     IntersectionDataset,
     RasterDataset,
@@ -42,6 +41,10 @@ class CustomGeoDataset(GeoDataset):
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, BoundingBox]:
         return {"index": query}
+
+
+class CustomVectorDataset(VectorDataset):
+    filename_glob = "*.geojson"
 
 
 class CustomVisionDataset(VisionDataset):
@@ -147,7 +150,7 @@ class TestRasterDataset:
     def naip(self, request: SubRequest) -> NAIP:
         root = os.path.join("tests", "data", "naip")
         crs = CRS.from_epsg(3005)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         cache = request.param
         return NAIP(root, crs=crs, transforms=transforms, cache=cache)
 
@@ -155,7 +158,7 @@ class TestRasterDataset:
     def sentinel(self, request: SubRequest) -> Sentinel2:
         root = os.path.join("tests", "data", "sentinel2")
         bands = ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B11"]
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         cache = request.param
         return Sentinel2(root, bands=bands, transforms=transforms, cache=cache)
 
@@ -180,7 +183,7 @@ class TestRasterDataset:
         x = custom_dtype_ds[custom_dtype_ds.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
-        assert x["image"].dtype == torch.int64  # type: ignore[attr-defined]
+        assert x["image"].dtype == torch.int64
 
     def test_invalid_query(self, sentinel: Sentinel2) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
@@ -201,20 +204,25 @@ class TestRasterDataset:
 
 
 class TestVectorDataset:
-    @pytest.fixture
-    def dataset(self) -> CanadianBuildingFootprints:
-        root = os.path.join("tests", "data", "cbf")
-        transforms = nn.Identity()  # type: ignore[attr-defined]
-        return CanadianBuildingFootprints(root, res=0.1, transforms=transforms)
+    @pytest.fixture(scope="class")
+    def dataset(self) -> CustomVectorDataset:
+        root = os.path.join("tests", "data", "vector")
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        return CustomVectorDataset(root, res=0.1, transforms=transforms)
 
-    def test_getitem(self, dataset: CanadianBuildingFootprints) -> None:
+    def test_getitem(self, dataset: CustomVectorDataset) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
 
-    def test_invalid_query(self, dataset: CanadianBuildingFootprints) -> None:
-        query = BoundingBox(2, 2, 2, 2, 2, 2)
+    def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
+        query = BoundingBox(1.1, 1.9, 1.1, 1.9, 0, 0)
+        x = dataset[query]
+        assert torch.equal(x["mask"], torch.zeros(7, 7, dtype=torch.uint8))
+
+    def test_invalid_query(self, dataset: CustomVectorDataset) -> None:
+        query = BoundingBox(3, 3, 3, 3, 0, 0)
         with pytest.raises(
             IndexError, match="query: .* not found in index with bounds:"
         ):
@@ -272,7 +280,7 @@ class TestVisionDataset:
 class TestVisionClassificationDataset:
     @pytest.fixture(scope="class")
     def dataset(self, root: str) -> VisionClassificationDataset:
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return VisionClassificationDataset(root, transforms=transforms)
 
     @pytest.fixture(scope="class")

@@ -4,6 +4,7 @@
 import os
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -29,7 +30,7 @@ class TestSentinel2:
             "B09",
             "B11",
         ]
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return Sentinel2(root, bands=bands, transforms=transforms)
 
     def test_separate_files(self, dataset: Sentinel2) -> None:
@@ -56,6 +57,7 @@ class TestSentinel2:
     def test_plot(self, dataset: Sentinel2) -> None:
         x = dataset[dataset.bounds]
         dataset.plot(x, suptitle="Test")
+        plt.close()
 
     def test_plot_wrong_bands(self, dataset: Sentinel2) -> None:
         bands = ("B01",)

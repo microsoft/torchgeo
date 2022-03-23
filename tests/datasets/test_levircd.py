@@ -4,7 +4,6 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -24,21 +23,16 @@ def download_url(url: str, root: str, *args: str) -> None:
 class TestLEVIRCDPlus:
     @pytest.fixture(params=["train", "test"])
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LEVIRCDPlus:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.utils, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         md5 = "1adf156f628aa32fb2e8fe6cada16c04"
-        monkeypatch.setattr(LEVIRCDPlus, "md5", md5)  # type: ignore[attr-defined]
+        monkeypatch.setattr(LEVIRCDPlus, "md5", md5)
         url = os.path.join("tests", "data", "levircd", "LEVIR-CD+.zip")
-        monkeypatch.setattr(LEVIRCDPlus, "url", url)  # type: ignore[attr-defined]
+        monkeypatch.setattr(LEVIRCDPlus, "url", url)
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return LEVIRCDPlus(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: LEVIRCDPlus) -> None:

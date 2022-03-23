@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Generator, Type, cast
+from typing import Any, Dict, Type, cast
 
 import pytest
 import segmentation_models_pytorch as smp
@@ -45,10 +45,7 @@ class TestSemanticSegmentationTask:
         ],
     )
     def test_trainer(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        name: str,
-        classname: Type[LightningDataModule],
+        self, monkeypatch: MonkeyPatch, name: str, classname: Type[LightningDataModule]
     ) -> None:
         if name == "naipchesapeake":
             pytest.importorskip("zipfile_deflate64")
@@ -62,10 +59,8 @@ class TestSemanticSegmentationTask:
         datamodule = classname(**datamodule_kwargs)
 
         # Instantiate model
-        monkeypatch.setattr(smp, "Unet", create_model)  # type: ignore[attr-defined]
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            smp, "DeepLabV3Plus", create_model
-        )
+        monkeypatch.setattr(smp, "Unet", create_model)
+        monkeypatch.setattr(smp, "DeepLabV3Plus", create_model)
         model_kwargs = conf_dict["module"]
         model = SemanticSegmentationTask(**model_kwargs)
 

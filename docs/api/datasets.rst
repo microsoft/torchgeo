@@ -18,11 +18,16 @@ Geospatial Datasets
    :align: center
    :file: generic_datasets.csv
 
+Aboveground Live Woody Biomass Density
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: AbovegroundLiveWoodyBiomassDensity
+
 Aster Global Digital Evaluation Model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: AsterGDEM
-    
+
 Canadian Building Footprints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -63,6 +68,16 @@ Esri2020
 
 .. autoclass:: Esri2020
 
+EU-DEM
+^^^^^^
+
+.. autoclass:: EUDEM
+
+GlobBiomass
+^^^^^^^^^^^
+
+.. autoclass:: GlobBiomass
+
 Landsat
 ^^^^^^^
 
@@ -83,6 +98,11 @@ National Agriculture Imagery Program (NAIP)
 
 .. autoclass:: NAIP
 
+Open Buildings
+^^^^^^^^^^^^^^
+
+.. autoclass:: OpenBuildings
+    
 Sentinel
 ^^^^^^^^
 
@@ -238,6 +258,11 @@ UC Merced
 ^^^^^^^^^
 
 .. autoclass:: UCMerced
+
+USAVars
+^^^^^^^
+
+.. autoclass:: USAVars
 
 Vaihingen
 ^^^^^^^^^

@@ -4,6 +4,12 @@
 # Required
 version: 2
 
+# Set the version of Python
+build:
+  os: ubuntu-20.04
+  tools:
+    python: "3.9"
+
 # Configuration of the Python environment to be used
 python:
    install:
