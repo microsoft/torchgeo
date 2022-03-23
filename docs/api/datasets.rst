@@ -5,13 +5,6 @@ torchgeo.datasets
 
 In :mod:`torchgeo`, we define two types of datasets: :ref:`Geospatial Datasets` and :ref:`Non-geospatial Datasets`. These abstract base classes are documented in more detail in :ref:`Base Classes`.
 
-.. _Geospatial Datasets:
-
-.. csv-table:: Geospatial Datasets
-   :widths: 30 20 20 15 15
-   :header-rows: 1
-   :align: center
-   :file: generic_datasets.csv
 
 Geospatial Datasets
 -------------------
@@ -19,7 +12,7 @@ Geospatial Datasets
 :class:`GeoDataset` is designed for datasets that contain geospatial information, like latitude, longitude, coordinate system, and projection. Datasets containing this kind of information can be combined using :class:`IntersectionDataset` and :class:`UnionDataset`.
 
 .. csv-table:: Geospatial Datasets
-   :widths: 50 50
+   :widths: 30 15 20 20 15
    :header-rows: 1
    :align: center
    :file: generic_datasets.csv
@@ -126,7 +119,7 @@ Non-geospatial Datasets
    :widths: 15 7 15 12 11 12 15 13
    :header-rows: 1
    :align: center
-   :file: vision_datasets.csv
+   :file: non_geo_datasets.csv
 
 ADVANCE (AuDio Visual Aerial sceNe reCognition datasEt)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
