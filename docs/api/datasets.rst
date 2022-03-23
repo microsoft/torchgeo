@@ -5,6 +5,7 @@ torchgeo.datasets
 
 In :mod:`torchgeo`, we define two types of datasets: :ref:`Geospatial Datasets` and :ref:`Non-geospatial Datasets`. These abstract base classes are documented in more detail in :ref:`Base Classes`.
 
+.. _Geospatial Datasets:
 
 Geospatial Datasets
 -------------------
