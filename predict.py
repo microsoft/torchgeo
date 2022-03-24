@@ -7,7 +7,7 @@
 
 import argparse
 import os
-from typing import Dict, Tuple, Type
+from typing import Dict, Tuple, Type, cast
 
 import pytorch_lightning as pl
 import rasterio as rio
@@ -118,14 +118,16 @@ def main(config_dir: str, predict_on: str, output_dir: str, device: str) -> None
             masks = []
 
             def tensor_to_int(
-                tensor_tuple: Tuple[torch.Tensor, torch.Tensor]
+                tensor_tuple: Tuple[torch.Tensor, ...]
             ) -> Tuple[int, ...]:
                 """Convert tuple of tensors to tuple of ints."""
                 return tuple(int(i.item()) for i in tensor_tuple)
 
-            original_shape = tensor_to_int(batch["original_shape"])
-            patch_shape = tensor_to_int(batch["patch_shape"])
-            padding = tensor_to_int(batch["padding"])
+            original_shape = cast(
+                Tuple[int, int], tensor_to_int(batch["original_shape"])
+            )
+            patch_shape = cast(Tuple[int, int], tensor_to_int(batch["patch_shape"]))
+            padding = cast(Tuple[int, int], tensor_to_int(batch["padding"]))
             patch_combine = CombineTensorPatches(
                 original_size=original_shape, window_size=patch_shape, unpadding=padding
             )
