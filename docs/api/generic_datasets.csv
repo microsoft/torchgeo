@@ -1,7 +1,15 @@
-Dataset,Type
-Landsat,Imagery
-Sentinel,Imagery
-NAIP,Imagery
-Cropland Data Layer,Labels
-Chesapeake Land Cover,Labels
-Canadian Buildings Footprints,Labels
+Dataset,Type,Source,Size (px),Resolution (m)
+`Aboveground Live Woody Biomass Density`_,Mask,"Landsat, LiDAR","~40,000x40,000",~30
+`Aster Global Digital Evaluation Model`_,Mask,Aster,"3,601x3,601",30
+`Canadian Building Footprints`_,Labels,Generated,,-
+`Chesapeake Bay High-Resolution Land Cover Project`_,"Imagery, Labels",,,1
+`CMS Global Mangrove Canopy Dataset`_,Mask,Generated,,3
+`Cropland Data Layer (CDL)`_,Labels,Aerial,,
+`EnviroAtlas`_,"Imagery, Labels",Aerial,,1
+`Esri2020`_,Labels,Sentinel-2,,10
+`EU-DEM`_,Labels,"Aster, SRTM, Russian Topomaps",,25
+`GlobBiomass`_,Labels,Landsat,"45,000x45,000",~100
+`Landsat`_,Imagery,Landsat,,30
+`National Agriculture Imagery Program (NAIP)`_,Imagery,Aerial,,1
+`Open Buildings`_,Labels,Generated,,-
+`Sentinel`_,Imagery,Sentinel,,10
