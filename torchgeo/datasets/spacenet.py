@@ -281,7 +281,7 @@ class SpaceNet(VisionDataset, abc.ABC):
         """
         for collection in collections:
             download_radiant_mlhub_collection(collection, self.root, api_key)
-            archive_path = os.path.join(self.root, collection + ".tar.gz")
+            archive_path = os.path.join(self.root, f"{collection}.tar.gz")
             if (
                 not self.checksum
                 or not check_integrity(
@@ -558,7 +558,7 @@ class SpaceNet3(SpaceNet):
     r"""SpaceNet 3: Road Network Detection.
 
     `SpaceNet 3 <https://spacenet.ai/spacenet-roads-dataset/>`_
-    is a dataset of road networks over the cities of Vegas, Paris, Shanghai.
+    is a dataset of road networks over the cities of Las Vegas, Paris, Shanghai,
     and Khartoum.
 
     Collection features:
@@ -566,11 +566,11 @@ class SpaceNet3(SpaceNet):
     +------------+---------------------+------------+---------------------------+
     |    AOI     | Area (km\ :sup:`2`\)| # Images   | # Road Network Labels (km)|
     +============+=====================+============+===========================+
-    | Vegas      |    216              |   1353     |         3685              |
+    | Vegas      |    216              |   854      |         3685              |
     +------------+---------------------+------------+---------------------------+
     | Paris      |    1030             |   257      |         425               |
     +------------+---------------------+------------+---------------------------+
-    | Shanghai   |    1000             |   1016     |         3537              |
+    | Shanghai   |    1000             |   1028     |         3537              |
     +------------+---------------------+------------+---------------------------+
     | Khartoum   |    765              |   283      |         1030              |
     +------------+---------------------+------------+---------------------------+
@@ -627,7 +627,9 @@ class SpaceNet3(SpaceNet):
 
     dataset_id = "spacenet3"
     collection_md5_dict = {
+        "sn3_AOI_2_Vegas": "8ce7e6abffb8849eb88885035f061ee8",
         "sn3_AOI_3_Paris": "90b9ebd64cd83dc8d3d4773f45050d8f",
+        "sn3_AOI_4_Shanghai": "3ea291df34548962dfba8b5ed37d700c",
         "sn3_AOI_5_Khartoum": "b8d549ac9a6d7456c0f7a8e6de23d9f9",
     }
 
