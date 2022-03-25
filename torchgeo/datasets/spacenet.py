@@ -133,7 +133,7 @@ class SpaceNet(VisionDataset, abc.ABC):
             images = sorted(images)
             for imgpath in images:
                 lbl_path = os.path.join(
-                    os.path.dirname(imgpath) + "-labels", self.label_glob
+                    f"{os.path.dirname(imgpath)}-labels", self.label_glob
                 )
                 files.append({"image_path": imgpath, "label_path": lbl_path})
         return files
@@ -183,10 +183,8 @@ class SpaceNet(VisionDataset, abc.ABC):
         except FionaValueError:
             labels = []
 
-        if not labels:
-            mask_data = np.zeros(shape=shape)
-        else:
-            mask_data = rasterize(
+        mask_data = (
+            rasterize(
                 labels,
                 out_shape=shape,
                 fill=0,  # nodata value
@@ -194,6 +192,9 @@ class SpaceNet(VisionDataset, abc.ABC):
                 all_touched=False,
                 dtype=np.uint8,
             )
+            if labels
+            else np.zeros(shape=shape)
+        )
 
         mask = torch.from_numpy(mask_data).long()
 
@@ -731,10 +732,8 @@ class SpaceNet3(SpaceNet):
         except FionaValueError:
             labels = []
 
-        if not labels:
-            mask_data = np.zeros(shape=shape)
-        else:
-            mask_data = rasterize(
+        mask_data = (
+            rasterize(
                 labels,
                 out_shape=shape,
                 fill=0,  # nodata value
@@ -742,6 +741,9 @@ class SpaceNet3(SpaceNet):
                 all_touched=False,
                 dtype=np.uint8,
             )
+            if labels
+            else np.zeros(shape=shape)
+        )
 
         mask = torch.from_numpy(mask_data).long()
         return mask
@@ -762,7 +764,6 @@ class SpaceNet3(SpaceNet):
         Returns:
             a matplotlib Figure with the rendered sample
 
-        .. versionadded:: 0.2
         """
         # image can be 1 channel or >3 channels
         if sample["image"].shape[0] == 1:

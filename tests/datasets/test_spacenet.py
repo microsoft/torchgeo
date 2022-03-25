@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import glob
-import itertools
 import os
 import shutil
 from pathlib import Path
@@ -150,9 +149,7 @@ class TestSpaceNet2:
 
 
 class TestSpaceNet3:
-    @pytest.fixture(
-        params=itertools.product(["PAN", "MS", "PS-MS", "PS-RGB"], [False, True])
-    )
+    @pytest.fixture(params=zip(["PAN", "MS", "PS-MS", "PS-RGB"], [False, True]))
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet3:
@@ -282,9 +279,7 @@ class TestSpaceNet4:
 
 
 class TestSpaceNet5:
-    @pytest.fixture(
-        params=itertools.product(["PAN", "MS", "PS-MS", "PS-RGB"], [False, True])
-    )
+    @pytest.fixture(params=zip(["PAN", "MS", "PS-MS", "PS-RGB"], [False, True]))
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet5:
