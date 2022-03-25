@@ -183,8 +183,10 @@ class SpaceNet(VisionDataset, abc.ABC):
         except FionaValueError:
             labels = []
 
-        mask_data = (
-            rasterize(
+        if not labels:
+            mask_data = np.zeros(shape=shape)
+        else:
+            mask_data = rasterize(
                 labels,
                 out_shape=shape,
                 fill=0,  # nodata value
@@ -192,9 +194,6 @@ class SpaceNet(VisionDataset, abc.ABC):
                 all_touched=False,
                 dtype=np.uint8,
             )
-            if labels
-            else np.zeros(shape=shape)
-        )
 
         mask = torch.from_numpy(mask_data).long()
 
@@ -539,7 +538,8 @@ class SpaceNet2(SpaceNet):
             image: image selection which must be in ["MS", "PAN", "PS-MS", "PS-RGB"]
             collections: collection selection which must be a subset of:
                          [sn2_AOI_2_Vegas, sn2_AOI_3_Paris, sn2_AOI_4_Shanghai,
-                         sn2_AOI_5_Khartoum]
+                         sn2_AOI_5_Khartoum]. If unspecified, all collections will be
+                         used.
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory.
@@ -668,7 +668,8 @@ class SpaceNet3(SpaceNet):
                 10 mph increments) as label if true, else use binary mask
             collections: collection selection which must be a subset of:
                          [sn3_AOI_2_Vegas, sn3_AOI_3_Paris, sn3_AOI_4_Shanghai,
-                         sn3_AOI_5_Khartoum]
+                         sn3_AOI_5_Khartoum]. If unspecified, all collections will be
+                         used.
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory.
@@ -732,8 +733,10 @@ class SpaceNet3(SpaceNet):
         except FionaValueError:
             labels = []
 
-        mask_data = (
-            rasterize(
+        if not labels:
+            mask_data = np.zeros(shape=shape)
+        else:
+            mask_data = rasterize(
                 labels,
                 out_shape=shape,
                 fill=0,  # nodata value
@@ -741,9 +744,6 @@ class SpaceNet3(SpaceNet):
                 all_touched=False,
                 dtype=np.uint8,
             )
-            if labels
-            else np.zeros(shape=shape)
-        )
 
         mask = torch.from_numpy(mask_data).long()
         return mask
@@ -1099,7 +1099,8 @@ class SpaceNet5(SpaceNet3):
             speed_mask: use multi-class speed mask (created by binning roads at
                 10 mph increments) as label if true, else use binary mask
             collections: collection selection which must be a subset of:
-                         [sn5_AOI_7_Moscow, sn5_AOI_8_Mumbai]
+                         [sn5_AOI_7_Moscow, sn5_AOI_8_Mumbai]. If unspecified, all
+                         collections will be used.
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory.
