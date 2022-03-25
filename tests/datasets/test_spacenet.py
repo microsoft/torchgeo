@@ -149,7 +149,7 @@ class TestSpaceNet2:
 
 
 class TestSpaceNet3:
-    @pytest.fixture(params=zip(["PAN", "MS", "PS-MS", "PS-RGB"], [False, True]))
+    @pytest.fixture(params=zip(["PAN", "MS"], [False, True]))
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet3:
@@ -180,9 +180,7 @@ class TestSpaceNet3:
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
-        if dataset.image == "PS-RGB":
-            assert x["image"].shape[0] == 3
-        elif dataset.image in ["MS", "PS-MS"]:
+        if dataset.image == "MS":
             assert x["image"].shape[0] == 8
         else:
             assert x["image"].shape[0] == 1
@@ -279,7 +277,7 @@ class TestSpaceNet4:
 
 
 class TestSpaceNet5:
-    @pytest.fixture(params=zip(["PAN", "MS", "PS-MS", "PS-RGB"], [False, True]))
+    @pytest.fixture(params=zip(["PAN", "MS"], [False, True]))
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet5:
@@ -310,9 +308,7 @@ class TestSpaceNet5:
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
-        if dataset.image == "PS-RGB":
-            assert x["image"].shape[0] == 3
-        elif dataset.image in ["MS", "PS-MS"]:
+        if dataset.image == "MS":
             assert x["image"].shape[0] == 8
         else:
             assert x["image"].shape[0] == 1
