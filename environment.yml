@@ -10,7 +10,7 @@ dependencies:
   - pip
   - pycocotools
   - pyproj>=2.2
-  - python>=3.6
+  - python>=3.7
   - pytorch>=1.7
   - rarfile>=3
   - rasterio>=1.0.16
