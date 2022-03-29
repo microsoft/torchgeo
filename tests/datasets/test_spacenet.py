@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import glob
-import itertools
 import os
 import shutil
 from pathlib import Path
@@ -14,7 +13,14 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 
-from torchgeo.datasets import SpaceNet1, SpaceNet2, SpaceNet4, SpaceNet5, SpaceNet7
+from torchgeo.datasets import (
+    SpaceNet1,
+    SpaceNet2,
+    SpaceNet3,
+    SpaceNet4,
+    SpaceNet5,
+    SpaceNet7,
+)
 
 TEST_DATA_DIR = "tests/data/spacenet"
 
@@ -142,6 +148,71 @@ class TestSpaceNet2:
         plt.close()
 
 
+class TestSpaceNet3:
+    @pytest.fixture(params=zip(["PAN", "MS"], [False, True]))
+    def dataset(
+        self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> SpaceNet3:
+        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+        monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
+        test_md5 = {
+            "sn3_AOI_3_Paris": "197440e0ade970169a801a173a492c27",
+            "sn3_AOI_5_Khartoum": "b21ff7dd33a15ec32bd380c083263cdf",
+        }
+
+        monkeypatch.setattr(SpaceNet3, "collection_md5_dict", test_md5)
+        root = str(tmp_path)
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        return SpaceNet3(
+            root,
+            image=request.param[0],
+            speed_mask=request.param[1],
+            collections=["sn3_AOI_3_Paris", "sn3_AOI_5_Khartoum"],
+            transforms=transforms,
+            download=True,
+            api_key="",
+        )
+
+    def test_getitem(self, dataset: SpaceNet3) -> None:
+        # Iterate over all elements to maximize coverage
+        samples = [dataset[i] for i in range(len(dataset))]
+        x = samples[0]
+        assert isinstance(x, dict)
+        assert isinstance(x["image"], torch.Tensor)
+        assert isinstance(x["mask"], torch.Tensor)
+        if dataset.image == "MS":
+            assert x["image"].shape[0] == 8
+        else:
+            assert x["image"].shape[0] == 1
+
+    def test_len(self, dataset: SpaceNet3) -> None:
+        assert len(dataset) == 4
+
+    def test_already_downloaded(self, dataset: SpaceNet3) -> None:
+        SpaceNet3(root=dataset.root, download=True)
+
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(RuntimeError, match="Dataset not found"):
+            SpaceNet3(str(tmp_path))
+
+    def test_collection_checksum(self, dataset: SpaceNet3) -> None:
+        dataset.collection_md5_dict["sn3_AOI_5_Khartoum"] = "randommd5hash123"
+        with pytest.raises(
+            RuntimeError, match="Collection sn3_AOI_5_Khartoum corrupted"
+        ):
+            SpaceNet3(root=dataset.root, download=True, checksum=True)
+
+    def test_plot(self, dataset: SpaceNet3) -> None:
+        x = dataset[0].copy()
+        x["prediction"] = x["mask"]
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
+        dataset.plot({"image": x["image"]})
+        plt.close()
+
+
 class TestSpaceNet4:
     @pytest.fixture(params=["PAN", "MS", "PS-RGBNIR"])
     def dataset(
@@ -206,9 +277,7 @@ class TestSpaceNet4:
 
 
 class TestSpaceNet5:
-    @pytest.fixture(
-        params=itertools.product(["PAN", "MS", "PS-MS", "PS-RGB"], [False, True])
-    )
+    @pytest.fixture(params=zip(["PAN", "MS"], [False, True]))
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet5:
@@ -239,9 +308,7 @@ class TestSpaceNet5:
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
-        if dataset.image == "PS-RGB":
-            assert x["image"].shape[0] == 3
-        elif dataset.image in ["MS", "PS-MS"]:
+        if dataset.image == "MS":
             assert x["image"].shape[0] == 8
         else:
             assert x["image"].shape[0] == 1
