@@ -75,7 +75,15 @@ from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel2
 from .so2sat import So2Sat
-from .spacenet import SpaceNet, SpaceNet1, SpaceNet2, SpaceNet4, SpaceNet5, SpaceNet7
+from .spacenet import (
+    SpaceNet,
+    SpaceNet1,
+    SpaceNet2,
+    SpaceNet3,
+    SpaceNet4,
+    SpaceNet5,
+    SpaceNet7,
+)
 from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
@@ -155,6 +163,7 @@ __all__ = (
     "SpaceNet",
     "SpaceNet1",
     "SpaceNet2",
+    "SpaceNet3",
     "SpaceNet4",
     "SpaceNet5",
     "SpaceNet7",
