@@ -168,9 +168,7 @@ class EuroSAT(VisionClassificationDataset):
         """
         image, label = self._load_image(index)
 
-        image = torch.index_select(  # type: ignore[attr-defined]
-            image, dim=0, index=self.band_indices
-        )
+        image = torch.index_select(image, dim=0, index=self.band_indices)
         sample = {"image": image, "label": label}
 
         if self.transforms is not None:

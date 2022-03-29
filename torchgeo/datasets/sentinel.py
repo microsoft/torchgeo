@@ -131,7 +131,7 @@ class Sentinel2(Sentinel):
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
         image = sample["image"][rgb_indices].permute(1, 2, 0)
-        image = torch.clamp(image / 3000, min=0, max=1)  # type: ignore[attr-defined]
+        image = torch.clamp(image / 3000, min=0, max=1)
 
         fig, ax = plt.subplots(1, 1, figsize=(4, 4))
 

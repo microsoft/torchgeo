@@ -424,7 +424,7 @@ class RasterDataset(GeoDataset):
                     filepath = glob.glob(os.path.join(directory, filename))[0]
                     band_filepaths.append(filepath)
                 data_list.append(self._merge_files(band_filepaths, query))
-            data = torch.cat(data_list)  # type: ignore[attr-defined]
+            data = torch.cat(data_list)
         else:
             data = self._merge_files(filepaths, query)
 
@@ -469,7 +469,7 @@ class RasterDataset(GeoDataset):
         elif dest.dtype == np.uint32:
             dest = dest.astype(np.int64)
 
-        tensor: Tensor = torch.tensor(dest)  # type: ignore[attr-defined]
+        tensor = torch.tensor(dest)
         return tensor
 
     @functools.lru_cache(maxsize=128)
@@ -661,35 +661,21 @@ class VectorDataset(GeoDataset):
         transform = rasterio.transform.from_bounds(
             query.minx, query.miny, query.maxx, query.maxy, width, height
         )
-        masks = rasterio.features.rasterize(
-            shapes, out_shape=(int(height), int(width)), transform=transform
-        )
+        if shapes:
+            masks = rasterio.features.rasterize(
+                shapes, out_shape=(int(height), int(width)), transform=transform
+            )
+        else:
+            # If no features are found in this query, return an empty mask
+            # with the default fill value and dtype used by rasterize
+            masks = np.zeros((int(height), int(width)), dtype=np.uint8)
 
-        sample = {
-            "mask": torch.tensor(masks),  # type: ignore[attr-defined]
-            "crs": self.crs,
-            "bbox": query,
-        }
+        sample = {"mask": torch.tensor(masks), "crs": self.crs, "bbox": query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
 
         return sample
-
-    def plot(self, data: Tensor) -> None:
-        """Plot a data sample.
-
-        Args:
-            data: the data to plot
-        """
-        array = data.squeeze().numpy()
-
-        # Plot the image
-        ax = plt.axes()
-        ax.imshow(array)
-        ax.axis("off")
-        plt.show()
-        plt.close()
 
 
 class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):
@@ -805,10 +791,10 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
         """
         img, label = ImageFolder.__getitem__(self, index)
         array: "np.typing.NDArray[np.int_]" = np.array(img)
-        tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+        tensor = torch.from_numpy(array)
         # Convert from HxWxC to CxHxW
         tensor = tensor.permute((2, 0, 1))
-        label = torch.tensor(label)  # type: ignore[attr-defined]
+        label = torch.tensor(label)
         return tensor, label
 
 

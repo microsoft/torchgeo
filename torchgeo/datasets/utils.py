@@ -548,7 +548,7 @@ def concat_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
     collated: Dict[Any, Any] = _list_dict_to_dict_list(samples)
     for key, value in collated.items():
         if isinstance(value[0], Tensor):
-            collated[key] = torch.cat(value)  # type: ignore[attr-defined]
+            collated[key] = torch.cat(value)
         else:
             collated[key] = value[0]
     return collated
@@ -573,9 +573,7 @@ def merge_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
             if key in collated and isinstance(value, Tensor):
                 # Take the maximum so that nodata values (zeros) get replaced
                 # by data values whenever possible
-                collated[key] = torch.maximum(  # type: ignore[attr-defined]
-                    collated[key], value
-                )
+                collated[key] = torch.maximum(collated[key], value)
             else:
                 collated[key] = value
     return collated
@@ -645,7 +643,7 @@ def draw_semantic_segmentation_masks(
         a version of ``image`` overlayed with the colors given by ``mask`` and
             ``colors``
     """
-    classes = torch.unique(mask)  # type: ignore[attr-defined]
+    classes = torch.unique(mask)
     classes = classes[1:]
     class_masks = mask == classes[:, None, None]
     img = draw_segmentation_masks(

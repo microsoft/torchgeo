@@ -177,7 +177,7 @@ class USAVars(VisionDataset):
         """
         with rasterio.open(path) as f:
             array: "np.typing.NDArray[np.int_]" = f.read()
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             return tensor
 
     def _verify(self) -> None:

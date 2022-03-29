@@ -4,7 +4,6 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -26,14 +25,9 @@ class TestBigEarthNet:
         params=zip(["all", "s1", "s2"], [43, 19, 19], ["train", "val", "test"])
     )
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> BigEarthNet:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.bigearthnet, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.bigearthnet, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "bigearthnet")
         metadata = {
             "s1": {
@@ -66,15 +60,11 @@ class TestBigEarthNet:
                 "md5": "851a6bdda484d47f60e121352dcb1bf5",
             },
         }
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            BigEarthNet, "metadata", metadata
-        )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            BigEarthNet, "splits_metadata", splits_metadata
-        )
+        monkeypatch.setattr(BigEarthNet, "metadata", metadata)
+        monkeypatch.setattr(BigEarthNet, "splits_metadata", splits_metadata)
         bands, num_classes, split = request.param
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return BigEarthNet(
             root, split, bands, num_classes, transforms, download=True, checksum=True
         )
@@ -85,8 +75,8 @@ class TestBigEarthNet:
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["label"], torch.Tensor)
         assert x["label"].shape == (dataset.num_classes,)
-        assert x["image"].dtype == torch.int32  # type: ignore[attr-defined]
-        assert x["label"].dtype == torch.int64  # type: ignore[attr-defined]
+        assert x["image"].dtype == torch.int32
+        assert x["label"].dtype == torch.int64
 
         if dataset.bands == "all":
             assert x["image"].shape == (14, 120, 120)

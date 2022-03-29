@@ -189,7 +189,7 @@ class GlobBiomass(RasterDataset):
         std_error_paths = [f for f in filepaths if "err" in f]
         std_err_mask = self._merge_files(std_error_paths, query)
 
-        mask = torch.cat((mask, std_err_mask), dim=0)  # type: ignore[attr-defined]
+        mask = torch.cat((mask, std_err_mask), dim=0)
 
         sample = {"mask": mask, "crs": self.crs, "bbox": query}
 
