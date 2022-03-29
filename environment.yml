@@ -10,7 +10,7 @@ dependencies:
   - pip
   - pycocotools
   - pyproj>=2.2
-  - python>=3.6
+  - python>=3.7
   - pytorch>=1.7
   - rarfile>=3
   - rasterio>=1.0.16
@@ -30,7 +30,7 @@ dependencies:
     - omegaconf>=2.1
     - open3d>=0.11.2
     - opencv-python
-    - pandas>=0.19.1
+    - pandas>=0.23.2
     - pillow>=2.9
     - pydocstyle[toml]>=6.1
     - pytest>=6
