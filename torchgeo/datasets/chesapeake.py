@@ -22,7 +22,7 @@ from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import GeoDataset, RasterDataset
-from .utils import BoundingBox, download_url, extract_archive
+from .utils import BoundingBox, check_integrity, download_url, extract_archive
 
 
 class Chesapeake(RasterDataset, abc.ABC):
@@ -420,18 +420,30 @@ class ChesapeakeCVPR(GeoDataset):
     * https://doi.org/10.1109/cvpr.2019.01301
     """
 
-    subdatasets = ["base", "prior_extension"]
-    urls = {
-        "base": "https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip",  # noqa: E501
-        "prior_extension": "https://zenodo.org/record/5866525/files/cvpr_chesapeake_landcover_prior_extension.zip?download=1",  # noqa: E501
+    all_urls = {
+        "de": "url",
+        "md": "url",
+        "va": "url",
+        "wv": "url",
+        "pa": "url",
+        "ny": "url",
     }
-    filenames = {
-        "base": "cvpr_chesapeake_landcover.zip",
-        "prior_extension": "cvpr_chesapeake_landcover_prior_extension.zip",
+    all_zip_filenames = {
+        "de": "filename",
+        "md": "filename",
+        "va": "filename",
+        "wv": "filename",
+        "pa": "filename",
+        "ny": "filename",
     }
-    md5s = {
-        "base": "1225ccbb9590e9396875f221e5031514",
-        "prior_extension": "402f41d07823c8faf7ea6960d7c4e17a",
+
+    all_md5s = {
+        "de": "md5",
+        "md": "md5",
+        "va": "md5",
+        "wv": "md5",
+        "pa": "md5",
+        "ny": "md5",
     }
 
     crs = CRS.from_epsg(3857)
@@ -447,15 +459,15 @@ class ChesapeakeCVPR(GeoDataset):
         "buildings",
         "prior_from_cooccurrences_101_31_no_osm_no_buildings",
     ]
-    states = ["de", "md", "va", "wv", "pa", "ny"]
-    splits = (
-        [f"{state}-train" for state in states]
-        + [f"{state}-val" for state in states]
-        + [f"{state}-test" for state in states]
+    all_states = ["de", "md", "va", "wv", "pa", "ny"]
+    all_splits = (
+        [f"{state}-train" for state in all_states]
+        + [f"{state}-val" for state in all_states]
+        + [f"{state}-test" for state in all_states]
     )
 
     # these are used to check the integrity of the dataset
-    files = {
+    all_files = {
         "de": [
             "de_1m_2013_extended-debuffered-test_tiles",
             "de_1m_2013_extended-debuffered-train_tiles",
@@ -549,6 +561,8 @@ class ChesapeakeCVPR(GeoDataset):
         self.cache = cache
         self.download = download
         self.checksum = checksum
+
+        self.states = [s.split("-")[0] for s in splits]
 
         self._verify()
 
@@ -651,10 +665,8 @@ class ChesapeakeCVPR(GeoDataset):
         sample["image"] = np.concatenate(sample["image"], axis=0)
         sample["mask"] = np.concatenate(sample["mask"], axis=0)
 
-        sample["image"] = torch.from_numpy(  # type: ignore[attr-defined]
-            sample["image"]
-        )
-        sample["mask"] = torch.from_numpy(sample["mask"])  # type: ignore[attr-defined]
+        sample["image"] = torch.from_numpy(sample["image"])
+        sample["mask"] = torch.from_numpy(sample["mask"])
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -668,20 +680,33 @@ class ChesapeakeCVPR(GeoDataset):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         # Check if the extracted files already exist
-        def exists(filename: str) -> bool:
-            return os.path.exists(os.path.join(self.root, filename))
+        exists = []
+        for state in self.states:
+            state_files = self.all_files[state]
+            for filename in state_files:
+                if os.path.exists(os.path.join(self.root, filename)):
+                    exists.append(True)
+                else:
+                    exists.append(False)
 
-        if all(map(exists, self.files)):
+        if all(exists):
             return
 
         # Check if the zip files have already been downloaded
-        if all(
-            [
-                os.path.exists(os.path.join(self.root, self.filenames[subdataset]))
-                for subdataset in self.subdatasets
-            ]
-        ):
-            self._extract()
+        exists = []
+        for state in self.states:
+            filename = self.all_zip_filenames[state]
+            md5 = self.all_md5s[state]
+            filepath = os.path.join(self.root, filename)
+            if os.path.isfile(filepath):
+                if self.checksum and not check_integrity(filepath, md5):
+                    raise RuntimeError("Dataset found, but corrupted.")
+                exists.append(True)
+                extract_archive(filepath)
+            else:
+                exists.append(False)
+
+        if all(exists):
             return
 
         # Check if the user requested to download the dataset
@@ -698,15 +723,32 @@ class ChesapeakeCVPR(GeoDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        for subdataset in self.subdatasets:
-            download_url(
-                self.urls[subdataset],
-                self.root,
-                filename=self.filenames[subdataset],
-                md5=self.md5s[subdataset],
-            )
+        for state in self.states:
+            # only download if files for this state do not exist yet
+            if all(
+                [
+                    os.path.exists(os.path.join(self.root, filename))
+                    for filename in self.all_files[state]
+                ]
+            ):
+                continue
+            else:
+                download_url(
+                    self.all_urls[state],
+                    self.root,
+                    filename=self.filenames[state],
+                    md5=self.md5s[state],
+                )
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        for subdataset in self.subdatasets:
-            extract_archive(os.path.join(self.root, self.filenames[subdataset]))
+        for state in self.states:
+            if all(
+                [
+                    os.path.exists(os.path.join(self.root, filename))
+                    for filename in self.all_files[state]
+                ]
+            ):
+                continue
+            else:
+                extract_archive(os.path.join(self.root, self.all_zip_filenames[state]))
