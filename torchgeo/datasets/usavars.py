@@ -118,15 +118,10 @@ class USAVars(VisionDataset):
 
         self.files = self._load_files()
 
-        self.label_dfs = dict(
-            [
-                (
-                    lab,
-                    pd.read_csv(os.path.join(self.root, lab + ".csv"), index_col="ID"),
-                )
-                for lab in self.labels
-            ]
-        )
+        self.label_dfs = {
+            lab: pd.read_csv(os.path.join(self.root, lab + ".csv"), index_col="ID")
+            for lab in self.labels
+        }
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.

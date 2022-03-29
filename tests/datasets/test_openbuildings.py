@@ -107,7 +107,7 @@ class TestOpenBuildings:
 
     def test_nothing_in_index(self, dataset: OpenBuildings, tmp_path: Path) -> None:
         # change meta data to another 'title_url' so that there is no match found
-        with open(os.path.join(tmp_path, "tiles.geojson"), "r") as f:
+        with open(os.path.join(tmp_path, "tiles.geojson")) as f:
             content = json.load(f)
             content["features"][0]["properties"]["tile_url"] = "mismatch.csv.gz"
 

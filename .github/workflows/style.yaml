@@ -65,3 +65,17 @@ jobs:
       run: pip install .[style]
     - name: Run pydocstyle checks
       run: pydocstyle
+  pyupgrade:
+    name: pyupgrade
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone repo
+      uses: actions/checkout@v2
+    - name: Set up python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install pip dependencies
+      run: pip install .[style]
+    - name: Run pyupgrade checks
+      run: pyupgrade --py37-plus $(find . -name "*.py")

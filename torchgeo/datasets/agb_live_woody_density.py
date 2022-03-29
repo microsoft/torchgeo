@@ -114,7 +114,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
         """Download the dataset."""
         download_url(self.url, self.root, self.base_filename)
 
-        with open(os.path.join(self.root, self.base_filename), "r") as f:
+        with open(os.path.join(self.root, self.base_filename)) as f:
             content = json.load(f)
 
         for item in content["features"]:

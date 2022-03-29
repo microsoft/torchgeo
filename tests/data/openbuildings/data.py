@@ -34,7 +34,7 @@ def create_meta_data_file(zipfilename):
                 },
                 "properties": {
                     "tile_id": "025",
-                    "tile_url": "polygons_s2_level_4_gzip/{}".format(zipfilename),
+                    "tile_url": f"polygons_s2_level_4_gzip/{zipfilename}",
                     "size_mb": 0.2,
                 },
             }
