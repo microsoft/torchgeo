@@ -102,7 +102,7 @@ class Sentinel2(Sentinel):
 
         super().__init__(root, crs, res, transforms, cache)
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Tensor],
         show_titles: bool = True,

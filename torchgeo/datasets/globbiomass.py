@@ -225,7 +225,7 @@ class GlobBiomass(RasterDataset):
             "have manually downloaded the dataset as suggested in the documentation."
         )
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Any],
         show_titles: bool = True,

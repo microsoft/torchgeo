@@ -251,7 +251,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         pathname = os.path.join(self.root, self.zipfile)
         extract_archive(pathname)
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Any],
         show_titles: bool = True,
