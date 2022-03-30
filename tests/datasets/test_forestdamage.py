@@ -4,7 +4,6 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -22,20 +21,16 @@ def download_url(url: str, root: str, *args: str) -> None:
 
 class TestForestDamage:
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
-    ) -> ForestDamage:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.utils, "download_url", download_url
-        )
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ForestDamage:
+        monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "forestdamage")
 
         url = os.path.join(data_dir, "Data_Set_Larch_Casebearer.zip")
 
         md5 = "a6adc19879c1021cc1ba8d424e19c9e0"
 
-        monkeypatch.setattr(ForestDamage, "url", url)  # type: ignore[attr-defined]
-        monkeypatch.setattr(ForestDamage, "md5", md5)  # type: ignore[attr-defined]
+        monkeypatch.setattr(ForestDamage, "url", url)
+        monkeypatch.setattr(ForestDamage, "md5", md5)
         root = str(tmp_path)
         transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return ForestDamage(
