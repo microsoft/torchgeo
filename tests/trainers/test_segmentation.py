@@ -83,7 +83,7 @@ class TestSemanticSegmentationTask:
         model = SemanticSegmentationTask(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(logger=None, fast_dev_run=True, log_every_n_steps=1)
+        trainer = Trainer(logger=False, fast_dev_run=True, log_every_n_steps=1)
         trainer.fit(model=model, datamodule=datamodule)
 
     @pytest.fixture
