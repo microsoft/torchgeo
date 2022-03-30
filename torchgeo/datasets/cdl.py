@@ -398,7 +398,7 @@ class CDL(RasterDataset):
         for zipfile in glob.iglob(pathname):
             extract_archive(zipfile)
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Any],
         show_titles: bool = True,

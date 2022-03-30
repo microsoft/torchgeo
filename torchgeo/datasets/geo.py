@@ -13,7 +13,6 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
 
 import fiona
 import fiona.transform
-import matplotlib.pyplot as plt
 import numpy as np
 import pyproj
 import rasterio
@@ -303,10 +302,6 @@ class RasterDataset(GeoDataset):
     #: Names of RGB bands in the dataset, used for plotting
     rgb_bands: List[str] = []
 
-    #: If True, stretch the image from the 2nd percentile to the 98th percentile,
-    #: used for plotting
-    stretch = False
-
     #: Color map for the dataset, used for plotting
     cmap: Dict[int, Tuple[int, int, int, int]] = {}
 
@@ -502,53 +497,6 @@ class RasterDataset(GeoDataset):
             return vrt
         else:
             return src
-
-    def plot(self, data: Tensor) -> None:
-        """Plot a data sample.
-
-        Args:
-            data: the data to plot
-
-        Raises:
-            AssertionError: if ``is_image`` is True and ``data`` has a different number
-                of channels than expected
-        """
-        array = data.squeeze().numpy()
-
-        if self.is_image:
-            bands = getattr(self, "bands", self.all_bands)
-            assert array.shape[0] == len(bands)
-
-            # Only plot RGB bands
-            if bands and self.rgb_bands:
-                indices: "np.typing.NDArray[np.int_]" = np.array(
-                    [bands.index(band) for band in self.rgb_bands]
-                )
-                array = array[indices]
-
-            # Convert from CxHxW to HxWxC
-            array = np.rollaxis(array, 0, 3)
-
-        if self.cmap:
-            # Convert from class labels to RGBA values
-            cmap: "np.typing.NDArray[np.int_]" = np.array(
-                [self.cmap[i] for i in range(len(self.cmap))]
-            )
-            array = cmap[array]
-
-        if self.stretch:
-            # Stretch to the range of 2nd to 98th percentile
-            per02 = np.percentile(array, 2)
-            per98 = np.percentile(array, 98)
-            array = (array - per02) / (per98 - per02)
-            array = np.clip(array, 0, 1)
-
-        # Plot the data
-        ax = plt.axes()
-        ax.imshow(array)
-        ax.axis("off")
-        plt.show()
-        plt.close()
 
 
 class VectorDataset(GeoDataset):
