@@ -176,7 +176,7 @@ class Chesapeake(RasterDataset, abc.ABC):
         """Extract the dataset."""
         extract_archive(os.path.join(self.root, self.zipfile))
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Tensor],
         show_titles: bool = True,

@@ -92,7 +92,7 @@ class AsterGDEM(RasterDataset):
             "have manually downloaded dataset tiles as suggested in the documentation."
         )
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Any],
         show_titles: bool = True,
