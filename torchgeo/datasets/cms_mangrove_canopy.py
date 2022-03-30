@@ -215,7 +215,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         )
         self.measurement = measurement
 
-        self.filename_glob = "**/Mangrove_{}_{}*".format(self.measurement, self.country)
+        self.filename_glob = f"**/Mangrove_{self.measurement}_{self.country}*"
 
         self._verify()
 
