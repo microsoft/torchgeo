@@ -234,7 +234,7 @@ class NAIPCluster(VisionDataset):
 
         x_all_flat = x_all.reshape((num_cluster_samples, -1))
 
-        self.kmeans = KMeans(n_clusters=num_clusters)
+        self.kmeans = KMeans(n_clusters=num_clusters, random_state=0)
         self.kmeans = self.kmeans.fit(x_all_flat)
         del samples, x_all_flat
 
@@ -312,7 +312,8 @@ class NAIPCluster(VisionDataset):
             a matplotlib Figure with the rendered sample
         """
         image = np.rollaxis(sample["image"].numpy(), 0, 3)
-        mask = sample["mask"].squeeze()
+        mask = sample["mask"].squeeze().numpy()
+        #  recolored = self.recolor_mask(mask)
         ncols = 2
 
         showing_predictions = "prediction" in sample
