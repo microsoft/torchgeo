@@ -252,9 +252,9 @@ class PreChippedGeoSampler(GeoSampler):
 
     This sampler should not be used with :class:`~torchgeo.datasets.VisionDataset`.
     You may encounter problems when using an :term:`ROI <region of interest (ROI)>`
-    that partially intersects with one of the file bounding boxes, or when using an
-    :class:`~torchgeo.datasets.IntersectionDataset`. These issues can be solved by
-    adding padding.
+    that partially intersects with one of the file bounding boxes, when using an
+    :class:`~torchgeo.datasets.IntersectionDataset`, or when each file is in a
+    different CRS. These issues can be solved by adding padding.
     """
 
     def __init__(
