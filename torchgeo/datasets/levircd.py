@@ -137,7 +137,7 @@ class LEVIRCDPlus(VisionDataset):
         """
         files = []
         images = glob.glob(os.path.join(root, directory, split, "A", "*.png"))
-        images = sorted([os.path.basename(image) for image in images])
+        images = sorted(os.path.basename(image) for image in images)
         for image in images:
             image1 = os.path.join(root, directory, split, "A", image)
             image2 = os.path.join(root, directory, split, "B", image)

@@ -174,7 +174,7 @@ class OSCD(VisionDataset):
 
             with open(os.path.join(images_root, region, "dates.txt")) as f:
                 dates = tuple(
-                    [line.split()[-1] for line in f.read().strip().splitlines()]
+                    line.split()[-1] for line in f.read().strip().splitlines()
                 )
 
             regions.append(

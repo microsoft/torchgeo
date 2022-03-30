@@ -117,7 +117,7 @@ class ADVANCE(VisionDataset):
             )
 
         self.files = self._load_files(self.root)
-        self.classes = sorted(set(f["cls"] for f in self.files))
+        self.classes = sorted({f["cls"] for f in self.files})
         self.class_to_idx: Dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:

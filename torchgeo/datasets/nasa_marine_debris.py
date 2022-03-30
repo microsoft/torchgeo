@@ -150,7 +150,7 @@ class NASAMarineDebris(VisionDataset):
         image_root = os.path.join(self.root, self.directories[0])
         target_root = os.path.join(self.root, self.directories[1])
         image_folders = sorted(
-            [f for f in os.listdir(image_root) if not f.endswith("json")]
+            f for f in os.listdir(image_root) if not f.endswith("json")
         )
 
         files = []
