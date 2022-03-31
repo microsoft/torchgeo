@@ -1,6 +1,5 @@
 import hashlib
 import os
-import random
 import shutil
 import xml.etree.ElementTree as ET
 
@@ -10,7 +9,6 @@ from PIL import Image
 SIZE = 32
 
 np.random.seed(0)
-random.seed(0)
 
 PATHS = {
     "images": [
