@@ -5,14 +5,12 @@
 
 import hashlib
 import os
-import random
 import zipfile
 
 import numpy as np
 import rasterio
 
 np.random.seed(0)
-random.seed(0)
 
 SIZE = 64
 
