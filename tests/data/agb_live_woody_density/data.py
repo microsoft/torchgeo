@@ -5,7 +5,6 @@
 
 import json
 import os
-import random
 
 import numpy as np
 import rasterio
@@ -13,7 +12,6 @@ import rasterio
 SIZE = 32
 
 np.random.seed(0)
-random.seed(0)
 
 
 base_file = {
