@@ -70,15 +70,15 @@ class ForestDamage(VisionDataset):
 
     Dataset Classes:
 
-    * other (0)
-    * healthy (1)
-    * light damage (2)
-    * high damage (3)
+    0. other
+    1. healthy
+    2. light damage
+    3. high damage
 
     If the download fails or stalls, it is recommended to try azcopy
     as suggested `here <https://lila.science/faq>`__. It is expected that the
-    downloaded data file with name `Data_Set_Larch_Casebearer`
-    can be found in `root`.
+    downloaded data file with name ``Data_Set_Larch_Casebearer``
+    can be found in ``root``.
 
     If you use this dataset in your research, please use the following citation:
 

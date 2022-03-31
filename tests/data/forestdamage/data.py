@@ -2,7 +2,7 @@ import hashlib
 import os
 import random
 import shutil
-import xml.etree.cElementTree as ET
+import xml.etree.ElementTree as ET
 
 import numpy as np
 from PIL import Image
