@@ -157,6 +157,11 @@ FAIR1M (Fine-grAined object recognItion in high-Resolution imagery)
 
 .. autoclass:: FAIR1M
 
+Forest Damage
+^^^^^^^^^^^^^
+
+.. autoclass:: ForestDamage
+
 GID-15 (Gaofen Image Dataset)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
