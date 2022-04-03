@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import itertools
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -23,20 +23,12 @@ def download_url(url: str, root: str, *args: str) -> None:
 
 class TestMillionAID:
     @pytest.fixture(
-        params=zip(
-            ["train", "train", "test", "test"],
-            ["multi-class", "multi-label", "multi-class", "multi-label"],
-        )
+        params=itertools.product(["train", "test"], ["multi-class", "multi-label"])
     )
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        request: SubRequest,
-        tmp_path: Path,
+        self, monkeypatch: MonkeyPatch, request: SubRequest, tmp_path: Path
     ) -> MillionAID:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.utils, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "millionaid")
 
         urls = {
@@ -49,8 +41,8 @@ class TestMillionAID:
             "test": "7309f19eca7f010d1af9a6adb396b7f8",
         }
 
-        monkeypatch.setattr(MillionAID, "url", urls)  # type: ignore[attr-defined]
-        monkeypatch.setattr(MillionAID, "md5s", md5s)  # type: ignore[attr-defined]
+        monkeypatch.setattr(MillionAID, "url", urls)
+        monkeypatch.setattr(MillionAID, "md5s", md5s)
         root = str(tmp_path)
         split, task = request.param
         transforms = nn.Identity()  # type: ignore[no-untyped-call]

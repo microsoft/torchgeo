@@ -21,7 +21,7 @@ class MillionAID(VisionDataset):
     """Million-AID Dataset.
 
     The `MillionAID <https://captain-whu.github.io/DiRS/>`_ dataset consists
-    of one million aerial images from the Googl Earth Engine that offers
+    of one million aerial images from the Google Earth Engine that offers
     either `a mult-class learning task
     <https://competitions.codalab.org/competitions/35945#learn_the_details-dataset>`_
     with 51 classess or a `mulit-label learning task
@@ -226,7 +226,7 @@ class MillionAID(VisionDataset):
 
         self.files = self._load_files(self.root)
 
-        self.classes = sorted(set(cls for f in self.files for cls in f["label"]))
+        self.classes = sorted({cls for f in self.files for cls in f["label"]})
         self.class_to_idx: Dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
     def __len__(self) -> int:
@@ -336,9 +336,9 @@ class MillionAID(VisionDataset):
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
-                "Dataset not found in `root` directory, either specify a different"
-                + " `root` directory or manually download "
-                + "the dataset to this directory."
+                f"Dataset not found in `root={self.root}` directory, either "
+                "specify a different `root` directory or manually download "
+                "the dataset to this directory."
             )
 
         # else download the dataset
