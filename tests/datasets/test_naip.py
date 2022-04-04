@@ -7,7 +7,6 @@ from pathlib import Path
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import NAIP, BoundingBox, IntersectionDataset, UnionDataset
@@ -15,13 +14,16 @@ from torchgeo.datasets import NAIP, BoundingBox, IntersectionDataset, UnionDatas
 
 class TestNAIP:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch) -> NAIP:
+    def dataset(self) -> NAIP:
         root = os.path.join("tests", "data", "naip")
         transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return NAIP(root, transforms=transforms)
 
     def test_getitem(self, dataset: NAIP) -> None:
         x = dataset[dataset.bounds]
+        print(len(dataset))
+        print(dataset.bounds)
+        print(x["image"].shape)
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["image"], torch.Tensor)
