@@ -147,7 +147,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
             array: "np.typing.NDArray[np.int_]" = np.array(img)
             if len(array.shape) == 3:
                 array = array[:, :, 0]
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             return tensor
 
     def _load_features(self, directory: str) -> Dict[str, Any]:
@@ -210,7 +210,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

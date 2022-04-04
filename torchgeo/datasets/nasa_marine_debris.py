@@ -123,7 +123,7 @@ class NASAMarineDebris(VisionDataset):
         """
         with rasterio.open(path) as f:
             array = f.read()
-        tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+        tensor = torch.from_numpy(array)
         return tensor
 
     def _load_target(self, path: str) -> Tensor:
@@ -138,7 +138,7 @@ class NASAMarineDebris(VisionDataset):
         array = np.load(path)
         # boxes contain unecessary value of 1 after xyxy coords
         array = array[:, :4]
-        tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+        tensor = torch.from_numpy(array)
         return tensor
 
     def _load_files(self) -> List[Dict[str, str]]:
@@ -150,7 +150,7 @@ class NASAMarineDebris(VisionDataset):
         image_root = os.path.join(self.root, self.directories[0])
         target_root = os.path.join(self.root, self.directories[1])
         image_folders = sorted(
-            [f for f in os.listdir(image_root) if not f.endswith("json")]
+            f for f in os.listdir(image_root) if not f.endswith("json")
         )
 
         files = []

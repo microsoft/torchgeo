@@ -23,7 +23,13 @@ _EPSILON = 1e-10
 
 
 class AppendNormalizedDifferenceIndex(Module):
-    """Append normalized difference index as channel to image tensor.
+    r"""Append normalized difference index as channel to image tensor.
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDI} = \frac{A - B}{A + B}
 
     .. versionadded:: 0.2
     """
@@ -68,15 +74,19 @@ class AppendNormalizedDifferenceIndex(Module):
             )
             index = index.unsqueeze(self.dim)
 
-            sample["image"] = torch.cat(  # type: ignore[attr-defined]
-                [sample["image"], index], dim=self.dim
-            )
+            sample["image"] = torch.cat([sample["image"], index], dim=self.dim)
 
         return sample
 
 
 class AppendNBR(AppendNormalizedDifferenceIndex):
-    """Normalized Burn Ratio (NBR).
+    r"""Normalized Burn Ratio (NBR).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NBR} = \frac{\text{NIR} - \text{SWIR}}{\text{NIR} + \text{SWIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -96,7 +106,13 @@ class AppendNBR(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDBI(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Built-up Index (NDBI).
+    r"""Normalized Difference Built-up Index (NDBI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDBI} = \frac{\text{SWIR} - \text{NIR}}{\text{SWIR} + \text{NIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -114,7 +130,13 @@ class AppendNDBI(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDSI(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Snow Index (NDSI).
+    r"""Normalized Difference Snow Index (NDSI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDSI} = \frac{\text{G} - \text{SWIR}}{\text{G} + \text{SWIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -132,7 +154,13 @@ class AppendNDSI(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDVI(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Vegetation Index (NDVI).
+    r"""Normalized Difference Vegetation Index (NDVI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDVI} = \frac{\text{R} - \text{NIR}}{\text{R} + \text{NIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -150,7 +178,13 @@ class AppendNDVI(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDWI(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Water Index (NDWI).
+    r"""Normalized Difference Water Index (NDWI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDWI} = \frac{\text{G} - \text{NIR}}{\text{G} + \text{NIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -168,7 +202,13 @@ class AppendNDWI(AppendNormalizedDifferenceIndex):
 
 
 class AppendSWI(AppendNormalizedDifferenceIndex):
-    """Standardized Water-Level Index (SWI).
+    r"""Standardized Water-Level Index (SWI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{SWI} = \frac{\text{R} - \text{SWIR}}{\text{R} + \text{SWIR}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -186,7 +226,13 @@ class AppendSWI(AppendNormalizedDifferenceIndex):
 
 
 class AppendGNDVI(AppendNormalizedDifferenceIndex):
-    """Green Normalized Difference Vegetation Index (GNDVI).
+    r"""Green Normalized Difference Vegetation Index (GNDVI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{GNDVI} = \frac{\text{NIR} - \text{G}}{\text{NIR} + \text{G}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -204,7 +250,13 @@ class AppendGNDVI(AppendNormalizedDifferenceIndex):
 
 
 class AppendBNDVI(AppendNormalizedDifferenceIndex):
-    """Blue Normalized Difference Vegetation Index (BNDVI).
+    r"""Blue Normalized Difference Vegetation Index (BNDVI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{BNDVI} = \frac{\text{NIR} - \text{B}}{\text{NIR} + \text{B}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -224,7 +276,13 @@ class AppendBNDVI(AppendNormalizedDifferenceIndex):
 
 
 class AppendNDRE(AppendNormalizedDifferenceIndex):
-    """Normalized Difference Red Edge Vegetation Index (NDRE).
+    r"""Normalized Difference Red Edge Vegetation Index (NDRE).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDRE} = \frac{\text{NIR} - \text{VRE1}}{\text{NIR} + \text{VRE1}}
 
     If you use this index in your research, please cite the following paper:
 
@@ -241,3 +299,64 @@ class AppendNDRE(AppendNormalizedDifferenceIndex):
             index_vre1: index of the Red Edge band, B5 in Sentinel 2 imagery
         """
         super().__init__(index_a=index_nir, index_b=index_vre1)
+
+
+class AppendTriBandNormalizedDifferenceIndex(Module):
+    r"""Append normalized difference index involving 3 bands as channel to image tensor.
+
+    Computes the following index:
+
+    .. math::
+
+       \text{NDI} = \frac{A - {B + C}}{A + {B + C}}
+
+    .. versionadded:: 0.3
+    """
+
+    def __init__(self, index_a: int, index_b: int, index_c: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_a: reference band channel index
+            index_b: difference band channel index of component 1
+            index_c: difference band channel index of component 2
+        """
+        super().__init__()
+        self.dim = -3
+        self.index_a = index_a
+        self.index_b = index_b
+        self.index_c = index_c
+
+    def _compute_index(self, band_a: Tensor, band_b: Tensor, band_c: Tensor) -> Tensor:
+        """Compute tri-band normalized difference index.
+
+        Args:
+            band_a: reference band tensor
+            band_b: difference band tensor component 1
+            band_c: difference band tensor component 2
+
+        Returns:
+            the index
+        """
+        return (band_a - (band_b + band_c)) / ((band_a + band_b + band_c) + _EPSILON)
+
+    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+        """Compute and append tri-band normalized difference index to image.
+
+        Args:
+            sample: a sample or batch dict
+
+        Returns:
+            the transformed sample
+        """
+        if "image" in sample:
+            index = self._compute_index(
+                band_a=sample["image"][..., self.index_a, :, :],
+                band_b=sample["image"][..., self.index_b, :, :],
+                band_c=sample["image"][..., self.index_c, :, :],
+            )
+            index = index.unsqueeze(self.dim)
+
+            sample["image"] = torch.cat([sample["image"], index], dim=self.dim)
+
+        return sample

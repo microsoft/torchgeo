@@ -4,10 +4,11 @@
 """EuroSAT dataset."""
 
 import os
-from typing import Callable, Dict, Optional, cast
+from typing import Callable, Dict, Optional, Sequence, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 from torch import Tensor
 
 from .geo import VisionClassificationDataset
@@ -83,10 +84,31 @@ class EuroSAT(VisionClassificationDataset):
         "Forest",
     ]
 
+    all_band_names = (
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B07",
+        "B08",
+        "B08A",
+        "B09",
+        "B10",
+        "B11",
+        "B12",
+    )
+
+    RGB_BANDS = ("B04", "B03", "B02")
+
+    BAND_SETS = {"all": all_band_names, "rgb": RGB_BANDS}
+
     def __init__(
         self,
         root: str = "data",
         split: str = "train",
+        bands: Sequence[str] = BAND_SETS["all"],
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -96,23 +118,35 @@ class EuroSAT(VisionClassificationDataset):
         Args:
             root: root directory where dataset can be found
             split: one of "train", "val", or "test"
+            bands: a sequence of band names to load
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
+            AssertionError: if ``split`` argument is invalid
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
+
         """
         self.root = root
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
+
+        assert split in ["train", "val", "test"]
+
+        self._validate_bands(bands)
+        self.bands = bands
+        self.band_indices = Tensor(
+            [self.all_band_names.index(b) for b in bands if b in self.all_band_names]
+        ).long()
+
         self._verify()
 
         valid_fns = set()
-        with open(os.path.join(self.root, f"eurosat-{split}.txt"), "r") as f:
+        with open(os.path.join(self.root, f"eurosat-{split}.txt")) as f:
             for fn in f:
                 valid_fns.add(fn.strip().replace(".jpg", ".tif"))
         is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns
@@ -123,6 +157,24 @@ class EuroSAT(VisionClassificationDataset):
             loader=rasterio_loader,
             is_valid_file=is_in_split,
         )
+
+    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+        """Return an index within the dataset.
+
+        Args:
+            index: index to return
+        Returns:
+            data and label at that index
+        """
+        image, label = self._load_image(index)
+
+        image = torch.index_select(image, dim=0, index=self.band_indices)
+        sample = {"image": image, "label": label}
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
@@ -184,6 +236,23 @@ class EuroSAT(VisionClassificationDataset):
         filepath = os.path.join(self.root, self.filename)
         extract_archive(filepath)
 
+    def _validate_bands(self, bands: Sequence[str]) -> None:
+        """Validate list of bands.
+
+        Args:
+            bands: user-provided sequence of bands to load
+
+        Raises:
+            AssertionError: if ``bands`` is not a sequence
+            ValueError: if an invalid band name is provided
+
+        .. versionadded:: 0.3
+        """
+        assert isinstance(bands, Sequence), "'bands' must be a sequence"
+        for band in bands:
+            if band not in self.all_band_names:
+                raise ValueError(f"'{band}' is an invalid band name.")
+
     def plot(
         self,
         sample: Dict[str, Tensor],
@@ -200,9 +269,20 @@ class EuroSAT(VisionClassificationDataset):
         Returns:
             a matplotlib Figure with the rendered sample
 
+        Raises:
+            ValueError: if RGB bands are not found in dataset
+
         .. versionadded:: 0.2
         """
-        image = np.rollaxis(sample["image"][[3, 2, 1]].numpy(), 0, 3).copy()
+        rgb_indices = []
+        for band in self.RGB_BANDS:
+            if band in self.bands:
+                rgb_indices.append(self.bands.index(band))
+            else:
+                raise ValueError("Dataset doesn't contain some of the RGB bands")
+
+        image = np.take(sample["image"].numpy(), indices=rgb_indices, axis=0)
+        image = np.rollaxis(image, 0, 3)
         image = np.clip(image / 3000, 0, 1)
 
         label = cast(int, sample["label"].item())

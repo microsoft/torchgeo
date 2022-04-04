@@ -47,7 +47,7 @@ class NAIP(RasterDataset):
     all_bands = ["R", "G", "B", "NIR"]
     rgb_bands = ["R", "G", "B"]
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Any],
         show_titles: bool = True,

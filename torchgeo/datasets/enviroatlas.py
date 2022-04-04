@@ -18,7 +18,6 @@ import shapely.ops
 import torch
 from matplotlib.colors import ListedColormap
 from rasterio.crs import CRS
-from torch import Tensor
 
 from .geo import GeoDataset
 from .utils import BoundingBox, download_url, extract_archive
@@ -47,7 +46,7 @@ class EnviroAtlas(GeoDataset):
 
     url = "https://zenodo.org/record/5778193/files/enviroatlas_lotp.zip?download=1"
     filename = "enviroatlas_lotp.zip"
-    md5 = "6142f8d1ebfc7f8ad888337f0683dc7a"
+    md5 = "bfe601be21c7c001315fc6154be8ef14"
 
     crs = CRS.from_epsg(3857)
     res = 1
@@ -403,10 +402,8 @@ class EnviroAtlas(GeoDataset):
         sample["image"] = np.concatenate(sample["image"], axis=0)
         sample["mask"] = np.concatenate(sample["mask"], axis=0)
 
-        sample["image"] = torch.from_numpy(  # type: ignore[attr-defined]
-            sample["image"]
-        )
-        sample["mask"] = torch.from_numpy(sample["mask"])  # type: ignore[attr-defined]
+        sample["image"] = torch.from_numpy(sample["image"])
+        sample["mask"] = torch.from_numpy(sample["mask"])
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -453,7 +450,7 @@ class EnviroAtlas(GeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

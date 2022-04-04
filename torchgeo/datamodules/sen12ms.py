@@ -29,7 +29,7 @@ class SEN12MSDataModule(pl.LightningDataModule):
 
     #: Mapping from the IGBP class definitions to the DFC2020, taken from the dataloader
     #: here https://github.com/lukasliebel/dfc2020_baseline.
-    DFC2020_CLASS_MAPPING = torch.tensor(  # type: ignore[attr-defined]
+    DFC2020_CLASS_MAPPING = torch.tensor(
         [
             0,  # maps 0s to 0
             1,  # maps 1s to 1
@@ -102,9 +102,7 @@ class SEN12MSDataModule(pl.LightningDataModule):
             sample["image"][:] = sample["image"][:].clamp(0, 10000) / 10000
 
         sample["mask"] = sample["mask"][0, :, :].long()
-        sample["mask"] = torch.take(  # type: ignore[attr-defined]
-            self.DFC2020_CLASS_MAPPING, sample["mask"]
-        )
+        sample["mask"] = torch.take(self.DFC2020_CLASS_MAPPING, sample["mask"])
 
         return sample
 

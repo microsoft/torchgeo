@@ -4,7 +4,6 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -18,10 +17,8 @@ from torchgeo.datasets import XView2
 
 class TestXView2:
     @pytest.fixture(params=["train", "test"])
-    def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
-    ) -> XView2:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> XView2:
+        monkeypatch.setattr(
             XView2,
             "metadata",
             {
@@ -39,7 +36,7 @@ class TestXView2:
         )
         root = os.path.join("tests", "data", "xview2")
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return XView2(root, split, transforms, checksum=True)
 
     def test_getitem(self, dataset: XView2) -> None:

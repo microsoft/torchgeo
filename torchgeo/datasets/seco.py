@@ -5,7 +5,7 @@
 
 import os
 from collections import defaultdict
-from typing import Callable, Dict, List, Optional, cast
+from typing import Callable, Dict, List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -184,10 +184,8 @@ class SeasonalContrastS2(VisionDataset):
                         pil_image.resize((264, 264), resample=Image.BILINEAR)
                     )
                 all_data.append(band_data)
-        image = torch.from_numpy(  # type: ignore[attr-defined]
-            np.stack(all_data, axis=0)
-        )
-        return cast(Tensor, image)
+        image = torch.from_numpy(np.stack(all_data, axis=0))
+        return image
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
