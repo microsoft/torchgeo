@@ -21,10 +21,10 @@ class MillionAID(VisionDataset):
     """Million-AID Dataset.
 
     The `MillionAID <https://captain-whu.github.io/DiRS/>`_ dataset consists
-    of one million aerial images from the Google Earth Engine that offers
-    either `a mult-class learning task
+    of one million aerial images from Google Earth Engine that offers
+    either `a multi-class learning task
     <https://competitions.codalab.org/competitions/35945#learn_the_details-dataset>`_
-    with 51 classess or a `mulit-label learning task
+    with 51 classes or a `multi-label learning task
     <https://competitions.codalab.org/competitions/35974#learn_the_details-dataset>`_
     with 73 different possible labels. For more details please consult
     the accompanying `paper <https://ieeexplore.ieee.org/document/9393553>`_.
@@ -261,17 +261,17 @@ class MillionAID(VisionDataset):
         """Return the paths of the files in the dataset.
 
         Args:
-            root: root dir of dataset
+            root: root directory of dataset
 
         Returns:
             list of dicts containing paths for each pair of image, and list of labels
         """
         imgs_no_subcat = list(
-            glob.glob(os.path.join(root, self.split, "**", "**", "*.jpg"))
+            glob.glob(os.path.join(root, self.split, "*", "*", "*.jpg"))
         )
 
         imgs_subcat = list(
-            glob.glob(os.path.join(root, self.split, "**", "**", "**", "*.jpg"))
+            glob.glob(os.path.join(root, self.split, "*", "*", "*", "*.jpg"))
         )
 
         scenes = [p.split(os.sep)[-3] for p in imgs_no_subcat] + [
