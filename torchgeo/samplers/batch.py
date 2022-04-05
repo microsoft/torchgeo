@@ -4,9 +4,9 @@
 """TorchGeo batch samplers."""
 
 import abc
-import random
 from typing import Iterator, List, Optional, Tuple, Union
 
+import torch
 from rtree.index import Index, Property
 from torch.utils.data import Sampler
 
@@ -104,13 +104,20 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         self.batch_size = batch_size
         self.length = length
         self.hits = []
+        areas = []
         for hit in self.index.intersection(tuple(self.roi), objects=True):
             bounds = BoundingBox(*hit.bounds)
             if (
-                bounds.maxx - bounds.minx > self.size[1]
-                and bounds.maxy - bounds.miny > self.size[0]
+                bounds.maxx - bounds.minx >= self.size[1]
+                and bounds.maxy - bounds.miny >= self.size[0]
             ):
                 self.hits.append(hit)
+                areas.append(bounds.area)
+
+        # torch.multinomial requires float probabilities > 0
+        self.areas = torch.tensor(areas, dtype=torch.float)
+        if torch.sum(self.areas) == 0:
+            self.areas += 1
 
     def __iter__(self) -> Iterator[List[BoundingBox]]:
         """Return the indices of a dataset.
@@ -119,8 +126,9 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             batch of (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
         for _ in range(len(self)):
-            # Choose a random tile
-            hit = random.choice(self.hits)
+            # Choose a random tile, weighted by area
+            idx = torch.multinomial(self.areas, 1)
+            hit = self.hits[idx]
             bounds = BoundingBox(*hit.bounds)
 
             # Choose random indices within that tile
