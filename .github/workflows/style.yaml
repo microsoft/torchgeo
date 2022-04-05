@@ -20,7 +20,7 @@ jobs:
       with:
         python-version: '3.10'
     - name: Install pip dependencies
-      run: pip install .[style]
+      run: pip install --pre .[style]
     - name: Run black checks
       run: black . --check --diff
   flake8:
@@ -34,7 +34,7 @@ jobs:
       with:
         python-version: '3.10'
     - name: Install pip dependencies
-      run: pip install .[style]
+      run: pip install --pre .[style]
     - name: Run flake8 checks
       run: flake8
   isort:
@@ -48,7 +48,7 @@ jobs:
       with:
         python-version: '3.10'
     - name: Install pip dependencies
-      run: pip install .[style]
+      run: pip install --pre .[style]
     - name: Run isort checks
       run: isort . --check --diff
   pydocstyle:
@@ -62,7 +62,7 @@ jobs:
       with:
         python-version: '3.10'
     - name: Install pip dependencies
-      run: pip install .[style]
+      run: pip install --pre .[style]
     - name: Run pydocstyle checks
       run: pydocstyle
   pyupgrade:
@@ -76,6 +76,6 @@ jobs:
       with:
         python-version: 3.9
     - name: Install pip dependencies
-      run: pip install .[style]
+      run: pip install --pre .[style]
     - name: Run pyupgrade checks
       run: pyupgrade --py37-plus $(find . -name "*.py")

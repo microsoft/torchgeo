@@ -19,8 +19,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
-        pip install cython numpy  # needed for pycocotools
-        pip install .[tests]
+        pip install --pre .[tests]
     - name: Run pytest checks
       run: pytest --cov=torchgeo --cov-report=xml
   integration:
@@ -34,7 +33,7 @@ jobs:
       with:
         python-version: '3.10'
     - name: Install pip dependencies
-      run: pip install .[datasets,tests]
+      run: pip install --pre .[datasets,tests]
     - name: Run integration checks
       run: pytest -m slow
   notebooks:
@@ -49,7 +48,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
-        pip install .[datasets,tests]
+        pip install --pre .[datasets,tests]
         pip install -r docs/requirements.txt
     - name: Run notebook checks
       env:

@@ -21,8 +21,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
-        pip install cython numpy  # needed for pycocotools
-        pip install .[datasets,tests]
+        pip install --pre .[datasets,tests]
     - name: Run mypy checks
       run: mypy .
   pytest:
@@ -62,8 +61,7 @@ jobs:
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies
       run: |
-        pip install cython numpy  # needed for pycocotools
-        pip install .[datasets,tests]
+        pip install --pre .[datasets,tests]
     - name: Run pytest checks
       run: pytest --cov=torchgeo --cov-report=xml
     - name: Report coverage
