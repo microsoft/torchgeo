@@ -5,11 +5,12 @@
 
 from .batch import BatchGeoSampler, RandomBatchGeoSampler
 from .constants import Units
-from .single import GeoSampler, GridGeoSampler, RandomGeoSampler
+from .single import GeoSampler, GridGeoSampler, PreChippedGeoSampler, RandomGeoSampler
 
 __all__ = (
     # Samplers
     "GridGeoSampler",
+    "PreChippedGeoSampler",
     "RandomGeoSampler",
     # Batch samplers
     "RandomBatchGeoSampler",
