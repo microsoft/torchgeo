@@ -261,9 +261,9 @@ class SEN12MS(VisionDataset):
         with rasterio.open(
             os.path.join(
                 self.root,
-                "{0}_{1}".format(*parts),
+                "{}_{}".format(*parts),
                 "{2}_{3}".format(*parts),
-                "{0}_{1}_{2}_{3}_{4}".format(*parts),
+                "{}_{}_{}_{}_{}".format(*parts),
             )
         ) as f:
             array = f.read().astype(np.int32)

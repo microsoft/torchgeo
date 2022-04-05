@@ -412,7 +412,7 @@ class BigEarthNet(VisionDataset):
             folder = self.folders[index]["s1"]
 
         path = glob.glob(os.path.join(folder, "*.json"))[0]
-        with open(path, "r") as f:
+        with open(path) as f:
             labels = json.load(f)["labels"]
 
         # labels -> indices

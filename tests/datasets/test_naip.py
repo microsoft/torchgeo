@@ -4,7 +4,6 @@
 import os
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -17,7 +16,6 @@ from torchgeo.datasets import NAIP, BoundingBox, IntersectionDataset, UnionDatas
 class TestNAIP:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch) -> NAIP:
-        monkeypatch.setattr(plt, "show", lambda *args: None)
         root = os.path.join("tests", "data", "naip")
         transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return NAIP(root, transforms=transforms)
@@ -35,11 +33,6 @@ class TestNAIP:
     def test_or(self, dataset: NAIP) -> None:
         ds = dataset | dataset
         assert isinstance(ds, UnionDataset)
-
-    def test_plot(self, dataset: NAIP) -> None:
-        query = dataset.bounds
-        x = dataset[query]
-        dataset.plot(x["image"])
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="No NAIP data was found in "):

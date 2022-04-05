@@ -155,8 +155,8 @@ class GlobBiomass(RasterDataset):
         )
         self.measurement = measurement
 
-        self.filename_glob = "*0_{}*.tif".format(self.measurement)
-        self.zipfile_glob = "*0_{}.zip".format(self.measurement)
+        self.filename_glob = f"*0_{self.measurement}*.tif"
+        self.zipfile_glob = f"*0_{self.measurement}.zip"
 
         self._verify()
 
@@ -225,7 +225,7 @@ class GlobBiomass(RasterDataset):
             "have manually downloaded the dataset as suggested in the documentation."
         )
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Any],
         show_titles: bool = True,

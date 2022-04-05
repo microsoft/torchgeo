@@ -402,7 +402,7 @@ class OpenBuildings(VectorDataset):
         for zipfile in glob.iglob(pathname):
             filename = os.path.basename(zipfile)
             if self.checksum and not check_integrity(zipfile, self.md5s[filename]):
-                raise RuntimeError("Dataset found, but corrupted: {}.".format(filename))
+                raise RuntimeError(f"Dataset found, but corrupted: {filename}.")
             i += 1
 
         if i != 0:

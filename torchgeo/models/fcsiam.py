@@ -92,7 +92,7 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
             kernel_size=3,
         )
         self.classification_head = None
-        self.name = "u-{}".format(encoder_name)
+        self.name = f"u-{encoder_name}"
         self.initialize()
 
     def forward(self, x: Tensor) -> Tensor:
