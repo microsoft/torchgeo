@@ -40,7 +40,10 @@ def parse_pascal_voc(path: str) -> Dict[str, Any]:
             int(bndbox.find("xmax").text),  # type: ignore[union-attr, arg-type]
             int(bndbox.find("ymax").text),  # type: ignore[union-attr, arg-type]
         ]
-        label = obj.find("damage").text  # type: ignore[union-attr]
+        if obj.find("damage") is not None:
+            label = obj.find("damage").text  # type: ignore[union-attr]
+        else:
+            label = "other"
         bboxes.append(bbox)
         labels.append(label)
     return dict(filename=filename, bboxes=bboxes, labels=labels)
