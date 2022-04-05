@@ -202,7 +202,7 @@ class MillionAID(VisionDataset):
 
         Args:
             root: root directory where dataset can be found
-            task: whether to use multi-class or multi-label task
+            task: type of task, either "multi-class" or "multi-label"
             split: train or test split
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
