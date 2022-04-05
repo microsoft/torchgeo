@@ -21,7 +21,9 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
-        pip install --pre .[datasets,tests]
+        pip install --pre 'rasterio>=1.0.16'
+        pip install .[datasets,tests]
+        pip list
     - name: Run mypy checks
       run: mypy .
   pytest:
@@ -61,7 +63,9 @@ jobs:
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies
       run: |
-        pip install --pre .[datasets,tests]
+        pip install --pre 'rasterio>=1.0.16'
+        pip install .[datasets,tests]
+        pip list
     - name: Run pytest checks
       run: pytest --cov=torchgeo --cov-report=xml
     - name: Report coverage
