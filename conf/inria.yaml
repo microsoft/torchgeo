@@ -27,4 +27,4 @@ experiment:
       batch_size: 2
       num_workers: 32
       patch_size: 512
-      num_patches_per_tile: 8
+      num_patches_per_tile: 4
