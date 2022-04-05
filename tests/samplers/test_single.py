@@ -11,7 +11,13 @@ from rasterio.crs import CRS
 from torch.utils.data import DataLoader
 
 from torchgeo.datasets import BoundingBox, GeoDataset, stack_samples
-from torchgeo.samplers import GeoSampler, GridGeoSampler, RandomGeoSampler, Units
+from torchgeo.samplers import (
+    GeoSampler,
+    GridGeoSampler,
+    PreChippedGeoSampler,
+    RandomGeoSampler,
+    Units,
+)
 
 
 class CustomGeoSampler(GeoSampler):
@@ -183,6 +189,51 @@ class TestGridGeoSampler:
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(
         self, dataset: CustomGeoDataset, sampler: GridGeoSampler, num_workers: int
+    ) -> None:
+        dl = DataLoader(
+            dataset, sampler=sampler, num_workers=num_workers, collate_fn=stack_samples
+        )
+        for _ in dl:
+            continue
+
+
+class TestPreChippedGeoSampler:
+    @pytest.fixture(scope="class")
+    def dataset(self) -> CustomGeoDataset:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 20, 0, 20, 0, 20))
+        ds.index.insert(1, (0, 30, 0, 30, 0, 30))
+        return ds
+
+    @pytest.fixture(scope="function")
+    def sampler(self, dataset: CustomGeoDataset) -> PreChippedGeoSampler:
+        return PreChippedGeoSampler(dataset, shuffle=True)
+
+    def test_iter(self, sampler: GridGeoSampler) -> None:
+        for _ in sampler:
+            continue
+
+    def test_len(self, sampler: GridGeoSampler) -> None:
+        assert len(sampler) == 2
+
+    def test_roi(self, dataset: CustomGeoDataset) -> None:
+        roi = BoundingBox(5, 15, 5, 15, 5, 15)
+        sampler = PreChippedGeoSampler(dataset, roi=roi)
+        for query in sampler:
+            assert query == roi
+
+    def test_point_data(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 0, 0, 0, 0, 0))
+        ds.index.insert(1, (1, 1, 1, 1, 1, 1))
+        sampler = PreChippedGeoSampler(ds)
+        for _ in sampler:
+            continue
+
+    @pytest.mark.slow
+    @pytest.mark.parametrize("num_workers", [0, 1, 2])
+    def test_dataloader(
+        self, dataset: CustomGeoDataset, sampler: PreChippedGeoSampler, num_workers: int
     ) -> None:
         dl = DataLoader(
             dataset, sampler=sampler, num_workers=num_workers, collate_fn=stack_samples
