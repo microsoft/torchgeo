@@ -149,7 +149,6 @@ class TestRasterDataset:
     @pytest.fixture(params=[True, False])
     def naip(self, request: SubRequest) -> NAIP:
         root = os.path.join("tests", "data", "naip")
-        # crs = CRS.from_epsg(3005)
         transforms = nn.Identity()  # type: ignore[no-untyped-call]
         cache = request.param
         return NAIP(root, transforms=transforms, cache=cache)

@@ -4,6 +4,7 @@
 import os
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -40,6 +41,7 @@ class TestNAIP:
         query = dataset.bounds
         x = dataset[query]
         dataset.plot(x, suptitle="Test")
+        plt.close()
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="No NAIP data was found in "):
