@@ -3,7 +3,6 @@
 
 """InriaAerialImageLabeling datamodule."""
 
-import os
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import kornia.augmentation as K
@@ -18,7 +17,7 @@ from torch.utils.data._utils.collate import default_collate
 
 from torchgeo.datamodules.utils import dataset_split
 from torchgeo.datasets import InriaAerialImageLabeling
-from torchgeo.datasets.utils import PredictDataset, compute_padding
+from torchgeo.datasets.utils import compute_padding
 
 DEFAULT_AUGS = K.AugmentationSequential(
     K.RandomHorizontalFlip(p=0.5),
@@ -141,7 +140,6 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         """
         train_transforms = T.Compose([self.preprocess, self.n_random_crop])
         test_transforms = T.Compose([self.preprocess, self.patch_sample])
-        predict_transforms = T.Compose([self.preprocess])
 
         train_dataset = InriaAerialImageLabeling(
             self.root_dir, split="train", transforms=train_transforms
@@ -168,15 +166,10 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             self.val_dataset = train_dataset
             self.test_dataset = train_dataset
 
-        if os.path.isdir(self.predict_on):
-            self.predict_dataset = PredictDataset(
-                self.predict_on, self.patch_size, transforms=predict_transforms
-            )
-        else:
-            assert self.predict_on == "test"
-            self.predict_dataset = InriaAerialImageLabeling(  # type: ignore[assignment]
-                self.root_dir, self.predict_on, transforms=test_transforms
-            )
+        assert self.predict_on == "test"
+        self.predict_dataset = InriaAerialImageLabeling(
+            self.root_dir, self.predict_on, transforms=test_transforms
+        )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""

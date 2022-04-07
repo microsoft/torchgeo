@@ -1,0 +1,18 @@
+experiment:
+  task: "inria"
+  module:
+    loss: "ce"
+    segmentation_model: "unet"
+    encoder_name: "resnet18"
+    encoder_weights: "imagenet"
+    learning_rate: 1e-3
+    learning_rate_schedule_patience: 6
+    in_channels: 3
+    num_classes: 2
+    ignore_zeros: True  # class 0 not used for scoring
+  datamodule:
+      root_dir: "data/inria"
+      batch_size: 1
+      num_workers: 0
+      patch_size: 512
+      num_patches_per_tile: 1
