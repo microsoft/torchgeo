@@ -11,8 +11,10 @@ experiment:
     num_classes: 2
     ignore_zeros: True  # class 0 not used for scoring
   datamodule:
-      root_dir: "data/inria"
+      root_dir: "tests/data/inria"
       batch_size: 1
       num_workers: 0
-      patch_size: 512
-      num_patches_per_tile: 1
+      val_split_pct: 0.2
+      test_split_pct: 0.2
+      patch_size: 2
+      num_patches_per_tile: 2

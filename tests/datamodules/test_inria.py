@@ -9,12 +9,11 @@ from _pytest.fixtures import SubRequest
 from torchgeo.datamodules import InriaAerialImageLabelingDataModule
 
 TEST_DATA_DIR = os.path.join("tests", "data", "inria")
-PREDICT_DATA_DIR = os.path.join(TEST_DATA_DIR, "AerialImageDataset", "test", "images")
 
 
 class TestInriaAerialImageLabelingDataModule:
     @pytest.fixture(
-        params=zip([0.2, 0.2, 0.0], [0.2, 0.0, 0.0], ["test", PREDICT_DATA_DIR, "test"])
+        params=zip([0.2, 0.2, 0.0], [0.2, 0.0, 0.0], ["test", "test", "test"])
     )
     def datamodule(self, request: SubRequest) -> InriaAerialImageLabelingDataModule:
         val_split_pct, test_split_pct, predict_on = request.param
