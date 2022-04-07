@@ -177,7 +177,7 @@ class MillionAID(VisionDataset):
 
     md5s = {
         "train": "1b40503cafa9b0601653ca36cd788852",
-        "test": "https://eastus1-mediap.svc.ms/transform/zip?cs=fFNQTw",
+        "test": "51a63ee3eeb1351889eacff349a983d8",
     }
     url = {
         "train": "https://eastus1-mediap.svc.ms/transform/zip?cs=fFNQTw",
