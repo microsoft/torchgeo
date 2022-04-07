@@ -31,7 +31,6 @@ import numpy as np
 import rasterio
 import torch
 from torch import Tensor
-from torch.nn.modules.utils import _pair
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
 
@@ -53,24 +52,6 @@ __all__ = (
     "rgb_to_mask",
     "percentile_normalization",
 )
-
-
-def compute_padding(
-    original_size: Union[int, Tuple[int, int]], window_size: Union[int, Tuple[int, int]]
-) -> Tuple[int, int]:
-    """Compute required padding."""
-    original_size = cast(Tuple[int, int], _pair(original_size))
-    window_size = cast(Tuple[int, int], _pair(window_size))
-
-    if (original_size[0] % window_size[0]) == 0:
-        h_pad = 0
-    else:
-        h_pad = (window_size[0] - (original_size[0] % window_size[0])) // 2
-    if (original_size[1] % window_size[1]) == 0:
-        w_pad = 0
-    else:
-        w_pad = (window_size[1] - (original_size[1] % window_size[1])) // 2
-    return (h_pad, w_pad)
 
 
 class _rarfile:

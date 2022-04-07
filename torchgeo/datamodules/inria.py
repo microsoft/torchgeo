@@ -10,14 +10,13 @@ import pytorch_lightning as pl
 import torch
 import torchvision.transforms as T
 from einops import rearrange
-from kornia.contrib import extract_tensor_patches
+from kornia.contrib import compute_padding, extract_tensor_patches
 from torch.nn.modules.utils import _pair
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data._utils.collate import default_collate
 
 from torchgeo.datamodules.utils import dataset_split
 from torchgeo.datasets import InriaAerialImageLabeling
-from torchgeo.datasets.utils import compute_padding
 
 DEFAULT_AUGS = K.AugmentationSequential(
     K.RandomHorizontalFlip(p=0.5),
