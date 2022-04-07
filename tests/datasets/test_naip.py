@@ -22,9 +22,6 @@ class TestNAIP:
 
     def test_getitem(self, dataset: NAIP) -> None:
         x = dataset[dataset.bounds]
-        print(len(dataset))
-        print(dataset.bounds)
-        print(x["image"].shape)
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["image"], torch.Tensor)

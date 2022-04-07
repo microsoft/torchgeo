@@ -149,9 +149,10 @@ class TestRasterDataset:
     @pytest.fixture(params=[True, False])
     def naip(self, request: SubRequest) -> NAIP:
         root = os.path.join("tests", "data", "naip")
+        crs = CRS.from_epsg(3005)
         transforms = nn.Identity()  # type: ignore[no-untyped-call]
         cache = request.param
-        return NAIP(root, transforms=transforms, cache=cache)
+        return NAIP(root, crs=crs, transforms=transforms, cache=cache)
 
     @pytest.fixture(params=[True, False])
     def sentinel(self, request: SubRequest) -> Sentinel2:
@@ -167,8 +168,6 @@ class TestRasterDataset:
         return RasterDataset(root)
 
     def test_getitem_single_file(self, naip: NAIP) -> None:
-        print("Naip bounds")
-        print(naip.bounds)
         x = naip[naip.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)

@@ -4,7 +4,6 @@
 # Licensed under the MIT License.
 
 import os
-import random
 
 import numpy as np
 import rasterio
@@ -14,7 +13,6 @@ from rasterio.transform import Affine
 SIZE = 128
 
 np.random.seed(0)
-random.seed(0)
 
 # from Chesapeak data.py
 wkt = """
