@@ -17,14 +17,12 @@ class Landsat(RasterDataset, abc.ABC):
     `Landsat <https://landsat.gsfc.nasa.gov/>`_ is a joint NASA/USGS program,
     providing the longest continuous space-based record of Earth's land in existence.
 
-    If you use this dataset in your research, please cite it using the following format:
+    If you use this dataset in your research, please cite the following paper:
 
-    * https://www.usgs.gov/centers/eros/data-citation
+    * https://doi.org/10.1109/LGRS.2005.857030
     """
 
-    # https://www.usgs.gov/faqs/what-naming-convention-landsat-collections-level-1-scenes
-    # https://www.usgs.gov/faqs/what-naming-convention-landsat-collection-2-level-1-and-level-2-scenes
-    filename_glob = "L*"
+    # https://www.usgs.gov/landsat-missions/landsat-collection-2
     filename_regex = r"""
         ^L
         (?P<sensor>[COTEM])
@@ -39,10 +37,6 @@ class Landsat(RasterDataset, abc.ABC):
         _(?P<band>[A-Z0-9_]+)
         \.
     """
-
-    # https://www.usgs.gov/faqs/what-are-band-designations-landsat-satellites
-    all_bands: List[str] = []
-    rgb_bands: List[str] = []
 
     separate_files = True
 
@@ -142,7 +136,19 @@ class Landsat8(Landsat):
 
     filename_glob = "LC08_*_{}.*"
 
-    all_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7", "SR_B8", "SR_B9", "SR_B10", "SR_B11"]
+    all_bands = [
+        "SR_B1",
+        "SR_B2",
+        "SR_B3",
+        "SR_B4",
+        "SR_B5",
+        "SR_B6",
+        "SR_B7",
+        "SR_B8",
+        "SR_B9",
+        "SR_B10",
+        "SR_B11",
+    ]
     rgb_bands = ["SR_B4", "SR_B3", "SR_B2"]
 
 
