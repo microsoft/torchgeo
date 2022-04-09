@@ -4,7 +4,7 @@
 """Landsat datasets."""
 
 import abc
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Any, Callable, Dict, Optional, Sequence
 
 from rasterio.crs import CRS
 
@@ -17,10 +17,18 @@ class Landsat(RasterDataset, abc.ABC):
     `Landsat <https://landsat.gsfc.nasa.gov/>`_ is a joint NASA/USGS program,
     providing the longest continuous space-based record of Earth's land in existence.
 
-    If you use this dataset in your research, please cite the following paper:
+    If you use this dataset in your research, please cite it using the following format:
 
-    * https://doi.org/10.1109/LGRS.2005.857030
-    """
+    * https://www.usgs.gov/centers/eros/data-citation
+
+    If you use any of the following Level-2 products, there may be additional citation
+    requirements, including papers you can cite. See the "Citation Information" section
+    of the following pages:
+
+    * `Surface Temperature <https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-temperature>`_
+    * `Surface Reflectance <https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-reflectance>`_
+    * `U.S. Analysis Ready Data <https://www.usgs.gov/landsat-missions/landsat-collection-2-us-analysis-ready-data>`_
+    """  # noqa: E501
 
     # https://www.usgs.gov/landsat-missions/landsat-collection-2
     filename_regex = r"""
