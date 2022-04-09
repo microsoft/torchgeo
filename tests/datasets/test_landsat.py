@@ -17,7 +17,7 @@ class TestLandsat8:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch) -> Landsat8:
         root = os.path.join("tests", "data", "landsat8")
-        bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7"]
+        bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"]
         transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return Landsat8(root, bands=bands, transforms=transforms)
 
