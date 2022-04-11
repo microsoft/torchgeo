@@ -34,6 +34,7 @@ from .etci2021 import ETCI2021
 from .eudem import EUDEM
 from .eurosat import EuroSAT
 from .fair1m import FAIR1M
+from .forestdamage import ForestDamage
 from .geo import (
     GeoDataset,
     IntersectionDataset,
@@ -75,7 +76,15 @@ from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel2
 from .so2sat import So2Sat
-from .spacenet import SpaceNet, SpaceNet1, SpaceNet2, SpaceNet4, SpaceNet5, SpaceNet7
+from .spacenet import (
+    SpaceNet,
+    SpaceNet1,
+    SpaceNet2,
+    SpaceNet3,
+    SpaceNet4,
+    SpaceNet5,
+    SpaceNet7,
+)
 from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
@@ -138,6 +147,7 @@ __all__ = (
     "ETCI2021",
     "EuroSAT",
     "FAIR1M",
+    "ForestDamage",
     "GID15",
     "IDTReeS",
     "InriaAerialImageLabeling",
@@ -155,6 +165,7 @@ __all__ = (
     "SpaceNet",
     "SpaceNet1",
     "SpaceNet2",
+    "SpaceNet3",
     "SpaceNet4",
     "SpaceNet5",
     "SpaceNet7",

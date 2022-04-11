@@ -94,14 +94,16 @@ In order to remain `PEP-8 <https://www.python.org/dev/peps/pep-0008/>`_ complian
 * `isort <https://pycqa.github.io/isort/>`_ for import ordering
 * `flake8 <https://flake8.pycqa.org/>`_ for code formatting
 * `pydocstyle <https://www.pydocstyle.org/>`_ for docstrings
+* `pyupgrade <https://github.com/asottile/pyupgrade>`_ for code formatting
 * `mypy <https://mypy.readthedocs.io/>`_ for static type analysis
 
-All of these tools should be used from the root of the project to ensure that our configuration files are found. Black and isort are relatively easy to use, and will automatically format your code for you:
+All of these tools should be used from the root of the project to ensure that our configuration files are found. Black, isort, and pyupgrade are relatively easy to use, and will automatically format your code for you:
 
 .. code-block:: console
 
    $ black .
    $ isort .
+   $ pyupgrade --py37-plus $(find . -name "*.py")
 
 
 Flake8, pydocstyle, and mypy won't format your code for you, but they will warn you about potential issues with your code or docstrings:

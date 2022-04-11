@@ -5,7 +5,7 @@ import builtins
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import pytest
 import torch
@@ -28,21 +28,16 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestUSAVars:
     @pytest.fixture()
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> USAVars:
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.usavars, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.usavars, "download_url", download_url)
 
         md5 = "b504580a00bdc27097d5421dec50481b"
-        monkeypatch.setattr(USAVars, "md5", md5)  # type: ignore[attr-defined]
+        monkeypatch.setattr(USAVars, "md5", md5)
 
         data_url = os.path.join("tests", "data", "usavars", "uar.zip")
-        monkeypatch.setattr(USAVars, "data_url", data_url)  # type: ignore[attr-defined]
+        monkeypatch.setattr(USAVars, "data_url", data_url)
 
         label_urls = {
             "elevation": os.path.join("tests", "data", "usavars", "elevation.csv"),
@@ -53,12 +48,10 @@ class TestUSAVars:
             "roads": os.path.join("tests", "data", "usavars", "roads.csv"),
             "housing": os.path.join("tests", "data", "usavars", "housing.csv"),
         }
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            USAVars, "label_urls", label_urls
-        )
+        monkeypatch.setattr(USAVars, "label_urls", label_urls)
 
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
 
         return USAVars(root, transforms=transforms, download=True, checksum=True)
 
@@ -103,9 +96,7 @@ class TestUSAVars:
             USAVars(str(tmp_path))
 
     @pytest.fixture(params=["pandas"])
-    def mock_missing_module(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
-    ) -> str:
+    def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:
         import_orig = builtins.__import__
         package = str(request.param)
 
@@ -114,9 +105,7 @@ class TestUSAVars:
                 raise ImportError()
             return import_orig(name, *args, **kwargs)
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            builtins, "__import__", mocked_import
-        )
+        monkeypatch.setattr(builtins, "__import__", mocked_import)
         return package
 
     def test_mock_missing_module(

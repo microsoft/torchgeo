@@ -39,7 +39,9 @@ class CustomGeoDataset(GeoDataset):
 class TestBatchGeoSampler:
     @pytest.fixture(scope="class")
     def dataset(self) -> CustomGeoDataset:
-        return CustomGeoDataset()
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 100, 200, 300, 400, 500))
+        return ds
 
     @pytest.fixture(scope="function")
     def sampler(self) -> CustomBatchGeoSampler:
@@ -124,6 +126,23 @@ class TestRandomBatchGeoSampler:
         sampler = RandomBatchGeoSampler(ds, 2, 2, 10)
         for _ in sampler:
             continue
+
+    def test_point_data(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 0, 0, 0, 0, 0))
+        ds.index.insert(1, (1, 1, 1, 1, 1, 1))
+        sampler = RandomBatchGeoSampler(ds, 0, 2, 10)
+        for _ in sampler:
+            continue
+
+    def test_weighted_sampling(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 0, 0, 0, 0, 0))
+        ds.index.insert(1, (0, 10, 0, 10, 0, 10))
+        sampler = RandomBatchGeoSampler(ds, 1, 2, 10)
+        for batch in sampler:
+            for bbox in batch:
+                assert bbox == BoundingBox(0, 10, 0, 10, 0, 10)
 
     @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])

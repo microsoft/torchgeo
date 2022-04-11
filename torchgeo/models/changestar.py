@@ -78,14 +78,10 @@ class ChangeMixin(Module):
             a list of bidirected output predictions
         """
         batch_size = bi_feature.size(0)
-        t1t2 = torch.cat(  # type: ignore[attr-defined]
-            [bi_feature[:, 0, :, :, :], bi_feature[:, 1, :, :, :]], dim=1
-        )
-        t2t1 = torch.cat(  # type: ignore[attr-defined]
-            [bi_feature[:, 1, :, :, :], bi_feature[:, 0, :, :, :]], dim=1
-        )
+        t1t2 = torch.cat([bi_feature[:, 0, :, :, :], bi_feature[:, 1, :, :, :]], dim=1)
+        t2t1 = torch.cat([bi_feature[:, 1, :, :, :], bi_feature[:, 0, :, :, :]], dim=1)
 
-        c1221 = self.convs(torch.cat([t1t2, t2t1], dim=0))  # type: ignore[attr-defined]
+        c1221 = self.convs(torch.cat([t1t2, t2t1], dim=0))
         c12, c21 = torch.split(
             c1221, batch_size, dim=0
         )  # type: ignore[no-untyped-call]

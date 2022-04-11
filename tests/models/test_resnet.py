@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, Generator, Optional
+from typing import Any, Optional
 
 import pytest
 import torch
@@ -32,7 +32,7 @@ def load_state_dict_from_file(
     [(resnet50, "sentinel2", "all", 10, 17)],
 )
 def test_resnet(
-    monkeypatch: Generator[MonkeyPatch, None, None],
+    monkeypatch: MonkeyPatch,
     tmp_path: Path,
     model_class: Module,
     sensor: str,
@@ -49,15 +49,13 @@ def test_resnet(
         "sentinel2": {"all": {"resnet50": str(tmp_path / "resnet50-sentinel2-2.pt")}}
     }
 
-    monkeypatch.setattr(  # type: ignore[attr-defined]
-        torchgeo.models.resnet, "MODEL_URLS", new_model_urls
-    )
-    monkeypatch.setattr(  # type: ignore[attr-defined]
+    monkeypatch.setattr(torchgeo.models.resnet, "MODEL_URLS", new_model_urls)
+    monkeypatch.setattr(
         torchgeo.models.resnet, "load_state_dict_from_url", load_state_dict_from_file
     )
 
     model = model_class(sensor, bands, pretrained=True)
-    x = torch.zeros(1, in_channels, 256, 256)  # type: ignore[attr-defined]
+    x = torch.zeros(1, in_channels, 256, 256)
     y = model(x)
     assert isinstance(y, torch.Tensor)
-    assert y.size() == torch.Size([1, 17])  # type: ignore[attr-defined]
+    assert y.size() == torch.Size([1, 17])

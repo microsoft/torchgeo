@@ -8,16 +8,11 @@ import gzip
 import hashlib
 import json
 import os
-import random
 import shutil
 
-import numpy as np
 from shapely.geometry import Polygon
 
 SIZE = 0.05
-
-np.random.seed(0)
-random.seed(0)
 
 
 def create_meta_data_file(zipfilename):
@@ -34,7 +29,7 @@ def create_meta_data_file(zipfilename):
                 },
                 "properties": {
                     "tile_id": "025",
-                    "tile_url": "polygons_s2_level_4_gzip/{}".format(zipfilename),
+                    "tile_url": f"polygons_s2_level_4_gzip/{zipfilename}",
                     "size_mb": 0.2,
                 },
             }

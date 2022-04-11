@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
-from torch import Generator  # type: ignore[attr-defined]
+from torch import Generator
 from torch.utils.data import DataLoader, random_split
 from torchvision.transforms import Normalize
 
@@ -24,11 +24,11 @@ class ETCI2021DataModule(pl.LightningDataModule):
     .. versionadded:: 0.2
     """
 
-    band_means = torch.tensor(  # type: ignore[attr-defined]
+    band_means = torch.tensor(
         [0.52253931, 0.52253931, 0.52253931, 0.61221701, 0.61221701, 0.61221701, 0]
     )
 
-    band_stds = torch.tensor(  # type: ignore[attr-defined]
+    band_stds = torch.tensor(
         [0.35221376, 0.35221376, 0.35221376, 0.37364622, 0.37364622, 0.37364622, 1]
     )
 
@@ -72,9 +72,7 @@ class ETCI2021DataModule(pl.LightningDataModule):
         flood_mask = sample["mask"][1]
         flood_mask = (flood_mask > 0).long()
 
-        sample["image"] = torch.cat(  # type: ignore[attr-defined]
-            [image, water_mask], dim=0
-        ).float()
+        sample["image"] = torch.cat([image, water_mask], dim=0).float()
         sample["image"] /= 255.0
         sample["image"] = self.norm(sample["image"])
         sample["mask"] = flood_mask
@@ -153,4 +151,4 @@ class ETCI2021DataModule(pl.LightningDataModule):
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
         """Run :meth:`torchgeo.datasets.ETCI2021.plot`."""
-        return self.val_dataset.plot(*args, **kwargs)
+        return self.test_dataset.plot(*args, **kwargs)

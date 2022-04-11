@@ -26,7 +26,7 @@ class OSCDDataModule(pl.LightningDataModule):
     .. versionadded:: 0.2
     """
 
-    band_means = torch.tensor(  # type: ignore[attr-defined]
+    band_means = torch.tensor(
         [
             1583.0741,
             1374.3202,
@@ -44,7 +44,7 @@ class OSCDDataModule(pl.LightningDataModule):
         ]
     )
 
-    band_stds = torch.tensor(  # type: ignore[attr-defined]
+    band_stds = torch.tensor(
         [
             52.1937,
             83.4168,
@@ -114,9 +114,7 @@ class OSCDDataModule(pl.LightningDataModule):
         sample["image"] = sample["image"].float()
         sample["mask"] = sample["mask"]
         sample["image"] = self.norm(sample["image"])
-        sample["image"] = torch.flatten(  # type: ignore[attr-defined]
-            sample["image"], 0, 1
-        )
+        sample["image"] = torch.flatten(sample["image"], 0, 1)
         return sample
 
     def prepare_data(self) -> None:
@@ -187,12 +185,8 @@ class OSCDDataModule(pl.LightningDataModule):
             r_batch: Dict[str, Any] = default_collate(  # type: ignore[no-untyped-call]
                 batch
             )
-            r_batch["image"] = torch.flatten(  # type: ignore[attr-defined]
-                r_batch["image"], 0, 1
-            )
-            r_batch["mask"] = torch.flatten(  # type: ignore[attr-defined]
-                r_batch["mask"], 0, 1
-            )
+            r_batch["image"] = torch.flatten(r_batch["image"], 0, 1)
+            r_batch["mask"] = torch.flatten(r_batch["mask"], 0, 1)
             return r_batch
 
         return DataLoader(

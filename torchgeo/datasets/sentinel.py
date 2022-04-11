@@ -102,7 +102,7 @@ class Sentinel2(Sentinel):
 
         super().__init__(root, crs, res, transforms, cache)
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Tensor],
         show_titles: bool = True,
@@ -131,7 +131,7 @@ class Sentinel2(Sentinel):
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
         image = sample["image"][rgb_indices].permute(1, 2, 0)
-        image = torch.clamp(image / 3000, min=0, max=1)  # type: ignore[attr-defined]
+        image = torch.clamp(image / 2000, min=0, max=1)
 
         fig, ax = plt.subplots(1, 1, figsize=(4, 4))
 

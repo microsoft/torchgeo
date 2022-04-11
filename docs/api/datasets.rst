@@ -157,6 +157,11 @@ FAIR1M (Fine-grAined object recognItion in high-Resolution imagery)
 
 .. autoclass:: FAIR1M
 
+Forest Damage
+^^^^^^^^^^^^^
+
+.. autoclass:: ForestDamage
+
 GID-15 (Gaofen Image Dataset)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -233,6 +238,7 @@ SpaceNet
 .. autoclass:: SpaceNet
 .. autoclass:: SpaceNet1
 .. autoclass:: SpaceNet2
+.. autoclass:: SpaceNet3    
 .. autoclass:: SpaceNet4
 .. autoclass:: SpaceNet5
 .. autoclass:: SpaceNet7
