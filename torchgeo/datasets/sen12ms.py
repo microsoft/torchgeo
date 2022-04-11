@@ -266,7 +266,9 @@ class SEN12MS(VisionDataset):
                 "{}_{}_{}_{}_{}".format(*parts),
             )
         ) as f:
-            array = f.read().astype(np.int32)
+            array = f.read()
+            if array.dtype == np.uint16:
+                array = array.astype(np.int32)
             tensor = torch.from_numpy(array)
             return tensor
 
