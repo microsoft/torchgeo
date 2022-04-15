@@ -64,7 +64,7 @@ class GBIF(GeoDataset):
     all types of life on Earth.
 
     This dataset is intended for use with GBIF's
-    `occurence records <https://www.gbif.org/dataset/search>`_. It may or may not work
+    `occurrence records <https://www.gbif.org/dataset/search>`_. It may or may not work
     for other GBIF `datasets <https://www.gbif.org/dataset/search>`_. Data for a
     particular species or region of interest can be downloaded from the above link.
 
