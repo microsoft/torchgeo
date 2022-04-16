@@ -138,9 +138,11 @@ class GBIF(GeoDataset):
         hits = self.index.intersection(tuple(query), objects=True)
         bboxes = [hit.bbox for hit in hits]
 
-        sample = {
-            "crs": self.crs,
-            "bbox": bboxes
-        }
+        if not bboxes:
+            raise IndexError(
+                f"query: {query} not found in index with bounds: {self.bounds}"
+            )
+
+        sample = {"crs": self.crs, "bbox": bboxes}
 
         return sample
