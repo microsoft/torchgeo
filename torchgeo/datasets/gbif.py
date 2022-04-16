@@ -115,6 +115,7 @@ class GBIF(GeoDataset):
         for y, x, day, month, year in data.itertuples(index=False, name=None):
             # Skip rows without lat/lon
             if np.isnan(y) or np.isnan(x):
+                print("is pytest-cov broken?")
                 continue
 
             mint, maxt = _disambiguate_timestamps(year, month, day)
