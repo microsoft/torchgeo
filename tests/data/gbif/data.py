@@ -30,7 +30,7 @@ data = {
     "occurrenceStatus": ["PRESENT"] * size,
     "individualCount": [1] * size,
     "publishingOrgKey": [""] * size,
-    "decimalLatitude": [""] + [41.881832] * (size - 1),
+    "decimalLatitude": [41.881832] * size,
     "decimalLongitude": [""] + [-87.623177] * (size - 1),
     "coordinateUncertaintyInMeters": [5] * size,
     "coordinatePrecision": [""] * size,
