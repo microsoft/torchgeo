@@ -72,6 +72,11 @@ class GBIF(GeoDataset):
 
     * https://www.gbif.org/citation-guidelines
 
+    .. note::
+       This dataset requires the following additional library to be installed:
+
+       * `pandas <https://pypi.org/project/pandas/>`_ to load CSV files
+
     .. versionadded:: 0.3
     """
 
