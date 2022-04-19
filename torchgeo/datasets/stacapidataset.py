@@ -4,28 +4,19 @@
 """STACAPIDataset."""
 
 import sys
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, Optional, Sequence
 
 import matplotlib.pyplot as plt
-import numpy as np
 import planetary_computer as pc
 import stackstac
 import torch
 from pyproj import Transformer
-from pystac.item import Item
 from pystac_client import Client
 from rasterio.crs import CRS
-from rioxarray.merge import merge_arrays
-from rtree.index import Index, Property
 from torch import Tensor
-
-# from torch.utils.data import DataLoader
-from xarray.core.dataarray import DataArray
 
 from torchgeo.datasets.geo import GeoDataset
 from torchgeo.datasets.utils import BoundingBox
-
-# from torchgeo.samplers import RandomGeoSampler
 
 
 class STACAPIDataset(GeoDataset):
@@ -87,8 +78,7 @@ class STACAPIDataset(GeoDataset):
         self.bands = bands
         self.is_image = is_image
 
-        # Create an R-tree to index the dataset
-        self.index = Index(interleaved=False, properties=Property(dimension=3))
+        super().__init__(transforms)
 
         catalog = Client.open(api_endpoint)
 
@@ -98,19 +88,18 @@ class STACAPIDataset(GeoDataset):
 
         if not items:
             raise RuntimeError(
-                f"Your search criteria off {query_parameters} did not return any items"
+                f"No items returned from search criteria: {query_parameters}"
             )
 
         epsg = items[0].properties["proj:epsg"]
-        crs_dict = {"init": "epsg:{}".format(epsg)}
-        src_crs = CRS.from_dict(crs_dict)
+        src_crs = CRS.from_epsg(epsg)
         if crs is None:
-            crs = CRS.from_dict(crs_dict)
+            crs = src_crs
 
         for i, item in enumerate(items):
             minx, miny, maxx, maxy = item.bbox
 
-            transformer = Transformer.from_crs(src_crs.to_epsg(), crs.to_epsg())
+            transformer = Transformer.from_crs(4326, crs.to_epsg(), always_xy=True)
             (minx, maxx), (miny, maxy) = transformer.transform(
                 [minx, maxx], [miny, maxy]
             )
@@ -120,8 +109,7 @@ class STACAPIDataset(GeoDataset):
             self.index.insert(i, coords, item)
 
         self._crs = crs
-        self.res = 10
-        self.transforms = transforms
+        self.res = res
         self.items = items
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
@@ -144,18 +132,6 @@ class STACAPIDataset(GeoDataset):
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
-        bounds = (query.minx, query.miny, query.maxx, query.maxy)
-
-        raster_list = []
-        for item in items:
-            raster_list.append(self._snap_to_single_raster(item, bounds))
-
-        # merge single rasters
-        data = self._merge_rasters(raster_list)
-
-        # if only single time step then squeeze out time dimenstion
-        image = data.squeeze(0)
-
         # suggested #
         signed_items = [pc.sign(item).to_dict() for item in items]
 
@@ -170,11 +146,10 @@ class STACAPIDataset(GeoDataset):
             ..., query.maxy : query.miny, query.minx : query.maxx  # type: ignore[misc]
         ]
 
-        suggested_data = aoi.compute(scheduler="single-threaded")
-        suggested_image = suggested_data.data
-        # end suggested #
+        data = aoi.compute(scheduler="single-threaded").data
 
-        assert suggested_image.shape == image.shape
+        # handle time dimension here
+        image: Tensor = torch.Tensor(data)
 
         key = "image" if self.is_image else "mask"
         sample = {key: image, "crs": self.crs, "bbox": query}
@@ -183,54 +158,6 @@ class STACAPIDataset(GeoDataset):
             sample = self.transforms(sample)
 
         return sample
-
-    def _snap_to_single_raster(
-        self, item: Item, bounds: Tuple[float, ...]
-    ) -> DataArray:
-        """Load and merge one or multiple individual bands to one raster.
-
-        Args:
-            item: one search item from cataloge
-            bounds: (minx, maxx, miny, maxy) coordinates to index
-
-        Returns:
-            computed data array from stac
-        """
-        signed_items = pc.sign(item).to_dict()
-
-        aoi = stackstac.stack(
-            signed_items,
-            assets=self.bands,
-            bounds_latlon=bounds,
-            resolution=self.res,
-            epsg=self._crs.to_epsg(),
-        )
-
-        dest = aoi.compute(scheduler="single-threaded")
-        return dest
-
-    def _merge_rasters(self, raster_list: List[DataArray]) -> Tensor:
-        """Merge a list of rasters.
-
-        Args:
-            raster_list: list of xarrays
-
-        Returns:
-            Tensor of merged xarray data.
-        """
-        time_dim = raster_list[0].shape[0]
-
-        # rioxarray only supports merges for 2D and 3D arrays so merge per time_step
-        # and later stack to one tensor
-        merged_rasters = []
-        for t in range(time_dim):
-            rasters_at_t = [r[t, ...] for r in raster_list]
-            merged_rasters.append(merge_arrays(rasters_at_t))
-
-        data: "np.typing.NDArray[np.float_]" = np.stack(merged_rasters)
-        tensor: Tensor = torch.tensor(data)  # type: ignore[attr-defined]
-
-        return tensor
 
     def plot(
         self,
@@ -296,26 +223,12 @@ if __name__ == "__main__":
         query={"eo:cloud_cover": {"lt": 10}},
     )
 
-    minx = -148.46876
-    maxx = -148.31072
-    miny = 61.0491
-    maxy = 61.12567489536982
+    minx = 420688.14962388354
+    maxx = 429392.15007465985
+    miny = 6769145.954634559
+    maxy = 6777492.989499866
     mint = 0
     maxt = 100000
 
     bbox = BoundingBox(minx, maxx, miny, maxy, mint, maxt)
     sample = ds[bbox]
-
-    ds.plot(sample)
-    import pdb
-
-    pdb.set_trace()
-
-    # tile_size_pix = 40
-    # sampler_size = tile_size_pix * ds.res
-    # sampler = RandomGeoSampler(ds, size=sampler_size, length=2)
-    # dl = DataLoader(ds, sampler=sampler, collate_fn=stack_samples, batch_size=1)
-
-    # for sample in dl:
-    #     k = sample["image"]
-    #     print(k.shape)
