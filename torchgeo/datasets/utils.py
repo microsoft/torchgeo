@@ -447,7 +447,6 @@ def disambiguate_timestamp(date_str: str, format: str) -> Tuple[float, float]:
         # Microsecond resolution
         maxt = mint + timedelta(microseconds=1)
 
-    mint -= timedelta(microseconds=1)
     maxt -= timedelta(microseconds=1)
 
     return mint.timestamp(), maxt.timestamp()
