@@ -23,6 +23,7 @@ from .chesapeake import (
     ChesapeakeVA,
     ChesapeakeWV,
 )
+from.cloud_cover import CloudCoverDetection
 from .cms_mangrove_canopy import CMSGlobalMangroveCanopy
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
@@ -115,6 +116,7 @@ __all__ = (
     "ChesapeakeVA",
     "ChesapeakeWV",
     "ChesapeakeCVPR",
+    "CloudCoverDetection",
     "CMSGlobalMangroveCanopy",
     "Esri2020",
     "EUDEM",
