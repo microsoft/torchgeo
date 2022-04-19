@@ -11,8 +11,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import rasterio
-from rasterio.enums import Resampling
-from PIL import Image
 from torch import Tensor
 
 from .geo import VisionDataset
@@ -50,7 +48,7 @@ class CloudCoverDetection(VisionDataset):
          imagery and labels from the Radiant Earth MLHub
     """
 
-    datset_id = "ref_cloud_cover_detection_challenge_v1"
+    dataset_id = "ref_cloud_cover_detection_challenge_v1"
 
     image_meta = {
         "train": {
@@ -128,7 +126,6 @@ class CloudCoverDetection(VisionDataset):
         self.bands = bands
         self.transforms = transforms
         self.checksum = checksum
-        self.collection_glob = self._get_collection_glob()
 
         if download:
             self._download(api_key)
@@ -161,7 +158,7 @@ class CloudCoverDetection(VisionDataset):
 
         image = self._load_image(index)
         label = self._load_target(index)
-        sample = Dict[str, Tensor] = {
+        sample: Dict[str, Tensor] = {
             "image": image,
             "mask": label
         }
@@ -185,12 +182,7 @@ class CloudCoverDetection(VisionDataset):
         images = []
         for path in source_asset_paths:
             with rasterio.open(path) as image_data:
-                image_array = image_data.read(
-                    indexes=1,
-                    # out_shape=self.chip_size,
-                    out_type="int32",
-                    # resampling=Resampling.bilinear
-                )
+                image_array = image_data.read(1).astype(np.int32)
                 images.append(image_array)
         image_stack: "np.typing.NDArray[np.int_]" = np.stack(images, axis=0)
         image_tensor = torch.from_numpy(image_stack)
@@ -207,21 +199,11 @@ class CloudCoverDetection(VisionDataset):
         """
 
         label_asset_path = self.chip_paths[index]['target']
-        with Image.open(label_asset_path) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img)
-            labels = torch.from_numpy(array)
-
-    def _get_collection_glob(self):
-        """Loads collection paths for the train/test split
-
-        Returns:
-            a list of paths to each collection.json file from the dataset
-        """
-        
-        collection_glob = []
-        for collection in self.collection_names[self.split]:
-            collection_glob += glob.glob(f'{self.root}/{collection}/**/collection.json', recursive=True) 
-        return collection_glob
+        with rasterio.open(label_asset_path) as target_data:
+            target_array = target_data.read(1).astype(np.int32)
+            target_array: "np.typing.NDArray[np.int_]" = np.array(target_array)
+            label_tensor = torch.from_numpy(target_array)
+            return label_tensor
 
     @staticmethod
     def _validate_stac_object(object_path: str) -> bool:
@@ -274,7 +256,7 @@ class CloudCoverDetection(VisionDataset):
                     source_item_path = os.path.split(item_href)[0]
                     if self._validate_stac_object(item_href):
                         source_data = self._read_json_data(item_href)
-                        source_item_assets = [os.path.join(source_item_path, asset_value['href']) for asset_key, asset_value in source_data['assets'].items() if asset_key in bands]
+                        source_item_assets = [os.path.join(source_item_path, asset_value['href']) for asset_key, asset_value in source_data['assets'].items() if asset_key in self.bands]
                         source_item_assets = sorted(source_item_assets)
                         for source_item_asset in source_item_assets:
                             if self._validate_stac_object(source_item_asset):
@@ -299,10 +281,6 @@ class CloudCoverDetection(VisionDataset):
         label_collection_json = os.path.join(label_collection_path, 'collection.json')
         
         if self._validate_stac_object(label_collection_json):
-            if not label_collection_json in self.collection_glob:
-                raise RuntimeError(
-                    f"{label_collection_json} not found in dataset directory"
-                )
 
             label_collection_item_hrefs = [l['href'] for l in self._read_json_data(label_collection_json)['links'] if l['rel'] == 'item']
             label_collection_item_hrefs = sorted(label_collection_item_hrefs)
@@ -366,3 +344,59 @@ class CloudCoverDetection(VisionDataset):
         target_archive_path = os.path.join(self.root, self.target_meta[self.split]["filename"])
         for fn in [image_archive_path, target_archive_path]:
             extract_archive(fn, self.root)
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            time_step: time step at which to access image, beginning with 0
+            suptitle: optional suptitle to use for figure
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        rgb_indices = []
+        for band in self.RGB_BANDS:
+            if band in self.bands:
+                rgb_indices.append(self.bands.index(band))
+            else:
+                raise ValueError("Dataset doesn't contain some of the RGB bands")
+
+        if "prediction" in sample:
+            prediction = sample["prediction"]
+            n_cols = 3
+        else:
+            n_cols = 2
+
+        image, mask = sample["image"], sample["mask"]
+
+        fig, axs = plt.subplots(nrows=1, ncols=n_cols, figsize=(10, n_cols * 5))
+
+        axs[0].imshow(image.permute(1, 2, 0))
+        axs[0].axis("off")
+        axs[1].imshow(mask)
+        axs[1].axis("off")
+
+        if "prediction" in sample:
+            axs[2].imshow(prediction)
+            axs[2].axis("off")
+            if show_titles:
+                axs[2].set_title("Prediction")
+
+        if show_titles:
+            axs[0].set_title("Image")
+            axs[1].set_title("Mask")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
