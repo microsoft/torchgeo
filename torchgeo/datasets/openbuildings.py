@@ -19,7 +19,7 @@ import torch
 from rasterio.crs import CRS
 from rtree.index import Index, Property
 
-from .geo import VectorDataset
+from .geo import GeoMetaData, VectorDataset
 from .utils import BoundingBox, check_integrity
 
 
@@ -281,7 +281,7 @@ class OpenBuildings(VectorDataset):
             filepath = os.path.join(
                 self.root, feature["properties"]["tile_url"].split("/")[-1]
             )
-            self.index.insert(i, coords, dict(filepath=filepath))
+            self.index.insert(i, coords, GeoMetaData(filepath=filepath, crs=crs))
             i += 1
 
         if i == 0:
