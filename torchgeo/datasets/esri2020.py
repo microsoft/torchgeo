@@ -137,7 +137,7 @@ class Esri2020(RasterDataset):
         """Extract the dataset."""
         extract_archive(os.path.join(self.root, self.zipfile))
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Any],
         show_titles: bool = True,

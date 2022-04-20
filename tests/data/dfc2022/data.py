@@ -5,7 +5,6 @@
 
 import hashlib
 import os
-import random
 import shutil
 
 import numpy as np
@@ -16,7 +15,6 @@ from torchgeo.datasets import DFC2022
 SIZE = 32
 
 np.random.seed(0)
-random.seed(0)
 
 
 train_set = [

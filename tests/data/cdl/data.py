@@ -28,6 +28,17 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
     profile["width"] = SIZE
     profile["compress"] = "lzw"
     profile["predictor"] = 2
+    cmap = {
+        0: (0, 0, 0, 0),
+        1: (255, 211, 0, 255),
+        2: (255, 38, 38, 255),
+        3: (0, 168, 228, 255),
+        4: (255, 158, 11, 255),
+        5: (38, 112, 0, 255),
+        6: (255, 255, 0, 255),
+        7: (0, 0, 0, 255),
+        8: (0, 0, 0, 255),
+    }
 
     Z = np.random.randint(size=(SIZE, SIZE), low=0, high=8)
 
@@ -35,14 +46,16 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
     for i in range(1, profile["count"] + 1):
         src.write(Z, i)
 
+    src.write_colormap(1, cmap)
+
 
 directories = ["2020_30m_cdls", "2021_30m_cdls"]
-raster_extensions = [[".tif", ".tif.ovr"], [".tif", ".tif.ovr"]]
+raster_extensions = [".tif", ".tif.ovr"]
 
 
 if __name__ == "__main__":
 
-    for dir, extensions in zip(directories, raster_extensions):
+    for dir in directories:
         filename = dir + ".zip"
 
         # Remove old data
@@ -51,7 +64,7 @@ if __name__ == "__main__":
 
         os.makedirs(os.path.join(os.getcwd(), dir))
 
-        for e in extensions:
+        for e in raster_extensions:
             create_file(
                 os.path.join(dir, filename.replace(".zip", e)),
                 dtype="int8",

@@ -3,7 +3,7 @@
 
 """Implementation of a random convolutional feature projection model."""
 
-from typing import Optional, cast
+from typing import Optional
 
 import torch
 import torch.nn.functional as F
@@ -24,6 +24,9 @@ class RCF(Module):
 
         This Module is *not* trainable. It is only used as a feature extractor.
     """
+
+    weights: Tensor
+    biases: Tensor
 
     def __init__(
         self,
@@ -55,9 +58,7 @@ class RCF(Module):
         if seed is None:
             generator = None
         else:
-            generator = torch.Generator().manual_seed(  # type: ignore[attr-defined]
-                seed
-            )
+            generator = torch.Generator().manual_seed(seed)
 
         # We register the weight and bias tensors as "buffers". This does two things:
         # makes them behave correctly when we call .to(...) on the module, and makes
@@ -75,11 +76,7 @@ class RCF(Module):
             ),
         )
         self.register_buffer(
-            "biases",
-            torch.zeros(  # type: ignore[attr-defined]
-                features // 2, requires_grad=False
-            )
-            + bias,
+            "biases", torch.zeros(features // 2, requires_grad=False) + bias
         )
 
     def forward(self, x: Tensor) -> Tensor:
@@ -104,9 +101,9 @@ class RCF(Module):
         x1b = F.adaptive_avg_pool2d(x1b, (1, 1)).squeeze()
 
         if len(x1a.shape) == 1:  # case where we passed a single input
-            output = torch.cat((x1a, x1b), dim=0)  # type: ignore[attr-defined]
-            return cast(Tensor, output)
+            output = torch.cat((x1a, x1b), dim=0)
+            return output
         else:  # case where we passed a batch of > 1 inputs
             assert len(x1a.shape) == 2
-            output = torch.cat((x1a, x1b), dim=1)  # type: ignore[attr-defined]
-            return cast(Tensor, output)
+            output = torch.cat((x1a, x1b), dim=1)
+            return output

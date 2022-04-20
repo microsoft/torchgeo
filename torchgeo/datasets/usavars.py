@@ -118,15 +118,10 @@ class USAVars(VisionDataset):
 
         self.files = self._load_files()
 
-        self.label_dfs = dict(
-            [
-                (
-                    lab,
-                    pd.read_csv(os.path.join(self.root, lab + ".csv"), index_col="ID"),
-                )
-                for lab in self.labels
-            ]
-        )
+        self.label_dfs = {
+            lab: pd.read_csv(os.path.join(self.root, lab + ".csv"), index_col="ID")
+            for lab in self.labels
+        }
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
@@ -177,7 +172,7 @@ class USAVars(VisionDataset):
         """
         with rasterio.open(path) as f:
             array: "np.typing.NDArray[np.int_]" = f.read()
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             return tensor
 
     def _verify(self) -> None:

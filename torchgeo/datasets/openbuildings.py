@@ -325,11 +325,9 @@ class OpenBuildings(VectorDataset):
             masks = rasterio.features.rasterize(
                 shapes, out_shape=(int(height), int(width)), transform=transform
             )
-            masks = torch.tensor(masks).unsqueeze(0)  # type: ignore[attr-defined]
+            masks = torch.tensor(masks).unsqueeze(0)
         else:
-            masks = torch.zeros(  # type: ignore[attr-defined]
-                size=(1, int(height), int(width))
-            )
+            masks = torch.zeros(size=(1, int(height), int(width)))
 
         sample = {"mask": masks, "crs": self.crs, "bbox": query}
 
@@ -404,7 +402,7 @@ class OpenBuildings(VectorDataset):
         for zipfile in glob.iglob(pathname):
             filename = os.path.basename(zipfile)
             if self.checksum and not check_integrity(zipfile, self.md5s[filename]):
-                raise RuntimeError("Dataset found, but corrupted: {}.".format(filename))
+                raise RuntimeError(f"Dataset found, but corrupted: {filename}.")
             i += 1
 
         if i != 0:
@@ -423,7 +421,7 @@ class OpenBuildings(VectorDataset):
             "have manually downloaded the dataset as suggested in the documentation."
         )
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Any],
         show_titles: bool = True,

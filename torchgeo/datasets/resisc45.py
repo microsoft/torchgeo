@@ -180,7 +180,7 @@ class RESISC45(VisionClassificationDataset):
         self._verify()
 
         valid_fns = set()
-        with open(os.path.join(self.root, f"resisc45-{split}.txt"), "r") as f:
+        with open(os.path.join(self.root, f"resisc45-{split}.txt")) as f:
             for fn in f:
                 valid_fns.add(fn.strip())
         is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns

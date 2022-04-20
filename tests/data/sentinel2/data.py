@@ -4,7 +4,6 @@
 # Licensed under the MIT License.
 
 import os
-import random
 
 import numpy as np
 import rasterio
@@ -12,7 +11,6 @@ import rasterio
 SIZE = 32
 
 np.random.seed(0)
-random.seed(0)
 
 filenames = [
     "T41XNE_20200829T083611_B01_60m.tif",

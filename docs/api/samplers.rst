@@ -32,6 +32,11 @@ Grid Geo Sampler
 
 .. autoclass:: GridGeoSampler
 
+Pre-chipped Geo Sampler
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: PreChippedGeoSampler
+
 Batch Samplers
 --------------
 

@@ -146,7 +146,7 @@ class EuroSAT(VisionClassificationDataset):
         self._verify()
 
         valid_fns = set()
-        with open(os.path.join(self.root, f"eurosat-{split}.txt"), "r") as f:
+        with open(os.path.join(self.root, f"eurosat-{split}.txt")) as f:
             for fn in f:
                 valid_fns.add(fn.strip().replace(".jpg", ".tif"))
         is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns
@@ -168,9 +168,7 @@ class EuroSAT(VisionClassificationDataset):
         """
         image, label = self._load_image(index)
 
-        image = torch.index_select(  # type: ignore[attr-defined]
-            image, dim=0, index=self.band_indices
-        )
+        image = torch.index_select(image, dim=0, index=self.band_indices)
         sample = {"image": image, "label": label}
 
         if self.transforms is not None:

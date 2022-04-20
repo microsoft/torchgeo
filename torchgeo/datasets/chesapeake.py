@@ -176,7 +176,7 @@ class Chesapeake(RasterDataset, abc.ABC):
         """Extract the dataset."""
         extract_archive(os.path.join(self.root, self.zipfile))
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Tensor],
         show_titles: bool = True,
@@ -636,10 +636,8 @@ class ChesapeakeCVPR(GeoDataset):
         sample["image"] = np.concatenate(sample["image"], axis=0)
         sample["mask"] = np.concatenate(sample["mask"], axis=0)
 
-        sample["image"] = torch.from_numpy(  # type: ignore[attr-defined]
-            sample["image"]
-        )
-        sample["mask"] = torch.from_numpy(sample["mask"])  # type: ignore[attr-defined]
+        sample["image"] = torch.from_numpy(sample["image"])
+        sample["mask"] = torch.from_numpy(sample["mask"])
 
         if self.transforms is not None:
             sample = self.transforms(sample)
