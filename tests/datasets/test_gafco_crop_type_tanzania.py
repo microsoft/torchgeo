@@ -21,7 +21,7 @@ class Dataset:
         glob_path = os.path.join(
             "tests", "data", "ref_african_crops_tanzania_01", "*.tar.gz"
         )
-        for tarball in glob.iglob(glob_path):
+        for tarball in glob.iglob(glob_path, recursive=True):
             shutil.copy(tarball, output_dir)
 
 
@@ -62,19 +62,20 @@ class TestGAFCOCropTypeTanzania:
         image_meta = {
             "filename": "ref_african_crops_tanzania_01_source.tar.gz",
             "directory": "ref_african_crops_tanzania_01_source",
-            "md5": "3d42ebbae207704b66494367e7330571",
+            "md5": "6c33291d959ca52f04afa39e0c6144fd",
         }
         target_meta = {
             "filename": "ref_african_crops_tanzania_01_labels.tar.gz",
             "directory": "ref_african_crops_tanzania_01_labels",
-            "md5": "d654c81d59ced4afad4eabf55e19c86a",
+            "md5": "348f0049e0671570220d0edfb155e0dc",
         }
         monkeypatch.setattr(GAFCOCropTypeTanzania, "image_meta", image_meta)
         monkeypatch.setattr(GAFCOCropTypeTanzania, "target_meta", target_meta)
         transforms = nn.Identity()  # type: ignore[no-untyped-call]
-        return GAFCOCropTypeTanzania(
-            root=root, transforms=transforms, download=True, api_key=""
-        )
+        return GAFCOCropTypeTanzania(root=root, transforms=transforms, api_key="")
+
+    def test_download(self, tmp_path: Path) -> None:
+        GAFCOCropTypeTanzania(root=tmp_path, download=True)
 
     def test_getitem(self, dataset: GAFCOCropTypeTanzania) -> None:
         x = dataset[dataset.bounds]
@@ -83,6 +84,10 @@ class TestGAFCOCropTypeTanzania:
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
 
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(RuntimeError, match="Dataset not found in"):
+            GAFCOCropTypeTanzania(root=str(tmp_path))
+
     def test_corrupted(self, dataset: GAFCOCropTypeTanzania, tmp_path: Path) -> None:
         with open(
             os.path.join(tmp_path, "ref_african_crops_tanzania_01_labels.tar.gz"), "w"
@@ -90,10 +95,6 @@ class TestGAFCOCropTypeTanzania:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
             GAFCOCropTypeTanzania(dataset.root, checksum=True)
-
-    def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in"):
-            GAFCOCropTypeTanzania(str(tmp_path))
 
     def test_already_downloaded(self, dataset: GAFCOCropTypeTanzania) -> None:
         GAFCOCropTypeTanzania(root=dataset.root, download=True, api_key="")
@@ -114,7 +115,7 @@ class TestGAFCOCropTypeTanzania:
 
     def test_plot(self, dataset: GAFCOCropTypeTanzania) -> None:
         x = dataset[dataset.bounds]
-        dataset.plot(x, suptitle="test")
+        dataset.plot(x, time_step=0, suptitle="test")
         plt.close()
 
     def test_plot_prediction(self, dataset: GAFCOCropTypeTanzania) -> None:

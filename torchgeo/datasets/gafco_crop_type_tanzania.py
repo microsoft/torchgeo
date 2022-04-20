@@ -221,7 +221,7 @@ class GAFCOCropTypeTanzania(GeoDataset):
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
-            sample of image/mask and metadata at that index
+            sample of image/mask and metadata at that index TxCxHxW
 
         Raises:
             IndexError: if query is not found in the index
@@ -260,13 +260,15 @@ class GAFCOCropTypeTanzania(GeoDataset):
         """
         # load imagery
         img_list: List[Tensor] = []
-        for band in getattr(self, "bands", self.all_bands):
+        for filepath in filepaths:
             band_filepaths = []
-            for filepath in filepaths:
+            for band in getattr(self, "bands", self.all_bands):
                 band_filename = os.path.join(filepath["img_dir"], band + ".tif")
                 band_filepaths.append(band_filename)
-            img_list.append(self._merge_files(band_filepaths, query))
-        data = torch.cat(img_list)
+            img_list.append(self._concatenate_bands(band_filepaths, query))
+
+        # stack along time dimension
+        data = torch.stack(img_list, dim=0)
 
         return data
 
@@ -338,7 +340,9 @@ class GAFCOCropTypeTanzania(GeoDataset):
 
         return masks
 
-    def _merge_files(self, filepaths: Sequence[str], query: BoundingBox) -> Tensor:
+    def _concatenate_bands(
+        self, filepaths: Sequence[str], query: BoundingBox
+    ) -> Tensor:
         """Load and merge one or more files.
 
         Args:
@@ -354,18 +358,18 @@ class GAFCOCropTypeTanzania(GeoDataset):
             vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
-        if len(vrt_fhs) == 1:
-            src = vrt_fhs[0]
+        img_list: List[Tensor] = []
+        for src in vrt_fhs:
             out_width = int(round((query.maxx - query.minx) / self.res))
             out_height = int(round((query.maxy - query.miny) / self.res))
             out_shape = (src.count, out_height, out_width)
             dest = src.read(
                 out_shape=out_shape, window=from_bounds(*bounds, src.transform)
-            )
-        else:
-            dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res)
+            ).astype(np.int32)
 
-        tensor = torch.Tensor(dest)
+            img_list.append(torch.from_numpy(dest))
+
+        tensor = torch.cat(img_list, dim=0)
         return tensor
 
     @lru_cache(maxsize=128)
@@ -475,6 +479,7 @@ class GAFCOCropTypeTanzania(GeoDataset):
         self,
         sample: Dict[str, Tensor],
         show_titles: bool = True,
+        time_step: int = 0,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
         """Plot a sample from the dataset.
@@ -482,6 +487,7 @@ class GAFCOCropTypeTanzania(GeoDataset):
         Args:
             sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
+            time_step: time step at which to access image, beginning with 0
             suptitle: optional suptitle to use for figure
 
         Returns:
@@ -503,7 +509,13 @@ class GAFCOCropTypeTanzania(GeoDataset):
 
         image, mask = sample["image"].numpy(), sample["mask"].numpy()
 
-        image = image[rgb_indices, :, :]
+        assert time_step <= image.shape[0] - 1, (
+            "The specified time step"
+            " does not exist, image only contains {} time"
+            " instances."
+        ).format(image.shape[0])
+
+        image = image[time_step, rgb_indices, :, :]
 
         image = percentile_normalization(image)
 

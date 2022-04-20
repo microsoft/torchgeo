@@ -12,6 +12,7 @@ from typing import List
 
 import numpy as np
 import rasterio
+from rasterio.transform import Affine
 
 SIZE = 32
 
@@ -56,10 +57,33 @@ image_directories = [
         ],
         "datetime": "2018-03-18T00:00:00Z",
     },
+    {
+        "path": "ref_african_crops_tanzania_01_source_01_20180102",
+        "bbox": [
+            33.568404763042174,
+            -3.020344843124805,
+            33.6664699555098,
+            -2.9259331588640256,
+        ],
+        "datetime": "2018-01-02T00:00:00Z",
+    },
+    {
+        "path": "ref_african_crops_tanzania_01_source_01_20180318",
+        "bbox": [
+            33.568404763042174,
+            -3.020344843124805,
+            33.6664699555098,
+            -2.9259331588640256,
+        ],
+        "datetime": "2018-03-18T00:00:00Z",
+    },
 ]
 
 root_label_dir = "ref_african_crops_tanzania_01_labels"
-label_directory = "ref_african_crops_tanzania_01_labels_00"
+label_directories = [
+    {"path": "ref_african_crops_tanzania_01_labels_00", "num_features": 2},
+    {"path": "ref_african_crops_tanzania_01_labels_01", "num_features": 0},
+]
 
 
 def create_imagery(path: str, dtype: str, num_channels: int) -> None:
@@ -68,7 +92,14 @@ def create_imagery(path: str, dtype: str, num_channels: int) -> None:
     profile["dtype"] = dtype
     profile["count"] = num_channels
     profile["crs"] = "epsg:32736"
-    profile["transform"] = rasterio.transform.from_bounds(0, 0, 1, 1, 1, 1)
+    profile["transform"] = Affine(
+        9.998199740032945,
+        0.0,
+        782853.9107002986,
+        0.0,
+        -10.002868812795558,
+        9773930.117133377,
+    )
     profile["height"] = SIZE
     profile["width"] = SIZE
     profile["compress"] = "lzw"
@@ -153,34 +184,34 @@ def create_stac_labels(path: str) -> None:
         json.dump(label_stac, f)
 
 
-def create_label(path: str) -> None:
+def create_label(path: str, num_features: int = 1) -> None:
+    feature = {
+        "type": "Feature",
+        "properties": {
+            "Village": "Mwatumbe",
+            "Region": "Simiyu",
+            "Plot Area (acre)": 2,
+            "Planting Date": "2018-03-30",
+            "Estimated Harvest Date": "2018-10-30",
+            "Crop": "Sunflower",
+        },
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [564105.3968795359, 9676577.1790148],
+                    [564158.887044993, 9676577.151513517],
+                    [564158.8546518659, 9676514.179071717],
+                    [564105.364513419, 9676514.206578337],
+                    [564105.3968795359, 9676577.1790148],
+                ]
+            ],
+        },
+    }
+
     label_data = {
         "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "properties": {
-                    "Village": "Mwatumbe",
-                    "Region": "Simiyu",
-                    "Plot Area (acre)": 2,
-                    "Planting Date": "2018-03-30",
-                    "Estimated Harvest Date": "2018-10-30",
-                    "Crop": "Sunflower",
-                },
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [
-                        [
-                            [564105.3968795359, 9676577.1790148],
-                            [564158.887044993, 9676577.151513517],
-                            [564158.8546518659, 9676514.179071717],
-                            [564105.364513419, 9676514.206578337],
-                            [564105.3968795359, 9676577.1790148],
-                        ]
-                    ],
-                },
-            }
-        ],
+        "features": [feature for i in range(num_features)],
         "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::32736"}},
     }
 
@@ -216,10 +247,14 @@ if __name__ == "__main__":
     # create label and corresponding stac.sjon
     if os.path.isdir(root_label_dir):
         shutil.rmtree(root_label_dir)
-    label_dir_path = os.path.join(root_label_dir, label_directory)
-    os.makedirs(label_dir_path)
-    create_label(os.path.join(label_dir_path, "labels.geojson"))
-    create_stac_labels(os.path.join(label_dir_path, "stac.json"))
+
+    for label_dir in label_directories:
+        label_dir_path = os.path.join(root_label_dir, label_dir["path"])
+        os.makedirs(label_dir_path)
+        create_label(
+            os.path.join(label_dir_path, "labels.geojson"), label_dir["num_features"]
+        )
+        create_stac_labels(os.path.join(label_dir_path, "stac.json"))
 
     # tar directories to .tar.gz and compute checksum
     for directory in [root_image_dir, root_label_dir]:
