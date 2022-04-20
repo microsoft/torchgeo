@@ -9,17 +9,7 @@ import glob
 import os
 import re
 import sys
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Tuple,
-    cast,
-)
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
 
 import fiona
 import fiona.transform
@@ -45,13 +35,6 @@ from .utils import BoundingBox, concat_samples, disambiguate_timestamp, merge_sa
 # https://github.com/pytorch/pytorch/pull/61045
 Dataset.__module__ = "torch.utils.data"
 ImageFolder.__module__ = "torchvision.datasets"
-
-
-class GeoMetaData(NamedTuple):
-    """A namedtuple class for metadata to be stored in the rtree index."""
-
-    filepath: str
-    crs: CRS
 
 
 class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
@@ -385,9 +368,7 @@ class RasterDataset(GeoDataset):
 
                     coords = (minx, maxx, miny, maxy, mint, maxt)
                     self.index.insert(
-                        id=i,
-                        coordinates=coords,
-                        obj=GeoMetaData(filepath=filepath, crs=crs),
+                        id=i, coordinates=coords, obj=dict(filepath=filepath, crs=crs)
                     )
                     i += 1
 
@@ -412,7 +393,7 @@ class RasterDataset(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object.filepath for hit in hits]
+        filepaths = [hit.object["filepath"] for hit in hits]
 
         if not filepaths:
             raise IndexError(
@@ -576,9 +557,7 @@ class VectorDataset(GeoDataset):
                 maxt = sys.maxsize
                 coords = (minx, maxx, miny, maxy, mint, maxt)
                 self.index.insert(
-                    id=i,
-                    coordinates=coords,
-                    obj=GeoMetaData(filepath=filepath, crs=crs),
+                    id=i, coordinates=coords, obj=dict(filepath=filepath, crs=crs)
                 )
                 i += 1
 
@@ -602,7 +581,7 @@ class VectorDataset(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object.filepath for hit in hits]
+        filepaths = [hit.object["filepath"] for hit in hits]
 
         if not filepaths:
             raise IndexError(

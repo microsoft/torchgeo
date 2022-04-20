@@ -281,7 +281,7 @@ class OpenBuildings(VectorDataset):
             filepath = os.path.join(
                 self.root, feature["properties"]["tile_url"].split("/")[-1]
             )
-            self.index.insert(i, coords, filepath)
+            self.index.insert(i, coords, dict(filepath=filepath))
             i += 1
 
         if i == 0:
@@ -306,7 +306,7 @@ class OpenBuildings(VectorDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object for hit in hits]
+        filepaths = [hit.object["filepath"] for hit in hits]
 
         if not filepaths:
             raise IndexError(
