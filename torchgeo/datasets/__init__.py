@@ -35,6 +35,7 @@ from .eudem import EUDEM
 from .eurosat import EuroSAT
 from .fair1m import FAIR1M
 from .forestdamage import ForestDamage
+from .gafco_crop_type_tanzania import GAFCOCropTypeTanzania
 from .geo import (
     GeoDataset,
     IntersectionDataset,
@@ -118,6 +119,7 @@ __all__ = (
     "CMSGlobalMangroveCanopy",
     "Esri2020",
     "EUDEM",
+    "GAFCOCropTypeTanzania",
     "GlobBiomass",
     "Landsat",
     "Landsat1",
