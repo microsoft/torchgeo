@@ -8,7 +8,7 @@ import json
 import os
 import shutil
 import tarfile
-from typing import List
+from typing import Dict, List
 
 import numpy as np
 import rasterio
@@ -36,6 +36,8 @@ band_filenames = [
 
 root_image_dir = "ref_african_crops_tanzania_01_source"
 
+root_image_dir = "ref_african_crops_tanzania_01_source"
+
 image_directories = [
     {
         "path": "ref_african_crops_tanzania_01_source_00_20180102",
@@ -60,20 +62,20 @@ image_directories = [
     {
         "path": "ref_african_crops_tanzania_01_source_01_20180102",
         "bbox": [
-            33.568404763042174,
-            -3.020344843124805,
-            33.6664699555098,
-            -2.9259331588640256,
+            33.59950207405073,
+            -2.879144375215818,
+            33.63487636385129,
+            -2.837614873164026,
         ],
         "datetime": "2018-01-02T00:00:00Z",
     },
     {
         "path": "ref_african_crops_tanzania_01_source_01_20180318",
         "bbox": [
-            33.568404763042174,
-            -3.020344843124805,
-            33.6664699555098,
-            -2.9259331588640256,
+            33.59950207405073,
+            -2.879144375215818,
+            33.63487636385129,
+            -2.837614873164026,
         ],
         "datetime": "2018-03-18T00:00:00Z",
     },
@@ -81,8 +83,38 @@ image_directories = [
 
 root_label_dir = "ref_african_crops_tanzania_01_labels"
 label_directories = [
-    {"path": "ref_african_crops_tanzania_01_labels_00", "num_features": 2},
-    {"path": "ref_african_crops_tanzania_01_labels_01", "num_features": 0},
+    {
+        "path": "ref_african_crops_tanzania_01_labels_00",
+        "num_features": 2,
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [564105.3968795359, 9676577.1790148],
+                    [564158.887044993, 9676577.151513517],
+                    [564158.8546518659, 9676514.179071717],
+                    [564105.364513419, 9676514.206578337],
+                    [564105.3968795359, 9676577.1790148],
+                ]
+            ],
+        },
+    },
+    {
+        "path": "ref_african_crops_tanzania_01_labels_01",
+        "num_features": 0,
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [567937.2005904686, 9686280.31514543],
+                    [567977.4866463939, 9686280.293857086],
+                    [567977.4706946044, 9686250.117088463],
+                    [567937.1846481342, 9686250.138378847],
+                    [567937.2005904686, 9686280.31514543],
+                ]
+            ],
+        },
+    },
 ]
 
 
@@ -93,12 +125,12 @@ def create_imagery(path: str, dtype: str, num_channels: int) -> None:
     profile["count"] = num_channels
     profile["crs"] = "epsg:32736"
     profile["transform"] = Affine(
-        9.998199740032945,
+        9.997558351553115,
         0.0,
-        782853.9107002986,
+        642068.9738940755,
         0.0,
-        -10.002868812795558,
-        9773930.117133377,
+        -9.999449954310554,
+        65607.7835340335,
     )
     profile["height"] = SIZE
     profile["width"] = SIZE
@@ -120,7 +152,6 @@ def create_imagery(path: str, dtype: str, num_channels: int) -> None:
 def create_stac_imagery(path: str, bbox: List, date: str) -> None:
     image_stac = {
         "bbox": bbox,
-        "id": "ref_african_crops_tanzania_01_source_00_20180102",
         "properties": {"constellation": "Sentinel-2", "datetime": date},
     }
 
@@ -128,63 +159,7 @@ def create_stac_imagery(path: str, bbox: List, date: str) -> None:
         json.dump(image_stac, f)
 
 
-def create_stac_labels(path: str) -> None:
-    label_stac = {
-        "assets": {
-            "documentation": {
-                "href": "../_common/documentation.pdf",
-                "title": "Dataset Documentation",
-                "type": "application/pdf",
-            },
-            "labels": {
-                "href": "labels.geojson",
-                "title": "Crop Labels",
-                "type": "image/tiff",
-            },
-            "property_descriptions": {
-                "href": "../_common/property_descriptions.csv",
-                "title": "Label Property Descriptions",
-                "type": "text/csv",
-            },
-        },
-        "bbox": [
-            33.568404763042174,
-            -3.020344843124805,
-            33.6664699555098,
-            -2.9259331588640256,
-        ],
-        "collection": "ref_african_crops_tanzania_01_labels",
-        "geometry": {
-            "coordinates": [
-                [
-                    [33.6664699555098, -3.020344843124805],
-                    [33.6664699555098, -2.9259331588640256],
-                    [33.568404763042174, -2.9259331588640256],
-                    [33.568404763042174, -3.020344843124805],
-                    [33.6664699555098, -3.020344843124805],
-                ]
-            ],
-            "type": "Polygon",
-        },
-        "id": "ref_african_crops_tanzania_01_labels_00",
-        "properties": {
-            "datetime": "2018-07-01T00:00:00Z",
-            "label:description": "Tanzania Tile 00 Labels",
-            "label:methods": ["manual"],
-            "label:properties": "null",
-            "label:tasks": ["classification"],
-            "label:type": "vector",
-        },
-        "stac_extensions": ["label"],
-        "stac_version": "1.0.0-beta.2",
-        "type": "Feature",
-    }
-
-    with open(path, "w") as f:
-        json.dump(label_stac, f)
-
-
-def create_label(path: str, num_features: int = 1) -> None:
+def create_label(path: str, geometry: Dict, num_features: int = 1) -> None:
     feature = {
         "type": "Feature",
         "properties": {
@@ -195,18 +170,7 @@ def create_label(path: str, num_features: int = 1) -> None:
             "Estimated Harvest Date": "2018-10-30",
             "Crop": "Sunflower",
         },
-        "geometry": {
-            "type": "Polygon",
-            "coordinates": [
-                [
-                    [564105.3968795359, 9676577.1790148],
-                    [564158.887044993, 9676577.151513517],
-                    [564158.8546518659, 9676514.179071717],
-                    [564105.364513419, 9676514.206578337],
-                    [564105.3968795359, 9676577.1790148],
-                ]
-            ],
-        },
+        "geometry": geometry,
     }
 
     label_data = {
@@ -252,9 +216,10 @@ if __name__ == "__main__":
         label_dir_path = os.path.join(root_label_dir, label_dir["path"])
         os.makedirs(label_dir_path)
         create_label(
-            os.path.join(label_dir_path, "labels.geojson"), label_dir["num_features"]
+            path=os.path.join(label_dir_path, "labels.geojson"),
+            num_features=label_dir["num_features"],
+            geometry=label_dir["geometry"],
         )
-        create_stac_labels(os.path.join(label_dir_path, "stac.json"))
 
     # tar directories to .tar.gz and compute checksum
     for directory in [root_image_dir, root_label_dir]:

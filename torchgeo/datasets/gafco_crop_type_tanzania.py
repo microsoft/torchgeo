@@ -43,7 +43,18 @@ class GAFCOCropTypeTanzania(GeoDataset):
 
     Dataset Features:
 
+    * Sentinel-2 imagery at 10m resolution
+    * 4 different labelled regions
+    * time-series images between January and December of 2018
+    * 6 different crop types
+    * 392 polygon annotations
+
     Dataset Format:
+
+    * images are 13 channel geotiffs, 12 Sentinel 2 bands plus pixel wise
+      cloud probability layer
+    * stac.json files
+    * annotations in geojson files
 
     Dataset Classes:
 
@@ -207,9 +218,7 @@ class GAFCOCropTypeTanzania(GeoDataset):
             i += 1
 
         if i == 0:
-            raise FileNotFoundError(
-                f"No {self.__class__.__name__} data was found in '{root}'"
-            )
+            raise FileNotFoundError(f"No stac.json files found in '{root}'")
 
         self._crs = cast(CRS, crs)
         self.res = cast(float, res)
