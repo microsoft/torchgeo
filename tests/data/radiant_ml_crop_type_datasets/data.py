@@ -15,7 +15,7 @@ import rasterio
 from rasterio.transform import Affine
 
 SIZE = 32
-EPSGCODE = 32736
+EPSGCODE = 32636
 
 np.random.seed(0)
 
@@ -45,7 +45,7 @@ image_directories = [
             34.18191992149459,
             0.4724181558451209,
             34.2766208946704,
-            0.5894898556277989,
+            0.5954898556277989,
         ],
         "datetime": "2018-04-12T00:00:00Z",
     },
@@ -55,7 +55,7 @@ image_directories = [
             34.18191992149459,
             0.4724181558451209,
             34.2766208946704,
-            0.5894898556277989,
+            0.5954898556277989,
         ],
         "datetime": "2018-06-06T00:00:00Z",
     },
@@ -120,7 +120,7 @@ kenya_label_dir = [
                 ]
             ],
         },
-        "properties": {"Crop": "Cassava"},
+        "properties": {"Crop1": "Cassava"},
     },
 ]
 
@@ -131,22 +131,23 @@ tanzania_label_dir = [
         "path": "ref_african_crops_tanzania_01_labels_00",
         "num_features": 2,
         "geometry": kenya_label_dir[0]["geometry"],
-        "properties": {"Crop1": "Dry Bean"},
+        "properties": {"Crop": "Dry Bean"},
     },
     {
         "path": "ref_african_crops_tanzania_01_labels_01",
         "num_features": 0,
         "geometry": kenya_label_dir[0]["geometry"],
-        "properties": {"Crop1": "Dry Bean"},
+        "properties": {"Crop": "Dry Bean"},
     },
 ]
 
 # labels for CropTypeUgandaDalbergDataInsight
+# generate no features to test no labels found
 uganda_label_root = "ref_african_crops_uganda_01_labels"
 uganda_label_dir = [
     {
         "path": "ref_african_crops_uganda_01_labels_00",
-        "num_features": 2,
+        "num_features": 0,
         "geometry": kenya_label_dir[0]["geometry"],
         "properties": {"crop1": "sorghum"},
     },

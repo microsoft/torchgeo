@@ -22,10 +22,10 @@ from torchgeo.datasets import (
     CropTypeUgandaDalbergDataInsight,
 )
 
-IMAGERY_MD5 = "b789c59caed2c4ab96a47187d1856351"
-KENYA_MD5 = "dd057c4ae203255061eaeeff5d527405"
-TANZANIA_MD5 = "b1568959e416ed9b895af0a5a81a758c"
-UGANDA_MD5 = "eb3ac3302cdf5ca9e54b2f8df1bd181e"
+KENYA_MD5 = "d36af9773acd649eba619bb856be132d"
+TANZANIA_MD5 = "f445ebfdc8b6dde99cf642fa04482740"
+UGANDA_MD5 = "1d3b328011c94a12b7aa53e9c3a86f52"
+IMAGERY_MD5 = "6b9ff24030de74a868096fe4c84a267e"
 
 
 class Dataset:
@@ -83,8 +83,11 @@ class TestCropTypeKenyaPlantVillage:
             "directory": "ref_african_crops_kenya_01_labels",
             "md5": KENYA_MD5,
         }
+
+        crop_label_key = "Crop1"
         monkeypatch.setattr(CropTypeKenyaPlantVillage, "image_meta", image_meta)
         monkeypatch.setattr(CropTypeKenyaPlantVillage, "target_meta", target_meta)
+        monkeypatch.setattr(CropTypeKenyaPlantVillage, "crop_label_key", crop_label_key)
         transforms = nn.Identity()  # type: ignore[no-untyped-call]
         cache = request.param
         return CropTypeKenyaPlantVillage(
@@ -209,8 +212,10 @@ class TestCropTypeTanzaniaGAFCO:
             "directory": "ref_african_crops_tanzania_01_labels",
             "md5": TANZANIA_MD5,
         }
+        crop_label_key = "Crop"
         monkeypatch.setattr(CropTypeTanzaniaGAFCO, "image_meta", image_meta)
         monkeypatch.setattr(CropTypeTanzaniaGAFCO, "target_meta", target_meta)
+        monkeypatch.setattr(CropTypeTanzaniaGAFCO, "crop_label_key", crop_label_key)
         transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return CropTypeTanzaniaGAFCO(root=root, transforms=transforms, api_key="")
 
@@ -262,9 +267,14 @@ class TestCropTypyUgandaDalbergDataInsight:
             "directory": "ref_african_crops_uganda_01_labels",
             "md5": UGANDA_MD5,
         }
+
+        crop_label_key = "crop1"
         monkeypatch.setattr(CropTypeUgandaDalbergDataInsight, "image_meta", image_meta)
         monkeypatch.setattr(
             CropTypeUgandaDalbergDataInsight, "target_meta", target_meta
+        )
+        monkeypatch.setattr(
+            CropTypeUgandaDalbergDataInsight, "crop_label_key", crop_label_key
         )
         transforms = nn.Identity()  # type: ignore[no-untyped-call]
         return CropTypeUgandaDalbergDataInsight(

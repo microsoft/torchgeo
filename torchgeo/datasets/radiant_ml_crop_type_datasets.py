@@ -733,4 +733,4 @@ class CropTypeUgandaDalbergDataInsight(CropTypeDatasetRadiantML):
     # labels are lower case here
     crop_labels = ["no Class", "maize", "sorghum"]
 
-    crop_label_key = "Crop1"
+    crop_label_key = "crop1"
