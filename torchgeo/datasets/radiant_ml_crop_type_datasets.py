@@ -647,12 +647,12 @@ class CropTypeKenyaPlantVillage(CropTypeDatasetRadiantML):
     image_meta = {
         "filename": "ref_african_crops_kenya_01_source.tar.gz",
         "directory": "ref_african_crops_kenya_01_source",
-        "md5": "2d94a7f56771701b8ff6598ffdf1f814",
+        "md5": "1428a00cc984c591909c945ec8d30c1b",
     }
     target_meta = {
         "filename": "ref_african_crops_kenya_01_labels.tar.gz",
         "directory": "ref_african_crops_kenya_01_labels",
-        "md5": "a8ab4f957f7eee1e8bf1bada4a0a4f54",
+        "md5": "19e31536982d97f2f62efcea4d860279",
     }
 
     crop_labels = [
@@ -722,12 +722,12 @@ class CropTypeUgandaDalbergDataInsight(CropTypeDatasetRadiantML):
     image_meta = {
         "filename": "ref_african_crops_uganda_01_source.tar.gz",
         "directory": "ref_african_crops_uganda_01_source",
-        "md5": "2d94a7f56771701b8ff6598ffdf1f814",
+        "md5": "fd5718698a3167c6e9b65184a5c6b281",
     }
     target_meta = {
         "filename": "ref_african_crops_uganda_01_labels.tar.gz",
         "directory": "ref_african_crops_uganda_01_labels",
-        "md5": "a8ab4f957f7eee1e8bf1bada4a0a4f54",
+        "md5": "3565c040b026372e21d75e163e13e781",
     }
 
     # labels are lower case here
