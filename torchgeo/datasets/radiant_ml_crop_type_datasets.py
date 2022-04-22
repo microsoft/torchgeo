@@ -159,13 +159,12 @@ class CropTypeDatasetRadiantML(GeoDataset, abc.ABC):
                 "labels.geojson",
             )
             label_path = label_path.replace("_source_", "_labels_")
-
             if i == 0:
-                with open(label_path) as label_file:
-                    data = json.load(label_file)
+                # find crs in first B01.tif
+                src = rasterio.open(os.path.join(os.path.dirname(filepath), "B01.tif"))
 
                 if crs is None:
-                    crs = CRS.from_string(data["crs"]["properties"]["name"])
+                    crs = src.crs
                 if res is None:
                     res = 10
 
