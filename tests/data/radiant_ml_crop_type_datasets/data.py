@@ -159,6 +159,14 @@ uganda_label_dir = [
     },
 ]
 
+# labels for CropTypeSouthAfricaCompetition
+# generate labels.tif and not .geojson
+south_africa_label_root = "ref_south_africa_crops_competition_v1_train_labels"
+south_africa_label_dir = [
+    {"path": "ref_south_africa_crops_competition_v1_train_labels_00"},
+    {"path": "ref_south_africa_crops_competition_v1_train_labels_01"},
+]
+
 
 def create_imagery(path: str, dtype: str, num_channels: int) -> None:
     profile = {}
@@ -201,7 +209,7 @@ def create_stac_imagery(path: str, bbox: List, date: str) -> None:
         json.dump(image_stac, f)
 
 
-def create_label(
+def create_geosjon_label(
     path: str, geometry: Dict, properties: Dict, num_features: int = 1
 ) -> None:
     feature = {"type": "Feature", "properties": properties, "geometry": geometry}
@@ -222,6 +230,20 @@ def create_label(
 def make_tarfile(output_filename, source_dir):
     with tarfile.open(output_filename, "w:gz") as tar:
         tar.add(source_dir, arcname=os.path.basename(source_dir))
+
+
+label_roots = [
+    kenya_label_root,
+    tanzania_label_root,
+    uganda_label_root,
+    south_africa_label_root,
+]
+label_directories = [
+    kenya_label_dir,
+    tanzania_label_dir,
+    uganda_label_dir,
+    south_africa_label_dir,
+]
 
 
 if __name__ == "__main__":
@@ -245,9 +267,6 @@ if __name__ == "__main__":
         )
 
     # create label and corresponding stac.sjon
-    label_roots = [kenya_label_root, tanzania_label_root, uganda_label_root]
-    label_directories = [kenya_label_dir, tanzania_label_dir, uganda_label_dir]
-
     for root, label_dirs in zip(label_roots, label_directories):
         if os.path.isdir(root):
             shutil.rmtree(root)
@@ -255,12 +274,20 @@ if __name__ == "__main__":
         for label_dir in label_dirs:
             label_dir_path = os.path.join(root, label_dir["path"])
             os.makedirs(label_dir_path, exist_ok=True)
-            create_label(
-                path=os.path.join(label_dir_path, "labels.geojson"),
-                num_features=label_dir["num_features"],
-                geometry=label_dir["geometry"],
-                properties=label_dir["properties"],
-            )
+            # create .geojson or .tif label
+            if "geometry" in label_dir:
+                create_geosjon_label(
+                    path=os.path.join(label_dir_path, "labels.geojson"),
+                    num_features=label_dir["num_features"],
+                    geometry=label_dir["geometry"],
+                    properties=label_dir["properties"],
+                )
+            else:
+                create_imagery(
+                    path=os.path.join(root, label_dir["path"], "labels.tif"),
+                    dtype="int32",
+                    num_channels=1,
+                )
 
     # tar directories to .tar.gz and compute checksum
     for root in label_roots + [image_root]:

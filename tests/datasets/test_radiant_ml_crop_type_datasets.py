@@ -18,14 +18,16 @@ from rasterio.crs import CRS
 from torchgeo.datasets import (
     BoundingBox,
     CropTypeKenyaPlantVillage,
+    CropTypeSouthAfricaCompetition,
     CropTypeTanzaniaGAFCO,
     CropTypeUgandaDalbergDataInsight,
 )
 
-KENYA_MD5 = "d36af9773acd649eba619bb856be132d"
-TANZANIA_MD5 = "f445ebfdc8b6dde99cf642fa04482740"
-UGANDA_MD5 = "1d3b328011c94a12b7aa53e9c3a86f52"
-IMAGERY_MD5 = "6b9ff24030de74a868096fe4c84a267e"
+KENYA_MD5 = "d545508c8f169d1846d19971eb42077d"
+TANZANIA_MD5 = "2f951535a4c53603278d91eefc8d5de6"
+UGANDA_MD5 = "6ae24aab3a117be171c5bf08eb4a138f"
+SOUTH_AFRICA_MD5 = "1b491d8a6f4eddb9edace53ee66936f3"
+IMAGERY_MD5 = "eb3068369bff98c790f517ae2465de32"
 
 
 class Dataset:
@@ -74,14 +76,18 @@ class TestCropTypeKenyaPlantVillage:
         )
 
         image_meta = {
-            "filename": "ref_african_crops_datasets.tar.gz",
-            "directory": "ref_african_crops_datasets",
-            "md5": IMAGERY_MD5,
+            "train": {
+                "filename": "ref_african_crops_datasets.tar.gz",
+                "directory": "ref_african_crops_datasets",
+                "md5": IMAGERY_MD5,
+            }
         }
         target_meta = {
-            "filename": "ref_african_crops_kenya_01_labels.tar.gz",
-            "directory": "ref_african_crops_kenya_01_labels",
-            "md5": KENYA_MD5,
+            "train": {
+                "filename": "ref_african_crops_kenya_01_labels.tar.gz",
+                "directory": "ref_african_crops_kenya_01_labels",
+                "md5": KENYA_MD5,
+            }
         }
 
         crop_label_key = "Crop1"
@@ -203,14 +209,18 @@ class TestCropTypeTanzaniaGAFCO:
         )
 
         image_meta = {
-            "filename": "ref_african_crops_datasets.tar.gz",
-            "directory": "ref_african_crops_datasets",
-            "md5": IMAGERY_MD5,
+            "train": {
+                "filename": "ref_african_crops_datasets.tar.gz",
+                "directory": "ref_african_crops_datasets",
+                "md5": IMAGERY_MD5,
+            }
         }
         target_meta = {
-            "filename": "ref_african_crops_tanzania_01_labels.tar.gz",
-            "directory": "ref_african_crops_tanzania_01_labels",
-            "md5": TANZANIA_MD5,
+            "train": {
+                "filename": "ref_african_crops_tanzania_01_labels.tar.gz",
+                "directory": "ref_african_crops_tanzania_01_labels",
+                "md5": TANZANIA_MD5,
+            }
         }
         crop_label_key = "Crop"
         monkeypatch.setattr(CropTypeTanzaniaGAFCO, "image_meta", image_meta)
@@ -227,7 +237,7 @@ class TestCropTypeTanzaniaGAFCO:
         assert isinstance(x["mask"], torch.Tensor)
 
 
-class TestCropTypyUgandaDalbergDataInsight:
+class TestCropTypeUgandaDalbergDataInsight:
     @pytest.fixture
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
@@ -258,14 +268,18 @@ class TestCropTypyUgandaDalbergDataInsight:
         )
 
         image_meta = {
-            "filename": "ref_african_crops_datasets.tar.gz",
-            "directory": "ref_african_crops_datasets",
-            "md5": IMAGERY_MD5,
+            "train": {
+                "filename": "ref_african_crops_datasets.tar.gz",
+                "directory": "ref_african_crops_datasets",
+                "md5": IMAGERY_MD5,
+            }
         }
         target_meta = {
-            "filename": "ref_african_crops_uganda_01_labels.tar.gz",
-            "directory": "ref_african_crops_uganda_01_labels",
-            "md5": UGANDA_MD5,
+            "train": {
+                "filename": "ref_african_crops_uganda_01_labels.tar.gz",
+                "directory": "ref_african_crops_uganda_01_labels",
+                "md5": UGANDA_MD5,
+            }
         }
 
         crop_label_key = "crop1"
@@ -282,6 +296,78 @@ class TestCropTypyUgandaDalbergDataInsight:
         )
 
     def test_getitem(self, dataset: CropTypeUgandaDalbergDataInsight) -> None:
+        x = dataset[dataset.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x["crs"], CRS)
+        assert isinstance(x["image"], torch.Tensor)
+        assert isinstance(x["mask"], torch.Tensor)
+
+
+class TestCropTypeSouthAfricaCompetition:
+    @pytest.fixture
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+    ) -> CropTypeSouthAfricaCompetition:
+
+        root = str(tmp_path)
+
+        # copy general imagery
+        shutil.copy(
+            os.path.join(
+                "tests",
+                "data",
+                "radiant_ml_crop_type_datasets",
+                "ref_african_crops_datasets.tar.gz",
+            ),
+            root,
+        )
+
+        # copy specific labels
+        shutil.copy(
+            os.path.join(
+                "tests",
+                "data",
+                "radiant_ml_crop_type_datasets",
+                "ref_south_africa_crops_competition_v1_train_labels.tar.gz",
+            ),
+            root,
+        )
+
+        image_meta = {
+            "train": {
+                "filename": "ref_african_crops_datasets.tar.gz",
+                "directory": "ref_african_crops_datasets",
+                "md5": IMAGERY_MD5,
+            }
+        }
+        target_meta = {
+            "train": {
+                "filename": "ref_south_africa_crops_competition_v1_train_labels.tar.gz",
+                "directory": "ref_south_africa_crops_competition_v1_train_labels",
+                "md5": SOUTH_AFRICA_MD5,
+            }
+        }
+
+        directory_regex = r"""
+        _(?P<id>[0-9]{2})
+        _(?P<year>[0-9]{4})
+        (?P<month>[0-9]{2})
+        (?P<day>[0-9]{2})$"""
+
+        date_format = "%Y-%m-%dT%H:%M:%SZ"
+
+        monkeypatch.setattr(CropTypeSouthAfricaCompetition, "image_meta", image_meta)
+        monkeypatch.setattr(CropTypeSouthAfricaCompetition, "target_meta", target_meta)
+        monkeypatch.setattr(
+            CropTypeSouthAfricaCompetition, "directory_regex", directory_regex
+        )
+        monkeypatch.setattr(CropTypeSouthAfricaCompetition, "date_format", date_format)
+        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        return CropTypeSouthAfricaCompetition(
+            root=root, transforms=transforms, api_key=""
+        )
+
+    def test_getitem(self, dataset: CropTypeSouthAfricaCompetition) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)

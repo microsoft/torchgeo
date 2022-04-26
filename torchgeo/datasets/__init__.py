@@ -74,6 +74,7 @@ from .potsdam import Potsdam2D
 from .radiant_ml_crop_type_datasets import (
     CropTypeDatasetRadiantML,
     CropTypeKenyaPlantVillage,
+    CropTypeSouthAfricaCompetition,
     CropTypeTanzaniaGAFCO,
     CropTypeUgandaDalbergDataInsight,
 )
@@ -126,6 +127,7 @@ __all__ = (
     "CropTypeKenyaPlantVillage",
     "CropTypeTanzaniaGAFCO",
     "CropTypeUgandaDalbergDataInsight",
+    "CropTypeSouthAfricaCompetition",
     "Esri2020",
     "EUDEM",
     "GlobBiomass",

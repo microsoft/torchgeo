@@ -52,6 +52,15 @@ Cropland Data Layer (CDL)
 
 .. autoclass:: CDL
 
+Crop Type Datasets Radiant ML Hub
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: CropTypeDatasetRadiantML
+.. autoclass:: CropTypeTanzaniaGAFCO
+.. autoclass:: CropTypeKenyaPlantVillage
+.. autoclass:: CropTypeUgandaDalbergDataInsight
+.. autoclass:: CropTypeSouthAfricaCompetition
+
 EnviroAtlas
 ^^^^^^^^^^^
 
@@ -96,7 +105,7 @@ Open Buildings
 ^^^^^^^^^^^^^^
 
 .. autoclass:: OpenBuildings
-    
+
 Sentinel
 ^^^^^^^^
 
@@ -238,7 +247,7 @@ SpaceNet
 .. autoclass:: SpaceNet
 .. autoclass:: SpaceNet1
 .. autoclass:: SpaceNet2
-.. autoclass:: SpaceNet3    
+.. autoclass:: SpaceNet3
 .. autoclass:: SpaceNet4
 .. autoclass:: SpaceNet5
 .. autoclass:: SpaceNet7
