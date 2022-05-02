@@ -347,7 +347,7 @@ class BYOLTask(LightningModule):
             )
 
         encoder.conv1 = new_layer
-        self.model = BYOL(encoder, image_size=(256, 256))
+        self.model = BYOL(encoder, in_channels=in_channels, image_size=(256, 256))
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize a LightningModule for pre-training a model with BYOL.
