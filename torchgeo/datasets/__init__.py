@@ -71,6 +71,13 @@ from .openbuildings import OpenBuildings
 from .oscd import OSCD
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
+from .radiant_ml_crop_type_datasets import (
+    CropTypeDatasetRadiantML,
+    CropTypeKenyaPlantVillage,
+    CropTypeSouthAfricaCompetition,
+    CropTypeTanzaniaGAFCO,
+    CropTypeUgandaDalbergDataInsight,
+)
 from .resisc45 import RESISC45
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
@@ -116,6 +123,11 @@ __all__ = (
     "ChesapeakeWV",
     "ChesapeakeCVPR",
     "CMSGlobalMangroveCanopy",
+    "CropTypeDatasetRadiantML",
+    "CropTypeKenyaPlantVillage",
+    "CropTypeTanzaniaGAFCO",
+    "CropTypeUgandaDalbergDataInsight",
+    "CropTypeSouthAfricaCompetition",
     "Esri2020",
     "EUDEM",
     "GlobBiomass",
