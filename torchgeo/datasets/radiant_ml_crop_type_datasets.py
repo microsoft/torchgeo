@@ -8,6 +8,7 @@ import glob
 import json
 import os
 import re
+import sys
 from functools import lru_cache
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
 
@@ -98,7 +99,12 @@ class CropTypeDatasetRadiantML(GeoDataset, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def directory_regex(self) -> str:
+    def img_directory_regex(self) -> str:
+        """Regex to match filename directories."""
+
+    @property
+    @abc.abstractmethod
+    def label_directory_regex(self) -> str:
         """Regex to match filename directories."""
 
     @property
@@ -164,27 +170,23 @@ class CropTypeDatasetRadiantML(GeoDataset, abc.ABC):
         self._verify()
 
         super().__init__(transforms)
-
-        # fill index base on stac.json files
+        image_file_paths = glob.glob(os.path.join(root, self.image_meta[self.split]["directory"], "**", "stac.json"))
+        # fill index base on labels stac.json files, one to many
         i = 0
         pathname = os.path.join(
-            root, self.image_meta[self.split]["directory"], "**", "stac.json"
+            root, self.target_meta[self.split]["directory"], "**", "stac.json"
         )
-        directory_regex = re.compile(self.directory_regex, re.VERBOSE)
+        label_directory_regex = re.compile(self.label_directory_regex, re.VERBOSE)
         for filepath in glob.iglob(pathname, recursive=True):
             # labels and source have an id in common
-            match = re.search(directory_regex, os.path.dirname(filepath))
-            label_path = os.path.join(
-                self.root,
-                self.target_meta[self.split]["directory"],
-                self.target_meta[self.split]["directory"] + "_" + match.group("id"),
-                "labels.geojson",
-            )
-            label_path = label_path.replace("_source_", "_labels_")
+            match = re.search(label_directory_regex, os.path.dirname(filepath))
+            id = match.group("id")
+
+            matched_image_dirs = self._filter_image_paths(image_file_paths, id)
 
             if i == 0:
                 # find crs in first B01.tif
-                src = rasterio.open(os.path.join(os.path.dirname(filepath), "B01.tif"))
+                src = rasterio.open(os.path.join(matched_image_dirs[0], "B01.tif"))
 
                 if crs is None:
                     crs = src.crs
@@ -204,24 +206,48 @@ class CropTypeDatasetRadiantML(GeoDataset, abc.ABC):
             (minx, maxx), (miny, maxy) = transformer.transform(
                 [minx, maxx], [miny, maxy]
             )
-
-            date = data["properties"]["datetime"]
-            mint, maxt = disambiguate_timestamp(date, self.date_format)
+            # date = data["properties"]["datetime"]
+            # mint, maxt = disambiguate_timestamp(date, self.date_format)
+            mint: float = 0
+            maxt: float = sys.maxsize
 
             coords = (minx, maxx, miny, maxy, mint, maxt)
-            # insert dict here with filepath and label
+            # insert dict here with label filepath and all image filepaths
             self.index.insert(
                 i,
                 coords,
-                {"img_dir": os.path.dirname(filepath), "label_path": label_path},
+                {"img_dirs": matched_image_dirs, "label_path": os.path.dirname(filepath)},
             )
             i += 1
 
         if i == 0:
             raise FileNotFoundError("No stac.json files found!")
 
+        del image_file_paths
+
         self._crs = cast(CRS, crs)
         self.res = cast(float, res)
+
+    def _filter_image_paths(self, filepaths: List[str], id: str) -> List[str]:
+        """Filter image paths based on label id.
+
+        Args:
+            filepaths: all image filepaths
+            id: id to match on
+
+        Returns:
+            image directory paths that match label id and contain bands
+        """
+        matched_paths: List[str] = []
+        img_directory_regex = re.compile(self.img_directory_regex, re.VERBOSE)
+
+        for path in filepaths:
+            img_dir = os.path.dirname(path)
+            match = re.search(img_directory_regex, img_dir)
+            if match.group("id") == id:
+                matched_paths.append(img_dir)
+
+        return matched_paths
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
@@ -324,7 +350,8 @@ class CropTypeDatasetRadiantML(GeoDataset, abc.ABC):
             raise IndexError(
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
-
+        import pdb
+        pdb.set_trace()
         # load imagery
         data = self._load_separate_images(filepaths, query)
         # load mask
@@ -340,7 +367,7 @@ class CropTypeDatasetRadiantML(GeoDataset, abc.ABC):
     def _load_separate_images(
         self, filepaths: Sequence[str], query: BoundingBox
     ) -> Tensor:
-        """Load seperate band images.
+        """Load all bands for all images that received a hit.
 
         Args:
             filepaths: one por more files to load and merge
@@ -351,13 +378,14 @@ class CropTypeDatasetRadiantML(GeoDataset, abc.ABC):
         """
         # load imagery
         img_list: List[Tensor] = []
-        for filepath in filepaths:
-            band_filepaths = []
-            for band in getattr(self, "bands", self.all_band_names):
-                tif_name: str = band + ".tif"
-                band_filename = os.path.join(filepath["img_dir"], tif_name)
-                band_filepaths.append(band_filename)
-            img_list.append(self._concatenate_bands(band_filepaths, query))
+        for label in filepaths:
+            for image_dir in label["img_dirs"]:
+                band_filepaths = []
+                for band in getattr(self, "bands", self.all_band_names):
+                    tif_name: str = band + ".tif"
+                    band_filename = os.path.join(image_dir, tif_name)
+                    band_filepaths.append(band_filename)
+                img_list.append(self._concatenate_bands(band_filepaths, query))
 
         # stack along time dimension
         data = torch.stack(img_list, dim=0)
@@ -625,11 +653,13 @@ class CropTypeTanzaniaGAFCO(CropTypeDatasetRadiantML):
 
     data_splits = ["train"]
 
-    directory_regex = r"""
+    img_directory_regex = r"""
     _(?P<id>[0-9]{2})
     _(?P<year>[0-9]{4})
     (?P<month>[0-9]{2})
     (?P<day>[0-9]{2})$"""
+
+    label_directory_regex = r"""_(?P<id>[0-9]{2})$"""
 
     extra_band_names = ("CLD",)
 
@@ -716,11 +746,13 @@ class CropTypeKenyaPlantVillage(CropTypeDatasetRadiantML):
         }
     }
 
-    directory_regex = r"""
+    img_directory_regex = r"""
     _(?P<id>[0-9]{2})
     _(?P<year>[0-9]{4})
     (?P<month>[0-9]{2})
     (?P<day>[0-9]{2})$"""
+
+    label_directory_regex = r"""_(?P<id>[0-9]{2})$"""
 
     data_splits = ["train"]
 
@@ -806,11 +838,13 @@ class CropTypeUgandaDalbergDataInsight(CropTypeDatasetRadiantML):
         }
     }
 
-    directory_regex = r"""
+    img_directory_regex = r"""
     _(?P<id>[0-9]{2})
     _(?P<year>[0-9]{4})
     (?P<month>[0-9]{2})
     (?P<day>[0-9]{2})$"""
+
+    label_directory_regex = r"""_(?P<id>[0-9]{2})$"""
 
     data_splits = ["train"]
 
@@ -918,11 +952,13 @@ class CropTypeSouthAfricaCompetition(CropTypeDatasetRadiantML):
     # dataset follows a different label format
     crop_label_key = "None"
 
-    directory_regex = r"""
+    img_directory_regex = r"""
     _(?P<id>[0-9]{4})
     _(?P<year>[0-9]{4})
     _(?P<month>[0-9]{2})
     _(?P<day>[0-9]{2})$"""
+
+    label_directory_regex = r"""_(?P<id>[0-9]{4})$"""
 
     date_format = "%Y-%m-%dT%H:%M:%S+0000"
 
@@ -937,7 +973,7 @@ class CropTypeSouthAfricaCompetition(CropTypeDatasetRadiantML):
         Returns:
             labels at this query index
         """
-        # load imagery
+        # load mask
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
         label_list: List[Tensor] = []
 
