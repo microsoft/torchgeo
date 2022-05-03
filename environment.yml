@@ -1,6 +1,8 @@
 name: torchgeo
 channels:
+  - pytorch
   - conda-forge
+  - esri
 dependencies:
   - cudatoolkit
   - einops
