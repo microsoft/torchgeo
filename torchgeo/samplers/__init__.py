@@ -3,7 +3,7 @@
 
 """TorchGeo samplers."""
 
-from .batch import BatchGeoSampler, RandomBatchGeoSampler
+from .batch import BatchGeoSampler, RandomBatchGeoSampler, TripletBatchGeoSampler
 from .constants import Units
 from .single import GeoSampler, GridGeoSampler, PreChippedGeoSampler, RandomGeoSampler
 

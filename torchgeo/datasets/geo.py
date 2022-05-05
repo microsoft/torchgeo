@@ -9,7 +9,7 @@ import glob
 import os
 import re
 import sys
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union, cast
 
 import fiona
 import fiona.transform
@@ -378,7 +378,39 @@ class RasterDataset(GeoDataset):
         self._crs = cast(CRS, crs)
         self.res = cast(float, res)
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: Union[BoundingBox, Sequence[Any]]) -> Dict[str, Any]:
+        """Retrieve image/mask and metadata indexed by query.
+
+        Args:
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+
+        Returns:
+            sample of image/mask and metadata at that index
+
+        Raises:
+            IndexError: if query is not found in the index
+        """
+        data = self._handle_queries(query)    
+
+        key = "image" if self.is_image else "mask"
+        sample = {key: data, "crs": self.crs, "bbox": query}
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+    def _handle_queries(self, queries: Union[BoundingBox, Sequence[Any]]) -> Dict[str, Any]:
+        if isinstance(queries, Sequence):
+            data = []
+            for query in queries:
+                data.append(self._handle_queries(query))
+                
+            return torch.stack(data)
+        else:
+            return self._handle_query(queries)
+    
+    def _handle_query(self, query: BoundingBox) -> Tensor:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -419,17 +451,9 @@ class RasterDataset(GeoDataset):
                     filepath = glob.glob(os.path.join(directory, filename))[0]
                     band_filepaths.append(filepath)
                 data_list.append(self._merge_files(band_filepaths, query))
-            data = torch.cat(data_list)
+            return torch.cat(data_list)
         else:
-            data = self._merge_files(filepaths, query)
-
-        key = "image" if self.is_image else "mask"
-        sample = {key: data, "crs": self.crs, "bbox": query}
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
+            return self._merge_files(filepaths, query)
 
     def _merge_files(self, filepaths: Sequence[str], query: BoundingBox) -> Tensor:
         """Load and merge one or more files.

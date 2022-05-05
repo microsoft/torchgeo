@@ -147,3 +147,108 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             number of batches in an epoch
         """
         return self.length // self.batch_size
+
+
+class TripletBatchGeoSampler(BatchGeoSampler):
+    """Samples triplets from a region of interest randomly.
+    """
+
+    def __init__(
+        self,
+        dataset: GeoDataset,
+        size: Union[Tuple[float, float], float],
+        neighborhood: int,
+        batch_size: int,
+        length: int,
+        roi: Optional[BoundingBox] = None,
+        units: Units = Units.PIXELS,
+    ) -> None:
+        """Initialize a new Sampler instance.
+
+        The ``size`` argument can either be:
+
+        * a single ``float`` - in which case the same value is used for the height and
+          width dimension
+        * a ``tuple`` of two floats - in which case, the first *float* is used for the
+          height dimension, and the second *float* for the width dimension
+
+        Args:
+            dataset: dataset to index from
+            size: dimensions of each :term:`patch`
+            neighborhood: size of positive sampling neighborhood
+            batch_size: number of samples per batch
+            length: number of random samples to draw per epoch
+            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+                (defaults to the bounds of ``dataset.index``)
+            units: defines if ``size`` is in pixel or CRS units
+        """
+        super().__init__(dataset, roi)
+        self.size = _to_tuple(size)
+
+        if units == Units.PIXELS:
+            self.size = (self.size[0] * self.res, self.size[1] * self.res)
+
+        self.neighborhood = neighborhood
+        self.batch_size = batch_size
+        self.length = length
+        self.hits = []
+        areas = []
+        for hit in self.index.intersection(tuple(self.roi), objects=True):
+            bounds = BoundingBox(*hit.bounds)
+            if (
+                bounds.maxx - bounds.minx >= self.size[1]
+                and bounds.maxy - bounds.miny >= self.size[0]
+            ):
+                self.hits.append(hit)
+                areas.append(bounds.area)
+
+        # torch.multinomial requires float probabilities > 0
+        self.areas = torch.tensor(areas, dtype=torch.float)
+        if torch.sum(self.areas) == 0:
+            self.areas += 1
+
+    def __iter__(self) -> Iterator[BoundingBox]:
+        """Return triplet indices of a dataset.
+
+        Returns:
+            list of (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
+        """
+        for _ in range(len(self)):
+            # Choose a random tile, weighted by area
+            idx = torch.multinomial(self.areas, 1)
+            hit = self.hits[idx]
+            bounds = BoundingBox(*hit.bounds)
+
+            batch = []
+            for _ in range(self.batch_size):
+                # Choose a random index within that tile
+                anchor_bbox = get_random_bounding_box(bounds, self.size, self.res)
+                mid_x, mid_y = (anchor_bbox.minx + (anchor_bbox.maxx - anchor_bbox.minx) / 2, anchor_bbox.miny + (anchor_bbox.maxy - anchor_bbox.miny) / 2)
+
+                # Neighborhood based on midpoint of anchor, contains positive midpoint => +/- half the patch size
+                neighborhood_bounds = BoundingBox(
+                    max(bounds.minx, mid_x - self.neighborhood - self.size[0] // 2),
+                    min(bounds.maxx, mid_x + self.neighborhood + self.size[0] // 2),
+                    max(bounds.miny, mid_y - self.neighborhood - self.size[1] // 2),
+                    min(bounds.maxy, mid_y + self.neighborhood + self.size[1] // 2),
+                    bounds.mint,
+                    bounds.maxt
+                )
+
+                positive_bbox = get_random_bounding_box(neighborhood_bounds, self.size, self.res)
+
+                negative_bbox = get_random_bounding_box(bounds, self.size, self.res)
+                while (negative_bbox in neighborhood_bounds):
+                    negative_bbox = get_random_bounding_box(bounds, self.size, self.res)
+
+                batch.append([anchor_bbox, positive_bbox, negative_bbox])
+
+            yield batch
+
+    def __len__(self) -> int:
+        """Return the number of samples in a single epoch.
+
+        Returns:
+            length of the epoch
+        """
+        return self.length // self.batch_size
