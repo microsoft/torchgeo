@@ -18,11 +18,12 @@ jobs:
     - name: Set up python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install pip dependencies
       run: |
-        pip install cython numpy  # needed for pycocotools
+        pip install --pre 'rasterio>=1.0.16'
         pip install .[datasets,tests]
+        pip list
     - name: Run mypy checks
       run: mypy .
   pytest:
@@ -33,7 +34,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ['3.7', '3.8', '3.9', '3.10']
     steps:
     - name: Clone repo
       uses: actions/checkout@v2
@@ -62,8 +63,9 @@ jobs:
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies
       run: |
-        pip install cython numpy  # needed for pycocotools
+        pip install --pre 'rasterio>=1.0.16'
         pip install .[datasets,tests]
+        pip list
     - name: Run pytest checks
       run: pytest --cov=torchgeo --cov-report=xml
     - name: Report coverage
