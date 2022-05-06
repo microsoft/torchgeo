@@ -2,7 +2,6 @@
 /data/
 /logs/
 /output/
-*.csv
 *.pdf
 
 # Spack
