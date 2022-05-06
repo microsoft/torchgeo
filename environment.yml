@@ -1,12 +1,16 @@
 name: torchgeo
 channels:
+  - pytorch  # for pytorch and torchvision.
   - conda-forge
+  - esri  # for pycocotools. Remove when https://github.com/conda-forge/pycocotools-feedstock/issues/16 is solved
+  - open3d-admin  # for open3d
 dependencies:
   - cudatoolkit<=11.5  # Remove pegging once solved: https://github.com/conda-forge/pytorch-cpu-feedstock/issues/102
   - einops
   - fiona>=1.5
   - h5py
   - numpy
+  - open3d>=0.11.2
   - pip
   - pycocotools
   - pyproj>=2.2
@@ -28,7 +32,6 @@ dependencies:
     - nbmake>=0.1
     - nbsphinx>=0.8.5
     - omegaconf>=2.1
-    - open3d>=0.11.2
     - opencv-python
     - pandas>=0.23.2
     - pillow>=2.9
