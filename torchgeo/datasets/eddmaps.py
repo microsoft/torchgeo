@@ -82,10 +82,10 @@ class EDDMapS(GeoDataset):
             if np.isnan(y) or np.isnan(x):
                 continue
 
-            if pd.isna(date):
-                mint, maxt = 0, sys.maxsize
-            else:
+            if not pd.isna(date):
                 mint, maxt = disambiguate_timestamp(date, "%m-%d-%y")
+            else:
+                mint, maxt = 0, sys.maxsize
 
             coords = (x, x, y, y, mint, maxt)
             self.index.insert(i, coords)
