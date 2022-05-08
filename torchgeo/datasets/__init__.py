@@ -28,6 +28,7 @@ from .cowc import COWC, COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCycloneWindEstimation
 from .dfc2022 import DFC2022
+from .eddmaps import EDDMapS
 from .enviroatlas import EnviroAtlas
 from .esri2020 import Esri2020
 from .etci2021 import ETCI2021
@@ -117,6 +118,7 @@ __all__ = (
     "ChesapeakeWV",
     "ChesapeakeCVPR",
     "CMSGlobalMangroveCanopy",
+    "EDDMapS",
     "Esri2020",
     "EUDEM",
     "GBIF",

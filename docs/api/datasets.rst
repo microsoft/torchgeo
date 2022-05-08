@@ -52,6 +52,11 @@ Cropland Data Layer (CDL)
 
 .. autoclass:: CDL
 
+EDDMapS
+^^^^^^^
+
+.. autoclass:: EDDMapS
+
 EnviroAtlas
 ^^^^^^^^^^^
 
