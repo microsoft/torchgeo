@@ -77,6 +77,11 @@ GlobBiomass
 
 .. autoclass:: GlobBiomass
 
+iNaturalist
+^^^^^^^^^^^
+
+.. autoclass:: INaturalist
+
 Landsat
 ^^^^^^^
 

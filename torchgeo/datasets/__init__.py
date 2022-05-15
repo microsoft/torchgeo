@@ -48,6 +48,7 @@ from .geo import (
 from .gid15 import GID15
 from .globbiomass import GlobBiomass
 from .idtrees import IDTReeS
+from .inaturalist import INaturalist
 from .inria import InriaAerialImageLabeling
 from .landcoverai import LandCoverAI
 from .landsat import (
@@ -121,6 +122,7 @@ __all__ = (
     "EUDEM",
     "GBIF",
     "GlobBiomass",
+    "INaturalist",
     "Landsat",
     "Landsat1",
     "Landsat2",
