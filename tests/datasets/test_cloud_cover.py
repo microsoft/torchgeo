@@ -23,7 +23,7 @@ class Dataset:
             "tests", "data", "ref_cloud_cover_detection_challenge_v1", "*.tar.gz"
         )
         for tarball in glob.iglob(glob_path):
-            print(os.path.exists(tarball))
+            # print(os.path.exists(tarball))
             shutil.copy(tarball, output_dir)
 
 
@@ -68,6 +68,17 @@ class TestCloudCoverDetection:
             checksum=True,
         )
 
+    def test_invalid_band(self, dataset: CloudCoverDetection) -> None:
+        invalid_band = ["B09"]
+        with pytest.raises(ValueError):
+            CloudCoverDetection(
+                root=dataset.root,
+                split="test",
+                download=True,
+                api_key="",
+                bands=invalid_band,
+            )
+
     def test_get_item(self, dataset: CloudCoverDetection) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
@@ -85,8 +96,8 @@ class TestCloudCoverDetection:
             CloudCoverDetection(str(tmp_path))
 
     def test_plot(self, dataset: CloudCoverDetection) -> None:
-        print(dataset[0]["image"].shape)
-        print(dataset[0]["mask"].shape)
+        # print(dataset[0]["image"].shape)
+        # print(dataset[0]["mask"].shape)
         dataset.plot(dataset[0], suptitle="Test")
         plt.close()
 
