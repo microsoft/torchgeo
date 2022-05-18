@@ -5,12 +5,13 @@
 
 import json
 import os
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
+from numpy.typing import NDArray
 from torch import Tensor
 
 from .geo import VisionDataset
@@ -95,7 +96,7 @@ class CloudCoverDetection(VisionDataset):
         root: str = "data",
         chip_size: int = 512,
         split: str = "train",
-        bands: List[str] = band_names,
+        bands: Sequence[str] = band_names,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
@@ -120,9 +121,11 @@ class CloudCoverDetection(VisionDataset):
         self.root = root
         self.chip_size = chip_size
         self.split = split
-        self.bands = bands
         self.transforms = transforms
         self.checksum = checksum
+
+        self._validate_bands(bands)
+        self.bands = bands
 
         if download:
             self._download(api_key)
@@ -176,7 +179,7 @@ class CloudCoverDetection(VisionDataset):
             with rasterio.open(path) as image_data:
                 image_array = image_data.read(1).astype(np.int32)
                 images.append(image_array)
-        image_stack: "np.typing.NDArray[np.int_]" = np.stack(images, axis=0)
+        image_stack: NDArray[np.int_] = np.stack(images, axis=0)
         image_tensor = torch.from_numpy(image_stack)
         return image_tensor
 
@@ -193,26 +196,9 @@ class CloudCoverDetection(VisionDataset):
         with rasterio.open(label_asset_path) as target_data:
             target_img = target_data.read(1).astype(np.int32)
 
-        target_array: "np.typing.NDArray[np.int_]" = np.array(target_img)
+        target_array: NDArray[np.int_] = np.array(target_img)
         target_tensor = torch.from_numpy(target_array)
         return target_tensor
-
-    @staticmethod
-    def _validate_stac_object(object_path: str) -> bool:
-        """Validates a STAC object JSON filepath exists.
-
-        Returns:
-            True if the object is a valid JSON file
-
-        Raises:
-            RuntimeError: if JSON or TIF file is not a valid object on disk
-        """
-        if not os.path.exists(object_path):
-            raise RuntimeError(
-                f"{object_path} not a valid STAC object path in the Catalog. "
-                + "Make sure all files uncompressed completely."
-            )
-        return True
 
     @staticmethod
     def _read_json_data(object_path: str) -> Any:
@@ -231,37 +217,34 @@ class CloudCoverDetection(VisionDataset):
         """
         item_meta = {}
 
-        if self._validate_stac_object(item_json):
-            label_data = self._read_json_data(item_json)
-            label_asset_path = os.path.join(
-                os.path.split(item_json)[0], label_data["assets"]["labels"]["href"]
-            )
-            item_meta["target"] = [label_asset_path]
+        label_data = self._read_json_data(item_json)
+        label_asset_path = os.path.join(
+            os.path.split(item_json)[0], label_data["assets"]["labels"]["href"]
+        )
+        item_meta["target"] = [label_asset_path]
 
-            if self._validate_stac_object(label_asset_path):
-                source_item_hrefs = [
-                    os.path.join(self.root, link["href"].replace("../../", ""))
-                    for link in label_data["links"]
-                    if link["rel"] == "source"
-                ]
-                source_item_hrefs = sorted(source_item_hrefs)
-                source_item_paths = []
+        source_item_hrefs = [
+            os.path.join(self.root, link["href"].replace("../../", ""))
+            for link in label_data["links"]
+            if link["rel"] == "source"
+        ]
 
-                for item_href in source_item_hrefs:
-                    source_item_path = os.path.split(item_href)[0]
-                    if self._validate_stac_object(item_href):
-                        source_data = self._read_json_data(item_href)
-                        source_item_assets = [
-                            os.path.join(source_item_path, asset_value["href"])
-                            for asset_key, asset_value in source_data["assets"].items()
-                            if asset_key in self.bands
-                        ]
-                        source_item_assets = sorted(source_item_assets)
-                        for source_item_asset in source_item_assets:
-                            if self._validate_stac_object(source_item_asset):
-                                source_item_paths.append(source_item_asset)
+        source_item_hrefs = sorted(source_item_hrefs)
+        source_item_paths = []
 
-            item_meta["source"] = source_item_paths
+        for item_href in source_item_hrefs:
+            source_item_path = os.path.split(item_href)[0]
+            source_data = self._read_json_data(item_href)
+            source_item_assets = [
+                os.path.join(source_item_path, asset_value["href"])
+                for asset_key, asset_value in source_data["assets"].items()
+                if asset_key in self.bands
+            ]
+            source_item_assets = sorted(source_item_assets)
+            for source_item_asset in source_item_assets:
+                source_item_paths.append(source_item_asset)
+
+        item_meta["source"] = source_item_paths
         return item_meta
 
     def _load_collections(self) -> List[Dict[str, Any]]:
@@ -280,23 +263,21 @@ class CloudCoverDetection(VisionDataset):
         label_collection_path = os.path.join(self.root, label_collection)
         label_collection_json = os.path.join(label_collection_path, "collection.json")
 
-        if self._validate_stac_object(label_collection_json):
+        label_collection_item_hrefs = [
+            link["href"]
+            for link in self._read_json_data(label_collection_json)["links"]
+            if link["rel"] == "item"
+        ]
+        label_collection_item_hrefs = sorted(label_collection_item_hrefs)
 
-            label_collection_item_hrefs = [
-                link["href"]
-                for link in self._read_json_data(label_collection_json)["links"]
-                if link["rel"] == "item"
-            ]
-            label_collection_item_hrefs = sorted(label_collection_item_hrefs)
-
-            for label_href in label_collection_item_hrefs:
-                label_json = os.path.join(label_collection_path, label_href)
-                indexed_item = self._load_items(label_json)
-                indexed_chips.append(indexed_item)
+        for label_href in label_collection_item_hrefs:
+            label_json = os.path.join(label_collection_path, label_href)
+            indexed_item = self._load_items(label_json)
+            indexed_chips.append(indexed_item)
 
         return indexed_chips
 
-    def _validate_bands(self, bands: List[str]) -> None:
+    def _validate_bands(self, bands: Sequence[str]) -> None:
         """Validate list of bands.
 
         Args:
@@ -306,7 +287,6 @@ class CloudCoverDetection(VisionDataset):
             AssertionError: if ``bands`` is not a tuple
             ValueError: if an invalid band name is provided
         """
-        assert isinstance(bands, List), "The list of bands must be a tuple"
         for band in bands:
             if band not in self.band_names:
                 raise ValueError(f"'{band}' is an invalid band name.")
