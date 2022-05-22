@@ -14,12 +14,8 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
-from torchgeo.datasets.geo import VisionDataset
-from torchgeo.datasets.utils import (
-    check_integrity,
-    extract_archive,
-    percentile_normalization,
-)
+from .geo import VisionDataset
+from .utils import check_integrity, extract_archive, percentile_normalization
 
 
 class InriaAerialImageLabeling(VisionDataset):
@@ -103,10 +99,10 @@ class InriaAerialImageLabeling(VisionDataset):
             labels = sorted(labels)
 
             for img, lbl in zip(images, labels):
-                files.append({"image_path": img, "label_path": lbl})
+                files.append({"image": img, "label": lbl})
         else:
             for img in images:
-                files.append({"image_path": img})
+                files.append({"image": img})
 
         return files
 
@@ -157,11 +153,10 @@ class InriaAerialImageLabeling(VisionDataset):
             data and label at that index
         """
         files = self.files[index]
-        sample = {}
-        img = self._load_image(files["image_path"])
-        sample["image"] = img
-        if files.get("label_path"):
-            mask = self._load_target(files["label_path"])
+        img = self._load_image(files["image"])
+        sample = {"image": img}
+        if files.get("label"):
+            mask = self._load_target(files["label"])
             sample["mask"] = mask
 
         if self.transforms is not None:
