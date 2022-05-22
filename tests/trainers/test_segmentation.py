@@ -14,6 +14,7 @@ from torch.nn.modules import Module
 from torchgeo.datamodules import (
     ChesapeakeCVPRDataModule,
     ETCI2021DataModule,
+    InriaAerialImageLabelingDataModule,
     LandCoverAIDataModule,
     NAIPChesapeakeDataModule,
     OSCDDataModule,
@@ -34,6 +35,7 @@ class TestSemanticSegmentationTask:
         [
             ("chesapeake_cvpr_5", ChesapeakeCVPRDataModule),
             ("etci2021", ETCI2021DataModule),
+            ("inria", InriaAerialImageLabelingDataModule),
             ("landcoverai", LandCoverAIDataModule),
             ("naipchesapeake", NAIPChesapeakeDataModule),
             ("oscd_all", OSCDDataModule),
