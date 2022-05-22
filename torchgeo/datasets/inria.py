@@ -14,12 +14,8 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
-from torchgeo.datasets.geo import VisionDataset
-from torchgeo.datasets.utils import (
-    check_integrity,
-    extract_archive,
-    percentile_normalization,
-)
+from .geo import VisionDataset
+from .utils import check_integrity, extract_archive, percentile_normalization
 
 
 class InriaAerialImageLabeling(VisionDataset):

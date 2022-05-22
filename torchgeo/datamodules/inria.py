@@ -11,12 +11,12 @@ import torch
 import torchvision.transforms as T
 from einops import rearrange
 from kornia.contrib import compute_padding, extract_tensor_patches
-from torch.nn.modules.utils import _pair
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data._utils.collate import default_collate
 
-from torchgeo.datamodules.utils import dataset_split
-from torchgeo.datasets import InriaAerialImageLabeling
+from ..datasets import InriaAerialImageLabeling
+from ..samplers.utils import _to_tuple
+from .utils import dataset_split
 
 DEFAULT_AUGS = K.AugmentationSequential(
     K.RandomHorizontalFlip(p=0.5),
@@ -79,7 +79,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
-        self.patch_size = cast(Tuple[int, int], _pair(patch_size))
+        self.patch_size = cast(Tuple[int, int], _to_tuple(patch_size))
         self.num_patches_per_tile = num_patches_per_tile
         self.augmentations = augmentations
         self.predict_on = predict_on
@@ -112,7 +112,6 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         sample["image"] = sample["image"] / 255.0
         sample["image"] = torch.clip(sample["image"], min=0.0, max=1.0)
 
-        # This is pointless since it will get squeezed out anyway
         if "mask" in sample:
             sample["mask"] = rearrange(sample["mask"], "h w -> () h w")
 
@@ -224,12 +223,19 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             dict: A batch of data
         """
         # Training
-        if self.trainer.training and self.augmentations is not None:  # type: ignore[union-attr] # noqa: E501
+        if (
+            hasattr(self, "trainer")
+            and self.trainer is not None
+            and hasattr(self.trainer, "training")
+            and self.trainer.training
+            and self.augmentations is not None
+        ):
             batch["mask"] = batch["mask"].to(torch.float)
             batch["image"], batch["mask"] = self.augmentations(
                 batch["image"], batch["mask"]
             )
             batch["mask"] = batch["mask"].to(torch.long)
+
         # Validation
         if "mask" in batch:
             batch["mask"] = rearrange(batch["mask"], "b () h w -> b h w")
