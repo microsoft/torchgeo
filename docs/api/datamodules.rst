@@ -44,6 +44,11 @@ FAIR1M (Fine-grAined object recognItion in high-Resolution imagery)
 
 .. autoclass:: FAIR1MDataModule
 
+Inria Aerial Image Labeling
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: InriaAerialImageLabelingDataModule
+
 LandCover.ai (Land Cover from Aerial Imagery)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
