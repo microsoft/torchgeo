@@ -2,7 +2,7 @@ name: torchgeo
 channels:
   - conda-forge
 dependencies:
-  - cudatoolkit
+  - cudatoolkit<=11.5  # Remove pegging once solved: https://github.com/conda-forge/pytorch-cpu-feedstock/issues/102
   - einops
   - fiona>=1.5
   - h5py
