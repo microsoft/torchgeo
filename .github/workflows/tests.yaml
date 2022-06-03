@@ -19,13 +19,14 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: '3.10'
-    - name: Install pip dependencies
+    - name: Install pip dependencies via poetry
       run: |
-        pip install --pre 'rasterio>=1.0.16'
-        pip install .[datasets,tests]
-        pip list
+        pip install poetry
+        poetry install
+        poetry show
     - name: Run mypy checks
       run: mypy .
+      
   pytest:
     name: pytest
     runs-on: ${{ matrix.os }}
@@ -61,11 +62,11 @@ jobs:
         conda list
         conda info
       if: ${{ runner.os == 'Windows' }}
-    - name: Install pip dependencies
+    - name: Install pip dependencies via poetry
       run: |
-        pip install --pre 'rasterio>=1.0.16'
-        pip install .[datasets,tests]
-        pip list
+        pip install poetry
+        poetry install --extras "datasets"
+        poetry show
     - name: Run pytest checks
       run: pytest --cov=torchgeo --cov-report=xml
     - name: Report coverage
