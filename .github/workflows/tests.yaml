@@ -65,9 +65,9 @@ jobs:
     - name: Install pip dependencies via poetry
       run: |
         pip install poetry
-        poetry install --extras "datasets"
+        poetry install
         poetry show
     - name: Run pytest checks
-      run: pytest --cov=torchgeo --cov-report=xml
+      run: poetry run pytest --cov=torchgeo --cov-report=xml
     - name: Report coverage
       uses: codecov/codecov-action@v2
