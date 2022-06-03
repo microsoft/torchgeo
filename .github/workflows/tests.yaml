@@ -25,8 +25,8 @@ jobs:
         poetry install
         poetry show
     - name: Run mypy checks
-      run: mypy .
-      
+      run: poetry run mypy .
+
   pytest:
     name: pytest
     runs-on: ${{ matrix.os }}

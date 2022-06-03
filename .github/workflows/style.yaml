@@ -25,7 +25,7 @@ jobs:
         poetry install
         poetry show
     - name: Run black checks
-      run: black . --check --diff
+      run: poetry run black . --check --diff
 
   flake8:
     name: flake8
@@ -43,7 +43,7 @@ jobs:
         poetry install
         poetry show
     - name: Run flake8 checks
-      run: flake8
+      run: poetry run flake8
 
   isort:
     name: isort
@@ -61,7 +61,7 @@ jobs:
         poetry install
         poetry show
     - name: Run isort checks
-      run: isort . --check --diff
+      run: poetry run isort . --check --diff
 
   pydocstyle:
     name: pydocstyle
@@ -79,7 +79,7 @@ jobs:
         poetry install
         poetry show
     - name: Run pydocstyle checks
-      run: pydocstyle
+      run: poetry run pydocstyle
 
   pyupgrade:
     name: pyupgrade
@@ -97,4 +97,4 @@ jobs:
         poetry install
         poetry show
     - name: Run pyupgrade checks
-      run: pyupgrade --py37-plus $(find . -name "*.py")
+      run: poetry run pyupgrade --py37-plus $(find . -name "*.py")
