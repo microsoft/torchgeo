@@ -41,7 +41,8 @@ pycocotools==2.0.4
 radiant-mlhub==0.5.1;python_version>='3.8'
 radiant-mlhub==0.4.1;python_version=='3.7'
 rarfile==4.0
-scipy==1.8.1
+scipy==1.8.1;python_version>='3.8'
+scipy==1.7.3;python_version=='3.7'
 zipfile-deflate64==0.2.0
 
 # style
