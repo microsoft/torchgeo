@@ -75,6 +75,7 @@ from .oscd import OSCD
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
 from .resisc45 import RESISC45
+from .rioxarray import RioXarrayDataset
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel2
@@ -138,6 +139,7 @@ __all__ = (
     "Landsat9",
     "NAIP",
     "OpenBuildings",
+    "RioXarrayDataset",
     "Sentinel",
     "Sentinel2",
     # VisionDataset
