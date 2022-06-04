@@ -21,7 +21,8 @@ pytorch-lightning==1.6.4
 rasterio==1.3b1;python_version=='3.10'
 rasterio==1.2.10;python_version<='3.9'
 rtree==1.0.0
-scikit-learn==1.1.1
+scikit-learn==1.1.1;python_version>='3.8'
+scikit-learn==1.0.2;python_version=='3.7'
 segmentation-models-pytorch==0.2.1
 shapely==1.8.2
 timm==0.4.12
