@@ -56,16 +56,10 @@ jobs:
       if: ${{ runner.os == 'Windows' }}
     - name: Install conda dependencies (Windows)
       run: |
-        conda install 'fiona==1.8.21' 'rasterio==1.3b1'
-        conda list
-        conda info
-      if: ${{ runner.os == 'Windows' && matrix.python-version == '3.10' }}
-    - name: Install conda dependencies (Windows)
-      run: |
         conda install 'fiona==1.8.21' 'rasterio==1.2.10'
         conda list
         conda info
-      if: ${{ runner.os == 'Windows' && matrix.python-version != '3.10' }}
+      if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies
       run: |
         pip install -r requirements.txt

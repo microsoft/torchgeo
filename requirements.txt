@@ -18,8 +18,8 @@ pillow==9.1.1
 pyproj==3.3.1;python_version>='3.8'
 pyproj==3.2.0;python_version=='3.7'
 pytorch-lightning==1.6.4
-rasterio==1.3b1;python_version=='3.10'
-rasterio==1.2.10;python_version<='3.9'
+rasterio==1.3b1;python_version=='3.10' and platform_system != 'Windows'
+rasterio==1.2.10;python_version<='3.9' or platform_system == 'Windows'
 rtree==1.0.0
 scikit-learn==1.1.1;python_version>='3.8'
 scikit-learn==1.0.2;python_version=='3.7'
