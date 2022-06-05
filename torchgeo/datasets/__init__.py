@@ -92,6 +92,7 @@ from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
     BoundingBox,
+    PredictDataset,
     concat_samples,
     merge_samples,
     stack_samples,
@@ -192,6 +193,7 @@ __all__ = (
     "VisionClassificationDataset",
     # Utilities
     "BoundingBox",
+    "PredictDataset",
     "concat_samples",
     "merge_samples",
     "stack_samples",
