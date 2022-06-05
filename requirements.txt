@@ -46,7 +46,7 @@ scipy==1.7.3;python_version=='3.7'
 zipfile-deflate64==0.2.0
 
 # style
-black==22.3.0
+black[jupyter]==22.3.0
 flake8==4.0.1;python_version=='3.10'
 isort[colors]==5.10.1
 pydocstyle[toml]==6.1.1
