@@ -21,8 +21,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
-        pip install --pre 'rasterio>=1.0.16'
-        pip install .[datasets,tests]
+        pip install -r requirements.txt
         pip list
     - name: Run mypy checks
       run: mypy .
@@ -57,14 +56,13 @@ jobs:
       if: ${{ runner.os == 'Windows' }}
     - name: Install conda dependencies (Windows)
       run: |
-        conda install 'fiona>=1.5' 'rasterio>=1.0.16'
+        conda install 'fiona==1.8.21' 'rasterio==1.2.10'
         conda list
         conda info
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies
       run: |
-        pip install --pre 'rasterio>=1.0.16'
-        pip install .[datasets,tests]
+        pip install -r requirements.txt
         pip list
     - name: Run pytest checks
       run: pytest --cov=torchgeo --cov-report=xml

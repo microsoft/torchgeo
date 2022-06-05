@@ -36,8 +36,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
-        pip install --pre 'rasterio>=1.0.16'
-        pip install .[datasets,tests]
+        pip install -r requirements.txt
         pip list
     - name: Run integration checks
       run: pytest -m slow
@@ -53,9 +52,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
-        pip install --pre 'rasterio>=1.0.16'
-        pip install .[datasets,tests]
-        pip install -r docs/requirements.txt
+        pip install -r requirements.txt
         pip list
     - name: Run notebook checks
       env:
