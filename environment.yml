@@ -26,7 +26,7 @@ dependencies:
     - ipywidgets>=7
     - isort[colors]>=5.8
     - jupyterlab
-    - kornia>=0.5.11
+    - kornia>=0.6.4
     - laspy>=2.0.0
     - mypy>=0.900
     - nbmake>=0.1
