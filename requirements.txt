@@ -45,6 +45,11 @@ scipy==1.8.1;python_version>='3.8'
 scipy==1.7.3;python_version=='3.7'
 zipfile-deflate64==0.2.0
 
+# docs
+ipywidgets==7.7.0
+nbsphinx==0.8.9
+sphinx==5.0.1
+
 # style
 black[jupyter]==22.3.0
 flake8==4.0.1;python_version=='3.10'
@@ -57,8 +62,3 @@ mypy==0.960
 nbmake==1.3.0
 pytest==7.1.2
 pytest-cov==3.0.0
-
-# docs
-ipywidgets==7.7.0
-nbsphinx==0.8.9
-sphinx==5.0.1
