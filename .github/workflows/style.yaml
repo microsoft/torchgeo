@@ -21,8 +21,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
-        pip install --pre 'rasterio>=1.0.16'
-        pip install .[style]
+        pip install -r requirements.txt
         pip list
     - name: Run black checks
       run: black . --check --diff
@@ -38,8 +37,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
-        pip install --pre 'rasterio>=1.0.16'
-        pip install .[style]
+        pip install -r requirements.txt
         pip list
     - name: Run flake8 checks
       run: flake8
@@ -55,8 +53,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
-        pip install --pre 'rasterio>=1.0.16'
-        pip install .[style]
+        pip install -r requirements.txt
         pip list
     - name: Run isort checks
       run: isort . --check --diff
@@ -72,8 +69,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
-        pip install --pre 'rasterio>=1.0.16'
-        pip install .[style]
+        pip install -r requirements.txt
         pip list
     - name: Run pydocstyle checks
       run: pydocstyle
@@ -89,8 +85,7 @@ jobs:
         python-version: 3.9
     - name: Install pip dependencies
       run: |
-        pip install --pre 'rasterio>=1.0.16'
-        pip install .[style]
+        pip install -r requirements.txt
         pip list
     - name: Run pyupgrade checks
       run: pyupgrade --py37-plus $(find . -name "*.py")
