@@ -5,7 +5,6 @@ channels:
   - esri  # for pycocotools. Remove when https://github.com/conda-forge/pycocotools-feedstock/issues/16 is solved
   - open3d-admin  # for open3d
 dependencies:
-  - cudatoolkit<=11.5
   - einops
   - fiona>=1.5
   - h5py
