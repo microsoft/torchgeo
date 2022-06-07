@@ -55,7 +55,7 @@ black[jupyter]==22.3.0
 flake8==4.0.1;python_version=='3.10'
 isort[colors]==5.10.1
 pydocstyle[toml]==6.1.1
-pyupgrade==2.32.1
+pyupgrade==2.34.0
 
 # tests
 mypy==0.960
