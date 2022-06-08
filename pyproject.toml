@@ -54,10 +54,19 @@ match_dir = "(datamodules|datasets|losses|models|samplers|torchgeo|trainers|tran
 addopts = "-m 'not slow'"
 # https://docs.pytest.org/en/latest/how-to/capture-warnings.html
 filterwarnings = [
+    # Treat all warnings as errors
+    "error",
+
     # Warnings raised by dependencies of dependencies, out of our control
     # https://github.com/tensorflow/tensorboard/pull/5138
     "ignore:.*is a deprecated alias for the builtin:DeprecationWarning",
     "ignore:.*Create unlinked descriptors is going to go away:DeprecationWarning",
+    # https://github.com/pytorch/vision/pull/5898
+    # https://github.com/rwightman/pytorch-image-models/pull/1256
+    "ignore:.*is deprecated and will be removed in Pillow 10:DeprecationWarning",
+    # https://github.com/pytorch/pytorch/issues/72906
+    # https://github.com/pytorch/pytorch/pull/69823
+    "ignore:distutils Version classes are deprecated. Use packaging.version instead.:DeprecationWarning",
 
     # Expected warnings
     # Kornia fixed a bug in bbox handling, but there's no way to suppress the warning
