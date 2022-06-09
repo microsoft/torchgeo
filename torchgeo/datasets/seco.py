@@ -183,7 +183,7 @@ class SeasonalContrastS2(VisionDataset):
                     pil_image = Image.fromarray(band_data)
                     if tuple(int(v) for v in PIL.__version__.split(".")) >= (9, 1):
                         resample = Image.Resampling.BILINEAR
-                    else:
+                    else:  # pragma: no cover
                         resample = Image.BILINEAR
                     band_data = np.array(
                         pil_image.resize((264, 264), resample=resample)

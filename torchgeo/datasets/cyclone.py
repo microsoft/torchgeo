@@ -146,7 +146,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
             if img.height != self.size or img.width != self.size:
                 if tuple(int(v) for v in PIL.__version__.split(".")) >= (9, 1):
                     resample = Image.Resampling.BILINEAR
-                else:
+                else:  # pragma: no cover
                     resample = Image.BILINEAR
                 img = img.resize(size=(self.size, self.size), resample=resample)
             array: "np.typing.NDArray[np.int_]" = np.array(img)
