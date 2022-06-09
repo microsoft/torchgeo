@@ -58,9 +58,6 @@ filterwarnings = [
     "error",
 
     # Warnings raised by dependencies of dependencies, out of our control
-    # https://github.com/tensorflow/tensorboard/pull/5138
-    #"ignore:.*is a deprecated alias for the builtin:DeprecationWarning",
-    #"ignore:.*Create unlinked descriptors is going to go away:DeprecationWarning",
     # https://github.com/pytorch/vision/pull/5898
     # https://github.com/rwightman/pytorch-image-models/pull/1256
     "ignore:.*is deprecated and will be removed in Pillow 10:DeprecationWarning",
@@ -69,21 +66,6 @@ filterwarnings = [
     "ignore:distutils Version classes are deprecated. Use packaging.version instead.:DeprecationWarning",
     # https://github.com/PyTorchLightning/pytorch-lightning/issues/13256
     "ignore:torch.distributed._sharded_tensor will be deprecated, use torch.distributed._shard.sharded_tensor instead:DeprecationWarning",
-
-    # Expected warnings
-    # Kornia fixed a bug in bbox handling, but there's no way to suppress the warning
-    #"ignore:Previous behaviour produces incorrect box coordinates:UserWarning",
-    # pytorch-lightning warns us about using num_workers=0, but it's faster on macOS
-    #"ignore:The dataloader, .*, does not have many workers which may be a bottleneck:UserWarning",
-    # pytorch-lightning warns us if a GPU is available but isn't being used
-    #"ignore:GPU available but not used:UserWarning",
-
-    # Unexpected warnings, worth investigating
-    # pytorch-lightning warns us not to use shuffle=True with val/test dataloader, but we aren't...
-    # Warning only raised for GeoSamplers, need to investigate
-    #"ignore:Your `.*_dataloader` has `shuffle=True`:UserWarning",
-    # pytorch-lightning is having trouble inferring the batch size for CycloneDataModule for some reason
-    #"ignore:Trying to infer the `batch_size` from an ambiguous collection:UserWarning",
 ]
 markers = [
     "slow: marks tests as slow",
