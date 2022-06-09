@@ -67,6 +67,10 @@ filterwarnings = [
     # https://github.com/PyTorchLightning/pytorch-lightning/issues/13256
     "ignore:torch.distributed._sharded_tensor will be deprecated, use torch.distributed._shard.sharded_tensor instead:DeprecationWarning",
 
+    # Expected warnings
+    # pytorch-lightning warns us about using num_workers=0, but it's faster on macOS
+    "ignore:The dataloader, .*, does not have many workers which may be a bottleneck:UserWarning",
+
     # Unexpected warnings, worth investigating
     # pytorch-lightning is having trouble inferring the batch size for ChesapeakeCVPRDataModule and CycloneDataModule for some reason
     "ignore:Trying to infer the `batch_size` from an ambiguous collection:UserWarning",
