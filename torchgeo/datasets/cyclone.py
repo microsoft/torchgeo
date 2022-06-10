@@ -10,7 +10,6 @@ from typing import Any, Callable, Dict, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
-import PIL
 import torch
 from PIL import Image
 from torch import Tensor

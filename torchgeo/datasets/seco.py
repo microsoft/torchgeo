@@ -9,7 +9,6 @@ from typing import Callable, Dict, List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-import PIL
 import rasterio
 import torch
 from PIL import Image
