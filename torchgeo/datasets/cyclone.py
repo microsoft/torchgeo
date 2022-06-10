@@ -144,7 +144,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
         filename = os.path.join(directory.format("source"), "image.jpg")
         with Image.open(filename) as img:
             if img.height != self.size or img.width != self.size:
-                # Added in PIL 9.1.0
+                # Moved in PIL 9.1.0
                 try:
                     resample = Image.Resampling.BILINEAR
                 except AttributeError:  # pragma: no cover

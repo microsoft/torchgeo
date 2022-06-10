@@ -181,7 +181,7 @@ class SeasonalContrastS2(VisionDataset):
                     # slowdown here from converting to/from a PIL Image just to resize.
                     # https://gist.github.com/calebrob6/748045ac8d844154067b2eefa47de92f
                     pil_image = Image.fromarray(band_data)
-                    # Added in PIL 9.1.0
+                    # Moved in PIL 9.1.0
                     try:
                         resample = Image.Resampling.BILINEAR
                     except AttributeError:  # pragma: no cover
