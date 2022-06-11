@@ -51,7 +51,7 @@ class EuroSAT(VisionClassificationDataset):
     * https://ieeexplore.ieee.org/document/8519248
     """
 
-    url = "http://madm.dfki.de/files/sentinel/EuroSATallBands.zip"  # 2.0 GB download
+    url = "https://madm.dfki.de/files/sentinel/EuroSATallBands.zip"  # 2.0 GB download
     filename = "EuroSATallBands.zip"
     md5 = "5ac12b3b2557aa56e1826e981e8e200e"
 
