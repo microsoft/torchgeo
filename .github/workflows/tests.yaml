@@ -85,6 +85,7 @@ jobs:
     - name: Install pip dependencies
       run: |
         pip install cython  # needed by pycocotools
+        pip install numpy==1.17.2  # needed by matplotlib
         pip install -r requirements/requirements-min.txt
         pip list
     - name: Run pytest checks
