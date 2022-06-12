@@ -84,7 +84,8 @@ jobs:
       run: |
         sudo add-apt-repository ppa:ubuntugis/ppa
         sudo apt-get update
-        sudo apt-get install gdal-bin unrar
+        sudo apt-get install gdal-bin libgdal-dev
+        sudo apt-get install unrar
     - name: Install pip dependencies
       run: |
         pip install cython  # needed by pycocotools
