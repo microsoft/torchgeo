@@ -84,6 +84,7 @@ jobs:
       run: sudo apt-get install unrar
     - name: Install pip dependencies
       run: |
+        pip install numpy==1.7.0
         pip install -r requirements/requirements-min.txt
         pip list
     - name: Run pytest checks
