@@ -9,7 +9,7 @@ wheel==0.1
 einops==0.1.0
 fiona==1.5.0
 kornia==0.6.4
-matplotlib==0.63.0
+matplotlib==0.86
 numpy==0.9.6
 omegaconf==2.1.0
 pillow==2.9.0
