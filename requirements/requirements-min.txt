@@ -3,7 +3,7 @@
 
 # setup
 setuptools==42.0.0
-wheel==0.21.0
+wheel==0.26.0
 
 # install
 einops==0.1.0
