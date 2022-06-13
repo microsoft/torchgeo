@@ -89,7 +89,7 @@ jobs:
         sudo apt-get install unrar
     - name: Install pip dependencies
       run: |
-        pip install cython  # needed by pycocotools
+        pip install cython numpy==1.17.2  # needed by pycocotools
         pip install -r requirements/requirements-min.txt
         pip list
     - name: Run pytest checks
