@@ -26,9 +26,14 @@ class DeepGlobeLandCover(VisionDataset):
     """DeepGlobe Land Cover Classification Challenge dataset.
 
     The `DeepGlobe Land Cover Classification Challenge <https://competitions.codalab.org/competitions/18468/>` dataset 
-    offers high-resolution sub-meter satellite imagery focusing for the task of semantic segmentation to detect areas of urban, agriculture, rangeland, forest, water, barren, and unknown.
-    It contains 1,146 satellite images of size 2448 x 2448 pixels in total, split into training/validation/test sets, the original dataset can be downloaded from `Kaggle <https://www.kaggle.com/datasets/balraj98/deepglobe-land-cover-classification-dataset>`.
-    However, we only use the training dataset with 803 images since the original test and valid dataset are not accompanied by labels. The dataset that we use with a custom train/test split can be downloaded from `Kaggle <https://www.kaggle.com/datasets/geoap96/deepglobe2018-landcover-segmentation-traindataset>` (created as a part of Computer Vision by Deep Learning (CS4245) course offered at TU Delft). 
+    offers high-resolution sub-meter satellite imagery focusing for the task of semantic segmentation to detect areas of 
+    urban, agriculture, rangeland, forest, water, barren, and unknown.
+    It contains 1,146 satellite images of size 2448 x 2448 pixels in total, 
+    split into training/validation/test sets, the original dataset can be downloaded from 
+    `Kaggle <https://www.kaggle.com/datasets/balraj98/deepglobe-land-cover-classification-dataset>`.
+    However, we only use the training dataset with 803 images since the original test and 
+    valid dataset are not accompanied by labels. The dataset that we use with a custom train/test split can be downloaded from `Kaggle <https://www.kaggle.com/datasets/geoap96/deepglobe2018-landcover-segmentation-traindataset>`
+    (created as a part of Computer Vision by Deep Learning (CS4245) course offered at TU Delft). 
 
     Dataset format:
 
