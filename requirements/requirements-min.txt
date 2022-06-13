@@ -12,7 +12,7 @@ kornia==0.6.4
 matplotlib==3.4.0
 numpy==1.17.2
 omegaconf==2.1.0
-pillow==5.3.0
+pillow==6.2.0
 pyproj==2.2.0
 pytorch-lightning==1.5.0
 rasterio==1.0.20
