@@ -84,14 +84,12 @@ jobs:
       run: |
         sudo add-apt-repository ppa:ubuntugis/ppa
         sudo apt-get update
-        sudo apt-get install gdal-bin libgdal-dev
+        sudo apt-get install libgdal-dev
         sudo apt-get install libspatialindex-dev
         sudo apt-get install unrar
     - name: Install pip dependencies
       run: |
         pip install cython  # needed by pycocotools
-        pip install numpy==1.17.2  # needed by matplotlib
-        pip install scipy==1.1.0  # needed by scikit-learn
         pip install -r requirements/requirements-min.txt
         pip list
     - name: Run pytest checks
