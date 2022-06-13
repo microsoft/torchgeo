@@ -6,7 +6,7 @@ setuptools==42.0.0
 wheel==0.26.0
 
 # install
-einops==0.1.0
+einops==0.3.0
 fiona==1.7.13
 kornia==0.6.4
 matplotlib==2.2.2
