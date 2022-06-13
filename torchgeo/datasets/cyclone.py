@@ -143,7 +143,12 @@ class TropicalCycloneWindEstimation(VisionDataset):
         filename = os.path.join(directory.format("source"), "image.jpg")
         with Image.open(filename) as img:
             if img.height != self.size or img.width != self.size:
-                img = img.resize(size=(self.size, self.size), resample=Image.BILINEAR)
+                # Moved in PIL 9.1.0
+                try:
+                    resample = Image.Resampling.BILINEAR
+                except AttributeError:  # pragma: no cover
+                    resample = Image.BILINEAR
+                img = img.resize(size=(self.size, self.size), resample=resample)
             array: "np.typing.NDArray[np.int_]" = np.array(img)
             if len(array.shape) == 3:
                 array = array[:, :, 0]
