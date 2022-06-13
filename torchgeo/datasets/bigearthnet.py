@@ -245,7 +245,7 @@ class BigEarthNet(VisionDataset):
     metadata = {
         "s1": {
             "url": "http://bigearth.net/downloads/BigEarthNet-S1-v1.0.tar.gz",
-            "md5": "5a64e9ce38deb036a435a7b59494924c",
+            "md5": "94ced73440dea8c7b9645ee738c5a172",
             "filename": "BigEarthNet-S1-v1.0.tar.gz",
             "directory": "BigEarthNet-S1-v1.0",
         },
