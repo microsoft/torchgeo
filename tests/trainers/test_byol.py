@@ -58,7 +58,7 @@ class TestBYOLTask:
         model.encoder = ClassificationTestModel(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1)
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
         trainer.test(model=model, datamodule=datamodule)
 
