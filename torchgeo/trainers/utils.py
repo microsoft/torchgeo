@@ -42,8 +42,8 @@ def extract_encoder(path: str) -> Tuple[str, "OrderedDict[str, Tensor]"]:
         state_dict = OrderedDict(
             {k.replace("model.", ""): v for k, v in state_dict.items()}
         )
-    elif "encoder" in checkpoint["hyper_parameters"]:
-        name = checkpoint["hyper_parameters"]["encoder"]
+    elif "encoder_name" in checkpoint["hyper_parameters"]:
+        name = checkpoint["hyper_parameters"]["encoder_name"]
         state_dict = checkpoint["state_dict"]
         state_dict = OrderedDict(
             {k: v for k, v in state_dict.items() if "model.encoder.model" in k}
