@@ -81,10 +81,7 @@ jobs:
       with:
         python-version: '3.7'
     - name: Install apt dependencies (Linux)
-      run: |
-        sudo add-apt-repository ppa:ubuntugis/ppa
-        sudo apt-get update
-        sudo apt-get install libgdal-dev unrar
+      run: sudo apt-get install unrar
     - name: Install pip dependencies
       run: |
         pip install cython numpy==1.17.2  # needed by pycocotools
