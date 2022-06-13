@@ -3,7 +3,7 @@
 # CI, these are not hard requirements for using TorchGeo.
 
 # setup
-setuptools==62.3.3
+setuptools==62.4.0
 wheel==0.37.1
 
 # install
