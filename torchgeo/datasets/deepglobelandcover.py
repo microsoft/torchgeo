@@ -59,7 +59,7 @@ class DeepGlobeLandCover(VisionDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * DeepGlobe 2018: A Challenge to Parse the Earth Through Satellite Images
+    * https://arxiv.org/pdf/1805.06561.pdf
 
     """
 
@@ -212,7 +212,7 @@ class DeepGlobeLandCover(VisionDataset):
 
         # Check if the user requested to download the dataset
         raise RuntimeError(
-            "Dataset not found in `root` directory, either specify a different"
+            f"Dataset not found in `root={self.root}`, either specify a different"
             + " `root` directory or manually download the dataset to this directory."
         )
 
