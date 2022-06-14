@@ -81,10 +81,10 @@ jobs:
       with:
         python-version: '3.7'
     - name: Install apt dependencies (Linux)
-      run: sudo apt-get install libspatialindex-dev libhdf5-dev unrar
+      run: sudo apt-get install libhdf5-dev unrar
     - name: Install pip dependencies
       run: |
-        pip install cython numpy==1.17.2  # needed by pycocotools
+        pip install cython numpy==1.17.2 wheel==0.26.0  # needed by pycocotools
         pip install -r requirements/requirements-min.txt
         pip list
     - name: Run pytest checks
