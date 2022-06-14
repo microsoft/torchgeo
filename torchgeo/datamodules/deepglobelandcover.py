@@ -14,7 +14,7 @@ from .utils import dataset_split
 
 
 class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
-    """LightningDataModule implementation for the DeepGlobe Land Cover Classification Challenge dataset.
+    """LightningDataModule implementation for the DeepGlobe Land Cover dataset.
 
     Uses the train/test splits from the dataset.
 
@@ -31,12 +31,12 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         """Initialize a LightningDataModule for DeepGlobe Land Cover based DataLoaders.
 
         Args:
-            root_dir: The ``root`` argument to pass to the DeepGlobe Land Cover Dataset classes
+            root_dir: The ``root`` argument to pass to the DeepGlobe Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
             val_split_pct: What percentage of the dataset to use as a validation set
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
@@ -78,7 +78,9 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             self.train_dataset = dataset
             self.val_dataset = dataset
 
-        self.test_dataset = DeepGlobeLandCover(self.root_dir, "test", transforms=transforms)
+        self.test_dataset = DeepGlobeLandCover(
+            self.root_dir, "test", transforms=transforms
+        )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.
@@ -118,5 +120,3 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=False,
         )
-
-
