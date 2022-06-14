@@ -15,7 +15,7 @@ omegaconf==2.1.0
 pillow==6.2.0
 pyproj==2.2.0
 pytorch-lightning==1.5.1
-rasterio==1.0.21
+rasterio==1.2.10
 rtree==1.0.0
 scikit-learn==0.19.2
 segmentation-models-pytorch==0.2.0
