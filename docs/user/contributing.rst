@@ -162,9 +162,9 @@ TorchGeo has a number of tutorials included in the documentation that can be run
 Datasets
 --------
 
-A major component of TorchGeo is the large collection of :ref:`torchgeo.datasets` that have been implemented. Adding new datasets to this list is a great way to contribute to the library. A brief checklist to follow when implementing a new dataset:
+A major component of TorchGeo is the large collection of `torchgeo.datasets`_ that have been implemented. Adding new datasets to this list is a great way to contribute to the library. A brief checklist to follow when implementing a new dataset:
 
-* Implement the dataset extending either :class:`GeoDataset` or :class:`VisionDataset`.
+* Implement the dataset extending either `GeoDataset`_ or `VisionDataset`_
 * Add the dataset definition to ``torchgeo/datasets/__init__.py``
 * Add appropriate tests with 100% test coverage to ``tests/datasets/``
 * Add the dataset to ``docs/api/datasets.rst``
