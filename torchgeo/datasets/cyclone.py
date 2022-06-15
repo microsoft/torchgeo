@@ -30,7 +30,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * http://doi.org/10.1109/JSTARS.2020.3011907
+    * https://doi.org/10.1109/JSTARS.2020.3011907
 
     .. note::
 

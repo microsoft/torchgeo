@@ -32,7 +32,7 @@ class EDDMapS(GeoDataset):
 
     * EDDMapS. *YEAR*. Early Detection & Distribution Mapping System. The University of
       Georgia - Center for Invasive Species and Ecosystem Health. Available online at
-      http://www.eddmaps.org/; last accessed *DATE*.
+      https://www.eddmaps.org/; last accessed *DATE*.
 
     .. note::
        This dataset requires the following additional library to be installed:
