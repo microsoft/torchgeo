@@ -2,7 +2,6 @@ name: torchgeo
 channels:
   - pytorch  # for pytorch and torchvision.
   - conda-forge
-  - esri  # for pycocotools. Remove when https://github.com/conda-forge/pycocotools-feedstock/issues/16 is solved
   - open3d-admin  # for open3d
 dependencies:
   - einops
