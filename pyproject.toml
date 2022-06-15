@@ -56,6 +56,9 @@ match_dir = "(datamodules|datasets|losses|models|samplers|torchgeo|trainers|tran
 addopts = "-m 'not slow'"
 # https://docs.pytest.org/en/latest/how-to/capture-warnings.html
 filterwarnings = [
+    # Treat all warnings as errors
+    "error",
+
     # Warnings raised by dependencies of dependencies, out of our control
     # https://github.com/pytorch/vision/pull/5898
     # https://github.com/rwightman/pytorch-image-models/pull/1256
@@ -69,6 +72,8 @@ filterwarnings = [
     # Expected warnings
     # pytorch-lightning warns us about using num_workers=0, but it's faster on macOS
     "ignore:The dataloader, .*, does not have many workers which may be a bottleneck:UserWarning",
+    # pytorch-lightning warns us about using the CPU when a GPU is available
+    "ignore:GPU available but not used.:UserWarning",
 
     # Unexpected warnings, worth investigating
     # pytorch-lightning is having trouble inferring the batch size for ChesapeakeCVPRDataModule and CycloneDataModule for some reason

@@ -183,7 +183,7 @@ class SeasonalContrastS2(VisionDataset):
                     # Moved in PIL 9.1.0
                     try:
                         resample = Image.Resampling.BILINEAR
-                    except AttributeError:  # pragma: no cover
+                    except AttributeError:
                         resample = Image.BILINEAR
                     band_data = np.array(
                         pil_image.resize((264, 264), resample=resample)

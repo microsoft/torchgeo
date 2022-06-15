@@ -10,7 +10,6 @@ dependencies:
   - numpy>=1.17.2
   - open3d>=0.11.2
   - pip
-  - protobuf<4
   - pycocotools>=2
   - pyproj>=2.2
   - python>=3.7
