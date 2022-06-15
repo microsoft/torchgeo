@@ -160,8 +160,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         Returns:
             length of the dataset
         """
-        count: int = self.index.get_size()
-        return count
+        return len(self.index)
 
     def __str__(self) -> str:
         """Return the informal string representation of the object.

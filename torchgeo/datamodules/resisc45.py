@@ -73,7 +73,12 @@ class RESISC45DataModule(pl.LightningDataModule):
                 K.RandomSharpness(p=0.5),
                 K.RandomErasing(p=0.1),
                 K.ColorJitter(
-                    p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1
+                    p=0.5,
+                    brightness=0.1,
+                    contrast=0.1,
+                    saturation=0.1,
+                    hue=0.1,
+                    silence_instantiation_warning=True,
                 ),
                 data_keys=["input"],
             )
