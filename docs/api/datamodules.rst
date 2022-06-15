@@ -6,13 +6,13 @@ torchgeo.datamodules
 Geospatial DataModules
 ----------------------
 
-Chesapeake Bay High-Resolution Land Cover Project
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Chesapeake Land Cover
+^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: ChesapeakeCVPRDataModule
 
-National Agriculture Imagery Program (NAIP)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+NAIP
+^^^^
 
 .. autoclass:: NAIPChesapeakeDataModule
 
@@ -24,8 +24,8 @@ BigEarthNet
 
 .. autoclass:: BigEarthNetDataModule
 
-Cars Overhead With Context (COWC)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+COWC
+^^^^
 
 .. autoclass:: COWCCountingDataModule
 
@@ -39,8 +39,8 @@ EuroSAT
 
 .. autoclass:: EuroSATDataModule
 
-FAIR1M (Fine-grAined object recognItion in high-Resolution imagery)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FAIR1M
+^^^^^^
 
 .. autoclass:: FAIR1MDataModule
 
@@ -49,13 +49,13 @@ Inria Aerial Image Labeling
 
 .. autoclass:: InriaAerialImageLabelingDataModule
 
-LandCover.ai (Land Cover from Aerial Imagery)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+LandCover.ai
+^^^^^^^^^^^^
 
 .. autoclass:: LandCoverAIDataModule
 
-LoveDA (Land-cOVEr Domain Adaptive semantic segmentation)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+LoveDA
+^^^^^^
 
 .. autoclass:: LoveDADataModule
 
@@ -64,8 +64,8 @@ NASA Marine Debris
 
 .. autoclass:: NASAMarineDebrisDataModule
 
-OSCD (Onera Satellite Change Detection)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSCD
+^^^^
 
 .. autoclass:: OSCDDataModule
 
@@ -74,8 +74,8 @@ Potsdam
 
 .. autoclass:: Potsdam2DDataModule
 
-RESISC45 (Remote Sensing Image Scene Classification)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RESISC45
+^^^^^^^^
 
 .. autoclass:: RESISC45DataModule
 
@@ -89,8 +89,8 @@ So2Sat
 
 .. autoclass:: So2SatDataModule
 
-Tropical Cyclone Wind Estimation Competition
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Tropical Cyclone
+^^^^^^^^^^^^^^^^
 
 .. autoclass:: CycloneDataModule
 
