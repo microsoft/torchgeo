@@ -212,6 +212,11 @@ Potsdam
 
 .. autoclass:: Potsdam2D
 
+ReforesTree
+^^^^^^^^^^^
+
+.. autoclass:: ReforesTree
+
 RESISC45 (Remote Sensing Image Scene Classification)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
