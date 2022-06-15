@@ -7,8 +7,8 @@ dependencies:
   - einops>=0.3
   - fiona>=1.8
   - h5py>=2.6
-  - numpy>=1.18
-  - open3d>=0.13
+  - numpy>=1.17.2
+  - open3d>=0.11.2
   - pip
   - pycocotools>=2
   - pyproj>=2.2
@@ -30,8 +30,8 @@ dependencies:
     - nbsphinx>=0.8.5
     - omegaconf>=2.1
     - opencv-python>=3.4.2.17
-    - pandas>=1
-    - pillow>=8.2
+    - pandas>=0.23.2
+    - pillow>=6.2
     - pydocstyle[toml]>=6.1
     - pytest>=6.1.2
     - pytest-cov>=2.4
@@ -39,7 +39,7 @@ dependencies:
     - git+https://github.com/pytorch/pytorch_sphinx_theme
     - radiant-mlhub>=0.2.1
     - rtree>=1
-    - scikit-learn>=0.21
+    - scikit-learn>=0.19.2
     - scipy>=1.1
     - segmentation-models-pytorch>=0.2
     - setuptools>=42
