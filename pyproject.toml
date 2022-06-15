@@ -2,8 +2,6 @@
 requires = [
     # setuptools 42+ required for metadata.license_files support in setup.cfg
     "setuptools>=42,<63",
-    # wheel 0.26+ required by tensorboard
-    "wheel>=0.26,<0.38",
 ]
 build-backend = "setuptools.build_meta"
 
