@@ -29,7 +29,7 @@ h5py==2.6.0
 laspy==2.0.0
 open3d==0.13.0
 opencv-python==3.4.2.17
-pandas==0.23.2
+pandas==1.0.0
 pycocotools==2.0.0
 radiant-mlhub==0.2.1
 rarfile==3.0
