@@ -36,7 +36,7 @@ class TestDeepGlobeLandCover:
         assert isinstance(x["mask"], torch.Tensor)
 
     def test_len(self, dataset: DeepGlobeLandCover) -> None:
-        assert len(dataset) == 2
+        assert len(dataset) == 3
 
     def test_extract(self, tmp_path: Path) -> None:
         root = os.path.join("tests", "data", "deepglobelandcover")
@@ -57,8 +57,12 @@ class TestDeepGlobeLandCover:
             DeepGlobeLandCover(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match=f"Dataset not found in `root={str(tmp_path)}`, either specify a different"
-            + " `root` directory or manually download the dataset to this directory."):
+        with pytest.raises(
+            RuntimeError,
+            match=f"Dataset not found in `root={str(tmp_path)}`, either"
+            + " specify a different `root` directory or manually download"
+            + " the dataset to this directory.",
+        ):
             DeepGlobeLandCover(str(tmp_path))
 
     def test_plot(self, dataset: DeepGlobeLandCover) -> None:
