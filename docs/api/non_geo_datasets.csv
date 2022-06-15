@@ -2,13 +2,13 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands
 `ADVANCE`_,C,"Google Earth, Freesound",5075,13,512x512,0.5,RGB
 `Benin Cashew Plantations`_,S,Airbus Pléiades,70,6,"1,186x1,122",0.5,MSI
 `BigEarthNet`_,C,Sentinel-1/2,590326,19--43,120x120,10,"SAR, MSI"
-`Cars Overhead With Context`_,"C, R","CSUAV AFRL, ISPRS, LINZ, AGRC",388435,2,256x256,0.15,RGB
-`Kenya Crop Types`_,S,Sentinel-2,4688,7,"3,035x2,016",10,MSI
+`COWC`_,"C, R","CSUAV AFRL, ISPRS, LINZ, AGRC",388435,2,256x256,0.15,RGB
+`Kenya Crop Type`_,S,Sentinel-2,4688,7,"3,035x2,016",10,MSI
 `DFC2022`_,S,Aerial,,15,"2,000x2,000",0.5,RGB
 `ETCI2021 Flood Detection`_,S,Sentinel-1,66810,2,256x256,5-20,SAR
 `EuroSAT`_,C,Sentinel-2,27000,10,64x64,10,MSI
 `FAIR1M`_,OD,Gaofen/Google Earth,15000,37,"1,024x1,024",0.3-0.8,RGB
-`Forest Damage`,TODO
+`Forest Damage`,OD,Drone imagery,1543,4,1500x1500,,RGB
 `GID-15`_,S,Gaofen-2,150,15,"6,800x7,200",3,RGB
 `IDTReeS`_,"OD,C",Aerial,591,33,200x200,0.1-1,RGB
 `Inria Aerial Image Labeling`_,O,Aerial,360,-,5000x5000,0.3,RGB
@@ -20,7 +20,7 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands
 `OSCD`_,CD,Sentinel-2,24,2,"40--1,180",60,MSI
 `PatternNet`_,C,Google Earth,30400,38,256x256,0.06-5,RGB
 `Potsdam`_,S,Aerial,38,6,"6,000x6,000",0.05,MSI
-`RESISC45 (Remote Sensing Image Scene Classification)`_,C,Google Earth,31500,45,256x256,0.2-30,RGB
+`RESISC45`_,C,Google Earth,31500,45,256x256,0.2-30,RGB
 `Seasonal Contrast`_,T,Sentinel-2,100K--1M,-,264x264,10,MSI
 `SEN12MS`_,S,"Sentinel-1/2, MODIS",180662,33,256x256,10,"SAR, MSI"
 `So2Sat`_,C,Sentinel-1/2,400673,17,32x32,10,"SAR, MSI"

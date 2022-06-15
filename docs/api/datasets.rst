@@ -18,8 +18,8 @@ Geospatial Datasets
    :align: center
    :file: geo_datasets.csv
 
-Aboveground Live Woody Biomass
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Aboveground Woody Biomass
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: AbovegroundLiveWoodyBiomassDensity
 
