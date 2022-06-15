@@ -8,7 +8,7 @@ dependencies:
   - fiona>=1.8
   - h5py>=2.6
   - numpy>=1.17.2
-  - open3d>=0.11.2
+  - open3d>=0.13
   - pip
   - pycocotools>=2
   - pyproj>=2.2
@@ -39,7 +39,7 @@ dependencies:
     - git+https://github.com/pytorch/pytorch_sphinx_theme
     - radiant-mlhub>=0.2.1
     - rtree>=1
-    - scikit-learn>=0.19.2
+    - scikit-learn>=0.21
     - scipy>=1.1
     - segmentation-models-pytorch>=0.2
     - setuptools>=42
