@@ -157,3 +157,15 @@ TorchGeo has a number of tutorials included in the documentation that can be run
 .. code-block:: console
 
    $ pytest --nbmake docs/tutorials
+
+
+Datasets
+--------
+
+A major component of TorchGeo is the large collection of :ref:`torchgeo.datasets` that have been implemented. Adding new datasets to this list is a great way to contribute to the library. A brief checklist to follow when implementing a new dataset:
+
+* Implement the dataset extending either :class:`GeoDataset` or :class:`VisionDataset`.
+* Add the dataset definition to ``torchgeo/datasets/__init__.py``
+* Add appropriate tests with 100% test coverage to ``tests/datasets/``
+* Add the dataset to ``docs/api/datasets.rst``
+* Add the dataset metadata to either ``docs/api/geo_datasets.csv`` or ``docs/api/non_geo_datasets.csv``
