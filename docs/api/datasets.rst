@@ -16,7 +16,7 @@ Geospatial Datasets
    :widths: 30 15 20 20 15
    :header-rows: 1
    :align: center
-   :file: generic_datasets.csv
+   :file: geo_datasets.csv
 
 Aboveground Live Woody Biomass
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
