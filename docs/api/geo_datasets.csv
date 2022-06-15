@@ -1,7 +1,7 @@
 Dataset,Type,Source,Size (px),Resolution (m)
 `Aboveground Woody Biomass`_,Mask,"Landsat, LiDAR","~40,000x40,000",~30
 `Aster Global DEM`_,Mask,Aster,"3,601x3,601",30
-`Canadian Building Footprints`_,Labels,Generated,,-
+`Canadian Building Footprints`_,Labels,Generated,,
 `Chesapeake Land Cover`_,"Imagery, Labels",,,1
 `Global Mangrove Distribution`_,Mask,Generated,,3
 `Cropland Data Layer`_,Labels,Aerial,,
@@ -13,5 +13,5 @@ Dataset,Type,Source,Size (px),Resolution (m)
 `GlobBiomass`_,Labels,Landsat,"45,000x45,000",~100
 `Landsat`_,Imagery,Landsat,,30
 `NAIP`_,Imagery,Aerial,,1
-`Open Buildings`_,Labels,Generated,,-
+`Open Buildings`_,Labels,Generated,,
 `Sentinel`_,Imagery,Sentinel,,10
