@@ -76,9 +76,6 @@ filterwarnings = [
     # https://github.com/pytorch/pytorch/issues/60053
     # https://github.com/pytorch/pytorch/pull/60059
     "ignore:Named tensors and all their associated APIs are an experimental feature and subject to change:UserWarning:torch.nn.functional",
-    # https://github.com/numpy/numpy/issues/14920
-    # https://github.com/numpy/numpy/issues/15748
-    #"ignore:numpy.ufunc size changed, may indicate binary incompatibility:RuntimeWarning",
 
     # Expected warnings
     # pytorch-lightning warns us about using num_workers=0, but it's faster on macOS
