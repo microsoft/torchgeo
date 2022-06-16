@@ -199,7 +199,7 @@ class ADVANCE(VisionDataset):
                 "scipy is not installed and is required to use this dataset"
             )
 
-        array = wavfile.read(path, mmap=True)[1]
+        array = wavfile.read(path)[1]
         tensor = torch.from_numpy(array)
         tensor = tensor.unsqueeze(0)
         return tensor
