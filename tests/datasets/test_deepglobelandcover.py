@@ -20,7 +20,7 @@ class TestDeepGlobeLandCover:
     def dataset(
         self, monkeypatch: MonkeyPatch, request: SubRequest
     ) -> DeepGlobeLandCover:
-        md5 = "f32684b0b2bf6f8d604cd359a399c061"
+        md5 = "2cbd68d36b1485f09f32d874dde7c5c5"
         splits = ["train", "test"]
         monkeypatch.setattr(DeepGlobeLandCover, "md5", md5)
         monkeypatch.setattr(DeepGlobeLandCover, "splits", splits)
@@ -59,7 +59,7 @@ class TestDeepGlobeLandCover:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(
             RuntimeError,
-            match=f"Dataset not found in `root={str(tmp_path)}`, either"
+            match="Dataset not found in `root`, either"
             + " specify a different `root` directory or manually download"
             + " the dataset to this directory.",
         ):

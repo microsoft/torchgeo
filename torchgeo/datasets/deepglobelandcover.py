@@ -212,7 +212,7 @@ class DeepGlobeLandCover(VisionDataset):
 
         # Check if the user requested to download the dataset
         raise RuntimeError(
-            f"Dataset not found in `root={self.root}`, either specify a different"
+            "Dataset not found in `root`, either specify a different"
             + " `root` directory or manually download the dataset to this directory."
         )
 
