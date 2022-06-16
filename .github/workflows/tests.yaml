@@ -86,7 +86,6 @@ jobs:
       run: |
         pip install cython numpy==1.17.2  # needed by pycocotools
         pip install -r requirements/requirements-min.txt
-        pip uninstall -y sklearn  # open3d brings in sklearn shadowing scikit-learn
         pip list
     - name: Run pytest checks
       run: pytest --cov=torchgeo --cov-report=xml
