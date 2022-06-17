@@ -49,7 +49,7 @@ zipfile-deflate64==0.2.0
 # docs
 ipywidgets==7.7.0
 nbsphinx==0.8.9
-sphinx==5.0.1
+sphinx==5.0.2
 
 # style
 black[jupyter]==22.3.0
