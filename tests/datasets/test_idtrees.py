@@ -19,7 +19,7 @@ from _pytest.monkeypatch import MonkeyPatch
 import torchgeo.datasets.utils
 from torchgeo.datasets import IDTReeS
 
-pytest.importorskip("pandas", minversion="0.19.1")
+pytest.importorskip("pandas", minversion="0.23.2")
 pytest.importorskip("laspy", minversion="2")
 
 
