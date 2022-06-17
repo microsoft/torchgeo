@@ -12,13 +12,13 @@ Geospatial Datasets
 
 :class:`GeoDataset` is designed for datasets that contain geospatial information, like latitude, longitude, coordinate system, and projection. Datasets containing this kind of information can be combined using :class:`IntersectionDataset` and :class:`UnionDataset`.
 
-Aboveground Live Woody Biomass Density
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Aboveground Woody Biomass
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: AbovegroundLiveWoodyBiomassDensity
 
-Aster Global Digital Evaluation Model
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Aster Global DEM
+^^^^^^^^^^^^^^^^
 
 .. autoclass:: AsterGDEM
 
@@ -27,8 +27,8 @@ Canadian Building Footprints
 
 .. autoclass:: CanadianBuildingFootprints
 
-Chesapeake Bay High-Resolution Land Cover Project
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Chesapeake Land Cover
+^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: Chesapeake
 .. autoclass:: Chesapeake7
@@ -42,15 +42,20 @@ Chesapeake Bay High-Resolution Land Cover Project
 .. autoclass:: ChesapeakeWV
 .. autoclass:: ChesapeakeCVPR
 
-CMS Global Mangrove Canopy Dataset
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Global Mangrove Distribution
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: CMSGlobalMangroveCanopy
 
-Cropland Data Layer (CDL)
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Cropland Data Layer
+^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: CDL
+
+EDDMapS
+^^^^^^^
+
+.. autoclass:: EDDMapS
 
 EnviroAtlas
 ^^^^^^^^^^^
@@ -67,10 +72,20 @@ EU-DEM
 
 .. autoclass:: EUDEM
 
+GBIF
+^^^^
+
+.. autoclass:: GBIF
+
 GlobBiomass
 ^^^^^^^^^^^
 
 .. autoclass:: GlobBiomass
+
+iNaturalist
+^^^^^^^^^^^
+
+.. autoclass:: INaturalist
 
 Landsat
 ^^^^^^^
@@ -87,8 +102,8 @@ Landsat
 .. autoclass:: Landsat2
 .. autoclass:: Landsat1
 
-National Agriculture Imagery Program (NAIP)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+NAIP
+^^^^
 
 .. autoclass:: NAIP
 
@@ -96,7 +111,7 @@ Open Buildings
 ^^^^^^^^^^^^^^
 
 .. autoclass:: OpenBuildings
-    
+
 Sentinel
 ^^^^^^^^
 
@@ -110,13 +125,13 @@ Non-geospatial Datasets
 
 :class:`VisionDataset` is designed for datasets that lack geospatial information. These datasets can still be combined using :class:`ConcatDataset <torch.utils.data.ConcatDataset>`.
 
-ADVANCE (AuDio Visual Aerial sceNe reCognition datasEt)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ADVANCE
+^^^^^^^
 
 .. autoclass:: ADVANCE
 
-Smallholder Cashew Plantations in Benin
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Benin Cashew Plantations
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: BeninSmallHolderCashews
 
@@ -125,20 +140,20 @@ BigEarthNet
 
 .. autoclass:: BigEarthNet
 
-Cars Overhead With Context (COWC)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+COWC
+^^^^
 
 .. autoclass:: COWC
 .. autoclass:: COWCCounting
 .. autoclass:: COWCDetection
 
-CV4A Kenya Crop Type Competition
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Kenya Crop Type
+^^^^^^^^^^^^^^^
 
 .. autoclass:: CV4AKenyaCropType
 
-2022 IEEE GRSS Data Fusion Contest (DFC2022)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+DFC2022
+^^^^^^^
 
 .. autoclass:: DFC2022
 
@@ -152,8 +167,8 @@ EuroSAT
 
 .. autoclass:: EuroSAT
 
-FAIR1M (Fine-grAined object recognItion in high-Resolution imagery)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FAIR1M
+^^^^^^
 
 .. autoclass:: FAIR1M
 
@@ -162,8 +177,8 @@ Forest Damage
 
 .. autoclass:: ForestDamage
 
-GID-15 (Gaofen Image Dataset)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+GID-15
+^^^^^^
 
 .. autoclass:: GID15
 
@@ -177,18 +192,18 @@ Inria Aerial Image Labeling
 
 .. autoclass:: InriaAerialImageLabeling
 
-LandCover.ai (Land Cover from Aerial Imagery)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+LandCover.ai
+^^^^^^^^^^^^
 
 .. autoclass:: LandCoverAI
 
-LEVIR-CD+ (LEVIR Change Detection +)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+LEVIR-CD+
+^^^^^^^^^
 
 .. autoclass:: LEVIRCDPlus
 
-LoveDA (Land-cOVEr Domain Adaptive semantic segmentation)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+LoveDA
+^^^^^^
 
 .. autoclass:: LoveDA
 
@@ -197,8 +212,8 @@ NASA Marine Debris
 
 .. autoclass:: NASAMarineDebris
 
-OSCD (Onera Satellite Change Detection)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSCD
+^^^^
 
 .. autoclass:: OSCD
 
@@ -217,8 +232,8 @@ ReforesTree
 
 .. autoclass:: ReforesTree
 
-RESISC45 (Remote Sensing Image Scene Classification)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RESISC45
+^^^^^^^^
 
 .. autoclass:: RESISC45
 
@@ -243,13 +258,13 @@ SpaceNet
 .. autoclass:: SpaceNet
 .. autoclass:: SpaceNet1
 .. autoclass:: SpaceNet2
-.. autoclass:: SpaceNet3    
+.. autoclass:: SpaceNet3
 .. autoclass:: SpaceNet4
 .. autoclass:: SpaceNet5
 .. autoclass:: SpaceNet7
 
-Tropical Cyclone Wind Estimation Competition
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Tropical Cyclone
+^^^^^^^^^^^^^^^^
 
 .. autoclass:: TropicalCycloneWindEstimation
 

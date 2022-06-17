@@ -98,6 +98,7 @@ class SemanticSegmentationTask(LightningModule):
                 Accuracy(
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_zeros,
+                    mdmc_average="global",
                 ),
                 JaccardIndex(
                     num_classes=self.hyperparams["num_classes"],

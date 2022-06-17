@@ -43,7 +43,7 @@ def generate_test_data(root: str, n_samples: int = 2) -> str:
         str: md5 hash of created archive
     """
     dtype = np.dtype("uint8")
-    size = (64, 64)
+    size = (8, 8)
 
     driver = "GTiff"
     transform = Affine(0.3, 0.0, 616500.0, 0.0, -0.3, 3345000.0)
@@ -83,9 +83,9 @@ def generate_test_data(root: str, n_samples: int = 2) -> str:
         archive_path, "zip", root_dir=root, base_dir="AerialImageDataset"
     )
     shutil.rmtree(folder_path)
-    return calculate_md5(archive_path + ".zip")
+    return calculate_md5(f"{archive_path}.zip")
 
 
 if __name__ == "__main__":
-    md5_hash = generate_test_data(os.getcwd(), 2)
+    md5_hash = generate_test_data(os.getcwd(), 5)
     print(md5_hash)

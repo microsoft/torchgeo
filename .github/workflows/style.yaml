@@ -18,9 +18,11 @@ jobs:
     - name: Set up python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install pip dependencies
-      run: pip install .[style]
+      run: |
+        pip install -r requirements.txt
+        pip list
     - name: Run black checks
       run: black . --check --diff
   flake8:
@@ -32,9 +34,11 @@ jobs:
     - name: Set up python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install pip dependencies
-      run: pip install .[style]
+      run: |
+        pip install -r requirements.txt
+        pip list
     - name: Run flake8 checks
       run: flake8
   isort:
@@ -46,9 +50,11 @@ jobs:
     - name: Set up python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install pip dependencies
-      run: pip install .[style]
+      run: |
+        pip install -r requirements.txt
+        pip list
     - name: Run isort checks
       run: isort . --check --diff
   pydocstyle:
@@ -60,9 +66,11 @@ jobs:
     - name: Set up python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install pip dependencies
-      run: pip install .[style]
+      run: |
+        pip install -r requirements.txt
+        pip list
     - name: Run pydocstyle checks
       run: pydocstyle
   pyupgrade:
@@ -74,8 +82,10 @@ jobs:
     - name: Set up python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install pip dependencies
-      run: pip install .[style]
+      run: |
+        pip install -r requirements.txt
+        pip list
     - name: Run pyupgrade checks
       run: pyupgrade --py37-plus $(find . -name "*.py")

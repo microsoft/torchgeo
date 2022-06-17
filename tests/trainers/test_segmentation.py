@@ -14,6 +14,7 @@ from torch.nn.modules import Module
 from torchgeo.datamodules import (
     ChesapeakeCVPRDataModule,
     ETCI2021DataModule,
+    InriaAerialImageLabelingDataModule,
     LandCoverAIDataModule,
     NAIPChesapeakeDataModule,
     OSCDDataModule,
@@ -34,6 +35,7 @@ class TestSemanticSegmentationTask:
         [
             ("chesapeake_cvpr_5", ChesapeakeCVPRDataModule),
             ("etci2021", ETCI2021DataModule),
+            ("inria", InriaAerialImageLabelingDataModule),
             ("landcoverai", LandCoverAIDataModule),
             ("naipchesapeake", NAIPChesapeakeDataModule),
             ("oscd_all", OSCDDataModule),
@@ -65,7 +67,7 @@ class TestSemanticSegmentationTask:
         model = SemanticSegmentationTask(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1)
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
         trainer.test(model=model, datamodule=datamodule)
 
@@ -83,7 +85,9 @@ class TestSemanticSegmentationTask:
         model = SemanticSegmentationTask(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(logger=False, fast_dev_run=True, log_every_n_steps=1)
+        trainer = Trainer(
+            logger=False, fast_dev_run=True, log_every_n_steps=1, max_epochs=1
+        )
         trainer.fit(model=model, datamodule=datamodule)
 
     @pytest.fixture

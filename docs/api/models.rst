@@ -10,28 +10,28 @@ Change Star
 .. autoclass:: ChangeStarFarSeg
 .. autoclass:: ChangeMixin
 
-Foreground-aware Relation Network (FarSeg)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FarSeg
+^^^^^^
 
 .. autoclass:: FarSeg
 
-Fully-convolutional Network (FCN)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Fully-convolutional Network
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: FCN
 
-Fully Convolutional Siamese Networks for Change Detection
+FC Siamese Networks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: FCSiamConc
 .. autoclass:: FCSiamDiff
 
-Random-convolutional feature (RCF) extractor
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RCF Extractor
+^^^^^^^^^^^^^
 
 .. autoclass:: RCF
 
-Residual Network (ResNet)
-^^^^^^^^^^^^^^^^^^^^^^^^^
+ResNet
+^^^^^^
 
 .. autofunction:: resnet50

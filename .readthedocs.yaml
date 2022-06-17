@@ -13,6 +13,7 @@ build:
 # Configuration of the Python environment to be used
 python:
    install:
+   - requirements: requirements.txt
    - requirements: docs/requirements.txt
    - method: pip
      path: .

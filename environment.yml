@@ -1,13 +1,16 @@
 name: torchgeo
 channels:
+  - pytorch  # for pytorch and torchvision.
   - conda-forge
+  - open3d-admin  # for open3d
 dependencies:
-  - cudatoolkit
   - einops
   - fiona>=1.5
   - h5py
   - numpy
+  - open3d>=0.11.2
   - pip
+  - protobuf<4
   - pycocotools
   - pyproj>=2.2
   - python>=3.7
@@ -22,13 +25,12 @@ dependencies:
     - ipywidgets>=7
     - isort[colors]>=5.8
     - jupyterlab
-    - kornia>=0.5.11
+    - kornia>=0.6.4
     - laspy>=2.0.0
     - mypy>=0.900
     - nbmake>=0.1
     - nbsphinx>=0.8.5
     - omegaconf>=2.1
-    - open3d>=0.11.2
     - opencv-python
     - pandas>=0.23.2
     - pillow>=2.9
@@ -38,7 +40,7 @@ dependencies:
     - pytorch-lightning>=1.3
     - git+https://github.com/pytorch/pytorch_sphinx_theme
     - radiant-mlhub>=0.2.1
-    - rtree>=0.5
+    - rtree>=1
     - scikit-learn>=0.18
     - scipy>=0.9
     - segmentation-models-pytorch>=0.2
