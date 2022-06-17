@@ -21,7 +21,7 @@ from .utils import check_integrity, download_and_extract_archive, extract_archiv
 class ReforesTree(VisionDataset):
     """ReforesTree dataset.
 
-    The `ReforesTree https://github.com/gyrrei/ReforesTree`_
+    The `ReforesTree <https://github.com/gyrrei/ReforesTree>`_
     dataset contains drone imagery that can be used for tree crown detection,
     tree species classification and Aboveground Biomass (AGB) estimation.
 
