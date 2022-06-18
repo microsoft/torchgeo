@@ -8,7 +8,7 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands
 `ETCI2021 Flood Detection`_,S,Sentinel-1,66810,2,256x256,5-20,SAR
 `EuroSAT`_,C,Sentinel-2,27000,10,64x64,10,MSI
 `FAIR1M`_,OD,Gaofen/Google Earth,15000,37,"1,024x1,024",0.3-0.8,RGB
-`Forest Damage`,OD,Drone imagery,1543,4,1500x1500,,RGB
+`Forest Damage`_,OD,Drone imagery,1543,4,1500x1500,,RGB
 `GID-15`_,S,Gaofen-2,150,15,"6,800x7,200",3,RGB
 `IDTReeS`_,"OD,C",Aerial,591,33,200x200,0.1-1,RGB
 `Inria Aerial Image Labeling`_,O,Aerial,360,,5000x5000,0.3,RGB
