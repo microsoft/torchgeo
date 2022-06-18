@@ -1,5 +1,5 @@
 Dataset,Type,Source,Size (px),Resolution (m)
-`Aboveground Woody Biomass`_,Mask,"Landsat, LiDAR","~40,000&nbsp;x&nbsp;40,000",~30
+`Aboveground Woody Biomass`_,Mask,"Landsat, LiDAR","~40,000x40,000",~30
 `Aster Global DEM`_,Mask,Aster,"3,601x3,601",30
 `Canadian Building Footprints`_,Labels,Generated,,
 `Chesapeake Land Cover`_,"Imagery, Labels",,,1
