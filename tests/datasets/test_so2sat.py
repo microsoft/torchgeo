@@ -15,7 +15,7 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from torchgeo.datasets import So2Sat
 
-pytest.importorskip("h5py")
+pytest.importorskip("h5py", minversion="2.6")
 
 
 class TestSo2Sat:

@@ -4,7 +4,6 @@
 
 # setup
 setuptools==62.4.0
-wheel==0.37.1
 
 # install
 einops==0.4.1
@@ -47,7 +46,6 @@ scipy==1.7.3;python_version=='3.7'
 zipfile-deflate64==0.2.0
 
 # docs
-ipywidgets==7.7.0
 nbsphinx==0.8.9
 sphinx==5.0.2
 

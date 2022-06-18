@@ -16,7 +16,7 @@ from _pytest.monkeypatch import MonkeyPatch
 import torchgeo.datasets.utils
 from torchgeo.datasets import ZueriCrop
 
-pytest.importorskip("h5py")
+pytest.importorskip("h5py", minversion="2.6")
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:

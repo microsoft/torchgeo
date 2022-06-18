@@ -21,7 +21,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
-        pip install -r requirements.txt
+        pip install -r requirements/requirements.txt
         pip list
     - name: Run mypy checks
       run: mypy .
@@ -62,7 +62,30 @@ jobs:
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies
       run: |
-        pip install -r requirements.txt
+        pip install -r requirements/requirements.txt
+        pip list
+    - name: Run pytest checks
+      run: pytest --cov=torchgeo --cov-report=xml
+    - name: Report coverage
+      uses: codecov/codecov-action@v2
+  minimum:
+    name: minimum
+    runs-on: ubuntu-latest
+    env:
+      MPLBACKEND: Agg
+    steps:
+    - name: Clone repo
+      uses: actions/checkout@v2
+    - name: Set up python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.7'
+    - name: Install apt dependencies (Linux)
+      run: sudo apt-get install libgeos-dev libhdf5-dev unrar
+    - name: Install pip dependencies
+      run: |
+        pip install cython numpy==1.17.2  # needed by pycocotools
+        pip install -r requirements/requirements-min.txt
         pip list
     - name: Run pytest checks
       run: pytest --cov=torchgeo --cov-report=xml
