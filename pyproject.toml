@@ -1,7 +1,7 @@
 [build-system]
 requires = [
+    # setuptools 42+ required for metadata.license_files support in setup.cfg
     "setuptools>=42,<63",
-    "wheel<0.38",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -58,18 +58,30 @@ filterwarnings = [
     "error",
 
     # Warnings raised by dependencies of dependencies, out of our control
+    # https://github.com/Cadene/pretrained-models.pytorch/issues/221
+    "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:pretrainedmodels.datasets.utils",
     # https://github.com/pytorch/vision/pull/5898
+    "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:torchvision.transforms.functional_pil",
     # https://github.com/rwightman/pytorch-image-models/pull/1256
-    "ignore:.*is deprecated and will be removed in Pillow 10:DeprecationWarning",
+    "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:timm.data",
     # https://github.com/pytorch/pytorch/issues/72906
     # https://github.com/pytorch/pytorch/pull/69823
-    "ignore:distutils Version classes are deprecated. Use packaging.version instead.:DeprecationWarning",
+    "ignore:distutils Version classes are deprecated. Use packaging.version instead:DeprecationWarning:torch.utils.tensorboard",
     # https://github.com/PyTorchLightning/pytorch-lightning/issues/13256
-    "ignore:torch.distributed._sharded_tensor will be deprecated, use torch.distributed._shard.sharded_tensor instead:DeprecationWarning",
+    # https://github.com/PyTorchLightning/pytorch-lightning/pull/13261
+    "ignore:torch.distributed._sharded_tensor will be deprecated:DeprecationWarning:torch.distributed._sharded_tensor",
+    # https://github.com/rasterio/rasterio/issues/1742
+    # https://github.com/rasterio/rasterio/pull/1753
+    "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:rasterio.crs",
+    # https://github.com/pytorch/pytorch/issues/60053
+    # https://github.com/pytorch/pytorch/pull/60059
+    "ignore:Named tensors and all their associated APIs are an experimental feature and subject to change:UserWarning:torch.nn.functional",
 
     # Expected warnings
     # pytorch-lightning warns us about using num_workers=0, but it's faster on macOS
     "ignore:The dataloader, .*, does not have many workers which may be a bottleneck:UserWarning",
+    # pytorch-lightning warns us about using the CPU when a GPU is available
+    "ignore:GPU available but not used.:UserWarning",
 
     # Unexpected warnings, worth investigating
     # pytorch-lightning is having trouble inferring the batch size for ChesapeakeCVPRDataModule and CycloneDataModule for some reason

@@ -42,7 +42,7 @@ class TestClassificationTask:
         self, monkeypatch: MonkeyPatch, name: str, classname: Type[LightningDataModule]
     ) -> None:
         if name.startswith("so2sat"):
-            pytest.importorskip("h5py")
+            pytest.importorskip("h5py", minversion="2.6")
 
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)

@@ -146,7 +146,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
                 # Moved in PIL 9.1.0
                 try:
                     resample = Image.Resampling.BILINEAR
-                except AttributeError:  # pragma: no cover
+                except AttributeError:
                     resample = Image.BILINEAR
                 img = img.resize(size=(self.size, self.size), resample=resample)
             array: "np.typing.NDArray[np.int_]" = np.array(img)
