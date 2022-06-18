@@ -1,5 +1,5 @@
 Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands
-`ADVANCE`_,C,"Google Earth, Freesound",5075,13,512x512,0.5,RGB
+`ADVANCE`_,C,"Google Earth, Freesound","5,075",13,512x512,0.5,RGB
 `Benin Cashew Plantations`_,S,Airbus Pléiades,70,6,"1,186x1,122",0.5,MSI
 `BigEarthNet`_,C,Sentinel-1/2,590326,19--43,120x120,10,"SAR, MSI"
 `COWC`_,"C, R","CSUAV AFRL, ISPRS, LINZ, AGRC",388435,2,256x256,0.15,RGB
