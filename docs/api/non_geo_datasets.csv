@@ -5,7 +5,7 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands
 `COWC`_,"C, R","CSUAV AFRL, ISPRS, LINZ, AGRC",388435,2,256x256,0.15,RGB
 `Kenya Crop Type`_,S,Sentinel-2,4688,7,"3,035x2,016",10,MSI
 `DFC2022`_,S,Aerial,,15,"2,000x2,000",0.5,RGB
-`ETCI2021 Flood Detection`_,S,Sentinel-1,66810,2,256x256,5-20,SAR
+`ETCI2021 Flood Detection`_,S,Sentinel-1,66810,2,256x256,5--20,SAR
 `EuroSAT`_,C,Sentinel-2,27000,10,64x64,10,MSI
 `FAIR1M`_,OD,Gaofen/Google Earth,15000,37,"1,024x1,024",0.3-0.8,RGB
 `Forest Damage`_,OD,Drone imagery,1543,4,1500x1500,,RGB
