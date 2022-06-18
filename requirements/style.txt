@@ -1,0 +1,10 @@
+# This file is managed by dependabot and should not be manually edited unless you need
+# to add or remove a dependency. It documents the version of our dependencies used in
+# CI, these are not hard requirements for using TorchGeo.
+
+# style
+black[jupyter]==22.3.0
+flake8==4.0.1;python_version=='3.10'
+isort[colors]==5.10.1
+pydocstyle[toml]==6.1.1
+pyupgrade==2.34.0
