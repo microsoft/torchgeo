@@ -3,6 +3,15 @@ description: Submit a proposal/request for a new TorchGeo feature
 labels: [feature]
 
 body:
+- type: markdown
+  attributes:
+    value: >
+      TorchGeo is a PyTorch domain library for _geospatial_ data. If the feature you
+      are suggesting is not specific to working with geospatial data or multispectral
+      satellite imagery and may be of interest to the broader computer vision
+      community, consider contributing it to
+      [torchvision](https://github.com/pytorch/vision) or
+      [kornia](https://github.com/kornia/kornia) instead.
 - type: textarea
   attributes:
     label: Summary
