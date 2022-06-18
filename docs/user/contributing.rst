@@ -135,6 +135,7 @@ All of our documentation is hosted on `Read the Docs <https://readthedocs.org/>`
 
 .. code-block:: console
 
+   $ pip install .[docs]
    $ cd docs
    $ pip install -r requirements.txt
 
