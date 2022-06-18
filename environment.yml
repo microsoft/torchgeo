@@ -21,7 +21,7 @@ dependencies:
   - pip:
     - black[jupyter]>=21.8
     - flake8>=3.8
-    - ipython
+    - ipywidgets>=7
     - isort[colors]>=5.8
     - kornia>=0.6.4
     - laspy>=2
