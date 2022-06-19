@@ -3,7 +3,7 @@
 # CI, these are not hard requirements for using TorchGeo.
 
 # setup
-setuptools==62.4.0
+setuptools==62.5.0
 
 # install
 einops==0.4.1
