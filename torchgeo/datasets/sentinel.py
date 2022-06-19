@@ -16,7 +16,7 @@ from .geo import RasterDataset
 class Sentinel(RasterDataset):
     """Abstract base class for all Sentinel datasets.
 
-    `Sentinel <https://sentinel.esa.int/web/sentinel/home>`_ is a family of
+    `Sentinel <https://sentinel.esa.int/web/sentinel/home>`__ is a family of
     satellites launched by the `European Space Agency (ESA) <https://www.esa.int/>`_
     under the `Copernicus Programme <https://www.copernicus.eu/en>`_.
 

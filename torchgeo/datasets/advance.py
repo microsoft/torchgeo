@@ -20,7 +20,7 @@ from .utils import download_and_extract_archive
 class ADVANCE(VisionDataset):
     """ADVANCE dataset.
 
-    The `ADVANCE <https://akchen.github.io/ADVANCE-DATASET/>`_
+    The `ADVANCE <https://akchen.github.io/ADVANCE-DATASET/>`__
     dataset is a dataset for audio visual scene recognition.
 
     Dataset features:

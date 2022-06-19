@@ -23,7 +23,7 @@ from .utils import download_url, extract_archive, working_dir
 class LandCoverAI(VisionDataset):
     r"""LandCover.ai dataset.
 
-    The `LandCover.ai <https://landcover.ai/>`_ (Land Cover from Aerial Imagery)
+    The `LandCover.ai <https://landcover.ai/>`__ (Land Cover from Aerial Imagery)
     dataset is a dataset for automatic mapping of buildings, woodlands, water and
     roads from aerial images. This implementation is specifically for Version 1 of
     Landcover.ai.

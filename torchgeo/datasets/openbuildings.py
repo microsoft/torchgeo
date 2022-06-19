@@ -27,7 +27,7 @@ class OpenBuildings(VectorDataset):
     r"""Open Buildings dataset.
 
     The `Open Buildings
-    <https://sites.research.google/open-buildings/#download>`_ dataset
+    <https://sites.research.google/open-buildings/#download>`__ dataset
     consists of computer generated building detections across the African continent.
 
     Dataset features:

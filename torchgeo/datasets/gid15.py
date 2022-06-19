@@ -20,7 +20,7 @@ from .utils import download_and_extract_archive
 class GID15(VisionDataset):
     """GID-15 dataset.
 
-    The `GID-15 <https://captain-whu.github.io/GID15/>`_
+    The `GID-15 <https://captain-whu.github.io/GID15/>`__
     dataset is a dataset for semantic segmentation.
 
     Dataset features:
