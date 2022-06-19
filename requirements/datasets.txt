@@ -3,7 +3,7 @@
 # CI, these are not hard requirements for using TorchGeo.
 
 # datasets
-h5py==3.6.0
+h5py==3.7.0
 laspy==2.1.2
 open3d==0.14.1;python_version<'3.10'
 opencv-python==4.6.0.66
