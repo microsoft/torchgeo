@@ -17,7 +17,7 @@ class CanadianBuildingFootprints(VectorDataset):
     """Canadian Building Footprints dataset.
 
     The `Canadian Building Footprints
-    <https://github.com/Microsoft/CanadianBuildingFootprints>`_ dataset contains
+    <https://github.com/Microsoft/CanadianBuildingFootprints>`__ dataset contains
     11,842,186 computer generated building footprints in all Canadian provinces and
     territories in GeoJSON format. This data is freely available for download and use.
     """

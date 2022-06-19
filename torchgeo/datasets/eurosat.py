@@ -18,7 +18,7 @@ from .utils import check_integrity, download_url, extract_archive, rasterio_load
 class EuroSAT(VisionClassificationDataset):
     """EuroSAT dataset.
 
-    The `EuroSAT <https://github.com/phelber/EuroSAT>`_ dataset is based on Sentinel-2
+    The `EuroSAT <https://github.com/phelber/EuroSAT>`__ dataset is based on Sentinel-2
     satellite images covering 13 spectral bands and consists of 10 target classes with
     a total of 27,000 labeled and geo-referenced images.
 

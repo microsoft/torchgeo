@@ -14,7 +14,7 @@ from .geo import RasterDataset
 class Landsat(RasterDataset, abc.ABC):
     """Abstract base class for all Landsat datasets.
 
-    `Landsat <https://landsat.gsfc.nasa.gov/>`_ is a joint NASA/USGS program,
+    `Landsat <https://landsat.gsfc.nasa.gov/>`__ is a joint NASA/USGS program,
     providing the longest continuous space-based record of Earth's land in existence.
 
     If you use this dataset in your research, please cite it using the following format:

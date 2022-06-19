@@ -17,7 +17,7 @@ from .utils import BoundingBox, disambiguate_timestamp
 class EDDMapS(GeoDataset):
     """Dataset for EDDMapS.
 
-    `EDDMapS <https://www.eddmaps.org/>`_, Early Detection and Distribution Mapping
+    `EDDMapS <https://www.eddmaps.org/>`__, Early Detection and Distribution Mapping
     System, is a web-based mapping system for documenting invasive species and pest
     distribution. Launched in 2005 by the Center for Invasive Species and Ecosystem
     Health at the University of Georgia, it was originally designed as a tool for

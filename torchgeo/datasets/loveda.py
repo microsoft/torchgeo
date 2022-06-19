@@ -20,7 +20,7 @@ from .utils import download_and_extract_archive
 class LoveDA(VisionDataset):
     """LoveDA dataset.
 
-    The `LoveDA <https://github.com/Junjue-Wang/LoveDA>`_ datataset is a
+    The `LoveDA <https://github.com/Junjue-Wang/LoveDA>`__ datataset is a
     semantic segmentation dataset.
 
     Dataset features:
