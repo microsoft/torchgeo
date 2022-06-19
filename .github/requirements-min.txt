@@ -13,7 +13,7 @@ numpy==1.17.2
 omegaconf==2.1.0
 pillow==6.2.0
 pyproj==2.2.0
-pytorch-lightning==1.5.1
+pytorch-lightning==1.6.0
 rasterio==1.0.20
 rtree==1.0.0
 scikit-learn==0.21.0
