@@ -37,6 +37,7 @@ scipy==1.2.0
 zipfile-deflate64==0.2.0
 
 # docs
+ipywidgets==7.0.0
 nbsphinx==0.8.5
 sphinx==4.0.0
 
