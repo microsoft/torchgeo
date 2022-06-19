@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "pip"
-    directory: "requirements"
+    directory: "/requirements"
     schedule:
       interval: "daily"
     # Allow up to 2 open pull requests at a time
