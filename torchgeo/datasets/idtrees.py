@@ -23,7 +23,7 @@ from .utils import download_url, extract_archive
 class IDTReeS(VisionDataset):
     """IDTReeS dataset.
 
-    The `IDTReeS <https://idtrees.org/competition/>`_
+    The `IDTReeS <https://idtrees.org/competition/>`__
     dataset is a dataset for tree crown detection.
 
     Dataset features:
