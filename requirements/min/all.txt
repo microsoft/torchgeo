@@ -27,7 +27,7 @@ torchvision==0.10.0
 # datasets
 h5py==2.6.0
 laspy==2.0.0
-open3d==0.11.2
+open3d==0.15.2
 opencv-python==3.4.2.17
 pandas==0.23.2
 pycocotools==2.0.0
