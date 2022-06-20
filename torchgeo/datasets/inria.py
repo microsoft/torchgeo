@@ -22,7 +22,7 @@ class InriaAerialImageLabeling(VisionDataset):
     r"""Inria Aerial Image Labeling Dataset.
 
     The `Inria Aerial Image Labeling
-    <https://project.inria.fr/aerialimagelabeling/>`_ dataset is a building
+    <https://project.inria.fr/aerialimagelabeling/>`__ dataset is a building
     detection dataset over dissimilar settlements ranging ranging from densely
     populated areas to alpine towns. Refer to the dataset homepage to download
     the dataset.

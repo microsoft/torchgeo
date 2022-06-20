@@ -22,7 +22,7 @@ from .utils import download_url, extract_archive, sort_sentinel2_bands
 class BigEarthNet(VisionDataset):
     """BigEarthNet dataset.
 
-    The `BigEarthNet <https://bigearth.net/>`_
+    The `BigEarthNet <https://bigearth.net/>`__
     dataset is a dataset for multilabel remote sensing image scene classification.
 
     Dataset features:

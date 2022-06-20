@@ -27,7 +27,7 @@ class EnviroAtlas(GeoDataset):
     """EnviroAtlas dataset covering four cities with prior and weak input data layers.
 
     The `EnviroAtlas
-    <https://doi.org/10.5281/zenodo.5778192>`_ dataset contains NAIP aerial imagery,
+    <https://doi.org/10.5281/zenodo.5778192>`__ dataset contains NAIP aerial imagery,
     NLCD land cover labels, OpenStreetMap roads, water, waterways, and waterbodies,
     Microsoft building footprint labels, high-resolution land cover labels from the
     EPA EnviroAtlas dataset, and high-resolution land cover prior layers.

@@ -17,7 +17,7 @@ from .utils import download_url, percentile_normalization
 class ZueriCrop(VisionDataset):
     """ZueriCrop dataset.
 
-    The `ZueriCrop <https://github.com/0zgur0/ms-convSTAR>`_
+    The `ZueriCrop <https://github.com/0zgur0/ms-convSTAR>`__
     dataset is a dataset for time-series instance segmentation of crops.
 
     Dataset features:
