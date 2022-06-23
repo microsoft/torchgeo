@@ -3,6 +3,6 @@
 # CI, these are not hard requirements for using TorchGeo.
 
 # docs
-ipywidgets==7.7.0
+ipywidgets==7.7.1
 nbsphinx==0.8.9
 sphinx==5.0.2
