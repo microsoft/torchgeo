@@ -88,4 +88,4 @@ jobs:
         pip install -r requirements/style.txt
         pip list
     - name: Run pyupgrade checks
-      run: pyupgrade --py37-plus $(find . -name "*.py")
+      run: pyupgrade --py37-plus $(find . -path ./docs/src -prune -o -name "*.py" -print)
