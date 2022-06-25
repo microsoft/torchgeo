@@ -14,11 +14,11 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import download_url, extract_archive
 
 
-class USAVars(VisionDataset):
+class USAVars(NonGeoDataset):
     """USAVars dataset.
 
     The USAVars dataset is reproduction of the dataset used in the paper "`A

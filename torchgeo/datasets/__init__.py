@@ -41,11 +41,11 @@ from .gbif import GBIF
 from .geo import (
     GeoDataset,
     IntersectionDataset,
+    NonGeoClassificationDataset,
+    NonGeoDataset,
     RasterDataset,
     UnionDataset,
     VectorDataset,
-    VisionClassificationDataset,
-    VisionDataset,
 )
 from .gid15 import GID15
 from .globbiomass import GlobBiomass
@@ -143,7 +143,7 @@ __all__ = (
     "OpenBuildings",
     "Sentinel",
     "Sentinel2",
-    # VisionDataset
+    # NonGeoDataset
     "ADVANCE",
     "BeninSmallHolderCashews",
     "BigEarthNet",
@@ -194,8 +194,8 @@ __all__ = (
     "RasterDataset",
     "UnionDataset",
     "VectorDataset",
-    "VisionDataset",
-    "VisionClassificationDataset",
+    "NonGeoDataset",
+    "NonGeoClassificationDataset",
     # Utilities
     "BoundingBox",
     "concat_samples",

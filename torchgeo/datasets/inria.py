@@ -14,11 +14,11 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import check_integrity, extract_archive, percentile_normalization
 
 
-class InriaAerialImageLabeling(VisionDataset):
+class InriaAerialImageLabeling(NonGeoDataset):
     r"""Inria Aerial Image Labeling Dataset.
 
     The `Inria Aerial Image Labeling <https://project.inria.fr/aerialimagelabeling/>`__

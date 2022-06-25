@@ -15,11 +15,11 @@ import torch
 from rasterio.enums import Resampling
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import download_url, extract_archive, sort_sentinel2_bands
 
 
-class BigEarthNet(VisionDataset):
+class BigEarthNet(NonGeoDataset):
     """BigEarthNet dataset.
 
     The `BigEarthNet <https://bigearth.net/>`__

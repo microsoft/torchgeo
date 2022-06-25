@@ -14,15 +14,15 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import check_integrity, download_radiant_mlhub_dataset, extract_archive
 
 
 # TODO: read geospatial information from stac.json files
-class CV4AKenyaCropType(VisionDataset):
+class CV4AKenyaCropType(NonGeoDataset):
     """CV4A Kenya Crop Type dataset.
 
-    Used in a competition in the Computer Vision for Agriculture (CV4A) workshop in
+    Used in a competition in the Computer NonGeo for Agriculture (CV4A) workshop in
     ICLR 2020. See `this website <https://registry.mlhub.earth/10.34911/rdnt.dw605x/>`__
     for dataset details.
 

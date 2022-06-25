@@ -13,11 +13,11 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import check_integrity, draw_semantic_segmentation_masks, extract_archive
 
 
-class XView2(VisionDataset):
+class XView2(NonGeoDataset):
     """xView2 dataset.
 
     The `xView2 <https://xview2.org/>`__

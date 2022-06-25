@@ -18,12 +18,12 @@ from torchgeo.datasets import (
     BoundingBox,
     GeoDataset,
     IntersectionDataset,
+    NonGeoClassificationDataset,
+    NonGeoDataset,
     RasterDataset,
     Sentinel2,
     UnionDataset,
     VectorDataset,
-    VisionClassificationDataset,
-    VisionDataset,
 )
 
 
@@ -47,7 +47,7 @@ class CustomVectorDataset(VectorDataset):
     filename_glob = "*.geojson"
 
 
-class CustomVisionDataset(VisionDataset):
+class CustomNonGeoDataset(NonGeoDataset):
     def __getitem__(self, index: int) -> Dict[str, int]:
         return {"index": index}
 
@@ -138,7 +138,7 @@ class TestGeoDataset:
             GeoDataset()  # type: ignore[abstract]
 
     def test_and_vision(self, dataset: GeoDataset) -> None:
-        ds2 = CustomVisionDataset()
+        ds2 = CustomNonGeoDataset()
         with pytest.raises(
             ValueError, match="IntersectionDataset only supports GeoDatasets"
         ):
@@ -227,97 +227,97 @@ class TestVectorDataset:
             VectorDataset(str(tmp_path))
 
 
-class TestVisionDataset:
+class TestNonGeoDataset:
     @pytest.fixture(scope="class")
-    def dataset(self) -> VisionDataset:
-        return CustomVisionDataset()
+    def dataset(self) -> NonGeoDataset:
+        return CustomNonGeoDataset()
 
-    def test_getitem(self, dataset: VisionDataset) -> None:
+    def test_getitem(self, dataset: NonGeoDataset) -> None:
         assert dataset[0] == {"index": 0}
 
-    def test_len(self, dataset: VisionDataset) -> None:
+    def test_len(self, dataset: NonGeoDataset) -> None:
         assert len(dataset) == 2
 
     def test_add_two(self) -> None:
-        ds1 = CustomVisionDataset()
-        ds2 = CustomVisionDataset()
+        ds1 = CustomNonGeoDataset()
+        ds2 = CustomNonGeoDataset()
         dataset = ds1 + ds2
         assert isinstance(dataset, ConcatDataset)
         assert len(dataset) == 4
 
     def test_add_three(self) -> None:
-        ds1 = CustomVisionDataset()
-        ds2 = CustomVisionDataset()
-        ds3 = CustomVisionDataset()
+        ds1 = CustomNonGeoDataset()
+        ds2 = CustomNonGeoDataset()
+        ds3 = CustomNonGeoDataset()
         dataset = ds1 + ds2 + ds3
         assert isinstance(dataset, ConcatDataset)
         assert len(dataset) == 6
 
     def test_add_four(self) -> None:
-        ds1 = CustomVisionDataset()
-        ds2 = CustomVisionDataset()
-        ds3 = CustomVisionDataset()
-        ds4 = CustomVisionDataset()
+        ds1 = CustomNonGeoDataset()
+        ds2 = CustomNonGeoDataset()
+        ds3 = CustomNonGeoDataset()
+        ds4 = CustomNonGeoDataset()
         dataset = (ds1 + ds2) + (ds3 + ds4)
         assert isinstance(dataset, ConcatDataset)
         assert len(dataset) == 8
 
-    def test_str(self, dataset: VisionDataset) -> None:
-        assert "type: VisionDataset" in str(dataset)
+    def test_str(self, dataset: NonGeoDataset) -> None:
+        assert "type: NonGeoDataset" in str(dataset)
         assert "size: 2" in str(dataset)
 
     def test_abstract(self) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            VisionDataset()  # type: ignore[abstract]
+            NonGeoDataset()  # type: ignore[abstract]
 
 
-class TestVisionClassificationDataset:
+class TestNonGeoClassificationDataset:
     @pytest.fixture(scope="class")
-    def dataset(self, root: str) -> VisionClassificationDataset:
+    def dataset(self, root: str) -> NonGeoClassificationDataset:
         transforms = nn.Identity()
-        return VisionClassificationDataset(root, transforms=transforms)
+        return NonGeoClassificationDataset(root, transforms=transforms)
 
     @pytest.fixture(scope="class")
     def root(self) -> str:
         root = os.path.join("tests", "data", "visionclassificationdataset")
         return root
 
-    def test_getitem(self, dataset: VisionClassificationDataset) -> None:
+    def test_getitem(self, dataset: NonGeoClassificationDataset) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["label"], torch.Tensor)
         assert x["image"].shape[0] == 3
 
-    def test_len(self, dataset: VisionClassificationDataset) -> None:
+    def test_len(self, dataset: NonGeoClassificationDataset) -> None:
         assert len(dataset) == 2
 
     def test_add_two(self, root: str) -> None:
-        ds1 = VisionClassificationDataset(root)
-        ds2 = VisionClassificationDataset(root)
+        ds1 = NonGeoClassificationDataset(root)
+        ds2 = NonGeoClassificationDataset(root)
         dataset = ds1 + ds2
         assert isinstance(dataset, ConcatDataset)
         assert len(dataset) == 4
 
     def test_add_three(self, root: str) -> None:
-        ds1 = VisionClassificationDataset(root)
-        ds2 = VisionClassificationDataset(root)
-        ds3 = VisionClassificationDataset(root)
+        ds1 = NonGeoClassificationDataset(root)
+        ds2 = NonGeoClassificationDataset(root)
+        ds3 = NonGeoClassificationDataset(root)
         dataset = ds1 + ds2 + ds3
         assert isinstance(dataset, ConcatDataset)
         assert len(dataset) == 6
 
     def test_add_four(self, root: str) -> None:
-        ds1 = VisionClassificationDataset(root)
-        ds2 = VisionClassificationDataset(root)
-        ds3 = VisionClassificationDataset(root)
-        ds4 = VisionClassificationDataset(root)
+        ds1 = NonGeoClassificationDataset(root)
+        ds2 = NonGeoClassificationDataset(root)
+        ds3 = NonGeoClassificationDataset(root)
+        ds4 = NonGeoClassificationDataset(root)
         dataset = (ds1 + ds2) + (ds3 + ds4)
         assert isinstance(dataset, ConcatDataset)
         assert len(dataset) == 8
 
-    def test_str(self, dataset: VisionClassificationDataset) -> None:
-        assert "type: VisionDataset" in str(dataset)
+    def test_str(self, dataset: NonGeoClassificationDataset) -> None:
+        assert "type: NonGeoDataset" in str(dataset)
         assert "size: 2" in str(dataset)
 
 
@@ -342,8 +342,8 @@ class TestIntersectionDataset:
         assert "size: 1" in out
 
     def test_vision_dataset(self) -> None:
-        ds1 = CustomVisionDataset()
-        ds2 = CustomVisionDataset()
+        ds1 = CustomNonGeoDataset()
+        ds2 = CustomNonGeoDataset()
         with pytest.raises(
             ValueError, match="IntersectionDataset only supports GeoDatasets"
         ):
@@ -396,8 +396,8 @@ class TestUnionDataset:
         assert "size: 2" in out
 
     def test_vision_dataset(self) -> None:
-        ds1 = CustomVisionDataset()
-        ds2 = CustomVisionDataset()
+        ds1 = CustomNonGeoDataset()
+        ds2 = CustomNonGeoDataset()
         with pytest.raises(ValueError, match="UnionDataset only supports GeoDatasets"):
             UnionDataset(ds1, ds2)  # type: ignore[arg-type]
 

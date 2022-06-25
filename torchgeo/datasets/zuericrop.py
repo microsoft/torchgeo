@@ -10,11 +10,11 @@ import matplotlib.pyplot as plt
 import torch
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import download_url, percentile_normalization
 
 
-class ZueriCrop(VisionDataset):
+class ZueriCrop(NonGeoDataset):
     """ZueriCrop dataset.
 
     The `ZueriCrop <https://github.com/0zgur0/ms-convSTAR>`__
