@@ -9,9 +9,8 @@ from torch import Tensor
 
 from torchgeo.transforms import (
     AppendBNDVI,
-    AppendGNDVI,
-    AppendRBNDVI,
     AppendGBNDVI,
+    AppendGNDVI,
     AppendGRNDVI,
     AppendNBR,
     AppendNDBI,
@@ -20,6 +19,7 @@ from torchgeo.transforms import (
     AppendNDVI,
     AppendNDWI,
     AppendNormalizedDifferenceIndex,
+    AppendRBNDVI,
     AppendSWI,
     AppendTriBandNormalizedDifferenceIndex,
 )

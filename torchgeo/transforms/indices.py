@@ -361,7 +361,7 @@ class AppendTriBandNormalizedDifferenceIndex(Module):
 
         return sample
 
-    
+
 class AppendGRNDVI(AppendTriBandNormalizedDifferenceIndex):
     r"""Green-Red Normalized Difference Vegetation Index (GRNDVI).
 
@@ -376,7 +376,7 @@ class AppendGRNDVI(AppendTriBandNormalizedDifferenceIndex):
     * https://doi.org/10.2134/agronj2001.933583x
 
     .. versionadded:: 0.3
-    """
+    """  # noqa: E501
 
     def __init__(self, index_nir: int, index_green: int, index_red: int) -> None:
         """Initialize a new transform instance.
@@ -403,7 +403,7 @@ class AppendGBNDVI(AppendTriBandNormalizedDifferenceIndex):
     * https://doi.org/10.2134/agronj2001.933583x
 
     .. versionadded:: 0.3
-    """
+    """  # noqa: E501
 
     def __init__(self, index_nir: int, index_green: int, index_blue: int) -> None:
         """Initialize a new transform instance.
@@ -430,7 +430,7 @@ class AppendRBNDVI(AppendTriBandNormalizedDifferenceIndex):
     * https://doi.org/10.2134/agronj2001.933583x
 
     .. versionadded:: 0.3
-    """
+    """  # noqa: E501
 
     def __init__(self, index_nir: int, index_red: int, index_blue: int) -> None:
         """Initialize a new transform instance.
