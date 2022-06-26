@@ -75,9 +75,6 @@ def test_append_triband_index_batch(batch: Dict[str, Tensor]) -> None:
         AppendNDWI,
         AppendSWI,
         AppendGNDVI,
-        AppendGBNDVI,
-        AppendGRNDVI,
-        AppendRBNDVI,
     ],
 )
 def test_append_normalized_difference_indices(
@@ -85,5 +82,22 @@ def test_append_normalized_difference_indices(
 ) -> None:
     c, h, w = sample["image"].shape
     tr = index(0, 0)
+    output = tr(sample)
+    assert output["image"].shape == (c + 1, h, w)
+
+
+@pytest.mark.parametrize(
+    "index",
+    [
+        AppendGBNDVI,
+        AppendGRNDVI,
+        AppendRBNDVI,
+    ],
+)
+def test_append_tri_band_normalized_difference_indices(
+    sample: Dict[str, Tensor], index: AppendTriBandNormalizedDifferenceIndex
+) -> None:
+    c, h, w = sample["image"].shape
+    tr = index(0, 0, 0)
     output = tr(sample)
     assert output["image"].shape == (c + 1, h, w)
