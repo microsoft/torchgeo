@@ -308,7 +308,7 @@ class AppendTriBandNormalizedDifferenceIndex(Module):
 
     .. math::
 
-       \text{NDI} = \frac{A - {B + C}}{A + {B + C}}
+       \text{NDI} = \frac{A - (B + C)}{A + (B + C)}
 
     .. versionadded:: 0.3
     """
@@ -369,14 +369,15 @@ class AppendGRNDVI(AppendTriBandNormalizedDifferenceIndex):
 
     .. math::
 
-       \text{GRNDVI} = \frac{\text{NIR} - {\text{GREEN} + \text{RED}}}{\text{NIR} + {\text{GREEN} + \text{RED}}}
+       \text{GRNDVI} =
+           \frac{\text{NIR} - (\text{G} + \text{R})}{\text{NIR} + (\text{G} + \text{R})}
 
     If you use this index in your research, please cite the following paper:
 
-    * https://doi.org/10.2134/agronj2001.933583x
+    * https://doi.org/10.1016/S1672-6308(07)60027-4
 
     .. versionadded:: 0.3
-    """  # noqa: E501
+    """
 
     def __init__(self, index_nir: int, index_green: int, index_red: int) -> None:
         """Initialize a new transform instance.
@@ -396,14 +397,15 @@ class AppendGBNDVI(AppendTriBandNormalizedDifferenceIndex):
 
     .. math::
 
-       \text{GBNDVI} = \frac{\text{NIR} - {\text{GREEN} + \text{BLUE}}}{\text{NIR} + {\text{GREEN} + \text{BLUE}}}
+       \text{GBNDVI} =
+           \frac{\text{NIR} - (\text{G} + \text{B})}{\text{NIR} + (\text{G} + \text{B})}
 
     If you use this index in your research, please cite the following paper:
 
-    * https://doi.org/10.2134/agronj2001.933583x
+    * https://doi.org/10.1016/S1672-6308(07)60027-4
 
     .. versionadded:: 0.3
-    """  # noqa: E501
+    """
 
     def __init__(self, index_nir: int, index_green: int, index_blue: int) -> None:
         """Initialize a new transform instance.
@@ -411,7 +413,7 @@ class AppendGBNDVI(AppendTriBandNormalizedDifferenceIndex):
         Args:
             index_nir: index of the NIR band, e.g. B8 in Sentinel 2 imagery
             index_green: index of the Green band, B3 in Sentinel 2 imagery
-            index_red: index of the Blue band, B2 in Sentinel 2 imagery
+            index_blue: index of the Blue band, B2 in Sentinel 2 imagery
         """
         super().__init__(index_a=index_nir, index_b=index_green, index_c=index_blue)
 
@@ -423,14 +425,15 @@ class AppendRBNDVI(AppendTriBandNormalizedDifferenceIndex):
 
     .. math::
 
-       \text{RBNDVI} = \frac{\text{NIR} - {\text{RED} + \text{BLUE}}}{\text{NIR} + {\text{RED} + \text{BLUE}}}
+       \text{RBNDVI} =
+           \frac{\text{NIR} - (\text{R} + \text{B})}{\text{NIR} + (\text{R} + \text{B})}
 
     If you use this index in your research, please cite the following paper:
 
-    * https://doi.org/10.2134/agronj2001.933583x
+    * https://doi.org/10.1016/S1672-6308(07)60027-4
 
     .. versionadded:: 0.3
-    """  # noqa: E501
+    """
 
     def __init__(self, index_nir: int, index_red: int, index_blue: int) -> None:
         """Initialize a new transform instance.

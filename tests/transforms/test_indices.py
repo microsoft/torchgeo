@@ -86,14 +86,7 @@ def test_append_normalized_difference_indices(
     assert output["image"].shape == (c + 1, h, w)
 
 
-@pytest.mark.parametrize(
-    "index",
-    [
-        AppendGBNDVI,
-        AppendGRNDVI,
-        AppendRBNDVI,
-    ],
-)
+@pytest.mark.parametrize("index", [AppendGBNDVI, AppendGRNDVI, AppendRBNDVI])
 def test_append_tri_band_normalized_difference_indices(
     sample: Dict[str, Tensor], index: AppendTriBandNormalizedDifferenceIndex
 ) -> None:
