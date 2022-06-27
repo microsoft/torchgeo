@@ -30,7 +30,7 @@ COWC
 .. autoclass:: COWCCountingDataModule
 
 Deep Globe Land Cover Challenge
-^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: DeepGlobeLandCoverDataModule
 
