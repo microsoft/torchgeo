@@ -165,12 +165,12 @@ Kenya Crop Type
 .. autoclass:: CV4AKenyaCropType
 
 Deep Globe Land Cover Challenge
-^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: DeepGlobeLandCover
 
-2022 IEEE GRSS Data Fusion Contest (DFC2022)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+DFC2022
+^^^^^^^
 
 .. autoclass:: DFC2022
 
