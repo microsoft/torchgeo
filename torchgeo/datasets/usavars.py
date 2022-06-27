@@ -180,7 +180,7 @@ class USAVars(VisionDataset):
 
     def _load_files(self) -> List[str]:
         """Loads file names."""
-        with open(os.path.join(self.root, f"{self.split}_split.txt"), "r") as f:
+        with open(os.path.join(self.root, f"{self.split}_split.txt")) as f:
             files = f.read().splitlines()
         return files
 

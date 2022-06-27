@@ -76,9 +76,7 @@ class TestUSAVars:
                 "md5": "4ab0f5549fee944a5690de1bc95ed245",
             },
         }
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            USAVars, "split_metadata", split_metadata
-        )
+        monkeypatch.setattr(USAVars, "split_metadata", split_metadata)
 
         root = str(tmp_path)
         split, labels = request.param
