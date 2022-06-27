@@ -308,7 +308,7 @@ class AppendTriBandNormalizedDifferenceIndex(Module):
 
     .. math::
 
-       \text{NDI} = \frac{A - {B + C}}{A + {B + C}}
+       \text{NDI} = \frac{A - (B + C)}{A + (B + C)}
 
     .. versionadded:: 0.3
     """
@@ -360,3 +360,87 @@ class AppendTriBandNormalizedDifferenceIndex(Module):
             sample["image"] = torch.cat([sample["image"], index], dim=self.dim)
 
         return sample
+
+
+class AppendGRNDVI(AppendTriBandNormalizedDifferenceIndex):
+    r"""Green-Red Normalized Difference Vegetation Index (GRNDVI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{GRNDVI} =
+           \frac{\text{NIR} - (\text{G} + \text{R})}{\text{NIR} + (\text{G} + \text{R})}
+
+    If you use this index in your research, please cite the following paper:
+
+    * https://doi.org/10.1016/S1672-6308(07)60027-4
+
+    .. versionadded:: 0.3
+    """
+
+    def __init__(self, index_nir: int, index_green: int, index_red: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_nir: index of the NIR band, e.g. B8 in Sentinel 2 imagery
+            index_green: index of the Green band, B3 in Sentinel 2 imagery
+            index_red: index of the Red band, B4 in Sentinel 2 imagery
+        """
+        super().__init__(index_a=index_nir, index_b=index_green, index_c=index_red)
+
+
+class AppendGBNDVI(AppendTriBandNormalizedDifferenceIndex):
+    r"""Green-Blue Normalized Difference Vegetation Index (GBNDVI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{GBNDVI} =
+           \frac{\text{NIR} - (\text{G} + \text{B})}{\text{NIR} + (\text{G} + \text{B})}
+
+    If you use this index in your research, please cite the following paper:
+
+    * https://doi.org/10.1016/S1672-6308(07)60027-4
+
+    .. versionadded:: 0.3
+    """
+
+    def __init__(self, index_nir: int, index_green: int, index_blue: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_nir: index of the NIR band, e.g. B8 in Sentinel 2 imagery
+            index_green: index of the Green band, B3 in Sentinel 2 imagery
+            index_blue: index of the Blue band, B2 in Sentinel 2 imagery
+        """
+        super().__init__(index_a=index_nir, index_b=index_green, index_c=index_blue)
+
+
+class AppendRBNDVI(AppendTriBandNormalizedDifferenceIndex):
+    r"""Red-Blue Normalized Difference Vegetation Index (RBNDVI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{RBNDVI} =
+           \frac{\text{NIR} - (\text{R} + \text{B})}{\text{NIR} + (\text{R} + \text{B})}
+
+    If you use this index in your research, please cite the following paper:
+
+    * https://doi.org/10.1016/S1672-6308(07)60027-4
+
+    .. versionadded:: 0.3
+    """
+
+    def __init__(self, index_nir: int, index_red: int, index_blue: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_nir: index of the NIR band, e.g. B8 in Sentinel 2 imagery
+            index_red: index of the Red band, B4 in Sentinel 2 imagery
+            index_blue: index of the Blue band, B2 in Sentinel 2 imagery
+        """
+        super().__init__(index_a=index_nir, index_b=index_red, index_c=index_blue)
