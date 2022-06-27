@@ -5,6 +5,7 @@
 
 import os
 import shutil
+
 import numpy as np
 from PIL import Image
 from torchvision.datasets.utils import calculate_md5
