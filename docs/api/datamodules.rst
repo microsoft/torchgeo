@@ -99,6 +99,11 @@ UC Merced
 
 .. autoclass:: UCMercedDataModule
 
+USAVars
+^^^^^^^
+
+.. autoclass:: USAVarsDataModule
+
 Vaihingen
 ^^^^^^^^^
 
