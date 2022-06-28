@@ -201,10 +201,12 @@ class GridGeoSampler(GeoSampler):
 
             # last patch samples outside the bounds
             rows = math.ceil(
-                (bounds.maxy - bounds.miny - self.size[0] + self.stride[0]) / self.stride[0]
+                (bounds.maxy - bounds.miny - self.size[0] + self.stride[0])
+                / self.stride[0]
             )
             cols = math.ceil(
-                (bounds.maxx - bounds.minx - self.size[1] + self.stride[1]) / self.stride[1]
+                (bounds.maxx - bounds.minx - self.size[1] + self.stride[1])
+                / self.stride[1]
             )
             self.length += rows * cols
 
