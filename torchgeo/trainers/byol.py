@@ -18,7 +18,6 @@ from torch import Tensor, optim
 from torch.autograd import Variable
 from torch.nn.modules import BatchNorm1d, Conv2d, Linear, Module, ReLU, Sequential
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torchvision.models import resnet18, resnet50
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -312,15 +311,19 @@ class BYOLTask(LightningModule):
         """Configures the task based on kwargs parameters passed to the constructor."""
         in_channels = self.hyperparams["in_channels"]
         pretrained = self.hyperparams["imagenet_pretraining"]
-        encoder_name = self.hyperparams['encoder_name']
+        encoder_name = self.hyperparams["encoder_name"]
 
-        if parse(torchvision.__version__) >= parse('0.12'):
+        if parse(torchvision.__version__) >= parse("0.12"):
             if pretrained:
-                kwargs = {'weights': getattr(torchvision.models, f'ResNet{encoder_name[6:]}_Weights').DEFAULT}
+                kwargs = {
+                    "weights": getattr(
+                        torchvision.models, f"ResNet{encoder_name[6:]}_Weights"
+                    ).DEFAULT
+                }
             else:
-                kwargs = {'weights': None}
+                kwargs = {"weights": None}
         else:
-            kwargs = {'pretrained': pretrained}
+            kwargs = {"pretrained": pretrained}
 
         encoder = getattr(torchvision.models, encoder_name)(**kwargs)
 
