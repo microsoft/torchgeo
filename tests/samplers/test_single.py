@@ -171,9 +171,13 @@ class TestGridGeoSampler:
 
     def test_iter(self, sampler: GridGeoSampler) -> None:
         for query in sampler:
-            assert sampler.roi.minx <= query.minx <= query.maxx <= sampler.roi.maxx
-            assert sampler.roi.miny <= query.miny <= query.miny <= sampler.roi.maxy
-            assert sampler.roi.mint <= query.mint <= query.maxt <= sampler.roi.maxt
+            assert sampler.roi.minx <= query.minx
+            assert sampler.roi.miny <= query.miny
+            assert sampler.roi.mint <= query.mint
+            if query.maxx > sampler.roi.maxx:
+                assert (query.maxx - sampler.roi.maxx) < sampler.size[1]
+            if query.maxy > sampler.roi.maxy:
+                assert (query.maxy - sampler.roi.maxy) < sampler.size[0]
 
             assert math.isclose(query.maxx - query.minx, sampler.size[1])
             assert math.isclose(query.maxy - query.miny, sampler.size[0])
@@ -182,10 +186,20 @@ class TestGridGeoSampler:
             )
 
     def test_len(self, sampler: GridGeoSampler) -> None:
-        rows = int((100 - sampler.size[0]) // sampler.stride[0]) + 1
-        cols = int((100 - sampler.size[1]) // sampler.stride[1]) + 1
+        rows = math.ceil((100 - sampler.size[0] + sampler.stride[0]) / sampler.stride[0])
+        cols = math.ceil((100 - sampler.size[1] + sampler.stride[1]) / sampler.stride[1])
         length = rows * cols * 2
         assert len(sampler) == length
+
+    def test_len_larger(self, sampler: GridGeoSampler) -> None:
+        entire_rows = (100 - sampler.size[0] + sampler.stride[0]) // sampler.stride[0]
+        entire_cols = (100 - sampler.size[1] + sampler.stride[1]) // sampler.stride[1]
+        leftover_row = (100 - sampler.size[0] + sampler.stride[0]) \
+                       / sampler.stride[0] - entire_rows
+        leftover_col = (100 - sampler.size[1] + sampler.stride[1]) \
+                       / sampler.stride[1] - entire_cols
+        assert len(sampler) == (entire_rows + math.ceil(leftover_row)) * \
+               (entire_cols + math.ceil(leftover_col)) * 2
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
         roi = BoundingBox(0, 50, 200, 250, 400, 450)
@@ -195,11 +209,36 @@ class TestGridGeoSampler:
 
     def test_small_area(self) -> None:
         ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
-        ds.index.insert(1, (20, 21, 20, 21, 20, 21))
+        ds.index.insert(0, (0, 1, 0, 1, 0, 1))
         sampler = GridGeoSampler(ds, 2, 10)
-        for _ in sampler:
-            continue
+        assert len(sampler) == 1
+        for bbox in sampler:
+            assert bbox == BoundingBox(minx=0.0, maxx=20.0, miny=0.0, maxy=20.0, mint=0.0, maxt=1.0)
+            
+    # TODO: skip patches with area=0 when two tiles are side-by-side with an overlapping edge face.
+    def test_tiles_side_by_side(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        ds.index.insert(0, (0, 10, 10, 20, 0, 10))
+        sampler = GridGeoSampler(ds, 2, 10)
+        for bbox in sampler:
+            assert bbox.area > 0
+
+    def test_equal_area(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        sampler = GridGeoSampler(ds, 10, 10, units=Units.CRS)
+        assert len(sampler) == 1
+        for bbox in sampler:
+            assert bbox == BoundingBox(minx=0.0, maxx=10.0, miny=0.0, maxy=10.0, mint=0.0, maxt=10.0)
+
+    def test_larger_area(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 6, 0, 5, 0, 10))
+        sampler = GridGeoSampler(ds, 5, 5, units=Units.CRS)
+        assert len(sampler) == 2
+        assert list(sampler)[0] == BoundingBox(minx=0.0, maxx=5.0, miny=0.0, maxy=5.0, mint=0.0, maxt=10.0)
+        assert list(sampler)[1] == BoundingBox(minx=5.0, maxx=10.0, miny=0.0, maxy=5.0, mint=0.0, maxt=10.0)
 
     @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
