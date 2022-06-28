@@ -30,7 +30,7 @@ dependencies:
     - nbsphinx>=0.8.5
     - omegaconf>=2.1
     - opencv-python>=3.4.2.17
-    - packaging>=14
+    - packaging>=17
     - pandas>=0.23.2
     - pillow>=6.2
     - pydocstyle[toml]>=6.1
