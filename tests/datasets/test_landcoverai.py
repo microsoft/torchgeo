@@ -35,7 +35,7 @@ class TestLandCoverAI:
         monkeypatch.setattr(LandCoverAI, "sha256", sha256)
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return LandCoverAI(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: LandCoverAI) -> None:

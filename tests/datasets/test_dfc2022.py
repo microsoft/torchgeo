@@ -31,7 +31,7 @@ class TestDFC2022:
         )
         root = os.path.join("tests", "data", "dfc2022")
         split = request.param
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return DFC2022(root, split, transforms, checksum=True)
 
     def test_getitem(self, dataset: DFC2022) -> None:

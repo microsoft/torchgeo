@@ -36,7 +36,7 @@ class TestXView2:
         )
         root = os.path.join("tests", "data", "xview2")
         split = request.param
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return XView2(root, split, transforms, checksum=True)
 
     def test_getitem(self, dataset: XView2) -> None:

@@ -126,7 +126,7 @@ class MLP(Module):
         super().__init__()
         self.mlp = Sequential(
             Linear(dim, hidden_size),
-            BatchNorm1d(hidden_size),  # type: ignore[no-untyped-call]
+            BatchNorm1d(hidden_size),
             ReLU(inplace=True),
             Linear(hidden_size, projection_size),
         )

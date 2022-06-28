@@ -147,16 +147,12 @@ class _FSRelation(Module):
         for c in in_channels_list:
             self.content_encoders.append(
                 Sequential(
-                    Conv2d(c, out_channels, 1),
-                    BatchNorm2d(out_channels),  # type: ignore[no-untyped-call]
-                    ReLU(True),
+                    Conv2d(c, out_channels, 1), BatchNorm2d(out_channels), ReLU(True)
                 )
             )
             self.feature_reencoders.append(
                 Sequential(
-                    Conv2d(c, out_channels, 1),
-                    BatchNorm2d(out_channels),  # type: ignore[no-untyped-call]
-                    ReLU(True),
+                    Conv2d(c, out_channels, 1), BatchNorm2d(out_channels), ReLU(True)
                 )
             )
 
@@ -222,11 +218,11 @@ class _LightWeightDecoder(Module):
                                 1,
                                 bias=False,
                             ),
-                            BatchNorm2d(out_channels),  # type: ignore[no-untyped-call]
+                            BatchNorm2d(out_channels),
                             ReLU(inplace=True),
                             UpsamplingBilinear2d(scale_factor=2)
                             if num_upsample != 0
-                            else Identity(),  # type: ignore[no-untyped-call]
+                            else Identity(),
                         )
                         for idx in range(num_layers)
                     ]
