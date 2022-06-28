@@ -205,10 +205,10 @@ class TestGridGeoSampler:
             1
         ] - entire_cols
         assert (
-                len(sampler)
-                == (entire_rows + math.ceil(leftover_row))
-                * (entire_cols + math.ceil(leftover_col))
-                * 2
+            len(sampler)
+            == (entire_rows + math.ceil(leftover_row))
+            * (entire_cols + math.ceil(leftover_col))
+            * 2
         )
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
