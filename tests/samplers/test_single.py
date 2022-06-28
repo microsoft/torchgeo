@@ -226,7 +226,7 @@ class TestGridGeoSampler:
             assert bbox == BoundingBox(
                 minx=0.0, maxx=20.0, miny=0.0, maxy=20.0, mint=0.0, maxt=1.0
             )
-            
+
     # TODO: skip patches with area=0 when two tiles are
     #  side-by-side with an overlapping edge face.
     def test_tiles_side_by_side(self) -> None:
