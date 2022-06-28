@@ -9,6 +9,8 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision
+from packaging.version import parse
 from torch import Tensor
 from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -28,8 +30,16 @@ class RegressionTask(pl.LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters."""
+        pretrained = self.hyperparams["pretrained"]
         if self.hyperparams["model"] == "resnet18":
-            self.model = models.resnet18(pretrained=self.hyperparams["pretrained"])
+            if parse(torchvision.__version__) >= parse('0.12'):
+                if pretrained:
+                    kwargs = {'weights': models.ResNet18_Weights.DEFAULT}
+                else:
+                    kwargs = {'weights': None}
+            else:
+                kwargs = {'pretrained': pretrained}
+            self.model = models.resnet18(**kwargs)
             in_features = self.model.fc.in_features
             self.model.fc = nn.Linear(in_features, out_features=1)
         else:

@@ -207,7 +207,7 @@ class ChangeStarFarSeg(ChangeStar):
             backbone=backbone, classes=classes, backbone_pretrained=backbone_pretrained
         )
         seg_classifier: Module = model.decoder.classifier
-        model.decoder.classifier = nn.modules.Identity()
+        model.decoder.classifier: Module = nn.modules.Identity()
 
         super().__init__(
             dense_feature_extractor=model,
