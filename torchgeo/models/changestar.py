@@ -3,7 +3,7 @@
 
 """ChangeStar implementations."""
 
-from typing import Dict, List
+from typing import Dict, List, cast
 
 import torch
 import torch.nn as nn
@@ -207,7 +207,8 @@ class ChangeStarFarSeg(ChangeStar):
             backbone=backbone, classes=classes, backbone_pretrained=backbone_pretrained
         )
         seg_classifier: Module = model.decoder.classifier
-        model.decoder.classifier: Module = nn.modules.Identity()
+        model.decoder.classifier = cast(Module, model.decoder.classifier)
+        model.decoder.classifier = nn.modules.Identity()
 
         super().__init__(
             dense_feature_extractor=model,
