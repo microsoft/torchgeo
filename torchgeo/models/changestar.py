@@ -3,7 +3,7 @@
 
 """ChangeStar implementations."""
 
-from typing import Dict, List, cast
+from typing import Dict, List
 
 import torch
 import torch.nn as nn
