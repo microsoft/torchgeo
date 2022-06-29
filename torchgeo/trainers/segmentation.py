@@ -11,7 +11,6 @@ import torch.nn as nn
 from pytorch_lightning.core.lightning import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torch.utils.data import DataLoader
 from torchmetrics import Accuracy, JaccardIndex, MetricCollection
 
 from ..datasets.utils import unbind_samples

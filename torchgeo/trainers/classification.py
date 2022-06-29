@@ -12,7 +12,6 @@ import torch
 import torch.nn as nn
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
-from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import Accuracy, FBetaScore, JaccardIndex, MetricCollection
 
