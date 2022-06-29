@@ -10,10 +10,6 @@ from torch.utils.data import DataLoader
 
 from ..datasets import LoveDA
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class LoveDADataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the LoveDA dataset.

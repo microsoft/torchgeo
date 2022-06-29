@@ -13,10 +13,6 @@ from torch.nn.modules import Module
 
 from .farseg import FarSeg
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Module.__module__ = "torch.nn"
-
 
 class ChangeMixin(Module):
     """This module enables any segmentation model to detect binary change.

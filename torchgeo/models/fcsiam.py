@@ -11,8 +11,6 @@ from segmentation_models_pytorch.base.model import SegmentationModel
 from segmentation_models_pytorch.unet.model import Unet
 from torch import Tensor
 
-Unet.__module__ = "segmentation_models_pytorch"
-
 
 class FCSiamConc(SegmentationModel):  # type: ignore[misc]
     """Fully-convolutional Siamese Concatenation (FC-Siam-conc).

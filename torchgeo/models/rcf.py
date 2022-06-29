@@ -10,9 +10,6 @@ import torch.nn.functional as F
 from torch import Tensor
 from torch.nn.modules import Conv2d, Module
 
-Module.__module__ = "torch.nn"
-Conv2d.__module__ = "torch.nn"
-
 
 class RCF(Module):
     """This model extracts random convolutional features (RCFs) from its input.

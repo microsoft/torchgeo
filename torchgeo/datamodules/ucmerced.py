@@ -14,10 +14,6 @@ from torchvision.transforms import Compose, Normalize
 
 from ..datasets import UCMerced
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class UCMercedDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the UC Merced dataset.

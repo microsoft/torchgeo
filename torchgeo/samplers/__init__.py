@@ -20,7 +20,3 @@ __all__ = (
     # Constants
     "Units",
 )
-
-# https://stackoverflow.com/questions/40018681
-for module in __all__:
-    globals()[module].__module__ = "torchgeo.samplers"

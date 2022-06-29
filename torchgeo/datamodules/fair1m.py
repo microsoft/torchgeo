@@ -14,10 +14,6 @@ from torchvision.transforms import Compose
 from ..datasets import FAIR1M
 from .utils import dataset_split
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
     """Custom object detection collate fn to handle variable number of boxes.

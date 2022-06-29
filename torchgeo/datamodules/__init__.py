@@ -50,7 +50,3 @@ __all__ = (
     "Vaihingen2DDataModule",
     "XView2DataModule",
 )
-
-# https://stackoverflow.com/questions/40018681
-for module in __all__:
-    globals()[module].__module__ = "torchgeo.datamodules"

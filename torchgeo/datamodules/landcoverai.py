@@ -12,10 +12,6 @@ from torch.utils.data import DataLoader
 
 from ..datasets import LandCoverAI
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class LandCoverAIDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the LandCover.ai dataset.

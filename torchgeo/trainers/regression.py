@@ -17,11 +17,6 @@ from torchvision import models
 
 from ..datasets.utils import unbind_samples
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Conv2d.__module__ = "nn.Conv2d"
-Linear.__module__ = "nn.Linear"
-
 
 class RegressionTask(pl.LightningModule):
     """LightningModule for training models on regression datasets."""

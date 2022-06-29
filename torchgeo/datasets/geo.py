@@ -31,11 +31,6 @@ from torchvision.datasets.folder import default_loader as pil_loader
 
 from .utils import BoundingBox, concat_samples, disambiguate_timestamp, merge_samples
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Dataset.__module__ = "torch.utils.data"
-ImageFolder.__module__ = "torchvision.datasets"
-
 
 class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     """Abstract base class for datasets containing geospatial information.

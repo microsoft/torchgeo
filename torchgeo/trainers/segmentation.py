@@ -17,10 +17,6 @@ from torchmetrics import Accuracy, JaccardIndex, MetricCollection
 from ..datasets.utils import unbind_samples
 from ..models import FCN
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class SemanticSegmentationTask(LightningModule):
     """LightningModule for semantic segmentation of images."""

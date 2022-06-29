@@ -6,10 +6,6 @@ import torch
 import torch.nn.functional as F
 from torch.nn.modules import Module
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Module.__module__ = "torch.nn"
-
 
 class QRLoss(Module):
     """The QR (forward) loss between class probabilities and predictions.

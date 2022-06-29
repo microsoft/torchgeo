@@ -14,10 +14,6 @@ from torchvision.transforms import Compose, Normalize
 
 from ..datasets import RESISC45
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class RESISC45DataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the RESISC45 dataset.
