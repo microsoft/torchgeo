@@ -4,7 +4,7 @@
 import os
 from collections import OrderedDict
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 import pytest
 import torch
@@ -17,7 +17,7 @@ from torch.nn.modules import Module
 
 @pytest.fixture(scope="package")
 def model() -> Module:
-    kwargs = {}
+    kwargs: Dict[str, Optional[bool]] = {}
     if parse(torchvision.__version__) >= parse("0.12"):
         kwargs = {"weights": None}
     else:

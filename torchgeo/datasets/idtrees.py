@@ -459,7 +459,7 @@ class IDTReeS(VisionDataset):
         hsi = normalize(sample["hsi"][hsi_indices, :, :]).permute((1, 2, 0)).numpy()
         chm = normalize(sample["chm"]).permute((1, 2, 0)).numpy()
 
-        if "boxes" in sample and sample["boxes"]:
+        if "boxes" in sample and len(sample["boxes"]):
             labels = (
                 [self.idx2class[int(i)] for i in sample["label"]]
                 if "label" in sample
