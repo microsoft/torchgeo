@@ -472,7 +472,7 @@ class IDTReeS(VisionDataset):
         else:
             image = sample["image"].permute((1, 2, 0)).numpy()
 
-        if "prediction_boxes" in sample:
+        if "prediction_boxes" in sample and len(sample["prediction_boxes"]):
             ncols += 1
             labels = (
                 [self.idx2class[int(i)] for i in sample["prediction_label"]]
