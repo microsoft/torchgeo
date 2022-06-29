@@ -65,7 +65,7 @@ class TestBYOLTask:
     def test_invalid_encoder(self) -> None:
         kwargs = {
             "in_channels": 1,
-            "imagenet_pretraining": True,
+            "imagenet_pretraining": False,
             "encoder_name": "invalid_encoder",
         }
         error_message = "module 'torchvision.models' has no attribute 'invalid_encoder'"

@@ -43,7 +43,6 @@ class TestRegressionTask:
         conf = OmegaConf.load(os.path.join("tests", "conf", "cyclone.yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
         conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
-        conf_dict["pretrained"] = True
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]
