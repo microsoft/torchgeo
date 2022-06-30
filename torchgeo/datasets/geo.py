@@ -673,10 +673,11 @@ class VisionDataset(NonGeoDataset):
        Use :class:`NonGeoDataset` instead.
     """
 
-    def __new__(cls):
+    def __new__(cls) -> VisionDataset:
         """Create a new instance of VisionDataset."""
         msg = "VisionDataset is deprecated, use NonGeoDataset instead."
         warnings.warn(msg, DeprecationWarning)
+        return cls
 
 
 class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[misc]
@@ -766,11 +767,12 @@ class VisionClassificationDataset(NonGeoClassificationDataset):
        Use :class:`NonGeoClassificationDataset` instead.
     """
 
-    def __new__(cls):
+    def __new__(cls) -> VisionClassificationDataset:
         """Create a new instance of VisionClassificationDataset."""
         msg = "VisionClassificationDataset is deprecated, "
         msg += "use NonGeoClassificationDataset instead."
         warnings.warn(msg, DeprecationWarning)
+        return cls
 
 
 class IntersectionDataset(GeoDataset):
