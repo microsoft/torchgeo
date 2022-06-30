@@ -46,6 +46,8 @@ from .geo import (
     RasterDataset,
     UnionDataset,
     VectorDataset,
+    VisionClassificationDataset,
+    VisionDataset,
 )
 from .gid15 import GID15
 from .globbiomass import GlobBiomass
@@ -191,11 +193,13 @@ __all__ = (
     # Base classes
     "GeoDataset",
     "IntersectionDataset",
+    "NonGeoClassificationDataset",
+    "NonGeoDataset",
     "RasterDataset",
     "UnionDataset",
     "VectorDataset",
-    "NonGeoDataset",
-    "NonGeoClassificationDataset",
+    "VisionClassificationDataset",
+    "VisionDataset",
     # Utilities
     "BoundingBox",
     "concat_samples",

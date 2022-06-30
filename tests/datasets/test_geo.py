@@ -24,6 +24,8 @@ from torchgeo.datasets import (
     Sentinel2,
     UnionDataset,
     VectorDataset,
+    VisionClassificationDataset,
+    VisionDataset,
 )
 
 
@@ -137,7 +139,7 @@ class TestGeoDataset:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
             GeoDataset()  # type: ignore[abstract]
 
-    def test_and_vision(self, dataset: GeoDataset) -> None:
+    def test_and_nongeo(self, dataset: GeoDataset) -> None:
         ds2 = CustomNonGeoDataset()
         with pytest.raises(
             ValueError, match="IntersectionDataset only supports GeoDatasets"
@@ -271,6 +273,13 @@ class TestNonGeoDataset:
             NonGeoDataset()  # type: ignore[abstract]
 
 
+class TestVisionDataset:
+    def test_deprecation(self) -> None:
+        match = "VisionDataset is deprecated, use NonGeoDataset instead."
+        with pytest.warns(DeprecationWarning, match=match):
+            VisionDataset()
+
+
 class TestNonGeoClassificationDataset:
     @pytest.fixture(scope="class")
     def dataset(self, root: str) -> NonGeoClassificationDataset:
@@ -279,7 +288,7 @@ class TestNonGeoClassificationDataset:
 
     @pytest.fixture(scope="class")
     def root(self) -> str:
-        root = os.path.join("tests", "data", "visionclassificationdataset")
+        root = os.path.join("tests", "data", "nongeoclassification")
         return root
 
     def test_getitem(self, dataset: NonGeoClassificationDataset) -> None:
@@ -321,6 +330,14 @@ class TestNonGeoClassificationDataset:
         assert "size: 2" in str(dataset)
 
 
+class TestVisionClassificationDataset:
+    def test_deprecation(self) -> None:
+        match = "VisionClassificationDataset is deprecated, "
+        match += "use NonGeoClassificationDataset instead."
+        with pytest.warns(DeprecationWarning, match=match):
+            VisionClassificationDataset()
+
+
 class TestIntersectionDataset:
     @pytest.fixture(scope="class")
     def dataset(self) -> IntersectionDataset:
@@ -341,7 +358,7 @@ class TestIntersectionDataset:
         assert "bbox: BoundingBox" in out
         assert "size: 1" in out
 
-    def test_vision_dataset(self) -> None:
+    def test_nongeo_dataset(self) -> None:
         ds1 = CustomNonGeoDataset()
         ds2 = CustomNonGeoDataset()
         with pytest.raises(
@@ -395,7 +412,7 @@ class TestUnionDataset:
         assert "bbox: BoundingBox" in out
         assert "size: 2" in out
 
-    def test_vision_dataset(self) -> None:
+    def test_nongeo_dataset(self) -> None:
         ds1 = CustomNonGeoDataset()
         ds2 = CustomNonGeoDataset()
         with pytest.raises(ValueError, match="UnionDataset only supports GeoDatasets"):
