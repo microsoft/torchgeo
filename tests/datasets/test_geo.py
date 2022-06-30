@@ -340,10 +340,11 @@ class TestNonGeoClassificationDataset:
 
 class TestVisionClassificationDataset:
     def test_deprecation(self) -> None:
+        root = os.path.join("tests", "data", "nongeoclassification")
         match = "VisionClassificationDataset is deprecated, "
         match += "use NonGeoClassificationDataset instead."
         with pytest.warns(DeprecationWarning, match=match):
-            VisionClassificationDataset()
+            VisionClassificationDataset(root)
 
 
 class TestIntersectionDataset:
