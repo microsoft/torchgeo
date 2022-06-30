@@ -80,7 +80,7 @@ class TestUSAVars:
 
         root = str(tmp_path)
         split, labels = request.param
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
 
         return USAVars(
             root, split, labels, transforms=transforms, download=True, checksum=True

@@ -150,7 +150,7 @@ class TestRasterDataset:
     def naip(self, request: SubRequest) -> NAIP:
         root = os.path.join("tests", "data", "naip")
         crs = CRS.from_epsg(3005)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         cache = request.param
         return NAIP(root, crs=crs, transforms=transforms, cache=cache)
 
@@ -158,7 +158,7 @@ class TestRasterDataset:
     def sentinel(self, request: SubRequest) -> Sentinel2:
         root = os.path.join("tests", "data", "sentinel2")
         bands = ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B11"]
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         cache = request.param
         return Sentinel2(root, bands=bands, transforms=transforms, cache=cache)
 
@@ -201,7 +201,7 @@ class TestVectorDataset:
     @pytest.fixture(scope="class")
     def dataset(self) -> CustomVectorDataset:
         root = os.path.join("tests", "data", "vector")
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return CustomVectorDataset(root, res=0.1, transforms=transforms)
 
     def test_getitem(self, dataset: CustomVectorDataset) -> None:
@@ -274,7 +274,7 @@ class TestVisionDataset:
 class TestVisionClassificationDataset:
     @pytest.fixture(scope="class")
     def dataset(self, root: str) -> VisionClassificationDataset:
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return VisionClassificationDataset(root, transforms=transforms)
 
     @pytest.fixture(scope="class")

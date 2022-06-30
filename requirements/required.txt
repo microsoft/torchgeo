@@ -13,6 +13,7 @@ matplotlib==3.5.2
 numpy==1.23.0;python_version>='3.8'
 numpy==1.21.6;python_version=='3.7'
 omegaconf==2.2.2
+packaging==21.3
 pillow==9.1.1
 protobuf==3.20.1
 pyproj==3.3.1;python_version>='3.8'
@@ -26,6 +27,6 @@ scikit-learn==1.0.2;python_version=='3.7'
 segmentation-models-pytorch==0.2.1
 shapely==1.8.2
 timm==0.4.12
-torch==1.11.0
+torch==1.12.0
 torchmetrics==0.9.1
-torchvision==0.12.0
+torchvision==0.13.0

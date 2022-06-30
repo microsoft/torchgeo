@@ -41,7 +41,7 @@ class TestCanadianBuildingFootprints:
         monkeypatch.setattr(CanadianBuildingFootprints, "url", url)
         monkeypatch.setattr(plt, "show", lambda *args: None)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return CanadianBuildingFootprints(
             root, res=0.1, transforms=transforms, download=True, checksum=True
         )

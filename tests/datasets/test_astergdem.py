@@ -20,7 +20,7 @@ class TestAsterGDEM:
         zipfile = os.path.join("tests", "data", "astergdem", "astergdem.zip")
         shutil.unpack_archive(zipfile, tmp_path, "zip")
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return AsterGDEM(root, transforms=transforms)
 
     def test_datasetmissing(self, tmp_path: Path) -> None:

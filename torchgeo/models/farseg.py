@@ -8,6 +8,8 @@ from collections import OrderedDict
 from typing import List, cast
 
 import torch.nn.functional as F
+import torchvision
+from packaging.version import parse
 from torch import Tensor
 from torch.nn.modules import (
     BatchNorm2d,
@@ -71,7 +73,20 @@ class FarSeg(Module):
             max_channels = 2048
         else:
             raise ValueError(f"unknown backbone: {backbone}.")
-        self.backbone = getattr(resnet, backbone)(pretrained=backbone_pretrained)
+        kwargs = {}
+        if parse(torchvision.__version__) >= parse("0.12"):
+            if backbone_pretrained:
+                kwargs = {
+                    "weights": getattr(
+                        torchvision.models, f"ResNet{backbone[6:]}_Weights"
+                    ).DEFAULT
+                }
+            else:
+                kwargs = {"weights": None}
+        else:
+            kwargs = {"pretrained": backbone_pretrained}
+
+        self.backbone = getattr(resnet, backbone)(**kwargs)
 
         self.fpn = FPN(
             in_channels_list=[max_channels // (2 ** (3 - i)) for i in range(4)],
@@ -147,16 +162,12 @@ class _FSRelation(Module):
         for c in in_channels_list:
             self.content_encoders.append(
                 Sequential(
-                    Conv2d(c, out_channels, 1),
-                    BatchNorm2d(out_channels),  # type: ignore[no-untyped-call]
-                    ReLU(True),
+                    Conv2d(c, out_channels, 1), BatchNorm2d(out_channels), ReLU(True)
                 )
             )
             self.feature_reencoders.append(
                 Sequential(
-                    Conv2d(c, out_channels, 1),
-                    BatchNorm2d(out_channels),  # type: ignore[no-untyped-call]
-                    ReLU(True),
+                    Conv2d(c, out_channels, 1), BatchNorm2d(out_channels), ReLU(True)
                 )
             )
 
@@ -222,11 +233,11 @@ class _LightWeightDecoder(Module):
                                 1,
                                 bias=False,
                             ),
-                            BatchNorm2d(out_channels),  # type: ignore[no-untyped-call]
+                            BatchNorm2d(out_channels),
                             ReLU(inplace=True),
                             UpsamplingBilinear2d(scale_factor=2)
                             if num_upsample != 0
-                            else Identity(),  # type: ignore[no-untyped-call]
+                            else Identity(),
                         )
                         for idx in range(num_layers)
                     ]

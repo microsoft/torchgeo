@@ -46,7 +46,7 @@ class TestSeasonalContrastS2:
         )
         root = str(tmp_path)
         version, bands = request.param
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return SeasonalContrastS2(
             root, version, bands, transforms, download=True, checksum=True
         )

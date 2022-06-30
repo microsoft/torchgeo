@@ -27,7 +27,7 @@ class TestVaihingen2D:
         monkeypatch.setattr(Vaihingen2D, "splits", splits)
         root = os.path.join("tests", "data", "vaihingen")
         split = request.param
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return Vaihingen2D(root, split, transforms, checksum=True)
 
     def test_getitem(self, dataset: Vaihingen2D) -> None:
