@@ -677,7 +677,7 @@ class VisionDataset(NonGeoDataset):
         """Create a new instance of VisionDataset."""
         msg = "VisionDataset is deprecated, use NonGeoDataset instead."
         warnings.warn(msg, DeprecationWarning)
-        return cast(VisionDataset, super().__new__(cls, *args, **kwargs))
+        return super().__new__(cls, *args, **kwargs)
 
 
 class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[misc]
