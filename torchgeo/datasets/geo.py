@@ -772,7 +772,7 @@ class VisionClassificationDataset(NonGeoClassificationDataset):
         msg = "VisionClassificationDataset is deprecated, "
         msg += "use NonGeoClassificationDataset instead."
         warnings.warn(msg, DeprecationWarning)
-        return cast(VisionClassificationDataset, super().__new__(cls, *args, **kwargs))
+        return cast(VisionClassificationDataset, super().__new__(cls))
 
 
 class IntersectionDataset(GeoDataset):
