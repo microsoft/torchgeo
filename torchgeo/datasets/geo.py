@@ -673,7 +673,7 @@ class VisionDataset(NonGeoDataset):
        Use :class:`NonGeoDataset` instead.
     """
 
-    def __new__(cls) -> VisionDataset:
+    def __new__(cls, *args, **kwargs) -> "VisionDataset":
         """Create a new instance of VisionDataset."""
         msg = "VisionDataset is deprecated, use NonGeoDataset instead."
         warnings.warn(msg, DeprecationWarning)
@@ -767,7 +767,7 @@ class VisionClassificationDataset(NonGeoClassificationDataset):
        Use :class:`NonGeoClassificationDataset` instead.
     """
 
-    def __new__(cls) -> VisionClassificationDataset:
+    def __new__(cls, *args, **kwargs) -> "VisionClassificationDataset":
         """Create a new instance of VisionClassificationDataset."""
         msg = "VisionClassificationDataset is deprecated, "
         msg += "use NonGeoClassificationDataset instead."
