@@ -37,7 +37,7 @@ class TestGlobBiomass:
 
         monkeypatch.setattr(GlobBiomass, "md5s", md5s)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return GlobBiomass(root, transforms=transforms, checksum=True)
 
     def test_getitem(self, dataset: GlobBiomass) -> None:

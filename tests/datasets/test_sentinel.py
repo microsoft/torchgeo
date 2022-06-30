@@ -30,7 +30,7 @@ class TestSentinel2:
             "B09",
             "B11",
         ]
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return Sentinel2(root, bands=bands, transforms=transforms)
 
     def test_separate_files(self, dataset: Sentinel2) -> None:

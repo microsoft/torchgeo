@@ -37,7 +37,7 @@ class TestEsri2020:
         )
         monkeypatch.setattr(Esri2020, "url", url)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return Esri2020(root, transforms=transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: Esri2020) -> None:

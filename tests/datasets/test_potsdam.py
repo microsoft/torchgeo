@@ -27,7 +27,7 @@ class TestPotsdam2D:
         monkeypatch.setattr(Potsdam2D, "splits", splits)
         root = os.path.join("tests", "data", "potsdam")
         split = request.param
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return Potsdam2D(root, split, transforms, checksum=True)
 
     def test_getitem(self, dataset: Potsdam2D) -> None:

@@ -51,7 +51,7 @@ class TestSpaceNet1:
         # Refer https://github.com/python/mypy/issues/1032
         monkeypatch.setattr(SpaceNet1, "collection_md5_dict", test_md5)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return SpaceNet1(
             root, image=request.param, transforms=transforms, download=True, api_key=""
         )
@@ -101,7 +101,7 @@ class TestSpaceNet2:
 
         monkeypatch.setattr(SpaceNet2, "collection_md5_dict", test_md5)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return SpaceNet2(
             root,
             image=request.param,
@@ -162,7 +162,7 @@ class TestSpaceNet3:
 
         monkeypatch.setattr(SpaceNet3, "collection_md5_dict", test_md5)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return SpaceNet3(
             root,
             image=request.param[0],
@@ -226,7 +226,7 @@ class TestSpaceNet4:
 
         monkeypatch.setattr(SpaceNet4, "collection_md5_dict", test_md5)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return SpaceNet4(
             root,
             image=request.param,
@@ -290,7 +290,7 @@ class TestSpaceNet5:
 
         monkeypatch.setattr(SpaceNet5, "collection_md5_dict", test_md5)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return SpaceNet5(
             root,
             image=request.param[0],
@@ -354,7 +354,7 @@ class TestSpaceNet7:
 
         monkeypatch.setattr(SpaceNet7, "collection_md5_dict", test_md5)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return SpaceNet7(
             root, split=request.param, transforms=transforms, download=True, api_key=""
         )

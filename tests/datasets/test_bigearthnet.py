@@ -64,7 +64,7 @@ class TestBigEarthNet:
         monkeypatch.setattr(BigEarthNet, "splits_metadata", splits_metadata)
         bands, num_classes, split = request.param
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return BigEarthNet(
             root, split, bands, num_classes, transforms, download=True, checksum=True
         )

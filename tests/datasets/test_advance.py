@@ -34,7 +34,7 @@ class TestADVANCE:
         monkeypatch.setattr(ADVANCE, "urls", urls)
         monkeypatch.setattr(ADVANCE, "md5s", md5s)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return ADVANCE(root, transforms, download=True, checksum=True)
 
     @pytest.fixture
