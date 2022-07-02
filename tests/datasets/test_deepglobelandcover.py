@@ -21,9 +21,7 @@ class TestDeepGlobeLandCover:
         self, monkeypatch: MonkeyPatch, request: SubRequest
     ) -> DeepGlobeLandCover:
         md5 = "2cbd68d36b1485f09f32d874dde7c5c5"
-        splits = ["train", "test"]
         monkeypatch.setattr(DeepGlobeLandCover, "md5", md5)
-        monkeypatch.setattr(DeepGlobeLandCover, "splits", splits)
         root = os.path.join("tests", "data", "deepglobelandcover")
         split = request.param
         transforms = nn.Identity()  # type: ignore[no-untyped-call]
