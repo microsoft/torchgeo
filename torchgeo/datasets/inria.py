@@ -21,10 +21,9 @@ from .utils import check_integrity, extract_archive, percentile_normalization
 class InriaAerialImageLabeling(VisionDataset):
     r"""Inria Aerial Image Labeling Dataset.
 
-    The `Inria Aerial Image Labeling
-    <https://project.inria.fr/aerialimagelabeling/>`__ dataset is a building
-    detection dataset over dissimilar settlements ranging ranging from densely
-    populated areas to alpine towns. Refer to the dataset homepage to download
+    The `Inria Aerial Image Labeling <https://project.inria.fr/aerialimagelabeling/>`__
+    dataset is a building detection dataset over dissimilar settlements ranging from
+    densely populated areas to alpine towns. Refer to the dataset homepage to download
     the dataset.
 
     Dataset features:
