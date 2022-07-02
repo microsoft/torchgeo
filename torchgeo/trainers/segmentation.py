@@ -54,9 +54,7 @@ class SemanticSegmentationTask(LightningModule):
 
         if self.hyperparams["loss"] == "ce":
             ignore_value = -1000 if self.ignore_index is None else self.ignore_index
-            self.loss = nn.CrossEntropyLoss(
-                ignore_index=ignore_value
-            )
+            self.loss = nn.CrossEntropyLoss(ignore_index=ignore_value)
         elif self.hyperparams["loss"] == "jaccard":
             self.loss = smp.losses.JaccardLoss(
                 mode="multiclass", classes=self.hyperparams["num_classes"]
