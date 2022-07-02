@@ -26,7 +26,7 @@ class DeepGlobeLandCover(VisionDataset):
     """DeepGlobe Land Cover Classification Challenge dataset.
 
     The `DeepGlobe Land Cover Classification Challenge
-    <https://competitions.codalab.org/competitions/18468/>`__ dataset
+    <https://competitions.codalab.org/competitions/18468>`__ dataset
     offers high-resolution sub-meter satellite imagery focusing for the task of
     semantic segmentation to detect areas of urban, agriculture, rangeland, forest,
     water, barren, and unknown. It contains 1,146 satellite images of size
