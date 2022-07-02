@@ -97,7 +97,7 @@ class TestSemanticSegmentationTask:
             "encoder_name": "resnet18",
             "encoder_weights": None,
             "in_channels": 1,
-            "num_classes": 1,
+            "num_classes": 2,
             "loss": "ce",
             "ignore_zeros": True,
         }
@@ -116,6 +116,15 @@ class TestSemanticSegmentationTask:
 
     def test_invalid_ignorezeros(self, model_kwargs: Dict[Any, Any]) -> None:
         model_kwargs["ignore_zeros"] = 10
-        match = "`ignore_zeros` must be a bool"
+        match = "ignore_zeros must be a bool"
         with pytest.raises(ValueError, match=match):
+            SemanticSegmentationTask(**model_kwargs)
+
+    def test_ignorezeros_with_jaccard(self, model_kwargs: Dict[Any, Any]) -> None:
+        model_kwargs["loss"] = "jaccard"
+        model_kwargs["ignore_zeros"] = True
+        match = (
+            "Warning ignore_zeros=True has no effect on training" " when loss='jaccard'"
+        )
+        with pytest.warns(UserWarning, match=match):
             SemanticSegmentationTask(**model_kwargs)

@@ -3,6 +3,7 @@
 
 """Segmentation tasks."""
 
+import warnings
 from typing import Any, Dict, cast
 
 import segmentation_models_pytorch as smp
@@ -90,7 +91,13 @@ class SemanticSegmentationTask(LightningModule):
         self.hyperparams = cast(Dict[str, Any], self.hparams)
 
         if not isinstance(kwargs["ignore_zeros"], bool):
-            raise ValueError("`ignore_zeros` must be a bool")
+            raise ValueError("ignore_zeros must be a bool")
+        if kwargs["ignore_zeros"] and kwargs["loss"] == "jaccard":
+            warnings.warn(
+                "Warning ignore_zeros=True has no effect on training when"
+                + " loss='jaccard'",
+                UserWarning,
+            )
         self.ignore_index = None
         if kwargs["ignore_zeros"]:
             self.ignore_index = 0
