@@ -53,8 +53,9 @@ class SemanticSegmentationTask(LightningModule):
             )
 
         if self.hyperparams["loss"] == "ce":
+            ignore_value = -1000 if self.ignore_index is None else self.ignore_index
             self.loss = nn.CrossEntropyLoss(
-                ignore_index=-1000 if self.ignore_zeros is None else 0
+                ignore_index=ignore_value
             )
         elif self.hyperparams["loss"] == "jaccard":
             self.loss = smp.losses.JaccardLoss(
@@ -62,7 +63,7 @@ class SemanticSegmentationTask(LightningModule):
             )
         elif self.hyperparams["loss"] == "focal":
             self.loss = smp.losses.FocalLoss(
-                "multiclass", ignore_index=self.ignore_zeros, normalized=True
+                "multiclass", ignore_index=self.ignore_index, normalized=True
             )
         else:
             raise ValueError(f"Loss type '{self.hyperparams['loss']}' is not valid.")
@@ -78,7 +79,8 @@ class SemanticSegmentationTask(LightningModule):
             in_channels: Number of channels in input image
             num_classes: Number of semantic classes to predict
             loss: Name of the loss function
-            ignore_zeros: Whether to ignore the "0" class value in the loss and metrics
+            ignore_zeros: Boolean indicating whether to ignore the "0" class value in
+                the loss and metrics
 
         Raises:
             ValueError: if kwargs arguments are invalid
@@ -89,7 +91,10 @@ class SemanticSegmentationTask(LightningModule):
         self.save_hyperparameters()  # type: ignore[operator]
         self.hyperparams = cast(Dict[str, Any], self.hparams)
 
-        self.ignore_zeros = None if kwargs["ignore_zeros"] else 0
+        assert isinstance(kwargs["ignore_zeros"], bool)
+        self.ignore_index = None
+        if kwargs["ignore_zeros"]:
+            self.ignore_index = 0
 
         self.config_task()
 
@@ -97,12 +102,12 @@ class SemanticSegmentationTask(LightningModule):
             [
                 Accuracy(
                     num_classes=self.hyperparams["num_classes"],
-                    ignore_index=self.ignore_zeros,
+                    ignore_index=self.ignore_index,
                     mdmc_average="global",
                 ),
                 JaccardIndex(
                     num_classes=self.hyperparams["num_classes"],
-                    ignore_index=self.ignore_zeros,
+                    ignore_index=self.ignore_index,
                 ),
             ],
             prefix="train_",
