@@ -102,9 +102,9 @@ class TestSemanticSegmentationTask:
             "encoder_name": "resnet18",
             "encoder_weights": None,
             "in_channels": 1,
-            "num_classes": 1,
+            "num_classes": 2,
             "loss": "ce",
-            "ignore_zeros": True,
+            "ignore_index": 0,
         }
 
     def test_invalid_model(self, model_kwargs: Dict[Any, Any]) -> None:
@@ -117,4 +117,17 @@ class TestSemanticSegmentationTask:
         model_kwargs["loss"] = "invalid_loss"
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
+            SemanticSegmentationTask(**model_kwargs)
+
+    def test_invalid_ignoreindex(self, model_kwargs: Dict[Any, Any]) -> None:
+        model_kwargs["ignore_index"] = "0"
+        match = "ignore_index must be an int or None"
+        with pytest.raises(ValueError, match=match):
+            SemanticSegmentationTask(**model_kwargs)
+
+    def test_ignoreindex_with_jaccard(self, model_kwargs: Dict[Any, Any]) -> None:
+        model_kwargs["loss"] = "jaccard"
+        model_kwargs["ignore_index"] = 0
+        match = "ignore_index has no effect on training when loss='jaccard'"
+        with pytest.warns(UserWarning, match=match):
             SemanticSegmentationTask(**model_kwargs)

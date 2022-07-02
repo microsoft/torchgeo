@@ -16,7 +16,7 @@ experiment:
     in_channels: 4
     num_classes: 14
     num_filters: 64
-    ignore_zeros: False
+    ignore_index: null
   datamodule:
     naip_root_dir: "data/naip"
     chesapeake_root_dir: "data/chesapeake/BAYWIDE"
