@@ -115,10 +115,11 @@ class DeepGlobeLandCover(VisionDataset):
         else:
             split_folder = "test_data"
 
-        self.files = []
-        for image in sorted(os.listdir(
-            os.path.join(root, self.data_root, split_folder, "images")
-        )):
+        self.image_fns = []
+        self.mask_fns = []
+        for image in sorted(
+            os.listdir(os.path.join(root, self.data_root, split_folder, "images"))
+        ):
             if image.endswith(".jpg"):
                 id = image[:-8]
                 image_path = os.path.join(
@@ -127,8 +128,9 @@ class DeepGlobeLandCover(VisionDataset):
                 mask_path = os.path.join(
                     root, self.data_root, split_folder, "masks", str(id) + "_mask.png"
                 )
-                if os.path.exists(mask_path):
-                    self.files.append(dict(image=image_path, mask=mask_path))
+
+                self.image_fns.append(image_path)
+                self.mask_fns.append(mask_path)
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
@@ -154,7 +156,7 @@ class DeepGlobeLandCover(VisionDataset):
         Returns:
             length of the dataset
         """
-        return len(self.files)
+        return len(self.image_fns)
 
     def _load_image(self, index: int) -> Tensor:
         """Load a single image.
@@ -165,7 +167,7 @@ class DeepGlobeLandCover(VisionDataset):
         Returns:
             the image
         """
-        path = self.files[index]["image"]
+        path = self.image_fns[index]
 
         with Image.open(path) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img)
@@ -183,7 +185,7 @@ class DeepGlobeLandCover(VisionDataset):
         Returns:
             the target mask
         """
-        path = self.files[index]["mask"]
+        path = self.mask_fns[index]
         with Image.open(path) as img:
             array: "np.typing.NDArray[np.uint8]" = np.array(img)
             array = rgb_to_mask(array, self.colormap)
