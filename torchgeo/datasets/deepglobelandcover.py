@@ -61,6 +61,7 @@ class DeepGlobeLandCover(VisionDataset):
 
     * https://arxiv.org/pdf/1805.06561.pdf
 
+    .. versionadded:: 0.3
     """
 
     filename = "data.zip"
