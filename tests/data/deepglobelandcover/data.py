@@ -13,11 +13,11 @@ from torchvision.datasets.utils import calculate_md5
 
 def generate_test_data(root: str, n_samples: int = 3) -> str:
     """Create test data archive for DeepGlobeLandCover dataset.
-    
+
     Args:
         root: path to store test data
         n_samples: number of samples.
-        
+
     Returns:
         md5 hash of created archive
     """

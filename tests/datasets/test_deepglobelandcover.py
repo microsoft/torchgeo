@@ -24,7 +24,7 @@ class TestDeepGlobeLandCover:
         monkeypatch.setattr(DeepGlobeLandCover, "md5", md5)
         root = os.path.join("tests", "data", "deepglobelandcover")
         split = request.param
-        transforms = nn.Identity() 
+        transforms = nn.Identity()
         return DeepGlobeLandCover(root, split, transforms, checksum=True)
 
     def test_getitem(self, dataset: DeepGlobeLandCover) -> None:
