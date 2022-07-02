@@ -11,7 +11,6 @@ from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 from torch.nn.modules import Module
 
-from torchgeo.datasets import LandCoverAI
 from torchgeo.datamodules import (
     ChesapeakeCVPRDataModule,
     ETCI2021DataModule,
@@ -21,6 +20,7 @@ from torchgeo.datamodules import (
     OSCDDataModule,
     SEN12MSDataModule,
 )
+from torchgeo.datasets import LandCoverAI
 from torchgeo.trainers import SemanticSegmentationTask
 
 from .test_utils import SegmentationTestModel

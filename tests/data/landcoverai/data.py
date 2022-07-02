@@ -101,6 +101,11 @@ for i in range(2):
 with open("split.py", "w") as f:
     f.write(code)
 
+# Create output
+with open("split.py") as f:
+    split = f.read().encode("utf-8")
+    exec(split)
+
 # Compress data
 with zipfile.ZipFile(zipfilename, "w") as f:
     for file in [
@@ -117,4 +122,4 @@ with zipfile.ZipFile(zipfilename, "w") as f:
 with open(zipfilename, "rb") as f:
     print(zipfilename, hashlib.md5(f.read()).hexdigest())
 with open("split.py", "rb") as f:
-    print("split.py", hashlib.sha256(f.read().encode("utf-8")).hexdigest())
+    print("split.py", hashlib.sha256(f.read()).hexdigest())
