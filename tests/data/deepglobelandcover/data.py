@@ -31,14 +31,10 @@ def generate_test_data(root: str, n_samples: int = 3) -> str:
     test_img_dir = os.path.join(folder_path, "data", "test_data", "images")
     test_mask_dir = os.path.join(folder_path, "data", "test_data", "masks")
 
-    if not os.path.exists(train_img_dir):
-        os.makedirs(train_img_dir)
-    if not os.path.exists(train_mask_dir):
-        os.makedirs(train_mask_dir)
-    if not os.path.exists(test_img_dir):
-        os.makedirs(test_img_dir)
-    if not os.path.exists(test_mask_dir):
-        os.makedirs(test_mask_dir)
+    os.makedirs(train_img_dir, exist_ok=True)
+    os.makedirs(train_mask_dir, exist_ok=True)
+    os.makedirs(test_img_dir, exist_ok=True)
+    os.makedirs(test_mask_dir, exist_ok=True)
 
     train_ids = [1, 2, 3]
     test_ids = [8, 9, 10]
