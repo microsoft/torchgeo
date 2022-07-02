@@ -89,14 +89,11 @@ class SemanticSegmentationTask(LightningModule):
         self.save_hyperparameters()  # type: ignore[operator]
         self.hyperparams = cast(Dict[str, Any], self.hparams)
 
-        if not (
-            isinstance(kwargs["ignore_index"], int) or (kwargs["ignore_index"] is None)
-        ):
+        if not isinstance(kwargs["ignore_index"], (int, type(None))):
             raise ValueError("ignore_index must be an int or None")
         if (kwargs["ignore_index"] is not None) and (kwargs["loss"] == "jaccard"):
             warnings.warn(
-                "Warning ignore_index has no effect on training when"
-                + " loss='jaccard'",
+                "ignore_index has no effect on training when loss='jaccard'",
                 UserWarning,
             )
         self.ignore_index = kwargs["ignore_index"]
