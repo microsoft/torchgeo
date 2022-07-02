@@ -642,8 +642,7 @@ def draw_semantic_segmentation_masks(
         a version of ``image`` overlayed with the colors given by ``mask`` and
             ``colors``
     """
-    classes = torch.unique(mask)
-    classes = classes[1:]
+    classes = torch.from_numpy(np.arange(len(colors) if colors else 0, dtype=np.uint8))
     class_masks = mask == classes[:, None, None]
     img = draw_segmentation_masks(
         image=image, masks=class_masks, alpha=alpha, colors=colors
