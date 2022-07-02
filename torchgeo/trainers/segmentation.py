@@ -89,7 +89,8 @@ class SemanticSegmentationTask(LightningModule):
         self.save_hyperparameters()  # type: ignore[operator]
         self.hyperparams = cast(Dict[str, Any], self.hparams)
 
-        assert isinstance(kwargs["ignore_zeros"], bool)
+        if not isinstance(kwargs["ignore_zeros"], bool):
+            raise ValueError("`ignore_zeros` must be a bool")
         self.ignore_index = None
         if kwargs["ignore_zeros"]:
             self.ignore_index = 0

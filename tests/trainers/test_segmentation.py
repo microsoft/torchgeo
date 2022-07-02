@@ -113,3 +113,9 @@ class TestSemanticSegmentationTask:
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
             SemanticSegmentationTask(**model_kwargs)
+
+    def test_invalid_ignorezeros(self, model_kwargs: Dict[Any, Any]) -> None:
+        model_kwargs["ignore_zeros"] = 10
+        match = "`ignore_zeros` must be a bool"
+        with pytest.raises(ValueError, match=match):
+            SemanticSegmentationTask(**model_kwargs)
