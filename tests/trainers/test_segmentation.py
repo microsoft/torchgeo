@@ -11,6 +11,7 @@ from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 from torch.nn.modules import Module
 
+from torchgeo.datasets import LandCoverAI
 from torchgeo.datamodules import (
     ChesapeakeCVPRDataModule,
     ETCI2021DataModule,
@@ -51,6 +52,10 @@ class TestSemanticSegmentationTask:
     ) -> None:
         if name == "naipchesapeake":
             pytest.importorskip("zipfile_deflate64")
+
+        if name == "landcoverai":
+            sha256 = "ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b"
+            monkeypatch.setattr(LandCoverAI, "sha256", sha256)
 
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
