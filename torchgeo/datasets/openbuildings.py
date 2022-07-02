@@ -385,8 +385,11 @@ class OpenBuildings(VectorDataset):
         """
         x = json.dumps(shapely.geometry.mapping(wkt.loads(x)))
         x = json.loads(x.replace("'", '"'))
+        import fiona
+
         if parse(fiona.__version__) >= parse("1.9a1"):
             import fiona.model
+
             geom = fiona.model.Geometry(geometries=x)
         else:
             geom = x
