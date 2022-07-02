@@ -116,9 +116,9 @@ class DeepGlobeLandCover(VisionDataset):
             split_folder = "test_data"
 
         self.files = []
-        for image in os.listdir(
+        for image in sorted(os.listdir(
             os.path.join(root, self.data_root, split_folder, "images")
-        ):
+        )):
             if image.endswith(".jpg"):
                 id = image[:-8]
                 image_path = os.path.join(
