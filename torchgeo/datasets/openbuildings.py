@@ -390,7 +390,7 @@ class OpenBuildings(VectorDataset):
         if parse(fiona.__version__) >= parse("1.9a1"):
             import fiona.model
 
-            geom = fiona.model.Geometry(geometries=x)
+            geom = fiona.model.Geometry(x)
         else:
             geom = x
         transformed: Dict[str, Any] = fiona.transform.transform_geom(
