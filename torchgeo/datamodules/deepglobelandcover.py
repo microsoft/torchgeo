@@ -82,7 +82,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             self.root_dir, "test", transforms=transforms
         )
 
-    def train_dataloader(self) -> DataLoader[Any]:
+    def train_dataloader(self) -> DataLoader[Dict[str, Any]]:
         """Return a DataLoader for training.
 
         Returns:
@@ -95,7 +95,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             shuffle=True,
         )
 
-    def val_dataloader(self) -> DataLoader[Any]:
+    def val_dataloader(self) -> DataLoader[Dict[str, Any]]:
         """Return a DataLoader for validation.
 
         Returns:
@@ -108,7 +108,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             shuffle=False,
         )
 
-    def test_dataloader(self) -> DataLoader[Any]:
+    def test_dataloader(self) -> DataLoader[Dict[str, Any]]:
         """Return a DataLoader for testing.
 
         Returns:
