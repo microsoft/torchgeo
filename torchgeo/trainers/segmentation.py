@@ -78,8 +78,7 @@ class SemanticSegmentationTask(LightningModule):
             in_channels: Number of channels in input image
             num_classes: Number of semantic classes to predict
             loss: Name of the loss function
-            ignore_zeros: Boolean indicating whether to ignore the "0" class value in
-                the loss and metrics
+            ignore_index: Optional integer class index to ignore in the loss and metrics
 
         Raises:
             ValueError: if kwargs arguments are invalid
@@ -90,18 +89,17 @@ class SemanticSegmentationTask(LightningModule):
         self.save_hyperparameters()  # type: ignore[operator]
         self.hyperparams = cast(Dict[str, Any], self.hparams)
 
-        if not isinstance(kwargs["ignore_zeros"], bool):
-            raise ValueError("ignore_zeros must be a bool")
-        if kwargs["ignore_zeros"] and kwargs["loss"] == "jaccard":
+        if not (
+            isinstance(kwargs["ignore_index"], int) or (kwargs["ignore_index"] is None)
+        ):
+            raise ValueError("ignore_index must be an int or None")
+        if kwargs["ignore_index"] and kwargs["loss"] == "jaccard":
             warnings.warn(
-                "Warning ignore_zeros=True has no effect on training when"
+                "Warning ignore_index has no effect on training when"
                 + " loss='jaccard'",
                 UserWarning,
             )
-        self.ignore_index = None
-        if kwargs["ignore_zeros"]:
-            self.ignore_index = 0
-
+        self.ignore_index = kwargs["ignore_index"]
         self.config_task()
 
         self.train_metrics = MetricCollection(

@@ -11,7 +11,7 @@ experiment:
     in_channels: 3
     num_classes: 6
     num_filters: 1
-    ignore_zeros: False
+    ignore_index: null
   datamodule:
     root_dir: "tests/data/landcoverai"
     batch_size: 1
