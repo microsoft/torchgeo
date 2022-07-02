@@ -11,7 +11,7 @@ experiment:
     in_channels: 3
     num_classes: 7
     num_filters: 1
-    ignore_zeros: null
+    ignore_index: null
   datamodule:
     root_dir: "tests/data/deepglobelandcover"
     val_split_pct: 0.5
