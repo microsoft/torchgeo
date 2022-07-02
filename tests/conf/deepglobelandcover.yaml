@@ -14,5 +14,6 @@ experiment:
     ignore_zeros: False
   datamodule:
     root_dir: "tests/data/deepglobelandcover"
+    val_split_pct: 0.5
     batch_size: 1
     num_workers: 0
