@@ -3,6 +3,7 @@
 
 """Segmentation tasks."""
 
+import warnings
 from typing import Any, Dict, cast
 
 import segmentation_models_pytorch as smp
@@ -53,16 +54,15 @@ class SemanticSegmentationTask(LightningModule):
             )
 
         if self.hyperparams["loss"] == "ce":
-            self.loss = nn.CrossEntropyLoss(
-                ignore_index=-1000 if self.ignore_zeros is None else 0
-            )
+            ignore_value = -1000 if self.ignore_index is None else self.ignore_index
+            self.loss = nn.CrossEntropyLoss(ignore_index=ignore_value)
         elif self.hyperparams["loss"] == "jaccard":
             self.loss = smp.losses.JaccardLoss(
                 mode="multiclass", classes=self.hyperparams["num_classes"]
             )
         elif self.hyperparams["loss"] == "focal":
             self.loss = smp.losses.FocalLoss(
-                "multiclass", ignore_index=self.ignore_zeros, normalized=True
+                "multiclass", ignore_index=self.ignore_index, normalized=True
             )
         else:
             raise ValueError(f"Loss type '{self.hyperparams['loss']}' is not valid.")
@@ -78,7 +78,7 @@ class SemanticSegmentationTask(LightningModule):
             in_channels: Number of channels in input image
             num_classes: Number of semantic classes to predict
             loss: Name of the loss function
-            ignore_zeros: Whether to ignore the "0" class value in the loss and metrics
+            ignore_index: Optional integer class index to ignore in the loss and metrics
 
         Raises:
             ValueError: if kwargs arguments are invalid
@@ -89,20 +89,26 @@ class SemanticSegmentationTask(LightningModule):
         self.save_hyperparameters()  # type: ignore[operator]
         self.hyperparams = cast(Dict[str, Any], self.hparams)
 
-        self.ignore_zeros = None if kwargs["ignore_zeros"] else 0
-
+        if not isinstance(kwargs["ignore_index"], (int, type(None))):
+            raise ValueError("ignore_index must be an int or None")
+        if (kwargs["ignore_index"] is not None) and (kwargs["loss"] == "jaccard"):
+            warnings.warn(
+                "ignore_index has no effect on training when loss='jaccard'",
+                UserWarning,
+            )
+        self.ignore_index = kwargs["ignore_index"]
         self.config_task()
 
         self.train_metrics = MetricCollection(
             [
                 Accuracy(
                     num_classes=self.hyperparams["num_classes"],
-                    ignore_index=self.ignore_zeros,
+                    ignore_index=self.ignore_index,
                     mdmc_average="global",
                 ),
                 JaccardIndex(
                     num_classes=self.hyperparams["num_classes"],
-                    ignore_index=self.ignore_zeros,
+                    ignore_index=self.ignore_index,
                 ),
             ],
             prefix="train_",
