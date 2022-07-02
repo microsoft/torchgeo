@@ -93,7 +93,7 @@ class SemanticSegmentationTask(LightningModule):
             isinstance(kwargs["ignore_index"], int) or (kwargs["ignore_index"] is None)
         ):
             raise ValueError("ignore_index must be an int or None")
-        if kwargs["ignore_index"] and kwargs["loss"] == "jaccard":
+        if (kwargs["ignore_index"] is not None) and (kwargs["loss"] == "jaccard"):
             warnings.warn(
                 "Warning ignore_index has no effect on training when"
                 + " loss='jaccard'",

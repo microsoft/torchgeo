@@ -120,7 +120,7 @@ class TestSemanticSegmentationTask:
         with pytest.raises(ValueError, match=match):
             SemanticSegmentationTask(**model_kwargs)
 
-    def test_ignorezeros_with_jaccard(self, model_kwargs: Dict[Any, Any]) -> None:
+    def test_ignoreindex_with_jaccard(self, model_kwargs: Dict[Any, Any]) -> None:
         model_kwargs["loss"] = "jaccard"
         model_kwargs["ignore_index"] = 0
         match = "Warning ignore_index has no effect on training when loss='jaccard'"
