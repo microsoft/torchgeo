@@ -71,7 +71,7 @@ jobs:
         pip list
       if: ${{ matrix.python-version == '3.7' }}
     - name: Run pytest checks
-      run: python -X faulthandler -m pytest --cov=torchgeo --cov-report=xml
+      run: pytest --cov=torchgeo --cov-report=xml
     - name: Report coverage
       uses: codecov/codecov-action@v2
   minimum:
