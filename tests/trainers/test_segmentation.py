@@ -35,7 +35,8 @@ class TestSemanticSegmentationTask:
         "name,classname",
         [
             ("chesapeake_cvpr_5", ChesapeakeCVPRDataModule),
-            ("deepglobelandcover", DeepGlobeLandCoverDataModule),
+            ("deepglobelandcover_0", DeepGlobeLandCoverDataModule),
+            ("deepglobelandcover_5", DeepGlobeLandCoverDataModule),
             ("etci2021", ETCI2021DataModule),
             ("inria", InriaAerialImageLabelingDataModule),
             ("landcoverai", LandCoverAIDataModule),
