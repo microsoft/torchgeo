@@ -1,6 +1,3 @@
-# This file is not managed by dependabot. It documents the minimum version of our
-# dependencies that is supported.
-
 # setup
 setuptools==42.0.0
 
