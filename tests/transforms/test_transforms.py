@@ -11,9 +11,6 @@ from torch import Tensor
 
 from torchgeo.transforms import indices, transforms
 
-# Tests require newer version of Kornia for newer bounding box behavior
-pytest.importorskip("kornia", minversion="0.6.3")
-
 
 @pytest.fixture
 def batch_gray() -> Dict[str, Tensor]:

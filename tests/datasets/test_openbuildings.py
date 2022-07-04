@@ -24,7 +24,7 @@ from torchgeo.datasets import (
     UnionDataset,
 )
 
-pytest.importorskip("pandas", minversion="0.19.1")
+pytest.importorskip("pandas", minversion="0.23.2")
 
 
 class TestOpenBuildings:
@@ -42,7 +42,7 @@ class TestOpenBuildings:
         md5s = {"000_buildings.csv.gz": "20aeeec9d45a0ce4d772a26e0bcbc25f"}
 
         monkeypatch.setattr(OpenBuildings, "md5s", md5s)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return OpenBuildings(root=root, transforms=transforms)
 
     @pytest.fixture(params=["pandas"])

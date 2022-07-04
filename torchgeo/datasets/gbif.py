@@ -58,7 +58,7 @@ def _disambiguate_timestamps(
 class GBIF(GeoDataset):
     """Dataset for the Global Biodiversity Information Facility.
 
-    `GBIF <https://www.gbif.org/>`_, the Global Biodiversity Information Facility,
+    `GBIF <https://www.gbif.org/>`__, the Global Biodiversity Information Facility,
     is an international network and data infrastructure funded by the world's
     governments and aimed at providing anyone, anywhere, open access to data about
     all types of life on Earth.

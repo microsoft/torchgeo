@@ -19,4 +19,4 @@ documentation:
 - docs/**
 testing:
 - tests/**
-- .github/**
+- .github/workflows/**

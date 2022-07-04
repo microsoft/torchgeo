@@ -20,7 +20,7 @@ from .utils import download_radiant_mlhub_dataset, extract_archive
 class NASAMarineDebris(VisionDataset):
     """NASA Marine Debris dataset.
 
-    The `NASA Marine Debris <https://mlhub.earth/data/nasa_marine_debris>`_
+    The `NASA Marine Debris <https://mlhub.earth/data/nasa_marine_debris>`__
     dataset is a dataset for detection of floating marine debris in satellite imagery.
 
     Dataset features:

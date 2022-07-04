@@ -21,7 +21,7 @@ experiment:
     learning_rate_schedule_patience: 6
     in_channels: 3
     num_classes: 2
-    ignore_zeros: True  # class 0 not used for scoring
+    ignore_index: 0  # class 0 not used for scoring
   datamodule:
       root_dir: "data/inria"
       batch_size: 2

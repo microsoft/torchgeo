@@ -27,6 +27,7 @@ from .cms_mangrove_canopy import CMSGlobalMangroveCanopy
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCycloneWindEstimation
+from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
 from .eddmaps import EDDMapS
 from .enviroatlas import EnviroAtlas
@@ -149,6 +150,7 @@ __all__ = (
     "COWCCounting",
     "COWCDetection",
     "CV4AKenyaCropType",
+    "DeepGlobeLandCover",
     "DFC2022",
     "EnviroAtlas",
     "ETCI2021",

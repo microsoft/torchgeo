@@ -17,7 +17,7 @@ from .utils import download_url, extract_archive
 class RESISC45(VisionClassificationDataset):
     """RESISC45 dataset.
 
-    The `RESISC45 <http://www.escience.cn/people/JunweiHan/NWPU-RESISC45.html>`_
+    The `RESISC45 <http://www.escience.cn/people/JunweiHan/NWPU-RESISC45.html>`__
     dataset is a dataset for remote sensing image scene classification.
 
     Dataset features:

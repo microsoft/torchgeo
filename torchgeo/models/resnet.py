@@ -66,7 +66,7 @@ def _resnet(
 
     # Load pretrained weights
     if pretrained:
-        state_dict = load_state_dict_from_url(  # type: ignore[no-untyped-call]
+        state_dict = load_state_dict_from_url(
             MODEL_URLS[sensor][bands][arch], progress=progress
         )
         model.load_state_dict(state_dict)

@@ -9,7 +9,9 @@ from torch import Tensor
 
 from torchgeo.transforms import (
     AppendBNDVI,
+    AppendGBNDVI,
     AppendGNDVI,
+    AppendGRNDVI,
     AppendNBR,
     AppendNDBI,
     AppendNDRE,
@@ -17,6 +19,7 @@ from torchgeo.transforms import (
     AppendNDVI,
     AppendNDWI,
     AppendNormalizedDifferenceIndex,
+    AppendRBNDVI,
     AppendSWI,
     AppendTriBandNormalizedDifferenceIndex,
 )
@@ -79,5 +82,15 @@ def test_append_normalized_difference_indices(
 ) -> None:
     c, h, w = sample["image"].shape
     tr = index(0, 0)
+    output = tr(sample)
+    assert output["image"].shape == (c + 1, h, w)
+
+
+@pytest.mark.parametrize("index", [AppendGBNDVI, AppendGRNDVI, AppendRBNDVI])
+def test_append_tri_band_normalized_difference_indices(
+    sample: Dict[str, Tensor], index: AppendTriBandNormalizedDifferenceIndex
+) -> None:
+    c, h, w = sample["image"].shape
+    tr = index(0, 0, 0)
     output = tr(sample)
     assert output["image"].shape == (c + 1, h, w)

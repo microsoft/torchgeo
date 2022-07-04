@@ -36,7 +36,7 @@ from .utils import (
 class SpaceNet(VisionDataset, abc.ABC):
     """Abstract base class for the SpaceNet datasets.
 
-    The `SpaceNet <https://spacenet.ai/datasets/>`_ datasets are a set of
+    The `SpaceNet <https://spacenet.ai/datasets/>`__ datasets are a set of
     datasets that all together contain >11M building footprints and ~20,000 km
     of road labels mapped over high-resolution satellite imagery obtained from
     a variety of sensors such as Worldview-2, Worldview-3 and Dove.

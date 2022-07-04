@@ -27,7 +27,7 @@ class ReforesTree(VisionDataset):
 
     Dataset features:
 
-    * 105 high resolution RGB drone images at 2cm/pixel of size 4000x4000px
+    * 100 high resolution RGB drone images at 2cm/pixel of size 4000x4000px
     * more than 4600 tree crown box annotations
     * tree crown matched with field measurements of diameter at breast height (DBH),
       and computed AGB and carbon values
@@ -54,7 +54,13 @@ class ReforesTree(VisionDataset):
     """
 
     classes = ["other", "banana", "cacao", "citrus", "fruit", "timber"]
-    url = "https://uc62e9acc213a8f56919a7a7add8.dl.dropboxusercontent.com/zip_download_get/BKn4_obEfo0iR6UUpOqBMp9K0ohkldQtJTUN802va4SgJvdOsN36ap5fcbbxFLbhPMHoI1oJBrkjwJWyYkcBE-SxCeFPTZ0a-gOBozXL7CfaKg?_download_id=60050202761817577232630466548949000707876929025297308895167120694292&_notify_domain=www.dropbox.com&dl=1"
+    url = (
+        "https://uc62e9acc213a8f56919a7a7add8.dl.dropboxusercontent.com/"
+        "zip_download_get/BKn4_obEfo0iR6UUpOqBMp9K0ohkldQtJTUN802va4SgJvd"
+        "OsN36ap5fcbbxFLbhPMHoI1oJBrkjwJWyYkcBE-SxCeFPTZ0a-gOBozXL7CfaKg?"
+        "_download_id=600502027618175772326304665489490007078769290252973"
+        "08895167120694292&_notify_domain=www.dropbox.com&dl=1"
+    )
 
     md5 = "f6a4a1d8207aeaa5fbab7b21b683a302"
     zipfilename = "data.zip"

@@ -35,7 +35,7 @@ class TestReforesTree:
         monkeypatch.setattr(ReforesTree, "url", url)
         monkeypatch.setattr(ReforesTree, "md5", md5)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return ReforesTree(
             root=root, transforms=transforms, download=True, checksum=True
         )

@@ -53,7 +53,7 @@ class TestUCMerced:
         )
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return UCMerced(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: UCMerced) -> None:

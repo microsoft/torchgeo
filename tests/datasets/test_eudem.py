@@ -24,7 +24,7 @@ class TestEUDEM:
         zipfile = os.path.join("tests", "data", "eudem", "eu_dem_v11_E30N10.zip")
         shutil.copy(zipfile, tmp_path)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return EUDEM(root, transforms=transforms)
 
     def test_getitem(self, dataset: EUDEM) -> None:

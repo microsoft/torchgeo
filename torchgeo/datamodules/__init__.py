@@ -7,6 +7,7 @@ from .bigearthnet import BigEarthNetDataModule
 from .chesapeake import ChesapeakeCVPRDataModule
 from .cowc import COWCCountingDataModule
 from .cyclone import CycloneDataModule
+from .deepglobelandcover import DeepGlobeLandCoverDataModule
 from .etci2021 import ETCI2021DataModule
 from .eurosat import EuroSATDataModule
 from .fair1m import FAIR1MDataModule
@@ -21,6 +22,7 @@ from .resisc45 import RESISC45DataModule
 from .sen12ms import SEN12MSDataModule
 from .so2sat import So2SatDataModule
 from .ucmerced import UCMercedDataModule
+from .usavars import USAVarsDataModule
 from .vaihingen import Vaihingen2DDataModule
 from .xview import XView2DataModule
 
@@ -31,6 +33,7 @@ __all__ = (
     # VisionDataset
     "BigEarthNetDataModule",
     "COWCCountingDataModule",
+    "DeepGlobeLandCoverDataModule",
     "ETCI2021DataModule",
     "EuroSATDataModule",
     "FAIR1MDataModule",
@@ -45,6 +48,7 @@ __all__ = (
     "So2SatDataModule",
     "CycloneDataModule",
     "UCMercedDataModule",
+    "USAVarsDataModule",
     "Vaihingen2DDataModule",
     "XView2DataModule",
 )

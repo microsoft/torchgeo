@@ -12,6 +12,12 @@ Geospatial Datasets
 
 :class:`GeoDataset` is designed for datasets that contain geospatial information, like latitude, longitude, coordinate system, and projection. Datasets containing this kind of information can be combined using :class:`IntersectionDataset` and :class:`UnionDataset`.
 
+.. csv-table::
+   :widths: 30 15 20 20 15
+   :header-rows: 1
+   :align: center
+   :file: geo_datasets.csv
+
 Aboveground Woody Biomass
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -125,6 +131,12 @@ Non-geospatial Datasets
 
 :class:`VisionDataset` is designed for datasets that lack geospatial information. These datasets can still be combined using :class:`ConcatDataset <torch.utils.data.ConcatDataset>`.
 
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection
+   :widths: 15 7 15 12 11 12 15 13
+   :header-rows: 1
+   :align: center
+   :file: non_geo_datasets.csv
+
 ADVANCE
 ^^^^^^^
 
@@ -151,6 +163,11 @@ Kenya Crop Type
 ^^^^^^^^^^^^^^^
 
 .. autoclass:: CV4AKenyaCropType
+
+Deep Globe Land Cover Challenge
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: DeepGlobeLandCover
 
 DFC2022
 ^^^^^^^

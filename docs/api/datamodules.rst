@@ -29,6 +29,11 @@ COWC
 
 .. autoclass:: COWCCountingDataModule
 
+Deep Globe Land Cover Challenge
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: DeepGlobeLandCoverDataModule
+
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -98,6 +103,11 @@ UC Merced
 ^^^^^^^^^
 
 .. autoclass:: UCMercedDataModule
+
+USAVars
+^^^^^^^
+
+.. autoclass:: USAVarsDataModule
 
 Vaihingen
 ^^^^^^^^^

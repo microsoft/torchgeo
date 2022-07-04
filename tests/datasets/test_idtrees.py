@@ -19,7 +19,7 @@ from _pytest.monkeypatch import MonkeyPatch
 import torchgeo.datasets.utils
 from torchgeo.datasets import IDTReeS
 
-pytest.importorskip("pandas", minversion="0.19.1")
+pytest.importorskip("pandas", minversion="0.23.2")
 pytest.importorskip("laspy", minversion="2")
 
 
@@ -49,7 +49,7 @@ class TestIDTReeS:
         split, task = request.param
         monkeypatch.setattr(IDTReeS, "metadata", metadata)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return IDTReeS(root, split, task, transforms, download=True, checksum=True)
 
     @pytest.fixture(params=["pandas", "laspy", "open3d"])

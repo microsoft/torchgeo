@@ -21,7 +21,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
-        pip install -r requirements.txt
+        pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
         pip list
     - name: Run mypy checks
       run: mypy .
@@ -53,16 +53,45 @@ jobs:
         python-version: ${{ matrix.python-version }}
         channels: conda-forge
         channel-priority: strict
-      if: ${{ runner.os == 'Windows' }}
+      if: ${{ runner.os == 'Windows' && matrix.python-version == '3.7' }}
     - name: Install conda dependencies (Windows)
       run: |
-        conda install 'fiona==1.8.21' 'rasterio==1.2.10'
+        conda install 'rasterio==1.2.10'
         conda list
         conda info
-      if: ${{ runner.os == 'Windows' }}
+      if: ${{ runner.os == 'Windows' && matrix.python-version == '3.7' }}
+    - name: Install pip dependencies (3.8+)
+      run: |
+        pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
+        pip list
+      if: ${{ matrix.python-version != '3.7' }}
+    - name: Install pip dependencies (3.7)
+      run: |
+        pip install -r requirements/required.old -r requirements/datasets.old -r requirements/tests.txt
+        pip list
+      if: ${{ matrix.python-version == '3.7' }}
+    - name: Run pytest checks
+      run: pytest --cov=torchgeo --cov-report=xml
+    - name: Report coverage
+      uses: codecov/codecov-action@v2
+  minimum:
+    name: minimum
+    runs-on: ubuntu-latest
+    env:
+      MPLBACKEND: Agg
+    steps:
+    - name: Clone repo
+      uses: actions/checkout@v2
+    - name: Set up python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.7'
+    - name: Install apt dependencies (Linux)
+      run: sudo apt-get install libgeos-dev libhdf5-dev unrar
     - name: Install pip dependencies
       run: |
-        pip install -r requirements.txt
+        pip install cython numpy==1.17.2  # needed by pycocotools
+        pip install -r requirements/min.old
         pip list
     - name: Run pytest checks
       run: pytest --cov=torchgeo --cov-report=xml

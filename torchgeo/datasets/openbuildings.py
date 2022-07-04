@@ -16,6 +16,7 @@ import rasterio
 import shapely
 import shapely.wkt as wkt
 import torch
+from packaging.version import parse
 from rasterio.crs import CRS
 from rtree.index import Index, Property
 
@@ -27,7 +28,7 @@ class OpenBuildings(VectorDataset):
     r"""Open Buildings dataset.
 
     The `Open Buildings
-    <https://sites.research.google/open-buildings/#download>`_ dataset
+    <https://sites.research.google/open-buildings/#download>`__ dataset
     consists of computer generated building detections across the African continent.
 
     Dataset features:
@@ -384,8 +385,16 @@ class OpenBuildings(VectorDataset):
         """
         x = json.dumps(shapely.geometry.mapping(wkt.loads(x)))
         x = json.loads(x.replace("'", '"'))
+        import fiona
+
+        if parse(fiona.__version__) >= parse("1.9a1"):
+            import fiona.model
+
+            geom = fiona.model.Geometry(**x)
+        else:
+            geom = x
         transformed: Dict[str, Any] = fiona.transform.transform_geom(
-            self._source_crs.to_dict(), self._crs.to_dict(), x
+            self._source_crs.to_dict(), self._crs.to_dict(), geom
         )
         return transformed
 

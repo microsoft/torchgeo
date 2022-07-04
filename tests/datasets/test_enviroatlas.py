@@ -51,7 +51,7 @@ class TestEnviroAtlas:
             ["pittsburgh_pa-2010_1m-train_tiles-debuffered", "spatial_index.geojson"],
         )
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return EnviroAtlas(
             root,
             layers=request.param[0],

@@ -17,6 +17,6 @@ preferred-citation:
     given-names: "Arindam"
   journal: "arXiv preprint arXiv:2111.08872"
   month: 11
-  title: "TorchGeo: deep learning with geospatial data"
+  title: "TorchGeo: Deep Learning With Geospatial Data"
   url: "https://github.com/microsoft/torchgeo"
   year: 2021

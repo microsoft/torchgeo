@@ -48,14 +48,14 @@ class ChangeMixin(Module):
         layers: List[Module] = [
             nn.modules.Sequential(
                 nn.modules.Conv2d(in_channels, inner_channels, 3, 1, 1),
-                nn.modules.BatchNorm2d(inner_channels),  # type: ignore[no-untyped-call]
+                nn.modules.BatchNorm2d(inner_channels),
                 nn.modules.ReLU(True),
             )
         ]
         layers += [
             nn.modules.Sequential(
                 nn.modules.Conv2d(inner_channels, inner_channels, 3, 1, 1),
-                nn.modules.BatchNorm2d(inner_channels),  # type: ignore[no-untyped-call]
+                nn.modules.BatchNorm2d(inner_channels),
                 nn.modules.ReLU(True),
             )
             for _ in range(num_convs - 1)
@@ -82,9 +82,7 @@ class ChangeMixin(Module):
         t2t1 = torch.cat([bi_feature[:, 1, :, :, :], bi_feature[:, 0, :, :, :]], dim=1)
 
         c1221 = self.convs(torch.cat([t1t2, t2t1], dim=0))
-        c12, c21 = torch.split(
-            c1221, batch_size, dim=0
-        )  # type: ignore[no-untyped-call]
+        c12, c21 = torch.split(c1221, batch_size, dim=0)
         return [c12, c21]
 
 
@@ -209,9 +207,7 @@ class ChangeStarFarSeg(ChangeStar):
             backbone=backbone, classes=classes, backbone_pretrained=backbone_pretrained
         )
         seg_classifier: Module = model.decoder.classifier
-        model.decoder.classifier = (
-            nn.modules.Identity()  # type: ignore[no-untyped-call, assignment]
-        )
+        model.decoder.classifier = nn.modules.Identity()  # type: ignore[assignment]
 
         super().__init__(
             dense_feature_extractor=model,

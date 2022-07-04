@@ -32,7 +32,7 @@ class TestLEVIRCDPlus:
         monkeypatch.setattr(LEVIRCDPlus, "url", url)
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return LEVIRCDPlus(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: LEVIRCDPlus) -> None:
