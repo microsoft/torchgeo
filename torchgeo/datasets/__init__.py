@@ -28,7 +28,9 @@ from .cms_mangrove_canopy import CMSGlobalMangroveCanopy
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCycloneWindEstimation
+from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
+from .eddmaps import EDDMapS
 from .enviroatlas import EnviroAtlas
 from .esri2020 import Esri2020
 from .etci2021 import ETCI2021
@@ -36,6 +38,7 @@ from .eudem import EUDEM
 from .eurosat import EuroSAT
 from .fair1m import FAIR1M
 from .forestdamage import ForestDamage
+from .gbif import GBIF
 from .geo import (
     GeoDataset,
     IntersectionDataset,
@@ -48,6 +51,7 @@ from .geo import (
 from .gid15 import GID15
 from .globbiomass import GlobBiomass
 from .idtrees import IDTReeS
+from .inaturalist import INaturalist
 from .inria import InriaAerialImageLabeling
 from .landcoverai import LandCoverAI
 from .landsat import (
@@ -118,9 +122,12 @@ __all__ = (
     "ChesapeakeCVPR",
     "CloudCoverDetection",
     "CMSGlobalMangroveCanopy",
+    "EDDMapS",
     "Esri2020",
     "EUDEM",
+    "GBIF",
     "GlobBiomass",
+    "INaturalist",
     "Landsat",
     "Landsat1",
     "Landsat2",
@@ -144,6 +151,7 @@ __all__ = (
     "COWCCounting",
     "COWCDetection",
     "CV4AKenyaCropType",
+    "DeepGlobeLandCover",
     "DFC2022",
     "EnviroAtlas",
     "ETCI2021",

@@ -23,7 +23,7 @@ from .utils import download_url, extract_archive, working_dir
 class LandCoverAI(VisionDataset):
     r"""LandCover.ai dataset.
 
-    The `LandCover.ai <https://landcover.ai/>`_ (Land Cover from Aerial Imagery)
+    The `LandCover.ai <https://landcover.ai/>`__ (Land Cover from Aerial Imagery)
     dataset is a dataset for automatic mapping of buildings, woodlands, water and
     roads from aerial images. This implementation is specifically for Version 1 of
     Landcover.ai.
@@ -60,7 +60,7 @@ class LandCoverAI(VisionDataset):
          the train/val/test split
     """
 
-    url = "https://landcover.ai/download/landcover.ai.v1.zip"
+    url = "https://landcover.ai.linuxpolska.com/download/landcover.ai.v1.zip"
     filename = "landcover.ai.v1.zip"
     md5 = "3268c89070e8734b4e91d531c0617e03"
     sha256 = "15ee4ca9e3fd187957addfa8f0d74ac31bc928a966f76926e11b3c33ea76daa1"

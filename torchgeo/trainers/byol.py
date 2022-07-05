@@ -8,16 +8,16 @@ from typing import Any, Callable, Dict, Optional, Tuple, cast
 
 import torch
 import torch.nn.functional as F
+import torchvision
 from kornia import augmentation as K
 from kornia import filters
 from kornia.geometry import transform as KorniaTransform
+from packaging.version import parse
 from pytorch_lightning.core.lightning import LightningModule
 from torch import Tensor, optim
 from torch.autograd import Variable
 from torch.nn.modules import BatchNorm1d, Conv2d, Linear, Module, ReLU, Sequential
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torchvision.models import resnet18
-from torchvision.models.resnet import resnet50
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -126,7 +126,7 @@ class MLP(Module):
         super().__init__()
         self.mlp = Sequential(
             Linear(dim, hidden_size),
-            BatchNorm1d(hidden_size),  # type: ignore[no-untyped-call]
+            BatchNorm1d(hidden_size),
             ReLU(inplace=True),
             Linear(hidden_size, projection_size),
         )
@@ -311,16 +311,21 @@ class BYOLTask(LightningModule):
         """Configures the task based on kwargs parameters passed to the constructor."""
         in_channels = self.hyperparams["in_channels"]
         pretrained = self.hyperparams["imagenet_pretraining"]
-        encoder = None
+        encoder_name = self.hyperparams["encoder_name"]
 
-        if self.hyperparams["encoder_name"] == "resnet18":
-            encoder = resnet18(pretrained=pretrained)
-        elif self.hyperparams["encoder_name"] == "resnet50":
-            encoder = resnet50(pretrained=pretrained)
+        if parse(torchvision.__version__) >= parse("0.12"):
+            if pretrained:
+                kwargs = {
+                    "weights": getattr(
+                        torchvision.models, f"ResNet{encoder_name[6:]}_Weights"
+                    ).DEFAULT
+                }
+            else:
+                kwargs = {"weights": None}
         else:
-            raise ValueError(
-                f"Encoder type '{self.hyperparams['encoder_name']}' is not valid."
-            )
+            kwargs = {"pretrained": pretrained}
+
+        encoder = getattr(torchvision.models, encoder_name)(**kwargs)
 
         layer = encoder.conv1
         # Creating new Conv2d layer
@@ -347,7 +352,7 @@ class BYOLTask(LightningModule):
             )
 
         encoder.conv1 = new_layer
-        self.model = BYOL(encoder, image_size=(256, 256))
+        self.model = BYOL(encoder, in_channels=in_channels, image_size=(256, 256))
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize a LightningModule for pre-training a model with BYOL.

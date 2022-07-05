@@ -43,7 +43,7 @@ class TestCV4AKenyaCropType:
         )
         monkeypatch.setattr(CV4AKenyaCropType, "dates", ["20190606"])
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return CV4AKenyaCropType(
             root,
             transforms=transforms,

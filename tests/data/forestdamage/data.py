@@ -24,6 +24,7 @@ PATHS = {
         "Bebehojd_20190527/Annotations/B01_0004.xml",
         "Bebehojd_20190527/Annotations/B01_0005.xml",
     ],
+    "labels": [True, False],
 }
 
 
@@ -38,15 +39,17 @@ def create_annotation(path: str) -> None:
     ET.SubElement(size, "height").text = str(SIZE)
     ET.SubElement(size, "depth").text = str(3)
 
-    annotation = ET.SubElement(root, "object")
+    for label in PATHS["labels"]:
+        annotation = ET.SubElement(root, "object")
 
-    ET.SubElement(annotation, "damage").text = "other"
+        if label:
+            ET.SubElement(annotation, "damage").text = "other"
 
-    bbox = ET.SubElement(annotation, "bndbox")
-    ET.SubElement(bbox, "xmin").text = str(0 + int(SIZE / 4))
-    ET.SubElement(bbox, "ymin").text = str(0 + int(SIZE / 4))
-    ET.SubElement(bbox, "xmax").text = str(SIZE - int(SIZE / 4))
-    ET.SubElement(bbox, "ymax").text = str(SIZE - int(SIZE / 4))
+        bbox = ET.SubElement(annotation, "bndbox")
+        ET.SubElement(bbox, "xmin").text = str(0 + int(SIZE / 4))
+        ET.SubElement(bbox, "ymin").text = str(0 + int(SIZE / 4))
+        ET.SubElement(bbox, "xmax").text = str(SIZE - int(SIZE / 4))
+        ET.SubElement(bbox, "ymax").text = str(SIZE - int(SIZE / 4))
 
     tree = ET.ElementTree(root)
     tree.write(path)

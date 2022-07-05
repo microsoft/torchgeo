@@ -51,7 +51,7 @@ class TestEuroSAT:
         )
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return EuroSAT(
             root=root, split=split, transforms=transforms, download=True, checksum=True
         )

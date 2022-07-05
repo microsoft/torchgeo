@@ -15,7 +15,7 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from torchgeo.datasets import So2Sat
 
-pytest.importorskip("h5py")
+pytest.importorskip("h5py", minversion="2.6")
 
 
 class TestSo2Sat:
@@ -30,7 +30,7 @@ class TestSo2Sat:
         monkeypatch.setattr(So2Sat, "md5s", md5s)
         root = os.path.join("tests", "data", "so2sat")
         split = request.param
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return So2Sat(root=root, split=split, transforms=transforms, checksum=True)
 
     @pytest.fixture

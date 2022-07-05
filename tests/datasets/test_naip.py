@@ -4,10 +4,10 @@
 import os
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import NAIP, BoundingBox, IntersectionDataset, UnionDataset
@@ -15,9 +15,9 @@ from torchgeo.datasets import NAIP, BoundingBox, IntersectionDataset, UnionDatas
 
 class TestNAIP:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch) -> NAIP:
+    def dataset(self) -> NAIP:
         root = os.path.join("tests", "data", "naip")
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return NAIP(root, transforms=transforms)
 
     def test_getitem(self, dataset: NAIP) -> None:
@@ -33,6 +33,12 @@ class TestNAIP:
     def test_or(self, dataset: NAIP) -> None:
         ds = dataset | dataset
         assert isinstance(ds, UnionDataset)
+
+    def test_plot(self, dataset: NAIP) -> None:
+        query = dataset.bounds
+        x = dataset[query]
+        dataset.plot(x, suptitle="Test")
+        plt.close()
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="No NAIP data was found in "):

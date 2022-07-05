@@ -22,6 +22,8 @@ labels = [
     "housing",
     "roads",
 ]
+splits = ["train", "val", "test"]
+
 SIZE = 3
 
 
@@ -47,9 +49,12 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
 # Remove old data
 filename = f"{data_dir}.zip"
 csvs = glob.glob("*.csv")
+txts = glob.glob("*.txt")
 
 for csv in csvs:
     os.remove(csv)
+for txt in txts:
+    os.remove(txt)
 if os.path.exists(filename):
     os.remove(filename)
 if os.path.exists(data_dir):
@@ -66,6 +71,17 @@ fake_vals = [["0,0", 0.0, 0.0, 0.0], ["0,1", 0.1, 0.1, 1.0]]
 for lab, cols in zip(labels, columns):
     df = pd.DataFrame(fake_vals, columns=cols)
     df.to_csv(lab + ".csv")
+
+# Create splits:
+with open("train_split.txt", "w") as f:
+    f.write("tile_0,0.tif" + "\n")
+    f.write("tile_0,0.tif" + "\n")
+    f.write("tile_0,0.tif" + "\n")
+with open("val_split.txt", "w") as f:
+    f.write("tile_0,1.tif" + "\n")
+    f.write("tile_0,1.tif" + "\n")
+with open("test_split.txt", "w") as f:
+    f.write("tile_0,0.tif" + "\n")
 
 # Compress data
 shutil.make_archive(data_dir, "zip", ".", data_dir)

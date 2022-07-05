@@ -32,7 +32,7 @@ class TestGID15:
         monkeypatch.setattr(GID15, "url", url)
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return GID15(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: GID15) -> None:

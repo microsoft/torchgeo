@@ -180,8 +180,13 @@ class SeasonalContrastS2(VisionDataset):
                     # slowdown here from converting to/from a PIL Image just to resize.
                     # https://gist.github.com/calebrob6/748045ac8d844154067b2eefa47de92f
                     pil_image = Image.fromarray(band_data)
+                    # Moved in PIL 9.1.0
+                    try:
+                        resample = Image.Resampling.BILINEAR
+                    except AttributeError:
+                        resample = Image.BILINEAR
                     band_data = np.array(
-                        pil_image.resize((264, 264), resample=Image.BILINEAR)
+                        pil_image.resize((264, 264), resample=resample)
                     )
                 all_data.append(band_data)
         image = torch.from_numpy(np.stack(all_data, axis=0))

@@ -27,12 +27,12 @@ class TestForestDamage:
 
         url = os.path.join(data_dir, "Data_Set_Larch_Casebearer.zip")
 
-        md5 = "a6adc19879c1021cc1ba8d424e19c9e0"
+        md5 = "52d82ac38899e6e6bb40aacda643ee15"
 
         monkeypatch.setattr(ForestDamage, "url", url)
         monkeypatch.setattr(ForestDamage, "md5", md5)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return ForestDamage(
             root=root, transforms=transforms, download=True, checksum=True
         )

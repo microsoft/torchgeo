@@ -1,49 +1,50 @@
 name: torchgeo
 channels:
+  - pytorch  # for pytorch and torchvision.
   - conda-forge
+  - open3d-admin  # for open3d
 dependencies:
-  - cudatoolkit
-  - einops
-  - fiona>=1.5
-  - h5py
-  - numpy
+  - einops>=0.3
+  - fiona>=1.8
+  - h5py>=2.6
+  - numpy>=1.17.2
+  - open3d>=0.11.2
   - pip
-  - pycocotools
+  - pycocotools>=2
   - pyproj>=2.2
   - python>=3.7
-  - pytorch>=1.7
+  - pytorch>=1.9
   - rarfile>=3
-  - rasterio>=1.0.16
+  - rasterio>=1.0.20
   - shapely>=1.3
   - torchvision>=0.10
   - pip:
-    - black>=21.4b0
+    - black[jupyter]>=21.8
     - flake8>=3.8
     - ipywidgets>=7
     - isort[colors]>=5.8
-    - jupyterlab
-    - kornia>=0.5.11
-    - laspy>=2.0.0
+    - kornia>=0.6.4
+    - laspy>=2
     - mypy>=0.900
     - nbmake>=0.1
     - nbsphinx>=0.8.5
     - omegaconf>=2.1
-    - open3d>=0.11.2
-    - opencv-python
+    - opencv-python>=3.4.2.17
+    - packaging>=17
     - pandas>=0.23.2
-    - pillow>=2.9
+    - pillow>=6.2
     - pydocstyle[toml]>=6.1
-    - pytest>=6
+    - pytest>=6.1.2
     - pytest-cov>=2.4
-    - pytorch-lightning>=1.3
+    - pytorch-lightning>=1.5.1
     - git+https://github.com/pytorch/pytorch_sphinx_theme
     - radiant-mlhub>=0.2.1
-    - rtree>=0.5
-    - scikit-learn>=0.18
-    - scipy>=0.9
+    - rtree>=1
+    - scikit-learn>=0.21
+    - scipy>=1.2
     - segmentation-models-pytorch>=0.2
     - setuptools>=42
     - sphinx>=4
-    - timm>=0.2.1
+    - timm>=0.4.12
     - torchmetrics>=0.7
     - zipfile-deflate64>=0.2

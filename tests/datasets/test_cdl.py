@@ -36,7 +36,7 @@ class TestCDL:
         monkeypatch.setattr(CDL, "url", url)
         monkeypatch.setattr(plt, "show", lambda *args: None)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return CDL(root, transforms=transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: CDL) -> None:

@@ -9,7 +9,7 @@ experiment:
     learning_rate_schedule_patience: 6
     in_channels: 7
     num_classes: 2
-    ignore_zeros: True
+    ignore_index: 0
   datamodule:
     root_dir: "data/etci2021"
     batch_size: 32

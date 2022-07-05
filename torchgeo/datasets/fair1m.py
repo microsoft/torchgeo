@@ -53,7 +53,7 @@ def parse_pascal_voc(path: str) -> Dict[str, Any]:
 class FAIR1M(VisionDataset):
     """FAIR1M dataset.
 
-    The `FAIR1M <http://gaofen-challenge.com/benchmark>`_
+    The `FAIR1M <http://gaofen-challenge.com/benchmark>`__
     dataset is a dataset for remote sensing fine-grained oriented object detection.
 
     Dataset features:

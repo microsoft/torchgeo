@@ -19,7 +19,7 @@ from .utils import check_integrity, percentile_normalization
 class SEN12MS(VisionDataset):
     """SEN12MS dataset.
 
-    The `SEN12MS <https://doi.org/10.14459/2019mp1474000>`_ dataset contains
+    The `SEN12MS <https://doi.org/10.14459/2019mp1474000>`__ dataset contains
     180,662 patch triplets of corresponding Sentinel-1 dual-pol SAR data,
     Sentinel-2 multi-spectral images, and MODIS-derived land cover maps.
     The patches are distributed across the land masses of the Earth and
@@ -266,7 +266,9 @@ class SEN12MS(VisionDataset):
                 "{}_{}_{}_{}_{}".format(*parts),
             )
         ) as f:
-            array = f.read().astype(np.int32)
+            array = f.read()
+            if array.dtype == np.uint16:
+                array = array.astype(np.int32)
             tensor = torch.from_numpy(array)
             return tensor
 

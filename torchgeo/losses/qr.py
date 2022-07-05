@@ -1,7 +1,5 @@
 """Loss functions for learing on the prior."""
 
-from typing import cast
-
 import torch
 import torch.nn.functional as F
 from torch.nn.modules import Module
@@ -34,12 +32,10 @@ class QRLoss(Module):
         q_bar = q.mean(dim=(0, 2, 3))
         qbar_log_S = (q_bar * torch.log(q_bar)).sum()
 
-        q_log_p = torch.einsum(  # type: ignore[no-untyped-call]
-            "bcxy,bcxy->bxy", q, torch.log(target)
-        ).mean()
+        q_log_p = torch.einsum("bcxy,bcxy->bxy", q, torch.log(target)).mean()
 
         loss = qbar_log_S - q_log_p
-        return cast(torch.Tensor, loss)
+        return loss
 
 
 class RQLoss(Module):
@@ -69,8 +65,6 @@ class RQLoss(Module):
         ).clamp_min(1e-12).expand_as(q)
         r = F.normalize(z * target, p=1, dim=1)
 
-        loss = torch.einsum(  # type: ignore[no-untyped-call]
-            "bcxy,bcxy->bxy", r, torch.log(r) - torch.log(q)
-        ).mean()
+        loss = torch.einsum("bcxy,bcxy->bxy", r, torch.log(r) - torch.log(q)).mean()
 
-        return cast(torch.Tensor, loss)
+        return loss

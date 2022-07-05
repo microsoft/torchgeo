@@ -18,7 +18,7 @@ from torch.utils.data import ConcatDataset
 import torchgeo.datasets.utils
 from torchgeo.datasets import USAVars
 
-pytest.importorskip("pandas", minversion="0.19.1")
+pytest.importorskip("pandas", minversion="0.23.2")
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -26,7 +26,16 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestUSAVars:
-    @pytest.fixture()
+    @pytest.fixture(
+        params=zip(
+            ["train", "val", "test"],
+            [
+                ["elevation", "population", "treecover"],
+                ["elevation", "population"],
+                ["treecover"],
+            ],
+        )
+    )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> USAVars:
@@ -50,21 +59,49 @@ class TestUSAVars:
         }
         monkeypatch.setattr(USAVars, "label_urls", label_urls)
 
-        root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        split_metadata = {
+            "train": {
+                "url": os.path.join("tests", "data", "usavars", "train_split.txt"),
+                "filename": "train_split.txt",
+                "md5": "b94f3f6f63110b253779b65bc31d91b5",
+            },
+            "val": {
+                "url": os.path.join("tests", "data", "usavars", "val_split.txt"),
+                "filename": "val_split.txt",
+                "md5": "e39aa54b646c4c45921fcc9765d5a708",
+            },
+            "test": {
+                "url": os.path.join("tests", "data", "usavars", "test_split.txt"),
+                "filename": "test_split.txt",
+                "md5": "4ab0f5549fee944a5690de1bc95ed245",
+            },
+        }
+        monkeypatch.setattr(USAVars, "split_metadata", split_metadata)
 
-        return USAVars(root, transforms=transforms, download=True, checksum=True)
+        root = str(tmp_path)
+        split, labels = request.param
+        transforms = nn.Identity()
+
+        return USAVars(
+            root, split, labels, transforms=transforms, download=True, checksum=True
+        )
 
     def test_getitem(self, dataset: USAVars) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert x["image"].ndim == 3
-        assert len(x.keys()) == 2  # image, elevation, population, treecover
+        assert len(x.keys()) == 2  # image, labels
         assert x["image"].shape[0] == 4  # R, G, B, Inf
+        assert len(dataset.labels) == len(x["labels"])
 
     def test_len(self, dataset: USAVars) -> None:
-        assert len(dataset) == 2
+        if dataset.split == "train":
+            assert len(dataset) == 3
+        elif dataset.split == "val":
+            assert len(dataset) == 2
+        else:
+            assert len(dataset) == 1
 
     def test_add(self, dataset: USAVars) -> None:
         ds = dataset + dataset
@@ -88,6 +125,9 @@ class TestUSAVars:
         ]
         for csv in csvs:
             shutil.copy(os.path.join("tests", "data", "usavars", csv), root)
+        splits = ["train_split.txt", "val_split.txt", "test_split.txt"]
+        for split in splits:
+            shutil.copy(os.path.join("tests", "data", "usavars", split), root)
 
         USAVars(root)
 
