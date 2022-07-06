@@ -42,7 +42,7 @@ class OSCDDataModule(pl.LightningDataModule):
             2080.3347,
             1524.6930,
         ]
-    )
+    ).reshape(-1, 1, 1)
 
     band_stds = torch.tensor(
         [
@@ -60,7 +60,7 @@ class OSCDDataModule(pl.LightningDataModule):
             213.4821,
             179.4793,
         ]
-    )
+    ).reshape(-1, 1, 1)
 
     def __init__(
         self,
@@ -97,11 +97,8 @@ class OSCDDataModule(pl.LightningDataModule):
         self.num_patches_per_tile = num_patches_per_tile
 
         if bands == "rgb":
-            self.band_means = self.band_means[[3, 2, 1], None, None]
-            self.band_stds = self.band_stds[[3, 2, 1], None, None]
-        else:
-            self.band_means = self.band_means[:, None, None]
-            self.band_stds = self.band_stds[:, None, None]
+            self.band_means = self.band_means[[3, 2, 1]]
+            self.band_stds = self.band_stds[[3, 2, 1]]
 
         self.rcrop = K.AugmentationSequential(
             K.RandomCrop(patch_size), data_keys=["input", "mask"], same_on_batch=True

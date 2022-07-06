@@ -38,7 +38,7 @@ class EuroSATDataModule(pl.LightningDataModule):
             1118.92391149,
             2594.14080798,
         ]
-    )
+    ).reshape(-1, 1, 1)
 
     band_stds = torch.tensor(
         [
@@ -56,7 +56,7 @@ class EuroSATDataModule(pl.LightningDataModule):
             761.30323499,
             1231.58581042,
         ]
-    )
+    ).reshape(-1, 1, 1)
 
     def __init__(
         self, root_dir: str, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
