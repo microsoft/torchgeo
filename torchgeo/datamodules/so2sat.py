@@ -36,7 +36,7 @@ class So2SatDataModule(pl.LightningDataModule):
             0.15428468872076637,
             0.10905050699570007,
         ]
-    ).reshape(10, 1, 1)
+    ).reshape(-1, 1, 1)
 
     band_stds = torch.tensor(
         [
@@ -51,7 +51,7 @@ class So2SatDataModule(pl.LightningDataModule):
             0.09991773043519253,
             0.08780632509122865,
         ]
-    ).reshape(10, 1, 1)
+    ).reshape(-1, 1, 1)
 
     # this reorders the bands to put S2 RGB first, then remainder of S2
     reindex_to_rgb_first = [10, 9, 8, 11, 12, 13, 14, 15, 16, 17]
@@ -118,38 +118,42 @@ class So2SatDataModule(pl.LightningDataModule):
         train_transforms = Compose([self.preprocess])
         val_test_transforms = self.preprocess
 
+        s2bands = So2Sat.BAND_SETS["s2"]
         if not self.unsupervised_mode:
 
             self.train_dataset = So2Sat(
-                self.root_dir, split="train", bands="s2", transforms=train_transforms
+                self.root_dir, split="train", bands=s2bands, transforms=train_transforms
             )
 
             self.val_dataset = So2Sat(
                 self.root_dir,
                 split="validation",
-                bands="s2",
+                bands=s2bands,
                 transforms=val_test_transforms,
             )
 
             self.test_dataset = So2Sat(
-                self.root_dir, split="test", bands="s2", transforms=val_test_transforms
+                self.root_dir,
+                split="test",
+                bands=s2bands,
+                transforms=val_test_transforms,
             )
 
         else:
 
             temp_train = So2Sat(
-                self.root_dir, split="train", bands="s2", transforms=train_transforms
+                self.root_dir, split="train", bands=s2bands, transforms=train_transforms
             )
 
             self.val_dataset = So2Sat(
                 self.root_dir,
                 split="validation",
-                bands="s2",
+                bands=s2bands,
                 transforms=train_transforms,
             )
 
             self.test_dataset = So2Sat(
-                self.root_dir, split="test", bands="s2", transforms=train_transforms
+                self.root_dir, split="test", bands=s2bands, transforms=train_transforms
             )
 
             self.train_dataset = cast(
