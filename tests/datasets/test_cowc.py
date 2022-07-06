@@ -4,7 +4,6 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -32,18 +31,11 @@ class TestCOWC:
 class TestCOWCCounting:
     @pytest.fixture(params=["train", "test"])
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> COWC:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.utils, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         base_url = os.path.join("tests", "data", "cowc_counting") + os.sep
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            COWCCounting, "base_url", base_url
-        )
+        monkeypatch.setattr(COWCCounting, "base_url", base_url)
         md5s = [
             "7d0c6d1fb548d3ea3a182a56ce231f97",
             "2e9a806b19b21f9d796c7393ad8f51ee",
@@ -54,10 +46,10 @@ class TestCOWCCounting:
             "f159e23d52bd0b5656fe296f427b98e1",
             "0a4daed8c5f6c4e20faa6e38636e4346",
         ]
-        monkeypatch.setattr(COWCCounting, "md5s", md5s)  # type: ignore[attr-defined]
+        monkeypatch.setattr(COWCCounting, "md5s", md5s)
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return COWCCounting(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: COWC) -> None:
@@ -103,18 +95,11 @@ class TestCOWCCounting:
 class TestCOWCDetection:
     @pytest.fixture(params=["train", "test"])
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> COWC:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.utils, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         base_url = os.path.join("tests", "data", "cowc_detection") + os.sep
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            COWCDetection, "base_url", base_url
-        )
+        monkeypatch.setattr(COWCDetection, "base_url", base_url)
         md5s = [
             "6bbbdb36ee4922e879f66ed9234cb8ab",
             "09e4af08c6e6553afe5098b328ce9749",
@@ -125,10 +110,10 @@ class TestCOWCDetection:
             "dd315cfb48dfa7ddb8230c942682bc37",
             "dccc2257e9c4a9dde2b4f84769804046",
         ]
-        monkeypatch.setattr(COWCDetection, "md5s", md5s)  # type: ignore[attr-defined]
+        monkeypatch.setattr(COWCDetection, "md5s", md5s)
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return COWCDetection(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: COWC) -> None:

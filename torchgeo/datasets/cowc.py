@@ -147,7 +147,7 @@ class COWC(VisionDataset, abc.ABC):
         filename = os.path.join(self.root, self.images[index])
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img)
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -162,7 +162,7 @@ class COWC(VisionDataset, abc.ABC):
             the target
         """
         target = int(self.targets[index])
-        tensor: Tensor = torch.tensor(target)  # type: ignore[attr-defined]
+        tensor = torch.tensor(target)
         return tensor
 
     def _check_integrity(self) -> bool:

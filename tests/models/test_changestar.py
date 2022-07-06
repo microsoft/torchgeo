@@ -79,7 +79,7 @@ class TestChangeStar:
     def test_changestar(self) -> None:
         dense_feature_extractor = nn.modules.Sequential(
             nn.modules.Conv2d(3, 32, 3, 1, 1),
-            nn.modules.BatchNorm2d(32),  # type: ignore[no-untyped-call]
+            nn.modules.BatchNorm2d(32),
             nn.modules.ReLU(),
             nn.modules.MaxPool2d(3, 2, 1),
         )
@@ -106,7 +106,7 @@ class TestChangeStar:
     def test_changestar_invalid_inference_mode(self) -> None:
         dense_feature_extractor = nn.modules.Sequential(
             nn.modules.Conv2d(3, 32, 3, 1, 1),
-            nn.modules.BatchNorm2d(32),  # type: ignore[no-untyped-call]
+            nn.modules.BatchNorm2d(32),
             nn.modules.ReLU(),
             nn.modules.MaxPool2d(3, 2, 1),
         )
@@ -132,7 +132,7 @@ class TestChangeStar:
     def test_changestar_inference_output_size(self, inference_mode: str) -> None:
         dense_feature_extractor = nn.modules.Sequential(
             nn.modules.Conv2d(3, 32, 3, 1, 1),
-            nn.modules.BatchNorm2d(32),  # type: ignore[no-untyped-call]
+            nn.modules.BatchNorm2d(32),
             nn.modules.ReLU(),
             nn.modules.MaxPool2d(3, 2, 1),
         )

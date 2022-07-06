@@ -205,10 +205,8 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             num_channels, height, width = sample["image"].shape
 
             if height < size or width < size:
-                sample["image"] = torch.zeros(  # type: ignore[attr-defined]
-                    (num_channels, size, size)
-                )
-                sample["mask"] = torch.zeros((size, size))  # type: ignore[attr-defined]
+                sample["image"] = torch.zeros((num_channels, size, size))
+                sample["mask"] = torch.zeros((size, size))
 
             return sample
 

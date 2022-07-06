@@ -3,13 +3,17 @@
 
 """Common datamodule utilities."""
 
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 
-from torch.utils.data import Dataset, Subset, random_split
+from torch.utils.data import Subset, TensorDataset, random_split
+
+from ..datasets import VisionDataset
 
 
 def dataset_split(
-    dataset: Dataset[Any], val_pct: float, test_pct: Optional[float] = None
+    dataset: Union[TensorDataset, VisionDataset],
+    val_pct: float,
+    test_pct: Optional[float] = None,
 ) -> List[Subset[Any]]:
     """Split a torch Dataset into train/val/test sets.
 

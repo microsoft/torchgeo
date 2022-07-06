@@ -1,0 +1,47 @@
+name: 🚀 Feature request
+description: Submit a proposal/request for a new TorchGeo feature
+labels: [feature]
+
+body:
+- type: markdown
+  attributes:
+    value: >
+      TorchGeo is a PyTorch domain library for _geospatial_ data. If the feature you
+      are suggesting is not specific to working with geospatial data or multispectral
+      satellite imagery and may be of interest to the broader computer vision
+      community, consider contributing it to
+      [torchvision](https://github.com/pytorch/vision) or
+      [kornia](https://github.com/kornia/kornia) instead.
+- type: textarea
+  attributes:
+    label: Summary
+    description: >
+      A clear and concise summary of your suggestion.
+- type: textarea
+  attributes:
+    label: Rationale
+    description: >
+      Why is this feature important? Is it related to a problem you are experiencing?
+- type: textarea
+  attributes:
+    label: Implementation
+    description: >
+      If you've thought about how to implement this feature, describe your proposed
+      solution.
+- type: textarea
+  attributes:
+    label: Alternatives
+    description: >
+      Are there any alternatives to the solution you've proposed?
+- type: textarea
+  attributes:
+    label: Additional information
+    description: >
+      Any additional information that might be relevant to the proposed feature.
+- type: markdown
+  attributes:
+    value: >
+      Thanks for suggesting this awesome new feature! TorchGeo is an open-source project
+      maintained by its users. If you're Python savvy and want to contribute a pull
+      request to implement this feature, we'll be happy to review it. If not, we'll try
+      to implement your feature when we get a chance.

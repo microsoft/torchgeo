@@ -12,7 +12,7 @@ from typing import Any, Dict, Union
 
 import pytorch_lightning as pl
 import torch
-from torchmetrics import Accuracy, IoU, Metric, MetricCollection
+from torchmetrics import Accuracy, JaccardIndex, MetricCollection
 
 from torchgeo.trainers import ClassificationTask, SemanticSegmentationTask
 from train import TASK_TO_MODULES_MAPPING
@@ -52,7 +52,7 @@ def set_up_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-b",
         "--batch-size",
-        default=2 ** 4,
+        default=2**4,
         type=int,
         help="number of samples in each mini-batch",
         metavar="SIZE",
@@ -85,8 +85,8 @@ def set_up_parser() -> argparse.ArgumentParser:
 def run_eval_loop(
     model: pl.LightningModule,
     dataloader: Any,
-    device: torch.device,  # type: ignore[name-defined]
-    metrics: Metric,
+    device: torch.device,
+    metrics: MetricCollection,
 ) -> Any:
     """Runs a standard test loop over a dataloader and records metrics.
 
@@ -94,10 +94,11 @@ def run_eval_loop(
         model: the model used for inference
         dataloader: the dataloader to get samples from
         device: the device to put data on
-        metrics: a torchmetrics compatible Metric to score the output from the model
+        metrics: a torchmetrics compatible metric collection to score the output
+            from the model
 
     Returns:
-        the result of ``metric.compute()``
+        the result of ``metrics.compute()``
     """
     for batch in dataloader:
         x = batch["image"].to(device)
@@ -158,7 +159,7 @@ def main(args: argparse.Namespace) -> None:
             "loss": model.hparams["loss"],
         }
     elif issubclass(TASK, SemanticSegmentationTask):
-        val_row: Dict[str, Union[str, float]] = {  # type: ignore[no-redef]
+        val_row = {
             "split": "val",
             "segmentation_model": model.hparams["segmentation_model"],
             "encoder_name": model.hparams["encoder_name"],
@@ -167,7 +168,7 @@ def main(args: argparse.Namespace) -> None:
             "loss": model.hparams["loss"],
         }
 
-        test_row: Dict[str, Union[str, float]] = {  # type: ignore[no-redef]
+        test_row = {
             "split": "test",
             "segmentation_model": model.hparams["segmentation_model"],
             "encoder_name": model.hparams["encoder_name"],
@@ -179,13 +180,13 @@ def main(args: argparse.Namespace) -> None:
         raise ValueError(f"{TASK} is not supported")
 
     # Compute metrics
-    device = torch.device("cuda:%d" % (args.gpu))  # type: ignore[attr-defined]
+    device = torch.device("cuda:%d" % (args.gpu))
     model = model.to(device)
 
     if args.task == "etci2021":  # Custom metric setup for testing ETCI2021
 
         metrics = MetricCollection(
-            [Accuracy(num_classes=2), IoU(num_classes=2, reduction="none")]
+            [Accuracy(num_classes=2), JaccardIndex(num_classes=2, reduction="none")]
         ).to(device)
 
         val_results = run_eval_loop(model, dm.val_dataloader(), device, metrics)
@@ -194,13 +195,13 @@ def main(args: argparse.Namespace) -> None:
         val_row.update(
             {
                 "overall_accuracy": val_results["Accuracy"].item(),
-                "iou": val_results["IoU"][1].item(),
+                "jaccard_index": val_results["JaccardIndex"][1].item(),
             }
         )
         test_row.update(
             {
                 "overall_accuracy": test_results["Accuracy"].item(),
-                "iou": test_results["IoU"][1].item(),
+                "jaccard_index": test_results["JaccardIndex"][1].item(),
             }
         )
     else:  # Test with PyTorch Lightning as usual
@@ -230,13 +231,13 @@ def main(args: argparse.Namespace) -> None:
             val_row.update(
                 {
                     "overall_accuracy": val_results["val_Accuracy"].item(),
-                    "iou": val_results["val_IoU"].item(),
+                    "jaccard_index": val_results["val_JaccardIndex"].item(),
                 }
             )
             test_row.update(
                 {
                     "overall_accuracy": test_results["test_Accuracy"].item(),
-                    "iou": test_results["test_IoU"].item(),
+                    "jaccard_index": test_results["test_JaccardIndex"].item(),
                 }
             )
 

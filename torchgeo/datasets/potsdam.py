@@ -26,7 +26,7 @@ from .utils import (
 class Potsdam2D(VisionDataset):
     """Potsdam 2D Semantic Segmentation dataset.
 
-    The `Potsdam <https://www2.isprs.org/commissions/comm2/wg4/benchmark/2d-sem-label-potsdam/>`_
+    The `Potsdam <https://www2.isprs.org/commissions/comm2/wg4/benchmark/2d-sem-label-potsdam/>`__
     dataset is a dataset for urban semantic segmentation used in the 2D Semantic Labeling
     Contest - Potsdam. This dataset uses the "4_Ortho_RGBIR.zip" and "5_Labels_all.zip"
     files to create the train/test sets used in the challenge. The dataset can be
@@ -187,7 +187,7 @@ class Potsdam2D(VisionDataset):
         path = self.files[index]["image"]
         with rasterio.open(path) as f:
             array = f.read()
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             return tensor
 
     def _load_target(self, index: int) -> Tensor:
@@ -203,9 +203,9 @@ class Potsdam2D(VisionDataset):
         with Image.open(path) as img:
             array: "np.typing.NDArray[np.uint8]" = np.array(img.convert("RGB"))
             array = rgb_to_mask(array, self.colormap)
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
-            tensor = tensor.to(torch.long)  # type: ignore[attr-defined]
+            tensor = tensor.to(torch.long)
         return tensor
 
     def _verify(self) -> None:

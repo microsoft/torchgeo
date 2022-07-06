@@ -22,7 +22,7 @@ class EuroSATDataModule(pl.LightningDataModule):
     .. versionadded:: 0.2
     """
 
-    band_means = torch.tensor(  # type: ignore[attr-defined]
+    band_means = torch.tensor(
         [
             1354.40546513,
             1118.24399958,
@@ -40,7 +40,7 @@ class EuroSATDataModule(pl.LightningDataModule):
         ]
     )
 
-    band_stds = torch.tensor(  # type: ignore[attr-defined]
+    band_stds = torch.tensor(
         [
             245.71762908,
             333.00778264,

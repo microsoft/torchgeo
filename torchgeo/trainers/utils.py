@@ -5,7 +5,7 @@
 
 import warnings
 from collections import OrderedDict
-from typing import Dict, Optional, Tuple, Union
+from typing import Optional, Tuple, Union, cast
 
 import torch
 import torch.nn as nn
@@ -18,7 +18,7 @@ Module.__module__ = "nn.Module"
 Conv2d.__module__ = "nn.Conv2d"
 
 
-def extract_encoder(path: str) -> Tuple[str, Dict[str, Tensor]]:
+def extract_encoder(path: str) -> Tuple[str, "OrderedDict[str, Tensor]"]:
     """Extracts an encoder from a pytorch lightning checkpoint file.
 
     Args:
@@ -32,7 +32,7 @@ def extract_encoder(path: str) -> Tuple[str, Dict[str, Tensor]]:
             checkpoint['hyper_parameters']
     """
     checkpoint = torch.load(  # type: ignore[no-untyped-call]
-        path, map_location=torch.device("cpu")  # type: ignore[attr-defined]
+        path, map_location=torch.device("cpu")
     )
 
     if "classification_model" in checkpoint["hyper_parameters"]:
@@ -42,8 +42,8 @@ def extract_encoder(path: str) -> Tuple[str, Dict[str, Tensor]]:
         state_dict = OrderedDict(
             {k.replace("model.", ""): v for k, v in state_dict.items()}
         )
-    elif "encoder" in checkpoint["hyper_parameters"]:
-        name = checkpoint["hyper_parameters"]["encoder"]
+    elif "encoder_name" in checkpoint["hyper_parameters"]:
+        name = checkpoint["hyper_parameters"]["encoder_name"]
         state_dict = checkpoint["state_dict"]
         state_dict = OrderedDict(
             {k: v for k, v in state_dict.items() if "model.encoder.model" in k}
@@ -60,7 +60,7 @@ def extract_encoder(path: str) -> Tuple[str, Dict[str, Tensor]]:
     return name, state_dict
 
 
-def load_state_dict(model: Module, state_dict: Dict[str, Tensor]) -> Module:
+def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Module:
     """Load pretrained resnet weights to a model.
 
     Args:
@@ -74,9 +74,9 @@ def load_state_dict(model: Module, state_dict: Dict[str, Tensor]) -> Module:
         If input channels in model != pretrained model input channels
         If num output classes in model != pretrained model num classes
     """
-    in_channels = model.conv1.in_channels  # type: ignore[union-attr]
+    in_channels = cast(nn.Module, model.conv1).in_channels
     expected_in_channels = state_dict["conv1.weight"].shape[1]
-    num_classes = model.fc.out_features  # type: ignore[union-attr]
+    num_classes = cast(nn.Module, model.fc).out_features
     expected_num_classes = state_dict["fc.weight"].shape[0]
 
     if in_channels != expected_in_channels:
@@ -93,7 +93,7 @@ def load_state_dict(model: Module, state_dict: Dict[str, Tensor]) -> Module:
         )
         del state_dict["fc.weight"], state_dict["fc.bias"]
 
-    model.load_state_dict(state_dict, strict=False)  # type: ignore[arg-type]
+    model.load_state_dict(state_dict, strict=False)
 
     return model
 
@@ -126,8 +126,7 @@ def reinit_initial_conv_layer(
     if keep_rgb_weights:
         w_old = layer.weight.data[:, :3, :, :].clone()
         if use_bias:
-            # mypy doesn't realize that bias isn't None here...
-            b_old = layer.bias.data.clone()  # type: ignore[union-attr]
+            b_old = cast(Tensor, layer.bias).data.clone()
 
     updated_stride = layer.stride if new_stride is None else new_stride
     updated_padding = layer.padding if new_padding is None else new_padding
@@ -143,13 +142,11 @@ def reinit_initial_conv_layer(
         bias=use_bias,
         padding_mode=layer.padding_mode,
     )
-    nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
-        new_layer.weight, mode="fan_out", nonlinearity="relu"
-    )
+    nn.init.kaiming_normal_(new_layer.weight, mode="fan_out", nonlinearity="relu")
 
     if keep_rgb_weights:
         new_layer.weight.data[:, :3, :, :] = w_old
         if use_bias:
-            new_layer.bias.data = b_old  # type: ignore[union-attr]
+            cast(Tensor, new_layer.bias).data = b_old
 
     return new_layer

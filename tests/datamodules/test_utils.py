@@ -9,8 +9,8 @@ from torchgeo.datamodules.utils import dataset_split
 
 def test_dataset_split() -> None:
     num_samples = 24
-    x = torch.ones(num_samples, 5)  # type: ignore[attr-defined]
-    y = torch.randint(low=0, high=2, size=(num_samples,))  # type: ignore[attr-defined]
+    x = torch.ones(num_samples, 5)
+    y = torch.randint(low=0, high=2, size=(num_samples,))
     ds = TensorDataset(x, y)
 
     # Test only train/val set split

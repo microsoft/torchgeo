@@ -5,7 +5,6 @@ import glob
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -32,29 +31,19 @@ def fetch(dataset_id: str, **kwargs: str) -> Dataset:
 
 class TestCV4AKenyaCropType:
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
-    ) -> CV4AKenyaCropType:
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CV4AKenyaCropType:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            radiant_mlhub.Dataset, "fetch", fetch
-        )
+        monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch)
         source_md5 = "7f4dcb3f33743dddd73f453176308bfb"
         labels_md5 = "95fc59f1d94a85ec00931d4d1280bec9"
-        monkeypatch.setitem(  # type: ignore[attr-defined]
-            CV4AKenyaCropType.image_meta, "md5", source_md5
-        )
-        monkeypatch.setitem(  # type: ignore[attr-defined]
-            CV4AKenyaCropType.target_meta, "md5", labels_md5
-        )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        monkeypatch.setitem(CV4AKenyaCropType.image_meta, "md5", source_md5)
+        monkeypatch.setitem(CV4AKenyaCropType.target_meta, "md5", labels_md5)
+        monkeypatch.setattr(
             CV4AKenyaCropType, "tile_names", ["ref_african_crops_kenya_02_tile_00"]
         )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            CV4AKenyaCropType, "dates", ["20190606"]
-        )
+        monkeypatch.setattr(CV4AKenyaCropType, "dates", ["20190606"])
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return CV4AKenyaCropType(
             root,
             transforms=transforms,

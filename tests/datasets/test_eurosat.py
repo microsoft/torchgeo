@@ -4,7 +4,6 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -25,19 +24,14 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestEuroSAT:
     @pytest.fixture(params=["train", "val", "test"])
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> EuroSAT:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.eurosat, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.eurosat, "download_url", download_url)
         md5 = "aa051207b0547daba0ac6af57808d68e"
-        monkeypatch.setattr(EuroSAT, "md5", md5)  # type: ignore[attr-defined]
+        monkeypatch.setattr(EuroSAT, "md5", md5)
         url = os.path.join("tests", "data", "eurosat", "EuroSATallBands.zip")
-        monkeypatch.setattr(EuroSAT, "url", url)  # type: ignore[attr-defined]
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        monkeypatch.setattr(EuroSAT, "url", url)
+        monkeypatch.setattr(
             EuroSAT,
             "split_urls",
             {
@@ -46,7 +40,7 @@ class TestEuroSAT:
                 "test": os.path.join("tests", "data", "eurosat", "eurosat-test.txt"),
             },
         )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        monkeypatch.setattr(
             EuroSAT,
             "split_md5s",
             {
@@ -57,14 +51,24 @@ class TestEuroSAT:
         )
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
-        return EuroSAT(root, split, transforms, download=True, checksum=True)
+        transforms = nn.Identity()
+        return EuroSAT(
+            root=root, split=split, transforms=transforms, download=True, checksum=True
+        )
 
     def test_getitem(self, dataset: EuroSAT) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["label"], torch.Tensor)
+
+    def test_invalid_split(self) -> None:
+        with pytest.raises(AssertionError):
+            EuroSAT(split="foo")
+
+    def test_invalid_bands(self) -> None:
+        with pytest.raises(ValueError):
+            EuroSAT(bands=("OK", "BK"))
 
     def test_len(self, dataset: EuroSAT) -> None:
         assert len(dataset) == 2
@@ -100,3 +104,8 @@ class TestEuroSAT:
         x["prediction"] = x["label"].clone()
         dataset.plot(x)
         plt.close()
+
+    def test_plot_rgb(self, dataset: EuroSAT, tmp_path: Path) -> None:
+        dataset = EuroSAT(root=str(tmp_path), bands=("B03",))
+        with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
+            dataset.plot(dataset[0], suptitle="Single Band")

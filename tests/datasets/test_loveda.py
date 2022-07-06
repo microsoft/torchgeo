@@ -4,7 +4,6 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -24,14 +23,9 @@ def download_url(url: str, root: str, *args: str) -> None:
 class TestLoveDA:
     @pytest.fixture(params=["train", "val", "test"])
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LoveDA:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.utils, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         md5 = "3d5b1373ef9a3084ec493b9b2056fe07"
 
         info_dict = {
@@ -52,13 +46,11 @@ class TestLoveDA:
             },
         }
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            LoveDA, "info_dict", info_dict
-        )
+        monkeypatch.setattr(LoveDA, "info_dict", info_dict)
 
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return LoveDA(
             root=root, split=split, transforms=transforms, download=True, checksum=True
         )

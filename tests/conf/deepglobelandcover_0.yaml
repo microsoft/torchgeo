@@ -1,0 +1,19 @@
+experiment:
+  task: "deepglobelandcover"
+  module:
+    loss: "ce"
+    segmentation_model: "unet"
+    encoder_name: "resnet18"
+    encoder_weights: null
+    learning_rate: 1e-3
+    learning_rate_schedule_patience: 6
+    verbose: false
+    in_channels: 3
+    num_classes: 7
+    num_filters: 1
+    ignore_index: null
+  datamodule:
+    root_dir: "tests/data/deepglobelandcover"
+    val_split_pct: 0.0
+    batch_size: 1
+    num_workers: 0

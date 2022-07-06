@@ -3,8 +3,9 @@
 
 """Common sampler utilities."""
 
-import random
 from typing import Tuple, Union
+
+import torch
 
 from ..datasets import BoundingBox
 
@@ -43,14 +44,21 @@ def get_random_bounding_box(
     Returns:
         randomly sampled bounding box from the extent of the input
     """
-    t_size: Tuple[float, float] = _to_tuple(size)
+    t_size = _to_tuple(size)
 
     width = (bounds.maxx - bounds.minx - t_size[1]) // res
-    minx = random.randrange(int(width)) * res + bounds.minx
-    maxx = minx + t_size[1]
-
     height = (bounds.maxy - bounds.miny - t_size[0]) // res
-    miny = random.randrange(int(height)) * res + bounds.miny
+
+    minx = bounds.minx
+    miny = bounds.miny
+
+    # random.randrange crashes for inputs <= 0
+    if width > 0:
+        minx += torch.rand(1).item() * width * res
+    if height > 0:
+        miny += torch.rand(1).item() * height * res
+
+    maxx = minx + t_size[1]
     maxy = miny + t_size[0]
 
     mint = bounds.mint

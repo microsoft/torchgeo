@@ -5,14 +5,13 @@
 
 import bz2
 import csv
-import hashlib
 import glob
+import hashlib
 import os
 import random
 import shutil
 
 from PIL import Image
-
 
 SIZE = 64  # image width/height
 STOP = 2  # range of values for labels

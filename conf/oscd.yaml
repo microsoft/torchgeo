@@ -16,7 +16,7 @@ experiment:
     in_channels: 26
     num_classes: 2
     num_filters: 256
-    ignore_zeros: True
+    ignore_index: 0
   datamodule:
     root_dir: "data/oscd"
     batch_size: 32

@@ -6,7 +6,6 @@ import os
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -25,24 +24,19 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 class TestCDL:
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
-    ) -> CDL:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.cdl, "download_url", download_url
-        )
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CDL:
+        monkeypatch.setattr(torchgeo.datasets.cdl, "download_url", download_url)
+
         md5s = [
-            (2021, "0693f0bb10deb79c69bcafe4aa1635b7"),
-            (2020, "7695292902a8672d16ac034d4d560d84"),
+            (2021, "e929beb9c8e59fa1d7b7f82e64edaae1"),
+            (2020, "e95c2d40ce0c261ed6ee0bd00b49e4b6"),
         ]
-        monkeypatch.setattr(CDL, "md5s", md5s)  # type: ignore[attr-defined]
+        monkeypatch.setattr(CDL, "md5s", md5s)
         url = os.path.join("tests", "data", "cdl", "{}_30m_cdls.zip")
-        monkeypatch.setattr(CDL, "url", url)  # type: ignore[attr-defined]
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            plt, "show", lambda *args: None
-        )
+        monkeypatch.setattr(CDL, "url", url)
+        monkeypatch.setattr(plt, "show", lambda *args: None)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return CDL(root, transforms=transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: CDL) -> None:
@@ -78,7 +72,15 @@ class TestCDL:
     def test_plot(self, dataset: CDL) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x["mask"])
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+
+    def test_plot_prediction(self, dataset: CDL) -> None:
+        query = dataset.bounds
+        x = dataset[query]
+        x["prediction"] = x["mask"].clone()
+        dataset.plot(x, suptitle="Prediction")
+        plt.close()
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):

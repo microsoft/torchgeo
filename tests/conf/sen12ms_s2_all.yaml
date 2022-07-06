@@ -10,7 +10,7 @@ experiment:
     learning_rate_schedule_patience: 2
     in_channels: 13
     num_classes: 11
-    ignore_zeros: False
+    ignore_index: null
   datamodule:
     root_dir: "tests/data/sen12ms"
     band_set: "s2-all"

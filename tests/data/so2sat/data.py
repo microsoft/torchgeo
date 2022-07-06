@@ -9,7 +9,6 @@ import os
 import h5py
 import numpy as np
 
-
 SIZE = 64  # image width/height
 NUM_CLASSES = 17
 NUM_SAMPLES = 1

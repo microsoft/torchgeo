@@ -11,7 +11,7 @@ experiment:
     in_channels: 4
     num_classes: 5
     num_filters: 1
-    ignore_zeros: False
+    ignore_index: null
     imagenet_pretraining: False
   datamodule:
     root_dir: "tests/data/chesapeake/cvpr"

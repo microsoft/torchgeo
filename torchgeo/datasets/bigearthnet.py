@@ -22,7 +22,7 @@ from .utils import download_url, extract_archive, sort_sentinel2_bands
 class BigEarthNet(VisionDataset):
     """BigEarthNet dataset.
 
-    The `BigEarthNet <http://bigearth.net/>`_
+    The `BigEarthNet <https://bigearth.net/>`__
     dataset is a dataset for multilabel remote sensing image scene classification.
 
     Dataset features:
@@ -244,13 +244,13 @@ class BigEarthNet(VisionDataset):
     }
     metadata = {
         "s1": {
-            "url": "http://bigearth.net/downloads/BigEarthNet-S1-v1.0.tar.gz",
-            "md5": "5a64e9ce38deb036a435a7b59494924c",
+            "url": "https://bigearth.net/downloads/BigEarthNet-S1-v1.0.tar.gz",
+            "md5": "94ced73440dea8c7b9645ee738c5a172",
             "filename": "BigEarthNet-S1-v1.0.tar.gz",
             "directory": "BigEarthNet-S1-v1.0",
         },
         "s2": {
-            "url": "http://bigearth.net/downloads/BigEarthNet-S2-v1.0.tar.gz",
+            "url": "https://bigearth.net/downloads/BigEarthNet-S2-v1.0.tar.gz",
             "md5": "5a64e9ce38deb036a435a7b59494924c",
             "filename": "BigEarthNet-S2-v1.0.tar.gz",
             "directory": "BigEarthNet-v1.0",
@@ -394,7 +394,7 @@ class BigEarthNet(VisionDataset):
                 )
                 images.append(array)
         arrays: "np.typing.NDArray[np.int_]" = np.stack(images, axis=0)
-        tensor: Tensor = torch.from_numpy(arrays)  # type: ignore[attr-defined]
+        tensor = torch.from_numpy(arrays)
         return tensor
 
     def _load_target(self, index: int) -> Tensor:
@@ -412,7 +412,7 @@ class BigEarthNet(VisionDataset):
             folder = self.folders[index]["s1"]
 
         path = glob.glob(os.path.join(folder, "*.json"))[0]
-        with open(path, "r") as f:
+        with open(path) as f:
             labels = json.load(f)["labels"]
 
         # labels -> indices
@@ -420,14 +420,10 @@ class BigEarthNet(VisionDataset):
 
         # Map 43 to 19 class labels
         if self.num_classes == 19:
-            indices = [
-                self.label_converter.get(idx) for idx in indices  # type: ignore[misc]
-            ]
-            indices = [idx for idx in indices if idx is not None]
+            indices_optional = [self.label_converter.get(idx) for idx in indices]
+            indices = [idx for idx in indices_optional if idx is not None]
 
-        target: Tensor = torch.zeros(  # type: ignore[attr-defined]
-            self.num_classes, dtype=torch.long  # type: ignore[attr-defined]
-        )
+        target = torch.zeros(self.num_classes, dtype=torch.long)
         target[indices] = 1
         return target
 

@@ -34,9 +34,9 @@ class TestRCF:
 
     def test_biases(self) -> None:
         model = RCF(features=24, bias=10)
-        assert torch.all(model.biases == 10)  # type: ignore[attr-defined]
+        assert torch.all(model.biases == 10)
 
     def test_seed(self) -> None:
         weights1 = RCF(seed=1).weights
         weights2 = RCF(seed=1).weights
-        assert torch.allclose(weights1, weights2)  # type: ignore[attr-defined]
+        assert torch.allclose(weights1, weights2)

@@ -16,7 +16,7 @@ from .utils import download_url, extract_archive
 class PatternNet(VisionClassificationDataset):
     """PatternNet dataset.
 
-    The `PatternNet <https://sites.google.com/view/zhouwx/dataset>`_
+    The `PatternNet <https://sites.google.com/view/zhouwx/dataset>`__
     dataset is a dataset for remote sensing scene classification and image retrieval.
 
     Dataset features:

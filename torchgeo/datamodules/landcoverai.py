@@ -52,8 +52,9 @@ class LandCoverAIDataModule(pl.LightningDataModule):
         """
         if (
             hasattr(self, "trainer")
+            and self.trainer is not None
             and hasattr(self.trainer, "training")
-            and self.trainer.training  # type: ignore[union-attr]
+            and self.trainer.training
         ):
             # Kornia expects masks to be floats with a channel dimension
             x = batch["image"]
@@ -65,7 +66,12 @@ class LandCoverAIDataModule(pl.LightningDataModule):
                 K.RandomVerticalFlip(p=0.5),
                 K.RandomSharpness(p=0.5),
                 K.ColorJitter(
-                    p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1
+                    p=0.5,
+                    brightness=0.1,
+                    contrast=0.1,
+                    saturation=0.1,
+                    hue=0.1,
+                    silence_instantiation_warning=True,
                 ),
                 data_keys=["input", "mask"],
             )
