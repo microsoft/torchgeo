@@ -54,7 +54,7 @@ class So2SatDataModule(pl.LightningDataModule):
     ).reshape(-1, 1, 1)
 
     # this reorders the bands to put S2 RGB first, then remainder of S2
-    reindex_to_rgb_first = [10, 9, 8, 11, 12, 13, 14, 15, 16, 17]
+    reindex_to_rgb_first = [2, 1, 0, 3, 4, 5, 6, 7, 8, 9]
 
     def __init__(
         self,
