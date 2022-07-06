@@ -34,7 +34,7 @@ class PASTISDataModule(pl.LightningDataModule, abc.ABC):
     """LightningDataModule implementation for the PASTIS dataset."""
 
     # (S1A, S1D, S2)
-    band_means = torch.tensor(  # type: ignore[attr-defined]
+    band_means = torch.tensor(
         [
             -10.930951118469238,
             -17.348514556884766,
@@ -54,7 +54,7 @@ class PASTISDataModule(pl.LightningDataModule, abc.ABC):
             1639.370361328125,
         ]
     )
-    band_stds = torch.tensor(  # type: ignore[attr-defined]
+    band_stds = torch.tensor(
         [
             3.285966396331787,
             3.2129523754119873,
