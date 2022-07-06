@@ -73,12 +73,7 @@ from .nasa_marine_debris import NASAMarineDebris
 from .nwpu import VHR10
 from .openbuildings import OpenBuildings
 from .oscd import OSCD
-from .pastis import (
-    PASTISInstanceSegmentation,
-    PASTISInstanceSegmentationDataModule,
-    PASTISSemanticSegmentation,
-    PASTISSemanticSegmentationDataModule,
-)
+from .pastis import PASTISInstanceSegmentation, PASTISSemanticSegmentation
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
 from .resisc45 import RESISC45
@@ -170,14 +165,8 @@ __all__ = (
     "LoveDA",
     "NASAMarineDebris",
     "OSCD",
-<<<<<<< HEAD
-=======
-    "OSCDDataModule",
     "PASTISInstanceSegmentation",
-    "PASTISInstanceSegmentationDataModule",
     "PASTISSemanticSegmentation",
-    "PASTISSemanticSegmentationDataModule",
->>>>>>> draft
     "PatternNet",
     "Potsdam2D",
     "RESISC45",

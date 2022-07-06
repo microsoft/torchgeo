@@ -17,6 +17,10 @@ from .loveda import LoveDADataModule
 from .naip import NAIPChesapeakeDataModule
 from .nasa_marine_debris import NASAMarineDebrisDataModule
 from .oscd import OSCDDataModule
+from .pastis import (
+    PASTISInstanceSegmentationDataModule,
+    PASTISSemanticSegmentationDataModule,
+)
 from .potsdam import Potsdam2DDataModule
 from .resisc45 import RESISC45DataModule
 from .sen12ms import SEN12MSDataModule
@@ -42,6 +46,8 @@ __all__ = (
     "LoveDADataModule",
     "NASAMarineDebrisDataModule",
     "OSCDDataModule",
+    "PASTISInstanceSegmentationDataModule",
+    "PASTISSemanticSegmentationDataModule",
     "Potsdam2DDataModule",
     "RESISC45DataModule",
     "SEN12MSDataModule",
