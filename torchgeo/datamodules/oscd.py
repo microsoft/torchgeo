@@ -11,7 +11,7 @@ import torch
 from einops import repeat
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data._utils.collate import default_collate
-from torchvision.transforms import Compose, Normalize
+from torchvision.transforms import Compose
 
 from ..datasets import OSCD
 from .utils import dataset_split
@@ -103,7 +103,6 @@ class OSCDDataModule(pl.LightningDataModule):
             self.band_means = self.band_means[:, None, None]
             self.band_stds = self.band_stds[:, None, None]
 
-        self.norm = Normalize(self.band_means, self.band_stds)
         self.rcrop = K.AugmentationSequential(
             K.RandomCrop(patch_size), data_keys=["input", "mask"], same_on_batch=True
         )
@@ -112,8 +111,7 @@ class OSCDDataModule(pl.LightningDataModule):
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         sample["image"] = sample["image"].float()
-        sample["mask"] = sample["mask"]
-        sample["image"] = self.norm(sample["image"])
+        sample["image"] = (sample["image"] - self.band_means) / self.band_stds
         sample["image"] = torch.flatten(sample["image"], 0, 1)
         return sample
 

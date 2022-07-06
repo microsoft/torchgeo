@@ -26,7 +26,6 @@ class RESISC45DataModule(pl.LightningDataModule):
     """
 
     band_means = torch.tensor([0.36820969, 0.38083247, 0.34341029])
-
     band_stds = torch.tensor([0.20339924, 0.18524736, 0.18455448])
 
     def __init__(
@@ -99,7 +98,7 @@ class RESISC45DataModule(pl.LightningDataModule):
         """
         sample["image"] = sample["image"].float()
         sample["image"] /= 255.0
-        sample["image"] = self.norm(sample["image"])
+        sample["image"] = (sample["image"] - self.band_means) / self.band_stds
         return sample
 
     def prepare_data(self) -> None:

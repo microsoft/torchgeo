@@ -52,7 +52,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.patch_size = patch_size
 
-    def naip_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the NAIP Dataset.
 
         Args:
@@ -61,10 +61,8 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         Returns:
             preprocessed NAIP data
         """
-        sample["image"] = sample["image"] / 255.0
         sample["image"] = sample["image"].float()
-
-        del sample["bbox"]
+        sample["image"] /= 255.0
 
         return sample
 
@@ -78,8 +76,6 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             preprocessed Chesapeake data
         """
         sample["mask"] = sample["mask"].long()[0]
-
-        del sample["bbox"]
 
         return sample
 
@@ -107,7 +103,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             self.naip_root_dir,
             chesapeake.crs,
             chesapeake.res,
-            transforms=self.naip_transform,
+            transforms=self.preprocess,
         )
         self.dataset = chesapeake & naip
 

@@ -169,23 +169,21 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         Returns:
             preprocessed sample
         """
-        sample["image"] = sample["image"] / 255.0
-        sample["mask"] = sample["mask"].squeeze()
-
-        if self.use_prior_labels:
-            sample["mask"] = F.normalize(sample["mask"].float(), p=1, dim=0)
-            sample["mask"] = F.normalize(
-                sample["mask"] + self.prior_smoothing_constant, p=1, dim=0
-            )
-        else:
-            if self.class_set == 5:
-                sample["mask"][sample["mask"] == 5] = 4
-                sample["mask"][sample["mask"] == 6] = 4
-            sample["mask"] = sample["mask"].long()
-
         sample["image"] = sample["image"].float()
+        sample["image"] /= 255.0
 
-        del sample["bbox"]
+        if "mask" in sample:
+            sample["mask"] = sample["mask"].squeeze()
+            if self.use_prior_labels:
+                sample["mask"] = F.normalize(sample["mask"].float(), p=1, dim=0)
+                sample["mask"] = F.normalize(
+                    sample["mask"] + self.prior_smoothing_constant, p=1, dim=0
+                )
+            else:
+                if self.class_set == 5:
+                    sample["mask"][sample["mask"] == 5] = 4
+                    sample["mask"][sample["mask"] == 6] = 4
+                sample["mask"] = sample["mask"].long()
 
         return sample
 

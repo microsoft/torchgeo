@@ -107,9 +107,16 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         return sample
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset."""
-        # RGB is int32 so divide by 255
-        sample["image"] = sample["image"] / 255.0
+        """Transform a single sample from the Dataset.
+
+        Args:
+            sample: input image dictionary
+
+        Returns:
+            preprocessed sample
+        """
+        sample["image"] = sample["image"].float()
+        sample["image"] /= 255.0
         sample["image"] = torch.clip(sample["image"], min=0.0, max=1.0)
 
         if "mask" in sample:
