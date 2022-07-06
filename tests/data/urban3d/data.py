@@ -4,11 +4,11 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
 import random
+import shutil
 
-import rasterio
 import numpy as np
+import rasterio
 
 from torchgeo.datasets import Urban3DChallenge
 

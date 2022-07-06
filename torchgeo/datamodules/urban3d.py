@@ -24,12 +24,8 @@ class Urban3DChallengeDataModule(pl.LightningDataModule):
     """
 
     # global min/max values of train set
-    band_mins = torch.tensor(  # type: ignore[attr-defined]
-        [-48.0, -42.0, 1.0, 1.0, 1.0, 1.0]
-    )
-    band_maxs = torch.tensor(  # type: ignore[attr-defined]
-        [6.0, 16.0, 9859.0, 12872.0, 13163.0, 14445.0]
-    )
+    band_mins = torch.tensor([-48.0, -42.0, 1.0, 1.0, 1.0, 1.0])
+    band_maxs = torch.tensor([6.0, 16.0, 9859.0, 12872.0, 13163.0, 14445.0])
 
     def __init__(
         self, root_dir: str, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
@@ -58,9 +54,7 @@ class Urban3DChallengeDataModule(pl.LightningDataModule):
             preprocessed sample
         """
         sample["image"] = (sample["image"] - self.mins) / (self.maxs - self.mins)
-        sample["image"] = torch.clamp(  # type: ignore[attr-defined]
-            sample["image"], min=0.0, max=1.0
-        )
+        sample["image"] = torch.clamp(sample["image"], min=0.0, max=1.0)
         return sample
 
     def setup(self, stage: Optional[str] = None) -> None:

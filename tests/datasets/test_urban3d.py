@@ -18,7 +18,7 @@ class TestUrban3DChallenge:
     def dataset(self, request: SubRequest) -> Urban3DChallenge:
         root = os.path.join("tests", "data", "urban3d")
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return Urban3DChallenge(root, split, transforms)
 
     def test_getitem(self, dataset: Urban3DChallenge) -> None:
@@ -26,8 +26,8 @@ class TestUrban3DChallenge:
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
-        assert x["image"].dtype == torch.float  # type: ignore[attr-defined]
-        assert x["mask"].dtype == torch.long  # type: ignore[attr-defined]
+        assert x["image"].dtype == torch.float
+        assert x["mask"].dtype == torch.long
         assert x["image"].ndim == 3
         assert x["image"].shape[0] == 5
         assert x["mask"].ndim == 2
