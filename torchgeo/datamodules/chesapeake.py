@@ -187,6 +187,18 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
 
         return sample
 
+    def remove_bbox(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Removes the bounding box property from a sample.
+
+        Args:
+            sample: dictionary with geographic metadata
+
+        Returns
+            sample without the bbox property
+        """
+        del sample["bbox"]
+        return sample
+
     def nodata_check(
         self, size: int = 512
     ) -> Callable[[Dict[str, Tensor]], Dict[str, Tensor]]:
@@ -238,6 +250,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
                 self.center_crop(self.patch_size),
                 self.nodata_check(self.patch_size),
                 self.preprocess,
+                self.remove_bbox,
             ]
         )
         val_transforms = Compose(
@@ -245,12 +258,14 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
                 self.center_crop(self.patch_size),
                 self.nodata_check(self.patch_size),
                 self.preprocess,
+                self.remove_bbox,
             ]
         )
         test_transforms = Compose(
             [
                 self.pad_to(self.original_patch_size, image_value=0, mask_value=0),
                 self.preprocess,
+                self.remove_bbox,
             ]
         )
 
