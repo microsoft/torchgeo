@@ -77,12 +77,7 @@ from .nasa_marine_debris import NASAMarineDebris
 from .nlcd import NLCD
 from .openbuildings import OpenBuildings
 from .oscd import OSCD
-from .pastis import (
-    PASTISInstanceSegmentation,
-    PASTISInstanceSegmentationDataModule,
-    PASTISSemanticSegmentation,
-    PASTISSemanticSegmentationDataModule,
-)
+from .pastis import PASTISInstanceSegmentation, PASTISSemanticSegmentation
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
 from .reforestree import ReforesTree
@@ -197,14 +192,8 @@ __all__ = (
     "MillionAID",
     "NASAMarineDebris",
     "OSCD",
-<<<<<<< HEAD
-=======
-    "OSCDDataModule",
     "PASTISInstanceSegmentation",
-    "PASTISInstanceSegmentationDataModule",
     "PASTISSemanticSegmentation",
-    "PASTISSemanticSegmentationDataModule",
->>>>>>> draft
     "PatternNet",
     "Potsdam2D",
     "RESISC45",
