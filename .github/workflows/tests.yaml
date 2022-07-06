@@ -56,7 +56,7 @@ jobs:
       if: ${{ runner.os == 'Windows' && matrix.python-version == '3.7' }}
     - name: Install conda dependencies (Windows)
       run: |
-        conda install 'rasterio==1.2.10'
+        conda install 'rasterio==1.2.10' 'geos=3.10.3'
         conda list
         conda info
       if: ${{ runner.os == 'Windows' && matrix.python-version == '3.7' }}
