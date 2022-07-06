@@ -4,7 +4,7 @@
 """Landsat datasets."""
 
 import abc
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Any, Callable, Dict, Optional, Sequence
 
 from rasterio.crs import CRS
 
@@ -14,17 +14,23 @@ from .geo import RasterDataset
 class Landsat(RasterDataset, abc.ABC):
     """Abstract base class for all Landsat datasets.
 
-    `Landsat <https://landsat.gsfc.nasa.gov/>`_ is a joint NASA/USGS program,
+    `Landsat <https://landsat.gsfc.nasa.gov/>`__ is a joint NASA/USGS program,
     providing the longest continuous space-based record of Earth's land in existence.
 
     If you use this dataset in your research, please cite it using the following format:
 
     * https://www.usgs.gov/centers/eros/data-citation
-    """
 
-    # https://www.usgs.gov/faqs/what-naming-convention-landsat-collections-level-1-scenes
-    # https://www.usgs.gov/faqs/what-naming-convention-landsat-collection-2-level-1-and-level-2-scenes
-    filename_glob = ""
+    If you use any of the following Level-2 products, there may be additional citation
+    requirements, including papers you can cite. See the "Citation Information" section
+    of the following pages:
+
+    * `Surface Temperature <https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-temperature>`_
+    * `Surface Reflectance <https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-reflectance>`_
+    * `U.S. Analysis Ready Data <https://www.usgs.gov/landsat-missions/landsat-collection-2-us-analysis-ready-data>`_
+    """  # noqa: E501
+
+    # https://www.usgs.gov/landsat-missions/landsat-collection-2
     filename_regex = r"""
         ^L
         (?P<sensor>[COTEM])
@@ -36,17 +42,11 @@ class Landsat(RasterDataset, abc.ABC):
         _(?P<processing_date>\d{8})
         _(?P<collection_number>\d{2})
         _(?P<collection_category>[A-Z0-9]{2})
-        _SR
-        _(?P<band>B\d+)
-        \..*$
+        _(?P<band>[A-Z0-9_]+)
+        \.
     """
 
-    # https://www.usgs.gov/faqs/what-are-band-designations-landsat-satellites
-    all_bands: List[str] = []
-    rgb_bands: List[str] = []
-
     separate_files = True
-    stretch = True
 
     def __init__(
         self,
@@ -74,6 +74,7 @@ class Landsat(RasterDataset, abc.ABC):
             FileNotFoundError: if no files are found in ``root``
         """
         self.bands = bands if bands else self.all_bands
+        self.filename_glob = self.filename_glob.format(self.bands[0])
 
         super().__init__(root, crs, res, transforms, cache)
 
@@ -81,73 +82,85 @@ class Landsat(RasterDataset, abc.ABC):
 class Landsat1(Landsat):
     """Landsat 1 Multispectral Scanner (MSS)."""
 
-    filename_glob = "LM01_*_SR_B4.*"
+    filename_glob = "LM01_*_{}.*"
 
-    all_bands = ["B4", "B5", "B6", "B7"]
-    rgb_bands = ["B6", "B5", "B4"]
+    all_bands = ["SR_B4", "SR_B5", "SR_B6", "SR_B7"]
+    rgb_bands = ["SR_B6", "SR_B5", "SR_B4"]
 
 
 class Landsat2(Landsat1):
     """Landsat 2 Multispectral Scanner (MSS)."""
 
-    filename_glob = "LM02_*_SR_B4.*"
+    filename_glob = "LM02_*_{}.*"
 
 
 class Landsat3(Landsat1):
     """Landsat 3 Multispectral Scanner (MSS)."""
 
-    filename_glob = "LM03_*_SR_B4.*"
+    filename_glob = "LM03_*_{}.*"
 
 
 class Landsat4MSS(Landsat):
     """Landsat 4 Multispectral Scanner (MSS)."""
 
-    filename_glob = "LM04_*_SR_B1.*"
+    filename_glob = "LM04_*_{}.*"
 
-    all_bands = ["B1", "B2", "B3", "B4"]
-    rgb_bands = ["B3", "B2", "B1"]
+    all_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4"]
+    rgb_bands = ["SR_B3", "SR_B2", "SR_B1"]
 
 
 class Landsat4TM(Landsat):
     """Landsat 4 Thematic Mapper (TM)."""
 
-    filename_glob = "LT04_*_SR_B1.*"
+    filename_glob = "LT04_*_{}.*"
 
-    all_bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7"]
-    rgb_bands = ["B3", "B2", "B1"]
+    all_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"]
+    rgb_bands = ["SR_B3", "SR_B2", "SR_B1"]
 
 
 class Landsat5MSS(Landsat4MSS):
     """Landsat 4 Multispectral Scanner (MSS)."""
 
-    filename_glob = "LM04_*_SR_B1.*"
+    filename_glob = "LM04_*_{}.*"
 
 
 class Landsat5TM(Landsat4TM):
     """Landsat 5 Thematic Mapper (TM)."""
 
-    filename_glob = "LT05_*_SR_B1.*"
+    filename_glob = "LT05_*_{}.*"
 
 
 class Landsat7(Landsat):
     """Landsat 7 Enhanced Thematic Mapper Plus (ETM+)."""
 
-    filename_glob = "LE07_*_SR_B1.*"
+    filename_glob = "LE07_*_{}.*"
 
-    all_bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8"]
-    rgb_bands = ["B3", "B2", "B1"]
+    all_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7", "SR_B8"]
+    rgb_bands = ["SR_B3", "SR_B2", "SR_B1"]
 
 
 class Landsat8(Landsat):
     """Landsat 8 Operational Land Imager (OLI) and Thermal Infrared Sensor (TIRS)."""
 
-    filename_glob = "LC08_*_SR_B2.*"
+    filename_glob = "LC08_*_{}.*"
 
-    all_bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11"]
-    rgb_bands = ["B4", "B3", "B2"]
+    all_bands = [
+        "SR_B1",
+        "SR_B2",
+        "SR_B3",
+        "SR_B4",
+        "SR_B5",
+        "SR_B6",
+        "SR_B7",
+        "SR_B8",
+        "SR_B9",
+        "SR_B10",
+        "SR_B11",
+    ]
+    rgb_bands = ["SR_B4", "SR_B3", "SR_B2"]
 
 
 class Landsat9(Landsat8):
     """Landsat 9 Operational Land Imager (OLI) and Thermal Infrared Sensor (TIRS)."""
 
-    filename_glob = "LC09_*_SR_B2.*"
+    filename_glob = "LC09_*_{}.*"

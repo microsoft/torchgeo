@@ -14,21 +14,16 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
-from torchgeo.datasets.geo import VisionDataset
-from torchgeo.datasets.utils import (
-    check_integrity,
-    extract_archive,
-    percentile_normalization,
-)
+from .geo import VisionDataset
+from .utils import check_integrity, extract_archive, percentile_normalization
 
 
 class InriaAerialImageLabeling(VisionDataset):
     r"""Inria Aerial Image Labeling Dataset.
 
-    The `Inria Aerial Image Labeling
-    <https://project.inria.fr/aerialimagelabeling/>`_ dataset is a building
-    detection dataset over dissimilar settlements ranging ranging from densely
-    populated areas to alpine towns. Refer to the dataset homepage to download
+    The `Inria Aerial Image Labeling <https://project.inria.fr/aerialimagelabeling/>`__
+    dataset is a building detection dataset over dissimilar settlements ranging from
+    densely populated areas to alpine towns. Refer to the dataset homepage to download
     the dataset.
 
     Dataset features:
@@ -103,10 +98,10 @@ class InriaAerialImageLabeling(VisionDataset):
             labels = sorted(labels)
 
             for img, lbl in zip(images, labels):
-                files.append({"image_path": img, "label_path": lbl})
+                files.append({"image": img, "label": lbl})
         else:
             for img in images:
-                files.append({"image_path": img})
+                files.append({"image": img})
 
         return files
 
@@ -121,7 +116,7 @@ class InriaAerialImageLabeling(VisionDataset):
         """
         with rio.open(path) as img:
             array = img.read().astype(np.int32)
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             return tensor
 
     def _load_target(self, path: str) -> Tensor:
@@ -136,7 +131,7 @@ class InriaAerialImageLabeling(VisionDataset):
         with rio.open(path) as img:
             array = img.read().astype(np.int32)
             array = np.clip(array, 0, 1)
-            mask: Tensor = torch.from_numpy(array[0])  # type: ignore[attr-defined]
+            mask = torch.from_numpy(array[0])
             return mask
 
     def __len__(self) -> int:
@@ -157,11 +152,10 @@ class InriaAerialImageLabeling(VisionDataset):
             data and label at that index
         """
         files = self.files[index]
-        sample = {}
-        img = self._load_image(files["image_path"])
-        sample["image"] = img
-        if files.get("label_path"):
-            mask = self._load_target(files["label_path"])
+        img = self._load_image(files["image"])
+        sample = {"image": img}
+        if files.get("label"):
+            mask = self._load_target(files["label"])
             sample["mask"] = mask
 
         if self.transforms is not None:

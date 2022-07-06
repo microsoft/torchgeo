@@ -4,19 +4,25 @@
 import os
 from collections import OrderedDict
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 import pytest
 import torch
 import torchvision
 from _pytest.fixtures import SubRequest
+from packaging.version import parse
 from torch import Tensor
 from torch.nn.modules import Module
 
 
 @pytest.fixture(scope="package")
 def model() -> Module:
-    model: Module = torchvision.models.resnet18(pretrained=False)
+    kwargs: Dict[str, Optional[bool]] = {}
+    if parse(torchvision.__version__) >= parse("0.12"):
+        kwargs = {"weights": None}
+    else:
+        kwargs = {"pretrained": False}
+    model: Module = torchvision.models.resnet18(**kwargs)
     return model
 
 
@@ -25,7 +31,7 @@ def state_dict(model: Module) -> Dict[str, Tensor]:
     return model.state_dict()
 
 
-@pytest.fixture(params=["classification_model", "encoder"])
+@pytest.fixture(params=["classification_model", "encoder_name"])
 def checkpoint(
     state_dict: Dict[str, Tensor], request: SubRequest, tmp_path: Path
 ) -> str:

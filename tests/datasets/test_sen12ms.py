@@ -3,7 +3,6 @@
 
 import os
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -18,9 +17,7 @@ from torchgeo.datasets import SEN12MS
 
 class TestSEN12MS:
     @pytest.fixture(params=["train", "test"])
-    def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
-    ) -> SEN12MS:
+    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> SEN12MS:
         md5s = [
             "b7d9e183a460979e997b443517a78ded",
             "7131dbb098c832fff84c2b8a0c8f1126",
@@ -38,10 +35,10 @@ class TestSEN12MS:
             "02d5128ac1fc2bf8762091b4f319762d",
         ]
 
-        monkeypatch.setattr(SEN12MS, "md5s", md5s)  # type: ignore[attr-defined]
+        monkeypatch.setattr(SEN12MS, "md5s", md5s)
         root = os.path.join("tests", "data", "sen12ms")
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return SEN12MS(root, split, transforms=transforms, checksum=True)
 
     def test_getitem(self, dataset: SEN12MS) -> None:

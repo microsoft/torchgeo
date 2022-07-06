@@ -2,7 +2,6 @@
 /data/
 /logs/
 /output/
-*.csv
 *.pdf
 
 # Spack
@@ -86,6 +85,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/src/
 
 # PyBuilder
 target/

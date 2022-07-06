@@ -17,7 +17,7 @@ from .utils import download_url, extract_archive
 class RESISC45(VisionClassificationDataset):
     """RESISC45 dataset.
 
-    The `RESISC45 <http://www.escience.cn/people/JunweiHan/NWPU-RESISC45.html>`_
+    The `RESISC45 <http://www.escience.cn/people/JunweiHan/NWPU-RESISC45.html>`__
     dataset is a dataset for remote sensing image scene classification.
 
     Dataset features:
@@ -180,7 +180,7 @@ class RESISC45(VisionClassificationDataset):
         self._verify()
 
         valid_fns = set()
-        with open(os.path.join(self.root, f"resisc45-{split}.txt"), "r") as f:
+        with open(os.path.join(self.root, f"resisc45-{split}.txt")) as f:
             for fn in f:
                 valid_fns.add(fn.strip())
         is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns

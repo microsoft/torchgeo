@@ -13,7 +13,6 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
 
 import fiona
 import fiona.transform
-import matplotlib.pyplot as plt
 import numpy as np
 import pyproj
 import rasterio
@@ -161,8 +160,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         Returns:
             length of the dataset
         """
-        count: int = self.index.get_size()
-        return count
+        return len(self.index)
 
     def __str__(self) -> str:
         """Return the informal string representation of the object.
@@ -303,10 +301,6 @@ class RasterDataset(GeoDataset):
     #: Names of RGB bands in the dataset, used for plotting
     rgb_bands: List[str] = []
 
-    #: If True, stretch the image from the 2nd percentile to the 98th percentile,
-    #: used for plotting
-    stretch = False
-
     #: Color map for the dataset, used for plotting
     cmap: Dict[int, Tuple[int, int, int, int]] = {}
 
@@ -348,10 +342,11 @@ class RasterDataset(GeoDataset):
                 try:
                     with rasterio.open(filepath) as src:
                         # See if file has a color map
-                        try:
-                            self.cmap = src.colormap(1)
-                        except ValueError:
-                            pass
+                        if len(self.cmap) == 0:
+                            try:
+                                self.cmap = src.colormap(1)
+                            except ValueError:
+                                pass
 
                         if crs is None:
                             crs = src.crs
@@ -423,7 +418,7 @@ class RasterDataset(GeoDataset):
                     filepath = glob.glob(os.path.join(directory, filename))[0]
                     band_filepaths.append(filepath)
                 data_list.append(self._merge_files(band_filepaths, query))
-            data = torch.cat(data_list)  # type: ignore[attr-defined]
+            data = torch.cat(data_list)
         else:
             data = self._merge_files(filepaths, query)
 
@@ -461,9 +456,14 @@ class RasterDataset(GeoDataset):
             )
         else:
             dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res)
-        dest = dest.astype(np.int32)
 
-        tensor: Tensor = torch.tensor(dest)  # type: ignore[attr-defined]
+        # fix numpy dtypes which are not supported by pytorch tensors
+        if dest.dtype == np.uint16:
+            dest = dest.astype(np.int32)
+        elif dest.dtype == np.uint32:
+            dest = dest.astype(np.int64)
+
+        tensor = torch.tensor(dest)
         return tensor
 
     @functools.lru_cache(maxsize=128)
@@ -496,53 +496,6 @@ class RasterDataset(GeoDataset):
             return vrt
         else:
             return src
-
-    def plot(self, data: Tensor) -> None:
-        """Plot a data sample.
-
-        Args:
-            data: the data to plot
-
-        Raises:
-            AssertionError: if ``is_image`` is True and ``data`` has a different number
-                of channels than expected
-        """
-        array = data.squeeze().numpy()
-
-        if self.is_image:
-            bands = getattr(self, "bands", self.all_bands)
-            assert array.shape[0] == len(bands)
-
-            # Only plot RGB bands
-            if bands and self.rgb_bands:
-                indices: "np.typing.NDArray[np.int_]" = np.array(
-                    [bands.index(band) for band in self.rgb_bands]
-                )
-                array = array[indices]
-
-            # Convert from CxHxW to HxWxC
-            array = np.rollaxis(array, 0, 3)
-
-        if self.cmap:
-            # Convert from class labels to RGBA values
-            cmap: "np.typing.NDArray[np.int_]" = np.array(
-                [self.cmap[i] for i in range(len(self.cmap))]
-            )
-            array = cmap[array]
-
-        if self.stretch:
-            # Stretch to the range of 2nd to 98th percentile
-            per02 = np.percentile(array, 2)
-            per98 = np.percentile(array, 98)
-            array = (array - per02) / (per98 - per02)
-            array = np.clip(array, 0, 1)
-
-        # Plot the data
-        ax = plt.axes()
-        ax.imshow(array)
-        ax.axis("off")
-        plt.show()
-        plt.close()
 
 
 class VectorDataset(GeoDataset):
@@ -655,35 +608,21 @@ class VectorDataset(GeoDataset):
         transform = rasterio.transform.from_bounds(
             query.minx, query.miny, query.maxx, query.maxy, width, height
         )
-        masks = rasterio.features.rasterize(
-            shapes, out_shape=(int(height), int(width)), transform=transform
-        )
+        if shapes:
+            masks = rasterio.features.rasterize(
+                shapes, out_shape=(int(height), int(width)), transform=transform
+            )
+        else:
+            # If no features are found in this query, return an empty mask
+            # with the default fill value and dtype used by rasterize
+            masks = np.zeros((int(height), int(width)), dtype=np.uint8)
 
-        sample = {
-            "mask": torch.tensor(masks),  # type: ignore[attr-defined]
-            "crs": self.crs,
-            "bbox": query,
-        }
+        sample = {"mask": torch.tensor(masks), "crs": self.crs, "bbox": query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
 
         return sample
-
-    def plot(self, data: Tensor) -> None:
-        """Plot a data sample.
-
-        Args:
-            data: the data to plot
-        """
-        array = data.squeeze().numpy()
-
-        # Plot the image
-        ax = plt.axes()
-        ax.imshow(array)
-        ax.axis("off")
-        plt.show()
-        plt.close()
 
 
 class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):
@@ -799,10 +738,10 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
         """
         img, label = ImageFolder.__getitem__(self, index)
         array: "np.typing.NDArray[np.int_]" = np.array(img)
-        tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+        tensor = torch.from_numpy(array)
         # Convert from HxWxC to CxHxW
         tensor = tensor.permute((2, 0, 1))
-        label = torch.tensor(label)  # type: ignore[attr-defined]
+        label = torch.tensor(label)
         return tensor, label
 
 

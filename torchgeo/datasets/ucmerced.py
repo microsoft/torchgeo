@@ -16,7 +16,7 @@ from .utils import check_integrity, download_url, extract_archive
 class UCMerced(VisionClassificationDataset):
     """UC Merced dataset.
 
-    The `UC Merced <http://weegee.vision.ucmerced.edu/datasets/landuse.html>`_
+    The `UC Merced <http://weegee.vision.ucmerced.edu/datasets/landuse.html>`__
     dataset is a land use classification dataset of 2.1k 256x256 1ft resolution RGB
     images of urban locations around the U.S. extracted from the USGS National Map Urban
     Area Imagery collection with 21 land use classes (100 images per class).
@@ -132,7 +132,7 @@ class UCMerced(VisionClassificationDataset):
         self._verify()
 
         valid_fns = set()
-        with open(os.path.join(self.root, f"uc_merced-{split}.txt"), "r") as f:
+        with open(os.path.join(self.root, f"uc_merced-{split}.txt")) as f:
             for fn in f:
                 valid_fns.add(fn.strip())
         is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns

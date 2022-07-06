@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import math
+from itertools import product
 from typing import Dict, Iterator, List
 
 import pytest
@@ -10,7 +11,7 @@ from rasterio.crs import CRS
 from torch.utils.data import DataLoader
 
 from torchgeo.datasets import BoundingBox, GeoDataset, stack_samples
-from torchgeo.samplers import BatchGeoSampler, RandomBatchGeoSampler
+from torchgeo.samplers import BatchGeoSampler, RandomBatchGeoSampler, Units
 
 
 class CustomBatchGeoSampler(BatchGeoSampler):
@@ -26,7 +27,7 @@ class CustomBatchGeoSampler(BatchGeoSampler):
 
 
 class CustomGeoDataset(GeoDataset):
-    def __init__(self, crs: CRS = CRS.from_epsg(3005), res: float = 1) -> None:
+    def __init__(self, crs: CRS = CRS.from_epsg(3005), res: float = 10) -> None:
         super().__init__()
         self._crs = crs
         self.res = res
@@ -36,6 +37,12 @@ class CustomGeoDataset(GeoDataset):
 
 
 class TestBatchGeoSampler:
+    @pytest.fixture(scope="class")
+    def dataset(self) -> CustomGeoDataset:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 100, 200, 300, 400, 500))
+        return ds
+
     @pytest.fixture(scope="function")
     def sampler(self) -> CustomBatchGeoSampler:
         return CustomBatchGeoSampler()
@@ -49,28 +56,45 @@ class TestBatchGeoSampler:
 
     @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
-    def test_dataloader(self, sampler: CustomBatchGeoSampler, num_workers: int) -> None:
-        ds = CustomGeoDataset()
+    def test_dataloader(
+        self,
+        dataset: CustomGeoDataset,
+        sampler: CustomBatchGeoSampler,
+        num_workers: int,
+    ) -> None:
         dl = DataLoader(
-            ds, batch_sampler=sampler, num_workers=num_workers, collate_fn=stack_samples
+            dataset,
+            batch_sampler=sampler,
+            num_workers=num_workers,
+            collate_fn=stack_samples,
         )
         for _ in dl:
             continue
 
-    def test_abstract(self) -> None:
-        ds = CustomGeoDataset()
+    def test_abstract(self, dataset: CustomGeoDataset) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            BatchGeoSampler(ds)  # type: ignore[abstract]
+            BatchGeoSampler(dataset)  # type: ignore[abstract]
 
 
 class TestRandomBatchGeoSampler:
-    @pytest.fixture(scope="function", params=[3, 4.5, (2, 2), (3, 4.5), (4.5, 3)])
-    def sampler(self, request: SubRequest) -> RandomBatchGeoSampler:
+    @pytest.fixture(scope="class")
+    def dataset(self) -> CustomGeoDataset:
         ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 10, 20, 30, 40, 50))
-        ds.index.insert(1, (0, 10, 20, 30, 40, 50))
-        size = request.param
-        return RandomBatchGeoSampler(ds, size, batch_size=2, length=10)
+        ds.index.insert(0, (0, 100, 200, 300, 400, 500))
+        ds.index.insert(1, (0, 100, 200, 300, 400, 500))
+        return ds
+
+    @pytest.fixture(
+        scope="function",
+        params=product([3, 4.5, (2, 2), (3, 4.5), (4.5, 3)], [Units.PIXELS, Units.CRS]),
+    )
+    def sampler(
+        self, dataset: CustomGeoDataset, request: SubRequest
+    ) -> RandomBatchGeoSampler:
+        size, units = request.param
+        return RandomBatchGeoSampler(
+            dataset, size, batch_size=2, length=10, units=units
+        )
 
     def test_iter(self, sampler: RandomBatchGeoSampler) -> None:
         for batch in sampler:
@@ -88,30 +112,51 @@ class TestRandomBatchGeoSampler:
     def test_len(self, sampler: RandomBatchGeoSampler) -> None:
         assert len(sampler) == sampler.length // sampler.batch_size
 
-    def test_roi(self) -> None:
-        ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
-        ds.index.insert(1, (5, 15, 5, 15, 5, 15))
-        roi = BoundingBox(0, 10, 0, 10, 0, 10)
-        sampler = RandomBatchGeoSampler(ds, 2, 2, 10, roi=roi)
+    def test_roi(self, dataset: CustomGeoDataset) -> None:
+        roi = BoundingBox(0, 50, 200, 250, 400, 450)
+        sampler = RandomBatchGeoSampler(dataset, 2, 2, 10, roi=roi)
         for batch in sampler:
             for query in batch:
                 assert query in roi
 
     def test_small_area(self) -> None:
-        ds = CustomGeoDataset()
+        ds = CustomGeoDataset(res=1)
         ds.index.insert(0, (0, 10, 0, 10, 0, 10))
         ds.index.insert(1, (20, 21, 20, 21, 20, 21))
         sampler = RandomBatchGeoSampler(ds, 2, 2, 10)
         for _ in sampler:
             continue
 
+    def test_point_data(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 0, 0, 0, 0, 0))
+        ds.index.insert(1, (1, 1, 1, 1, 1, 1))
+        sampler = RandomBatchGeoSampler(ds, 0, 2, 10)
+        for _ in sampler:
+            continue
+
+    def test_weighted_sampling(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 0, 0, 0, 0, 0))
+        ds.index.insert(1, (0, 10, 0, 10, 0, 10))
+        sampler = RandomBatchGeoSampler(ds, 1, 2, 10)
+        for batch in sampler:
+            for bbox in batch:
+                assert bbox == BoundingBox(0, 10, 0, 10, 0, 10)
+
     @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
-    def test_dataloader(self, sampler: RandomBatchGeoSampler, num_workers: int) -> None:
-        ds = CustomGeoDataset()
+    def test_dataloader(
+        self,
+        dataset: CustomGeoDataset,
+        sampler: RandomBatchGeoSampler,
+        num_workers: int,
+    ) -> None:
         dl = DataLoader(
-            ds, batch_sampler=sampler, num_workers=num_workers, collate_fn=stack_samples
+            dataset,
+            batch_sampler=sampler,
+            num_workers=num_workers,
+            collate_fn=stack_samples,
         )
         for _ in dl:
             continue

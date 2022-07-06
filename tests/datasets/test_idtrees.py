@@ -7,7 +7,7 @@ import os
 import shutil
 import sys
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import matplotlib.pyplot as plt
 import pytest
@@ -19,7 +19,7 @@ from _pytest.monkeypatch import MonkeyPatch
 import torchgeo.datasets.utils
 from torchgeo.datasets import IDTReeS
 
-pytest.importorskip("pandas", minversion="0.19.1")
+pytest.importorskip("pandas", minversion="0.23.2")
 pytest.importorskip("laspy", minversion="2")
 
 
@@ -30,14 +30,9 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestIDTReeS:
     @pytest.fixture(params=zip(["train", "test", "test"], ["task1", "task1", "task2"]))
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> IDTReeS:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.idtrees, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.idtrees, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "idtrees")
         metadata = {
             "train": {
@@ -52,15 +47,13 @@ class TestIDTReeS:
             },
         }
         split, task = request.param
-        monkeypatch.setattr(IDTReeS, "metadata", metadata)  # type: ignore[attr-defined]
+        monkeypatch.setattr(IDTReeS, "metadata", metadata)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return IDTReeS(root, split, task, transforms, download=True, checksum=True)
 
     @pytest.fixture(params=["pandas", "laspy", "open3d"])
-    def mock_missing_module(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
-    ) -> str:
+    def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:
         import_orig = builtins.__import__
         package = str(request.param)
 
@@ -69,9 +62,7 @@ class TestIDTReeS:
                 raise ImportError()
             return import_orig(name, *args, **kwargs)
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            builtins, "__import__", mocked_import
-        )
+        monkeypatch.setattr(builtins, "__import__", mocked_import)
         return package
 
     def test_getitem(self, dataset: IDTReeS) -> None:

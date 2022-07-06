@@ -3,6 +3,7 @@
 
 """Segmentation tasks."""
 
+import warnings
 from typing import Any, Dict, cast
 
 import segmentation_models_pytorch as smp
@@ -27,45 +28,44 @@ class SemanticSegmentationTask(LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
-        if self.hparams["segmentation_model"] == "unet":
+        if self.hyperparams["segmentation_model"] == "unet":
             self.model = smp.Unet(
-                encoder_name=self.hparams["encoder_name"],
-                encoder_weights=self.hparams["encoder_weights"],
-                in_channels=self.hparams["in_channels"],
-                classes=self.hparams["num_classes"],
+                encoder_name=self.hyperparams["encoder_name"],
+                encoder_weights=self.hyperparams["encoder_weights"],
+                in_channels=self.hyperparams["in_channels"],
+                classes=self.hyperparams["num_classes"],
             )
-        elif self.hparams["segmentation_model"] == "deeplabv3+":
+        elif self.hyperparams["segmentation_model"] == "deeplabv3+":
             self.model = smp.DeepLabV3Plus(
-                encoder_name=self.hparams["encoder_name"],
-                encoder_weights=self.hparams["encoder_weights"],
-                in_channels=self.hparams["in_channels"],
-                classes=self.hparams["num_classes"],
+                encoder_name=self.hyperparams["encoder_name"],
+                encoder_weights=self.hyperparams["encoder_weights"],
+                in_channels=self.hyperparams["in_channels"],
+                classes=self.hyperparams["num_classes"],
             )
-        elif self.hparams["segmentation_model"] == "fcn":
+        elif self.hyperparams["segmentation_model"] == "fcn":
             self.model = FCN(
-                in_channels=self.hparams["in_channels"],
-                classes=self.hparams["num_classes"],
-                num_filters=self.hparams["num_filters"],
+                in_channels=self.hyperparams["in_channels"],
+                classes=self.hyperparams["num_classes"],
+                num_filters=self.hyperparams["num_filters"],
             )
         else:
             raise ValueError(
-                f"Model type '{self.hparams['segmentation_model']}' is not valid."
+                f"Model type '{self.hyperparams['segmentation_model']}' is not valid."
             )
 
-        if self.hparams["loss"] == "ce":
-            self.loss = nn.CrossEntropyLoss(  # type: ignore[attr-defined]
-                ignore_index=-1000 if self.ignore_zeros is None else 0
-            )
-        elif self.hparams["loss"] == "jaccard":
+        if self.hyperparams["loss"] == "ce":
+            ignore_value = -1000 if self.ignore_index is None else self.ignore_index
+            self.loss = nn.CrossEntropyLoss(ignore_index=ignore_value)
+        elif self.hyperparams["loss"] == "jaccard":
             self.loss = smp.losses.JaccardLoss(
-                mode="multiclass", classes=self.hparams["num_classes"]
+                mode="multiclass", classes=self.hyperparams["num_classes"]
             )
-        elif self.hparams["loss"] == "focal":
+        elif self.hyperparams["loss"] == "focal":
             self.loss = smp.losses.FocalLoss(
-                "multiclass", ignore_index=self.ignore_zeros, normalized=True
+                "multiclass", ignore_index=self.ignore_index, normalized=True
             )
         else:
-            raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
+            raise ValueError(f"Loss type '{self.hyperparams['loss']}' is not valid.")
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
@@ -78,27 +78,37 @@ class SemanticSegmentationTask(LightningModule):
             in_channels: Number of channels in input image
             num_classes: Number of semantic classes to predict
             loss: Name of the loss function
-            ignore_zeros: Whether to ignore the "0" class value in the loss and metrics
+            ignore_index: Optional integer class index to ignore in the loss and metrics
 
         Raises:
             ValueError: if kwargs arguments are invalid
         """
         super().__init__()
-        self.save_hyperparameters()  # creates `self.hparams` from kwargs
 
-        self.ignore_zeros = None if kwargs["ignore_zeros"] else 0
+        # Creates `self.hparams` from kwargs
+        self.save_hyperparameters()  # type: ignore[operator]
+        self.hyperparams = cast(Dict[str, Any], self.hparams)
 
+        if not isinstance(kwargs["ignore_index"], (int, type(None))):
+            raise ValueError("ignore_index must be an int or None")
+        if (kwargs["ignore_index"] is not None) and (kwargs["loss"] == "jaccard"):
+            warnings.warn(
+                "ignore_index has no effect on training when loss='jaccard'",
+                UserWarning,
+            )
+        self.ignore_index = kwargs["ignore_index"]
         self.config_task()
 
         self.train_metrics = MetricCollection(
             [
                 Accuracy(
-                    num_classes=self.hparams["num_classes"],
-                    ignore_index=self.ignore_zeros,
+                    num_classes=self.hyperparams["num_classes"],
+                    ignore_index=self.ignore_index,
+                    mdmc_average="global",
                 ),
                 JaccardIndex(
-                    num_classes=self.hparams["num_classes"],
-                    ignore_index=self.ignore_zeros,
+                    num_classes=self.hyperparams["num_classes"],
+                    ignore_index=self.ignore_index,
                 ),
             ],
             prefix="train_",
@@ -106,7 +116,7 @@ class SemanticSegmentationTask(LightningModule):
         self.val_metrics = self.train_metrics.clone(prefix="val_")
         self.test_metrics = self.train_metrics.clone(prefix="test_")
 
-    def forward(self, x: Tensor) -> Any:  # type: ignore[override]
+    def forward(self, *args: Any, **kwargs: Any) -> Any:
         """Forward pass of the model.
 
         Args:
@@ -115,20 +125,18 @@ class SemanticSegmentationTask(LightningModule):
         Returns:
             output from the model
         """
-        return self.model(x)
+        return self.model(*args, **kwargs)
 
-    def training_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> Tensor:
-        """Training step - reports average accuracy and average JaccardIndex.
+    def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
+        """Compute and return the training loss.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: the output of your DataLoader
 
         Returns:
             training loss
         """
+        batch = args[0]
         x = batch["image"]
         y = batch["mask"]
         y_hat = self.forward(x)
@@ -152,18 +160,15 @@ class SemanticSegmentationTask(LightningModule):
         self.log_dict(self.train_metrics.compute())
         self.train_metrics.reset()
 
-    def validation_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
-        """Validation step - reports average accuracy and average JaccardIndex.
-
-        Logs the first 10 validation samples to tensorboard as images with 3 subplots
-        showing the image, mask, and predictions.
+    def validation_step(self, *args: Any, **kwargs: Any) -> None:
+        """Compute validation loss and log example predictions.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: the output of your DataLoader
+            batch_idx: the index of this batch
         """
+        batch = args[0]
+        batch_idx = args[1]
         x = batch["image"]
         y = batch["mask"]
         y_hat = self.forward(x)
@@ -176,13 +181,13 @@ class SemanticSegmentationTask(LightningModule):
 
         if batch_idx < 10:
             try:
-                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                datamodule = self.trainer.datamodule  # type: ignore[union-attr]
                 batch["prediction"] = y_hat_hard
                 for key in ["image", "mask", "prediction"]:
                     batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
-                summary_writer = self.logger.experiment
+                summary_writer = self.logger.experiment  # type: ignore[union-attr]
                 summary_writer.add_figure(
                     f"image/{batch_idx}", fig, global_step=self.global_step
                 )
@@ -198,15 +203,13 @@ class SemanticSegmentationTask(LightningModule):
         self.log_dict(self.val_metrics.compute())
         self.val_metrics.reset()
 
-    def test_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
-        """Test step identical to the validation step.
+    def test_step(self, *args: Any, **kwargs: Any) -> None:
+        """Compute test loss.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: the output of your DataLoader
         """
+        batch = args[0]
         x = batch["image"]
         y = batch["mask"]
         y_hat = self.forward(x)
@@ -235,13 +238,14 @@ class SemanticSegmentationTask(LightningModule):
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         optimizer = torch.optim.Adam(
-            self.model.parameters(), lr=self.hparams["learning_rate"]
+            self.model.parameters(), lr=self.hyperparams["learning_rate"]
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
+                    optimizer,
+                    patience=self.hyperparams["learning_rate_schedule_patience"],
                 ),
                 "monitor": "val_loss",
             },

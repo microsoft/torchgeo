@@ -20,7 +20,7 @@ from .utils import download_and_extract_archive
 class ADVANCE(VisionDataset):
     """ADVANCE dataset.
 
-    The `ADVANCE <https://akchen.github.io/ADVANCE-DATASET/>`_
+    The `ADVANCE <https://akchen.github.io/ADVANCE-DATASET/>`__
     dataset is a dataset for audio visual scene recognition.
 
     Dataset features:
@@ -117,7 +117,7 @@ class ADVANCE(VisionDataset):
             )
 
         self.files = self._load_files(self.root)
-        self.classes = sorted(set(f["cls"] for f in self.files))
+        self.classes = sorted({f["cls"] for f in self.files})
         self.class_to_idx: Dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
@@ -133,7 +133,7 @@ class ADVANCE(VisionDataset):
         image = self._load_image(files["image"])
         audio = self._load_target(files["audio"])
         cls_label = self.class_to_idx[files["cls"]]
-        label = torch.tensor(cls_label, dtype=torch.long)  # type: ignore[attr-defined]
+        label = torch.tensor(cls_label, dtype=torch.long)
         sample = {"image": image, "audio": audio, "label": label}
 
         if self.transforms is not None:
@@ -178,7 +178,7 @@ class ADVANCE(VisionDataset):
         """
         with Image.open(path) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -199,8 +199,8 @@ class ADVANCE(VisionDataset):
                 "scipy is not installed and is required to use this dataset"
             )
 
-        array = wavfile.read(path)[1]
-        tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+        array = wavfile.read(path, mmap=True)[1]
+        tensor = torch.from_numpy(array)
         tensor = tensor.unsqueeze(0)
         return tensor
 

@@ -55,7 +55,7 @@ def _resnet(
     model = ResNet(block, layers, NUM_CLASSES[sensor], **kwargs)
 
     # Replace the first layer with the correct number of input channels
-    model.conv1 = nn.Conv2d(  # type: ignore[attr-defined]
+    model.conv1 = nn.Conv2d(
         IN_CHANNELS[sensor][bands],
         out_channels=64,
         kernel_size=7,
@@ -66,7 +66,7 @@ def _resnet(
 
     # Load pretrained weights
     if pretrained:
-        state_dict = load_state_dict_from_url(  # type: ignore[no-untyped-call]
+        state_dict = load_state_dict_from_url(
             MODEL_URLS[sensor][bands][arch], progress=progress
         )
         model.load_state_dict(state_dict)

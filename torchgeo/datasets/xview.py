@@ -20,7 +20,7 @@ from .utils import check_integrity, draw_semantic_segmentation_masks, extract_ar
 class XView2(VisionDataset):
     """xView2 dataset.
 
-    The `xView2 <https://xview2.org/>`_
+    The `xView2 <https://xview2.org/>`__
     dataset is a dataset for building disaster change detection. This dataset object
     uses the "Challenge training set (~7.8 GB)" and "Challenge test set (~2.6 GB)" data
     from the xView2 website as the train and test splits. Note, the xView2 website
@@ -158,7 +158,7 @@ class XView2(VisionDataset):
         filename = os.path.join(path)
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -175,8 +175,8 @@ class XView2(VisionDataset):
         filename = os.path.join(path)
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("L"))
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
-            tensor = tensor.to(torch.long)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
+            tensor = tensor.to(torch.long)
             return tensor
 
     def _verify(self) -> None:

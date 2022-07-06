@@ -3,7 +3,6 @@
 
 import os
 import shutil
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -18,15 +17,13 @@ from torchgeo.datasets import InriaAerialImageLabeling
 class TestInriaAerialImageLabeling:
     @pytest.fixture(params=["train", "test"])
     def dataset(
-        self, request: SubRequest, monkeypatch: Generator[MonkeyPatch, None, None]
+        self, request: SubRequest, monkeypatch: MonkeyPatch
     ) -> InriaAerialImageLabeling:
 
         root = os.path.join("tests", "data", "inria")
-        test_md5 = "f23caf363389ef59de55fad11197c161"
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            InriaAerialImageLabeling, "md5", test_md5
-        )
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        test_md5 = "478688944e4797c097d9387fd0b3f038"
+        monkeypatch.setattr(InriaAerialImageLabeling, "md5", test_md5)
+        transforms = nn.Identity()
         return InriaAerialImageLabeling(
             root, split=request.param, transforms=transforms, checksum=True
         )
@@ -42,7 +39,7 @@ class TestInriaAerialImageLabeling:
         assert x["image"].ndim == 3
 
     def test_len(self, dataset: InriaAerialImageLabeling) -> None:
-        assert len(dataset) == 2
+        assert len(dataset) == 5
 
     def test_already_downloaded(self, dataset: InriaAerialImageLabeling) -> None:
         InriaAerialImageLabeling(root=dataset.root)
