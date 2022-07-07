@@ -172,8 +172,7 @@ class SeasonalContrastS2(VisionDataset):
             with rasterio.open(fn) as f:
                 band_data = f.read(1)
                 height, width = band_data.shape
-                assert height == width
-                size = height
+                size = min(height, width)
                 if size < 264:
                     # TODO: PIL resize is much slower than cv2, we should check to see
                     # what could be sped up throughout later. There is also a potential
