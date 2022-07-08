@@ -123,10 +123,6 @@ All TorchGeo datasets are compatible with PyTorch data loaders, making them easy
 In order to facilitate direct comparisons between results published in the literature and further reduce the boilerplate code needed to run experiments with datasets in TorchGeo, we have created PyTorch Lightning [*datamodules*](https://torchgeo.readthedocs.io/en/stable/api/datamodules.html) with well-defined train-val-test splits and [*trainers*](https://torchgeo.readthedocs.io/en/stable/api/trainers.html) for various tasks like classification, regression, and semantic segmentation. These datamodules show how to incorporate augmentations from the kornia library, include preprocessing transforms (with pre-calculated channel statistics), and let users easily experiment with hyperparameters related to the data itself (as opposed to the modeling process). Training a semantic segmentation model on the [Inria Aerial Image Labeling](https://project.inria.fr/aerialimagelabeling/) dataset is as easy as a few imports and four lines of code.
 
 ```python
-from pytorch_lightning import Trainer
-from torchgeo.datamodules import InriaAerialImageLabelingDataModule
-from torchgeo.trainers import SemanticSegmentationTask
-
 datamodule = InriaAerialImageLabelingDataModule(root_dir="...", batch_size=64, num_workers=6)
 task = SemanticSegmentationTask(segmentation_model="unet", encoder_weights="imagenet", learning_rate=0.1)
 trainer = Trainer(gpus=1, default_root_dir="...")
