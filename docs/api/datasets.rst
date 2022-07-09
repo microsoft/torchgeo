@@ -224,6 +224,11 @@ LoveDA
 
 .. autoclass:: LoveDA
 
+Million-AID
+^^^^^^^^^^^
+
+.. autoclass:: MillionAID
+
 NASA Marine Debris
 ^^^^^^^^^^^^^^^^^^
 
