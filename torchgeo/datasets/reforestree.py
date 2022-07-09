@@ -54,16 +54,10 @@ class ReforesTree(VisionDataset):
     """
 
     classes = ["other", "banana", "cacao", "citrus", "fruit", "timber"]
-    url = (
-        "https://uc62e9acc213a8f56919a7a7add8.dl.dropboxusercontent.com/"
-        "zip_download_get/BKn4_obEfo0iR6UUpOqBMp9K0ohkldQtJTUN802va4SgJvd"
-        "OsN36ap5fcbbxFLbhPMHoI1oJBrkjwJWyYkcBE-SxCeFPTZ0a-gOBozXL7CfaKg?"
-        "_download_id=600502027618175772326304665489490007078769290252973"
-        "08895167120694292&_notify_domain=www.dropbox.com&dl=1"
-    )
+    url = "https://zenodo.org/record/6813783/files/reforesTree.zip?download=1"
 
     md5 = "f6a4a1d8207aeaa5fbab7b21b683a302"
-    zipfilename = "data.zip"
+    zipfilename = "reforesTree.zip"
 
     def __init__(
         self,
