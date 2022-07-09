@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
-from torchvision.transforms import Compose
+from torchvision.transforms import Compose, Normalize
 
 from ..datasets import RESISC45
 
@@ -25,8 +25,8 @@ class RESISC45DataModule(pl.LightningDataModule):
     Uses the train/val/test splits from the dataset.
     """
 
-    band_means = torch.tensor([0.36820969, 0.38083247, 0.34341029]).reshape(-1, 1, 1)
-    band_stds = torch.tensor([0.20339924, 0.18524736, 0.18455448]).reshape(-1, 1, 1)
+    band_means = torch.tensor([0.36820969, 0.38083247, 0.34341029])
+    band_stds = torch.tensor([0.20339924, 0.18524736, 0.18455448])
 
     def __init__(
         self, root_dir: str, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
@@ -42,6 +42,8 @@ class RESISC45DataModule(pl.LightningDataModule):
         self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
+
+        self.norm = Normalize(self.band_means, self.band_stds)
 
     def on_after_batch_transfer(
         self, batch: Dict[str, Any], batch_idx: int
@@ -96,7 +98,7 @@ class RESISC45DataModule(pl.LightningDataModule):
         """
         sample["image"] = sample["image"].float()
         sample["image"] /= 255.0
-        sample["image"] = (sample["image"] - self.band_means) / self.band_stds
+        sample["image"] = self.norm(sample["image"])
         return sample
 
     def prepare_data(self) -> None:

@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional, cast
 import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
-from torchvision.transforms import Compose
+from torchvision.transforms import Compose, Normalize
 
 from ..datasets import So2Sat
 
@@ -36,7 +36,7 @@ class So2SatDataModule(pl.LightningDataModule):
             0.15428468872076637,
             0.10905050699570007,
         ]
-    ).reshape(-1, 1, 1)
+    )
 
     band_stds = torch.tensor(
         [
@@ -51,7 +51,7 @@ class So2SatDataModule(pl.LightningDataModule):
             0.09991773043519253,
             0.08780632509122865,
         ]
-    ).reshape(-1, 1, 1)
+    )
 
     # this reorders the bands to put S2 RGB first, then remainder of S2
     reindex_to_rgb_first = [2, 1, 0, 3, 4, 5, 6, 7, 8, 9]
@@ -82,6 +82,8 @@ class So2SatDataModule(pl.LightningDataModule):
         self.bands = bands
         self.unsupervised_mode = unsupervised_mode
 
+        self.norm = Normalize(self.band_means, self.band_stds)
+
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
 
@@ -92,7 +94,7 @@ class So2SatDataModule(pl.LightningDataModule):
             preprocessed sample
         """
         sample["image"] = sample["image"].float()
-        sample["image"] = (sample["image"] - self.band_means) / self.band_stds
+        sample["image"] = self.norm(sample["image"])
         sample["image"] = sample["image"][self.reindex_to_rgb_first, :, :]
 
         if self.bands == "rgb":

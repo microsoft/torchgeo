@@ -10,6 +10,7 @@ import pytorch_lightning as pl
 import torch
 from torch import Generator
 from torch.utils.data import DataLoader, random_split
+from torchvision.transforms import Normalize
 
 from ..datasets import ETCI2021
 
@@ -25,11 +26,11 @@ class ETCI2021DataModule(pl.LightningDataModule):
 
     band_means = torch.tensor(
         [0.52253931, 0.52253931, 0.52253931, 0.61221701, 0.61221701, 0.61221701]
-    ).reshape(-1, 1, 1)
+    )
 
     band_stds = torch.tensor(
         [0.35221376, 0.35221376, 0.35221376, 0.37364622, 0.37364622, 0.37364622]
-    ).reshape(-1, 1, 1)
+    )
 
     def __init__(
         self,
@@ -53,6 +54,8 @@ class ETCI2021DataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
 
+        self.norm = Normalize(self.band_means, self.band_stds)
+
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
 
@@ -66,7 +69,7 @@ class ETCI2021DataModule(pl.LightningDataModule):
         """
         sample["image"] = sample["image"].float()
         sample["image"] /= 255.0
-        sample["image"] = (sample["image"] - self.band_means) / self.band_stds
+        sample["image"] = self.norm(sample["image"])
 
         if "mask" in sample:
             flood_mask = sample["mask"][1]

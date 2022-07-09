@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
-from torchvision.transforms import Compose
+from torchvision.transforms import Compose, Normalize
 
 from ..datasets import EuroSAT
 
@@ -38,7 +38,7 @@ class EuroSATDataModule(pl.LightningDataModule):
             1118.92391149,
             2594.14080798,
         ]
-    ).reshape(-1, 1, 1)
+    )
 
     band_stds = torch.tensor(
         [
@@ -56,7 +56,7 @@ class EuroSATDataModule(pl.LightningDataModule):
             761.30323499,
             1231.58581042,
         ]
-    ).reshape(-1, 1, 1)
+    )
 
     def __init__(
         self, root_dir: str, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
@@ -73,6 +73,8 @@ class EuroSATDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
 
+        self.norm = Normalize(self.band_means, self.band_stds)
+
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
 
@@ -83,7 +85,7 @@ class EuroSATDataModule(pl.LightningDataModule):
             preprocessed sample
         """
         sample["image"] = sample["image"].float()
-        sample["image"] = (sample["image"] - self.band_means) / self.band_stds
+        sample["image"] = self.norm(sample["image"])
         return sample
 
     def prepare_data(self) -> None:

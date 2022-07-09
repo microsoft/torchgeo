@@ -11,7 +11,7 @@ import torch
 from einops import repeat
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data._utils.collate import default_collate
-from torchvision.transforms import Compose
+from torchvision.transforms import Compose, Normalize
 
 from ..datasets import OSCD
 from .utils import dataset_split
@@ -42,7 +42,7 @@ class OSCDDataModule(pl.LightningDataModule):
             2080.3347,
             1524.6930,
         ]
-    ).reshape(-1, 1, 1)
+    )
 
     band_stds = torch.tensor(
         [
@@ -60,7 +60,7 @@ class OSCDDataModule(pl.LightningDataModule):
             213.4821,
             179.4793,
         ]
-    ).reshape(-1, 1, 1)
+    )
 
     def __init__(
         self,
@@ -105,10 +105,12 @@ class OSCDDataModule(pl.LightningDataModule):
         )
         self.padto = K.PadTo(pad_size)
 
+        self.norm = Normalize(self.band_means, self.band_stds)
+
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         sample["image"] = sample["image"].float()
-        sample["image"] = (sample["image"] - self.band_means) / self.band_stds
+        sample["image"] = self.norm(sample["image"])
         sample["image"] = torch.flatten(sample["image"], 0, 1)
         return sample
 
