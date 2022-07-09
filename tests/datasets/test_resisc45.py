@@ -82,7 +82,7 @@ class TestRESISC45:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         err = "Dataset not found in `root` directory and `download=False`, "
         "either specify a different `root` directory or use `download=True` "
-        "to automaticaly download the dataset."
+        "to automatically download the dataset."
         with pytest.raises(RuntimeError, match=err):
             RESISC45(str(tmp_path))
 
