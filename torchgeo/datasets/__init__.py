@@ -75,6 +75,7 @@ from .openbuildings import OpenBuildings
 from .oscd import OSCD
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
+from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
@@ -167,6 +168,7 @@ __all__ = (
     "PatternNet",
     "Potsdam2D",
     "RESISC45",
+    "ReforesTree",
     "SeasonalContrastS2",
     "SEN12MS",
     "So2Sat",
