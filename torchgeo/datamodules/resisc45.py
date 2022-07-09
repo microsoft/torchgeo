@@ -26,7 +26,6 @@ class RESISC45DataModule(pl.LightningDataModule):
     """
 
     band_means = torch.tensor([0.36820969, 0.38083247, 0.34341029])
-
     band_stds = torch.tensor([0.20339924, 0.18524736, 0.18455448])
 
     def __init__(
