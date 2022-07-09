@@ -49,7 +49,7 @@ def create_img(path: str) -> None:
 
 
 if __name__ == "__main__":
-    data_root = "data"
+    data_root = "reforesTree"
     # remove old data
     if os.path.isdir(data_root):
         shutil.rmtree(data_root)

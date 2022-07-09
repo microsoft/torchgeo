@@ -28,9 +28,9 @@ class TestReforesTree:
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "reforestree")
 
-        url = os.path.join(data_dir, "data.zip")
+        url = os.path.join(data_dir, "reforesTree.zip")
 
-        md5 = "4f70885489000ed52de3223514179f63"
+        md5 = "387e04dbbb0aa803f72bd6d774409648"
 
         monkeypatch.setattr(ReforesTree, "url", url)
         monkeypatch.setattr(ReforesTree, "md5", md5)
@@ -82,12 +82,12 @@ class TestReforesTree:
         assert len(dataset) == 2
 
     def test_not_extracted(self, tmp_path: Path) -> None:
-        url = os.path.join("tests", "data", "reforestree", "data.zip")
+        url = os.path.join("tests", "data", "reforestree", "reforesTree.zip")
         shutil.copy(url, tmp_path)
         ReforesTree(root=str(tmp_path))
 
     def test_corrupted(self, tmp_path: Path) -> None:
-        with open(os.path.join(tmp_path, "data.zip"), "w") as f:
+        with open(os.path.join(tmp_path, "reforesTree.zip"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
             ReforesTree(root=str(tmp_path), checksum=True)
