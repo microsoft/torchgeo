@@ -16,6 +16,7 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands
 `LandCover.ai`_,S,Aerial,"10,674",5,512x512,0.25--0.5,RGB
 `LEVIR-CD+`_,CD,Google Earth,985,2,"1,024x1,024",0.5,RGB
 `LoveDA`_,S,Google Earth,"5,987",7,"1,024x1,024",0.3,RGB
+`Million-AID`_,C,Google Earth,1M,51--73,,0.5--153,RGB
 `NASA Marine Debris`_,OD,PlanetScope,707,1,256x256,3,RGB
 `OSCD`_,CD,Sentinel-2,24,2,"40--1,180",60,MSI
 `PatternNet`_,C,Google Earth,"30,400",38,256x256,0.06--5,RGB

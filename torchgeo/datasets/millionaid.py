@@ -14,7 +14,7 @@ from torch import Tensor
 
 from torchgeo.datasets import VisionDataset
 
-from .utils import check_integrity, download_and_extract_archive, extract_archive
+from .utils import check_integrity, extract_archive
 
 
 class MillionAID(VisionDataset):
@@ -31,7 +31,7 @@ class MillionAID(VisionDataset):
 
     Dataset features:
 
-    * RGB aerial images with varying resolutions from 0.5m to 153m per pixel
+    * RGB aerial images with varying resolutions from 0.5 m to 153 m per pixel
     * images within classes can have different pixel dimension
 
     Dataset format:
@@ -179,10 +179,6 @@ class MillionAID(VisionDataset):
         "train": "1b40503cafa9b0601653ca36cd788852",
         "test": "51a63ee3eeb1351889eacff349a983d8",
     }
-    url = {
-        "train": "https://eastus1-mediap.svc.ms/transform/zip?cs=fFNQTw",
-        "test": "https://eastus1-mediap.svc.ms/transform/zip?cs=fFNQTw",
-    }
 
     filenames = {"train": "train.zip", "test": "test.zip"}
 
@@ -195,7 +191,6 @@ class MillionAID(VisionDataset):
         task: str = "multi-class",
         split: str = "train",
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
-        download: bool = False,
         checksum: bool = False,
     ) -> None:
         """Initialize a new MillionAID dataset instance.
@@ -206,16 +201,13 @@ class MillionAID(VisionDataset):
             split: train or test split
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
-            download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            RuntimeError: if dataset is not found
         """
         self.root = root
         self.transforms = transforms
-        self.download = download
         self.checksum = checksum
         assert task in self.tasks
         assert split in self.splits
@@ -333,28 +325,10 @@ class MillionAID(VisionDataset):
             extract_archive(filepath)
             return
 
-        # Check if the user requested to download the dataset
-        if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` directory, either "
-                "specify a different `root` directory or manually download "
-                "the dataset to this directory."
-            )
-
-        # else download the dataset
-        self._download()
-
-    def _download(self) -> None:
-        """Download the dataset and extract it.
-
-        Raises:
-            AssertionError: if the checksum does not match
-        """
-        download_and_extract_archive(
-            self.url[self.split],
-            self.root,
-            filename=self.filenames[self.split],
-            md5=self.md5s[self.split] if self.checksum else None,
+        raise RuntimeError(
+            f"Dataset not found in `root={self.root}` directory, either "
+            "specify a different `root` directory or manually download "
+            "the dataset to this directory."
         )
 
     def plot(
