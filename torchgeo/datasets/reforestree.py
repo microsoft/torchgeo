@@ -27,8 +27,8 @@ class ReforesTree(VisionDataset):
 
     Dataset features:
 
-    * 100 high resolution RGB drone images at 2cm/pixel of size 4000x4000px
-    * more than 4600 tree crown box annotations
+    * 100 high resolution RGB drone images at 2 cm/pixel of size 4,000 x 4,000 px
+    * more than 4,600 tree crown box annotations
     * tree crown matched with field measurements of diameter at breast height (DBH),
       and computed AGB and carbon values
 
@@ -180,11 +180,8 @@ class ReforesTree(VisionDataset):
     def _verify(self) -> None:
         """Checks the integrity of the dataset structure.
 
-        Returns:
-            True if the dataset directories are found, else False
-
         Raises:
-            Runtime Error if dataset is not found in root or is corrupted
+            RuntimeError: if dataset is not found in root or is corrupted
         """
         filepaths = [os.path.join(self.root, dir) for dir in ["tiles", "mapping"]]
         if all([os.path.exists(filepath) for filepath in filepaths]):
@@ -200,9 +197,9 @@ class ReforesTree(VisionDataset):
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
-                f"Dataset not found in {self.root} directory, either specify a"
-                + " different `root` directory or manually download "
-                + "the dataset to this directory."
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
             )
 
         # else download the dataset

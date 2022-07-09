@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 
 import torchgeo.datasets.utils
@@ -54,10 +53,10 @@ class TestReforesTree:
         assert x["image"].ndim == 3
         assert len(x["boxes"]) == 2
 
-    @pytest.fixture(params=["pandas"])
-    def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:
+    @pytest.fixture
+    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
         import_orig = builtins.__import__
-        package = str(request.param)
+        package = "pandas"
 
         def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
             if name == package:
@@ -65,16 +64,13 @@ class TestReforesTree:
             return import_orig(name, *args, **kwargs)
 
         monkeypatch.setattr(builtins, "__import__", mocked_import)
-        return package
 
     def test_mock_missing_module(
-        self, dataset: ReforesTree, mock_missing_module: str
+        self, dataset: ReforesTree, mock_missing_module: None
     ) -> None:
-        package = mock_missing_module
-
         with pytest.raises(
             ImportError,
-            match=f"{package} is not installed and is required to use this dataset",
+            match=f"pandas is not installed and is required to use this dataset",
         ):
             ReforesTree(root=dataset.root)
 
@@ -93,7 +89,7 @@ class TestReforesTree:
             ReforesTree(root=str(tmp_path), checksum=True)
 
     def test_not_found(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in."):
+        with pytest.raises(RuntimeError, match="Dataset not found in"):
             ReforesTree(str(tmp_path))
 
     def test_plot(self, dataset: ReforesTree) -> None:

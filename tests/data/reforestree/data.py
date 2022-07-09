@@ -50,11 +50,10 @@ def create_img(path: str) -> None:
 
 if __name__ == "__main__":
     data_root = "reforesTree"
+
     # remove old data
     if os.path.isdir(data_root):
         shutil.rmtree(data_root)
-    else:
-        os.makedirs(data_root)
 
     # create imagery
     for path in PATHS["images"]:
