@@ -199,7 +199,7 @@ class NASAMarineDebris(VisionDataset):
             raise RuntimeError(
                 "Dataset not found in `root` directory and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # TODO: need a checksum check in here post downloading

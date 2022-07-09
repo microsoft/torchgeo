@@ -421,7 +421,7 @@ class IDTReeS(VisionDataset):
             raise RuntimeError(
                 "Dataset not found in `root` directory and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # Download and extract the dataset
