@@ -70,7 +70,7 @@ class TestReforesTree:
     ) -> None:
         with pytest.raises(
             ImportError,
-            match=f"pandas is not installed and is required to use this dataset",
+            match="pandas is not installed and is required to use this dataset",
         ):
             ReforesTree(root=dataset.root)
 
