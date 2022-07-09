@@ -12,12 +12,12 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from torchgeo.datasets import VisionDataset
+from torchgeo.datasets import NonGeoDataset
 
 from .utils import check_integrity, extract_archive
 
 
-class MillionAID(VisionDataset):
+class MillionAID(NonGeoDataset):
     """Million-AID Dataset.
 
     The `MillionAID <https://captain-whu.github.io/DiRS/>`_ dataset consists
