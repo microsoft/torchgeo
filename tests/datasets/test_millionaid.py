@@ -21,7 +21,7 @@ class TestMillionAID:
     def dataset(self, request: SubRequest) -> MillionAID:
         root = os.path.join("tests", "data", "millionaid")
         split, task = request.param
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return MillionAID(
             root=root, split=split, task=task, transforms=transforms, checksum=True
         )
