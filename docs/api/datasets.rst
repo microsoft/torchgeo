@@ -244,6 +244,11 @@ Potsdam
 
 .. autoclass:: Potsdam2D
 
+ReforesTree
+^^^^^^^^^^^
+
+.. autoclass:: ReforesTree
+
 RESISC45
 ^^^^^^^^
 
