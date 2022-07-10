@@ -7,7 +7,6 @@ dependencies:
   - fiona>=1.8
   - h5py>=2.6
   - numpy>=1.17.2
-  - open3d>=0.11.2
   - pip
   - pycocotools>=2
   - pyproj>=2.2
