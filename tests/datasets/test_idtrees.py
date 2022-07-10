@@ -142,6 +142,9 @@ class TestIDTReeS:
 
     def test_plot_las(self, dataset: IDTReeS) -> None:
         pytest.importorskip("pyvista", minversion="0.35.1")
-        vis = dataset.plot_las(index=0, colormap="BrBG")
-        vis = dataset.plot_las(index=0, colormap=None)
-        vis = dataset.plot_las(index=1, colormap=None)
+        plot = dataset.plot_las(index=0, colormap="BrBG")
+        plot.show()
+        plot = dataset.plot_las(index=0, colormap=None)
+        plot.show()
+        plot = dataset.plot_las(index=1, colormap=None)
+        plot.show()
