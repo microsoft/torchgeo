@@ -24,6 +24,7 @@ def download_url(url: str, root: str, *args: str) -> None:
 class TestReforesTree:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ReforesTree:
+        pytest.importorskip("pandas", minversion="0.23.2")
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "reforestree")
 

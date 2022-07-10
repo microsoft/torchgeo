@@ -26,6 +26,7 @@ class TestLandCoverAI:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LandCoverAI:
+        pytest.importorskip("cv2", minversion="3.4.2.17")
         monkeypatch.setattr(torchgeo.datasets.landcoverai, "download_url", download_url)
         md5 = "ff8998857cc8511f644d3f7d0f3688d0"
         monkeypatch.setattr(LandCoverAI, "md5", md5)
