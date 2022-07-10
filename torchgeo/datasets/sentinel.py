@@ -8,7 +8,6 @@ from typing import Any, Callable, Dict, Optional, Sequence
 import matplotlib.pyplot as plt
 import torch
 from rasterio.crs import CRS
-from torch import Tensor
 
 from .geo import RasterDataset
 
@@ -104,7 +103,7 @@ class Sentinel2(Sentinel):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
@@ -121,7 +120,9 @@ class Sentinel2(Sentinel):
         Raises:
             ValueError: if the RGB bands are not included in ``self.bands``
 
-        .. versionadded:: 0.3
+        .. versionchanged:: 0.3
+           Method now takes a sample dict, not a Tensor. Additionally, possible to
+           show subplot titles and/or use a custom suptitle.
         """
         rgb_indices = []
         for band in self.RGB_BANDS:
