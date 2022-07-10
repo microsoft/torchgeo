@@ -140,15 +140,8 @@ class TestIDTReeS:
             dataset.plot(x, show_titles=False)
             plt.close()
 
-    @pytest.mark.skipif(
-        sys.platform in ["darwin", "win32"],
-        reason="segmentation fault on macOS and windows",
-    )
     def test_plot_las(self, dataset: IDTReeS) -> None:
         pytest.importorskip("pyvista", minversion="0.35.1")
         vis = dataset.plot_las(index=0, colormap="BrBG")
-        vis.close()
         vis = dataset.plot_las(index=0, colormap=None)
-        vis.close()
         vis = dataset.plot_las(index=1, colormap=None)
-        vis.close()
