@@ -111,11 +111,8 @@ class Landsat(RasterDataset, abc.ABC):
 
         image = sample["image"][rgb_indices].permute(1, 2, 0).float()
 
-        # Stretch to the range of 2nd to 98th percentile
-        per02 = image.quantile(0.02)
-        per98 = image.quantile(0.98)
-        image = (image - per02) / (per98 - per02)
-        image = image.clamp(min=0, max=1)
+        # Stretch to the full range
+        image = (image - image.min()) / (image.max() - image.min())
 
         fig, ax = plt.subplots(1, 1, figsize=(4, 4))
 

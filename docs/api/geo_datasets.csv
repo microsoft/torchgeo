@@ -12,7 +12,7 @@ Dataset,Type,Source,Size (px),Resolution (m)
 `GBIF`_,Points,Citizen Scientists,-,-
 `GlobBiomass`_,Masks,Landsat,"45,000x45,000",100
 `iNaturalist`_,Points,Citizen Scientists,-,-
-`Landsat`_,Imagery,Landsat,-,30
+`Landsat`_,Imagery,Landsat,"8,900x8,900",30
 `NAIP`_,Imagery,Aerial,"6,100x7,600",1
 `Open Buildings`_,Geometries,"Maxar, CNES/Airbus",-,-
 `Sentinel`_,Imagery,Sentinel,"10,000x10,000",10
