@@ -507,7 +507,9 @@ class IDTReeS(NonGeoDataset):
 
         return fig
 
-    def plot_las(self, index: int, colormap: Optional[str] = None) -> Any:
+    def plot_las(
+        self, index: int, colormap: Optional[str] = None
+    ) -> "pyvista.Plotter":  # type: ignore[name-defined] # noqa: F821
         """Plot a sample point cloud at the index.
 
         Args:
@@ -515,17 +517,16 @@ class IDTReeS(NonGeoDataset):
             colormap: a valid matplotlib colormap
 
         Returns:
-            a open3d.visualizer.Visualizer object. Use
-                Visualizer.run() to display
+            pyvista.Plotter object. Run plotter.show() to display
 
         Raises:
-            ImportError: if open3d is not installed
+            ImportError: if pyvista is not installed
         """
         try:
-            import open3d  # noqa: F401
+            import pyvista  # noqa: F401
         except ImportError:
             raise ImportError(
-                "open3d is not installed and is required to plot point clouds"
+                "pyvista is not installed and is required to plot point clouds"
             )
         import laspy
 
@@ -549,10 +550,10 @@ class IDTReeS(NonGeoDataset):
             else:
                 colors = np.zeros_like(points)
 
-        pcd = open3d.geometry.PointCloud()
-        pcd.points = open3d.utility.Vector3dVector(points)
-        pcd.colors = open3d.utility.Vector3dVector(colors)
-        vis = open3d.visualization.Visualizer()
-        vis.create_window()
-        vis.add_geometry(pcd)
-        return vis
+        point_cloud = pyvista.PolyData(points)  # type: ignore[attr-defined]
+        point_cloud["color"] = colors
+        plotter = pyvista.Plotter()  # type: ignore[attr-defined]
+        _ = plotter.add_mesh(point_cloud, scalars="color", rgb=True)
+        plotter.camera_position = "yz"
+        plotter.background_color = "white"
+        return plotter
