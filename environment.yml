@@ -2,7 +2,6 @@ name: torchgeo
 channels:
   - pytorch  # for pytorch and torchvision.
   - conda-forge
-  - open3d-admin  # for open3d
 dependencies:
   - einops>=0.3
   - fiona>=1.8
@@ -14,6 +13,7 @@ dependencies:
   - pyproj>=2.2
   - python>=3.7
   - pytorch>=1.9
+  - pyvista
   - rarfile>=3
   - rasterio>=1.0.20
   - shapely>=1.3
