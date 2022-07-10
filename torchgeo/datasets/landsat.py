@@ -109,7 +109,7 @@ class Landsat(RasterDataset, abc.ABC):
             else:
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
-        image = sample["image"][rgb_indices].permute(1, 2, 0)
+        image = sample["image"][rgb_indices].permute(1, 2, 0).float()
 
         # Stretch to the range of 2nd to 98th percentile
         per02 = image.quantile(0.02)
