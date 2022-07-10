@@ -609,7 +609,7 @@ def rasterio_loader(path: str) -> "np.typing.NDArray[np.int_]":
     """
     with rasterio.open(path) as f:
         array: "np.typing.NDArray[np.int_]" = f.read().astype(np.int32)
-        # VisionClassificationDataset expects images returned with channels last (HWC)
+        # NonGeoClassificationDataset expects images returned with channels last (HWC)
         array = array.transpose(1, 2, 0)
     return array
 

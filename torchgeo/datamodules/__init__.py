@@ -30,7 +30,7 @@ __all__ = (
     # GeoDataset
     "ChesapeakeCVPRDataModule",
     "NAIPChesapeakeDataModule",
-    # VisionDataset
+    # NonGeoDataset
     "BigEarthNetDataModule",
     "COWCCountingDataModule",
     "DeepGlobeLandCoverDataModule",

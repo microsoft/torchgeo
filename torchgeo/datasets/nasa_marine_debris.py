@@ -13,11 +13,11 @@ import torch
 from torch import Tensor
 from torchvision.utils import draw_bounding_boxes
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import download_radiant_mlhub_dataset, extract_archive
 
 
-class NASAMarineDebris(VisionDataset):
+class NASAMarineDebris(NonGeoDataset):
     """NASA Marine Debris dataset.
 
     The `NASA Marine Debris <https://mlhub.earth/data/nasa_marine_debris>`__

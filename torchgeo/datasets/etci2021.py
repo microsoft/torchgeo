@@ -13,11 +13,11 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import download_and_extract_archive
 
 
-class ETCI2021(VisionDataset):
+class ETCI2021(NonGeoDataset):
     """ETCI 2021 Flood Detection dataset.
 
     The `ETCI2021 <https://nasa-impact.github.io/etci2021/>`_

@@ -15,7 +15,7 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import check_integrity, download_and_extract_archive, extract_archive
 
 
@@ -51,7 +51,7 @@ def parse_pascal_voc(path: str) -> Dict[str, Any]:
     return dict(filename=filename, bboxes=bboxes, labels=labels)
 
 
-class ForestDamage(VisionDataset):
+class ForestDamage(NonGeoDataset):
     """Forest Damage dataset.
 
     The `ForestDamage

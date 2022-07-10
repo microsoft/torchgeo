@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import (
     check_integrity,
     draw_semantic_segmentation_masks,
@@ -22,7 +22,7 @@ from .utils import (
 )
 
 
-class DeepGlobeLandCover(VisionDataset):
+class DeepGlobeLandCover(NonGeoDataset):
     """DeepGlobe Land Cover Classification Challenge dataset.
 
     The `DeepGlobe Land Cover Classification Challenge

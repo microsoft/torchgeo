@@ -46,9 +46,9 @@ rec = {"type": "Feature", "id": "0", "properties": OrderedDict(), "geometry": {"
 dst.write(rec)
 ```
 
-## VisionDataset
+## NonGeoDataset
 
-VisionDataset data can be created like so.
+NonGeoDataset data can be created like so.
 
 ### RGB images
 

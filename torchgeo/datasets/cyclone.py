@@ -14,11 +14,11 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import check_integrity, download_radiant_mlhub_dataset, extract_archive
 
 
-class TropicalCycloneWindEstimation(VisionDataset):
+class TropicalCycloneWindEstimation(NonGeoDataset):
     """Tropical Cyclone Wind Estimation Competition dataset.
 
     A collection of tropical storms in the Atlantic and East Pacific Oceans from 2000 to

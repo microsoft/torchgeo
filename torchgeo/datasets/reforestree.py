@@ -14,11 +14,11 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import check_integrity, download_and_extract_archive, extract_archive
 
 
-class ReforesTree(VisionDataset):
+class ReforesTree(NonGeoDataset):
     """ReforesTree dataset.
 
     The `ReforesTree <https://github.com/gyrrei/ReforesTree>`__
