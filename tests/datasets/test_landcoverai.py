@@ -57,6 +57,7 @@ class TestLandCoverAI:
         LandCoverAI(root=dataset.root, download=True)
 
     def test_already_downloaded(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+        pytest.importorskip("cv2", minversion="3.4.2.17")
         sha256 = "ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b"
         monkeypatch.setattr(LandCoverAI, "sha256", sha256)
         url = os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip")

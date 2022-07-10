@@ -79,6 +79,7 @@ class TestReforesTree:
         assert len(dataset) == 2
 
     def test_not_extracted(self, tmp_path: Path) -> None:
+        pytest.importorskip("pandas", minversion="0.23.2")
         url = os.path.join("tests", "data", "reforestree", "reforesTree.zip")
         shutil.copy(url, tmp_path)
         ReforesTree(root=str(tmp_path))
