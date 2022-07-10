@@ -15,11 +15,11 @@ from matplotlib import colors
 from rasterio.enums import Resampling
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import check_integrity, extract_archive, percentile_normalization
 
 
-class DFC2022(VisionDataset):
+class DFC2022(NonGeoDataset):
     """DFC2022 dataset.
 
     The `DFC2022 <https://www.grss-ieee.org/community/technical-committees/2022-ieee-grss-data-fusion-contest/>`__

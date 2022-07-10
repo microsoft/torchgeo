@@ -24,7 +24,7 @@ from rasterio.features import rasterize
 from rasterio.transform import Affine
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import (
     check_integrity,
     download_radiant_mlhub_collection,
@@ -33,7 +33,7 @@ from .utils import (
 )
 
 
-class SpaceNet(VisionDataset, abc.ABC):
+class SpaceNet(NonGeoDataset, abc.ABC):
     """Abstract base class for the SpaceNet datasets.
 
     The `SpaceNet <https://spacenet.ai/datasets/>`__ datasets are a set of

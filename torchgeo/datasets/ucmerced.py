@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from torch import Tensor
 
-from .geo import VisionClassificationDataset
+from .geo import NonGeoClassificationDataset
 from .utils import check_integrity, download_url, extract_archive
 
 
-class UCMerced(VisionClassificationDataset):
+class UCMerced(NonGeoClassificationDataset):
     """UC Merced dataset.
 
     The `UC Merced <http://weegee.vision.ucmerced.edu/datasets/landuse.html>`__
@@ -212,7 +212,7 @@ class UCMerced(VisionClassificationDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`VisionClassificationDataset.__getitem__`
+            sample: a sample returned by :meth:`NonGeoClassificationDataset.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 

@@ -257,7 +257,7 @@ class PreChippedGeoSampler(GeoSampler):
     and subclass :class:`~torchgeo.datasets.GeoDataset` but have already been
     pre-processed into :term:`chips <chip>`.
 
-    This sampler should not be used with :class:`~torchgeo.datasets.VisionDataset`.
+    This sampler should not be used with :class:`~torchgeo.datasets.NonGeoDataset`.
     You may encounter problems when using an :term:`ROI <region of interest (ROI)>`
     that partially intersects with one of the file bounding boxes, when using an
     :class:`~torchgeo.datasets.IntersectionDataset`, or when each file is in a

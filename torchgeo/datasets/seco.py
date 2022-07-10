@@ -14,11 +14,11 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import download_url, extract_archive, percentile_normalization
 
 
-class SeasonalContrastS2(VisionDataset):
+class SeasonalContrastS2(NonGeoDataset):
     """Sentinel 2 imagery from the Seasonal Contrast paper.
 
     The `Seasonal Contrast imagery <https://github.com/ElementAI/seasonal-contrast/>`_

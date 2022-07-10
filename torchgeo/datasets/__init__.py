@@ -41,6 +41,8 @@ from .gbif import GBIF
 from .geo import (
     GeoDataset,
     IntersectionDataset,
+    NonGeoClassificationDataset,
+    NonGeoDataset,
     RasterDataset,
     UnionDataset,
     VectorDataset,
@@ -143,7 +145,7 @@ __all__ = (
     "OpenBuildings",
     "Sentinel",
     "Sentinel2",
-    # VisionDataset
+    # NonGeoDataset
     "ADVANCE",
     "BeninSmallHolderCashews",
     "BigEarthNet",
@@ -191,11 +193,13 @@ __all__ = (
     # Base classes
     "GeoDataset",
     "IntersectionDataset",
+    "NonGeoClassificationDataset",
+    "NonGeoDataset",
     "RasterDataset",
     "UnionDataset",
     "VectorDataset",
-    "VisionDataset",
     "VisionClassificationDataset",
+    "VisionDataset",
     # Utilities
     "BoundingBox",
     "concat_samples",

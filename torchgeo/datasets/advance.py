@@ -13,11 +13,11 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import download_and_extract_archive
 
 
-class ADVANCE(VisionDataset):
+class ADVANCE(NonGeoDataset):
     """ADVANCE dataset.
 
     The `ADVANCE <https://akchen.github.io/ADVANCE-DATASET/>`__

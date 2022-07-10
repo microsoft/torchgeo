@@ -9,6 +9,7 @@ import glob
 import os
 import re
 import sys
+import warnings
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
 
 import fiona
@@ -46,7 +47,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     * :term:`coordinate reference system (CRS)`
     * resolution
 
-    :class:`GeoDataset` is a special class of datasets. Unlike :class:`VisionDataset`,
+    :class:`GeoDataset` is a special class of datasets. Unlike :class:`NonGeoDataset`,
     the presence of geospatial information allows two or more datasets to be combined
     based on latitude/longitude. This allows users to do things like:
 
@@ -625,7 +626,7 @@ class VectorDataset(GeoDataset):
         return sample
 
 
-class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):
+class NonGeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     """Abstract base class for datasets lacking geospatial information.
 
     This base class is designed for datasets with pre-defined image chips.
@@ -661,11 +662,25 @@ class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):
         """
         return f"""\
 {self.__class__.__name__} Dataset
-    type: VisionDataset
+    type: NonGeoDataset
     size: {len(self)}"""
 
 
-class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[misc]
+class VisionDataset(NonGeoDataset):
+    """Abstract base class for datasets lacking geospatial information.
+
+    .. deprecated:: 0.3
+       Use :class:`NonGeoDataset` instead.
+    """
+
+    def __new__(cls, *args: Any, **kwargs: Any) -> "VisionDataset":
+        """Create a new instance of VisionDataset."""
+        msg = "VisionDataset is deprecated, use NonGeoDataset instead."
+        warnings.warn(msg, DeprecationWarning)
+        return super().__new__(cls, *args, **kwargs)
+
+
+class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[misc]
     """Abstract base class for classification datasets lacking geospatial information.
 
     This base class is designed for datasets with pre-defined image chips which
@@ -679,7 +694,7 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
         loader: Optional[Callable[[str], Any]] = pil_loader,
         is_valid_file: Optional[Callable[[str], bool]] = None,
     ) -> None:
-        """Initialize a new VisionClassificationDataset instance.
+        """Initialize a new NonGeoClassificationDataset instance.
 
         Args:
             root: root directory where dataset can be found
@@ -743,6 +758,21 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
         tensor = tensor.permute((2, 0, 1))
         label = torch.tensor(label)
         return tensor, label
+
+
+class VisionClassificationDataset(NonGeoClassificationDataset):
+    """Abstract base class for classification datasets lacking geospatial information.
+
+    .. deprecated:: 0.3
+       Use :class:`NonGeoClassificationDataset` instead.
+    """
+
+    def __new__(cls, *args: Any, **kwargs: Any) -> "VisionClassificationDataset":
+        """Create a new instance of VisionClassificationDataset."""
+        msg = "VisionClassificationDataset is deprecated, "
+        msg += "use NonGeoClassificationDataset instead."
+        warnings.warn(msg, DeprecationWarning)
+        return cast(VisionClassificationDataset, super().__new__(cls))
 
 
 class IntersectionDataset(GeoDataset):

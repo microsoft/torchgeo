@@ -14,7 +14,7 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import (
     check_integrity,
     draw_semantic_segmentation_masks,
@@ -23,7 +23,7 @@ from .utils import (
 )
 
 
-class Potsdam2D(VisionDataset):
+class Potsdam2D(NonGeoDataset):
     """Potsdam 2D Semantic Segmentation dataset.
 
     The `Potsdam <https://www2.isprs.org/commissions/comm2/wg4/benchmark/2d-sem-label-potsdam/>`__

@@ -16,11 +16,11 @@ from rasterio.enums import Resampling
 from torch import Tensor
 from torchvision.utils import draw_bounding_boxes
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import download_url, extract_archive
 
 
-class IDTReeS(VisionDataset):
+class IDTReeS(NonGeoDataset):
     """IDTReeS dataset.
 
     The `IDTReeS <https://idtrees.org/competition/>`__

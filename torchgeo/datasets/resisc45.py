@@ -10,11 +10,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from torch import Tensor
 
-from .geo import VisionClassificationDataset
+from .geo import NonGeoClassificationDataset
 from .utils import download_url, extract_archive
 
 
-class RESISC45(VisionClassificationDataset):
+class RESISC45(NonGeoClassificationDataset):
     """RESISC45 dataset.
 
     The `RESISC45 <http://www.escience.cn/people/JunweiHan/NWPU-RESISC45.html>`__
@@ -250,7 +250,7 @@ class RESISC45(VisionClassificationDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`VisionClassificationDataset.__getitem__`
+            sample: a sample returned by :meth:`NonGeoClassificationDataset.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 
