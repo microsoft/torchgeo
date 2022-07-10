@@ -67,6 +67,7 @@ filterwarnings = [
     # https://github.com/pytorch/pytorch/issues/72906
     # https://github.com/pytorch/pytorch/pull/69823
     "ignore:distutils Version classes are deprecated. Use packaging.version instead:DeprecationWarning:torch.utils.tensorboard",
+    "ignore:The distutils package is deprecated and slated for removal in Python 3.12:DeprecationWarning:torch.utils.tensorboard",
     # https://github.com/PyTorchLightning/pytorch-lightning/issues/13256
     # https://github.com/PyTorchLightning/pytorch-lightning/pull/13261
     "ignore:torch.distributed._sharded_tensor will be deprecated:DeprecationWarning:torch.distributed._sharded_tensor",
