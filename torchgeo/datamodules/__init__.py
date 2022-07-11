@@ -15,6 +15,7 @@ from .inria import InriaAerialImageLabelingDataModule
 from .landcoverai import LandCoverAIDataModule
 from .loveda import LoveDADataModule
 from .naip import NAIPChesapeakeDataModule
+from .naip_cluster import NAIPClusterDataModule
 from .nasa_marine_debris import NASAMarineDebrisDataModule
 from .oscd import OSCDDataModule
 from .potsdam import Potsdam2DDataModule
@@ -40,6 +41,7 @@ __all__ = (
     "InriaAerialImageLabelingDataModule",
     "LandCoverAIDataModule",
     "LoveDADataModule",
+    "NAIPClusterDataModule",
     "NASAMarineDebrisDataModule",
     "OSCDDataModule",
     "Potsdam2DDataModule",
