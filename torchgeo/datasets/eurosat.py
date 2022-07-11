@@ -129,6 +129,8 @@ class EuroSAT(NonGeoClassificationDataset):
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
 
+        .. versionadded:: 0.3
+           The *bands* parameter.
         """
         self.root = root
         self.transforms = transforms

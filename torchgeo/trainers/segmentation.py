@@ -82,6 +82,9 @@ class SemanticSegmentationTask(LightningModule):
 
         Raises:
             ValueError: if kwargs arguments are invalid
+
+        .. versionchanged:: 0.3
+           The *ignore_zeros* parameter was renamed to *ignore_index*.
         """
         super().__init__()
 

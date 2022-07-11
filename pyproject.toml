@@ -67,6 +67,7 @@ filterwarnings = [
     # https://github.com/pytorch/pytorch/issues/72906
     # https://github.com/pytorch/pytorch/pull/69823
     "ignore:distutils Version classes are deprecated. Use packaging.version instead:DeprecationWarning:torch.utils.tensorboard",
+    "ignore:The distutils package is deprecated and slated for removal in Python 3.12:DeprecationWarning:torch.utils.tensorboard",
     # https://github.com/PyTorchLightning/pytorch-lightning/issues/13256
     # https://github.com/PyTorchLightning/pytorch-lightning/pull/13261
     "ignore:torch.distributed._sharded_tensor will be deprecated:DeprecationWarning:torch.distributed._sharded_tensor",
@@ -78,6 +79,8 @@ filterwarnings = [
     "ignore:Named tensors and all their associated APIs are an experimental feature and subject to change:UserWarning:torch.nn.functional",
     # https://github.com/tensorflow/tensorboard/issues/5798
     "ignore:Call to deprecated create function:DeprecationWarning:tensorboard.compat.proto",
+    # https://github.com/treebeardtech/nbmake/issues/68
+    'ignore:The \(fspath. py.path.local\) argument to NotebookFile is deprecated:pytest.PytestDeprecationWarning:nbmake.pytest_plugin',
 
     # Expected warnings
     # pytorch-lightning warns us about using num_workers=0, but it's faster on macOS
