@@ -92,7 +92,7 @@ class AppendNBR(AppendNormalizedDifferenceIndex):
 
     * https://www.sciencebase.gov/catalog/item/4f4e4b20e4b07f02db6abb36
 
-    .. versionadded:: 0.2.0
+    .. versionadded:: 0.2
     """
 
     def __init__(self, index_nir: int, index_swir: int) -> None:
