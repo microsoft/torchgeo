@@ -223,7 +223,7 @@ class TestVectorDataset:
     def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
         query = BoundingBox(1.1, 1.9, 1.1, 1.9, 0, 0)
         x = dataset[query]
-        assert torch.equal(x["mask"], torch.zeros(7, 7, dtype=torch.uint8))
+        assert torch.equal(x["mask"], torch.zeros(8, 8, dtype=torch.uint8))
 
     def test_invalid_query(self, dataset: CustomVectorDataset) -> None:
         query = BoundingBox(3, 3, 3, 3, 0, 0)
