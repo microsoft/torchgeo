@@ -22,6 +22,7 @@ from .resisc45 import RESISC45DataModule
 from .sen12ms import SEN12MSDataModule
 from .so2sat import So2SatDataModule
 from .ucmerced import UCMercedDataModule
+from .urban3d import Urban3DChallengeDataModule
 from .usavars import USAVarsDataModule
 from .vaihingen import Vaihingen2DDataModule
 from .xview import XView2DataModule
@@ -48,6 +49,7 @@ __all__ = (
     "So2SatDataModule",
     "CycloneDataModule",
     "UCMercedDataModule",
+    "Urban3DChallengeDataModule",
     "USAVarsDataModule",
     "Vaihingen2DDataModule",
     "XView2DataModule",

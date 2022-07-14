@@ -94,6 +94,7 @@ from .spacenet import (
     SpaceNet7,
 )
 from .ucmerced import UCMerced
+from .urban3d import Urban3DChallenge
 from .usavars import USAVars
 from .utils import (
     BoundingBox,
@@ -185,6 +186,7 @@ __all__ = (
     "SpaceNet7",
     "TropicalCycloneWindEstimation",
     "UCMerced",
+    "Urban3DChallenge",
     "USAVars",
     "Vaihingen2D",
     "VHR10",
