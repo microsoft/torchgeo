@@ -3,6 +3,7 @@
 
 """InriaAerialImageLabeling datamodule."""
 
+import os
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import kornia.augmentation as K
@@ -14,7 +15,7 @@ from kornia.contrib import compute_padding, extract_tensor_patches
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data._utils.collate import default_collate
 
-from ..datasets import InriaAerialImageLabeling
+from ..datasets import InriaAerialImageLabeling, PredictDataset
 from ..samplers.utils import _to_tuple
 from .utils import dataset_split
 
@@ -167,10 +168,15 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             self.val_dataset = train_dataset
             self.test_dataset = train_dataset
 
-        assert self.predict_on == "test"
-        self.predict_dataset = InriaAerialImageLabeling(
-            self.root_dir, self.predict_on, transforms=test_transforms
-        )
+        if os.path.isdir(self.predict_on):
+            self.predict_dataset = PredictDataset(
+                self.predict_on, patch_size=self.patch_size, transforms=self.preprocess
+            )
+        else:
+            assert self.predict_on == "test"
+            self.predict_dataset = InriaAerialImageLabeling(  # type: ignore[assignment]
+                self.root_dir, self.predict_on, transforms=test_transforms
+            )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""

@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import (
     Any,
+    Callable,
     Dict,
     Iterable,
     Iterator,
@@ -30,7 +31,11 @@ from typing import (
 import numpy as np
 import rasterio
 import torch
+import torchvision.transforms as T
+from einops import rearrange
+from kornia.contrib import compute_padding, extract_tensor_patches
 from torch import Tensor
+from torch.utils.data import Dataset
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
 
@@ -51,7 +56,106 @@ __all__ = (
     "draw_semantic_segmentation_masks",
     "rgb_to_mask",
     "percentile_normalization",
+    "PredictDataset",
 )
+
+
+class PredictDataset(Dataset[Any]):
+    """Prediction dataset for VisionDatasets."""
+
+    def __init__(
+        self,
+        root: str,
+        patch_size: Tuple[int, int],
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        bands: Tuple[int, ...] = (1, 2, 3),
+    ) -> None:
+        """Initialize a new PredictDataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            patch_size: Size of patch used as input for the model.
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version.
+            bands: bands to be used.
+
+        """
+        self.root = root
+        self.patch_size = patch_size
+        self.bands = bands
+        # patch_sample must not be passed to PredictDataset
+        if transforms:
+            self.transforms = T.Compose([transforms, self.patch_sample])
+        else:
+            self.transforms = self.patch_sample
+        self.files = self._load_files(root)
+
+    def patch_sample(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract patches from single sample."""
+        assert sample["image"].ndim == 3
+        _, h, w = sample["image"].shape
+
+        padding = compute_padding((h, w), self.patch_size)
+        sample["original_shape"] = (h, w)
+        sample["patch_shape"] = self.patch_size
+        sample["padding"] = padding
+        sample["image"] = extract_tensor_patches(
+            sample["image"].unsqueeze(0),
+            self.patch_size,
+            self.patch_size,
+            padding=padding,
+        )
+        sample["image"] = rearrange(sample["image"], "() t c h w -> t () c h w")
+        return sample
+
+    def _load_files(self, root: str) -> List[Dict[str, str]]:
+        """Return the paths of the files in the dataset.
+
+        Args:
+            root: root dir of dataset
+
+        Returns:
+            list of dicts containing paths for each pair of image and label
+        """
+        images = [os.path.join(root, i) for i in os.listdir(root)]
+        return [{"image": img} for img in images]
+
+    def __len__(self) -> int:
+        """Return the number of samples in the dataset.
+
+        Returns:
+            length of the dataset
+        """
+        return len(self.files)
+
+    def _load_image(self, path: str) -> Tensor:
+        """Load a single image.
+
+        Args:
+            path: path to the image
+
+        Returns:
+            the image
+        """
+        with rasterio.open(path) as img:
+            array = img.read(self.bands).astype(np.int32)
+            tensor: Tensor = torch.from_numpy(array)
+            return tensor
+
+    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+        """Return an index within the dataset.
+
+        Args:
+            index: index to return
+
+        Returns:
+            data and label at that index
+        """
+        file = self.files[index]
+        img = self._load_image(file["image"])
+        sample = {"image": img}
+        sample = self.transforms(sample)
+        return sample
 
 
 class _rarfile:

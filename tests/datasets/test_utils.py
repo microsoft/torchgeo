@@ -16,12 +16,14 @@ from typing import Any, Dict, List, Tuple
 import numpy as np
 import pytest
 import torch
+from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
 from torchgeo.datasets.utils import (
     BoundingBox,
+    PredictDataset,
     concat_samples,
     disambiguate_timestamp,
     download_and_extract_archive,
@@ -582,3 +584,29 @@ def test_percentile_normalization() -> None:
     img = percentile_normalization(img, 2, 98)
     assert img.min() == 0
     assert img.max() == 1
+
+
+class TestPredictDataset:
+    @pytest.fixture(
+        params=zip(
+            [None, torch.nn.Identity(), None],  # type: ignore[no-untyped-call]
+            [(2, 2), (8, 8), (16, 16)],
+        )
+    )
+    def dataset(self, request: SubRequest) -> PredictDataset:
+        root = os.path.join(
+            "tests", "data", "inria", "AerialImageDataset", "test", "images"
+        )
+        transforms, patch_size = request.param
+        return PredictDataset(root, patch_size=patch_size, transforms=transforms)
+
+    def test_getitem(self, dataset: PredictDataset) -> None:
+        x = dataset[0]
+        assert isinstance(x, dict)
+        assert isinstance(x["image"], torch.Tensor)
+        assert x["image"].ndim == 5
+        assert len(x["original_shape"]) == len(x["patch_shape"]) == 2
+        assert len(x["padding"]) == 4
+
+    def test_len(self, dataset: PredictDataset) -> None:
+        assert len(dataset) == 5
