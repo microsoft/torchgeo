@@ -152,6 +152,11 @@ BigEarthNet
 
 .. autoclass:: BigEarthNet
 
+CloudCover
+^^^^^^^^^^
+
+.. autoclass:: CloudCoverDetection
+
 COWC
 ^^^^
 

@@ -11,11 +11,6 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from torchgeo.datasets import CloudCoverDetection
 
-# TODO use with pytest.fixture params
-# from requests import request
-# from _pytest.fixtures import SubRequest
-# from torch.utils.data import ConcatDataset
-
 
 class Dataset:
     def download(self, output_dir: str, **kwargs: str) -> None:
@@ -23,7 +18,6 @@ class Dataset:
             "tests", "data", "ref_cloud_cover_detection_challenge_v1", "*.tar.gz"
         )
         for tarball in glob.iglob(glob_path):
-            # print(os.path.exists(tarball))
             shutil.copy(tarball, output_dir)
 
 
@@ -32,32 +26,26 @@ def fetch(dataset_id: str, **kwargs: str) -> Dataset:
 
 
 class TestCloudCoverDetection:
-    # @pytest.fixture(params=(["train","test"]))
     @pytest.fixture
-    def dataset(
-        self,
-        monkeypatch: MonkeyPatch,
-        tmp_path: Path,
-        # request: SubRequest
-    ) -> CloudCoverDetection:
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CloudCoverDetection:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch)
 
         test_image_meta = {
             "filename": "ref_cloud_cover_detection_challenge_v1_test_source.tar.gz",
-            "md5": "430af00c0ed283f6281d9a83d389a1ef",
+            "md5": "542e64a6e39b53c84c6462ec1b989e43",
         }
         monkeypatch.setitem(CloudCoverDetection.image_meta, "test", test_image_meta)
 
         test_target_meta = {
             "filename": "ref_cloud_cover_detection_challenge_v1_test_labels.tar.gz",
-            "md5": "55813a5b2ca68473f508410a96419c6a",
+            "md5": "e8d41de08744a9845e74fca1eee3d1d3",
         }
         monkeypatch.setitem(CloudCoverDetection.target_meta, "test", test_target_meta)
 
         root = str(tmp_path)
-        split = "test"  # request.param
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        split = "test"
+        transforms = nn.Identity()
 
         return CloudCoverDetection(
             root=root,
@@ -69,14 +57,14 @@ class TestCloudCoverDetection:
         )
 
     def test_invalid_band(self, dataset: CloudCoverDetection) -> None:
-        invalid_band = ["B09"]
+        invalid_bands = ["B09"]
         with pytest.raises(ValueError):
             CloudCoverDetection(
                 root=dataset.root,
                 split="test",
-                download=True,
+                download=False,
                 api_key="",
-                bands=invalid_band,
+                bands=invalid_bands,
             )
 
     def test_get_item(self, dataset: CloudCoverDetection) -> None:
@@ -96,8 +84,6 @@ class TestCloudCoverDetection:
             CloudCoverDetection(str(tmp_path))
 
     def test_plot(self, dataset: CloudCoverDetection) -> None:
-        # print(dataset[0]["image"].shape)
-        # print(dataset[0]["mask"].shape)
         dataset.plot(dataset[0], suptitle="Test")
         plt.close()
 

@@ -23,9 +23,10 @@ class CloudCoverDetection(VisionDataset):
     """Cloud Cover Detection Challenge dataset.
 
     This training dataset was generated as part of a
-    [crowdsourcing competition](https://www.drivendata.org/competitions/83/cloud-cover/)
-    on DrivenData.org, and later on was validated using a team of expert annotators. See
-    `this website<https://mlhub.earth/data/ref_cloud_cover_detection_challenge_v1>`
+    `crowdsourcing competition
+    <https://www.drivendata.org/competitions/83/cloud-cover/>`_ on DrivenData.org, and
+    later on was validated using a team of expert annotators. See
+    `this website <https://mlhub.earth/data/ref_cloud_cover_detection_challenge_v1>`
     for dataset details.
 
     The dataset consists of Sentinel-2 satellite imagery and corresponding cloudy
@@ -35,10 +36,10 @@ class CloudCoverDetection(VisionDataset):
     Each chip has:
 
     * 4 multi-spectral bands from Sentinel-2 L2A product. The four bands are
-    [B02, B03, B04, B08] (refer to Sentinel-2 documentation for more
-    information about the bands).
+      [B02, B03, B04, B08] (refer to Sentinel-2 documentation for more
+      information about the bands).
     * Label raster for the corresponding source tile representing a binary classifcation
-    for if the pixel is is a cloud or not.
+      for if the pixel is is a cloud or not.
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -50,6 +51,8 @@ class CloudCoverDetection(VisionDataset):
 
        * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
          imagery and labels from the Radiant Earth MLHub
+
+    .. versionadded:: 0.4
     """
 
     dataset_id = "ref_cloud_cover_detection_challenge_v1"
@@ -94,7 +97,6 @@ class CloudCoverDetection(VisionDataset):
     def __init__(
         self,
         root: str = "data",
-        chip_size: int = 512,
         split: str = "train",
         bands: Sequence[str] = band_names,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
@@ -106,7 +108,6 @@ class CloudCoverDetection(VisionDataset):
 
         Args:
             root: root directory where dataset can be found
-            chip_size: size of chips
             split: train/val/test split to load
             bands: the subset of bands to load
             transforms: a function/transform that takes input sample and its target as
@@ -119,7 +120,6 @@ class CloudCoverDetection(VisionDataset):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         self.root = root
-        self.chip_size = chip_size
         self.split = split
         self.transforms = transforms
         self.checksum = checksum
