@@ -109,6 +109,7 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "python": ("https://docs.python.org/3", None),
     "pytorch-lightning": ("https://pytorch-lightning.readthedocs.io/en/stable/", None),
+    "pyvista": ("https://docs.pyvista.org/", None),
     "rasterio": ("https://rasterio.readthedocs.io/en/stable/", None),
     "rtree": ("https://rtree.readthedocs.io/en/stable/", None),
     "segmentation_models_pytorch": ("https://smp.readthedocs.io/en/stable/", None),
