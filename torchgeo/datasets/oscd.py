@@ -14,7 +14,7 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import (
     download_url,
     draw_semantic_segmentation_masks,
@@ -23,7 +23,7 @@ from .utils import (
 )
 
 
-class OSCD(VisionDataset):
+class OSCD(NonGeoDataset):
     """OSCD dataset.
 
     The `Onera Satellite Change Detection <https://rcdaudt.github.io/oscd/>`_
@@ -246,7 +246,7 @@ class OSCD(VisionDataset):
             raise RuntimeError(
                 f"Dataset not found in `root={self.root}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # Download the dataset

@@ -54,7 +54,8 @@ class LoveDADataModule(pl.LightningDataModule):
         Returns:
             preprocessed sample
         """
-        sample["image"] = sample["image"] / 255.0
+        sample["image"] = sample["image"].float()
+        sample["image"] /= 255.0
 
         return sample
 

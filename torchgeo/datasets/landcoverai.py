@@ -16,11 +16,11 @@ from matplotlib.colors import ListedColormap
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import download_url, extract_archive, working_dir
 
 
-class LandCoverAI(VisionDataset):
+class LandCoverAI(NonGeoDataset):
     r"""LandCover.ai dataset.
 
     The `LandCover.ai <https://landcover.ai/>`__ (Land Cover from Aerial Imagery)
@@ -193,7 +193,7 @@ class LandCoverAI(VisionDataset):
             raise RuntimeError(
                 f"Dataset not found in `root={self.root}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # Download the dataset

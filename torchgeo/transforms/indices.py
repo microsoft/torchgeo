@@ -92,7 +92,7 @@ class AppendNBR(AppendNormalizedDifferenceIndex):
 
     * https://www.sciencebase.gov/catalog/item/4f4e4b20e4b07f02db6abb36
 
-    .. versionadded:: 0.2.0
+    .. versionadded:: 0.2
     """
 
     def __init__(self, index_nir: int, index_swir: int) -> None:
@@ -213,6 +213,8 @@ class AppendSWI(AppendNormalizedDifferenceIndex):
     If you use this index in your research, please cite the following paper:
 
     * https://doi.org/10.3390/w13121647
+
+    .. versionadded:: 0.3
     """
 
     def __init__(self, index_red: int, index_swir: int) -> None:
@@ -237,6 +239,8 @@ class AppendGNDVI(AppendNormalizedDifferenceIndex):
     If you use this index in your research, please cite the following paper:
 
     * https://doi.org/10.2134/agronj2001.933583x
+
+    .. versionadded:: 0.3
     """
 
     def __init__(self, index_nir: int, index_green: int) -> None:

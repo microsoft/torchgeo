@@ -42,6 +42,8 @@ from .gbif import GBIF
 from .geo import (
     GeoDataset,
     IntersectionDataset,
+    NonGeoClassificationDataset,
+    NonGeoDataset,
     RasterDataset,
     UnionDataset,
     VectorDataset,
@@ -69,6 +71,7 @@ from .landsat import (
 )
 from .levircd import LEVIRCDPlus
 from .loveda import LoveDA
+from .millionaid import MillionAID
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nwpu import VHR10
@@ -76,6 +79,7 @@ from .openbuildings import OpenBuildings
 from .oscd import OSCD
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
+from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
@@ -143,7 +147,7 @@ __all__ = (
     "OpenBuildings",
     "Sentinel",
     "Sentinel2",
-    # VisionDataset
+    # NonGeoDataset
     "ADVANCE",
     "BeninSmallHolderCashews",
     "BigEarthNet",
@@ -164,11 +168,13 @@ __all__ = (
     "LandCoverAI",
     "LEVIRCDPlus",
     "LoveDA",
+    "MillionAID",
     "NASAMarineDebris",
     "OSCD",
     "PatternNet",
     "Potsdam2D",
     "RESISC45",
+    "ReforesTree",
     "SeasonalContrastS2",
     "SEN12MS",
     "So2Sat",
@@ -189,11 +195,13 @@ __all__ = (
     # Base classes
     "GeoDataset",
     "IntersectionDataset",
+    "NonGeoClassificationDataset",
+    "NonGeoDataset",
     "RasterDataset",
     "UnionDataset",
     "VectorDataset",
-    "VisionDataset",
     "VisionClassificationDataset",
+    "VisionDataset",
     # Utilities
     "BoundingBox",
     "concat_samples",

@@ -9,7 +9,6 @@ import pytorch_lightning as pl
 import torch
 from torch import Tensor
 from torch.utils.data import DataLoader
-from torchvision.transforms import Compose
 
 from ..datasets import FAIR1M
 from .utils import dataset_split
@@ -85,9 +84,7 @@ class FAIR1MDataModule(pl.LightningDataModule):
         Args:
             stage: stage to set up
         """
-        transforms = Compose([self.preprocess])
-
-        dataset = FAIR1M(self.root_dir, transforms=transforms)
+        dataset = FAIR1M(self.root_dir, transforms=self.preprocess)
         self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
             dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
         )

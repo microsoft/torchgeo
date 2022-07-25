@@ -6,6 +6,7 @@
 import abc
 from typing import Any, Callable, Dict, Optional, Sequence
 
+import matplotlib.pyplot as plt
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
@@ -77,6 +78,54 @@ class Landsat(RasterDataset, abc.ABC):
         self.filename_glob = self.filename_glob.format(self.bands[0])
 
         super().__init__(root, crs, res, transforms, cache)
+
+    def plot(
+        self,
+        sample: Dict[str, Any],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`RasterDataset.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        Raises:
+            ValueError: if the RGB bands are not included in ``self.bands``
+
+        .. versionchanged:: 0.3
+           Method now takes a sample dict, not a Tensor. Additionally, possible to
+           show subplot titles and/or use a custom suptitle.
+        """
+        rgb_indices = []
+        for band in self.rgb_bands:
+            if band in self.bands:
+                rgb_indices.append(self.bands.index(band))
+            else:
+                raise ValueError("Dataset doesn't contain some of the RGB bands")
+
+        image = sample["image"][rgb_indices].permute(1, 2, 0).float()
+
+        # Stretch to the full range
+        image = (image - image.min()) / (image.max() - image.min())
+
+        fig, ax = plt.subplots(1, 1, figsize=(4, 4))
+
+        ax.imshow(image)
+        ax.axis("off")
+
+        if show_titles:
+            ax.set_title("Image")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
 
 
 class Landsat1(Landsat):

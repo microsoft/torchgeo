@@ -378,7 +378,7 @@ class CDL(RasterDataset):
             raise RuntimeError(
                 f"Dataset not found in `root={self.root}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # Download the dataset
@@ -413,6 +413,10 @@ class CDL(RasterDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        .. versionchanged:: 0.3
+           Method now takes a sample dict, not a Tensor. Additionally, possible to
+           show subplot titles and/or use a custom suptitle.
         """
         mask = sample["mask"].squeeze().numpy()
         ncols = 1
