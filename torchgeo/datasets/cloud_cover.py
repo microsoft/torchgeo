@@ -14,12 +14,12 @@ import torch
 from numpy.typing import NDArray
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import check_integrity, download_radiant_mlhub_dataset, extract_archive
 
 
 # TODO: read geospatial information from stac.json files
-class CloudCoverDetection(VisionDataset):
+class CloudCoverDetection(NonGeoDataset):
     """Cloud Cover Detection Challenge dataset.
 
     This training dataset was generated as part of a
