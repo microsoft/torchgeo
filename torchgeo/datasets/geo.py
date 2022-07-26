@@ -292,6 +292,9 @@ class RasterDataset(GeoDataset):
     #: True if dataset contains imagery, False if dataset contains mask
     is_image = True
 
+    #: Band indexes to be used
+    band_indexes: Optional[List[int]] = None
+
     #: True if data is stored in a separate file for each band, else False.
     separate_files = False
 
@@ -446,12 +449,17 @@ class RasterDataset(GeoDataset):
             src = vrt_fhs[0]
             out_width = round((query.maxx - query.minx) / self.res)
             out_height = round((query.maxy - query.miny) / self.res)
-            out_shape = (src.count, out_height, out_width)
+            count = len(self.band_indexes) if self.band_indexes else src.count
+            out_shape = (count, out_height, out_width)
             dest = src.read(
-                out_shape=out_shape, window=from_bounds(*bounds, src.transform)
+                indexes=self.band_indexes,
+                out_shape=out_shape,
+                window=from_bounds(*bounds, src.transform),
             )
         else:
-            dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res)
+            dest, _ = rasterio.merge.merge(
+                vrt_fhs, bounds, self.res, indexes=self.band_indexes
+            )
 
         # fix numpy dtypes which are not supported by pytorch tensors
         if dest.dtype == np.uint16:
