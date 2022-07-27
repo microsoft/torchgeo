@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
-from numpy.typing import NDArray
 from torch import Tensor
 
 from .geo import NonGeoDataset
@@ -179,7 +178,7 @@ class CloudCoverDetection(NonGeoDataset):
             with rasterio.open(path) as image_data:
                 image_array = image_data.read(1).astype(np.int32)
                 images.append(image_array)
-        image_stack: NDArray[np.int_] = np.stack(images, axis=0)
+        image_stack: "np.typing.NDArray[np.int_]" = np.stack(images, axis=0)
         image_tensor = torch.from_numpy(image_stack)
         return image_tensor
 
@@ -196,7 +195,7 @@ class CloudCoverDetection(NonGeoDataset):
         with rasterio.open(label_asset_path) as target_data:
             target_img = target_data.read(1).astype(np.int32)
 
-        target_array: NDArray[np.int_] = np.array(target_img)
+        target_array: "np.typing.NDArray[np.int_]" = np.array(target_img)
         target_tensor = torch.from_numpy(target_array)
         return target_tensor
 
