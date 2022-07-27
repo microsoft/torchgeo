@@ -9,8 +9,12 @@ import torch
 
 from ..datasets import BoundingBox
 
+PixelsOrCRS = Union[int, float]
 
-def _to_tuple(value: Union[Tuple[float, float], float]) -> Tuple[float, float]:
+
+def _to_tuple(
+    value: Union[Tuple[PixelsOrCRS, PixelsOrCRS], PixelsOrCRS]
+) -> Tuple[PixelsOrCRS, PixelsOrCRS]:
     """Convert value to a tuple if it is not already a tuple.
 
     Args:

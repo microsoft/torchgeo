@@ -12,7 +12,7 @@ from torch.utils.data import Sampler
 
 from ..datasets import BoundingBox, GeoDataset
 from .constants import Units
-from .utils import _to_tuple, get_random_bounding_box
+from .utils import PixelsOrCRS, _to_tuple, get_random_bounding_box
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -68,7 +68,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
     def __init__(
         self,
         dataset: GeoDataset,
-        size: Union[Tuple[float, float], float],
+        size: Union[Tuple[PixelsOrCRS, PixelsOrCRS], PixelsOrCRS],
         batch_size: int,
         length: int,
         roi: Optional[BoundingBox] = None,
@@ -78,10 +78,10 @@ class RandomBatchGeoSampler(BatchGeoSampler):
 
         The ``size`` argument can either be:
 
-        * a single ``float`` - in which case the same value is used for the height and
-          width dimension
-        * a ``tuple`` of two floats - in which case, the first *float* is used for the
-          height dimension, and the second *float* for the width dimension
+        * a single ``int`` or ``float`` - in which case the same value is used for
+          the height and width dimension
+        * a ``tuple`` of two ints or floats - in which case, the first value is used
+          for the height dimension, and the second value for the width dimension
 
         Args:
             dataset: dataset to index from
