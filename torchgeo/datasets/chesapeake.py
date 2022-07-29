@@ -127,6 +127,7 @@ class Chesapeake(RasterDataset, abc.ABC):
 
         self._verify()
 
+        bands: Sequence[str] = []
         colors = []
         for i in range(len(self.cmap)):
             colors.append(
@@ -138,7 +139,7 @@ class Chesapeake(RasterDataset, abc.ABC):
             )
         self._cmap = ListedColormap(colors)
 
-        super().__init__(root, crs, res, transforms, cache)
+        super().__init__(root, crs, res, bands, transforms, cache)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.

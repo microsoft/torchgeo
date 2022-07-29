@@ -74,10 +74,10 @@ class Landsat(RasterDataset, abc.ABC):
         Raises:
             FileNotFoundError: if no files are found in ``root``
         """
-        self.bands = bands if bands else self.all_bands
-        self.filename_glob = self.filename_glob.format(self.bands[0])
+        bands = bands or self.all_bands
+        self.filename_glob = self.filename_glob.format(bands[0])
 
-        super().__init__(root, crs, res, transforms, cache)
+        super().__init__(root, crs, res, bands, transforms, cache)
 
     def plot(
         self,

@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Sequence
 
 import matplotlib.pyplot as plt
 from rasterio.crs import CRS
@@ -219,7 +219,9 @@ class CMSGlobalMangroveCanopy(RasterDataset):
 
         self._verify()
 
-        super().__init__(root, crs, res, transforms, cache)
+        bands: Sequence[str] = []
+
+        super().__init__(root, crs, res, bands, transforms, cache)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.

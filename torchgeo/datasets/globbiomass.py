@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Sequence
 
 import matplotlib.pyplot as plt
 import torch
@@ -158,9 +158,11 @@ class GlobBiomass(RasterDataset):
         self.filename_glob = f"*0_{self.measurement}*.tif"
         self.zipfile_glob = f"*0_{self.measurement}.zip"
 
+        bands: Sequence[str] = []
+
         self._verify()
 
-        super().__init__(root, crs, res, transforms, cache)
+        super().__init__(root, crs, res, bands, transforms, cache)
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.

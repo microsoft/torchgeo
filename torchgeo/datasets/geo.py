@@ -292,9 +292,6 @@ class RasterDataset(GeoDataset):
     #: True if dataset contains imagery, False if dataset contains mask
     is_image = True
 
-    #: Band indexes to be used
-    band_indexes: Optional[List[int]] = None
-
     #: True if data is stored in a separate file for each band, else False.
     separate_files = False
 
@@ -312,6 +309,7 @@ class RasterDataset(GeoDataset):
         root: str,
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
+        bands: Sequence[str] = [],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         cache: bool = True,
     ) -> None:
@@ -323,6 +321,7 @@ class RasterDataset(GeoDataset):
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
+            bands: list of band names to be used
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
@@ -334,6 +333,7 @@ class RasterDataset(GeoDataset):
 
         self.root = root
         self.cache = cache
+        self.bands = bands
 
         # Populate the dataset index
         i = 0
@@ -377,6 +377,20 @@ class RasterDataset(GeoDataset):
                 f"No {self.__class__.__name__} data was found in '{root}'"
             )
 
+        if not self.all_bands:
+            band_indexes = None
+        else:
+            if self.bands:
+                band_indexes = [self.all_bands.index(i) + 1 for i in self.bands]
+                assert len(band_indexes) == len(self.bands)
+            else:
+                band_indexes = None
+
+            if self.rgb_bands:
+                rgb_band_indexes = [self.all_bands.index(i) + 1 for i in self.rgb_bands]
+                assert len(rgb_band_indexes) == len(self.rgb_bands)
+
+        self.band_indexes = band_indexes
         self._crs = cast(CRS, crs)
         self.res = cast(float, res)
 
@@ -416,10 +430,10 @@ class RasterDataset(GeoDataset):
                             filename = filename[:start] + band + filename[end:]
                     filepath = glob.glob(os.path.join(directory, filename))[0]
                     band_filepaths.append(filepath)
-                data_list.append(self._merge_files(band_filepaths, query))
+                data_list.append(self._merge_files(band_filepaths, query, [1]))
             data = torch.cat(data_list)
         else:
-            data = self._merge_files(filepaths, query)
+            data = self._merge_files(filepaths, query, self.band_indexes)
 
         key = "image" if self.is_image else "mask"
         sample = {key: data, "crs": self.crs, "bbox": query}
@@ -429,12 +443,18 @@ class RasterDataset(GeoDataset):
 
         return sample
 
-    def _merge_files(self, filepaths: Sequence[str], query: BoundingBox) -> Tensor:
+    def _merge_files(
+        self,
+        filepaths: Sequence[str],
+        query: BoundingBox,
+        band_indexes: Optional[Sequence[int]] = None,
+    ) -> Tensor:
         """Load and merge one or more files.
 
         Args:
             filepaths: one or more files to load and merge
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            band_indexes: indexes of bands to be used
 
         Returns:
             image/mask at that index
@@ -449,16 +469,16 @@ class RasterDataset(GeoDataset):
             src = vrt_fhs[0]
             out_width = round((query.maxx - query.minx) / self.res)
             out_height = round((query.maxy - query.miny) / self.res)
-            count = len(self.band_indexes) if self.band_indexes else src.count
+            count = len(band_indexes) if band_indexes else src.count
             out_shape = (count, out_height, out_width)
             dest = src.read(
-                indexes=self.band_indexes,
+                indexes=band_indexes,
                 out_shape=out_shape,
                 window=from_bounds(*bounds, src.transform),
             )
         else:
             dest, _ = rasterio.merge.merge(
-                vrt_fhs, bounds, self.res, indexes=self.band_indexes
+                vrt_fhs, bounds, self.res, indexes=band_indexes
             )
 
         # fix numpy dtypes which are not supported by pytorch tensors
