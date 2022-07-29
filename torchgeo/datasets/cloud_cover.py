@@ -359,6 +359,9 @@ class CloudCoverDetection(NonGeoDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        Raises:
+            ValueError: if dataset does not contain an RGB band
         """
         rgb_indices = []
         for band in self.RGB_BANDS:
