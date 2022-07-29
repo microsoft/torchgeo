@@ -7,8 +7,8 @@ from typing import Any, Callable, Optional, Sequence, Union
 
 import segmentation_models_pytorch as smp
 import torch
-from segmentation_models_pytorch.base.model import SegmentationModel
 from segmentation_models_pytorch import Unet
+from segmentation_models_pytorch.base.model import SegmentationModel
 from torch import Tensor
 
 Unet.__module__ = "segmentation_models_pytorch"
