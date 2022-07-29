@@ -201,6 +201,15 @@ class CloudCoverDetection(NonGeoDataset):
 
     @staticmethod
     def _read_json_data(object_path: str) -> Any:
+        """Loads a JSON file.
+
+        Args:
+            object_path: string path to the JSON file
+
+        Returns:
+            json_data: JSON object / dictionary
+
+        """
         with open(object_path) as read_contents:
             json_data = json.load(read_contents)
         return json_data
@@ -222,11 +231,12 @@ class CloudCoverDetection(NonGeoDataset):
         )
         item_meta["target"] = [label_asset_path]
 
-        source_item_hrefs = [
-            os.path.join(self.root, link["href"].replace("../../", ""))
-            for link in label_data["links"]
-            if link["rel"] == "source"
-        ]
+        source_item_hrefs = []
+        for link in label_data["links"]:
+            if link["rel"] == "source":
+                source_item_hrefs.append(
+                    os.path.join(self.root, link["href"].replace("../../", ""))
+                )
 
         source_item_hrefs = sorted(source_item_hrefs)
         source_item_paths = []
@@ -234,11 +244,12 @@ class CloudCoverDetection(NonGeoDataset):
         for item_href in source_item_hrefs:
             source_item_path = os.path.split(item_href)[0]
             source_data = self._read_json_data(item_href)
-            source_item_assets = [
-                os.path.join(source_item_path, asset_value["href"])
-                for asset_key, asset_value in source_data["assets"].items()
-                if asset_key in self.bands
-            ]
+            source_item_assets = []
+            for asset_key, asset_value in source_data["assets"].items():
+                if asset_key in self.bands:
+                    source_item_assets.append(
+                        os.path.join(source_item_path, asset_value["href"])
+                    )
             source_item_assets = sorted(source_item_assets)
             for source_item_asset in source_item_assets:
                 source_item_paths.append(source_item_asset)
@@ -256,17 +267,18 @@ class CloudCoverDetection(NonGeoDataset):
             RuntimeError if collection.json is not found in the uncompressed dataset
         """
         indexed_chips = []
-        label_collection = [
-            c for c in self.collection_names[self.split] if c.__contains__("label")
-        ][0]
-        label_collection_path = os.path.join(self.root, label_collection)
+        label_collection: List[str] = []
+        for c in self.collection_names[self.split]:
+            if "label" in c:
+                label_collection.append(c)
+        label_collection_path = os.path.join(self.root, label_collection[0])
         label_collection_json = os.path.join(label_collection_path, "collection.json")
 
-        label_collection_item_hrefs = [
-            link["href"]
-            for link in self._read_json_data(label_collection_json)["links"]
-            if link["rel"] == "item"
-        ]
+        label_collection_item_hrefs = []
+        for link in self._read_json_data(label_collection_json)["links"]:
+            if link["rel"] == "item":
+                label_collection_item_hrefs.append(link["href"])
+
         label_collection_item_hrefs = sorted(label_collection_item_hrefs)
 
         for label_href in label_collection_item_hrefs:
@@ -283,7 +295,6 @@ class CloudCoverDetection(NonGeoDataset):
             bands: user-provided tuple of bands to load
 
         Raises:
-            AssertionError: if ``bands`` is not a tuple
             ValueError: if an invalid band name is provided
         """
         for band in bands:
@@ -348,8 +359,6 @@ class CloudCoverDetection(NonGeoDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
-
-        .. versionadded:: 0.2
         """
         rgb_indices = []
         for band in self.RGB_BANDS:
