@@ -51,7 +51,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         num_patches_per_tile: int = 32,
         predict_on: str = "test",
     ) -> None:
-        """Initialize a LightningDataModule for InriaAerialImageLabeling based DataLoaders.
+        """Initialize a LightningDataModule for InriaAerialImageLabeling.
 
         Args:
             root_dir: The ``root`` arugment to pass to the InriaAerialImageLabeling
