@@ -6,10 +6,10 @@
 import warnings
 from typing import Any, Dict, cast
 
+import pytorch_lightning as pl
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
-from pytorch_lightning.core.lightning import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
@@ -23,7 +23,7 @@ from ..models import FCN
 DataLoader.__module__ = "torch.utils.data"
 
 
-class SemanticSegmentationTask(LightningModule):
+class SemanticSegmentationTask(pl.LightningModule):
     """LightningModule for semantic segmentation of images."""
 
     def config_task(self) -> None:

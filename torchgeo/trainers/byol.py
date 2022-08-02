@@ -6,6 +6,7 @@
 import random
 from typing import Any, Callable, Dict, Optional, Tuple, cast
 
+import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 import torchvision
@@ -13,7 +14,6 @@ from kornia import augmentation as K
 from kornia import filters
 from kornia.geometry import transform as KorniaTransform
 from packaging.version import parse
-from pytorch_lightning.core.lightning import LightningModule
 from torch import Tensor, optim
 from torch.autograd import Variable
 from torch.nn.modules import BatchNorm1d, Conv2d, Linear, Module, ReLU, Sequential
@@ -304,7 +304,7 @@ class BYOL(Module):
             pt.data = self.beta * pt.data + (1 - self.beta) * p.data
 
 
-class BYOLTask(LightningModule):
+class BYOLTask(pl.LightningModule):
     """Class for pre-training any PyTorch model using BYOL."""
 
     def config_task(self) -> None:
