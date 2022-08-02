@@ -11,7 +11,6 @@ numpy==1.21.6;python_version=='3.7'
 omegaconf==2.2.2
 packaging==21.3
 pillow==9.2.0
-protobuf==3.20.1
 pyproj==3.3.1;python_version>='3.8'
 pyproj==3.2.0;python_version=='3.7'
 pytorch-lightning==1.6.4

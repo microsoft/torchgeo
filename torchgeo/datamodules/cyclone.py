@@ -44,7 +44,7 @@ class CycloneDataModule(pl.LightningDataModule):
             api_key: The RadiantEarth MLHub API key to use if the dataset needs to be
                 downloaded
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.root_dir = root_dir
         self.seed = seed
         self.batch_size = batch_size

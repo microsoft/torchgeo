@@ -46,7 +46,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             num_workers: The number of workers to use in all created DataLoaders
             patch_size: size of patches to sample
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.naip_root_dir = naip_root_dir
         self.chesapeake_root_dir = chesapeake_root_dir
         self.batch_size = batch_size

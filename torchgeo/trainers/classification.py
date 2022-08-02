@@ -189,7 +189,7 @@ class ClassificationTask(pl.LightningModule):
 
         if batch_idx < 10:
             try:
-                datamodule = self.trainer.datamodule  # type: ignore[union-attr]
+                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
                 batch["prediction"] = y_hat_hard
                 for key in ["image", "label", "prediction"]:
                     batch[key] = batch[key].cpu()
@@ -358,7 +358,7 @@ class MultiLabelClassificationTask(ClassificationTask):
 
         if batch_idx < 10:
             try:
-                datamodule = self.trainer.datamodule  # type: ignore[union-attr]
+                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
                 batch["prediction"] = y_hat_hard
                 for key in ["image", "label", "prediction"]:
                     batch[key] = batch[key].cpu()

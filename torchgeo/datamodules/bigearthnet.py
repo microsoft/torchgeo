@@ -90,7 +90,7 @@ class BigEarthNetDataModule(pl.LightningDataModule):
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.root_dir = root_dir
         self.bands = bands
         self.num_classes = num_classes
