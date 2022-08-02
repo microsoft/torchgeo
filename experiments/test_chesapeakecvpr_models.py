@@ -89,6 +89,7 @@ def main(args: argparse.Namespace) -> None:
     trainer = pl.Trainer(
         gpus=[args.device] if torch.cuda.is_available() else None,
         logger=False,
+        enable_progress_bar=False,
         enable_checkpointing=False,
     )
 
