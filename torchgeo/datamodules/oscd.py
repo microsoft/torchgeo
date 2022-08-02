@@ -87,7 +87,7 @@ class OSCDDataModule(pl.LightningDataModule):
             num_patches_per_tile: number of random patches per sample
             pad_size: size to pad images to during val/test steps
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.root_dir = root_dir
         self.bands = bands
         self.train_batch_size = train_batch_size

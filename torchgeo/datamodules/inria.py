@@ -65,7 +65,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             num_patches_per_tile: Number of random patches per sample
             predict_on: Directory/Dataset of images to run inference on
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
