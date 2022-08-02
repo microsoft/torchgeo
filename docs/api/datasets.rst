@@ -152,7 +152,7 @@ BigEarthNet
 
 .. autoclass:: BigEarthNet
 
-CloudCover
+Cloud Cover Detection
 ^^^^^^^^^^
 
 .. autoclass:: CloudCoverDetection
