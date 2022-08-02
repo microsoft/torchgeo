@@ -64,7 +64,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         Raises:
             ValueError: if ``use_prior_labels`` is used with ``class_set==7``
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         for state in train_splits + val_splits + test_splits:
             assert state in ChesapeakeCVPR.splits
         assert class_set in [5, 7]

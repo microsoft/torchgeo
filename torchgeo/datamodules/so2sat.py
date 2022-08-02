@@ -75,7 +75,7 @@ class So2SatDataModule(pl.LightningDataModule):
             unsupervised_mode: Makes the train dataloader return imagery from the train,
                 val, and test sets
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers

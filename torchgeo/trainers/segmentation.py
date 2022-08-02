@@ -184,7 +184,7 @@ class SemanticSegmentationTask(pl.LightningModule):
 
         if batch_idx < 10:
             try:
-                datamodule = self.trainer.datamodule  # type: ignore[union-attr]
+                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
                 batch["prediction"] = y_hat_hard
                 for key in ["image", "mask", "prediction"]:
                     batch[key] = batch[key].cpu()
