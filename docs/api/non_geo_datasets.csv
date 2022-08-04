@@ -29,7 +29,7 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands
 `SpaceNet`_,I,WorldView-2/3 Planet Lab Dove,"1,889--28,728",2,102--900,0.5--4,MSI
 `Tropical Cyclone`_,R,GOES 8--16,"108,110",-,256x256,4K--8K,MSI
 `UC Merced`_,C,USGS National Map,"21,000",21,256x256,0.3,RGB
-`USAVars`_,S,NAIP Aerial,100K,-,-,4,"RGB, NIR"
+`USAVars`_,R,NAIP Aerial,100K,-,-,4,"RGB, NIR"
 `Vaihingen`_,S,Aerial,33,6,"1,281--3,816",0.09,RGB
 `NWPU VHR-10`_,I,"Google Earth, Vaihingen",800,10,"358--1,728",0.08--2,RGB
 `xView2`_,CD,Maxar,"3,732",4,"1,024x1,024",0.8,RGB
