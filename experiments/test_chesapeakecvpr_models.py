@@ -89,8 +89,8 @@ def main(args: argparse.Namespace) -> None:
     trainer = pl.Trainer(
         gpus=[args.device] if torch.cuda.is_available() else None,
         logger=False,
-        progress_bar_refresh_rate=0,
-        checkpoint_callback=False,
+        enable_progress_bar=False,
+        enable_checkpointing=False,
     )
 
     for experiment_dir in os.listdir(args.input_dir):
