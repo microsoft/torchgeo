@@ -25,7 +25,7 @@ class CloudCoverDetection(NonGeoDataset):
     `crowdsourcing competition
     <https://www.drivendata.org/competitions/83/cloud-cover/>`_ on DrivenData.org, and
     later on was validated using a team of expert annotators. See
-    `this website <https://mlhub.earth/data/ref_cloud_cover_detection_challenge_v1>`
+    `this website <https://mlhub.earth/data/ref_cloud_cover_detection_challenge_v1>`_
     for dataset details.
 
     The dataset consists of Sentinel-2 satellite imagery and corresponding cloudy
