@@ -38,7 +38,7 @@ class CloudCoverDetection(NonGeoDataset):
       [B02, B03, B04, B08] (refer to Sentinel-2 documentation for more
       information about the bands).
     * Label raster for the corresponding source tile representing a binary classifcation
-      for if the pixel is is a cloud or not.
+      for if the pixel is a cloud or not.
 
     If you use this dataset in your research, please cite the following paper:
 
