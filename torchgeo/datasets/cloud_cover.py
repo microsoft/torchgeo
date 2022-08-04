@@ -37,7 +37,7 @@ class CloudCoverDetection(NonGeoDataset):
     * 4 multi-spectral bands from Sentinel-2 L2A product. The four bands are
       [B02, B03, B04, B08] (refer to Sentinel-2 documentation for more
       information about the bands).
-    * Label raster for the corresponding source tile representing a binary classifcation
+    * Label raster for the corresponding source tile representing a binary classification
       for if the pixel is a cloud or not.
 
     If you use this dataset in your research, please cite the following paper:
