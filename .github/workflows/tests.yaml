@@ -72,7 +72,7 @@ jobs:
     - name: Run pytest checks (Windows)
       shell: cmd
       run: |
-        set "PATH=c:\msys64\usr\bin;%PATH%"
+        set "PATH=%PATH%;c:\msys64\usr\bin"
         pytest --cov=torchgeo --cov-report=xml
       if: ${{ runner.os == 'Windows' }}
     - name: Report coverage
