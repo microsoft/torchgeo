@@ -53,7 +53,7 @@ jobs:
     - name: Install pacman dependencies (Windows)
       shell: cmd
       run: |
-        set "PATH=c:\msys64\usr\bin;%PATH%"
+        set "PATH=%PATH%;c:\msys64\usr\bin"
         pacman -S --noconfirm --needed unrar
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies (3.8+)
@@ -73,6 +73,8 @@ jobs:
       shell: cmd
       run: |
         set "PATH=%PATH%;c:\msys64\usr\bin"
+        where python
+        where pytest
         python -m pytest --cov=torchgeo --cov-report=xml
       if: ${{ runner.os == 'Windows' }}
     - name: Report coverage
