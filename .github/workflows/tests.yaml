@@ -53,7 +53,7 @@ jobs:
     - name: Install pacman dependencies (Windows)
       run: |
         set 'PATH=c:\msys64\usr\bin;%PATH%'
-        pacman unrar
+        pacman -S --noconfirm --needed unrar
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies (3.8+)
       run: |
