@@ -73,7 +73,7 @@ jobs:
       shell: cmd
       run: |
         set "PATH=%PATH%;c:\msys64\usr\bin"
-        pytest --cov=torchgeo --cov-report=xml
+        python -m pytest --cov=torchgeo --cov-report=xml
       if: ${{ runner.os == 'Windows' }}
     - name: Report coverage
       uses: codecov/codecov-action@v2
