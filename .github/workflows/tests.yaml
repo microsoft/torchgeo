@@ -50,6 +50,9 @@ jobs:
     - name: Install brew dependencies (macOS)
       run: brew install rar
       if: ${{ runner.os == 'macOS' }}
+    - name: Install pacman dependencies (Windows)
+      run: pacman unrar
+      if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies (3.8+)
       run: |
         pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt

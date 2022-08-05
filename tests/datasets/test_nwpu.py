@@ -25,8 +25,6 @@ def download_url(url: str, root: str, *args: str) -> None:
     shutil.copy(url, root)
 
 
-# TODO: figure out how to install unrar on Windows in GitHub Actions
-@pytest.mark.skipif(sys.platform == "win32", reason="requires unrar executable")
 class TestVHR10:
     @pytest.fixture(params=["positive", "negative"])
     def dataset(

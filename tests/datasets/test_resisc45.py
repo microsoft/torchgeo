@@ -21,7 +21,6 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="requires unrar executable")
 class TestRESISC45:
     @pytest.fixture(params=["train", "val", "test"])
     def dataset(
