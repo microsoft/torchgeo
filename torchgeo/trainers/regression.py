@@ -30,20 +30,25 @@ class RegressionTask(pl.LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters."""
-        if self.hyperparams["model"] == "resnet18":
-            pretrained = self.hyperparams["pretrained"]
-            if parse(torchvision.__version__) >= parse("0.12"):
-                if pretrained:
-                    kwargs = {"weights": models.ResNet18_Weights.DEFAULT}
-                else:
-                    kwargs = {"weights": None}
+
+        model = self.hyperparams["model"]
+        pretrained = self.hyperparams["pretrained"]
+
+        if parse(torchvision.__version__) >= parse("0.12"):
+            if pretrained:
+                kwargs = {
+                    "weights": getattr(
+                        torchvision.models, f"ResNet{model[6:]}_Weights"
+                    ).DEFAULT
+                }
             else:
-                kwargs = {"pretrained": pretrained}
-            self.model = models.resnet18(**kwargs)
-            in_features = self.model.fc.in_features
-            self.model.fc = nn.Linear(in_features, out_features=1)
+                kwargs = {"weights": None}
         else:
-            raise ValueError(f"Model type '{self.hyperparams['model']}' is not valid.")
+            kwargs = {"pretrained": pretrained}
+
+        self.model = getattr(torchvision.models, model)(**kwargs)
+        in_features = self.model.fc.in_features
+        self.model.fc = nn.Linear(in_features, out_features=1)
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize a new LightningModule for training simple regression models.
