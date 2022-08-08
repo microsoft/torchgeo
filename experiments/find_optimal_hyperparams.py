@@ -9,14 +9,24 @@ import glob
 import json
 import os
 from collections import defaultdict
+from typing import DefaultDict
 
 from tbparse import SummaryReader
 
 OUTPUT_DIR = "output/cowc_experiments"
 
 
+# mypy does not yet support recursive type hints
+def nested_dict() -> DefaultDict[str, defaultdict]:  # type: ignore[type-arg]
+    """Recursive defaultdict.
+
+    Returns:
+        a nested dictionary
+    """
+    return defaultdict(nested_dict)
+
+
 if __name__ == "__main__":
-    nested_dict = lambda: defaultdict(nested_dict)
     metrics = nested_dict()
 
     logs = os.path.join(OUTPUT_DIR, "logs", "*", "version_0", "events*")

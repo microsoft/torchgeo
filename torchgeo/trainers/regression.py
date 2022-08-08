@@ -15,7 +15,6 @@ from torch import Tensor
 from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
-from torchvision import models
 
 from ..datasets.utils import unbind_samples
 
@@ -30,7 +29,6 @@ class RegressionTask(pl.LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters."""
-
         model = self.hyperparams["model"]
         pretrained = self.hyperparams["pretrained"]
 
