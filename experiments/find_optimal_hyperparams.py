@@ -29,7 +29,7 @@ def nested_dict() -> DefaultDict[str, defaultdict]:  # type: ignore[type-arg]
 if __name__ == "__main__":
     metrics = nested_dict()
 
-    logs = os.path.join(OUTPUT_DIR, "logs", "*", "version_0", "events*")
+    logs = os.path.join(OUTPUT_DIR, "logs", "*", "version_*", "events*")
     for log in glob.iglob(logs):
         hyperparams = log.split(os.sep)[-3]
         reader = SummaryReader(log)
