@@ -55,6 +55,7 @@ jobs:
       run: |
         set "PATH=%PATH%;c:\msys64\usr\bin"
         pacman -S --noconfirm --needed unrar
+        where python
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies (3.8+)
       run: |
@@ -72,10 +73,9 @@ jobs:
     - name: Run pytest checks (Windows)
       shell: cmd
       run: |
-        set "PATH=%PATH%;c:\msys64\usr\bin"
+        #set "PATH=%PATH%;c:\msys64\usr\bin"
         where python
-        where pytest
-        python -m pytest --cov=torchgeo --cov-report=xml
+        pytest --cov=torchgeo --cov-report=xml
       if: ${{ runner.os == 'Windows' }}
     - name: Report coverage
       uses: codecov/codecov-action@v2
