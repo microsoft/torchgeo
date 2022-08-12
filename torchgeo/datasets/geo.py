@@ -309,7 +309,7 @@ class RasterDataset(GeoDataset):
         root: str,
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        bands: Sequence[str] = [],
+        bands: Optional[Sequence[str]] = None,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         cache: bool = True,
     ) -> None:
@@ -321,7 +321,7 @@ class RasterDataset(GeoDataset):
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
-            bands: list of band names to be used
+            bands: bands to return (defaults to all bands)
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
@@ -333,7 +333,6 @@ class RasterDataset(GeoDataset):
 
         self.root = root
         self.cache = cache
-        self.bands = bands
 
         # Populate the dataset index
         i = 0
@@ -377,18 +376,13 @@ class RasterDataset(GeoDataset):
                 f"No {self.__class__.__name__} data was found in '{root}'"
             )
 
-        if not self.all_bands:
-            band_indexes = None
+        if bands and self.all_bands:
+            band_indexes = [self.all_bands.index(i) + 1 for i in bands]
+            self.bands = bands
+            assert len(band_indexes) == len(self.bands)
         else:
-            if self.bands:
-                band_indexes = [self.all_bands.index(i) + 1 for i in self.bands]
-                assert len(band_indexes) == len(self.bands)
-            else:
-                band_indexes = None
-
-            if self.rgb_bands:
-                rgb_band_indexes = [self.all_bands.index(i) + 1 for i in self.rgb_bands]
-                assert len(rgb_band_indexes) == len(self.rgb_bands)
+            band_indexes = None
+            self.bands = self.all_bands
 
         self.band_indexes = band_indexes
         self._crs = cast(CRS, crs)
@@ -417,7 +411,7 @@ class RasterDataset(GeoDataset):
         if self.separate_files:
             data_list: List[Tensor] = []
             filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-            for band in getattr(self, "bands", self.all_bands):
+            for band in self.bands:
                 band_filepaths = []
                 for filepath in filepaths:
                     filename = os.path.basename(filepath)
@@ -430,7 +424,7 @@ class RasterDataset(GeoDataset):
                             filename = filename[:start] + band + filename[end:]
                     filepath = glob.glob(os.path.join(directory, filename))[0]
                     band_filepaths.append(filepath)
-                data_list.append(self._merge_files(band_filepaths, query, [1]))
+                data_list.append(self._merge_files(band_filepaths, query))
             data = torch.cat(data_list)
         else:
             data = self._merge_files(filepaths, query, self.band_indexes)

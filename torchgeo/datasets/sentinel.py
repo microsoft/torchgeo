@@ -75,7 +75,7 @@ class Sentinel2(Sentinel):
         root: str = "data",
         crs: Optional[CRS] = None,
         res: float = 10,
-        bands: Sequence[str] = [],
+        bands: Optional[Sequence[str]] = None,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         cache: bool = True,
     ) -> None:
