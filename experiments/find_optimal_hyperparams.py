@@ -13,7 +13,7 @@ from typing import DefaultDict
 
 from tbparse import SummaryReader
 
-OUTPUT_DIR = "output/cowc_experiments"
+OUTPUT_DIR = ""
 
 
 # mypy does not yet support recursive type hints
