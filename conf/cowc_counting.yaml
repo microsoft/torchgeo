@@ -12,5 +12,5 @@ experiment:
   datamodule:
     root_dir: "data/cowc_counting"
     seed: 0
-    batch_size: 32
+    batch_size: 64
     num_workers: 4
