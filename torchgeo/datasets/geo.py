@@ -380,6 +380,8 @@ class RasterDataset(GeoDataset):
             band_indexes = [self.all_bands.index(i) + 1 for i in bands]
             self.bands = bands
             assert len(band_indexes) == len(self.bands)
+        elif bands:
+            raise AssertionError("all_bands must be specified")
         else:
             band_indexes = None
             self.bands = self.all_bands

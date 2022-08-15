@@ -156,20 +156,29 @@ class TestGeoDataset:
 
 
 class TestRasterDataset:
-    @pytest.fixture(params=[True, False])
+    @pytest.fixture(params=zip([True, False], [["R", "G", "B"], None]))
     def naip(self, request: SubRequest) -> NAIP:
         root = os.path.join("tests", "data", "naip")
+        bands = request.param[1]
         crs = CRS.from_epsg(3005)
         transforms = nn.Identity()
-        cache = request.param
-        return NAIP(root, crs=crs, transforms=transforms, cache=cache)
+        cache = request.param[0]
+        return NAIP(root, crs=crs, bands=bands, transforms=transforms, cache=cache)
 
-    @pytest.fixture(params=[True, False])
+    @pytest.fixture(
+        params=zip(
+            [True, False],
+            [
+                ["B04", "B03", "B02"],
+                ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B11"],
+            ],
+        )
+    )
     def sentinel(self, request: SubRequest) -> Sentinel2:
         root = os.path.join("tests", "data", "sentinel2")
-        bands = ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B11"]
+        bands = request.param[1]
         transforms = nn.Identity()
-        cache = request.param
+        cache = request.param[0]
         return Sentinel2(root, bands=bands, transforms=transforms, cache=cache)
 
     @pytest.fixture()
