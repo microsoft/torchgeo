@@ -4,7 +4,7 @@
 import os
 import pickle
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 import pytest
 import torch
@@ -47,6 +47,10 @@ class CustomGeoDataset(GeoDataset):
 
 class CustomVectorDataset(VectorDataset):
     filename_glob = "*.geojson"
+
+
+class CustomSentinelDataset(Sentinel2):
+    all_bands: List[str] = []
 
 
 class CustomNonGeoDataset(NonGeoDataset):
@@ -214,6 +218,14 @@ class TestRasterDataset:
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="No RasterDataset data was found"):
             RasterDataset(str(tmp_path))
+
+    def test_no_allbands(self) -> None:
+        with pytest.raises(AssertionError, match="all_bands must be specified"):
+            root = os.path.join("tests", "data", "sentinel2")
+            bands = ["B04", "B03", "B02"]
+            transforms = nn.Identity()
+            cache = True
+            CustomSentinelDataset(root, bands=bands, transforms=transforms, cache=cache)
 
 
 class TestVectorDataset:
