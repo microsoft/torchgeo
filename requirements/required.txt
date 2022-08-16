@@ -1,5 +1,5 @@
 # setup
-setuptools==65.0.0
+setuptools==65.0.1
 
 # install
 einops==0.4.1
