@@ -23,7 +23,6 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        root_dir: str,
         batch_size: int = 64,
         num_workers: int = 0,
         val_split_pct: float = 0.2,
@@ -32,16 +31,15 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
         """Initialize a LightningDataModule for Vaihingen2D based DataLoaders.
 
         Args:
-            root_dir: The ``root`` argument to pass to the Vaihingen Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
             val_split_pct: What percentage of the dataset to use as a validation set
         """
         super().__init__()
-        self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.val_split_pct = val_split_pct
+        self.kwargs = kwargs
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
@@ -66,7 +64,7 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
         """
         transforms = Compose([self.preprocess])
 
-        dataset = Vaihingen2D(self.root_dir, "train", transforms=transforms)
+        dataset = Vaihingen2D(split="train", transforms=transforms, **self.kwargs)
 
         self.train_dataset: Dataset[Any]
         self.val_dataset: Dataset[Any]
@@ -79,7 +77,9 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
             self.train_dataset = dataset
             self.val_dataset = dataset
 
-        self.test_dataset = Vaihingen2D(self.root_dir, "test", transforms=transforms)
+        self.test_dataset = Vaihingen2D(
+            split="test", transforms=transforms, **self.kwargs
+        )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.

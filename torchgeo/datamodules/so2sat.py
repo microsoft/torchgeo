@@ -58,29 +58,24 @@ class So2SatDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        root_dir: str,
         batch_size: int = 64,
         num_workers: int = 0,
-        bands: str = "rgb",
         unsupervised_mode: bool = False,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for So2Sat based DataLoaders.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the So2Sat Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
-            bands: Either "rgb" or "s2"
             unsupervised_mode: Makes the train dataloader return imagery from the train,
                 val, and test sets
         """
         super().__init__()
-        self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
-        self.bands = bands
         self.unsupervised_mode = unsupervised_mode
+        self.kwargs = kwargs
 
         self.norm = Normalize(self.band_means, self.band_stds)
 
@@ -97,7 +92,8 @@ class So2SatDataModule(pl.LightningDataModule):
         sample["image"] = self.norm(sample["image"])
         sample["image"] = sample["image"][self.reindex_to_rgb_first, :, :]
 
-        if self.bands == "rgb":
+        bands = self.kwargs.get("bands", "all")
+        if bands == "rgb":
             sample["image"] = sample["image"][:3, :, :]
 
         return sample
@@ -107,7 +103,7 @@ class So2SatDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        So2Sat(self.root_dir, checksum=False)
+        So2Sat(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -120,42 +116,32 @@ class So2SatDataModule(pl.LightningDataModule):
         train_transforms = Compose([self.preprocess])
         val_test_transforms = self.preprocess
 
-        s2bands = So2Sat.BAND_SETS["s2"]
         if not self.unsupervised_mode:
 
             self.train_dataset = So2Sat(
-                self.root_dir, split="train", bands=s2bands, transforms=train_transforms
+                split="train", transforms=train_transforms, **self.kwargs
             )
 
             self.val_dataset = So2Sat(
-                self.root_dir,
-                split="validation",
-                bands=s2bands,
-                transforms=val_test_transforms,
+                split="validation", transforms=val_test_transforms, **self.kwargs
             )
 
             self.test_dataset = So2Sat(
-                self.root_dir,
-                split="test",
-                bands=s2bands,
-                transforms=val_test_transforms,
+                split="test", transforms=val_test_transforms, **self.kwargs
             )
 
         else:
 
             temp_train = So2Sat(
-                self.root_dir, split="train", bands=s2bands, transforms=train_transforms
+                split="train", transforms=train_transforms, **self.kwargs
             )
 
             self.val_dataset = So2Sat(
-                self.root_dir,
-                split="validation",
-                bands=s2bands,
-                transforms=train_transforms,
+                split="validation", transforms=train_transforms, **self.kwargs
             )
 
             self.test_dataset = So2Sat(
-                self.root_dir, split="test", bands=s2bands, transforms=train_transforms
+                split="test", transforms=train_transforms, **self.kwargs
             )
 
             self.train_dataset = cast(

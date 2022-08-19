@@ -43,21 +43,17 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        root_dir: str,
         batch_size: int = 32,
         num_workers: int = 0,
         val_split_pct: float = 0.1,
         test_split_pct: float = 0.1,
         patch_size: Union[int, Tuple[int, int]] = 512,
         num_patches_per_tile: int = 32,
-        predict_on: str = "test",
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for InriaAerialImageLabeling.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the InriaAerialImageLabeling
-                Dataset classes
             batch_size: The batch size used in the train DataLoader
                 (val_batch_size == test_batch_size == 1)
             num_workers: The number of workers to use in all created DataLoaders
@@ -65,22 +61,21 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             test_split_pct: What percentage of the dataset to use as a test set
             patch_size: Size of random patch from image and mask (height, width)
             num_patches_per_tile: Number of random patches per sample
-            predict_on: Directory/Dataset of images to run inference on
         """
         super().__init__()
-        self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
         self.patch_size = cast(Tuple[int, int], _to_tuple(patch_size))
         self.num_patches_per_tile = num_patches_per_tile
+        self.kwargs = kwargs
+
         self.augmentations = K.AugmentationSequential(
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             data_keys=["input", "mask"],
         )
-        self.predict_on = predict_on
         self.random_crop = K.AugmentationSequential(
             K.RandomCrop(self.patch_size, p=1.0, keepdim=False),
             data_keys=["input", "mask"],
@@ -145,7 +140,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         test_transforms = T.Compose([self.preprocess, self.patch_sample])
 
         self.dataset = InriaAerialImageLabeling(
-            self.root_dir, split="train", transforms=train_transforms
+            split="train", transforms=train_transforms, **self.kwargs
         )
 
         self.train_dataset: Dataset[Any]
@@ -169,9 +164,8 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             self.val_dataset = self.dataset
             self.test_dataset = self.dataset
 
-        assert self.predict_on == "test"
         self.predict_dataset = InriaAerialImageLabeling(
-            self.root_dir, self.predict_on, transforms=test_transforms
+            transforms=test_transforms, **self.kwargs
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
