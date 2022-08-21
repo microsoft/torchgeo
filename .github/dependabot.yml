@@ -4,11 +4,12 @@ updates:
     directory: "/requirements"
     schedule:
       interval: "daily"
-    # Allow up to 2 open pull requests at a time
-    open-pull-requests-limit: 2
     ignore:
       # radiant-mlhub 0.5+ changed download behavior:
       # https://github.com/radiantearth/radiant-mlhub/pull/104
       - dependency-name: "radiant-mlhub"
+      # setuptools releases new versions almost daily
+      - dependency-name: "setuptools"
+        update-types: ["version-update:semver-patch"]
       # segmentation-models-pytorch requires older timm, can't update
       - dependency-name: "timm"
