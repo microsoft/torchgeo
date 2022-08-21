@@ -18,7 +18,7 @@ experiment:
     num_filters: 256
     ignore_index: 0
   datamodule:
-    root_dir: "data/oscd"
+    root: "data/oscd"
     batch_size: 32
     num_workers: 4
     val_split_pct: 0.1

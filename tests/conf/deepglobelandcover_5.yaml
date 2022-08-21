@@ -13,7 +13,7 @@ experiment:
     num_filters: 1
     ignore_index: null
   datamodule:
-    root_dir: "tests/data/deepglobelandcover"
+    root: "tests/data/deepglobelandcover"
     val_split_pct: 0.5
     batch_size: 1
     num_workers: 0

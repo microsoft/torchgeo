@@ -9,6 +9,6 @@ experiment:
     in_channels: 13
     num_classes: 10
   datamodule:
-    root_dir: "data/eurosat"
+    root: "data/eurosat"
     batch_size: 128
     num_workers: 4
