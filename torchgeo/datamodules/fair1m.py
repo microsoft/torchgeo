@@ -59,7 +59,7 @@ class FAIR1MDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
-        self.kwargs
+        self.kwargs = kwargs
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.

@@ -165,7 +165,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             self.test_dataset = self.dataset
 
         self.predict_dataset = InriaAerialImageLabeling(
-            transforms=test_transforms, **self.kwargs
+            split="test", transforms=test_transforms, **self.kwargs
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
