@@ -63,7 +63,9 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         """
         transforms = Compose([self.preprocess])
 
-        dataset = DeepGlobeLandCover("train", transforms=transforms, **self.kwargs)
+        dataset = DeepGlobeLandCover(
+            split="train", transforms=transforms, **self.kwargs
+        )
 
         self.train_dataset: Dataset[Any]
         self.val_dataset: Dataset[Any]
@@ -77,7 +79,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             self.val_dataset = dataset
 
         self.test_dataset = DeepGlobeLandCover(
-            "test", transforms=transforms, **self.kwargs
+            split="test", transforms=transforms, **self.kwargs
         )
 
     def train_dataloader(self) -> DataLoader[Dict[str, Any]]:

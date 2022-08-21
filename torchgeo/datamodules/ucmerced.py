@@ -73,9 +73,11 @@ class UCMercedDataModule(pl.LightningDataModule):
         """
         transforms = Compose([self.preprocess])
 
-        self.train_dataset = UCMerced("train", transforms=transforms, **self.kwargs)
-        self.val_dataset = UCMerced("val", transforms=transforms, **self.kwargs)
-        self.test_dataset = UCMerced("test", transforms=transforms, **self.kwargs)
+        self.train_dataset = UCMerced(
+            split="train", transforms=transforms, **self.kwargs
+        )
+        self.val_dataset = UCMerced(split="val", transforms=transforms, **self.kwargs)
+        self.test_dataset = UCMerced(split="test", transforms=transforms, **self.kwargs)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.
