@@ -12,9 +12,7 @@ TEST_DATA_DIR = os.path.join("tests", "data", "inria")
 
 
 class TestInriaAerialImageLabelingDataModule:
-    @pytest.fixture(
-        params=zip([0.2, 0.2, 0.0], [0.2, 0.0, 0.0])
-    )
+    @pytest.fixture(params=zip([0.2, 0.2, 0.0], [0.2, 0.0, 0.0]))
     def datamodule(self, request: SubRequest) -> InriaAerialImageLabelingDataModule:
         val_split_pct, test_split_pct = request.param
         patch_size = 2  # (2,2)
