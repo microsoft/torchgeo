@@ -4,6 +4,7 @@
 """TorchGeo batch samplers."""
 
 import abc
+import math
 from typing import Iterator, List, Optional, Tuple, Union
 
 import torch
@@ -146,4 +147,4 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         Returns:
             number of batches in an epoch
         """
-        return self.length // self.batch_size
+        return math.floor(self.length / self.batch_size)

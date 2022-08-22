@@ -110,7 +110,7 @@ class TestRandomBatchGeoSampler:
                 )
 
     def test_len(self, sampler: RandomBatchGeoSampler) -> None:
-        assert len(sampler) == sampler.length // sampler.batch_size
+        assert len(sampler) == sampler.length / sampler.batch_size
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
         roi = BoundingBox(0, 50, 200, 250, 400, 450)

@@ -89,7 +89,7 @@ class FarSeg(Module):
         self.backbone = getattr(resnet, backbone)(**kwargs)
 
         self.fpn = FPN(
-            in_channels_list=[max_channels // (2 ** (3 - i)) for i in range(4)],
+            in_channels_list=[round(max_channels / (2 ** (3 - i))) for i in range(4)],
             out_channels=256,
         )
         self.fsr = _FSRelation(max_channels, [256] * 4, 256)
@@ -217,8 +217,8 @@ class _LightWeightDecoder(Module):
 
         self.blocks = ModuleList()
         for in_feat_os in in_feature_output_strides:
-            num_upsample = int(math.log2(int(in_feat_os))) - int(
-                math.log2(int(out_feature_output_stride))
+            num_upsample = round(math.log2(round(in_feat_os))) - round(
+                math.log2(round(out_feature_output_stride))
             )
             num_layers = num_upsample if num_upsample != 0 else 1
             self.blocks.append(
