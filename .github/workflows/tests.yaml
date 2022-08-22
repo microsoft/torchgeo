@@ -66,8 +66,14 @@ jobs:
         pip install -r requirements/required.old -r requirements/datasets.old -r requirements/tests.txt
         pip list
       if: ${{ matrix.python-version == '3.7' }}
-    - name: Run pytest checks
+    - name: Run pytest checks (Linux/macOS)
       run: pytest --cov=torchgeo --cov-report=xml
+      if: ${{ runner.os != 'Windows' }}
+    - name: Run pytest checks (Windows)
+      shell: cmd
+      run: |
+        pytest --cov=torchgeo --cov-report=xml
+      if: ${{ runner.os == 'Windows' }}
     - name: Report coverage
       uses: codecov/codecov-action@v2
   minimum:
