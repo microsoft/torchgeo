@@ -46,8 +46,8 @@ def get_random_bounding_box(
     """
     t_size = _to_tuple(size)
 
-    width = round((bounds.maxx - bounds.minx - t_size[1]) / res)
-    height = round((bounds.maxy - bounds.miny - t_size[0]) / res)
+    width = (bounds.maxx - bounds.minx - t_size[1]) // res
+    height = (bounds.maxy - bounds.miny - t_size[0]) // res
 
     minx = bounds.minx
     miny = bounds.miny
