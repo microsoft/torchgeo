@@ -67,7 +67,7 @@ class RCF(Module):
         self.register_buffer(
             "weights",
             torch.randn(
-                round(features / 2),
+                features // 2,
                 in_channels,
                 kernel_size,
                 kernel_size,
@@ -76,7 +76,7 @@ class RCF(Module):
             ),
         )
         self.register_buffer(
-            "biases", torch.zeros(round(features / 2), requires_grad=False) + bias
+            "biases", torch.zeros(features // 2, requires_grad=False) + bias
         )
 
     def forward(self, x: Tensor) -> Tensor:
