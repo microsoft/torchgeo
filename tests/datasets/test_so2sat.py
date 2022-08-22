@@ -82,7 +82,7 @@ class TestSo2Sat:
         plt.close()
 
     def test_plot_rgb(self, dataset: So2Sat) -> None:
-        dataset = So2Sat(root=dataset.root, bands=("B03",))
+        dataset = So2Sat(root=dataset.root, bands=("S2_B03",))
         with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
             dataset.plot(dataset[0], suptitle="Single Band")
 
