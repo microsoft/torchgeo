@@ -60,6 +60,7 @@ class So2SatDataModule(pl.LightningDataModule):
         self,
         batch_size: int = 64,
         num_workers: int = 0,
+        band_set: str = "rgb",
         unsupervised_mode: bool = False,
         **kwargs: Any,
     ) -> None:
@@ -68,12 +69,14 @@ class So2SatDataModule(pl.LightningDataModule):
         Args:
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
+            band_set: Collection of So2Sat bands to use
             unsupervised_mode: Makes the train dataloader return imagery from the train,
                 val, and test sets
         """
         super().__init__()
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.band_set = band_set
         self.unsupervised_mode = unsupervised_mode
         self.kwargs = kwargs
 
@@ -92,8 +95,7 @@ class So2SatDataModule(pl.LightningDataModule):
         sample["image"] = self.norm(sample["image"])
         sample["image"] = sample["image"][self.reindex_to_rgb_first, :, :]
 
-        bands = self.kwargs.get("bands", "all")
-        if bands == "rgb":
+        if self.band_set == "rgb":
             sample["image"] = sample["image"][:3, :, :]
 
         return sample
@@ -113,35 +115,41 @@ class So2SatDataModule(pl.LightningDataModule):
         Args:
             stage: stage to set up
         """
+        bands = So2Sat.BAND_SETS["s2"]
         train_transforms = Compose([self.preprocess])
         val_test_transforms = self.preprocess
 
         if not self.unsupervised_mode:
-
             self.train_dataset = So2Sat(
-                split="train", transforms=train_transforms, **self.kwargs
+                split="train", bands=bands, transforms=train_transforms, **self.kwargs
             )
 
             self.val_dataset = So2Sat(
-                split="validation", transforms=val_test_transforms, **self.kwargs
+                split="validation",
+                bands=bands,
+                transforms=val_test_transforms,
+                **self.kwargs,
             )
 
             self.test_dataset = So2Sat(
-                split="test", transforms=val_test_transforms, **self.kwargs
+                split="test", bands=bands, transforms=val_test_transforms, **self.kwargs
             )
 
         else:
 
             temp_train = So2Sat(
-                split="train", transforms=train_transforms, **self.kwargs
+                split="train", bands=bands, transforms=train_transforms, **self.kwargs
             )
 
             self.val_dataset = So2Sat(
-                split="validation", transforms=train_transforms, **self.kwargs
+                split="validation",
+                bands=bands,
+                transforms=train_transforms,
+                **self.kwargs,
             )
 
             self.test_dataset = So2Sat(
-                split="test", transforms=train_transforms, **self.kwargs
+                split="test", bands=bands, transforms=train_transforms, **self.kwargs
             )
 
             self.train_dataset = cast(

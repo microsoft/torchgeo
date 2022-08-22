@@ -53,18 +53,29 @@ class SEN12MSDataModule(pl.LightningDataModule):
     )
 
     def __init__(
-        self, seed: int, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+        self,
+        seed: int,
+        band_set: str = "all",
+        batch_size: int = 64,
+        num_workers: int = 0,
+        **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for SEN12MS based DataLoaders.
 
         Args:
             seed: The seed value to use when doing the sklearn based ShuffleSplit
+            band_set: The subset of S1/S2 bands to use. Options are: "all",
+                "s1", "s2-all", and "s2-reduced" where the "s2-reduced" set includes:
+                B2, B3, B4, B8, B11, and B12.
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
         """
         super().__init__()
+        assert band_set in SEN12MS.BAND_SETS.keys()
 
         self.seed = seed
+        self.band_set = band_set
+        self.bands = SEN12MS.BAND_SETS[band_set]
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.kwargs = kwargs
@@ -109,11 +120,11 @@ class SEN12MSDataModule(pl.LightningDataModule):
         season_to_int = {"winter": 0, "spring": 1000, "summer": 2000, "fall": 3000}
 
         self.all_train_dataset = SEN12MS(
-            split="train", transforms=self.preprocess, **self.kwargs
+            split="train", bands=self.bands, transforms=self.preprocess, **self.kwargs
         )
 
         self.all_test_dataset = SEN12MS(
-            split="test", transforms=self.preprocess, **self.kwargs
+            split="test", bands=self.bands, transforms=self.preprocess, **self.kwargs
         )
 
         # A patch is a filename like: "ROIs{num}_{season}_s2_{scene_id}_p{patch_id}.tif"

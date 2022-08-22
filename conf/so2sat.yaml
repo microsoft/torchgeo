@@ -17,5 +17,5 @@ experiment:
     root: "data/so2sat"
     batch_size: 128
     num_workers: 4
-    bands: "rgb"
+    band_set: "rgb"
     unsupervised_mode: False

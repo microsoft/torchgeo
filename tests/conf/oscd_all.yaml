@@ -14,7 +14,7 @@ experiment:
     ignore_index: null
   datamodule:
     root: "tests/data/oscd"
-    batch_size: 1
+    train_batch_size: 1
     num_workers: 0
     val_split_pct: 0.5
     bands: "all"
