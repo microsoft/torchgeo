@@ -71,7 +71,7 @@ class TestChangeStar:
             in_channels=inc, inner_channels=innerc, num_convs=nc, scale_factor=sf
         )
 
-        y = m(torch.rand(3, 2, inc / 2, 32, 32))
+        y = m(torch.rand(3, 2, inc // 2, 32, 32))
         assert y[0].shape == y[1].shape
         assert y[0].shape == (3, 1, 32 * sf, 32 * sf)
 
