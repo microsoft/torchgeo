@@ -135,7 +135,7 @@ def main(args: argparse.Namespace) -> None:
     # Initialize samplers
     if args.epoch_size:
         length = args.epoch_size
-        num_batches = round(args.epoch_size / args.batch_size)
+        num_batches = args.epoch_size // args.batch_size
     elif args.num_batches:
         length = args.num_batches * args.batch_size
         num_batches = args.num_batches
