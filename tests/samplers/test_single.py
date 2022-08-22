@@ -182,8 +182,8 @@ class TestGridGeoSampler:
             )
 
     def test_len(self, sampler: GridGeoSampler) -> None:
-        rows = round((100 - sampler.size[0]) / sampler.stride[0]) + 1
-        cols = round((100 - sampler.size[1]) / sampler.stride[1]) + 1
+        rows = ((100 - sampler.size[0]) // sampler.stride[0]) + 1
+        cols = ((100 - sampler.size[1]) // sampler.stride[1]) + 1
         length = rows * cols * 2
         assert len(sampler) == length
 

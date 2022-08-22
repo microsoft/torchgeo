@@ -44,7 +44,7 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
                 two times smaller in spatial dimensions than previous one
                 (e.g. for depth 0 we will have features. Each stage generate
                 features with shapes [(N, C, H, W),], for depth
-                1 - [(N, C, H, W), (N, C, H / 2, W / 2)] and so on). Default is 5
+                1 - [(N, C, H, W), (N, C, H // 2, W // 2)] and so on). Default is 5
             encoder_weights: One of **None** (random initialization), **"imagenet"**
                 (pre-training on ImageNet) and other pretrained weights (see table
                 with available weights for each encoder_name)
@@ -142,7 +142,7 @@ class FCSiamDiff(Unet):  # type: ignore[misc]
                 two times smaller in spatial dimensions than previous one
                 (e.g. for depth 0 we will have features. Each stage generate
                 features with shapes [(N, C, H, W),], for depth
-                1 - [(N, C, H, W), (N, C, H / 2, W / 2)] and so on). Default is 5
+                1 - [(N, C, H, W), (N, C, H // 2, W // 2)] and so on). Default is 5
             encoder_weights: One of **None** (random initialization), **"imagenet"**
                 (pre-training on ImageNet) and other pretrained weights (see table
                 with available weights for each encoder_name)
