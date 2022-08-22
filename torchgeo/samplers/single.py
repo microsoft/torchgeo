@@ -205,12 +205,12 @@ class GridGeoSampler(GeoSampler):
             ):
                 self.hits.append(hit)
 
-        self.length: int = 0
+        self.length = 0
         for hit in self.hits:
             bounds = BoundingBox(*hit.bounds)
 
-            rows = ((bounds.maxy - bounds.miny - self.size[0]) // self.stride[0]) + 1
-            cols = ((bounds.maxx - bounds.minx - self.size[1]) // self.stride[1]) + 1
+            rows = int((bounds.maxy - bounds.miny - self.size[0]) // self.stride[0]) + 1
+            cols = int((bounds.maxx - bounds.minx - self.size[1]) // self.stride[1]) + 1
             self.length += rows * cols
 
     def __iter__(self) -> Iterator[BoundingBox]:
@@ -223,8 +223,8 @@ class GridGeoSampler(GeoSampler):
         for hit in self.hits:
             bounds = BoundingBox(*hit.bounds)
 
-            rows = ((bounds.maxy - bounds.miny - self.size[0]) // self.stride[0]) + 1
-            cols = ((bounds.maxx - bounds.minx - self.size[1]) // self.stride[1]) + 1
+            rows = int((bounds.maxy - bounds.miny - self.size[0]) // self.stride[0]) + 1
+            cols = int((bounds.maxx - bounds.minx - self.size[1]) // self.stride[1]) + 1
 
             mint = bounds.mint
             maxt = bounds.maxt
