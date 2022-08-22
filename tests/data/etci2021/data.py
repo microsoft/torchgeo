@@ -24,12 +24,20 @@ metadatas = [
     {
         "filename": "val_with_ref_labels.zip",
         "directory": "test",
-        "subdirs": ["florence_20180510t231343", "florence_20180522t231344", "florence_20190302t234651"],
+        "subdirs": [
+            "florence_20180510t231343",
+            "florence_20180522t231344",
+            "florence_20190302t234651",
+        ],
     },
     {
         "filename": "test_without_ref_labels.zip",
         "directory": "test_internal",
-        "subdirs": ["redrivernorth_20190104t002247", "redrivernorth_20190116t002247", "redrivernorth_20190302t234651"],
+        "subdirs": [
+            "redrivernorth_20190104t002247",
+            "redrivernorth_20190116t002247",
+            "redrivernorth_20190302t234651",
+        ],
     },
 ]
 
