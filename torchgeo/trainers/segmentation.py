@@ -3,12 +3,13 @@
 
 """Segmentation tasks."""
 
+import warnings
 from typing import Any, Dict, cast
 
+import pytorch_lightning as pl
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
-from pytorch_lightning.core.lightning import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
@@ -22,7 +23,7 @@ from ..models import FCN
 DataLoader.__module__ = "torch.utils.data"
 
 
-class SemanticSegmentationTask(LightningModule):
+class SemanticSegmentationTask(pl.LightningModule):
     """LightningModule for semantic segmentation of images."""
 
     def config_task(self) -> None:
@@ -53,16 +54,15 @@ class SemanticSegmentationTask(LightningModule):
             )
 
         if self.hyperparams["loss"] == "ce":
-            self.loss = nn.CrossEntropyLoss(
-                ignore_index=-1000 if self.ignore_zeros is None else 0
-            )
+            ignore_value = -1000 if self.ignore_index is None else self.ignore_index
+            self.loss = nn.CrossEntropyLoss(ignore_index=ignore_value)
         elif self.hyperparams["loss"] == "jaccard":
             self.loss = smp.losses.JaccardLoss(
                 mode="multiclass", classes=self.hyperparams["num_classes"]
             )
         elif self.hyperparams["loss"] == "focal":
             self.loss = smp.losses.FocalLoss(
-                "multiclass", ignore_index=self.ignore_zeros, normalized=True
+                "multiclass", ignore_index=self.ignore_index, normalized=True
             )
         else:
             raise ValueError(f"Loss type '{self.hyperparams['loss']}' is not valid.")
@@ -78,10 +78,13 @@ class SemanticSegmentationTask(LightningModule):
             in_channels: Number of channels in input image
             num_classes: Number of semantic classes to predict
             loss: Name of the loss function
-            ignore_zeros: Whether to ignore the "0" class value in the loss and metrics
+            ignore_index: Optional integer class index to ignore in the loss and metrics
 
         Raises:
             ValueError: if kwargs arguments are invalid
+
+        .. versionchanged:: 0.3
+           The *ignore_zeros* parameter was renamed to *ignore_index*.
         """
         super().__init__()
 
@@ -89,20 +92,26 @@ class SemanticSegmentationTask(LightningModule):
         self.save_hyperparameters()  # type: ignore[operator]
         self.hyperparams = cast(Dict[str, Any], self.hparams)
 
-        self.ignore_zeros = None if kwargs["ignore_zeros"] else 0
-
+        if not isinstance(kwargs["ignore_index"], (int, type(None))):
+            raise ValueError("ignore_index must be an int or None")
+        if (kwargs["ignore_index"] is not None) and (kwargs["loss"] == "jaccard"):
+            warnings.warn(
+                "ignore_index has no effect on training when loss='jaccard'",
+                UserWarning,
+            )
+        self.ignore_index = kwargs["ignore_index"]
         self.config_task()
 
         self.train_metrics = MetricCollection(
             [
                 Accuracy(
                     num_classes=self.hyperparams["num_classes"],
-                    ignore_index=self.ignore_zeros,
+                    ignore_index=self.ignore_index,
                     mdmc_average="global",
                 ),
                 JaccardIndex(
                     num_classes=self.hyperparams["num_classes"],
-                    ignore_index=self.ignore_zeros,
+                    ignore_index=self.ignore_index,
                 ),
             ],
             prefix="train_",
@@ -175,7 +184,7 @@ class SemanticSegmentationTask(LightningModule):
 
         if batch_idx < 10:
             try:
-                datamodule = self.trainer.datamodule  # type: ignore[union-attr]
+                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
                 batch["prediction"] = y_hat_hard
                 for key in ["image", "mask", "prediction"]:
                     batch[key] = batch[key].cpu()

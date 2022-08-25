@@ -17,7 +17,7 @@ class TestNAIP:
     @pytest.fixture
     def dataset(self) -> NAIP:
         root = os.path.join("tests", "data", "naip")
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return NAIP(root, transforms=transforms)
 
     def test_getitem(self, dataset: NAIP) -> None:

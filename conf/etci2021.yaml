@@ -7,9 +7,9 @@ experiment:
     encoder_weights: "imagenet"
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
-    in_channels: 7
+    in_channels: 6
     num_classes: 2
-    ignore_zeros: True
+    ignore_index: 0
   datamodule:
     root_dir: "data/etci2021"
     batch_size: 32

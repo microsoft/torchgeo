@@ -31,7 +31,7 @@ class TestCMSGlobalMangroveCanopy:
         monkeypatch.setattr(CMSGlobalMangroveCanopy, "md5", md5)
 
         root = os.path.join("tests", "data", "cms_mangrove_canopy")
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         country = "Angola"
 
         return CMSGlobalMangroveCanopy(

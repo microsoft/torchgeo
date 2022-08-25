@@ -64,7 +64,7 @@ class TestBigEarthNet:
         monkeypatch.setattr(BigEarthNet, "splits_metadata", splits_metadata)
         bands, num_classes, split = request.param
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return BigEarthNet(
             root, split, bands, num_classes, transforms, download=True, checksum=True
         )
@@ -136,7 +136,7 @@ class TestBigEarthNet:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         err = "Dataset not found in `root` directory and `download=False`, "
         "either specify a different `root` directory or use `download=True` "
-        "to automaticaly download the dataset."
+        "to automatically download the dataset."
         with pytest.raises(RuntimeError, match=err):
             BigEarthNet(str(tmp_path))
 

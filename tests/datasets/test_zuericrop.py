@@ -36,7 +36,7 @@ class TestZueriCrop:
         monkeypatch.setattr(ZueriCrop, "urls", urls)
         monkeypatch.setattr(ZueriCrop, "md5s", md5s)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return ZueriCrop(root=root, transforms=transforms, download=True, checksum=True)
 
     @pytest.fixture
@@ -81,7 +81,7 @@ class TestZueriCrop:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         err = "Dataset not found in `root` directory and `download=False`, "
         "either specify a different `root` directory or use `download=True` "
-        "to automaticaly download the dataset."
+        "to automatically download the dataset."
         with pytest.raises(RuntimeError, match=err):
             ZueriCrop(str(tmp_path))
 

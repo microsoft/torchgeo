@@ -7,11 +7,11 @@ from typing import Any, List, Optional, Union
 
 from torch.utils.data import Subset, TensorDataset, random_split
 
-from ..datasets import VisionDataset
+from ..datasets import NonGeoDataset
 
 
 def dataset_split(
-    dataset: Union[TensorDataset, VisionDataset],
+    dataset: Union[TensorDataset, NonGeoDataset],
     val_pct: float,
     test_pct: Optional[float] = None,
 ) -> List[Subset[Any]]:

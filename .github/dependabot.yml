@@ -7,7 +7,8 @@ updates:
     # Allow up to 2 open pull requests at a time
     open-pull-requests-limit: 2
     ignore:
-      # torch, tensorboard require protobuf < 4
-      - dependency-name: "protobuf"
+      # radiant-mlhub 0.5+ changed download behavior:
+      # https://github.com/radiantearth/radiant-mlhub/pull/104
+      - dependency-name: "radiant-mlhub"
       # segmentation-models-pytorch requires older timm, can't update
       - dependency-name: "timm"

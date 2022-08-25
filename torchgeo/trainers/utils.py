@@ -142,9 +142,7 @@ def reinit_initial_conv_layer(
         bias=use_bias,
         padding_mode=layer.padding_mode,
     )
-    nn.init.kaiming_normal_(  # type: ignore[no-untyped-call]
-        new_layer.weight, mode="fan_out", nonlinearity="relu"
-    )
+    nn.init.kaiming_normal_(new_layer.weight, mode="fan_out", nonlinearity="relu")
 
     if keep_rgb_weights:
         new_layer.weight.data[:, :3, :, :] = w_old

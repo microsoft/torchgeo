@@ -34,7 +34,7 @@ class TestNASAMarineDebris:
         md5s = ["fe8698d1e68b3f24f0b86b04419a797d", "d8084f5a72778349e07ac90ec1e1d990"]
         monkeypatch.setattr(NASAMarineDebris, "md5s", md5s)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return NASAMarineDebris(root, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: NASAMarineDebris) -> None:
@@ -65,7 +65,7 @@ class TestNASAMarineDebris:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         err = "Dataset not found in `root` directory and `download=False`, "
         "either specify a different `root` directory or use `download=True` "
-        "to automaticaly download the dataset."
+        "to automatically download the dataset."
         with pytest.raises(RuntimeError, match=err):
             NASAMarineDebris(str(tmp_path))
 

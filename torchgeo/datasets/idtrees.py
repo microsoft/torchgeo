@@ -16,11 +16,11 @@ from rasterio.enums import Resampling
 from torch import Tensor
 from torchvision.utils import draw_bounding_boxes
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import download_url, extract_archive
 
 
-class IDTReeS(VisionDataset):
+class IDTReeS(NonGeoDataset):
     """IDTReeS dataset.
 
     The `IDTReeS <https://idtrees.org/competition/>`__
@@ -289,10 +289,10 @@ class IDTReeS(VisionDataset):
         with rasterio.open(path) as f:
             for geom in geoms:
                 coords = [f.index(x, y) for x, y in geom]
-                xmin = min(coord[0] for coord in coords)
-                xmax = max(coord[0] for coord in coords)
-                ymin = min(coord[1] for coord in coords)
-                ymax = max(coord[1] for coord in coords)
+                xmin = min(coord[1] for coord in coords)
+                xmax = max(coord[1] for coord in coords)
+                ymin = min(coord[0] for coord in coords)
+                ymax = max(coord[0] for coord in coords)
                 boxes.append([xmin, ymin, xmax, ymax])
 
         tensor = torch.tensor(boxes)
@@ -421,7 +421,7 @@ class IDTReeS(VisionDataset):
             raise RuntimeError(
                 "Dataset not found in `root` directory and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # Download and extract the dataset
@@ -459,7 +459,7 @@ class IDTReeS(VisionDataset):
         hsi = normalize(sample["hsi"][hsi_indices, :, :]).permute((1, 2, 0)).numpy()
         chm = normalize(sample["chm"]).permute((1, 2, 0)).numpy()
 
-        if "boxes" in sample:
+        if "boxes" in sample and len(sample["boxes"]):
             labels = (
                 [self.idx2class[int(i)] for i in sample["label"]]
                 if "label" in sample
@@ -472,7 +472,7 @@ class IDTReeS(VisionDataset):
         else:
             image = sample["image"].permute((1, 2, 0)).numpy()
 
-        if "prediction_boxes" in sample:
+        if "prediction_boxes" in sample and len(sample["prediction_boxes"]):
             ncols += 1
             labels = (
                 [self.idx2class[int(i)] for i in sample["prediction_label"]]

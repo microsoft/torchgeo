@@ -50,7 +50,7 @@ class TestETCI2021:
         monkeypatch.setattr(ETCI2021, "metadata", metadata)
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return ETCI2021(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: ETCI2021) -> None:

@@ -44,14 +44,14 @@ class CycloneDataModule(pl.LightningDataModule):
             api_key: The RadiantEarth MLHub API key to use if the dataset needs to be
                 downloaded
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.root_dir = root_dir
         self.seed = seed
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.api_key = api_key
 
-    def custom_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
 
         Args:
@@ -60,11 +60,13 @@ class CycloneDataModule(pl.LightningDataModule):
         Returns:
             preprocessed sample
         """
-        sample["image"] = sample["image"] / 255.0  # scale to [0,1]
+        sample["image"] = sample["image"].float()
+        sample["image"] /= 255.0
         sample["image"] = (
             sample["image"].unsqueeze(0).repeat(3, 1, 1)
-        )  # convert to 3 channel
-        sample["label"] = torch.as_tensor(sample["label"]).float()
+        )  # convert from grayscale to 3 channel
+        if "label" in sample:
+            sample["label"] = torch.as_tensor(sample["label"]).float()
 
         return sample
 
@@ -77,7 +79,6 @@ class CycloneDataModule(pl.LightningDataModule):
         TropicalCycloneWindEstimation(
             self.root_dir,
             split="train",
-            transforms=self.custom_transform,
             download=self.api_key is not None,
             api_key=self.api_key,
         )
@@ -99,17 +100,11 @@ class CycloneDataModule(pl.LightningDataModule):
             stage: stage to set up
         """
         self.all_train_dataset = TropicalCycloneWindEstimation(
-            self.root_dir,
-            split="train",
-            transforms=self.custom_transform,
-            download=False,
+            self.root_dir, split="train", transforms=self.preprocess, download=False
         )
 
         self.all_test_dataset = TropicalCycloneWindEstimation(
-            self.root_dir,
-            split="test",
-            transforms=self.custom_transform,
-            download=False,
+            self.root_dir, split="test", transforms=self.preprocess, download=False
         )
 
         storm_ids = []

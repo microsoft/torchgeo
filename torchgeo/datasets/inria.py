@@ -14,17 +14,16 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import check_integrity, extract_archive, percentile_normalization
 
 
-class InriaAerialImageLabeling(VisionDataset):
+class InriaAerialImageLabeling(NonGeoDataset):
     r"""Inria Aerial Image Labeling Dataset.
 
-    The `Inria Aerial Image Labeling
-    <https://project.inria.fr/aerialimagelabeling/>`__ dataset is a building
-    detection dataset over dissimilar settlements ranging ranging from densely
-    populated areas to alpine towns. Refer to the dataset homepage to download
+    The `Inria Aerial Image Labeling <https://project.inria.fr/aerialimagelabeling/>`__
+    dataset is a building detection dataset over dissimilar settlements ranging from
+    densely populated areas to alpine towns. Refer to the dataset homepage to download
     the dataset.
 
     Dataset features:

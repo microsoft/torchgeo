@@ -27,6 +27,7 @@ from .cms_mangrove_canopy import CMSGlobalMangroveCanopy
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCycloneWindEstimation
+from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
 from .eddmaps import EDDMapS
 from .enviroatlas import EnviroAtlas
@@ -40,6 +41,8 @@ from .gbif import GBIF
 from .geo import (
     GeoDataset,
     IntersectionDataset,
+    NonGeoClassificationDataset,
+    NonGeoDataset,
     RasterDataset,
     UnionDataset,
     VectorDataset,
@@ -67,6 +70,7 @@ from .landsat import (
 )
 from .levircd import LEVIRCDPlus
 from .loveda import LoveDA
+from .millionaid import MillionAID
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nwpu import VHR10
@@ -74,6 +78,7 @@ from .openbuildings import OpenBuildings
 from .oscd import OSCD
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
+from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
@@ -140,7 +145,7 @@ __all__ = (
     "OpenBuildings",
     "Sentinel",
     "Sentinel2",
-    # VisionDataset
+    # NonGeoDataset
     "ADVANCE",
     "BeninSmallHolderCashews",
     "BigEarthNet",
@@ -148,6 +153,7 @@ __all__ = (
     "COWCCounting",
     "COWCDetection",
     "CV4AKenyaCropType",
+    "DeepGlobeLandCover",
     "DFC2022",
     "EnviroAtlas",
     "ETCI2021",
@@ -160,11 +166,13 @@ __all__ = (
     "LandCoverAI",
     "LEVIRCDPlus",
     "LoveDA",
+    "MillionAID",
     "NASAMarineDebris",
     "OSCD",
     "PatternNet",
     "Potsdam2D",
     "RESISC45",
+    "ReforesTree",
     "SeasonalContrastS2",
     "SEN12MS",
     "So2Sat",
@@ -185,11 +193,13 @@ __all__ = (
     # Base classes
     "GeoDataset",
     "IntersectionDataset",
+    "NonGeoClassificationDataset",
+    "NonGeoDataset",
     "RasterDataset",
     "UnionDataset",
     "VectorDataset",
-    "VisionDataset",
     "VisionClassificationDataset",
+    "VisionDataset",
     # Utilities
     "BoundingBox",
     "concat_samples",

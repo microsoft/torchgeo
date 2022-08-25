@@ -49,7 +49,7 @@ class TestIDTReeS:
         split, task = request.param
         monkeypatch.setattr(IDTReeS, "metadata", metadata)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return IDTReeS(root, split, task, transforms, download=True, checksum=True)
 
     @pytest.fixture(params=["pandas", "laspy", "open3d"])
@@ -95,7 +95,7 @@ class TestIDTReeS:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         err = "Dataset not found in `root` directory and `download=False`, "
         "either specify a different `root` directory or use `download=True` "
-        "to automaticaly download the dataset."
+        "to automatically download the dataset."
         with pytest.raises(RuntimeError, match=err):
             IDTReeS(str(tmp_path))
 

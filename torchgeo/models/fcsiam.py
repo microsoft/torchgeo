@@ -7,8 +7,8 @@ from typing import Any, Callable, Optional, Sequence, Union
 
 import segmentation_models_pytorch as smp
 import torch
+from segmentation_models_pytorch import Unet
 from segmentation_models_pytorch.base.model import SegmentationModel
-from segmentation_models_pytorch.unet.model import Unet
 from torch import Tensor
 
 Unet.__module__ = "segmentation_models_pytorch"
@@ -76,7 +76,13 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
         )
         encoder_out_channels = [c * 2 for c in self.encoder.out_channels[1:]]
         encoder_out_channels.insert(0, self.encoder.out_channels[0])
-        self.decoder = smp.unet.decoder.UnetDecoder(
+        try:
+            # smp 0.3+
+            UnetDecoder = smp.decoders.unet.decoder.UnetDecoder
+        except AttributeError:
+            # smp 0.2
+            UnetDecoder = smp.unet.decoder.UnetDecoder
+        self.decoder = UnetDecoder(
             encoder_channels=encoder_out_channels,
             decoder_channels=decoder_channels,
             n_blocks=encoder_depth,

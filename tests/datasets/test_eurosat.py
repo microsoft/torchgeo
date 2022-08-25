@@ -51,7 +51,7 @@ class TestEuroSAT:
         )
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[no-untyped-call]
+        transforms = nn.Identity()
         return EuroSAT(
             root=root, split=split, transforms=transforms, download=True, checksum=True
         )
@@ -91,7 +91,7 @@ class TestEuroSAT:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         err = "Dataset not found in `root` directory and `download=False`, "
         "either specify a different `root` directory or use `download=True` "
-        "to automaticaly download the dataset."
+        "to automatically download the dataset."
         with pytest.raises(RuntimeError, match=err):
             EuroSAT(str(tmp_path))
 

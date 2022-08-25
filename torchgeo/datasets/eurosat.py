@@ -11,11 +11,11 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from .geo import VisionClassificationDataset
+from .geo import NonGeoClassificationDataset
 from .utils import check_integrity, download_url, extract_archive, rasterio_loader
 
 
-class EuroSAT(VisionClassificationDataset):
+class EuroSAT(NonGeoClassificationDataset):
     """EuroSAT dataset.
 
     The `EuroSAT <https://github.com/phelber/EuroSAT>`__ dataset is based on Sentinel-2
@@ -129,6 +129,8 @@ class EuroSAT(VisionClassificationDataset):
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
 
+        .. versionadded:: 0.3
+           The *bands* parameter.
         """
         self.root = root
         self.transforms = transforms
@@ -208,7 +210,7 @@ class EuroSAT(VisionClassificationDataset):
             raise RuntimeError(
                 "Dataset not found in `root` directory and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # Download and extract the dataset
@@ -262,7 +264,7 @@ class EuroSAT(VisionClassificationDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`VisionClassificationDataset.__getitem__`
+            sample: a sample returned by :meth:`NonGeoClassificationDataset.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 

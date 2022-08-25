@@ -33,7 +33,7 @@ class LandCoverAIDataModule(pl.LightningDataModule):
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
@@ -92,10 +92,11 @@ class LandCoverAIDataModule(pl.LightningDataModule):
         Returns:
             preprocessed sample
         """
-        sample["image"] = sample["image"] / 255.0
-
         sample["image"] = sample["image"].float()
-        sample["mask"] = sample["mask"].long() + 1
+        sample["image"] /= 255.0
+
+        if "mask" in sample:
+            sample["mask"] = sample["mask"].long() + 1
 
         return sample
 
