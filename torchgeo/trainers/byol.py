@@ -4,20 +4,20 @@
 """BYOL tasks."""
 
 import random
-from typing import Any, Callable, Dict, Optional, Tuple, Union, cast
+from typing import Any, Callable, Dict, Optional, Tuple, cast
 
+import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
+import torchvision
 from kornia import augmentation as K
 from kornia import filters
 from kornia.geometry import transform as KorniaTransform
-from pytorch_lightning.core.lightning import LightningModule
+from packaging.version import parse
 from torch import Tensor, optim
 from torch.autograd import Variable
 from torch.nn.modules import BatchNorm1d, Conv2d, Linear, Module, ReLU, Sequential
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torchvision.models import resnet18
-from torchvision.models.resnet import resnet50
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -36,8 +36,8 @@ def normalized_mse(x: Tensor, y: Tensor) -> Tensor:
     """
     x = F.normalize(x, dim=-1)
     y = F.normalize(y, dim=-1)
-    mse = torch.mean(2 - 2 * (x * y).sum(dim=-1))  # type: ignore[attr-defined]
-    return cast(Tensor, mse)
+    mse = torch.mean(2 - 2 * (x * y).sum(dim=-1))
+    return mse
 
 
 # TODO: Move this to transforms
@@ -89,9 +89,7 @@ class SimCLRAugmentation(Module):
         self.size = image_size
 
         self.augmentation = Sequential(
-            KorniaTransform.Resize(  # type: ignore[attr-defined]
-                size=image_size, align_corners=False
-            ),
+            KorniaTransform.Resize(size=image_size, align_corners=False),
             # Not suitable for multispectral adapt
             # RandomApply(K.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.8),
             # K.RandomGrayscale(p=0.2),
@@ -128,7 +126,7 @@ class MLP(Module):
         super().__init__()
         self.mlp = Sequential(
             Linear(dim, hidden_size),
-            BatchNorm1d(hidden_size),  # type: ignore[no-untyped-call]
+            BatchNorm1d(hidden_size),
             ReLU(inplace=True),
             Linear(hidden_size, projection_size),
         )
@@ -161,7 +159,7 @@ class EncoderWrapper(Module):
         model: Module,
         projection_size: int = 256,
         hidden_size: int = 4096,
-        layer: Union[str, int] = -2,
+        layer: int = -2,
     ) -> None:
         """Initializes EncoderWrapper.
 
@@ -180,7 +178,7 @@ class EncoderWrapper(Module):
 
         self._projector: Optional[Module] = None
         self._projector_dim: Optional[int] = None
-        self._encoded = torch.empty(0)  # type: ignore[attr-defined]
+        self._encoded = torch.empty(0)
         self._register_hook()
 
     @property
@@ -215,7 +213,7 @@ class EncoderWrapper(Module):
 
     def _register_hook(self) -> None:
         """Register a hook for layer that we will extract features from."""
-        layer = list(self.model.children())[self.layer]  # type: ignore[index]
+        layer = list(self.model.children())[self.layer]
         layer.register_forward_hook(self._hook)
 
     def forward(self, x: Tensor) -> Tensor:
@@ -228,7 +226,7 @@ class EncoderWrapper(Module):
             output from the model
         """
         _ = self.model(x)
-        return cast(Tensor, self._encoded)
+        return self._encoded
 
 
 class BYOL(Module):
@@ -246,7 +244,7 @@ class BYOL(Module):
         self,
         model: Module,
         image_size: Tuple[int, int] = (256, 256),
-        hidden_layer: Union[str, int] = -2,
+        hidden_layer: int = -2,
         in_channels: int = 4,
         projection_size: int = 256,
         hidden_size: int = 4096,
@@ -287,9 +285,7 @@ class BYOL(Module):
         )
 
         # Perform a single forward pass to initialize the wrapper correctly
-        self.encoder(
-            torch.zeros(2, self.in_channels, *image_size)  # type: ignore[attr-defined]
-        )
+        self.encoder(torch.zeros(2, self.in_channels, *image_size))
 
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the encoder model through the MLP and prediction head.
@@ -308,23 +304,28 @@ class BYOL(Module):
             pt.data = self.beta * pt.data + (1 - self.beta) * p.data
 
 
-class BYOLTask(LightningModule):
+class BYOLTask(pl.LightningModule):
     """Class for pre-training any PyTorch model using BYOL."""
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
-        in_channels = self.hparams["in_channels"]
-        pretrained = self.hparams["imagenet_pretraining"]
-        encoder = None
+        in_channels = self.hyperparams["in_channels"]
+        pretrained = self.hyperparams["imagenet_pretraining"]
+        encoder_name = self.hyperparams["encoder_name"]
 
-        if self.hparams["encoder_name"] == "resnet18":
-            encoder = resnet18(pretrained=pretrained)
-        elif self.hparams["encoder_name"] == "resnet50":
-            encoder = resnet50(pretrained=pretrained)
+        if parse(torchvision.__version__) >= parse("0.12"):
+            if pretrained:
+                kwargs = {
+                    "weights": getattr(
+                        torchvision.models, f"ResNet{encoder_name[6:]}_Weights"
+                    ).DEFAULT
+                }
+            else:
+                kwargs = {"weights": None}
         else:
-            raise ValueError(
-                f"Encoder type '{self.hparams['encoder_name']}' is not valid."
-            )
+            kwargs = {"pretrained": pretrained}
+
+        encoder = getattr(torchvision.models, encoder_name)(**kwargs)
 
         layer = encoder.conv1
         # Creating new Conv2d layer
@@ -339,21 +340,19 @@ class BYOLTask(LightningModule):
         # initialize the weights from new channel with the red channel weights
         copy_weights = 0
         # Copying the weights from the old to the new layer
-        new_layer.weight[:, : layer.in_channels, :, :].data[
-            ...  # type: ignore[index]
-        ] = Variable(layer.weight.clone(), requires_grad=True)
+        new_layer.weight[:, : layer.in_channels, :, :].data[:] = Variable(
+            layer.weight.clone(), requires_grad=True
+        )
         # Copying the weights of the old layer to the extra channels
         for i in range(in_channels - layer.in_channels):
             channel = layer.in_channels + i
-            new_layer.weight[:, channel : channel + 1, :, :].data[
-                ...  # type: ignore[index]
-            ] = Variable(
+            new_layer.weight[:, channel : channel + 1, :, :].data[:] = Variable(
                 layer.weight[:, copy_weights : copy_weights + 1, ::].clone(),
                 requires_grad=True,
             )
 
         encoder.conv1 = new_layer
-        self.model = BYOL(encoder, image_size=(256, 256))
+        self.model = BYOL(encoder, in_channels=in_channels, image_size=(256, 256))
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize a LightningModule for pre-training a model with BYOL.
@@ -368,11 +367,14 @@ class BYOLTask(LightningModule):
             ValueError: if kwargs arguments are invalid
         """
         super().__init__()
-        self.save_hyperparameters()  # creates `self.hparams` from kwargs
+
+        # Creates `self.hparams` from kwargs
+        self.save_hyperparameters()  # type: ignore[operator]
+        self.hyperparams = cast(Dict[str, Any], self.hparams)
 
         self.config_task()
 
-    def forward(self, x: Tensor) -> Any:  # type: ignore[override]
+    def forward(self, *args: Any, **kwargs: Any) -> Any:
         """Forward pass of the model.
 
         Args:
@@ -381,7 +383,7 @@ class BYOLTask(LightningModule):
         Returns:
             output from the model
         """
-        return self.model(x)
+        return self.model(*args, **kwargs)
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
@@ -390,33 +392,32 @@ class BYOLTask(LightningModule):
             a "lr dict" according to the pytorch lightning documentation --
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
-        optimizer_class = getattr(optim, self.hparams.get("optimizer", "Adam"))
-        lr = self.hparams.get("lr", 1e-4)
-        weight_decay = self.hparams.get("weight_decay", 1e-6)
+        optimizer_class = getattr(optim, self.hyperparams.get("optimizer", "Adam"))
+        lr = self.hyperparams.get("lr", 1e-4)
+        weight_decay = self.hyperparams.get("weight_decay", 1e-6)
         optimizer = optimizer_class(self.parameters(), lr=lr, weight_decay=weight_decay)
 
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
+                    optimizer,
+                    patience=self.hyperparams["learning_rate_schedule_patience"],
                 ),
                 "monitor": "val_loss",
             },
         }
 
-    def training_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> Tensor:
-        """Training step - reports BYOL loss.
+    def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
+        """Compute and return the training loss.
 
         Args:
-            batch: current batch
-            batch_idx: index of current batch
+            batch: the output of your DataLoader
 
         Returns:
             training loss
         """
+        batch = args[0]
         x = batch["image"]
         with torch.no_grad():
             x1, x2 = self.model.augment(x), self.model.augment(x)
@@ -424,33 +425,27 @@ class BYOLTask(LightningModule):
         pred1, pred2 = self.forward(x1), self.forward(x2)
         with torch.no_grad():
             targ1, targ2 = self.model.target(x1), self.model.target(x2)
-        loss = torch.mean(  # type: ignore[attr-defined]
-            normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1)
-        )
+        loss = torch.mean(normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1))
 
         self.log("train_loss", loss, on_step=True, on_epoch=False)
         self.model.update_target()
 
-        return cast(Tensor, loss)
+        return loss
 
-    def validation_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
-        """Logs iteration level validation loss.
+    def validation_step(self, *args: Any, **kwargs: Any) -> None:
+        """Compute validation loss.
 
         Args:
-            batch: current batch
-            batch_idx: index of current batch
+            batch: the output of your DataLoader
         """
+        batch = args[0]
         x = batch["image"]
         x1, x2 = self.model.augment(x), self.model.augment(x)
         pred1, pred2 = self.forward(x1), self.forward(x2)
         targ1, targ2 = self.model.target(x1), self.model.target(x2)
-        loss = torch.mean(  # type: ignore[attr-defined]
-            normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1)
-        )
+        loss = torch.mean(normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1))
 
         self.log("val_loss", loss, on_step=False, on_epoch=True)
 
-    def test_step(self, *args: Any) -> None:  # type: ignore[override]
+    def test_step(self, *args: Any, **kwargs: Any) -> Any:
         """No-op, does nothing."""

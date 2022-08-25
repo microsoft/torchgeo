@@ -10,14 +10,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from torch import Tensor
 
-from .geo import VisionClassificationDataset
+from .geo import NonGeoClassificationDataset
 from .utils import download_url, extract_archive
 
 
-class RESISC45(VisionClassificationDataset):
+class RESISC45(NonGeoClassificationDataset):
     """RESISC45 dataset.
 
-    The `RESISC45 <http://www.escience.cn/people/JunweiHan/NWPU-RESISC45.html>`_
+    The `RESISC45 <http://www.escience.cn/people/JunweiHan/NWPU-RESISC45.html>`__
     dataset is a dataset for remote sensing image scene classification.
 
     Dataset features:
@@ -180,7 +180,7 @@ class RESISC45(VisionClassificationDataset):
         self._verify()
 
         valid_fns = set()
-        with open(os.path.join(self.root, f"resisc45-{split}.txt"), "r") as f:
+        with open(os.path.join(self.root, f"resisc45-{split}.txt")) as f:
             for fn in f:
                 valid_fns.add(fn.strip())
         is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns
@@ -213,7 +213,7 @@ class RESISC45(VisionClassificationDataset):
             raise RuntimeError(
                 "Dataset not found in `root` directory and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # Download and extract the dataset
@@ -250,7 +250,7 @@ class RESISC45(VisionClassificationDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`VisionClassificationDataset.__getitem__`
+            sample: a sample returned by :meth:`NonGeoClassificationDataset.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 

@@ -1,0 +1,18 @@
+Dataset,Type,Source,Size (px),Resolution (m)
+`Aboveground Woody Biomass`_,Masks,"Landsat, LiDAR","40,000x40,000",30
+`Aster Global DEM`_,Masks,Aster,"3,601x3,601",30
+`Canadian Building Footprints`_,Geometries,Bing Imagery,-,-
+`Chesapeake Land Cover`_,"Imagery, Masks",NAIP,-,1
+`Global Mangrove Distribution`_,Masks,"Remote Sensing, In Situ Measurements",-,3
+`Cropland Data Layer`_,Masks,Aerial,-,30
+`EDDMapS`_,Points,Citizen Scientists,-,-
+`EnviroAtlas`_,"Imagery, Masks","NAIP, NLCD, OpenStreetMap",-,1
+`Esri2020`_,Masks,Sentinel-2,-,10
+`EU-DEM`_,Masks,"Aster, SRTM, Russian Topomaps",-,25
+`GBIF`_,Points,Citizen Scientists,-,-
+`GlobBiomass`_,Masks,Landsat,"45,000x45,000",100
+`iNaturalist`_,Points,Citizen Scientists,-,-
+`Landsat`_,Imagery,Landsat,"8,900x8,900",30
+`NAIP`_,Imagery,Aerial,"6,100x7,600",1
+`Open Buildings`_,Geometries,"Maxar, CNES/Airbus",-,-
+`Sentinel`_,Imagery,Sentinel,"10,000x10,000",10

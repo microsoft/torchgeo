@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional
 
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
+from torchvision.transforms import Compose
 
 from ..datasets import NAIP, BoundingBox, Chesapeake13, stack_samples
 from ..samplers.batch import RandomBatchGeoSampler
@@ -45,14 +46,14 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             num_workers: The number of workers to use in all created DataLoaders
             patch_size: size of patches to sample
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.naip_root_dir = naip_root_dir
         self.chesapeake_root_dir = chesapeake_root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.patch_size = patch_size
 
-    def naip_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the NAIP Dataset.
 
         Args:
@@ -61,10 +62,8 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         Returns:
             preprocessed NAIP data
         """
-        sample["image"] = sample["image"] / 255.0
         sample["image"] = sample["image"].float()
-
-        del sample["bbox"]
+        sample["image"] /= 255.0
 
         return sample
 
@@ -79,8 +78,18 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         """
         sample["mask"] = sample["mask"].long()[0]
 
-        del sample["bbox"]
+        return sample
 
+    def remove_bbox(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Removes the bounding box property from a sample.
+
+        Args:
+            sample: dictionary with geographic metadata
+
+        Returns
+            sample without the bbox property
+        """
+        del sample["bbox"]
         return sample
 
     def prepare_data(self) -> None:
@@ -100,14 +109,18 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         """
         # TODO: these transforms will be applied independently, this won't work if we
         # add things like random horizontal flip
+
+        naip_transforms = Compose([self.preprocess, self.remove_bbox])
+        chesapeak_transforms = Compose([self.chesapeake_transform, self.remove_bbox])
+
         chesapeake = Chesapeake13(
-            self.chesapeake_root_dir, transforms=self.chesapeake_transform
+            self.chesapeake_root_dir, transforms=chesapeak_transforms
         )
         naip = NAIP(
             self.naip_root_dir,
             chesapeake.crs,
             chesapeake.res,
-            transforms=self.naip_transform,
+            transforms=naip_transforms,
         )
         self.dataset = chesapeake & naip
 

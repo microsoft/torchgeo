@@ -104,7 +104,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
             raise RuntimeError(
                 f"Dataset not found in `root={self.root}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # Download the dataset
@@ -114,7 +114,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
         """Download the dataset."""
         download_url(self.url, self.root, self.base_filename)
 
-        with open(os.path.join(self.root, self.base_filename), "r") as f:
+        with open(os.path.join(self.root, self.base_filename)) as f:
             content = json.load(f)
 
         for item in content["features"]:
@@ -124,7 +124,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
                 item["properties"]["tile_id"] + ".tif",
             )
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Any],
         show_titles: bool = True,

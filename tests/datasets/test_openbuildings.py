@@ -6,10 +6,9 @@ import json
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import matplotlib.pyplot as plt
-import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
@@ -24,14 +23,12 @@ from torchgeo.datasets import (
     UnionDataset,
 )
 
-pytest.importorskip("pandas", minversion="0.19.1")
+pd = pytest.importorskip("pandas", minversion="0.23.2")
 
 
 class TestOpenBuildings:
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
-    ) -> OpenBuildings:
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> OpenBuildings:
 
         root = str(tmp_path)
         shutil.copy(
@@ -43,14 +40,12 @@ class TestOpenBuildings:
 
         md5s = {"000_buildings.csv.gz": "20aeeec9d45a0ce4d772a26e0bcbc25f"}
 
-        monkeypatch.setattr(OpenBuildings, "md5s", md5s)  # type: ignore[attr-defined]
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        monkeypatch.setattr(OpenBuildings, "md5s", md5s)
+        transforms = nn.Identity()
         return OpenBuildings(root=root, transforms=transforms)
 
     @pytest.fixture(params=["pandas"])
-    def mock_missing_module(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
-    ) -> str:
+    def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:
         import_orig = builtins.__import__
         package = str(request.param)
 
@@ -59,9 +54,7 @@ class TestOpenBuildings:
                 raise ImportError()
             return import_orig(name, *args, **kwargs)
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            builtins, "__import__", mocked_import
-        )
+        monkeypatch.setattr(builtins, "__import__", mocked_import)
         return package
 
     def test_mock_missing_module(
@@ -113,7 +106,7 @@ class TestOpenBuildings:
 
     def test_nothing_in_index(self, dataset: OpenBuildings, tmp_path: Path) -> None:
         # change meta data to another 'title_url' so that there is no match found
-        with open(os.path.join(tmp_path, "tiles.geojson"), "r") as f:
+        with open(os.path.join(tmp_path, "tiles.geojson")) as f:
             content = json.load(f)
             content["features"][0]["properties"]["tile_url"] = "mismatch.csv.gz"
 

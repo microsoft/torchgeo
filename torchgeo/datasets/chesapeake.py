@@ -19,7 +19,6 @@ import shapely.ops
 import torch
 from matplotlib.colors import ListedColormap
 from rasterio.crs import CRS
-from torch import Tensor
 
 from .geo import GeoDataset, RasterDataset
 from .utils import BoundingBox, download_url, extract_archive
@@ -161,7 +160,7 @@ class Chesapeake(RasterDataset, abc.ABC):
             raise RuntimeError(
                 f"Dataset not found in `root={self.root}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # Download the dataset
@@ -176,9 +175,9 @@ class Chesapeake(RasterDataset, abc.ABC):
         """Extract the dataset."""
         extract_archive(os.path.join(self.root, self.zipfile))
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
@@ -192,7 +191,9 @@ class Chesapeake(RasterDataset, abc.ABC):
         Returns:
             a matplotlib Figure with the rendered sample
 
-        .. versionadded:: 0.3
+        .. versionchanged:: 0.3
+           Method now takes a sample dict, not a Tensor. Additionally, possible to
+           show subplot titles and/or use a custom suptitle.
         """
         mask = sample["mask"].squeeze(0)
         ncols = 1
@@ -636,10 +637,8 @@ class ChesapeakeCVPR(GeoDataset):
         sample["image"] = np.concatenate(sample["image"], axis=0)
         sample["mask"] = np.concatenate(sample["mask"], axis=0)
 
-        sample["image"] = torch.from_numpy(  # type: ignore[attr-defined]
-            sample["image"]
-        )
-        sample["mask"] = torch.from_numpy(sample["mask"])  # type: ignore[attr-defined]
+        sample["image"] = torch.from_numpy(sample["image"])
+        sample["mask"] = torch.from_numpy(sample["mask"])
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -674,7 +673,7 @@ class ChesapeakeCVPR(GeoDataset):
             raise RuntimeError(
                 f"Dataset not found in `root={self.root}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # Download the dataset

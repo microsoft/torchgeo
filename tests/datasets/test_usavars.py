@@ -5,7 +5,7 @@ import builtins
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import pytest
 import torch
@@ -18,7 +18,7 @@ from torch.utils.data import ConcatDataset
 import torchgeo.datasets.utils
 from torchgeo.datasets import USAVars
 
-pytest.importorskip("pandas", minversion="0.19.1")
+pytest.importorskip("pandas", minversion="0.23.2")
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -26,23 +26,27 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestUSAVars:
-    @pytest.fixture()
+    @pytest.fixture(
+        params=zip(
+            ["train", "val", "test"],
+            [
+                ["elevation", "population", "treecover"],
+                ["elevation", "population"],
+                ["treecover"],
+            ],
+        )
+    )
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> USAVars:
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.usavars, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.usavars, "download_url", download_url)
 
         md5 = "b504580a00bdc27097d5421dec50481b"
-        monkeypatch.setattr(USAVars, "md5", md5)  # type: ignore[attr-defined]
+        monkeypatch.setattr(USAVars, "md5", md5)
 
         data_url = os.path.join("tests", "data", "usavars", "uar.zip")
-        monkeypatch.setattr(USAVars, "data_url", data_url)  # type: ignore[attr-defined]
+        monkeypatch.setattr(USAVars, "data_url", data_url)
 
         label_urls = {
             "elevation": os.path.join("tests", "data", "usavars", "elevation.csv"),
@@ -53,25 +57,51 @@ class TestUSAVars:
             "roads": os.path.join("tests", "data", "usavars", "roads.csv"),
             "housing": os.path.join("tests", "data", "usavars", "housing.csv"),
         }
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            USAVars, "label_urls", label_urls
-        )
+        monkeypatch.setattr(USAVars, "label_urls", label_urls)
+
+        split_metadata = {
+            "train": {
+                "url": os.path.join("tests", "data", "usavars", "train_split.txt"),
+                "filename": "train_split.txt",
+                "md5": "b94f3f6f63110b253779b65bc31d91b5",
+            },
+            "val": {
+                "url": os.path.join("tests", "data", "usavars", "val_split.txt"),
+                "filename": "val_split.txt",
+                "md5": "e39aa54b646c4c45921fcc9765d5a708",
+            },
+            "test": {
+                "url": os.path.join("tests", "data", "usavars", "test_split.txt"),
+                "filename": "test_split.txt",
+                "md5": "4ab0f5549fee944a5690de1bc95ed245",
+            },
+        }
+        monkeypatch.setattr(USAVars, "split_metadata", split_metadata)
 
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        split, labels = request.param
+        transforms = nn.Identity()
 
-        return USAVars(root, transforms=transforms, download=True, checksum=True)
+        return USAVars(
+            root, split, labels, transforms=transforms, download=True, checksum=True
+        )
 
     def test_getitem(self, dataset: USAVars) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert x["image"].ndim == 3
-        assert len(x.keys()) == 2  # image, elevation, population, treecover
+        assert len(x.keys()) == 2  # image, labels
         assert x["image"].shape[0] == 4  # R, G, B, Inf
+        assert len(dataset.labels) == len(x["labels"])
 
     def test_len(self, dataset: USAVars) -> None:
-        assert len(dataset) == 2
+        if dataset.split == "train":
+            assert len(dataset) == 3
+        elif dataset.split == "val":
+            assert len(dataset) == 2
+        else:
+            assert len(dataset) == 1
 
     def test_add(self, dataset: USAVars) -> None:
         ds = dataset + dataset
@@ -95,6 +125,9 @@ class TestUSAVars:
         ]
         for csv in csvs:
             shutil.copy(os.path.join("tests", "data", "usavars", csv), root)
+        splits = ["train_split.txt", "val_split.txt", "test_split.txt"]
+        for split in splits:
+            shutil.copy(os.path.join("tests", "data", "usavars", split), root)
 
         USAVars(root)
 
@@ -103,9 +136,7 @@ class TestUSAVars:
             USAVars(str(tmp_path))
 
     @pytest.fixture(params=["pandas"])
-    def mock_missing_module(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], request: SubRequest
-    ) -> str:
+    def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:
         import_orig = builtins.__import__
         package = str(request.param)
 
@@ -114,9 +145,7 @@ class TestUSAVars:
                 raise ImportError()
             return import_orig(name, *args, **kwargs)
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            builtins, "__import__", mocked_import
-        )
+        monkeypatch.setattr(builtins, "__import__", mocked_import)
         return package
 
     def test_mock_missing_module(

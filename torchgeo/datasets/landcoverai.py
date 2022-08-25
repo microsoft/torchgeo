@@ -16,14 +16,14 @@ from matplotlib.colors import ListedColormap
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import download_url, extract_archive, working_dir
 
 
-class LandCoverAI(VisionDataset):
+class LandCoverAI(NonGeoDataset):
     r"""LandCover.ai dataset.
 
-    The `LandCover.ai <https://landcover.ai/>`_ (Land Cover from Aerial Imagery)
+    The `LandCover.ai <https://landcover.ai/>`__ (Land Cover from Aerial Imagery)
     dataset is a dataset for automatic mapping of buildings, woodlands, water and
     roads from aerial images. This implementation is specifically for Version 1 of
     Landcover.ai.
@@ -60,7 +60,7 @@ class LandCoverAI(VisionDataset):
          the train/val/test split
     """
 
-    url = "https://landcover.ai/download/landcover.ai.v1.zip"
+    url = "https://landcover.ai.linuxpolska.com/download/landcover.ai.v1.zip"
     filename = "landcover.ai.v1.zip"
     md5 = "3268c89070e8734b4e91d531c0617e03"
     sha256 = "15ee4ca9e3fd187957addfa8f0d74ac31bc928a966f76926e11b3c33ea76daa1"
@@ -149,7 +149,7 @@ class LandCoverAI(VisionDataset):
         filename = os.path.join(self.root, "output", id_ + ".jpg")
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img)
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -167,7 +167,7 @@ class LandCoverAI(VisionDataset):
         filename = os.path.join(self.root, "output", id_ + "_m.png")
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("L"))
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             return tensor
 
     def _verify(self) -> None:
@@ -193,7 +193,7 @@ class LandCoverAI(VisionDataset):
             raise RuntimeError(
                 f"Dataset not found in `root={self.root}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # Download the dataset

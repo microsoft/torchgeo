@@ -1,8 +1,9 @@
-# ipywidgets 7+ required for nbsphinx
-ipywidgets>=7
-# nbsphinx 0.8.5 fixes bug with nbformat attributes
-nbsphinx>=0.8.5
-# release versions missing files, must install from master
+# This dependency must be installed in "editable mode" in this directory,
+# otherwise Sphinx is unable to find static files like fonts:
+#
+# https://github.com/pytorch/pytorch_sphinx_theme/issues/143
+#
+# All other documentation dependencies can be found in
+# setup.cfg and requirements/docs.txt
+
 -e git+https://github.com/pytorch/pytorch_sphinx_theme.git#egg=pytorch_sphinx_theme
-# sphinx 4+ required for autodoc_typehints_description_target = documented
-sphinx>=4

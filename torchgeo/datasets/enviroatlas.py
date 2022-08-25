@@ -27,7 +27,7 @@ class EnviroAtlas(GeoDataset):
     """EnviroAtlas dataset covering four cities with prior and weak input data layers.
 
     The `EnviroAtlas
-    <https://doi.org/10.5281/zenodo.5778192>`_ dataset contains NAIP aerial imagery,
+    <https://doi.org/10.5281/zenodo.5778192>`__ dataset contains NAIP aerial imagery,
     NLCD land cover labels, OpenStreetMap roads, water, waterways, and waterbodies,
     Microsoft building footprint labels, high-resolution land cover labels from the
     EPA EnviroAtlas dataset, and high-resolution land cover prior layers.
@@ -402,10 +402,8 @@ class EnviroAtlas(GeoDataset):
         sample["image"] = np.concatenate(sample["image"], axis=0)
         sample["mask"] = np.concatenate(sample["mask"], axis=0)
 
-        sample["image"] = torch.from_numpy(  # type: ignore[attr-defined]
-            sample["image"]
-        )
-        sample["mask"] = torch.from_numpy(sample["mask"])  # type: ignore[attr-defined]
+        sample["image"] = torch.from_numpy(sample["image"])
+        sample["mask"] = torch.from_numpy(sample["mask"])
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -435,7 +433,7 @@ class EnviroAtlas(GeoDataset):
             raise RuntimeError(
                 f"Dataset not found in `root={self.root}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # Download the dataset

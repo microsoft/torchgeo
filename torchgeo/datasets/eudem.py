@@ -18,7 +18,7 @@ class EUDEM(RasterDataset):
     """European Digital Elevation Model (EU-DEM) Dataset.
 
     The `EU-DEM
-    <https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1?tab=mapview>`_
+    <https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1?tab=mapview>`__
     dataset is a Digital Elevation Model of reference for the entire European region.
     The dataset can be downloaded from this `website
     <https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1?tab=mapview>`_
@@ -139,7 +139,7 @@ class EUDEM(RasterDataset):
             "have manually downloaded the dataset as suggested in the documentation."
         )
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Any],
         show_titles: bool = True,

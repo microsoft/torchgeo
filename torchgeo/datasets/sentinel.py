@@ -8,7 +8,6 @@ from typing import Any, Callable, Dict, Optional, Sequence
 import matplotlib.pyplot as plt
 import torch
 from rasterio.crs import CRS
-from torch import Tensor
 
 from .geo import RasterDataset
 
@@ -16,7 +15,7 @@ from .geo import RasterDataset
 class Sentinel(RasterDataset):
     """Abstract base class for all Sentinel datasets.
 
-    `Sentinel <https://sentinel.esa.int/web/sentinel/home>`_ is a family of
+    `Sentinel <https://sentinel.esa.int/web/sentinel/home>`__ is a family of
     satellites launched by the `European Space Agency (ESA) <https://www.esa.int/>`_
     under the `Copernicus Programme <https://www.copernicus.eu/en>`_.
 
@@ -102,9 +101,9 @@ class Sentinel2(Sentinel):
 
         super().__init__(root, crs, res, transforms, cache)
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
@@ -121,7 +120,9 @@ class Sentinel2(Sentinel):
         Raises:
             ValueError: if the RGB bands are not included in ``self.bands``
 
-        .. versionadded:: 0.3
+        .. versionchanged:: 0.3
+           Method now takes a sample dict, not a Tensor. Additionally, possible to
+           show subplot titles and/or use a custom suptitle.
         """
         rgb_indices = []
         for band in self.RGB_BANDS:
@@ -131,7 +132,7 @@ class Sentinel2(Sentinel):
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
         image = sample["image"][rgb_indices].permute(1, 2, 0)
-        image = torch.clamp(image / 3000, min=0, max=1)  # type: ignore[attr-defined]
+        image = torch.clamp(image / 2000, min=0, max=1)
 
         fig, ax = plt.subplots(1, 1, figsize=(4, 4))
 

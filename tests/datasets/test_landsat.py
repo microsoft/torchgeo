@@ -3,7 +3,6 @@
 
 import os
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -17,13 +16,10 @@ from torchgeo.datasets import BoundingBox, IntersectionDataset, Landsat8, UnionD
 
 class TestLandsat8:
     @pytest.fixture
-    def dataset(self, monkeypatch: Generator[MonkeyPatch, None, None]) -> Landsat8:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            plt, "show", lambda *args: None
-        )
+    def dataset(self, monkeypatch: MonkeyPatch) -> Landsat8:
         root = os.path.join("tests", "data", "landsat8")
-        bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7"]
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"]
+        transforms = nn.Identity()
         return Landsat8(root, bands=bands, transforms=transforms)
 
     def test_separate_files(self, dataset: Landsat8) -> None:
@@ -44,9 +40,18 @@ class TestLandsat8:
         assert isinstance(ds, UnionDataset)
 
     def test_plot(self, dataset: Landsat8) -> None:
-        query = dataset.bounds
-        x = dataset[query]
-        dataset.plot(x["image"])
+        x = dataset[dataset.bounds]
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+
+    def test_plot_wrong_bands(self, dataset: Landsat8) -> None:
+        bands = ("SR_B1",)
+        ds = Landsat8(root=dataset.root, bands=bands)
+        x = dataset[dataset.bounds]
+        with pytest.raises(
+            ValueError, match="Dataset doesn't contain some of the RGB bands"
+        ):
+            ds.plot(x)
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="No Landsat8 data was found in "):

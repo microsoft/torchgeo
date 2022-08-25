@@ -1,0 +1,36 @@
+Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands
+`ADVANCE`_,C,"Google Earth, Freesound","5,075",13,512x512,0.5,RGB
+`Benin Cashew Plantations`_,S,Airbus Pléiades,70,6,"1,122x1,186",10,MSI
+`BigEarthNet`_,C,Sentinel-1/2,"590,326",19--43,120x120,10,"SAR, MSI"
+`COWC`_,"C, R","CSUAV AFRL, ISPRS, LINZ, AGRC","388,435",2,256x256,0.15,RGB
+`Kenya Crop Type`_,S,Sentinel-2,"4,688",7,"3,035x2,016",10,MSI
+`Deep Globe Land Cover`_,S,DigitalGlobe +Vivid,803,7,"2,448x2,448",0.5,RGB
+`DFC2022`_,S,Aerial,"3,981",15,"2,000x2,000",0.5,RGB
+`ETCI2021 Flood Detection`_,S,Sentinel-1,"66,810",2,256x256,5--20,SAR
+`EuroSAT`_,C,Sentinel-2,"27,000",10,64x64,10,MSI
+`FAIR1M`_,OD,Gaofen/Google Earth,"15,000",37,"1,024x1,024",0.3--0.8,RGB
+`Forest Damage`_,OD,Drone imagery,"1,543",4,"1,500x1,500",,RGB
+`GID-15`_,S,Gaofen-2,150,15,"6,800x7,200",3,RGB
+`IDTReeS`_,"OD,C",Aerial,591,33,200x200,0.1--1,RGB
+`Inria Aerial Image Labeling`_,S,Aerial,360,2,"5,000x5,000",0.3,RGB
+`LandCover.ai`_,S,Aerial,"10,674",5,512x512,0.25--0.5,RGB
+`LEVIR-CD+`_,CD,Google Earth,985,2,"1,024x1,024",0.5,RGB
+`LoveDA`_,S,Google Earth,"5,987",7,"1,024x1,024",0.3,RGB
+`Million-AID`_,C,Google Earth,1M,51--73,,0.5--153,RGB
+`NASA Marine Debris`_,OD,PlanetScope,707,1,256x256,3,RGB
+`OSCD`_,CD,Sentinel-2,24,2,"40--1,180",60,MSI
+`PatternNet`_,C,Google Earth,"30,400",38,256x256,0.06--5,RGB
+`Potsdam`_,S,Aerial,38,6,"6,000x6,000",0.05,MSI
+`ReforesTree`_,"OD, R",Aerial,100,"4,000x4,000",0.02,RGB
+`RESISC45`_,C,Google Earth,"31,500",45,256x256,0.2--30,RGB
+`Seasonal Contrast`_,T,Sentinel-2,100K--1M,-,264x264,10,MSI
+`SEN12MS`_,S,"Sentinel-1/2, MODIS","180,662",33,256x256,10,"SAR, MSI"
+`So2Sat`_,C,Sentinel-1/2,"400,673",17,32x32,10,"SAR, MSI"
+`SpaceNet`_,I,WorldView-2/3 Planet Lab Dove,"1,889--28,728",2,102--900,0.5--4,MSI
+`Tropical Cyclone`_,R,GOES 8--16,"108,110",-,256x256,4K--8K,MSI
+`UC Merced`_,C,USGS National Map,"21,000",21,256x256,0.3,RGB
+`USAVars`_,R,NAIP Aerial,100K,-,-,4,"RGB, NIR"
+`Vaihingen`_,S,Aerial,33,6,"1,281--3,816",0.09,RGB
+`NWPU VHR-10`_,I,"Google Earth, Vaihingen",800,10,"358--1,728",0.08--2,RGB
+`xView2`_,CD,Maxar,"3,732",4,"1,024x1,024",0.8,RGB
+`ZueriCrop`_,"I, T",Sentinel-2,116K,48,24x24,10,MSI

@@ -4,7 +4,6 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -23,20 +22,16 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestCMSGlobalMangroveCanopy:
     @pytest.fixture
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> CMSGlobalMangroveCanopy:
         zipfile = "CMS_Global_Map_Mangrove_Canopy_1665.zip"
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            CMSGlobalMangroveCanopy, "zipfile", zipfile
-        )
+        monkeypatch.setattr(CMSGlobalMangroveCanopy, "zipfile", zipfile)
 
         md5 = "d6894fa6293cc9c0f3f95a810e842de5"
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            CMSGlobalMangroveCanopy, "md5", md5
-        )
+        monkeypatch.setattr(CMSGlobalMangroveCanopy, "md5", md5)
 
         root = os.path.join("tests", "data", "cms_mangrove_canopy")
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         country = "Angola"
 
         return CMSGlobalMangroveCanopy(

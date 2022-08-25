@@ -11,11 +11,11 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import check_integrity, download_and_extract_archive, download_url
 
 
-class VHR10(VisionDataset):
+class VHR10(NonGeoDataset):
     """NWPU VHR-10 dataset.
 
     Northwestern Polytechnical University (NWPU) very-high-resolution ten-class (VHR-10)
@@ -175,7 +175,7 @@ class VHR10(VisionDataset):
         )
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img)
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor

@@ -19,7 +19,7 @@ class CDL(RasterDataset):
     """Cropland Data Layer (CDL) dataset.
 
     The `Cropland Data Layer
-    <https://data.nal.usda.gov/dataset/cropscape-cropland-data-layer>`_, hosted on
+    <https://data.nal.usda.gov/dataset/cropscape-cropland-data-layer>`__, hosted on
     `CropScape <https://nassgeodata.gmu.edu/CropScape/>`_, provides a raster,
     geo-referenced, crop-specific land cover map for the continental United States. The
     CDL also includes a crop mask layer and planting frequency layers, as well as
@@ -378,7 +378,7 @@ class CDL(RasterDataset):
             raise RuntimeError(
                 f"Dataset not found in `root={self.root}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # Download the dataset
@@ -398,7 +398,7 @@ class CDL(RasterDataset):
         for zipfile in glob.iglob(pathname):
             extract_archive(zipfile)
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Any],
         show_titles: bool = True,
@@ -413,6 +413,10 @@ class CDL(RasterDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        .. versionchanged:: 0.3
+           Method now takes a sample dict, not a Tensor. Additionally, possible to
+           show subplot titles and/or use a custom suptitle.
         """
         mask = sample["mask"].squeeze().numpy()
         ncols = 1

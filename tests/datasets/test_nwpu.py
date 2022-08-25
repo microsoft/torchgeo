@@ -6,7 +6,7 @@ import os
 import shutil
 import sys
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import pytest
 import torch
@@ -30,35 +30,26 @@ def download_url(url: str, root: str, *args: str) -> None:
 class TestVHR10:
     @pytest.fixture(params=["positive", "negative"])
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> VHR10:
         pytest.importorskip("rarfile", minversion="3")
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.nwpu, "download_url", download_url
-        )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.utils, "download_url", download_url
-        )
+        monkeypatch.setattr(torchgeo.datasets.nwpu, "download_url", download_url)
+        monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         url = os.path.join("tests", "data", "vhr10", "NWPU VHR-10 dataset.rar")
-        monkeypatch.setitem(VHR10.image_meta, "url", url)  # type: ignore[attr-defined]
+        monkeypatch.setitem(VHR10.image_meta, "url", url)
         md5 = "e5c38351bd948479fe35a71136aedbc4"
-        monkeypatch.setitem(VHR10.image_meta, "md5", md5)  # type: ignore[attr-defined]
+        monkeypatch.setitem(VHR10.image_meta, "md5", md5)
         url = os.path.join("tests", "data", "vhr10", "annotations.json")
-        monkeypatch.setitem(VHR10.target_meta, "url", url)  # type: ignore[attr-defined]
+        monkeypatch.setitem(VHR10.target_meta, "url", url)
         md5 = "16fc6aa597a19179dad84151cc221873"
-        monkeypatch.setitem(VHR10.target_meta, "md5", md5)  # type: ignore[attr-defined]
+        monkeypatch.setitem(VHR10.target_meta, "md5", md5)
         root = str(tmp_path)
         split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return VHR10(root, split, transforms, download=True, checksum=True)
 
     @pytest.fixture
-    def mock_missing_module(
-        self, monkeypatch: Generator[MonkeyPatch, None, None]
-    ) -> None:
+    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
         import_orig = builtins.__import__
 
         def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
@@ -66,9 +57,7 @@ class TestVHR10:
                 raise ImportError()
             return import_orig(name, *args, **kwargs)
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            builtins, "__import__", mocked_import
-        )
+        monkeypatch.setattr(builtins, "__import__", mocked_import)
 
     def test_getitem(self, dataset: VHR10) -> None:
         x = dataset[0]

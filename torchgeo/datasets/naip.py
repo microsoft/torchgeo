@@ -3,6 +3,10 @@
 
 """National Agriculture Imagery Program (NAIP) dataset."""
 
+from typing import Any, Dict, Optional
+
+import matplotlib.pyplot as plt
+
 from .geo import RasterDataset
 
 
@@ -42,3 +46,37 @@ class NAIP(RasterDataset):
     # Plotting
     all_bands = ["R", "G", "B", "NIR"]
     rgb_bands = ["R", "G", "B"]
+
+    def plot(
+        self,
+        sample: Dict[str, Any],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`RasterDataset.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionchanged:: 0.3
+           Method now takes a sample dict, not a Tensor. Additionally, possible to
+           show subplot titles and/or use a custom suptitle.
+        """
+        image = sample["image"][0:3, :, :].permute(1, 2, 0)
+
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(4, 4))
+
+        ax.imshow(image)
+        ax.axis("off")
+        if show_titles:
+            ax.set_title("Image")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig

@@ -4,7 +4,6 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
@@ -28,11 +27,11 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestAbovegroundLiveWoodyBiomassDensity:
     @pytest.fixture
     def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> AbovegroundLiveWoodyBiomassDensity:
 
-        transforms = nn.Identity()  # type: ignore[attr-defined]
-        monkeypatch.setattr(  # type: ignore[attr-defined]
+        transforms = nn.Identity()
+        monkeypatch.setattr(
             torchgeo.datasets.agb_live_woody_density, "download_url", download_url
         )
         url = os.path.join(
@@ -41,9 +40,7 @@ class TestAbovegroundLiveWoodyBiomassDensity:
             "agb_live_woody_density",
             "Aboveground_Live_Woody_Biomass_Density.geojson",
         )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            AbovegroundLiveWoodyBiomassDensity, "url", url
-        )
+        monkeypatch.setattr(AbovegroundLiveWoodyBiomassDensity, "url", url)
 
         root = str(tmp_path)
         return AbovegroundLiveWoodyBiomassDensity(

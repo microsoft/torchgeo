@@ -1,0 +1,11 @@
+# datasets
+h5py==3.6.0
+laspy==2.2.0
+open3d==0.14.1;python_version<'3.10'
+opencv-python==4.6.0.66
+pandas==1.4.3;python_version>='3.8'
+pycocotools==2.0.4
+radiant-mlhub==0.4.1
+rarfile==4.0
+scipy==1.9.0;python_version>='3.8'
+zipfile-deflate64==0.2.0

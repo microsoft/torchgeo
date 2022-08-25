@@ -16,6 +16,7 @@ import rasterio
 import shapely
 import shapely.wkt as wkt
 import torch
+from packaging.version import parse
 from rasterio.crs import CRS
 from rtree.index import Index, Property
 
@@ -27,7 +28,7 @@ class OpenBuildings(VectorDataset):
     r"""Open Buildings dataset.
 
     The `Open Buildings
-    <https://sites.research.google/open-buildings/#download>`_ dataset
+    <https://sites.research.google/open-buildings/#download>`__ dataset
     consists of computer generated building detections across the African continent.
 
     Dataset features:
@@ -325,11 +326,9 @@ class OpenBuildings(VectorDataset):
             masks = rasterio.features.rasterize(
                 shapes, out_shape=(int(height), int(width)), transform=transform
             )
-            masks = torch.tensor(masks).unsqueeze(0)  # type: ignore[attr-defined]
+            masks = torch.tensor(masks).unsqueeze(0)
         else:
-            masks = torch.zeros(  # type: ignore[attr-defined]
-                size=(1, int(height), int(width))
-            )
+            masks = torch.zeros(size=(1, int(height), int(width)))
 
         sample = {"mask": masks, "crs": self.crs, "bbox": query}
 
@@ -386,8 +385,16 @@ class OpenBuildings(VectorDataset):
         """
         x = json.dumps(shapely.geometry.mapping(wkt.loads(x)))
         x = json.loads(x.replace("'", '"'))
+        import fiona
+
+        if parse(fiona.__version__) >= parse("1.9a1"):
+            import fiona.model
+
+            geom = fiona.model.Geometry(**x)
+        else:
+            geom = x
         transformed: Dict[str, Any] = fiona.transform.transform_geom(
-            self._source_crs.to_dict(), self._crs.to_dict(), x
+            self._source_crs.to_dict(), self._crs.to_dict(), geom
         )
         return transformed
 
@@ -404,7 +411,7 @@ class OpenBuildings(VectorDataset):
         for zipfile in glob.iglob(pathname):
             filename = os.path.basename(zipfile)
             if self.checksum and not check_integrity(zipfile, self.md5s[filename]):
-                raise RuntimeError("Dataset found, but corrupted: {}.".format(filename))
+                raise RuntimeError(f"Dataset found, but corrupted: {filename}.")
             i += 1
 
         if i != 0:
@@ -423,7 +430,7 @@ class OpenBuildings(VectorDataset):
             "have manually downloaded the dataset as suggested in the documentation."
         )
 
-    def plot(  # type: ignore[override]
+    def plot(
         self,
         sample: Dict[str, Any],
         show_titles: bool = True,

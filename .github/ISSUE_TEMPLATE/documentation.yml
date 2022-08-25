@@ -1,0 +1,25 @@
+name: 📚 Documentation
+description: Issues or suggestions related to documentation
+labels: [documentation]
+
+body:
+- type: textarea
+  attributes:
+    label: Issue
+    description: >
+      A clear and concise description of what is wrong with or missing from the
+      documentation.
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Fix
+    description: >
+      Tell us how we could improve the documentation!
+- type: markdown
+  attributes:
+    value: >
+      Thanks for taking the time to improve the documentation! TorchGeo is an
+      open-source project maintained by its users. If you're rST savvy and want
+      to contribute a pull request to improve the docs, we'll be happy to review
+      it. If not, we'll try to fix it when a get a chance.

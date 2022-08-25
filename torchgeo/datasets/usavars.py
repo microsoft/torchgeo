@@ -14,11 +14,11 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import download_url, extract_archive
 
 
-class USAVars(VisionDataset):
+class USAVars(NonGeoDataset):
     """USAVars dataset.
 
     The USAVars dataset is reproduction of the dataset used in the paper "`A
@@ -71,11 +71,30 @@ class USAVars(VisionDataset):
         + f"outcomes_sampled_treecover_{uar_csv_suffix}",
     }
 
+    split_metadata = {
+        "train": {
+            "url": "https://mosaiks.blob.core.windows.net/datasets/train_split.txt",
+            "filename": "train_split.txt",
+            "md5": "3f58fffbf5fe177611112550297200e7",
+        },
+        "val": {
+            "url": "https://mosaiks.blob.core.windows.net/datasets/val_split.txt",
+            "filename": "val_split.txt",
+            "md5": "bca7183b132b919dec0fc24fb11662a0",
+        },
+        "test": {
+            "url": "https://mosaiks.blob.core.windows.net/datasets/test_split.txt",
+            "filename": "test_split.txt",
+            "md5": "97bb36bc003ae0bf556a8d6e8f77141a",
+        },
+    }
+
     ALL_LABELS = list(label_urls.keys())
 
     def __init__(
         self,
         root: str = "data",
+        split: str = "train",
         labels: Sequence[str] = ALL_LABELS,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
@@ -85,6 +104,7 @@ class USAVars(VisionDataset):
 
         Args:
             root: root directory where dataset can be found
+            split: train/val/test split to load
             labels: list of labels to include
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
@@ -98,6 +118,9 @@ class USAVars(VisionDataset):
                 don't match
         """
         self.root = root
+
+        assert split in self.split_metadata
+        self.split = split
 
         for lab in labels:
             assert lab in self.ALL_LABELS
@@ -118,15 +141,10 @@ class USAVars(VisionDataset):
 
         self.files = self._load_files()
 
-        self.label_dfs = dict(
-            [
-                (
-                    lab,
-                    pd.read_csv(os.path.join(self.root, lab + ".csv"), index_col="ID"),
-                )
-                for lab in self.labels
-            ]
-        )
+        self.label_dfs = {
+            lab: pd.read_csv(os.path.join(self.root, lab + ".csv"), index_col="ID")
+            for lab in self.labels
+        }
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
@@ -162,8 +180,8 @@ class USAVars(VisionDataset):
 
     def _load_files(self) -> List[str]:
         """Loads file names."""
-        file_path = os.path.join(self.root, "uar")
-        files = os.listdir(file_path)
+        with open(os.path.join(self.root, f"{self.split}_split.txt")) as f:
+            files = f.read().splitlines()
         return files
 
     def _load_image(self, path: str) -> Tensor:
@@ -177,7 +195,7 @@ class USAVars(VisionDataset):
         """
         with rasterio.open(path) as f:
             array: "np.typing.NDArray[np.int_]" = f.read()
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             return tensor
 
     def _verify(self) -> None:
@@ -189,13 +207,15 @@ class USAVars(VisionDataset):
         # Check if the extracted files already exist
         pathname = os.path.join(self.root, "uar")
         csv_pathname = os.path.join(self.root, "*.csv")
+        split_pathname = os.path.join(self.root, "*_split.txt")
 
-        if glob.glob(pathname) and len(glob.glob(csv_pathname)) == 7:
+        csv_split_count = (len(glob.glob(csv_pathname)), len(glob.glob(split_pathname)))
+        if glob.glob(pathname) and csv_split_count == (7, 3):
             return
 
         # Check if the zip files have already been downloaded
         pathname = os.path.join(self.root, self.dirname + ".zip")
-        if glob.glob(pathname) and len(glob.glob(csv_pathname)) == 7:
+        if glob.glob(pathname) and csv_split_count == (7, 3):
             self._extract()
             return
 
@@ -204,7 +224,7 @@ class USAVars(VisionDataset):
             raise RuntimeError(
                 f"Dataset not found in `root={self.root}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         self._download()
@@ -216,6 +236,13 @@ class USAVars(VisionDataset):
             download_url(self.label_urls[f_name], self.root, filename=f_name + ".csv")
 
         download_url(self.data_url, self.root, md5=self.md5 if self.checksum else None)
+
+        for metadata in self.split_metadata.values():
+            download_url(
+                metadata["url"],
+                self.root,
+                md5=metadata["md5"] if self.checksum else None,
+            )
 
     def _extract(self) -> None:
         """Extract the dataset."""

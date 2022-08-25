@@ -14,15 +14,15 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import check_integrity, download_radiant_mlhub_dataset, extract_archive
 
 
 # TODO: read geospatial information from stac.json files
-class CV4AKenyaCropType(VisionDataset):
+class CV4AKenyaCropType(NonGeoDataset):
     """CV4A Kenya Crop Type dataset.
 
-    Used in a competition in the Computer Vision for Agriculture (CV4A) workshop in
+    Used in a competition in the Computer NonGeo for Agriculture (CV4A) workshop in
     ICLR 2020. See `this website <https://registry.mlhub.earth/10.34911/rdnt.dw605x/>`__
     for dataset details.
 
@@ -192,9 +192,9 @@ class CV4AKenyaCropType(VisionDataset):
             "image": img,
             "mask": labels,
             "field_ids": field_ids,
-            "tile_index": torch.tensor(tile_index),  # type: ignore[attr-defined]
-            "x": torch.tensor(x),  # type: ignore[attr-defined]
-            "y": torch.tensor(y),  # type: ignore[attr-defined]
+            "tile_index": torch.tensor(tile_index),
+            "x": torch.tensor(x),
+            "y": torch.tensor(y),
         }
 
         if self.transforms is not None:
@@ -234,11 +234,11 @@ class CV4AKenyaCropType(VisionDataset):
 
         with Image.open(os.path.join(directory, "labels.tif")) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img)
-            labels: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            labels = torch.from_numpy(array)
 
         with Image.open(os.path.join(directory, "field_ids.tif")) as img:
             array = np.array(img)
-            field_ids: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            field_ids = torch.from_numpy(array)
 
         return (labels, field_ids)
 
@@ -281,12 +281,12 @@ class CV4AKenyaCropType(VisionDataset):
         if self.verbose:
             print(f"Loading all imagery for {tile_name}")
 
-        img: Tensor = torch.zeros(  # type: ignore[attr-defined]
+        img = torch.zeros(
             len(self.dates),
             len(bands),
             self.tile_height,
             self.tile_width,
-            dtype=torch.float32,  # type: ignore[attr-defined]
+            dtype=torch.float32,
         )
 
         for date_index, date in enumerate(self.dates):
@@ -319,11 +319,8 @@ class CV4AKenyaCropType(VisionDataset):
         if self.verbose:
             print(f"Loading imagery for {tile_name} at {date}")
 
-        img: Tensor = torch.zeros(  # type: ignore[attr-defined]
-            len(bands),
-            self.tile_height,
-            self.tile_width,
-            dtype=torch.float32,  # type: ignore[attr-defined]
+        img = torch.zeros(
+            len(bands), self.tile_height, self.tile_width, dtype=torch.float32
         )
         for band_index, band_name in enumerate(self.bands):
             filepath = os.path.join(
@@ -334,7 +331,7 @@ class CV4AKenyaCropType(VisionDataset):
             )
             with Image.open(filepath) as band_img:
                 array: "np.typing.NDArray[np.int_]" = np.array(band_img)
-                img[band_index] = torch.from_numpy(array)  # type: ignore[attr-defined]
+                img[band_index] = torch.from_numpy(array)
 
         return img
 
