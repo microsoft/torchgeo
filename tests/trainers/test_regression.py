@@ -59,6 +59,6 @@ class TestRegressionTask:
         trainer.fit(model=model, datamodule=datamodule)
 
     def test_invalid_model(self) -> None:
-        match = "Model type 'invalid_model' is not valid."
-        with pytest.raises(ValueError, match=match):
-            RegressionTask(model="invalid_model")
+        match = "module 'torchvision.models' has no attribute 'invalid_model'"
+        with pytest.raises(AttributeError, match=match):
+            RegressionTask(model="invalid_model", pretrained=False)
