@@ -127,7 +127,7 @@ class RegressionTask(pl.LightningModule):
 
         if batch_idx < 10:
             try:
-                datamodule = self.trainer.datamodule  # type: ignore[union-attr]
+                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
                 batch["prediction"] = y_hat
                 for key in ["image", "label", "prediction"]:
                     batch[key] = batch[key].cpu()
