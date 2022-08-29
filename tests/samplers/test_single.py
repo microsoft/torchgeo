@@ -192,7 +192,7 @@ class TestGridGeoSampler:
         cols = math.ceil(
             (100 - sampler.size[1] + sampler.stride[1]) / sampler.stride[1]
         )
-        length = rows * cols * 2
+        length = rows * cols * 2  # two items in dataset
         assert len(sampler) == length
 
     def test_len_larger(self, sampler: GridGeoSampler) -> None:
@@ -221,11 +221,7 @@ class TestGridGeoSampler:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 1, 0, 1, 0, 1))
         sampler = GridGeoSampler(ds, 2, 10)
-        assert len(sampler) == 1
-        for bbox in sampler:
-            assert bbox == BoundingBox(
-                minx=0.0, maxx=20.0, miny=0.0, maxy=20.0, mint=0.0, maxt=1.0
-            )
+        assert len(sampler) == 0
 
     # TODO: skip patches with area=0 when two tiles are
     #  side-by-side with an overlapping edge face.
@@ -256,7 +252,7 @@ class TestGridGeoSampler:
             minx=0.0, maxx=5.0, miny=0.0, maxy=5.0, mint=0.0, maxt=10.0
         )
         assert list(sampler)[1] == BoundingBox(
-            minx=5.0, maxx=10.0, miny=0.0, maxy=5.0, mint=0.0, maxt=10.0
+            minx=1.0, maxx=6.0, miny=0.0, maxy=5.0, mint=0.0, maxt=10.0
         )
 
     @pytest.mark.slow
