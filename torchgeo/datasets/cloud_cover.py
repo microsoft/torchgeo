@@ -376,7 +376,7 @@ class CloudCoverDetection(NonGeoDataset):
         else:
             n_cols = 2
 
-        image, mask = sample["image"], sample["mask"]
+        image, mask = sample["image"] / 3000, sample["mask"]
 
         fig, axs = plt.subplots(nrows=1, ncols=n_cols, figsize=(10, n_cols * 5))
 
