@@ -34,5 +34,5 @@ repos:
         hooks:
         -   id: mypy
             args: [--strict, --ignore-missing-imports, --show-error-codes]
-            additional_dependencies: [torch>=1.11, torchmetrics>=0.7, pytorch-lightning>=1.6, pytest>=6, omegaconf>=2.1, kornia>=0.6, numpy>=1.22.0]
+            additional_dependencies: [torch>=1.11, torchmetrics>=0.7, pytorch-lightning>=1.7, pytest>=6, omegaconf>=2.1, kornia>=0.6, numpy>=1.22.0]
             exclude: (build|data|dist|logo|logs|output)/
