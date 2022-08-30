@@ -5,7 +5,6 @@
 
 import abc
 import math
-import warnings
 from typing import Callable, Iterable, Iterator, Optional, Tuple, Union
 
 import torch
