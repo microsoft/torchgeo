@@ -50,6 +50,12 @@ jobs:
     - name: Install brew dependencies (macOS)
       run: brew install rar
       if: ${{ runner.os == 'macOS' }}
+    - name: Install pacman dependencies (Windows)
+      shell: cmd
+      run: |
+        set "PATH=%PATH%;c:\msys64\usr\bin"
+        pacman -S --noconfirm --needed unrar
+      if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies (3.8+)
       run: |
         pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
@@ -60,8 +66,15 @@ jobs:
         pip install -r requirements/required.old -r requirements/datasets.old -r requirements/tests.txt
         pip list
       if: ${{ matrix.python-version == '3.7' }}
-    - name: Run pytest checks
+    - name: Run pytest checks (Linux/macOS)
       run: pytest --cov=torchgeo --cov-report=xml
+      if: ${{ runner.os != 'Windows' }}
+    - name: Run pytest checks (Windows)
+      shell: cmd
+      run: |
+        set "PATH=%PATH%;c:\msys64\usr\bin"
+        pytest --cov=torchgeo --cov-report=xml
+      if: ${{ runner.os == 'Windows' }}
     - name: Report coverage
       uses: codecov/codecov-action@v2
   minimum:

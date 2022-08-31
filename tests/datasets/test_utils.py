@@ -82,8 +82,6 @@ def test_mock_missing_module(mock_missing_module: None) -> None:
     import sys  # noqa: F401
 
 
-# TODO: figure out how to install unrar on Windows in GitHub Actions
-@pytest.mark.skipif(sys.platform == "win32", reason="requires unrar executable")
 @pytest.mark.parametrize(
     "src",
     [
