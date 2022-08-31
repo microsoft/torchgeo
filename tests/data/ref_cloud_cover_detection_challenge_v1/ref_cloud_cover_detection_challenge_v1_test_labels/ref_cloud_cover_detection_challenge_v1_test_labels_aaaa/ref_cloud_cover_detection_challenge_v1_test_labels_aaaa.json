@@ -1,0 +1,95 @@
+{
+  "type": "Feature",
+  "stac_version": "1.0.0",
+  "id": "ref_cloud_cover_detection_challenge_v1_test_labels_aaaa",
+  "properties": {
+    "label:description": "Sentinel-2 Cloud Cover Segmentation Test Labels",
+    "label:type": "raster",
+    "label:properties": null,
+    "label:classes": [
+      {
+        "classes": [
+          "cloud"
+        ],
+        "name": "labels"
+      }
+    ],
+    "label:overviews": [
+      {
+        "property_key": "labels",
+        "counts": [
+          {
+            "name": "cloud",
+            "count": 130696
+          }
+        ]
+      }
+    ],
+    "datetime": "2020-06-03T00:00:00Z"
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          137.86580132892396,
+          -29.52744848758255
+        ],
+        [
+          137.86450090473795,
+          -29.481297003404038
+        ],
+        [
+          137.91724642199793,
+          -29.48015007212528
+        ],
+        [
+          137.9185707094313,
+          -29.526299409555623
+        ],
+        [
+          137.86580132892396,
+          -29.52744848758255
+        ]
+      ]
+    ]
+  },
+  "links": [
+    {
+      "rel": "source",
+      "href": "../../ref_cloud_cover_detection_challenge_v1_test_source/ref_cloud_cover_detection_challenge_v1_test_source_aaaa/ref_cloud_cover_detection_challenge_v1_test_source_aaaa.json",
+      "type": "image/tiff; application=geotiff"
+    },
+    {
+      "rel": "root",
+      "href": "../collection.json",
+      "type": "application/json"
+    },
+    {
+      "rel": "collection",
+      "href": "../collection.json",
+      "type": "application/json"
+    },
+    {
+      "rel": "parent",
+      "href": "../collection.json",
+      "type": "application/json"
+    }
+  ],
+  "assets": {
+    "labels": {
+      "href": "./labels.tif",
+      "type": "image/tiff; application=geotiff"
+    }
+  },
+  "bbox": [
+    137.86450090473795,
+    -29.52744848758255,
+    137.9185707094313,
+    -29.48015007212528
+  ],
+  "stac_extensions": [
+    "https://stac-extensions.github.io/label/v1.0.1/schema.json"
+  ],
+  "collection": "ref_cloud_cover_detection_challenge_v1_test_labels"
+}

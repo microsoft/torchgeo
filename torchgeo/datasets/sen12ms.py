@@ -12,11 +12,11 @@ import rasterio
 import torch
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import check_integrity, percentile_normalization
 
 
-class SEN12MS(VisionDataset):
+class SEN12MS(NonGeoDataset):
     """SEN12MS dataset.
 
     The `SEN12MS <https://doi.org/10.14459/2019mp1474000>`__ dataset contains

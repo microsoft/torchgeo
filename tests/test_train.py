@@ -69,8 +69,10 @@ def test_overwrite_experiment_dir(tmp_path: Path) -> None:
         "program.data_dir=" + data_dir,
         "program.log_dir=" + str(log_dir),
         "experiment.task=cyclone",
+        "experiment.datamodule.root_dir=" + data_dir,
         "program.overwrite=True",
         "trainer.fast_dev_run=1",
+        "trainer.gpus=0",
     ]
     ps = subprocess.run(args, capture_output=True, check=True)
     assert re.search(
@@ -123,8 +125,11 @@ program:
 experiment:
   name: test
   task: cyclone
+  datamodule:
+    root_dir: {data_dir}
 trainer:
   fast_dev_run: true
+  gpus: 0
 """
     )
     args = [sys.executable, "train.py", "config_file=" + str(config_file)]

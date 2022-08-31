@@ -25,11 +25,11 @@ class ETCI2021DataModule(pl.LightningDataModule):
     """
 
     band_means = torch.tensor(
-        [0.52253931, 0.52253931, 0.52253931, 0.61221701, 0.61221701, 0.61221701, 0]
+        [0.52253931, 0.52253931, 0.52253931, 0.61221701, 0.61221701, 0.61221701]
     )
 
     band_stds = torch.tensor(
-        [0.35221376, 0.35221376, 0.35221376, 0.37364622, 0.37364622, 0.37364622, 1]
+        [0.35221376, 0.35221376, 0.35221376, 0.37364622, 0.37364622, 0.37364622]
     )
 
     def __init__(
@@ -48,7 +48,7 @@ class ETCI2021DataModule(pl.LightningDataModule):
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.root_dir = root_dir
         self.seed = seed
         self.batch_size = batch_size
@@ -67,15 +67,15 @@ class ETCI2021DataModule(pl.LightningDataModule):
         Returns:
             preprocessed sample
         """
-        image = sample["image"]
-        water_mask = sample["mask"][0].unsqueeze(0)
-        flood_mask = sample["mask"][1]
-        flood_mask = (flood_mask > 0).long()
-
-        sample["image"] = torch.cat([image, water_mask], dim=0).float()
+        sample["image"] = sample["image"].float()
         sample["image"] /= 255.0
         sample["image"] = self.norm(sample["image"])
-        sample["mask"] = flood_mask
+
+        if "mask" in sample:
+            flood_mask = sample["mask"][1]
+            flood_mask = (flood_mask > 0).long()
+            sample["mask"] = flood_mask
+
         return sample
 
     def prepare_data(self) -> None:

@@ -3,7 +3,6 @@
 
 import os
 import shutil
-import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -21,7 +20,6 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="requires unrar executable")
 class TestRESISC45:
     @pytest.fixture(params=["train", "val", "test"])
     def dataset(
@@ -82,7 +80,7 @@ class TestRESISC45:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         err = "Dataset not found in `root` directory and `download=False`, "
         "either specify a different `root` directory or use `download=True` "
-        "to automaticaly download the dataset."
+        "to automatically download the dataset."
         with pytest.raises(RuntimeError, match=err):
             RESISC45(str(tmp_path))
 

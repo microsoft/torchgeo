@@ -36,13 +36,13 @@ class COWCCountingDataModule(pl.LightningDataModule):
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.root_dir = root_dir
         self.seed = seed
         self.batch_size = batch_size
         self.num_workers = num_workers
 
-    def custom_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
 
         Args:
@@ -51,8 +51,10 @@ class COWCCountingDataModule(pl.LightningDataModule):
         Returns:
             preprocessed sample
         """
-        sample["image"] = sample["image"] / 255.0  # scale to [0, 1]
-        sample["label"] = sample["label"].float()
+        sample["image"] = sample["image"].float()
+        sample["image"] /= 255.0  # scale to [0, 1]
+        if "label" in sample:
+            sample["label"] = sample["label"].float()
         return sample
 
     def prepare_data(self) -> None:
@@ -73,10 +75,10 @@ class COWCCountingDataModule(pl.LightningDataModule):
             stage: stage to set up
         """
         train_val_dataset = COWCCounting(
-            self.root_dir, split="train", transforms=self.custom_transform
+            self.root_dir, split="train", transforms=self.preprocess
         )
         self.test_dataset = COWCCounting(
-            self.root_dir, split="test", transforms=self.custom_transform
+            self.root_dir, split="test", transforms=self.preprocess
         )
         self.train_dataset, self.val_dataset = random_split(
             train_val_dataset,

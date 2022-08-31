@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional, cast
 import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
-from torchvision.transforms import Compose
+from torchvision.transforms import Compose, Normalize
 
 from ..datasets import So2Sat
 
@@ -25,14 +25,6 @@ class So2SatDataModule(pl.LightningDataModule):
 
     band_means = torch.tensor(
         [
-            -3.591224256609313e-05,
-            -7.658561276843396e-06,
-            5.9373857475971184e-05,
-            2.5166231537121083e-05,
-            0.04420110659759328,
-            0.25761027084996196,
-            0.0007556743372573258,
-            0.0013503466830024448,
             0.12375696117681859,
             0.1092774636368323,
             0.1010855203267882,
@@ -44,18 +36,10 @@ class So2SatDataModule(pl.LightningDataModule):
             0.15428468872076637,
             0.10905050699570007,
         ]
-    ).reshape(18, 1, 1)
+    )
 
     band_stds = torch.tensor(
         [
-            0.17555201137417686,
-            0.17556463274968204,
-            0.45998793417834255,
-            0.455988755730148,
-            2.8559909213125763,
-            8.324800606439833,
-            2.4498757382563103,
-            1.4647352984509094,
             0.03958795985905458,
             0.047778262752410296,
             0.06636616706371974,
@@ -67,29 +51,10 @@ class So2SatDataModule(pl.LightningDataModule):
             0.09991773043519253,
             0.08780632509122865,
         ]
-    ).reshape(18, 1, 1)
+    )
 
-    # this reorders the bands to put S2 RGB first, then remainder of S2, then S1
-    reindex_to_rgb_first = [
-        10,
-        9,
-        8,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-        # 0,
-        # 1,
-        # 2,
-        # 3,
-        # 4,
-        # 5,
-        # 6,
-        # 7,
-    ]
+    # this reorders the bands to put S2 RGB first, then remainder of S2
+    reindex_to_rgb_first = [2, 1, 0, 3, 4, 5, 6, 7, 8, 9]
 
     def __init__(
         self,
@@ -110,12 +75,14 @@ class So2SatDataModule(pl.LightningDataModule):
             unsupervised_mode: Makes the train dataloader return imagery from the train,
                 val, and test sets
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.bands = bands
         self.unsupervised_mode = unsupervised_mode
+
+        self.norm = Normalize(self.band_means, self.band_stds)
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
@@ -126,8 +93,8 @@ class So2SatDataModule(pl.LightningDataModule):
         Returns:
             preprocessed sample
         """
-        # sample["image"] = (sample["image"] - self.band_means) / self.band_stds
         sample["image"] = sample["image"].float()
+        sample["image"] = self.norm(sample["image"])
         sample["image"] = sample["image"][self.reindex_to_rgb_first, :, :]
 
         if self.bands == "rgb":
@@ -153,32 +120,42 @@ class So2SatDataModule(pl.LightningDataModule):
         train_transforms = Compose([self.preprocess])
         val_test_transforms = self.preprocess
 
+        s2bands = So2Sat.BAND_SETS["s2"]
         if not self.unsupervised_mode:
 
             self.train_dataset = So2Sat(
-                self.root_dir, split="train", transforms=train_transforms
+                self.root_dir, split="train", bands=s2bands, transforms=train_transforms
             )
 
             self.val_dataset = So2Sat(
-                self.root_dir, split="validation", transforms=val_test_transforms
+                self.root_dir,
+                split="validation",
+                bands=s2bands,
+                transforms=val_test_transforms,
             )
 
             self.test_dataset = So2Sat(
-                self.root_dir, split="test", transforms=val_test_transforms
+                self.root_dir,
+                split="test",
+                bands=s2bands,
+                transforms=val_test_transforms,
             )
 
         else:
 
             temp_train = So2Sat(
-                self.root_dir, split="train", transforms=train_transforms
+                self.root_dir, split="train", bands=s2bands, transforms=train_transforms
             )
 
             self.val_dataset = So2Sat(
-                self.root_dir, split="validation", transforms=train_transforms
+                self.root_dir,
+                split="validation",
+                bands=s2bands,
+                transforms=train_transforms,
             )
 
             self.test_dataset = So2Sat(
-                self.root_dir, split="test", transforms=train_transforms
+                self.root_dir, split="test", bands=s2bands, transforms=train_transforms
             )
 
             self.train_dataset = cast(

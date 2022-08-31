@@ -14,11 +14,11 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import check_integrity, download_and_extract_archive
 
 
-class COWC(VisionDataset, abc.ABC):
+class COWC(NonGeoDataset, abc.ABC):
     """Abstract base class for the COWC dataset.
 
     The `Cars Overhead With Context (COWC) <https://gdo152.llnl.gov/cowc/>`_ data set

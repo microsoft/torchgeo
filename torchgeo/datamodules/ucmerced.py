@@ -7,10 +7,9 @@ from typing import Any, Dict, Optional
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-import torch
 import torchvision
 from torch.utils.data import DataLoader
-from torchvision.transforms import Compose, Normalize
+from torchvision.transforms import Compose
 
 from ..datasets import UCMerced
 
@@ -25,10 +24,6 @@ class UCMercedDataModule(pl.LightningDataModule):
     Uses random train/val/test splits.
     """
 
-    band_means = torch.tensor([0, 0, 0])
-
-    band_stds = torch.tensor([1, 1, 1])
-
     def __init__(
         self, root_dir: str, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
@@ -39,12 +34,10 @@ class UCMercedDataModule(pl.LightningDataModule):
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
-
-        self.norm = Normalize(self.band_means, self.band_stds)
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
@@ -62,7 +55,6 @@ class UCMercedDataModule(pl.LightningDataModule):
             sample["image"] = torchvision.transforms.functional.resize(
                 sample["image"], size=(256, 256)
             )
-        sample["image"] = self.norm(sample["image"])
         return sample
 
     def prepare_data(self) -> None:

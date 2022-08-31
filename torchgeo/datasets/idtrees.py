@@ -16,11 +16,11 @@ from rasterio.enums import Resampling
 from torch import Tensor
 from torchvision.utils import draw_bounding_boxes
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import download_url, extract_archive
 
 
-class IDTReeS(VisionDataset):
+class IDTReeS(NonGeoDataset):
     """IDTReeS dataset.
 
     The `IDTReeS <https://idtrees.org/competition/>`__
@@ -289,10 +289,10 @@ class IDTReeS(VisionDataset):
         with rasterio.open(path) as f:
             for geom in geoms:
                 coords = [f.index(x, y) for x, y in geom]
-                xmin = min(coord[0] for coord in coords)
-                xmax = max(coord[0] for coord in coords)
-                ymin = min(coord[1] for coord in coords)
-                ymax = max(coord[1] for coord in coords)
+                xmin = min(coord[1] for coord in coords)
+                xmax = max(coord[1] for coord in coords)
+                ymin = min(coord[0] for coord in coords)
+                ymax = max(coord[0] for coord in coords)
                 boxes.append([xmin, ymin, xmax, ymax])
 
         tensor = torch.tensor(boxes)
@@ -421,7 +421,7 @@ class IDTReeS(VisionDataset):
             raise RuntimeError(
                 "Dataset not found in `root` directory and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # Download and extract the dataset

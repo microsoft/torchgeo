@@ -9,11 +9,11 @@ from typing import Callable, Dict, Optional, cast
 import matplotlib.pyplot as plt
 from torch import Tensor
 
-from .geo import VisionClassificationDataset
+from .geo import NonGeoClassificationDataset
 from .utils import download_url, extract_archive
 
 
-class PatternNet(VisionClassificationDataset):
+class PatternNet(NonGeoClassificationDataset):
     """PatternNet dataset.
 
     The `PatternNet <https://sites.google.com/view/zhouwx/dataset>`__
@@ -124,7 +124,7 @@ class PatternNet(VisionClassificationDataset):
             raise RuntimeError(
                 "Dataset not found in `root` directory and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # Download and extract the dataset
@@ -154,7 +154,7 @@ class PatternNet(VisionClassificationDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`VisionClassificationDataset.__getitem__`
+            sample: a sample returned by :meth:`NonGeoClassificationDataset.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for figure
 

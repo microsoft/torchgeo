@@ -3,10 +3,9 @@
 
 """USAVars datamodule."""
 
-from typing import Any, Callable, Dict, Optional, Sequence
+from typing import Any, Dict, Optional, Sequence
 
 import pytorch_lightning as pl
-from torch import Tensor
 from torch.utils.data import DataLoader
 
 from ..datasets import USAVars
@@ -24,7 +23,6 @@ class USAVarsDataModule(pl.LightningModule):
         self,
         root_dir: str,
         labels: Sequence[str] = USAVars.ALL_LABELS,
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         batch_size: int = 64,
         num_workers: int = 0,
     ) -> None:
@@ -33,17 +31,27 @@ class USAVarsDataModule(pl.LightningModule):
         Args:
             root_dir: The root argument passed to the USAVars Dataset classes
             labels: The labels argument passed to the USAVars Dataset classes
-            transforms: a function/transform that takes input sample and its target as
-                            entry and returns a transformed version
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
         """
         super().__init__()
         self.root_dir = root_dir
         self.labels = labels
-        self.transforms = transforms
         self.batch_size = batch_size
         self.num_workers = num_workers
+
+    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Transform a single sample from the Dataset.
+
+        Args:
+            sample: dictionary containing image
+
+        Returns:
+            preprocessed sample
+        """
+        sample["image"] = sample["image"].float()
+        sample["image"] /= 255.0
+        return sample
 
     def prepare_data(self) -> None:
         """Make sure that the dataset is downloaded.
@@ -58,13 +66,13 @@ class USAVarsDataModule(pl.LightningModule):
         This method is called once per GPU per run.
         """
         self.train_dataset = USAVars(
-            self.root_dir, "train", self.labels, transforms=self.transforms
+            self.root_dir, "train", self.labels, transforms=self.preprocess
         )
         self.val_dataset = USAVars(
-            self.root_dir, "val", self.labels, transforms=self.transforms
+            self.root_dir, "val", self.labels, transforms=self.preprocess
         )
         self.test_dataset = USAVars(
-            self.root_dir, "test", self.labels, transforms=self.transforms
+            self.root_dir, "test", self.labels, transforms=self.preprocess
         )
 
     def train_dataloader(self) -> DataLoader[Any]:

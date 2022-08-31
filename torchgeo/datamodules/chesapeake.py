@@ -64,7 +64,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         Raises:
             ValueError: if ``use_prior_labels`` is used with ``class_set==7``
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         for state in train_splits + val_splits + test_splits:
             assert state in ChesapeakeCVPR.splits
         assert class_set in [5, 7]
@@ -169,24 +169,34 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         Returns:
             preprocessed sample
         """
-        sample["image"] = sample["image"] / 255.0
-        sample["mask"] = sample["mask"].squeeze()
-
-        if self.use_prior_labels:
-            sample["mask"] = F.normalize(sample["mask"].float(), p=1, dim=0)
-            sample["mask"] = F.normalize(
-                sample["mask"] + self.prior_smoothing_constant, p=1, dim=0
-            )
-        else:
-            if self.class_set == 5:
-                sample["mask"][sample["mask"] == 5] = 4
-                sample["mask"][sample["mask"] == 6] = 4
-            sample["mask"] = sample["mask"].long()
-
         sample["image"] = sample["image"].float()
+        sample["image"] /= 255.0
 
+        if "mask" in sample:
+            sample["mask"] = sample["mask"].squeeze()
+            if self.use_prior_labels:
+                sample["mask"] = F.normalize(sample["mask"].float(), p=1, dim=0)
+                sample["mask"] = F.normalize(
+                    sample["mask"] + self.prior_smoothing_constant, p=1, dim=0
+                )
+            else:
+                if self.class_set == 5:
+                    sample["mask"][sample["mask"] == 5] = 4
+                    sample["mask"][sample["mask"] == 6] = 4
+                sample["mask"] = sample["mask"].long()
+
+        return sample
+
+    def remove_bbox(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Removes the bounding box property from a sample.
+
+        Args:
+            sample: dictionary with geographic metadata
+
+        Returns
+            sample without the bbox property
+        """
         del sample["bbox"]
-
         return sample
 
     def nodata_check(
@@ -240,6 +250,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
                 self.center_crop(self.patch_size),
                 self.nodata_check(self.patch_size),
                 self.preprocess,
+                self.remove_bbox,
             ]
         )
         val_transforms = Compose(
@@ -247,12 +258,14 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
                 self.center_crop(self.patch_size),
                 self.nodata_check(self.patch_size),
                 self.preprocess,
+                self.remove_bbox,
             ]
         )
         test_transforms = Compose(
             [
                 self.pad_to(self.original_patch_size, image_value=0, mask_value=0),
                 self.preprocess,
+                self.remove_bbox,
             ]
         )
 

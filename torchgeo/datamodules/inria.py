@@ -18,12 +18,6 @@ from ..datasets import InriaAerialImageLabeling
 from ..samplers.utils import _to_tuple
 from .utils import dataset_split
 
-DEFAULT_AUGS = K.AugmentationSequential(
-    K.RandomHorizontalFlip(p=0.5),
-    K.RandomVerticalFlip(p=0.5),
-    data_keys=["input", "mask"],
-)
-
 
 def collate_wrapper(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Flatten wrapper."""
@@ -55,10 +49,9 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         test_split_pct: float = 0.1,
         patch_size: Union[int, Tuple[int, int]] = 512,
         num_patches_per_tile: int = 32,
-        augmentations: K.AugmentationSequential = DEFAULT_AUGS,
         predict_on: str = "test",
     ) -> None:
-        """Initialize a LightningDataModule for InriaAerialImageLabeling based DataLoaders.
+        """Initialize a LightningDataModule for InriaAerialImageLabeling.
 
         Args:
             root_dir: The ``root`` arugment to pass to the InriaAerialImageLabeling
@@ -70,10 +63,9 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             test_split_pct: What percentage of the dataset to use as a test set
             patch_size: Size of random patch from image and mask (height, width)
             num_patches_per_tile: Number of random patches per sample
-            augmentations: Default augmentations applied
             predict_on: Directory/Dataset of images to run inference on
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
@@ -81,7 +73,11 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         self.test_split_pct = test_split_pct
         self.patch_size = cast(Tuple[int, int], _to_tuple(patch_size))
         self.num_patches_per_tile = num_patches_per_tile
-        self.augmentations = augmentations
+        self.augmentations = K.AugmentationSequential(
+            K.RandomHorizontalFlip(p=0.5),
+            K.RandomVerticalFlip(p=0.5),
+            data_keys=["input", "mask"],
+        )
         self.predict_on = predict_on
         self.random_crop = K.AugmentationSequential(
             K.RandomCrop(self.patch_size, p=1.0, keepdim=False),
@@ -107,9 +103,16 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         return sample
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset."""
-        # RGB is int32 so divide by 255
-        sample["image"] = sample["image"] / 255.0
+        """Transform a single sample from the Dataset.
+
+        Args:
+            sample: input image dictionary
+
+        Returns:
+            preprocessed sample
+        """
+        sample["image"] = sample["image"].float()
+        sample["image"] /= 255.0
         sample["image"] = torch.clip(sample["image"], min=0.0, max=1.0)
 
         if "mask" in sample:

@@ -13,11 +13,11 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import download_and_extract_archive
 
 
-class LoveDA(VisionDataset):
+class LoveDA(NonGeoDataset):
     """LoveDA dataset.
 
     The `LoveDA <https://github.com/Junjue-Wang/LoveDA>`__ datataset is a

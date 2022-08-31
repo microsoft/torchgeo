@@ -14,11 +14,11 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import download_url, extract_archive, percentile_normalization
 
 
-class SeasonalContrastS2(VisionDataset):
+class SeasonalContrastS2(NonGeoDataset):
     """Sentinel 2 imagery from the Seasonal Contrast paper.
 
     The `Seasonal Contrast imagery <https://github.com/ElementAI/seasonal-contrast/>`_
@@ -172,8 +172,7 @@ class SeasonalContrastS2(VisionDataset):
             with rasterio.open(fn) as f:
                 band_data = f.read(1)
                 height, width = band_data.shape
-                assert height == width
-                size = height
+                size = min(height, width)
                 if size < 264:
                     # TODO: PIL resize is much slower than cv2, we should check to see
                     # what could be sped up throughout later. There is also a potential
@@ -214,7 +213,7 @@ class SeasonalContrastS2(VisionDataset):
             raise RuntimeError(
                 f"Dataset not found in `root={self.root}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # Download the dataset

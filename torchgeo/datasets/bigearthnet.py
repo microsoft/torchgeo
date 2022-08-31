@@ -15,11 +15,11 @@ import torch
 from rasterio.enums import Resampling
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import download_url, extract_archive, sort_sentinel2_bands
 
 
-class BigEarthNet(VisionDataset):
+class BigEarthNet(NonGeoDataset):
     """BigEarthNet dataset.
 
     The `BigEarthNet <https://bigearth.net/>`__
@@ -475,7 +475,7 @@ class BigEarthNet(VisionDataset):
             raise RuntimeError(
                 "Dataset not found in `root` directory and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # Download and extract the dataset

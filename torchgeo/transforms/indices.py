@@ -92,7 +92,7 @@ class AppendNBR(AppendNormalizedDifferenceIndex):
 
     * https://www.sciencebase.gov/catalog/item/4f4e4b20e4b07f02db6abb36
 
-    .. versionadded:: 0.2.0
+    .. versionadded:: 0.2
     """
 
     def __init__(self, index_nir: int, index_swir: int) -> None:
@@ -160,21 +160,21 @@ class AppendNDVI(AppendNormalizedDifferenceIndex):
 
     .. math::
 
-       \text{NDVI} = \frac{\text{R} - \text{NIR}}{\text{R} + \text{NIR}}
+       \text{NDVI} = \frac{\text{NIR} - \text{R}}{\text{NIR} + \text{R}}
 
     If you use this index in your research, please cite the following paper:
 
     * https://doi.org/10.1016/0034-4257(79)90013-0
     """
 
-    def __init__(self, index_red: int, index_nir: int) -> None:
+    def __init__(self, index_nir: int, index_red: int) -> None:
         """Initialize a new transform instance.
 
         Args:
-            index_red: index of the Red band in the image
             index_nir: index of the Near Infrared (NIR) band in the image
+            index_red: index of the Red band in the image
         """
-        super().__init__(index_a=index_red, index_b=index_nir)
+        super().__init__(index_a=index_nir, index_b=index_red)
 
 
 class AppendNDWI(AppendNormalizedDifferenceIndex):
@@ -208,21 +208,23 @@ class AppendSWI(AppendNormalizedDifferenceIndex):
 
     .. math::
 
-       \text{SWI} = \frac{\text{R} - \text{SWIR}}{\text{R} + \text{SWIR}}
+       \text{SWI} = \frac{\text{VRE1} - \text{SWIR2}}{\text{VRE1} + \text{SWIR2}}
 
     If you use this index in your research, please cite the following paper:
 
     * https://doi.org/10.3390/w13121647
+
+    .. versionadded:: 0.3
     """
 
-    def __init__(self, index_red: int, index_swir: int) -> None:
+    def __init__(self, index_vre1: int, index_swir2: int) -> None:
         """Initialize a new transform instance.
 
         Args:
-            index_red: index of the VRE1 band, e.g. B5 in Sentinel 2 imagery
-            index_swir: index of the SWIR2 band, e.g. B11 in Sentinel 2 imagery
+            index_vre1: index of the VRE1 band, e.g. B5 in Sentinel 2 imagery
+            index_swir2: index of the SWIR2 band, e.g. B11 in Sentinel 2 imagery
         """
-        super().__init__(index_a=index_red, index_b=index_swir)
+        super().__init__(index_a=index_vre1, index_b=index_swir2)
 
 
 class AppendGNDVI(AppendNormalizedDifferenceIndex):
@@ -237,6 +239,8 @@ class AppendGNDVI(AppendNormalizedDifferenceIndex):
     If you use this index in your research, please cite the following paper:
 
     * https://doi.org/10.2134/agronj2001.933583x
+
+    .. versionadded:: 0.3
     """
 
     def __init__(self, index_nir: int, index_green: int) -> None:

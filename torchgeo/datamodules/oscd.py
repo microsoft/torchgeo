@@ -87,7 +87,7 @@ class OSCDDataModule(pl.LightningDataModule):
             num_patches_per_tile: number of random patches per sample
             pad_size: size to pad images to during val/test steps
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.root_dir = root_dir
         self.bands = bands
         self.train_batch_size = train_batch_size
@@ -97,22 +97,19 @@ class OSCDDataModule(pl.LightningDataModule):
         self.num_patches_per_tile = num_patches_per_tile
 
         if bands == "rgb":
-            self.band_means = self.band_means[[3, 2, 1], None, None]
-            self.band_stds = self.band_stds[[3, 2, 1], None, None]
-        else:
-            self.band_means = self.band_means[:, None, None]
-            self.band_stds = self.band_stds[:, None, None]
+            self.band_means = self.band_means[[3, 2, 1]]
+            self.band_stds = self.band_stds[[3, 2, 1]]
 
-        self.norm = Normalize(self.band_means, self.band_stds)
         self.rcrop = K.AugmentationSequential(
             K.RandomCrop(patch_size), data_keys=["input", "mask"], same_on_batch=True
         )
         self.padto = K.PadTo(pad_size)
 
+        self.norm = Normalize(self.band_means, self.band_stds)
+
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset."""
         sample["image"] = sample["image"].float()
-        sample["mask"] = sample["mask"]
         sample["image"] = self.norm(sample["image"])
         sample["image"] = torch.flatten(sample["image"], 0, 1)
         return sample

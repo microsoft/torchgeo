@@ -11,11 +11,11 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import check_integrity, download_and_extract_archive, download_url
 
 
-class VHR10(VisionDataset):
+class VHR10(NonGeoDataset):
     """NWPU VHR-10 dataset.
 
     Northwestern Polytechnical University (NWPU) very-high-resolution ten-class (VHR-10)
