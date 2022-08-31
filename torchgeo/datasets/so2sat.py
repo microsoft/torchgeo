@@ -150,6 +150,9 @@ class So2Sat(NonGeoDataset):
         Raises:
             AssertionError: if ``split`` argument is invalid
             RuntimeError: if data is not found in ``root``, or checksums don't match
+
+        .. versionadded:: 0.3
+           The *bands* parameter.
         """
         try:
             import h5py  # noqa: F401

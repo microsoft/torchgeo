@@ -2,10 +2,10 @@
 h5py==3.6.0
 laspy==2.2.0
 opencv-python==4.6.0.66
-pandas==1.4.3;python_version>='3.8'
+pandas==1.4.4;python_version>='3.8'
 pycocotools==2.0.4
 pyvista
-radiant-mlhub==0.5.1;python_version>='3.8'
+radiant-mlhub==0.4.1
 rarfile==4.0
-scipy==1.8.1;python_version>='3.8'
+scipy==1.9.1;python_version>='3.8'
 zipfile-deflate64==0.2.0

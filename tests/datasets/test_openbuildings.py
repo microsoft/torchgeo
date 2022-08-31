@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any
 
 import matplotlib.pyplot as plt
-import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
@@ -24,7 +23,7 @@ from torchgeo.datasets import (
     UnionDataset,
 )
 
-pytest.importorskip("pandas", minversion="0.23.2")
+pd = pytest.importorskip("pandas", minversion="0.23.2")
 
 
 class TestOpenBuildings:
