@@ -11,7 +11,6 @@ import lzma
 import os
 import sys
 import tarfile
-import zipfile
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import (
@@ -77,6 +76,27 @@ class _rarfile:
             pass
 
 
+class _zipfile:
+    class ZipFile:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            self.args = args
+            self.kwargs = kwargs
+
+        def __enter__(self) -> Any:
+            try:
+                # Supports normal zip files, proprietary deflate64 compression algorithm
+                import zipfile_deflate64 as zipfile
+            except ImportError:
+                # Only supports normal zip files
+                # https://github.com/python/mypy/issues/1153
+                import zipfile  # type: ignore[no-redef]
+
+            return zipfile.ZipFile(*self.args, **self.kwargs)
+
+        def __exit__(self, exc_type: None, exc_value: None, traceback: None) -> None:
+            pass
+
+
 def extract_archive(src: str, dst: Optional[str] = None) -> None:
     """Extract an archive.
 
@@ -96,7 +116,7 @@ def extract_archive(src: str, dst: Optional[str] = None) -> None:
             (".tar", ".tar.gz", ".tar.bz2", ".tar.xz", ".tgz", ".tbz2", ".tbz", ".txz"),
             tarfile.open,
         ),
-        (".zip", zipfile.ZipFile),
+        (".zip", _zipfile.ZipFile),
     ]
 
     for suffix, extractor in suffix_and_extractor:
@@ -146,7 +166,7 @@ def download_and_extract_archive(
     download_url(url, download_root, filename, md5)
 
     archive = os.path.join(download_root, filename)
-    print("Extracting {} to {}".format(archive, extract_root))
+    print(f"Extracting {archive} to {extract_root}")
     extract_archive(archive, extract_root)
 
 
@@ -332,6 +352,32 @@ class BoundingBox:
         except ValueError:
             raise ValueError(f"Bounding boxes {self} and {other} do not overlap")
 
+    @property
+    def area(self) -> float:
+        """Area of bounding box.
+
+        Area is defined as spatial area.
+
+        Returns:
+            area
+
+        .. versionadded:: 0.3
+        """
+        return (self.maxx - self.minx) * (self.maxy - self.miny)
+
+    @property
+    def volume(self) -> float:
+        """Volume of bounding box.
+
+        Volume is defined as spatial area times temporal range.
+
+        Returns:
+            volume
+
+        .. versionadded:: 0.3
+        """
+        return self.area * (self.maxt - self.mint)
+
     def intersects(self, other: "BoundingBox") -> bool:
         """Whether or not two bounding boxes intersect.
 
@@ -401,7 +447,6 @@ def disambiguate_timestamp(date_str: str, format: str) -> Tuple[float, float]:
         # Microsecond resolution
         maxt = mint + timedelta(microseconds=1)
 
-    mint -= timedelta(microseconds=1)
     maxt -= timedelta(microseconds=1)
 
     return mint.timestamp(), maxt.timestamp()
@@ -502,7 +547,7 @@ def concat_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
     collated: Dict[Any, Any] = _list_dict_to_dict_list(samples)
     for key, value in collated.items():
         if isinstance(value[0], Tensor):
-            collated[key] = torch.cat(value)  # type: ignore[attr-defined]
+            collated[key] = torch.cat(value)
         else:
             collated[key] = value[0]
     return collated
@@ -527,9 +572,7 @@ def merge_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
             if key in collated and isinstance(value, Tensor):
                 # Take the maximum so that nodata values (zeros) get replaced
                 # by data values whenever possible
-                collated[key] = torch.maximum(  # type: ignore[attr-defined]
-                    collated[key], value
-                )
+                collated[key] = torch.maximum(collated[key], value)
             else:
                 collated[key] = value
     return collated
@@ -566,7 +609,7 @@ def rasterio_loader(path: str) -> "np.typing.NDArray[np.int_]":
     """
     with rasterio.open(path) as f:
         array: "np.typing.NDArray[np.int_]" = f.read().astype(np.int32)
-        # VisionClassificationDataset expects images returned with channels last (HWC)
+        # NonGeoClassificationDataset expects images returned with channels last (HWC)
         array = array.transpose(1, 2, 0)
     return array
 
@@ -599,8 +642,7 @@ def draw_semantic_segmentation_masks(
         a version of ``image`` overlayed with the colors given by ``mask`` and
             ``colors``
     """
-    classes = torch.unique(mask)  # type: ignore[attr-defined]
-    classes = classes[1:]
+    classes = torch.from_numpy(np.arange(len(colors) if colors else 0, dtype=np.uint8))
     class_masks = mask == classes[:, None, None]
     img = draw_segmentation_masks(
         image=image, masks=class_masks, alpha=alpha, colors=colors

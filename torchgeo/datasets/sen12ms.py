@@ -12,14 +12,14 @@ import rasterio
 import torch
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import check_integrity, percentile_normalization
 
 
-class SEN12MS(VisionDataset):
+class SEN12MS(NonGeoDataset):
     """SEN12MS dataset.
 
-    The `SEN12MS <https://doi.org/10.14459/2019mp1474000>`_ dataset contains
+    The `SEN12MS <https://doi.org/10.14459/2019mp1474000>`__ dataset contains
     180,662 patch triplets of corresponding Sentinel-1 dual-pol SAR data,
     Sentinel-2 multi-spectral images, and MODIS-derived land cover maps.
     The patches are distributed across the land masses of the Earth and
@@ -192,7 +192,7 @@ class SEN12MS(VisionDataset):
         assert split in ["train", "test"]
 
         self._validate_bands(bands)
-        self.band_indices = torch.tensor(  # type: ignore[attr-defined]
+        self.band_indices = torch.tensor(
             [self.band_names.index(b) for b in bands]
         ).long()
         self.bands = bands
@@ -227,10 +227,8 @@ class SEN12MS(VisionDataset):
         s1 = self._load_raster(filename, "s1")
         s2 = self._load_raster(filename, "s2")
 
-        image = torch.cat(tensors=[s1, s2], dim=0)  # type: ignore[attr-defined]
-        image = torch.index_select(  # type: ignore[attr-defined]
-            image, dim=0, index=self.band_indices
-        )
+        image = torch.cat(tensors=[s1, s2], dim=0)
+        image = torch.index_select(image, dim=0, index=self.band_indices)
 
         sample: Dict[str, Tensor] = {"image": image, "mask": lc}
 
@@ -263,13 +261,15 @@ class SEN12MS(VisionDataset):
         with rasterio.open(
             os.path.join(
                 self.root,
-                "{0}_{1}".format(*parts),
+                "{}_{}".format(*parts),
                 "{2}_{3}".format(*parts),
-                "{0}_{1}_{2}_{3}_{4}".format(*parts),
+                "{}_{}_{}_{}_{}".format(*parts),
             )
         ) as f:
-            array = f.read().astype(np.int32)
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            array = f.read()
+            if array.dtype == np.uint16:
+                array = array.astype(np.int32)
+            tensor = torch.from_numpy(array)
             return tensor
 
     def _validate_bands(self, bands: Sequence[str]) -> None:

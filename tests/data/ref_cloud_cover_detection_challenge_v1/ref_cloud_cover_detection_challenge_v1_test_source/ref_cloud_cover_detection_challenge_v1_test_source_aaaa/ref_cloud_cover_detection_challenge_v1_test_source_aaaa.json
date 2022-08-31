@@ -1,0 +1,130 @@
+{
+  "type": "Feature",
+  "stac_version": "1.0.0",
+  "id": "ref_cloud_cover_detection_challenge_v1_test_source_aaaa",
+  "properties": {
+    "eo:bands": [
+      {
+        "name": "B02",
+        "common_name": "blue",
+        "description": "Blue"
+      },
+      {
+        "name": "B03",
+        "common_name": "green",
+        "description": "Green"
+      },
+      {
+        "name": "B04",
+        "common_name": "red",
+        "description": "Red"
+      },
+      {
+        "name": "B08",
+        "common_name": "nir",
+        "description": "NIR"
+      }
+    ],
+    "datetime": "2020-06-03T00:00:00Z"
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          137.86580132892396,
+          -29.52744848758255
+        ],
+        [
+          137.86450090473795,
+          -29.481297003404038
+        ],
+        [
+          137.91724642199793,
+          -29.48015007212528
+        ],
+        [
+          137.9185707094313,
+          -29.526299409555623
+        ],
+        [
+          137.86580132892396,
+          -29.52744848758255
+        ]
+      ]
+    ]
+  },
+  "links": [
+    {
+      "rel": "root",
+      "href": "../collection.json",
+      "type": "application/json"
+    },
+    {
+      "rel": "collection",
+      "href": "../collection.json",
+      "type": "application/json"
+    },
+    {
+      "rel": "parent",
+      "href": "../collection.json",
+      "type": "application/json"
+    }
+  ],
+  "assets": {
+    "B02": {
+      "href": "./B02.tif",
+      "type": "image/tiff; application=geotiff",
+      "eo:bands": [
+        {
+          "name": "B02",
+          "common_name": "blue",
+          "description": "Blue"
+        }
+      ]
+    },
+    "B03": {
+      "href": "./B03.tif",
+      "type": "image/tiff; application=geotiff",
+      "eo:bands": [
+        {
+          "name": "B03",
+          "common_name": "green",
+          "description": "Green"
+        }
+      ]
+    },
+    "B04": {
+      "href": "./B04.tif",
+      "type": "image/tiff; application=geotiff",
+      "eo:bands": [
+        {
+          "name": "B04",
+          "common_name": "red",
+          "description": "Red"
+        }
+      ]
+    },
+    "B08": {
+      "href": "./B08.tif",
+      "type": "image/tiff; application=geotiff",
+      "eo:bands": [
+        {
+          "name": "B08",
+          "common_name": "nir",
+          "description": "NIR"
+        }
+      ]
+    }
+  },
+  "bbox": [
+    137.86450090473795,
+    -29.52744848758255,
+    137.9185707094313,
+    -29.48015007212528
+  ],
+  "stac_extensions": [
+    "https://stac-extensions.github.io/eo/v1.0.0/schema.json"
+  ],
+  "collection": "ref_cloud_cover_detection_challenge_v1_test_source"
+}

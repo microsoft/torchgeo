@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import (
     check_integrity,
     draw_semantic_segmentation_masks,
@@ -22,10 +22,10 @@ from .utils import (
 )
 
 
-class Vaihingen2D(VisionDataset):
+class Vaihingen2D(NonGeoDataset):
     """Vaihingen 2D Semantic Segmentation dataset.
 
-    The `Vaihingen <https://www2.isprs.org/commissions/comm2/wg4/benchmark/2d-sem-label-vaihingen/>`_
+    The `Vaihingen <https://www2.isprs.org/commissions/comm2/wg4/benchmark/2d-sem-label-vaihingen/>`__
     dataset is a dataset for urban semantic segmentation used in the 2D Semantic Labeling
     Contest - Vaihingen. This dataset uses the "ISPRS_semantic_labeling_Vaihingen.zip"
     and "ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip" files to create the
@@ -185,7 +185,7 @@ class Vaihingen2D(VisionDataset):
         path = self.files[index]["image"]
         with Image.open(path) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
         return tensor
@@ -203,9 +203,9 @@ class Vaihingen2D(VisionDataset):
         with Image.open(path) as img:
             array: "np.typing.NDArray[np.uint8]" = np.array(img.convert("RGB"))
             array = rgb_to_mask(array, self.colormap)
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
-            tensor = tensor.to(torch.long)  # type: ignore[attr-defined]
+            tensor = tensor.to(torch.long)
         return tensor
 
     def _verify(self) -> None:

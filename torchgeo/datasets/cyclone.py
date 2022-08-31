@@ -14,11 +14,11 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import check_integrity, download_radiant_mlhub_dataset, extract_archive
 
 
-class TropicalCycloneWindEstimation(VisionDataset):
+class TropicalCycloneWindEstimation(NonGeoDataset):
     """Tropical Cyclone Wind Estimation Competition dataset.
 
     A collection of tropical storms in the Atlantic and East Pacific Oceans from 2000 to
@@ -30,7 +30,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * http://doi.org/10.1109/JSTARS.2020.3011907
+    * https://doi.org/10.1109/JSTARS.2020.3011907
 
     .. note::
 
@@ -143,11 +143,16 @@ class TropicalCycloneWindEstimation(VisionDataset):
         filename = os.path.join(directory.format("source"), "image.jpg")
         with Image.open(filename) as img:
             if img.height != self.size or img.width != self.size:
-                img = img.resize(size=(self.size, self.size), resample=Image.BILINEAR)
+                # Moved in PIL 9.1.0
+                try:
+                    resample = Image.Resampling.BILINEAR
+                except AttributeError:
+                    resample = Image.BILINEAR
+                img = img.resize(size=(self.size, self.size), resample=resample)
             array: "np.typing.NDArray[np.int_]" = np.array(img)
             if len(array.shape) == 3:
                 array = array[:, :, 0]
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             return tensor
 
     def _load_features(self, directory: str) -> Dict[str, Any]:
@@ -210,7 +215,7 @@ class TropicalCycloneWindEstimation(VisionDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: Dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

@@ -11,7 +11,7 @@ import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import pytest
@@ -37,17 +37,15 @@ from torchgeo.datasets.utils import (
 
 
 @pytest.fixture
-def mock_missing_module(monkeypatch: Generator[MonkeyPatch, None, None]) -> None:
+def mock_missing_module(monkeypatch: MonkeyPatch) -> None:
     import_orig = builtins.__import__
 
     def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name in ["rarfile", "radiant_mlhub"]:
+        if name in ["radiant_mlhub", "rarfile", "zipfile_deflate64"]:
             raise ImportError()
         return import_orig(name, *args, **kwargs)
 
-    monkeypatch.setattr(  # type: ignore[attr-defined]
-        builtins, "__import__", mocked_import
-    )
+    monkeypatch.setattr(builtins, "__import__", mocked_import)
 
 
 class Dataset:
@@ -84,8 +82,6 @@ def test_mock_missing_module(mock_missing_module: None) -> None:
     import sys  # noqa: F401
 
 
-# TODO: figure out how to install unrar on Windows in GitHub Actions
-@pytest.mark.skipif(sys.platform == "win32", reason="requires unrar executable")
 @pytest.mark.parametrize(
     "src",
     [
@@ -93,11 +89,15 @@ def test_mock_missing_module(mock_missing_module: None) -> None:
         os.path.join("cowc_detection", "COWC_test_list_detection.txt.bz2"),
         os.path.join("vhr10", "NWPU VHR-10 dataset.rar"),
         os.path.join("landcoverai", "landcover.ai.v1.zip"),
+        os.path.join("chesapeake", "BAYWIDE", "Baywide_13Class_20132014.zip"),
         os.path.join("sen12ms", "ROIs1158_spring_lc.tar.gz"),
     ],
 )
 def test_extract_archive(src: str, tmp_path: Path) -> None:
-    pytest.importorskip("rarfile", minversion="3")
+    if src.endswith(".rar"):
+        pytest.importorskip("rarfile", minversion="3")
+    if src.startswith("chesapeake"):
+        pytest.importorskip("zipfile_deflate64")
     extract_archive(os.path.join("tests", "data", src), str(tmp_path))
 
 
@@ -111,6 +111,11 @@ def test_missing_rarfile(mock_missing_module: None) -> None:
         )
 
 
+def test_missing_zipfile_deflate64(mock_missing_module: None) -> None:
+    # Should fallback on Python builtin zipfile
+    extract_archive(os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip"))
+
+
 def test_unsupported_scheme() -> None:
     with pytest.raises(
         RuntimeError, match="src file has unknown archival/compression scheme"
@@ -118,12 +123,8 @@ def test_unsupported_scheme() -> None:
         extract_archive("foo.bar")
 
 
-def test_download_and_extract_archive(
-    tmp_path: Path, monkeypatch: Generator[MonkeyPatch, None, None]
-) -> None:
-    monkeypatch.setattr(  # type: ignore[attr-defined]
-        torchgeo.datasets.utils, "download_url", download_url
-    )
+def test_download_and_extract_archive(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
     download_and_extract_archive(
         os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip"),
         str(tmp_path),
@@ -131,22 +132,18 @@ def test_download_and_extract_archive(
 
 
 def test_download_radiant_mlhub_dataset(
-    tmp_path: Path, monkeypatch: Generator[MonkeyPatch, None, None]
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ) -> None:
     radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
-    monkeypatch.setattr(  # type: ignore[attr-defined]
-        radiant_mlhub.Dataset, "fetch", fetch_dataset
-    )
+    monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch_dataset)
     download_radiant_mlhub_dataset("", str(tmp_path))
 
 
 def test_download_radiant_mlhub_collection(
-    tmp_path: Path, monkeypatch: Generator[MonkeyPatch, None, None]
+    tmp_path: Path, monkeypatch: MonkeyPatch
 ) -> None:
     radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
-    monkeypatch.setattr(  # type: ignore[attr-defined]
-        radiant_mlhub.Collection, "fetch", fetch_collection
-    )
+    monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
     download_radiant_mlhub_collection("", str(tmp_path))
 
 
@@ -325,6 +322,46 @@ class TestBoundingBox:
     @pytest.mark.parametrize(
         "test_input,expected",
         [
+            # Rectangular prism
+            ((0, 1, 0, 1, 0, 1), 1),
+            ((0, 2, 0, 3, 0, 4), 6),
+            # Plane
+            ((0, 0, 0, 1, 0, 1), 0),
+            # Line
+            ((0, 0, 0, 0, 0, 1), 0),
+            # Point
+            ((0, 0, 0, 0, 0, 0), 0),
+        ],
+    )
+    def test_area(
+        self, test_input: Tuple[float, float, float, float, float, float], expected: int
+    ) -> None:
+        bbox = BoundingBox(*test_input)
+        assert bbox.area == expected
+
+    @pytest.mark.parametrize(
+        "test_input,expected",
+        [
+            # Rectangular prism
+            ((0, 1, 0, 1, 0, 1), 1),
+            ((0, 2, 0, 3, 0, 4), 24),
+            # Plane
+            ((0, 0, 0, 1, 0, 1), 0),
+            # Line
+            ((0, 0, 0, 0, 0, 1), 0),
+            # Point
+            ((0, 0, 0, 0, 0, 0), 0),
+        ],
+    )
+    def test_volume(
+        self, test_input: Tuple[float, float, float, float, float, float], expected: int
+    ) -> None:
+        bbox = BoundingBox(*test_input)
+        assert bbox.volume == expected
+
+    @pytest.mark.parametrize(
+        "test_input,expected",
+        [
             # Same box
             ((0, 1, 0, 1, 0, 1), True),
             ((0.0, 1.0, 0.0, 1.0, 0.0, 1.0), True),
@@ -448,49 +485,31 @@ class TestCollateFunctionsMatchingKeys:
     @pytest.fixture(scope="class")
     def samples(self) -> List[Dict[str, Any]]:
         return [
-            {
-                "image": torch.tensor([1, 2, 0]),  # type: ignore[attr-defined]
-                "crs": CRS.from_epsg(2000),
-            },
-            {
-                "image": torch.tensor([0, 0, 3]),  # type: ignore[attr-defined]
-                "crs": CRS.from_epsg(2001),
-            },
+            {"image": torch.tensor([1, 2, 0]), "crs": CRS.from_epsg(2000)},
+            {"image": torch.tensor([0, 0, 3]), "crs": CRS.from_epsg(2001)},
         ]
 
     def test_stack_unbind_samples(self, samples: List[Dict[str, Any]]) -> None:
         sample = stack_samples(samples)
-        assert sample["image"].size() == torch.Size(  # type: ignore[attr-defined]
-            [2, 3]
-        )
-        assert torch.allclose(  # type: ignore[attr-defined]
-            sample["image"],
-            torch.tensor([[1, 2, 0], [0, 0, 3]]),  # type: ignore[attr-defined]
-        )
+        assert sample["image"].size() == torch.Size([2, 3])
+        assert torch.allclose(sample["image"], torch.tensor([[1, 2, 0], [0, 0, 3]]))
         assert sample["crs"] == [CRS.from_epsg(2000), CRS.from_epsg(2001)]
 
         new_samples = unbind_samples(sample)
         for i in range(2):
-            assert torch.allclose(  # type: ignore[attr-defined]
-                samples[i]["image"], new_samples[i]["image"]
-            )
+            assert torch.allclose(samples[i]["image"], new_samples[i]["image"])
             assert samples[i]["crs"] == new_samples[i]["crs"]
 
     def test_concat_samples(self, samples: List[Dict[str, Any]]) -> None:
         sample = concat_samples(samples)
-        assert sample["image"].size() == torch.Size([6])  # type: ignore[attr-defined]
-        assert torch.allclose(  # type: ignore[attr-defined]
-            sample["image"],
-            torch.tensor([1, 2, 0, 0, 0, 3]),  # type: ignore[attr-defined]
-        )
+        assert sample["image"].size() == torch.Size([6])
+        assert torch.allclose(sample["image"], torch.tensor([1, 2, 0, 0, 0, 3]))
         assert sample["crs"] == CRS.from_epsg(2000)
 
     def test_merge_samples(self, samples: List[Dict[str, Any]]) -> None:
         sample = merge_samples(samples)
-        assert sample["image"].size() == torch.Size([3])  # type: ignore[attr-defined]
-        assert torch.allclose(  # type: ignore[attr-defined]
-            sample["image"], torch.tensor([1, 2, 3])  # type: ignore[attr-defined]
-        )
+        assert sample["image"].size() == torch.Size([3])
+        assert torch.allclose(sample["image"], torch.tensor([1, 2, 3]))
         assert sample["crs"] == CRS.from_epsg(2001)
 
 
@@ -498,64 +517,40 @@ class TestCollateFunctionsDifferingKeys:
     @pytest.fixture(scope="class")
     def samples(self) -> List[Dict[str, Any]]:
         return [
-            {
-                "image": torch.tensor([1, 2, 0]),  # type: ignore[attr-defined]
-                "crs1": CRS.from_epsg(2000),
-            },
-            {
-                "mask": torch.tensor([0, 0, 3]),  # type: ignore[attr-defined]
-                "crs2": CRS.from_epsg(2001),
-            },
+            {"image": torch.tensor([1, 2, 0]), "crs1": CRS.from_epsg(2000)},
+            {"mask": torch.tensor([0, 0, 3]), "crs2": CRS.from_epsg(2001)},
         ]
 
     def test_stack_unbind_samples(self, samples: List[Dict[str, Any]]) -> None:
         sample = stack_samples(samples)
-        assert sample["image"].size() == torch.Size(  # type: ignore[attr-defined]
-            [1, 3]
-        )
-        assert sample["mask"].size() == torch.Size([1, 3])  # type: ignore[attr-defined]
-        assert torch.allclose(  # type: ignore[attr-defined]
-            sample["image"], torch.tensor([[1, 2, 0]])  # type: ignore[attr-defined]
-        )
-        assert torch.allclose(  # type: ignore[attr-defined]
-            sample["mask"], torch.tensor([[0, 0, 3]])  # type: ignore[attr-defined]
-        )
+        assert sample["image"].size() == torch.Size([1, 3])
+        assert sample["mask"].size() == torch.Size([1, 3])
+        assert torch.allclose(sample["image"], torch.tensor([[1, 2, 0]]))
+        assert torch.allclose(sample["mask"], torch.tensor([[0, 0, 3]]))
         assert sample["crs1"] == [CRS.from_epsg(2000)]
         assert sample["crs2"] == [CRS.from_epsg(2001)]
 
         new_samples = unbind_samples(sample)
-        assert torch.allclose(  # type: ignore[attr-defined]
-            samples[0]["image"], new_samples[0]["image"]
-        )
+        assert torch.allclose(samples[0]["image"], new_samples[0]["image"])
         assert samples[0]["crs1"] == new_samples[0]["crs1"]
-        assert torch.allclose(  # type: ignore[attr-defined]
-            samples[1]["mask"], new_samples[0]["mask"]
-        )
+        assert torch.allclose(samples[1]["mask"], new_samples[0]["mask"])
         assert samples[1]["crs2"] == new_samples[0]["crs2"]
 
     def test_concat_samples(self, samples: List[Dict[str, Any]]) -> None:
         sample = concat_samples(samples)
-        assert sample["image"].size() == torch.Size([3])  # type: ignore[attr-defined]
-        assert sample["mask"].size() == torch.Size([3])  # type: ignore[attr-defined]
-        assert torch.allclose(  # type: ignore[attr-defined]
-            sample["image"], torch.tensor([1, 2, 0])  # type: ignore[attr-defined]
-        )
-        assert torch.allclose(  # type: ignore[attr-defined]
-            sample["mask"], torch.tensor([0, 0, 3])  # type: ignore[attr-defined]
-        )
+        assert sample["image"].size() == torch.Size([3])
+        assert sample["mask"].size() == torch.Size([3])
+        assert torch.allclose(sample["image"], torch.tensor([1, 2, 0]))
+        assert torch.allclose(sample["mask"], torch.tensor([0, 0, 3]))
         assert sample["crs1"] == CRS.from_epsg(2000)
         assert sample["crs2"] == CRS.from_epsg(2001)
 
     def test_merge_samples(self, samples: List[Dict[str, Any]]) -> None:
         sample = merge_samples(samples)
-        assert sample["image"].size() == torch.Size([3])  # type: ignore[attr-defined]
-        assert sample["mask"].size() == torch.Size([3])  # type: ignore[attr-defined]
-        assert torch.allclose(  # type: ignore[attr-defined]
-            sample["image"], torch.tensor([1, 2, 0])  # type: ignore[attr-defined]
-        )
-        assert torch.allclose(  # type: ignore[attr-defined]
-            sample["mask"], torch.tensor([0, 0, 3])  # type: ignore[attr-defined]
-        )
+        assert sample["image"].size() == torch.Size([3])
+        assert sample["mask"].size() == torch.Size([3])
+        assert torch.allclose(sample["image"], torch.tensor([1, 2, 0]))
+        assert torch.allclose(sample["mask"], torch.tensor([0, 0, 3]))
         assert sample["crs1"] == CRS.from_epsg(2000)
         assert sample["crs2"] == CRS.from_epsg(2001)
 

@@ -14,11 +14,11 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import check_integrity, download_and_extract_archive
 
 
-class COWC(VisionDataset, abc.ABC):
+class COWC(NonGeoDataset, abc.ABC):
     """Abstract base class for the COWC dataset.
 
     The `Cars Overhead With Context (COWC) <https://gdo152.llnl.gov/cowc/>`_ data set
@@ -147,7 +147,7 @@ class COWC(VisionDataset, abc.ABC):
         filename = os.path.join(self.root, self.images[index])
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img)
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -162,7 +162,7 @@ class COWC(VisionDataset, abc.ABC):
             the target
         """
         target = int(self.targets[index])
-        tensor: Tensor = torch.tensor(target)  # type: ignore[attr-defined]
+        tensor = torch.tensor(target)
         return tensor
 
     def _check_integrity(self) -> bool:

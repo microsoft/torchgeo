@@ -14,7 +14,7 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import (
     download_url,
     draw_semantic_segmentation_masks,
@@ -23,7 +23,7 @@ from .utils import (
 )
 
 
-class OSCD(VisionDataset):
+class OSCD(NonGeoDataset):
     """OSCD dataset.
 
     The `Onera Satellite Change Detection <https://rcdaudt.github.io/oscd/>`_
@@ -174,7 +174,7 @@ class OSCD(VisionDataset):
 
             with open(os.path.join(images_root, region, "dates.txt")) as f:
                 dates = tuple(
-                    [line.split()[-1] for line in f.read().strip().splitlines()]
+                    line.split()[-1] for line in f.read().strip().splitlines()
                 )
 
             regions.append(
@@ -203,7 +203,7 @@ class OSCD(VisionDataset):
             with Image.open(path) as img:
                 images.append(np.array(img))
         array: "np.typing.NDArray[np.int_]" = np.stack(images, axis=0).astype(np.int_)
-        tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+        tensor = torch.from_numpy(array)
         return tensor
 
     def _load_target(self, path: str) -> Tensor:
@@ -218,9 +218,9 @@ class OSCD(VisionDataset):
         filename = os.path.join(path)
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("L"))
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
-            tensor = torch.clamp(tensor, min=0, max=1)  # type: ignore[attr-defined]
-            tensor = tensor.to(torch.long)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
+            tensor = torch.clamp(tensor, min=0, max=1)
+            tensor = tensor.to(torch.long)
             return tensor
 
     def _verify(self) -> None:
@@ -246,7 +246,7 @@ class OSCD(VisionDataset):
             raise RuntimeError(
                 f"Dataset not found in `root={self.root}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
+                "to automatically download the dataset."
             )
 
         # Download the dataset
@@ -299,7 +299,7 @@ class OSCD(VisionDataset):
                 np.uint8
             )
             array: "np.typing.NDArray[np.uint8]" = draw_semantic_segmentation_masks(
-                torch.from_numpy(rgb_img),  # type: ignore[attr-defined]
+                torch.from_numpy(rgb_img),
                 sample["mask"],
                 alpha=alpha,
                 colors=self.colormap,

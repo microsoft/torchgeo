@@ -14,7 +14,7 @@ from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torchmetrics import Accuracy, FBeta, IoU, MetricCollection
+from torchmetrics import Accuracy, FBetaScore, JaccardIndex, MetricCollection
 
 from ..datasets.utils import unbind_samples
 from . import utils
@@ -30,18 +30,20 @@ class ClassificationTask(pl.LightningModule):
 
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor."""
-        in_channels = self.hparams["in_channels"]
-        classification_model = self.hparams["classification_model"]
+        in_channels = self.hyperparams["in_channels"]
+        classification_model = self.hyperparams["classification_model"]
 
         imagenet_pretrained = False
         custom_pretrained = False
-        if self.hparams["weights"] and not os.path.exists(self.hparams["weights"]):
-            if self.hparams["weights"] not in ["imagenet", "random"]:
+        if self.hyperparams["weights"] and not os.path.exists(
+            self.hyperparams["weights"]
+        ):
+            if self.hyperparams["weights"] not in ["imagenet", "random"]:
                 raise ValueError(
-                    f"Weight type '{self.hparams['weights']}' is not valid."
+                    f"Weight type '{self.hyperparams['weights']}' is not valid."
                 )
             else:
-                imagenet_pretrained = self.hparams["weights"] == "imagenet"
+                imagenet_pretrained = self.hyperparams["weights"] == "imagenet"
             custom_pretrained = False
         else:
             custom_pretrained = True
@@ -51,7 +53,7 @@ class ClassificationTask(pl.LightningModule):
         if classification_model in valid_models:
             self.model = timm.create_model(
                 classification_model,
-                num_classes=self.hparams["num_classes"],
+                num_classes=self.hyperparams["num_classes"],
                 in_chans=in_channels,
                 pretrained=imagenet_pretrained,
             )
@@ -61,12 +63,12 @@ class ClassificationTask(pl.LightningModule):
             )
 
         if custom_pretrained:
-            name, state_dict = utils.extract_encoder(self.hparams["weights"])
+            name, state_dict = utils.extract_encoder(self.hyperparams["weights"])
 
-            if self.hparams["classification_model"] != name:
+            if self.hyperparams["classification_model"] != name:
                 raise ValueError(
                     f"Trying to load {name} weights into a "
-                    f"{self.hparams['classification_model']}"
+                    f"{self.hyperparams['classification_model']}"
                 )
             self.model = utils.load_state_dict(self.model, state_dict)
 
@@ -74,14 +76,14 @@ class ClassificationTask(pl.LightningModule):
         """Configures the task based on kwargs parameters passed to the constructor."""
         self.config_model()
 
-        if self.hparams["loss"] == "ce":
-            self.loss = nn.CrossEntropyLoss()  # type: ignore[attr-defined]
-        elif self.hparams["loss"] == "jaccard":
+        if self.hyperparams["loss"] == "ce":
+            self.loss: nn.Module = nn.CrossEntropyLoss()
+        elif self.hyperparams["loss"] == "jaccard":
             self.loss = JaccardLoss(mode="multiclass")
-        elif self.hparams["loss"] == "focal":
+        elif self.hyperparams["loss"] == "focal":
             self.loss = FocalLoss(mode="multiclass", normalized=True)
         else:
-            raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
+            raise ValueError(f"Loss type '{self.hyperparams['loss']}' is not valid.")
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
@@ -93,21 +95,28 @@ class ClassificationTask(pl.LightningModule):
                 "random_rgb"
         """
         super().__init__()
-        self.save_hyperparameters()  # creates `self.hparams` from kwargs
+
+        # Creates `self.hparams` from kwargs
+        self.save_hyperparameters()  # type: ignore[operator]
+        self.hyperparams = cast(Dict[str, Any], self.hparams)
 
         self.config_task()
 
         self.train_metrics = MetricCollection(
             {
                 "OverallAccuracy": Accuracy(
-                    num_classes=self.hparams["num_classes"], average="micro"
+                    num_classes=self.hyperparams["num_classes"], average="micro"
                 ),
                 "AverageAccuracy": Accuracy(
-                    num_classes=self.hparams["num_classes"], average="macro"
+                    num_classes=self.hyperparams["num_classes"], average="macro"
                 ),
-                "IoU": IoU(num_classes=self.hparams["num_classes"]),
-                "F1Score": FBeta(
-                    num_classes=self.hparams["num_classes"], beta=1.0, average="micro"
+                "JaccardIndex": JaccardIndex(
+                    num_classes=self.hyperparams["num_classes"]
+                ),
+                "F1Score": FBetaScore(
+                    num_classes=self.hyperparams["num_classes"],
+                    beta=1.0,
+                    average="micro",
                 ),
             },
             prefix="train_",
@@ -115,7 +124,7 @@ class ClassificationTask(pl.LightningModule):
         self.val_metrics = self.train_metrics.clone(prefix="val_")
         self.test_metrics = self.train_metrics.clone(prefix="test_")
 
-    def forward(self, x: Tensor) -> Any:  # type: ignore[override]
+    def forward(self, *args: Any, **kwargs: Any) -> Any:
         """Forward pass of the model.
 
         Args:
@@ -124,20 +133,18 @@ class ClassificationTask(pl.LightningModule):
         Returns:
             prediction
         """
-        return self.model(x)
+        return self.model(*args, **kwargs)
 
-    def training_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> Tensor:
-        """Training step.
+    def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
+        """Compute and return the training loss.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: the output of your DataLoader
 
         Returns:
             training loss
         """
+        batch = args[0]
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
@@ -161,15 +168,15 @@ class ClassificationTask(pl.LightningModule):
         self.log_dict(self.train_metrics.compute())
         self.train_metrics.reset()
 
-    def validation_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
-        """Validation step.
+    def validation_step(self, *args: Any, **kwargs: Any) -> None:
+        """Compute validation loss and log example predictions.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: the output of your DataLoader
+            batch_idx: the index of this batch
         """
+        batch = args[0]
+        batch_idx = args[1]
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
@@ -188,7 +195,7 @@ class ClassificationTask(pl.LightningModule):
                     batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
-                summary_writer = self.logger.experiment
+                summary_writer = self.logger.experiment  # type: ignore[union-attr]
                 summary_writer.add_figure(
                     f"image/{batch_idx}", fig, global_step=self.global_step
                 )
@@ -204,15 +211,13 @@ class ClassificationTask(pl.LightningModule):
         self.log_dict(self.val_metrics.compute())
         self.val_metrics.reset()
 
-    def test_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
-        """Test step.
+    def test_step(self, *args: Any, **kwargs: Any) -> None:
+        """Compute test loss.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: the output of your DataLoader
         """
+        batch = args[0]
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
@@ -241,13 +246,14 @@ class ClassificationTask(pl.LightningModule):
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         optimizer = torch.optim.AdamW(
-            self.model.parameters(), lr=self.hparams["learning_rate"]
+            self.model.parameters(), lr=self.hyperparams["learning_rate"]
         )
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": ReduceLROnPlateau(
-                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
+                    optimizer,
+                    patience=self.hyperparams["learning_rate_schedule_patience"],
                 ),
                 "monitor": "val_loss",
             },
@@ -261,10 +267,10 @@ class MultiLabelClassificationTask(ClassificationTask):
         """Configures the task based on kwargs parameters passed to the constructor."""
         self.config_model()
 
-        if self.hparams["loss"] == "bce":
-            self.loss = nn.BCEWithLogitsLoss()  # type: ignore[attr-defined]
+        if self.hyperparams["loss"] == "bce":
+            self.loss = nn.BCEWithLogitsLoss()
         else:
-            raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
+            raise ValueError(f"Loss type '{self.hyperparams['loss']}' is not valid.")
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
@@ -276,24 +282,27 @@ class MultiLabelClassificationTask(ClassificationTask):
                 "random_rgb"
         """
         super().__init__(**kwargs)
-        self.save_hyperparameters()  # creates `self.hparams` from kwargs
+
+        # Creates `self.hparams` from kwargs
+        self.save_hyperparameters()  # type: ignore[operator]
+        self.hyperparams = cast(Dict[str, Any], self.hparams)
 
         self.config_task()
 
         self.train_metrics = MetricCollection(
             {
                 "OverallAccuracy": Accuracy(
-                    num_classes=self.hparams["num_classes"],
+                    num_classes=self.hyperparams["num_classes"],
                     average="micro",
                     multiclass=False,
                 ),
                 "AverageAccuracy": Accuracy(
-                    num_classes=self.hparams["num_classes"],
+                    num_classes=self.hyperparams["num_classes"],
                     average="macro",
                     multiclass=False,
                 ),
-                "F1Score": FBeta(
-                    num_classes=self.hparams["num_classes"],
+                "F1Score": FBetaScore(
+                    num_classes=self.hyperparams["num_classes"],
                     beta=1.0,
                     average="micro",
                     multiclass=False,
@@ -304,23 +313,22 @@ class MultiLabelClassificationTask(ClassificationTask):
         self.val_metrics = self.train_metrics.clone(prefix="val_")
         self.test_metrics = self.train_metrics.clone(prefix="test_")
 
-    def training_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> Tensor:
-        """Training step.
+    def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
+        """Compute and return the training loss.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: the output of your DataLoader
+
         Returns:
             training loss
         """
+        batch = args[0]
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
-        y_hat_hard = torch.softmax(y_hat, dim=-1)  # type: ignore[attr-defined]
+        y_hat_hard = torch.softmax(y_hat, dim=-1)
 
-        loss = self.loss(y_hat, y.to(torch.float))  # type: ignore[attr-defined]
+        loss = self.loss(y_hat, y.to(torch.float))
 
         # by default, the train step logs every `log_every_n_steps` steps where
         # `log_every_n_steps` is a parameter to the `Trainer` object
@@ -329,21 +337,21 @@ class MultiLabelClassificationTask(ClassificationTask):
 
         return cast(Tensor, loss)
 
-    def validation_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
-        """Validation step.
+    def validation_step(self, *args: Any, **kwargs: Any) -> None:
+        """Compute validation loss and log example predictions.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: the output of your DataLoader
+            batch_idx: the index of this batch
         """
+        batch = args[0]
+        batch_idx = args[1]
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
-        y_hat_hard = torch.softmax(y_hat, dim=-1)  # type: ignore[attr-defined]
+        y_hat_hard = torch.softmax(y_hat, dim=-1)
 
-        loss = self.loss(y_hat, y.to(torch.float))  # type: ignore[attr-defined]
+        loss = self.loss(y_hat, y.to(torch.float))
 
         self.log("val_loss", loss, on_step=False, on_epoch=True)
         self.val_metrics(y_hat_hard, y)
@@ -356,28 +364,26 @@ class MultiLabelClassificationTask(ClassificationTask):
                     batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
-                summary_writer = self.logger.experiment
+                summary_writer = self.logger.experiment  # type: ignore[union-attr]
                 summary_writer.add_figure(
                     f"image/{batch_idx}", fig, global_step=self.global_step
                 )
             except AttributeError:
                 pass
 
-    def test_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
-        """Test step.
+    def test_step(self, *args: Any, **kwargs: Any) -> None:
+        """Compute test loss.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: the output of your DataLoader
         """
+        batch = args[0]
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
-        y_hat_hard = torch.softmax(y_hat, dim=-1)  # type: ignore[attr-defined]
+        y_hat_hard = torch.softmax(y_hat, dim=-1)
 
-        loss = self.loss(y_hat, y.to(torch.float))  # type: ignore[attr-defined]
+        loss = self.loss(y_hat, y.to(torch.float))
 
         # by default, the test and validation steps only log per *epoch*
         self.log("test_loss", loss, on_step=False, on_epoch=True)

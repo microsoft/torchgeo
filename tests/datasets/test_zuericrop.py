@@ -5,7 +5,7 @@ import builtins
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import matplotlib.pyplot as plt
 import pytest
@@ -16,7 +16,7 @@ from _pytest.monkeypatch import MonkeyPatch
 import torchgeo.datasets.utils
 from torchgeo.datasets import ZueriCrop
 
-pytest.importorskip("h5py")
+pytest.importorskip("h5py", minversion="2.6")
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -25,28 +25,22 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 class TestZueriCrop:
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: Generator[MonkeyPatch, None, None], tmp_path: Path
-    ) -> ZueriCrop:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.zuericrop, "download_url", download_url
-        )
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ZueriCrop:
+        monkeypatch.setattr(torchgeo.datasets.zuericrop, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "zuericrop")
         urls = [
             os.path.join(data_dir, "ZueriCrop.hdf5"),
             os.path.join(data_dir, "labels.csv"),
         ]
         md5s = ["1635231df67f3d25f4f1e62c98e221a4", "5118398c7a5bbc246f5f6bb35d8d529b"]
-        monkeypatch.setattr(ZueriCrop, "urls", urls)  # type: ignore[attr-defined]
-        monkeypatch.setattr(ZueriCrop, "md5s", md5s)  # type: ignore[attr-defined]
+        monkeypatch.setattr(ZueriCrop, "urls", urls)
+        monkeypatch.setattr(ZueriCrop, "md5s", md5s)
         root = str(tmp_path)
-        transforms = nn.Identity()  # type: ignore[attr-defined]
+        transforms = nn.Identity()
         return ZueriCrop(root=root, transforms=transforms, download=True, checksum=True)
 
     @pytest.fixture
-    def mock_missing_module(
-        self, monkeypatch: Generator[MonkeyPatch, None, None]
-    ) -> None:
+    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
         import_orig = builtins.__import__
 
         def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
@@ -54,9 +48,7 @@ class TestZueriCrop:
                 raise ImportError()
             return import_orig(name, *args, **kwargs)
 
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            builtins, "__import__", mocked_import
-        )
+        monkeypatch.setattr(builtins, "__import__", mocked_import)
 
     def test_getitem(self, dataset: ZueriCrop) -> None:
         x = dataset[0]
@@ -89,7 +81,7 @@ class TestZueriCrop:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         err = "Dataset not found in `root` directory and `download=False`, "
         "either specify a different `root` directory or use `download=True` "
-        "to automaticaly download the dataset."
+        "to automatically download the dataset."
         with pytest.raises(RuntimeError, match=err):
             ZueriCrop(str(tmp_path))
 

@@ -5,6 +5,8 @@
 
 from typing import Any, Callable, Dict, Optional, Sequence
 
+import matplotlib.pyplot as plt
+import torch
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
@@ -13,7 +15,7 @@ from .geo import RasterDataset
 class Sentinel(RasterDataset):
     """Abstract base class for all Sentinel datasets.
 
-    `Sentinel <https://sentinel.esa.int/web/sentinel/home>`_ is a family of
+    `Sentinel <https://sentinel.esa.int/web/sentinel/home>`__ is a family of
     satellites launched by the `European Space Agency (ESA) <https://www.esa.int/>`_
     under the `Copernicus Programme <https://www.copernicus.eu/en>`_.
 
@@ -44,7 +46,7 @@ class Sentinel2(Sentinel):
     filename_regex = r"""
         ^T(?P<tile>\d{2}[A-Z]{3})
         _(?P<date>\d{8}T\d{6})
-        _(?P<band>B\d{2})
+        _(?P<band>B[018][\dA])
         _(?P<resolution>\d{2}m)
         \..*$
     """
@@ -66,7 +68,7 @@ class Sentinel2(Sentinel):
         "B11",
         "B12",
     ]
-    rgb_bands = ["B04", "B03", "B02"]
+    RGB_BANDS = ["B04", "B03", "B02"]
 
     separate_files = True
 
@@ -98,3 +100,49 @@ class Sentinel2(Sentinel):
         self.bands = bands if bands else self.all_bands
 
         super().__init__(root, crs, res, transforms, cache)
+
+    def plot(
+        self,
+        sample: Dict[str, Any],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`RasterDataset.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        Raises:
+            ValueError: if the RGB bands are not included in ``self.bands``
+
+        .. versionchanged:: 0.3
+           Method now takes a sample dict, not a Tensor. Additionally, possible to
+           show subplot titles and/or use a custom suptitle.
+        """
+        rgb_indices = []
+        for band in self.RGB_BANDS:
+            if band in self.bands:
+                rgb_indices.append(self.bands.index(band))
+            else:
+                raise ValueError("Dataset doesn't contain some of the RGB bands")
+
+        image = sample["image"][rgb_indices].permute(1, 2, 0)
+        image = torch.clamp(image / 2000, min=0, max=1)
+
+        fig, ax = plt.subplots(1, 1, figsize=(4, 4))
+
+        ax.imshow(image)
+        ax.axis("off")
+
+        if show_titles:
+            ax.set_title("Image")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig

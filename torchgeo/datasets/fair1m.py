@@ -6,7 +6,7 @@
 import glob
 import os
 from typing import Any, Callable, Dict, List, Optional, Tuple, cast
-from xml.etree import ElementTree
+from xml.etree.ElementTree import Element, parse
 
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
@@ -15,7 +15,7 @@ import torch
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import check_integrity, extract_archive
 
 
@@ -28,28 +28,32 @@ def parse_pascal_voc(path: str) -> Dict[str, Any]:
     Returns:
         dict of image filename, points, and class labels
     """
-    et = ElementTree.parse(path)
+    et = parse(path)
     element = et.getroot()
-    filename = element.find("source").find("filename").text  # type: ignore[union-attr]
+    source = cast(Element, element.find("source"))
+    filename = cast(Element, source.find("filename")).text
     labels, points = [], []
-    for obj in element.find("objects").findall("object"):  # type: ignore[union-attr]
-        obj_points = [
-            p for p in obj.find("points").findall("point")  # type: ignore[union-attr]
-        ]
-        obj_points = [p.text.split(",") for p in obj_points]  # type: ignore[union-attr]
-        obj_points = [
-            (float(p1), float(p2)) for p1, p2 in obj_points  # type: ignore[arg-type]
-        ]
-        label = obj.find("possibleresult").find("name").text  # type: ignore[union-attr]
+    objects = cast(Element, element.find("objects"))
+    for obj in objects.findall("object"):
+        elm_points = cast(Element, obj.find("points"))
+        lis_points = elm_points.findall("point")
+        str_points = []
+        for point in lis_points:
+            text = cast(str, point.text)
+            str_points.append(text.split(","))
+        tup_points = [(float(p1), float(p2)) for p1, p2 in str_points]
+        possibleresult = cast(Element, obj.find("possibleresult"))
+        name = cast(Element, possibleresult.find("name"))
+        label = name.text
         labels.append(label)
-        points.append(obj_points)
+        points.append(tup_points)
     return dict(filename=filename, points=points, labels=labels)
 
 
-class FAIR1M(VisionDataset):
+class FAIR1M(NonGeoDataset):
     """FAIR1M dataset.
 
-    The `FAIR1M <http://gaofen-challenge.com/benchmark>`_
+    The `FAIR1M <http://gaofen-challenge.com/benchmark>`__
     dataset is a dataset for remote sensing fine-grained oriented object detection.
 
     Dataset features:
@@ -219,7 +223,7 @@ class FAIR1M(VisionDataset):
         path = os.path.join(self.root, self.image_root, path)
         with Image.open(path) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -237,9 +241,9 @@ class FAIR1M(VisionDataset):
             the target bounding boxes and labels
         """
         labels_list = [self.classes[label]["id"] for label in labels]
-        boxes = torch.tensor(points).to(torch.float)  # type: ignore[attr-defined]
-        labels = torch.tensor(labels_list)  # type: ignore[attr-defined]
-        return boxes, cast(Tensor, labels)
+        boxes = torch.tensor(points).to(torch.float)
+        labels_tensor = torch.tensor(labels_list)
+        return boxes, labels_tensor
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.

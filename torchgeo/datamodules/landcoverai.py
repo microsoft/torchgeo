@@ -33,7 +33,7 @@ class LandCoverAIDataModule(pl.LightningDataModule):
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
         """
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
         self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
@@ -52,8 +52,9 @@ class LandCoverAIDataModule(pl.LightningDataModule):
         """
         if (
             hasattr(self, "trainer")
+            and self.trainer is not None
             and hasattr(self.trainer, "training")
-            and self.trainer.training  # type: ignore[union-attr]
+            and self.trainer.training
         ):
             # Kornia expects masks to be floats with a channel dimension
             x = batch["image"]
@@ -65,7 +66,12 @@ class LandCoverAIDataModule(pl.LightningDataModule):
                 K.RandomVerticalFlip(p=0.5),
                 K.RandomSharpness(p=0.5),
                 K.ColorJitter(
-                    p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1
+                    p=0.5,
+                    brightness=0.1,
+                    contrast=0.1,
+                    saturation=0.1,
+                    hue=0.1,
+                    silence_instantiation_warning=True,
                 ),
                 data_keys=["input", "mask"],
             )
@@ -86,10 +92,11 @@ class LandCoverAIDataModule(pl.LightningDataModule):
         Returns:
             preprocessed sample
         """
-        sample["image"] = sample["image"] / 255.0
-
         sample["image"] = sample["image"].float()
-        sample["mask"] = sample["mask"].long() + 1
+        sample["image"] /= 255.0
+
+        if "mask" in sample:
+            sample["mask"] = sample["mask"].long() + 1
 
         return sample
 

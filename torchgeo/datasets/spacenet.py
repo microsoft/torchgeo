@@ -24,7 +24,7 @@ from rasterio.features import rasterize
 from rasterio.transform import Affine
 from torch import Tensor
 
-from .geo import VisionDataset
+from .geo import NonGeoDataset
 from .utils import (
     check_integrity,
     download_radiant_mlhub_collection,
@@ -33,10 +33,10 @@ from .utils import (
 )
 
 
-class SpaceNet(VisionDataset, abc.ABC):
+class SpaceNet(NonGeoDataset, abc.ABC):
     """Abstract base class for the SpaceNet datasets.
 
-    The `SpaceNet <https://spacenet.ai/datasets/>`_ datasets are a set of
+    The `SpaceNet <https://spacenet.ai/datasets/>`__ datasets are a set of
     datasets that all together contain >11M building footprints and ~20,000 km
     of road labels mapped over high-resolution satellite imagery obtained from
     a variety of sensors such as Worldview-2, Worldview-3 and Dove.
@@ -111,7 +111,7 @@ class SpaceNet(VisionDataset, abc.ABC):
                 raise RuntimeError(
                     f"Dataset not found in `root={self.root}` and `download=False`, "
                     "either specify a different `root` directory or use "
-                    "`download=True` to automaticaly download the dataset."
+                    "`download=True` to automatically download the dataset."
                 )
             else:
                 self._download(to_be_downloaded, api_key)
@@ -133,7 +133,7 @@ class SpaceNet(VisionDataset, abc.ABC):
             images = sorted(images)
             for imgpath in images:
                 lbl_path = os.path.join(
-                    os.path.dirname(imgpath) + "-labels", self.label_glob
+                    f"{os.path.dirname(imgpath)}-labels", self.label_glob
                 )
                 files.append({"image_path": imgpath, "label_path": lbl_path})
         return files
@@ -150,7 +150,7 @@ class SpaceNet(VisionDataset, abc.ABC):
         filename = os.path.join(path)
         with rio.open(filename) as img:
             array = img.read().astype(np.int32)
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             return tensor, img.transform, img.crs
 
     def _load_mask(
@@ -195,7 +195,7 @@ class SpaceNet(VisionDataset, abc.ABC):
                 dtype=np.uint8,
             )
 
-        mask: Tensor = torch.from_numpy(mask_data).long()  # type: ignore[attr-defined]
+        mask = torch.from_numpy(mask_data).long()
 
         return mask
 
@@ -248,7 +248,7 @@ class SpaceNet(VisionDataset, abc.ABC):
 
         to_be_downloaded = []
         for collection in missing_collections:
-            archive_path = os.path.join(self.root, collection + ".tar.gz")
+            archive_path = os.path.join(self.root, f"{collection}.tar.gz")
             if os.path.exists(archive_path):
                 print(f"Found {collection} archive")
                 if (
@@ -281,7 +281,7 @@ class SpaceNet(VisionDataset, abc.ABC):
         """
         for collection in collections:
             download_radiant_mlhub_collection(collection, self.root, api_key)
-            archive_path = os.path.join(self.root, collection + ".tar.gz")
+            archive_path = os.path.join(self.root, f"{collection}.tar.gz")
             if (
                 not self.checksum
                 or not check_integrity(
@@ -501,7 +501,7 @@ class SpaceNet2(SpaceNet):
 
     dataset_id = "spacenet2"
     collection_md5_dict = {
-        "sn2_AOI_2_Vegas": "cdc5df70920adca870a9fd0dfc4cca26",
+        "sn2_AOI_2_Vegas": "a5a8de355290783b88ac4d69c7ef0694",
         "sn2_AOI_3_Paris": "8299186b7bbfb9a256d515bad1b7f146",
         "sn2_AOI_4_Shanghai": "4e3e80f2f437faca10ca2e6e6df0ef99",
         "sn2_AOI_5_Khartoum": "8070ff9050f94cd9f0efe9417205d7c3",
@@ -538,7 +538,8 @@ class SpaceNet2(SpaceNet):
             image: image selection which must be in ["MS", "PAN", "PS-MS", "PS-RGB"]
             collections: collection selection which must be a subset of:
                          [sn2_AOI_2_Vegas, sn2_AOI_3_Paris, sn2_AOI_4_Shanghai,
-                         sn2_AOI_5_Khartoum]
+                         sn2_AOI_5_Khartoum]. If unspecified, all collections will be
+                         used.
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory.
@@ -553,34 +554,271 @@ class SpaceNet2(SpaceNet):
             root, image, collections, transforms, download, api_key, checksum
         )
 
-    # TODO: Remove this once radiantearth/radiant-mlhub#65 is fixed
-    def _load_files(self, root: str) -> List[Dict[str, str]]:
-        """Return the paths of the files in the dataset.
+
+class SpaceNet3(SpaceNet):
+    r"""SpaceNet 3: Road Network Detection.
+
+    `SpaceNet 3 <https://spacenet.ai/spacenet-roads-dataset/>`_
+    is a dataset of road networks over the cities of Las Vegas, Paris, Shanghai,
+    and Khartoum.
+
+    Collection features:
+
+    +------------+---------------------+------------+---------------------------+
+    |    AOI     | Area (km\ :sup:`2`\)| # Images   | # Road Network Labels (km)|
+    +============+=====================+============+===========================+
+    | Vegas      |    216              |   854      |         3685              |
+    +------------+---------------------+------------+---------------------------+
+    | Paris      |    1030             |   257      |         425               |
+    +------------+---------------------+------------+---------------------------+
+    | Shanghai   |    1000             |   1028     |         3537              |
+    +------------+---------------------+------------+---------------------------+
+    | Khartoum   |    765              |   283      |         1030              |
+    +------------+---------------------+------------+---------------------------+
+
+    Imagery features:
+
+    .. list-table::
+        :widths: 10 10 10 10 10
+        :header-rows: 1
+        :stub-columns: 1
+
+        *   -
+            - PAN
+            - MS
+            - PS-MS
+            - PS-RGB
+        *   - GSD (m)
+            - 0.31
+            - 1.24
+            - 0.30
+            - 0.30
+        *   - Chip size (px)
+            - 1300 x 1300
+            - 325 x 325
+            - 1300 x 1300
+            - 1300 x 1300
+
+    Dataset format:
+
+    * Imagery - Worldview-3 GeoTIFFs
+
+        * PAN.tif (Panchromatic)
+        * MS.tif (Multispectral)
+        * PS-MS (Pansharpened Multispectral)
+        * PS-RGB (Pansharpened RGB)
+
+    * Labels - GeoJSON
+
+        * labels.geojson
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/1807.01232
+
+    .. note::
+
+       This dataset requires the following additional library to be installed:
+
+       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
+         imagery and labels from the Radiant Earth MLHub
+
+    .. versionadded:: 0.3
+    """
+
+    dataset_id = "spacenet3"
+    collection_md5_dict = {
+        "sn3_AOI_2_Vegas": "8ce7e6abffb8849eb88885035f061ee8",
+        "sn3_AOI_3_Paris": "90b9ebd64cd83dc8d3d4773f45050d8f",
+        "sn3_AOI_4_Shanghai": "3ea291df34548962dfba8b5ed37d700c",
+        "sn3_AOI_5_Khartoum": "b8d549ac9a6d7456c0f7a8e6de23d9f9",
+    }
+
+    imagery = {
+        "MS": "MS.tif",
+        "PAN": "PAN.tif",
+        "PS-MS": "PS-MS.tif",
+        "PS-RGB": "PS-RGB.tif",
+    }
+    chip_size = {
+        "MS": (325, 325),
+        "PAN": (1300, 1300),
+        "PS-MS": (1300, 1300),
+        "PS-RGB": (1300, 1300),
+    }
+    label_glob = "labels.geojson"
+
+    def __init__(
+        self,
+        root: str,
+        image: str = "PS-RGB",
+        speed_mask: Optional[bool] = False,
+        collections: List[str] = [],
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        download: bool = False,
+        api_key: Optional[str] = None,
+        checksum: bool = False,
+    ) -> None:
+        """Initialize a new SpaceNet 3 Dataset instance.
 
         Args:
-            root: root dir of dataset
+            root: root directory where dataset can be found
+            image: image selection which must be in ["MS", "PAN", "PS-MS", "PS-RGB"]
+            speed_mask: use multi-class speed mask (created by binning roads at
+                10 mph increments) as label if true, else use binary mask
+            collections: collection selection which must be a subset of:
+                         [sn3_AOI_2_Vegas, sn3_AOI_3_Paris, sn3_AOI_4_Shanghai,
+                         sn3_AOI_5_Khartoum]. If unspecified, all collections will be
+                         used.
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            download: if True, download dataset and store it in the root directory.
+            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing
+        """
+        assert image in {"MS", "PAN", "PS-MS", "PS-RGB"}
+        self.speed_mask = speed_mask
+        super().__init__(
+            root, image, collections, transforms, download, api_key, checksum
+        )
+
+    def _load_mask(
+        self, path: str, tfm: Affine, raster_crs: CRS, shape: Tuple[int, int]
+    ) -> Tensor:
+        """Rasterizes the dataset's labels (in geojson format).
+
+        Args:
+            path: path to the label
+            tfm: transform of corresponding image
+            shape: shape of corresponding image
 
         Returns:
-            list of dicts containing paths for each pair of image and label
+            Tensor: label tensor
         """
-        files = []
-        pat = re.compile("img1" + re.escape(os.sep))
-        for collection in self.collections:
-            images = glob.glob(os.path.join(root, collection, "*", self.filename))
-            images = sorted(images)
-            for imgpath in images:
-                if collection == "sn2_AOI_2_Vegas" and pat.search(imgpath):
-                    lbl_path = os.path.join(
-                        os.path.dirname(os.path.dirname(imgpath)),
-                        "_common",
-                        "labels.geojson",
-                    )
-                else:
-                    lbl_path = os.path.join(
-                        os.path.dirname(imgpath) + "-labels", self.label_glob
-                    )
-                files.append({"image_path": imgpath, "label_path": lbl_path})
-        return files
+        min_speed_bin = 1
+        max_speed_bin = 65
+        speed_arr_bin = np.arange(min_speed_bin, max_speed_bin + 1)
+        bin_size_mph = 10.0
+        speed_cls_arr: "np.typing.NDArray[np.int_]" = np.array(
+            [int(math.ceil(s / bin_size_mph)) for s in speed_arr_bin]
+        )
+
+        try:
+            with fiona.open(path) as src:
+                vector_crs = CRS(src.crs)
+                labels = []
+
+                for feature in src:
+                    if raster_crs != vector_crs:
+                        geom = transform_geom(
+                            vector_crs.to_string(),
+                            raster_crs.to_string(),
+                            feature["geometry"],
+                        )
+                    else:
+                        geom = feature["geometry"]
+
+                    if self.speed_mask:
+                        val = speed_cls_arr[
+                            int(feature["properties"]["inferred_speed_mph"]) - 1
+                        ]
+                    else:
+                        val = 1
+
+                    labels.append((geom, val))
+
+        except FionaValueError:
+            labels = []
+
+        if not labels:
+            mask_data = np.zeros(shape=shape)
+        else:
+            mask_data = rasterize(
+                labels,
+                out_shape=shape,
+                fill=0,  # nodata value
+                transform=tfm,
+                all_touched=False,
+                dtype=np.uint8,
+            )
+
+        mask = torch.from_numpy(mask_data).long()
+        return mask
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`SpaceNet.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        """
+        # image can be 1 channel or >3 channels
+        if sample["image"].shape[0] == 1:
+            image = np.rollaxis(sample["image"].numpy(), 0, 3)
+        else:
+            image = np.rollaxis(sample["image"][:3].numpy(), 0, 3)
+        image = percentile_normalization(image, axis=(0, 1))
+
+        ncols = 1
+        show_mask = "mask" in sample
+        show_predictions = "prediction" in sample
+
+        if show_mask:
+            mask = sample["mask"].numpy()
+            ncols += 1
+
+        if show_predictions:
+            prediction = sample["prediction"].numpy()
+            ncols += 1
+
+        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 8, 8))
+        if not isinstance(axs, np.ndarray):
+            axs = [axs]
+        axs[0].imshow(image)
+        axs[0].axis("off")
+        if show_titles:
+            axs[0].set_title("Image")
+
+        if show_mask:
+            if self.speed_mask:
+                cmap = copy.copy(plt.get_cmap("autumn_r"))
+                cmap.set_under(color="black")
+                axs[1].imshow(mask, vmin=0.1, vmax=7, cmap=cmap, interpolation="none")
+            else:
+                axs[1].imshow(mask, cmap="Greys_r", interpolation="none")
+            axs[1].axis("off")
+            if show_titles:
+                axs[1].set_title("Label")
+
+        if show_predictions:
+            if self.speed_mask:
+                cmap = copy.copy(plt.get_cmap("autumn_r"))
+                cmap.set_under(color="black")
+                axs[2].imshow(
+                    prediction, vmin=0.1, vmax=7, cmap=cmap, interpolation="none"
+                )
+            else:
+                axs[2].imshow(prediction, cmap="Greys_r", interpolation="none")
+            axs[2].axis("off")
+            if show_titles:
+                axs[2].set_title("Prediction")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig
 
 
 class SpaceNet4(SpaceNet):
@@ -728,7 +966,7 @@ class SpaceNet4(SpaceNet):
 
             lbl_dir = os.path.dirname(imgpath).split("-nadir")[0]
 
-            lbl_path = os.path.join(lbl_dir + "-labels", self.label_glob)
+            lbl_path = os.path.join(f"{lbl_dir}-labels", self.label_glob)
             assert os.path.exists(lbl_path)
 
             _file = {"image_path": imgpath, "label_path": lbl_path}
@@ -753,7 +991,7 @@ class SpaceNet4(SpaceNet):
         return files
 
 
-class SpaceNet5(SpaceNet):
+class SpaceNet5(SpaceNet3):
     r"""SpaceNet 5: Automated Road Network Extraction and Route Travel Time Estimation.
 
     `SpaceNet 5 <https://spacenet.ai/sn5-challenge/>`_
@@ -861,7 +1099,8 @@ class SpaceNet5(SpaceNet):
             speed_mask: use multi-class speed mask (created by binning roads at
                 10 mph increments) as label if true, else use binary mask
             collections: collection selection which must be a subset of:
-                         [sn5_AOI_7_Moscow, sn5_AOI_8_Mumbai]
+                         [sn5_AOI_7_Moscow, sn5_AOI_8_Mumbai]. If unspecified, all
+                         collections will be used.
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory.
@@ -871,147 +1110,16 @@ class SpaceNet5(SpaceNet):
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing
         """
-        assert image in {"MS", "PAN", "PS-MS", "PS-RGB"}
-        self.speed_mask = speed_mask
         super().__init__(
-            root, image, collections, transforms, download, api_key, checksum
+            root,
+            image,
+            speed_mask,
+            collections,
+            transforms,
+            download,
+            api_key,
+            checksum,
         )
-
-    def _load_mask(
-        self, path: str, tfm: Affine, raster_crs: CRS, shape: Tuple[int, int]
-    ) -> Tensor:
-        """Rasterizes the dataset's labels (in geojson format).
-
-        Args:
-            path: path to the label
-            tfm: transform of corresponding image
-            shape: shape of corresponding image
-
-        Returns:
-            Tensor: label tensor
-        """
-        min_speed_bin = 1
-        max_speed_bin = 65
-        speed_arr_bin = np.arange(min_speed_bin, max_speed_bin + 1)
-        bin_size_mph = 10.0
-        speed_cls_arr: "np.typing.NDArray[np.int_]" = np.array(
-            [int(math.ceil(s / bin_size_mph)) for s in speed_arr_bin]
-        )
-
-        try:
-            with fiona.open(path) as src:
-                vector_crs = CRS(src.crs)
-                labels = []
-
-                for feature in src:
-                    if raster_crs != vector_crs:
-                        geom = transform_geom(
-                            vector_crs.to_string(),
-                            raster_crs.to_string(),
-                            feature["geometry"],
-                        )
-                    else:
-                        geom = feature["geometry"]
-
-                    if self.speed_mask:
-                        val = speed_cls_arr[
-                            int(feature["properties"]["inferred_speed_mph"]) - 1
-                        ]
-                    else:
-                        val = 1
-
-                    labels.append((geom, val))
-
-        except FionaValueError:
-            labels = []
-
-        if not labels:
-            mask_data = np.zeros(shape=shape)
-        else:
-            mask_data = rasterize(
-                labels,
-                out_shape=shape,
-                fill=0,  # nodata value
-                transform=tfm,
-                all_touched=False,
-                dtype=np.uint8,
-            )
-
-        mask: Tensor = torch.from_numpy(mask_data).long()  # type: ignore[attr-defined]
-        return mask
-
-    def plot(
-        self,
-        sample: Dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: Optional[str] = None,
-    ) -> Figure:
-        """Plot a sample from the dataset.
-
-        Args:
-            sample: a sample returned by :meth:`SpaceNet.__getitem__`
-            show_titles: flag indicating whether to show titles above each panel
-            suptitle: optional string to use as a suptitle
-
-        Returns:
-            a matplotlib Figure with the rendered sample
-
-        .. versionadded:: 0.2
-        """
-        # image can be 1 channel or >3 channels
-        if sample["image"].shape[0] == 1:
-            image = np.rollaxis(sample["image"].numpy(), 0, 3)
-        else:
-            image = np.rollaxis(sample["image"][:3].numpy(), 0, 3)
-        image = percentile_normalization(image, axis=(0, 1))
-
-        ncols = 1
-        show_mask = "mask" in sample
-        show_predictions = "prediction" in sample
-
-        if show_mask:
-            mask = sample["mask"].numpy()
-            ncols += 1
-
-        if show_predictions:
-            prediction = sample["prediction"].numpy()
-            ncols += 1
-
-        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 8, 8))
-        if not isinstance(axs, np.ndarray):
-            axs = [axs]
-        axs[0].imshow(image)
-        axs[0].axis("off")
-        if show_titles:
-            axs[0].set_title("Image")
-
-        if show_mask:
-            if self.speed_mask:
-                cmap = copy.copy(plt.get_cmap("autumn_r"))
-                cmap.set_under(color="black")
-                axs[1].imshow(mask, vmin=0.1, vmax=7, cmap=cmap, interpolation="none")
-            else:
-                axs[1].imshow(mask, cmap="Greys_r", interpolation="none")
-            axs[1].axis("off")
-            if show_titles:
-                axs[1].set_title("Label")
-
-        if show_predictions:
-            if self.speed_mask:
-                cmap = copy.copy(plt.get_cmap("autumn_r"))
-                cmap.set_under(color="black")
-                axs[2].imshow(
-                    prediction, vmin=0.1, vmax=7, cmap=cmap, interpolation="none"
-                )
-            else:
-                axs[2].imshow(prediction, cmap="Greys_r", interpolation="none")
-            axs[2].axis("off")
-            if show_titles:
-                axs[2].set_title("Prediction")
-
-        if suptitle is not None:
-            plt.suptitle(suptitle)
-        return fig
 
 
 class SpaceNet7(SpaceNet):
@@ -1112,7 +1220,7 @@ class SpaceNet7(SpaceNet):
                 raise RuntimeError(
                     f"Dataset not found in `root={self.root}` and `download=False`, "
                     "either specify a different `root` directory or use "
-                    "`download=True` to automaticaly download the dataset."
+                    "`download=True` to automatically download the dataset."
                 )
             else:
                 self._download(to_be_downloaded, api_key)
@@ -1155,13 +1263,12 @@ class SpaceNet7(SpaceNet):
         Returns:
             data at that index
         """
-        sample = {}
         files = self.files[index]
         img, tfm, raster_crs = self._load_image(files["image_path"])
         h, w = img.shape[1:]
 
         ch, cw = self.chip_size["img"]
-        sample["image"] = img[:, :ch, :cw]
+        sample = {"image": img[:, :ch, :cw]}
         if self.split == "train":
             mask = self._load_mask(files["label_path"], tfm, raster_crs, (h, w))
             sample["mask"] = mask[:ch, :cw]

@@ -94,14 +94,16 @@ In order to remain `PEP-8 <https://www.python.org/dev/peps/pep-0008/>`_ complian
 * `isort <https://pycqa.github.io/isort/>`_ for import ordering
 * `flake8 <https://flake8.pycqa.org/>`_ for code formatting
 * `pydocstyle <https://www.pydocstyle.org/>`_ for docstrings
+* `pyupgrade <https://github.com/asottile/pyupgrade>`_ for code formatting
 * `mypy <https://mypy.readthedocs.io/>`_ for static type analysis
 
-All of these tools should be used from the root of the project to ensure that our configuration files are found. Black and isort are relatively easy to use, and will automatically format your code for you:
+All of these tools should be used from the root of the project to ensure that our configuration files are found. Black, isort, and pyupgrade are relatively easy to use, and will automatically format your code for you:
 
 .. code-block:: console
 
    $ black .
    $ isort .
+   $ pyupgrade --py37-plus $(find . -name "*.py")
 
 
 Flake8, pydocstyle, and mypy won't format your code for you, but they will warn you about potential issues with your code or docstrings:
@@ -133,6 +135,7 @@ All of our documentation is hosted on `Read the Docs <https://readthedocs.org/>`
 
 .. code-block:: console
 
+   $ pip install .[docs]
    $ cd docs
    $ pip install -r requirements.txt
 
@@ -155,3 +158,18 @@ TorchGeo has a number of tutorials included in the documentation that can be run
 .. code-block:: console
 
    $ pytest --nbmake docs/tutorials
+
+
+Datasets
+--------
+
+A major component of TorchGeo is the large collection of :mod:`torchgeo.datasets` that have been implemented. Adding new datasets to this list is a great way to contribute to the library. A brief checklist to follow when implementing a new dataset:
+
+* Implement the dataset extending either :class:`~torchgeo.datasets.GeoDataset` or :class:`~torchgeo.datasets.NonGeoDataset`
+* Add the dataset definition to ``torchgeo/datasets/__init__.py``
+* Add a ``data.py`` script to ``tests/data/<new dataset>/`` that generates test data with the same directory structure/file naming conventions as the new dataset
+* Add appropriate tests with 100% test coverage to ``tests/datasets/``
+* Add the dataset to ``docs/api/datasets.rst``
+* Add the dataset metadata to either ``docs/api/geo_datasets.csv`` or ``docs/api/non_geo_datasets.csv``
+
+A good way to get started is by looking at some of the existing implementations that are most closely related to the dataset that you are implementing (e.g. if you are implementing a semantic segmentation dataset, looking at the LandCover.ai dataset implementation would be a good starting point).
