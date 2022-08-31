@@ -34,6 +34,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ['3.7', '3.8', '3.9', '3.10']
+        exclude:
+        - os: windows-latest
+          python-version: '3.7'
     steps:
     - name: Clone repo
       uses: actions/checkout@v2
@@ -47,19 +50,6 @@ jobs:
     - name: Install brew dependencies (macOS)
       run: brew install rar
       if: ${{ runner.os == 'macOS' }}
-    - name: Install conda (Windows)
-      uses: conda-incubator/setup-miniconda@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-        channels: conda-forge
-        channel-priority: strict
-      if: ${{ runner.os == 'Windows' && matrix.python-version == '3.7' }}
-    - name: Install conda dependencies (Windows)
-      run: |
-        conda install 'rasterio==1.2.10' 'geos=3.10.3'
-        conda list
-        conda info
-      if: ${{ runner.os == 'Windows' && matrix.python-version == '3.7' }}
     - name: Install pip dependencies (3.8+)
       run: |
         pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
