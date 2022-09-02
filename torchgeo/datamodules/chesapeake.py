@@ -82,7 +82,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         self.patch_size = patch_size
         # This is a rough estimate of how large of a patch we will need to sample in
         # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
-        self.original_patch_size = int(patch_size * 2.0)
+        self.original_patch_size = patch_size * 2
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.class_set = class_set
@@ -151,8 +151,8 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         def center_crop_inner(sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
             _, height, width = sample["image"].shape
 
-            y1 = (height - size) // 2
-            x1 = (width - size) // 2
+            y1 = round((height - size) / 2)
+            x1 = round((width - size) / 2)
             sample["image"] = sample["image"][:, y1 : y1 + size, x1 : x1 + size]
             sample["mask"] = sample["mask"][:, y1 : y1 + size, x1 : x1 + size]
 

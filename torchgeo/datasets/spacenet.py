@@ -703,7 +703,7 @@ class SpaceNet3(SpaceNet):
         speed_arr_bin = np.arange(min_speed_bin, max_speed_bin + 1)
         bin_size_mph = 10.0
         speed_cls_arr: "np.typing.NDArray[np.int_]" = np.array(
-            [int(math.ceil(s / bin_size_mph)) for s in speed_arr_bin]
+            [math.ceil(s / bin_size_mph) for s in speed_arr_bin]
         )
 
         try:
