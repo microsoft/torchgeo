@@ -205,7 +205,7 @@ class GridGeoSampler(GeoSampler):
             ):
                 self.hits.append(hit)
 
-        self.length: int = 0
+        self.length = 0
         for hit in self.hits:
             bounds = BoundingBox(*hit.bounds)
 

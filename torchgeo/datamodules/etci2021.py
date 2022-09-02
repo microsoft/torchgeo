@@ -101,7 +101,7 @@ class ETCI2021DataModule(pl.LightningDataModule):
         )
 
         size_train_val = len(train_val_dataset)
-        size_train = int(0.8 * size_train_val)
+        size_train = round(0.8 * size_train_val)
         size_val = size_train_val - size_train
 
         self.train_dataset, self.val_dataset = random_split(
