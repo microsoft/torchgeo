@@ -449,8 +449,8 @@ class RasterDataset(GeoDataset):
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
         if len(vrt_fhs) == 1:
             src = vrt_fhs[0]
-            out_width = int(round((query.maxx - query.minx) / self.res))
-            out_height = int(round((query.maxy - query.miny) / self.res))
+            out_width = round((query.maxx - query.minx) / self.res)
+            out_height = round((query.maxy - query.miny) / self.res)
             out_shape = (src.count, out_height, out_width)
             dest = src.read(
                 out_shape=out_shape, window=from_bounds(*bounds, src.transform)

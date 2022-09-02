@@ -15,17 +15,29 @@ metadatas = [
     {
         "filename": "train.zip",
         "directory": "train",
-        "subdirs": ["nebraska_20170108t002112", "bangladesh_20170314t115609"],
+        "subdirs": [
+            "nebraska_20170108t002112",
+            "bangladesh_20170314t115609",
+            "northal_20190302t234651",
+        ],
     },
     {
         "filename": "val_with_ref_labels.zip",
         "directory": "test",
-        "subdirs": ["florence_20180510t231343", "florence_20180522t231344"],
+        "subdirs": [
+            "florence_20180510t231343",
+            "florence_20180522t231344",
+            "florence_20190302t234651",
+        ],
     },
     {
         "filename": "test_without_ref_labels.zip",
         "directory": "test_internal",
-        "subdirs": ["redrivernorth_20190104t002247", "redrivernorth_20190116t002247"],
+        "subdirs": [
+            "redrivernorth_20190104t002247",
+            "redrivernorth_20190116t002247",
+            "redrivernorth_20190302t234651",
+        ],
     },
 ]
 

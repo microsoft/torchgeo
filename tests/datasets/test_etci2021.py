@@ -30,19 +30,19 @@ class TestETCI2021:
         metadata = {
             "train": {
                 "filename": "train.zip",
-                "md5": "ebbd2e65cd10621bc2e90a230b474b8b",
+                "md5": "bd55f2116e43a35d5b94a765938be2aa",
                 "directory": "train",
                 "url": os.path.join(data_dir, "train.zip"),
             },
             "val": {
                 "filename": "val_with_ref_labels.zip",
-                "md5": "efdd1fe6c90f5dfd267c88b86b237c2b",
+                "md5": "96ed69904043e514c13c14ffd3ec45cd",
                 "directory": "test",
                 "url": os.path.join(data_dir, "val_with_ref_labels.zip"),
             },
             "test": {
                 "filename": "test_without_ref_labels.zip",
-                "md5": "bf1180143de5705fe95fa8490835d6d1",
+                "md5": "1b66d85e22c8f5b0794b3542c5ea09ef",
                 "directory": "test_internal",
                 "url": os.path.join(data_dir, "test_without_ref_labels.zip"),
             },
@@ -67,7 +67,7 @@ class TestETCI2021:
             assert x["mask"].shape[0] == 1
 
     def test_len(self, dataset: ETCI2021) -> None:
-        assert len(dataset) == 2
+        assert len(dataset) == 3
 
     def test_already_downloaded(self, dataset: ETCI2021) -> None:
         ETCI2021(root=dataset.root, download=True)
