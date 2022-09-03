@@ -102,8 +102,6 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
     profile["transform"] = rasterio.transform.from_bounds(0, 0, 1, 1, 1, 1)
     profile["height"] = SIZE
     profile["width"] = SIZE
-    profile["compress"] = "lzw"
-    profile["predictor"] = 2
 
     if "float" in profile["dtype"]:
         Z = np.random.randn(SIZE, SIZE).astype(profile["dtype"])
@@ -112,9 +110,9 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
             np.iinfo(profile["dtype"]).max, size=(SIZE, SIZE), dtype=profile["dtype"]
         )
 
-    src = rasterio.open(path, "w", **profile)
-    for i in range(1, profile["count"] + 1):
-        src.write(Z, i)
+    with rasterio.open(path, "w", **profile) as src:
+        for i in range(1, profile["count"] + 1):
+            src.write(Z, i)
 
 
 def create_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:

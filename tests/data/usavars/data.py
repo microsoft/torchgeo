@@ -42,8 +42,8 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
     Z = np.random.randint(
         np.iinfo(profile["dtype"]).max, size=(4, SIZE, SIZE), dtype=profile["dtype"]
     )
-    src = rasterio.open(path, "w", **profile)
-    src.write(Z)
+    with rasterio.open(path, "w", **profile) as src:
+        src.write(Z)
 
 
 # Remove old data
