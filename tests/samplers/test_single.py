@@ -18,6 +18,7 @@ from torchgeo.samplers import (
     RandomGeoSampler,
     Units,
 )
+from torchgeo.samplers.utils import tile_to_chips
 
 
 class CustomGeoSampler(GeoSampler):
@@ -182,8 +183,7 @@ class TestGridGeoSampler:
             )
 
     def test_len(self, sampler: GridGeoSampler) -> None:
-        rows = math.ceil((100 - sampler.size[0]) / sampler.stride[0]) + 1
-        cols = math.ceil((100 - sampler.size[1]) / sampler.stride[1]) + 1
+        rows, cols = tile_to_chips(sampler.roi, sampler.size, sampler.stride)
         length = rows * cols * 2  # two items in dataset
         assert len(sampler) == length
 

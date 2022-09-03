@@ -12,7 +12,7 @@ from torch.utils.data import Sampler
 
 from ..datasets import BoundingBox, GeoDataset
 from .constants import Units
-from .utils import _to_tuple, get_random_bounding_box
+from .utils import _to_tuple, get_random_bounding_box, tile_to_chips
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -70,7 +70,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         dataset: GeoDataset,
         size: Union[Tuple[float, float], float],
         batch_size: int,
-        length: int,
+        length: Optional[int] = None,
         roi: Optional[BoundingBox] = None,
         units: Units = Units.PIXELS,
     ) -> None:
@@ -94,6 +94,9 @@ class RandomBatchGeoSampler(BatchGeoSampler):
 
         .. versionchanged:: 0.3
            Added ``units`` parameter, changed default to pixel units
+
+        .. versionchanged:: 0.4
+           ``length`` parameter is now optional, a reasonable default will be used
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
@@ -102,7 +105,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             self.size = (self.size[0] * self.res, self.size[1] * self.res)
 
         self.batch_size = batch_size
-        self.length = length
+        self.length = 0
         self.hits = []
         areas = []
         for hit in self.index.intersection(tuple(self.roi), objects=True):
@@ -111,8 +114,12 @@ class RandomBatchGeoSampler(BatchGeoSampler):
                 bounds.maxx - bounds.minx >= self.size[1]
                 and bounds.maxy - bounds.miny >= self.size[0]
             ):
+                rows, cols = tile_to_chips(bounds, self.size)
+                self.length += rows * cols
                 self.hits.append(hit)
                 areas.append(bounds.area)
+        if length is not None:
+            self.length = length
 
         # torch.multinomial requires float probabilities > 0
         self.areas = torch.tensor(areas, dtype=torch.float)

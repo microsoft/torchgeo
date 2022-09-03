@@ -4,7 +4,6 @@
 """TorchGeo samplers."""
 
 import abc
-import math
 from typing import Callable, Iterable, Iterator, Optional, Tuple, Union
 
 import torch
@@ -13,7 +12,7 @@ from torch.utils.data import Sampler
 
 from ..datasets import BoundingBox, GeoDataset
 from .constants import Units
-from .utils import _to_tuple, get_random_bounding_box
+from .utils import _to_tuple, get_random_bounding_box, tile_to_chips
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -73,7 +72,7 @@ class RandomGeoSampler(GeoSampler):
         self,
         dataset: GeoDataset,
         size: Union[Tuple[float, float], float],
-        length: int,
+        length: Optional[int],
         roi: Optional[BoundingBox] = None,
         units: Units = Units.PIXELS,
     ) -> None:
@@ -96,6 +95,9 @@ class RandomGeoSampler(GeoSampler):
 
         .. versionchanged:: 0.3
            Added ``units`` parameter, changed default to pixel units
+
+        .. versionchanged:: 0.4
+           ``length`` parameter is now optional, a reasonable default will be used
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
@@ -103,7 +105,7 @@ class RandomGeoSampler(GeoSampler):
         if units == Units.PIXELS:
             self.size = (self.size[0] * self.res, self.size[1] * self.res)
 
-        self.length = length
+        self.length = 0
         self.hits = []
         areas = []
         for hit in self.index.intersection(tuple(self.roi), objects=True):
@@ -112,8 +114,12 @@ class RandomGeoSampler(GeoSampler):
                 bounds.maxx - bounds.minx >= self.size[1]
                 and bounds.maxy - bounds.miny >= self.size[0]
             ):
+                rows, cols = tile_to_chips(bounds, self.size)
+                self.length += rows * cols
                 self.hits.append(hit)
                 areas.append(bounds.area)
+        if length is not None:
+            self.length = length
 
         # torch.multinomial requires float probabilities > 0
         self.areas = torch.tensor(areas, dtype=torch.float)
@@ -147,7 +153,7 @@ class RandomGeoSampler(GeoSampler):
 
 
 class GridGeoSampler(GeoSampler):
-    r"""Samples elements in a grid-like fashion.
+    """Samples elements in a grid-like fashion.
 
     This is particularly useful during evaluation when you want to make predictions for
     an entire region of interest. You want to minimize the amount of redundant
@@ -162,18 +168,6 @@ class GridGeoSampler(GeoSampler):
 
     Note that the stride of the final set of chips in each row/column may be adjusted so
     that the entire :term:`tile` is sampled without exceeding the bounds of the dataset.
-
-    Let :math:`i` be the size of the input tile. Let :math:`k` be the requested size of
-    the output patch. Let :math:`s` be the requested stride. Let :math:`o` be the number
-    of output rows/columns sampled from each tile. :math:`o` can then be computed as:
-
-    .. math::
-
-       o = \left\lceil \frac{i - k}{s} \right\rceil + 1
-
-    This is almost identical to relationship 5 in
-    https://doi.org/10.48550/arXiv.1603.07285. However, we use ceiling instead of floor
-    because we want to include the final remaining chip.
     """
 
     def __init__(
@@ -224,15 +218,7 @@ class GridGeoSampler(GeoSampler):
         self.length = 0
         for hit in self.hits:
             bounds = BoundingBox(*hit.bounds)
-
-            rows = (
-                math.ceil((bounds.maxy - bounds.miny - self.size[0]) / self.stride[0])
-                + 1
-            )
-            cols = (
-                math.ceil((bounds.maxx - bounds.minx - self.size[1]) / self.stride[1])
-                + 1
-            )
+            rows, cols = tile_to_chips(bounds, self.size, self.stride)
             self.length += rows * cols
 
     def __iter__(self) -> Iterator[BoundingBox]:
@@ -244,16 +230,7 @@ class GridGeoSampler(GeoSampler):
         # For each tile...
         for hit in self.hits:
             bounds = BoundingBox(*hit.bounds)
-
-            rows = (
-                math.ceil((bounds.maxy - bounds.miny - self.size[0]) / self.stride[0])
-                + 1
-            )
-            cols = (
-                math.ceil((bounds.maxx - bounds.minx - self.size[1]) / self.stride[1])
-                + 1
-            )
-
+            rows, cols = tile_to_chips(bounds, self.size, self.stride)
             mint = bounds.mint
             maxt = bounds.maxt
 
