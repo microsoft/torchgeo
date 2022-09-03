@@ -169,7 +169,7 @@ class GridGeoSampler(GeoSampler):
 
     .. math::
 
-       o = \lceil \frac{i - k}{s} \rceil + 1
+       o = \left\lceil \frac{i - k}{s} \right\rceil + 1
 
     This is almost identical to relationship 5 in
     https://doi.org/10.48550/arXiv.1603.07285. However, since we want to
