@@ -8,6 +8,8 @@ from typing import Dict, List, Union
 
 import numpy as np
 import rasterio
+from rasterio.crs import CRS
+from rasterio import Affine
 
 SIZE = 32
 
@@ -98,8 +100,8 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
     profile["driver"] = "JP2OpenJPEG"
     profile["dtype"] = dtype
     profile["count"] = num_channels
-    profile["crs"] = "epsg:4326"
-    profile["transform"] = rasterio.transform.from_bounds(0, 0, 1, 1, 1, 1)
+    profile["crs"] = CRS.from_epsg(32616)
+    profile["transform"] = Affine(10.0, 0.0, 399960.0, 0.0, -10.0, 4500000.0)
     profile["height"] = SIZE
     profile["width"] = SIZE
 
@@ -126,7 +128,7 @@ def create_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:
         # Base case
         for value in hierarchy:
             path = os.path.join(directory, value)
-            create_file(path, dtype="int32", num_channels=1)
+            create_file(path, dtype="uint16", num_channels=1)
 
 
 if __name__ == "__main__":
