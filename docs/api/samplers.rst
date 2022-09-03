@@ -76,6 +76,12 @@ Batch Geo Sampler
 
 .. autoclass:: BatchGeoSampler
 
+Utilities
+---------
+
+.. autofunction:: get_random_bounding_box
+.. autofunction:: tile_to_chips
+
 Units
 -----
 
