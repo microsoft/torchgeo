@@ -74,7 +74,7 @@ def tile_to_chips(
     size: Tuple[float, float],
     stride: Optional[Tuple[float, float]] = None,
 ) -> Tuple[int, int]:
-    r"""Compute number of :term:`chips <chip` that can be sampled from a :term:`tile`.
+    r"""Compute number of :term:`chips <chip>` that can be sampled from a :term:`tile`.
 
     Let :math:`i` be the size of the input tile. Let :math:`k` be the requested size of
     the output patch. Let :math:`s` be the requested stride. Let :math:`o` be the number
