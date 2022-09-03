@@ -114,8 +114,11 @@ class RandomGeoSampler(GeoSampler):
                 bounds.maxx - bounds.minx >= self.size[1]
                 and bounds.maxy - bounds.miny >= self.size[0]
             ):
-                rows, cols = tile_to_chips(bounds, self.size)
-                self.length += rows * cols
+                if bounds.area > 0:
+                    rows, cols = tile_to_chips(bounds, self.size)
+                    self.length += rows * cols
+                else:
+                    self.length += 1
                 self.hits.append(hit)
                 areas.append(bounds.area)
         if length is not None:

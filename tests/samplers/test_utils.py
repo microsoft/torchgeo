@@ -7,7 +7,8 @@ from typing import Optional, Tuple, Union
 import pytest
 
 from torchgeo.datasets import BoundingBox
-from torchgeo.samplers.utils import _to_tuple, tile_to_chips
+from torchgeo.samplers import tile_to_chips
+from torchgeo.samplers.utils import _to_tuple
 
 MAYBE_TUPLE = Union[float, Tuple[float, float]]
 
