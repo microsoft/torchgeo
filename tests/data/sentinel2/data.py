@@ -95,7 +95,7 @@ filenames: FILENAME_HIERARCHY = {
 
 def create_file(path: str, dtype: str, num_channels: int) -> None:
     profile = {}
-    profile["driver"] = "GTiff"
+    profile["driver"] = "JP2OpenJPEG"
     profile["dtype"] = dtype
     profile["count"] = num_channels
     profile["crs"] = "epsg:4326"
