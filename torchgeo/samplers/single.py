@@ -210,7 +210,6 @@ class GridGeoSampler(GeoSampler):
         for hit in self.hits:
             bounds = BoundingBox(*hit.bounds)
 
-            # last patch samples outside the bounds
             rows = math.ceil(
                 (bounds.maxy - bounds.miny - self.size[0] + self.stride[0])
                 / self.stride[0]

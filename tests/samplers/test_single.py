@@ -171,13 +171,9 @@ class TestGridGeoSampler:
 
     def test_iter(self, sampler: GridGeoSampler) -> None:
         for query in sampler:
-            assert sampler.roi.minx <= query.minx
-            assert sampler.roi.miny <= query.miny
-            assert sampler.roi.mint <= query.mint
-            if query.maxx > sampler.roi.maxx:
-                assert (query.maxx - sampler.roi.maxx) < sampler.size[1]
-            if query.maxy > sampler.roi.maxy:
-                assert (query.maxy - sampler.roi.maxy) < sampler.size[0]
+            assert sampler.roi.minx <= query.minx <= query.maxx <= sampler.roi.maxx
+            assert sampler.roi.miny <= query.miny <= query.miny <= sampler.roi.maxy
+            assert sampler.roi.mint <= query.mint <= query.maxt <= sampler.roi.maxt
 
             assert math.isclose(query.maxx - query.minx, sampler.size[1])
             assert math.isclose(query.maxy - query.miny, sampler.size[0])
@@ -193,7 +189,7 @@ class TestGridGeoSampler:
             (100 - sampler.size[1] + sampler.stride[1]) / sampler.stride[1]
         )
         length = rows * cols * 2  # two items in dataset
-       assert len(sampler) == length
+        assert len(sampler) == length
 
     def test_len_larger(self, sampler: GridGeoSampler) -> None:
         entire_rows = (100 - sampler.size[0] + sampler.stride[0]) // sampler.stride[0]
