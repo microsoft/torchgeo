@@ -4,6 +4,7 @@
 """TorchGeo samplers."""
 
 import abc
+import math
 from typing import Callable, Iterable, Iterator, Optional, Tuple, Union
 
 import torch
@@ -146,7 +147,7 @@ class RandomGeoSampler(GeoSampler):
 
 
 class GridGeoSampler(GeoSampler):
-    """Samples elements in a grid-like fashion.
+    r"""Samples elements in a grid-like fashion.
 
     This is particularly useful during evaluation when you want to make predictions for
     an entire region of interest. You want to minimize the amount of redundant
@@ -158,6 +159,21 @@ class GridGeoSampler(GeoSampler):
     The overlap between each chip (``chip_size - stride``) should be approximately equal
     to the `receptive field <https://distill.pub/2019/computing-receptive-fields/>`_ of
     the CNN.
+
+    Note that the stride of the final set of chips in each row/column may be adjusted so
+    that the entire :term:`tile` is sampled without exceeding the bounds of the dataset.
+
+    Let :math:`i` be the size of the input tile. Let :math:`k` be the requested size of
+    the output patch. Let :math:`s` be the requested stride. Let :math:`o` be the number
+    of output rows/columns sampled from each tile. :math:`o` can then be computed as:
+
+    .. math::
+
+       o = \left\lceil \frac{i - k}{s} \right\rceil + 1
+
+    This is almost identical to relationship 5 in
+    https://doi.org/10.48550/arXiv.1603.07285. However, we use ceiling instead of floor
+    because we want to include the final remaining chip.
     """
 
     def __init__(
@@ -200,8 +216,8 @@ class GridGeoSampler(GeoSampler):
         for hit in self.index.intersection(tuple(self.roi), objects=True):
             bounds = BoundingBox(*hit.bounds)
             if (
-                bounds.maxx - bounds.minx > self.size[1]
-                and bounds.maxy - bounds.miny > self.size[0]
+                bounds.maxx - bounds.minx >= self.size[1]
+                and bounds.maxy - bounds.miny >= self.size[0]
             ):
                 self.hits.append(hit)
 
@@ -209,8 +225,14 @@ class GridGeoSampler(GeoSampler):
         for hit in self.hits:
             bounds = BoundingBox(*hit.bounds)
 
-            rows = int((bounds.maxy - bounds.miny - self.size[0]) // self.stride[0]) + 1
-            cols = int((bounds.maxx - bounds.minx - self.size[1]) // self.stride[1]) + 1
+            rows = (
+                math.ceil((bounds.maxy - bounds.miny - self.size[0]) / self.stride[0])
+                + 1
+            )
+            cols = (
+                math.ceil((bounds.maxx - bounds.minx - self.size[1]) / self.stride[1])
+                + 1
+            )
             self.length += rows * cols
 
     def __iter__(self) -> Iterator[BoundingBox]:
@@ -223,8 +245,14 @@ class GridGeoSampler(GeoSampler):
         for hit in self.hits:
             bounds = BoundingBox(*hit.bounds)
 
-            rows = int((bounds.maxy - bounds.miny - self.size[0]) // self.stride[0]) + 1
-            cols = int((bounds.maxx - bounds.minx - self.size[1]) // self.stride[1]) + 1
+            rows = (
+                math.ceil((bounds.maxy - bounds.miny - self.size[0]) / self.stride[0])
+                + 1
+            )
+            cols = (
+                math.ceil((bounds.maxx - bounds.minx - self.size[1]) / self.stride[1])
+                + 1
+            )
 
             mint = bounds.mint
             maxt = bounds.maxt
@@ -233,11 +261,17 @@ class GridGeoSampler(GeoSampler):
             for i in range(rows):
                 miny = bounds.miny + i * self.stride[0]
                 maxy = miny + self.size[0]
+                if maxy > bounds.maxy:
+                    maxy = bounds.maxy
+                    miny = bounds.maxy - self.size[0]
 
                 # For each column...
                 for j in range(cols):
                     minx = bounds.minx + j * self.stride[1]
                     maxx = minx + self.size[1]
+                    if maxx > bounds.maxx:
+                        maxx = bounds.maxx
+                        minx = bounds.maxx - self.size[1]
 
                     yield BoundingBox(minx, maxx, miny, maxy, mint, maxt)
 

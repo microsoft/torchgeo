@@ -182,9 +182,9 @@ class TestGridGeoSampler:
             )
 
     def test_len(self, sampler: GridGeoSampler) -> None:
-        rows = ((100 - sampler.size[0]) // sampler.stride[0]) + 1
-        cols = ((100 - sampler.size[1]) // sampler.stride[1]) + 1
-        length = rows * cols * 2
+        rows = math.ceil((100 - sampler.size[0]) / sampler.stride[0]) + 1
+        cols = math.ceil((100 - sampler.size[1]) / sampler.stride[1]) + 1
+        length = rows * cols * 2  # two items in dataset
         assert len(sampler) == length
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
@@ -195,11 +195,34 @@ class TestGridGeoSampler:
 
     def test_small_area(self) -> None:
         ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
-        ds.index.insert(1, (20, 21, 20, 21, 20, 21))
+        ds.index.insert(0, (0, 1, 0, 1, 0, 1))
         sampler = GridGeoSampler(ds, 2, 10)
-        for _ in sampler:
-            continue
+        assert len(sampler) == 0
+
+    def test_tiles_side_by_side(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        ds.index.insert(0, (0, 10, 10, 20, 0, 10))
+        sampler = GridGeoSampler(ds, 2, 10)
+        for bbox in sampler:
+            assert bbox.area > 0
+
+    def test_integer_multiple(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        sampler = GridGeoSampler(ds, 10, 10, units=Units.CRS)
+        iterator = iter(sampler)
+        assert len(sampler) == 1
+        assert next(iterator) == BoundingBox(0, 10, 0, 10, 0, 10)
+
+    def test_float_multiple(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 6, 0, 5, 0, 10))
+        sampler = GridGeoSampler(ds, 5, 5, units=Units.CRS)
+        iterator = iter(sampler)
+        assert len(sampler) == 2
+        assert next(iterator) == BoundingBox(0, 5, 0, 5, 0, 10)
+        assert next(iterator) == BoundingBox(1, 6, 0, 5, 0, 10)
 
     @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])
