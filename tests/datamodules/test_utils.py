@@ -15,11 +15,11 @@ def test_dataset_split() -> None:
 
     # Test only train/val set split
     train_ds, val_ds = dataset_split(ds, val_pct=1 / 2)
-    assert len(train_ds) == num_samples // 2
-    assert len(val_ds) == num_samples // 2
+    assert len(train_ds) == round(num_samples / 2)
+    assert len(val_ds) == round(num_samples / 2)
 
     # Test train/val/test set split
     train_ds, val_ds, test_ds = dataset_split(ds, val_pct=1 / 3, test_pct=1 / 3)
-    assert len(train_ds) == num_samples // 3
-    assert len(val_ds) == num_samples // 3
-    assert len(test_ds) == num_samples // 3
+    assert len(train_ds) == round(num_samples / 3)
+    assert len(val_ds) == round(num_samples / 3)
+    assert len(test_ds) == round(num_samples / 3)

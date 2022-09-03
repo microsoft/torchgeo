@@ -11,15 +11,21 @@ from torch import Tensor
 
 from torchgeo.transforms import indices, transforms
 
+# Kornia is very particular about its boxes:
+#
+# * Boxes must have shape B x 4 x 2
+# * Defined in clockwise order: top-left, top-right, bottom-right, bottom-left
+# * Coordinates must be in (x, y) order
+#
+# This seems to change with every release...
+
 
 @pytest.fixture
 def batch_gray() -> Dict[str, Tensor]:
     return {
         "image": torch.tensor([[[[1, 2, 3], [4, 5, 6], [7, 8, 9]]]], dtype=torch.float),
         "mask": torch.tensor([[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]], dtype=torch.long),
-        # This is a list of 4 (y,x) points of the corners of a bounding box.
-        # kornia expects something with (B, 4, 2) shape
-        "boxes": torch.tensor([[[0, 0], [0, 1], [1, 1], [1, 0]]], dtype=torch.float),
+        "boxes": torch.tensor([[[0, 1], [1, 1], [1, 0], [0, 0]]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
 
@@ -38,7 +44,7 @@ def batch_rgb() -> Dict[str, Tensor]:
             dtype=torch.float,
         ),
         "mask": torch.tensor([[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]], dtype=torch.long),
-        "boxes": torch.tensor([[[0, 0], [0, 1], [1, 1], [1, 0]]], dtype=torch.float),
+        "boxes": torch.tensor([[[0, 1], [1, 1], [1, 0], [0, 0]]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
 
@@ -59,7 +65,7 @@ def batch_multispectral() -> Dict[str, Tensor]:
             dtype=torch.float,
         ),
         "mask": torch.tensor([[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]], dtype=torch.long),
-        "boxes": torch.tensor([[[0, 0], [0, 1], [1, 1], [1, 0]]], dtype=torch.float),
+        "boxes": torch.tensor([[[0, 1], [1, 1], [1, 0], [0, 0]]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
 
@@ -152,7 +158,7 @@ def test_augmentation_sequential_image_only(
             dtype=torch.float,
         ),
         "mask": torch.tensor([[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]], dtype=torch.long),
-        "boxes": torch.tensor([[[0, 0], [0, 1], [1, 1], [1, 0]]], dtype=torch.float),
+        "boxes": torch.tensor([[[0, 1], [1, 1], [1, 0], [0, 0]]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
     augs = transforms.AugmentationSequential(

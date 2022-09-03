@@ -1,0 +1,40 @@
+{
+  "type": "Collection",
+  "id": "ref_cloud_cover_detection_challenge_v1_test_labels",
+  "stac_version": "1.0.0",
+  "description": "Test Label Collection for Torchgo Cloud Cover Detection Dataset",
+  "links": [
+    {
+      "rel": "root",
+      "href": "./collection.json",
+      "type": "application/json"
+    },
+    {
+      "rel": "item",
+      "href": "./ref_cloud_cover_detection_challenge_v1_test_labels_aaaa/ref_cloud_cover_detection_challenge_v1_test_labels_aaaa.json",
+      "type": "application/json"
+    }
+  ],
+  "stac_extensions": [],
+  "extent": {
+    "spatial": {
+      "bbox": [
+        [
+          -80.05464265420176,
+          -53.31380701212582,
+          151.75593282192196,
+          35.199126843018696
+        ]
+      ]
+    },
+    "temporal": {
+      "interval": [
+        [
+          "2018-02-18T00:00:00Z",
+          "2020-09-13T00:00:00Z"
+        ]
+      ]
+    }
+  },
+  "license": "CC-BY-4.0"
+}

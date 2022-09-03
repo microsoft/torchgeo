@@ -197,7 +197,7 @@ class So2Sat(NonGeoDataset):
             raise RuntimeError("Dataset not found or corrupted.")
 
         with h5py.File(self.fn, "r") as f:
-            self.size = int(f["label"].shape[0])
+            self.size: int = f["label"].shape[0]
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
