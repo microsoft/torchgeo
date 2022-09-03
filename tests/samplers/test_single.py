@@ -199,8 +199,6 @@ class TestGridGeoSampler:
         sampler = GridGeoSampler(ds, 2, 10)
         assert len(sampler) == 0
 
-    # TODO: skip patches with area=0 when two tiles are
-    #  side-by-side with an overlapping edge face.
     def test_tiles_side_by_side(self) -> None:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 10, 0, 10, 0, 10))
@@ -209,27 +207,22 @@ class TestGridGeoSampler:
         for bbox in sampler:
             assert bbox.area > 0
 
-    def test_equal_area(self) -> None:
+    def test_integer_multiple(self) -> None:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 10, 0, 10, 0, 10))
         sampler = GridGeoSampler(ds, 10, 10, units=Units.CRS)
+        iterator = iter(sampler)
         assert len(sampler) == 1
-        for bbox in sampler:
-            assert bbox == BoundingBox(
-                minx=0.0, maxx=10.0, miny=0.0, maxy=10.0, mint=0.0, maxt=10.0
-            )
+        assert next(iterator) == BoundingBox(0, 10, 0, 10, 0, 10)
 
-    def test_larger_area(self) -> None:
+    def test_float_multiple(self) -> None:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 6, 0, 5, 0, 10))
         sampler = GridGeoSampler(ds, 5, 5, units=Units.CRS)
+        iterator = iter(sampler)
         assert len(sampler) == 2
-        assert list(sampler)[0] == BoundingBox(
-            minx=0.0, maxx=5.0, miny=0.0, maxy=5.0, mint=0.0, maxt=10.0
-        )
-        assert list(sampler)[1] == BoundingBox(
-            minx=1.0, maxx=6.0, miny=0.0, maxy=5.0, mint=0.0, maxt=10.0
-        )
+        assert next(iterator) == BoundingBox(0, 5, 0, 5, 0, 10)
+        assert next(iterator) == BoundingBox(1, 6, 0, 5, 0, 10)
 
     @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])

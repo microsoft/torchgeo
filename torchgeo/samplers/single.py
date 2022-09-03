@@ -172,7 +172,8 @@ class GridGeoSampler(GeoSampler):
        o = \left\lceil \frac{i - k}{s} \right\rceil + 1
 
     This is almost identical to relationship 5 in
-    https://doi.org/10.48550/arXiv.1603.07285. However, since we want to
+    https://doi.org/10.48550/arXiv.1603.07285. However, we use ceiling instead of floor
+    because we want to include the final remaining chip.
     """
 
     def __init__(
