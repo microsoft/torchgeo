@@ -182,30 +182,10 @@ class TestGridGeoSampler:
             )
 
     def test_len(self, sampler: GridGeoSampler) -> None:
-        rows = math.ceil(
-            (100 - sampler.size[0] + sampler.stride[0]) / sampler.stride[0]
-        )
-        cols = math.ceil(
-            (100 - sampler.size[1] + sampler.stride[1]) / sampler.stride[1]
-        )
+        rows = math.ceil((100 - sampler.size[0]) / sampler.stride[0]) + 1
+        cols = math.ceil((100 - sampler.size[1]) / sampler.stride[1]) + 1
         length = rows * cols * 2  # two items in dataset
         assert len(sampler) == length
-
-    def test_len_larger(self, sampler: GridGeoSampler) -> None:
-        entire_rows = (100 - sampler.size[0] + sampler.stride[0]) // sampler.stride[0]
-        entire_cols = (100 - sampler.size[1] + sampler.stride[1]) // sampler.stride[1]
-        leftover_row = (100 - sampler.size[0] + sampler.stride[0]) / sampler.stride[
-            0
-        ] - entire_rows
-        leftover_col = (100 - sampler.size[1] + sampler.stride[1]) / sampler.stride[
-            1
-        ] - entire_cols
-        assert (
-            len(sampler)
-            == (entire_rows + math.ceil(leftover_row))
-            * (entire_cols + math.ceil(leftover_col))
-            * 2
-        )
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
         roi = BoundingBox(0, 50, 200, 250, 400, 450)

@@ -210,13 +210,13 @@ class GridGeoSampler(GeoSampler):
         for hit in self.hits:
             bounds = BoundingBox(*hit.bounds)
 
-            rows = math.ceil(
-                (bounds.maxy - bounds.miny - self.size[0] + self.stride[0])
-                / self.stride[0]
+            rows = (
+                math.ceil((bounds.maxy - bounds.miny - self.size[0]) / self.stride[0])
+                + 1
             )
-            cols = math.ceil(
-                (bounds.maxx - bounds.minx - self.size[1] + self.stride[1])
-                / self.stride[1]
+            cols = (
+                math.ceil((bounds.maxx - bounds.minx - self.size[1]) / self.stride[1])
+                + 1
             )
             self.length += rows * cols
 
@@ -230,13 +230,13 @@ class GridGeoSampler(GeoSampler):
         for hit in self.hits:
             bounds = BoundingBox(*hit.bounds)
 
-            rows = math.ceil(
-                (bounds.maxy - bounds.miny - self.size[0] + self.stride[0])
-                / self.stride[0]
+            rows = (
+                math.ceil((bounds.maxy - bounds.miny - self.size[0]) / self.stride[0])
+                + 1
             )
-            cols = math.ceil(
-                (bounds.maxx - bounds.minx - self.size[1] + self.stride[1])
-                / self.stride[1]
+            cols = (
+                math.ceil((bounds.maxx - bounds.minx - self.size[1]) / self.stride[1])
+                + 1
             )
 
             mint = bounds.mint
