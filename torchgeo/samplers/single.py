@@ -147,7 +147,7 @@ class RandomGeoSampler(GeoSampler):
 
 
 class GridGeoSampler(GeoSampler):
-    """Samples elements in a grid-like fashion.
+    r"""Samples elements in a grid-like fashion.
 
     This is particularly useful during evaluation when you want to make predictions for
     an entire region of interest. You want to minimize the amount of redundant
@@ -159,6 +159,20 @@ class GridGeoSampler(GeoSampler):
     The overlap between each chip (``chip_size - stride``) should be approximately equal
     to the `receptive field <https://distill.pub/2019/computing-receptive-fields/>`_ of
     the CNN.
+
+    Note that the stride of the final set of chips in each row/column may be adjusted so
+    that the entire :term:`tile` is sampled without exceeding the bounds of the dataset.
+
+    Let :math:`i` be the size of the input tile. Let :math:`k` be the requested size of
+    the output patch. Let :math:`s` be the requested stride. Let :math:`o` be the number
+    of output rows/columns sampled from each tile. :math:`o` can then be computed as:
+
+    .. math::
+
+       o = \lceil \frac{i - k}{s} \rceil + 1
+
+    This is almost identical to relationship 5 in
+    https://doi.org/10.48550/arXiv.1603.07285. However, since we want to
     """
 
     def __init__(
