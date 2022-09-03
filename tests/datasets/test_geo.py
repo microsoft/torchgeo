@@ -160,29 +160,29 @@ class TestGeoDataset:
 
 
 class TestRasterDataset:
-    @pytest.fixture(params=zip([True, False], [["R", "G", "B"], None]))
+    @pytest.fixture(params=zip([["R", "G", "B"], None], [True, False]))
     def naip(self, request: SubRequest) -> NAIP:
         root = os.path.join("tests", "data", "naip")
-        bands = request.param[1]
+        bands = request.param[0]
         crs = CRS.from_epsg(3005)
         transforms = nn.Identity()
-        cache = request.param[0]
+        cache = request.param[1]
         return NAIP(root, crs=crs, bands=bands, transforms=transforms, cache=cache)
 
     @pytest.fixture(
         params=zip(
-            [True, False],
             [
                 ["B04", "B03", "B02"],
                 ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B11"],
             ],
+            [True, False],
         )
     )
     def sentinel(self, request: SubRequest) -> Sentinel2:
         root = os.path.join("tests", "data", "sentinel2")
-        bands = request.param[1]
+        bands = request.param[0]
         transforms = nn.Identity()
-        cache = request.param[0]
+        cache = request.param[1]
         return Sentinel2(root, bands=bands, transforms=transforms, cache=cache)
 
     @pytest.fixture()
@@ -195,12 +195,14 @@ class TestRasterDataset:
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["image"], torch.Tensor)
+        assert len(naip.bands) == x["image"].shape[0]
 
     def test_getitem_separate_files(self, sentinel: Sentinel2) -> None:
         x = sentinel[sentinel.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["image"], torch.Tensor)
+        assert len(sentinel.bands) == x["image"].shape[0]
 
     def test_getitem_uint_dtype(self, custom_dtype_ds: RasterDataset) -> None:
         x = custom_dtype_ds[custom_dtype_ds.bounds]
@@ -220,7 +222,11 @@ class TestRasterDataset:
             RasterDataset(str(tmp_path))
 
     def test_no_allbands(self) -> None:
-        with pytest.raises(AssertionError, match="all_bands must be specified"):
+        msg = (
+            "CustomSentinelDataset is missing an `all_bands` attribute,"
+            " so `bands` cannot be specified."
+        )
+        with pytest.raises(AssertionError, match=msg):
             root = os.path.join("tests", "data", "sentinel2")
             bands = ["B04", "B03", "B02"]
             transforms = nn.Identity()

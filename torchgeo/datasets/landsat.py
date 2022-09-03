@@ -54,7 +54,7 @@ class Landsat(RasterDataset, abc.ABC):
         root: str = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        bands: Sequence[str] = [],
+        bands: Optional[Sequence[str]] = None,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         cache: bool = True,
     ) -> None:
@@ -76,6 +76,8 @@ class Landsat(RasterDataset, abc.ABC):
         """
         if bands:
             self.filename_glob = self.filename_glob.format(bands[0])
+        else:
+            self.filename_glob = self.filename_glob.format(self.all_bands[0])
 
         super().__init__(root, crs, res, bands, transforms, cache)
 

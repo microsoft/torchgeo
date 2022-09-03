@@ -381,7 +381,11 @@ class RasterDataset(GeoDataset):
             self.bands = bands
             assert len(band_indexes) == len(self.bands)
         elif bands:
-            raise AssertionError("all_bands must be specified")
+            msg = (
+                f"{self.__class__.__name__} is missing an `all_bands` attribute,"
+                " so `bands` cannot be specified."
+            )
+            raise AssertionError(msg)
         else:
             band_indexes = None
             self.bands = self.all_bands

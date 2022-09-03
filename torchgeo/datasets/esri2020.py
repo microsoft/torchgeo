@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, Optional, Sequence
+from typing import Any, Callable, Dict, Optional
 
 import matplotlib.pyplot as plt
 from rasterio.crs import CRS
@@ -98,9 +98,7 @@ class Esri2020(RasterDataset):
 
         self._verify()
 
-        bands: Sequence[str] = []
-
-        super().__init__(root, crs, res, bands, transforms, cache)
+        super().__init__(root, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
