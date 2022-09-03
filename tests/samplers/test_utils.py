@@ -33,7 +33,7 @@ MAYBE_TUPLE = Union[float, Tuple[float, float]]
 )
 def test_tile_to_chips(
     size: MAYBE_TUPLE, stride: Optional[MAYBE_TUPLE], expected: MAYBE_TUPLE
-) -> Tuple[float, float]:
+) -> None:
     bounds = BoundingBox(0, 10, 20, 30, 40, 50)
     size = _to_tuple(size)
     if stride is not None:
