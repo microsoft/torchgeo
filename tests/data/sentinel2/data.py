@@ -8,8 +8,8 @@ from typing import Dict, List, Union
 
 import numpy as np
 import rasterio
-from rasterio.crs import CRS
 from rasterio import Affine
+from rasterio.crs import CRS
 
 SIZE = 32
 
