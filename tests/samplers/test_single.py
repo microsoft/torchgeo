@@ -17,8 +17,8 @@ from torchgeo.samplers import (
     PreChippedGeoSampler,
     RandomGeoSampler,
     Units,
+    tile_to_chips,
 )
-from torchgeo.samplers import tile_to_chips
 
 
 class CustomGeoSampler(GeoSampler):
