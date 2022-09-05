@@ -296,6 +296,7 @@ class IDTReeS(NonGeoDataset):
                 boxes.append([xmin, ymin, xmax, ymax])
 
         tensor = torch.tensor(boxes)
+        tensor = torch.clamp(tensor, min=0, max=self.image_size[0])
         return tensor
 
     def _load_target(self, path: str) -> Tensor:
