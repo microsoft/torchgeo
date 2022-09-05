@@ -5,6 +5,7 @@
 
 from typing import Any, Dict, List, Optional
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 from torch import Tensor
@@ -30,6 +31,7 @@ def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
     output: Dict[str, Any] = {}
     output["image"] = torch.stack([sample["image"] for sample in batch])
     output["boxes"] = [sample["boxes"] for sample in batch]
+    output["labels"] = [torch.tensor([1] * len(sample["boxes"])) for sample in batch]
     return output
 
 
@@ -92,9 +94,9 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
         Args:
             stage: stage to set up
         """
-        dataset = NASAMarineDebris(transforms=self.preprocess, **self.kwargs)
+        self.dataset = NASAMarineDebris(transforms=self.preprocess, **self.kwargs)
         self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-            dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
+            self.dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
@@ -138,3 +140,10 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
             shuffle=False,
             collate_fn=collate_fn,
         )
+
+    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+        """Run :meth:`torchgeo.datasets.NASAMarineDebris.plot`.
+
+        .. versionadded:: 0.4
+        """
+        return self.dataset.plot(*args, **kwargs)
