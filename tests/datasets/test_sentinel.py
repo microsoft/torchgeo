@@ -17,24 +17,13 @@ class TestSentinel2:
     @pytest.fixture
     def dataset(self) -> Sentinel2:
         root = os.path.join("tests", "data", "sentinel2")
-        bands = [
-            "B01",
-            "B02",
-            "B03",
-            "B04",
-            "B05",
-            "B06",
-            "B07",
-            "B08",
-            "B8A",
-            "B09",
-            "B11",
-        ]
+        res = 10
+        bands = ["B02", "B03", "B04", "B08"]
         transforms = nn.Identity()
-        return Sentinel2(root, bands=bands, transforms=transforms)
+        return Sentinel2(root, res=res, bands=bands, transforms=transforms)
 
     def test_separate_files(self, dataset: Sentinel2) -> None:
-        assert dataset.index.count(dataset.index.bounds) == 1
+        assert dataset.index.count(dataset.index.bounds) == 2
 
     def test_getitem(self, dataset: Sentinel2) -> None:
         x = dataset[dataset.bounds]
@@ -60,8 +49,8 @@ class TestSentinel2:
         plt.close()
 
     def test_plot_wrong_bands(self, dataset: Sentinel2) -> None:
-        bands = ("B01",)
-        ds = Sentinel2(root=dataset.root, bands=bands)
+        bands = ["B02"]
+        ds = Sentinel2(root=dataset.root, res=dataset.res, bands=bands)
         x = dataset[dataset.bounds]
         with pytest.raises(
             ValueError, match="Dataset doesn't contain some of the RGB bands"
