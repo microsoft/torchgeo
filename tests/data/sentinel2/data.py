@@ -11,7 +11,7 @@ import rasterio
 from rasterio import Affine
 from rasterio.crs import CRS
 
-SIZE = 32
+SIZE = 36
 
 np.random.seed(0)
 
@@ -96,14 +96,19 @@ filenames: FILENAME_HIERARCHY = {
 
 
 def create_file(path: str, dtype: str, num_channels: int) -> None:
+    res = 10
+    root, _ = os.path.splitext(path)
+    if root.endswith("m"):
+        res = int(root[-3:-1])
+
     profile = {}
     profile["driver"] = "JP2OpenJPEG"
     profile["dtype"] = dtype
     profile["count"] = num_channels
     profile["crs"] = CRS.from_epsg(32616)
-    profile["transform"] = Affine(10.0, 0.0, 399960.0, 0.0, -10.0, 4500000.0)
-    profile["height"] = SIZE
-    profile["width"] = SIZE
+    profile["transform"] = Affine(res, 0.0, 399960.0, 0.0, -res, 4500000.0)
+    profile["height"] = round(SIZE * 10 / res)
+    profile["width"] = round(SIZE * 10 / res)
 
     if "float" in profile["dtype"]:
         Z = np.random.randn(SIZE, SIZE).astype(profile["dtype"])
