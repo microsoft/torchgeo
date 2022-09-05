@@ -42,11 +42,11 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
 
     Z = np.random.randint(size=(SIZE, SIZE), low=0, high=8)
 
-    src = rasterio.open(path, "w", **profile)
-    for i in range(1, profile["count"] + 1):
-        src.write(Z, i)
+    with rasterio.open(path, "w", **profile) as src:
+        for i in range(1, profile["count"] + 1):
+            src.write(Z, i)
 
-    src.write_colormap(1, cmap)
+        src.write_colormap(1, cmap)
 
 
 directories = ["2020_30m_cdls", "2021_30m_cdls"]

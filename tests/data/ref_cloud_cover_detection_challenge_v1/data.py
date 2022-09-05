@@ -123,9 +123,9 @@ def create_raster(path: str, dtype: str, num_channels: int, collection: str) -> 
     elif collection == "labels":
         Z = np.random.randint(0, 2, (SIZE, SIZE)).astype(profile["dtype"])
 
-    src = rasterio.open(path, "w", **profile)
-    for i in range(1, profile["count"] + 1):
-        src.write(Z, i)
+    with rasterio.open(path, "w", **profile) as src:
+        for i in range(1, profile["count"] + 1):
+            src.write(Z, i)
 
 
 def create_source_item() -> Item:
