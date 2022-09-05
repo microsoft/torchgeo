@@ -282,7 +282,6 @@ class RasterDataset(GeoDataset):
     #: searched for to find other files:
     #:
     #: * ``band``: replaced with requested band name
-    #: * ``resolution``: replaced with a glob character
     filename_regex = ".*"
 
     #: Date format string used to parse date from filename.
@@ -412,10 +411,6 @@ class RasterDataset(GeoDataset):
                             start = match.start("band")
                             end = match.end("band")
                             filename = filename[:start] + band + filename[end:]
-                        if "resolution" in match.groupdict():
-                            start = match.start("resolution")
-                            end = match.end("resolution")
-                            filename = filename[:start] + "*" + filename[end:]
                     filepath = glob.glob(os.path.join(directory, filename))[0]
                     band_filepaths.append(filepath)
                 data_list.append(self._merge_files(band_filepaths, query))
