@@ -32,7 +32,6 @@ import rasterio
 import torch
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_url
-from torchvision.ops import clip_boxes_to_image, remove_small_boxes
 from torchvision.utils import draw_segmentation_masks
 
 __all__ = (
@@ -52,7 +51,6 @@ __all__ = (
     "draw_semantic_segmentation_masks",
     "rgb_to_mask",
     "percentile_normalization",
-    "filter_boxes",
 )
 
 
@@ -709,32 +707,3 @@ def percentile_normalization(
         (img - lower_percentile) / (upper_percentile - lower_percentile), 0, 1
     )
     return img_normalized
-
-
-def filter_boxes(
-    image_size: Tuple[int, int],
-    boxes: Tensor,
-    min_size: int = 1,
-    labels: Optional[Tensor] = None,
-) -> Tuple[Tensor, Optional[Tensor]]:
-    """Clip boxes to image size and filter boxes with any side less than ``min_size``.
-
-    Args:
-        image_size: tuple of (height, width) of image
-        min_size: filter boxes that have any side less than min_size
-        boxes: [N, 4] shape tensor of xyxy bounding box coordinates
-        labels: (Optional) [N,] shape tensor of bounding box labels
-
-    Returns:
-        a tuple of filtered boxes and labels
-
-    .. versionadded:: 0.3.1
-    """
-    boxes = clip_boxes_to_image(boxes=boxes, size=image_size)
-    indices = remove_small_boxes(boxes=boxes, min_size=min_size)
-
-    boxes = boxes[indices]
-    if labels is not None:
-        labels = labels[indices]
-
-    return boxes, labels
