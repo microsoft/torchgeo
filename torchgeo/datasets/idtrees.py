@@ -18,7 +18,7 @@ from torchvision.ops import clip_boxes_to_image, remove_small_boxes
 from torchvision.utils import draw_bounding_boxes
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, filter_boxes
+from .utils import download_url, extract_archive
 
 
 class IDTReeS(NonGeoDataset):
@@ -409,7 +409,7 @@ class IDTReeS(NonGeoDataset):
         min_size: int = 1,
         labels: Optional[Tensor] = None,
     ) -> Tuple[Tensor, Optional[Tensor]]:
-        """Clip boxes to image size and filter boxes with any side less than ``min_size``.
+        """Clip boxes to image size and filter boxes with sides less than ``min_size``.
 
         Args:
             image_size: tuple of (height, width) of image
