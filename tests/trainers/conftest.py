@@ -18,7 +18,7 @@ from torch.nn.modules import Module
 @pytest.fixture(scope="package")
 def model() -> Module:
     kwargs: Dict[str, Optional[bool]] = {}
-    if parse(torchvision.__version__) >= parse("0.12"):
+    if parse(torchvision.__version__) >= parse("0.13"):
         kwargs = {"weights": None}
     else:
         kwargs = {"pretrained": False}
