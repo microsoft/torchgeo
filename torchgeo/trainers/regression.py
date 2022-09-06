@@ -32,7 +32,7 @@ class RegressionTask(pl.LightningModule):
         """Configures the task based on kwargs parameters."""
         if self.hyperparams["model"] == "resnet18":
             pretrained = self.hyperparams["pretrained"]
-            if parse(torchvision.__version__) >= parse("0.12"):
+            if parse(torchvision.__version__) >= parse("0.13"):
                 if pretrained:
                     kwargs = {"weights": models.ResNet18_Weights.DEFAULT}
                 else:
