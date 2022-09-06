@@ -284,11 +284,15 @@ class IDTReeS(NonGeoDataset):
         geometries = cast(Dict[int, Dict[str, Any]], self.geometries)
 
         # Find object ids and geometries
+        # The train set geometry->image mapping is contained
+        # in the train/Field/itc_rsFile.csv file
         if self.split == "train":
             indices = self.labels["rsFile"] == base_path
             ids = self.labels[indices]["id"].tolist()
             geoms = [geometries[i]["geometry"]["coordinates"][0][:4] for i in ids]
-        # Test set - Task 2 has no mapping csv. Mapping is inside of geometry
+        # The test set has no mapping csv. The mapping is inside of the geometry
+        # properties i.e. geom["property"]["plotID"] contains the RGB image filename
+        # Return all geometries with the matching RGB image filename of the sample
         else:
             ids = [
                 k
@@ -397,9 +401,10 @@ class IDTReeS(NonGeoDataset):
         for path in filepaths:
             with fiona.open(path) as src:
                 for feature in src:
+                    # The train set has a unique id for each geometry in the properties
                     if self.split == "train":
                         features[feature["properties"]["id"]] = feature
-                    # Test set task 2 has no id
+                    # The test set has no unique id so create a dummy id
                     else:
                         id = len(features) + 1
                         features[id] = feature
