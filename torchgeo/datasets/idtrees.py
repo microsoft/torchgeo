@@ -14,6 +14,7 @@ import rasterio
 import torch
 from rasterio.enums import Resampling
 from torch import Tensor
+from torchvision.ops import clip_boxes_to_image, remove_small_boxes
 from torchvision.utils import draw_bounding_boxes
 
 from .geo import NonGeoDataset
@@ -212,15 +213,15 @@ class IDTReeS(NonGeoDataset):
             if self.task == "task2":
                 sample["boxes"] = self._load_boxes(path)
                 w, h = sample["image"].shape[1:]
-                sample["boxes"], _ = filter_boxes(
+                sample["boxes"], _ = self._filter_boxes(
                     image_size=(h, w), boxes=sample["boxes"]
                 )
         else:
             sample["boxes"] = self._load_boxes(path)
             sample["label"] = self._load_target(path)
 
-            w, h = sample["image"].shape[1:]
-            sample["boxes"], sample["label"] = filter_boxes(  # type:ignore[assignment]
+            h, w = sample["image"].shape[1:]
+            sample["boxes"], sample["label"] = self._filter_boxes(
                 image_size=(h, w), boxes=sample["boxes"], labels=sample["label"]
             )
 
@@ -400,6 +401,35 @@ class IDTReeS(NonGeoDataset):
                     else:
                         features[i] = feature
         return features
+
+    def _filter_boxes(
+        self,
+        image_size: Tuple[int, int],
+        boxes: Tensor,
+        min_size: int = 1,
+        labels: Optional[Tensor] = None,
+    ) -> Tuple[Tensor, Optional[Tensor]]:
+        """Clip boxes to image size and filter boxes with any side less than ``min_size``.
+
+        Args:
+            image_size: tuple of (height, width) of image
+            min_size: filter boxes that have any side less than min_size
+            boxes: [N, 4] shape tensor of xyxy bounding box coordinates
+            labels: (Optional) [N,] shape tensor of bounding box labels
+
+        Returns:
+            a tuple of filtered boxes and labels
+
+        .. versionadded:: 0.3.1
+        """
+        boxes = clip_boxes_to_image(boxes=boxes, size=image_size)
+        indices = remove_small_boxes(boxes=boxes, min_size=min_size)
+
+        boxes = boxes[indices]
+        if labels is not None:
+            labels = labels[indices]
+
+        return boxes, labels
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
