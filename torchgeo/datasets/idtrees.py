@@ -422,8 +422,6 @@ class IDTReeS(NonGeoDataset):
 
         Returns:
             a tuple of filtered boxes and labels
-
-        .. versionadded:: 0.3.1
         """
         boxes = clip_boxes_to_image(boxes=boxes, size=image_size)
         indices = remove_small_boxes(boxes=boxes, min_size=min_size)
