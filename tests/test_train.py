@@ -69,7 +69,7 @@ def test_overwrite_experiment_dir(tmp_path: Path) -> None:
         "program.data_dir=" + data_dir,
         "program.log_dir=" + str(log_dir),
         "experiment.task=cyclone",
-        "experiment.datamodule.root_dir=" + data_dir,
+        "experiment.datamodule.root=" + data_dir,
         "program.overwrite=True",
         "trainer.fast_dev_run=1",
         "trainer.gpus=0",
@@ -126,7 +126,7 @@ experiment:
   name: test
   task: cyclone
   datamodule:
-    root_dir: {data_dir}
+    root: {data_dir}
 trainer:
   fast_dev_run: true
   gpus: 0
