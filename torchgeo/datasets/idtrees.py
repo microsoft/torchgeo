@@ -396,12 +396,13 @@ class IDTReeS(NonGeoDataset):
         features: Dict[int, Dict[str, Any]] = {}
         for path in filepaths:
             with fiona.open(path) as src:
-                for i, feature in enumerate(src):
+                for feature in src:
                     if self.split == "train":
                         features[feature["properties"]["id"]] = feature
                     # Test set task 2 has no id
                     else:
-                        features[i] = feature
+                        id = len(features) + 1
+                        features[id] = feature
         return features
 
     def _filter_boxes(
