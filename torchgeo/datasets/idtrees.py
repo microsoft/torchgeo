@@ -17,7 +17,7 @@ from torch import Tensor
 from torchvision.utils import draw_bounding_boxes
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import download_url, extract_archive, filter_boxes
 
 
 class IDTReeS(NonGeoDataset):
@@ -211,10 +211,20 @@ class IDTReeS(NonGeoDataset):
         if self.split == "test":
             if self.task == "task2":
                 sample["boxes"] = self._load_boxes(path)
+                w, h = sample["image"].shape[1:]
+                sample["boxes"], _ = filter_boxes(
+                    image_size=(h, w), boxes=sample["boxes"]
+                )
         else:
             sample["boxes"] = self._load_boxes(path)
             sample["label"] = self._load_target(path)
 
+            w, h = sample["image"].shape[1:]
+            sample["boxes"], sample["label"] = filter_boxes(  # type:ignore[assignment]
+                image_size=(h, w), boxes=sample["boxes"], labels=sample["label"]
+            )
+
+        # Filter boxes
         if self.transforms is not None:
             sample = self.transforms(sample)
 
@@ -296,7 +306,6 @@ class IDTReeS(NonGeoDataset):
                 boxes.append([xmin, ymin, xmax, ymax])
 
         tensor = torch.tensor(boxes)
-        tensor = torch.clamp(tensor, min=0, max=self.image_size[0])
         return tensor
 
     def _load_target(self, path: str) -> Tensor:
