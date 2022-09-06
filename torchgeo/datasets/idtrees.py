@@ -212,7 +212,7 @@ class IDTReeS(NonGeoDataset):
         if self.split == "test":
             if self.task == "task2":
                 sample["boxes"] = self._load_boxes(path)
-                w, h = sample["image"].shape[1:]
+                h, w = sample["image"].shape[1:]
                 sample["boxes"], _ = self._filter_boxes(
                     image_size=(h, w), boxes=sample["boxes"]
                 )
