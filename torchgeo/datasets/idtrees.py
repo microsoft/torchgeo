@@ -217,13 +217,15 @@ class IDTReeS(NonGeoDataset):
                     image_size=(h, w), boxes=sample["boxes"]
                 )
         else:
-            sample["boxes"] = self._load_boxes(path)
-            sample["label"] = self._load_target(path)
+            boxes = self._load_boxes(path)
+            labels = self._load_target(path)
 
             h, w = sample["image"].shape[1:]
-            sample["boxes"], sample["label"] = self._filter_boxes(
-                image_size=(h, w), boxes=sample["boxes"], labels=sample["label"]
+            boxes, labels = self._filter_boxes(  # type: ignore[assignment]
+                image_size=(h, w), boxes=boxes, labels=labels
             )
+            sample["boxes"] = boxes
+            sample["label"] = labels
 
         # Filter boxes
         if self.transforms is not None:
