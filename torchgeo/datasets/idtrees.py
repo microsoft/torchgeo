@@ -397,6 +397,7 @@ class IDTReeS(NonGeoDataset):
         """
         filepaths = glob.glob(os.path.join(directory, "ITC", "*.shp"))
 
+        i = 0
         features: Dict[int, Dict[str, Any]] = {}
         for path in filepaths:
             with fiona.open(path) as src:
@@ -406,8 +407,8 @@ class IDTReeS(NonGeoDataset):
                         features[feature["properties"]["id"]] = feature
                     # The test set has no unique id so create a dummy id
                     else:
-                        id = len(features) + 1
-                        features[id] = feature
+                        features[i] = feature
+                        i += 1
         return features
 
     @overload
