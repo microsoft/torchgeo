@@ -74,7 +74,7 @@ filterwarnings = [
     # https://github.com/Lightning-AI/lightning/issues/13989
     "ignore:SelectableGroups dict interface is deprecated. Use select.:DeprecationWarning:pytorch_lightning.trainer.connectors.callback_connector",
     # https://github.com/Lightning-AI/lightning/issues/14594
-    "ignore:To copy construct from a tensor, it is recommended to use:UserWarning:pytorch_lightning.utilities.apply_func",
+    "ignore:To copy construct from a tensor, it is recommended to use:UserWarning:pytorch_lightning.core.module",
     # https://github.com/rasterio/rasterio/issues/1742
     # https://github.com/rasterio/rasterio/pull/1753
     "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:rasterio.crs",
