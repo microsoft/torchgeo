@@ -4,7 +4,7 @@
 import os
 import pickle
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 import pytest
 import torch
@@ -47,6 +47,10 @@ class CustomGeoDataset(GeoDataset):
 
 class CustomVectorDataset(VectorDataset):
     filename_glob = "*.geojson"
+
+
+class CustomSentinelDataset(Sentinel2):
+    all_bands: List[str] = []
 
 
 class CustomNonGeoDataset(NonGeoDataset):
@@ -156,20 +160,29 @@ class TestGeoDataset:
 
 
 class TestRasterDataset:
-    @pytest.fixture(params=[True, False])
+    @pytest.fixture(params=zip([["R", "G", "B"], None], [True, False]))
     def naip(self, request: SubRequest) -> NAIP:
         root = os.path.join("tests", "data", "naip")
+        bands = request.param[0]
         crs = CRS.from_epsg(3005)
         transforms = nn.Identity()
-        cache = request.param
-        return NAIP(root, crs=crs, transforms=transforms, cache=cache)
+        cache = request.param[1]
+        return NAIP(root, crs=crs, bands=bands, transforms=transforms, cache=cache)
 
-    @pytest.fixture(params=[True, False])
+    @pytest.fixture(
+        params=zip(
+            [
+                ["B04", "B03", "B02"],
+                ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B11"],
+            ],
+            [True, False],
+        )
+    )
     def sentinel(self, request: SubRequest) -> Sentinel2:
         root = os.path.join("tests", "data", "sentinel2")
-        bands = ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B11"]
+        bands = request.param[0]
         transforms = nn.Identity()
-        cache = request.param
+        cache = request.param[1]
         return Sentinel2(root, bands=bands, transforms=transforms, cache=cache)
 
     @pytest.fixture()
@@ -182,12 +195,14 @@ class TestRasterDataset:
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["image"], torch.Tensor)
+        assert len(naip.bands) == x["image"].shape[0]
 
     def test_getitem_separate_files(self, sentinel: Sentinel2) -> None:
         x = sentinel[sentinel.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["image"], torch.Tensor)
+        assert len(sentinel.bands) == x["image"].shape[0]
 
     def test_getitem_uint_dtype(self, custom_dtype_ds: RasterDataset) -> None:
         x = custom_dtype_ds[custom_dtype_ds.bounds]
@@ -205,6 +220,19 @@ class TestRasterDataset:
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="No RasterDataset data was found"):
             RasterDataset(str(tmp_path))
+
+    def test_no_allbands(self) -> None:
+        root = os.path.join("tests", "data", "sentinel2")
+        bands = ["B04", "B03", "B02"]
+        transforms = nn.Identity()
+        cache = True
+        msg = (
+            "CustomSentinelDataset is missing an `all_bands` attribute,"
+            " so `bands` cannot be specified."
+        )
+
+        with pytest.raises(AssertionError, match=msg):
+            CustomSentinelDataset(root, bands=bands, transforms=transforms, cache=cache)
 
 
 class TestVectorDataset:

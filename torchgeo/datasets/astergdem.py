@@ -73,7 +73,7 @@ class AsterGDEM(RasterDataset):
 
         self._verify()
 
-        super().__init__(root, crs, res, transforms, cache)
+        super().__init__(root, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
