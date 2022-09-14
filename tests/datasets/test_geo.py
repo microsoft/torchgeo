@@ -222,15 +222,16 @@ class TestRasterDataset:
             RasterDataset(str(tmp_path))
 
     def test_no_allbands(self) -> None:
+        root = os.path.join("tests", "data", "sentinel2")
+        bands = ["B04", "B03", "B02"]
+        transforms = nn.Identity()
+        cache = True
         msg = (
             "CustomSentinelDataset is missing an `all_bands` attribute,"
             " so `bands` cannot be specified."
         )
+
         with pytest.raises(AssertionError, match=msg):
-            root = os.path.join("tests", "data", "sentinel2")
-            bands = ["B04", "B03", "B02"]
-            transforms = nn.Identity()
-            cache = True
             CustomSentinelDataset(root, bands=bands, transforms=transforms, cache=cache)
 
 
