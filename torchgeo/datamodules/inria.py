@@ -247,5 +247,8 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         return batch
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.InriaAerialImageLabeling.plot`."""
+        """Run :meth:`torchgeo.datasets.InriaAerialImageLabeling.plot`.
+
+        .. versionadded:: 0.4
+        """
         return self.dataset.plot(*args, **kwargs)
