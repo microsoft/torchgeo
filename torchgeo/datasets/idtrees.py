@@ -8,6 +8,7 @@ import os
 from typing import Any, Callable, Dict, List, Optional, Tuple, cast, overload
 
 import fiona
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
@@ -596,7 +597,10 @@ class IDTReeS(NonGeoDataset):
         ).transpose((1, 0))
 
         if colormap:
-            cm = plt.cm.get_cmap(colormap)
+            if hasattr(mpl, "colormaps"):
+                cm = mpl.colormaps[colormap]
+            else:
+                cm = plt.cm.get_cmap(colormap)
             norm = plt.Normalize()
             colors = cm(norm(points[:, 2]))[:, :3]
         else:
