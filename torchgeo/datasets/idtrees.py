@@ -597,7 +597,10 @@ class IDTReeS(NonGeoDataset):
         ).transpose((1, 0))
 
         if colormap:
-            cm = mpl.colormaps[colormap]
+            if hasattr(mpl, "colormaps"):
+                cm = mpl.colormaps[colormap]
+            else:
+                cm = plt.cm.get_cmap(colormap)
             norm = plt.Normalize()
             colors = cm(norm(points[:, 2]))[:, :3]
         else:
