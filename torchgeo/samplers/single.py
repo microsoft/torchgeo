@@ -4,6 +4,7 @@
 """TorchGeo samplers."""
 
 import abc
+from email import generator
 import math
 from typing import Callable, Iterable, Iterator, Optional, Tuple, Union
 
@@ -340,4 +341,39 @@ class PreChippedGeoSampler(GeoSampler):
         Returns:
             number of patches that will be sampled
         """
+        return len(self.hits)
+
+class PointGeoSampler(GeoSampler):
+    """"
+    Barebones for the pointgeo sampler. takes in a roi and a point dataset, 
+    returns the combination with the image containing the point.
+    """
+    def __init__(self,
+                 dataset: GeoDataset, 
+                 size, 
+                 points, 
+                 roi,
+                 units, 
+                 
+    )-> None:
+
+    super().__init__(dataset, roi)
+    self.hits = []
+    
+    for point in self.points:
+        if point in self.roi:
+            self.hits.append(point)
+
+    def __iter__(self)-> Iterator(BoundingBox):
+        
+        generator Callable[[int, Iterable[int]] = range 
+        
+        if self.shuffle:
+            generator = torch.randperm 
+
+        for idx in generator(len(self)):
+            yield BoundingBox(*self.hits[idx].bounds)
+
+    def __len__(self)-> int:
+
         return len(self.hits)
