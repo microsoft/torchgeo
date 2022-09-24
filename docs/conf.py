@@ -89,7 +89,7 @@ html_theme_options = {
 html_favicon = os.path.join("..", "logo", "favicon.ico")
 
 html_static_path = ["_static"]
-html_css_files = ["workaround.css"]
+html_css_files = ["button-width.css", "notebook-prompt.css"]
 
 # -- Extension configuration -------------------------------------------------
 
