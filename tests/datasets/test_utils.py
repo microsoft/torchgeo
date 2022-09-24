@@ -589,7 +589,7 @@ def test_percentile_normalization() -> None:
 class TestPredictDataset:
     @pytest.fixture(
         params=zip(
-            [None, torch.nn.Identity(), None],  # type: ignore[no-untyped-call]
+            [None, torch.nn.Identity(), None],
             [(2, 2), (8, 8), (16, 16)],
         )
     )
