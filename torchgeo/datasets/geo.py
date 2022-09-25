@@ -1005,7 +1005,7 @@ class UnionDataset(GeoDataset):
         # Not all datasets are guaranteed to have a valid query
         samples = []
         for ds in self.datasets:
-            if ds.index.intersection(tuple(query)):
+            if list(ds.index.intersection(tuple(query))):
                 samples.append(ds[query])
 
         return self.collate_fn(samples)
