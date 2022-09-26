@@ -326,7 +326,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
-        y_hat_hard = torch.softmax(y_hat, dim=-1)
+        y_hat_hard = torch.sigmoid(y_hat)
 
         loss = self.loss(y_hat, y.to(torch.float))
 
@@ -349,7 +349,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
-        y_hat_hard = torch.softmax(y_hat, dim=-1)
+        y_hat_hard = torch.sigmoid(y_hat)
 
         loss = self.loss(y_hat, y.to(torch.float))
 
@@ -381,7 +381,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         x = batch["image"]
         y = batch["label"]
         y_hat = self.forward(x)
-        y_hat_hard = torch.softmax(y_hat, dim=-1)
+        y_hat_hard = torch.sigmoid(y_hat)
 
         loss = self.loss(y_hat, y.to(torch.float))
 
