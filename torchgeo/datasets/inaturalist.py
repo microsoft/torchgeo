@@ -17,7 +17,7 @@ from .utils import BoundingBox, disambiguate_timestamp
 class INaturalist(GeoDataset):
     """Dataset for iNaturalist.
 
-    `iNaturalist <https://www.inaturalist.org/>`_ is a joint initiative of the
+    `iNaturalist <https://www.inaturalist.org/>`__ is a joint initiative of the
     California Academy of Sciences and the National Geographic Society. It allows
     citizen scientists to upload observations of organisms that can be downloaded by
     scientists and researchers.

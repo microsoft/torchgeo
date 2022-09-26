@@ -50,10 +50,6 @@ extensions = [
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build"]
 
-# nbsphinx has issues highlighting shell commands:
-# https://github.com/spatialaudio/nbsphinx/issues/670
-suppress_warnings = ["misc.highlighting_failure"]
-
 # Sphinx 3.0+ required for:
 # autodoc_typehints_description_target = "documented"
 needs_sphinx = "4.0"
@@ -93,7 +89,7 @@ html_theme_options = {
 html_favicon = os.path.join("..", "logo", "favicon.ico")
 
 html_static_path = ["_static"]
-html_css_files = ["workaround.css"]
+html_css_files = ["button-width.css", "notebook-prompt.css"]
 
 # -- Extension configuration -------------------------------------------------
 

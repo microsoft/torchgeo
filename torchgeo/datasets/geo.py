@@ -309,6 +309,7 @@ class RasterDataset(GeoDataset):
         root: str,
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
+        bands: Optional[Sequence[str]] = None,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         cache: bool = True,
     ) -> None:
@@ -320,6 +321,7 @@ class RasterDataset(GeoDataset):
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
+            bands: bands to return (defaults to all bands)
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
@@ -374,6 +376,21 @@ class RasterDataset(GeoDataset):
                 f"No {self.__class__.__name__} data was found in '{root}'"
             )
 
+        if bands and self.all_bands:
+            band_indexes = [self.all_bands.index(i) + 1 for i in bands]
+            self.bands = bands
+            assert len(band_indexes) == len(self.bands)
+        elif bands:
+            msg = (
+                f"{self.__class__.__name__} is missing an `all_bands` attribute,"
+                " so `bands` cannot be specified."
+            )
+            raise AssertionError(msg)
+        else:
+            band_indexes = None
+            self.bands = self.all_bands
+
+        self.band_indexes = band_indexes
         self._crs = cast(CRS, crs)
         self.res = cast(float, res)
 
@@ -400,7 +417,7 @@ class RasterDataset(GeoDataset):
         if self.separate_files:
             data_list: List[Tensor] = []
             filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-            for band in getattr(self, "bands", self.all_bands):
+            for band in self.bands:
                 band_filepaths = []
                 for filepath in filepaths:
                     filename = os.path.basename(filepath)
@@ -416,7 +433,7 @@ class RasterDataset(GeoDataset):
                 data_list.append(self._merge_files(band_filepaths, query))
             data = torch.cat(data_list)
         else:
-            data = self._merge_files(filepaths, query)
+            data = self._merge_files(filepaths, query, self.band_indexes)
 
         key = "image" if self.is_image else "mask"
         sample = {key: data, "crs": self.crs, "bbox": query}
@@ -426,12 +443,18 @@ class RasterDataset(GeoDataset):
 
         return sample
 
-    def _merge_files(self, filepaths: Sequence[str], query: BoundingBox) -> Tensor:
+    def _merge_files(
+        self,
+        filepaths: Sequence[str],
+        query: BoundingBox,
+        band_indexes: Optional[Sequence[int]] = None,
+    ) -> Tensor:
         """Load and merge one or more files.
 
         Args:
             filepaths: one or more files to load and merge
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            band_indexes: indexes of bands to be used
 
         Returns:
             image/mask at that index
@@ -446,12 +469,17 @@ class RasterDataset(GeoDataset):
             src = vrt_fhs[0]
             out_width = round((query.maxx - query.minx) / self.res)
             out_height = round((query.maxy - query.miny) / self.res)
-            out_shape = (src.count, out_height, out_width)
+            count = len(band_indexes) if band_indexes else src.count
+            out_shape = (count, out_height, out_width)
             dest = src.read(
-                out_shape=out_shape, window=from_bounds(*bounds, src.transform)
+                indexes=band_indexes,
+                out_shape=out_shape,
+                window=from_bounds(*bounds, src.transform),
             )
         else:
-            dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res)
+            dest, _ = rasterio.merge.merge(
+                vrt_fhs, bounds, self.res, indexes=band_indexes
+            )
 
         # fix numpy dtypes which are not supported by pytorch tensors
         if dest.dtype == np.uint16:
@@ -977,7 +1005,7 @@ class UnionDataset(GeoDataset):
         # Not all datasets are guaranteed to have a valid query
         samples = []
         for ds in self.datasets:
-            if ds.index.intersection(tuple(query)):
+            if list(ds.index.intersection(tuple(query))):
                 samples.append(ds[query])
 
         return self.collate_fn(samples)
