@@ -388,3 +388,15 @@ class MultiLabelClassificationTask(ClassificationTask):
         # by default, the test and validation steps only log per *epoch*
         self.log("test_loss", loss, on_step=False, on_epoch=True)
         self.test_metrics(y_hat_hard, y)
+
+    def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
+        """Compute and return the predictions.
+        Args:
+            batch: the output of your DataLoader
+        Returns:
+            predicted sigmoid probabilities
+        """
+        batch = args[0]
+        x = batch["image"]
+        y_hat = torch.sigmoid(self(x))
+        return y_hat
