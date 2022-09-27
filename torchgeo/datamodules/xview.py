@@ -34,6 +34,8 @@ class XView2DataModule(pl.LightningDataModule):
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
             val_split_pct: What percentage of the dataset to use as a validation set
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.XView2`
         """
         super().__init__()
         self.batch_size = batch_size

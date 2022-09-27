@@ -31,6 +31,8 @@ class LandCoverAIDataModule(pl.LightningDataModule):
         Args:
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.LandCoverAI`
         """
         super().__init__()
         self.batch_size = batch_size

@@ -57,6 +57,8 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             use_prior_labels: Flag for using a prior over high-resolution classes
                 instead of the high-resolution labels themselves
             prior_smoothing_constant: additive smoothing to add when using prior labels
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.ChesapeakeCVPR`
 
         Raises:
             ValueError: if ``use_prior_labels`` is used with ``class_set==7``

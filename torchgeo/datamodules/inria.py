@@ -61,6 +61,8 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             test_split_pct: What percentage of the dataset to use as a test set
             patch_size: Size of random patch from image and mask (height, width)
             num_patches_per_tile: Number of random patches per sample
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.InriaAerialImageLabeling`
         """
         super().__init__()
         self.batch_size = batch_size

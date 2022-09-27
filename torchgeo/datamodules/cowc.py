@@ -29,6 +29,8 @@ class COWCCountingDataModule(pl.LightningDataModule):
             seed: The seed value to use when doing the dataset random_split
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.COWCCounting`
         """
         super().__init__()
         self.seed = seed

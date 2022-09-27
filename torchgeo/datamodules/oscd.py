@@ -82,6 +82,8 @@ class OSCDDataModule(pl.LightningDataModule):
             patch_size: Size of random patch from image and mask (height, width)
             num_patches_per_tile: number of random patches per sample
             pad_size: size to pad images to during val/test steps
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.OSCD`
         """
         super().__init__()
         self.train_batch_size = train_batch_size

@@ -69,6 +69,8 @@ class SEN12MSDataModule(pl.LightningDataModule):
                 B2, B3, B4, B8, B11, and B12.
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.SEN12MS`
         """
         super().__init__()
         assert band_set in SEN12MS.BAND_SETS.keys()

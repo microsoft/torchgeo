@@ -72,6 +72,8 @@ class So2SatDataModule(pl.LightningDataModule):
             band_set: Collection of So2Sat bands to use
             unsupervised_mode: Makes the train dataloader return imagery from the train,
                 val, and test sets
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.So2Sat`
         """
         super().__init__()
         self.batch_size = batch_size
