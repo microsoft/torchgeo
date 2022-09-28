@@ -344,36 +344,37 @@ class PreChippedGeoSampler(GeoSampler):
         return len(self.hits)
 
 class PointGeoSampler(GeoSampler):
-    """"
-    Barebones for the pointgeo sampler. takes in a roi and a point dataset, 
-    returns the combination with the image containing the point.
-    """
-    def __init__(self,
-                 dataset: GeoDataset, 
-                 size, 
-                 points, 
-                 roi,
-                 units, 
-                 
-    )-> None:
+  """Samples from an intersection of points and image GeoDatasets.
 
-    super().__init__(dataset, roi)
+  This sampler should take in a pair of coordinates and region of interests and
+  returns image patches containing the coordinates of interest.
+  """
+
+  def __init__(
+      self,
+      image_dataset: GeoDataset,  ## for exampler raster dataset of sentinel 2
+      points: GeoDataset,   ## e.g GBIF dataset containing coordinate points 
+      roi: Optional[BoundingBox] = None,
+      shuffle: bool = False,
+  )-> None:
+    super().__init__(image_dataset, roi)
+    self.shuffle = shuffle
+    self.points = points
+    self.image_dataset = image_dataset
+
     self.hits = []
-    
-    for point in self.points:
-        if point in self.roi:
-            self.hits.append(point)
 
-    def __iter__(self)-> Iterator(BoundingBox):
-        
-        generator Callable[[int, Iterable[int]] = range 
-        
-        if self.shuffle:
-            generator = torch.randperm 
+    for hit in self.image_dataset.index.intersection(tuple(self.points.index.bounds),objects=True):
+      self.hits.append(hit)
 
-        for idx in generator(len(self)):
-            yield BoundingBox(*self.hits[idx].bounds)
 
-    def __len__(self)-> int:
+  def __iter__(self) -> Iterator[BoundingBox]:
+    generator: Callable[[int], Iterable[int]] = range
+    if self.shuffle: 
+      generator = torch.randperm 
 
-        return len(self.hits)
+    for idx in generator(len(self)):
+      yield BoundingBox(*self.hits[idx].bounds)
+
+  def __len__(self) -> int: 
+    return len(self.hits)
