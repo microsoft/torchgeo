@@ -249,7 +249,7 @@ class ClassificationTask(pl.LightningModule):
         """
         batch = args[0]
         x = batch["image"]
-        y_hat = self(x).softmax(dim=-1)
+        y_hat: Tensor = self(x).softmax(dim=-1)
         return y_hat
 
     def configure_optimizers(self) -> Dict[str, Any]:
