@@ -391,6 +391,7 @@ class MultiLabelClassificationTask(ClassificationTask):
 
     def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
         """Compute and return the predictions.
+
         Args:
             batch: the output of your DataLoader
         Returns:
