@@ -266,7 +266,7 @@ class VHR10(NonGeoDataset):
         plt.imshow(sample["image"].permute(1, 2, 0))
         annotations = sample["label"]["annotations"]  # type: ignore[index]
         if annotations:
-            self.coco.showAnns(annotations, draw_boxes)
+            self.coco.showAnns(anns=annotations, draw_bbox=draw_boxes)
 
         axs = plt.gca()
         axs.axis("off")
