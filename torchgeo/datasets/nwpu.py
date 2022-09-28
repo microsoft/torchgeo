@@ -6,6 +6,7 @@
 import os
 from typing import Any, Callable, Dict, Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from PIL import Image
@@ -192,7 +193,7 @@ class VHR10(NonGeoDataset):
         # Images in the "negative" image set have no annotations
         annot = []
         if self.split == "positive":
-            annot = self.coco.loadAnns(self.coco.getAnnIds(id_))
+            annot = self.coco.loadAnns(self.coco.getAnnIds(id_ - 1))
 
         target = dict(image_id=id_, annotations=annot)
 
@@ -244,3 +245,33 @@ class VHR10(NonGeoDataset):
                 self.target_meta["filename"],
                 self.target_meta["md5"] if self.checksum else None,
             )
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        suptitle: Optional[str] = None,
+        draw_boxes: Optional[bool] = False,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            suptitle: optional string to use as a suptitle
+            draw_boxes: draw only segmentation masks if False else draw boxes as well
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        _ = plt.figure(figsize=(8, 8))
+        plt.imshow(sample["image"].permute(1, 2, 0))
+        annotations = sample["label"]["annotations"]  # type: ignore[index]
+        if annotations:
+            self.coco.showAnns(annotations, draw_boxes)
+
+        axs = plt.gca()
+        axs.axis("off")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return plt.gcf()
