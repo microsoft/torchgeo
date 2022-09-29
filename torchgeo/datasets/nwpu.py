@@ -261,6 +261,8 @@ class VHR10(NonGeoDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.4
         """
         _ = plt.figure(figsize=(8, 8))
         plt.imshow(sample["image"].permute(1, 2, 0))
