@@ -88,6 +88,8 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             size: dimensions of each :term:`patch`
             batch_size: number of samples per batch
             length: number of samples per epoch
+                (defaults to the maximal number of non-overlapping :term:`chips <chip>`
+                of size ``size`` that can be sampled from the dataset)
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units
