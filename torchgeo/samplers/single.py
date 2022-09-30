@@ -62,7 +62,8 @@ class RandomGeoSampler(GeoSampler):
     """Samples elements from a region of interest randomly.
 
     This is particularly useful during training when you want to maximize the size of
-    the dataset and return as many random :term:`chips <chip>` as possible.
+    the dataset and return as many random :term:`chips <chip>` as possible. Note that
+    randomly sampled chips may overlap.
 
     This sampler is not recommended for use with tile-based datasets. Use
     :class:`RandomBatchGeoSampler` instead.
@@ -89,8 +90,9 @@ class RandomGeoSampler(GeoSampler):
             dataset: dataset to index from
             size: dimensions of each :term:`patch`
             length: number of random samples to draw per epoch
-                (defaults to the maximal number of non-overlapping :term:`chips <chip>`
-                of size ``size`` that can be sampled from the dataset)
+                (defaults to approximately the maximal number of non-overlapping
+                :term:`chips <chip>` of size ``size`` that could be sampled from
+                the dataset)
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units

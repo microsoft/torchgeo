@@ -62,7 +62,8 @@ class RandomBatchGeoSampler(BatchGeoSampler):
     """Samples batches of elements from a region of interest randomly.
 
     This is particularly useful during training when you want to maximize the size of
-    the dataset and return as many random :term:`chips <chip>` as possible.
+    the dataset and return as many random :term:`chips <chip>` as possible. Note that
+    randomly sampled chips may overlap.
     """
 
     def __init__(
@@ -88,8 +89,9 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             size: dimensions of each :term:`patch`
             batch_size: number of samples per batch
             length: number of samples per epoch
-                (defaults to the maximal number of non-overlapping :term:`chips <chip>`
-                of size ``size`` that can be sampled from the dataset)
+                (defaults to approximately the maximal number of non-overlapping
+                :term:`chips <chip>` of size ``size`` that could be sampled from
+                the dataset)
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units
