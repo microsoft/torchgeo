@@ -70,7 +70,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
     def __init__(
         self,
         root: str = "data",
-        image: str,
+        image: str = "",
         collections: List[str] = [],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
@@ -93,7 +93,10 @@ class SpaceNet(NonGeoDataset, abc.ABC):
             RuntimeError: if ``download=False`` but dataset is missing
         """
         self.root = root
-        self.image = image  # For testing
+        if image:
+            self.image = image
+        else:
+            self.image = list(self.imagery.keys())[0]
 
         if collections:
             for collection in collections:
