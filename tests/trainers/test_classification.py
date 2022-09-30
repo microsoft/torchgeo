@@ -153,6 +153,7 @@ class TestMultiLabelClassificationTask:
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
         trainer.test(model=model, datamodule=datamodule)
+        trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
 
     def test_no_logger(self) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", "bigearthnet_s1.yaml"))
