@@ -40,7 +40,7 @@ def fetch_collection(collection_id: str, **kwargs: str) -> Collection:
 
 
 class TestSpaceNet1:
-    @pytest.fixture(params=["rgb", "8band", ""])
+    @pytest.fixture(params=["rgb", "8band"])
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet1:
