@@ -38,16 +38,14 @@ class Sentinel2(Sentinel):
     Earth's surface changes.
     """
 
-    # TODO: files downloaded from USGS Earth Explorer seem to have a different
-    # filename format than the official documentation
     # https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-2-msi/naming-convention
     # https://sentinel.esa.int/documents/247904/685211/Sentinel-2-MSI-L2A-Product-Format-Specifications.pdf
-    filename_glob = "T*_*_B02_*m.*"
+    filename_glob = "T*_*_{}*.*"
     filename_regex = r"""
-        ^T(?P<tile>\d{2}[A-Z]{3})
-        _(?P<date>\d{8}T\d{6})
+        ^T(?P<tile>\d{{2}}[A-Z]{{3}})
+        _(?P<date>\d{{8}}T\d{{6}})
         _(?P<band>B[018][\dA])
-        _(?P<resolution>\d{2}m)
+        (?:_(?P<resolution>{}m))?
         \..*$
     """
     date_format = "%Y%m%dT%H%M%S"
@@ -76,8 +74,8 @@ class Sentinel2(Sentinel):
         self,
         root: str = "data",
         crs: Optional[CRS] = None,
-        res: Optional[float] = None,
-        bands: Sequence[str] = [],
+        res: float = 10,
+        bands: Optional[Sequence[str]] = None,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         cache: bool = True,
     ) -> None:
@@ -97,9 +95,11 @@ class Sentinel2(Sentinel):
         Raises:
             FileNotFoundError: if no files are found in ``root``
         """
-        self.bands = bands if bands else self.all_bands
+        bands = bands or self.all_bands
+        self.filename_glob = self.filename_glob.format(bands[0])
+        self.filename_regex = self.filename_regex.format(res)
 
-        super().__init__(root, crs, res, transforms, cache)
+        super().__init__(root, crs, res, bands, transforms, cache)
 
     def plot(
         self,

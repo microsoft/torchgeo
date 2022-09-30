@@ -6,6 +6,7 @@
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import kornia.augmentation as K
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 import torchvision.transforms as T
@@ -50,6 +51,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         patch_size: Union[int, Tuple[int, int]] = 512,
         num_patches_per_tile: int = 32,
         predict_on: str = "test",
+        **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for InriaAerialImageLabeling.
 
@@ -142,7 +144,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         train_transforms = T.Compose([self.preprocess, self.n_random_crop])
         test_transforms = T.Compose([self.preprocess, self.patch_sample])
 
-        train_dataset = InriaAerialImageLabeling(
+        self.dataset = InriaAerialImageLabeling(
             self.root_dir, split="train", transforms=train_transforms
         )
 
@@ -153,19 +155,19 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         if self.val_split_pct > 0.0:
             if self.test_split_pct > 0.0:
                 self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-                    train_dataset,
+                    self.dataset,
                     val_pct=self.val_split_pct,
                     test_pct=self.test_split_pct,
                 )
             else:
                 self.train_dataset, self.val_dataset = dataset_split(
-                    train_dataset, val_pct=self.val_split_pct
+                    self.dataset, val_pct=self.val_split_pct
                 )
                 self.test_dataset = self.val_dataset
         else:
-            self.train_dataset = train_dataset
-            self.val_dataset = train_dataset
-            self.test_dataset = train_dataset
+            self.train_dataset = self.dataset
+            self.val_dataset = self.dataset
+            self.test_dataset = self.dataset
 
         assert self.predict_on == "test"
         self.predict_dataset = InriaAerialImageLabeling(
@@ -243,3 +245,10 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         if "mask" in batch:
             batch["mask"] = rearrange(batch["mask"], "b () h w -> b h w")
         return batch
+
+    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+        """Run :meth:`torchgeo.datasets.InriaAerialImageLabeling.plot`.
+
+        .. versionadded:: 0.4
+        """
+        return self.dataset.plot(*args, **kwargs)

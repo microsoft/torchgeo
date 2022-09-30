@@ -4,7 +4,7 @@
 import os
 import pickle
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 import pytest
 import torch
@@ -42,11 +42,18 @@ class CustomGeoDataset(GeoDataset):
         self.res = res
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, BoundingBox]:
-        return {"index": query}
+        hits = self.index.intersection(tuple(query), objects=True)
+        hit = next(iter(hits))
+        bounds = BoundingBox(*hit.bounds)
+        return {"index": bounds}
 
 
 class CustomVectorDataset(VectorDataset):
     filename_glob = "*.geojson"
+
+
+class CustomSentinelDataset(Sentinel2):
+    all_bands: List[str] = []
 
 
 class CustomNonGeoDataset(NonGeoDataset):
@@ -71,7 +78,7 @@ class TestGeoDataset:
         return CustomGeoDataset()
 
     def test_getitem(self, dataset: GeoDataset) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        query = BoundingBox(0, 1, 2, 3, 4, 5)
         assert dataset[query] == {"index": query}
 
     def test_len(self, dataset: GeoDataset) -> None:
@@ -156,20 +163,29 @@ class TestGeoDataset:
 
 
 class TestRasterDataset:
-    @pytest.fixture(params=[True, False])
+    @pytest.fixture(params=zip([["R", "G", "B"], None], [True, False]))
     def naip(self, request: SubRequest) -> NAIP:
         root = os.path.join("tests", "data", "naip")
+        bands = request.param[0]
         crs = CRS.from_epsg(3005)
         transforms = nn.Identity()
-        cache = request.param
-        return NAIP(root, crs=crs, transforms=transforms, cache=cache)
+        cache = request.param[1]
+        return NAIP(root, crs=crs, bands=bands, transforms=transforms, cache=cache)
 
-    @pytest.fixture(params=[True, False])
+    @pytest.fixture(
+        params=zip(
+            [
+                ["B04", "B03", "B02"],
+                ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B11"],
+            ],
+            [True, False],
+        )
+    )
     def sentinel(self, request: SubRequest) -> Sentinel2:
         root = os.path.join("tests", "data", "sentinel2")
-        bands = ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B11"]
+        bands = request.param[0]
         transforms = nn.Identity()
-        cache = request.param
+        cache = request.param[1]
         return Sentinel2(root, bands=bands, transforms=transforms, cache=cache)
 
     @pytest.fixture()
@@ -182,12 +198,14 @@ class TestRasterDataset:
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["image"], torch.Tensor)
+        assert len(naip.bands) == x["image"].shape[0]
 
     def test_getitem_separate_files(self, sentinel: Sentinel2) -> None:
         x = sentinel[sentinel.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["image"], torch.Tensor)
+        assert len(sentinel.bands) == x["image"].shape[0]
 
     def test_getitem_uint_dtype(self, custom_dtype_ds: RasterDataset) -> None:
         x = custom_dtype_ds[custom_dtype_ds.bounds]
@@ -205,6 +223,19 @@ class TestRasterDataset:
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="No RasterDataset data was found"):
             RasterDataset(str(tmp_path))
+
+    def test_no_allbands(self) -> None:
+        root = os.path.join("tests", "data", "sentinel2")
+        bands = ["B04", "B03", "B02"]
+        transforms = nn.Identity()
+        cache = True
+        msg = (
+            "CustomSentinelDataset is missing an `all_bands` attribute,"
+            " so `bands` cannot be specified."
+        )
+
+        with pytest.raises(AssertionError, match=msg):
+            CustomSentinelDataset(root, bands=bands, transforms=transforms, cache=cache)
 
 
 class TestVectorDataset:
@@ -404,12 +435,12 @@ class TestIntersectionDataset:
 class TestUnionDataset:
     @pytest.fixture(scope="class")
     def dataset(self) -> UnionDataset:
-        ds1 = CustomGeoDataset()
-        ds2 = CustomGeoDataset()
+        ds1 = CustomGeoDataset(bounds=BoundingBox(0, 1, 0, 1, 0, 1))
+        ds2 = CustomGeoDataset(bounds=BoundingBox(2, 3, 2, 3, 2, 3))
         return ds1 | ds2
 
     def test_getitem(self, dataset: UnionDataset) -> None:
-        query = BoundingBox(0, 1, 2, 3, 4, 5)
+        query = BoundingBox(0, 1, 0, 1, 0, 1)
         assert dataset[query] == {"index": query}
 
     def test_len(self, dataset: UnionDataset) -> None:
@@ -424,29 +455,31 @@ class TestUnionDataset:
     def test_nongeo_dataset(self) -> None:
         ds1 = CustomNonGeoDataset()
         ds2 = CustomNonGeoDataset()
-        with pytest.raises(ValueError, match="UnionDataset only supports GeoDatasets"):
+        ds3 = CustomGeoDataset()
+        msg = "UnionDataset only supports GeoDatasets"
+        with pytest.raises(ValueError, match=msg):
             UnionDataset(ds1, ds2)  # type: ignore[arg-type]
+        with pytest.raises(ValueError, match=msg):
+            UnionDataset(ds1, ds3)  # type: ignore[arg-type]
+        with pytest.raises(ValueError, match=msg):
+            UnionDataset(ds3, ds1)  # type: ignore[arg-type]
 
     def test_different_crs(self) -> None:
         ds1 = CustomGeoDataset(crs=CRS.from_epsg(3005))
         ds2 = CustomGeoDataset(crs=CRS.from_epsg(32616))
         ds = UnionDataset(ds1, ds2)
+        assert ds.crs == ds1.crs
         assert len(ds) == 2
 
     def test_different_res(self) -> None:
         ds1 = CustomGeoDataset(res=1)
         ds2 = CustomGeoDataset(res=2)
         ds = UnionDataset(ds1, ds2)
-        assert len(ds) == 2
-
-    def test_no_overlap(self) -> None:
-        ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
-        ds2 = CustomGeoDataset(BoundingBox(6, 7, 8, 9, 10, 11))
-        ds = UnionDataset(ds1, ds2)
+        assert ds.res == ds1.res
         assert len(ds) == 2
 
     def test_invalid_query(self, dataset: UnionDataset) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        query = BoundingBox(4, 5, 4, 5, 4, 5)
         with pytest.raises(
             IndexError, match="query: .* not found in index with bounds:"
         ):

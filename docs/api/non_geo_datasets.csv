@@ -2,6 +2,7 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands
 `ADVANCE`_,C,"Google Earth, Freesound","5,075",13,512x512,0.5,RGB
 `Benin Cashew Plantations`_,S,Airbus Pléiades,70,6,"1,122x1,186",10,MSI
 `BigEarthNet`_,C,Sentinel-1/2,"590,326",19--43,120x120,10,"SAR, MSI"
+`Cloud Cover Detection`_,S,Sentinel-2,"22,728",2,512x512,10,MSI
 `COWC`_,"C, R","CSUAV AFRL, ISPRS, LINZ, AGRC","388,435",2,256x256,0.15,RGB
 `Kenya Crop Type`_,S,Sentinel-2,"4,688",7,"3,035x2,016",10,MSI
 `Deep Globe Land Cover`_,S,DigitalGlobe +Vivid,803,7,"2,448x2,448",0.5,RGB

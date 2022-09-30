@@ -32,7 +32,7 @@ class RegressionTask(pl.LightningModule):
         model = self.hyperparams["model"]
         pretrained = self.hyperparams["pretrained"]
 
-        if parse(torchvision.__version__) >= parse("0.12"):
+        if parse(torchvision.__version__) >= parse("0.13"):
             if pretrained:
                 kwargs = {
                     "weights": getattr(

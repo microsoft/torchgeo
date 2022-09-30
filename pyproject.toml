@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     # setuptools 42+ required for metadata.license_files support in setup.cfg
-    "setuptools>=42,<65",
+    "setuptools>=42,<66",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -68,11 +68,13 @@ filterwarnings = [
     # https://github.com/pytorch/pytorch/pull/69823
     "ignore:distutils Version classes are deprecated. Use packaging.version instead:DeprecationWarning:torch.utils.tensorboard",
     "ignore:The distutils package is deprecated and slated for removal in Python 3.12:DeprecationWarning:torch.utils.tensorboard",
-    # https://github.com/PyTorchLightning/pytorch-lightning/issues/13256
-    # https://github.com/PyTorchLightning/pytorch-lightning/pull/13261
+    # https://github.com/Lightning-AI/lightning/issues/13256
+    # https://github.com/Lightning-AI/lightning/pull/13261
     "ignore:torch.distributed._sharded_tensor will be deprecated:DeprecationWarning:torch.distributed._sharded_tensor",
     # https://github.com/Lightning-AI/lightning/issues/13989
     "ignore:SelectableGroups dict interface is deprecated. Use select.:DeprecationWarning:pytorch_lightning.trainer.connectors.callback_connector",
+    # https://github.com/Lightning-AI/lightning/issues/14594
+    "ignore:To copy construct from a tensor, it is recommended to use:UserWarning:pytorch_lightning.core.module",
     # https://github.com/rasterio/rasterio/issues/1742
     # https://github.com/rasterio/rasterio/pull/1753
     "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:rasterio.crs",
