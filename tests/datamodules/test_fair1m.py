@@ -15,7 +15,11 @@ class TestFAIR1MDataModule:
         batch_size = 2
         num_workers = 0
         dm = FAIR1MDataModule(
-            root, batch_size, num_workers, val_split_pct=0.33, test_split_pct=0.33
+            root=root,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            val_split_pct=0.33,
+            test_split_pct=0.33,
         )
         dm.setup()
         return dm

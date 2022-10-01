@@ -3,7 +3,7 @@
 
 """LoveDA datamodule."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
@@ -24,26 +24,20 @@ class LoveDADataModule(pl.LightningDataModule):
     """
 
     def __init__(
-        self,
-        root_dir: str,
-        scene: List[str],
-        batch_size: int = 32,
-        num_workers: int = 0,
-        **kwargs: Any,
+        self, batch_size: int = 32, num_workers: int = 0, **kwargs: Any
     ) -> None:
         """Initialize a LightningDataModule for LoveDA based DataLoaders.
 
         Args:
-            root_dir: The ``root`` argument to pass to LoveDA Dataset classes
-            scene: specify whether to load only 'urban', only 'rural' or both
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.LoveDA`
         """
         super().__init__()
-        self.root_dir = root_dir
-        self.scene = scene
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.kwargs = kwargs
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
@@ -64,7 +58,7 @@ class LoveDADataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        _ = LoveDA(self.root_dir, scene=self.scene, download=False, checksum=False)
+        LoveDA(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -78,18 +72,15 @@ class LoveDADataModule(pl.LightningDataModule):
         val_test_transforms = self.preprocess
 
         self.train_dataset = LoveDA(
-            self.root_dir, split="train", scene=self.scene, transforms=train_transforms
+            split="train", transforms=train_transforms, **self.kwargs
         )
 
         self.val_dataset = LoveDA(
-            self.root_dir, split="val", scene=self.scene, transforms=val_test_transforms
+            split="val", transforms=val_test_transforms, **self.kwargs
         )
 
         self.test_dataset = LoveDA(
-            self.root_dir,
-            split="test",
-            scene=self.scene,
-            transforms=val_test_transforms,
+            split="test", transforms=val_test_transforms, **self.kwargs
         )
 
     def train_dataloader(self) -> DataLoader[Any]:

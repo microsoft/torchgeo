@@ -59,19 +59,20 @@ class EuroSATDataModule(pl.LightningDataModule):
     )
 
     def __init__(
-        self, root_dir: str, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
         """Initialize a LightningDataModule for EuroSAT based DataLoaders.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the EuroSAT Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.EuroSAT`
         """
         super().__init__()
-        self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.kwargs = kwargs
 
         self.norm = Normalize(self.band_means, self.band_stds)
 
@@ -93,7 +94,7 @@ class EuroSATDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        EuroSAT(self.root_dir)
+        EuroSAT(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -105,9 +106,11 @@ class EuroSATDataModule(pl.LightningDataModule):
         """
         transforms = Compose([self.preprocess])
 
-        self.train_dataset = EuroSAT(self.root_dir, "train", transforms=transforms)
-        self.val_dataset = EuroSAT(self.root_dir, "val", transforms=transforms)
-        self.test_dataset = EuroSAT(self.root_dir, "test", transforms=transforms)
+        self.train_dataset = EuroSAT(
+            split="train", transforms=transforms, **self.kwargs
+        )
+        self.val_dataset = EuroSAT(split="val", transforms=transforms, **self.kwargs)
+        self.test_dataset = EuroSAT(split="test", transforms=transforms, **self.kwargs)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.

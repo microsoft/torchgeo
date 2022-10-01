@@ -14,8 +14,8 @@ experiment:
     in_channels: 3
     num_classes: 17
   datamodule:
-    root_dir: "data/so2sat"
+    root: "data/so2sat"
     batch_size: 128
     num_workers: 4
-    bands: "rgb"
+    band_set: "rgb"
     unsupervised_mode: False

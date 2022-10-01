@@ -6,7 +6,7 @@ experiment:
     learning_rate_schedule_patience: 2
     pretrained: True
   datamodule:
-    root_dir: "tests/data/cowc_counting"
+    root: "tests/data/cowc_counting"
     seed: 0
     batch_size: 1
     num_workers: 0

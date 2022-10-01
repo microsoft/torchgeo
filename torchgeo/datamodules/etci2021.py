@@ -33,26 +33,22 @@ class ETCI2021DataModule(pl.LightningDataModule):
     )
 
     def __init__(
-        self,
-        root_dir: str,
-        seed: int = 0,
-        batch_size: int = 64,
-        num_workers: int = 0,
-        **kwargs: Any,
+        self, seed: int = 0, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
         """Initialize a LightningDataModule for ETCI2021 based DataLoaders.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the ETCI2021 Dataset classes
             seed: The seed value to use when doing the dataset random_split
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.ETCI2021`
         """
         super().__init__()
-        self.root_dir = root_dir
         self.seed = seed
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.kwargs = kwargs
 
         self.norm = Normalize(self.band_means, self.band_stds)
 
@@ -83,7 +79,7 @@ class ETCI2021DataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        ETCI2021(self.root_dir, checksum=False)
+        ETCI2021(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -94,10 +90,10 @@ class ETCI2021DataModule(pl.LightningDataModule):
             stage: stage to set up
         """
         train_val_dataset = ETCI2021(
-            self.root_dir, split="train", transforms=self.preprocess
+            split="train", transforms=self.preprocess, **self.kwargs
         )
         self.test_dataset = ETCI2021(
-            self.root_dir, split="val", transforms=self.preprocess
+            split="val", transforms=self.preprocess, **self.kwargs
         )
 
         size_train_val = len(train_val_dataset)

@@ -30,7 +30,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
 
     def __init__(
         self,
-        root_dir: str,
         train_splits: List[str],
         val_splits: List[str],
         test_splits: List[str],
@@ -46,8 +45,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         """Initialize a LightningDataModule for Chesapeake CVPR based DataLoaders.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the ChesapeakeCVPR Dataset
-                classes
             train_splits: The splits used to train the model, e.g. ["ny-train"]
             val_splits: The splits used to validate the model, e.g. ["ny-val"]
             test_splits: The splits used to test the model, e.g. ["ny-test"]
@@ -60,6 +57,8 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             use_prior_labels: Flag for using a prior over high-resolution classes
                 instead of the high-resolution labels themselves
             prior_smoothing_constant: additive smoothing to add when using prior labels
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.ChesapeakeCVPR`
 
         Raises:
             ValueError: if ``use_prior_labels`` is used with ``class_set==7``
@@ -74,7 +73,6 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
                 + " class set of labels"
             )
 
-        self.root_dir = root_dir
         self.train_splits = train_splits
         self.val_splits = val_splits
         self.test_splits = test_splits
@@ -88,6 +86,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         self.class_set = class_set
         self.use_prior_labels = use_prior_labels
         self.prior_smoothing_constant = prior_smoothing_constant
+        self.kwargs = kwargs
 
         if self.use_prior_labels:
             self.layers = [
@@ -227,14 +226,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
 
         This method is called once per node, while :func:`setup` is called once per GPU.
         """
-        ChesapeakeCVPR(
-            self.root_dir,
-            splits=self.train_splits,
-            layers=self.layers,
-            transforms=None,
-            download=False,
-            checksum=False,
-        )
+        ChesapeakeCVPR(splits=self.train_splits, layers=self.layers, **self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Create the train/val/test splits based on the original Dataset objects.
@@ -270,28 +262,22 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
         )
 
         self.train_dataset = ChesapeakeCVPR(
-            self.root_dir,
             splits=self.train_splits,
             layers=self.layers,
             transforms=train_transforms,
-            download=False,
-            checksum=False,
+            **self.kwargs,
         )
         self.val_dataset = ChesapeakeCVPR(
-            self.root_dir,
             splits=self.val_splits,
             layers=self.layers,
             transforms=val_transforms,
-            download=False,
-            checksum=False,
+            **self.kwargs,
         )
         self.test_dataset = ChesapeakeCVPR(
-            self.root_dir,
             splits=self.test_splits,
             layers=self.layers,
             transforms=test_transforms,
-            download=False,
-            checksum=False,
+            **self.kwargs,
         )
 
     def train_dataloader(self) -> DataLoader[Any]:

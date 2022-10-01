@@ -24,19 +24,20 @@ class LandCoverAIDataModule(pl.LightningDataModule):
     """
 
     def __init__(
-        self, root_dir: str, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
         """Initialize a LightningDataModule for LandCover.ai based DataLoaders.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the Landcover.AI Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.LandCoverAI`
         """
         super().__init__()
-        self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.kwargs = kwargs
 
     def on_after_batch_transfer(
         self, batch: Dict[str, Any], batch_idx: int
@@ -105,7 +106,7 @@ class LandCoverAIDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        LandCoverAI(self.root_dir, download=False, checksum=False)
+        LandCoverAI(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -119,15 +120,15 @@ class LandCoverAIDataModule(pl.LightningDataModule):
         val_test_transforms = self.preprocess
 
         self.train_dataset = LandCoverAI(
-            self.root_dir, split="train", transforms=train_transforms
+            split="train", transforms=train_transforms, **self.kwargs
         )
 
         self.val_dataset = LandCoverAI(
-            self.root_dir, split="val", transforms=val_test_transforms
+            split="val", transforms=val_test_transforms, **self.kwargs
         )
 
         self.test_dataset = LandCoverAI(
-            self.root_dir, split="test", transforms=val_test_transforms
+            split="test", transforms=val_test_transforms, **self.kwargs
         )
 
     def train_dataloader(self) -> DataLoader[Any]:

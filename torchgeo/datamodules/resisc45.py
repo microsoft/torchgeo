@@ -29,19 +29,20 @@ class RESISC45DataModule(pl.LightningDataModule):
     band_stds = torch.tensor([0.20339924, 0.18524736, 0.18455448])
 
     def __init__(
-        self, root_dir: str, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
         """Initialize a LightningDataModule for RESISC45 based DataLoaders.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the RESISC45 Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.RESISC45`
         """
         super().__init__()
-        self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.kwargs = kwargs
 
         self.norm = Normalize(self.band_means, self.band_stds)
 
@@ -106,7 +107,7 @@ class RESISC45DataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        RESISC45(self.root_dir, checksum=False)
+        RESISC45(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -118,9 +119,11 @@ class RESISC45DataModule(pl.LightningDataModule):
         """
         transforms = Compose([self.preprocess])
 
-        self.train_dataset = RESISC45(self.root_dir, "train", transforms=transforms)
-        self.val_dataset = RESISC45(self.root_dir, "val", transforms=transforms)
-        self.test_dataset = RESISC45(self.root_dir, "test", transforms=transforms)
+        self.train_dataset = RESISC45(
+            split="train", transforms=transforms, **self.kwargs
+        )
+        self.val_dataset = RESISC45(split="val", transforms=transforms, **self.kwargs)
+        self.test_dataset = RESISC45(split="test", transforms=transforms, **self.kwargs)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.

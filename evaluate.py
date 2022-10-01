@@ -44,7 +44,7 @@ def set_up_parser() -> argparse.ArgumentParser:
         "--gpu", default=0, type=int, help="GPU ID to use", metavar="ID"
     )
     parser.add_argument(
-        "--root-dir",
+        "--root",
         required=True,
         type=str,
         help="root directory of the dataset for the accompanying task",
@@ -123,7 +123,7 @@ def main(args: argparse.Namespace) -> None:
         args: command-line arguments
     """
     assert os.path.exists(args.input_checkpoint)
-    assert os.path.exists(args.root_dir)
+    assert os.path.exists(args.root)
     TASK = TASK_TO_MODULES_MAPPING[args.task][0]
     DATAMODULE = TASK_TO_MODULES_MAPPING[args.task][1]
 
@@ -135,7 +135,7 @@ def main(args: argparse.Namespace) -> None:
 
     dm = DATAMODULE(  # type: ignore[call-arg]
         seed=args.seed,
-        root_dir=args.root_dir,
+        root=args.root,
         num_workers=args.num_workers,
         batch_size=args.batch_size,
     )

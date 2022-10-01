@@ -17,7 +17,10 @@ class TestXView2DataModule:
         num_workers = 0
         val_split_size = request.param
         dm = XView2DataModule(
-            root, batch_size, num_workers, val_split_pct=val_split_size
+            root=root,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            val_split_pct=val_split_size,
         )
         dm.prepare_data()
         dm.setup()

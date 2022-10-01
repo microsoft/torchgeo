@@ -25,19 +25,20 @@ class UCMercedDataModule(pl.LightningDataModule):
     """
 
     def __init__(
-        self, root_dir: str, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
         """Initialize a LightningDataModule for UCMerced based DataLoaders.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the UCMerced Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.UCMerced`
         """
         super().__init__()
-        self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.kwargs = kwargs
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
@@ -62,7 +63,7 @@ class UCMercedDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        UCMerced(self.root_dir, download=False, checksum=False)
+        UCMerced(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -74,9 +75,11 @@ class UCMercedDataModule(pl.LightningDataModule):
         """
         transforms = Compose([self.preprocess])
 
-        self.train_dataset = UCMerced(self.root_dir, "train", transforms=transforms)
-        self.val_dataset = UCMerced(self.root_dir, "val", transforms=transforms)
-        self.test_dataset = UCMerced(self.root_dir, "test", transforms=transforms)
+        self.train_dataset = UCMerced(
+            split="train", transforms=transforms, **self.kwargs
+        )
+        self.val_dataset = UCMerced(split="val", transforms=transforms, **self.kwargs)
+        self.test_dataset = UCMerced(split="test", transforms=transforms, **self.kwargs)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.

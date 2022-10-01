@@ -30,8 +30,8 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        naip_root_dir: str,
-        chesapeake_root_dir: str,
+        naip_root: str,
+        chesapeake_root: str,
         batch_size: int = 64,
         num_workers: int = 0,
         patch_size: int = 256,
@@ -40,18 +40,22 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         """Initialize a LightningDataModule for NAIP and Chesapeake based DataLoaders.
 
         Args:
-            naip_root_dir: directory containing NAIP data
-            chesapeake_root_dir: directory containing Chesapeake data
+            naip_root: directory containing NAIP data
+            chesapeake_root: directory containing Chesapeake data
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
             patch_size: size of patches to sample
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.NAIP` and
+                :class:`~torchgeo.datasets.Chesapeake13`
         """
         super().__init__()
-        self.naip_root_dir = naip_root_dir
-        self.chesapeake_root_dir = chesapeake_root_dir
+        self.naip_root = naip_root
+        self.chesapeake_root = chesapeake_root
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.patch_size = patch_size
+        self.kwargs = kwargs
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the NAIP Dataset.
@@ -97,7 +101,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        Chesapeake13(self.chesapeake_root_dir, download=False, checksum=False)
+        Chesapeake13(self.chesapeake_root, **self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -114,13 +118,14 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         chesapeak_transforms = Compose([self.chesapeake_transform, self.remove_bbox])
 
         chesapeake = Chesapeake13(
-            self.chesapeake_root_dir, transforms=chesapeak_transforms
+            self.chesapeake_root, transforms=chesapeak_transforms, **self.kwargs
         )
         naip = NAIP(
-            self.naip_root_dir,
+            self.naip_root,
             chesapeake.crs,
             chesapeake.res,
             transforms=naip_transforms,
+            **self.kwargs,
         )
         self.dataset = chesapeake & naip
 
