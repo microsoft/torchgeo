@@ -11,6 +11,6 @@ experiment:
     num_classes: 2
     ignore_index: 0
   datamodule:
-    root_dir: "data/etci2021"
+    root: "data/etci2021"
     batch_size: 32
     num_workers: 4

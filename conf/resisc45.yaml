@@ -14,6 +14,6 @@ experiment:
     in_channels: 3
     num_classes: 45
   datamodule:
-    root_dir: "data/resisc45"
+    root: "data/resisc45"
     batch_size: 128
     num_workers: 4

@@ -138,7 +138,7 @@ def main(args: argparse.Namespace) -> None:
         for test_splits in ALL_TEST_SPLITS:
 
             dm = ChesapeakeCVPRDataModule(
-                args.chesapeakecvpr_root,
+                root=args.chesapeakecvpr_root,
                 train_splits=["de-train"],
                 val_splits=["de-val"],
                 test_splits=test_splits,

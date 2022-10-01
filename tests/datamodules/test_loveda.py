@@ -17,7 +17,7 @@ class TestLoveDADataModule:
         scene = ["rural", "urban"]
 
         dm = LoveDADataModule(
-            root_dir=root, scene=scene, batch_size=batch_size, num_workers=num_workers
+            root=root, scene=scene, batch_size=batch_size, num_workers=num_workers
         )
 
         dm.prepare_data()

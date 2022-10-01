@@ -10,7 +10,7 @@ experiment:
     learning_rate_schedule_patience: 2
     pretrained: True
   datamodule:
-    root_dir: "data/cyclone"
+    root: "data/cyclone"
     seed: 0
     batch_size: 32
     num_workers: 4

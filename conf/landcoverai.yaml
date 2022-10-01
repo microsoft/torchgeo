@@ -17,6 +17,6 @@ experiment:
     num_filters: 256
     ignore_index: null
   datamodule:
-    root_dir: "data/landcoverai"
+    root: "data/landcoverai"
     batch_size: 32
     num_workers: 4

@@ -14,7 +14,7 @@ experiment:
     in_channels: 14
     num_classes: 19
   datamodule:
-    root_dir: "data/bigearthnet"
+    root: "data/bigearthnet"
     bands: "all"
     num_classes: ${experiment.module.num_classes}
     batch_size: 128

@@ -73,30 +73,22 @@ class BigEarthNetDataModule(pl.LightningDataModule):
     )
 
     def __init__(
-        self,
-        root_dir: str,
-        bands: str = "all",
-        num_classes: int = 19,
-        batch_size: int = 64,
-        num_workers: int = 0,
-        **kwargs: Any,
+        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
         """Initialize a LightningDataModule for BigEarthNet based DataLoaders.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the BigEarthNet Dataset classes
-            bands: load Sentinel-1 bands, Sentinel-2, or both. one of {s1, s2, all}
-            num_classes: number of classes to load in target. one of {19, 43}
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.BigEarthNet`
         """
         super().__init__()
-        self.root_dir = root_dir
-        self.bands = bands
-        self.num_classes = num_classes
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.kwargs = kwargs
 
+        bands = kwargs.get("bands", "all")
         if bands == "all":
             self.mins = self.band_mins[:, None, None]
             self.maxs = self.band_maxs[:, None, None]
@@ -119,7 +111,7 @@ class BigEarthNetDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        BigEarthNet(self.root_dir, split="train", bands=self.bands, checksum=False)
+        BigEarthNet(split="train", **self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -128,25 +120,13 @@ class BigEarthNetDataModule(pl.LightningDataModule):
         """
         transforms = Compose([self.preprocess])
         self.train_dataset = BigEarthNet(
-            self.root_dir,
-            split="train",
-            bands=self.bands,
-            num_classes=self.num_classes,
-            transforms=transforms,
+            split="train", transforms=transforms, **self.kwargs
         )
         self.val_dataset = BigEarthNet(
-            self.root_dir,
-            split="val",
-            bands=self.bands,
-            num_classes=self.num_classes,
-            transforms=transforms,
+            split="val", transforms=transforms, **self.kwargs
         )
         self.test_dataset = BigEarthNet(
-            self.root_dir,
-            split="test",
-            bands=self.bands,
-            num_classes=self.num_classes,
-            transforms=transforms,
+            split="test", transforms=transforms, **self.kwargs
         )
 
     def train_dataloader(self) -> DataLoader[Any]:

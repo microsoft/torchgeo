@@ -20,7 +20,7 @@ experiment:
     ignore_index: null
     imagenet_pretraining: True
   datamodule:
-    root_dir: "data/chesapeake/cvpr"
+    root: "data/chesapeake/cvpr"
     train_splits:
       - "de-train"
     val_splits:

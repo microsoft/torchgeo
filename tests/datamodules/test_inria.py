@@ -12,25 +12,22 @@ TEST_DATA_DIR = os.path.join("tests", "data", "inria")
 
 
 class TestInriaAerialImageLabelingDataModule:
-    @pytest.fixture(
-        params=zip([0.2, 0.2, 0.0], [0.2, 0.0, 0.0], ["test", "test", "test"])
-    )
+    @pytest.fixture(params=zip([0.2, 0.2, 0.0], [0.2, 0.0, 0.0]))
     def datamodule(self, request: SubRequest) -> InriaAerialImageLabelingDataModule:
-        val_split_pct, test_split_pct, predict_on = request.param
+        val_split_pct, test_split_pct = request.param
         patch_size = 2  # (2,2)
         num_patches_per_tile = 2
         root = TEST_DATA_DIR
         batch_size = 1
         num_workers = 0
         dm = InriaAerialImageLabelingDataModule(
-            root,
-            batch_size,
-            num_workers,
-            val_split_pct,
-            test_split_pct,
-            patch_size,
-            num_patches_per_tile,
-            predict_on=predict_on,
+            root=root,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            val_split_pct=val_split_pct,
+            test_split_pct=test_split_pct,
+            patch_size=patch_size,
+            num_patches_per_tile=num_patches_per_tile,
         )
         dm.prepare_data()
         dm.setup()

@@ -14,7 +14,7 @@ experiment:
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
   datamodule:
-    root_dir: "data/chesapeake/cvpr"
+    root: "data/chesapeake/cvpr"
     train_splits:
       - "de-train"
     val_splits:
