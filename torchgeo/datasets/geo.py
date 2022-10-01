@@ -306,7 +306,7 @@ class RasterDataset(GeoDataset):
 
     def __init__(
         self,
-        root: str,
+        root: str = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
@@ -712,7 +712,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
 
     def __init__(
         self,
-        root: str,
+        root: str = "data",
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         loader: Optional[Callable[[str], Any]] = pil_loader,
         is_valid_file: Optional[Callable[[str], bool]] = None,

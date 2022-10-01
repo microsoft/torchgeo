@@ -401,7 +401,7 @@ class SpaceNet1(SpaceNet):
 
     def __init__(
         self,
-        root: str,
+        root: str = "data",
         image: str = "rgb",
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
@@ -523,7 +523,7 @@ class SpaceNet2(SpaceNet):
 
     def __init__(
         self,
-        root: str,
+        root: str = "data",
         image: str = "PS-RGB",
         collections: List[str] = [],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
@@ -650,7 +650,7 @@ class SpaceNet3(SpaceNet):
 
     def __init__(
         self,
-        root: str,
+        root: str = "data",
         image: str = "PS-RGB",
         speed_mask: Optional[bool] = False,
         collections: List[str] = [],
@@ -907,7 +907,7 @@ class SpaceNet4(SpaceNet):
 
     def __init__(
         self,
-        root: str,
+        root: str = "data",
         image: str = "PS-RGBNIR",
         angles: List[str] = [],
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
@@ -1082,7 +1082,7 @@ class SpaceNet5(SpaceNet3):
 
     def __init__(
         self,
-        root: str,
+        root: str = "data",
         image: str = "PS-RGB",
         speed_mask: Optional[bool] = False,
         collections: List[str] = [],
@@ -1179,7 +1179,7 @@ class SpaceNet7(SpaceNet):
 
     def __init__(
         self,
-        root: str,
+        root: str = "data",
         split: str = "train",
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
