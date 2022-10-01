@@ -53,7 +53,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
 
     def __init__(
         self,
-        root: str,
+        root: str = "data",
         split: str = "train",
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         checksum: bool = False,
