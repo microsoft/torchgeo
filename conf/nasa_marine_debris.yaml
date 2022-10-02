@@ -21,7 +21,7 @@ experiment:
     learning_rate_schedule_patience: 6
     verbose: false
   datamodule:
-    root_dir: "data/nasamr/nasa_marine_debris"
+    root: "data/nasamr/nasa_marine_debris"
     batch_size: 4
     num_workers: 56
     val_split_pct: 0.2

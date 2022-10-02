@@ -8,6 +8,6 @@ experiment:
     learning_rate_schedule_patience: 6
     verbose: false
   datamodule:
-    root_dir: "tests/data/nasa_marine_debris"
+    root: "tests/data/nasa_marine_debris"
     batch_size: 1
     num_workers: 0
