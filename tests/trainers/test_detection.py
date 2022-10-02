@@ -54,3 +54,7 @@ class TestObjectDetectionTask:
         match = "Backbone type 'invalid_backbone' is not valid."
         with pytest.raises(ValueError, match=match):
             ObjectDetectionTask(**model_kwargs)
+
+    def test_non_pretrained_backbone(self, model_kwargs: Dict[Any, Any]) -> None:
+        model_kwargs["pretrained"] = False
+        ObjectDetectionTask(**model_kwargs)
