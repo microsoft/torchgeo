@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Callable, Dict, Type, cast
+from typing import Any, Dict, Type, cast
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -17,9 +17,7 @@ class TestObjectDetectionTask:
     @pytest.mark.parametrize(
         "name,classname", [("nasa_marine_debris", NASAMarineDebrisDataModule)]
     )
-    def test_trainer(
-        self, name: str, classname: Type[LightningDataModule], monkeypatch: MonkeyPatch
-    ) -> None:
+    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", f"{name}.yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
         conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
@@ -36,11 +34,6 @@ class TestObjectDetectionTask:
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
         trainer.test(model=model, datamodule=datamodule)
-
-        if isinstance(getattr(datamodule, "plot"), Callable):  # type: ignore[arg-type]
-            monkeypatch.delattr(classname, "plot")
-            datamodule2 = classname(**datamodule_kwargs)
-            trainer.validate(model=model, datamodule=datamodule2)
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:
@@ -65,3 +58,14 @@ class TestObjectDetectionTask:
     def test_non_pretrained_backbone(self, model_kwargs: Dict[Any, Any]) -> None:
         model_kwargs["pretrained"] = False
         ObjectDetectionTask(**model_kwargs)
+
+    def test_missing_attributes(
+        self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
+    ) -> None:
+        monkeypatch.delattr(NASAMarineDebrisDataModule, "plot")
+        datamodule = NASAMarineDebrisDataModule(
+            root="tests/data/nasa_marine_debris", batch_size=1, num_workers=0
+        )
+        model = ObjectDetectionTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer.validate(model=model, datamodule=datamodule)
