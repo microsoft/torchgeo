@@ -147,7 +147,7 @@ class ObjectDetectionTask(pl.LightningModule):
             {"boxes": batch["boxes"][i], "labels": batch["labels"][i]}
             for i in range(batch_size)
         ]
-        loss_dict = self.forward(x, y)
+        loss_dict = self(x, y)
         train_loss = sum(loss_dict.values())
 
         self.log_dict(loss_dict)
@@ -169,7 +169,7 @@ class ObjectDetectionTask(pl.LightningModule):
             {"boxes": batch["boxes"][i], "labels": batch["labels"][i]}
             for i in range(batch_size)
         ]
-        y_hat = self.forward(x)
+        y_hat = self(x)
 
         self.val_metrics.update(y_hat, y)
 
@@ -217,7 +217,7 @@ class ObjectDetectionTask(pl.LightningModule):
             {"boxes": batch["boxes"][i], "labels": batch["labels"][i]}
             for i in range(batch_size)
         ]
-        y_hat = self.forward(x)
+        y_hat = self(x)
 
         self.test_metrics.update(y_hat, y)
 
