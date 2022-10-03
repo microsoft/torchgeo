@@ -2,9 +2,10 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Type, cast
+from typing import Any, Callable, Dict, Type, cast
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 
@@ -16,9 +17,10 @@ class TestObjectDetectionTask:
     @pytest.mark.parametrize(
         "name,classname", [("nasa_marine_debris", NASAMarineDebrisDataModule)]
     )
-    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
-
-        conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
+    def test_trainer(
+        self, name: str, classname: Type[LightningDataModule], monkeypatch: MonkeyPatch
+    ) -> None:
+        conf = OmegaConf.load(os.path.join("tests", "conf", f"{name}.yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
         conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
 
@@ -34,6 +36,11 @@ class TestObjectDetectionTask:
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
         trainer.test(model=model, datamodule=datamodule)
+
+        if isinstance(getattr(datamodule, "plot"), Callable):  # type: ignore[arg-type]
+            monkeypatch.delattr(classname, "plot")
+            datamodule2 = classname(**datamodule_kwargs)
+            trainer.validate(model=model, datamodule=datamodule2)
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:
