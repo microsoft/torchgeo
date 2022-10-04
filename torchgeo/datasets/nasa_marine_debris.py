@@ -99,6 +99,12 @@ class NASAMarineDebris(NonGeoDataset):
         boxes = self._load_target(self.files[index]["target"])
         sample = {"image": image, "boxes": boxes}
 
+        # Filter invalid boxes
+        w_check = (sample["boxes"][:, 2] - sample["boxes"][:, 0]) > 0
+        h_check = (sample["boxes"][:, 3] - sample["boxes"][:, 1]) > 0
+        indices = w_check & h_check
+        sample["boxes"] = sample["boxes"][indices]
+
         if self.transforms is not None:
             sample = self.transforms(sample)
 

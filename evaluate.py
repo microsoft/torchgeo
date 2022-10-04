@@ -14,7 +14,11 @@ import pytorch_lightning as pl
 import torch
 from torchmetrics import Accuracy, JaccardIndex, MetricCollection
 
-from torchgeo.trainers import ClassificationTask, SemanticSegmentationTask
+from torchgeo.trainers import (
+    ClassificationTask,
+    ObjectDetectionTask,
+    SemanticSegmentationTask,
+)
 from train import TASK_TO_MODULES_MAPPING
 
 
@@ -106,6 +110,14 @@ def run_eval_loop(
             y = batch["mask"].to(device)
         elif "label" in batch:
             y = batch["label"].to(device)
+        elif "boxes" in batch:
+            y = [
+                {
+                    "boxes": batch["boxes"][i].to(device),
+                    "labels": batch["labels"][i].to(device),
+                }
+                for i in range(len(batch["image"]))
+            ]
         with torch.inference_mode():
             y_pred = model(x)
         metrics(y_pred, y)
@@ -176,6 +188,20 @@ def main(args: argparse.Namespace) -> None:
             "learning_rate": model.hparams["learning_rate"],
             "loss": model.hparams["loss"],
         }
+    elif issubclass(TASK, ObjectDetectionTask):
+        val_row = {
+            "split": "val",
+            "detection_model": model.hparams["detection_model"],
+            "backbone": model.hparams["backbone"],
+            "learning_rate": model.hparams["learning_rate"],
+        }
+
+        test_row = {
+            "split": "test",
+            "detection_model": model.hparams["detection_model"],
+            "backbone": model.hparams["backbone"],
+            "learning_rate": model.hparams["learning_rate"],
+        }
     else:
         raise ValueError(f"{TASK} is not supported")
 
@@ -240,6 +266,9 @@ def main(args: argparse.Namespace) -> None:
                     "jaccard_index": test_results["test_JaccardIndex"].item(),
                 }
             )
+        elif issubclass(TASK, ObjectDetectionTask):
+            val_row.update({"map": val_results["map"].item()})
+            test_row.update({"map": test_results["map"].item()})
 
     assert set(val_row.keys()) == set(test_row.keys())
     fieldnames = list(test_row.keys())
