@@ -55,7 +55,7 @@ class SEN12MSDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        seed: int,
+        seed: int = 0,
         band_set: str = "all",
         batch_size: int = 64,
         num_workers: int = 0,

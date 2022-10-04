@@ -26,7 +26,7 @@ class CycloneDataModule(pl.LightningDataModule):
     """
 
     def __init__(
-        self, seed: int, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+        self, seed = 0: int, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
         """Initialize a LightningDataModule for NASA Cyclone based DataLoaders.
 
