@@ -458,10 +458,11 @@ class BYOLTask(pl.LightningModule):
 
         Args:
             batch: the output of your DataLoader
+
         Returns:
             image embeddings
         """
         batch = args[0]
         x = batch["image"]
-        _ = self(x)
+        self(x)
         return self.model.encoder._embedding
