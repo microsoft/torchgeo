@@ -134,3 +134,14 @@ class TestSemanticSegmentationTask:
         match = "ignore_index has no effect on training when loss='jaccard'"
         with pytest.warns(UserWarning, match=match):
             SemanticSegmentationTask(**model_kwargs)
+
+    def test_missing_attributes(
+        self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
+    ) -> None:
+        monkeypatch.delattr(DeepGlobeLandCoverDataModule, "plot")
+        datamodule = DeepGlobeLandCoverDataModule(
+            root="tests/data/deepglobelandcover", batch_size=1, num_workers=0
+        )
+        model = SemanticSegmentationTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer.validate(model=model, datamodule=datamodule)

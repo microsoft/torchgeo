@@ -141,8 +141,12 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         self.train_sampler = RandomBatchGeoSampler(
             self.naip, self.patch_size, self.batch_size, self.length, train_roi
         )
-        self.val_sampler = GridGeoSampler(self.naip, self.patch_size, self.stride, val_roi)
-        self.test_sampler = GridGeoSampler(self.naip, self.patch_size, self.stride, test_roi)
+        self.val_sampler = GridGeoSampler(
+            self.naip, self.patch_size, self.stride, val_roi
+        )
+        self.test_sampler = GridGeoSampler(
+            self.naip, self.patch_size, self.stride, test_roi
+        )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.
