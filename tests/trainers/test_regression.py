@@ -67,10 +67,7 @@ class TestRegressionTask:
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:
-        return {
-            "model": "resnet18",
-            "pretrained": False,
-        }
+        return {"model": "resnet18", "pretrained": False}
 
     def test_missing_attributes(
         self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch

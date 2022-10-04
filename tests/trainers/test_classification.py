@@ -86,7 +86,7 @@ class TestClassificationTask:
     def model_kwargs(self) -> Dict[Any, Any]:
         return {
             "classification_model": "resnet18",
-            "in_channels": 1,
+            "in_channels": 13,
             "loss": "ce",
             "num_classes": 2,
             "weights": "random",
@@ -190,9 +190,9 @@ class TestMultiLabelClassificationTask:
     def model_kwargs(self) -> Dict[Any, Any]:
         return {
             "classification_model": "resnet18",
-            "in_channels": 1,
+            "in_channels": 14,
             "loss": "bce",
-            "num_classes": 1,
+            "num_classes": 19,
             "weights": "random",
         }
 
