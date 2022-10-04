@@ -3,7 +3,7 @@
 
 """National Agriculture Imagery Program (NAIP) datamodule."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
@@ -117,17 +117,17 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         naip_transforms = Compose([self.preprocess, self.remove_bbox])
         chesapeak_transforms = Compose([self.chesapeake_transform, self.remove_bbox])
 
-        chesapeake = Chesapeake13(
+        self.chesapeake = Chesapeake13(
             self.chesapeake_root, transforms=chesapeak_transforms, **self.kwargs
         )
-        naip = NAIP(
+        self.naip = NAIP(
             self.naip_root,
             chesapeake.crs,
             chesapeake.res,
             transforms=naip_transforms,
             **self.kwargs,
         )
-        self.dataset = chesapeake & naip
+        self.dataset = self.chesapeake & self.naip
 
         # TODO: figure out better train/val/test split
         roi = self.dataset.bounds
@@ -183,3 +183,15 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             collate_fn=stack_samples,
         )
+
+    def plot(self, *args: Any, **kwargs: Any) -> Tuple[plt.Figure, plt.Figure]:
+        """Run NAIP and Chesapeake plot methods.
+
+        See :meth:`torchgeo.datasets.NAIP.plot` and
+        :meth:`torchgeo.datasets.Chesapeake.plot`.
+
+        .. versionadded:: 0.4
+        """
+        image = self.naip.plot(*args, **kwargs)
+        label = self.chesapeake.plot(*args, **kwargs)
+        return image, label

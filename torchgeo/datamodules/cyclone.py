@@ -148,3 +148,10 @@ class CycloneDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=False,
         )
+
+    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+        """Run :meth:`torchgeo.datasets.TropicalCycloneWindEstimation.plot`.
+
+        .. versionadded:: 0.4
+        """
+        return self.all_train_dataset.plot(*args, **kwargs)
