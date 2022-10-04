@@ -2,7 +2,7 @@
 setuptools==65.4.0
 
 # install
-einops==0.4.1
+einops==0.5.0
 fiona==1.9a2
 kornia==0.6.7
 matplotlib==3.6.0
