@@ -113,7 +113,6 @@ class LoveDA(NonGeoDataset):
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
-        print(split)
         assert split in self.splits
         assert set(scene).intersection(
             set(self.scenes)
