@@ -5,6 +5,7 @@
 
 from typing import Any, Dict, List, Optional
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 from torch import Tensor

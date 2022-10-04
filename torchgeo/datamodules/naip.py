@@ -5,6 +5,7 @@
 
 from typing import Any, Dict, Optional, Tuple
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
@@ -122,8 +123,8 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         )
         self.naip = NAIP(
             self.naip_root,
-            chesapeake.crs,
-            chesapeake.res,
+            self.chesapeake.crs,
+            self.chesapeake.res,
             transforms=naip_transforms,
             **self.kwargs,
         )
@@ -138,10 +139,10 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         test_roi = BoundingBox(roi.minx, roi.maxx, midy, roi.maxy, roi.mint, roi.maxt)
 
         self.train_sampler = RandomBatchGeoSampler(
-            naip, self.patch_size, self.batch_size, self.length, train_roi
+            self.naip, self.patch_size, self.batch_size, self.length, train_roi
         )
-        self.val_sampler = GridGeoSampler(naip, self.patch_size, self.stride, val_roi)
-        self.test_sampler = GridGeoSampler(naip, self.patch_size, self.stride, test_roi)
+        self.val_sampler = GridGeoSampler(self.naip, self.patch_size, self.stride, val_roi)
+        self.test_sampler = GridGeoSampler(self.naip, self.patch_size, self.stride, test_roi)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.

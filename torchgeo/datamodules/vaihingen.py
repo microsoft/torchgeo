@@ -5,6 +5,7 @@
 
 from typing import Any, Dict, Optional
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import Compose
