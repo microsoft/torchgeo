@@ -65,6 +65,13 @@ class TestRegressionTask:
         with pytest.raises(AttributeError, match=match):
             RegressionTask(model="invalid_model", pretrained=False)
 
+    @pytest.fixture
+    def model_kwargs(self) -> Dict[Any, Any]:
+        return {
+            "model": "resnet18",
+            "pretrained": False,
+        }
+
     def test_missing_attributes(
         self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
     ) -> None:

@@ -191,7 +191,7 @@ class TestMultiLabelClassificationTask:
         return {
             "classification_model": "resnet18",
             "in_channels": 1,
-            "loss": "ce",
+            "loss": "bce",
             "num_classes": 1,
             "weights": "random",
         }
