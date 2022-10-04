@@ -3,7 +3,7 @@
 
 """Detection tasks."""
 
-from typing import Any, Dict, cast
+from typing import Any, Dict, List, cast
 
 import pytorch_lightning as pl
 import torch
@@ -232,7 +232,7 @@ class ObjectDetectionTask(pl.LightningModule):
         self.log_dict(renamed_metrics)
         self.test_metrics.reset()
 
-    def predict_step(self, *args: Any, **kwargs: Any) -> list[Dict[str, Tensor]]:
+    def predict_step(self, *args: Any, **kwargs: Any) -> List[Dict[str, Tensor]]:
         """Compute and return the predictions.
 
         Args:
@@ -243,7 +243,7 @@ class ObjectDetectionTask(pl.LightningModule):
         """
         batch = args[0]
         x = batch["image"]
-        y_hat: list[Dict[str, Tensor]] = self(x)
+        y_hat: List[Dict[str, Tensor]] = self(x)
         return y_hat
 
     def configure_optimizers(self) -> Dict[str, Any]:
