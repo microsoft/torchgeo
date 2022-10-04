@@ -5,9 +5,9 @@ import os
 from typing import Any, Dict, Type, cast
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
-from _pytest.monkeypatch import MonkeyPatch
 
 from torchgeo.datamodules import COWCCountingDataModule, CycloneDataModule
 from torchgeo.trainers import RegressionTask
