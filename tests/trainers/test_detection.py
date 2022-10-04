@@ -34,6 +34,7 @@ class TestObjectDetectionTask:
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
         trainer.test(model=model, datamodule=datamodule)
+        trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:

@@ -232,6 +232,20 @@ class ObjectDetectionTask(pl.LightningModule):
         self.log_dict(renamed_metrics)
         self.test_metrics.reset()
 
+    def predict_step(self, *args: Any, **kwargs: Any) -> list[Dict[str, Tensor]]:
+        """Compute and return the predictions.
+
+        Args:
+            batch: the output of your DataLoader
+
+        Returns:
+            list of predicted boxes, labels and scores
+        """
+        batch = args[0]
+        x = batch["image"]
+        y_hat: list[Dict[str, Tensor]] = self(x)
+        return y_hat
+
     def configure_optimizers(self) -> Dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
 
