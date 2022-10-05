@@ -211,6 +211,9 @@ class EncoderWrapper(Module):
         # time this is called
         self._encoded = self.projector(output)
 
+        # Store the image embeddings
+        self._embedding = output
+
     def _register_hook(self) -> None:
         """Register a hook for layer that we will extract features from."""
         layer = list(self.model.children())[self.layer]
@@ -449,3 +452,17 @@ class BYOLTask(pl.LightningModule):
 
     def test_step(self, *args: Any, **kwargs: Any) -> Any:
         """No-op, does nothing."""
+
+    def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
+        """Compute and return the output embeddings of the image encoder.
+
+        Args:
+            batch: the output of your DataLoader
+
+        Returns:
+            image embeddings
+        """
+        batch = args[0]
+        x = batch["image"]
+        self(x)
+        return self.model.encoder._embedding
