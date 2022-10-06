@@ -581,32 +581,14 @@ class ChesapeakeCVPR(GeoDataset):
 
         super().__init__(transforms)
 
-        lc_colors = []
-        for i in range(min(self.lc_cmap.keys()), max(self.lc_cmap.keys()) + 1):
-            if i in self.lc_cmap:
-                lc_colors.append(
-                    (
-                        self.lc_cmap[i][0] / 255.0,
-                        self.lc_cmap[i][1] / 255.0,
-                        self.lc_cmap[i][2] / 255.0,
-                    )
-                )
-            else:
-                lc_colors.append((0, 0, 0))
+        lc_colors = np.zeros((max(self.lc_cmap.keys()) + 1, 4))
+        lc_colors[list(self.lc_cmap.keys())] = list(self.lc_cmap.values())
+        lc_colors = lc_colors[:, :3] / 255
         self._lc_cmap = ListedColormap(lc_colors)
 
-        nlcd_colors = []
-        for i in range(min(self.nlcd_cmap.keys()), max(self.nlcd_cmap.keys()) + 1):
-            if i in self.nlcd_cmap:
-                nlcd_colors.append(
-                    (
-                        self.nlcd_cmap[i][0] / 255.0,
-                        self.nlcd_cmap[i][1] / 255.0,
-                        self.nlcd_cmap[i][2] / 255.0,
-                    )
-                )
-            else:
-                nlcd_colors.append((0, 0, 0))
+        nlcd_colors = np.zeros((max(self.nlcd_cmap.keys()) + 1, 4))
+        nlcd_colors[list(self.nlcd_cmap.keys())] = list(self.nlcd_cmap.values())
+        nlcd_colors = nlcd_colors[:, :3] / 255
         self._nlcd_cmap = ListedColormap(nlcd_colors)
 
         # Add all tiles into the index in epsg:3857 based on the included geojson
