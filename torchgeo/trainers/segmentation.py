@@ -142,7 +142,7 @@ class SemanticSegmentationTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         y = batch["mask"]
-        y_hat = self.forward(x)
+        y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
 
         loss = self.loss(y_hat, y)
@@ -174,7 +174,7 @@ class SemanticSegmentationTask(pl.LightningModule):
         batch_idx = args[1]
         x = batch["image"]
         y = batch["mask"]
-        y_hat = self.forward(x)
+        y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
 
         loss = self.loss(y_hat, y)
@@ -215,7 +215,7 @@ class SemanticSegmentationTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         y = batch["mask"]
-        y_hat = self.forward(x)
+        y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
 
         loss = self.loss(y_hat, y)
