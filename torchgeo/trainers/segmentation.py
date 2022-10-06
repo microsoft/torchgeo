@@ -13,7 +13,7 @@ import torch.nn as nn
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
-from torchmetrics import Accuracy, JaccardIndex, MetricCollection
+from torchmetrics import MetricCollection, MulticlassAccuracy, MulticlassJaccardIndex
 
 from ..datasets.utils import unbind_samples
 from ..models import FCN
@@ -104,12 +104,12 @@ class SemanticSegmentationTask(pl.LightningModule):
 
         self.train_metrics = MetricCollection(
             [
-                Accuracy(
+                MulticlassAccuracy(
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
                     mdmc_average="global",
                 ),
-                JaccardIndex(
+                MulticlassJaccardIndex(
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
                 ),

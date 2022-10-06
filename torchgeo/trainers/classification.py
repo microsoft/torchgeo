@@ -14,7 +14,12 @@ from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torchmetrics import Accuracy, FBetaScore, JaccardIndex, MetricCollection
+from torchmetrics import (
+    MetricCollection,
+    MulticlassAccuracy,
+    MulticlassFBetaScore,
+    MulticlassJaccardIndex,
+)
 
 from ..datasets.utils import unbind_samples
 from . import utils
@@ -104,16 +109,16 @@ class ClassificationTask(pl.LightningModule):
 
         self.train_metrics = MetricCollection(
             {
-                "OverallAccuracy": Accuracy(
+                "OverallAccuracy": MulticlassAccuracy(
                     num_classes=self.hyperparams["num_classes"], average="micro"
                 ),
-                "AverageAccuracy": Accuracy(
+                "AverageAccuracy": MulticlassAccuracy(
                     num_classes=self.hyperparams["num_classes"], average="macro"
                 ),
-                "JaccardIndex": JaccardIndex(
+                "JaccardIndex": MulticlassJaccardIndex(
                     num_classes=self.hyperparams["num_classes"]
                 ),
-                "F1Score": FBetaScore(
+                "F1Score": MulticlassFBetaScore(
                     num_classes=self.hyperparams["num_classes"],
                     beta=1.0,
                     average="micro",
@@ -305,17 +310,17 @@ class MultiLabelClassificationTask(ClassificationTask):
 
         self.train_metrics = MetricCollection(
             {
-                "OverallAccuracy": Accuracy(
+                "OverallAccuracy": MulticlassAccuracy(
                     num_classes=self.hyperparams["num_classes"],
                     average="micro",
                     multiclass=False,
                 ),
-                "AverageAccuracy": Accuracy(
+                "AverageAccuracy": MulticlassAccuracy(
                     num_classes=self.hyperparams["num_classes"],
                     average="macro",
                     multiclass=False,
                 ),
-                "F1Score": FBetaScore(
+                "F1Score": MulticlassFBetaScore(
                     num_classes=self.hyperparams["num_classes"],
                     beta=1.0,
                     average="micro",

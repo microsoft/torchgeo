@@ -7,23 +7,16 @@ from typing import Any, Dict, List, cast
 
 import pytorch_lightning as pl
 import torch
-import torchmetrics
 import torchvision
 from packaging.version import parse
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
+from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models.detection import FasterRCNN
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.ops import MultiScaleRoIAlign
-
-if parse(torchmetrics.__version__) >= parse("0.8.0"):
-    from torchmetrics.detection.mean_ap import MeanAveragePrecision
-else:
-    from torchmetrics.detection.map import (  # type: ignore[no-redef]
-        MeanAveragePrecision,
-    )
 
 if parse(torchvision.__version__) >= parse("0.13"):
     from torchvision.models import resnet as R
