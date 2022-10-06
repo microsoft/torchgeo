@@ -147,7 +147,7 @@ class ClassificationTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         y = batch["label"]
-        y_hat = self.forward(x)
+        y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
 
         loss = self.loss(y_hat, y)
@@ -179,7 +179,7 @@ class ClassificationTask(pl.LightningModule):
         batch_idx = args[1]
         x = batch["image"]
         y = batch["label"]
-        y_hat = self.forward(x)
+        y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
 
         loss = self.loss(y_hat, y)
@@ -220,7 +220,7 @@ class ClassificationTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         y = batch["label"]
-        y_hat = self.forward(x)
+        y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
 
         loss = self.loss(y_hat, y)
@@ -339,7 +339,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         batch = args[0]
         x = batch["image"]
         y = batch["label"]
-        y_hat = self.forward(x)
+        y_hat = self(x)
         y_hat_hard = torch.sigmoid(y_hat)
 
         loss = self.loss(y_hat, y.to(torch.float))
@@ -362,7 +362,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         batch_idx = args[1]
         x = batch["image"]
         y = batch["label"]
-        y_hat = self.forward(x)
+        y_hat = self(x)
         y_hat_hard = torch.sigmoid(y_hat)
 
         loss = self.loss(y_hat, y.to(torch.float))
@@ -394,7 +394,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         batch = args[0]
         x = batch["image"]
         y = batch["label"]
-        y_hat = self.forward(x)
+        y_hat = self(x)
         y_hat_hard = torch.sigmoid(y_hat)
 
         loss = self.loss(y_hat, y.to(torch.float))

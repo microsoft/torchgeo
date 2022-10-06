@@ -425,7 +425,7 @@ class BYOLTask(pl.LightningModule):
         with torch.no_grad():
             x1, x2 = self.model.augment(x), self.model.augment(x)
 
-        pred1, pred2 = self.forward(x1), self.forward(x2)
+        pred1, pred2 = self(x1), self(x2)
         with torch.no_grad():
             targ1, targ2 = self.model.target(x1), self.model.target(x2)
         loss = torch.mean(normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1))
@@ -444,7 +444,7 @@ class BYOLTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         x1, x2 = self.model.augment(x), self.model.augment(x)
-        pred1, pred2 = self.forward(x1), self.forward(x2)
+        pred1, pred2 = self(x1), self(x2)
         targ1, targ2 = self.model.target(x1), self.model.target(x2)
         loss = torch.mean(normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1))
 
