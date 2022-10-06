@@ -25,6 +25,66 @@ class Sentinel(RasterDataset):
     """
 
 
+class Sentinel1(Sentinel):
+    """Sentinel-1 dataset.
+
+    The `Sentinel-1 mission
+    <https://sentinel.esa.int/web/sentinel/missions/sentinel-1>`_ comprises a
+    constellation of two polar-orbiting satellites, operating day and night
+    performing C-band synthetic aperture radar imaging, enabling them to
+    acquire imagery regardless of the weather.
+    """
+
+    # https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/naming-conventions
+    # https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/document-library/-/asset_publisher/1dO7RF5fJMbd/content/sentinel-1-product-specification
+    filename_glob = "s1*{}.*"
+    filename_regex = r"""
+        ^(?P<mission>s1[ab])
+        -(?P<swath>[a-z0-9]{3})
+        -(?P<product>slc|grd|ocn)
+        -(?P<polarization>[vh]{2})
+        -(?P<start_date>\d{8}t\d{6})
+        -(?P<stop_date>\d{8}t\d{6})
+        -(?P<orbit>\d{6})
+        -(?P<take>[0-9a-f]{6})
+        -(?P<band>00[1-6])
+        \.
+    """
+    date_format = "%Y%m%dt%H%M%S"
+    all_bands = ["001", "002", "003", "004", "005", "006"]
+    separate_files = True
+
+    def __init__(
+        self,
+        root: str = "data",
+        crs: Optional[CRS] = None,
+        res: float = 10,
+        bands: Optional[Sequence[str]] = None,
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        cache: bool = True,
+    ) -> None:
+        """Initialize a new Dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
+            res: resolution of the dataset in units of CRS
+                (defaults to the resolution of the first file found)
+            bands: bands to return (defaults to all bands)
+            transforms: a function/transform that takes an input sample
+                and returns a transformed version
+            cache: if True, cache file handle to speed up repeated sampling
+
+        Raises:
+            FileNotFoundError: if no files are found in ``root``
+        """
+        bands = bands or self.all_bands
+        self.filename_glob = self.filename_glob.format(bands[0])
+
+        super().__init__(root, crs, res, bands, transforms, cache)
+
+
 class Sentinel2(Sentinel):
     """Sentinel-2 dataset.
 

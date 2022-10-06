@@ -122,6 +122,7 @@ Sentinel
 ^^^^^^^^
 
 .. autoclass:: Sentinel
+.. autoclass:: Sentinel1
 .. autoclass:: Sentinel2
 
 .. _Non-geospatial Datasets:

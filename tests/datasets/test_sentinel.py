@@ -10,7 +10,49 @@ import torch
 import torch.nn as nn
 from rasterio.crs import CRS
 
-from torchgeo.datasets import BoundingBox, IntersectionDataset, Sentinel2, UnionDataset
+from torchgeo.datasets import (
+    BoundingBox,
+    IntersectionDataset,
+    Sentinel1,
+    Sentinel2,
+    UnionDataset,
+)
+
+
+class TestSentinel1:
+    @pytest.fixture
+    def dataset(self) -> Sentinel1:
+        root = os.path.join("tests", "data", "sentinel1")
+        transforms = nn.Identity()
+        return Sentinel1(root, transforms=transforms)
+
+    def test_separate_files(self, dataset: Sentinel1) -> None:
+        assert dataset.index.count(dataset.index.bounds) == 1
+
+    def test_getitem(self, dataset: Sentinel1) -> None:
+        x = dataset[dataset.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x["crs"], CRS)
+        assert isinstance(x["image"], torch.Tensor)
+
+    def test_and(self, dataset: Sentinel1) -> None:
+        ds = dataset & dataset
+        assert isinstance(ds, IntersectionDataset)
+
+    def test_or(self, dataset: Sentinel1) -> None:
+        ds = dataset | dataset
+        assert isinstance(ds, UnionDataset)
+
+    def test_no_data(self, tmp_path: Path) -> None:
+        with pytest.raises(FileNotFoundError, match="No Sentinel1 data was found in "):
+            Sentinel1(str(tmp_path))
+
+    def test_invalid_query(self, dataset: Sentinel1) -> None:
+        query = BoundingBox(-1, -1, -1, -1, -1, -1)
+        with pytest.raises(
+            IndexError, match="query: .* not found in index with bounds:"
+        ):
+            dataset[query]
 
 
 class TestSentinel2:
