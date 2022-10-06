@@ -212,7 +212,7 @@ def main(args: argparse.Namespace) -> None:
     if args.task == "etci2021":  # Custom metric setup for testing ETCI2021
 
         metrics = MetricCollection(
-            [BinaryAccuracy(num_classes=2), BinaryJaccardIndex(num_classes=2, reduction="none")]
+            [BinaryAccuracy(), BinaryJaccardIndex()]
         ).to(device)
 
         val_results = run_eval_loop(model, dm.val_dataloader(), device, metrics)
