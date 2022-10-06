@@ -17,6 +17,8 @@ transforms:
 # Other
 documentation:
 - docs/**
+scripts:
+- *.py
 testing:
 - tests/**
 - .github/workflows/**
