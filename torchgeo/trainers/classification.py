@@ -19,6 +19,8 @@ from torchmetrics.classification import (
     MulticlassAccuracy,
     MulticlassFBetaScore,
     MulticlassJaccardIndex,
+    MultilabelAccuracy,
+    MultilabelFBetaScore,
 )
 
 from ..datasets.utils import unbind_samples
@@ -310,21 +312,16 @@ class MultiLabelClassificationTask(ClassificationTask):
 
         self.train_metrics = MetricCollection(
             {
-                "OverallAccuracy": MulticlassAccuracy(
-                    num_classes=self.hyperparams["num_classes"],
-                    average="micro",
-                    multiclass=False,
+                "OverallAccuracy": MultilabelAccuracy(
+                    num_labels=self.hyperparams["num_classes"], average="micro"
                 ),
-                "AverageAccuracy": MulticlassAccuracy(
-                    num_classes=self.hyperparams["num_classes"],
-                    average="macro",
-                    multiclass=False,
+                "AverageAccuracy": MultilabelAccuracy(
+                    num_labels=self.hyperparams["num_classes"], average="macro"
                 ),
-                "F1Score": MulticlassFBetaScore(
-                    num_classes=self.hyperparams["num_classes"],
+                "F1Score": MultilabelFBetaScore(
+                    num_labels=self.hyperparams["num_classes"],
                     beta=1.0,
                     average="micro",
-                    multiclass=False,
                 ),
             },
             prefix="train_",
