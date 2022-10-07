@@ -15,7 +15,7 @@ from torch import Tensor
 from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MetricCollection
-from torchmetrics.classification import (
+from torchmetrics.classification import (  # type: ignore[attr-defined]
     MulticlassAccuracy,
     MulticlassFBetaScore,
     MulticlassJaccardIndex,
