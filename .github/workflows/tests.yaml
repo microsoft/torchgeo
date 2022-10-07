@@ -94,7 +94,7 @@ jobs:
     - name: Install pip dependencies
       run: |
         pip install cython numpy==1.17.2  # needed by pycocotools
-        pip install -vvv -r requirements/min.old
+        pip install -r requirements/min.old
         pip list
     - name: Run pytest checks
       run: pytest --cov=torchgeo --cov-report=xml
