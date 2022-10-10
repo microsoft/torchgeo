@@ -12,7 +12,11 @@ from typing import Any, Dict, Union
 
 import pytorch_lightning as pl
 import torch
-from torchmetrics import Accuracy, JaccardIndex, MetricCollection
+from torchmetrics import MetricCollection
+from torchmetrics.classification import (  # type: ignore[attr-defined]
+    BinaryAccuracy,
+    BinaryJaccardIndex,
+)
 
 from torchgeo.trainers import (
     ClassificationTask,
@@ -211,9 +215,7 @@ def main(args: argparse.Namespace) -> None:
 
     if args.task == "etci2021":  # Custom metric setup for testing ETCI2021
 
-        metrics = MetricCollection(
-            [Accuracy(num_classes=2), JaccardIndex(num_classes=2, reduction="none")]
-        ).to(device)
+        metrics = MetricCollection([BinaryAccuracy(), BinaryJaccardIndex()]).to(device)
 
         val_results = run_eval_loop(model, dm.val_dataloader(), device, metrics)
         test_results = run_eval_loop(model, dm.test_dataloader(), device, metrics)
