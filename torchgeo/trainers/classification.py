@@ -14,7 +14,14 @@ from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torchmetrics import Accuracy, FBetaScore, JaccardIndex, MetricCollection
+from torchmetrics import MetricCollection
+from torchmetrics.classification import (  # type: ignore[attr-defined]
+    MulticlassAccuracy,
+    MulticlassFBetaScore,
+    MulticlassJaccardIndex,
+    MultilabelAccuracy,
+    MultilabelFBetaScore,
+)
 
 from ..datasets.utils import unbind_samples
 from . import utils
@@ -104,16 +111,16 @@ class ClassificationTask(pl.LightningModule):
 
         self.train_metrics = MetricCollection(
             {
-                "OverallAccuracy": Accuracy(
+                "OverallAccuracy": MulticlassAccuracy(
                     num_classes=self.hyperparams["num_classes"], average="micro"
                 ),
-                "AverageAccuracy": Accuracy(
+                "AverageAccuracy": MulticlassAccuracy(
                     num_classes=self.hyperparams["num_classes"], average="macro"
                 ),
-                "JaccardIndex": JaccardIndex(
+                "JaccardIndex": MulticlassJaccardIndex(
                     num_classes=self.hyperparams["num_classes"]
                 ),
-                "F1Score": FBetaScore(
+                "F1Score": MulticlassFBetaScore(
                     num_classes=self.hyperparams["num_classes"],
                     beta=1.0,
                     average="micro",
@@ -305,21 +312,16 @@ class MultiLabelClassificationTask(ClassificationTask):
 
         self.train_metrics = MetricCollection(
             {
-                "OverallAccuracy": Accuracy(
-                    num_classes=self.hyperparams["num_classes"],
-                    average="micro",
-                    multiclass=False,
+                "OverallAccuracy": MultilabelAccuracy(
+                    num_labels=self.hyperparams["num_classes"], average="micro"
                 ),
-                "AverageAccuracy": Accuracy(
-                    num_classes=self.hyperparams["num_classes"],
-                    average="macro",
-                    multiclass=False,
+                "AverageAccuracy": MultilabelAccuracy(
+                    num_labels=self.hyperparams["num_classes"], average="macro"
                 ),
-                "F1Score": FBetaScore(
-                    num_classes=self.hyperparams["num_classes"],
+                "F1Score": MultilabelFBetaScore(
+                    num_labels=self.hyperparams["num_classes"],
                     beta=1.0,
                     average="micro",
-                    multiclass=False,
                 ),
             },
             prefix="train_",

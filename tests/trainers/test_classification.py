@@ -88,7 +88,7 @@ class TestClassificationTask:
             "classification_model": "resnet18",
             "in_channels": 1,
             "loss": "ce",
-            "num_classes": 1,
+            "num_classes": 2,
             "weights": "random",
         }
 
