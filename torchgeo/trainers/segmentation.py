@@ -6,6 +6,7 @@
 import warnings
 from typing import Any, Dict, cast
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import segmentation_models_pytorch as smp
 import torch
@@ -198,6 +199,7 @@ class SemanticSegmentationTask(pl.LightningModule):
                 summary_writer.add_figure(
                     f"image/{batch_idx}", fig, global_step=self.global_step
                 )
+                plt.close()
             except AttributeError:
                 pass
 

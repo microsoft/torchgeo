@@ -6,6 +6,7 @@
 import os
 from typing import Any, Dict, cast
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import timm
 import torch
@@ -206,6 +207,7 @@ class ClassificationTask(pl.LightningModule):
                 summary_writer.add_figure(
                     f"image/{batch_idx}", fig, global_step=self.global_step
                 )
+                plt.close()
             except AttributeError:
                 pass
 
