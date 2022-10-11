@@ -5,6 +5,7 @@
 
 from typing import Any, Dict, List, cast
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 import torchvision
@@ -183,6 +184,7 @@ class ObjectDetectionTask(pl.LightningModule):
                 summary_writer.add_figure(
                     f"image/{batch_idx}", fig, global_step=self.global_step
                 )
+                plt.close()
             except AttributeError:
                 pass
 
