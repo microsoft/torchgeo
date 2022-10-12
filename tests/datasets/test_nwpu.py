@@ -35,11 +35,13 @@ class TestVHR10:
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         url = os.path.join("tests", "data", "vhr10", "NWPU VHR-10 dataset.rar")
         monkeypatch.setitem(VHR10.image_meta, "url", url)
-        md5 = "e5c38351bd948479fe35a71136aedbc4"
+        md5 = "1de589590bf1a9bb35c1c35f34229ff2"
         monkeypatch.setitem(VHR10.image_meta, "md5", md5)
-        url = os.path.join("tests", "data", "vhr10", "annotations.json")
+        url = os.path.join(
+            "tests", "data", "vhr10", "NWPU VHR-10 dataset", "annotations.json"
+        )
         monkeypatch.setitem(VHR10.target_meta, "url", url)
-        md5 = "16fc6aa597a19179dad84151cc221873"
+        md5 = "9f1d91c5229d31a613d5a5a35ee94f95"
         monkeypatch.setitem(VHR10.target_meta, "md5", md5)
         root = str(tmp_path)
         split = request.param
@@ -61,11 +63,14 @@ class TestVHR10:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
-        assert isinstance(x["label"], dict)
+        if dataset.split == "positive":
+            assert isinstance(x["labels"], torch.Tensor)
+            assert isinstance(x["boxes"], torch.Tensor)
+            assert isinstance(x["masks"], torch.Tensor)
 
     def test_len(self, dataset: VHR10) -> None:
         if dataset.split == "positive":
-            assert len(dataset) == 650
+            assert len(dataset) == len(dataset.ids)
         elif dataset.split == "negative":
             assert len(dataset) == 150
 
@@ -73,7 +78,7 @@ class TestVHR10:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
         if dataset.split == "positive":
-            assert len(ds) == 1300
+            assert len(ds) == 6
         elif dataset.split == "negative":
             assert len(ds) == 300
 
@@ -99,8 +104,15 @@ class TestVHR10:
                 VHR10(dataset.root, dataset.split)
 
     def test_plot(self, dataset: VHR10) -> None:
-        x = dataset[0].copy()
+        x = dataset[1].copy()
         dataset.plot(x, suptitle="Test")
         plt.close()
-        dataset.plot(x, draw_boxes=False)
+        dataset.plot(x, show_titles=False)
         plt.close()
+        if dataset.split == "positive":
+            x["prediction_labels"] = x["labels"]
+            x["prediction_boxes"] = x["boxes"]
+            x["prediction_scores"] = torch.Tensor([0.7, 0.3])
+            x["prediction_masks"] = x["masks"]
+            dataset.plot(x, show_feats="masks")
+            plt.close()

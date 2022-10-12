@@ -9,13 +9,17 @@ from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 
-from torchgeo.datamodules import NASAMarineDebrisDataModule
+from torchgeo.datamodules import NASAMarineDebrisDataModule, VHR10DataModule
 from torchgeo.trainers import ObjectDetectionTask
 
 
 class TestObjectDetectionTask:
     @pytest.mark.parametrize(
-        "name,classname", [("nasa_marine_debris", NASAMarineDebrisDataModule)]
+        "name,classname",
+        [
+            ("nasa_marine_debris", NASAMarineDebrisDataModule),
+            ("nwpu_vhr10", VHR10DataModule),
+        ],
     )
     def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", f"{name}.yaml"))

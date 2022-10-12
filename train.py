@@ -29,6 +29,7 @@ from torchgeo.datamodules import (
     So2SatDataModule,
     TropicalCycloneDataModule,
     UCMercedDataModule,
+    VHR10DataModule,
 )
 from torchgeo.trainers import (
     BYOLTask,
@@ -53,6 +54,7 @@ TASK_TO_MODULES_MAPPING: Dict[
     "landcoverai": (SemanticSegmentationTask, LandCoverAIDataModule),
     "naipchesapeake": (SemanticSegmentationTask, NAIPChesapeakeDataModule),
     "nasa_marine_debris": (ObjectDetectionTask, NASAMarineDebrisDataModule),
+    "nwpu_vhr10": (ObjectDetectionTask, VHR10DataModule),
     "oscd": (SemanticSegmentationTask, OSCDDataModule),
     "resisc45": (ClassificationTask, RESISC45DataModule),
     "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),

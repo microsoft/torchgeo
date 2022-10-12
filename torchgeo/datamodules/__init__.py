@@ -16,6 +16,7 @@ from .landcoverai import LandCoverAIDataModule
 from .loveda import LoveDADataModule
 from .naip import NAIPChesapeakeDataModule
 from .nasa_marine_debris import NASAMarineDebrisDataModule
+from .nwpu import VHR10DataModule
 from .oscd import OSCDDataModule
 from .potsdam import Potsdam2DDataModule
 from .resisc45 import RESISC45DataModule
@@ -50,6 +51,7 @@ __all__ = (
     "UCMercedDataModule",
     "USAVarsDataModule",
     "Vaihingen2DDataModule",
+    "VHR10DataModule",
     "XView2DataModule",
 )
 
