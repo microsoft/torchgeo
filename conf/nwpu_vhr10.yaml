@@ -1,0 +1,27 @@
+program:
+  seed: 0
+  overwrite: True
+
+trainer:
+  gpus: 1
+  min_epochs: 5
+  max_epochs: 100
+  auto_lr_find: False
+  benchmark: True
+
+experiment:
+  task: "nwpu_vhr10"
+  name: "nwpu_vhr10_test"
+  module:
+    detection_model: "faster-rcnn"
+    backbone: "resnet50"
+    pretrained: True
+    num_classes: 11
+    learning_rate: 1.2e-4
+    learning_rate_schedule_patience: 6
+    verbose: false
+  datamodule:
+    root: "data/vhr10"
+    batch_size: 1
+    num_workers: 12
+    val_split_pct: 0.2
