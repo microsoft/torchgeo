@@ -56,7 +56,7 @@ class ConvertCocoAnnotations:
     """
 
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Converts MS COCO fields (boxes, masks and labels) from list of ints to tensors.
+        """Converts MS COCO fields (boxes, masks & labels) from list of ints to tensors.
 
         Args:
             sample (Dict[str, Any]): Sample
