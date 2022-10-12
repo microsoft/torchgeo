@@ -6,7 +6,7 @@ einops==0.5.0
 fiona==1.9a2
 kornia==0.6.7
 matplotlib==3.6.1
-numpy==1.23.3;python_version>='3.8'
+numpy==1.23.4;python_version>='3.8'
 omegaconf==2.2.3
 packaging==21.3
 pillow==9.2.0
