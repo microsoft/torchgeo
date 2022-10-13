@@ -1,26 +1,32 @@
 import json
 import os
-from pathlib import Path
+import shutil
+import subprocess
+import warnings
+from copy import deepcopy
 
 import numpy as np
 import rasterio as rio
+from rasterio.errors import NotGeoreferencedWarning
 from torchvision.datasets.utils import calculate_md5
 
 ANNOTATION_FILE = {"images": [], "annotations": []}
 
 
 def write_data(path: str, img: np.ndarray) -> None:
-    with rio.open(
-        path,
-        "w",
-        driver="JP2OpenJPEG",
-        height=img.shape[0],
-        width=img.shape[1],
-        count=3,
-        dtype=img.dtype,
-    ) as dst:
-        for i in range(1, dst.count + 1):
-            dst.write(img, i)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=NotGeoreferencedWarning)
+        with rio.open(
+            path,
+            "w",
+            driver="JP2OpenJPEG",
+            height=img.shape[0],
+            width=img.shape[1],
+            count=3,
+            dtype=img.dtype,
+        ) as dst:
+            for i in range(1, dst.count + 1):
+                dst.write(img, i)
 
 
 def generate_test_data(root: str, n_imgs: int = 3) -> str:
@@ -28,6 +34,7 @@ def generate_test_data(root: str, n_imgs: int = 3) -> str:
     pos_img_dir = os.path.join(folder_path, "positive image set")
     neg_img_dir = os.path.join(folder_path, "negative image set")
     ann_file = os.path.join(folder_path, "annotations.json")
+    ann_file2 = os.path.join(root, "annotations.json")
 
     if not os.path.exists(pos_img_dir):
         os.makedirs(pos_img_dir)
@@ -42,34 +49,56 @@ def generate_test_data(root: str, n_imgs: int = 3) -> str:
         write_data(pos_img_name, img)
         write_data(neg_img_name, img)
 
-        img_name = Path(pos_img_name).name
+        img_name = os.path.basename(pos_img_name)
+
         ANNOTATION_FILE["images"].append(
             {"file_name": img_name, "height": 8, "width": 8, "id": img_id - 1}
         )
 
     ann = 0
-    for img in ANNOTATION_FILE["images"]:
-        for _ in range(2):
-            annot = {
-                "id": ann,
-                "image_id": img["id"],
-                "category_id": 1,
-                "area": 4.0,
-                "bbox": [4, 4, 2, 2],
-                "segmentation": [[1, 1, 2, 2, 3, 3, 4, 5, 5]],
-                "iscrowd": 0,
-            }
-            ann += 1
-            ANNOTATION_FILE["annotations"].append(annot)
+    import pdb
 
+    pdb.set_trace()
+    for i, img in enumerate(ANNOTATION_FILE["images"]):
+        annot = {
+            "id": ann,
+            "image_id": img["id"],
+            "category_id": 1,
+            "area": 4.0,
+            "bbox": [4, 4, 2, 2],
+            "segmentation": [[1, 1, 2, 2, 3, 3, 4, 5, 5]],
+            "iscrowd": 0,
+        }
+        if i != 0:
+            ANNOTATION_FILE["annotations"].append(annot)
+        else:
+            noseg_annot = deepcopy(annot)
+            del noseg_annot["segmentation"]
+            ANNOTATION_FILE["annotations"].append(noseg_annot)
+        ann += 1
+    import pdb
+
+    pdb.set_trace()
     with open(ann_file, "w") as j:
         json.dump(ANNOTATION_FILE, j)
 
+    with open(ann_file2, "w") as j:
+        json.dump(ANNOTATION_FILE, j)
+
+    # Create rar file
+    subprocess.run(
+        ["rar", "a", "NWPU VHR-10 dataset.rar", "-m5", "NWPU VHR-10 dataset"],
+        capture_output=True,
+        check=True,
+    )
+
     annotations_md5 = calculate_md5(ann_file)
-    # TODO: Create rar and return md5 hash
-    return annotations_md5
+    archive_md5 = calculate_md5("NWPU VHR-10 dataset.rar")
+    shutil.rmtree(folder_path)
+
+    return f"archive md5: {archive_md5}, annotation md5: {annotations_md5}"
 
 
 if __name__ == "__main__":
-    md5 = generate_test_data(os.getcwd())
+    md5 = generate_test_data(os.getcwd(), 5)
     print(md5)

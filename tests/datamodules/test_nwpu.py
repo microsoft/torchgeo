@@ -14,8 +14,8 @@ class TestVHR10DataModule:
         root = os.path.join("tests", "data", "vhr10")
         batch_size = 1
         num_workers = 0
-        val_split_pct = 0.33
-        test_split_pct = 0.33
+        val_split_pct = 0.4
+        test_split_pct = 0.2
         dm = VHR10DataModule(
             root=root,
             batch_size=batch_size,

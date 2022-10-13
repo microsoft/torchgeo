@@ -35,11 +35,11 @@ class TestVHR10:
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         url = os.path.join("tests", "data", "vhr10", "NWPU VHR-10 dataset.rar")
         monkeypatch.setitem(VHR10.image_meta, "url", url)
-        md5 = "a3ef39def90c8046865b203b2647ce8f"
+        md5 = "e68727b2c91ac849def1985924d9586f"
         monkeypatch.setitem(VHR10.image_meta, "md5", md5)
         url = os.path.join("tests", "data", "vhr10", "annotations.json")
         monkeypatch.setitem(VHR10.target_meta, "url", url)
-        md5 = "6bf0c9cfa1ca2b697893d89e193cb722"
+        md5 = "833899cce369168e0d4ee420dac326dc"
         monkeypatch.setitem(VHR10.target_meta, "md5", md5)
         root = str(tmp_path)
         split = request.param
@@ -58,13 +58,15 @@ class TestVHR10:
         monkeypatch.setattr(builtins, "__import__", mocked_import)
 
     def test_getitem(self, dataset: VHR10) -> None:
-        x = dataset[0]
-        assert isinstance(x, dict)
-        assert isinstance(x["image"], torch.Tensor)
-        if dataset.split == "positive":
-            assert isinstance(x["labels"], torch.Tensor)
-            assert isinstance(x["boxes"], torch.Tensor)
-            assert isinstance(x["masks"], torch.Tensor)
+        for i in range(2):
+            x = dataset[i]
+            assert isinstance(x, dict)
+            assert isinstance(x["image"], torch.Tensor)
+            if dataset.split == "positive":
+                assert isinstance(x["labels"], torch.Tensor)
+                assert isinstance(x["boxes"], torch.Tensor)
+                if "masks" in x:
+                    assert isinstance(x["masks"], torch.Tensor)
 
     def test_len(self, dataset: VHR10) -> None:
         if dataset.split == "positive":
@@ -76,7 +78,7 @@ class TestVHR10:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
         if dataset.split == "positive":
-            assert len(ds) == 6
+            assert len(ds) == 10
         elif dataset.split == "negative":
             assert len(ds) == 300
 
@@ -108,9 +110,13 @@ class TestVHR10:
         dataset.plot(x, show_titles=False)
         plt.close()
         if dataset.split == "positive":
-            x["prediction_labels"] = x["labels"]
-            x["prediction_boxes"] = x["boxes"]
-            x["prediction_scores"] = torch.Tensor([0.7, 0.3])
-            x["prediction_masks"] = x["masks"]
-            dataset.plot(x, show_feats="masks")
-            plt.close()
+            scores = [0.7, 0.3, 0.7]
+            for i in range(3):
+                x = dataset[i]
+                x["prediction_labels"] = x["labels"]
+                x["prediction_boxes"] = x["boxes"]
+                x["prediction_scores"] = torch.Tensor([scores[i]])
+                if "masks" in x:
+                    x["prediction_masks"] = x["masks"]
+                    dataset.plot(x, show_feats="masks")
+                plt.close()

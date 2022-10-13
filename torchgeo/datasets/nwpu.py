@@ -85,19 +85,20 @@ class ConvertCocoAnnotations:
         categories = [obj["category_id"] for obj in anno]
         classes = torch.tensor(categories, dtype=torch.int64)
 
-        segmentations = [obj["segmentation"] for obj in anno]
+        if "segmentation" in anno[0]:
+            segmentations = [obj["segmentation"] for obj in anno]
+        else:
+            segmentations = []
         masks = convert_coco_poly_to_mask(segmentations, h, w)
 
         keep = (boxes[:, 3] > boxes[:, 1]) & (boxes[:, 2] > boxes[:, 0])
         boxes = boxes[keep]
         classes = classes[keep]
-        masks = masks[keep]
 
-        target = {}
-        target["boxes"] = boxes
-        target["labels"] = classes
-        target["masks"] = masks
-        target["image_id"] = image_id
+        target = {"boxes": boxes, "labels": classes, "image_id": image_id}
+        if masks.nelement() > 0:
+            masks = masks[keep]
+            target["masks"] = masks
 
         # for conversion to coco api
         area = torch.tensor([obj["area"] for obj in anno])
@@ -259,7 +260,8 @@ class VHR10(NonGeoDataset):
             sample = self.coco_convert(sample)
             sample["labels"] = sample["label"]["labels"]
             sample["boxes"] = sample["label"]["boxes"]
-            sample["masks"] = sample["label"]["masks"]
+            if "masks" in sample["label"]:
+                sample["masks"] = sample["label"]["masks"]
             del sample["label"]
 
         if self.transforms is not None:
@@ -403,7 +405,8 @@ class VHR10(NonGeoDataset):
         image = sample["image"].permute(1, 2, 0).numpy()
         boxes = sample["boxes"].cpu().numpy()
         labels = sample["labels"].cpu().numpy()
-        masks = [mask.squeeze().cpu().numpy() for mask in sample["masks"]]
+        if "masks" in sample:
+            masks = [mask.squeeze().cpu().numpy() for mask in sample["masks"]]
 
         N_GT = len(boxes)
 
@@ -460,7 +463,7 @@ class VHR10(NonGeoDataset):
             )
 
             # Add masks
-            if show_feats in {"masks", "both"}:
+            if show_feats in {"masks", "both"} and "masks" in sample:
                 mask = masks[i]
                 contours = find_contours(mask, 0.5)
                 for verts in contours:

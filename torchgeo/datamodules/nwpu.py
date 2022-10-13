@@ -34,7 +34,8 @@ def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
     output["image"] = torch.stack([sample["image"] for sample in batch])
     output["labels"] = [sample["labels"] for sample in batch]
     output["boxes"] = [sample["boxes"] for sample in batch]
-    output["masks"] = [sample["masks"] for sample in batch]
+    if "masks" in batch[0]:
+        output["masks"] = [sample["masks"] for sample in batch]
     return output
 
 
@@ -95,9 +96,10 @@ class VHR10DataModule(pl.LightningDataModule):
         sample["boxes"][:, 3] *= box_scale[1]
         sample["boxes"] = torch.round(sample["boxes"])
 
-        sample["masks"] = torchvision.transforms.functional.resize(
-            sample["masks"], size=self.patch_size
-        )
+        if "masks" in sample:
+            sample["masks"] = torchvision.transforms.functional.resize(
+                sample["masks"], size=self.patch_size
+            )
 
         return sample
 
