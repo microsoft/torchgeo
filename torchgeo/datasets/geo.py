@@ -180,10 +180,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
     def __getstate__(
         self,
-    ) -> Tuple[
-        Dict[Any, Any],
-        List[Tuple[int, Tuple[float, float, float, float, float, float], str]],
-    ]:
+    ) -> Tuple[Dict[str, Any], List[Tuple[Any, Any, Optional[Any]]]]:
         """Define how instances are pickled.
 
         Returns:
@@ -407,7 +404,7 @@ class RasterDataset(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object for hit in hits]
+        filepaths = cast(List[str], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
