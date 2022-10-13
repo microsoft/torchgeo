@@ -23,7 +23,7 @@ def write_data(path: str, img: np.ndarray) -> None:
             dst.write(img, i)
 
 
-def generate_test_data(root: str, n_imgs: int = 3):
+def generate_test_data(root: str, n_imgs: int = 3) -> str:
     folder_path = os.path.join(root, "NWPU VHR-10 dataset")
     pos_img_dir = os.path.join(folder_path, "positive image set")
     neg_img_dir = os.path.join(folder_path, "negative image set")
