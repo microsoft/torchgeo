@@ -35,11 +35,11 @@ class TestVHR10:
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         url = os.path.join("tests", "data", "vhr10", "NWPU VHR-10 dataset.rar")
         monkeypatch.setitem(VHR10.image_meta, "url", url)
-        md5 = "b77f310f26851c71cb113c61cfcf1d76"
+        md5 = "a3ef39def90c8046865b203b2647ce8f"
         monkeypatch.setitem(VHR10.image_meta, "md5", md5)
         url = os.path.join("tests", "data", "vhr10", "annotations.json")
         monkeypatch.setitem(VHR10.target_meta, "url", url)
-        md5 = "9f1d91c5229d31a613d5a5a35ee94f95"
+        md5 = "6bf0c9cfa1ca2b697893d89e193cb722"
         monkeypatch.setitem(VHR10.target_meta, "md5", md5)
         root = str(tmp_path)
         split = request.param

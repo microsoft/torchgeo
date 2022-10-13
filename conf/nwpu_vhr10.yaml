@@ -17,11 +17,12 @@ experiment:
     backbone: "resnet50"
     pretrained: True
     num_classes: 11
-    learning_rate: 1.2e-4
+    learning_rate: 1.3e-5
     learning_rate_schedule_patience: 6
     verbose: false
   datamodule:
     root: "data/vhr10"
-    batch_size: 1
-    num_workers: 12
+    batch_size: 2
+    patch_size: 512
+    num_workers: 56
     val_split_pct: 0.2

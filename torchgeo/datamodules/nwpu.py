@@ -3,15 +3,17 @@
 
 """NWPU VHR-10 datamodule."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
+import torchvision
 from torch import Tensor
 from torch.utils.data import DataLoader
 
 from ..datasets import VHR10
+from ..samplers.utils import _to_tuple
 from .utils import dataset_split
 
 # https://github.com/pytorch/pytorch/issues/60979
@@ -49,6 +51,7 @@ class VHR10DataModule(pl.LightningDataModule):
         num_workers: int = 0,
         val_split_pct: float = 0.2,
         test_split_pct: float = 0.2,
+        patch_size: Union[int, Tuple[int, int]] = 512,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for VHR10 based DataLoaders.
@@ -59,6 +62,7 @@ class VHR10DataModule(pl.LightningDataModule):
             num_workers: The number of workers to use in all created DataLoaders
             val_split_pct: What percentage of the dataset to use as a validation set
             test_split_pct: What percentage of the dataset to use as a test set
+            patch_size: Patch size (height, width) for batched training
         """
         super().__init__()
         self.root = root
@@ -66,6 +70,7 @@ class VHR10DataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
+        self.patch_size = cast(Tuple[int, int], _to_tuple(patch_size))
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
@@ -78,6 +83,22 @@ class VHR10DataModule(pl.LightningDataModule):
         """
         sample["image"] = sample["image"].float()
         sample["image"] /= 255.0
+
+        _, h, w = sample["image"].shape
+        sample["image"] = torchvision.transforms.functional.resize(
+            sample["image"], size=self.patch_size
+        )
+        box_scale = (self.patch_size[1] / w, self.patch_size[0] / h)
+        sample["boxes"][:, 0] *= box_scale[0]
+        sample["boxes"][:, 1] *= box_scale[1]
+        sample["boxes"][:, 2] *= box_scale[0]
+        sample["boxes"][:, 3] *= box_scale[1]
+        sample["boxes"] = torch.round(sample["boxes"])
+
+        sample["masks"] = torchvision.transforms.functional.resize(
+            sample["masks"], size=self.patch_size
+        )
+
         return sample
 
     def prepare_data(self) -> None:

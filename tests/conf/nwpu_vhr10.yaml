@@ -13,3 +13,4 @@ experiment:
     seed: 0
     batch_size: 1
     num_workers: 0
+    patch_size: 4
