@@ -5,7 +5,7 @@
 
 import os
 import sys
-from typing import Any, Callable, Dict, Optional, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence, cast
 
 import fiona
 import matplotlib.pyplot as plt
@@ -343,7 +343,7 @@ class EnviroAtlas(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object for hit in hits]
+        filepaths = cast(List[Dict[str, str]], [hit.object for hit in hits])
 
         sample = {"image": [], "mask": [], "crs": self.crs, "bbox": query}
 

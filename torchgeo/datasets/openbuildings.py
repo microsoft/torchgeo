@@ -7,7 +7,7 @@ import glob
 import json
 import os
 import sys
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, cast
 
 import fiona
 import fiona.transform
@@ -307,7 +307,7 @@ class OpenBuildings(VectorDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object for hit in hits]
+        filepaths = cast(List[str], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
