@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import pytest
 from _pytest.fixtures import SubRequest
 
-from torchgeo.datasets import unbind_samples
 from torchgeo.datamodules import Potsdam2DDataModule
+from torchgeo.datasets import unbind_samples
 
 
 class TestPotsdam2DDataModule:

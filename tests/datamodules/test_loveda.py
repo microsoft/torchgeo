@@ -6,8 +6,8 @@ import os
 import matplotlib.pyplot as plt
 import pytest
 
-from torchgeo.datasets import unbind_samples
 from torchgeo.datamodules import LoveDADataModule
+from torchgeo.datasets import unbind_samples
 
 
 class TestLoveDADataModule:

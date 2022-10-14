@@ -6,8 +6,8 @@ import os
 import matplotlib.pyplot as plt
 import pytest
 
-from torchgeo.datasets import unbind_samples
 from torchgeo.datamodules import FAIR1MDataModule
+from torchgeo.datasets import unbind_samples
 
 
 class TestFAIR1MDataModule:
