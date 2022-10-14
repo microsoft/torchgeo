@@ -138,7 +138,8 @@ class TestSemanticSegmentationTask:
     def test_missing_attributes(
         self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
     ) -> None:
-        monkeypatch.delattr(DeepGlobeLandCoverDataModule, "plot")
+        # TODO: uncomment once DGLC has a plot method
+        # monkeypatch.delattr(DeepGlobeLandCoverDataModule, "plot")
         datamodule = DeepGlobeLandCoverDataModule(
             root="tests/data/deepglobelandcover", batch_size=1, num_workers=0
         )
