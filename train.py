@@ -17,7 +17,6 @@ from torchgeo.datamodules import (
     BigEarthNetDataModule,
     ChesapeakeCVPRDataModule,
     COWCCountingDataModule,
-    TropicalCycloneDataModule,
     ETCI2021DataModule,
     EuroSATDataModule,
     InriaAerialImageLabelingDataModule,
@@ -28,6 +27,7 @@ from torchgeo.datamodules import (
     RESISC45DataModule,
     SEN12MSDataModule,
     So2SatDataModule,
+    TropicalCycloneDataModule,
     UCMercedDataModule,
 )
 from torchgeo.trainers import (

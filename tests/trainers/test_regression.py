@@ -17,7 +17,10 @@ from .test_utils import RegressionTestModel
 class TestRegressionTask:
     @pytest.mark.parametrize(
         "name,classname",
-        [("cowc_counting", COWCCountingDataModule), ("cyclone", TropicalCycloneDataModule)],
+        [
+            ("cowc_counting", COWCCountingDataModule),
+            ("cyclone", TropicalCycloneDataModule),
+        ],
     )
     def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))

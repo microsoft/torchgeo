@@ -25,7 +25,7 @@ class TropicalCycloneDataModule(pl.LightningDataModule):
 
     .. versionchanged:: 0.4.0
             Class name changed from CycloneDataModule to TropicalCycloneDataModule to be
-            consistent with TropicalCyclone dataclass. 
+            consistent with TropicalCyclone dataclass.
     """
 
     def __init__(
