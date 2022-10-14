@@ -6,7 +6,6 @@
 from typing import Any, Dict, List, Optional, Tuple
 
 import kornia.augmentation as K
-import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 from einops import repeat
@@ -197,10 +196,3 @@ class OSCDDataModule(pl.LightningDataModule):
         return DataLoader(
             self.test_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
         )
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.OSCD.plot`.
-
-        .. versionadded:: 0.4
-        """
-        return self.test_dataset.plot(*args, **kwargs)

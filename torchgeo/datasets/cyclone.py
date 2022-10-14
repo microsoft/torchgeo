@@ -232,7 +232,6 @@ class TropicalCycloneWindEstimation(NonGeoDataset):
         .. versionadded:: 0.2
         """
         image, label = sample["image"], sample["label"]
-        image = image.permute((1, 2, 0)).numpy()
 
         showing_predictions = "prediction" in sample
         if showing_predictions:

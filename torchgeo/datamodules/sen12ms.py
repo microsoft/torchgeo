@@ -5,7 +5,6 @@
 
 from typing import Any, Dict, Optional
 
-import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 from sklearn.model_selection import GroupShuffleSplit
@@ -192,10 +191,3 @@ class SEN12MSDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=False,
         )
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.SEN12MS.plot`.
-
-        .. versionadded:: 0.4
-        """
-        return self.all_train_dataset.plot(*args, **kwargs)
