@@ -40,8 +40,8 @@ class TropicalCyclone(NonGeoDataset):
          imagery and labels from the Radiant Earth MLHub
 
     ..versionchanged:: 0.4.0
-            Class name changed from TropicalCycloneWindEstimation to TropicalCyclone
-            to be consistent with TropicalCycloneDataModule.
+        Class name changed from TropicalCycloneWindEstimation to TropicalCyclone
+        to be consistent with TropicalCycloneDataModule.
     """
 
     collection_id = "nasa_tropical_storm_competition"
