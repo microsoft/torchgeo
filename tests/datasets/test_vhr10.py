@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -30,15 +31,15 @@ class TestVHR10:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> VHR10:
         pytest.importorskip("rarfile", minversion="3")
-        monkeypatch.setattr(torchgeo.datasets.nwpu, "download_url", download_url)
+        monkeypatch.setattr(torchgeo.datasets.vhr10, "download_url", download_url)
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         url = os.path.join("tests", "data", "vhr10", "NWPU VHR-10 dataset.rar")
         monkeypatch.setitem(VHR10.image_meta, "url", url)
-        md5 = "e5c38351bd948479fe35a71136aedbc4"
+        md5 = "e68727b2c91ac849def1985924d9586f"
         monkeypatch.setitem(VHR10.image_meta, "md5", md5)
         url = os.path.join("tests", "data", "vhr10", "annotations.json")
         monkeypatch.setitem(VHR10.target_meta, "url", url)
-        md5 = "16fc6aa597a19179dad84151cc221873"
+        md5 = "833899cce369168e0d4ee420dac326dc"
         monkeypatch.setitem(VHR10.target_meta, "md5", md5)
         root = str(tmp_path)
         split = request.param
@@ -57,14 +58,19 @@ class TestVHR10:
         monkeypatch.setattr(builtins, "__import__", mocked_import)
 
     def test_getitem(self, dataset: VHR10) -> None:
-        x = dataset[0]
-        assert isinstance(x, dict)
-        assert isinstance(x["image"], torch.Tensor)
-        assert isinstance(x["label"], dict)
+        for i in range(2):
+            x = dataset[i]
+            assert isinstance(x, dict)
+            assert isinstance(x["image"], torch.Tensor)
+            if dataset.split == "positive":
+                assert isinstance(x["labels"], torch.Tensor)
+                assert isinstance(x["boxes"], torch.Tensor)
+                if "masks" in x:
+                    assert isinstance(x["masks"], torch.Tensor)
 
     def test_len(self, dataset: VHR10) -> None:
         if dataset.split == "positive":
-            assert len(dataset) == 650
+            assert len(dataset) == len(dataset.ids)
         elif dataset.split == "negative":
             assert len(dataset) == 150
 
@@ -72,7 +78,7 @@ class TestVHR10:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
         if dataset.split == "positive":
-            assert len(ds) == 1300
+            assert len(ds) == 10
         elif dataset.split == "negative":
             assert len(ds) == 300
 
@@ -96,3 +102,21 @@ class TestVHR10:
                 match="pycocotools is not installed and is required to use this datase",
             ):
                 VHR10(dataset.root, dataset.split)
+
+    def test_plot(self, dataset: VHR10) -> None:
+        x = dataset[1].copy()
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
+        if dataset.split == "positive":
+            scores = [0.7, 0.3, 0.7]
+            for i in range(3):
+                x = dataset[i]
+                x["prediction_labels"] = x["labels"]
+                x["prediction_boxes"] = x["boxes"]
+                x["prediction_scores"] = torch.Tensor([scores[i]])
+                if "masks" in x:
+                    x["prediction_masks"] = x["masks"]
+                    dataset.plot(x, show_feats="masks")
+                plt.close()
