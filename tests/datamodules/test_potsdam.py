@@ -3,9 +3,11 @@
 
 import os
 
+import matplotlib.pyplot as plt
 import pytest
 from _pytest.fixtures import SubRequest
 
+from torchgeo.datasets import unbind_samples
 from torchgeo.datamodules import Potsdam2DDataModule
 
 
@@ -34,3 +36,9 @@ class TestPotsdam2DDataModule:
 
     def test_test_dataloader(self, datamodule: Potsdam2DDataModule) -> None:
         next(iter(datamodule.test_dataloader()))
+
+    def test_plot(self, datamodule: Potsdam2DDataModule) -> None:
+        batch = next(iter(datamodule.train_dataloader()))
+        sample = unbind_samples(batch)[0]
+        datamodule.plot(sample)
+        plt.close()
