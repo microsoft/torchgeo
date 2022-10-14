@@ -37,8 +37,8 @@ def convert_coco_poly_to_mask(
     for polygons in segmentations:
         rles = coco_mask.frPyObjects(polygons, height, width)
         mask = coco_mask.decode(rles)
-        if len(mask.shape) < 3:
-            mask = mask[..., None]
+        # if len(mask.shape) < 3:
+        #     mask = mask[..., None]
         mask = torch.as_tensor(mask, dtype=torch.uint8)
         mask = mask.any(dim=2)
         masks.append(mask)
