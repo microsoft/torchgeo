@@ -293,7 +293,7 @@ SpaceNet
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
 
-.. autoclass:: TropicalCycloneWindEstimation
+.. autoclass:: TropicalCyclone
 
 UC Merced
 ^^^^^^^^^
