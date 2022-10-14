@@ -24,8 +24,8 @@ class TropicalCycloneDataModule(pl.LightningDataModule):
     See :func:`setup` for more details.
 
     .. versionchanged:: 0.4.0
-            Class name changed from CycloneDataModule to TropicalCycloneDataModule to be
-            consistent with TropicalCyclone dataclass.
+        Class name changed from CycloneDataModule to TropicalCycloneDataModule to be
+        consistent with TropicalCyclone dataset.
     """
 
     def __init__(
