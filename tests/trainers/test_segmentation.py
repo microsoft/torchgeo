@@ -104,8 +104,8 @@ class TestSemanticSegmentationTask:
             "segmentation_model": "unet",
             "encoder_name": "resnet18",
             "encoder_weights": None,
-            "in_channels": 1,
-            "num_classes": 2,
+            "in_channels": 3,
+            "num_classes": 6,
             "loss": "ce",
             "ignore_index": 0,
         }
@@ -138,10 +138,9 @@ class TestSemanticSegmentationTask:
     def test_missing_attributes(
         self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
     ) -> None:
-        # TODO: uncomment once DGLC has a plot method
-        # monkeypatch.delattr(DeepGlobeLandCoverDataModule, "plot")
-        datamodule = DeepGlobeLandCoverDataModule(
-            root="tests/data/deepglobelandcover", batch_size=1, num_workers=0
+        monkeypatch.delattr(LandCoverAIDataModule, "plot")
+        datamodule = LandCoverAIDataModule(
+            root="tests/data/landcoverai", batch_size=1, num_workers=0
         )
         model = SemanticSegmentationTask(**model_kwargs)
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
