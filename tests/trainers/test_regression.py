@@ -8,7 +8,7 @@ import pytest
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 
-from torchgeo.datamodules import COWCCountingDataModule, CycloneDataModule
+from torchgeo.datamodules import COWCCountingDataModule, TropicalCycloneDataModule
 from torchgeo.trainers import RegressionTask
 
 from .test_utils import RegressionTestModel
@@ -17,7 +17,10 @@ from .test_utils import RegressionTestModel
 class TestRegressionTask:
     @pytest.mark.parametrize(
         "name,classname",
-        [("cowc_counting", COWCCountingDataModule), ("cyclone", CycloneDataModule)],
+        [
+            ("cowc_counting", COWCCountingDataModule),
+            ("cyclone", TropicalCycloneDataModule),
+        ],
     )
     def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
@@ -47,7 +50,7 @@ class TestRegressionTask:
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = CycloneDataModule(**datamodule_kwargs)
+        datamodule = TropicalCycloneDataModule(**datamodule_kwargs)
 
         # Instantiate model
         model_kwargs = conf_dict["module"]
