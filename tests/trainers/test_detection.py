@@ -18,7 +18,7 @@ class TestObjectDetectionTask:
         "name,classname",
         [
             ("nasa_marine_debris", NASAMarineDebrisDataModule),
-            ("nwpu_vhr10", VHR10DataModule),
+            ("vhr10", VHR10DataModule),
         ],
     )
     def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:

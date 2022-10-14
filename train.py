@@ -54,12 +54,12 @@ TASK_TO_MODULES_MAPPING: Dict[
     "landcoverai": (SemanticSegmentationTask, LandCoverAIDataModule),
     "naipchesapeake": (SemanticSegmentationTask, NAIPChesapeakeDataModule),
     "nasa_marine_debris": (ObjectDetectionTask, NASAMarineDebrisDataModule),
-    "nwpu_vhr10": (ObjectDetectionTask, VHR10DataModule),
     "oscd": (SemanticSegmentationTask, OSCDDataModule),
     "resisc45": (ClassificationTask, RESISC45DataModule),
     "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),
     "so2sat": (ClassificationTask, So2SatDataModule),
     "ucmerced": (ClassificationTask, UCMercedDataModule),
+    "vhr10": (ObjectDetectionTask, VHR10DataModule),
 }
 
 

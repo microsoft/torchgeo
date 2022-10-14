@@ -1,6 +1,6 @@
 
 experiment:
-  task: "nwpu_vhr10"
+  task: "vhr10"
   module:
     detection_model: "faster-rcnn"
     backbone: "resnet18"

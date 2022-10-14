@@ -10,8 +10,8 @@ trainer:
   benchmark: True
 
 experiment:
-  task: "nwpu_vhr10"
-  name: "nwpu_vhr10_test"
+  task: "vhr10"
+  name: "vhr10_test"
   module:
     detection_model: "faster-rcnn"
     backbone: "resnet50"

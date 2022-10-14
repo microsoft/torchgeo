@@ -16,7 +16,6 @@ from .landcoverai import LandCoverAIDataModule
 from .loveda import LoveDADataModule
 from .naip import NAIPChesapeakeDataModule
 from .nasa_marine_debris import NASAMarineDebrisDataModule
-from .nwpu import VHR10DataModule
 from .oscd import OSCDDataModule
 from .potsdam import Potsdam2DDataModule
 from .resisc45 import RESISC45DataModule
@@ -25,6 +24,7 @@ from .so2sat import So2SatDataModule
 from .ucmerced import UCMercedDataModule
 from .usavars import USAVarsDataModule
 from .vaihingen import Vaihingen2DDataModule
+from .vhr10 import VHR10DataModule
 from .xview import XView2DataModule
 
 __all__ = (

@@ -31,12 +31,8 @@ def convert_coco_poly_to_mask(
     Returns:
         Tensor: Mask tensor
     """
-    try:
-        from pycocotools import mask as coco_mask  # noqa: F401
-    except ImportError:
-        raise ImportError(
-            "pycocotools is not installed and is required to use this dataset"
-        )
+    from pycocotools import mask as coco_mask  # noqa: F401
+
     masks = []
     for polygons in segmentations:
         rles = coco_mask.frPyObjects(polygons, height, width)
