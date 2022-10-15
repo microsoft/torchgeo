@@ -31,12 +31,12 @@ DataLoader.__module__ = "torch.utils.data"
 class SemanticSegmentationTask(pl.LightningModule):
     """LightningModule for semantic segmentation of images.
 
-    Supports `segmentation_models.pytorch
+    Supports `Segmentation Models Pytorch
     <https://github.com/qubvel/segmentation_models.pytorch>`_
     as an architecture choice in combination with any of these
     `TIMM encoders <https://smp.readthedocs.io/en/latest/encoders_timm.html>`_.
 
-    .. versionchanged:: 0.4.0
+    .. versionchanged:: 0.3.2
         Add documentation about supported architectures.
 
     """
@@ -44,7 +44,7 @@ class SemanticSegmentationTask(pl.LightningModule):
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor.
 
-        .. versionchanged:: 0.4.0
+        .. versionchanged:: 0.3.2
             Improve error message of supported segmentation architectures
             and loss function.
         """
@@ -103,12 +103,17 @@ class SemanticSegmentationTask(pl.LightningModule):
             num_classes: Number of semantic classes to predict
             loss: Name of the loss function
             ignore_index: Optional integer class index to ignore in the loss and metrics
+            learning_rate: Learning rate for optimizer
+            learning_rate_schedule_patience: Patience for learning rate scheduler
 
         Raises:
             ValueError: if kwargs arguments are invalid
 
         .. versionchanged:: 0.3
            The *ignore_zeros* parameter was renamed to *ignore_index*.
+
+        .. versionchanged:: 0.3.2
+            Add 'learning_rate' and 'learning_rate_schedule_patience' to keyword args
         """
         super().__init__()
 

@@ -40,14 +40,14 @@ class ClassificationTask(pl.LightningModule):
     <https://rwightman.github.io/pytorch-image-models/>`_
     as an architecture choice.
 
-    .. versionchanged:: 0.4.0
+    .. versionchanged:: 0.3.2
         Add documentation about available classification models.
     """
 
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor.
 
-        .. versionchanged:: 0.4.0
+        .. versionchanged:: 0.3.2
             Add documentation about available pretrained weights and available
             Timm models.
         """
@@ -119,7 +119,7 @@ class ClassificationTask(pl.LightningModule):
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
 
-        :: versionchanged:: 0.4.0
+        :: versionchanged:: 0.3.2
             Add keyword arguments 'num_classes', 'in_channels', 'learing_rate' and
             'learning_rate_schedule_patience' and change supported
             weights name.
@@ -322,9 +322,17 @@ class MultiLabelClassificationTask(ClassificationTask):
 
         Keyword Args:
             classification_model: Name of the classification model use
-            loss: Name of the loss function
-            weights: Either "random", "imagenet_only", "imagenet_and_random", or
-                "random_rgb"
+            loss: Name of the loss function, currently only supports 'bce'
+            weights: Either "random" or 'imagenet'
+            num_classes: Number of prediction classes
+            in_channels: Number of input channels to model
+            learning_rate: Learning rate for optimizer
+            learning_rate_schedule_patience: Patience for learning rate scheduler
+
+        :: versionchanged:: 0.3.2
+            Add keyword arguments 'num_classes', 'in_channels', 'learing_rate' and
+            'learning_rate_schedule_patience' and change supported
+            weights name.
         """
         super().__init__(**kwargs)
 
