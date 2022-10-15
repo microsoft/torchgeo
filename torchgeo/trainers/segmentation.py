@@ -29,10 +29,25 @@ DataLoader.__module__ = "torch.utils.data"
 
 
 class SemanticSegmentationTask(pl.LightningModule):
-    """LightningModule for semantic segmentation of images."""
+    """LightningModule for semantic segmentation of images.
+
+    Supports `segmentation_models.pytorch
+    <https://github.com/qubvel/segmentation_models.pytorch>`_
+    as an architecture choice in combination with any of these
+    `TIMM encoders <https://smp.readthedocs.io/en/latest/encoders_timm.html>`_.
+
+    .. versionchanged:: 0.4.0
+        Add documentation about supported architectures.
+
+    """
 
     def config_task(self) -> None:
-        """Configures the task based on kwargs parameters passed to the constructor."""
+        """Configures the task based on kwargs parameters passed to the constructor.
+
+        .. versionchanged:: 0.4.0
+            Improve error message of supported segmentation architectures
+            and loss function.
+        """
         if self.hyperparams["segmentation_model"] == "unet":
             self.model = smp.Unet(
                 encoder_name=self.hyperparams["encoder_name"],
@@ -56,6 +71,7 @@ class SemanticSegmentationTask(pl.LightningModule):
         else:
             raise ValueError(
                 f"Model type '{self.hyperparams['segmentation_model']}' is not valid."
+                f"Currently, only support 'unet', 'deeplabv3+' and 'fcn'."
             )
 
         if self.hyperparams["loss"] == "ce":
@@ -70,7 +86,10 @@ class SemanticSegmentationTask(pl.LightningModule):
                 "multiclass", ignore_index=self.ignore_index, normalized=True
             )
         else:
-            raise ValueError(f"Loss type '{self.hyperparams['loss']}' is not valid.")
+            raise ValueError(
+                f"Loss type '{self.hyperparams['loss']}' is not valid."
+                f"Currently, support 'ce', 'jaccard' or 'focal' loss."
+            )
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.

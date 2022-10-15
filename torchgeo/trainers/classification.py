@@ -34,10 +34,23 @@ Linear.__module__ = "nn.Linear"
 
 
 class ClassificationTask(pl.LightningModule):
-    """LightningModule for image classification."""
+    """LightningModule for image classification.
+
+    Supports any available `Timm model
+    <https://rwightman.github.io/pytorch-image-models/>`_
+    as an architecture choice.
+
+    .. versionchanged:: 0.4.0
+        Add documentation about available classification models.
+    """
 
     def config_model(self) -> None:
-        """Configures the model based on kwargs parameters passed to the constructor."""
+        """Configures the model based on kwargs parameters passed to the constructor.
+
+        .. versionchanged:: 0.4.0
+            Add documentation about available pretrained weights and available
+            Timm models.
+        """
         in_channels = self.hyperparams["in_channels"]
         classification_model = self.hyperparams["classification_model"]
 
@@ -68,6 +81,7 @@ class ClassificationTask(pl.LightningModule):
         else:
             raise ValueError(
                 f"Model type '{classification_model}' is not a valid timm model."
+                f"Valid model types are {valid_models}."
             )
 
         if custom_pretrained:
@@ -99,8 +113,16 @@ class ClassificationTask(pl.LightningModule):
         Keyword Args:
             classification_model: Name of the classification model use
             loss: Name of the loss function
-            weights: Either "random", "imagenet_only", "imagenet_and_random", or
-                "random_rgb"
+            weights: Either "random" or "imagenet"
+            num_classes: Number of prediction classes
+            in_channels: Number of input channels to model
+            learning_rate: Learning rate for optimizer
+            learning_rate_schedule_patience: Patience for learning rate scheduler
+
+        :: versionchanged:: 0.4.0
+            Add keyword arguments 'num_classes', 'in_channels', 'learing_rate' and
+            'learning_rate_schedule_patience' and change supported
+            weights name.
         """
         super().__init__()
 
