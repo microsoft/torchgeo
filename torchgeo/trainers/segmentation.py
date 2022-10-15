@@ -35,10 +35,6 @@ class SemanticSegmentationTask(pl.LightningModule):
     <https://github.com/qubvel/segmentation_models.pytorch>`_
     as an architecture choice in combination with any of these
     `TIMM encoders <https://smp.readthedocs.io/en/latest/encoders_timm.html>`_.
-
-    .. versionchanged:: 0.3.2
-        Add documentation about supported architectures.
-
     """
 
     def config_task(self) -> None:
@@ -111,9 +107,6 @@ class SemanticSegmentationTask(pl.LightningModule):
 
         .. versionchanged:: 0.3
            The *ignore_zeros* parameter was renamed to *ignore_index*.
-
-        .. versionchanged:: 0.3.2
-            Add 'learning_rate' and 'learning_rate_schedule_patience' to keyword args
         """
         super().__init__()
 

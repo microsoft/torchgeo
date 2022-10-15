@@ -39,18 +39,10 @@ class ClassificationTask(pl.LightningModule):
     Supports any available `Timm model
     <https://rwightman.github.io/pytorch-image-models/>`_
     as an architecture choice.
-
-    .. versionchanged:: 0.3.2
-        Add documentation about available classification models.
     """
 
     def config_model(self) -> None:
-        """Configures the model based on kwargs parameters passed to the constructor.
-
-        .. versionchanged:: 0.3.2
-            Add documentation about available pretrained weights and available
-            Timm models.
-        """
+        """Configures the model based on kwargs parameters passed to the constructor."""
         in_channels = self.hyperparams["in_channels"]
         classification_model = self.hyperparams["classification_model"]
 
@@ -118,11 +110,6 @@ class ClassificationTask(pl.LightningModule):
             in_channels: Number of input channels to model
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
-
-        :: versionchanged:: 0.3.2
-            Add keyword arguments 'num_classes', 'in_channels', 'learing_rate' and
-            'learning_rate_schedule_patience' and change supported
-            weights name.
         """
         super().__init__()
 
@@ -328,11 +315,6 @@ class MultiLabelClassificationTask(ClassificationTask):
             in_channels: Number of input channels to model
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
-
-        :: versionchanged:: 0.3.2
-            Add keyword arguments 'num_classes', 'in_channels', 'learing_rate' and
-            'learning_rate_schedule_patience' and change supported
-            weights name.
         """
         super().__init__(**kwargs)
 
