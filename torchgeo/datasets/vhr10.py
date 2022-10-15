@@ -11,7 +11,6 @@ import numpy as np
 import torch
 from matplotlib import patches
 from PIL import Image
-from skimage.measure import find_contours
 from torch import Tensor
 
 from .geo import NonGeoDataset
@@ -393,6 +392,14 @@ class VHR10(NonGeoDataset):
         .. versionadded:: 0.4
         """
         assert show_feats in {"boxes", "masks", "both"}
+
+        if show_feats != "boxes":
+            try:
+                from skimage.measure import find_contours  # noqa: F401
+            except ImportError:
+                raise ImportError(
+                    "scikit-image is not installed and is required to plot masks."
+                )
 
         if self.split == "negative":
             plt.imshow(sample["image"].permute(1, 2, 0))
