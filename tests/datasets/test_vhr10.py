@@ -47,11 +47,11 @@ class TestVHR10:
         return VHR10(root, split, transforms, download=True, checksum=True)
 
     @pytest.fixture
-    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
+    def mock_missing_modules(self, monkeypatch: MonkeyPatch) -> None:
         import_orig = builtins.__import__
 
         def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name == "pycocotools.coco":
+            if name in {"pycocotools.coco", "skimage.measure"}:
                 raise ImportError()
             return import_orig(name, *args, **kwargs)
 
@@ -70,7 +70,7 @@ class TestVHR10:
 
     def test_len(self, dataset: VHR10) -> None:
         if dataset.split == "positive":
-            assert len(dataset) == len(dataset.ids)
+            assert len(dataset) == 5
         elif dataset.split == "negative":
             assert len(dataset) == 150
 
@@ -94,7 +94,7 @@ class TestVHR10:
             VHR10(str(tmp_path))
 
     def test_mock_missing_module(
-        self, dataset: VHR10, mock_missing_module: None
+        self, dataset: VHR10, mock_missing_modules: None
     ) -> None:
         if dataset.split == "positive":
             with pytest.raises(
@@ -102,6 +102,13 @@ class TestVHR10:
                 match="pycocotools is not installed and is required to use this datase",
             ):
                 VHR10(dataset.root, dataset.split)
+
+            with pytest.raises(
+                ImportError,
+                match="scikit-image is not installed and is required to plot masks",
+            ):
+                x = dataset[0]
+                _ = dataset.plot(x)
 
     def test_plot(self, dataset: VHR10) -> None:
         x = dataset[1].copy()
