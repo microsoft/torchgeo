@@ -38,12 +38,7 @@ class SemanticSegmentationTask(pl.LightningModule):
     """
 
     def config_task(self) -> None:
-        """Configures the task based on kwargs parameters passed to the constructor.
-
-        .. versionchanged:: 0.3.2
-            Improve error message of supported segmentation architectures
-            and loss function.
-        """
+        """Configures the task based on kwargs parameters passed to the constructor."""
         if self.hyperparams["segmentation_model"] == "unet":
             self.model = smp.Unet(
                 encoder_name=self.hyperparams["encoder_name"],
