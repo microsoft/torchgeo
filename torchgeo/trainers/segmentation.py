@@ -62,7 +62,7 @@ class SemanticSegmentationTask(pl.LightningModule):
         else:
             raise ValueError(
                 f"Model type '{self.hyperparams['segmentation_model']}' is not valid."
-                f"Currently, only support 'unet', 'deeplabv3+' and 'fcn'."
+                f"Currently, only supports 'unet', 'deeplabv3+' and 'fcn'."
             )
 
         if self.hyperparams["loss"] == "ce":
@@ -79,7 +79,7 @@ class SemanticSegmentationTask(pl.LightningModule):
         else:
             raise ValueError(
                 f"Loss type '{self.hyperparams['loss']}' is not valid."
-                f"Currently, support 'ce', 'jaccard' or 'focal' loss."
+                f"Currently, supports 'ce', 'jaccard' or 'focal' loss."
             )
 
     def __init__(self, **kwargs: Any) -> None:
