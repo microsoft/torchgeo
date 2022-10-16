@@ -165,7 +165,7 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
         """Return a DataLoader for training.
 
         Returns:
-            training dataloader
+            training data loader
         """
 
         def collate_wrapper(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -195,7 +195,7 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
         """Return a DataLoader for validation.
 
         Returns:
-            validation dataloader
+            validation data loader
         """
         return DataLoader(
             self.val_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
@@ -205,7 +205,7 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
         """Return a DataLoader for testing.
 
         Returns:
-            test dataloader
+            test data loader
         """
         return DataLoader(
             self.test_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
