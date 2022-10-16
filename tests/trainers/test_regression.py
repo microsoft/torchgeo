@@ -59,7 +59,37 @@ class TestRegressionTask:
         )
         trainer.fit(model=model, datamodule=datamodule)
 
-    def test_invalid_model(self) -> None:
-        match = "module 'torchvision.models' has no attribute 'invalid_model'"
-        with pytest.raises(AttributeError, match=match):
-            RegressionTask(model="invalid_model", pretrained=False)
+    @pytest.fixture
+    def model_kwargs(self) -> Dict[Any, Any]:
+        return {
+            "regression_model": "resnet18",
+            "weights": "random",
+            "num_outputs": 1,
+            "in_channels": 3,
+        }
+
+    def test_invalid_pretrained(
+        self, model_kwargs: Dict[Any, Any], checkpoint: str
+    ) -> None:
+        model_kwargs["weights"] = checkpoint
+        model_kwargs["regression_model"] = "resnet50"
+        match = "Trying to load resnet18 weights into a resnet50"
+        with pytest.raises(ValueError, match=match):
+            RegressionTask(**model_kwargs)
+
+    def test_pretrained(self, model_kwargs: Dict[Any, Any], checkpoint: str) -> None:
+        model_kwargs["weights"] = checkpoint
+        with pytest.warns(UserWarning):
+            RegressionTask(**model_kwargs)
+
+    def test_invalid_model(self, model_kwargs: Dict[Any, Any]) -> None:
+        model_kwargs["regression_model"] = "invalid_model"
+        match = "Model type 'invalid_model' is not a valid timm model."
+        with pytest.raises(ValueError, match=match):
+            RegressionTask(**model_kwargs)
+
+    def test_invalid_weights(self, model_kwargs: Dict[Any, Any]) -> None:
+        model_kwargs["weights"] = "invalid_weights"
+        match = "Weight type 'invalid_weights' is not valid."
+        with pytest.raises(ValueError, match=match):
+            RegressionTask(**model_kwargs)
