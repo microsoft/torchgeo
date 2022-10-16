@@ -72,7 +72,7 @@ class ClassificationTask(pl.LightningModule):
             )
         else:
             raise ValueError(
-                f"Model type '{classification_model}' is not a valid timm model."
+                f"Model type '{classification_model}' is not a valid timm model. "
                 f"Valid model types are {valid_models}."
             )
 
