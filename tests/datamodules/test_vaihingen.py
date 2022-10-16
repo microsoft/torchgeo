@@ -20,7 +20,7 @@ class TestVaihingen2DDataModule:
         val_split_size = request.param
         dm = Vaihingen2DDataModule(
             root=root,
-            batch_size=batch_size,
+            train_batch_size=batch_size,
             num_workers=num_workers,
             val_split_pct=val_split_size,
         )

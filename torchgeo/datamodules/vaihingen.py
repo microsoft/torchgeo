@@ -3,11 +3,15 @@
 
 """Vaihingen datamodule."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
+import kornia.augmentation as K
 import pytorch_lightning as pl
+import torch
+from einops import repeat
 from torch.utils.data import DataLoader, Dataset
+from torch.utils.data._utils.collate import default_collate
 from torchvision.transforms import Compose
 
 from ..datasets import Vaihingen2D
@@ -24,25 +28,43 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        batch_size: int = 64,
+        train_batch_size: int = 32,
         num_workers: int = 0,
+        patch_size: Tuple[int, int] = (64, 64),
+        num_patches_per_tile: int = 32,
         val_split_pct: float = 0.2,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for Vaihingen2D based DataLoaders.
 
         Args:
-            batch_size: The batch size to use in all created DataLoaders
+            train_batch_size: The batch size used in the train DataLoader
+                (val_batch_size == test_batch_size == 1). The effective batch size
+                will be 'train_batch_size' * 'num_patches_per_tile'
             num_workers: The number of workers to use in all created DataLoaders
             val_split_pct: What percentage of the dataset to use as a validation set
+            patch_size: Size of random patch from image and mask (height, width), should
+                be a multiple of 32 for most segmentation architectures
+            num_patches_per_tile: number of random patches per sample
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.Vaihingen2D`
+
+        :: versionchanged:: 0.4
+            'batch_size' is renamed to 'train_batch_size', 'patch_size' and
+            'num_patches_per_tile' introduced in order to randomly crop the
+            variable size images during training
         """
         super().__init__()
-        self.batch_size = batch_size
+        self.train_batch_size = train_batch_size
         self.num_workers = num_workers
+        self.patch_size = patch_size
+        self.num_patches_per_tile = num_patches_per_tile
         self.val_split_pct = val_split_pct
         self.kwargs = kwargs
+
+        self.rcrop = K.AugmentationSequential(
+            K.RandomCrop(patch_size), data_keys=["input", "mask"], same_on_batch=True
+        )
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
@@ -64,63 +86,93 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
 
         Args:
             stage: stage to set up
-        """
-        transforms = Compose([self.preprocess])
 
-        dataset = Vaihingen2D(split="train", transforms=transforms, **self.kwargs)
+        :: versionchanged:: 0.4
+            Add functionality to randomly crop patches from a tile during
+            training and pad validation and test samples to next multiple of 32
+        """
+
+        def n_random_crop(sample: Dict[str, Any]) -> Dict[str, Any]:
+            images, masks = [], []
+            for i in range(self.num_patches_per_tile):
+                mask = repeat(sample["mask"], "h w -> t h w", t=2).float()
+                image, mask = self.rcrop(sample["image"], mask)
+                mask = mask.squeeze()[0]
+                images.append(image.squeeze())
+                masks.append(mask.long())
+            sample["image"] = torch.stack(images).squeeze(0)
+            sample["mask"] = torch.stack(masks).squeeze(0)
+            return sample
+
+        def pad_to(sample: Dict[str, Any]) -> Dict[str, Any]:
+            """Pad to next multiple of 32."""
+            h, w = sample["image"].shape[1], sample["image"].shape[2]
+            new_h = int(32 * ((h // 32) + 1))
+            new_w = int(32 * ((w // 32) + 1))
+
+            padto = K.PadTo((new_h, new_w))
+
+            sample["image"] = padto(sample["image"])[0]
+            sample["mask"] = padto(sample["mask"].float()).long()[0, 0]
+            return sample
+
+        train_transforms = Compose([self.preprocess, n_random_crop])
+        # for testing and validation we pad all inputs to next larger multiple of 32
+        # to avoid issues with upsampling paths in encoder-decoder architectures
+        test_transforms = Compose([self.preprocess, pad_to])
+
+        train_dataset = Vaihingen2D(
+            split="train", transforms=train_transforms, **self.kwargs
+        )
 
         self.train_dataset: Dataset[Any]
         self.val_dataset: Dataset[Any]
 
         if self.val_split_pct > 0.0:
-            self.train_dataset, self.val_dataset, _ = dataset_split(
-                dataset, val_pct=self.val_split_pct, test_pct=0.0
+            val_dataset = Vaihingen2D(
+                split="train", transforms=test_transforms, **self.kwargs
             )
+            self.train_dataset, self.val_dataset, _ = dataset_split(
+                train_dataset, val_pct=self.val_split_pct, test_pct=0.0
+            )
+            self.val_dataset.dataset = val_dataset
         else:
-            self.train_dataset = dataset
-            self.val_dataset = dataset
+            self.train_dataset = train_dataset
+            self.val_dataset = train_dataset
 
         self.test_dataset = Vaihingen2D(
-            split="test", transforms=transforms, **self.kwargs
+            split="test", transforms=test_transforms, **self.kwargs
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training.
+        """Return a DataLoader for training."""
 
-        Returns:
-            training data loader
-        """
+        def collate_wrapper(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
+            r_batch: Dict[str, Any] = default_collate(  # type: ignore[no-untyped-call]
+                batch
+            )
+            r_batch["image"] = torch.flatten(r_batch["image"], 0, 1)
+            r_batch["mask"] = torch.flatten(r_batch["mask"], 0, 1)
+            return r_batch
+
         return DataLoader(
             self.train_dataset,
-            batch_size=self.batch_size,
+            batch_size=self.train_batch_size,
             num_workers=self.num_workers,
+            collate_fn=collate_wrapper,
             shuffle=True,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
+        """Return a DataLoader for validation."""
         return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
+            self.val_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
+        """Return a DataLoader for testing."""
         return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
+            self.test_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
         )
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
