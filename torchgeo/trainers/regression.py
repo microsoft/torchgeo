@@ -94,7 +94,7 @@ class RegressionTask(pl.LightningModule):
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
 
-        :: versionchanged:: 0.4
+        .. versionchanged:: 0.4
             Change regression model support from torchvision.models to timm
         """
         super().__init__()
