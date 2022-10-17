@@ -38,7 +38,13 @@ class ClassificationTask(pl.LightningModule):
 
     Supports any available `Timm model
     <https://rwightman.github.io/pytorch-image-models/>`_
-    as an architecture choice.
+    as an architecture choice. To see a list of available pretrained
+    models, you can do:
+
+    .. code-block:: python
+
+        import timm
+        print(timm.list_models(pretrained=True))
     """
 
     def config_model(self) -> None:
@@ -72,8 +78,7 @@ class ClassificationTask(pl.LightningModule):
             )
         else:
             raise ValueError(
-                f"Model type '{classification_model}' is not a valid timm model. "
-                f"Valid model types are {valid_models}."
+                f"Model type '{classification_model}' is not a valid timm model."
             )
 
         if custom_pretrained:
