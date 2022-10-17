@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import kornia.augmentation as K
 import pytorch_lightning as pl
 import torch
-from einops import repeat
+from einops import rearrange
 from torch.utils.data import DataLoader, Dataset, default_collate
 from torchvision.transforms import Compose
 
@@ -65,7 +65,7 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
         self.kwargs = kwargs
 
         self.rcrop = K.AugmentationSequential(
-            K.RandomCrop(patch_size), data_keys=["input", "mask"], same_on_batch=True
+            K.RandomCrop(patch_size), data_keys=["input", "mask"]
         )
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
@@ -105,13 +105,12 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
             """
             images, masks = [], []
             for i in range(self.num_patches_per_tile):
-                mask = repeat(sample["mask"], "h w -> t h w", t=2).float()
-                image, mask = self.rcrop(sample["image"], mask)
-                mask = mask.squeeze()[0]
-                images.append(image.squeeze())
-                masks.append(mask.long())
-            sample["image"] = torch.stack(images).squeeze(0)
-            sample["mask"] = torch.stack(masks).squeeze(0)
+                image, mask = self.rcrop(sample["image"], sample["mask"].float())
+                images.append(image.squeeze(0))
+                masks.append(mask.squeeze().long())
+
+            sample["image"] = torch.stack(images)
+            sample["mask"] = torch.stack(masks)
             return sample
 
         def pad_to(sample: Dict[str, Any]) -> Dict[str, Any]:
@@ -179,8 +178,8 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
                 'train_batch_size' * 'num_patches_per_tile'
             """
             r_batch: Dict[str, Any] = default_collate(batch)
-            r_batch["image"] = torch.flatten(r_batch["image"], 0, 1)
-            r_batch["mask"] = torch.flatten(r_batch["mask"], 0, 1)
+            r_batch["image"] = rearrange(r_batch["image"], "b t c h w -> (b t) c h w")
+            r_batch["mask"] = rearrange(r_batch["mask"], "b t h w -> (b t) h w")
             return r_batch
 
         return DataLoader(
