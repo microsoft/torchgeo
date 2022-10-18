@@ -645,7 +645,7 @@ def draw_semantic_segmentation_masks(
     classes = torch.from_numpy(np.arange(len(colors) if colors else 0, dtype=np.uint8))
     class_masks = mask == classes[:, None, None]
     img = draw_segmentation_masks(
-        image=image, masks=class_masks, alpha=alpha, colors=colors
+        image=image.byte(), masks=class_masks, alpha=alpha, colors=colors
     )
     img = img.permute((1, 2, 0)).numpy().astype(np.uint8)
     return cast("np.typing.NDArray[np.uint8]", img)

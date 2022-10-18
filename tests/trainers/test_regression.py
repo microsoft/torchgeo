@@ -5,6 +5,7 @@ import os
 from typing import Any, Dict, Type, cast
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 
@@ -66,3 +67,18 @@ class TestRegressionTask:
         match = "module 'torchvision.models' has no attribute 'invalid_model'"
         with pytest.raises(AttributeError, match=match):
             RegressionTask(model="invalid_model", pretrained=False)
+
+    @pytest.fixture
+    def model_kwargs(self) -> Dict[Any, Any]:
+        return {"model": "resnet18", "pretrained": False}
+
+    def test_missing_attributes(
+        self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
+    ) -> None:
+        monkeypatch.delattr(COWCCountingDataModule, "plot")
+        datamodule = COWCCountingDataModule(
+            root="tests/data/cowc_counting", batch_size=1, num_workers=0
+        )
+        model = RegressionTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer.validate(model=model, datamodule=datamodule)
