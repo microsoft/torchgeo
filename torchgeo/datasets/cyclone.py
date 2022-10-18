@@ -6,7 +6,7 @@
 import json
 import os
 from functools import lru_cache
-from typing import Any, Callable, Dict, Optional, cast
+from typing import Any, Callable, Dict, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -249,7 +249,7 @@ class TropicalCyclone(NonGeoDataset):
         if show_titles:
             title = f"Label: {label}"
             if showing_predictions:
-                title += f"\nPrediction: {cast(str, prediction)}"
+                title += f"\nPrediction: {prediction}"
             ax.set_title(title)
 
         if suptitle is not None:
