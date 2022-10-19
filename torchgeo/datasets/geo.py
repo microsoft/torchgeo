@@ -535,6 +535,7 @@ class VectorDataset(GeoDataset):
         crs: Optional[CRS] = None,
         res: float = 0.0001,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        label_name: Optional[str] = None
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -545,6 +546,8 @@ class VectorDataset(GeoDataset):
             res: resolution of the dataset in units of CRS
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
+            label_name: name of the dataset property that has the label to be
+                rasterized into the mask
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
@@ -553,6 +556,7 @@ class VectorDataset(GeoDataset):
 
         self.root = root
         self.res = res
+        self.label_name = label_name
 
         # Populate the dataset index
         i = 0
@@ -621,6 +625,8 @@ class VectorDataset(GeoDataset):
                     shape = fiona.transform.transform_geom(
                         src.crs, self.crs.to_dict(), feature["geometry"]
                     )
+                    if self.label_name:
+                        shape = (shape, feature["properties"][self.label_name])
                     shapes.append(shape)
 
         # Rasterize geometries
