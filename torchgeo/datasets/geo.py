@@ -535,7 +535,7 @@ class VectorDataset(GeoDataset):
         crs: Optional[CRS] = None,
         res: float = 0.0001,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
-        label_name: Optional[str] = None
+        label_name: Optional[str] = None,
     ) -> None:
         """Initialize a new Dataset instance.
 
