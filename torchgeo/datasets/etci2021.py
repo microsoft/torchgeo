@@ -171,25 +171,40 @@ class ETCI2021(NonGeoDataset):
         folders = [os.path.join(folder, "tiles") for folder in folders]
         for folder in folders:
             vvs = sorted(glob.glob(os.path.join(folder, "vv", "*.png")))
-            vhs = sorted(glob.glob(os.path.join(folder, "vh", "*.png")))
-            water_masks = sorted(
-                glob.glob(os.path.join(folder, "water_body_label", "*.png"))
-            )
+            vhs = [vv.replace('/vv/', '/vh/').replace('_vv.png', '_vh.png')
+                   for vv in vvs]
+            water_masks = [
+                vv.replace('/vv/',
+                           '/water_body_label/').replace('_vv.png', '.png')
+                for vv in vvs]
 
             if split != "test":
-                flood_masks = sorted(
-                    glob.glob(os.path.join(folder, "flood_label", "*.png"))
-                )
+                flood_masks = [
+                    vv.replace('/vv/',
+                               '/flood_label/').replace('_vv.png', '.png')
+                    for vv in vvs]
 
                 for vv, vh, flood_mask, water_mask in zip(
-                    vvs, vhs, flood_masks, water_masks
+                        vvs, vhs, flood_masks, water_masks
                 ):
-                    files.append(
-                        dict(vv=vv, vh=vh, flood_mask=flood_mask, water_mask=water_mask)
-                    )
+                    if os.path.exists(vh) and os.path.exists(water_mask) \
+                            and os.path.exists(flood_mask):
+                        files.append(
+                            dict(vv=vv, vh=vh, flood_mask=flood_mask,
+                                 water_mask=water_mask)
+                        )
+                    else:
+                        print('Not found: %s' %
+                              (vh if not os.path.exists(vh) else
+                               water_mask if not os.path.exists(water_mask)
+                               else flood_mask))
             else:
                 for vv, vh, water_mask in zip(vvs, vhs, water_masks):
-                    files.append(dict(vv=vv, vh=vh, water_mask=water_mask))
+                    if os.path.exists(vh) and os.path.exists(water_mask):
+                        files.append(dict(vv=vv, vh=vh, water_mask=water_mask))
+                    else:
+                        print('Not found: %s' %
+                              (vh if not os.path.exists(vh) else water_mask))
 
         return files
 
