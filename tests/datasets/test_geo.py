@@ -52,6 +52,10 @@ class CustomVectorDataset(VectorDataset):
     filename_glob = "*.geojson"
 
 
+class CustomVectorDatasetMultilabel(VectorDataset):
+    filename_glob = "*.geojson"
+
+
 class CustomSentinelDataset(Sentinel2):
     all_bands: List[str] = []
 
@@ -245,11 +249,35 @@ class TestVectorDataset:
         transforms = nn.Identity()
         return CustomVectorDataset(root, res=0.1, transforms=transforms)
 
+    @pytest.fixture(scope="class")
+    def multilabel(self) -> CustomVectorDatasetMultilabel:
+        root = os.path.join("tests", "data", "vector")
+        transforms = nn.Identity()
+        return CustomVectorDatasetMultilabel(
+            root, res=0.1, transforms=transforms, label_name="label_id"
+        )
+
     def test_getitem(self, dataset: CustomVectorDataset) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
+        assert torch.equal(
+            x["mask"].unique(),  # type: ignore[no-untyped-call]
+            torch.tensor([0, 1], dtype=torch.uint8),
+        )
+
+    def test_getitem_multilabel(
+        self, multilabel: CustomVectorDatasetMultilabel
+    ) -> None:
+        x = multilabel[multilabel.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x["crs"], CRS)
+        assert isinstance(x["mask"], torch.Tensor)
+        assert torch.equal(
+            x["mask"].unique(),  # type: ignore[no-untyped-call]
+            torch.tensor([0, 1, 2, 3], dtype=torch.uint8),
+        )
 
     def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
         query = BoundingBox(1.1, 1.9, 1.1, 1.9, 0, 0)
