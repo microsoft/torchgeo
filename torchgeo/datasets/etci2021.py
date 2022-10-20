@@ -186,39 +186,12 @@ class ETCI2021(NonGeoDataset):
                 for vv, vh, flood_mask, water_mask in zip(
                     vvs, vhs, flood_masks, water_masks
                 ):
-                    if (
-                        os.path.exists(vh)
-                        and os.path.exists(water_mask)
-                        and os.path.exists(flood_mask)
-                    ):
-                        files.append(
-                            dict(
-                                vv=vv,
-                                vh=vh,
-                                flood_mask=flood_mask,
-                                water_mask=water_mask,
-                            )
-                        )
-                    else:
-                        print(
-                            "Not found: %s"
-                            % (
-                                vh
-                                if not os.path.exists(vh)
-                                else water_mask
-                                if not os.path.exists(water_mask)
-                                else flood_mask
-                            )
-                        )
+                    files.append(
+                        dict(vv=vv, vh=vh, flood_mask=flood_mask, water_mask=water_mask)
+                    )
             else:
                 for vv, vh, water_mask in zip(vvs, vhs, water_masks):
-                    if os.path.exists(vh) and os.path.exists(water_mask):
-                        files.append(dict(vv=vv, vh=vh, water_mask=water_mask))
-                    else:
-                        print(
-                            "Not found: %s"
-                            % (vh if not os.path.exists(vh) else water_mask)
-                        )
+                    files.append(dict(vv=vv, vh=vh, water_mask=water_mask))
 
         return files
 
