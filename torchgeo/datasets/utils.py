@@ -396,6 +396,32 @@ class BoundingBox:
             and self.maxt >= other.mint
         )
 
+    def extent_crop(
+        self,
+        skip_bottom: float = 0.0,
+        skip_left: float = 0.0,
+        skip_top: float = 0.0,
+        skip_right: float = 0.0,
+    ) -> "BoundingBox":
+        """Crop BoundingBox by skipping a proportion from its sides.
+
+        Args:
+            skip_bottom: proportion to skip from the bottom
+            skip_left: proportion to skip from the left
+            skip_top: proportion to skip from the top
+            skip_right: proportion to skip from the right
+
+        Returns:
+            The cropped BoundingBox
+        """
+        h = self.maxy - self.miny
+        w = self.maxx - self.minx
+
+        miny, minx = self.miny + int(h * skip_bottom), self.minx + int(w * skip_left)
+        maxy, maxx = self.maxy - int(h * skip_top), self.maxx - int(w * skip_right)
+
+        return BoundingBox(minx, maxx, miny, maxy, self.mint, self.maxt)
+
 
 def disambiguate_timestamp(date_str: str, format: str) -> Tuple[float, float]:
     """Disambiguate partial timestamps.
