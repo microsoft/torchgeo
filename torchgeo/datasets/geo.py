@@ -551,6 +551,9 @@ class VectorDataset(GeoDataset):
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
+
+        .. versionadded:: 0.4
+            The *label_name* parameter.
         """
         super().__init__(transforms)
 
