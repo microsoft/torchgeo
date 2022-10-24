@@ -52,10 +52,6 @@ class CustomVectorDataset(VectorDataset):
     filename_glob = "*.geojson"
 
 
-class CustomVectorDatasetMultilabel(VectorDataset):
-    filename_glob = "*.geojson"
-
-
 class CustomSentinelDataset(Sentinel2):
     all_bands: List[str] = []
 
@@ -250,10 +246,10 @@ class TestVectorDataset:
         return CustomVectorDataset(root, res=0.1, transforms=transforms)
 
     @pytest.fixture(scope="class")
-    def multilabel(self) -> CustomVectorDatasetMultilabel:
+    def multilabel(self) -> CustomVectorDataset:
         root = os.path.join("tests", "data", "vector")
         transforms = nn.Identity()
-        return CustomVectorDatasetMultilabel(
+        return CustomVectorDataset(
             root, res=0.1, transforms=transforms, label_name="label_id"
         )
 
@@ -267,9 +263,7 @@ class TestVectorDataset:
             torch.tensor([0, 1], dtype=torch.uint8),
         )
 
-    def test_getitem_multilabel(
-        self, multilabel: CustomVectorDatasetMultilabel
-    ) -> None:
+    def test_getitem_multilabel(self, multilabel: CustomVectorDataset) -> None:
         x = multilabel[multilabel.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
