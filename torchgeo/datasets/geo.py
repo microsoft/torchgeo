@@ -835,6 +835,9 @@ class IntersectionDataset(GeoDataset):
 
         Raises:
             ValueError: if either dataset is not a :class:`GeoDataset`
+
+        .. versionadded:: 0.4
+            The *transforms* parameter.
         """
         super().__init__(transforms)
         self.datasets = [dataset1, dataset2]
@@ -955,6 +958,9 @@ class UnionDataset(GeoDataset):
 
         Raises:
             ValueError: if either dataset is not a :class:`GeoDataset`
+
+        .. versionadded:: 0.4
+            The *transforms* parameter.
         """
         super().__init__(transforms)
         self.datasets = [dataset1, dataset2]
