@@ -384,7 +384,7 @@ class TestIntersectionDataset:
         ds1 = CustomGeoDataset()
         ds2 = CustomGeoDataset()
         transforms = nn.Identity()
-        return IntersectionDataset(ds1, ds2, transforms)
+        return IntersectionDataset(ds1, ds2, transforms=transforms)
 
     def test_getitem(self, dataset: IntersectionDataset) -> None:
         query = BoundingBox(0, 1, 2, 3, 4, 5)
@@ -439,7 +439,7 @@ class TestUnionDataset:
         ds1 = CustomGeoDataset(bounds=BoundingBox(0, 1, 0, 1, 0, 1))
         ds2 = CustomGeoDataset(bounds=BoundingBox(2, 3, 2, 3, 2, 3))
         transforms = nn.Identity()
-        return UnionDataset(ds1, ds2, transforms)
+        return UnionDataset(ds1, ds2, transforms=transforms)
 
     def test_getitem(self, dataset: UnionDataset) -> None:
         query = BoundingBox(0, 1, 0, 1, 0, 1)
