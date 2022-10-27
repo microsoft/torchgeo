@@ -14,7 +14,7 @@ from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import TropicalCycloneWindEstimation
+from torchgeo.datasets import TropicalCyclone
 
 
 class Dataset:
@@ -27,11 +27,11 @@ def fetch(collection_id: str, **kwargs: str) -> Dataset:
     return Dataset()
 
 
-class TestTropicalCycloneWindEstimation:
+class TestTropicalCyclone:
     @pytest.fixture(params=["train", "test"])
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
-    ) -> TropicalCycloneWindEstimation:
+    ) -> TropicalCyclone:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch)
         md5s = {
@@ -44,17 +44,17 @@ class TestTropicalCycloneWindEstimation:
                 "labels": "3ca4243eff39b87c73e05ec8db1824bf",
             },
         }
-        monkeypatch.setattr(TropicalCycloneWindEstimation, "md5s", md5s)
-        monkeypatch.setattr(TropicalCycloneWindEstimation, "size", 1)
+        monkeypatch.setattr(TropicalCyclone, "md5s", md5s)
+        monkeypatch.setattr(TropicalCyclone, "size", 1)
         root = str(tmp_path)
         split = request.param
         transforms = nn.Identity()
-        return TropicalCycloneWindEstimation(
+        return TropicalCyclone(
             root, split, transforms, download=True, api_key="", checksum=True
         )
 
     @pytest.mark.parametrize("index", [0, 1])
-    def test_getitem(self, dataset: TropicalCycloneWindEstimation, index: int) -> None:
+    def test_getitem(self, dataset: TropicalCyclone, index: int) -> None:
         x = dataset[index]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
@@ -64,26 +64,26 @@ class TestTropicalCycloneWindEstimation:
         assert isinstance(x["label"], int)
         assert x["image"].shape == (dataset.size, dataset.size)
 
-    def test_len(self, dataset: TropicalCycloneWindEstimation) -> None:
+    def test_len(self, dataset: TropicalCyclone) -> None:
         assert len(dataset) == 5
 
-    def test_add(self, dataset: TropicalCycloneWindEstimation) -> None:
+    def test_add(self, dataset: TropicalCyclone) -> None:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
         assert len(ds) == 10
 
-    def test_already_downloaded(self, dataset: TropicalCycloneWindEstimation) -> None:
-        TropicalCycloneWindEstimation(root=dataset.root, download=True, api_key="")
+    def test_already_downloaded(self, dataset: TropicalCyclone) -> None:
+        TropicalCyclone(root=dataset.root, download=True, api_key="")
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
-            TropicalCycloneWindEstimation(split="foo")
+            TropicalCyclone(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
-            TropicalCycloneWindEstimation(str(tmp_path))
+            TropicalCyclone(str(tmp_path))
 
-    def test_plot(self, dataset: TropicalCycloneWindEstimation) -> None:
+    def test_plot(self, dataset: TropicalCyclone) -> None:
         dataset.plot(dataset[0], suptitle="Test")
         plt.close()
 

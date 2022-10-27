@@ -21,7 +21,7 @@ class COWCCountingDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the COWC Counting dataset."""
 
     def __init__(
-        self, seed: int, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+        self, seed: int = 0, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
         """Initialize a LightningDataModule for COWC Counting based DataLoaders.
 

@@ -86,9 +86,9 @@ class TestClassificationTask:
     def model_kwargs(self) -> Dict[Any, Any]:
         return {
             "classification_model": "resnet18",
-            "in_channels": 1,
+            "in_channels": 13,
             "loss": "ce",
-            "num_classes": 2,
+            "num_classes": 10,
             "weights": "random",
         }
 
@@ -123,6 +123,17 @@ class TestClassificationTask:
         match = "Weight type 'invalid_weights' is not valid."
         with pytest.raises(ValueError, match=match):
             ClassificationTask(**model_kwargs)
+
+    def test_missing_attributes(
+        self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
+    ) -> None:
+        monkeypatch.delattr(EuroSATDataModule, "plot")
+        datamodule = EuroSATDataModule(
+            root="tests/data/eurosat", batch_size=1, num_workers=0
+        )
+        model = ClassificationTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer.validate(model=model, datamodule=datamodule)
 
 
 class TestMultiLabelClassificationTask:
@@ -179,9 +190,9 @@ class TestMultiLabelClassificationTask:
     def model_kwargs(self) -> Dict[Any, Any]:
         return {
             "classification_model": "resnet18",
-            "in_channels": 1,
-            "loss": "ce",
-            "num_classes": 1,
+            "in_channels": 14,
+            "loss": "bce",
+            "num_classes": 19,
             "weights": "random",
         }
 
@@ -190,3 +201,14 @@ class TestMultiLabelClassificationTask:
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
             MultiLabelClassificationTask(**model_kwargs)
+
+    def test_missing_attributes(
+        self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
+    ) -> None:
+        monkeypatch.delattr(BigEarthNetDataModule, "plot")
+        datamodule = BigEarthNetDataModule(
+            root="tests/data/bigearthnet", batch_size=1, num_workers=0
+        )
+        model = MultiLabelClassificationTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer.validate(model=model, datamodule=datamodule)

@@ -97,7 +97,7 @@ So2Sat
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
 
-.. autoclass:: CycloneDataModule
+.. autoclass:: TropicalCycloneDataModule
 
 UC Merced
 ^^^^^^^^^
