@@ -1020,12 +1020,14 @@ class UnionDataset(GeoDataset):
         samples = []
         for ds in self.datasets:
             if list(ds.index.intersection(tuple(query))):
-                sample = ds[query]
-                if self.transforms is not None:
-                    sample = self.transforms(sample)
-                samples.append(sample)
+                samples.append(ds[query])
 
-        return self.collate_fn(samples)
+        sample = self.collate_fn(samples)
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
 
     def __str__(self) -> str:
         """Return the informal string representation of the object.
