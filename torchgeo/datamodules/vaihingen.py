@@ -10,7 +10,8 @@ import kornia.augmentation as K
 import pytorch_lightning as pl
 import torch
 from einops import rearrange
-from torch.utils.data import DataLoader, Dataset, default_collate
+from torch.utils.data import DataLoader, Dataset
+from torch.utils.data._utils.collate import default_collate
 from torchvision.transforms import Compose
 
 from torchgeo.samplers.utils import _to_tuple
@@ -177,7 +178,9 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
                 sample batch where the batch dimension is
                 'train_batch_size' * 'num_patches_per_tile'
             """
-            r_batch: Dict[str, Any] = default_collate(batch)
+            r_batch: Dict[str, Any] = default_collate(  # type: ignore[no-untyped-call]
+                batch
+            )
             r_batch["image"] = rearrange(r_batch["image"], "b t c h w -> (b t) c h w")
             r_batch["mask"] = rearrange(r_batch["mask"], "b t h w -> (b t) h w")
             return r_batch
