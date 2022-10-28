@@ -159,6 +159,132 @@ class RandomGeoSampler(GeoSampler):
         return self.length
 
 
+class ForecastingGeoSampler(GeoSampler):
+    """Samples consecutive instances for time-series tasks.
+    
+    This is particularly useful for time-series datasets where you would
+    like to sample sequential inputs of specified length or time duration
+    and predict targets beyond such a time frame.
+
+    .. versionadded:: 0.4.0
+    """
+
+    def __init__(
+        self,
+        dataset: GeoDataset,
+        size: Union[Tuple[float, float], float],
+        length: Optional[int],
+        sample_window: int,
+        target_window: int,
+        time_range: Optional[Tuple[float, float]] = None,
+        roi: Optional[BoundingBox] = None,
+        units: Units = Units.PIXELS,
+    ) -> None:
+        """Initialize a new Sampler instance.
+
+        The ``size`` argument can either be:
+
+        * a single ``float`` - in which case the same value is used for the height and
+          width dimension
+        * a ``tuple`` of two floats - in which case, the first *float* is used for the
+          height dimension, and the second *float* for the width dimension
+        
+        Args:
+            dataset: dataset to index from
+            size: dimensions of each :term:`patch` in the desired time-series sample
+            length: number of random samples to draw per epoch
+                (defaults to approximately the maximal number of non-overlapping
+                :term:`chips <chip>` of size ``size`` that could be sampled from
+                the dataset each with a randomly chosen sequential time-series) 
+            sample_window: time window for a single sample from the ``time-range`` 
+                long time-series in units of days, i.e. to sample data that falls within
+                a week specify sample_window=7
+            target_window: time window for corresponding target that follows
+                the ``sample_window`` in units of days
+            time_range: beginning and end unix timestamp to consider drawing samples from
+            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+                (defaults to the bounds of ``dataset.index``bounds)
+            units: defines if ``size`` is in pixel or CRS units
+        """
+        # what we need to support
+        # - variable input length (unit of unix timespamp min max)
+        # - sample_window what should be the units
+        # - variable output length (autoregressive models, going several steps into the future)
+        # how to decide how many samples to return / it seems as if there is a lag parameter
+        # that specifies the number of sequences one can draw from one time-series group
+        # roi should be overwritten with time_range specifications
+        if roi is None:
+            roi = BoundingBox(*dataset.index)
+        
+        # by default take roi of dataset but in case time range
+        # is specified overwrite default roi
+        if time_range is not None:
+            roi.mint = time_range[0]
+            roi.maxt = time_range[1]
+        
+        super().__init__(dataset, roi)
+        self.size = _to_tuple(size)
+
+        # convert windows to unix timestamps given that 1 day = 86,400 seconds
+        unix_day_duration = 86400
+        self.sample_window = sample_window * unix_day_duration
+        self.target_window = target_window * unix_day_duration
+
+        if units == Units.PIXELS:
+            self.size = (self.size[0] * self.res, self.size[1] * self.res)
+
+        self.length = 0
+        self.hits = []
+
+        self.length = 0
+        self.hits = []
+        areas = []
+        for hit in self.index.intersection(tuple(self.roi), objects=True):
+            bounds = BoundingBox(*hit.bounds)
+            if (
+                bounds.maxx - bounds.minx >= self.size[1]
+                and bounds.maxy - bounds.miny >= self.size[0]
+            ):
+                if bounds.area > 0:
+                    rows, cols = tile_to_chips(bounds, self.size)
+                    self.length += rows * cols
+                else:
+                    self.length += 1
+                self.hits.append(hit)
+                areas.append(bounds.area)
+        if length is not None:
+            self.length = length
+
+        # torch.multinomial requires float probabilities > 0
+        self.areas = torch.tensor(areas, dtype=torch.float)
+        if torch.sum(self.areas) == 0:
+            self.areas += 1
+
+    def __iter__(self) -> Iterator[BoundingBox]:
+        """Return the index of a dataset.
+
+        Returns:
+            (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
+        """
+        for _ in range(len(self)):
+            # Choose a random tile, weighted by area
+            idx = torch.multinomial(self.areas, 1)
+            hit = self.hits[idx]
+            bounds = BoundingBox(*hit.bounds)
+
+            # Choose a random index within that tile
+            bounding_box = get_random_bounding_box(bounds, self.size, self.res)
+
+            yield bounding_box
+
+    def __len__(self) -> int:
+        """Return the number of samples in a single epoch.
+
+        Returns:
+            length of the epoch
+        """
+        return self.length
+
 class GridGeoSampler(GeoSampler):
     """Samples elements in a grid-like fashion.
 
@@ -325,3 +451,14 @@ class PreChippedGeoSampler(GeoSampler):
             number of patches that will be sampled
         """
         return len(self.hits)
+
+
+# Discussion
+
+# I began with a draft of what a `ForecastingGeoSampler` could look like. I am not an expert on time-series prediction so I am not completely certain what functionality one might desire from such a sampler. But I will try to explain my thoughts and the current issues I am running into.
+
+# First of all, I am not really certain how a forecasting sampler fits in with the existing `GeoDataset` and sampler framework, since the dataset `__getitem__` method takes in a single bounding box to return a sample. There is `BatchGeoSampler` that will return a list of bounding boxes which when passed to the `batch_sampler` argument of a pytorch DataLoader will return a single batch. However for forecasting purposes we need a sequential sample consisting of multiple time steps as well as a batch size.
+
+# ```python
+
+# ```
