@@ -31,9 +31,7 @@ def extract_encoder(path: str) -> Tuple[str, "OrderedDict[str, Tensor]"]:
         ValueError: if 'classification_model' or 'encoder' not in
             checkpoint['hyper_parameters']
     """
-    checkpoint = torch.load(  # type: ignore[no-untyped-call]
-        path, map_location=torch.device("cpu")
-    )
+    checkpoint = torch.load(path, map_location=torch.device("cpu"))
 
     if "classification_model" in checkpoint["hyper_parameters"]:
         name = checkpoint["hyper_parameters"]["classification_model"]
