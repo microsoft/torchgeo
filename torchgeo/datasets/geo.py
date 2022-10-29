@@ -4,13 +4,25 @@
 """Base classes for all :mod:`torchgeo` datasets."""
 
 import abc
+import datetime
 import functools
 import glob
 import os
 import re
 import sys
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
+from collections import defaultdict
+from typing import (
+    Any,
+    Callable,
+    DefaultDict,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    cast,
+)
 
 import fiona
 import fiona.transform
@@ -428,7 +440,12 @@ class RasterDataset(GeoDataset):
                     filepath = glob.glob(os.path.join(directory, filename))[0]
                     band_filepaths.append(filepath)
                 data_list.append(self._merge_files(band_filepaths, query))
-            data = torch.cat(data_list)
+            if len(data_list[0].shape) == 3:  # ch x height x width
+                data = torch.cat(data_list, dim=0)
+            elif (
+                len(data_list[0].shape) == 4
+            ):  # for timeseries seq_len x ch x height x width
+                data = torch.cat(data_list, dim=1)
         else:
             data = self._merge_files(filepaths, query, self.band_indexes)
 
@@ -463,16 +480,7 @@ class RasterDataset(GeoDataset):
 
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
         if len(vrt_fhs) == 1:
-            src = vrt_fhs[0]
-            out_width = round((query.maxx - query.minx) / self.res)
-            out_height = round((query.maxy - query.miny) / self.res)
-            count = len(band_indexes) if band_indexes else src.count
-            out_shape = (count, out_height, out_width)
-            dest = src.read(
-                indexes=band_indexes,
-                out_shape=out_shape,
-                window=from_bounds(*bounds, src.transform),
-            )
+            dest = self._read_single_file(vrt_fhs[0], band_indexes, query, bounds)
         else:
             dest, _ = rasterio.merge.merge(
                 vrt_fhs, bounds, self.res, indexes=band_indexes
@@ -517,6 +525,122 @@ class RasterDataset(GeoDataset):
             return vrt
         else:
             return src
+
+    def _read_single_file(
+        self,
+        src: rasterio.io.DatasetReader,
+        band_indexes: Optional[Sequence[int]],
+        query: BoundingBox,
+        bounds: Tuple[float, float, float, float],
+    ) -> np.ndarray:
+        """Read a single datasetreader from a query into array."""
+        out_width = round((query.maxx - query.minx) / self.res)
+        out_height = round((query.maxy - query.miny) / self.res)
+        count = len(band_indexes) if band_indexes else src.count
+        out_shape = (count, out_height, out_width)
+        dest = src.read(
+            indexes=band_indexes,
+            out_shape=out_shape,
+            window=from_bounds(*bounds, src.transform),
+        )
+        return dest
+
+
+class TimeSeriesRasterDataset(RasterDataset):
+    """Raster dataset class for time-series raster data."""
+
+    def __init__(
+        self,
+        root: str = "data",
+        crs: Optional[CRS] = None,
+        res: Optional[float] = None,
+        bands: Optional[Sequence[str]] = None,
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        cache: bool = True,
+    ) -> None:
+        """Initialize a new Dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
+            res: resolution of the dataset in units of CRS
+                (defaults to the resolution of the first file found)
+            bands: bands to return (defaults to all bands)
+            transforms: a function/transform that takes an input sample
+                and returns a transformed version
+            cache: if True, cache file handle to speed up repeated sampling
+
+        Raises:
+            FileNotFoundError: if no files are found in ``root``
+
+        .. version_added:: 0.4
+        """
+        super().__init__(root, crs, res, bands, transforms, cache)
+
+    def _merge_files(
+        self,
+        filepaths: Sequence[str],
+        query: BoundingBox,
+        band_indexes: Optional[Sequence[int]] = None,
+    ) -> Tensor:
+        """Load and merge one or more files.
+
+        Args:
+            filepaths: one or more files to load and merge
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            band_indexes: indexes of bands to be used
+
+        Returns:
+            image/mask at that index
+        """
+        if self.cache:
+            vrt_fhs = [self._cached_load_warp_file(fp) for fp in filepaths]
+        else:
+            vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
+
+        # group images with the same time-stamp for the same geographic area
+        # and use rasterio merge to extract one common area
+        # mint, maxt = disambiguate_timestamp(date, self.date_format)
+        filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+        date_tile_dict: DefaultDict[str, List[rasterio.io.DatasetReader]] = defaultdict(
+            list
+        )
+        for vrt in vrt_fhs:
+            match = re.match(filename_regex, os.path.basename(vrt.name))
+            if match:
+                date_tile_dict[match.group("date")].append(vrt)
+
+        date_array_dict: Dict[str, np.ndarray] = {}
+
+        bounds = (query.minx, query.miny, query.maxx, query.maxy)
+        for date, vrts in date_tile_dict.items():
+            if len(vrts) == 1:
+                dest = self._read_single_file(vrt_fhs[0], band_indexes, query, bounds)
+            else:
+                dest, _ = rasterio.merge.merge(
+                    vrts, bounds, self.res, indexes=band_indexes
+                )
+            date_array_dict[date] = dest
+
+        # order the time-stamps correctly to build a sequential time series
+        sorted_dates = sorted(
+            list(date_array_dict.keys()),
+            key=lambda x: datetime.datetime.strptime(x, self.date_format),
+        )
+
+        # subsequently stack these extracted patches along the timedimension
+        # specify bounds and according to these bounds read out
+        ts_array = np.stack([date_array_dict[date] for date in sorted_dates])
+
+        # fix numpy dtypes which are not supported by pytorch tensors
+        if dest.dtype == np.uint16:
+            ts_array = ts_array.astype(np.int32)
+        elif dest.dtype == np.uint32:
+            ts_array = ts_array.astype(np.int64)
+
+        tensor = torch.tensor(ts_array)  # dimension seq_len x 1 x height x width
+        return tensor
 
 
 class VectorDataset(GeoDataset):
