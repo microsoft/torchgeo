@@ -9,7 +9,7 @@ from _pytest.fixtures import SubRequest
 from torchgeo.datamodules import DeepGlobeLandCoverDataModule
 
 
-class TestVaihingen2DDataModule:
+class TestDeepGlobeLandCoverDataModule:
     @pytest.fixture(scope="class", params=[0.0, 0.5])
     def datamodule(self, request: SubRequest) -> DeepGlobeLandCoverDataModule:
         root = os.path.join("tests", "data", "deepglobelandcover")
