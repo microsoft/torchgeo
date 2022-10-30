@@ -1022,7 +1022,7 @@ class IntersectionDataset(GeoDataset):
             samples = [ds[query] for ds in self.datasets]
 
         elif isinstance(
-            query, (BoundingBox, BoundingBox)
+            query, Tuple
         ):  # time-series case assuming one input and one target query
             if not query[0].intersects(self.bounds):
                 raise IndexError(

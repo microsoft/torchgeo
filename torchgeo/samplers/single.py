@@ -253,6 +253,7 @@ class ForecastingGeoSampler(GeoSampler):
                     self.length += rows * cols
                 else:
                     self.length += 1
+                hit.bounds = hit.bounds[0:4] + [self.roi.mint, self.roi.maxt]
                 self.hits.append(hit)
                 areas.append(bounds.area)
         if length is not None:
@@ -305,7 +306,24 @@ class ForecastingGeoSampler(GeoSampler):
             Tuple of sequential bounding boxes in time with same location for input
             and target
         """
-        return (query, query)
+        # select a time range covering both sample and target window
+        input_query = BoundingBox(
+            minx=query.minx,
+            maxx=query.maxx,
+            miny=query.miny,
+            maxy=query.maxy,
+            mint=query.mint,
+            maxt=query.mint + self.sample_window,
+        )
+        target_query = BoundingBox(
+            minx=query.minx,
+            maxx=query.maxx,
+            miny=query.miny,
+            maxy=query.maxy,
+            mint=input_query.maxt,
+            maxt=input_query.maxt + self.target_window,
+        )
+        return (input_query, target_query)
 
 
 class GridGeoSampler(GeoSampler):
