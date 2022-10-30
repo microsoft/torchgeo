@@ -263,11 +263,12 @@ class ForecastingGeoSampler(GeoSampler):
         if torch.sum(self.areas) == 0:
             self.areas += 1
 
-    def __iter__(self) -> Iterator[BoundingBox]:
+    def __iter__(self) -> Iterator[Tuple[BoundingBox, BoundingBox]]:
         """Return the index of a dataset.
 
         Returns:
-            (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
+            Tuple of (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
+            sequentially for input and target sequence
         """
         for _ in range(len(self)):
             # Choose a random tile, weighted by area
@@ -275,10 +276,14 @@ class ForecastingGeoSampler(GeoSampler):
             hit = self.hits[idx]
             bounds = BoundingBox(*hit.bounds)
 
-            # Choose a random index within that tile
-            bounding_box = get_random_bounding_box(bounds, self.size, self.res)
+            # Choose a random index within that tile, the timedimension is
+            geo_query = get_random_bounding_box(bounds, self.size, self.res)
 
-            yield bounding_box
+            # mint and maxt are unchanged so from this bounding box find
+            # sequential input and target sequence
+            time_query = self._retrieve_sequential_query(geo_query)
+
+            yield time_query
 
     def __len__(self) -> int:
         """Return the number of samples in a single epoch.
@@ -287,6 +292,20 @@ class ForecastingGeoSampler(GeoSampler):
             length of the epoch
         """
         return self.length
+
+    def _retrieve_sequential_query(
+        self, query: BoundingBox
+    ) -> Tuple[BoundingBox, BoundingBox]:
+        """Retrieve a sequential query based on *sample_window* and *target_window*.
+
+        Args:
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates
+
+        Returns:
+            Tuple of sequential bounding boxes in time with same location for input
+            and target
+        """
+        return (query, query)
 
 
 class GridGeoSampler(GeoSampler):

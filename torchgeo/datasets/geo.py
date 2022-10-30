@@ -21,6 +21,7 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    Union,
     cast,
 )
 
@@ -996,11 +997,14 @@ class IntersectionDataset(GeoDataset):
                 self.index.insert(i, tuple(box1 & box2))
                 i += 1
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(
+        self, query: Union[BoundingBox, Tuple[BoundingBox, BoundingBox]]
+    ) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index or
+                tuple of queries for time-series
 
         Returns:
             sample of data/labels and metadata at that index
@@ -1008,13 +1012,30 @@ class IntersectionDataset(GeoDataset):
         Raises:
             IndexError: if query is not within bounds of the index
         """
-        if not query.intersects(self.bounds):
-            raise IndexError(
-                f"query: {query} not found in index with bounds: {self.bounds}"
-            )
+        if isinstance(query, BoundingBox):  # non-time-series
+            if not query.intersects(self.bounds):
+                raise IndexError(
+                    f"query: {query} not found in index with bounds: {self.bounds}"
+                )
 
-        # All datasets are guaranteed to have a valid query
-        samples = [ds[query] for ds in self.datasets]
+            # All datasets are guaranteed to have a valid query
+            samples = [ds[query] for ds in self.datasets]
+
+        elif isinstance(
+            query, (BoundingBox, BoundingBox)
+        ):  # time-series case assuming one input and one target query
+            if not query[0].intersects(self.bounds):
+                raise IndexError(
+                    f"query: {query[0]} not found in index with bounds: {self.bounds}"
+                )
+            elif not query[1].intersects(self.bounds):
+                raise IndexError(
+                    f"query: {query[1]} not found in index with bounds: {self.bounds}"
+                )
+
+            # input and target dataset have valid query
+            # assuming dataset1 is is_image=True and dataset2 has is_image=False
+            samples = [self.datasets[0][query[0]], self.datasets[1][query[1]]]
 
         return self.collate_fn(samples)
 
