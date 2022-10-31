@@ -75,6 +75,7 @@ class TestSpaceNet1:
 
     def test_getitem(self, dataset: SpaceNet1) -> None:
         x = dataset[0]
+        _ = dataset[1]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
