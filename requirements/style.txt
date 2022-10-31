@@ -3,4 +3,4 @@ black[jupyter]==22.10.0
 flake8==5.0.4
 isort[colors]==5.10.1
 pydocstyle[toml]==6.1.1
-pyupgrade==3.1.0
+pyupgrade==3.2.0
