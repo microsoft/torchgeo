@@ -55,6 +55,7 @@ __all__ = (
     "draw_semantic_segmentation_masks",
     "rgb_to_mask",
     "percentile_normalization",
+    "train_test_split",
 )
 
 
@@ -432,13 +433,16 @@ class BoundingBox:
         """Split BoundingBox in two.
 
         Args:
-            proportion: split proportion
-            horizontal: whether the split is horizontal (True) or
-                vertical
+            proportion: split proportion in range [0,1]
+            horizontal: whether the split is horizontal or vertical
 
         Returns:
             A tuple with the resulting BoundingBoxes
+
+        .. versionadded:: 0.4
         """
+        assert 0 < proportion < 1, "test_size must be between 0 and 1"
+
         if horizontal:
             w = self.maxx - self.minx
             splitx = self.minx + int(w * proportion)
@@ -778,8 +782,8 @@ def train_test_split(
 ) -> Tuple[GeoDataset, GeoDataset]:
     """Splits a dataset into train and test.
 
-    This function will go through each BoundingBox saved in the index and split it
-    in a random direction by the proportion specified in test_size.
+    This function will go through each BoundingBox saved in the GeoDataset's index and
+    split it in a random direction by the proportion specified in test_size.
 
     Args:
         dataset: GeoDataset to split
@@ -787,13 +791,14 @@ def train_test_split(
         random_seed: random seed for reproducibility
 
     Returns
-        normalized version of ``img``
+        A tuple with the resulting GeoDatasets in order (train, test)
 
     .. versionadded:: 0.4
     """
     assert 0 < test_size < 1, "test_size must be between 0 and 1"
 
-    np.random.seed(random_seed)
+    if random_seed:
+        np.random.seed(random_seed)
 
     index_train = Index(interleaved=False, properties=Property(dimension=3))
     index_test = Index(interleaved=False, properties=Property(dimension=3))
