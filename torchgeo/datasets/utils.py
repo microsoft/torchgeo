@@ -15,6 +15,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import (
+    TYPE_CHECKING,
     Any,
     Dict,
     Iterable,
@@ -36,7 +37,8 @@ from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
 
-from .geo import GeoDataset
+if TYPE_CHECKING:
+    from .geo import GeoDataset
 
 __all__ = (
     "check_integrity",
@@ -778,8 +780,8 @@ def percentile_normalization(
 
 
 def train_test_split(
-    dataset: GeoDataset, test_size: float = 0.25, random_seed: Optional[int] = None
-) -> Tuple[GeoDataset, GeoDataset]:
+    dataset: "GeoDataset", test_size: float = 0.25, random_seed: Optional[int] = None
+) -> Tuple["GeoDataset", "GeoDataset"]:
     """Splits a dataset into train and test.
 
     This function will go through each BoundingBox saved in the GeoDataset's index and
