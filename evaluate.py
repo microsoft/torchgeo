@@ -159,6 +159,7 @@ def main(args: argparse.Namespace) -> None:
 
     # Record model hyperparameters
     model.hparams = cast(Dict[str, Union[str, float]], model.hparams)
+    model.val_metrics = cast(MetricCollection, model.val_metrics)
     if issubclass(TASK, ClassificationTask):
         val_row: Dict[str, Union[str, float]] = {
             "split": "val",
