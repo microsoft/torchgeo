@@ -8,7 +8,7 @@
 import argparse
 import csv
 import os
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, cast
 
 import pytorch_lightning as pl
 import torch
@@ -155,9 +155,10 @@ def main(args: argparse.Namespace) -> None:
         num_workers=args.num_workers,
         batch_size=args.batch_size,
     )
-    dm.setup()
+    dm.setup("validate")
 
     # Record model hyperparameters
+    model.hparams = cast(Dict[str, Union[str, float]], model.hparams)
     if issubclass(TASK, ClassificationTask):
         val_row: Dict[str, Union[str, float]] = {
             "split": "val",
