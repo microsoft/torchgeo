@@ -159,7 +159,6 @@ def main(args: argparse.Namespace) -> None:
 
     # Record model hyperparameters
     model.hparams = cast(Dict[str, Union[str, float]], model.hparams)
-    model.val_metrics = cast(MetricCollection, model.val_metrics)
     if issubclass(TASK, ClassificationTask):
         val_row: Dict[str, Union[str, float]] = {
             "split": "val",
@@ -235,6 +234,8 @@ def main(args: argparse.Namespace) -> None:
             }
         )
     else:  # Test with PyTorch Lightning as usual
+        model.val_metrics = cast(MetricCollection, model.val_metrics)
+        model.test_metrics = cast(MetricCollection, model.test_metrics)
 
         val_results = run_eval_loop(
             model, dm.val_dataloader(), device, model.val_metrics
