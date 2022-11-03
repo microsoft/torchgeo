@@ -478,6 +478,11 @@ class RasterDataset(GeoDataset):
                 vrt_fhs, bounds, self.res, indexes=band_indexes
             )
 
+        # release file handle if not caching
+        if not self.cache:
+            for vrt_fh in vrt_fhs:
+                vrt_fh.close()
+
         # fix numpy dtypes which are not supported by pytorch tensors
         if dest.dtype == np.uint16:
             dest = dest.astype(np.int32)
