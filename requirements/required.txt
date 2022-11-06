@@ -3,7 +3,7 @@ setuptools==65.5.0
 
 # install
 einops==0.5.0
-fiona==1.9a2
+fiona==1.9a3
 kornia==0.6.8
 matplotlib==3.6.1
 numpy==1.23.4;python_version>='3.8'
