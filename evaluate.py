@@ -160,7 +160,7 @@ def main(args: argparse.Namespace) -> None:
 
     # Record model hyperparameters
     if issubclass(TASK, ClassificationTask):
-        val_row: Dict[str, Union[str, float]] = {
+        val_row = {
             "split": "val",
             "classification_model": model.hparams["classification_model"],
             "learning_rate": model.hparams["learning_rate"],
@@ -168,7 +168,7 @@ def main(args: argparse.Namespace) -> None:
             "loss": model.hparams["loss"],
         }
 
-        test_row: Dict[str, Union[str, float]] = {
+        test_row = {
             "split": "test",
             "classification_model": model.hparams["classification_model"],
             "learning_rate": model.hparams["learning_rate"],
