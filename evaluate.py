@@ -146,6 +146,7 @@ def main(args: argparse.Namespace) -> None:
     # Loads the saved model from checkpoint based on the `args.task` name that was
     # passed as input
     model = TASK.load_from_checkpoint(args.input_checkpoint)
+    model = cast(pl.LightningModule, model)
     model.freeze()
     model.eval()
 
