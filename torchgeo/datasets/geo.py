@@ -831,6 +831,7 @@ class IntersectionDataset(GeoDataset):
         collate_fn: Callable[
             [Sequence[Dict[str, Any]]], Dict[str, Any]
         ] = concat_samples,
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -838,11 +839,16 @@ class IntersectionDataset(GeoDataset):
             dataset1: the first dataset
             dataset2: the second dataset
             collate_fn: function used to collate samples
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
 
         Raises:
             ValueError: if either dataset is not a :class:`GeoDataset`
+
+        .. versionadded:: 0.4
+            The *transforms* parameter.
         """
-        super().__init__()
+        super().__init__(transforms)
         self.datasets = [dataset1, dataset2]
         self.collate_fn = collate_fn
 
@@ -901,7 +907,12 @@ class IntersectionDataset(GeoDataset):
         # All datasets are guaranteed to have a valid query
         samples = [ds[query] for ds in self.datasets]
 
-        return self.collate_fn(samples)
+        sample = self.collate_fn(samples)
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
 
     def __str__(self) -> str:
         """Return the informal string representation of the object.
@@ -943,6 +954,7 @@ class UnionDataset(GeoDataset):
         collate_fn: Callable[
             [Sequence[Dict[str, Any]]], Dict[str, Any]
         ] = merge_samples,
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -950,11 +962,16 @@ class UnionDataset(GeoDataset):
             dataset1: the first dataset
             dataset2: the second dataset
             collate_fn: function used to collate samples
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
 
         Raises:
             ValueError: if either dataset is not a :class:`GeoDataset`
+
+        .. versionadded:: 0.4
+            The *transforms* parameter.
         """
-        super().__init__()
+        super().__init__(transforms)
         self.datasets = [dataset1, dataset2]
         self.collate_fn = collate_fn
 
@@ -1014,7 +1031,12 @@ class UnionDataset(GeoDataset):
             if list(ds.index.intersection(tuple(query))):
                 samples.append(ds[query])
 
-        return self.collate_fn(samples)
+        sample = self.collate_fn(samples)
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
 
     def __str__(self) -> str:
         """Return the informal string representation of the object.
