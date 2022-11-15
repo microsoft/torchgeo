@@ -1,4 +1,4 @@
 # docs
 ipywidgets==8.0.2
-nbsphinx==0.8.9
+nbsphinx==0.8.10
 sphinx==5.3.0
