@@ -159,6 +159,7 @@ def main(args: argparse.Namespace) -> None:
     dm.setup("validate")
 
     # Record model hyperparameters
+    model.hparams = cast(Dict[str, Union[str, float]], model.hparams)
     if issubclass(TASK, ClassificationTask):
         val_row = {
             "split": "val",
