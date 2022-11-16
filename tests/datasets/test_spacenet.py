@@ -75,7 +75,7 @@ class TestSpaceNet1:
 
     def test_getitem(self, dataset: SpaceNet1) -> None:
         x = dataset[0]
-        _ = dataset[1]
+        dataset[1]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
@@ -363,9 +363,6 @@ class TestSpaceNet6:
     ) -> SpaceNet6:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch_dataset)
-        # test_md5 = {"sn6_AOI_11_Rotterdam": "6ceae7ff8c557346e8a4c8b6c61cc1b9"}
-
-        # monkeypatch.setattr(SpaceNet6, "collection_md5_dict", test_md5)
         root = str(tmp_path)
         transforms = nn.Identity()
         return SpaceNet6(

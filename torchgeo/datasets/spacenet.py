@@ -41,6 +41,13 @@ class SpaceNet(NonGeoDataset, abc.ABC):
     datasets that all together contain >11M building footprints and ~20,000 km
     of road labels mapped over high-resolution satellite imagery obtained from
     a variety of sensors such as Worldview-2, Worldview-3 and Dove.
+
+    .. note::
+
+    The SpaceNet datasets require the following additional library to be installed:
+
+    * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
+        imagery and labels from the Radiant Earth MLHub
     """
 
     @property
@@ -385,13 +392,6 @@ class SpaceNet1(SpaceNet):
 
     * https://arxiv.org/abs/1807.01232
 
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-         imagery and labels from the Radiant Earth MLHub
-
     """
 
     dataset_id = "spacenet1"
@@ -490,13 +490,6 @@ class SpaceNet2(SpaceNet):
     If you use this dataset in your research, please cite the following paper:
 
     * https://arxiv.org/abs/1807.01232
-
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-         imagery and labels from the Radiant Earth MLHub
 
     """
 
@@ -616,13 +609,6 @@ class SpaceNet3(SpaceNet):
     If you use this dataset in your research, please cite the following paper:
 
     * https://arxiv.org/abs/1807.01232
-
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-         imagery and labels from the Radiant Earth MLHub
 
     .. versionadded:: 0.3
     """
@@ -854,13 +840,6 @@ class SpaceNet4(SpaceNet):
 
     * https://arxiv.org/abs/1903.12239
 
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-         imagery and labels from the Radiant Earth MLHub
-
     """
 
     dataset_id = "spacenet4"
@@ -1050,13 +1029,6 @@ class SpaceNet5(SpaceNet3):
     * The SpaceNet Partners, “SpaceNet5: Automated Road Network Extraction and
       Route Travel Time Estimation from Satellite Imagery”,
       https://spacenet.ai/sn5-challenge/
-
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-         imagery and labels from the Radiant Earth MLHub
 
     .. versionadded:: 0.2
     """
@@ -1298,13 +1270,6 @@ class SpaceNet7(SpaceNet):
     If you use this dataset in your research, please cite the following paper:
 
     * https://arxiv.org/abs/2102.04420
-
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-         imagery and labels from the Radiant Earth MLHub
 
     .. versionadded:: 0.2
     """
