@@ -1,7 +1,7 @@
 experiment:
   task: "cyclone"
   module:
-    regression_model: "resnet18"
+    model: "resnet18"
     weights: "random"
     num_outputs: 1
     in_channels: 3  
