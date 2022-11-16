@@ -33,30 +33,28 @@ class SemanticSegmentationTask(pl.LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
-        if self.hyperparams["segmentation_model"] == "unet":
+        if self.hyperparams["model"] == "unet":
             self.model = smp.Unet(
-                encoder_name=self.hyperparams["encoder_name"],
+                encoder_name=self.hyperparams["encoder"],
                 encoder_weights=self.hyperparams["encoder_weights"],
                 in_channels=self.hyperparams["in_channels"],
                 classes=self.hyperparams["num_classes"],
             )
-        elif self.hyperparams["segmentation_model"] == "deeplabv3+":
+        elif self.hyperparams["model"] == "deeplabv3+":
             self.model = smp.DeepLabV3Plus(
-                encoder_name=self.hyperparams["encoder_name"],
+                encoder_name=self.hyperparams["encoder"],
                 encoder_weights=self.hyperparams["encoder_weights"],
                 in_channels=self.hyperparams["in_channels"],
                 classes=self.hyperparams["num_classes"],
             )
-        elif self.hyperparams["segmentation_model"] == "fcn":
+        elif self.hyperparams["model"] == "fcn":
             self.model = FCN(
                 in_channels=self.hyperparams["in_channels"],
                 classes=self.hyperparams["num_classes"],
                 num_filters=self.hyperparams["num_filters"],
             )
         else:
-            raise ValueError(
-                f"Model type '{self.hyperparams['segmentation_model']}' is not valid."
-            )
+            raise ValueError(f"Model type '{self.hyperparams['model']}' is not valid.")
 
         if self.hyperparams["loss"] == "ce":
             ignore_value = -1000 if self.ignore_index is None else self.ignore_index
@@ -76,8 +74,8 @@ class SemanticSegmentationTask(pl.LightningModule):
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
-            segmentation_model: Name of the segmentation model type to use
-            encoder_name: Name of the encoder model backbone to use
+            model: Name of the segmentation model type to use
+            encoder: Name of the encoder model backbone to use
             encoder_weights: None or "imagenet" to use imagenet pretrained weights in
                 the encoder model
             in_channels: Number of channels in input image

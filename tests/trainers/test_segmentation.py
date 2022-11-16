@@ -101,8 +101,8 @@ class TestSemanticSegmentationTask:
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:
         return {
-            "segmentation_model": "unet",
-            "encoder_name": "resnet18",
+            "model": "unet",
+            "encoder": "resnet18",
             "encoder_weights": None,
             "in_channels": 1,
             "num_classes": 2,
@@ -111,7 +111,7 @@ class TestSemanticSegmentationTask:
         }
 
     def test_invalid_model(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["segmentation_model"] = "invalid_model"
+        model_kwargs["model"] = "invalid_model"
         match = "Model type 'invalid_model' is not valid."
         with pytest.raises(ValueError, match=match):
             SemanticSegmentationTask(**model_kwargs)

@@ -314,7 +314,7 @@ class BYOLTask(pl.LightningModule):
         """Configures the task based on kwargs parameters passed to the constructor."""
         in_channels = self.hyperparams["in_channels"]
         pretrained = self.hyperparams["imagenet_pretraining"]
-        encoder_name = self.hyperparams["encoder_name"]
+        encoder_name = self.hyperparams["encoder"]
 
         if parse(torchvision.__version__) >= parse("0.13"):
             if pretrained:
@@ -362,7 +362,7 @@ class BYOLTask(pl.LightningModule):
 
         Keyword Args:
             in_channels: number of channels on the input imagery
-            encoder_name: either "resnet18" or "resnet50"
+            encoder: either "resnet18" or "resnet50"
             imagenet_pretraining: bool indicating whether to use imagenet pretrained
                 weights
 
