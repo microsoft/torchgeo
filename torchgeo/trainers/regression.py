@@ -42,7 +42,7 @@ class RegressionTask(pl.LightningModule):
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters."""
         in_channels = self.hyperparams["in_channels"]
-        regression_model = self.hyperparams["regression_model"]
+        model = self.hyperparams["model"]
 
         imagenet_pretrained = False
         custom_pretrained = False
@@ -61,25 +61,23 @@ class RegressionTask(pl.LightningModule):
 
         # Create the model
         valid_models = timm.list_models(pretrained=True)
-        if regression_model in valid_models:
+        if model in valid_models:
             self.model = timm.create_model(
-                regression_model,
+                model,
                 num_classes=self.hyperparams["num_outputs"],
                 in_chans=in_channels,
                 pretrained=imagenet_pretrained,
             )
         else:
-            raise ValueError(
-                f"Model type '{regression_model}' is not a valid timm model."
-            )
+            raise ValueError(f"Model type '{model}' is not a valid timm model.")
 
         if custom_pretrained:
             name, state_dict = utils.extract_encoder(self.hyperparams["weights"])
 
-            if self.hyperparams["regression_model"] != name:
+            if self.hyperparams["model"] != name:
                 raise ValueError(
                     f"Trying to load {name} weights into a "
-                    f"{self.hyperparams['regression_model']}"
+                    f"{self.hyperparams['model']}"
                 )
             self.model = utils.load_state_dict(self.model, state_dict)
 
@@ -87,7 +85,7 @@ class RegressionTask(pl.LightningModule):
         """Initialize a new LightningModule for training simple regression models.
 
         Keyword Args:
-            regression_model: Name of the model to use
+            model: Name of the timm model to use
             weights: Either "random" or "imagenet"
             num_outputs: Number of prediction outputs
             in_channels: Number of input channels to model
