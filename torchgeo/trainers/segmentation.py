@@ -75,7 +75,7 @@ class SemanticSegmentationTask(pl.LightningModule):
 
         Keyword Args:
             model: Name of the segmentation model type to use
-            encoder: Name of the encoder model backbone to use
+            encoder: Name of the encoder backbone to use
             encoder_weights: None or "imagenet" to use imagenet pretrained weights in
                 the encoder model
             in_channels: Number of channels in input image
@@ -88,6 +88,10 @@ class SemanticSegmentationTask(pl.LightningModule):
 
         .. versionchanged:: 0.3
            The *ignore_zeros* parameter was renamed to *ignore_index*.
+
+        .. versionchanged:: 0.4
+           The *segmentation_model* parameter was renamed to *model* and
+           *encoder_name* renamed to *encoder*.
         """
         super().__init__()
 

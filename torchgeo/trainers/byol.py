@@ -368,6 +368,9 @@ class BYOLTask(pl.LightningModule):
 
         Raises:
             ValueError: if kwargs arguments are invalid
+
+        .. versionchanged:: 0.4
+           The *encoder_name* parameter was renamed to *encoder*.
         """
         super().__init__()
 
