@@ -44,10 +44,10 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
     .. note::
 
-    The SpaceNet datasets require the following additional library to be installed:
+       The SpaceNet datasets require the following additional library to be installed:
 
-    * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-        imagery and labels from the Radiant Earth MLHub
+       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
+           imagery and labels from the Radiant Earth MLHub
     """
 
     @property
