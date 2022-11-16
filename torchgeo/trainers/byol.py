@@ -3,21 +3,22 @@
 
 """BYOL tasks."""
 
+import os
 import random
 from typing import Any, Callable, Dict, Optional, Tuple, cast
 
 import pytorch_lightning as pl
+import timm
 import torch
 import torch.nn.functional as F
-import torchvision
 from kornia import augmentation as K
 from kornia import filters
 from kornia.geometry import transform as KorniaTransform
-from packaging.version import parse
 from torch import Tensor, optim
-from torch.autograd import Variable
-from torch.nn.modules import BatchNorm1d, Conv2d, Linear, Module, ReLU, Sequential
+from torch.nn.modules import BatchNorm1d, Linear, Module, ReLU, Sequential
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+
+from . import utils
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
@@ -308,53 +309,58 @@ class BYOL(Module):
 
 
 class BYOLTask(pl.LightningModule):
-    """Class for pre-training any PyTorch model using BYOL."""
+    """Class for pre-training any PyTorch model using BYOL.
+
+    Supports any available `Timm model
+    <https://rwightman.github.io/pytorch-image-models/>`_
+    as an architecture choice. To see a list of available pretrained
+    models, you can do:
+
+    .. code-block:: python
+
+        import timm
+        print(timm.list_models(pretrained=True)
+    """
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
         in_channels = self.hyperparams["in_channels"]
-        pretrained = self.hyperparams["imagenet_pretraining"]
         encoder_name = self.hyperparams["encoder"]
 
-        if parse(torchvision.__version__) >= parse("0.13"):
-            if pretrained:
-                kwargs = {
-                    "weights": getattr(
-                        torchvision.models, f"ResNet{encoder_name[6:]}_Weights"
-                    ).DEFAULT
-                }
+        imagenet_pretrained = False
+        custom_pretrained = False
+        if self.hyperparams["weights"] and not os.path.exists(
+            self.hyperparams["weights"]
+        ):
+            if self.hyperparams["weights"] not in ["imagenet", "random"]:
+                raise ValueError(
+                    f"Weight type '{self.hyperparams['weights']}' is not valid."
+                )
             else:
-                kwargs = {"weights": None}
+                imagenet_pretrained = self.hyperparams["weights"] == "imagenet"
+            custom_pretrained = False
         else:
-            kwargs = {"pretrained": pretrained}
+            custom_pretrained = True
 
-        encoder = getattr(torchvision.models, encoder_name)(**kwargs)
-
-        layer = encoder.conv1
-        # Creating new Conv2d layer
-        new_layer = Conv2d(
-            in_channels=in_channels,
-            out_channels=layer.out_channels,
-            kernel_size=layer.kernel_size,
-            stride=layer.stride,
-            padding=layer.padding,
-            bias=layer.bias,
-        ).requires_grad_()
-        # initialize the weights from new channel with the red channel weights
-        copy_weights = 0
-        # Copying the weights from the old to the new layer
-        new_layer.weight[:, : layer.in_channels, :, :].data[:] = Variable(
-            layer.weight.clone(), requires_grad=True
-        )
-        # Copying the weights of the old layer to the extra channels
-        for i in range(in_channels - layer.in_channels):
-            channel = layer.in_channels + i
-            new_layer.weight[:, channel : channel + 1, :, :].data[:] = Variable(
-                layer.weight[:, copy_weights : copy_weights + 1, ::].clone(),
-                requires_grad=True,
+        # Create the model
+        valid_models = timm.list_models(pretrained=True)
+        if encoder_name in valid_models:
+            encoder = timm.create_model(
+                encoder_name, in_chans=in_channels, pretrained=imagenet_pretrained
             )
+        else:
+            raise ValueError(f"Model type '{encoder_name}' is not a valid timm model.")
 
-        encoder.conv1 = new_layer
+        if custom_pretrained:
+            name, state_dict = utils.extract_encoder(self.hyperparams["weights"])
+
+            if self.hyperparams["encoder"] != name:
+                raise ValueError(
+                    f"Trying to load {name} weights into a "
+                    f"{self.hyperparams['encoder']}"
+                )
+            encoder = utils.load_state_dict(encoder, state_dict)
+
         self.model = BYOL(encoder, in_channels=in_channels, image_size=(256, 256))
 
     def __init__(self, **kwargs: Any) -> None:
@@ -362,15 +368,15 @@ class BYOLTask(pl.LightningModule):
 
         Keyword Args:
             in_channels: number of channels on the input imagery
-            encoder: either "resnet18" or "resnet50"
-            imagenet_pretraining: bool indicating whether to use imagenet pretrained
-                weights
+            encoder: Name of the timm model to use
+            weights: Either "random" or "imagenet"
 
         Raises:
             ValueError: if kwargs arguments are invalid
 
         .. versionchanged:: 0.4
-           The *encoder_name* parameter was renamed to *encoder*.
+           The *encoder_name* parameter was renamed to *encoder*. Change encoder support
+           from torchvision.models to timm.
         """
         super().__init__()
 
