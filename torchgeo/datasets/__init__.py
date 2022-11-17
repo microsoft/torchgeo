@@ -92,6 +92,7 @@ from .spacenet import (
     SpaceNet3,
     SpaceNet4,
     SpaceNet5,
+    SpaceNet6,
     SpaceNet7,
 )
 from .ucmerced import UCMerced
@@ -184,6 +185,7 @@ __all__ = (
     "SpaceNet3",
     "SpaceNet4",
     "SpaceNet5",
+    "SpaceNet6",
     "SpaceNet7",
     "TropicalCyclone",
     "UCMerced",
