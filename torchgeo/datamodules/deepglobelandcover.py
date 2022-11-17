@@ -3,6 +3,7 @@
 
 """DeepGlobe Land Cover Classification Challenge datamodule."""
 
+import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import kornia.augmentation as K
@@ -32,7 +33,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         train_batch_size: int = 32,
         num_workers: int = 0,
         patch_size: Union[Tuple[int, int], int] = (64, 64),
-        num_patches_per_tile: int = 32,
+        num_tiles_per_batch: int = 16,
         val_split_pct: float = 0.2,
         **kwargs: Any,
     ) -> None:
@@ -40,19 +41,19 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
 
         Args:
             train_batch_size: The batch size used in the train DataLoader
-                (val_batch_size == test_batch_size == 1). The effective batch size
-                will be 'train_batch_size' * 'num_patches_per_tile'
+                (val_batch_size == test_batch_size == 1).
             num_workers: The number of workers to use in all created DataLoaders
             val_split_pct: What percentage of the dataset to use as a validation set
             patch_size: Size of random patch from image and mask (height, width), should
                 be a multiple of 32 for most segmentation architectures
-            num_patches_per_tile: number of random patches per sample
+            num_tiles_per_batch: number of random tiles to consider sampling patches
+                from per sample, should evenly divide train_batch_size
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.DeepGlobeLandCover`
 
         .. versionchanged:: 0.4
             'batch_size' is renamed to 'train_batch_size', 'patch_size' and
-            'num_patches_per_tile' introduced in order to randomly crop the
+            'num_tiles_per_batch' introduced in order to randomly crop the
             variable size images during training
         """
         super().__init__()
@@ -60,9 +61,19 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         self.train_batch_size = train_batch_size
         self.num_workers = num_workers
         self.patch_size = _to_tuple(patch_size)
-        self.num_patches_per_tile = num_patches_per_tile
         self.val_split_pct = val_split_pct
         self.kwargs = kwargs
+
+        self.num_patches_per_tile = self.train_batch_size // num_tiles_per_batch
+
+        if (self.num_patches_per_tile % 2) != 0:
+            warnings.warn(
+                "The effective batch size"
+                f" will differ from the specified {train_batch_size}"
+                f" and be {self.num_patches_per_tile * num_tiles_per_batch} instead."
+                " To match the train_batch_size exactly, ensure that"
+                " num_tiles_per_batch evenly divides train_batch_size"
+            )
 
         self.rcrop = K.AugmentationSequential(
             K.RandomCrop(self.patch_size), data_keys=["input", "mask"]
