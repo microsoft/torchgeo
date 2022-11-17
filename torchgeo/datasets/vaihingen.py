@@ -25,12 +25,13 @@ from .utils import (
 class Vaihingen2D(NonGeoDataset):
     """Vaihingen 2D Semantic Segmentation dataset.
 
-    The `Vaihingen <https://www2.isprs.org/commissions/comm2/wg4/benchmark/2d-sem-label-vaihingen/>`__
+    The `Vaihingen <https://www.isprs.org/education/benchmarks/UrbanSemLab/semantic-labeling.aspx>`__
     dataset is a dataset for urban semantic segmentation used in the 2D Semantic Labeling
     Contest - Vaihingen. This dataset uses the "ISPRS_semantic_labeling_Vaihingen.zip"
     and "ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip" files to create the
-    train/test sets used in the challenge. The dataset can be requested at the challenge
-    homepage. Note, the server contains additional data for 3D Semantic Labeling which
+    train/test sets used in the challenge. The dataset can be downloaded from
+    `here <https://www.isprs.org/education/benchmarks/UrbanSemLab/default.aspx>`__.
+    Note, the server contains additional data for 3D Semantic Labeling which
     are currently not supported.
 
     Dataset format:
