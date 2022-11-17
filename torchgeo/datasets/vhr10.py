@@ -36,8 +36,6 @@ def convert_coco_poly_to_mask(
     for polygons in segmentations:
         rles = coco_mask.frPyObjects(polygons, height, width)
         mask = coco_mask.decode(rles)
-        # if len(mask.shape) < 3:
-        #     mask = mask[..., None]
         mask = torch.as_tensor(mask, dtype=torch.uint8)
         mask = mask.any(dim=2)
         masks.append(mask)
@@ -52,17 +50,17 @@ class ConvertCocoAnnotations:
     """Callable for converting the boxes, masks and labels into tensors.
 
     This is a modified version of ConvertCocoPolysToMask() from torchvision found in
-    https://github.com/pytorch/vision/blob/main/references/detection/coco_utils.py
+    https://github.com/pytorch/vision/blob/v0.14.0/references/detection/coco_utils.py
     """
 
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Converts MS COCO fields (boxes, masks & labels) from list of ints to tensors.
 
         Args:
-            sample (Dict[str, Any]): Sample
+            sample: Sample
 
         Returns:
-            Dict[str, Any]: Processed sample
+            Processed sample
         """
         image = sample["image"]
         _, h, w = image.size()
@@ -416,7 +414,7 @@ class VHR10(NonGeoDataset):
         if "masks" in sample:
             masks = [mask.squeeze().cpu().numpy() for mask in sample["masks"]]
 
-        N_GT = len(boxes)
+        n_gt = len(boxes)
 
         ncols = 1
         show_predictions = "prediction_labels" in sample
@@ -433,7 +431,7 @@ class VHR10(NonGeoDataset):
                 prediction_masks = sample["prediction_masks"].numpy()
                 show_pred_masks = True
 
-            N_PRED = len(prediction_labels)
+            n_pred = len(prediction_labels)
             ncols += 1
 
         # Display image
@@ -444,7 +442,7 @@ class VHR10(NonGeoDataset):
         axs[0].axis("off")
 
         cm = plt.get_cmap("gist_rainbow")
-        for i in range(N_GT):
+        for i in range(n_gt):
             class_num = labels[i]
             color = cm(class_num / len(self.categories))
 
@@ -487,7 +485,7 @@ class VHR10(NonGeoDataset):
         if show_predictions:
             axs[1].imshow(image)
             axs[1].axis("off")
-            for i in range(N_PRED):
+            for i in range(n_pred):
                 score = prediction_scores[i]
                 if score < 0.5:
                     continue

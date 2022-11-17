@@ -35,7 +35,7 @@ class TestVHR10:
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         url = os.path.join("tests", "data", "vhr10", "NWPU VHR-10 dataset.rar")
         monkeypatch.setitem(VHR10.image_meta, "url", url)
-        md5 = "e68727b2c91ac849def1985924d9586f"
+        md5 = "5fddb0dfd56a80638831df9f90cbf37a"
         monkeypatch.setitem(VHR10.image_meta, "md5", md5)
         url = os.path.join("tests", "data", "vhr10", "annotations.json")
         monkeypatch.setitem(VHR10.target_meta, "url", url)
@@ -108,7 +108,7 @@ class TestVHR10:
                 match="scikit-image is not installed and is required to plot masks",
             ):
                 x = dataset[0]
-                _ = dataset.plot(x)
+                dataset.plot(x)
 
     def test_plot(self, dataset: VHR10) -> None:
         x = dataset[1].copy()
@@ -126,4 +126,4 @@ class TestVHR10:
                 if "masks" in x:
                     x["prediction_masks"] = x["masks"]
                     dataset.plot(x, show_feats="masks")
-                plt.close()
+                    plt.close()

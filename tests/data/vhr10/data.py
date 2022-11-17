@@ -2,31 +2,19 @@ import json
 import os
 import shutil
 import subprocess
-import warnings
 from copy import deepcopy
 
 import numpy as np
-import rasterio as rio
-from rasterio.errors import NotGeoreferencedWarning
+from PIL import Image
 from torchvision.datasets.utils import calculate_md5
 
 ANNOTATION_FILE = {"images": [], "annotations": []}
 
 
 def write_data(path: str, img: np.ndarray) -> None:
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=NotGeoreferencedWarning)
-        with rio.open(
-            path,
-            "w",
-            driver="JP2OpenJPEG",
-            height=img.shape[0],
-            width=img.shape[1],
-            count=3,
-            dtype=img.dtype,
-        ) as dst:
-            for i in range(1, dst.count + 1):
-                dst.write(img, i)
+    img = np.repeat(img[:, :, np.newaxis], 3, axis=2)
+    img = Image.fromarray(img)
+    img.save(path)
 
 
 def generate_test_data(root: str, n_imgs: int = 3) -> str:
