@@ -72,6 +72,7 @@ from .landsat import (
 from .levircd import LEVIRCDPlus
 from .loveda import LoveDA
 from .millionaid import MillionAID
+from .modis import Modis
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nwpu import VHR10
@@ -142,6 +143,7 @@ __all__ = (
     "Landsat7",
     "Landsat8",
     "Landsat9",
+    "Modis",
     "NAIP",
     "OpenBuildings",
     "Sentinel",

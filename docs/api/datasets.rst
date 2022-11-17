@@ -108,6 +108,11 @@ Landsat
 .. autoclass:: Landsat2
 .. autoclass:: Landsat1
 
+Modis
+^^^^^
+
+.. autoclass:: Modis
+
 NAIP
 ^^^^
 
