@@ -24,6 +24,7 @@ from torchgeo.datasets import (
 )
 
 TEST_DATA_DIR = "tests/data/spacenet"
+radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
 
 
 class Collection:
@@ -61,7 +62,6 @@ class TestSpaceNet1:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet1:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
         test_md5 = {"sn1_AOI_1_RIO": "246e27fcd7ae73496212a7f585a43dbb"}
 
@@ -108,7 +108,6 @@ class TestSpaceNet2:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet2:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
         test_md5 = {
             "sn2_AOI_2_Vegas": "131048686ba21a45853c05f227f40b7f",
@@ -170,7 +169,6 @@ class TestSpaceNet3:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet3:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
         test_md5 = {
             "sn3_AOI_3_Paris": "93452c68da11dd6b57dc83dba43c2c9d",
@@ -235,7 +233,6 @@ class TestSpaceNet4:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet4:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
         test_md5 = {"sn4_AOI_6_Atlanta": "097a76a2319b7ba34dac1722862fc93b"}
 
@@ -298,7 +295,6 @@ class TestSpaceNet5:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet5:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
         test_md5 = {
             "sn5_AOI_7_Moscow": "5c511dd31eea739cc1f81ef5962f3d56",
@@ -361,7 +357,6 @@ class TestSpaceNet6:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet6:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch_dataset)
         root = str(tmp_path)
         transforms = nn.Identity()
@@ -401,7 +396,6 @@ class TestSpaceNet7:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet7:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
         test_md5 = {
             "sn7_train_source": "197bfa8842a40b09b6837b824a6370e0",
