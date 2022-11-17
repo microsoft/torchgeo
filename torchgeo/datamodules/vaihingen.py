@@ -66,7 +66,7 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
         self.kwargs = kwargs
 
         self.rcrop = K.AugmentationSequential(
-            K.RandomCrop(self.patch_size), data_keys=["input", "mask"]
+            K.RandomCrop(self.patch_size, align_corners=False), data_keys=["input", "mask"]
         )
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
