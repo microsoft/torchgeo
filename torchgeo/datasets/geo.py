@@ -322,6 +322,7 @@ class RasterDataset(GeoDataset):
         bands: Optional[Sequence[str]] = None,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         cache: bool = True,
+        as_time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -335,14 +336,20 @@ class RasterDataset(GeoDataset):
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
+            as_time_series: whether or not to return sampled query as a time
+                series or as a merged single time instance
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
+
+        .. versionchanged:: 0.4
+            Add *as_time_series* parameter to support time series datasets
         """
         super().__init__(transforms)
 
         self.root = root
         self.cache = cache
+        self.as_time_series = as_time_series
 
         # Populate the dataset index
         i = 0
@@ -404,17 +411,42 @@ class RasterDataset(GeoDataset):
         self._crs = cast(CRS, crs)
         self.res = cast(float, res)
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(
+        self, query: Union[BoundingBox, Sequence[BoundingBox]]
+    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Retrieve image/mask and metadata indexed by query.
+
+        Args:
+            query: one or more (minx, maxx, miny, maxy, mint, maxt)
+                coordinates to index
+
+        Returns:
+            sample of image/mask and metadata for each index in the query or
+
+        Raises:
+            IndexError: if queries is not found in the index
+
+        .. versionchanged:: 0.4
+            *query* parameter can accept one or multiple index queries
+        """
+        if isinstance(query, BoundingBox):
+            return self._query_data_from_bbox(query)
+        else:
+            return [self._query_data_from_bbox(q) for q in query]
+
+    def _query_data_from_bbox(self, query: BoundingBox) -> Dict[str, Any]:
+        """Return data from a query bounding box.
 
         Args:
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
-            sample of image/mask and metadata at that index
+            sample of image/mask and metadata for each index in the query
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: if queries is not found in the index
+
+        .. versionadded: 0.4
         """
         hits = self.index.intersection(tuple(query), objects=True)
         filepaths = cast(List[str], [hit.object for hit in hits])
@@ -441,12 +473,10 @@ class RasterDataset(GeoDataset):
                     filepath = glob.glob(os.path.join(directory, filename))[0]
                     band_filepaths.append(filepath)
                 data_list.append(self._merge_files(band_filepaths, query))
-            if len(data_list[0].shape) == 3:  # ch x height x width
-                data = torch.cat(data_list, dim=0)
-            elif (
-                len(data_list[0].shape) == 4
-            ):  # for timeseries seq_len x ch x height x width
+            if self.as_time_series:  # for timeseries seq_len x ch x height x width
                 data = torch.cat(data_list, dim=1)
+            else:  # ch x height x width
+                data = torch.cat(data_list, dim=0)
         else:
             data = self._merge_files(filepaths, query, self.band_indexes)
 
@@ -457,6 +487,29 @@ class RasterDataset(GeoDataset):
             sample = self.transforms(sample)
 
         return sample
+
+    def _dataset_reader_to_array(
+        self,
+        vrts: List[rasterio.io.DatasetReader],
+        query: BoundingBox,
+        bounds: Tuple[float],
+        band_indexes: Optional[Sequence[int]] = None,
+    ) -> np.ndarray:
+        """Read dataset readers into numpy arrays.
+
+        Args:
+            vrts: List of opened rasterio filehandles
+
+        Returns:
+            data array from file handle
+
+        .. versionadded:: 0.4
+        """
+        if len(vrts) == 1:
+            dest = self._read_single_file(vrts[0], band_indexes, query, bounds)
+        else:
+            dest, _ = rasterio.merge.merge(vrts, bounds, self.res, indexes=band_indexes)
+        return dest
 
     def _merge_files(
         self,
@@ -473,6 +526,10 @@ class RasterDataset(GeoDataset):
 
         Returns:
             image/mask at that index
+
+        .. versionchanged:: 0.4
+            Given the *as_time_series* parameter merge files to a single time instance
+            as previously or return a time series for the geographical location
         """
         if self.cache:
             vrt_fhs = [self._cached_load_warp_file(fp) for fp in filepaths]
@@ -480,12 +537,36 @@ class RasterDataset(GeoDataset):
             vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
-        if len(vrt_fhs) == 1:
-            dest = self._read_single_file(vrt_fhs[0], band_indexes, query, bounds)
-        else:
-            dest, _ = rasterio.merge.merge(
-                vrt_fhs, bounds, self.res, indexes=band_indexes
+        if self.as_time_series:
+            # group images with the same time-stamp for the same geographic area
+            # and use rasterio merge to extract one common area
+            filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+            date_tile_dict: DefaultDict[
+                str, List[rasterio.io.DatasetReader]
+            ] = defaultdict(list)
+            for vrt in vrt_fhs:
+                match = re.match(filename_regex, os.path.basename(vrt.name))
+                if match:
+                    date_tile_dict[match.group("date")].append(vrt)
+
+            date_array_dict: Dict[str, np.ndarray] = {}
+
+            for date, vrts in date_tile_dict.items():
+                date_array_dict[date] = self._dataset_reader_to_array(
+                    vrts, query, bounds, band_indexes
+                )
+
+            # order the time-stamps correctly to build a sequential time series
+            sorted_dates = sorted(
+                list(date_array_dict.keys()),
+                key=lambda x: datetime.datetime.strptime(x, self.date_format),
             )
+
+            # subsequently stack these extracted patches along the timedimension
+            # specify bounds and according to these bounds read out
+            dest = np.stack([date_array_dict[date] for date in sorted_dates])
+        else:
+            dest = self._dataset_reader_to_array(vrt_fhs, query, bounds, band_indexes)
 
         # fix numpy dtypes which are not supported by pytorch tensors
         if dest.dtype == np.uint16:
@@ -493,7 +574,7 @@ class RasterDataset(GeoDataset):
         elif dest.dtype == np.uint32:
             dest = dest.astype(np.int64)
 
-        tensor = torch.tensor(dest)
+        tensor = torch.tensor(dest)  # dimension seq_len x 1 x height x width
         return tensor
 
     @functools.lru_cache(maxsize=128)
@@ -545,103 +626,6 @@ class RasterDataset(GeoDataset):
             window=from_bounds(*bounds, src.transform),
         )
         return dest
-
-
-class TimeSeriesRasterDataset(RasterDataset):
-    """Raster dataset class for time-series raster data."""
-
-    def __init__(
-        self,
-        root: str = "data",
-        crs: Optional[CRS] = None,
-        res: Optional[float] = None,
-        bands: Optional[Sequence[str]] = None,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
-        cache: bool = True,
-    ) -> None:
-        """Initialize a new Dataset instance.
-
-        Args:
-            root: root directory where dataset can be found
-            crs: :term:`coordinate reference system (CRS)` to warp to
-                (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
-                (defaults to the resolution of the first file found)
-            bands: bands to return (defaults to all bands)
-            transforms: a function/transform that takes an input sample
-                and returns a transformed version
-            cache: if True, cache file handle to speed up repeated sampling
-
-        Raises:
-            FileNotFoundError: if no files are found in ``root``
-
-        .. version_added:: 0.4
-        """
-        super().__init__(root, crs, res, bands, transforms, cache)
-
-    def _merge_files(
-        self,
-        filepaths: Sequence[str],
-        query: BoundingBox,
-        band_indexes: Optional[Sequence[int]] = None,
-    ) -> Tensor:
-        """Load and merge one or more files.
-
-        Args:
-            filepaths: one or more files to load and merge
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
-            band_indexes: indexes of bands to be used
-
-        Returns:
-            image/mask at that index
-        """
-        if self.cache:
-            vrt_fhs = [self._cached_load_warp_file(fp) for fp in filepaths]
-        else:
-            vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
-
-        # group images with the same time-stamp for the same geographic area
-        # and use rasterio merge to extract one common area
-        # mint, maxt = disambiguate_timestamp(date, self.date_format)
-        filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-        date_tile_dict: DefaultDict[str, List[rasterio.io.DatasetReader]] = defaultdict(
-            list
-        )
-        for vrt in vrt_fhs:
-            match = re.match(filename_regex, os.path.basename(vrt.name))
-            if match:
-                date_tile_dict[match.group("date")].append(vrt)
-
-        date_array_dict: Dict[str, np.ndarray] = {}
-
-        bounds = (query.minx, query.miny, query.maxx, query.maxy)
-        for date, vrts in date_tile_dict.items():
-            if len(vrts) == 1:
-                dest = self._read_single_file(vrt_fhs[0], band_indexes, query, bounds)
-            else:
-                dest, _ = rasterio.merge.merge(
-                    vrts, bounds, self.res, indexes=band_indexes
-                )
-            date_array_dict[date] = dest
-
-        # order the time-stamps correctly to build a sequential time series
-        sorted_dates = sorted(
-            list(date_array_dict.keys()),
-            key=lambda x: datetime.datetime.strptime(x, self.date_format),
-        )
-
-        # subsequently stack these extracted patches along the timedimension
-        # specify bounds and according to these bounds read out
-        ts_array = np.stack([date_array_dict[date] for date in sorted_dates])
-
-        # fix numpy dtypes which are not supported by pytorch tensors
-        if dest.dtype == np.uint16:
-            ts_array = ts_array.astype(np.int32)
-        elif dest.dtype == np.uint32:
-            ts_array = ts_array.astype(np.int64)
-
-        tensor = torch.tensor(ts_array)  # dimension seq_len x 1 x height x width
-        return tensor
 
 
 class VectorDataset(GeoDataset):
@@ -1003,8 +987,8 @@ class IntersectionDataset(GeoDataset):
         """Retrieve image and metadata indexed by query.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index or
-                tuple of queries for time-series
+            query: one or more (minx, maxx, miny, maxy, mint, maxt) coordinates
+                to index datasets
 
         Returns:
             sample of data/labels and metadata at that index
@@ -1012,32 +996,17 @@ class IntersectionDataset(GeoDataset):
         Raises:
             IndexError: if query is not within bounds of the index
         """
-        if isinstance(query, BoundingBox):  # non-time-series
-            if not query.intersects(self.bounds):
-                raise IndexError(
-                    f"query: {query} not found in index with bounds: {self.bounds}"
-                )
+        if not query.intersects(self.bounds):
+            raise IndexError(
+                f"query: {query} not found in index with bounds: {self.bounds}"
+            )
 
-            # All datasets are guaranteed to have a valid query
-            samples = [ds[query] for ds in self.datasets]
+        # All datasets are guaranteed to have a valid query
+        samples = [ds[query] for ds in self.datasets]
 
-        elif isinstance(
-            query, Tuple
-        ):  # time-series case assuming one input and one target query
-            if not query[0].intersects(self.bounds):
-                raise IndexError(
-                    f"query: {query[0]} not found in index with bounds: {self.bounds}"
-                )
-            elif not query[1].intersects(self.bounds):
-                raise IndexError(
-                    f"query: {query[1]} not found in index with bounds: {self.bounds}"
-                )
+        sample = self.collate_fn(samples)
 
-            # input and target dataset have valid query
-            # assuming dataset1 is is_image=True and dataset2 has is_image=False
-            samples = [self.datasets[0][query[0]], self.datasets[1][query[1]]]
-
-        return self.collate_fn(samples)
+        return sample
 
     def __str__(self) -> str:
         """Return the informal string representation of the object.

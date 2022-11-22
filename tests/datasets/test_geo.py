@@ -193,6 +193,20 @@ class TestRasterDataset:
         root = os.path.join("tests", "data", "raster")
         return RasterDataset(root)
 
+    @pytest.fixture()
+    def time_series_ds(self) -> RasterDataset:
+        root = os.path.join("tests", "data", "time_series_raster")
+
+        class TimeSeriesRaster(RasterDataset):
+            filename_glob = "test_*.tif"
+            filename_regex = r"test_(?P<date>\d{8})_(?P<band>B0[12])"
+            date_format = "%Y%m%d"
+            is_image = True
+            separate_files = True
+            all_bands = ["B01", "B02"]
+
+        return TimeSeriesRaster(root, as_time_series=True)
+
     def test_getitem_single_file(self, naip: NAIP) -> None:
         x = naip[naip.bounds]
         assert isinstance(x, dict)
@@ -236,6 +250,14 @@ class TestRasterDataset:
 
         with pytest.raises(AssertionError, match=msg):
             CustomSentinelDataset(root, bands=bands, transforms=transforms, cache=cache)
+
+    def test_time_series(self, time_series_ds: RasterDataset) -> None:
+        queries = [time_series_ds.bounds, time_series_ds.bounds]
+        samples = time_series_ds[queries]
+        assert isinstance(samples, list)
+        assert all(isinstance(x, dict) for x in samples)
+        assert all(isinstance(x["image"], torch.Tensor) for x in samples)
+        assert all(x["image"].dtype == torch.int64 for x in samples)
 
 
 class TestVectorDataset:
