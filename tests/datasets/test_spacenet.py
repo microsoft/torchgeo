@@ -19,10 +19,12 @@ from torchgeo.datasets import (
     SpaceNet3,
     SpaceNet4,
     SpaceNet5,
+    SpaceNet6,
     SpaceNet7,
 )
 
 TEST_DATA_DIR = "tests/data/spacenet"
+radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
 
 
 class Collection:
@@ -35,8 +37,24 @@ class Collection:
             shutil.copy(tarball, output_dir)
 
 
+class Dataset:
+    def __init__(self, dataset_id: str) -> None:
+        self.dataset_id = dataset_id
+
+    def download(self, output_dir: str, **kwargs: str) -> None:
+        glob_path = os.path.join(TEST_DATA_DIR, "spacenet*")
+        for directory in glob.iglob(glob_path):
+            dataset_name = os.path.basename(directory)
+            output_dir = os.path.join(output_dir, dataset_name)
+            shutil.copytree(directory, output_dir)
+
+
 def fetch_collection(collection_id: str, **kwargs: str) -> Collection:
     return Collection(collection_id)
+
+
+def fetch_dataset(dataset_id: str, **kwargs: str) -> Dataset:
+    return Dataset(dataset_id)
 
 
 class TestSpaceNet1:
@@ -44,9 +62,8 @@ class TestSpaceNet1:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet1:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
-        test_md5 = {"sn1_AOI_1_RIO": "829652022c2df4511ee4ae05bc290250"}
+        test_md5 = {"sn1_AOI_1_RIO": "246e27fcd7ae73496212a7f585a43dbb"}
 
         # Refer https://github.com/python/mypy/issues/1032
         monkeypatch.setattr(SpaceNet1, "collection_md5_dict", test_md5)
@@ -58,6 +75,7 @@ class TestSpaceNet1:
 
     def test_getitem(self, dataset: SpaceNet1) -> None:
         x = dataset[0]
+        dataset[1]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
@@ -90,13 +108,12 @@ class TestSpaceNet2:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet2:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
         test_md5 = {
-            "sn2_AOI_2_Vegas": "6ceae7ff8c557346e8a4c8b6c61cc1b9",
-            "sn2_AOI_3_Paris": "811e6a26fdeb8be445fed99769fa52c5",
-            "sn2_AOI_4_Shanghai": "139d1627d184c74426a85ad0222f7355",
-            "sn2_AOI_5_Khartoum": "435535120414b74165aa87f051c3a2b3",
+            "sn2_AOI_2_Vegas": "131048686ba21a45853c05f227f40b7f",
+            "sn2_AOI_3_Paris": "62242fd198ee32b59f0178cf656e1513",
+            "sn2_AOI_4_Shanghai": "563b0817ecedd8ff3b3e4cb2991bf3fb",
+            "sn2_AOI_5_Khartoum": "e4185a2e9a12cf7b3d0cd1db6b3e0f06",
         }
 
         monkeypatch.setattr(SpaceNet2, "collection_md5_dict", test_md5)
@@ -123,9 +140,8 @@ class TestSpaceNet2:
         else:
             assert x["image"].shape[0] == 1
 
-    # TODO: Change len to 4 when radiantearth/radiant-mlhub#65 is fixed
     def test_len(self, dataset: SpaceNet2) -> None:
-        assert len(dataset) == 5
+        assert len(dataset) == 4
 
     def test_already_downloaded(self, dataset: SpaceNet2) -> None:
         SpaceNet2(root=dataset.root, download=True)
@@ -153,11 +169,10 @@ class TestSpaceNet3:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet3:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
         test_md5 = {
-            "sn3_AOI_3_Paris": "197440e0ade970169a801a173a492c27",
-            "sn3_AOI_5_Khartoum": "b21ff7dd33a15ec32bd380c083263cdf",
+            "sn3_AOI_3_Paris": "93452c68da11dd6b57dc83dba43c2c9d",
+            "sn3_AOI_5_Khartoum": "7c9d96810198bf101cbaf54f7a5e8b3b",
         }
 
         monkeypatch.setattr(SpaceNet3, "collection_md5_dict", test_md5)
@@ -218,9 +233,8 @@ class TestSpaceNet4:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet4:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
-        test_md5 = {"sn4_AOI_6_Atlanta": "ea37c2d87e2c3a1d8b2a7c2230080d46"}
+        test_md5 = {"sn4_AOI_6_Atlanta": "097a76a2319b7ba34dac1722862fc93b"}
 
         test_angles = ["nadir", "off-nadir", "very-off-nadir"]
 
@@ -281,11 +295,10 @@ class TestSpaceNet5:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet5:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
         test_md5 = {
-            "sn5_AOI_7_Moscow": "e0d5f41f1b6b0ee7696c15e5ff3141f5",
-            "sn5_AOI_8_Mumbai": "ab898700ee586a137af492b84a08e662",
+            "sn5_AOI_7_Moscow": "5c511dd31eea739cc1f81ef5962f3d56",
+            "sn5_AOI_8_Mumbai": "e00452b87bbe87feaef65f373be3978e",
         }
 
         monkeypatch.setattr(SpaceNet5, "collection_md5_dict", test_md5)
@@ -339,17 +352,55 @@ class TestSpaceNet5:
         plt.close()
 
 
+class TestSpaceNet6:
+    @pytest.fixture(params=["PAN", "RGBNIR", "PS-RGB", "PS-RGBNIR", "SAR-Intensity"])
+    def dataset(
+        self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> SpaceNet6:
+        monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch_dataset)
+        root = str(tmp_path)
+        transforms = nn.Identity()
+        return SpaceNet6(
+            root, image=request.param, transforms=transforms, download=True, api_key=""
+        )
+
+    def test_getitem(self, dataset: SpaceNet6) -> None:
+        x = dataset[0]
+        assert isinstance(x, dict)
+        assert isinstance(x["image"], torch.Tensor)
+        assert isinstance(x["mask"], torch.Tensor)
+        if dataset.image == "PS-RGB":
+            assert x["image"].shape[0] == 3
+        elif dataset.image in ["RGBNIR", "PS-RGBNIR"]:
+            assert x["image"].shape[0] == 4
+        else:
+            assert x["image"].shape[0] == 1
+
+    def test_len(self, dataset: SpaceNet6) -> None:
+        assert len(dataset) == 2
+
+    def test_already_downloaded(self, dataset: SpaceNet6) -> None:
+        SpaceNet6(root=dataset.root, download=True)
+
+    def test_plot(self, dataset: SpaceNet6) -> None:
+        x = dataset[0].copy()
+        x["prediction"] = x["mask"]
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
+
+
 class TestSpaceNet7:
     @pytest.fixture(params=["train", "test"])
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet7:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
         test_md5 = {
-            "sn7_train_source": "254fd6b16e350b071137b2658332091f",
-            "sn7_train_labels": "05befe86b037a3af75c7143553033664",
-            "sn7_test_source": "37d98d44a9da39657ed4b7beee22a21e",
+            "sn7_train_source": "197bfa8842a40b09b6837b824a6370e0",
+            "sn7_train_labels": "625ad8a989a5105bc766a53e53df4d0e",
+            "sn7_test_source": "461f59eb21bb4f416c867f5037dfceeb",
         }
 
         monkeypatch.setattr(SpaceNet7, "collection_md5_dict", test_md5)

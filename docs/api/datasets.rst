@@ -288,12 +288,13 @@ SpaceNet
 .. autoclass:: SpaceNet3
 .. autoclass:: SpaceNet4
 .. autoclass:: SpaceNet5
+.. autoclass:: SpaceNet6
 .. autoclass:: SpaceNet7
 
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
 
-.. autoclass:: TropicalCycloneWindEstimation
+.. autoclass:: TropicalCyclone
 
 UC Merced
 ^^^^^^^^^

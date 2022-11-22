@@ -24,7 +24,7 @@ def load_state_dict_from_file(
     file_name: Optional[str] = None,
 ) -> Any:
     """Mockup of ``torch.hub.load_state_dict_from_url``."""
-    return torch.load(file)  # type: ignore[no-untyped-call]
+    return torch.load(file)
 
 
 @pytest.mark.parametrize(

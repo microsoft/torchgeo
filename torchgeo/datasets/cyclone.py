@@ -6,7 +6,7 @@
 import json
 import os
 from functools import lru_cache
-from typing import Any, Callable, Dict, Optional, cast
+from typing import Any, Callable, Dict, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,7 +18,7 @@ from .geo import NonGeoDataset
 from .utils import check_integrity, download_radiant_mlhub_dataset, extract_archive
 
 
-class TropicalCycloneWindEstimation(NonGeoDataset):
+class TropicalCyclone(NonGeoDataset):
     """Tropical Cyclone Wind Estimation Competition dataset.
 
     A collection of tropical storms in the Atlantic and East Pacific Oceans from 2000 to
@@ -38,6 +38,10 @@ class TropicalCycloneWindEstimation(NonGeoDataset):
 
        * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
          imagery and labels from the Radiant Earth MLHub
+
+    .. versionchanged:: 0.4.0
+        Class name changed from TropicalCycloneWindEstimation to TropicalCyclone
+        to be consistent with TropicalCycloneDataModule.
     """
 
     collection_id = "nasa_tropical_storm_competition"
@@ -245,7 +249,7 @@ class TropicalCycloneWindEstimation(NonGeoDataset):
         if show_titles:
             title = f"Label: {label}"
             if showing_predictions:
-                title += f"\nPrediction: {cast(str, prediction)}"
+                title += f"\nPrediction: {prediction}"
             ax.set_title(title)
 
         if suptitle is not None:

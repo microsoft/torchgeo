@@ -3,9 +3,11 @@
 
 import os
 
+import matplotlib.pyplot as plt
 import pytest
 
 from torchgeo.datamodules import LoveDADataModule
+from torchgeo.datasets import unbind_samples
 
 
 class TestLoveDADataModule:
@@ -32,3 +34,9 @@ class TestLoveDADataModule:
 
     def test_test_dataloader(self, datamodule: LoveDADataModule) -> None:
         next(iter(datamodule.test_dataloader()))
+
+    def test_plot(self, datamodule: LoveDADataModule) -> None:
+        batch = next(iter(datamodule.train_dataloader()))
+        sample = unbind_samples(batch)[0]
+        datamodule.plot(sample)
+        plt.close()
