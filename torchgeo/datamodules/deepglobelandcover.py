@@ -4,17 +4,16 @@
 """DeepGlobe Land Cover Classification Challenge datamodule."""
 
 import warnings
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
-from einops import rearrange
 from torch.utils.data import DataLoader, Dataset
-from torch.utils.data._utils.collate import default_collate
 from torchvision.transforms import Compose
 
+from torchgeo.datasets.utils import collate_patches_per_tile
 from torchgeo.samplers.utils import _to_tuple
 
 from ..datasets import DeepGlobeLandCover
@@ -47,7 +46,8 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             patch_size: Size of random patch from image and mask (height, width), should
                 be a multiple of 32 for most segmentation architectures
             num_tiles_per_batch: number of random tiles to consider sampling patches
-                from per sample, should evenly divide train_batch_size
+                from per sample, should evenly divide train_batch_size and be less than
+                or equal to train_batch_size
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.DeepGlobeLandCover`
 
@@ -64,9 +64,15 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         self.val_split_pct = val_split_pct
         self.kwargs = kwargs
 
+        assert (
+            self.train_batch_size >= num_tiles_per_batch
+        ), "num_tiles_per_bacth should be less than or equal to train_batch_size."
+
         self.num_patches_per_tile = self.train_batch_size // num_tiles_per_batch
 
-        if (self.num_patches_per_tile % 2) != 0:
+        if (self.num_patches_per_tile % 2) != 0 and (
+            self.num_patches_per_tile != num_tiles_per_batch
+        ):
             warnings.warn(
                 "The effective batch size"
                 f" will differ from the specified {train_batch_size}"
@@ -177,29 +183,11 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         Returns:
             training data loader
         """
-
-        def collate_wrapper(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
-            """Define collate function to combine patches per tile and batch size.
-
-            Args:
-                batch: sample batch from dataloader containing image and mask
-
-            Returns:
-                sample batch where the batch dimension is
-                'train_batch_size' * 'num_patches_per_tile'
-            """
-            r_batch: Dict[str, Any] = default_collate(  # type: ignore[no-untyped-call]
-                batch
-            )
-            r_batch["image"] = rearrange(r_batch["image"], "b t c h w -> (b t) c h w")
-            r_batch["mask"] = rearrange(r_batch["mask"], "b t h w -> (b t) h w")
-            return r_batch
-
         return DataLoader(
             self.train_dataset,
             batch_size=self.train_batch_size,
             num_workers=self.num_workers,
-            collate_fn=collate_wrapper,
+            collate_fn=collate_patches_per_tile,
             shuffle=True,
         )
 
@@ -209,9 +197,21 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         Returns:
             validation data loader
         """
-        return DataLoader(
-            self.val_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
-        )
+        if self.val_split_pct > 0.0:
+            return DataLoader(
+                self.val_dataset,
+                batch_size=1,
+                num_workers=self.num_workers,
+                shuffle=False,
+            )
+        else:
+            return DataLoader(
+                self.val_dataset,
+                batch_size=1,
+                num_workers=self.num_workers,
+                shuffle=False,
+                collate_fn=collate_patches_per_tile,
+            )
 
     def test_dataloader(self) -> DataLoader[Dict[str, Any]]:
         """Return a DataLoader for testing.

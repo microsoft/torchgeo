@@ -15,5 +15,6 @@ experiment:
   datamodule:
     root: "tests/data/deepglobelandcover"
     val_split_pct: 0.0
-    batch_size: 1
+    train_batch_size: 1
+    num_tiles_per_batch: 1
     num_workers: 0
