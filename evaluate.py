@@ -146,6 +146,7 @@ def main(args: argparse.Namespace) -> None:
     # Loads the saved model from checkpoint based on the `args.task` name that was
     # passed as input
     model = TASK.load_from_checkpoint(args.input_checkpoint)
+    model = cast(pl.LightningModule, model)
     model.freeze()
     model.eval()
 
@@ -158,54 +159,54 @@ def main(args: argparse.Namespace) -> None:
     dm.setup("validate")
 
     # Record model hyperparameters
-    model.hparams = cast(Dict[str, Union[str, float]], model.hparams)
+    hparams = cast(Dict[str, Union[str, float]], model.hparams)
     if issubclass(TASK, ClassificationTask):
-        val_row: Dict[str, Union[str, float]] = {
+        val_row = {
             "split": "val",
-            "classification_model": model.hparams["classification_model"],
-            "learning_rate": model.hparams["learning_rate"],
-            "weights": model.hparams["weights"],
-            "loss": model.hparams["loss"],
+            "classification_model": hparams["classification_model"],
+            "learning_rate": hparams["learning_rate"],
+            "weights": hparams["weights"],
+            "loss": hparams["loss"],
         }
 
-        test_row: Dict[str, Union[str, float]] = {
+        test_row = {
             "split": "test",
-            "classification_model": model.hparams["classification_model"],
-            "learning_rate": model.hparams["learning_rate"],
-            "weights": model.hparams["weights"],
-            "loss": model.hparams["loss"],
+            "classification_model": hparams["classification_model"],
+            "learning_rate": hparams["learning_rate"],
+            "weights": hparams["weights"],
+            "loss": hparams["loss"],
         }
     elif issubclass(TASK, SemanticSegmentationTask):
         val_row = {
             "split": "val",
-            "segmentation_model": model.hparams["segmentation_model"],
-            "encoder_name": model.hparams["encoder_name"],
-            "encoder_weights": model.hparams["encoder_weights"],
-            "learning_rate": model.hparams["learning_rate"],
-            "loss": model.hparams["loss"],
+            "segmentation_model": hparams["segmentation_model"],
+            "encoder_name": hparams["encoder_name"],
+            "encoder_weights": hparams["encoder_weights"],
+            "learning_rate": hparams["learning_rate"],
+            "loss": hparams["loss"],
         }
 
         test_row = {
             "split": "test",
-            "segmentation_model": model.hparams["segmentation_model"],
-            "encoder_name": model.hparams["encoder_name"],
-            "encoder_weights": model.hparams["encoder_weights"],
-            "learning_rate": model.hparams["learning_rate"],
-            "loss": model.hparams["loss"],
+            "segmentation_model": hparams["segmentation_model"],
+            "encoder_name": hparams["encoder_name"],
+            "encoder_weights": hparams["encoder_weights"],
+            "learning_rate": hparams["learning_rate"],
+            "loss": hparams["loss"],
         }
     elif issubclass(TASK, ObjectDetectionTask):
         val_row = {
             "split": "val",
-            "detection_model": model.hparams["detection_model"],
-            "backbone": model.hparams["backbone"],
-            "learning_rate": model.hparams["learning_rate"],
+            "detection_model": hparams["detection_model"],
+            "backbone": hparams["backbone"],
+            "learning_rate": hparams["learning_rate"],
         }
 
         test_row = {
             "split": "test",
-            "detection_model": model.hparams["detection_model"],
-            "backbone": model.hparams["backbone"],
-            "learning_rate": model.hparams["learning_rate"],
+            "detection_model": hparams["detection_model"],
+            "backbone": hparams["backbone"],
+            "learning_rate": hparams["learning_rate"],
         }
     else:
         raise ValueError(f"{TASK} is not supported")
