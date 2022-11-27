@@ -68,7 +68,7 @@ class ClassificationTask(pl.LightningModule):
             custom_pretrained = True
 
         # Create the model
-        valid_models = timm.list_models(pretrained=True)
+        valid_models = timm.list_models(pretrained=False)
         if model in valid_models:
             self.model = timm.create_model(
                 model,
