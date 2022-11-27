@@ -39,7 +39,7 @@ class ClassificationTask(pl.LightningModule):
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor."""
         in_channels = self.hyperparams["in_channels"]
-        classification_model = self.hyperparams["classification_model"]
+        model = self.hyperparams["model"]
 
         imagenet_pretrained = False
         custom_pretrained = False
@@ -58,25 +58,23 @@ class ClassificationTask(pl.LightningModule):
 
         # Create the model
         valid_models = timm.list_models(pretrained=True)
-        if classification_model in valid_models:
+        if model in valid_models:
             self.model = timm.create_model(
-                classification_model,
+                model,
                 num_classes=self.hyperparams["num_classes"],
                 in_chans=in_channels,
                 pretrained=imagenet_pretrained,
             )
         else:
-            raise ValueError(
-                f"Model type '{classification_model}' is not a valid timm model."
-            )
+            raise ValueError(f"Model type '{model}' is not a valid timm model.")
 
         if custom_pretrained:
             name, state_dict = utils.extract_encoder(self.hyperparams["weights"])
 
-            if self.hyperparams["classification_model"] != name:
+            if self.hyperparams["model"] != name:
                 raise ValueError(
                     f"Trying to load {name} weights into a "
-                    f"{self.hyperparams['classification_model']}"
+                    f"{self.hyperparams['model']}"
                 )
             self.model = utils.load_state_dict(self.model, state_dict)
 
@@ -97,10 +95,13 @@ class ClassificationTask(pl.LightningModule):
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
-            classification_model: Name of the classification model use
+            model: Name of the classification model use
             loss: Name of the loss function
             weights: Either "random", "imagenet_only", "imagenet_and_random", or
                 "random_rgb"
+
+        .. versionchanged:: 0.4
+           The *classification_model* parameter was renamed to *model*.
         """
         super().__init__()
 
@@ -299,10 +300,13 @@ class MultiLabelClassificationTask(ClassificationTask):
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
-            classification_model: Name of the classification model use
+            model: Name of the classification model use
             loss: Name of the loss function
             weights: Either "random", "imagenet_only", "imagenet_and_random", or
                 "random_rgb"
+
+        .. versionchanged:: 0.4
+           The *classification_model* parameter was renamed to *model*.
         """
         super().__init__(**kwargs)
 

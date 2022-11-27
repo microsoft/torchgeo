@@ -161,7 +161,7 @@ def main(args: argparse.Namespace) -> None:
     if issubclass(TASK, ClassificationTask):
         val_row: Dict[str, Union[str, float]] = {
             "split": "val",
-            "classification_model": model.hparams["classification_model"],
+            "model": model.hparams["model"],
             "learning_rate": model.hparams["learning_rate"],
             "weights": model.hparams["weights"],
             "loss": model.hparams["loss"],
@@ -169,7 +169,7 @@ def main(args: argparse.Namespace) -> None:
 
         test_row: Dict[str, Union[str, float]] = {
             "split": "test",
-            "classification_model": model.hparams["classification_model"],
+            "model": model.hparams["model"],
             "learning_rate": model.hparams["learning_rate"],
             "weights": model.hparams["weights"],
             "loss": model.hparams["loss"],

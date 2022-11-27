@@ -85,7 +85,7 @@ class TestClassificationTask:
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:
         return {
-            "classification_model": "resnet18",
+            "model": "resnet18",
             "in_channels": 1,
             "loss": "ce",
             "num_classes": 2,
@@ -101,7 +101,7 @@ class TestClassificationTask:
         self, model_kwargs: Dict[Any, Any], checkpoint: str
     ) -> None:
         model_kwargs["weights"] = checkpoint
-        model_kwargs["classification_model"] = "resnet50"
+        model_kwargs["model"] = "resnet50"
         match = "Trying to load resnet18 weights into a resnet50"
         with pytest.raises(ValueError, match=match):
             ClassificationTask(**model_kwargs)
@@ -113,7 +113,7 @@ class TestClassificationTask:
             ClassificationTask(**model_kwargs)
 
     def test_invalid_model(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["classification_model"] = "invalid_model"
+        model_kwargs["model"] = "invalid_model"
         match = "Model type 'invalid_model' is not a valid timm model."
         with pytest.raises(ValueError, match=match):
             ClassificationTask(**model_kwargs)
@@ -178,7 +178,7 @@ class TestMultiLabelClassificationTask:
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:
         return {
-            "classification_model": "resnet18",
+            "model": "resnet18",
             "in_channels": 1,
             "loss": "ce",
             "num_classes": 1,
