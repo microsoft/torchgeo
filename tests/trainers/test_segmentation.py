@@ -101,17 +101,17 @@ class TestSemanticSegmentationTask:
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:
         return {
-            "segmentation_model": "unet",
-            "encoder_name": "resnet18",
+            "model": "unet",
+            "encoder": "resnet18",
             "encoder_weights": None,
-            "in_channels": 1,
-            "num_classes": 2,
+            "in_channels": 3,
+            "num_classes": 6,
             "loss": "ce",
             "ignore_index": 0,
         }
 
     def test_invalid_model(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["segmentation_model"] = "invalid_model"
+        model_kwargs["model"] = "invalid_model"
         match = "Model type 'invalid_model' is not valid."
         with pytest.raises(ValueError, match=match):
             SemanticSegmentationTask(**model_kwargs)
@@ -134,3 +134,14 @@ class TestSemanticSegmentationTask:
         match = "ignore_index has no effect on training when loss='jaccard'"
         with pytest.warns(UserWarning, match=match):
             SemanticSegmentationTask(**model_kwargs)
+
+    def test_missing_attributes(
+        self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
+    ) -> None:
+        monkeypatch.delattr(LandCoverAIDataModule, "plot")
+        datamodule = LandCoverAIDataModule(
+            root="tests/data/landcoverai", batch_size=1, num_workers=0
+        )
+        model = SemanticSegmentationTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer.validate(model=model, datamodule=datamodule)

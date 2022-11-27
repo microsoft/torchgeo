@@ -2,8 +2,8 @@ experiment:
   task: "chesapeake_cvpr"
   module:
     loss: "ce"
-    segmentation_model: "unet"
-    encoder_name: "resnet50"
+    model: "unet"
+    encoder: "resnet50"
     encoder_weights: null
     encoder_output_stride: 16
     learning_rate: 1e-3
