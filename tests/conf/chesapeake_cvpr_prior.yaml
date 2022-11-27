@@ -3,7 +3,7 @@ experiment:
   module:
     loss: "ce"
     segmentation_model: "unet"
-    encoder_name: "resnet50"
+    encoder: "resnet50"
     encoder_weights: null
     encoder_output_stride: 16
     learning_rate: 1e-3
@@ -12,7 +12,7 @@ experiment:
     num_classes: 5
     num_filters: 1
     ignore_index: null
-    imagenet_pretraining: False
+    weights: imagenet
   datamodule:
     root: "tests/data/chesapeake/cvpr"
     train_splits:
