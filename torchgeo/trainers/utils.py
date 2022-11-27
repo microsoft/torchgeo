@@ -50,7 +50,7 @@ def extract_encoder(path: str) -> Tuple[str, "OrderedDict[str, Tensor]"]:
         )
     else:
         raise ValueError(
-            "Unknown checkpoint task. Only encoder or model" " extraction is supported"
+            "Unknown checkpoint task. Only encoder or model extraction is supported"
         )
 
     return name, state_dict

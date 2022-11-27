@@ -163,18 +163,18 @@ def main(args: argparse.Namespace) -> None:
     if issubclass(TASK, ClassificationTask):
         val_row = {
             "split": "val",
-            "model": model.hparams["model"],
-            "learning_rate": model.hparams["learning_rate"],
-            "weights": model.hparams["weights"],
-            "loss": model.hparams["loss"],
+            "model": hparams["model"],
+            "learning_rate": hparams["learning_rate"],
+            "weights": hparams["weights"],
+            "loss": hparams["loss"],
         }
 
         test_row = {
             "split": "test",
-            "model": model.hparams["model"],
-            "learning_rate": model.hparams["learning_rate"],
-            "weights": model.hparams["weights"],
-            "loss": model.hparams["loss"],
+            "model": hparams["model"],
+            "learning_rate": hparams["learning_rate"],
+            "weights": hparams["weights"],
+            "loss": hparams["loss"],
         }
     elif issubclass(TASK, SemanticSegmentationTask):
         val_row = {

@@ -107,9 +107,12 @@ class ClassificationTask(pl.LightningModule):
 
         Keyword Args:
             model: Name of the classification model use
-            loss: Name of the loss function
-            weights: Either "random", "imagenet_only", "imagenet_and_random", or
-                "random_rgb"
+            loss: Name of the loss function, accepts 'ce', 'jaccard', or 'focal'
+            weights: Either "random" or "imagenet"
+            num_classes: Number of prediction classes
+            in_channels: Number of input channels to model
+            learning_rate: Learning rate for optimizer
+            learning_rate_schedule_patience: Patience for learning rate scheduler
 
         .. versionchanged:: 0.4
            The *classification_model* parameter was renamed to *model*.
@@ -312,9 +315,12 @@ class MultiLabelClassificationTask(ClassificationTask):
 
         Keyword Args:
             model: Name of the classification model use
-            loss: Name of the loss function
-            weights: Either "random", "imagenet_only", "imagenet_and_random", or
-                "random_rgb"
+            loss: Name of the loss function, currently only supports 'bce'
+            weights: Either "random" or 'imagenet'
+            num_classes: Number of prediction classes
+            in_channels: Number of input channels to model
+            learning_rate: Learning rate for optimizer
+            learning_rate_schedule_patience: Patience for learning rate scheduler
 
         .. versionchanged:: 0.4
            The *classification_model* parameter was renamed to *model*.
