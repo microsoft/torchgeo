@@ -343,7 +343,7 @@ class BYOLTask(pl.LightningModule):
             custom_pretrained = True
 
         # Create the model
-        valid_models = timm.list_models(pretrained=True)
+        valid_models = timm.list_models(pretrained=False)
         if encoder_name in valid_models:
             encoder = timm.create_model(
                 encoder_name, in_chans=in_channels, pretrained=imagenet_pretrained
