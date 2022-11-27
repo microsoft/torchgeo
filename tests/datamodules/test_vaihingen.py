@@ -3,10 +3,12 @@
 
 import os
 
+import matplotlib.pyplot as plt
 import pytest
 from _pytest.fixtures import SubRequest
 
 from torchgeo.datamodules import Vaihingen2DDataModule
+from torchgeo.datasets import unbind_samples
 
 
 class TestVaihingen2DDataModule:
@@ -34,3 +36,9 @@ class TestVaihingen2DDataModule:
 
     def test_test_dataloader(self, datamodule: Vaihingen2DDataModule) -> None:
         next(iter(datamodule.test_dataloader()))
+
+    def test_plot(self, datamodule: Vaihingen2DDataModule) -> None:
+        batch = next(iter(datamodule.train_dataloader()))
+        sample = unbind_samples(batch)[0]
+        datamodule.plot(sample)
+        plt.close()

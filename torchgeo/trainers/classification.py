@@ -34,7 +34,18 @@ Linear.__module__ = "nn.Linear"
 
 
 class ClassificationTask(pl.LightningModule):
-    """LightningModule for image classification."""
+    """LightningModule for image classification.
+
+    Supports any available `Timm model
+    <https://rwightman.github.io/pytorch-image-models/>`_
+    as an architecture choice. To see a list of available pretrained
+    models, you can do:
+
+    .. code-block:: python
+
+        import timm
+        print(timm.list_models(pretrained=True))
+    """
 
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor."""

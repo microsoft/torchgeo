@@ -8,7 +8,7 @@
 import argparse
 import csv
 import os
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, cast
 
 import pytorch_lightning as pl
 import torch
@@ -146,6 +146,7 @@ def main(args: argparse.Namespace) -> None:
     # Loads the saved model from checkpoint based on the `args.task` name that was
     # passed as input
     model = TASK.load_from_checkpoint(args.input_checkpoint)
+    model = cast(pl.LightningModule, model)
     model.freeze()
     model.eval()
 
@@ -155,11 +156,12 @@ def main(args: argparse.Namespace) -> None:
         num_workers=args.num_workers,
         batch_size=args.batch_size,
     )
-    dm.setup()
+    dm.setup("validate")
 
     # Record model hyperparameters
+    hparams = cast(Dict[str, Union[str, float]], model.hparams)
     if issubclass(TASK, ClassificationTask):
-        val_row: Dict[str, Union[str, float]] = {
+        val_row = {
             "split": "val",
             "model": model.hparams["model"],
             "learning_rate": model.hparams["learning_rate"],
@@ -167,7 +169,7 @@ def main(args: argparse.Namespace) -> None:
             "loss": model.hparams["loss"],
         }
 
-        test_row: Dict[str, Union[str, float]] = {
+        test_row = {
             "split": "test",
             "model": model.hparams["model"],
             "learning_rate": model.hparams["learning_rate"],
@@ -177,34 +179,34 @@ def main(args: argparse.Namespace) -> None:
     elif issubclass(TASK, SemanticSegmentationTask):
         val_row = {
             "split": "val",
-            "segmentation_model": model.hparams["segmentation_model"],
-            "encoder_name": model.hparams["encoder_name"],
-            "encoder_weights": model.hparams["encoder_weights"],
-            "learning_rate": model.hparams["learning_rate"],
-            "loss": model.hparams["loss"],
+            "segmentation_model": hparams["segmentation_model"],
+            "encoder_name": hparams["encoder_name"],
+            "encoder_weights": hparams["encoder_weights"],
+            "learning_rate": hparams["learning_rate"],
+            "loss": hparams["loss"],
         }
 
         test_row = {
             "split": "test",
-            "segmentation_model": model.hparams["segmentation_model"],
-            "encoder_name": model.hparams["encoder_name"],
-            "encoder_weights": model.hparams["encoder_weights"],
-            "learning_rate": model.hparams["learning_rate"],
-            "loss": model.hparams["loss"],
+            "segmentation_model": hparams["segmentation_model"],
+            "encoder_name": hparams["encoder_name"],
+            "encoder_weights": hparams["encoder_weights"],
+            "learning_rate": hparams["learning_rate"],
+            "loss": hparams["loss"],
         }
     elif issubclass(TASK, ObjectDetectionTask):
         val_row = {
             "split": "val",
-            "detection_model": model.hparams["detection_model"],
-            "backbone": model.hparams["backbone"],
-            "learning_rate": model.hparams["learning_rate"],
+            "detection_model": hparams["detection_model"],
+            "backbone": hparams["backbone"],
+            "learning_rate": hparams["learning_rate"],
         }
 
         test_row = {
             "split": "test",
-            "detection_model": model.hparams["detection_model"],
-            "backbone": model.hparams["backbone"],
-            "learning_rate": model.hparams["learning_rate"],
+            "detection_model": hparams["detection_model"],
+            "backbone": hparams["backbone"],
+            "learning_rate": hparams["learning_rate"],
         }
     else:
         raise ValueError(f"{TASK} is not supported")
@@ -233,6 +235,8 @@ def main(args: argparse.Namespace) -> None:
             }
         )
     else:  # Test with PyTorch Lightning as usual
+        model.val_metrics = cast(MetricCollection, model.val_metrics)
+        model.test_metrics = cast(MetricCollection, model.test_metrics)
 
         val_results = run_eval_loop(
             model, dm.val_dataloader(), device, model.val_metrics

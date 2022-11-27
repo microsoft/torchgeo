@@ -27,7 +27,7 @@ from .cloud_cover import CloudCoverDetection
 from .cms_mangrove_canopy import CMSGlobalMangroveCanopy
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
-from .cyclone import TropicalCycloneWindEstimation
+from .cyclone import TropicalCyclone
 from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
 from .eddmaps import EDDMapS
@@ -92,6 +92,7 @@ from .spacenet import (
     SpaceNet3,
     SpaceNet4,
     SpaceNet5,
+    SpaceNet6,
     SpaceNet7,
 )
 from .ucmerced import UCMerced
@@ -184,8 +185,9 @@ __all__ = (
     "SpaceNet3",
     "SpaceNet4",
     "SpaceNet5",
+    "SpaceNet6",
     "SpaceNet7",
-    "TropicalCycloneWindEstimation",
+    "TropicalCyclone",
     "UCMerced",
     "USAVars",
     "Vaihingen2D",
