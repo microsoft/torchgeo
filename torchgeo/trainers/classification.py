@@ -49,7 +49,7 @@ class ClassificationTask(pl.LightningModule):
         imagenet_pretrained = False
         custom_pretrained = False
         if self.hyperparams["weights"] and not os.path.exists(
-            self.hyperparams["weights"]
+            self.hyperparams["weights"] and isinstance(self.hyperparams["weights"], str)
         ):
             if self.hyperparams["weights"] not in ["imagenet", "random"]:
                 raise ValueError(
@@ -74,14 +74,25 @@ class ClassificationTask(pl.LightningModule):
             raise ValueError(f"Model type '{model}' is not a valid timm model.")
 
         if custom_pretrained:
-            name, state_dict = utils.extract_backbone(self.hyperparams["weights"])
+            if isinstance(self.hyperparams["weights"], str):
+                # load a checkpoint path
+                name, state_dict = utils.extract_backbone(self.hyperparams["weights"])
 
-            if self.hyperparams["model"] != name:
-                raise ValueError(
-                    f"Trying to load {name} weights into a "
-                    f"{self.hyperparams['model']}"
-                )
-            self.model = utils.load_state_dict(self.model, state_dict)
+                if self.hyperparams["classification_model"] != name:
+                    raise ValueError(
+                        f"Trying to load {name} weights into a "
+                        f"{self.hyperparams['classification_model']}"
+                    )
+                self.model = utils.load_state_dict(self.model, state_dict)
+            else:
+                # load a state_dict mapping
+                state_dict = self.hyperparams["weights"]
+                try:
+                    self.model.load_state_dict(state_dict, strict=False)
+                except RuntimeError:
+                    self.model = utils.load_state_dict(self.model, state_dict)
+
+                assert self.model.fc.out_features == self.hyperparams["num_classes"]
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""

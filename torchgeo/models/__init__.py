@@ -9,8 +9,10 @@ from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
 from .rcf import RCF
 from .resnet import resnet50
+from .weights import ResNet50_Weights
 
 __all__ = (
+    # models
     "ChangeMixin",
     "ChangeStar",
     "ChangeStarFarSeg",
@@ -20,4 +22,6 @@ __all__ = (
     "FCSiamDiff",
     "RCF",
     "resnet50",
+    # weights
+    "ResNet50_Weights",
 )
