@@ -50,7 +50,7 @@ class ObjectDetectionTask(pl.LightningModule):
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
         backbone_pretrained = self.hyperparams.get("pretrained", True)
-        if self.hyperparams["detection_model"] == "faster-rcnn":
+        if self.hyperparams["model"] == "faster-rcnn":
             if "resnet" in self.hyperparams["backbone"]:
                 kwargs = {
                     "backbone_name": self.hyperparams["backbone"],
@@ -88,21 +88,24 @@ class ObjectDetectionTask(pl.LightningModule):
             )
 
         else:
-            raise ValueError(
-                f"Model type '{self.hyperparams['detection_model']}' is not valid."
-            )
+            raise ValueError(f"Model type '{self.hyperparams['model']}' is not valid.")
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
-            detection_model: Name of the detection model type to use
+            model: Name of the detection model type to use
             backbone: Name of the model backbone to use
             in_channels: Number of channels in input image
             num_classes: Number of semantic classes to predict
+            learning_rate: Learning rate for optimizer
+            learning_rate_schedule_patience: Patience for learning rate scheduler
 
         Raises:
             ValueError: if kwargs arguments are invalid
+
+        .. versionchanged:: 0.4
+           The *detection_model* parameter was renamed to *model*.
         """
         super().__init__()
         # Creates `self.hparams` from kwargs
