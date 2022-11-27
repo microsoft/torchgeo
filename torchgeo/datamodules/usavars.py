@@ -5,6 +5,7 @@
 
 from typing import Any, Dict, Optional
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
@@ -96,3 +97,10 @@ class USAVarsDataModule(pl.LightningModule):
             num_workers=self.num_workers,
             shuffle=False,
         )
+
+    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+        """Run :meth:`torchgeo.datasets.USAVars.plot`.
+
+        .. versionadded:: 0.4
+        """
+        return self.train_dataset.plot(*args, **kwargs)

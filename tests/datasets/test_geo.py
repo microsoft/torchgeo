@@ -245,11 +245,33 @@ class TestVectorDataset:
         transforms = nn.Identity()
         return CustomVectorDataset(root, res=0.1, transforms=transforms)
 
+    @pytest.fixture(scope="class")
+    def multilabel(self) -> CustomVectorDataset:
+        root = os.path.join("tests", "data", "vector")
+        transforms = nn.Identity()
+        return CustomVectorDataset(
+            root, res=0.1, transforms=transforms, label_name="label_id"
+        )
+
     def test_getitem(self, dataset: CustomVectorDataset) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
+        assert torch.equal(
+            x["mask"].unique(),  # type: ignore[no-untyped-call]
+            torch.tensor([0, 1], dtype=torch.uint8),
+        )
+
+    def test_getitem_multilabel(self, multilabel: CustomVectorDataset) -> None:
+        x = multilabel[multilabel.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x["crs"], CRS)
+        assert isinstance(x["mask"], torch.Tensor)
+        assert torch.equal(
+            x["mask"].unique(),  # type: ignore[no-untyped-call]
+            torch.tensor([0, 1, 2, 3], dtype=torch.uint8),
+        )
 
     def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
         query = BoundingBox(1.1, 1.9, 1.1, 1.9, 0, 0)
@@ -383,7 +405,8 @@ class TestIntersectionDataset:
     def dataset(self) -> IntersectionDataset:
         ds1 = CustomGeoDataset()
         ds2 = CustomGeoDataset()
-        return ds1 & ds2
+        transforms = nn.Identity()
+        return IntersectionDataset(ds1, ds2, transforms=transforms)
 
     def test_getitem(self, dataset: IntersectionDataset) -> None:
         query = BoundingBox(0, 1, 2, 3, 4, 5)
@@ -437,7 +460,8 @@ class TestUnionDataset:
     def dataset(self) -> UnionDataset:
         ds1 = CustomGeoDataset(bounds=BoundingBox(0, 1, 0, 1, 0, 1))
         ds2 = CustomGeoDataset(bounds=BoundingBox(2, 3, 2, 3, 2, 3))
-        return ds1 | ds2
+        transforms = nn.Identity()
+        return UnionDataset(ds1, ds2, transforms=transforms)
 
     def test_getitem(self, dataset: UnionDataset) -> None:
         query = BoundingBox(0, 1, 0, 1, 0, 1)

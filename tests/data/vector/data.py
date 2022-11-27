@@ -25,7 +25,7 @@ geojson = {
     "features": [
         {
             "type": "Feature",
-            "properties": {},
+            "properties": {"label_id": 1},
             "geometry": {
                 "type": "Polygon",
                 "coordinates": [
@@ -35,7 +35,7 @@ geojson = {
         },
         {
             "type": "Feature",
-            "properties": {},
+            "properties": {"label_id": 2},
             "geometry": {
                 "type": "Polygon",
                 "coordinates": [
@@ -45,7 +45,7 @@ geojson = {
         },
         {
             "type": "Feature",
-            "properties": {},
+            "properties": {"label_id": 3},
             "geometry": {
                 "type": "Polygon",
                 "coordinates": [

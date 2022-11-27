@@ -10,22 +10,26 @@ import torch
 from sklearn.model_selection import GroupShuffleSplit
 from torch.utils.data import DataLoader, Subset
 
-from ..datasets import TropicalCycloneWindEstimation
+from ..datasets import TropicalCyclone
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 DataLoader.__module__ = "torch.utils.data"
 
 
-class CycloneDataModule(pl.LightningDataModule):
+class TropicalCycloneDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the NASA Cyclone dataset.
 
     Implements 80/20 train/val splits based on hurricane storm ids.
     See :func:`setup` for more details.
+
+    .. versionchanged:: 0.4.0
+        Class name changed from CycloneDataModule to TropicalCycloneDataModule to be
+        consistent with TropicalCyclone dataset.
     """
 
     def __init__(
-        self, seed: int, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+        self, seed: int = 0, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
         """Initialize a LightningDataModule for NASA Cyclone based DataLoaders.
 
@@ -34,7 +38,7 @@ class CycloneDataModule(pl.LightningDataModule):
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.TropicalCycloneWindEstimation`
+                :class:`~torchgeo.datasets.TropicalCyclone`
         """
         super().__init__()
         self.seed = seed
@@ -67,7 +71,7 @@ class CycloneDataModule(pl.LightningDataModule):
         This includes optionally downloading the dataset. This is done once per node,
         while :func:`setup` is done once per GPU.
         """
-        TropicalCycloneWindEstimation(split="train", **self.kwargs)
+        TropicalCyclone(split="train", **self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Create the train/val/test splits based on the original Dataset objects.
@@ -85,11 +89,11 @@ class CycloneDataModule(pl.LightningDataModule):
         Args:
             stage: stage to set up
         """
-        self.all_train_dataset = TropicalCycloneWindEstimation(
+        self.all_train_dataset = TropicalCyclone(
             split="train", transforms=self.preprocess, **self.kwargs
         )
 
-        self.all_test_dataset = TropicalCycloneWindEstimation(
+        self.all_test_dataset = TropicalCyclone(
             split="test", transforms=self.preprocess, **self.kwargs
         )
 

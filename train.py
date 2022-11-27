@@ -17,7 +17,6 @@ from torchgeo.datamodules import (
     BigEarthNetDataModule,
     ChesapeakeCVPRDataModule,
     COWCCountingDataModule,
-    CycloneDataModule,
     ETCI2021DataModule,
     EuroSATDataModule,
     InriaAerialImageLabelingDataModule,
@@ -28,6 +27,7 @@ from torchgeo.datamodules import (
     RESISC45DataModule,
     SEN12MSDataModule,
     So2SatDataModule,
+    TropicalCycloneDataModule,
     UCMercedDataModule,
 )
 from torchgeo.trainers import (
@@ -46,7 +46,7 @@ TASK_TO_MODULES_MAPPING: Dict[
     "byol": (BYOLTask, ChesapeakeCVPRDataModule),
     "chesapeake_cvpr": (SemanticSegmentationTask, ChesapeakeCVPRDataModule),
     "cowc_counting": (RegressionTask, COWCCountingDataModule),
-    "cyclone": (RegressionTask, CycloneDataModule),
+    "cyclone": (RegressionTask, TropicalCycloneDataModule),
     "eurosat": (ClassificationTask, EuroSATDataModule),
     "etci2021": (SemanticSegmentationTask, ETCI2021DataModule),
     "inria": (SemanticSegmentationTask, InriaAerialImageLabelingDataModule),

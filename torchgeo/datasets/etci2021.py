@@ -171,15 +171,17 @@ class ETCI2021(NonGeoDataset):
         folders = [os.path.join(folder, "tiles") for folder in folders]
         for folder in folders:
             vvs = sorted(glob.glob(os.path.join(folder, "vv", "*.png")))
-            vhs = sorted(glob.glob(os.path.join(folder, "vh", "*.png")))
-            water_masks = sorted(
-                glob.glob(os.path.join(folder, "water_body_label", "*.png"))
-            )
+            vhs = [vv.replace("vv", "vh") for vv in vvs]
+            water_masks = [
+                vv.replace("_vv.png", ".png").replace("vv", "water_body_label")
+                for vv in vvs
+            ]
 
             if split != "test":
-                flood_masks = sorted(
-                    glob.glob(os.path.join(folder, "flood_label", "*.png"))
-                )
+                flood_masks = [
+                    vv.replace("_vv.png", ".png").replace("vv", "flood_label")
+                    for vv in vvs
+                ]
 
                 for vv, vh, flood_mask, water_mask in zip(
                     vvs, vhs, flood_masks, water_masks
