@@ -178,8 +178,8 @@ def main(args: argparse.Namespace) -> None:
     elif issubclass(TASK, SemanticSegmentationTask):
         val_row = {
             "split": "val",
-            "segmentation_model": model.hparams["segmentation_model"],
-            "encoder_name": model.hparams["encoder_name"],
+            "model": model.hparams["model"],
+            "encoder": model.hparams["encoder"],
             "encoder_weights": model.hparams["encoder_weights"],
             "learning_rate": model.hparams["learning_rate"],
             "loss": model.hparams["loss"],
@@ -187,8 +187,8 @@ def main(args: argparse.Namespace) -> None:
 
         test_row = {
             "split": "test",
-            "segmentation_model": model.hparams["segmentation_model"],
-            "encoder_name": model.hparams["encoder_name"],
+            "model": model.hparams["model"],
+            "encoder": model.hparams["encoder"],
             "encoder_weights": model.hparams["encoder_weights"],
             "learning_rate": model.hparams["learning_rate"],
             "loss": model.hparams["loss"],
