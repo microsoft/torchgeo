@@ -44,7 +44,7 @@ class ResNet50_Weights(WeightsEnum):
         },
     )
 
-    MILLIONAID_RGB = Weights(
+    AERIAL_MILLIONAID_RGB = Weights(
         url="https://drive.google.com/file/d/1K3P4_fDfcBRGqpKoSdSa6OXS4xC1xLC9",
         transforms=nn.Identity(),
         meta={
