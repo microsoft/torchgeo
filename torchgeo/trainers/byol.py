@@ -319,7 +319,7 @@ class BYOLTask(pl.LightningModule):
     .. code-block:: python
 
         import timm
-        print(timm.list_models(pretrained=True)
+        print(timm.list_models())
     """
 
     def config_task(self) -> None:
