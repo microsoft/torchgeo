@@ -30,13 +30,13 @@ class RegressionTask(pl.LightningModule):
 
     Supports any available `Timm model
     <https://rwightman.github.io/pytorch-image-models/>`_
-    as an architecture choice. To see a list of available pretrained
+    as an architecture choice. To see a list of available
     models, you can do:
 
     .. code-block:: python
 
         import timm
-        print(timm.list_models(pretrained=True))
+        print(timm.list_models())
     """
 
     def config_task(self) -> None:
