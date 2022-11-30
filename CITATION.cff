@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 preferred-citation:
-  type: article
+  type: conference-paper
   authors:
   - family-names: "Stewart"
     given-names: "Adam J."
@@ -15,8 +15,15 @@ preferred-citation:
     given-names: "Juan M."
   - family-names: "Banerjee"
     given-names: "Arindam"
-  journal: "arXiv preprint arXiv:2111.08872"
-  month: 11
   title: "TorchGeo: Deep Learning With Geospatial Data"
+  booktitle: "Proceedings of the 30th International Conference on Advances in Geographic Information Systems"
+  year: 2022
+  number: 19
+  series: "SIGSPATIAL '22"
+  start: 1
+  end: 12
+  month: 11
+  address: "Seattle, Washington"
+  publisher: "Association for Computing Machinery"
   url: "https://github.com/microsoft/torchgeo"
-  year: 2021
+  doi: "10.1145/3557915.3560953"
