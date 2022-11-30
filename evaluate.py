@@ -13,10 +13,7 @@ from typing import Any, Dict, Union, cast
 import pytorch_lightning as pl
 import torch
 from torchmetrics import MetricCollection
-from torchmetrics.classification import (  # type: ignore[attr-defined]
-    BinaryAccuracy,
-    BinaryJaccardIndex,
-)
+from torchmetrics.classification import BinaryAccuracy, BinaryJaccardIndex
 
 from torchgeo.trainers import (
     ClassificationTask,
