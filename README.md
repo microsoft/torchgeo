@@ -147,7 +147,6 @@ If you use this software in your work, please cite our [paper](https://arxiv.org
     doi = {10.1145/3557915.3560953},
     month = {11},
     pages = {1--12},
-    journal={SIGSPATIAL '22},
     publisher = {Association for Computing Machinery},
     title = {{TorchGeo}: Deep Learning With Geospatial Data},
     url = {https://github.com/microsoft/torchgeo},
