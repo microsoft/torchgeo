@@ -142,13 +142,16 @@ $ python train.py config_file=conf/landcoverai.yaml
 
 If you use this software in your work, please cite our [paper](https://arxiv.org/abs/2111.08872):
 ```
-@article{Stewart_TorchGeo_deep_learning_2021,
+@inproceedings{Stewart_TorchGeo_Deep_Learning_2022,
     author = {Stewart, Adam J. and Robinson, Caleb and Corley, Isaac A. and Ortiz, Anthony and Lavista Ferres, Juan M. and Banerjee, Arindam},
-    journal = {arXiv preprint arXiv:2111.08872},
+    doi = {10.1145/3557915.3560953},
     month = {11},
+    pages = {1--12},
+    journal={SIGSPATIAL '22},
+    publisher = {Association for Computing Machinery},
     title = {{TorchGeo}: Deep Learning With Geospatial Data},
     url = {https://github.com/microsoft/torchgeo},
-    year = {2021}
+    year = {2022}
 }
 ```
 
