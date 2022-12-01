@@ -20,12 +20,13 @@ preferred-citation:
   conference:
     name: "SIGSPATIAL '22"
   doi: "10.1145/3557915.3560953"
+  end: 12
   isbn: "9781450395298"
   location: "Seattle, Washington"
   month: 11
   number: 19
-  pages: 12
   publisher: "Association for Computing Machinery"
+  start: 1
   title: "TorchGeo: Deep Learning With Geospatial Data"
   type: "conference-paper"
   url: "https://dl.acm.org/doi/10.1145/3557915.3560953"

@@ -144,12 +144,14 @@ If you use this software in your work, please cite our [paper](https://arxiv.org
 ```
 @inproceedings{Stewart_TorchGeo_Deep_Learning_2022,
     author = {Stewart, Adam J. and Robinson, Caleb and Corley, Isaac A. and Ortiz, Anthony and Lavista Ferres, Juan M. and Banerjee, Arindam},
+    booktitle = {Proceedings of the 30th International Conference on Advances in Geographic Information Systems},
     doi = {10.1145/3557915.3560953},
     month = {11},
     pages = {1--12},
     publisher = {Association for Computing Machinery},
+    series = {SIGSPATIAL '22},
     title = {{TorchGeo}: Deep Learning With Geospatial Data},
-    url = {https://github.com/microsoft/torchgeo},
+    url = {https://dl.acm.org/doi/10.1145/3557915.3560953},
     year = {2022}
 }
 ```
