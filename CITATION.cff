@@ -18,11 +18,12 @@ preferred-citation:
   collection-title: "Proceedings of the 30th International Conference on Advances in Geographic Information Systems"
   collection-type: "proceedings"
   conference:
+    city: "Seattle"
     name: "SIGSPATIAL '22"
+    region: "Washington"
   doi: "10.1145/3557915.3560953"
   end: 12
   isbn: "9781450395298"
-  location: "Seattle, Washington"
   month: 11
   number: 19
   publisher: "Association for Computing Machinery"
