@@ -16,14 +16,14 @@ preferred-citation:
   - family-names: "Banerjee"
     given-names: "Arindam"
   title: "TorchGeo: Deep Learning With Geospatial Data"
-  booktitle: "Proceedings of the 30th International Conference on Advances in Geographic Information Systems"
+  collection-title: Proceedings of the 30th International Conference on Advances in Geographic Information Systems
+  collection-type: proceedings
   year: 2022
   number: 19
   series: "SIGSPATIAL '22"
   start: 1
   end: 12
   month: 11
-  address: "Seattle, Washington"
   publisher: "Association for Computing Machinery"
-  url: "https://github.com/microsoft/torchgeo"
+  url: "https://dl.acm.org/doi/10.1145/3557915.3560953"
   doi: "10.1145/3557915.3560953"
