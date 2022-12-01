@@ -30,7 +30,7 @@ For [conda](https://docs.conda.io/) and [spack](https://spack.io/) installation 
 
 ## Documentation
 
-You can find the documentation for TorchGeo on [ReadTheDocs](https://torchgeo.readthedocs.io). This includes API documentation, contributing instructions, and several [tutorials](https://torchgeo.readthedocs.io/en/stable/tutorials/getting_started.html). For more details, check out our [paper](https://arxiv.org/abs/2111.08872) and [blog](https://pytorch.org/blog/geospatial-deep-learning-with-torchgeo/).
+You can find the documentation for TorchGeo on [ReadTheDocs](https://torchgeo.readthedocs.io). This includes API documentation, contributing instructions, and several [tutorials](https://torchgeo.readthedocs.io/en/stable/tutorials/getting_started.html). For more details, check out our [paper](https://dl.acm.org/doi/10.1145/3557915.3560953) and [blog](https://pytorch.org/blog/geospatial-deep-learning-with-torchgeo/).
 
 ## Example Usage
 
@@ -140,7 +140,7 @@ $ python train.py config_file=conf/landcoverai.yaml
 
 ## Citation
 
-If you use this software in your work, please cite our [paper](https://arxiv.org/abs/2111.08872):
+If you use this software in your work, please cite our [paper](https://dl.acm.org/doi/10.1145/3557915.3560953):
 ```
 @inproceedings{Stewart_TorchGeo_Deep_Learning_2022,
     address = {Seattle, Washington},
