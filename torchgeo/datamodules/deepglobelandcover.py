@@ -177,7 +177,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             split="test", transforms=test_transforms, **self.kwargs
         )
 
-    def train_dataloader(self) -> DataLoader[Any]:
+    def train_dataloader(self) -> DataLoader[Dict[str, Any]]:
         """Return a DataLoader for training.
 
         Returns:
