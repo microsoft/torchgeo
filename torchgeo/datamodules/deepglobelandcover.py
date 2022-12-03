@@ -29,7 +29,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        train_batch_size: int = 32,
+        batch_size: int = 32,
         num_workers: int = 0,
         patch_size: Union[Tuple[int, int], int] = (64, 64),
         num_tiles_per_batch: int = 16,
@@ -39,46 +39,46 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         """Initialize a LightningDataModule for DeepGlobeLandCover based DataLoaders.
 
         Args:
-            train_batch_size: The batch size used in the train DataLoader
+            batch_size: The batch size used in the train DataLoader
                 (val_batch_size == test_batch_size == 1).
             num_workers: The number of workers to use in all created DataLoaders
             val_split_pct: What percentage of the dataset to use as a validation set
             patch_size: Size of random patch from image and mask (height, width), should
                 be a multiple of 32 for most segmentation architectures
             num_tiles_per_batch: number of random tiles to consider sampling patches
-                from per sample, should evenly divide train_batch_size and be less than
-                or equal to train_batch_size
+                from per sample, should evenly divide batch_size and be less than
+                or equal to batch_size
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.DeepGlobeLandCover`
 
         .. versionchanged:: 0.4
-            'batch_size' is renamed to 'train_batch_size', 'patch_size' and
-            'num_tiles_per_batch' introduced in order to randomly crop the
-            variable size images during training
+            'patch_size' and 'num_tiles_per_batch' introduced in order to randomly
+            crop the variable size images during training
         """
         super().__init__()
 
-        self.train_batch_size = train_batch_size
+        self.batch_size = batch_size
         self.num_workers = num_workers
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
         self.kwargs = kwargs
 
         assert (
-            self.train_batch_size >= num_tiles_per_batch
-        ), "num_tiles_per_bacth should be less than or equal to train_batch_size."
+            self.batch_size >= num_tiles_per_batch
+        ), "num_tiles_per_batch should be less than or equal to batch_size."
 
-        self.num_patches_per_tile = self.train_batch_size // num_tiles_per_batch
+        self.num_patches_per_tile = self.batch_size // num_tiles_per_batch
+        self.num_tiles_per_batch = num_tiles_per_batch
 
         if (self.num_patches_per_tile % 2) != 0 and (
             self.num_patches_per_tile != num_tiles_per_batch
         ):
             warnings.warn(
                 "The effective batch size"
-                f" will differ from the specified {train_batch_size}"
+                f" will differ from the specified {batch_size}"
                 f" and be {self.num_patches_per_tile * num_tiles_per_batch} instead."
-                " To match the train_batch_size exactly, ensure that"
-                " num_tiles_per_batch evenly divides train_batch_size"
+                " To match the batch_size exactly, ensure that"
+                " num_tiles_per_batch evenly divides batch_size"
             )
 
         self.rcrop = K.AugmentationSequential(
@@ -185,7 +185,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         """
         return DataLoader(
             self.train_dataset,
-            batch_size=self.train_batch_size,
+            batch_size=self.num_tiles_per_batch,
             num_workers=self.num_workers,
             collate_fn=collate_patches_per_tile,
             shuffle=True,

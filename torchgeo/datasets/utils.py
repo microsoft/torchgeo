@@ -229,7 +229,6 @@ def collate_patches_per_tile(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
         'train_batch_size' * 'num_patches_per_tile'
     """
     r_batch: Dict[str, Any] = default_collate(batch)  # type: ignore[no-untyped-call]
-    print(r_batch["image"].shape)
     r_batch["image"] = rearrange(r_batch["image"], "b t c h w -> (b t) c h w")
     r_batch["mask"] = rearrange(r_batch["mask"], "b t h w -> (b t) h w")
     return r_batch
