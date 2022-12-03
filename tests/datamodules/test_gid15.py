@@ -20,7 +20,7 @@ class TestGID15DataModule:
         val_split_size = request.param
         dm = GID15DataModule(
             root=root,
-            train_batch_size=batch_size,
+            batch_size=batch_size,
             num_workers=num_workers,
             val_split_pct=val_split_size,
             num_tiles_per_batch=1,
@@ -35,7 +35,7 @@ class TestGID15DataModule:
         with pytest.warns(UserWarning, match=match):
             GID15DataModule(
                 root=datamodule.test_dataset.root,
-                train_batch_size=3,
+                batch_size=3,
                 num_tiles_per_batch=2,
                 num_workers=datamodule.num_workers,
                 val_split_pct=datamodule.val_split_pct,
