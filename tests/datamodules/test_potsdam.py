@@ -15,7 +15,7 @@ class TestPotsdam2DDataModule:
     @pytest.fixture(scope="class", params=[0.0, 0.5])
     def datamodule(self, request: SubRequest) -> Potsdam2DDataModule:
         root = os.path.join("tests", "data", "potsdam")
-        batch_size = 1
+        batch_size = 2
         num_workers = 0
         val_split_size = request.param
         dm = Potsdam2DDataModule(
@@ -23,10 +23,22 @@ class TestPotsdam2DDataModule:
             batch_size=batch_size,
             num_workers=num_workers,
             val_split_pct=val_split_size,
+            num_tiles_per_batch=1,
         )
         dm.prepare_data()
         dm.setup()
         return dm
+
+    def test_batch_size_warning(self, datamodule: Potsdam2DDataModule) -> None:
+        match = "The effective batch size will differ"
+        with pytest.warns(UserWarning, match=match):
+            Potsdam2DDataModule(
+                root=datamodule.test_dataset.root,
+                batch_size=3,
+                num_tiles_per_batch=2,
+                num_workers=datamodule.num_workers,
+                val_split_pct=datamodule.val_split_pct,
+            )
 
     def test_train_dataloader(self, datamodule: Potsdam2DDataModule) -> None:
         next(iter(datamodule.train_dataloader()))
