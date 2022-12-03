@@ -30,7 +30,9 @@ from typing import (
 import numpy as np
 import rasterio
 import torch
+from einops import rearrange
 from torch import Tensor
+from torch.utils.data._utils.collate import default_collate
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
 
@@ -214,6 +216,23 @@ def download_radiant_mlhub_collection(
 
     collection = radiant_mlhub.Collection.fetch(collection_id, api_key=api_key)
     collection.download(output_dir=download_root, api_key=api_key)
+
+
+def collate_patches_per_tile(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Define collate function to combine patches per tile and batch size.
+
+    Args:
+        batch: sample batch from dataloader containing image and mask
+
+    Returns:
+        sample batch where the batch dimension is
+        'train_batch_size' * 'num_patches_per_tile'
+    """
+    r_batch: Dict[str, Any] = default_collate(batch)  # type: ignore[no-untyped-call]
+    print(r_batch["image"].shape)
+    r_batch["image"] = rearrange(r_batch["image"], "b t c h w -> (b t) c h w")
+    r_batch["mask"] = rearrange(r_batch["mask"], "b t h w -> (b t) h w")
+    return r_batch
 
 
 @dataclass(frozen=True)

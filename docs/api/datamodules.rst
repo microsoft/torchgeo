@@ -49,6 +49,11 @@ FAIR1M
 
 .. autoclass:: FAIR1MDataModule
 
+GID-15
+^^^^^^
+
+.. autoclass:: GIDDataModule
+
 Inria Aerial Image Labeling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
