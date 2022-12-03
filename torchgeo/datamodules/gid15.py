@@ -63,9 +63,10 @@ class GID15DataModule(pl.LightningDataModule):
 
         assert (
             self.batch_size >= num_tiles_per_batch
-        ), "num_tiles_per_bacth should be less than or equal to batch_size."
+        ), "num_tiles_per_batch should be less than or equal to batch_size."
 
         self.num_patches_per_tile = self.batch_size // num_tiles_per_batch
+        self.num_tiles_per_batch = num_tiles_per_batch
 
         if (self.num_patches_per_tile % 2) != 0 and (
             self.num_patches_per_tile != num_tiles_per_batch
@@ -175,7 +176,7 @@ class GID15DataModule(pl.LightningDataModule):
         """
         return DataLoader(
             self.train_dataset,
-            batch_size=self.batch_size,
+            batch_size=self.num_tiles_per_batch,
             num_workers=self.num_workers,
             collate_fn=collate_patches_per_tile,
             shuffle=True,
