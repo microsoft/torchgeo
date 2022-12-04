@@ -50,7 +50,7 @@ if __name__ == "__main__":
                 "python train.py"
                 + f" config_file={config_file}"
                 + f" experiment.name={experiment_name}"
-                + f" experiment.module.classification_model={model}"
+                + f" experiment.module.model={model}"
                 + f" experiment.module.learning_rate={lr}"
                 + f" experiment.module.loss={loss}"
                 + f" experiment.module.weights={weights}"

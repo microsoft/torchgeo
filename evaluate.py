@@ -160,7 +160,7 @@ def main(args: argparse.Namespace) -> None:
     if issubclass(TASK, ClassificationTask):
         val_row = {
             "split": "val",
-            "classification_model": hparams["classification_model"],
+            "model": hparams["model"],
             "learning_rate": hparams["learning_rate"],
             "weights": hparams["weights"],
             "loss": hparams["loss"],
@@ -168,7 +168,7 @@ def main(args: argparse.Namespace) -> None:
 
         test_row = {
             "split": "test",
-            "classification_model": hparams["classification_model"],
+            "model": hparams["model"],
             "learning_rate": hparams["learning_rate"],
             "weights": hparams["weights"],
             "loss": hparams["loss"],
