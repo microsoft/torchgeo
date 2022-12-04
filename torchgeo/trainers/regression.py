@@ -60,7 +60,7 @@ class RegressionTask(pl.LightningModule):
             custom_pretrained = True
 
         # Create the model
-        valid_models = timm.list_models(pretrained=False)
+        valid_models = timm.list_models(pretrained=imagenet_pretrained)
         if model in valid_models:
             self.model = timm.create_model(
                 model,
