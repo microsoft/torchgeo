@@ -180,8 +180,8 @@ def main(args: argparse.Namespace) -> None:
         val_row = {
             "split": "val",
             "model": hparams["model"],
-            "encoder_name": hparams["encoder_name"],
-            "encoder_weights": hparams["encoder_weights"],
+            "encoder": hparams["encoder"],
+            "weights": hparams["weights"],
             "learning_rate": hparams["learning_rate"],
             "loss": hparams["loss"],
         }
@@ -189,8 +189,8 @@ def main(args: argparse.Namespace) -> None:
         test_row = {
             "split": "test",
             "model": hparams["model"],
-            "encoder_name": hparams["encoder_name"],
-            "encoder_weights": hparams["encoder_weights"],
+            "encoder": hparams["encoder"],
+            "weights": hparams["weights"],
             "learning_rate": hparams["learning_rate"],
             "loss": hparams["loss"],
         }
