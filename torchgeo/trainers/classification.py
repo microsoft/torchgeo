@@ -71,7 +71,7 @@ class ClassificationTask(pl.LightningModule):
             )
 
         if custom_pretrained:
-            name, state_dict = utils.extract_encoder(self.hyperparams["weights"])
+            name, state_dict = utils.extract_backbone(self.hyperparams["weights"])
 
             if self.hyperparams["classification_model"] != name:
                 raise ValueError(

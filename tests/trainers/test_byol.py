@@ -19,8 +19,8 @@ from .test_utils import ClassificationTestModel
 
 class TestBYOL:
     def test_custom_augment_fn(self) -> None:
-        encoder = resnet18()
-        layer = encoder.conv1
+        backbone = resnet18()
+        layer = backbone.conv1
         new_layer = nn.Conv2d(
             in_channels=4,
             out_channels=layer.out_channels,
@@ -29,9 +29,9 @@ class TestBYOL:
             padding=layer.padding,
             bias=layer.bias,
         ).requires_grad_()
-        encoder.conv1 = new_layer
+        backbone.conv1 = new_layer
         augment_fn = SimCLRAugmentation((2, 2))
-        BYOL(encoder, augment_fn=augment_fn)
+        BYOL(backbone, augment_fn=augment_fn)
 
 
 class TestBYOLTask:
@@ -55,7 +55,7 @@ class TestBYOLTask:
         model_kwargs = conf_dict["module"]
         model = BYOLTask(**model_kwargs)
 
-        model.encoder = ClassificationTestModel(**model_kwargs)
+        model.backbone = ClassificationTestModel(**model_kwargs)
 
         # Instantiate trainer
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
@@ -65,13 +65,13 @@ class TestBYOLTask:
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:
-        return {"encoder": "resnet18", "weights": "random", "in_channels": 3}
+        return {"backbone": "resnet18", "weights": "random", "in_channels": 3}
 
     def test_invalid_pretrained(
         self, model_kwargs: Dict[Any, Any], checkpoint: str
     ) -> None:
         model_kwargs["weights"] = checkpoint
-        model_kwargs["encoder"] = "resnet50"
+        model_kwargs["backbone"] = "resnet50"
         match = "Trying to load resnet18 weights into a resnet50"
         with pytest.raises(ValueError, match=match):
             BYOLTask(**model_kwargs)
@@ -80,9 +80,9 @@ class TestBYOLTask:
         model_kwargs["weights"] = checkpoint
         BYOLTask(**model_kwargs)
 
-    def test_invalid_encoder(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["encoder"] = "invalid_encoder"
-        match = "Model type 'invalid_encoder' is not a valid timm model."
+    def test_invalid_backbone(self, model_kwargs: Dict[Any, Any]) -> None:
+        model_kwargs["backbone"] = "invalid_backbone"
+        match = "Model type 'invalid_backbone' is not a valid timm model."
         with pytest.raises(ValueError, match=match):
             BYOLTask(**model_kwargs)
 

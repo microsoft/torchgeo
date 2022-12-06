@@ -3,9 +3,8 @@ experiment:
   module:
     loss: "ce"
     segmentation_model: "unet"
-    encoder: "resnet50"
-    encoder_weights: null
-    encoder_output_stride: 16
+    backbone: "resnet50"
+    backbone_output_stride: 16
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
     in_channels: 4

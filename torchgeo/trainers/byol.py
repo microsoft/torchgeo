@@ -144,8 +144,8 @@ class MLP(Module):
         return cast(Tensor, self.mlp(x))
 
 
-class EncoderWrapper(Module):
-    """Encoder wrapper for joining a model and a projection head.
+class BackboneWrapper(Module):
+    """Backbone wrapper for joining a model and a projection head.
 
     When we call .forward() on this module the following steps happen:
 
@@ -153,6 +153,9 @@ class EncoderWrapper(Module):
     * When the encoding layer is reached a hook is called
     * The output of the encoding layer is passed through the projection head
     * The forward call returns the output of the projection head
+
+    .. versionchanged 0.4: Name changed from *EncoderWrapper* to
+        *BackboneWrapper*.
     """
 
     def __init__(
@@ -162,7 +165,7 @@ class EncoderWrapper(Module):
         hidden_size: int = 4096,
         layer: int = -2,
     ) -> None:
-        """Initializes EncoderWrapper.
+        """Initializes BackboneWrapper.
 
         Args:
             model: model to encode
@@ -236,9 +239,9 @@ class EncoderWrapper(Module):
 class BYOL(Module):
     """BYOL implementation.
 
-    BYOL contains two identical encoder networks. The first is trained as usual, and its
-    weights are updated with each training batch. The second, "target" network, is
-    updated using a running average of the first encoder's weights.
+    BYOL contains two identical backbone networks. The first is trained as usual, and
+    its weights are updated with each training batch. The second, "target" network,
+    is updated using a running average of the first backbone's weights.
 
     See https://arxiv.org/abs/2006.07733 for more details (and please cite it if you
     use it in your own work).
@@ -267,8 +270,8 @@ class BYOL(Module):
             projection_size: size of first layer of the projection MLP
             hidden_size: size of the hidden layer of the projection MLP
             augment_fn: an instance of a module that performs data augmentation
-            beta: the speed at which the target encoder is updated using the main
-                encoder
+            beta: the speed at which the target backbone is updated using the main
+                backbone
         """
         super().__init__()
 
@@ -280,19 +283,19 @@ class BYOL(Module):
 
         self.beta = beta
         self.in_channels = in_channels
-        self.encoder = EncoderWrapper(
+        self.backbone = BackboneWrapper(
             model, projection_size, hidden_size, layer=hidden_layer
         )
         self.predictor = MLP(projection_size, projection_size, hidden_size)
-        self.target = EncoderWrapper(
+        self.target = BackboneWrapper(
             model, projection_size, hidden_size, layer=hidden_layer
         )
 
         # Perform a single forward pass to initialize the wrapper correctly
-        self.encoder(torch.zeros(2, self.in_channels, *image_size))
+        self.backbone(torch.zeros(2, self.in_channels, *image_size))
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward pass of the encoder model through the MLP and prediction head.
+        """Forward pass of the backbone model through the MLP and prediction head.
 
         Args:
             x: tensor of data to run through the model
@@ -300,11 +303,11 @@ class BYOL(Module):
         Returns:
             output from the model
         """
-        return cast(Tensor, self.predictor(self.encoder(x)))
+        return cast(Tensor, self.predictor(self.backbone(x)))
 
     def update_target(self) -> None:
         """Method to update the "target" model weights."""
-        for p, pt in zip(self.encoder.parameters(), self.target.parameters()):
+        for p, pt in zip(self.backbone.parameters(), self.target.parameters()):
             pt.data = self.beta * pt.data + (1 - self.beta) * p.data
 
 
@@ -325,7 +328,7 @@ class BYOLTask(pl.LightningModule):
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
         in_channels = self.hyperparams["in_channels"]
-        encoder_name = self.hyperparams["encoder"]
+        backbone_name = self.hyperparams["backbone"]
 
         imagenet_pretrained = False
         custom_pretrained = False
@@ -344,31 +347,31 @@ class BYOLTask(pl.LightningModule):
 
         # Create the model
         valid_models = timm.list_models(pretrained=imagenet_pretrained)
-        if encoder_name in valid_models:
-            encoder = timm.create_model(
-                encoder_name, in_chans=in_channels, pretrained=imagenet_pretrained
+        if backbone_name in valid_models:
+            backbone = timm.create_model(
+                backbone_name, in_chans=in_channels, pretrained=imagenet_pretrained
             )
         else:
-            raise ValueError(f"Model type '{encoder_name}' is not a valid timm model.")
+            raise ValueError(f"Model type '{backbone_name}' is not a valid timm model.")
 
         if custom_pretrained:
-            name, state_dict = utils.extract_encoder(self.hyperparams["weights"])
+            name, state_dict = utils.extract_backbone(self.hyperparams["weights"])
 
-            if self.hyperparams["encoder"] != name:
+            if self.hyperparams["backbone"] != name:
                 raise ValueError(
                     f"Trying to load {name} weights into a "
-                    f"{self.hyperparams['encoder']}"
+                    f"{self.hyperparams['backbone']}"
                 )
-            encoder = utils.load_state_dict(encoder, state_dict)
+            backbone = utils.load_state_dict(backbone, state_dict)
 
-        self.model = BYOL(encoder, in_channels=in_channels, image_size=(256, 256))
+        self.model = BYOL(backbone, in_channels=in_channels, image_size=(256, 256))
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize a LightningModule for pre-training a model with BYOL.
 
         Keyword Args:
             in_channels: Number of input channels to model
-            encoder: Name of the timm model to use
+            backbone: Name of the timm model to use
             weights: Either "random" or "imagenet"
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
@@ -377,8 +380,8 @@ class BYOLTask(pl.LightningModule):
             ValueError: if kwargs arguments are invalid
 
         .. versionchanged:: 0.4
-           The *encoder_name* parameter was renamed to *encoder*. Change encoder support
-           from torchvision.models to timm.
+           The *backbone_name* parameter was renamed to *backbone*. Change backbone
+           support from torchvision.models to timm.
         """
         super().__init__()
 
@@ -465,7 +468,7 @@ class BYOLTask(pl.LightningModule):
         """No-op, does nothing."""
 
     def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
-        """Compute and return the output embeddings of the image encoder.
+        """Compute and return the output embeddings of the image backbone.
 
         Args:
             batch: the output of your DataLoader
@@ -476,4 +479,4 @@ class BYOLTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         self(x)
-        return self.model.encoder._embedding
+        return self.model.backbone._embedding
