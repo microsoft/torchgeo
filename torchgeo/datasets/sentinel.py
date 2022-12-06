@@ -76,9 +76,12 @@ class Sentinel1(Sentinel):
     * `Wave (WV)
       <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/acquisition-modes/wave>`_
 
-    At the moment, this dataset only supports the GRD product type. Data must be
-    radiometrically terrain corrected (RTC). This can be done manually using a DEM, or
-    you can download an On Demand RTC product from ASF DAAC.
+    .. note::
+       At the moment, this dataset only supports the GRD product type. Data must be
+       radiometrically terrain corrected (RTC). This can be done manually using a DEM,
+       or you can download an On Demand RTC product from ASF DAAC.
+
+    .. versionadded:: 0.4
     """
 
     # SAFE format
