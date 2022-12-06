@@ -1,5 +1,5 @@
 # setup
-setuptools==42.0.0
+setuptools==46.4.0
 
 # install
 einops==0.3.0
@@ -36,7 +36,6 @@ zipfile-deflate64==0.2.0
 
 # docs
 ipywidgets==7.6.0
-jupyter-packaging==0.10.3
 nbsphinx==0.8.5
 sphinx==4.0.0
 
