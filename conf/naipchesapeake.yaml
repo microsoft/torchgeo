@@ -18,8 +18,8 @@ experiment:
     num_filters: 64
     ignore_index: null
   datamodule:
-    naip_root_dir: "data/naip"
-    chesapeake_root_dir: "data/chesapeake/BAYWIDE"
+    naip_root: "data/naip"
+    chesapeake_root: "data/chesapeake/BAYWIDE"
     batch_size: 32
     num_workers: 4
     patch_size: 32

@@ -188,7 +188,7 @@ class XView2(NonGeoDataset):
         # Check if the files already exist
         exists = []
         for split_info in self.metadata.values():
-            for directory in ["images", "labels", "targets"]:
+            for directory in ["images", "targets"]:
                 exists.append(
                     os.path.exists(
                         os.path.join(self.root, split_info["directory"], directory)

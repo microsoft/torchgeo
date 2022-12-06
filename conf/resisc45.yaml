@@ -7,13 +7,13 @@ experiment:
   task: "resisc45"
   module:
     loss: "ce"
-    classification_model: "resnet18"
+    model: "resnet18"
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
     weights: "random"
     in_channels: 3
     num_classes: 45
   datamodule:
-    root_dir: "data/resisc45"
+    root: "data/resisc45"
     batch_size: 128
     num_workers: 4

@@ -17,7 +17,7 @@ experiment:
     num_classes: 11
     ignore_index: null
   datamodule:
-    root_dir: "data/sen12ms"
+    root: "data/sen12ms"
     band_set: "all"
     batch_size: 32
     num_workers: 4

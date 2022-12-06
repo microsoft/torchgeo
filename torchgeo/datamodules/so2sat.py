@@ -5,6 +5,7 @@
 
 from typing import Any, Dict, Optional, cast
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
@@ -58,29 +59,29 @@ class So2SatDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        root_dir: str,
         batch_size: int = 64,
         num_workers: int = 0,
-        bands: str = "rgb",
+        band_set: str = "rgb",
         unsupervised_mode: bool = False,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for So2Sat based DataLoaders.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the So2Sat Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
-            bands: Either "rgb" or "s2"
+            band_set: Collection of So2Sat bands to use
             unsupervised_mode: Makes the train dataloader return imagery from the train,
                 val, and test sets
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.So2Sat`
         """
         super().__init__()
-        self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
-        self.bands = bands
+        self.band_set = band_set
         self.unsupervised_mode = unsupervised_mode
+        self.kwargs = kwargs
 
         self.norm = Normalize(self.band_means, self.band_stds)
 
@@ -97,7 +98,7 @@ class So2SatDataModule(pl.LightningDataModule):
         sample["image"] = self.norm(sample["image"])
         sample["image"] = sample["image"][self.reindex_to_rgb_first, :, :]
 
-        if self.bands == "rgb":
+        if self.band_set == "rgb":
             sample["image"] = sample["image"][:3, :, :]
 
         return sample
@@ -107,7 +108,7 @@ class So2SatDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        So2Sat(self.root_dir, checksum=False)
+        So2Sat(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -117,45 +118,41 @@ class So2SatDataModule(pl.LightningDataModule):
         Args:
             stage: stage to set up
         """
+        bands = So2Sat.BAND_SETS["s2"]
         train_transforms = Compose([self.preprocess])
         val_test_transforms = self.preprocess
 
-        s2bands = So2Sat.BAND_SETS["s2"]
         if not self.unsupervised_mode:
-
             self.train_dataset = So2Sat(
-                self.root_dir, split="train", bands=s2bands, transforms=train_transforms
+                split="train", bands=bands, transforms=train_transforms, **self.kwargs
             )
 
             self.val_dataset = So2Sat(
-                self.root_dir,
                 split="validation",
-                bands=s2bands,
+                bands=bands,
                 transforms=val_test_transforms,
+                **self.kwargs,
             )
 
             self.test_dataset = So2Sat(
-                self.root_dir,
-                split="test",
-                bands=s2bands,
-                transforms=val_test_transforms,
+                split="test", bands=bands, transforms=val_test_transforms, **self.kwargs
             )
 
         else:
 
             temp_train = So2Sat(
-                self.root_dir, split="train", bands=s2bands, transforms=train_transforms
+                split="train", bands=bands, transforms=train_transforms, **self.kwargs
             )
 
             self.val_dataset = So2Sat(
-                self.root_dir,
                 split="validation",
-                bands=s2bands,
+                bands=bands,
                 transforms=train_transforms,
+                **self.kwargs,
             )
 
             self.test_dataset = So2Sat(
-                self.root_dir, split="test", bands=s2bands, transforms=train_transforms
+                split="test", bands=bands, transforms=train_transforms, **self.kwargs
             )
 
             self.train_dataset = cast(
@@ -200,3 +197,10 @@ class So2SatDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=False,
         )
+
+    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+        """Run :meth:`torchgeo.datasets.So2Sat.plot`.
+
+        .. versionadded:: 0.4
+        """
+        return self.test_dataset.plot(*args, **kwargs)

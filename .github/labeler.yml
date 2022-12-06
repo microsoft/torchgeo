@@ -1,22 +1,24 @@
 # TorchGeo modules
 datamodules:
-- torchgeo/datamodules/**
+- "torchgeo/datamodules/**"
 datasets:
-- torchgeo/datasets/**
+- "torchgeo/datasets/**"
 losses:
-- torchgeo/losses/**
+- "torchgeo/losses/**"
 models:
-- torchgeo/models/**
+- "torchgeo/models/**"
 samplers:
-- torchgeo/samplers/**
+- "torchgeo/samplers/**"
 trainers:
-- torchgeo/trainers/**
+- "torchgeo/trainers/**"
 transforms:
-- torchgeo/transforms/**
+- "torchgeo/transforms/**"
 
 # Other
 documentation:
-- docs/**
+- "docs/**"
+scripts:
+- "*.py"
 testing:
-- tests/**
-- .github/workflows/**
+- "tests/**"
+- ".github/workflows/**"

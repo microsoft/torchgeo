@@ -6,6 +6,7 @@
 import os
 from typing import Any, Dict, cast
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import timm
 import torch
@@ -14,7 +15,14 @@ from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torchmetrics import Accuracy, FBetaScore, JaccardIndex, MetricCollection
+from torchmetrics import MetricCollection
+from torchmetrics.classification import (
+    MulticlassAccuracy,
+    MulticlassFBetaScore,
+    MulticlassJaccardIndex,
+    MultilabelAccuracy,
+    MultilabelFBetaScore,
+)
 
 from ..datasets.utils import unbind_samples
 from . import utils
@@ -26,12 +34,23 @@ Linear.__module__ = "nn.Linear"
 
 
 class ClassificationTask(pl.LightningModule):
-    """LightningModule for image classification."""
+    """LightningModule for image classification.
+
+    Supports any available `Timm model
+    <https://rwightman.github.io/pytorch-image-models/>`_
+    as an architecture choice. To see a list of available
+    models, you can do:
+
+    .. code-block:: python
+
+        import timm
+        print(timm.list_models())
+    """
 
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor."""
         in_channels = self.hyperparams["in_channels"]
-        classification_model = self.hyperparams["classification_model"]
+        model = self.hyperparams["model"]
 
         imagenet_pretrained = False
         custom_pretrained = False
@@ -49,26 +68,24 @@ class ClassificationTask(pl.LightningModule):
             custom_pretrained = True
 
         # Create the model
-        valid_models = timm.list_models(pretrained=True)
-        if classification_model in valid_models:
+        valid_models = timm.list_models(pretrained=imagenet_pretrained)
+        if model in valid_models:
             self.model = timm.create_model(
-                classification_model,
+                model,
                 num_classes=self.hyperparams["num_classes"],
                 in_chans=in_channels,
                 pretrained=imagenet_pretrained,
             )
         else:
-            raise ValueError(
-                f"Model type '{classification_model}' is not a valid timm model."
-            )
+            raise ValueError(f"Model type '{model}' is not a valid timm model.")
 
         if custom_pretrained:
             name, state_dict = utils.extract_encoder(self.hyperparams["weights"])
 
-            if self.hyperparams["classification_model"] != name:
+            if self.hyperparams["model"] != name:
                 raise ValueError(
                     f"Trying to load {name} weights into a "
-                    f"{self.hyperparams['classification_model']}"
+                    f"{self.hyperparams['model']}"
                 )
             self.model = utils.load_state_dict(self.model, state_dict)
 
@@ -89,10 +106,16 @@ class ClassificationTask(pl.LightningModule):
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
-            classification_model: Name of the classification model use
-            loss: Name of the loss function
-            weights: Either "random", "imagenet_only", "imagenet_and_random", or
-                "random_rgb"
+            model: Name of the classification model use
+            loss: Name of the loss function, accepts 'ce', 'jaccard', or 'focal'
+            weights: Either "random" or "imagenet"
+            num_classes: Number of prediction classes
+            in_channels: Number of input channels to model
+            learning_rate: Learning rate for optimizer
+            learning_rate_schedule_patience: Patience for learning rate scheduler
+
+        .. versionchanged:: 0.4
+           The *classification_model* parameter was renamed to *model*.
         """
         super().__init__()
 
@@ -104,16 +127,16 @@ class ClassificationTask(pl.LightningModule):
 
         self.train_metrics = MetricCollection(
             {
-                "OverallAccuracy": Accuracy(
+                "OverallAccuracy": MulticlassAccuracy(
                     num_classes=self.hyperparams["num_classes"], average="micro"
                 ),
-                "AverageAccuracy": Accuracy(
+                "AverageAccuracy": MulticlassAccuracy(
                     num_classes=self.hyperparams["num_classes"], average="macro"
                 ),
-                "JaccardIndex": JaccardIndex(
+                "JaccardIndex": MulticlassJaccardIndex(
                     num_classes=self.hyperparams["num_classes"]
                 ),
-                "F1Score": FBetaScore(
+                "F1Score": MulticlassFBetaScore(
                     num_classes=self.hyperparams["num_classes"],
                     beta=1.0,
                     average="micro",
@@ -147,7 +170,7 @@ class ClassificationTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         y = batch["label"]
-        y_hat = self.forward(x)
+        y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
 
         loss = self.loss(y_hat, y)
@@ -179,7 +202,7 @@ class ClassificationTask(pl.LightningModule):
         batch_idx = args[1]
         x = batch["image"]
         y = batch["label"]
-        y_hat = self.forward(x)
+        y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
 
         loss = self.loss(y_hat, y)
@@ -199,6 +222,7 @@ class ClassificationTask(pl.LightningModule):
                 summary_writer.add_figure(
                     f"image/{batch_idx}", fig, global_step=self.global_step
                 )
+                plt.close()
             except AttributeError:
                 pass
 
@@ -220,7 +244,7 @@ class ClassificationTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         y = batch["label"]
-        y_hat = self.forward(x)
+        y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
 
         loss = self.loss(y_hat, y)
@@ -237,6 +261,20 @@ class ClassificationTask(pl.LightningModule):
         """
         self.log_dict(self.test_metrics.compute())
         self.test_metrics.reset()
+
+    def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
+        """Compute and return the predictions.
+
+        Args:
+            batch: the output of your DataLoader
+
+        Returns:
+            predicted softmax probabilities
+        """
+        batch = args[0]
+        x = batch["image"]
+        y_hat: Tensor = self(x).softmax(dim=-1)
+        return y_hat
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
@@ -276,10 +314,16 @@ class MultiLabelClassificationTask(ClassificationTask):
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
-            classification_model: Name of the classification model use
-            loss: Name of the loss function
-            weights: Either "random", "imagenet_only", "imagenet_and_random", or
-                "random_rgb"
+            model: Name of the classification model use
+            loss: Name of the loss function, currently only supports 'bce'
+            weights: Either "random" or 'imagenet'
+            num_classes: Number of prediction classes
+            in_channels: Number of input channels to model
+            learning_rate: Learning rate for optimizer
+            learning_rate_schedule_patience: Patience for learning rate scheduler
+
+        .. versionchanged:: 0.4
+           The *classification_model* parameter was renamed to *model*.
         """
         super().__init__(**kwargs)
 
@@ -291,21 +335,16 @@ class MultiLabelClassificationTask(ClassificationTask):
 
         self.train_metrics = MetricCollection(
             {
-                "OverallAccuracy": Accuracy(
-                    num_classes=self.hyperparams["num_classes"],
-                    average="micro",
-                    multiclass=False,
+                "OverallAccuracy": MultilabelAccuracy(
+                    num_labels=self.hyperparams["num_classes"], average="micro"
                 ),
-                "AverageAccuracy": Accuracy(
-                    num_classes=self.hyperparams["num_classes"],
-                    average="macro",
-                    multiclass=False,
+                "AverageAccuracy": MultilabelAccuracy(
+                    num_labels=self.hyperparams["num_classes"], average="macro"
                 ),
-                "F1Score": FBetaScore(
-                    num_classes=self.hyperparams["num_classes"],
+                "F1Score": MultilabelFBetaScore(
+                    num_labels=self.hyperparams["num_classes"],
                     beta=1.0,
                     average="micro",
-                    multiclass=False,
                 ),
             },
             prefix="train_",
@@ -325,8 +364,8 @@ class MultiLabelClassificationTask(ClassificationTask):
         batch = args[0]
         x = batch["image"]
         y = batch["label"]
-        y_hat = self.forward(x)
-        y_hat_hard = torch.softmax(y_hat, dim=-1)
+        y_hat = self(x)
+        y_hat_hard = torch.sigmoid(y_hat)
 
         loss = self.loss(y_hat, y.to(torch.float))
 
@@ -348,8 +387,8 @@ class MultiLabelClassificationTask(ClassificationTask):
         batch_idx = args[1]
         x = batch["image"]
         y = batch["label"]
-        y_hat = self.forward(x)
-        y_hat_hard = torch.softmax(y_hat, dim=-1)
+        y_hat = self(x)
+        y_hat_hard = torch.sigmoid(y_hat)
 
         loss = self.loss(y_hat, y.to(torch.float))
 
@@ -380,11 +419,24 @@ class MultiLabelClassificationTask(ClassificationTask):
         batch = args[0]
         x = batch["image"]
         y = batch["label"]
-        y_hat = self.forward(x)
-        y_hat_hard = torch.softmax(y_hat, dim=-1)
+        y_hat = self(x)
+        y_hat_hard = torch.sigmoid(y_hat)
 
         loss = self.loss(y_hat, y.to(torch.float))
 
         # by default, the test and validation steps only log per *epoch*
         self.log("test_loss", loss, on_step=False, on_epoch=True)
         self.test_metrics(y_hat_hard, y)
+
+    def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
+        """Compute and return the predictions.
+
+        Args:
+            batch: the output of your DataLoader
+        Returns:
+            predicted sigmoid probabilities
+        """
+        batch = args[0]
+        x = batch["image"]
+        y_hat = torch.sigmoid(self(x))
+        return y_hat

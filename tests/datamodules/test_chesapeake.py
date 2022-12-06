@@ -33,10 +33,10 @@ class TestChesapeakeCVPRDataModule:
     def test_invalid_param_config(self) -> None:
         with pytest.raises(ValueError, match="The pre-generated prior labels"):
             ChesapeakeCVPRDataModule(
-                os.path.join("tests", "data", "chesapeake", "cvpr"),
-                ["de-test"],
-                ["de-test"],
-                ["de-test"],
+                root=os.path.join("tests", "data", "chesapeake", "cvpr"),
+                train_splits=["de-test"],
+                val_splits=["de-test"],
+                test_splits=["de-test"],
                 patch_size=32,
                 patches_per_tile=2,
                 batch_size=2,

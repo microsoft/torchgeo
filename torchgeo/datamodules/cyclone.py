@@ -10,46 +10,41 @@ import torch
 from sklearn.model_selection import GroupShuffleSplit
 from torch.utils.data import DataLoader, Subset
 
-from ..datasets import TropicalCycloneWindEstimation
+from ..datasets import TropicalCyclone
 
 # https://github.com/pytorch/pytorch/issues/60979
 # https://github.com/pytorch/pytorch/pull/61045
 DataLoader.__module__ = "torch.utils.data"
 
 
-class CycloneDataModule(pl.LightningDataModule):
+class TropicalCycloneDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the NASA Cyclone dataset.
 
     Implements 80/20 train/val splits based on hurricane storm ids.
     See :func:`setup` for more details.
+
+    .. versionchanged:: 0.4.0
+        Class name changed from CycloneDataModule to TropicalCycloneDataModule to be
+        consistent with TropicalCyclone dataset.
     """
 
     def __init__(
-        self,
-        root_dir: str,
-        seed: int,
-        batch_size: int = 64,
-        num_workers: int = 0,
-        api_key: Optional[str] = None,
-        **kwargs: Any,
+        self, seed: int = 0, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
         """Initialize a LightningDataModule for NASA Cyclone based DataLoaders.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the
-                TropicalCycloneWindEstimation Datasets classes
             seed: The seed value to use when doing the sklearn based GroupShuffleSplit
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
-            api_key: The RadiantEarth MLHub API key to use if the dataset needs to be
-                downloaded
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.TropicalCyclone`
         """
         super().__init__()
-        self.root_dir = root_dir
         self.seed = seed
         self.batch_size = batch_size
         self.num_workers = num_workers
-        self.api_key = api_key
+        self.kwargs = kwargs
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
@@ -76,12 +71,7 @@ class CycloneDataModule(pl.LightningDataModule):
         This includes optionally downloading the dataset. This is done once per node,
         while :func:`setup` is done once per GPU.
         """
-        TropicalCycloneWindEstimation(
-            self.root_dir,
-            split="train",
-            download=self.api_key is not None,
-            api_key=self.api_key,
-        )
+        TropicalCyclone(split="train", **self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Create the train/val/test splits based on the original Dataset objects.
@@ -99,12 +89,12 @@ class CycloneDataModule(pl.LightningDataModule):
         Args:
             stage: stage to set up
         """
-        self.all_train_dataset = TropicalCycloneWindEstimation(
-            self.root_dir, split="train", transforms=self.preprocess, download=False
+        self.all_train_dataset = TropicalCyclone(
+            split="train", transforms=self.preprocess, **self.kwargs
         )
 
-        self.all_test_dataset = TropicalCycloneWindEstimation(
-            self.root_dir, split="test", transforms=self.preprocess, download=False
+        self.all_test_dataset = TropicalCyclone(
+            split="test", transforms=self.preprocess, **self.kwargs
         )
 
         storm_ids = []

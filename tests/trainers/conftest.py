@@ -18,7 +18,7 @@ from torch.nn.modules import Module
 @pytest.fixture(scope="package")
 def model() -> Module:
     kwargs: Dict[str, Optional[bool]] = {}
-    if parse(torchvision.__version__) >= parse("0.12"):
+    if parse(torchvision.__version__) >= parse("0.13"):
         kwargs = {"weights": None}
     else:
         kwargs = {"pretrained": False}
@@ -31,11 +31,11 @@ def state_dict(model: Module) -> Dict[str, Tensor]:
     return model.state_dict()
 
 
-@pytest.fixture(params=["classification_model", "encoder_name"])
+@pytest.fixture(params=["model", "encoder_name"])
 def checkpoint(
     state_dict: Dict[str, Tensor], request: SubRequest, tmp_path: Path
 ) -> str:
-    if request.param == "classification_model":
+    if request.param == "model":
         state_dict = OrderedDict({"model." + k: v for k, v in state_dict.items()})
     else:
         state_dict = OrderedDict(

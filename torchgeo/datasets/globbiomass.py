@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -160,7 +160,7 @@ class GlobBiomass(RasterDataset):
 
         self._verify()
 
-        super().__init__(root, crs, res, transforms, cache)
+        super().__init__(root, crs, res, transforms=transforms, cache=cache)
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
@@ -176,7 +176,7 @@ class GlobBiomass(RasterDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object for hit in hits]
+        filepaths = cast(List[str], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(

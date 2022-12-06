@@ -19,13 +19,13 @@ class TestOSCDDataModule:
         batch_size = 1
         num_workers = 0
         dm = OSCDDataModule(
-            root,
-            bands,
-            batch_size,
-            num_workers,
-            val_split_pct,
-            patch_size,
-            num_patches_per_tile,
+            root=root,
+            bands=bands,
+            train_batch_size=batch_size,
+            num_workers=num_workers,
+            val_split_pct=val_split_pct,
+            patch_size=patch_size,
+            num_patches_per_tile=num_patches_per_tile,
         )
         dm.prepare_data()
         dm.setup()
@@ -35,7 +35,7 @@ class TestOSCDDataModule:
         sample = next(iter(datamodule.train_dataloader()))
         assert sample["image"].shape[-2:] == sample["mask"].shape[-2:] == (2, 2)
         assert sample["image"].shape[0] == sample["mask"].shape[0] == 2
-        if datamodule.bands == "all":
+        if datamodule.test_dataset.bands == "all":
             assert sample["image"].shape[1] == 26
         else:
             assert sample["image"].shape[1] == 6
@@ -47,7 +47,7 @@ class TestOSCDDataModule:
                 sample["image"].shape[-2:] == sample["mask"].shape[-2:] == (1280, 1280)
             )
             assert sample["image"].shape[0] == sample["mask"].shape[0] == 1
-            if datamodule.bands == "all":
+            if datamodule.test_dataset.bands == "all":
                 assert sample["image"].shape[1] == 26
             else:
                 assert sample["image"].shape[1] == 6
@@ -56,7 +56,7 @@ class TestOSCDDataModule:
         sample = next(iter(datamodule.test_dataloader()))
         assert sample["image"].shape[-2:] == sample["mask"].shape[-2:] == (1280, 1280)
         assert sample["image"].shape[0] == sample["mask"].shape[0] == 1
-        if datamodule.bands == "all":
+        if datamodule.test_dataset.bands == "all":
             assert sample["image"].shape[1] == 26
         else:
             assert sample["image"].shape[1] == 6

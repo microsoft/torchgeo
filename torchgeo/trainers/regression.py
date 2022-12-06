@@ -5,6 +5,7 @@
 
 from typing import Any, Dict, cast
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
@@ -32,7 +33,7 @@ class RegressionTask(pl.LightningModule):
         model = self.hyperparams["model"]
         pretrained = self.hyperparams["pretrained"]
 
-        if parse(torchvision.__version__) >= parse("0.12"):
+        if parse(torchvision.__version__) >= parse("0.13"):
             if pretrained:
                 kwargs = {
                     "weights": getattr(
@@ -93,7 +94,7 @@ class RegressionTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         y = batch["label"].view(-1, 1)
-        y_hat = self.forward(x)
+        y_hat = self(x)
 
         loss = F.mse_loss(y_hat, y)
 
@@ -122,7 +123,7 @@ class RegressionTask(pl.LightningModule):
         batch_idx = args[1]
         x = batch["image"]
         y = batch["label"].view(-1, 1)
-        y_hat = self.forward(x)
+        y_hat = self(x)
 
         loss = F.mse_loss(y_hat, y)
         self.log("val_loss", loss)
@@ -140,6 +141,7 @@ class RegressionTask(pl.LightningModule):
                 summary_writer.add_figure(
                     f"image/{batch_idx}", fig, global_step=self.global_step
                 )
+                plt.close()
             except AttributeError:
                 pass
 
@@ -161,7 +163,7 @@ class RegressionTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         y = batch["label"].view(-1, 1)
-        y_hat = self.forward(x)
+        y_hat = self(x)
 
         loss = F.mse_loss(y_hat, y)
         self.log("test_loss", loss)
@@ -175,6 +177,19 @@ class RegressionTask(pl.LightningModule):
         """
         self.log_dict(self.test_metrics.compute())
         self.test_metrics.reset()
+
+    def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
+        """Compute and return the predictions.
+
+        Args:
+            batch: the output of your DataLoader
+        Returns:
+            predicted values
+        """
+        batch = args[0]
+        x = batch["image"]
+        y_hat: Tensor = self(x)
+        return y_hat
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.

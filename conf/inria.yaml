@@ -21,9 +21,9 @@ experiment:
     learning_rate_schedule_patience: 6
     in_channels: 3
     num_classes: 2
-    ignore_index: 0  # class 0 not used for scoring
+    ignore_index: null
   datamodule:
-      root_dir: "data/inria"
+      root: "data/inria"
       batch_size: 2
       num_workers: 32
       patch_size: 512

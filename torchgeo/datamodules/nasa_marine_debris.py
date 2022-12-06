@@ -5,6 +5,7 @@
 
 from typing import Any, Dict, List, Optional
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 from torch import Tensor
@@ -30,6 +31,7 @@ def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
     output: Dict[str, Any] = {}
     output["image"] = torch.stack([sample["image"] for sample in batch])
     output["boxes"] = [sample["boxes"] for sample in batch]
+    output["labels"] = [torch.tensor([1] * len(sample["boxes"])) for sample in batch]
     return output
 
 
@@ -41,7 +43,6 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        root_dir: str,
         batch_size: int = 64,
         num_workers: int = 0,
         val_split_pct: float = 0.2,
@@ -51,18 +52,19 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
         """Initialize a LightningDataModule for NASA Marine Debris based DataLoaders.
 
         Args:
-            root_dir: The ``root`` argument to pass to the Dataset class
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
             val_split_pct: What percentage of the dataset to use as a validation set
             test_split_pct: What percentage of the dataset to use as a test set
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.NASAMarineDebris`
         """
         super().__init__()
-        self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
+        self.kwargs = kwargs
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
@@ -82,7 +84,7 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        NASAMarineDebris(self.root_dir, checksum=False)
+        NASAMarineDebris(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -92,9 +94,9 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
         Args:
             stage: stage to set up
         """
-        dataset = NASAMarineDebris(self.root_dir, transforms=self.preprocess)
+        self.dataset = NASAMarineDebris(transforms=self.preprocess, **self.kwargs)
         self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-            dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
+            self.dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
@@ -138,3 +140,10 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
             shuffle=False,
             collate_fn=collate_fn,
         )
+
+    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+        """Run :meth:`torchgeo.datasets.NASAMarineDebris.plot`.
+
+        .. versionadded:: 0.4
+        """
+        return self.dataset.plot(*args, **kwargs)

@@ -211,6 +211,9 @@ class EncoderWrapper(Module):
         # time this is called
         self._encoded = self.projector(output)
 
+        # Store the image embeddings
+        self._embedding = output
+
     def _register_hook(self) -> None:
         """Register a hook for layer that we will extract features from."""
         layer = list(self.model.children())[self.layer]
@@ -313,7 +316,7 @@ class BYOLTask(pl.LightningModule):
         pretrained = self.hyperparams["imagenet_pretraining"]
         encoder_name = self.hyperparams["encoder_name"]
 
-        if parse(torchvision.__version__) >= parse("0.12"):
+        if parse(torchvision.__version__) >= parse("0.13"):
             if pretrained:
                 kwargs = {
                     "weights": getattr(
@@ -422,7 +425,7 @@ class BYOLTask(pl.LightningModule):
         with torch.no_grad():
             x1, x2 = self.model.augment(x), self.model.augment(x)
 
-        pred1, pred2 = self.forward(x1), self.forward(x2)
+        pred1, pred2 = self(x1), self(x2)
         with torch.no_grad():
             targ1, targ2 = self.model.target(x1), self.model.target(x2)
         loss = torch.mean(normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1))
@@ -441,7 +444,7 @@ class BYOLTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         x1, x2 = self.model.augment(x), self.model.augment(x)
-        pred1, pred2 = self.forward(x1), self.forward(x2)
+        pred1, pred2 = self(x1), self(x2)
         targ1, targ2 = self.model.target(x1), self.model.target(x2)
         loss = torch.mean(normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1))
 
@@ -449,3 +452,17 @@ class BYOLTask(pl.LightningModule):
 
     def test_step(self, *args: Any, **kwargs: Any) -> Any:
         """No-op, does nothing."""
+
+    def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
+        """Compute and return the output embeddings of the image encoder.
+
+        Args:
+            batch: the output of your DataLoader
+
+        Returns:
+            image embeddings
+        """
+        batch = args[0]
+        x = batch["image"]
+        self(x)
+        return self.model.encoder._embedding

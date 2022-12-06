@@ -3,9 +3,11 @@
 
 import os
 
+import matplotlib.pyplot as plt
 import pytest
 
 from torchgeo.datamodules import FAIR1MDataModule
+from torchgeo.datasets import unbind_samples
 
 
 class TestFAIR1MDataModule:
@@ -15,7 +17,11 @@ class TestFAIR1MDataModule:
         batch_size = 2
         num_workers = 0
         dm = FAIR1MDataModule(
-            root, batch_size, num_workers, val_split_pct=0.33, test_split_pct=0.33
+            root=root,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            val_split_pct=0.33,
+            test_split_pct=0.33,
         )
         dm.setup()
         return dm
@@ -28,3 +34,9 @@ class TestFAIR1MDataModule:
 
     def test_test_dataloader(self, datamodule: FAIR1MDataModule) -> None:
         next(iter(datamodule.test_dataloader()))
+
+    def test_plot(self, datamodule: FAIR1MDataModule) -> None:
+        batch = next(iter(datamodule.train_dataloader()))
+        sample = unbind_samples(batch)[0]
+        datamodule.plot(sample)
+        plt.close()

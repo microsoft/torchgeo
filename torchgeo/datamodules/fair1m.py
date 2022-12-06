@@ -5,6 +5,7 @@
 
 from typing import Any, Dict, List, Optional
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 from torch import Tensor
@@ -40,7 +41,6 @@ class FAIR1MDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        root_dir: str,
         batch_size: int = 64,
         num_workers: int = 0,
         val_split_pct: float = 0.2,
@@ -50,18 +50,19 @@ class FAIR1MDataModule(pl.LightningDataModule):
         """Initialize a LightningDataModule for FAIR1M based DataLoaders.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the FAIR1M Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
             val_split_pct: What percentage of the dataset to use as a validation set
             test_split_pct: What percentage of the dataset to use as a test set
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.FAIR1M`
         """
         super().__init__()
-        self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
+        self.kwargs = kwargs
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
@@ -84,9 +85,9 @@ class FAIR1MDataModule(pl.LightningDataModule):
         Args:
             stage: stage to set up
         """
-        dataset = FAIR1M(self.root_dir, transforms=self.preprocess)
+        self.dataset = FAIR1M(transforms=self.preprocess, **self.kwargs)
         self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-            dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
+            self.dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
@@ -130,3 +131,10 @@ class FAIR1MDataModule(pl.LightningDataModule):
             shuffle=False,
             collate_fn=collate_fn,
         )
+
+    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+        """Run :meth:`torchgeo.datasets.FAIR1M.plot`.
+
+        .. versionadded:: 0.4
+        """
+        return self.dataset.plot(*args, **kwargs)

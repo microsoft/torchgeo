@@ -12,9 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3.1.0
     - name: Set up python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4.3.0
       with:
         python-version: '3.10'
     - name: Install pip dependencies
@@ -28,9 +28,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3.1.0
     - name: Set up python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4.3.0
       with:
         python-version: '3.10'
     - name: Install pip dependencies
@@ -44,9 +44,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3.1.0
     - name: Set up python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4.3.0
       with:
         python-version: '3.10'
     - name: Install pip dependencies

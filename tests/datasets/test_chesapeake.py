@@ -211,3 +211,13 @@ class TestChesapeakeCVPR:
             IndexError, match="query: .* spans multiple tiles which is not valid"
         ):
             ds[dataset.bounds]
+
+    def test_plot(self, dataset: ChesapeakeCVPR) -> None:
+        x = dataset[dataset.bounds].copy()
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
+        x["prediction"] = x["mask"][:, :, 0].clone().unsqueeze(2)
+        dataset.plot(x)
+        plt.close()

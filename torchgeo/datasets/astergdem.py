@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Aster Global Digital Evaluation Model dataset."""
+"""Aster Global Digital Elevation Model dataset."""
 
 import glob
 import os
@@ -14,9 +14,9 @@ from .geo import RasterDataset
 
 
 class AsterGDEM(RasterDataset):
-    """Aster Global Digital Evaluation Model Dataset.
+    """Aster Global Digital Elevation Model Dataset.
 
-    The `Aster Global Digital Evaluation Model
+    The `Aster Global Digital Elevation Model
     <https://lpdaac.usgs.gov/products/astgtmv003/>`_
     dataset is a Digital Elevation Model (DEM) on a global scale.
     The dataset can be downloaded from the
@@ -73,7 +73,7 @@ class AsterGDEM(RasterDataset):
 
         self._verify()
 
-        super().__init__(root, crs, res, transforms, cache)
+        super().__init__(root, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.

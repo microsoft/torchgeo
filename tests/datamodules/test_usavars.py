@@ -3,10 +3,12 @@
 
 import os
 
+import matplotlib.pyplot as plt
 import pytest
 from _pytest.fixtures import SubRequest
 
 from torchgeo.datamodules import USAVarsDataModule
+from torchgeo.datasets import unbind_samples
 
 
 class TestUSAVarsDataModule:
@@ -17,7 +19,9 @@ class TestUSAVarsDataModule:
         batch_size = 1
         num_workers = 0
 
-        dm = USAVarsDataModule(root, batch_size=batch_size, num_workers=num_workers)
+        dm = USAVarsDataModule(
+            root=root, batch_size=batch_size, num_workers=num_workers
+        )
         dm.prepare_data()
         dm.setup()
         return dm
@@ -36,3 +40,9 @@ class TestUSAVarsDataModule:
         assert len(datamodule.test_dataloader()) == 1
         sample = next(iter(datamodule.test_dataloader()))
         assert sample["image"].shape[0] == datamodule.batch_size
+
+    def test_plot(self, datamodule: USAVarsDataModule) -> None:
+        batch = next(iter(datamodule.train_dataloader()))
+        sample = unbind_samples(batch)[0]
+        datamodule.plot(sample)
+        plt.close()

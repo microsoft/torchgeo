@@ -5,6 +5,7 @@
 
 from typing import Any, Dict, Optional
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import Compose
@@ -22,7 +23,6 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        root_dir: str,
         batch_size: int = 64,
         num_workers: int = 0,
         val_split_pct: float = 0.2,
@@ -31,16 +31,17 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         """Initialize a LightningDataModule for DeepGlobe Land Cover based DataLoaders.
 
         Args:
-            root_dir: The ``root`` argument to pass to the DeepGlobe Dataset classes
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
             val_split_pct: What percentage of the dataset to use as a validation set
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.DeepGlobeLandCover`
         """
         super().__init__()
-        self.root_dir = root_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.val_split_pct = val_split_pct
+        self.kwargs = kwargs
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
@@ -65,7 +66,9 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         """
         transforms = Compose([self.preprocess])
 
-        dataset = DeepGlobeLandCover(self.root_dir, "train", transforms=transforms)
+        dataset = DeepGlobeLandCover(
+            split="train", transforms=transforms, **self.kwargs
+        )
 
         self.train_dataset: Dataset[Any]
         self.val_dataset: Dataset[Any]
@@ -79,7 +82,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             self.val_dataset = dataset
 
         self.test_dataset = DeepGlobeLandCover(
-            self.root_dir, "test", transforms=transforms
+            split="test", transforms=transforms, **self.kwargs
         )
 
     def train_dataloader(self) -> DataLoader[Dict[str, Any]]:
@@ -120,3 +123,10 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=False,
         )
+
+    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+        """Run :meth:`torchgeo.datasets.DeepGlobeLandCover.plot`.
+
+        .. versionadded:: 0.4
+        """
+        return self.test_dataset.plot(*args, **kwargs)

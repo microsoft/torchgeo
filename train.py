@@ -17,22 +17,24 @@ from torchgeo.datamodules import (
     BigEarthNetDataModule,
     ChesapeakeCVPRDataModule,
     COWCCountingDataModule,
-    CycloneDataModule,
     ETCI2021DataModule,
     EuroSATDataModule,
     InriaAerialImageLabelingDataModule,
     LandCoverAIDataModule,
     NAIPChesapeakeDataModule,
+    NASAMarineDebrisDataModule,
     OSCDDataModule,
     RESISC45DataModule,
     SEN12MSDataModule,
     So2SatDataModule,
+    TropicalCycloneDataModule,
     UCMercedDataModule,
 )
 from torchgeo.trainers import (
     BYOLTask,
     ClassificationTask,
     MultiLabelClassificationTask,
+    ObjectDetectionTask,
     RegressionTask,
     SemanticSegmentationTask,
 )
@@ -44,12 +46,13 @@ TASK_TO_MODULES_MAPPING: Dict[
     "byol": (BYOLTask, ChesapeakeCVPRDataModule),
     "chesapeake_cvpr": (SemanticSegmentationTask, ChesapeakeCVPRDataModule),
     "cowc_counting": (RegressionTask, COWCCountingDataModule),
-    "cyclone": (RegressionTask, CycloneDataModule),
+    "cyclone": (RegressionTask, TropicalCycloneDataModule),
     "eurosat": (ClassificationTask, EuroSATDataModule),
     "etci2021": (SemanticSegmentationTask, ETCI2021DataModule),
     "inria": (SemanticSegmentationTask, InriaAerialImageLabelingDataModule),
     "landcoverai": (SemanticSegmentationTask, LandCoverAIDataModule),
     "naipchesapeake": (SemanticSegmentationTask, NAIPChesapeakeDataModule),
+    "nasa_marine_debris": (ObjectDetectionTask, NASAMarineDebrisDataModule),
     "oscd": (SemanticSegmentationTask, OSCDDataModule),
     "resisc45": (ClassificationTask, RESISC45DataModule),
     "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),
@@ -168,11 +171,18 @@ def main(conf: DictConfig) -> None:
     ######################################
     tb_logger = pl_loggers.TensorBoardLogger(conf.program.log_dir, name=experiment_name)
 
+    if isinstance(task, ObjectDetectionTask):
+        monitor_metric = "val_map"
+        mode = "max"
+    else:
+        monitor_metric = "val_loss"
+        mode = "min"
+
     checkpoint_callback = ModelCheckpoint(
-        monitor="val_loss", dirpath=experiment_dir, save_top_k=1, save_last=True
+        monitor=monitor_metric, dirpath=experiment_dir, save_top_k=1, save_last=True
     )
     early_stopping_callback = EarlyStopping(
-        monitor="val_loss", min_delta=0.00, patience=18
+        monitor=monitor_metric, min_delta=0.00, patience=18, mode=mode
     )
 
     trainer_args = cast(Dict[str, Any], OmegaConf.to_object(conf.trainer))

@@ -2,13 +2,13 @@ experiment:
   task: "ucmerced"
   module:
     loss: "ce"
-    classification_model: "resnet18"
+    model: "resnet18"
     weights: null
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
     in_channels: 3
     num_classes: 21
   datamodule:
-    root_dir: "data/ucmerced"
+    root: "data/ucmerced"
     batch_size: 128
     num_workers: 4

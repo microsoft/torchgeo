@@ -1,6 +1,6 @@
 repos:
     -   repo: https://github.com/asottile/pyupgrade
-        rev: v2.37.3
+        rev: v3.2.2
         hooks:
         -   id: pyupgrade
             args: [--py37-plus]
@@ -12,13 +12,13 @@ repos:
              additional_dependencies: ["colorama>=0.4.3"]
 
     -   repo: https://github.com/psf/black
-        rev: 22.6.0
+        rev: 22.10.0
         hooks:
         -   id: black
             args: [--skip-magic-trailing-comma]
 
-    -   repo: https://gitlab.com/pycqa/flake8.git
-        rev: 3.9.2
+    -   repo: https://github.com/pycqa/flake8.git
+        rev: 5.0.4
         hooks:
         -   id: flake8
 
@@ -30,9 +30,9 @@ repos:
             additional_dependencies: ["toml"]
 
     -   repo: https://github.com/pre-commit/mirrors-mypy
-        rev: v0.971
+        rev: v0.991
         hooks:
         -   id: mypy
             args: [--strict, --ignore-missing-imports, --show-error-codes]
-            additional_dependencies: [torch>=1.11, torchmetrics>=0.7, pytorch-lightning>=1.7, pytest>=6, omegaconf>=2.1, kornia>=0.6, numpy>=1.22.0]
+            additional_dependencies: [torch>=1.13, torchmetrics>=0.10, pytorch-lightning>=1.7, pytest>=6, omegaconf>=2.1, kornia>=0.6, numpy>=1.22.0]
             exclude: (build|data|dist|logo|logs|output)/

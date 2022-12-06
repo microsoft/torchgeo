@@ -8,13 +8,18 @@
 import argparse
 import csv
 import os
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, cast
 
 import pytorch_lightning as pl
 import torch
-from torchmetrics import Accuracy, JaccardIndex, MetricCollection
+from torchmetrics import MetricCollection
+from torchmetrics.classification import BinaryAccuracy, BinaryJaccardIndex
 
-from torchgeo.trainers import ClassificationTask, SemanticSegmentationTask
+from torchgeo.trainers import (
+    ClassificationTask,
+    ObjectDetectionTask,
+    SemanticSegmentationTask,
+)
 from train import TASK_TO_MODULES_MAPPING
 
 
@@ -44,7 +49,7 @@ def set_up_parser() -> argparse.ArgumentParser:
         "--gpu", default=0, type=int, help="GPU ID to use", metavar="ID"
     )
     parser.add_argument(
-        "--root-dir",
+        "--root",
         required=True,
         type=str,
         help="root directory of the dataset for the accompanying task",
@@ -106,6 +111,14 @@ def run_eval_loop(
             y = batch["mask"].to(device)
         elif "label" in batch:
             y = batch["label"].to(device)
+        elif "boxes" in batch:
+            y = [
+                {
+                    "boxes": batch["boxes"][i].to(device),
+                    "labels": batch["labels"][i].to(device),
+                }
+                for i in range(len(batch["image"]))
+            ]
         with torch.inference_mode():
             y_pred = model(x)
         metrics(y_pred, y)
@@ -123,58 +136,74 @@ def main(args: argparse.Namespace) -> None:
         args: command-line arguments
     """
     assert os.path.exists(args.input_checkpoint)
-    assert os.path.exists(args.root_dir)
+    assert os.path.exists(args.root)
     TASK = TASK_TO_MODULES_MAPPING[args.task][0]
     DATAMODULE = TASK_TO_MODULES_MAPPING[args.task][1]
 
     # Loads the saved model from checkpoint based on the `args.task` name that was
     # passed as input
     model = TASK.load_from_checkpoint(args.input_checkpoint)
+    model = cast(pl.LightningModule, model)
     model.freeze()
     model.eval()
 
     dm = DATAMODULE(  # type: ignore[call-arg]
         seed=args.seed,
-        root_dir=args.root_dir,
+        root=args.root,
         num_workers=args.num_workers,
         batch_size=args.batch_size,
     )
-    dm.setup()
+    dm.setup("validate")
 
     # Record model hyperparameters
+    hparams = cast(Dict[str, Union[str, float]], model.hparams)
     if issubclass(TASK, ClassificationTask):
-        val_row: Dict[str, Union[str, float]] = {
-            "split": "val",
-            "classification_model": model.hparams["classification_model"],
-            "learning_rate": model.hparams["learning_rate"],
-            "weights": model.hparams["weights"],
-            "loss": model.hparams["loss"],
-        }
-
-        test_row: Dict[str, Union[str, float]] = {
-            "split": "test",
-            "classification_model": model.hparams["classification_model"],
-            "learning_rate": model.hparams["learning_rate"],
-            "weights": model.hparams["weights"],
-            "loss": model.hparams["loss"],
-        }
-    elif issubclass(TASK, SemanticSegmentationTask):
         val_row = {
             "split": "val",
-            "segmentation_model": model.hparams["segmentation_model"],
-            "encoder_name": model.hparams["encoder_name"],
-            "encoder_weights": model.hparams["encoder_weights"],
-            "learning_rate": model.hparams["learning_rate"],
-            "loss": model.hparams["loss"],
+            "model": hparams["model"],
+            "learning_rate": hparams["learning_rate"],
+            "weights": hparams["weights"],
+            "loss": hparams["loss"],
         }
 
         test_row = {
             "split": "test",
-            "segmentation_model": model.hparams["segmentation_model"],
-            "encoder_name": model.hparams["encoder_name"],
-            "encoder_weights": model.hparams["encoder_weights"],
-            "learning_rate": model.hparams["learning_rate"],
-            "loss": model.hparams["loss"],
+            "model": hparams["model"],
+            "learning_rate": hparams["learning_rate"],
+            "weights": hparams["weights"],
+            "loss": hparams["loss"],
+        }
+    elif issubclass(TASK, SemanticSegmentationTask):
+        val_row = {
+            "split": "val",
+            "segmentation_model": hparams["segmentation_model"],
+            "encoder_name": hparams["encoder_name"],
+            "encoder_weights": hparams["encoder_weights"],
+            "learning_rate": hparams["learning_rate"],
+            "loss": hparams["loss"],
+        }
+
+        test_row = {
+            "split": "test",
+            "segmentation_model": hparams["segmentation_model"],
+            "encoder_name": hparams["encoder_name"],
+            "encoder_weights": hparams["encoder_weights"],
+            "learning_rate": hparams["learning_rate"],
+            "loss": hparams["loss"],
+        }
+    elif issubclass(TASK, ObjectDetectionTask):
+        val_row = {
+            "split": "val",
+            "detection_model": hparams["detection_model"],
+            "backbone": hparams["backbone"],
+            "learning_rate": hparams["learning_rate"],
+        }
+
+        test_row = {
+            "split": "test",
+            "detection_model": hparams["detection_model"],
+            "backbone": hparams["backbone"],
+            "learning_rate": hparams["learning_rate"],
         }
     else:
         raise ValueError(f"{TASK} is not supported")
@@ -185,9 +214,7 @@ def main(args: argparse.Namespace) -> None:
 
     if args.task == "etci2021":  # Custom metric setup for testing ETCI2021
 
-        metrics = MetricCollection(
-            [Accuracy(num_classes=2), JaccardIndex(num_classes=2, reduction="none")]
-        ).to(device)
+        metrics = MetricCollection([BinaryAccuracy(), BinaryJaccardIndex()]).to(device)
 
         val_results = run_eval_loop(model, dm.val_dataloader(), device, metrics)
         test_results = run_eval_loop(model, dm.test_dataloader(), device, metrics)
@@ -205,6 +232,8 @@ def main(args: argparse.Namespace) -> None:
             }
         )
     else:  # Test with PyTorch Lightning as usual
+        model.val_metrics = cast(MetricCollection, model.val_metrics)
+        model.test_metrics = cast(MetricCollection, model.test_metrics)
 
         val_results = run_eval_loop(
             model, dm.val_dataloader(), device, model.val_metrics
@@ -240,6 +269,9 @@ def main(args: argparse.Namespace) -> None:
                     "jaccard_index": test_results["test_JaccardIndex"].item(),
                 }
             )
+        elif issubclass(TASK, ObjectDetectionTask):
+            val_row.update({"map": val_results["map"].item()})
+            test_row.update({"map": test_results["map"].item()})
 
     assert set(val_row.keys()) == set(test_row.keys())
     fieldnames = list(test_row.keys())
