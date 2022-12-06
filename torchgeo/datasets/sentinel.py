@@ -184,11 +184,12 @@ class Sentinel1(Sentinel):
         # Either HH/HV or VV/VH, doesn't really matter which
         hh = sample["image"][0]
         hv = sample["image"][1]
+        hh_hv = hh / hv
 
         # https://gis.stackexchange.com/a/400780/123758
         hh = torch.clamp(hh / 0.3, min=0, max=1)
         hv = torch.clamp(hv / 0.05, min=0, max=1)
-        hh_hv = torch.clamp(hh / hv / 25, min=0, max=1)
+        hh_hv = torch.clamp(hh_hv / 25, min=0, max=1)
 
         image = torch.stack((hh, hv, hh_hv), dim=-1)
 
