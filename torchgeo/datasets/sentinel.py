@@ -35,6 +35,7 @@ class Sentinel1(Sentinel):
     acquire imagery regardless of the weather.
 
     Data can be downloaded from:
+
     * `Copernicus Open Access Hub
       <https://scihub.copernicus.eu/>`_
     * `Alaska Satellite Facility (ASF) Distributed Active Archive Center (DAAC)
@@ -43,6 +44,7 @@ class Sentinel1(Sentinel):
       <https://planetarycomputer.microsoft.com/dataset/sentinel-1-rtc>`_
 
     Product Types:
+
     * `Level-0
       <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/product-types-processing-levels/level-0>`_:
       Raw (RAW)
@@ -57,12 +59,14 @@ class Sentinel1(Sentinel):
       Ocean (OCN)
 
     Polarizations:
+
     * HH: horizontal transmit, horizontal receive
     * HV: horizontal transmit, vertical receive
     * VV: vertical transmit, vertical receive
     * VH: vertical transmit, horizontal receive
 
     Acquisition Modes:
+
     * `Stripmap (SM)
       <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/acquisition-modes/stripmap>`_
     * `Interferometric Wide (IW) swath
