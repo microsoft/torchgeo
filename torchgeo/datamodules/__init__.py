@@ -6,7 +6,7 @@
 from .bigearthnet import BigEarthNetDataModule
 from .chesapeake import ChesapeakeCVPRDataModule
 from .cowc import COWCCountingDataModule
-from .cyclone import CycloneDataModule
+from .cyclone import TropicalCycloneDataModule
 from .deepglobelandcover import DeepGlobeLandCoverDataModule
 from .etci2021 import ETCI2021DataModule
 from .eurosat import EuroSATDataModule
@@ -46,7 +46,7 @@ __all__ = (
     "RESISC45DataModule",
     "SEN12MSDataModule",
     "So2SatDataModule",
-    "CycloneDataModule",
+    "TropicalCycloneDataModule",
     "UCMercedDataModule",
     "USAVarsDataModule",
     "Vaihingen2DDataModule",

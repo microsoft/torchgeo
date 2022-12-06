@@ -3,8 +3,9 @@
 
 """National Agriculture Imagery Program (NAIP) datamodule."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
@@ -117,17 +118,17 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         naip_transforms = Compose([self.preprocess, self.remove_bbox])
         chesapeak_transforms = Compose([self.chesapeake_transform, self.remove_bbox])
 
-        chesapeake = Chesapeake13(
+        self.chesapeake = Chesapeake13(
             self.chesapeake_root, transforms=chesapeak_transforms, **self.kwargs
         )
-        naip = NAIP(
+        self.naip = NAIP(
             self.naip_root,
-            chesapeake.crs,
-            chesapeake.res,
+            self.chesapeake.crs,
+            self.chesapeake.res,
             transforms=naip_transforms,
             **self.kwargs,
         )
-        self.dataset = chesapeake & naip
+        self.dataset = self.chesapeake & self.naip
 
         # TODO: figure out better train/val/test split
         roi = self.dataset.bounds
@@ -138,10 +139,14 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         test_roi = BoundingBox(roi.minx, roi.maxx, midy, roi.maxy, roi.mint, roi.maxt)
 
         self.train_sampler = RandomBatchGeoSampler(
-            naip, self.patch_size, self.batch_size, self.length, train_roi
+            self.naip, self.patch_size, self.batch_size, self.length, train_roi
         )
-        self.val_sampler = GridGeoSampler(naip, self.patch_size, self.stride, val_roi)
-        self.test_sampler = GridGeoSampler(naip, self.patch_size, self.stride, test_roi)
+        self.val_sampler = GridGeoSampler(
+            self.naip, self.patch_size, self.stride, val_roi
+        )
+        self.test_sampler = GridGeoSampler(
+            self.naip, self.patch_size, self.stride, test_roi
+        )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.
@@ -183,3 +188,15 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             collate_fn=stack_samples,
         )
+
+    def plot(self, *args: Any, **kwargs: Any) -> Tuple[plt.Figure, plt.Figure]:
+        """Run NAIP and Chesapeake plot methods.
+
+        See :meth:`torchgeo.datasets.NAIP.plot` and
+        :meth:`torchgeo.datasets.Chesapeake.plot`.
+
+        .. versionadded:: 0.4
+        """
+        image = self.naip.plot(*args, **kwargs)
+        label = self.chesapeake.plot(*args, **kwargs)
+        return image, label

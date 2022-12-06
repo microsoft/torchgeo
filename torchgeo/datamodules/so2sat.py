@@ -5,6 +5,7 @@
 
 from typing import Any, Dict, Optional, cast
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
@@ -196,3 +197,10 @@ class So2SatDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=False,
         )
+
+    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+        """Run :meth:`torchgeo.datasets.So2Sat.plot`.
+
+        .. versionadded:: 0.4
+        """
+        return self.test_dataset.plot(*args, **kwargs)

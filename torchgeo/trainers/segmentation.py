@@ -15,10 +15,7 @@ from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torchmetrics import MetricCollection
-from torchmetrics.classification import (  # type: ignore[attr-defined]
-    MulticlassAccuracy,
-    MulticlassJaccardIndex,
-)
+from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
 
 from ..datasets.utils import unbind_samples
 from ..models import FCN
@@ -29,7 +26,13 @@ DataLoader.__module__ = "torch.utils.data"
 
 
 class SemanticSegmentationTask(pl.LightningModule):
-    """LightningModule for semantic segmentation of images."""
+    """LightningModule for semantic segmentation of images.
+
+    Supports `Segmentation Models Pytorch
+    <https://github.com/qubvel/segmentation_models.pytorch>`_
+    as an architecture choice in combination with any of these
+    `TIMM encoders <https://smp.readthedocs.io/en/latest/encoders_timm.html>`_.
+    """
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
@@ -55,7 +58,8 @@ class SemanticSegmentationTask(pl.LightningModule):
             )
         else:
             raise ValueError(
-                f"Model type '{self.hyperparams['segmentation_model']}' is not valid."
+                f"Model type '{self.hyperparams['segmentation_model']}' is not valid. "
+                f"Currently, only supports 'unet', 'deeplabv3+' and 'fcn'."
             )
 
         if self.hyperparams["loss"] == "ce":
@@ -70,7 +74,10 @@ class SemanticSegmentationTask(pl.LightningModule):
                 "multiclass", ignore_index=self.ignore_index, normalized=True
             )
         else:
-            raise ValueError(f"Loss type '{self.hyperparams['loss']}' is not valid.")
+            raise ValueError(
+                f"Loss type '{self.hyperparams['loss']}' is not valid. "
+                f"Currently, supports 'ce', 'jaccard' or 'focal' loss."
+            )
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
@@ -84,6 +91,8 @@ class SemanticSegmentationTask(pl.LightningModule):
             num_classes: Number of semantic classes to predict
             loss: Name of the loss function
             ignore_index: Optional integer class index to ignore in the loss and metrics
+            learning_rate: Learning rate for optimizer
+            learning_rate_schedule_patience: Patience for learning rate scheduler
 
         Raises:
             ValueError: if kwargs arguments are invalid

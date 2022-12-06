@@ -22,7 +22,7 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands
 `OSCD`_,CD,Sentinel-2,24,2,"40--1,180",60,MSI
 `PatternNet`_,C,Google Earth,"30,400",38,256x256,0.06--5,RGB
 `Potsdam`_,S,Aerial,38,6,"6,000x6,000",0.05,MSI
-`ReforesTree`_,"OD, R",Aerial,100,"4,000x4,000",0.02,RGB
+`ReforesTree`_,"OD, R",Aerial,100,6,"4,000x4,000",0.02,RGB
 `RESISC45`_,C,Google Earth,"31,500",45,256x256,0.2--30,RGB
 `Seasonal Contrast`_,T,Sentinel-2,100K--1M,-,264x264,10,MSI
 `SEN12MS`_,S,"Sentinel-1/2, MODIS","180,662",33,256x256,10,"SAR, MSI"

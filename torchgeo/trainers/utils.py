@@ -28,18 +28,15 @@ def extract_backbone(path: str) -> Tuple[str, "OrderedDict[str, Tensor]"]:
         tuple containing model name and state dict
 
     Raises:
-        ValueError: if 'classification_model' or 'backbone' not in
+        ValueError: if 'model' or 'backbone' not in
             checkpoint['hyper_parameters']
 
     .. versionchanged:: 0.4
         Renamed from *extract_encoder* to *extract_backbone*
     """
-    checkpoint = torch.load(  # type: ignore[no-untyped-call]
-        path, map_location=torch.device("cpu")
-    )
-
-    if "classification_model" in checkpoint["hyper_parameters"]:
-        name = checkpoint["hyper_parameters"]["classification_model"]
+    checkpoint = torch.load(path, map_location=torch.device("cpu"))
+    if "model" in checkpoint["hyper_parameters"]:
+        name = checkpoint["hyper_parameters"]["model"]
         state_dict = checkpoint["state_dict"]
         state_dict = OrderedDict({k: v for k, v in state_dict.items() if "model." in k})
         state_dict = OrderedDict(
@@ -56,7 +53,7 @@ def extract_backbone(path: str) -> Tuple[str, "OrderedDict[str, Tensor]"]:
         )
     else:
         raise ValueError(
-            "Unknown checkpoint task. Only backbone or classification_model"
+            "Unknown checkpoint task. Only backbone or model"
             " extraction is supported"
         )
 
