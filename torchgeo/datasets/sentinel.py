@@ -191,7 +191,8 @@ class Sentinel1(Sentinel):
         ax.axis("off")
 
         if show_titles:
-            ax.set_title("Image")
+            title = "({0}, {1}, {0}/{1})".format(*self.bands)
+            ax.set_title(title)
 
         if suptitle is not None:
             plt.suptitle(suptitle)
