@@ -174,10 +174,16 @@ class Sentinel1(Sentinel):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        hh_vv = sample["image"][0]
-        hv_vh = sample["image"][1]
+        # Either HH/HV or VV/VH, doesn't really matter which
+        hh = sample["image"][0]
+        hv = sample["image"][1]
 
-        image = torch.stack((hh_vv, hv_vh, hh_vv / hv_vh), dim=-1)
+        # https://gis.stackexchange.com/a/400780/123758
+        hh = torch.clamp(hh / 0.3, min=0, max=1)
+        hv = torch.clamp(hv / 0.05, min=0, max=1)
+        hh_hv = torch.clamp(hh / hv / 25, min=0, max=1)
+
+        image = torch.stack((hh, hv, hh_hv), dim=-1)
 
         fig, ax = plt.subplots(1, 1, figsize=(4, 4))
 
