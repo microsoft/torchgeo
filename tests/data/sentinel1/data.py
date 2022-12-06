@@ -9,6 +9,7 @@ from typing import Dict, List, Union
 import numpy as np
 import rasterio
 from rasterio import Affine
+from rasterio.crs import CRS
 
 SIZE = 36
 
@@ -17,27 +18,25 @@ np.random.seed(0)
 FILENAME_HIERARCHY = Union[Dict[str, "FILENAME_HIERARCHY"], List[str]]
 
 filenames: FILENAME_HIERARCHY = {
-    # Copernicus Open Access Hub
-    "S1A_IW_SLC__1SDV_20221006T133300_20221006T133327_045322_056B2B_84A7.SAFE": {
-        "measurement": [
-            "s1a-iw1-slc-vh-20221006t133301-20221006t133327-045322-056b2b-001.tiff",
-            "s1a-iw1-slc-vv-20221006t133301-20221006t133327-045322-056b2b-004.tiff",
-            "s1a-iw2-slc-vh-20221006t133300-20221006t133325-045322-056b2b-002.tiff",
-            "s1a-iw2-slc-vv-20221006t133300-20221006t133325-045322-056b2b-005.tiff",
-            "s1a-iw3-slc-vh-20221006t133301-20221006t133326-045322-056b2b-003.tiff",
-            "s1a-iw3-slc-vv-20221006t133301-20221006t133326-045322-056b2b-006.tiff",
-        ]
-    }
+    # ASF DAAC
+    "S1A_IW_20221204T161641_DVR_RTC30_G_gpuned_1AE1": [
+        "S1A_IW_20221204T161641_DVR_RTC30_G_gpuned_1AE1_VH.tif",
+        "S1A_IW_20221204T161641_DVR_RTC30_G_gpuned_1AE1_VV.tif",
+    ],
+    "S1B_IW_20161021T042948_DHP_RTC30_G_gpuned_A784": [
+        "S1B_IW_20161021T042948_DHP_RTC30_G_gpuned_A784_HH.tif",
+        "S1B_IW_20161021T042948_DHP_RTC30_G_gpuned_A784_HV.tif",
+    ],
 }
 
 
 def create_file(path: str) -> None:
     profile = {}
     profile["driver"] = "GTiff"
-    profile["dtype"] = "complex64"
+    profile["dtype"] = "float32"
     profile["count"] = 1
-    profile["crs"] = None
-    profile["transform"] = Affine.identity()
+    profile["crs"] = CRS.from_epsg(32605)
+    profile["transform"] = Affine(30.0, 0.0, 79860.0, 0.0, -30.0, 2298240.0)
     profile["height"] = SIZE
     profile["width"] = SIZE
 
