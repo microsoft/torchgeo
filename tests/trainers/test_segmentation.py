@@ -102,8 +102,8 @@ class TestSemanticSegmentationTask:
     def model_kwargs(self) -> Dict[Any, Any]:
         return {
             "model": "unet",
-            "encoder": "resnet18",
-            "encoder_weights": None,
+            "backbone": "resnet18",
+            "weights": None,
             "in_channels": 3,
             "num_classes": 6,
             "loss": "ce",

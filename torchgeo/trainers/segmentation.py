@@ -34,22 +34,22 @@ class SemanticSegmentationTask(pl.LightningModule):
     Supports `Segmentation Models Pytorch
     <https://github.com/qubvel/segmentation_models.pytorch>`_
     as an architecture choice in combination with any of these
-    `TIMM encoders <https://smp.readthedocs.io/en/latest/encoders_timm.html>`_.
+    `TIMM backbones <https://smp.readthedocs.io/en/latest/encoders_timm.html>`_.
     """
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
         if self.hyperparams["model"] == "unet":
             self.model = smp.Unet(
-                encoder_name=self.hyperparams["encoder"],
-                encoder_weights=self.hyperparams["encoder_weights"],
+                encoder_name=self.hyperparams["backbone"],
+                encoder_weights=self.hyperparams["weights"],
                 in_channels=self.hyperparams["in_channels"],
                 classes=self.hyperparams["num_classes"],
             )
         elif self.hyperparams["model"] == "deeplabv3+":
             self.model = smp.DeepLabV3Plus(
-                encoder_name=self.hyperparams["encoder"],
-                encoder_weights=self.hyperparams["encoder_weights"],
+                encoder_name=self.hyperparams["backbone"],
+                encoder_weights=self.hyperparams["weights"],
                 in_channels=self.hyperparams["in_channels"],
                 classes=self.hyperparams["num_classes"],
             )
@@ -87,9 +87,9 @@ class SemanticSegmentationTask(pl.LightningModule):
 
         Keyword Args:
             model: Name of the segmentation model type to use
-            encoder: Name of the encoder backbone to use
-            encoder_weights: None or "imagenet" to use imagenet pretrained weights in
-                the encoder model
+            backbone: Name of the timm backbone to use
+            weights: None or "imagenet" to use imagenet pretrained weights in
+                the backbone
             in_channels: Number of channels in input image
             num_classes: Number of semantic classes to predict
             loss: Name of the loss function, currently supports
@@ -105,8 +105,9 @@ class SemanticSegmentationTask(pl.LightningModule):
            The *ignore_zeros* parameter was renamed to *ignore_index*.
 
         .. versionchanged:: 0.4
-           The *segmentation_model* parameter was renamed to *model* and
-           *encoder_name* renamed to *encoder*.
+           The *segmentation_model* parameter was renamed to *model*,
+           *encoder_name* renamed to *backbone*, and
+           *encoder_weights* to *weights*.
         """
         super().__init__()
 
