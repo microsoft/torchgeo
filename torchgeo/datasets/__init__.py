@@ -74,6 +74,7 @@ from .loveda import LoveDA
 from .millionaid import MillionAID
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
+from .nwpu import VHR10
 from .openbuildings import OpenBuildings
 from .oscd import OSCD
 from .patternnet import PatternNet
@@ -104,7 +105,6 @@ from .utils import (
     unbind_samples,
 )
 from .vaihingen import Vaihingen2D
-from .vhr10 import VHR10
 from .xview import XView2
 from .zuericrop import ZueriCrop
 

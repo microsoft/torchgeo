@@ -31,7 +31,7 @@ class TestVHR10:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> VHR10:
         pytest.importorskip("rarfile", minversion="3")
-        monkeypatch.setattr(torchgeo.datasets.vhr10, "download_url", download_url)
+        monkeypatch.setattr(torchgeo.datasets.nwpu, "download_url", download_url)
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         url = os.path.join("tests", "data", "vhr10", "NWPU VHR-10 dataset.rar")
         monkeypatch.setitem(VHR10.image_meta, "url", url)
