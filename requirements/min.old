@@ -1,5 +1,5 @@
 # setup
-setuptools==42.0.0
+setuptools==47.0.0
 
 # install
 einops==0.3.0
@@ -37,6 +37,7 @@ zipfile-deflate64==0.2.0
 # docs
 ipywidgets==7.6.0
 nbsphinx==0.8.5
+nbconvert==4.0.0
 sphinx==4.0.0
 
 # style
