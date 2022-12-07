@@ -5,6 +5,7 @@ import builtins
 import glob
 import os
 import shutil
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -139,11 +140,20 @@ class TestIDTReeS:
             dataset.plot(x, show_titles=False)
             plt.close()
 
+    @pytest.mark.skipif(
+        sys.platform != "linux",
+        reason="Pyvista tests require a virtual frame buffer only supported on linux",
+    )
     def test_plot_las(self, dataset: IDTReeS) -> None:
         pytest.importorskip("pyvista", minversion="0.35.1")
+        import pyvista
+
+        pyvista.OFF_SCREEN = True
+        pyvista.start_xvfb(wait=0)
         plot = dataset.plot_las(index=0, colormap="BrBG")
         plot.show()
         plot = dataset.plot_las(index=0, colormap=None)
         plot.show()
         plot = dataset.plot_las(index=1, colormap=None)
         plot.show()
+        # os.environ["DISPLAY"] = "0:0"

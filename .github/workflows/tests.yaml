@@ -45,7 +45,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install apt dependencies (Linux)
-      run: sudo apt-get install unrar
+      run: sudo apt-get install unrar libgl1-mesa-glx xvfb
       if: ${{ runner.os == 'Linux' }}
     - name: Install brew dependencies (macOS)
       run: brew install rar
