@@ -8,7 +8,6 @@ import os
 from typing import Any, Callable, Dict, List, Optional, Tuple, cast, overload
 
 import fiona
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
@@ -568,16 +567,15 @@ class IDTReeS(NonGeoDataset):
         return fig
 
     def plot_las(
-        self, index: int, colormap: Optional[str] = None
+        self, index: int
     ) -> "pyvista.Plotter":  # type: ignore[name-defined] # noqa: F821
         """Plot a sample point cloud at the index.
 
         Args:
             index: index to plot
-            colormap: a valid matplotlib colormap
 
         Returns:
-            pyvista.Plotter object. Run plotter.show() to display
+            pyvista.PolyData object. Run pyvista.plot(point_cloud, ...) to display
 
         Raises:
             ImportError: if pyvista is not installed
@@ -596,27 +594,12 @@ class IDTReeS(NonGeoDataset):
         points: "np.typing.NDArray[np.int_]" = np.stack(
             [las.x, las.y, las.z], axis=0
         ).transpose((1, 0))
-
-        if colormap:
-            if hasattr(mpl, "colormaps"):
-                cm = mpl.colormaps[colormap]
-            else:
-                cm = plt.cm.get_cmap(colormap)
-            norm = plt.Normalize()
-            colors = cm(norm(points[:, 2]))[:, :3]
-        else:
-            # Some point cloud files have no color->points mapping
-            if hasattr(las, "red"):
-                colors = np.stack([las.red, las.green, las.blue], axis=0)
-                colors = colors.transpose((1, 0)) / 65535
-            # Default to no colormap if no colors exist in las file
-            else:
-                colors = np.zeros_like(points)
-
         point_cloud = pyvista.PolyData(points)  # type: ignore[attr-defined]
-        point_cloud["color"] = colors
-        plotter = pyvista.Plotter()  # type: ignore[attr-defined]
-        _ = plotter.add_mesh(point_cloud, scalars="color", rgb=True)
-        plotter.camera_position = "yz"
-        plotter.background_color = "white"
-        return plotter
+
+        # Some point cloud files have no color->points mapping
+        if hasattr(las, "red"):
+            colors = np.stack([las.red, las.green, las.blue], axis=0)
+            colors = colors.transpose((1, 0)) / 65535
+            point_cloud["colors"] = colors
+
+        return point_cloud
