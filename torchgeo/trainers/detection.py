@@ -44,6 +44,17 @@ DataLoader.__module__ = "torch.utils.data"
 class ObjectDetectionTask(pl.LightningModule):
     """LightningModule for object detection of images.
 
+    Currently, supports a Faster R-CNN model from
+    `torchvision
+    <https://pytorch.org/vision/stable/models/faster_rcnn.html>`_ with
+    one of the following *backbone* arguments:
+
+    .. code-block:: python
+
+        ['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152',
+        'resnext50_32x4d','resnext101_32x8d', 'wide_resnet50_2',
+        'wide_resnet101_2']
+
     .. versionadded:: 0.4
     """
 
