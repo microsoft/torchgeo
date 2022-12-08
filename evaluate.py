@@ -13,10 +13,7 @@ from typing import Any, Dict, Union, cast
 import pytorch_lightning as pl
 import torch
 from torchmetrics import MetricCollection
-from torchmetrics.classification import (  # type: ignore[attr-defined]
-    BinaryAccuracy,
-    BinaryJaccardIndex,
-)
+from torchmetrics.classification import BinaryAccuracy, BinaryJaccardIndex
 
 from torchgeo.trainers import (
     ClassificationTask,
@@ -163,7 +160,7 @@ def main(args: argparse.Namespace) -> None:
     if issubclass(TASK, ClassificationTask):
         val_row = {
             "split": "val",
-            "classification_model": hparams["classification_model"],
+            "model": hparams["model"],
             "learning_rate": hparams["learning_rate"],
             "weights": hparams["weights"],
             "loss": hparams["loss"],
@@ -171,7 +168,7 @@ def main(args: argparse.Namespace) -> None:
 
         test_row = {
             "split": "test",
-            "classification_model": hparams["classification_model"],
+            "model": hparams["model"],
             "learning_rate": hparams["learning_rate"],
             "weights": hparams["weights"],
             "loss": hparams["loss"],

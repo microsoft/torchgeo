@@ -15,10 +15,7 @@ from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torchmetrics import MetricCollection
-from torchmetrics.classification import (  # type: ignore[attr-defined]
-    MulticlassAccuracy,
-    MulticlassJaccardIndex,
-)
+from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
 
 from ..datasets.utils import unbind_samples
 from ..models import FCN
@@ -256,6 +253,25 @@ class SemanticSegmentationTask(pl.LightningModule):
         """
         self.log_dict(self.test_metrics.compute())
         self.test_metrics.reset()
+
+    def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
+        """Compute and return the predictions.
+
+        By default, this will loop over images in a dataloader and aggregate
+        predictions into a list. This may not be desirable if you have many images
+        or large images which could cause out of memory errors. In this case
+        it's recommended to override this with a custom predict_step.
+
+        Args:
+            batch: the output of your DataLoader
+
+        Returns:
+            predicted softmax probabilities
+        """
+        batch = args[0]
+        x = batch["image"]
+        y_hat: Tensor = self(x).softmax(dim=1)
+        return y_hat
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.

@@ -1,7 +1,7 @@
-cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
+# https://github.com/citation-file-format/citation-file-format/blob/main/schema-guide.md
+cff-version: "1.2.0"
+message: "If you use this software, please cite it using the metadata from this file."
 preferred-citation:
-  type: article
   authors:
   - family-names: "Stewart"
     given-names: "Adam J."
@@ -15,8 +15,20 @@ preferred-citation:
     given-names: "Juan M."
   - family-names: "Banerjee"
     given-names: "Arindam"
-  journal: "arXiv preprint arXiv:2111.08872"
+  collection-title: "Proceedings of the 30th International Conference on Advances in Geographic Information Systems"
+  collection-type: "proceedings"
+  conference:
+    city: "Seattle"
+    name: "SIGSPATIAL '22"
+    region: "Washington"
+  doi: "10.1145/3557915.3560953"
+  end: 12
+  isbn: "9781450395298"
   month: 11
+  number: 19
+  publisher: "Association for Computing Machinery"
+  start: 1
   title: "TorchGeo: Deep Learning With Geospatial Data"
-  url: "https://github.com/microsoft/torchgeo"
-  year: 2021
+  type: "conference-paper"
+  url: "https://dl.acm.org/doi/10.1145/3557915.3560953"
+  year: 2022
