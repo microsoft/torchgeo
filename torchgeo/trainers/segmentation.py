@@ -251,6 +251,11 @@ class SemanticSegmentationTask(pl.LightningModule):
     def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
         """Compute and return the predictions.
 
+        By default, this will loop over images in a dataloader and aggregate
+        predictions into a list. This may not be desirable if you have many images
+        or large images which could cause out of memory errors. In this case
+        it's recommended to override this with a custom predict_step.
+
         Args:
             batch: the output of your DataLoader
 
