@@ -6,7 +6,6 @@ experiment:
     num_filters: 1
     backbone: "resnet18"
     weights: null
-    backbone_output_stride: 16
     learning_rate: 1e-3
     learning_rate_schedule_patience: 2
     in_channels: 2
