@@ -37,7 +37,7 @@ class TestVHR10:
         monkeypatch.setitem(VHR10.image_meta, "url", url)
         md5 = "5fddb0dfd56a80638831df9f90cbf37a"
         monkeypatch.setitem(VHR10.image_meta, "md5", md5)
-        url = os.path.join("tests", "data", "vhr10", "annotations.json")
+        url = os.path.join("tests", "data", "nwpu", "annotations.json")
         monkeypatch.setitem(VHR10.target_meta, "url", url)
         md5 = "833899cce369168e0d4ee420dac326dc"
         monkeypatch.setitem(VHR10.target_meta, "md5", md5)
