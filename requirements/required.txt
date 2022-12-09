@@ -7,7 +7,7 @@ fiona==1.9a3
 kornia==0.6.8
 matplotlib==3.6.2
 numpy==1.23.5;python_version>='3.8'
-omegaconf==2.2.3
+omegaconf==2.3.0
 packaging==22.0
 pillow==9.3.0
 pyproj==3.4.0;python_version>='3.8'
