@@ -4,7 +4,6 @@ experiment:
     loss: "ce"
     segmentation_model: "unet"
     backbone: "resnet18"
-    backbone_output_stride: 16
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
     in_channels: 4

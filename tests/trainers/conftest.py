@@ -31,7 +31,7 @@ def state_dict(model: Module) -> Dict[str, Tensor]:
     return model.state_dict()
 
 
-@pytest.fixture(params=["classification_model", "backbone"])
+@pytest.fixture(params=["model", "backbone"])
 def checkpoint(
     state_dict: Dict[str, Tensor], request: SubRequest, tmp_path: Path
 ) -> str:

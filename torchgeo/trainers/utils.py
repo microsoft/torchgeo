@@ -46,15 +46,14 @@ def extract_backbone(path: str) -> Tuple[str, "OrderedDict[str, Tensor]"]:
         name = checkpoint["hyper_parameters"]["backbone"]
         state_dict = checkpoint["state_dict"]
         state_dict = OrderedDict(
-            {k: v for k, v in state_dict.items() if "model.encoder.model" in k}
+            {k: v for k, v in state_dict.items() if "model.backbone.model" in k}
         )
         state_dict = OrderedDict(
             {k.replace("model.backbone.model.", ""): v for k, v in state_dict.items()}
         )
     else:
         raise ValueError(
-            "Unknown checkpoint task. Only backbone or model"
-            " extraction is supported"
+            "Unknown checkpoint task. Only backbone or model" " extraction is supported"
         )
 
     return name, state_dict

@@ -14,7 +14,7 @@ from torchgeo.datamodules import ChesapeakeCVPRDataModule
 from torchgeo.trainers import BYOLTask
 from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
 
-from .test_utils import ClassificationTestModel
+from .test_utils import SegmentationTestModel
 
 
 class TestBYOL:
@@ -55,7 +55,7 @@ class TestBYOLTask:
         model_kwargs = conf_dict["module"]
         model = BYOLTask(**model_kwargs)
 
-        model.backbone = ClassificationTestModel(**model_kwargs)
+        model.backbone = SegmentationTestModel(**model_kwargs)
 
         # Instantiate trainer
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
