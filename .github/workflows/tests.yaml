@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.1.0
+      uses: actions/checkout@v3.2.0
     - name: Set up python
       uses: actions/setup-python@v4.3.0
       with:
@@ -39,7 +39,7 @@ jobs:
           python-version: '3.7'
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.1.0
+      uses: actions/checkout@v3.2.0
     - name: Set up python
       uses: actions/setup-python@v4.3.0
       with:
@@ -84,7 +84,7 @@ jobs:
       MPLBACKEND: Agg
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.1.0
+      uses: actions/checkout@v3.2.0
     - name: Set up python
       uses: actions/setup-python@v4.3.0
       with:
