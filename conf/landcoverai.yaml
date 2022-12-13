@@ -7,9 +7,9 @@ experiment:
   task: "landcoverai"
   module:
     loss: "ce"
-    segmentation_model: "unet"
-    encoder_name: "resnet18"
-    encoder_weights: "imagenet"
+    model: "unet"
+    backbone: "resnet18"
+    weights: "imagenet"
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
     in_channels: 3

@@ -8,10 +8,9 @@ experiment:
   name: "chesapeake_cvpr_example"
   module:
     loss: "ce"
-    segmentation_model: "unet"
-    encoder_name: "resnet18"
-    encoder_weights: null
-    encoder_output_stride: 16
+    model: "unet"
+    backbone: "resnet18"
+    weights: null
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
     in_channels: 4
