@@ -2,11 +2,10 @@ experiment:
   task: "sen12ms"
   module:
     loss: "focal"
-    segmentation_model: "fcn"
+    model: "fcn"
     num_filters: 1
-    encoder_name: "resnet18"
-    encoder_weights: null
-    encoder_output_stride: 16
+    backbone: "resnet18"
+    weights: null
     learning_rate: 1e-3
     learning_rate_schedule_patience: 2
     in_channels: 2

@@ -2,7 +2,7 @@ experiment:
   task: "chesapeake_cvpr"
   module:
     loss: "ce"
-    segmentation_model: "unet"
+    model: "unet"
     encoder_name: "resnet18"
     encoder_weights: null
     encoder_output_stride: 16

@@ -15,7 +15,7 @@ DATA_DIR = ""  # path to the LandcoverAI data directory
 
 # Hyperparameter options
 model_options = ["unet"]
-encoder_options = ["resnet18", "resnet50"]
+backbone_options = ["resnet18", "resnet50"]
 lr_options = [1e-2, 1e-3, 1e-4]
 loss_options = ["ce", "jaccard"]
 weight_init_options = ["null", "imagenet"]
@@ -35,11 +35,11 @@ def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
 if __name__ == "__main__":
     work: "Queue[str]" = Queue()
 
-    for (model, encoder, lr, loss, weight_init) in itertools.product(
-        model_options, encoder_options, lr_options, loss_options, weight_init_options
+    for (model, backbone, lr, loss, weight_init) in itertools.product(
+        model_options, backbone_options, lr_options, loss_options, weight_init_options
     ):
 
-        experiment_name = f"{model}_{encoder}_{lr}_{loss}_{weight_init}"
+        experiment_name = f"{model}_{backbone}_{lr}_{loss}_{weight_init}"
 
         output_dir = os.path.join("output", "landcoverai_experiments")
         log_dir = os.path.join(output_dir, "logs")
@@ -54,8 +54,8 @@ if __name__ == "__main__":
                 + f" experiment.module.segmentation_model={model}"
                 + f" experiment.module.learning_rate={lr}"
                 + f" experiment.module.loss={loss}"
-                + f" experiment.module.encoder_name={encoder}"
-                + f" experiment.module.encoder_weights={weight_init}"
+                + f" experiment.module.backbone={backbone}"
+                + f" experiment.module.weights={weight_init}"
                 + f" program.output_dir={output_dir}"
                 + f" program.log_dir={log_dir}"
                 + f" program.data_dir={DATA_DIR}"
