@@ -38,14 +38,10 @@ class TestObjectDetectionTask:
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:
-        return {
-            "detection_model": "faster-rcnn",
-            "backbone": "resnet18",
-            "num_classes": 2,
-        }
+        return {"model": "faster-rcnn", "backbone": "resnet18", "num_classes": 2}
 
     def test_invalid_model(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["detection_model"] = "invalid_model"
+        model_kwargs["model"] = "invalid_model"
         match = "Model type 'invalid_model' is not valid."
         with pytest.raises(ValueError, match=match):
             ObjectDetectionTask(**model_kwargs)

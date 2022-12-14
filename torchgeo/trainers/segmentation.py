@@ -31,26 +31,26 @@ class SemanticSegmentationTask(pl.LightningModule):
     Supports `Segmentation Models Pytorch
     <https://github.com/qubvel/segmentation_models.pytorch>`_
     as an architecture choice in combination with any of these
-    `TIMM encoders <https://smp.readthedocs.io/en/latest/encoders_timm.html>`_.
+    `TIMM backbones <https://smp.readthedocs.io/en/latest/encoders_timm.html>`_.
     """
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
-        if self.hyperparams["segmentation_model"] == "unet":
+        if self.hyperparams["model"] == "unet":
             self.model = smp.Unet(
-                encoder_name=self.hyperparams["encoder_name"],
-                encoder_weights=self.hyperparams["encoder_weights"],
+                encoder_name=self.hyperparams["backbone"],
+                encoder_weights=self.hyperparams["weights"],
                 in_channels=self.hyperparams["in_channels"],
                 classes=self.hyperparams["num_classes"],
             )
-        elif self.hyperparams["segmentation_model"] == "deeplabv3+":
+        elif self.hyperparams["model"] == "deeplabv3+":
             self.model = smp.DeepLabV3Plus(
-                encoder_name=self.hyperparams["encoder_name"],
-                encoder_weights=self.hyperparams["encoder_weights"],
+                encoder_name=self.hyperparams["backbone"],
+                encoder_weights=self.hyperparams["weights"],
                 in_channels=self.hyperparams["in_channels"],
                 classes=self.hyperparams["num_classes"],
             )
-        elif self.hyperparams["segmentation_model"] == "fcn":
+        elif self.hyperparams["model"] == "fcn":
             self.model = FCN(
                 in_channels=self.hyperparams["in_channels"],
                 classes=self.hyperparams["num_classes"],
@@ -58,7 +58,7 @@ class SemanticSegmentationTask(pl.LightningModule):
             )
         else:
             raise ValueError(
-                f"Model type '{self.hyperparams['segmentation_model']}' is not valid. "
+                f"Model type '{self.hyperparams['model']}' is not valid. "
                 f"Currently, only supports 'unet', 'deeplabv3+' and 'fcn'."
             )
 
@@ -83,13 +83,14 @@ class SemanticSegmentationTask(pl.LightningModule):
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
-            segmentation_model: Name of the segmentation model type to use
-            encoder_name: Name of the encoder model backbone to use
-            encoder_weights: None or "imagenet" to use imagenet pretrained weights in
-                the encoder model
+            model: Name of the segmentation model type to use
+            backbone: Name of the timm backbone to use
+            weights: None or "imagenet" to use imagenet pretrained weights in
+                the backbone
             in_channels: Number of channels in input image
             num_classes: Number of semantic classes to predict
-            loss: Name of the loss function
+            loss: Name of the loss function, currently supports
+                'ce', 'jaccard' or 'focal' loss
             ignore_index: Optional integer class index to ignore in the loss and metrics
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
@@ -99,6 +100,11 @@ class SemanticSegmentationTask(pl.LightningModule):
 
         .. versionchanged:: 0.3
            The *ignore_zeros* parameter was renamed to *ignore_index*.
+
+        .. versionchanged:: 0.4
+           The *segmentation_model* parameter was renamed to *model*,
+           *encoder_name* renamed to *backbone*, and
+           *encoder_weights* to *weights*.
         """
         super().__init__()
 
@@ -247,6 +253,25 @@ class SemanticSegmentationTask(pl.LightningModule):
         """
         self.log_dict(self.test_metrics.compute())
         self.test_metrics.reset()
+
+    def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
+        """Compute and return the predictions.
+
+        By default, this will loop over images in a dataloader and aggregate
+        predictions into a list. This may not be desirable if you have many images
+        or large images which could cause out of memory errors. In this case
+        it's recommended to override this with a custom predict_step.
+
+        Args:
+            batch: the output of your DataLoader
+
+        Returns:
+            predicted softmax probabilities
+        """
+        batch = args[0]
+        x = batch["image"]
+        y_hat: Tensor = self(x).softmax(dim=1)
+        return y_hat
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
