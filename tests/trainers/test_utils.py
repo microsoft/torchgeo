@@ -56,10 +56,7 @@ def test_extract_encoder_unsupported_model(tmp_path: Path) -> None:
     checkpoint = {"hyper_parameters": {"some_unsupported_model": "resnet18"}}
     path = os.path.join(str(tmp_path), "dummy.ckpt")
     torch.save(checkpoint, path)
-    err = (
-        "Unknown checkpoint task. Only encoder or classification_model"
-        " extraction is supported"
-    )
+    err = "Unknown checkpoint task. Only encoder or model extraction is supported"
     with pytest.raises(ValueError, match=err):
         extract_encoder(path)
 

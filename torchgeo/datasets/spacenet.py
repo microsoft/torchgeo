@@ -28,6 +28,7 @@ from .geo import NonGeoDataset
 from .utils import (
     check_integrity,
     download_radiant_mlhub_collection,
+    download_radiant_mlhub_dataset,
     extract_archive,
     percentile_normalization,
 )
@@ -40,6 +41,13 @@ class SpaceNet(NonGeoDataset, abc.ABC):
     datasets that all together contain >11M building footprints and ~20,000 km
     of road labels mapped over high-resolution satellite imagery obtained from
     a variety of sensors such as Worldview-2, Worldview-3 and Dove.
+
+    .. note::
+
+       The SpaceNet datasets require the following additional library to be installed:
+
+       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
+           imagery and labels from the Radiant Earth MLHub
     """
 
     @property
@@ -384,13 +392,6 @@ class SpaceNet1(SpaceNet):
 
     * https://arxiv.org/abs/1807.01232
 
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-         imagery and labels from the Radiant Earth MLHub
-
     """
 
     dataset_id = "spacenet1"
@@ -489,13 +490,6 @@ class SpaceNet2(SpaceNet):
     If you use this dataset in your research, please cite the following paper:
 
     * https://arxiv.org/abs/1807.01232
-
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-         imagery and labels from the Radiant Earth MLHub
 
     """
 
@@ -615,13 +609,6 @@ class SpaceNet3(SpaceNet):
     If you use this dataset in your research, please cite the following paper:
 
     * https://arxiv.org/abs/1807.01232
-
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-         imagery and labels from the Radiant Earth MLHub
 
     .. versionadded:: 0.3
     """
@@ -853,13 +840,6 @@ class SpaceNet4(SpaceNet):
 
     * https://arxiv.org/abs/1903.12239
 
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-         imagery and labels from the Radiant Earth MLHub
-
     """
 
     dataset_id = "spacenet4"
@@ -1050,13 +1030,6 @@ class SpaceNet5(SpaceNet3):
       Route Travel Time Estimation from Satellite Imagery”,
       https://spacenet.ai/sn5-challenge/
 
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-         imagery and labels from the Radiant Earth MLHub
-
     .. versionadded:: 0.2
     """
 
@@ -1122,6 +1095,149 @@ class SpaceNet5(SpaceNet3):
         )
 
 
+class SpaceNet6(SpaceNet):
+    r"""SpaceNet 6: Multi-Sensor All-Weather Mapping.
+
+    `SpaceNet 6 <https://spacenet.ai/sn6-challenge/>`_ is a dataset
+    of optical and SAR imagery over the city of Rotterdam.
+
+    Collection features:
+
+    +------------+---------------------+------------+-----------------------------+
+    |    AOI     | Area (km\ :sup:`2`\)| # Images   | # Building Footprint Labels |
+    +============+=====================+============+=============================+
+    | Rotterdam  |    120              |   3401     |         48000               |
+    +------------+---------------------+------------+-----------------------------+
+
+
+    Imagery features:
+
+    .. list-table::
+        :widths: 10 10 10 10 10 10
+        :header-rows: 1
+        :stub-columns: 1
+
+        *   -
+            - PAN
+            - RGBNIR
+            - PS-RGB
+            - PS-RGBNIR
+            - SAR-Intensity
+        *   - GSD (m)
+            - 0.5
+            - 2.0
+            - 0.5
+            - 0.5
+            - 0.5
+        *   - Chip size (px)
+            - 900 x 900
+            - 450 x 450
+            - 900 x 900
+            - 900 x 900
+            - 900 x 900
+
+
+    Dataset format:
+
+    * Imagery - GeoTIFFs from Worldview-2 (optical) and Capella Space (SAR)
+
+        * PAN.tif (Panchromatic)
+        * RGBNIR.tif (Multispectral)
+        * PS-RGB (Pansharpened RGB)
+        * PS-RGBNIR (Pansharpened RGBNIR)
+        * SAR-Intensity (SAR Intensity)
+
+    * Labels - GeoJSON
+
+        * labels.geojson
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2004.06500
+
+    .. note::
+
+       This dataset requires the following additional library to be installed:
+
+       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
+         imagery and labels from the Radiant Earth MLHub
+
+    .. versionadded:: 0.4
+    """
+
+    dataset_id = "spacenet6"
+    collections = ["sn6_AOI_11_Rotterdam"]
+    # This is actually the metadata hash
+    collection_md5_dict = {"sn6_AOI_11_Rotterdam": "66f7312218fec67a1e0b3b02b22c95cc"}
+    imagery = {
+        "PAN": "PAN.tif",
+        "RGBNIR": "RGBNIR.tif",
+        "PS-RGB": "PS-RGB.tif",
+        "PS-RGBNIR": "PS-RGBNIR.tif",
+        "SAR-Intensity": "SAR-Intensity.tif",
+    }
+    chip_size = {
+        "PAN": (900, 900),
+        "RGBNIR": (450, 450),
+        "PS-RGB": (900, 900),
+        "PS-RGBNIR": (900, 900),
+        "SAR-Intensity": (900, 900),
+    }
+    label_glob = "labels.geojson"
+
+    def __init__(
+        self,
+        root: str = "data",
+        image: str = "PS-RGB",
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        download: bool = False,
+        api_key: Optional[str] = None,
+    ) -> None:
+        """Initialize a new SpaceNet 6 Dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            image: image selection which must be in ["PAN", "RGBNIR",
+                "PS-RGB", "PS-RGBNIR", "SAR-Intensity"]
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            download: if True, download dataset and store it in the root directory.
+            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing
+        """
+        self.root = root
+        self.image = image  # For testing
+
+        self.filename = self.imagery[image]
+        self.transforms = transforms
+
+        if download:
+            self.__download(api_key)
+
+        self.files = self._load_files(os.path.join(root, self.dataset_id))
+
+    def __download(self, api_key: Optional[str] = None) -> None:
+        """Download the dataset and extract it.
+
+        Args:
+            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
+
+        Raises:
+            RuntimeError: if download doesn't work correctly or checksums don't match
+        """
+        if os.path.exists(
+            os.path.join(
+                self.root, self.dataset_id, self.collections[0], "collection.json"
+            )
+        ):
+            print("Files already downloaded and verified")
+            return
+
+        download_radiant_mlhub_dataset(self.dataset_id, self.root, api_key)
+
+
 class SpaceNet7(SpaceNet):
     """SpaceNet 7: Multi-Temporal Urban Development Challenge.
 
@@ -1154,13 +1270,6 @@ class SpaceNet7(SpaceNet):
     If you use this dataset in your research, please cite the following paper:
 
     * https://arxiv.org/abs/2102.04420
-
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-         imagery and labels from the Radiant Earth MLHub
 
     .. versionadded:: 0.2
     """

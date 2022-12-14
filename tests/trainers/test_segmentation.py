@@ -78,6 +78,7 @@ class TestSemanticSegmentationTask:
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
         trainer.test(model=model, datamodule=datamodule)
+        trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
 
     def test_no_logger(self) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", "landcoverai.yaml"))
@@ -101,9 +102,9 @@ class TestSemanticSegmentationTask:
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:
         return {
-            "segmentation_model": "unet",
-            "encoder_name": "resnet18",
-            "encoder_weights": None,
+            "model": "unet",
+            "backbone": "resnet18",
+            "weights": None,
             "in_channels": 3,
             "num_classes": 6,
             "loss": "ce",
@@ -111,7 +112,7 @@ class TestSemanticSegmentationTask:
         }
 
     def test_invalid_model(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["segmentation_model"] = "invalid_model"
+        model_kwargs["model"] = "invalid_model"
         match = "Model type 'invalid_model' is not valid."
         with pytest.raises(ValueError, match=match):
             SemanticSegmentationTask(**model_kwargs)
