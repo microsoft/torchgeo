@@ -53,7 +53,7 @@ def extract_backbone(path: str) -> Tuple[str, "OrderedDict[str, Tensor]"]:
         )
     else:
         raise ValueError(
-            "Unknown checkpoint task. Only backbone or model" " extraction is supported"
+            "Unknown checkpoint task. Only backbone or model extraction is supported"
         )
 
     return name, state_dict

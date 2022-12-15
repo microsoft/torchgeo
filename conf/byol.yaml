@@ -10,7 +10,7 @@ experiment:
     model: "byol"
     backbone: "resnet18"
     input_channels: 4
-    imagenet_pretraining: True
+    weights: imagenet
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
   datamodule:

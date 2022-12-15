@@ -17,7 +17,6 @@ experiment:
     num_classes: 7
     num_filters: 256
     ignore_index: null
-    imagenet_pretraining: True
   datamodule:
     root: "data/chesapeake/cvpr"
     train_splits:
