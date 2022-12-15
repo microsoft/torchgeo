@@ -20,4 +20,4 @@ shapely==2.0.0
 timm==0.4.12
 torch==1.13.1
 torchmetrics==0.11.0
-torchvision==0.14.0
+torchvision==0.14.1
