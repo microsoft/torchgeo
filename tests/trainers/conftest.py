@@ -31,7 +31,7 @@ def state_dict(model: Module) -> Dict[str, Tensor]:
     return model.state_dict()
 
 
-@pytest.fixture(params=["model", "encoder_name"])
+@pytest.fixture(params=["model", "backbone"])
 def checkpoint(
     state_dict: Dict[str, Tensor], request: SubRequest, tmp_path: Path
 ) -> str:
@@ -39,7 +39,7 @@ def checkpoint(
         state_dict = OrderedDict({"model." + k: v for k, v in state_dict.items()})
     else:
         state_dict = OrderedDict(
-            {"model.encoder.model." + k: v for k, v in state_dict.items()}
+            {"model.backbone.model." + k: v for k, v in state_dict.items()}
         )
     checkpoint = {
         "hyper_parameters": {request.param: "resnet18"},

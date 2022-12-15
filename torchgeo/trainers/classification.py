@@ -80,7 +80,7 @@ class ClassificationTask(pl.LightningModule):
             raise ValueError(f"Model type '{model}' is not a valid timm model.")
 
         if custom_pretrained:
-            name, state_dict = utils.extract_encoder(self.hyperparams["weights"])
+            name, state_dict = utils.extract_backbone(self.hyperparams["weights"])
 
             if self.hyperparams["model"] != name:
                 raise ValueError(

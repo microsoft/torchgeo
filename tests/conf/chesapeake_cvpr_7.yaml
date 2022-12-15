@@ -3,16 +3,14 @@ experiment:
   module:
     loss: "ce"
     model: "unet"
-    encoder_name: "resnet18"
-    encoder_weights: null
-    encoder_output_stride: 16
+    backbone: "resnet18"
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
     in_channels: 4
     num_classes: 7
     num_filters: 1
     ignore_index: null
-    imagenet_pretraining: True
+    weights: imagenet
   datamodule:
     root: "tests/data/chesapeake/cvpr"
     train_splits:
