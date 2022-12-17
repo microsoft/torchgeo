@@ -579,6 +579,9 @@ class IDTReeS(NonGeoDataset):
 
         Raises:
             ImportError: if pyvista is not installed
+
+        .. versionchanged:: 0.4
+           Ported from Open3D to PyVista, *colormap* parameter removed.
         """
         try:
             import pyvista  # noqa: F401
