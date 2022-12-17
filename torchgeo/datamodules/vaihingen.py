@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader, Dataset
 from torch.utils.data._utils.collate import default_collate
 from torchvision.transforms import Compose
 
-from torchgeo.samplers.utils import _to_tuple
+from ..samplers.utils import _to_tuple
 
 from ..datasets import Vaihingen2D
 from .utils import dataset_split
