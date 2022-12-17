@@ -599,7 +599,7 @@ class IDTReeS(NonGeoDataset):
         # Some point cloud files have no color->points mapping
         if hasattr(las, "red"):
             colors = np.stack([las.red, las.green, las.blue], axis=0)
-            colors = colors.transpose((1, 0)) / 65535
+            colors = colors.transpose((1, 0)) / np.iinfo(np.uint16).max
             point_cloud["colors"] = colors
 
         return point_cloud

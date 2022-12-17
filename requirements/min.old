@@ -29,6 +29,7 @@ open3d==0.11.2
 opencv-python==3.4.2.17
 pandas==0.23.2
 pycocotools==2.0.0
+pyvista==0.20.0
 radiant-mlhub==0.2.1
 rarfile==3.0
 scipy==1.2.0
