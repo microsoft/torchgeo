@@ -144,6 +144,4 @@ class TestIDTReeS:
 
         # Test point cloud without colors
         point_cloud = dataset.plot_las(index=0)
-        pyvista.plot(  # type: ignore[attr-defined]
-            point_cloud, scalars=point_cloud.points, cpos="yz", cmap="viridis"
-        )
+        pyvista.plot(point_cloud, scalars=point_cloud.points, cpos="yz", cmap="viridis")
