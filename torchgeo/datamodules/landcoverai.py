@@ -97,7 +97,7 @@ class LandCoverAIDataModule(pl.LightningDataModule):
         sample["image"] /= 255.0
 
         if "mask" in sample:
-            sample["mask"] = sample["mask"].long() + 1
+            sample["mask"] = sample["mask"].long()
 
         return sample
 
