@@ -91,7 +91,7 @@ class CloudCoverDetection(NonGeoDataset):
 
     band_names = ["B02", "B03", "B04", "B08"]
 
-    RGB_BANDS = ["B04", "B03", "B02"]
+    rgb_bands = ["B04", "B03", "B02"]
 
     def __init__(
         self,
@@ -364,7 +364,7 @@ class CloudCoverDetection(NonGeoDataset):
             ValueError: if dataset does not contain an RGB band
         """
         rgb_indices = []
-        for band in self.RGB_BANDS:
+        for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:

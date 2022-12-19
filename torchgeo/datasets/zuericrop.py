@@ -58,7 +58,7 @@ class ZueriCrop(NonGeoDataset):
     filenames = ["ZueriCrop.hdf5", "labels.csv"]
 
     band_names = ("NIR", "B03", "B02", "B04", "B05", "B06", "B07", "B11", "B12")
-    RGB_BANDS = ["B04", "B03", "B02"]
+    rgb_bands = ["B04", "B03", "B02"]
 
     def __init__(
         self,
@@ -281,7 +281,7 @@ class ZueriCrop(NonGeoDataset):
         .. versionadded:: 0.2
         """
         rgb_indices = []
-        for band in self.RGB_BANDS:
+        for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
