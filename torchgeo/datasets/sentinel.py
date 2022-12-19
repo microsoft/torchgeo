@@ -148,8 +148,7 @@ class Sentinel1(Sentinel):
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
-            bands: bands to return, either ["HH", "HV"] or ["VV", "VH"]
-                (defaults to ["VV", "VH"])
+            bands: bands to return (defaults to ["VV", "VH"])
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
@@ -158,9 +157,23 @@ class Sentinel1(Sentinel):
             AssertionError: if ``bands`` is invalid
             FileNotFoundError: if no files are found in ``root``
         """
+        assert len(bands) > 0, "'bands' cannot be an empty list"
+        assert len(bands) == len(set(bands)), "'bands' contains duplicate bands"
+
+        for band in bands:
+            assert band in self.all_bands, f"invalid band '{band}'"
+
         # Sentinel-1 uses dual polarization, it can only transmit either
         # horizontal or vertical at a single time
-        assert list(bands) == ["HH", "HV"] or list(bands) == ["VV", "VH"]
+        msg = """
+'bands' cannot contain both horizontal and vertical transmit at the same time.
+To create a dataset containing both, use:
+
+    horizontal = Sentinel1(root, bands=["HH", "HV"])
+    vertical = Sentinel1(root, bands=["VV", "VH"])
+    dataset = horizontal | vertical
+"""
+        assert len(set([band[0] for band in bands])) == 1, msg
 
         self.filename_glob = self.filename_glob.format(bands[0])
 
@@ -182,17 +195,36 @@ class Sentinel1(Sentinel):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        # Either HH/HV or VV/VH, doesn't really matter which
-        hh = sample["image"][0]  # transmit == receive (HH or VV)
-        hv = sample["image"][1]  # transmit != receive (HV or VH)
-        hh_hv = hh / hv
+        bands = self.bands
 
-        # https://gis.stackexchange.com/a/400780/123758
-        hh = torch.clamp(hh / 0.3, min=0, max=1)
-        hv = torch.clamp(hv / 0.05, min=0, max=1)
-        hh_hv = torch.clamp(hh_hv / 25, min=0, max=1)
+        if len(bands) == 1:
+            # Only horizontal or vertical receive, plot as grayscale
 
-        image = torch.stack((hh, hv, hh_hv), dim=-1)
+            image = sample["image"][0]
+            image = torch.clamp(image, min=0, max=1)
+
+            title = "({0})".format(bands[0])
+        else:
+            # Both horizontal and vertical receive, plot as RGB
+
+            # Deal with reverse order
+            if bands in [["HV", "HH"], ["VH", "VV"]]
+                bands = bands[::-1]
+                sample["image"] = sample["image"][::-1]
+
+            # Could be horizontal or vertical transmit, doesn't really matter which
+            hh = sample["image"][0]  # transmit == receive (HH or VV)
+            hv = sample["image"][1]  # transmit != receive (HV or VH)
+            hh_hv = hh / hv  # ratio (HH/HV or VV/VH)
+
+            # https://gis.stackexchange.com/a/400780/123758
+            hh = torch.clamp(hh / 0.3, min=0, max=1)
+            hv = torch.clamp(hv / 0.05, min=0, max=1)
+            hh_hv = torch.clamp(hh_hv / 25, min=0, max=1)
+
+            image = torch.stack((hh, hv, hh_hv), dim=-1)
+
+            title = "({0}, {1}, {0}/{1})".format(*bands)
 
         fig, ax = plt.subplots(1, 1, figsize=(4, 4))
 
@@ -200,7 +232,6 @@ class Sentinel1(Sentinel):
         ax.axis("off")
 
         if show_titles:
-            title = "({0}, {1}, {0}/{1})".format(*self.bands)
             ax.set_title(title)
 
         if suptitle is not None:

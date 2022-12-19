@@ -3,6 +3,7 @@
 
 import os
 from pathlib import Path
+from typing import List
 
 import matplotlib.pyplot as plt
 import pytest
@@ -21,7 +22,20 @@ from torchgeo.datasets import (
 
 
 class TestSentinel1:
-    @pytest.fixture(params=[("VV", "VH"), ("HH", "HV")])
+    @pytest.fixture(
+        params=[
+            # Only horizontal or vertical receive
+            ["HH"],
+            ["HV"],
+            ["VV"],
+            ["VH"],
+            # Both horizontal and vertical receive
+            ["HH", "HV"],
+            ["HV", "HH"],
+            ["VV", "VH"],
+            ["VH", "VV"],
+        ]
+    )
     def dataset(self, request: SubRequest) -> Sentinel1:
         root = os.path.join("tests", "data", "sentinel1")
         bands = request.param
@@ -53,6 +67,25 @@ class TestSentinel1:
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="No Sentinel1 data was found in "):
             Sentinel1(str(tmp_path))
+
+    def test_empty_bands(self) -> None:
+        with pytest.raises(AssertionError, match="'bands' cannot be an empty list"):
+            Sentinel1(bands=[])
+
+    @pytest.mark.parametrize("bands", [["HH", "HH"], ["HH", "HV", "HH"]])
+    def test_duplicate_bands(self, bands: List[str]) -> None:
+        with pytest.raises(AssertionError, match="'bands' contains duplicate bands"):
+            Sentinel1(bands=bands)
+
+    @pytest.mark.parametrize("bands", [["HH_HV"], ["HH", "HV", "HH_HV"])
+    def test_invalid_bands(self, bands: List[str]) -> None:
+        with pytest.raises(AssertionError, match="invalid band 'HH_HV'"):
+            Sentinel1(bands=bands)
+
+    @pytest.mark.parametrize("bands", [["HH", "VV"], ["HH", "VH"], ["VV", "HV"])
+    def test_invalid_bands(self, bands: List[str]) -> None:
+        with pytest.raises(AssertionError, match="'bands' cannot contain both "):
+            Sentinel1(bands=bands)
 
     def test_invalid_query(self, dataset: Sentinel1) -> None:
         query = BoundingBox(-1, -1, -1, -1, -1, -1)
