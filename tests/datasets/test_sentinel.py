@@ -82,7 +82,9 @@ class TestSentinel1:
         with pytest.raises(AssertionError, match="invalid band 'HH_HV'"):
             Sentinel1(bands=bands)
 
-    @pytest.mark.parametrize("bands", [["HH", "VV"], ["HH", "VH"], ["VV", "HV"])
+    @pytest.mark.parametrize(
+        "bands", [["HH", "VV"], ["HH", "VH"], ["VV", "HV"], ["HH", "HV", "VV", "VH"]]
+    )
     def test_invalid_bands(self, bands: List[str]) -> None:
         with pytest.raises(AssertionError, match="'bands' cannot contain both "):
             Sentinel1(bands=bands)
