@@ -148,7 +148,8 @@ class Sentinel1(Sentinel):
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
-            bands: bands to return (defaults to all bands)
+            bands: bands to return, either ["HH", "HV"] or ["VV", "VH"]
+                (defaults to ["VV", "VH"])
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
@@ -182,8 +183,8 @@ class Sentinel1(Sentinel):
             a matplotlib Figure with the rendered sample
         """
         # Either HH/HV or VV/VH, doesn't really matter which
-        hh = sample["image"][0]
-        hv = sample["image"][1]
+        hh = sample["image"][0]  # transmit == receive (HH or VV)
+        hv = sample["image"][1]  # transmit != receive (HV or VH)
         hh_hv = hh / hv
 
         # https://gis.stackexchange.com/a/400780/123758
