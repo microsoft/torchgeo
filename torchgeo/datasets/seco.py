@@ -35,7 +35,7 @@ class SeasonalContrastS2(NonGeoDataset):
     * https://arxiv.org/pdf/2103.16607.pdf
     """
 
-    ALL_BANDS = [
+    all_bands = [
         "B1",
         "B2",
         "B3",
@@ -49,7 +49,7 @@ class SeasonalContrastS2(NonGeoDataset):
         "B11",
         "B12",
     ]
-    RGB_BANDS = ["B4", "B3", "B2"]
+    rgb_bands = ["B4", "B3", "B2"]
 
     urls = {
         # 7.3 GB
@@ -68,7 +68,7 @@ class SeasonalContrastS2(NonGeoDataset):
         self,
         root: str = "data",
         version: str = "100k",
-        bands: List[str] = RGB_BANDS,
+        bands: List[str] = rgb_bands,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -90,7 +90,7 @@ class SeasonalContrastS2(NonGeoDataset):
         """
         assert version in ["100k", "1m"]
         for band in bands:
-            assert band in self.ALL_BANDS
+            assert band in self.all_bands
 
         self.root = root
         self.bands = bands
@@ -259,7 +259,7 @@ class SeasonalContrastS2(NonGeoDataset):
             raise ValueError("This dataset doesn't support plotting predictions")
 
         rgb_indices = []
-        for band in self.RGB_BANDS:
+        for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:

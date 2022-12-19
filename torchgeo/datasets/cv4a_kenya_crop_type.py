@@ -103,7 +103,7 @@ class CV4AKenyaCropType(NonGeoDataset):
         "CLD",
     )
 
-    RGB_BANDS = ["B04", "B03", "B02"]
+    rgb_bands = ["B04", "B03", "B02"]
 
     # Same for all tiles
     tile_height = 3035
@@ -422,7 +422,7 @@ class CV4AKenyaCropType(NonGeoDataset):
         .. versionadded:: 0.2
         """
         rgb_indices = []
-        for band in self.RGB_BANDS:
+        for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
