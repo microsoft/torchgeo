@@ -99,6 +99,7 @@ from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
     BoundingBox,
+    collate_patches_per_tile,
     concat_samples,
     merge_samples,
     stack_samples,
@@ -210,4 +211,5 @@ __all__ = (
     "merge_samples",
     "stack_samples",
     "unbind_samples",
+    "collate_patches_per_tile",
 )

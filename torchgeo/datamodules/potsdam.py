@@ -13,10 +13,9 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import Compose
 
-from torchgeo.datasets.utils import collate_patches_per_tile
-from torchgeo.samplers.utils import _to_tuple
-
 from ..datasets import Potsdam2D
+from ..datasets.utils import collate_patches_per_tile
+from ..samplers.utils import _to_tuple
 from .utils import dataset_split
 
 
