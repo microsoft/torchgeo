@@ -101,6 +101,7 @@ from .utils import (
     BoundingBox,
     concat_samples,
     merge_samples,
+    rearrange_patches_to_sample,
     stack_samples,
     unbind_samples,
 )
@@ -210,4 +211,5 @@ __all__ = (
     "merge_samples",
     "stack_samples",
     "unbind_samples",
+    "rearrange_patches_to_sample",
 )

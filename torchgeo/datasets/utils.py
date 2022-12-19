@@ -218,22 +218,6 @@ def download_radiant_mlhub_collection(
     collection.download(output_dir=download_root, api_key=api_key)
 
 
-def collate_patches_per_tile(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Define collate function to combine patches per tile and batch size.
-
-    Args:
-        batch: sample batch from dataloader containing image and mask
-
-    Returns:
-        sample batch where the batch dimension is
-        'train_batch_size' * 'num_patches_per_tile'
-    """
-    r_batch: Dict[str, Any] = default_collate(batch)  # type: ignore[no-untyped-call]
-    r_batch["image"] = rearrange(r_batch["image"], "b t c h w -> (b t) c h w")
-    r_batch["mask"] = rearrange(r_batch["mask"], "b t h w -> (b t) h w")
-    return r_batch
-
-
 @dataclass(frozen=True)
 class BoundingBox:
     """Data class for indexing spatiotemporal data."""
@@ -614,6 +598,25 @@ def unbind_samples(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
         if isinstance(values, Tensor):
             sample[key] = torch.unbind(values)
     return _dict_list_to_list_dict(sample)
+
+
+def rearrange_patches_to_sample(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Define collate function to combine patches per tile and batch size.
+
+    Args:
+        batch: sample batch from dataloader containing image and mask
+
+    Returns:
+        sample batch where the batch dimension is
+        'batch_size' * 'num_patches_per_tile'
+
+    .. versionadded: 0.4
+    """
+    r_batch: Dict[str, Any] = default_collate(batch)  # type: ignore[no-untyped-call]
+    if "mask" in r_batch:
+        r_batch["mask"] = rearrange(r_batch["mask"], "b t h w -> (b t) h w")
+    r_batch["image"] = rearrange(r_batch["image"], "b t c h w -> (b t) c h w")
+    return r_batch
 
 
 def rasterio_loader(path: str) -> "np.typing.NDArray[np.int_]":
