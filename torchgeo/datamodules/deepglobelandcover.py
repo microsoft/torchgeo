@@ -9,13 +9,15 @@ from typing import Any, Dict, Optional, Tuple, Union
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-import torch
 from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import Compose
 
+from torchgeo.datasets.utils import _pad_segmentation_sample
+
 from ..datasets import DeepGlobeLandCover
-from ..datasets.utils import rearrange_samples
+from ..datasets.utils import flatten_samples
 from ..samplers.utils import _to_tuple
+from ..transforms import PatchesAugmentation
 from .utils import dataset_split
 
 
@@ -86,6 +88,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         self.rcrop = K.AugmentationSequential(
             K.RandomCrop(self.patch_size), data_keys=["input", "mask"]
         )
+        self.dataset_keys = ["image", "mask"]
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
@@ -112,49 +115,17 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             Add functionality to randomly crop patches from a tile during
             training and pad validation and test samples to next multiple of 32
         """
-
-        def n_random_crop(sample: Dict[str, Any]) -> Dict[str, Any]:
-            """Construct 'num_patches_per_tile' random patches of input tile.
-
-            Args:
-                sample: contains image and mask tile from dataset
-
-            Returns:
-                stacked randomly cropped patches from input tile
-            """
-            images, masks = [], []
-            for i in range(self.num_patches_per_tile):
-                image, mask = self.rcrop(sample["image"], sample["mask"].float())
-                images.append(image.squeeze(0))
-                masks.append(mask.squeeze().long())
-
-            sample["image"] = torch.stack(images)
-            sample["mask"] = torch.stack(masks)
-            return sample
-
-        def pad_to(sample: Dict[str, Any]) -> Dict[str, Any]:
-            """Pad image and mask to next multiple of 32.
-
-            Args:
-                sample: contains image and mask sample from dataset
-
-            Returns:
-                padded image and mask
-            """
-            h, w = sample["image"].shape[1], sample["image"].shape[2]
-            new_h = int(32 * ((h // 32) + 1))
-            new_w = int(32 * ((w // 32) + 1))
-
-            padto = K.PadTo((new_h, new_w))
-
-            sample["image"] = padto(sample["image"])[0]
-            sample["mask"] = padto(sample["mask"].float()).long()[0, 0]
-            return sample
-
-        train_transforms = Compose([self.preprocess, n_random_crop])
+        train_transforms = Compose(
+            [
+                self.preprocess,
+                PatchesAugmentation(
+                    self.rcrop, self.num_patches_per_tile, self.dataset_keys
+                ),
+            ]
+        )
         # for testing and validation we pad all inputs to next larger multiple of 32
         # to avoid issues with upsampling paths in encoder-decoder architectures
-        test_transforms = Compose([self.preprocess, pad_to])
+        test_transforms = Compose([self.preprocess, _pad_segmentation_sample])
 
         train_dataset = DeepGlobeLandCover(
             split="train", transforms=train_transforms, **self.kwargs
@@ -189,7 +160,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             self.train_dataset,
             batch_size=self.num_tiles_per_batch,
             num_workers=self.num_workers,
-            collate_fn=rearrange_samples,
+            collate_fn=flatten_samples,
             shuffle=True,
         )
 
@@ -212,7 +183,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
                 batch_size=1,
                 num_workers=self.num_workers,
                 shuffle=False,
-                collate_fn=rearrange_samples,
+                collate_fn=flatten_samples,
             )
 
     def test_dataloader(self) -> DataLoader[Dict[str, Any]]:

@@ -27,10 +27,10 @@ from typing import (
     overload,
 )
 
+import kornia.augmentation as K
 import numpy as np
 import rasterio
 import torch
-from einops import rearrange
 from torch import Tensor
 from torch.utils.data._utils.collate import default_collate
 from torchvision.datasets.utils import check_integrity, download_url
@@ -600,23 +600,48 @@ def unbind_samples(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
     return _dict_list_to_list_dict(sample)
 
 
-def rearrange_samples(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Define collate function to combine patches per tile and batch size.
+def flatten_samples(samples: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
+    """Flatten the first two dimensions of a list of samples.
+
+    Useful for combining several patches per sample into a batch of samples.
 
     Args:
-        batch: sample batch from dataloader containing image and mask
+        samples: list of samples
 
     Returns:
-        sample batch where the batch dimension is
-        'batch_size' * 'num_patches_per_tile'
+        a single sample
 
     .. versionadded: 0.4
     """
-    r_batch: Dict[str, Any] = default_collate(batch)  # type: ignore[no-untyped-call]
-    if "mask" in r_batch:
-        r_batch["mask"] = rearrange(r_batch["mask"], "b t h w -> (b t) h w")
-    r_batch["image"] = rearrange(r_batch["image"], "b t c h w -> (b t) c h w")
-    return r_batch
+    collated: Dict[str, Any] = default_collate(samples)  # type: ignore[no-untyped-call]
+    return {key: torch.flatten(val, end_dim=1) for key, val in collated.items()}
+
+
+def _pad_segmentation_sample(sample: Dict[str, Any]) -> Dict[str, Any]:
+    """Pad image and mask to next multiple of 32.
+
+    This is useful for padding segmentation task samples where
+    architectures often rely on the image dimensions being a
+    multiple of 32.
+
+    Args:
+        sample: contains image and mask sample from dataset
+
+    Returns:
+        padded image and mask
+
+    .. versionadded: 0.4
+    """
+    h, w = sample["image"].shape[1], sample["image"].shape[2]
+    new_h = int(32 * ((h // 32) + 1))
+    new_w = int(32 * ((w // 32) + 1))
+
+    padto = K.PadTo((new_h, new_w))
+
+    sample["image"] = padto(sample["image"])[0]
+    # mask has long type but Kornia expects float
+    sample["mask"] = padto(sample["mask"].float()).long()[0, 0]
+    return sample
 
 
 def rasterio_loader(path: str) -> "np.typing.NDArray[np.int_]":
