@@ -210,7 +210,7 @@ To create a dataset containing both, use:
             # Deal with reverse order
             if bands in [["HV", "HH"], ["VH", "VV"]]:
                 bands = bands[::-1]
-                sample["image"] = sample["image"][::-1]
+                sample["image"] = torch.flip(sample["image"], dims=[0])
 
             # Could be horizontal or vertical transmit, doesn't really matter which
             hh = sample["image"][0]  # transmit == receive (HH or VV)
