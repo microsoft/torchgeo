@@ -179,5 +179,5 @@ class SpaceNet1DataModule(pl.LightningDataModule):
         )
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.SpaceNet1.plot`."""
+        """Run :meth:`torchgeo.datasets.SpaceNet.plot`."""
         return self.dataset.plot(*args, **kwargs)
