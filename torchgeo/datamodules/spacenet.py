@@ -25,7 +25,12 @@ class SpaceNet1DataModule(pl.LightningDataModule):
     """
 
     def __init__(
-        self, batch_size: int = 64, num_workers: int = 0, val_split_pct: float = 0.1, test_split_pct: float = 0.2, **kwargs: Any
+        self,
+        batch_size: int = 64,
+        num_workers: int = 0,
+        val_split_pct: float = 0.1,
+        test_split_pct: float = 0.2,
+        **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for SpaceNet1.
 
@@ -169,6 +174,5 @@ class SpaceNet1DataModule(pl.LightningDataModule):
         )
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.SpaceNet1.plot`.
-        """
+        """Run :meth:`torchgeo.datasets.SpaceNet1.plot`."""
         return self.dataset.plot(*args, **kwargs)
