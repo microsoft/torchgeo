@@ -4,6 +4,7 @@
 """Dataset splitting utilities."""
 
 from copy import deepcopy
+from math import floor
 from typing import Any, List, Optional, Sequence, Union
 
 from rtree.index import Index, Property
@@ -71,7 +72,11 @@ def random_bbox_splitting(
 
     .. versionadded:: 0.4
     """
-    assert sum(fractions) == 1, "fractions must add up to 1"
+    if sum(fractions) != 1:
+        raise ValueError("Sum of input fractions must equal 1.")
+
+    if any(n <= 0 for n in fractions):
+        raise ValueError("All items in input fractions must be greater than 0.")
 
     new_indexes = [
         Index(interleaved=False, properties=Property(dimension=3)) for _ in fractions
@@ -108,7 +113,7 @@ def random_bbox_assignment(
 
     Args:
         dataset: dataset to be split
-        lengths: lengths of splits to be produced
+        lengths: lengths or fractions of splits to be produced
         generator: (optional) generator used for the random permutation
 
     Returns
@@ -117,6 +122,22 @@ def random_bbox_assignment(
     .. versionadded:: 0.4
     """
     hits = list(dataset.index.intersection(dataset.index.bounds, objects=True))
+    if sum(lengths) != 1 or sum(lengths) != len(hits):
+        raise ValueError(
+            "Sum of input lengths must equal 1 or be the length of the dataset's index."
+        )
+
+    if any(n <= 0 for n in lengths):
+        raise ValueError("All items in input lengths must be greater than 0.")
+
+    if sum(lengths) == 1:
+        lengths = [floor(frac * len(hits)) for frac in lengths]
+        remainder = len(hits) - sum(lengths)
+        # add 1 to all the lengths in round-robin fashion until the remainder is 0
+        for i in range(remainder):
+            idx_to_add_at = i % len(lengths)
+            lengths[idx_to_add_at] += 1
+
     hits = [hits[i] for i in randperm(sum(lengths), generator=generator)]
 
     new_indexes = [
