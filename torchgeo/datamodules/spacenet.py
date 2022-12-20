@@ -22,6 +22,8 @@ class SpaceNet1DataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the SpaceNet1 dataset.
 
     Randomly splits into train/val/test.
+
+    .. versionadded:: 0.4
     """
 
     def __init__(
@@ -110,6 +112,9 @@ class SpaceNet1DataModule(pl.LightningDataModule):
         sample["image"] /= 255.0
 
         if "mask" in sample:
+            # We add 1 to the mask to map the current {background, building} labels to
+            # the values {1, 2}. This is necessary because we add 0 padding to the
+            # mask that we want to ignore in the loss function.
             sample["mask"] = self.padto(sample["mask"].float() + 1).squeeze()
             sample["mask"] = sample["mask"].long()
         return sample
