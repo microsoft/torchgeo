@@ -309,7 +309,6 @@ class RasterDataset(GeoDataset):
         bands: Optional[Sequence[str]] = None,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         cache: bool = True,
-        extent_crop: Optional[Tuple[float, float, float, float]] = None,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -323,8 +322,6 @@ class RasterDataset(GeoDataset):
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
-            extent_crop: (skip_bottom, skip_left, skip_top, skip_right) crop
-                underlying raster by skipping a proportion of it from its edges
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
@@ -367,11 +364,7 @@ class RasterDataset(GeoDataset):
                         date = match.group("date")
                         mint, maxt = disambiguate_timestamp(date, self.date_format)
 
-                    if extent_crop:
-                        bbox = BoundingBox(minx, maxx, miny, maxy, mint, maxt)
-                        coords = tuple(bbox.extent_crop(*extent_crop))
-                    else:
-                        coords = (minx, maxx, miny, maxy, mint, maxt)
+                    coords = (minx, maxx, miny, maxy, mint, maxt)
                     self.index.insert(i, coords, filepath)
                     i += 1
 
