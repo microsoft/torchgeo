@@ -75,7 +75,7 @@ def create_test_image(img_dir: str, imgs: List[str]) -> List[List[float]]:
     """
     for img in imgs:
         imgpath = os.path.join(img_dir, img)
-        Z = np.random.randint(0, 255, size=(256,256), dtype="uint16")
+        Z = np.random.randint(0, 255, size=(256, 256), dtype="uint16")
         count = img_count[img]
         with rasterio.open(
             imgpath,
