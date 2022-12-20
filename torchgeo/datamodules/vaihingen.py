@@ -5,8 +5,8 @@
 
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import matplotlib.pyplot as plt
 import kornia.augmentation as K
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 from einops import rearrange
