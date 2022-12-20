@@ -27,7 +27,6 @@ from typing import (
     overload,
 )
 
-import kornia.augmentation as K
 import numpy as np
 import rasterio
 import torch
@@ -614,34 +613,13 @@ def flatten_samples(samples: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
     .. versionadded: 0.4
     """
     collated: Dict[str, Any] = default_collate(samples)  # type: ignore[no-untyped-call]
-    return {key: torch.flatten(val, end_dim=1) for key, val in collated.items()}
-
-
-def _pad_segmentation_sample(sample: Dict[str, Any]) -> Dict[str, Any]:
-    """Pad image and mask to next multiple of 32.
-
-    This is useful for padding segmentation task samples where
-    architectures often rely on the image dimensions being a
-    multiple of 32.
-
-    Args:
-        sample: contains image and mask sample from dataset
-
-    Returns:
-        padded image and mask
-
-    .. versionadded: 0.4
-    """
-    h, w = sample["image"].shape[1], sample["image"].shape[2]
-    new_h = int(32 * ((h // 32) + 1))
-    new_w = int(32 * ((w // 32) + 1))
-
-    padto = K.PadTo((new_h, new_w))
-
-    sample["image"] = padto(sample["image"])[0]
-    # mask has long type but Kornia expects float
-    sample["mask"] = padto(sample["mask"].float()).long()[0, 0]
-    return sample
+    flattened_sample: Dict[str, Any] = {}
+    for key, val in collated.items():
+        if isinstance(val, Tensor):
+            flattened_sample[key] = torch.flatten(val, end_dim=1)
+        else:
+            flattened_sample[key] = val
+    return flattened_sample
 
 
 def rasterio_loader(path: str) -> "np.typing.NDArray[np.int_]":

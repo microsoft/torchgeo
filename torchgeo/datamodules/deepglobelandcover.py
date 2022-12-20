@@ -12,12 +12,10 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import Compose
 
-from torchgeo.datasets.utils import _pad_segmentation_sample
-
 from ..datasets import DeepGlobeLandCover
 from ..datasets.utils import flatten_samples
 from ..samplers.utils import _to_tuple
-from ..transforms import PatchesAugmentation
+from ..transforms import PadSegmentationSamples, PatchesAugmentation
 from .utils import dataset_split
 
 
@@ -122,7 +120,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         )
         # for testing and validation we pad all inputs to next larger multiple of 32
         # to avoid issues with upsampling paths in encoder-decoder architectures
-        test_transforms = Compose([self.preprocess, _pad_segmentation_sample])
+        test_transforms = Compose([self.preprocess, PadSegmentationSamples(32)])
 
         train_dataset = DeepGlobeLandCover(
             split="train", transforms=train_transforms, **self.kwargs

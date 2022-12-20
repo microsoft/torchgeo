@@ -19,7 +19,11 @@ from .indices import (
     AppendSWI,
     AppendTriBandNormalizedDifferenceIndex,
 )
-from .transforms import AugmentationSequential, PatchesAugmentation
+from .transforms import (
+    AugmentationSequential,
+    PadSegmentationSamples,
+    PatchesAugmentation,
+)
 
 __all__ = (
     "AppendBNDVI",
@@ -38,4 +42,5 @@ __all__ = (
     "AppendTriBandNormalizedDifferenceIndex",
     "AugmentationSequential",
     "PatchesAugmentation",
+    "PadSegmentationSamples",
 )

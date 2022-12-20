@@ -135,3 +135,52 @@ class PatchesAugmentation:
             sample["boxes"] = sample["boxes"].to(boxes_dtype)
 
         return sample
+
+
+class PadSegmentationSamples:
+    """Pad Segmentation samples to a next multiple.
+
+    This is useful for several segmentation models that
+    except the input dimensions to be a multiple of 32.
+
+    .. versionadded: 0.4
+    """
+
+    def __init__(self, multiple: int = 32):
+        """Initialize a new instance of PadSegmentationSamples.
+
+        Args:
+            multiple: what next multiple to pad to
+
+        Raises:
+            AssertionError if *multiple* is not positve.
+        """
+        assert multiple > 0, "Multiple argument must be positive"
+        self.multiple = multiple
+
+    def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Pad samples to next multiple.
+
+        Args:
+            sample: contains image and mask tile from dataset
+
+        Returns:
+            stacked randomly cropped patches from input tile
+        """
+        if "image" in sample:
+            dim_key = "image"
+        else:
+            dim_key = "mask"
+
+        h, w = sample[dim_key].shape[1], sample[dim_key].shape[2]
+        new_h = int(self.multiple * ((h // self.multiple) + 1))
+        new_w = int(self.multiple * ((w // self.multiple) + 1))
+
+        padto = K.PadTo((new_h, new_w))
+
+        if "image" in sample:
+            sample["image"] = padto(sample["image"])[0]
+        # mask has long type but Kornia expects float
+        if "mask" in sample:
+            sample["mask"] = padto(sample["mask"].float()).long()[0, 0]
+        return sample
