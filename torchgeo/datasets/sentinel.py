@@ -173,7 +173,7 @@ To create a dataset containing both, use:
     vertical = Sentinel1(root, bands=["VV", "VH"])
     dataset = horizontal | vertical
 """
-        assert len(set([band[0] for band in bands])) == 1, msg
+        assert len({band[0] for band in bands}) == 1, msg
 
         self.filename_glob = self.filename_glob.format(bands[0])
 
@@ -203,7 +203,7 @@ To create a dataset containing both, use:
             image = sample["image"][0]
             image = torch.clamp(image, min=0, max=1)
 
-            title = "({0})".format(bands[0])
+            title = f"({bands[0]})"
         else:
             # Both horizontal and vertical receive, plot as RGB
 
