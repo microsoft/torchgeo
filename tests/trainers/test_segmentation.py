@@ -39,6 +39,7 @@ class TestSemanticSegmentationTask:
             ("chesapeake_cvpr_5", ChesapeakeCVPRDataModule),
             ("deepglobelandcover_0", DeepGlobeLandCoverDataModule),
             ("deepglobelandcover_5", DeepGlobeLandCoverDataModule),
+            # ("deepglobelandcover_batch_size", DeepGlobeLandCoverDataModule),
             ("etci2021", ETCI2021DataModule),
             ("inria_train", InriaAerialImageLabelingDataModule),
             ("inria_val", InriaAerialImageLabelingDataModule),
@@ -152,3 +153,26 @@ class TestSemanticSegmentationTask:
         model = SemanticSegmentationTask(**model_kwargs)
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.validate(model=model, datamodule=datamodule)
+
+    @pytest.mark.parametrize(
+        "name,classname",
+        [("deepglobelandcover_batch_size", DeepGlobeLandCoverDataModule)],
+    )
+    def test_batch_size_warning(
+        self,
+        model_kwargs: Dict[Any, Any],
+        name: str,
+        classname: Type[LightningDataModule],
+    ) -> None:
+        conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
+        conf_dict = OmegaConf.to_object(conf.experiment)
+        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+
+        # Instantiate datamodule
+        datamodule_kwargs = conf_dict["datamodule"]
+        match = "The effective batch size will differ"
+        with pytest.warns(UserWarning, match=match):
+            datamodule = classname(**datamodule_kwargs)
+            model = SemanticSegmentationTask(**model_kwargs)
+            trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+            trainer.validate(model=model, datamodule=datamodule)
