@@ -85,7 +85,7 @@ class TestSentinel1:
     @pytest.mark.parametrize(
         "bands", [["HH", "VV"], ["HH", "VH"], ["VV", "HV"], ["HH", "HV", "VV", "VH"]]
     )
-    def test_invalid_bands(self, bands: List[str]) -> None:
+    def test_dual_transmit(self, bands: List[str]) -> None:
         with pytest.raises(AssertionError, match="'bands' cannot contain both "):
             Sentinel1(bands=bands)
 
