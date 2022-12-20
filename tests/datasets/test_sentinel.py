@@ -77,7 +77,7 @@ class TestSentinel1:
         with pytest.raises(AssertionError, match="'bands' contains duplicate bands"):
             Sentinel1(bands=bands)
 
-    @pytest.mark.parametrize("bands", [["HH_HV"], ["HH", "HV", "HH_HV"])
+    @pytest.mark.parametrize("bands", [["HH_HV"], ["HH", "HV", "HH_HV"]])
     def test_invalid_bands(self, bands: List[str]) -> None:
         with pytest.raises(AssertionError, match="invalid band 'HH_HV'"):
             Sentinel1(bands=bands)
