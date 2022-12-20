@@ -11,11 +11,9 @@ import lzma
 import os
 import sys
 import tarfile
-from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import (
-    TYPE_CHECKING,
     Any,
     Dict,
     Iterable,
@@ -32,13 +30,9 @@ from typing import (
 import numpy as np
 import rasterio
 import torch
-from rtree.index import Index, Property
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
-
-if TYPE_CHECKING:
-    from .geo import GeoDataset
 
 __all__ = (
     "check_integrity",
@@ -57,7 +51,6 @@ __all__ = (
     "draw_semantic_segmentation_masks",
     "rgb_to_mask",
     "percentile_normalization",
-    "train_test_split",
 )
 
 
@@ -751,49 +744,3 @@ def percentile_normalization(
         (img - lower_percentile) / (upper_percentile - lower_percentile), 0, 1
     )
     return img_normalized
-
-
-def train_test_split(
-    dataset: "GeoDataset", test_size: float = 0.25, random_seed: Optional[int] = None
-) -> Tuple["GeoDataset", "GeoDataset"]:
-    """Splits a dataset into train and test.
-
-    This function will go through each BoundingBox saved in the GeoDataset's index and
-    split it in a random direction by the proportion specified in test_size.
-
-    Args:
-        dataset: GeoDataset to split
-        test_size: proportion of GeoDataset to use for test, in range [0,1]
-        random_seed: random seed for reproducibility
-
-    Returns
-        A tuple with the resulting GeoDatasets in order (train, test)
-
-    .. versionadded:: 0.4
-    """
-    assert 0 < test_size < 1, "test_size must be between 0 and 1"
-
-    if random_seed:
-        np.random.seed(random_seed)
-
-    index_train = Index(interleaved=False, properties=Property(dimension=3))
-    index_test = Index(interleaved=False, properties=Property(dimension=3))
-
-    for i, hit in enumerate(
-        dataset.index.intersection(dataset.index.bounds, objects=True)
-    ):
-        box = BoundingBox(*hit.bounds)
-        horizontal, flip = np.random.randint(2, size=2)
-        if flip:
-            box_train, box_test = box.split(1 - test_size, horizontal)
-        else:
-            box_test, box_train = box.split(test_size, horizontal)
-        index_train.insert(i, tuple(box_train))
-        index_test.insert(i, tuple(box_test))
-
-    dataset_train = deepcopy(dataset)
-    dataset_train.index = index_train
-    dataset_test = deepcopy(dataset)
-    dataset_test.index = index_test
-
-    return dataset_train, dataset_test
