@@ -4,11 +4,10 @@
 """Dataset splitting utilities."""
 
 from copy import deepcopy
-from typing import Any, List, Optional, Sequence, Tuple, Union
+from typing import Any, List, Optional, Sequence, Union
 
-import numpy as np
 from rtree.index import Index, Property
-from torch import Generator, default_generator
+from torch import Generator, default_generator, randint
 from torch.utils.data import Subset, TensorDataset, random_split
 
 from ..datasets import GeoDataset, NonGeoDataset
@@ -29,51 +28,60 @@ def random_nongeo_split(
 
     Returns:
         A list of the subset datasets.
+
+    .. versionadded:: 0.4
     """
     return random_split(dataset, lengths, generator)
 
 
 def random_bbox_splitting(
-    dataset: GeoDataset, test_size: float = 0.25, random_seed: Optional[int] = None
-) -> Tuple[GeoDataset, GeoDataset]:
-    """Splits a dataset into train and test.
+    dataset: GeoDataset,
+    fractions: Sequence[float],
+    generator: Optional[Generator] = default_generator,
+) -> List[GeoDataset]:
+    """Randomly split a GeoDataset by splitting its index's BoundingBoxes.
 
-    This function will go through each BoundingBox saved in the GeoDataset's index and
-    split it in a random direction by the proportion specified in test_size.
+    This function will go through each BoundingBox in the GeoDataset's index and
+    split it in a random direction.
 
     Args:
-        dataset: GeoDataset to split
-        test_size: proportion of GeoDataset to use for test, in range [0,1]
-        random_seed: random seed for reproducibility
+        dataset: dataset to be split
+        fractions: fractions of splits to be produced
+        generator: (optional) generator used for the random permutation
 
     Returns
-        A tuple with the resulting GeoDatasets in order (train, test)
+        A list of the subset datasets.
 
     .. versionadded:: 0.4
     """
-    assert 0 < test_size < 1, "test_size must be between 0 and 1"
+    assert sum(fractions) == 1, "fractions must add up to 1"
 
-    if random_seed:
-        np.random.seed(random_seed)
-
-    index_train = Index(interleaved=False, properties=Property(dimension=3))
-    index_test = Index(interleaved=False, properties=Property(dimension=3))
+    new_indexes = [
+        Index(interleaved=False, properties=Property(dimension=3)) for _ in fractions
+    ]
 
     for i, hit in enumerate(
         dataset.index.intersection(dataset.index.bounds, objects=True)
     ):
         box = BoundingBox(*hit.bounds)
-        horizontal, flip = np.random.randint(2, size=2)
-        if flip:
-            box_train, box_test = box.split(1 - test_size, horizontal)
-        else:
-            box_test, box_train = box.split(test_size, horizontal)
-        index_train.insert(i, tuple(box_train))
-        index_test.insert(i, tuple(box_test))
+        fraction_left = 1.0
 
-    dataset_train = deepcopy(dataset)
-    dataset_train.index = index_train
-    dataset_test = deepcopy(dataset)
-    dataset_test.index = index_test
+        for j, frac in enumerate(fractions):
+            horizontal, flip = randint(0, 2, (2,), generator=generator)
 
-    return dataset_train, dataset_test
+            if fraction_left == frac:
+                new_box = box
+            elif flip:
+                box, new_box = box.split((1 - frac) / fraction_left, horizontal)
+            else:
+                new_box, box = box.split(frac / fraction_left, horizontal)
+
+            new_indexes[j].insert(i, tuple(new_box))
+            fraction_left -= frac
+
+    def new_geodataset_like(dataset: GeoDataset, index: Index) -> GeoDataset:
+        new_dataset = deepcopy(dataset)
+        new_dataset.index = index
+        return new_dataset
+
+    return [new_geodataset_like(dataset, index) for index in new_indexes]
