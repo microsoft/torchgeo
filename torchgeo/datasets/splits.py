@@ -7,7 +7,7 @@ from copy import deepcopy
 from typing import Any, List, Optional, Sequence, Union
 
 from rtree.index import Index, Property
-from torch import Generator, default_generator, randint
+from torch import Generator, default_generator, randint, randperm
 from torch.utils.data import Subset, TensorDataset, random_split
 
 from ..datasets import GeoDataset, NonGeoDataset
@@ -35,7 +35,7 @@ def random_nongeo_split(
 
 
 def new_geodataset_like(dataset: GeoDataset, index: Index) -> GeoDataset:
-    """Create a new GeoDataset like an existing one and change its index.
+    """Utility to create a new GeoDataset from an existing one with a different index.
 
     Args:
         dataset: dataset to copy
@@ -56,7 +56,7 @@ def random_bbox_splitting(
     fractions: Sequence[float],
     generator: Optional[Generator] = default_generator,
 ) -> List[GeoDataset]:
-    """Randomly split a GeoDataset by splitting its index's BoundingBoxes.
+    """Split a GeoDataset randomly splitting its index's BoundingBoxes.
 
     This function will go through each BoundingBox in the GeoDataset's index and
     split it in a random direction.
@@ -99,8 +99,39 @@ def random_bbox_splitting(
     return [new_geodataset_like(dataset, index) for index in new_indexes]
 
 
+def random_bbox_assignment(
+    dataset: GeoDataset,
+    lengths: Sequence[int],
+    generator: Optional[Generator] = default_generator,
+) -> List[GeoDataset]:
+    """Split a GeoDataset randomly assigning its index's BoundingBoxes.
+
+    Args:
+        dataset: dataset to be split
+        lengths: lengths of splits to be produced
+        generator: (optional) generator used for the random permutation
+
+    Returns
+        A list of the subset datasets.
+
+    .. versionadded:: 0.4
+    """
+    hits = list(dataset.index.intersection(dataset.index.bounds, objects=True))
+    hits = [hits[i] for i in randperm(sum(lengths), generator=generator)]
+
+    new_indexes = [
+        Index(interleaved=False, properties=Property(dimension=3)) for _ in lengths
+    ]
+
+    for i, length in enumerate(lengths):
+        for j in range(length):
+            new_indexes[i].insert(j, hits.pop().bounds)
+
+    return [new_geodataset_like(dataset, index) for index in new_indexes]
+
+
 def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> List[GeoDataset]:
-    """Split a GeoDataset by intersecting it with a ROI for each desired new GeoDataset.
+    """Split a GeoDataset intersecting it with a ROI for each desired new GeoDataset.
 
     Args:
         dataset: dataset to be split
