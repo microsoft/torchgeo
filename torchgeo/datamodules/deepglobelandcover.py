@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import Compose
 
 from ..datasets import DeepGlobeLandCover
-from ..datasets.utils import rearrange_patches_to_sample
+from ..datasets.utils import rearrange_samples
 from ..samplers.utils import _to_tuple
 from .utils import dataset_split
 
@@ -49,6 +49,9 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
                 or equal to batch_size
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.DeepGlobeLandCover`
+
+        Raises:
+            AssertionError: if num_tiles_per_batch > batch_size
 
         .. versionchanged:: 0.4
             'patch_size' and 'num_tiles_per_batch' introduced in order to randomly
@@ -186,7 +189,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             self.train_dataset,
             batch_size=self.num_tiles_per_batch,
             num_workers=self.num_workers,
-            collate_fn=rearrange_patches_to_sample,
+            collate_fn=rearrange_samples,
             shuffle=True,
         )
 
@@ -209,7 +212,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
                 batch_size=1,
                 num_workers=self.num_workers,
                 shuffle=False,
-                collate_fn=rearrange_patches_to_sample,
+                collate_fn=rearrange_samples,
             )
 
     def test_dataloader(self) -> DataLoader[Dict[str, Any]]:

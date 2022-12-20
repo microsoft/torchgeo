@@ -600,7 +600,7 @@ def unbind_samples(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
     return _dict_list_to_list_dict(sample)
 
 
-def rearrange_patches_to_sample(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
+def rearrange_samples(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Define collate function to combine patches per tile and batch size.
 
     Args:
