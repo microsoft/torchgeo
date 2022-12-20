@@ -88,7 +88,6 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         self.rcrop = K.AugmentationSequential(
             K.RandomCrop(self.patch_size), data_keys=["input", "mask"]
         )
-        self.dataset_keys = ["image", "mask"]
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the Dataset.
@@ -118,9 +117,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         train_transforms = Compose(
             [
                 self.preprocess,
-                PatchesAugmentation(
-                    self.rcrop, self.num_patches_per_tile, self.dataset_keys
-                ),
+                PatchesAugmentation(self.rcrop, self.num_patches_per_tile),
             ]
         )
         # for testing and validation we pad all inputs to next larger multiple of 32

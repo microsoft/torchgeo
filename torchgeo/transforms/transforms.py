@@ -78,10 +78,7 @@ class PatchesAugmentation:
     """
 
     def __init__(
-        self,
-        augmentations: K.AugmentationSequential,
-        num_patches_per_tile: int,
-        dataset_keys: List[str],
+        self, augmentations: K.AugmentationSequential, num_patches_per_tile: int
     ) -> None:
         """Initialize a new instance of Augmentation for Patches.
 
@@ -90,11 +87,19 @@ class PatchesAugmentation:
                 be applied to sample to generate *num_patches_per_tile*
             num_patches_per_tile: number of patches to generate from one
                 tile
-            dataset_keys: name of keys in dataset
         """
         self.augmentations = augmentations
         self.num_patches_per_tile = num_patches_per_tile
-        self.dataset_keys = dataset_keys
+        data_keys = [key.name.lower() for key in self.augmentations.data_keys]
+
+        self.ds_keys: List[str] = []
+        for key in data_keys:
+            if key == "input":
+                self.ds_keys.append("image")
+            elif key == "bbox":
+                self.ds_keys.append("boxes")
+            else:
+                self.ds_keys.append(key)
 
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Construct 'num_patches_per_tile' random patches of input tile.
@@ -106,27 +111,27 @@ class PatchesAugmentation:
             stacked randomly cropped patches from input tile
         """
         # Kornia augmentations require masks & boxes to be float
-        if "mask" in self.dataset_keys:
+        if "mask" in self.ds_keys:
             mask_dtype = sample["mask"].dtype
             sample["mask"] = sample["mask"].to(torch.float)
-        if "boxes" in self.dataset_keys:
+        if "boxes" in self.ds_keys:
             boxes_dtype = sample["boxes"].dtype
             sample["boxes"] = sample["boxes"].to(torch.float)
 
-        inputs = [sample[k] for k in self.dataset_keys]
-        outputs: Dict[str, List[Tensor]] = {key: [] for key in self.dataset_keys}
+        inputs = [sample[k] for k in self.ds_keys]
+        outputs: Dict[str, List[Tensor]] = {key: [] for key in self.ds_keys}
         for i in range(self.num_patches_per_tile):
             out = self.augmentations(*inputs)
-            for idx, key in enumerate(self.dataset_keys):
+            for idx, key in enumerate(self.ds_keys):
                 outputs[key].extend([out[idx].squeeze(0)])
 
         # stack samples and update
         sample.update({key: torch.stack(patch) for key, patch in outputs.items()})
 
         # Convert masks & boxes to previous dtype
-        if "mask" in self.dataset_keys:
+        if "mask" in self.ds_keys:
             sample["mask"] = sample["mask"].to(mask_dtype).squeeze(1)
-        if "boxes" in self.dataset_keys:
+        if "boxes" in self.ds_keys:
             sample["boxes"] = sample["boxes"].to(boxes_dtype)
 
         return sample
