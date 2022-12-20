@@ -208,7 +208,7 @@ To create a dataset containing both, use:
             # Both horizontal and vertical receive, plot as RGB
 
             # Deal with reverse order
-            if bands in [["HV", "HH"], ["VH", "VV"]]
+            if bands in [["HV", "HH"], ["VH", "VV"]]:
                 bands = bands[::-1]
                 sample["image"] = sample["image"][::-1]
 
