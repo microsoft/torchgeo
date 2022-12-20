@@ -39,7 +39,6 @@ class TestSemanticSegmentationTask:
             ("chesapeake_cvpr_5", ChesapeakeCVPRDataModule),
             ("deepglobelandcover_0", DeepGlobeLandCoverDataModule),
             ("deepglobelandcover_5", DeepGlobeLandCoverDataModule),
-            # ("deepglobelandcover_batch_size", DeepGlobeLandCoverDataModule),
             ("etci2021", ETCI2021DataModule),
             ("inria_train", InriaAerialImageLabelingDataModule),
             ("inria_val", InriaAerialImageLabelingDataModule),
