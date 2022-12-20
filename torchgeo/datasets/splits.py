@@ -34,6 +34,23 @@ def random_nongeo_split(
     return random_split(dataset, lengths, generator)
 
 
+def new_geodataset_like(dataset: GeoDataset, index: Index) -> GeoDataset:
+    """Create a new GeoDataset like an existing one and change its index.
+
+    Args:
+        dataset: dataset to copy
+        index: new index
+
+    Returns:
+        A new GeoDataset.
+
+    .. versionadded:: 0.4
+    """
+    new_dataset = deepcopy(dataset)
+    new_dataset.index = index
+    return new_dataset
+
+
 def random_bbox_splitting(
     dataset: GeoDataset,
     fractions: Sequence[float],
@@ -79,9 +96,28 @@ def random_bbox_splitting(
             new_indexes[j].insert(i, tuple(new_box))
             fraction_left -= frac
 
-    def new_geodataset_like(dataset: GeoDataset, index: Index) -> GeoDataset:
-        new_dataset = deepcopy(dataset)
-        new_dataset.index = index
-        return new_dataset
+    return [new_geodataset_like(dataset, index) for index in new_indexes]
+
+
+def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> List[GeoDataset]:
+    """Split a GeoDataset by intersecting it with a ROI for each desired new GeoDataset.
+
+    Args:
+        dataset: dataset to be split
+        rois: regions of interest of splits to be produced
+
+    Returns
+        A list of the subset datasets.
+
+    .. versionadded:: 0.4
+    """
+    new_indexes = [
+        Index(interleaved=False, properties=Property(dimension=3)) for _ in rois
+    ]
+
+    for i, roi in enumerate(rois):
+        for j, hit in enumerate(dataset.index.intersection(tuple(roi), objects=True)):
+            box = BoundingBox(*hit.bounds)
+            new_indexes[i].insert(j, tuple(box & roi))
 
     return [new_geodataset_like(dataset, index) for index in new_indexes]
