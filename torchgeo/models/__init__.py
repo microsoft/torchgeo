@@ -8,8 +8,7 @@ from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
 from .rcf import RCF
-from .resnet import resnet50
-from .weights import ResNet50_Weights
+from .resnet import ResNet18_Weights, ResNet50_Weights
 
 __all__ = (
     # models
@@ -21,7 +20,7 @@ __all__ = (
     "FCSiamConc",
     "FCSiamDiff",
     "RCF",
-    "resnet50",
     # weights
     "ResNet50_Weights",
+    "ResNet18_Weights",
 )
