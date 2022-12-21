@@ -98,6 +98,9 @@ filterwarnings = [
     # Unexpected warnings, worth investigating
     # pytorch-lightning is having trouble inferring the batch size for ChesapeakeCVPRDataModule and CycloneDataModule for some reason
     "ignore:Trying to infer the `batch_size` from an ambiguous collection:UserWarning",
+
+    # 
+    "ignore:DataModule.setup has already been called, so it will not be called again. In v1.6 this behavior will change to always call DataModule.setup.:pytorch_lightning.utilities.warnings.LightningDeprecationWarning",
 ]
 markers = [
     "slow: marks tests as slow",
