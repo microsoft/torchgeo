@@ -79,7 +79,7 @@ def random_bbox_assignment(
     hits = list(dataset.index.intersection(dataset.index.bounds, objects=True))
     if sum(lengths) != 1 or sum(lengths) != len(hits):
         raise ValueError(
-            "Sum of input lengths must equal 1 or be the length of the dataset's index."
+            "Sum of input lengths must equal 1 or the length of dataset's index."
         )
 
     if any(n <= 0 for n in lengths):
