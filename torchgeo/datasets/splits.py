@@ -76,8 +76,7 @@ def random_bbox_assignment(
 
     .. versionadded:: 0.4
     """
-    hits = list(dataset.index.intersection(dataset.index.bounds, objects=True))
-    if sum(lengths) != 1 or sum(lengths) != len(hits):
+    if sum(lengths) != 1 or sum(lengths) != len(dataset):
         raise ValueError(
             "Sum of input lengths must equal 1 or the length of dataset's index."
         )
@@ -86,12 +85,14 @@ def random_bbox_assignment(
         raise ValueError("All items in input lengths must be greater than 0.")
 
     if sum(lengths) == 1:
-        lengths = [floor(frac * len(hits)) for frac in lengths]
-        remainder = int(len(hits) - sum(lengths))
+        lengths = [floor(frac * len(dataset)) for frac in lengths]
+        remainder = int(len(dataset) - sum(lengths))
         # add 1 to all the lengths in round-robin fashion until the remainder is 0
         for i in range(remainder):
             idx_to_add_at = i % len(lengths)
             lengths[idx_to_add_at] += 1
+
+    hits = list(dataset.index.intersection(dataset.index.bounds, objects=True))
 
     hits = [
         hits[i]

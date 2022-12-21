@@ -42,31 +42,25 @@ def test_random_bbox_assignment() -> None:
         | CustomGeoDataset(BoundingBox(3, 4, 0, 1, 0, 0))
     )
 
-    num_bbox = len(ds.index.count(ds.index.bounds))
-
     # Test list of lengths
     train_ds, val_ds, test_ds = random_bbox_assignment(ds, lengths=[2, 1, 1])
-    assert len(train_ds.index.count(train_ds.index.bounds)) == 2
-    assert len(val_ds.index.count(val_ds.index.bounds)) == 1
-    assert len(test_ds.index.count(test_ds.index.bounds)) == 1
+    assert len(train_ds) == 2
+    assert len(val_ds) == 1
+    assert len(test_ds) == 1
+    assert len(train_ds & val_ds & test_ds) == 0
+    assert (train_ds | val_ds | test_ds).bounds == ds.bounds
 
-    # Test list of fractions
-    train_ds, val_ds, test_ds = random_bbox_assignment(
-        ds, lengths=[1 / 2, 1 / 4, 1 / 4]
-    )
-    assert len(train_ds.index.count(train_ds.index.bounds)) == num_bbox / 2
-    assert len(val_ds.index.count(val_ds.index.bounds)) == num_bbox / 4
-    assert len(test_ds.index.count(test_ds.index.bounds)) == num_bbox / 4
-
-    # Test list of fractions with remainder
+    # Test list of fractions (with remainder)
     train_ds, val_ds, test_ds = random_bbox_assignment(
         ds, lengths=[1 / 3, 1 / 3, 1 / 3]
     )
-    assert len(train_ds.index.count(train_ds.index.bounds)) == floor(num_bbox / 3) + 1
-    assert len(val_ds.index.count(val_ds.index.bounds)) == floor(num_bbox / 3)
-    assert len(test_ds.index.count(test_ds.index.bounds)) == floor(num_bbox / 3)
+    assert len(train_ds) == floor(len(ds) / 3) + 1
+    assert len(val_ds) == floor(len(ds) / 3)
+    assert len(test_ds) == floor(len(ds) / 3)
+    assert len(train_ds & val_ds & test_ds) == 0
+    assert (train_ds | val_ds | test_ds).bounds == ds.bounds
 
-    # Test invalid input lenghts
+    # Test invalid input lengths
     with pytest.raises(
         ValueError,
         match="Sum of input lengths must equal 1 or the length of dataset's index.",
