@@ -34,6 +34,7 @@ class ResNet18_Weights(WeightsEnum):
             "publication": "https://arxiv.org/abs/2211.07044",
             "dataset": "SSL4EO-S12",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "num_input_channels": 3,
         },
     )
 
@@ -48,6 +49,7 @@ class ResNet18_Weights(WeightsEnum):
             "publication": "https://arxiv.org/abs/2211.07044",
             "dataset": "SSL4EO-S12",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "num_input_channels": 13,
         },
     )
 
@@ -89,6 +91,7 @@ class ResNet50_Weights(WeightsEnum):
                 "https://github.com/rwightman/pytorch-image-models/"
                 "blob/main/timm/models/resnet.py"
             ),
+            "num_input_channels": 3,
         },
     )
     SENTINEL2_RGB_SECO = Weights(
@@ -99,6 +102,7 @@ class ResNet50_Weights(WeightsEnum):
             "dataset": "seco",
             "publication": "https://arxiv.org/abs/2103.16607",
             "repo": "https://github.com/ServiceNow/seasonal-contrast",
+            "num_input_channels": 3,
         },
     )
 
@@ -112,6 +116,7 @@ class ResNet50_Weights(WeightsEnum):
                 "https://github.com/ViTAE-Transformer/"
                 "ViTAE-Transformer-Remote-Sensing"
             ),
+            "num_input_channels": 3,
         },
     )
 
@@ -126,6 +131,7 @@ class ResNet50_Weights(WeightsEnum):
             "publication": "https://arxiv.org/abs/2211.07044",
             "dataset": "SSL4EO-S12",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "num_input_channels": 13,
         },
     )
 
@@ -140,10 +146,11 @@ class ResNet50_Weights(WeightsEnum):
             "publication": "https://arxiv.org/abs/2211.07044",
             "dataset": "SSL4EO-S12",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "num_input_channels": 3,
         },
     )
 
-    SENTINEL1_ALL_MOCO = Weights(
+    SENTINEL1_GRD_MOCO = Weights(
         url=(
             "https://drive.google.com/file/d/1gjTTWikf1qORJyFifWD1ksk9HzezqQ0b/"
             "view?usp=sharing/B2_moco_rn50_0099_ckpt.pth"
@@ -154,6 +161,7 @@ class ResNet50_Weights(WeightsEnum):
             "publication": "https://arxiv.org/abs/2211.07044",
             "dataset": "SSL4EO-S12",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "num_input_channels": 2,
         },
     )
 
@@ -165,6 +173,7 @@ class ResNet50_Weights(WeightsEnum):
             "publication": "https://arxiv.org/abs/2211.07044",
             "dataset": "SSL4EO-S12",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "num_input_channels": 13,
         },
     )
 
@@ -180,8 +189,8 @@ class ResNet50_Weights(WeightsEnum):
             ckpt = load_checkpoint_from_url(root, filename, self.url, map_location)
             state_dict = adjust_dino_weights_zhu_lab(ckpt["teacher"])
 
-        elif "SENTINEL1_ALL_MOCO" in str(self):
-            filename = "resnet50_dino_sentinel1_all.pth"
+        elif "SENTINEL1_GRD_MOCO" in str(self):
+            filename = "resnet50_dino_sentinel1_grd.pth"
             ckpt = load_checkpoint_from_url(root, filename, self.url, map_location)
             state_dict = adjust_moco_weights_zhu_lab(ckpt["state_dict"])
 
