@@ -4,6 +4,7 @@
 """Dataset splitting utilities."""
 
 from copy import deepcopy
+from functools import reduce
 from math import floor
 from typing import Any, List, Optional, Sequence, Union
 
@@ -174,6 +175,9 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> List[GeoDatas
 
     .. versionadded:: 0.4
     """
+    if reduce(lambda x, y: x & y, rois).area != 0:
+        raise ValueError("ROIs in input roi should not overlap.")
+
     new_indexes = [
         Index(interleaved=False, properties=Property(dimension=3)) for _ in rois
     ]

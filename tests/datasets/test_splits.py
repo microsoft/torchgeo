@@ -7,9 +7,12 @@ import pytest
 import torch
 from torch.utils.data import TensorDataset
 
-from torchgeo.datasets.splits import (  # random_bbox_splitting,; roi_split,
+from torchgeo.datasets import GeoDataset
+from torchgeo.datasets.splits import (
     random_bbox_assignment,
+    random_bbox_splitting,
     random_nongeo_split,
+    roi_split,
 )
 from torchgeo.datasets.utils import BoundingBox
 
@@ -70,3 +73,74 @@ def test_random_bbox_assignment() -> None:
         ValueError, match="All items in input lengths must be greater than 0."
     ):
         random_bbox_assignment(ds, lengths=[1 / 2, 3 / 4, -1 / 4])
+
+
+def get_total_area(dataset: GeoDataset) -> float:
+
+    total_area = 0.0
+    for hit in dataset.index.intersection(dataset.index.bounds, objects=True):
+        total_area += BoundingBox(*hit.bounds).area
+
+    return total_area
+
+
+def test_random_bbox_splitting() -> None:
+    ds = (
+        CustomGeoDataset(BoundingBox(0, 1, 0, 1, 0, 0))
+        | CustomGeoDataset(BoundingBox(1, 2, 0, 1, 0, 0))
+        | CustomGeoDataset(BoundingBox(2, 3, 0, 1, 0, 0))
+        | CustomGeoDataset(BoundingBox(3, 4, 0, 1, 0, 0))
+    )
+
+    ds_area = get_total_area(ds)
+
+    # Test list of fractions
+    train_ds, val_ds, test_ds = random_bbox_splitting(
+        ds, fractions=[1 / 2, 1 / 4, 1 / 4]
+    )
+    train_ds_area = get_total_area(train_ds)
+    val_ds_area = get_total_area(val_ds)
+    test_ds_area = get_total_area(test_ds)
+
+    assert train_ds_area == ds_area / 2
+    assert val_ds_area == ds_area / 4
+    assert test_ds_area == ds_area / 4
+    assert len(train_ds & val_ds & test_ds) == 0
+    assert (train_ds | val_ds | test_ds).bounds == ds.bounds
+
+    # Test invalid input fractions
+    with pytest.raises(ValueError, match="Sum of input fractions must equal 1."):
+        random_bbox_splitting(ds, fractions=[1 / 2, 1 / 3, 1 / 4])
+    with pytest.raises(
+        ValueError, match="All items in input lengths must be greater than 0."
+    ):
+        random_bbox_splitting(ds, fractions=[1 / 2, 3 / 4, -1 / 4])
+
+
+def test_roi_split() -> None:
+    ds = (
+        CustomGeoDataset(BoundingBox(0, 1, 0, 1, 0, 0))
+        | CustomGeoDataset(BoundingBox(1, 2, 0, 1, 0, 0))
+        | CustomGeoDataset(BoundingBox(2, 3, 0, 1, 0, 0))
+        | CustomGeoDataset(BoundingBox(3, 4, 0, 1, 0, 0))
+    )
+
+    train_ds, val_ds, test_ds = roi_split(
+        ds,
+        rois=[
+            BoundingBox(0, 2, 0, 1, 0, 0),
+            BoundingBox(2, 3.5, 0, 1, 0, 0),
+            BoundingBox(3.5, 4, 0, 1, 0, 0),
+        ],
+    )
+    assert len(train_ds) == 2
+    assert len(val_ds) == 2
+    assert len(test_ds) == 1
+    assert len(train_ds & val_ds & test_ds) == 0
+    assert (train_ds | val_ds | test_ds).bounds == ds.bounds
+
+    # Test invalid input rois
+    with pytest.raises(ValueError, match="ROIs in input roi should not overlap."):
+        roi_split(
+            ds, rois=[BoundingBox(0, 2, 0, 1, 0, 0), BoundingBox(1, 3, 0, 1, 0, 0)]
+        )
