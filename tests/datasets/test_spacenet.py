@@ -63,7 +63,7 @@ class TestSpaceNet1:
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet1:
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
-        test_md5 = {"sn1_AOI_1_RIO": "9b445f0bddb5de04f806119dc8ee7fbf"}
+        test_md5 = {"sn1_AOI_1_RIO": "127a523561987110f008e8c9815ce807"}
 
         # Refer https://github.com/python/mypy/issues/1032
         monkeypatch.setattr(SpaceNet1, "collection_md5_dict", test_md5)
