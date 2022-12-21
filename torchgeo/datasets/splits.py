@@ -106,7 +106,7 @@ def random_bbox_splitting(
 
 def random_bbox_assignment(
     dataset: GeoDataset,
-    lengths: Sequence[int],
+    lengths: Sequence[Union[int, float]],
     generator: Optional[Generator] = default_generator,
 ) -> List[GeoDataset]:
     """Split a GeoDataset randomly assigning its index's BoundingBoxes.
@@ -132,20 +132,23 @@ def random_bbox_assignment(
 
     if sum(lengths) == 1:
         lengths = [floor(frac * len(hits)) for frac in lengths]
-        remainder = len(hits) - sum(lengths)
+        remainder = int(len(hits) - sum(lengths))
         # add 1 to all the lengths in round-robin fashion until the remainder is 0
         for i in range(remainder):
             idx_to_add_at = i % len(lengths)
             lengths[idx_to_add_at] += 1
 
-    hits = [hits[i] for i in randperm(sum(lengths), generator=generator)]
+    hits = [
+        hits[i]
+        for i in randperm(sum(lengths), generator=generator)  # type: ignore[arg-type]
+    ]
 
     new_indexes = [
         Index(interleaved=False, properties=Property(dimension=3)) for _ in lengths
     ]
 
     for i, length in enumerate(lengths):
-        for j in range(length):
+        for j in range(length):  # type: ignore[arg-type]
             new_indexes[i].insert(j, hits.pop().bounds)
 
     return [new_geodataset_like(dataset, index) for index in new_indexes]
