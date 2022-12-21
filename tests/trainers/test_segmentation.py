@@ -17,6 +17,7 @@ from torchgeo.datamodules import (
     ETCI2021DataModule,
     InriaAerialImageLabelingDataModule,
     LandCoverAIDataModule,
+    LoveDADataModule,
     NAIPChesapeakeDataModule,
     OSCDDataModule,
     SEN12MSDataModule,
@@ -44,6 +45,7 @@ class TestSemanticSegmentationTask:
             ("inria_val", InriaAerialImageLabelingDataModule),
             ("inria_test", InriaAerialImageLabelingDataModule),
             ("landcoverai", LandCoverAIDataModule),
+            ("loveda", LoveDADataModule),
             ("naipchesapeake", NAIPChesapeakeDataModule),
             ("oscd_all", OSCDDataModule),
             ("oscd_rgb", OSCDDataModule),
@@ -81,7 +83,9 @@ class TestSemanticSegmentationTask:
         # Instantiate trainer
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
-        trainer.test(model=model, datamodule=datamodule)
+
+        if hasattr(datamodule, "test_dataset"):
+            trainer.test(model=model, datamodule=datamodule)
 
         if hasattr(datamodule, "predict_dataset"):
             trainer.predict(model=model, datamodule=datamodule)
