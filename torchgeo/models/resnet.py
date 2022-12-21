@@ -226,7 +226,7 @@ class ResNet50_Weights(WeightsEnum):
 
 
 def adjust_moco_weights_zhu_lab(state_dict: Dict[str, Tensor]) -> Dict[str, Tensor]:
-    """Loading Moco weights from https://github.com/zhu-xlab/SSL4EO-S12.
+    """Loading Moco ResNet weights from https://github.com/zhu-xlab/SSL4EO-S12.
 
     # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/
     # src/benchmark/transfer_classification/linear_BE_moco.py#L248-L276

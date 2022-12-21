@@ -92,8 +92,6 @@ class ClassificationTask(pl.LightningModule):
                 except RuntimeError:
                     self.model = utils.load_state_dict(self.model, state_dict)
 
-                assert self.model.fc.out_features == self.hyperparams["num_classes"]
-
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
         self.config_model()
