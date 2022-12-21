@@ -55,7 +55,7 @@ class ResNet18_Weights(WeightsEnum):
 
     def get_state_dict(self) -> Dict[str, Any]:
         """Retrieve pretrained weights state_dict."""
-        root = os.path.join(os.getcwd(), "checkpoints")
+        root = os.path.join(torch.hub.get_dir(), "checkpoints")
         map_location = torch.device("cpu")
 
         if "SENTINEL2_ALL_MOCO" in str(self):
@@ -179,7 +179,7 @@ class ResNet50_Weights(WeightsEnum):
 
     def get_state_dict(self) -> Dict[str, Any]:
         """Retrieve pretrained weights state_dict."""
-        root = os.path.join(os.getcwd(), "checkpoints")
+        root = os.path.join(torch.hub.get_dir(), "checkpoints")
         map_location = torch.device("cpu")
 
         # need to define identifiers for each case
