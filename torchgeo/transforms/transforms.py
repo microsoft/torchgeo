@@ -3,7 +3,7 @@
 
 """TorchGeo transforms."""
 
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import kornia.augmentation as K
 import torch
@@ -71,73 +71,83 @@ class AugmentationSequential(Module):
         return sample
 
 
-class PatchesAugmentation:
-    """Apply augmentations on an image tile to create patches.
+class ConstantNormalize(Module):
+    """Normalize image tensor by a constant."""
 
-    .. versionadded:: 0.4
-    """
-
-    def __init__(
-        self, augmentations: K.AugmentationSequential, num_patches_per_tile: int
-    ) -> None:
-        """Initialize a new instance of Augmentation for Patches.
+    def __init__(self, val: float) -> None:
+        """Initialize a new instance of ConstantNormalize.
 
         Args:
-            augmentations: Kornia Augmentation sequential that should
-                be applied to sample to generate *num_patches_per_tile*
-            num_patches_per_tile: number of patches to generate from one
-                tile
+            val: value by which to normalize
         """
-        self.augmentations = augmentations
-        self.num_patches_per_tile = num_patches_per_tile
-        data_keys = [key.name.lower() for key in self.augmentations.data_keys]
+        super().__init__()
+        self.val = val
 
-        self.ds_keys: List[str] = []
-        for key in data_keys:
-            if key == "input":
-                self.ds_keys.append("image")
-            elif key == "bbox":
-                self.ds_keys.append("boxes")
-            else:
-                self.ds_keys.append(key)
-
-    def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Construct 'num_patches_per_tile' random patches of input tile.
+    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+        """Normalize sample image by a constant.
 
         Args:
-            sample: contains image and mask tile from dataset
+            sample: the input
 
         Returns:
-            stacked randomly cropped patches from input tile
+            output sample with normalized image
         """
-        # Kornia augmentations require masks & boxes to be float
-        if "mask" in self.ds_keys:
-            mask_dtype = sample["mask"].dtype
-            sample["mask"] = sample["mask"].to(torch.float)
-        if "boxes" in self.ds_keys:
-            boxes_dtype = sample["boxes"].dtype
-            sample["boxes"] = sample["boxes"].to(torch.float)
-
-        inputs = [sample[k] for k in self.ds_keys]
-        outputs: Dict[str, List[Tensor]] = {key: [] for key in self.ds_keys}
-        for i in range(self.num_patches_per_tile):
-            out = self.augmentations(*inputs)
-            for idx, key in enumerate(self.ds_keys):
-                outputs[key].extend([out[idx].squeeze(0)])
-
-        # stack samples and update
-        sample.update({key: torch.stack(patch) for key, patch in outputs.items()})
-
-        # Convert masks & boxes to previous dtype
-        if "mask" in self.ds_keys:
-            sample["mask"] = sample["mask"].to(mask_dtype).squeeze(1)
-        if "boxes" in self.ds_keys:
-            sample["boxes"] = sample["boxes"].to(boxes_dtype)
-
+        sample["image"] = sample["image"].float()
+        sample["image"] /= self.val
         return sample
 
 
-class PadSegmentationSamples:
+class RepeatedRandomCrop(Module):
+    """Take repeated random crops from a tile.
+
+    This is usefule to create *num_patches_per_tile* random
+    patches from a tile, to have a manageable input dimension
+    size for various models.
+
+    .. versionadded: 0.4
+    """
+
+    def __init__(
+        self,
+        patch_size: Union[Tuple[int, int], int],
+        num_patches_per_tile: int,
+        data_keys: List[str],
+    ) -> None:
+        """Initialize a new instance of RepeatedRandomCrop.
+
+        Args:
+            patch_size: Size of random patch from image and mask (height, width)
+            num_patches_per_tile: number of patches to
+                randomly crop from a tile
+            data_keys: data keys contained in *sample*
+        """
+        super().__init__()
+        self.num_patches_per_tile = num_patches_per_tile
+        self.rcrop = K.AugmentationSequential(
+            K.RandomCrop(patch_size), data_keys=data_keys
+        )
+
+    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+        """Perform random cropping on a tile to create patches.
+
+        Args:
+            sample: the input
+
+        Returns:
+            stacked random patches
+        """
+        images, masks = [], []
+        for i in range(self.num_patches_per_tile):
+            image, mask = self.rcrop(sample["image"], sample["mask"].float())
+            images.append(image.squeeze(0))
+            masks.append(mask.squeeze().long())
+
+        sample["image"] = torch.stack(images)
+        sample["mask"] = torch.stack(masks)
+        return sample
+
+
+class PadSegmentationSamples(Module):
     """Pad Segmentation samples to a next multiple.
 
     This is useful for several segmentation models that
@@ -155,10 +165,11 @@ class PadSegmentationSamples:
         Raises:
             AssertionError if *multiple* is not positve.
         """
+        super().__init__()
         assert multiple > 0, "Multiple argument must be positive"
         self.multiple = multiple
 
-    def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def forward(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Pad samples to next multiple.
 
         Args:

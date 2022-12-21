@@ -21,8 +21,9 @@ from .indices import (
 )
 from .transforms import (
     AugmentationSequential,
+    ConstantNormalize,
     PadSegmentationSamples,
-    PatchesAugmentation,
+    RepeatedRandomCrop,
 )
 
 __all__ = (
@@ -41,6 +42,7 @@ __all__ = (
     "AppendSWI",
     "AppendTriBandNormalizedDifferenceIndex",
     "AugmentationSequential",
-    "PatchesAugmentation",
     "PadSegmentationSamples",
+    "RepeatedRandomCrop",
+    "ConstantNormalize",
 )

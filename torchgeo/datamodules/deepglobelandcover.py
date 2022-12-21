@@ -6,7 +6,6 @@
 import warnings
 from typing import Any, Dict, Optional, Tuple, Union
 
-import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader, Dataset
@@ -15,7 +14,7 @@ from torchvision.transforms import Compose
 from ..datasets import DeepGlobeLandCover
 from ..datasets.utils import flatten_samples
 from ..samplers.utils import _to_tuple
-from ..transforms import PadSegmentationSamples, PatchesAugmentation
+from ..transforms import ConstantNormalize, PadSegmentationSamples, RepeatedRandomCrop
 from .utils import dataset_split
 
 
@@ -83,22 +82,19 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
                 " num_tiles_per_batch evenly divides batch_size"
             )
 
-        self.rcrop = K.AugmentationSequential(
-            K.RandomCrop(self.patch_size), data_keys=["input", "mask"]
+        self.train_preprocess = Compose(
+            [
+                ConstantNormalize(255.0),
+                RepeatedRandomCrop(
+                    self.patch_size,
+                    self.num_patches_per_tile,
+                    data_keys=["input", "mask"],
+                ),
+            ]
         )
-
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
-
-        Args:
-            sample: input image dictionary
-
-        Returns:
-            preprocessed sample
-        """
-        sample["image"] = sample["image"].float()
-        sample["image"] /= 255.0
-        return sample
+        self.test_preprocess = Compose(
+            [ConstantNormalize(255.0), PadSegmentationSamples(32)]
+        )
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -112,18 +108,8 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             Add functionality to randomly crop patches from a tile during
             training and pad validation and test samples to next multiple of 32
         """
-        train_transforms = Compose(
-            [
-                self.preprocess,
-                PatchesAugmentation(self.rcrop, self.num_patches_per_tile),
-            ]
-        )
-        # for testing and validation we pad all inputs to next larger multiple of 32
-        # to avoid issues with upsampling paths in encoder-decoder architectures
-        test_transforms = Compose([self.preprocess, PadSegmentationSamples(32)])
-
         train_dataset = DeepGlobeLandCover(
-            split="train", transforms=train_transforms, **self.kwargs
+            split="train", transforms=self.train_preprocess, **self.kwargs
         )
 
         self.train_dataset: Dataset[Any]
@@ -131,7 +117,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
 
         if self.val_split_pct > 0.0:
             val_dataset = DeepGlobeLandCover(
-                split="train", transforms=test_transforms, **self.kwargs
+                split="train", transforms=self.test_preprocess, **self.kwargs
             )
             self.train_dataset, self.val_dataset, _ = dataset_split(
                 train_dataset, val_pct=self.val_split_pct, test_pct=0.0
@@ -142,7 +128,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             self.val_dataset = train_dataset
 
         self.test_dataset = DeepGlobeLandCover(
-            split="test", transforms=test_transforms, **self.kwargs
+            split="test", transforms=self.test_preprocess, **self.kwargs
         )
 
     def train_dataloader(self) -> DataLoader[Dict[str, Any]]:
