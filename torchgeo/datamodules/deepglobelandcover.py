@@ -82,7 +82,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
                 " num_tiles_per_batch evenly divides batch_size"
             )
 
-        self.train_preprocess = Compose(
+        self.train_transform = Compose(
             [
                 ConstantNormalize(255.0),
                 RepeatedRandomCrop(
@@ -92,7 +92,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
                 ),
             ]
         )
-        self.test_preprocess = Compose(
+        self.test_transform = Compose(
             [ConstantNormalize(255.0), PadSegmentationSamples(32)]
         )
 
@@ -109,7 +109,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             training and pad validation and test samples to next multiple of 32
         """
         train_dataset = DeepGlobeLandCover(
-            split="train", transforms=self.train_preprocess, **self.kwargs
+            split="train", transforms=self.train_transform, **self.kwargs
         )
 
         self.train_dataset: Dataset[Any]
@@ -117,7 +117,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
 
         if self.val_split_pct > 0.0:
             val_dataset = DeepGlobeLandCover(
-                split="train", transforms=self.test_preprocess, **self.kwargs
+                split="train", transforms=self.test_transform, **self.kwargs
             )
             self.train_dataset, self.val_dataset, _ = dataset_split(
                 train_dataset, val_pct=self.val_split_pct, test_pct=0.0
@@ -128,7 +128,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             self.val_dataset = train_dataset
 
         self.test_dataset = DeepGlobeLandCover(
-            split="test", transforms=self.test_preprocess, **self.kwargs
+            split="test", transforms=self.test_transform, **self.kwargs
         )
 
     def train_dataloader(self) -> DataLoader[Dict[str, Any]]:

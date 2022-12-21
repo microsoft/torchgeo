@@ -104,7 +104,7 @@ class RepeatedRandomCrop(Module):
     patches from a tile, to have a manageable input dimension
     size for various models.
 
-    .. versionadded: 0.4
+    .. versionadded:: 0.4
     """
 
     def __init__(
@@ -153,7 +153,7 @@ class PadSegmentationSamples(Module):
     This is useful for several segmentation models that
     except the input dimensions to be a multiple of 32.
 
-    .. versionadded: 0.4
+    .. versionadded:: 0.4
     """
 
     def __init__(self, multiple: int = 32):

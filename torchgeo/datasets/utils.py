@@ -610,16 +610,13 @@ def flatten_samples(samples: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
     Returns:
         a single sample
 
-    .. versionadded: 0.4
+    .. versionadded:: 0.4
     """
     collated: Dict[str, Any] = default_collate(samples)  # type: ignore[no-untyped-call]
-    flattened_sample: Dict[str, Any] = {}
     for key, val in collated.items():
         if isinstance(val, Tensor):
-            flattened_sample[key] = torch.flatten(val, end_dim=1)
-        else:
-            flattened_sample[key] = val
-    return flattened_sample
+            collated[key] = torch.flatten(val, end_dim=1)
+    return collated
 
 
 def rasterio_loader(path: str) -> "np.typing.NDArray[np.int_]":
