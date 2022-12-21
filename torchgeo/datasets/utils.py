@@ -414,7 +414,7 @@ class BoundingBox:
 
         if horizontal:
             w = self.maxx - self.minx
-            splitx = self.minx + int(w * proportion)
+            splitx = self.minx + w * proportion
             bbox1 = BoundingBox(
                 self.minx, splitx, self.miny, self.maxy, self.mint, self.maxt
             )
@@ -423,7 +423,7 @@ class BoundingBox:
             )
         else:
             h = self.maxy - self.miny
-            splity = self.miny + int(h * proportion)
+            splity = self.miny + h * proportion
             bbox1 = BoundingBox(
                 self.minx, self.maxx, self.miny, splity, self.mint, self.maxt
             )

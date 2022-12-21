@@ -4,7 +4,6 @@
 """Dataset splitting utilities."""
 
 from copy import deepcopy
-from functools import reduce
 from math import floor
 from typing import Any, List, Optional, Sequence, Union
 
@@ -77,7 +76,7 @@ def random_bbox_assignment(
 
     .. versionadded:: 0.4
     """
-    if sum(lengths) != 1 or sum(lengths) != len(dataset):
+    if not (sum(lengths) == 1 or sum(lengths) == len(dataset)):
         raise ValueError(
             "Sum of input lengths must equal 1 or the length of dataset's index."
         )
@@ -147,18 +146,21 @@ def random_bbox_splitting(
         box = BoundingBox(*hit.bounds)
         fraction_left = 1.0
 
+        horizontal, flip = randint(0, 2, (2,), generator=generator)
         for j, frac in enumerate(fractions):
-            horizontal, flip = randint(0, 2, (2,), generator=generator)
 
             if fraction_left == frac:
                 new_box = box
             elif flip:
-                box, new_box = box.split((1 - frac) / fraction_left, horizontal)
+                box, new_box = box.split(
+                    (fraction_left - frac) / fraction_left, horizontal
+                )
             else:
                 new_box, box = box.split(frac / fraction_left, horizontal)
 
             new_indexes[j].insert(i, tuple(new_box))
             fraction_left -= frac
+            horizontal = not horizontal
 
     return [_create_geodataset_like(dataset, index) for index in new_indexes]
 
@@ -175,9 +177,6 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> List[GeoDatas
 
     .. versionadded:: 0.4
     """
-    if reduce(lambda x, y: x & y, rois).area != 0:
-        raise ValueError("ROIs in input roi should not overlap.")
-
     new_indexes = [
         Index(interleaved=False, properties=Property(dimension=3)) for _ in rois
     ]

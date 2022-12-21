@@ -884,8 +884,10 @@ class IntersectionDataset(GeoDataset):
             for hit2 in ds2.index.intersection(hit1.bounds, objects=True):
                 box1 = BoundingBox(*hit1.bounds)
                 box2 = BoundingBox(*hit2.bounds)
-                self.index.insert(i, tuple(box1 & box2))
-                i += 1
+                new_box = box1 & box2
+                if new_box.area > 0:
+                    self.index.insert(i, tuple(box1 & box2))
+                    i += 1
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.

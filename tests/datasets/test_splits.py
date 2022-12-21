@@ -50,7 +50,9 @@ def test_random_bbox_assignment() -> None:
     assert len(train_ds) == 2
     assert len(val_ds) == 1
     assert len(test_ds) == 1
-    assert len(train_ds & val_ds & test_ds) == 0
+    assert len(train_ds & val_ds) == 0
+    assert len(val_ds & test_ds) == 0
+    assert len(test_ds & train_ds) == 0
     assert (train_ds | val_ds | test_ds).bounds == ds.bounds
 
     # Test list of fractions (with remainder)
@@ -60,7 +62,9 @@ def test_random_bbox_assignment() -> None:
     assert len(train_ds) == floor(len(ds) / 3) + 1
     assert len(val_ds) == floor(len(ds) / 3)
     assert len(test_ds) == floor(len(ds) / 3)
-    assert len(train_ds & val_ds & test_ds) == 0
+    assert len(train_ds & val_ds) == 0
+    assert len(val_ds & test_ds) == 0
+    assert len(test_ds & train_ds) == 0
     assert (train_ds | val_ds | test_ds).bounds == ds.bounds
 
     # Test invalid input lengths
@@ -105,14 +109,16 @@ def test_random_bbox_splitting() -> None:
     assert train_ds_area == ds_area / 2
     assert val_ds_area == ds_area / 4
     assert test_ds_area == ds_area / 4
-    assert len(train_ds & val_ds & test_ds) == 0
-    assert (train_ds | val_ds | test_ds).bounds == ds.bounds
+    assert len(train_ds & val_ds) == 0
+    assert len(val_ds & test_ds) == 0
+    assert len(test_ds & train_ds) == 0
+    assert get_total_area(train_ds | val_ds | test_ds) == ds_area
 
     # Test invalid input fractions
     with pytest.raises(ValueError, match="Sum of input fractions must equal 1."):
         random_bbox_splitting(ds, fractions=[1 / 2, 1 / 3, 1 / 4])
     with pytest.raises(
-        ValueError, match="All items in input lengths must be greater than 0."
+        ValueError, match="All items in input fractions must be greater than 0."
     ):
         random_bbox_splitting(ds, fractions=[1 / 2, 3 / 4, -1 / 4])
 
@@ -120,27 +126,23 @@ def test_random_bbox_splitting() -> None:
 def test_roi_split() -> None:
     ds = (
         CustomGeoDataset(BoundingBox(0, 1, 0, 1, 0, 0))
-        | CustomGeoDataset(BoundingBox(1, 2, 0, 1, 0, 0))
         | CustomGeoDataset(BoundingBox(2, 3, 0, 1, 0, 0))
-        | CustomGeoDataset(BoundingBox(3, 4, 0, 1, 0, 0))
+        | CustomGeoDataset(BoundingBox(4, 5, 0, 1, 0, 0))
+        | CustomGeoDataset(BoundingBox(6, 7, 0, 1, 0, 0))
     )
 
     train_ds, val_ds, test_ds = roi_split(
         ds,
         rois=[
-            BoundingBox(0, 2, 0, 1, 0, 0),
-            BoundingBox(2, 3.5, 0, 1, 0, 0),
-            BoundingBox(3.5, 4, 0, 1, 0, 0),
+            BoundingBox(0, 3, 0, 1, 0, 0),
+            BoundingBox(4, 6.5, 0, 1, 0, 0),
+            BoundingBox(6.5, 7, 0, 1, 0, 0),
         ],
     )
     assert len(train_ds) == 2
     assert len(val_ds) == 2
     assert len(test_ds) == 1
-    assert len(train_ds & val_ds & test_ds) == 0
+    assert len(train_ds & val_ds) == 0
+    assert len(val_ds & test_ds) == 0
+    assert len(test_ds & train_ds) == 0
     assert (train_ds | val_ds | test_ds).bounds == ds.bounds
-
-    # Test invalid input rois
-    with pytest.raises(ValueError, match="ROIs in input roi should not overlap."):
-        roi_split(
-            ds, rois=[BoundingBox(0, 2, 0, 1, 0, 0), BoundingBox(1, 3, 0, 1, 0, 0)]
-        )
