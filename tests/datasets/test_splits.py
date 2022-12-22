@@ -126,17 +126,17 @@ def test_random_bbox_splitting() -> None:
 def test_roi_split() -> None:
     ds = (
         CustomGeoDataset(BoundingBox(0, 1, 0, 1, 0, 0))
+        | CustomGeoDataset(BoundingBox(1, 2, 0, 1, 0, 0))
         | CustomGeoDataset(BoundingBox(2, 3, 0, 1, 0, 0))
-        | CustomGeoDataset(BoundingBox(4, 5, 0, 1, 0, 0))
-        | CustomGeoDataset(BoundingBox(6, 7, 0, 1, 0, 0))
+        | CustomGeoDataset(BoundingBox(3, 4, 0, 1, 0, 0))
     )
 
     train_ds, val_ds, test_ds = roi_split(
         ds,
         rois=[
-            BoundingBox(0, 3, 0, 1, 0, 0),
-            BoundingBox(4, 6.5, 0, 1, 0, 0),
-            BoundingBox(6.5, 7, 0, 1, 0, 0),
+            BoundingBox(0, 2, 0, 1, 0, 0),
+            BoundingBox(2, 3.5, 0, 1, 0, 0),
+            BoundingBox(3.5, 4, 0, 1, 0, 0),
         ],
     )
     assert len(train_ds) == 2
@@ -146,3 +146,9 @@ def test_roi_split() -> None:
     assert len(val_ds & test_ds) == 0
     assert len(test_ds & train_ds) == 0
     assert (train_ds | val_ds | test_ds).bounds == ds.bounds
+
+    # Test invalid input rois
+    with pytest.raises(ValueError, match="ROIs in input rois can't overlap."):
+        roi_split(
+            ds, rois=[BoundingBox(0, 2, 0, 1, 0, 0), BoundingBox(1, 3, 0, 1, 0, 0)]
+        )

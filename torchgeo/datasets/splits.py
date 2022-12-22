@@ -177,13 +177,23 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> List[GeoDatas
 
     .. versionadded:: 0.4
     """
+    _rois = list(rois).copy()
+    while len(_rois) > 1:
+        r = _rois.pop()
+        if any(r.intersects(x) and (r & x).area > 0 for x in _rois):
+            raise ValueError("ROIs in input rois can't overlap.")
+
     new_indexes = [
         Index(interleaved=False, properties=Property(dimension=3)) for _ in rois
     ]
 
     for i, roi in enumerate(rois):
-        for j, hit in enumerate(dataset.index.intersection(tuple(roi), objects=True)):
+        j = 0
+        for hit in dataset.index.intersection(tuple(roi), objects=True):
             box = BoundingBox(*hit.bounds)
-            new_indexes[i].insert(j, tuple(box & roi))
+            new_box = box & roi
+            if new_box.area > 0:
+                new_indexes[i].insert(j, tuple(new_box))
+                j += 1
 
     return [_create_geodataset_like(dataset, index) for index in new_indexes]
