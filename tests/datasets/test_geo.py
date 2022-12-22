@@ -447,6 +447,12 @@ class TestIntersectionDataset:
         ds = IntersectionDataset(ds1, ds2)
         assert len(ds) == 0
 
+    def test_contiguous(self) -> None:
+        ds1 = CustomGeoDataset(BoundingBox(0, 1, 0, 1, 0, 1))
+        ds2 = CustomGeoDataset(BoundingBox(1, 2, 0, 1, 0, 1))
+        ds = IntersectionDataset(ds1, ds2)
+        assert len(ds) == 0
+
     def test_invalid_query(self, dataset: IntersectionDataset) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(

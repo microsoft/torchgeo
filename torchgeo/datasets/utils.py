@@ -402,7 +402,7 @@ class BoundingBox:
         """Split BoundingBox in two.
 
         Args:
-            proportion: split proportion in range [0,1]
+            proportion: split proportion in range (0,1)
             horizontal: whether the split is horizontal or vertical
 
         Returns:
@@ -410,7 +410,8 @@ class BoundingBox:
 
         .. versionadded:: 0.4
         """
-        assert 0 < proportion < 1, "test_size must be between 0 and 1"
+        if not (0.0 < proportion < 1.0):
+            raise ValueError("Input proportion must be between 0 and 1.")
 
         if horizontal:
             w = self.maxx - self.minx

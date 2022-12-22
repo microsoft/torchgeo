@@ -886,7 +886,7 @@ class IntersectionDataset(GeoDataset):
                 box2 = BoundingBox(*hit2.bounds)
                 new_box = box1 & box2
                 if new_box.area > 0:
-                    self.index.insert(i, tuple(box1 & box2))
+                    self.index.insert(i, tuple(new_box))
                     i += 1
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
