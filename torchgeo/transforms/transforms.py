@@ -84,12 +84,11 @@ class NCrop(Module):
     def __init__(
         self, patch_size: Union[Tuple[int, int], int], num_patches_per_tile: int
     ) -> None:
-        """Initialize a new instance of RepeatedRandomCrop.
+        """Initialize a new instance of NCrop.
 
         Args:
             patch_size: Size of random patch from image and mask (height, width)
-            num_patches_per_tile: number of patches to
-                randomly crop from a tile
+            num_patches_per_tile: number of patches to randomly crop from a tile
         """
         super().__init__()
         self.num_patches_per_tile = num_patches_per_tile
