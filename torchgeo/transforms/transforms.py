@@ -71,33 +71,7 @@ class AugmentationSequential(Module):
         return sample
 
 
-class ConstantNormalize(Module):
-    """Normalize image tensor by a constant."""
-
-    def __init__(self, val: float) -> None:
-        """Initialize a new instance of ConstantNormalize.
-
-        Args:
-            val: value by which to normalize
-        """
-        super().__init__()
-        self.val = val
-
-    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        """Normalize sample image by a constant.
-
-        Args:
-            sample: the input
-
-        Returns:
-            output sample with normalized image
-        """
-        sample["image"] = sample["image"].float()
-        sample["image"] /= self.val
-        return sample
-
-
-class RepeatedRandomCrop(Module):
+class NCrop(Module):
     """Take repeated random crops from a tile.
 
     This is usefule to create *num_patches_per_tile* random
@@ -108,10 +82,7 @@ class RepeatedRandomCrop(Module):
     """
 
     def __init__(
-        self,
-        patch_size: Union[Tuple[int, int], int],
-        num_patches_per_tile: int,
-        data_keys: List[str],
+        self, patch_size: Union[Tuple[int, int], int], num_patches_per_tile: int
     ) -> None:
         """Initialize a new instance of RepeatedRandomCrop.
 
@@ -119,13 +90,10 @@ class RepeatedRandomCrop(Module):
             patch_size: Size of random patch from image and mask (height, width)
             num_patches_per_tile: number of patches to
                 randomly crop from a tile
-            data_keys: data keys contained in *sample*
         """
         super().__init__()
         self.num_patches_per_tile = num_patches_per_tile
-        self.rcrop = K.AugmentationSequential(
-            K.RandomCrop(patch_size), data_keys=data_keys
-        )
+        self.patch_size = patch_size
 
     def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
         """Perform random cropping on a tile to create patches.
@@ -138,7 +106,9 @@ class RepeatedRandomCrop(Module):
         """
         images, masks = [], []
         for i in range(self.num_patches_per_tile):
-            image, mask = self.rcrop(sample["image"], sample["mask"].float())
+            crop = K.RandomCrop(self.patch_size, p=1.0)
+            image = crop(sample["image"].squeeze(0))
+            mask = crop(sample["mask"].float(), params=crop._params)
             images.append(image.squeeze(0))
             masks.append(mask.squeeze().long())
 
@@ -147,8 +117,8 @@ class RepeatedRandomCrop(Module):
         return sample
 
 
-class PadSegmentationSamples(Module):
-    """Pad Segmentation samples to a next multiple.
+class PadToMultiple(Module):
+    """Pad samples to a next multiple.
 
     This is useful for several segmentation models that
     except the input dimensions to be a multiple of 32.
@@ -157,7 +127,7 @@ class PadSegmentationSamples(Module):
     """
 
     def __init__(self, multiple: int = 32):
-        """Initialize a new instance of PadSegmentationSamples.
+        """Initialize a new instance of PadToMultiple.
 
         Args:
             multiple: what next multiple to pad to

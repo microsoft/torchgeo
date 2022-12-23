@@ -19,12 +19,7 @@ from .indices import (
     AppendSWI,
     AppendTriBandNormalizedDifferenceIndex,
 )
-from .transforms import (
-    AugmentationSequential,
-    ConstantNormalize,
-    PadSegmentationSamples,
-    RepeatedRandomCrop,
-)
+from .transforms import AugmentationSequential, NCrop, PadToMultiple
 
 __all__ = (
     "AppendBNDVI",
@@ -42,7 +37,6 @@ __all__ = (
     "AppendSWI",
     "AppendTriBandNormalizedDifferenceIndex",
     "AugmentationSequential",
-    "PadSegmentationSamples",
-    "RepeatedRandomCrop",
-    "ConstantNormalize",
+    "PadToMultiple",
+    "NCrop",
 )

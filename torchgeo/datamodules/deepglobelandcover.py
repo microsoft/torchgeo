@@ -6,15 +6,16 @@
 import warnings
 from typing import Any, Dict, Optional, Tuple, Union
 
+import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
+import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
-from torchvision.transforms import Compose
 
 from ..datasets import DeepGlobeLandCover
 from ..datasets.utils import flatten_samples
 from ..samplers.utils import _to_tuple
-from ..transforms import ConstantNormalize, PadSegmentationSamples, RepeatedRandomCrop
+from ..transforms import AugmentationSequential, NCrop, PadToMultiple
 from .utils import dataset_split
 
 
@@ -82,18 +83,17 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
                 " num_tiles_per_batch evenly divides batch_size"
             )
 
-        self.train_transform = Compose(
-            [
-                ConstantNormalize(255.0),
-                RepeatedRandomCrop(
-                    self.patch_size,
-                    self.num_patches_per_tile,
-                    data_keys=["input", "mask"],
-                ),
-            ]
+        self.train_transform = nn.Sequential(
+            AugmentationSequential(
+                K.Normalize(mean=0.0, std=255.0), data_keys=["image", "mask"]
+            ),
+            NCrop(patch_size, self.num_patches_per_tile),
         )
-        self.test_transform = Compose(
-            [ConstantNormalize(255.0), PadSegmentationSamples(32)]
+        self.test_transform = nn.Sequential(
+            AugmentationSequential(
+                K.Normalize(mean=0.0, std=255.0), data_keys=["image", "mask"]
+            ),
+            PadToMultiple(32),
         )
 
     def setup(self, stage: Optional[str] = None) -> None:
