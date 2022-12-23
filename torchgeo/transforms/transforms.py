@@ -107,12 +107,14 @@ class NCrop(Module):
         for i in range(self.num_patches_per_tile):
             crop = K.RandomCrop(self.patch_size, p=1.0)
             image = crop(sample["image"].squeeze(0))
-            mask = crop(sample["mask"].float(), params=crop._params)
             images.append(image.squeeze(0))
-            masks.append(mask.squeeze().long())
+            if "mask" in sample:
+                mask = crop(sample["mask"].float(), params=crop._params)
+                masks.append(mask.squeeze().long())
 
         sample["image"] = torch.stack(images)
-        sample["mask"] = torch.stack(masks)
+        if "mask" in sample:
+            sample["mask"] = torch.stack(masks)
         return sample
 
 
