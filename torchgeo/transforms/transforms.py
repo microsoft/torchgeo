@@ -132,7 +132,7 @@ class PadToMultiple(Module):
             multiple: what next multiple to pad to
 
         Raises:
-            AssertionError if *multiple* is not positve.
+            AssertionError: if *multiple* is not positve.
         """
         super().__init__()
         assert multiple > 0, "Multiple argument must be positive"
