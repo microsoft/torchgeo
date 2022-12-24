@@ -27,6 +27,7 @@ from torchgeo.datamodules import (
     RESISC45DataModule,
     SEN12MSDataModule,
     So2SatDataModule,
+    SpaceNet1DataModule,
     TropicalCycloneDataModule,
     UCMercedDataModule,
 )
@@ -57,6 +58,7 @@ TASK_TO_MODULES_MAPPING: Dict[
     "resisc45": (ClassificationTask, RESISC45DataModule),
     "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),
     "so2sat": (ClassificationTask, So2SatDataModule),
+    "spacenet1": (SemanticSegmentationTask, SpaceNet1DataModule),
     "ucmerced": (ClassificationTask, UCMercedDataModule),
 }
 
@@ -179,7 +181,11 @@ def main(conf: DictConfig) -> None:
         mode = "min"
 
     checkpoint_callback = ModelCheckpoint(
-        monitor=monitor_metric, dirpath=experiment_dir, save_top_k=1, save_last=True
+        monitor=monitor_metric,
+        filename="checkpoint-epoch{epoch:02d}-val_loss{val_loss:.2f}",
+        dirpath=experiment_dir,
+        save_top_k=1,
+        save_last=True,
     )
     early_stopping_callback = EarlyStopping(
         monitor=monitor_metric, min_delta=0.00, patience=18, mode=mode

@@ -94,6 +94,11 @@ So2Sat
 
 .. autoclass:: So2SatDataModule
 
+SpaceNet
+^^^^^^^^
+
+.. autoclass:: SpaceNet1DataModule
+
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
 
