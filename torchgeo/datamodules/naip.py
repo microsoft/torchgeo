@@ -43,8 +43,9 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             num_workers: The number of workers to use in all created DataLoaders
             patch_size: size of patches to sample
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.NAIP` (prefix keys with naip_) and
-                :class:`~torchgeo.datasets.Chesapeake13` (prefix keys with chesapeake_)
+                :class:`~torchgeo.datasets.NAIP` (prefix keys with ``naip_``) and
+                :class:`~torchgeo.datasets.Chesapeake13`
+                (prefix keys with ``chesapeake_``)
         """
         super().__init__()
         self.batch_size = batch_size
