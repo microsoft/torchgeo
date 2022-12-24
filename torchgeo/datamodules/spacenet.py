@@ -107,9 +107,8 @@ class SpaceNet1DataModule(pl.LightningDataModule):
         Returns:
             preprocessed sample
         """
-        sample["image"] = sample["image"].float()
+        sample["image"] = sample["image"].float() / 255
         sample["image"] = self.padto(sample["image"]).squeeze()
-        sample["image"] /= 255.0
 
         if "mask" in sample:
             # We add 1 to the mask to map the current {background, building} labels to
