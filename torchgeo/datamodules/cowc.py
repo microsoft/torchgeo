@@ -59,7 +59,8 @@ class COWCCountingDataModule(pl.LightningDataModule):
         This includes optionally downloading the dataset. This is done once per node,
         while :func:`setup` is done once per GPU.
         """
-        COWCCounting(**self.kwargs)
+        if self.kwargs.get("download", False):
+            COWCCounting(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Create the train/val/test splits based on the original Dataset objects.

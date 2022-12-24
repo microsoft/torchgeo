@@ -14,6 +14,7 @@ experiment:
   datamodule:
     naip_root: "tests/data/naip"
     chesapeake_root: "tests/data/chesapeake/BAYWIDE"
+    chesapeake_download: true
     batch_size: 2
     num_workers: 0
     patch_size: 32

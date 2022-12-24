@@ -79,7 +79,8 @@ class ETCI2021DataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        ETCI2021(**self.kwargs)
+        if self.kwargs.get("download", False):
+            ETCI2021(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.

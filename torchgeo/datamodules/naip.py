@@ -31,8 +31,6 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        naip_root: str,
-        chesapeake_root: str,
         batch_size: int = 64,
         num_workers: int = 0,
         patch_size: int = 256,
@@ -41,22 +39,25 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         """Initialize a LightningDataModule for NAIP and Chesapeake based DataLoaders.
 
         Args:
-            naip_root: directory containing NAIP data
-            chesapeake_root: directory containing Chesapeake data
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
             patch_size: size of patches to sample
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.NAIP` and
-                :class:`~torchgeo.datasets.Chesapeake13`
+                :class:`~torchgeo.datasets.NAIP` (prefix keys with naip_) and
+                :class:`~torchgeo.datasets.Chesapeake13` (prefix keys with chesapeake_)
         """
         super().__init__()
-        self.naip_root = naip_root
-        self.chesapeake_root = chesapeake_root
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.patch_size = patch_size
-        self.kwargs = kwargs
+
+        self.naip_kwargs = {}
+        self.chesapeake_kwargs = {}
+        for key, val in kwargs.items():
+            if key.startswith("naip_"):
+                self.naip_kwargs[key[5:]] = val
+            elif key.startswith("chesapeake_"):
+                self.chesapeake_kwargs[key[11:]] = val
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         """Transform a single sample from the NAIP Dataset.
@@ -102,7 +103,8 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        Chesapeake13(self.chesapeake_root, **self.kwargs)
+        if self.chesapeake_kwargs.get("download", False):
+            Chesapeake13(**self.chesapeake_kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -119,14 +121,13 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         chesapeak_transforms = Compose([self.chesapeake_transform, self.remove_bbox])
 
         self.chesapeake = Chesapeake13(
-            self.chesapeake_root, transforms=chesapeak_transforms, **self.kwargs
+            transforms=chesapeak_transforms, **self.chesapeake_kwargs
         )
         self.naip = NAIP(
-            self.naip_root,
-            self.chesapeake.crs,
-            self.chesapeake.res,
+            crs=self.chesapeake.crs,
+            res=self.chesapeake.res,
             transforms=naip_transforms,
-            **self.kwargs,
+            **self.naip_kwargs,
         )
         self.dataset = self.chesapeake & self.naip
 

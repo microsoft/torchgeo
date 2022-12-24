@@ -84,7 +84,8 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        NASAMarineDebris(**self.kwargs)
+        if self.kwargs.get("download", False):
+            NASAMarineDebris(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.

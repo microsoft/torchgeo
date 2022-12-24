@@ -9,5 +9,6 @@ experiment:
     verbose: false
   datamodule:
     root: "tests/data/nasa_marine_debris"
+    download: true
     batch_size: 1
     num_workers: 0

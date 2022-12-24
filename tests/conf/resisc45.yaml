@@ -10,5 +10,6 @@ experiment:
     num_classes: 3
   datamodule:
     root: "tests/data/resisc45"
+    download: true
     batch_size: 1
     num_workers: 0

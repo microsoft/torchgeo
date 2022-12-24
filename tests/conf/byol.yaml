@@ -10,6 +10,7 @@ experiment:
     learning_rate_schedule_patience: 6
   datamodule:
     root: "tests/data/chesapeake/cvpr"
+    download: true
     train_splits:
       - "de-test"
     val_splits:

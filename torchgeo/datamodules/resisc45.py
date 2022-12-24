@@ -107,7 +107,8 @@ class RESISC45DataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        RESISC45(**self.kwargs)
+        if self.kwargs.get("download", False):
+            RESISC45(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.

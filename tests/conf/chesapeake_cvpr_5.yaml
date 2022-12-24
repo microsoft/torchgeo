@@ -13,6 +13,7 @@ experiment:
     ignore_index: null
   datamodule:
     root: "tests/data/chesapeake/cvpr"
+    download: true
     train_splits:
     - "de-test"
     val_splits:

@@ -59,7 +59,8 @@ class LoveDADataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        LoveDA(**self.kwargs)
+        if self.kwargs.get("download", False):
+            LoveDA(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
