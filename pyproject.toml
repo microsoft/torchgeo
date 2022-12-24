@@ -85,6 +85,9 @@ filterwarnings = [
     "ignore:Call to deprecated create function:DeprecationWarning:tensorboard.compat.proto",
     # https://github.com/treebeardtech/nbmake/issues/68
     'ignore:The \(fspath. py.path.local\) argument to NotebookFile is deprecated:pytest.PytestDeprecationWarning:nbmake.pytest_plugin',
+    # https://github.com/lanpa/tensorboardX/issues/653
+    # https://github.com/lanpa/tensorboardX/pull/654
+    "ignore:Call to deprecated create function:DeprecationWarning:tensorboardX",
 
     # Expected warnings
     # pytorch-lightning warns us about using num_workers=0, but it's faster on macOS
