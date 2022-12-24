@@ -63,7 +63,7 @@ class TestSpaceNet1:
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet1:
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
-        test_md5 = {"sn1_AOI_1_RIO": "246e27fcd7ae73496212a7f585a43dbb"}
+        test_md5 = {"sn1_AOI_1_RIO": "127a523561987110f008e8c9815ce807"}
 
         # Refer https://github.com/python/mypy/issues/1032
         monkeypatch.setattr(SpaceNet1, "collection_md5_dict", test_md5)
@@ -85,7 +85,7 @@ class TestSpaceNet1:
             assert x["image"].shape[0] == 8
 
     def test_len(self, dataset: SpaceNet1) -> None:
-        assert len(dataset) == 2
+        assert len(dataset) == 3
 
     def test_already_downloaded(self, dataset: SpaceNet1) -> None:
         SpaceNet1(root=dataset.root, download=True)

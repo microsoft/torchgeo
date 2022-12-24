@@ -20,6 +20,7 @@ from torchgeo.datamodules import (
     NAIPChesapeakeDataModule,
     OSCDDataModule,
     SEN12MSDataModule,
+    SpaceNet1DataModule,
 )
 from torchgeo.datasets import LandCoverAI
 from torchgeo.trainers import SemanticSegmentationTask
@@ -48,6 +49,7 @@ class TestSemanticSegmentationTask:
             ("sen12ms_s1", SEN12MSDataModule),
             ("sen12ms_s2_all", SEN12MSDataModule),
             ("sen12ms_s2_reduced", SEN12MSDataModule),
+            ("spacenet1", SpaceNet1DataModule),
         ],
     )
     def test_trainer(
