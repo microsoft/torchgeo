@@ -226,7 +226,8 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
 
         This method is called once per node, while :func:`setup` is called once per GPU.
         """
-        ChesapeakeCVPR(splits=self.train_splits, layers=self.layers, **self.kwargs)
+        if self.kwargs.get("download", False):
+            ChesapeakeCVPR(splits=self.train_splits, layers=self.layers, **self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Create the train/val/test splits based on the original Dataset objects.

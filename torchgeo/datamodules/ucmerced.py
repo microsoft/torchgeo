@@ -63,7 +63,8 @@ class UCMercedDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        UCMerced(**self.kwargs)
+        if self.kwargs.get("download", False):
+            UCMerced(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.

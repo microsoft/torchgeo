@@ -12,5 +12,6 @@ experiment:
     root: "tests/data/bigearthnet"
     bands: "s2"
     num_classes: ${experiment.module.num_classes}
+    download: true
     batch_size: 1
     num_workers: 0

@@ -10,5 +10,6 @@ experiment:
     num_classes: 2
   datamodule:
     root: "tests/data/eurosat"
+    download: true
     batch_size: 1
     num_workers: 0

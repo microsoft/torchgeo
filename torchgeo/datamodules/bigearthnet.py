@@ -111,7 +111,8 @@ class BigEarthNetDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        BigEarthNet(split="train", **self.kwargs)
+        if self.kwargs.get("download", False):
+            BigEarthNet(split="train", **self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
