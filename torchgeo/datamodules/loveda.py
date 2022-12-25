@@ -67,18 +67,18 @@ class LoveDADataModule(pl.LightningDataModule):
             stage: stage to set up
         """
         train_transforms = self.preprocess
-        val_test_transforms = self.preprocess
+        val_predict_transforms = self.preprocess
 
         self.train_dataset = LoveDA(
             split="train", transforms=train_transforms, **self.kwargs
         )
 
         self.val_dataset = LoveDA(
-            split="val", transforms=val_test_transforms, **self.kwargs
+            split="val", transforms=val_predict_transforms, **self.kwargs
         )
 
-        self.test_dataset = LoveDA(
-            split="test", transforms=val_test_transforms, **self.kwargs
+        self.predict_dataset = LoveDA(
+            split="test", transforms=val_pred_transforms, **self.kwargs
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
@@ -107,14 +107,14 @@ class LoveDADataModule(pl.LightningDataModule):
             shuffle=False,
         )
 
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
+    def predict_dataloader(self) -> DataLoader[Any]:
+        """Return a DataLoader for prediction.
 
         Returns:
-            testing data loader
+            predict data loader
         """
         return DataLoader(
-            self.test_dataset,
+            self.predict_dataset,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=False,
