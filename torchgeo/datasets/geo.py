@@ -270,8 +270,8 @@ class RasterDataset(GeoDataset):
     #:
     #: * ``date``: used to calculate ``mint`` and ``maxt`` for ``index`` insertion
     #:
-    #: When :attr:`separate_files` is True, the following additional groups are
-    #: searched for to find other files:
+    #: When :attr:`~RasterDataset.separate_files` is True, the following additional
+    #: groups are searched for to find other files:
     #:
     #: * ``band``: replaced with requested band name
     filename_regex = ".*"
