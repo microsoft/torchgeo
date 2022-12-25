@@ -20,7 +20,7 @@ class TestUSAVarsDataModule:
         num_workers = 0
 
         dm = USAVarsDataModule(
-            root=root, batch_size=batch_size, num_workers=num_workers
+            root=root, batch_size=batch_size, num_workers=num_workers, download=True
         )
         dm.prepare_data()
         dm.setup()

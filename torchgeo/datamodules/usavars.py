@@ -54,7 +54,8 @@ class USAVarsDataModule(pl.LightningModule):
 
         This method is only called once per run.
         """
-        USAVars(**self.kwargs)
+        if self.kwargs.get("download", False):
+            USAVars(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main Dataset objects.

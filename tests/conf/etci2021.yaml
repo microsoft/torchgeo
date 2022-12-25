@@ -12,5 +12,6 @@ experiment:
     ignore_index: 0
   datamodule:
     root: "tests/data/etci2021"
+    download: true
     batch_size: 1
     num_workers: 0
