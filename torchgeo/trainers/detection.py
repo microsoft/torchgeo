@@ -36,10 +36,6 @@ if parse(torchvision.__version__) >= parse("0.13"):
 
 from ..datasets.utils import unbind_samples
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class ObjectDetectionTask(pl.LightningModule):
     """LightningModule for object detection of images.

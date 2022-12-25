@@ -14,11 +14,6 @@ import torch
 from torch import Tensor
 from torch.nn.modules import Module
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Module.__module__ = "torch.nn"
-
-
 _EPSILON = 1e-10
 
 

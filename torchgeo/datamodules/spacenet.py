@@ -13,10 +13,6 @@ from torch.utils.data import DataLoader
 from ..datasets import SpaceNet1
 from .utils import dataset_split
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class SpaceNet1DataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the SpaceNet1 dataset.
