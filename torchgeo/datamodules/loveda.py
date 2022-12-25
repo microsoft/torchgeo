@@ -77,6 +77,7 @@ class LoveDADataModule(pl.LightningDataModule):
             split="val", transforms=val_predict_transforms, **self.kwargs
         )
 
+        # Test set masks are not public, use for prediction instead
         self.predict_dataset = LoveDA(
             split="test", transforms=val_predict_transforms, **self.kwargs
         )
