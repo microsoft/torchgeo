@@ -6,7 +6,6 @@ import itertools
 import pytest
 import torch
 import torch.nn as nn
-from torch.nn.modules import Module
 
 from torchgeo.models import ChangeMixin, ChangeStar, ChangeStarFarSeg
 
