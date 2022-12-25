@@ -78,7 +78,7 @@ class LoveDADataModule(pl.LightningDataModule):
         )
 
         self.predict_dataset = LoveDA(
-            split="test", transforms=val_pred_transforms, **self.kwargs
+            split="test", transforms=val_predict_transforms, **self.kwargs
         )
 
     def train_dataloader(self) -> DataLoader[Any]:
