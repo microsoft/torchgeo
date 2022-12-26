@@ -50,7 +50,7 @@ class LoveDA(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * <https://arxiv.org/abs/2110.08733>
+    * https://arxiv.org/abs/2110.08733
 
     .. versionadded:: 0.2
     """
