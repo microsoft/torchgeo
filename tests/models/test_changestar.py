@@ -6,13 +6,8 @@ import itertools
 import pytest
 import torch
 import torch.nn as nn
-from torch.nn.modules import Module
 
 from torchgeo.models import ChangeMixin, ChangeStar, ChangeStarFarSeg
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Module.__module__ = "torch.nn"
 
 BACKBONE = ["resnet18", "resnet34", "resnet50", "resnet101"]
 IN_CHANNELS = [64, 128]

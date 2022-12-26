@@ -13,7 +13,6 @@ import torch
 import torch.nn as nn
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
-from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MetricCollection
 from torchmetrics.classification import (
@@ -26,11 +25,6 @@ from torchmetrics.classification import (
 
 from ..datasets.utils import unbind_samples
 from . import utils
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Conv2d.__module__ = "nn.Conv2d"
-Linear.__module__ = "nn.Linear"
 
 
 class ClassificationTask(pl.LightningModule):

@@ -13,16 +13,11 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torch.utils.data import DataLoader
 from torchmetrics import MetricCollection
 from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
 
 from ..datasets.utils import unbind_samples
 from ..models import FCN
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
 
 
 class SemanticSegmentationTask(pl.LightningModule):

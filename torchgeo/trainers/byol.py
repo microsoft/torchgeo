@@ -20,10 +20,6 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from . import utils
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Module.__module__ = "torch.nn"
-
 
 def normalized_mse(x: Tensor, y: Tensor) -> Tensor:
     """Computes the normalized mean squared error between x and y.
