@@ -98,7 +98,9 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             self.patch_size,
             padding=padding,
         )
-        sample["image"] = rearrange(sample["image"], "() t c h w -> t () c h w")
+        # Needed for reconstruction of patches later
+        sample["num_patches"] = sample["image"].shape[1]
+        sample["image"] = rearrange(sample["image"], "b n c h w -> (b n) c h w")
         return sample
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:

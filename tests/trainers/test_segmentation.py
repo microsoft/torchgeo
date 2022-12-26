@@ -40,7 +40,9 @@ class TestSemanticSegmentationTask:
             ("deepglobelandcover_0", DeepGlobeLandCoverDataModule),
             ("deepglobelandcover_5", DeepGlobeLandCoverDataModule),
             ("etci2021", ETCI2021DataModule),
-            ("inria", InriaAerialImageLabelingDataModule),
+            ("inria_train", InriaAerialImageLabelingDataModule),
+            ("inria_val", InriaAerialImageLabelingDataModule),
+            ("inria_test", InriaAerialImageLabelingDataModule),
             ("landcoverai", LandCoverAIDataModule),
             ("naipchesapeake", NAIPChesapeakeDataModule),
             ("oscd_all", OSCDDataModule),
@@ -80,7 +82,9 @@ class TestSemanticSegmentationTask:
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
         trainer.test(model=model, datamodule=datamodule)
-        trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
+
+        if hasattr(datamodule, "predict_dataset"):
+            trainer.predict(model=model, datamodule=datamodule)
 
     def test_no_logger(self) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", "landcoverai.yaml"))
