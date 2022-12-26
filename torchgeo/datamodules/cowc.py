@@ -12,10 +12,6 @@ from torch.utils.data import DataLoader, random_split
 
 from ..datasets import COWCCounting
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class COWCCountingDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the COWC Counting dataset."""

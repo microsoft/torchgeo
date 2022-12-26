@@ -12,7 +12,6 @@ import torchvision
 from packaging.version import parse
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torch.utils.data import DataLoader
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models.detection import FasterRCNN
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
@@ -35,10 +34,6 @@ if parse(torchvision.__version__) >= parse("0.13"):
     }
 
 from ..datasets.utils import unbind_samples
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
 
 
 class ObjectDetectionTask(pl.LightningModule):

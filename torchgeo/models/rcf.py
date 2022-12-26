@@ -8,10 +8,7 @@ from typing import Optional
 import torch
 import torch.nn.functional as F
 from torch import Tensor
-from torch.nn.modules import Conv2d, Module
-
-Module.__module__ = "torch.nn"
-Conv2d.__module__ = "torch.nn"
+from torch.nn.modules import Module
 
 
 class RCF(Module):
