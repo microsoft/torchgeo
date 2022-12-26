@@ -98,6 +98,8 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             self.patch_size,
             padding=padding,
         )
+        # Needed for reconstruction of patches later
+        sample["num_patches"] = sample["image"].shape[1]
         sample["image"] = rearrange(sample["image"], "b n c h w -> (b n) c h w")
         return sample
 
