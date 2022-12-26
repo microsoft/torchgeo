@@ -16,7 +16,7 @@ jobs:
     - name: Clone repo
       uses: actions/checkout@v3.2.0
     - name: Set up python
-      uses: actions/setup-python@v4.3.1
+      uses: actions/setup-python@v4.4.0
       with:
         python-version: '3.10'
     - name: Install pip dependencies
@@ -32,7 +32,7 @@ jobs:
     - name: Clone repo
       uses: actions/checkout@v3.2.0
     - name: Set up python
-      uses: actions/setup-python@v4.3.1
+      uses: actions/setup-python@v4.4.0
       with:
         python-version: '3.10'
     - name: Install pip dependencies
@@ -48,7 +48,7 @@ jobs:
     - name: Clone repo
       uses: actions/checkout@v3.2.0
     - name: Set up python
-      uses: actions/setup-python@v4.3.1
+      uses: actions/setup-python@v4.4.0
       with:
         python-version: '3.10'
     - name: Install pip dependencies
@@ -64,7 +64,7 @@ jobs:
     - name: Clone repo
       uses: actions/checkout@v3.2.0
     - name: Set up python
-      uses: actions/setup-python@v4.3.1
+      uses: actions/setup-python@v4.4.0
       with:
         python-version: '3.10'
     - name: Install pip dependencies
@@ -80,7 +80,7 @@ jobs:
     - name: Clone repo
       uses: actions/checkout@v3.2.0
     - name: Set up python
-      uses: actions/setup-python@v4.3.1
+      uses: actions/setup-python@v4.4.0
       with:
         python-version: '3.10'
     - name: Install pip dependencies
