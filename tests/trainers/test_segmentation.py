@@ -18,7 +18,6 @@ from torchgeo.datamodules import (
     InriaAerialImageLabelingDataModule,
     LandCoverAIDataModule,
     NAIPChesapeakeDataModule,
-    OSCDDataModule,
     SEN12MSDataModule,
     SpaceNet1DataModule,
 )
@@ -45,8 +44,6 @@ class TestSemanticSegmentationTask:
             ("inria_test", InriaAerialImageLabelingDataModule),
             ("landcoverai", LandCoverAIDataModule),
             ("naipchesapeake", NAIPChesapeakeDataModule),
-            ("oscd_all", OSCDDataModule),
-            ("oscd_rgb", OSCDDataModule),
             ("sen12ms_all", SEN12MSDataModule),
             ("sen12ms_s1", SEN12MSDataModule),
             ("sen12ms_s2_all", SEN12MSDataModule),

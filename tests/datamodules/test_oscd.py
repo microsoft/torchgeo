@@ -20,6 +20,7 @@ class TestOSCDDataModule:
         num_workers = 0
         dm = OSCDDataModule(
             root=root,
+            download=True,
             bands=bands,
             train_batch_size=batch_size,
             num_workers=num_workers,
