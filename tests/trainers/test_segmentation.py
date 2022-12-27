@@ -84,7 +84,7 @@ class TestSemanticSegmentationTask:
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
 
-        if hasattr(datamodule, "test_dataset"):
+        if hasattr(datamodule, "test_dataset") or hasattr(datamodule, "test_sampler"):
             trainer.test(model=model, datamodule=datamodule)
 
         if hasattr(datamodule, "predict_dataset"):
