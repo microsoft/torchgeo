@@ -144,3 +144,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Mac generated files
+.DS_Store
