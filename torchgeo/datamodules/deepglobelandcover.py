@@ -5,13 +5,14 @@
 
 from typing import Any, Dict, Optional, Tuple, Union
 
-import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-from torch.utils.data import DataLoader, Dataset
+from kornia.augmentation import Normalize
+from kornia.contrib import ExtractTensorPatches
+from torch.utils.data import DataLoader
 
 from ..datasets import DeepGlobeLandCover
-from ..transforms import AugmentationSequential, NCrop, PadToMultiple
+from ..transforms import AugmentationSequential, NCrop
 from .utils import dataset_split
 
 
@@ -64,13 +65,13 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         self.kwargs = kwargs
 
         self.train_transform = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0),
+            Normalize(mean=0.0, std=255.0),
             NCrop(patch_size, self.num_patches_per_tile),
             data_keys=["image", "mask"],
         )
         self.test_transform = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0),
-            PadToMultiple(32),
+            Normalize(mean=0.0, std=255.0),
+            ExtractTensorPatches(window_size=patch_size, stride=patch_size),
             data_keys=["image", "mask"],
         )
 
@@ -82,28 +83,11 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         Args:
             stage: the stage to set up
         """
-        train_dataset = DeepGlobeLandCover(
-            split="train", transforms=self.train_transform, **self.kwargs
+        train_dataset = DeepGlobeLandCover(split="train", **self.kwargs)
+        self.train_dataset, self.val_dataset = dataset_split(
+            train_dataset, self.val_split_pct
         )
-
-        self.train_dataset: Dataset[Any]
-        self.val_dataset: Dataset[Any]
-
-        if self.val_split_pct > 0.0:
-            val_dataset = DeepGlobeLandCover(
-                split="train", transforms=self.test_transform, **self.kwargs
-            )
-            self.train_dataset, self.val_dataset, _ = dataset_split(
-                train_dataset, val_pct=self.val_split_pct, test_pct=0.0
-            )
-            self.val_dataset.dataset = val_dataset
-        else:
-            self.train_dataset = train_dataset
-            self.val_dataset = train_dataset
-
-        self.test_dataset = DeepGlobeLandCover(
-            split="test", transforms=self.test_transform, **self.kwargs
-        )
+        self.test_dataset = DeepGlobeLandCover(split="test", **self.kwargs)
 
     def train_dataloader(self) -> DataLoader[Dict[str, Any]]:
         """Return a DataLoader for training.
@@ -137,6 +121,26 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         return DataLoader(
             self.test_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
         )
+
+    def on_after_batch_transfer(
+        self, batch: Dict[str, Any], dataloader_idx: int
+    ) -> Dict[str, Any]:
+        """Apply augmentations to batch after transferring to GPU.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented
+            dataloader_idx: The index of the dataloader to which the batch belongs
+
+        Returns:
+            A batch of data
+        """
+        if self.trainer:
+            if self.trainer.training:
+                batch = self.train_transform(batch)
+            elif self.trainer.validating or self.trainer.testing:
+                batch = self.test_transform(batch)
+
+        return batch
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
         """Run :meth:`torchgeo.datasets.DeepGlobeLandCover.plot`.
