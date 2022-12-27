@@ -100,7 +100,6 @@ from .usavars import USAVars
 from .utils import (
     BoundingBox,
     concat_samples,
-    flatten_samples,
     merge_samples,
     stack_samples,
     unbind_samples,
@@ -211,5 +210,4 @@ __all__ = (
     "merge_samples",
     "stack_samples",
     "unbind_samples",
-    "flatten_samples",
 )

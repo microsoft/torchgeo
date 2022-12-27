@@ -31,7 +31,6 @@ import numpy as np
 import rasterio
 import torch
 from torch import Tensor
-from torch.utils.data._utils.collate import default_collate
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
 
@@ -597,26 +596,6 @@ def unbind_samples(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
         if isinstance(values, Tensor):
             sample[key] = torch.unbind(values)
     return _dict_list_to_list_dict(sample)
-
-
-def flatten_samples(samples: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
-    """Flatten the first two dimensions of a list of samples.
-
-    Useful for combining several patches per sample into a batch of samples.
-
-    Args:
-        samples: list of samples
-
-    Returns:
-        a single sample
-
-    .. versionadded:: 0.4
-    """
-    collated: Dict[str, Any] = default_collate(samples)  # type: ignore[no-untyped-call]
-    for key, val in collated.items():
-        if isinstance(val, Tensor):
-            collated[key] = torch.flatten(val, end_dim=1)
-    return collated
 
 
 def rasterio_loader(path: str) -> "np.typing.NDArray[np.int_]":

@@ -3,18 +3,14 @@
 
 """DeepGlobe Land Cover Classification Challenge datamodule."""
 
-import warnings
 from typing import Any, Dict, Optional, Tuple, Union
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 
 from ..datasets import DeepGlobeLandCover
-from ..datasets.utils import flatten_samples
-from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential, NCrop, PadToMultiple
 from .utils import dataset_split
 
@@ -23,90 +19,68 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the DeepGlobe Land Cover dataset.
 
     Uses the train/test splits from the dataset.
-
     """
 
     def __init__(
         self,
-        batch_size: int = 32,
-        num_workers: int = 0,
-        patch_size: Union[Tuple[int, int], int] = (64, 64),
         num_tiles_per_batch: int = 16,
+        num_patches_per_tile: int = 16,
+        patch_size: Union[Tuple[int, int], int] = 64,
         val_split_pct: float = 0.2,
+        num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
-        """Initialize a LightningDataModule for DeepGlobeLandCover based DataLoaders.
+        """Initialize a new LightningDataModule instance.
+
+        The DeepGlobe Land Cover dataset contains images that are too large to pass
+        directly through a model. Instead, we randomly sample patches from image tiles
+        during training and chop up image tiles into patch grids during evaluation.
+        During training, the effective batch size is equal to
+        ``num_tiles_per_batch`` x ``num_patches_per_tile``.
 
         Args:
-            batch_size: The batch size used in the train DataLoader
-                (val_batch_size == test_batch_size == 1).
-            num_workers: The number of workers to use in all created DataLoaders
-            val_split_pct: What percentage of the dataset to use as a validation set
-            patch_size: Size of random patch from image and mask (height, width), should
-                be a multiple of 32 for most segmentation architectures
-            num_tiles_per_batch: number of random tiles to consider sampling patches
-                from per sample, should evenly divide batch_size and be less than
-                or equal to batch_size
+            num_tiles_per_batch: The number of image tiles to sample from during
+                training
+            num_patches_per_tile: The number of patches to randomly sample from each
+                image tile during training
+            patch_size: The size of each patch, either ``size`` or ``(height, width)``.
+                Should be a multiple of 32 for most segmentation architectures
+            val_split_pct: The percentage of the dataset to use as a validation set
+            num_workers: The number of workers to use for parallel data loading
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.DeepGlobeLandCover`
 
-        Raises:
-            AssertionError: if num_tiles_per_batch > batch_size
-
         .. versionchanged:: 0.4
-            'patch_size' and 'num_tiles_per_batch' introduced in order to randomly
-            crop the variable size images during training
+           *batch_size* was replaced by *num_tile_per_batch*, *num_patches_per_tile*,
+           and *patch_size*.
         """
         super().__init__()
 
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.patch_size = _to_tuple(patch_size)
+        self.num_tiles_per_batch = num_tiles_per_batch
+        self.num_patches_per_tile = num_patches_per_tile
+        self.patch_size = patch_size
         self.val_split_pct = val_split_pct
+        self.num_workers = num_workers
         self.kwargs = kwargs
 
-        assert (
-            self.batch_size >= num_tiles_per_batch
-        ), "num_tiles_per_batch should be less than or equal to batch_size."
-
-        self.num_patches_per_tile = self.batch_size // num_tiles_per_batch
-        self.num_tiles_per_batch = num_tiles_per_batch
-
-        if (self.num_patches_per_tile % 2) != 0 and (
-            self.num_patches_per_tile != num_tiles_per_batch
-        ):
-            warnings.warn(
-                "The effective batch size"
-                f" will differ from the specified {batch_size}"
-                f" and be {self.num_patches_per_tile * num_tiles_per_batch} instead."
-                " To match the batch_size exactly, ensure that"
-                " num_tiles_per_batch evenly divides batch_size"
-            )
-
-        self.train_transform = nn.Sequential(
-            AugmentationSequential(
-                K.Normalize(mean=0.0, std=255.0), data_keys=["image", "mask"]
-            ),
+        self.train_transform = AugmentationSequential(
+            K.Normalize(mean=0.0, std=255.0),
             NCrop(patch_size, self.num_patches_per_tile),
+            data_keys=["image", "mask"],
         )
-        self.test_transform = nn.Sequential(
-            AugmentationSequential(
-                K.Normalize(mean=0.0, std=255.0), data_keys=["image", "mask"]
-            ),
+        self.test_transform = AugmentationSequential(
+            K.Normalize(mean=0.0, std=255.0),
             PadToMultiple(32),
+            data_keys=["image", "mask"],
         )
 
     def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
+        """Initialize the main Dataset objects.
 
         This method is called once per GPU per run.
 
         Args:
-            stage: stage to set up
-
-        .. versionchanged:: 0.4
-            Add functionality to randomly crop patches from a tile during
-            training and pad validation and test samples to next multiple of 32
+            stage: the stage to set up
         """
         train_dataset = DeepGlobeLandCover(
             split="train", transforms=self.train_transform, **self.kwargs
@@ -141,7 +115,6 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             self.train_dataset,
             batch_size=self.num_tiles_per_batch,
             num_workers=self.num_workers,
-            collate_fn=flatten_samples,
             shuffle=True,
         )
 
@@ -151,21 +124,9 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         Returns:
             validation data loader
         """
-        if self.val_split_pct > 0.0:
-            return DataLoader(
-                self.val_dataset,
-                batch_size=1,
-                num_workers=self.num_workers,
-                shuffle=False,
-            )
-        else:
-            return DataLoader(
-                self.val_dataset,
-                batch_size=1,
-                num_workers=self.num_workers,
-                shuffle=False,
-                collate_fn=flatten_samples,
-            )
+        return DataLoader(
+            self.val_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
+        )
 
     def test_dataloader(self) -> DataLoader[Dict[str, Any]]:
         """Return a DataLoader for testing.
