@@ -7,16 +7,19 @@ from typing import Any, Dict, List, cast
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
+from functools import partial
 import torch
 import torchvision
 from packaging.version import parse
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.utils.data import DataLoader
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
-from torchvision.models.detection import FasterRCNN
+from torchvision.models.detection import FasterRCNN, FCOS, RetinaNet
+from torchvision.models.detection.retinanet import RetinaNetHead
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from torchvision.models.detection.rpn import AnchorGenerator
-from torchvision.ops import MultiScaleRoIAlign
+from torchvision.ops import MultiScaleRoIAlign, misc, feature_pyramid_network
 
 if parse(torchvision.__version__) >= parse("0.13"):
     from torchvision.models import resnet as R
@@ -33,15 +36,31 @@ if parse(torchvision.__version__) >= parse("0.13"):
         "wide_resnet101_2": R.Wide_ResNet101_2_Weights.DEFAULT,
     }
 
+BACKBONE_LAT_DIM_MAP = {
+    "resnet18": 512,
+    "resnet34": 512,
+    "resnet50": 2048,
+    "resnet101": 2048,
+    "resnet152": 2048,
+    "resnext50_32x4d": 2048,
+    "resnext101_32x8d": 2048,
+    "wide_resnet50_2": 2048,
+    "wide_resnet101_2": 2048,
+}
+
 from ..datasets.utils import unbind_samples
+
+# https://github.com/pytorch/pytorch/issues/60979
+# https://github.com/pytorch/pytorch/pull/61045
+DataLoader.__module__ = "torch.utils.data"
 
 
 class ObjectDetectionTask(pl.LightningModule):
     """LightningModule for object detection of images.
 
-    Currently, supports a Faster R-CNN model from
+    Currently, supports Faster R-CNN, FCOS, and RetinaNet models from
     `torchvision
-    <https://pytorch.org/vision/stable/models/faster_rcnn.html>`_ with
+    <https://pytorch.org/vision/stable/models.html#object-detection-instance-segmentation-and-person-keypoint-detection>`_ with
     one of the following *backbone* arguments:
 
     .. code-block:: python
@@ -56,28 +75,34 @@ class ObjectDetectionTask(pl.LightningModule):
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
         backbone_pretrained = self.hyperparams.get("pretrained", True)
-        if self.hyperparams["model"] == "faster-rcnn":
-            if "resnet" in self.hyperparams["backbone"]:
-                kwargs = {
-                    "backbone_name": self.hyperparams["backbone"],
-                    "trainable_layers": self.hyperparams.get("trainable_layers", 3),
-                }
-                if parse(torchvision.__version__) >= parse("0.13"):
-                    if backbone_pretrained:
-                        kwargs["weights"] = BACKBONE_WEIGHT_MAP[
-                            self.hyperparams["backbone"]
-                        ]
-                    else:
-                        kwargs["weights"] = None
+
+        if "resnet" in self.hyperparams["backbone"] or "resnext" in self.hyperparams["backbone"]:
+            kwargs = {
+                "backbone_name": self.hyperparams["backbone"],
+                "trainable_layers": self.hyperparams.get("trainable_layers", 3),
+            }
+            if parse(torchvision.__version__) >= parse("0.13"):
+                if backbone_pretrained:
+                    kwargs["weights"] = BACKBONE_WEIGHT_MAP[
+                        self.hyperparams["backbone"]
+                    ]
                 else:
-                    kwargs["pretrained"] = backbone_pretrained
-
-                backbone = resnet_fpn_backbone(**kwargs)
+                    kwargs["weights"] = None
             else:
-                raise ValueError(
-                    f"Backbone type '{self.hyperparams['backbone']}' is not valid."
-                )
+                kwargs["pretrained"] = backbone_pretrained
 
+            latent_dim = BACKBONE_LAT_DIM_MAP[
+                self.hyperparams["backbone"]
+            ]
+        else:
+            raise ValueError(
+                f"Backbone type '{self.hyperparams['backbone']}' is not valid."
+            )
+
+        num_classes = self.hyperparams["num_classes"]
+
+        if self.hyperparams["model"] == "faster-rcnn":
+            backbone = resnet_fpn_backbone(**kwargs)
             anchor_generator = AnchorGenerator(
                 sizes=((32), (64), (128), (256), (512)), aspect_ratios=((0.5, 1.0, 2.0))
             )
@@ -85,14 +110,48 @@ class ObjectDetectionTask(pl.LightningModule):
             roi_pooler = MultiScaleRoIAlign(
                 featmap_names=["0", "1", "2", "3"], output_size=7, sampling_ratio=2
             )
-            num_classes = self.hyperparams["num_classes"]
             self.model = FasterRCNN(
                 backbone,
                 num_classes,
                 rpn_anchor_generator=anchor_generator,
                 box_roi_pool=roi_pooler,
             )
+        elif self.hyperparams["model"] == "fcos":
+            kwargs["extra_blocks"] = feature_pyramid_network.LastLevelP6P7(256, 256)
+            is_trained = kwargs["weights"] if parse(
+                torchvision.__version__) >= parse("0.13") else kwargs["pretrained"]
+            kwargs["norm_layer"] = misc.FrozenBatchNorm2d if is_trained else torch.nn.BatchNorm2d
 
+            backbone = resnet_fpn_backbone(**kwargs)
+
+            anchor_sizes = ((8,), (16,), (32,), (64,), (128,), (256,))
+            aspect_ratios = ((1.0,),) * len(anchor_sizes)
+            anchor_generator = AnchorGenerator(anchor_sizes, aspect_ratios)
+
+            self.model = FCOS(backbone, num_classes, anchor_generator=anchor_generator)
+
+        elif self.hyperparams["model"] == "retinanet":
+            kwargs["extra_blocks"] = feature_pyramid_network.LastLevelP6P7(latent_dim, 256)
+            backbone = resnet_fpn_backbone(**kwargs)
+
+            anchor_sizes = tuple(
+                (x, int(x * 2 ** (1.0 / 3)), int(x * 2 ** (2.0 / 3))) for x in [16, 32, 64, 128, 256, 512]
+            )
+            aspect_ratios = ((0.5, 1.0, 2.0),) * len(anchor_sizes)
+            anchor_generator = AnchorGenerator(anchor_sizes, aspect_ratios)
+
+            head = RetinaNetHead(
+                backbone.out_channels,
+                anchor_generator.num_anchors_per_location()[0],
+                num_classes,
+                norm_layer=partial(torch.nn.GroupNorm, 32),
+            )
+
+            self.model = RetinaNet(
+                backbone, 
+                num_classes, 
+                anchor_generator=anchor_generator, 
+                head=head)
         else:
             raise ValueError(f"Model type '{self.hyperparams['model']}' is not valid.")
 
