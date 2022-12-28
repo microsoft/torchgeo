@@ -71,22 +71,19 @@ def test_resnet50_pretrained_weights(
     assert isinstance(y, torch.Tensor)
 
 
-# @pytest.mark.parametrize(
-#     "weight_name",
-#     [(w.name) for w in ResNet50_Weights]
-# )
-# def test_resnet50_weights_download(weight_name=str) -> None:
-#     weight = ResNet50_Weights[weight_name]
-#     state_dict = weight.get_state_dict()
-#     num_input_channels = weight.meta["num_input_channels"]
+@pytest.mark.parametrize("weight_name", [(w.name) for w in ResNet50_Weights])
+def test_resnet50_weights_download(weight_name=str) -> None:
+    weight = ResNet50_Weights[weight_name]
+    state_dict = weight.get_state_dict()
+    num_input_channels = weight.meta["num_input_channels"]
 
-#     task = ClassificationTask(
-#         model="resnet50",
-#         loss="ce",
-#         in_channels=num_input_channels,
-#         weights=state_dict,
-#         num_classes=1000 # imagenet default weights timm
-#     )
-#     x = torch.zeros(1, num_input_channels, 64, 64)
-#     y = task.forward(x)
-#     assert isinstance(y, torch.Tensor)
+    task = ClassificationTask(
+        model="resnet50",
+        loss="ce",
+        in_channels=num_input_channels,
+        weights=state_dict,
+        num_classes=1000,  # imagenet default weights timm
+    )
+    x = torch.zeros(1, num_input_channels, 64, 64)
+    y = task.forward(x)
+    assert isinstance(y, torch.Tensor)
