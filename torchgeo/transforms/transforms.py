@@ -8,11 +8,14 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import kornia
 import torch
 from kornia.augmentation import GeometricAugmentationBase2D
+from kornia.augmentation.random_generator import CropGenerator
 from kornia.contrib import compute_padding, extract_tensor_patches
+from kornia.geometry import crop_by_indices
 from torch import Tensor
 from torch.nn.modules import Module
 
 
+# TODO: contribute these to Kornia and delete this file
 class AugmentationSequential(Module):
     """Wrapper around kornia AugmentationSequential to handle input dicts."""
 
@@ -73,7 +76,6 @@ class AugmentationSequential(Module):
         return sample
 
 
-# TODO: contribute these to Kornia
 class _ExtractTensorPatches(GeometricAugmentationBase2D):  # type: ignore[misc]
     """Chop up a tensor into a grid."""
 
@@ -99,8 +101,8 @@ class _ExtractTensorPatches(GeometricAugmentationBase2D):  # type: ignore[misc]
         Returns:
             the transformation
         """
-        # TODO: this isn't correct, but we don't need it at the moment anyway
-        return self.identity_matrix(input)
+        out: Tensor = self.identity_matrix(input)
+        return out
 
     def apply_transform(
         self,
@@ -139,7 +141,24 @@ class _RandomNCrop(GeometricAugmentationBase2D):  # type: ignore[misc]
             num: number of crops to take
         """
         super().__init__(p=1)
+        self._param_generator = CropGenerator(size)
         self.flags = {"size": size, "num": num}
+
+    def compute_transformation(
+        self, input: Tensor, params: Dict[str, Tensor], flags: Dict[str, Any]
+    ) -> Tensor:
+        """Compute the transformation.
+
+        Args:
+            input: the input tensor
+            params: generated parameters
+            flags: static parameters
+
+        Returns:
+            the transformation
+        """
+        out: Tensor = self.identity_matrix(input)
+        return out
 
     def apply_transform(
         self,
@@ -159,32 +178,8 @@ class _RandomNCrop(GeometricAugmentationBase2D):  # type: ignore[misc]
         Returns:
             the augmented input
         """
-
-    def forward(self, sample):
-        images, masks = [], []
-        for i in range(self.num_patches_per_tile):
-            crop = K.RandomCrop(self.patch_size, p=1.0)
-            image = crop(sample["image"].squeeze(0))
-            images.append(image.squeeze(0))
-            if "mask" in sample:
-                mask = crop(sample["mask"].float(), params=crop._params)
-                masks.append(mask.squeeze().long())
-
-        sample["image"] = torch.stack(images)
-        if "mask" in sample:
-            sample["mask"] = torch.stack(masks)
-        return sample
-
-    def n_random_crop(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Get n random crops."""
-        images, masks = [], []
-        for _ in range(self.num_patches_per_tile):
-            image, mask = sample["image"], sample["mask"]
-            # RandomCrop needs image and mask to be in float
-            mask = mask.to(torch.float)
-            image, mask = self.random_crop(image, mask)
-            images.append(image.squeeze())
-            masks.append(mask.squeeze(0).long())
-        sample["image"] = torch.stack(images)  # (t,c,h,w)
-        sample["mask"] = torch.stack(masks)  # (t, 1, h, w)
-        return sample
+        out = []
+        for _ in range(flags["num"]):
+            params = self._param_generator(input.size())
+            out.append(crop_by_indices(input, params["src"], flags["size"]))
+        return torch.stack(out)

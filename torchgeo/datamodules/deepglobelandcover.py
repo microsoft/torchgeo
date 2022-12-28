@@ -11,6 +11,7 @@ from kornia.augmentation import Normalize
 from torch.utils.data import DataLoader
 
 from ..datasets import DeepGlobeLandCover
+from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
 from ..transforms.transforms import _ExtractTensorPatches, _RandomNCrop
 from .utils import dataset_split
@@ -58,18 +59,20 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         super().__init__()
 
         self.num_tiles_per_batch = num_tiles_per_batch
+        self.num_patches_per_tile = num_patches_per_tile
+        self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
         self.num_workers = num_workers
         self.kwargs = kwargs
 
         self.train_transform = AugmentationSequential(
             Normalize(mean=0.0, std=255.0),
-            _RandomNCrop(patch_size, num_patches_per_tile),
+            _RandomNCrop(self.patch_size, self.num_patches_per_tile),
             data_keys=["image", "mask"],
         )
         self.test_transform = AugmentationSequential(
             Normalize(mean=0.0, std=255.0),
-            _ExtractTensorPatches(patch_size),
+            _ExtractTensorPatches(self.patch_size),
             data_keys=["image", "mask"],
         )
 
