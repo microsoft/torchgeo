@@ -7,9 +7,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import kornia
 import torch
-from kornia.augmentation import AugmentationBase2D, GeometricAugmentationBase2D, IntensityAugmentationBase2D
+from kornia.augmentation import GeometricAugmentationBase2D
 from kornia.contrib import compute_padding, extract_tensor_patches
-from kornia.geometry import get_perspective_transform
 from torch import Tensor
 from torch.nn.modules import Module
 
@@ -75,7 +74,7 @@ class AugmentationSequential(Module):
 
 
 # TODO: contribute these to Kornia
-class _ExtractTensorPatches(IntensityAugmentationBase2D):  # type: ignore[misc]
+class _ExtractTensorPatches(GeometricAugmentationBase2D):  # type: ignore[misc]
     """Chop up a tensor into a grid."""
 
     def __init__(self, window_size: Union[int, Tuple[int, int]]) -> None:
@@ -86,6 +85,22 @@ class _ExtractTensorPatches(IntensityAugmentationBase2D):  # type: ignore[misc]
         """
         super().__init__(p=1)
         self.flags = {"window_size": window_size}
+
+    def compute_transformation(
+        self, input: Tensor, params: Dict[str, Tensor], flags: Dict[str, Any]
+    ) -> Tensor:
+        """Compute the transformation.
+
+        Args:
+            input: the input tensor
+            params: generated parameters
+            flags: static parameters
+
+        Returns:
+            the transformation
+        """
+        # TODO: this isn't correct, but we don't need it at the moment anyway
+        return self.identity_matrix(input)
 
     def apply_transform(
         self,
@@ -145,7 +160,7 @@ class _RandomNCrop(GeometricAugmentationBase2D):  # type: ignore[misc]
             the augmented input
         """
 
-    def forward(self):
+    def forward(self, sample):
         images, masks = [], []
         for i in range(self.num_patches_per_tile):
             crop = K.RandomCrop(self.patch_size, p=1.0)
