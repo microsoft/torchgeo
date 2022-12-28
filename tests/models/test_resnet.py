@@ -30,7 +30,7 @@ def resnet50_googleearth_millionaid_rgb(tmp_path: Path) -> str:
     model = timm.create_model("resnet50", in_chans=num_input_channels)
     ckpt_path = os.path.join(tmp_path, f"resnet50_{weight_key.lower()}.pt")
     torch.save(model.state_dict(), ckpt_path)
-    return ckpt_path, num_input_channels, weight_key
+    return ckpt_path, num_input_channels
 
 
 @pytest.fixture
@@ -40,21 +40,26 @@ def resnet50_imagenet_rgb(tmp_path: Path) -> str:
     model = timm.create_model("resnet50", in_chans=num_input_channels)
     ckpt_path = os.path.join(tmp_path, f"resnet50_{weight_key.lower()}.pt")
     torch.save(model.state_dict(), ckpt_path)
-    return ckpt_path, num_input_channels, weight_key
+    return ckpt_path, num_input_channels
 
 
 @pytest.mark.parametrize(
-    "weights", [("resnet50_googleearth_millionaid_rgb"), ("resnet50_imagenet_rgb")]
+    "generate_model,weight",
+    [
+        (
+            "resnet50_googleearth_millionaid_rgb",
+            ResNet50_Weights.GOOGLEEARTH_MILLIONAID_RGB,
+        ),
+        ("resnet50_imagenet_rgb", ResNet50_Weights.IMAGENET_RGB),
+    ],
 )
 def test_resnet50_pretrained_weights(
-    monkeypatch: MonkeyPatch, request: SubRequest, weights
+    monkeypatch: MonkeyPatch, request: SubRequest, generate_model, weight
 ) -> None:
 
-    ckpt_path, num_input_channels, weight_key = request.getfixturevalue(weights)
+    ckpt_path, num_input_channels = request.getfixturevalue(generate_model)
 
-    monkeypatch.setattr(
-        torchgeo.models.ResNet50_Weights, f"{weight_key}.url", ckpt_path
-    )
+    monkeypatch.setattr(weight, "url", ckpt_path)
     monkeypatch.setattr(
         torchgeo.models.resnet, "load_state_dict_from_url", load_state_dict_from_url
     )
@@ -63,7 +68,7 @@ def test_resnet50_pretrained_weights(
         model="resnet50",
         loss="ce",
         in_channels=num_input_channels,
-        weights=ResNet50_Weights[weight_key].get_state_dict(),
+        weights=weight.get_state_dict(),
         num_classes=1000,  # imagenet default weights timm
     )
     x = torch.zeros(1, num_input_channels, 64, 64)
@@ -71,8 +76,9 @@ def test_resnet50_pretrained_weights(
     assert isinstance(y, torch.Tensor)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("weight_name", [(w.name) for w in ResNet50_Weights])
-def test_resnet50_weights_download(weight_name=str) -> None:
+def test_resnet50_weights_download(weight_name: str) -> None:
     weight = ResNet50_Weights[weight_name]
     state_dict = weight.get_state_dict()
     num_input_channels = weight.meta["num_input_channels"]
