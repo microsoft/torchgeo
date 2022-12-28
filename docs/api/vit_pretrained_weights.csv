@@ -1,0 +1,3 @@
+Weight," Input Channels"," Source"," Citation", " Acc BigEarthNet", " Acc Eurosat"
+VITSmall16_Weights.SENTINEL2_ALL_MOCO," 13", " `link <https://github.com/zhu-xlab/SSL4EO-S12>`__"," `link <https://arxiv.org/abs/2211.07044>`__", " 89.9", " 98.6"
+VITSmall16_Weights.SENTINEL2_ALL_DINO," 13", " `link <https://github.com/zhu-xlab/SSL4EO-S12>`__"," `link <https://arxiv.org/abs/2211.07044>`__", " 90.5", " 99.0"

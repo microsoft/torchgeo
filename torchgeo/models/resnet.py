@@ -119,6 +119,7 @@ class ResNet50_Weights(WeightsEnum):
         transforms=nn.Identity(),
         meta={
             "dataset": "millionaid",
+            "publication": "https://arxiv.org/abs/2204.02825",
             "ssl_method": None,
             "repo": (
                 "https://github.com/ViTAE-Transformer/"
