@@ -60,13 +60,13 @@ class VITSmall16_Weights(WeightsEnum):
 
         if "SENTINEL2_ALL_MOCO" in str(self):
             filename = "vits16_moco_sentinel2_all.pth"
-            ckpt = load_checkpoint_from_url(root, filename, self.url, map_location)
+            ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
             state_dict = adjust_moco_weights_zhu_lab(ckpt["state_dict"])
 
         elif "SENTINEL2_ALL_DINO" in str(self):
             filename = "vits16_moco_sentinel2_all.pth"
-            ckpt = load_checkpoint_from_url(root, filename, self.url, map_location)
-            state_dict = adjust_dino_weights_zhu_lab(ckpt["state_dict"])
+            ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
+            state_dict = adjust_dino_weights_zhu_lab(ckpt["teacher"])
 
         return state_dict
 
@@ -101,7 +101,7 @@ def adjust_dino_weights_zhu_lab(state_dict: Dict[str, Tensor]) -> Dict[str, Tens
     return state_dict
 
 
-def load_checkpoint_from_url(
+def load_state_dict_from_url(
     root: str, filename: str, url: str, map_location: torch.device
 ) -> Dict[str, Any]:
     """Download and load a checkpoint.

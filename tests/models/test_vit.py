@@ -48,7 +48,7 @@ def vitsmall16_sentinel2_all_dino(tmp_path: Path) -> Tuple[str, int]:
     weight_key = "SENTINEL2_ALL_DINO"
     model = timm.create_model("vit_small_patch16_224", in_chans=num_input_channels)
     ckpt_path = os.path.join(tmp_path, f"vitsmall16_{weight_key.lower()}.pt")
-    torch.save(model.state_dict(), ckpt_path)
+    torch.save({"teacher": model.state_dict()}, ckpt_path)
     return ckpt_path, num_input_channels
 
 
@@ -67,7 +67,7 @@ def test_vitsmall16_pretrained_weights(
 
     monkeypatch.setattr(weight, "url", ckpt_path)
     monkeypatch.setattr(
-        torchgeo.models.resnet, "load_state_dict_from_url", load_state_dict_from_url
+        torchgeo.models.vit, "load_state_dict_from_url", load_state_dict_from_url
     )
 
     task = ClassificationTask(
