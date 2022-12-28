@@ -58,8 +58,6 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         super().__init__()
 
         self.num_tiles_per_batch = num_tiles_per_batch
-        self.num_patches_per_tile = num_patches_per_tile
-        self.patch_size = patch_size
         self.val_split_pct = val_split_pct
         self.num_workers = num_workers
         self.kwargs = kwargs
