@@ -182,4 +182,4 @@ class _RandomNCrop(GeometricAugmentationBase2D):  # type: ignore[misc]
         for _ in range(flags["num"]):
             params = self._param_generator(input.size())
             out.append(crop_by_indices(input, params["src"], flags["size"]))
-        return torch.stack(out)
+        return torch.cat(out)

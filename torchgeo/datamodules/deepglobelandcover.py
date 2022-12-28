@@ -141,6 +141,9 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             elif self.trainer.validating or self.trainer.testing:
                 batch = self.test_transform(batch)
 
+        # Kornia adds a channel dimension to the mask
+        batch["mask"] = batch["mask"].squeeze(1)
+
         return batch
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
