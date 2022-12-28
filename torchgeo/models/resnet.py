@@ -23,6 +23,20 @@ class ResNet18_Weights(WeightsEnum):
     <https://github.com/rwightman/pytorch-image-models>`_ implementation.
     """
 
+    IMAGENET_RGB = Weights(
+        url=("https://download.pytorch.org/models/resnet18-5c106cde.pth"),
+        transforms=nn.Identity(),
+        meta={
+            "dataset": "imagenet",
+            "ssl_method": None,
+            "repo": (
+                "https://github.com/rwightman/pytorch-image-models/"
+                "blob/main/timm/models/resnet.py"
+            ),
+            "num_input_channels": 3,
+        },
+    )
+
     SENTINEL2_RGB_MOCO = Weights(
         url=(
             "https://drive.google.com/file/d/1U_m39Owahk15Vg1uL1MYbPAmAyUWBKfI/"
@@ -58,7 +72,12 @@ class ResNet18_Weights(WeightsEnum):
         root = os.path.join(torch.hub.get_dir(), "checkpoints")
         map_location = torch.device("cpu")
 
-        if "SENTINEL2_ALL_MOCO" in str(self):
+        if "IMAGENET_RGB" in str(self):
+            filename = "resnet50_imagenet_rgb.pth"
+            state_dict = load_state_dict_from_url(
+                root, filename, self.url, map_location
+            )
+        elif "SENTINEL2_ALL_MOCO" in str(self):
             filename = "resnet18_moco_sentinel2_all.pth"
             ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
             state_dict = adjust_moco_weights_zhu_lab(ckpt["state_dict"])
@@ -91,17 +110,6 @@ class ResNet50_Weights(WeightsEnum):
                 "https://github.com/rwightman/pytorch-image-models/"
                 "blob/main/timm/models/resnet.py"
             ),
-            "num_input_channels": 3,
-        },
-    )
-    SENTINEL2_RGB_SECO = Weights(
-        url="https://zenodo.org/record/4728033/files/seco_resnet50_1m.ckpt?download=1",
-        transforms=nn.Identity(),
-        meta={
-            "ssl_method": "seco",
-            "dataset": "seco",
-            "publication": "https://arxiv.org/abs/2103.16607",
-            "repo": "https://github.com/ServiceNow/seasonal-contrast",
             "num_input_channels": 3,
         },
     )
