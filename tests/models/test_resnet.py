@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 import pytest
 import timm
@@ -32,7 +32,7 @@ def adjust_moco_state_dict(state_dict: Dict[str, Tensor]) -> Dict[str, Tensor]:
 
 # RESNET18 Weights
 @pytest.fixture
-def resnet18_imagenet_rgb(tmp_path: Path) -> str:
+def resnet18_imagenet_rgb(tmp_path: Path) -> Tuple[str, int]:
     num_input_channels = 3
     weight_key = "IMAGENET_RGB"
     model = timm.create_model("resnet18", in_chans=num_input_channels)
