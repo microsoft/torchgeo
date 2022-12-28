@@ -46,6 +46,7 @@ BACKBONE_LAT_DIM_MAP = {
     "wide_resnet101_2": 2048,
 }
 
+
 class ObjectDetectionTask(pl.LightningModule):
     """LightningModule for object detection of images.
 
