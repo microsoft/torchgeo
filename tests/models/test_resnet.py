@@ -151,7 +151,7 @@ def resnet50_sentinel1_grd_moco(tmp_path: Path) -> str:
 
 @pytest.fixture
 def resnet50_sentinel2_all_dino(tmp_path: Path) -> str:
-    num_input_channels = 3
+    num_input_channels = 13
     weight_key = "SENTINEL2_ALL_DINO"
     model = timm.create_model("resnet50", in_chans=num_input_channels)
     ckpt_path = os.path.join(tmp_path, f"resnet50_{weight_key.lower()}.pt")
