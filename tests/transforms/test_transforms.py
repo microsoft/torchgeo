@@ -205,39 +205,3 @@ def test_sequential_transforms_augmentations(
     )
     output = train_transforms(batch_multispectral)
     assert_matching(output, expected)
-
-
-def test_ncrop_num_patches(batch_rgb: Dict[str, Tensor]) -> None:
-    num_patches = 4
-    patch_size = (2, 2)
-    train_transforms = transforms.NCrop(patch_size, num_patches)
-    output = train_transforms(batch_rgb)
-    assert output["image"].shape[0] == num_patches
-    assert output["mask"].shape[0] == num_patches
-
-
-def test_ncrop_patch_size(batch_rgb: Dict[str, Tensor]) -> None:
-    num_patches = 4
-    patch_size = (2, 2)
-    train_transforms = transforms.NCrop(patch_size, num_patches)
-    output = train_transforms(batch_rgb)
-    assert output["image"].shape[-2:] == torch.Size(patch_size)
-    assert output["mask"].shape[-2:] == torch.Size(patch_size)
-
-
-def test_pad_to_multiple(batch_rgb: Dict[str, Tensor]) -> None:
-    multiple = 6
-    train_transforms = transforms.PadToMultiple(multiple)
-    output = train_transforms(batch_rgb)
-    assert output["image"].shape[-1] % multiple == 0
-    assert output["image"].shape[-2] % multiple == 0
-    assert output["mask"].shape[-1] % multiple == 0
-    assert output["mask"].shape[-2] % multiple == 0
-
-
-def test_pad_to_multiple_mask_only(batch_rgb: Dict[str, Tensor]) -> None:
-    multiple = 6
-    train_transforms = transforms.PadToMultiple(multiple)
-    output = train_transforms({"mask": batch_rgb["mask"]})
-    assert output["mask"].shape[-1] % multiple == 0
-    assert output["mask"].shape[-2] % multiple == 0
