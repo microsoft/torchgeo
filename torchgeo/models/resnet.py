@@ -60,12 +60,12 @@ class ResNet18_Weights(WeightsEnum):
 
         if "SENTINEL2_ALL_MOCO" in str(self):
             filename = "resnet18_moco_sentinel2_all.pth"
-            ckpt = load_checkpoint_from_url(root, filename, self.url, map_location)
+            ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
             state_dict = adjust_moco_weights_zhu_lab(ckpt["state_dict"])
 
         elif "SENTINEL2_RGB_MOCO" in str(self):
             filename = "resnet18_moco_sentinel2_rgb.pth"
-            ckpt = load_checkpoint_from_url(root, filename, self.url, map_location)
+            ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
             state_dict = adjust_moco_weights_zhu_lab(ckpt["state_dict"])
 
         return state_dict
@@ -186,27 +186,27 @@ class ResNet50_Weights(WeightsEnum):
 
         if "SENTINEL2_ALL_DINO" in str(self):
             filename = "resnet50_dino_sentinel2_all.pth"
-            ckpt = load_checkpoint_from_url(root, filename, self.url, map_location)
+            ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
             state_dict = adjust_dino_weights_zhu_lab(ckpt["teacher"])
 
         elif "SENTINEL1_GRD_MOCO" in str(self):
             filename = "resnet50_dino_sentinel1_grd.pth"
-            ckpt = load_checkpoint_from_url(root, filename, self.url, map_location)
+            ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
             state_dict = adjust_moco_weights_zhu_lab(ckpt["state_dict"])
 
         elif "SENTINEL2_ALL_MOCO" in str(self):
             filename = "resnet50_moco_sentinel2_all.pth"
-            ckpt = load_checkpoint_from_url(root, filename, self.url, map_location)
+            ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
             state_dict = adjust_moco_weights_zhu_lab(ckpt["state_dict"])
 
         elif "SENTINEL2_RGB_MOCO" in str(self):
             filename = "resnet50_moco_sentinel2_rgb.pth"
-            ckpt = load_checkpoint_from_url(root, filename, self.url, map_location)
+            ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
             state_dict = adjust_moco_weights_zhu_lab(ckpt["state_dict"])
 
         elif "IMAGENET_RGB" in str(self):
             filename = "resnet50_imagenet_rgb.pth"
-            state_dict = load_checkpoint_from_url(
+            state_dict = load_state_dict_from_url(
                 root, filename, self.url, map_location
             )
 
@@ -218,7 +218,7 @@ class ResNet50_Weights(WeightsEnum):
                     "yacs is not installed but is required to load these weights."
                 )
             filename = "resnet50_millionaid_rgb.pth"
-            state_dict = load_checkpoint_from_url(
+            state_dict = load_state_dict_from_url(
                 root, filename, self.url, map_location
             )
 
@@ -253,7 +253,7 @@ def adjust_dino_weights_zhu_lab(state_dict: Dict[str, Tensor]) -> Dict[str, Tens
     return state_dict
 
 
-def load_checkpoint_from_url(
+def load_state_dict_from_url(
     root: str, filename: str, url: str, map_location: torch.device
 ) -> Dict[str, Any]:
     """Download and load a checkpoint.

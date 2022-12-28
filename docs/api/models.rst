@@ -21,7 +21,7 @@ Fully-convolutional Network
 .. autoclass:: FCN
 
 FC Siamese Networks
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: FCSiamConc
 .. autoclass:: FCSiamDiff
@@ -31,7 +31,13 @@ RCF Extractor
 
 .. autoclass:: RCF
 
-ResNet
-^^^^^^
+ResNet Pretrained Weights
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autofunction:: resnet50
+.. autoclass:: ResNet18_Weights
+.. autoclass:: ResNet50_Weights
+
+Vision Transformer Pretrained Weights
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: VITSmall16_Weights
