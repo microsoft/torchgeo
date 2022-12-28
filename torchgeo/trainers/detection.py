@@ -3,23 +3,24 @@
 
 """Detection tasks."""
 
+from functools import partial
 from typing import Any, Dict, List, cast
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-from functools import partial
 import torch
 import torchvision
 from packaging.version import parse
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torch.utils.data import DataLoader
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
-from torchvision.models.detection import FasterRCNN, FCOS, RetinaNet
-from torchvision.models.detection.retinanet import RetinaNetHead
+from torchvision.models.detection import FCOS, FasterRCNN, RetinaNet
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
+from torchvision.models.detection.retinanet import RetinaNetHead
 from torchvision.models.detection.rpn import AnchorGenerator
-from torchvision.ops import MultiScaleRoIAlign, misc, feature_pyramid_network
+from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
+
+from ..datasets.utils import unbind_samples
 
 if parse(torchvision.__version__) >= parse("0.13"):
     from torchvision.models import resnet as R
@@ -48,15 +49,14 @@ BACKBONE_LAT_DIM_MAP = {
     "wide_resnet101_2": 2048,
 }
 
-from ..datasets.utils import unbind_samples
-
 
 class ObjectDetectionTask(pl.LightningModule):
     """LightningModule for object detection of images.
 
     Currently, supports Faster R-CNN, FCOS, and RetinaNet models from
     `torchvision
-    <https://pytorch.org/vision/stable/models.html#object-detection-instance-segmentation-and-person-keypoint-detection>`_ with
+    <https://pytorch.org/vision/stable/models.html
+    #object-detection-instance-segmentation-and-person-keypoint-detection>`_ with
     one of the following *backbone* arguments:
 
     .. code-block:: python
@@ -72,7 +72,10 @@ class ObjectDetectionTask(pl.LightningModule):
         """Configures the task based on kwargs parameters passed to the constructor."""
         backbone_pretrained = self.hyperparams.get("pretrained", True)
 
-        if "resnet" in self.hyperparams["backbone"] or "resnext" in self.hyperparams["backbone"]:
+        if (
+            "resnet" in self.hyperparams["backbone"]
+            or "resnext" in self.hyperparams["backbone"]
+        ):
             kwargs = {
                 "backbone_name": self.hyperparams["backbone"],
                 "trainable_layers": self.hyperparams.get("trainable_layers", 3),
@@ -87,9 +90,7 @@ class ObjectDetectionTask(pl.LightningModule):
             else:
                 kwargs["pretrained"] = backbone_pretrained
 
-            latent_dim = BACKBONE_LAT_DIM_MAP[
-                self.hyperparams["backbone"]
-            ]
+            latent_dim = BACKBONE_LAT_DIM_MAP[self.hyperparams["backbone"]]
         else:
             raise ValueError(
                 f"Backbone type '{self.hyperparams['backbone']}' is not valid."
@@ -114,24 +115,36 @@ class ObjectDetectionTask(pl.LightningModule):
             )
         elif self.hyperparams["model"] == "fcos":
             kwargs["extra_blocks"] = feature_pyramid_network.LastLevelP6P7(256, 256)
-            is_trained = kwargs["weights"] if parse(
-                torchvision.__version__) >= parse("0.13") else kwargs["pretrained"]
-            kwargs["norm_layer"] = misc.FrozenBatchNorm2d if is_trained else torch.nn.BatchNorm2d
+            is_trained = (
+                kwargs["weights"]
+                if parse(torchvision.__version__) >= parse("0.13")
+                else kwargs["pretrained"]
+            )
+            kwargs["norm_layer"] = (
+                misc.FrozenBatchNorm2d if is_trained else torch.nn.BatchNorm2d
+            )
 
             backbone = resnet_fpn_backbone(**kwargs)
-
-            anchor_sizes = ((8,), (16,), (32,), (64,), (128,), (256,))
-            aspect_ratios = ((1.0,),) * len(anchor_sizes)
-            anchor_generator = AnchorGenerator(anchor_sizes, aspect_ratios)
+            anchor_generator = AnchorGenerator(
+                sizes=((8,), (16,), (32,), (64,), (128,), (256,)),
+                aspect_ratios=((1.0,), (1.0,), (1.0,), (1.0,), (1.0,), (1.0,)),
+            )
 
             self.model = FCOS(backbone, num_classes, anchor_generator=anchor_generator)
 
         elif self.hyperparams["model"] == "retinanet":
-            kwargs["extra_blocks"] = feature_pyramid_network.LastLevelP6P7(latent_dim, 256)
+            kwargs["extra_blocks"] = feature_pyramid_network.LastLevelP6P7(
+                latent_dim, 256
+            )
             backbone = resnet_fpn_backbone(**kwargs)
 
-            anchor_sizes = tuple(
-                (x, int(x * 2 ** (1.0 / 3)), int(x * 2 ** (2.0 / 3))) for x in [16, 32, 64, 128, 256, 512]
+            anchor_sizes = (
+                (16, 20, 25),
+                (32, 40, 50),
+                (64, 80, 101),
+                (128, 161, 203),
+                (256, 322, 406),
+                (512, 645, 812),
             )
             aspect_ratios = ((0.5, 1.0, 2.0),) * len(anchor_sizes)
             anchor_generator = AnchorGenerator(anchor_sizes, aspect_ratios)
@@ -144,10 +157,8 @@ class ObjectDetectionTask(pl.LightningModule):
             )
 
             self.model = RetinaNet(
-                backbone, 
-                num_classes, 
-                anchor_generator=anchor_generator, 
-                head=head)
+                backbone, num_classes, anchor_generator=anchor_generator, head=head
+            )
         else:
             raise ValueError(f"Model type '{self.hyperparams['model']}' is not valid.")
 
