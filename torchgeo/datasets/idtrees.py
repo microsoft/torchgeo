@@ -597,7 +597,7 @@ class IDTReeS(NonGeoDataset):
         points: "np.typing.NDArray[np.int_]" = np.stack(
             [las.x, las.y, las.z], axis=0
         ).transpose((1, 0))
-        point_cloud = pyvista.PolyData(points)  # type: ignore[attr-defined]
+        point_cloud = pyvista.PolyData(points)
 
         # Some point cloud files have no color->points mapping
         if hasattr(las, "red"):

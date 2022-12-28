@@ -12,22 +12,27 @@ from pytorch_lightning import LightningDataModule, Trainer
 from torchgeo.datamodules import NASAMarineDebrisDataModule
 from torchgeo.trainers import ObjectDetectionTask
 
+
 class TestObjectDetectionTask:
     @pytest.mark.parametrize(
         "name,classname", [("nasa_marine_debris", NASAMarineDebrisDataModule)]
     )
-
     @pytest.mark.parametrize(
-        "model_name,backbone", 
+        "model_name,backbone",
         [
             ("faster-rcnn", "resnet18"),
             ("fcos", "resnet18"),
             ("retinanet", "resnet18"),
             ("retinanet", "resnet50"),
-        ]
+        ],
     )
-
-    def test_trainer(self, model_name: str, backbone: str, name: str, classname: Type[LightningDataModule]) -> None:
+    def test_trainer(
+        self,
+        model_name: str,
+        backbone: str,
+        name: str,
+        classname: Type[LightningDataModule],
+    ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", f"{name}.yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
         conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
