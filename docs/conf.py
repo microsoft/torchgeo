@@ -64,6 +64,7 @@ nitpick_ignore = [
     # Undocumented class
     ("py:class", "torchvision.models.resnet.ResNet"),
     ("py:class", "segmentation_models_pytorch.base.model.SegmentationModel"),
+    ("py:class", "torchvision.models._api.WeightsEnum"),
 ]
 
 

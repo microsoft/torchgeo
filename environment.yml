@@ -16,7 +16,7 @@ dependencies:
   - rarfile>=3
   - rasterio>=1.0.20
   - shapely>=1.3
-  - torchvision>=0.10
+  - torchvision>=0.14
   - pip:
     - black[jupyter]>=21.8
     - flake8>=3.8
