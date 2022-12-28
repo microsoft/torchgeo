@@ -9,6 +9,7 @@ from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
 from .rcf import RCF
 from .resnet import ResNet18_Weights, ResNet50_Weights
+from .utils import adjust_dino_weights_zhu_lab, load_state_dict_from_url
 from .vit import VITSmall16_Weights
 
 __all__ = (
@@ -25,4 +26,7 @@ __all__ = (
     "ResNet50_Weights",
     "ResNet18_Weights",
     "VITSmall16_Weights",
+    # utils
+    "adjust_dino_weights_zhu_lab",
+    "load_state_dict_from_url",
 )
