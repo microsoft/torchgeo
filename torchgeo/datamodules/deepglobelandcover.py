@@ -8,11 +8,11 @@ from typing import Any, Dict, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 from kornia.augmentation import Normalize
-from kornia.contrib import ExtractTensorPatches
 from torch.utils.data import DataLoader
 
 from ..datasets import DeepGlobeLandCover
-from ..transforms import AugmentationSequential, NCrop
+from ..transforms import AugmentationSequential
+from ..transforms.transforms import _ExtractTensorPatches, _RandomNCrop
 from .utils import dataset_split
 
 
@@ -66,12 +66,12 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
 
         self.train_transform = AugmentationSequential(
             Normalize(mean=0.0, std=255.0),
-            NCrop(patch_size, self.num_patches_per_tile),
+            _RandomNCrop(patch_size, num_patches_per_tile),
             data_keys=["image", "mask"],
         )
         self.test_transform = AugmentationSequential(
             Normalize(mean=0.0, std=255.0),
-            ExtractTensorPatches(window_size=patch_size, stride=patch_size),
+            _ExtractTensorPatches(patch_size),
             data_keys=["image", "mask"],
         )
 
