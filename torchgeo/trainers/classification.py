@@ -48,8 +48,10 @@ class ClassificationTask(pl.LightningModule):
 
         imagenet_pretrained = False
         custom_pretrained = False
-        if self.hyperparams["weights"] and not os.path.exists(
-            self.hyperparams["weights"] and isinstance(self.hyperparams["weights"], str)
+        if (
+            self.hyperparams["weights"]
+            and not os.path.exists(self.hyperparams["weights"])
+            and isinstance(self.hyperparams["weights"], str)
         ):
             if self.hyperparams["weights"] not in ["imagenet", "random"]:
                 raise ValueError(
