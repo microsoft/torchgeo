@@ -135,13 +135,16 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         Returns:
             A batch of data
         """
+        # Kornia requires masks to have a channel dimension
+        batch["mask"] = batch["mask"].unsqueeze(1)
+
         if self.trainer:
             if self.trainer.training:
                 batch = self.train_transform(batch)
             elif self.trainer.validating or self.trainer.testing:
                 batch = self.test_transform(batch)
 
-        # Kornia adds a channel dimension to the mask
+        # Torchmetrics does not support masks with a channel dimension
         batch["mask"] = batch["mask"].squeeze(1)
 
         return batch
