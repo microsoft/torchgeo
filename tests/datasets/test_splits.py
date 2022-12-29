@@ -21,7 +21,7 @@ from .test_geo import CustomGeoDataset
 
 
 def test_random_nongeo_split() -> None:
-    num_samples = 24
+    num_samples = 26
     x = torch.ones(num_samples, 5)
     y = torch.randint(low=0, high=2, size=(num_samples,))
     ds = TensorDataset(x, y)
@@ -31,11 +31,11 @@ def test_random_nongeo_split() -> None:
     assert len(train_ds) == round(num_samples / 2)
     assert len(val_ds) == round(num_samples / 2)
 
-    # Test train/val/test set split
+    # Test train/val/test set split with remainder
     train_ds, val_ds, test_ds = random_nongeo_split(ds, lengths=[1 / 3, 1 / 3, 1 / 3])
-    assert len(train_ds) == round(num_samples / 3)
-    assert len(val_ds) == round(num_samples / 3)
-    assert len(test_ds) == round(num_samples / 3)
+    assert len(train_ds) == floor(num_samples / 3) + 1
+    assert len(val_ds) == floor(num_samples / 3) + 1
+    assert len(test_ds) == floor(num_samples / 3)
 
 
 def test_random_bbox_assignment() -> None:
