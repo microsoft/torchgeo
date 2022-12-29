@@ -22,7 +22,7 @@ dependencies:
     - flake8>=3.8
     - ipywidgets>=7
     - isort[colors]>=5.8
-    - kornia>=0.6.4
+    - kornia>=0.6.5
     - laspy>=2
     - mypy>=0.900
     - nbmake>=0.1
