@@ -89,13 +89,7 @@ def test_resnet18_pretrained_weights(
 
 @pytest.mark.parametrize(
     "config_filename, datamodule_name, generate_model",
-    [
-        (
-            "resnet18_pretrained_weight.yaml",
-            EuroSATDataModule,
-            "resnet18_sentinel2_all_moco",
-        )
-    ],
+    [("resnet18_weight.yaml", EuroSATDataModule, "resnet18_sentinel2_all_moco")],
 )
 def test_pretrained_resnet18_from_config(
     monkeypatch: MonkeyPatch,
@@ -234,13 +228,7 @@ def test_resnet50_pretrained_weights(
 
 @pytest.mark.parametrize(
     "config_filename, datamodule_name, generate_model",
-    [
-        (
-            "resnet50_pretrained_weight.yaml",
-            EuroSATDataModule,
-            "resnet50_sentinel2_all_moco",
-        )
-    ],
+    [("resnet50_weight.yaml", EuroSATDataModule, "resnet50_sentinel2_all_moco")],
 )
 def test_pretrained_resnet50_from_config(
     monkeypatch: MonkeyPatch,
