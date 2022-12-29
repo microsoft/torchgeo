@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, cast
 
 import pytest
 import pytorch_lightning as pl
@@ -11,10 +11,13 @@ import timm
 import torch
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
+from omegaconf import OmegaConf
 from torch import Tensor
 
 import torchgeo.models.resnet
+from torchgeo.datamodules import EuroSATDataModule
 from torchgeo.models import ResNet18_Weights, ResNet50_Weights
+from torchgeo.models.weights import lookup_pretrained_weights
 from torchgeo.trainers import ClassificationTask, RegressionTask
 
 
@@ -32,16 +35,6 @@ def adjust_moco_state_dict(state_dict: Dict[str, Tensor]) -> Dict[str, Tensor]:
 
 
 # RESNET18 Weights
-@pytest.fixture
-def resnet18_imagenet_rgb(tmp_path: Path) -> Tuple[str, int]:
-    num_input_channels = 3
-    weight_key = "IMAGENET_RGB"
-    model = timm.create_model("resnet18", in_chans=num_input_channels)
-    ckpt_path = os.path.join(tmp_path, f"resnet18_{weight_key.lower()}.pt")
-    torch.save(model.state_dict(), ckpt_path)
-    return ckpt_path, num_input_channels
-
-
 @pytest.fixture
 def resnet18_sentinel2_rgb_moco(tmp_path: Path) -> str:
     num_input_channels = 3
@@ -67,7 +60,6 @@ def resnet18_sentinel2_all_moco(tmp_path: Path) -> str:
 @pytest.mark.parametrize(
     "generate_model,weight",
     [
-        ("resnet18_imagenet_rgb", ResNet18_Weights.IMAGENET_RGB),
         ("resnet18_sentinel2_rgb_moco", ResNet18_Weights.SENTINEL2_RGB_MOCO),
         ("resnet18_sentinel2_all_moco", ResNet18_Weights.SENTINEL2_ALL_MOCO),
     ],
@@ -95,22 +87,58 @@ def test_resnet18_pretrained_weights(
     assert isinstance(y, torch.Tensor)
 
 
+@pytest.mark.parametrize(
+    "config_filename, datamodule_name, generate_model",
+    [
+        (
+            "resnet18_pretrained_weight.yaml",
+            EuroSATDataModule,
+            "resnet18_sentinel2_all_moco",
+        )
+    ],
+)
+def test_pretrained_resnet18_from_config(
+    monkeypatch: MonkeyPatch,
+    request: SubRequest,
+    config_filename: str,
+    datamodule_name: pl.LightningDataModule,
+    generate_model,
+) -> None:
+    conf = OmegaConf.load(os.path.join("tests", "conf", config_filename))
+    conf_dict = OmegaConf.to_object(conf.experiment)
+    conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+
+    # Instantiate datamodule
+    datamodule_kwargs = conf_dict["datamodule"]
+    datamodule = datamodule_name(**datamodule_kwargs)
+
+    # Instantiate model
+    ckpt_path, _ = request.getfixturevalue(generate_model)
+    weight = lookup_pretrained_weights(
+        conf_dict["module"]["model"], conf_dict["module"]["weights"]
+    )
+    monkeypatch.setattr(weight, "url", ckpt_path)
+    monkeypatch.setattr(
+        torchgeo.models.resnet, "load_state_dict_from_url", load_state_dict_from_url
+    )
+    model_kwargs = {
+        key: val for key, val in conf_dict["module"].items() if key not in ["weights"]
+    }
+    model = ClassificationTask(weights=weight.get_state_dict(), **model_kwargs)
+
+    # Instantiate trainer
+    trainer = pl.Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+    trainer.fit(model=model, datamodule=datamodule)
+    trainer.test(model=model, datamodule=datamodule)
+    trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
+
+
 # RESNET 50 Weights
 @pytest.fixture
 def resnet50_googleearth_millionaid_rgb(tmp_path: Path) -> str:
     pytest.importorskip("yacs")
     num_input_channels = 3
     weight_key = "GOOGLEEARTH_MILLIONAID_RGB"
-    model = timm.create_model("resnet50", in_chans=num_input_channels)
-    ckpt_path = os.path.join(tmp_path, f"resnet50_{weight_key.lower()}.pt")
-    torch.save(model.state_dict(), ckpt_path)
-    return ckpt_path, num_input_channels
-
-
-@pytest.fixture
-def resnet50_imagenet_rgb(tmp_path: Path) -> str:
-    num_input_channels = 3
-    weight_key = "IMAGENET_RGB"
     model = timm.create_model("resnet50", in_chans=num_input_channels)
     ckpt_path = os.path.join(tmp_path, f"resnet50_{weight_key.lower()}.pt")
     torch.save(model.state_dict(), ckpt_path)
@@ -167,7 +195,6 @@ def resnet50_sentinel2_all_dino(tmp_path: Path) -> str:
             "resnet50_googleearth_millionaid_rgb",
             ResNet50_Weights.GOOGLEEARTH_MILLIONAID_RGB,
         ),
-        ("resnet50_imagenet_rgb", ResNet50_Weights.IMAGENET_RGB),
         ("resnet50_sentinel2_rgb_moco", ResNet50_Weights.SENTINEL2_RGB_MOCO),
         ("resnet50_sentinel2_all_moco", ResNet50_Weights.SENTINEL2_ALL_MOCO),
         ("resnet50_sentinel1_grd_moco", ResNet50_Weights.SENTINEL1_GRD_MOCO),
@@ -203,6 +230,52 @@ def test_resnet50_pretrained_weights(
     x = torch.zeros(2, num_input_channels, 64, 64)
     y = task.forward(x)
     assert isinstance(y, torch.Tensor)
+
+
+@pytest.mark.parametrize(
+    "config_filename, datamodule_name, generate_model",
+    [
+        (
+            "resnet50_pretrained_weight.yaml",
+            EuroSATDataModule,
+            "resnet50_sentinel2_all_moco",
+        )
+    ],
+)
+def test_pretrained_resnet50_from_config(
+    monkeypatch: MonkeyPatch,
+    request: SubRequest,
+    config_filename: str,
+    datamodule_name: pl.LightningDataModule,
+    generate_model,
+) -> None:
+    conf = OmegaConf.load(os.path.join("tests", "conf", config_filename))
+    conf_dict = OmegaConf.to_object(conf.experiment)
+    conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+
+    # Instantiate datamodule
+    datamodule_kwargs = conf_dict["datamodule"]
+    datamodule = datamodule_name(**datamodule_kwargs)
+
+    # Instantiate model
+    ckpt_path, _ = request.getfixturevalue(generate_model)
+    weight = lookup_pretrained_weights(
+        conf_dict["module"]["model"], conf_dict["module"]["weights"]
+    )
+    monkeypatch.setattr(weight, "url", ckpt_path)
+    monkeypatch.setattr(
+        torchgeo.models.resnet, "load_state_dict_from_url", load_state_dict_from_url
+    )
+    model_kwargs = {
+        key: val for key, val in conf_dict["module"].items() if key not in ["weights"]
+    }
+    model = ClassificationTask(weights=weight.get_state_dict(), **model_kwargs)
+
+    # Instantiate trainer
+    trainer = pl.Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+    trainer.fit(model=model, datamodule=datamodule)
+    trainer.test(model=model, datamodule=datamodule)
+    trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
 
 
 @pytest.mark.slow

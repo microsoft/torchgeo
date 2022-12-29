@@ -3,18 +3,22 @@
 
 import os
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, cast
 
+import kornia.augmentation as K
 import pytest
 import pytorch_lightning as pl
 import timm
 import torch
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
+from omegaconf import OmegaConf
 from torch import Tensor
 
 import torchgeo.models.resnet
+from torchgeo.datamodules import EuroSATDataModule
 from torchgeo.models import VITSmall16_Weights
+from torchgeo.models.weights import lookup_pretrained_weights
 from torchgeo.trainers import ClassificationTask, RegressionTask
 
 
@@ -95,6 +99,55 @@ def test_vitsmall16_pretrained_weights(
     x = torch.zeros(2, num_input_channels, 224, 224)
     y = task.forward(x)
     assert isinstance(y, torch.Tensor)
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    "config_filename, datamodule_name, generate_model",
+    [
+        (
+            "vit_small_patch16_224_weight.yaml",
+            EuroSATDataModule,
+            "vitsmall16_sentinel2_all_moco",
+        )
+    ],
+)
+def test_pretrained_resnet50_from_config(
+    monkeypatch: MonkeyPatch,
+    request: SubRequest,
+    config_filename: str,
+    datamodule_name: pl.LightningDataModule,
+    generate_model,
+) -> None:
+    conf = OmegaConf.load(os.path.join("tests", "conf", config_filename))
+    conf_dict = OmegaConf.to_object(conf.experiment)
+    conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+
+    # Instantiate datamodule
+    datamodule_kwargs = conf_dict["datamodule"]
+    # input size to vit_small_patch16_224 needs to be (224, 224)
+    transforms = K.Resize(224)
+    datamodule = datamodule_name(transforms=transforms, **datamodule_kwargs)
+
+    # Instantiate model
+    ckpt_path, _ = request.getfixturevalue(generate_model)
+    weight = lookup_pretrained_weights(
+        conf_dict["module"]["model"], conf_dict["module"]["weights"]
+    )
+    monkeypatch.setattr(weight, "url", ckpt_path)
+    monkeypatch.setattr(
+        torchgeo.models.resnet, "load_state_dict_from_url", load_state_dict_from_url
+    )
+    model_kwargs = {
+        key: val for key, val in conf_dict["module"].items() if key not in ["weights"]
+    }
+    model = ClassificationTask(weights=weight.get_state_dict(), **model_kwargs)
+
+    # Instantiate trainer
+    trainer = pl.Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+    trainer.fit(model=model, datamodule=datamodule)
+    trainer.test(model=model, datamodule=datamodule)
+    trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
 
 
 @pytest.mark.slow

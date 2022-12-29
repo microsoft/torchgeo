@@ -20,7 +20,8 @@ class VITSmall16_Weights(WeightsEnum):
     """Vision Transformer Samll Patch Size 16 weights.
 
     For `timm
-    <https://github.com/rwightman/pytorch-image-models>`_ implementation.
+    <https://github.com/rwightman/pytorch-image-models>`_
+    *vit_small_patch16_224* implementation.
     """
 
     SENTINEL2_ALL_MOCO = Weights(

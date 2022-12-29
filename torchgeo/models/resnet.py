@@ -20,22 +20,9 @@ class ResNet18_Weights(WeightsEnum):
     """ResNet18 weights.
 
     For `timm
-    <https://github.com/rwightman/pytorch-image-models>`_ implementation.
+    <https://github.com/rwightman/pytorch-image-models>`_
+    *resnet18* implementation.
     """
-
-    IMAGENET_RGB = Weights(
-        url=("https://download.pytorch.org/models/resnet18-5c106cde.pth"),
-        transforms=nn.Identity(),
-        meta={
-            "dataset": "imagenet",
-            "ssl_method": None,
-            "repo": (
-                "https://github.com/rwightman/pytorch-image-models/"
-                "blob/main/timm/models/resnet.py"
-            ),
-            "num_input_channels": 3,
-        },
-    )
 
     SENTINEL2_RGB_MOCO = Weights(
         url=(
@@ -72,12 +59,7 @@ class ResNet18_Weights(WeightsEnum):
         root = os.path.join(torch.hub.get_dir(), "checkpoints")
         map_location = torch.device("cpu")
 
-        if "IMAGENET_RGB" in str(self):
-            filename = "resnet50_imagenet_rgb.pth"
-            state_dict = load_state_dict_from_url(
-                root, filename, self.url, map_location
-            )
-        elif "SENTINEL2_ALL_MOCO" in str(self):
+        if "SENTINEL2_ALL_MOCO" in str(self):
             filename = "resnet18_moco_sentinel2_all.pth"
             ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
             state_dict = adjust_moco_weights_zhu_lab(ckpt["state_dict"])
@@ -94,25 +76,9 @@ class ResNet50_Weights(WeightsEnum):
     """ResNet50 weights.
 
     For `timm
-    <https://github.com/rwightman/pytorch-image-models>`_ implementation.
+    <https://github.com/rwightman/pytorch-image-models>`_
+    *resnet50* implementation.
     """
-
-    IMAGENET_RGB = Weights(
-        url=(
-            "https://github.com/rwightman/pytorch-image-models/releases/"
-            "download/v0.1-rsb-weights/resnet50_a1_0-14fe96d1.pth"
-        ),
-        transforms=nn.Identity(),
-        meta={
-            "dataset": "imagenet",
-            "ssl_method": None,
-            "repo": (
-                "https://github.com/rwightman/pytorch-image-models/"
-                "blob/main/timm/models/resnet.py"
-            ),
-            "num_input_channels": 3,
-        },
-    )
 
     GOOGLEEARTH_MILLIONAID_RGB = Weights(
         url="https://drive.google.com/file/d/1K3P4_fDfcBRGqpKoSdSa6OXS4xC1xLC9",
@@ -212,12 +178,6 @@ class ResNet50_Weights(WeightsEnum):
             filename = "resnet50_moco_sentinel2_rgb.pth"
             ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
             state_dict = adjust_moco_weights_zhu_lab(ckpt["state_dict"])
-
-        elif "IMAGENET_RGB" in str(self):
-            filename = "resnet50_imagenet_rgb.pth"
-            state_dict = load_state_dict_from_url(
-                root, filename, self.url, map_location
-            )
 
         elif "GOOGLEEARTH_MILLIONAID_RGB" in str(self):
             try:
