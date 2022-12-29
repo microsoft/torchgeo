@@ -88,8 +88,6 @@ filterwarnings = [
     # https://github.com/lanpa/tensorboardX/issues/653
     # https://github.com/lanpa/tensorboardX/pull/654
     "ignore:Call to deprecated create function:DeprecationWarning:tensorboardX",
-    # https://github.com/pytorch/pytorch/pull/72093
-    #"ignore:Default upsampling behavior when mode=bilinear is changed to align_corners=False:UserWarning:torch.nn.functional",
 
     # Expected warnings
     # pytorch-lightning warns us about using num_workers=0, but it's faster on macOS

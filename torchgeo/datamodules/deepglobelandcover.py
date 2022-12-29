@@ -82,7 +82,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         This method is called once per GPU per run.
 
         Args:
-            stage: the stage to set up
+            stage: stage to set up
         """
         train_dataset = DeepGlobeLandCover(split="train", **self.kwargs)
         self.train_dataset, self.val_dataset = dataset_split(
