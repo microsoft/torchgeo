@@ -169,8 +169,8 @@ Kenya Crop Type
 
 .. autoclass:: CV4AKenyaCropType
 
-Deep Globe Land Cover
-^^^^^^^^^^^^^^^^^^^^^
+DeepGlobe Land Cover
+^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: DeepGlobeLandCover
 
