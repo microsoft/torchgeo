@@ -13,6 +13,7 @@ from torchgeo.datasets.splits import (
     random_bbox_splitting,
     random_nongeo_split,
     roi_split,
+    time_series_split,
 )
 from torchgeo.datasets.utils import BoundingBox
 
@@ -152,3 +153,82 @@ def test_roi_split() -> None:
         roi_split(
             ds, rois=[BoundingBox(0, 2, 0, 1, 0, 0), BoundingBox(1, 3, 0, 1, 0, 0)]
         )
+
+
+def test_time_series_split() -> None:
+    ds = (
+        CustomGeoDataset(BoundingBox(0, 1, 0, 1, 0, 10))
+        | CustomGeoDataset(BoundingBox(0, 1, 0, 1, 10, 20))
+        | CustomGeoDataset(BoundingBox(0, 1, 0, 1, 20, 30))
+        | CustomGeoDataset(BoundingBox(0, 1, 0, 1, 30, 40))
+    )
+
+    # Test lengths input using timestamps
+    train_ds, val_ds, test_ds = time_series_split(
+        ds, lengths=[(0, 20), (20, 35), (35, 40)]
+    )
+
+    assert len(train_ds) == 2
+    assert len(val_ds) == 2
+    assert len(test_ds) == 1
+    assert len(train_ds & val_ds) == 0
+    assert len(val_ds & test_ds) == 0
+    assert len(test_ds & train_ds) == 0
+    assert (train_ds | val_ds | test_ds).bounds == ds.bounds
+
+    # Test lengths input using lengths
+    train_ds, val_ds, test_ds = time_series_split(ds, lengths=[20, 15, 5])
+
+    assert len(train_ds) == 2
+    assert len(val_ds) == 2
+    assert len(test_ds) == 1
+    assert len(train_ds & val_ds) == 0
+    assert len(val_ds & test_ds) == 0
+    assert len(test_ds & train_ds) == 0
+    assert (train_ds | val_ds | test_ds).bounds == ds.bounds
+
+    # Test lengths input using fractions
+    train_ds, val_ds, test_ds = time_series_split(ds, lengths=[1 / 2, 3 / 8, 1 / 8])
+
+    assert len(train_ds) == 2
+    assert len(val_ds) == 2
+    assert len(test_ds) == 1
+    assert len(train_ds & val_ds) == 0
+    assert len(val_ds & test_ds) == 0
+    assert len(test_ds & train_ds) == 0
+    assert (train_ds | val_ds | test_ds).bounds == ds.bounds
+
+    # Test invalid input lengths
+    with pytest.raises(
+        ValueError,
+        match="Pairs of timestamps in lengths must have end greater than start.",
+    ):
+        time_series_split(ds, lengths=[(0, 20), (35, 20), (35, 40)])
+
+    with pytest.raises(
+        ValueError,
+        match="Pairs of timestamps in lengths must cover dataset's time bounds.",
+    ):
+        time_series_split(ds, lengths=[(0, 20), (20, 35)])
+
+    with pytest.raises(
+        ValueError,
+        match="Pairs of timestamps in lengths can't be out of dataset's time bounds.",
+    ):
+        time_series_split(ds, lengths=[(0, 20), (20, 45)])
+
+    with pytest.raises(
+        ValueError, match="Pairs of timestamps in lengths can't overlap."
+    ):
+        time_series_split(ds, lengths=[(0, 10), (10, 20), (15, 40)])
+
+    with pytest.raises(
+        ValueError,
+        match="Sum of input lengths must equal 1 or the dataset's time length.",
+    ):
+        time_series_split(ds, lengths=[1 / 2, 1 / 2, 1 / 2])
+
+    with pytest.raises(
+        ValueError, match="All items in input lengths must be greater than 0."
+    ):
+        time_series_split(ds, lengths=[20, 25, -5])

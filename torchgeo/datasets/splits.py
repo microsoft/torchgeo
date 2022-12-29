@@ -5,10 +5,11 @@
 
 from copy import deepcopy
 from math import floor
-from typing import Any, List, Optional, Sequence, Union
+from typing import Any, List, Optional, Sequence, Tuple, Union
 
 from rtree.index import Index, Property
 from torch import Generator, default_generator, randint, randperm
+from torch._utils import _accumulate
 from torch.utils.data import Subset, TensorDataset, random_split
 
 from ..datasets import GeoDataset, NonGeoDataset
@@ -19,6 +20,7 @@ __all__ = (
     "random_bbox_assignment",
     "random_bbox_splitting",
     "roi_split",
+    "time_series_split",
 )
 
 
@@ -177,17 +179,14 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> List[GeoDatas
 
     .. versionadded:: 0.4
     """
-    _rois = list(rois).copy()
-    while len(_rois) > 1:
-        r = _rois.pop()
-        if any(r.intersects(x) and (r & x).area > 0 for x in _rois):
-            raise ValueError("ROIs in input rois can't overlap.")
-
     new_indexes = [
         Index(interleaved=False, properties=Property(dimension=3)) for _ in rois
     ]
 
     for i, roi in enumerate(rois):
+        if any(roi.intersects(x) and (roi & x).area > 0 for x in rois[i + 1 :]):
+            raise ValueError("ROIs in input rois can't overlap.")
+
         j = 0
         for hit in dataset.index.intersection(tuple(roi), objects=True):
             box = BoundingBox(*hit.bounds)
@@ -195,5 +194,87 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> List[GeoDatas
             if new_box.area > 0:
                 new_indexes[i].insert(j, tuple(new_box))
                 j += 1
+
+    return [_create_geodataset_like(dataset, index) for index in new_indexes]
+
+
+def time_series_split(
+    dataset: GeoDataset, lengths: Sequence[Union[int, float, Tuple[int, int]]]
+) -> List[GeoDataset]:
+    """Split a GeoDataset on it's time dimension to create non-overlapping GeoDatasets.
+
+    Args:
+        dataset: dataset to be split
+        lengths: lengths, fractions or pairs of timestamps (start, end) of splits
+            to be produced
+
+    Returns
+        A list of the subset datasets.
+
+    .. versionadded:: 0.4
+    """
+    minx, maxx, miny, maxy, mint, maxt = dataset.bounds
+
+    totalt = maxt - mint
+
+    if not all(isinstance(x, tuple) for x in lengths):
+
+        if not (sum(lengths) == 1 or sum(lengths) == totalt):  # type: ignore[arg-type]
+            raise ValueError(
+                "Sum of input lengths must equal 1 or the dataset's time length."
+            )
+
+        if any(n <= 0 for n in lengths):  # type: ignore[operator]
+            raise ValueError("All items in input lengths must be greater than 0.")
+
+        if sum(lengths) == 1:  # type: ignore[arg-type]
+            lengths = [totalt * f for f in lengths]  # type: ignore[operator]
+
+        lengths = [
+            (mint + offset - length, mint + offset)
+            for offset, length in zip(
+                _accumulate(lengths), lengths  # type: ignore[no-untyped-call]
+            )
+        ]
+
+    new_indexes = [
+        Index(interleaved=False, properties=Property(dimension=3)) for _ in lengths
+    ]
+
+    _totalt = 0
+    for i, (start, end) in enumerate(lengths):  # type: ignore[misc]
+
+        if start >= end:
+            raise ValueError(
+                "Pairs of timestamps in lengths must have end greater than start."
+            )
+
+        if start < mint or end > maxt:
+            raise ValueError(
+                "Pairs of timestamps in lengths can't be out of dataset's time bounds."
+            )
+
+        if any(  # type: ignore[misc]
+            start < x < end or start < y < end for x, y in lengths[i + 1 :]
+        ):
+            raise ValueError("Pairs of timestamps in lengths can't overlap.")
+
+        # remove one second from each BoundingBox's maxt to avoid overlapping
+        offset = 0 if i == len(lengths) - 1 else 1
+        roi = BoundingBox(minx, maxx, miny, maxy, start, end - offset)
+        j = 0
+        for hit in dataset.index.intersection(tuple(roi), objects=True):
+            box = BoundingBox(*hit.bounds)
+            new_box = box & roi
+            if new_box.volume > 0:
+                new_indexes[i].insert(j, tuple(new_box))
+                j += 1
+
+        _totalt += end - start
+
+    if not _totalt == totalt:
+        raise ValueError(
+            "Pairs of timestamps in lengths must cover dataset's time bounds."
+        )
 
     return [_create_geodataset_like(dataset, index) for index in new_indexes]
