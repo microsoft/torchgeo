@@ -13,7 +13,7 @@ experiment:
   task: "nasa_marine_debris"
   name: "nasa_marine_debris_test"
   module:
-    detection_model: "faster-rcnn"
+    model: "faster-rcnn"
     backbone: "resnet50"
     pretrained: True
     num_classes: 2
