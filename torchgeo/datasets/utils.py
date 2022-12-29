@@ -255,12 +255,13 @@ class BoundingBox:
                 f"Bounding box is invalid: 'mint={self.mint}' > 'maxt={self.maxt}'"
             )
 
+    # https://github.com/PyCQA/pydocstyle/issues/525
     @overload
-    def __getitem__(self, key: int) -> float:
+    def __getitem__(self, key: int) -> float:  # noqa: D105
         pass
 
     @overload
-    def __getitem__(self, key: slice) -> List[float]:
+    def __getitem__(self, key: slice) -> List[float]:  # noqa: D105
         pass
 
     def __getitem__(self, key: Union[int, slice]) -> Union[float, List[float]]:
