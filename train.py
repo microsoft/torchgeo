@@ -170,6 +170,7 @@ def main(conf: DictConfig) -> None:
     # Setup trainer
     ######################################
     tb_logger = pl_loggers.TensorBoardLogger(conf.program.log_dir, name=experiment_name)
+    csv_logger = pl_loggers.CSVLogger(conf.program.log_dir, name=experiment_name)
 
     if isinstance(task, ObjectDetectionTask):
         monitor_metric = "val_map"
@@ -192,7 +193,7 @@ def main(conf: DictConfig) -> None:
     trainer_args = cast(Dict[str, Any], OmegaConf.to_object(conf.trainer))
 
     trainer_args["callbacks"] = [checkpoint_callback, early_stopping_callback]
-    trainer_args["logger"] = tb_logger
+    trainer_args["logger"] = [tb_logger, csv_logger]
     trainer_args["default_root_dir"] = experiment_dir
     trainer = pl.Trainer(**trainer_args)
 
