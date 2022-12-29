@@ -40,8 +40,10 @@ class RegressionTask(pl.LightningModule):
 
         imagenet_pretrained = False
         custom_pretrained = False
-        if self.hyperparams["weights"] and not os.path.exists(
+        if (
             self.hyperparams["weights"]
+            and isinstance(self.hyperparams["weights"], str)
+            and not os.path.exists(self.hyperparams["weights"])
         ):
             if self.hyperparams["weights"] not in ["imagenet", "random"]:
                 raise ValueError(
@@ -66,14 +68,20 @@ class RegressionTask(pl.LightningModule):
             raise ValueError(f"Model type '{model}' is not a valid timm model.")
 
         if custom_pretrained:
-            name, state_dict = utils.extract_backbone(self.hyperparams["weights"])
+            if isinstance(self.hyperparams["weights"], str):
+                # load a checkpoint path
+                name, state_dict = utils.extract_backbone(self.hyperparams["weights"])
 
-            if self.hyperparams["model"] != name:
-                raise ValueError(
-                    f"Trying to load {name} weights into a "
-                    f"{self.hyperparams['model']}"
-                )
-            self.model = utils.load_state_dict(self.model, state_dict)
+                if self.hyperparams["model"] != name:
+                    raise ValueError(
+                        f"Trying to load {name} weights into a "
+                        f"{self.hyperparams['model']}"
+                    )
+                self.model = utils.load_state_dict(self.model, state_dict)
+            else:
+                # load a state_dict mapping
+                state_dict = self.hyperparams["weights"]
+                self.model.load_state_dict(state_dict, strict=False)
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize a new LightningModule for training simple regression models.

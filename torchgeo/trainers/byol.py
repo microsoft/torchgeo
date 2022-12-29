@@ -328,8 +328,10 @@ class BYOLTask(pl.LightningModule):
 
         imagenet_pretrained = False
         custom_pretrained = False
-        if self.hyperparams["weights"] and not os.path.exists(
+        if (
             self.hyperparams["weights"]
+            and isinstance(self.hyperparams["weights"], str)
+            and not os.path.exists(self.hyperparams["weights"])
         ):
             if self.hyperparams["weights"] not in ["imagenet", "random"]:
                 raise ValueError(
@@ -351,14 +353,20 @@ class BYOLTask(pl.LightningModule):
             raise ValueError(f"Model type '{backbone_name}' is not a valid timm model.")
 
         if custom_pretrained:
-            name, state_dict = utils.extract_backbone(self.hyperparams["weights"])
+            if isinstance(self.hyperparams["weights"], str):
+                # load a checkpoint path
+                name, state_dict = utils.extract_backbone(self.hyperparams["weights"])
 
-            if self.hyperparams["backbone"] != name:
-                raise ValueError(
-                    f"Trying to load {name} weights into a "
-                    f"{self.hyperparams['backbone']}"
-                )
-            backbone = utils.load_state_dict(backbone, state_dict)
+                if self.hyperparams["backbone"] != name:
+                    raise ValueError(
+                        f"Trying to load {name} weights into a "
+                        f"{self.hyperparams['backbone']}"
+                    )
+                backbone = utils.load_state_dict(backbone, state_dict)
+            else:
+                # load a state_dict mapping
+                state_dict = self.hyperparams["weights"]
+                backbone.load_state_dict(state_dict, strict=False)
 
         self.model = BYOL(backbone, in_channels=in_channels, image_size=(256, 256))
 

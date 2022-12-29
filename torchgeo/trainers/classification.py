@@ -89,10 +89,7 @@ class ClassificationTask(pl.LightningModule):
             else:
                 # load a state_dict mapping
                 state_dict = self.hyperparams["weights"]
-                try:
-                    self.model.load_state_dict(state_dict, strict=False)
-                except RuntimeError:
-                    self.model = utils.load_state_dict(self.model, state_dict)
+                self.model.load_state_dict(state_dict, strict=False)
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""

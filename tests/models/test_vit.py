@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Dict, Tuple
 
 import pytest
+import pytorch_lightning as pl
 import timm
 import torch
 from _pytest.fixtures import SubRequest
@@ -14,7 +15,7 @@ from torch import Tensor
 
 import torchgeo.models.resnet
 from torchgeo.models import VITSmall16_Weights
-from torchgeo.trainers import ClassificationTask
+from torchgeo.trainers import ClassificationTask, RegressionTask
 
 
 def load_state_dict_from_url(
@@ -59,8 +60,26 @@ def vitsmall16_sentinel2_all_dino(tmp_path: Path) -> Tuple[str, int]:
         ("vitsmall16_sentinel2_all_dino", VITSmall16_Weights.SENTINEL2_ALL_DINO),
     ],
 )
+@pytest.mark.parametrize(
+    "task, task_args",
+    [
+        (
+            ClassificationTask,
+            {"model": "vit_small_patch16_224", "loss": "ce", "num_classes": 1000},
+        ),
+        (
+            RegressionTask,
+            {"model": "vit_small_patch16_224", "loss": "mse", "num_outputs": 1000},
+        ),
+    ],
+)
 def test_vitsmall16_pretrained_weights(
-    monkeypatch: MonkeyPatch, request: SubRequest, generate_model, weight
+    monkeypatch: MonkeyPatch,
+    request: SubRequest,
+    generate_model,
+    weight,
+    task: pl.LightningModule,
+    task_args: Dict[str, Any],
 ) -> None:
 
     ckpt_path, num_input_channels = request.getfixturevalue(generate_model)
@@ -70,31 +89,37 @@ def test_vitsmall16_pretrained_weights(
         torchgeo.models.vit, "load_state_dict_from_url", load_state_dict_from_url
     )
 
-    task = ClassificationTask(
-        model="vit_small_patch16_224",
-        loss="ce",
-        in_channels=num_input_channels,
-        weights=weight.get_state_dict(),
-        num_classes=1000,  # imagenet default weights timm
+    task = task(
+        in_channels=num_input_channels, weights=weight.get_state_dict(), **task_args
     )
-    x = torch.zeros(1, num_input_channels, 224, 224)
+    x = torch.zeros(2, num_input_channels, 224, 224)
     y = task.forward(x)
     assert isinstance(y, torch.Tensor)
 
 
 @pytest.mark.slow
 @pytest.mark.parametrize("weight_name", [(w.name) for w in VITSmall16_Weights])
-def test_resnet50_weights_download(weight_name: str) -> None:
+@pytest.mark.parametrize(
+    "task, task_args",
+    [
+        (
+            ClassificationTask,
+            {"model": "vit_small_patch16_224", "loss": "ce", "num_classes": 1000},
+        ),
+        (
+            RegressionTask,
+            {"model": "vit_small_patch16_224", "loss": "mse", "num_outputs": 1000},
+        ),
+    ],
+)
+def test_resnet50_weights_download(
+    weight_name: str, task: pl.LightningModule, task_args: Dict[str, Any]
+) -> None:
     weight = VITSmall16_Weights[weight_name]
-    state_dict = weight.get_state_dict()
     num_input_channels = weight.meta["num_input_channels"]
 
-    task = ClassificationTask(
-        model="vit_small_patch16_224",
-        loss="ce",
-        in_channels=num_input_channels,
-        weights=state_dict,
-        num_classes=1000,  # imagenet default weights timm
+    task = task(
+        in_channels=num_input_channels, weights=weight.get_state_dict(), **task_args
     )
     x = torch.zeros(1, num_input_channels, 224, 224)
     y = task.forward(x)
