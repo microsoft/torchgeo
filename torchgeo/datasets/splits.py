@@ -41,6 +41,13 @@ def random_nongeo_split(
 
     .. versionadded:: 0.4
     """
+    if sum(lengths) == 1:
+        lengths = [floor(frac * len(dataset)) for frac in lengths]
+        remainder = int(len(dataset) - sum(lengths))
+        # add 1 to all the lengths in round-robin fashion until the remainder is 0
+        for i in range(remainder):
+            idx_to_add_at = i % len(lengths)
+            lengths[idx_to_add_at] += 1
     return random_split(dataset, lengths, generator)
 
 
