@@ -236,7 +236,7 @@ class NASAMarineDebris(NonGeoDataset):
         image = draw_bounding_boxes(image=sample["image"], boxes=sample["boxes"])
         image = image.permute((1, 2, 0)).numpy()
 
-        if "prediction_boxes" in sample:
+        if "prediction_boxes" in sample and len(sample["prediction_boxes"]):
             ncols += 1
             preds = draw_bounding_boxes(
                 image=sample["image"], boxes=sample["prediction_boxes"]
