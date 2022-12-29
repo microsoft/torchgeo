@@ -141,7 +141,7 @@ class _RandomNCrop(GeometricAugmentationBase2D):
             num: number of crops to take
         """
         super().__init__(p=1)
-        self._param_generator: CropGenerator = CropGenerator(size)
+        self._param_generator: _NCropGenerator = _NCropGenerator(size, num)
         self.flags = {"size": size, "num": num}
 
     def compute_transformation(
@@ -179,7 +179,42 @@ class _RandomNCrop(GeometricAugmentationBase2D):
             the augmented input
         """
         out = []
-        for _ in range(flags["num"]):
-            params = self._param_generator(input.size())
-            out.append(crop_by_indices(input, params["src"], flags["size"]))
+        for i in range(flags["num"]):
+            out.append(crop_by_indices(input, params["src"][i], flags["size"]))
         return torch.cat(out)
+
+
+class _NCropGenerator(CropGenerator):
+    """Generate N random crops."""
+
+    def __init__(self, size: Union[Tuple[int, int], Tensor], num: int) -> None:
+        """Initialize a new _NCropGenerator instance.
+
+        Args:
+            size: desired output size (out_h, out_w) of the crop
+            num: number of crops to generate
+        """
+        super().__init__(size)
+        self.num = num
+
+    def forward(
+        self, batch_shape: torch.Size, same_on_batch: bool = False
+    ) -> Dict[str, Tensor]:
+        """Generate the crops.
+
+        Args:
+            batch_shape: input size (b, c?, in_h, in_w)
+            same_on_batch: apply the same transformation across the batch
+
+        Returns:
+            the randomly generated parameters
+        """
+        out = []
+        for _ in range(self.num):
+            out.append(super().forward(batch_shape, same_on_batch))
+        return {
+            "src": torch.stack([x["src"] for x in out]),
+            "dst": torch.stack([x["dst"] for x in out]),
+            "input_size": out[0]["input_size"],
+            "output_size": out[0]["output_size"],
+        }
