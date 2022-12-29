@@ -76,7 +76,7 @@ class AugmentationSequential(Module):
         return sample
 
 
-class _ExtractTensorPatches(GeometricAugmentationBase2D):  # type: ignore[misc]
+class _ExtractTensorPatches(GeometricAugmentationBase2D):
     """Chop up a tensor into a grid."""
 
     def __init__(self, window_size: Union[int, Tuple[int, int]]) -> None:
@@ -130,7 +130,7 @@ class _ExtractTensorPatches(GeometricAugmentationBase2D):  # type: ignore[misc]
         return input
 
 
-class _RandomNCrop(GeometricAugmentationBase2D):  # type: ignore[misc]
+class _RandomNCrop(GeometricAugmentationBase2D):
     """Take N random crops of a tensor."""
 
     def __init__(self, size: Tuple[int, int], num: int) -> None:
@@ -141,7 +141,7 @@ class _RandomNCrop(GeometricAugmentationBase2D):  # type: ignore[misc]
             num: number of crops to take
         """
         super().__init__(p=1)
-        self._param_generator = CropGenerator(size)
+        self._param_generator: CropGenerator = CropGenerator(size)
         self.flags = {"size": size, "num": num}
 
     def compute_transformation(
