@@ -10,6 +10,5 @@ experiment:
   datamodule:
     root: "tests/data/cowc_counting"
     download: true
-    seed: 0
     batch_size: 1
     num_workers: 0
