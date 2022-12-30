@@ -7,9 +7,12 @@ from typing import Any, Dict, Optional
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
+from kornia import Normalize
+from torch import Tensor
 from torch.utils.data import DataLoader
 
 from ..datasets import LoveDA
+from ..transforms import AugmentationSequential
 
 
 class LoveDADataModule(pl.LightningDataModule):
@@ -36,19 +39,9 @@ class LoveDADataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.kwargs = kwargs
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
-
-        Args:
-            sample: dictionary containing image and mask
-
-        Returns:
-            preprocessed sample
-        """
-        sample["image"] = sample["image"].float()
-        sample["image"] /= 255.0
-
-        return sample
+        self.transform = AugmentationSequential(
+            Normalize(mean=0, std=255), data_keys=["image"]
+        )
 
     def prepare_data(self) -> None:
         """Make sure that the dataset is downloaded.
@@ -66,21 +59,11 @@ class LoveDADataModule(pl.LightningDataModule):
         Args:
             stage: stage to set up
         """
-        train_transforms = self.preprocess
-        val_predict_transforms = self.preprocess
-
-        self.train_dataset = LoveDA(
-            split="train", transforms=train_transforms, **self.kwargs
-        )
-
-        self.val_dataset = LoveDA(
-            split="val", transforms=val_predict_transforms, **self.kwargs
-        )
+        self.train_dataset = LoveDA(split="train", **self.kwargs)
+        self.val_dataset = LoveDA(split="val", **self.kwargs)
 
         # Test set masks are not public, use for prediction instead
-        self.predict_dataset = LoveDA(
-            split="test", transforms=val_predict_transforms, **self.kwargs
-        )
+        self.predict_dataset = LoveDA(split="test", **self.kwargs)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.
@@ -120,6 +103,21 @@ class LoveDADataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=False,
         )
+
+    def on_after_batch_transfer(
+        self, batch: Dict[str, Tensor], dataloader_idx: int
+    ) -> Dict[str, Tensor]:
+        """Apply augmentations to batch after transferring to GPU.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented
+            dataloader_idx: The index of the dataloader to which the batch belongs
+
+        Returns:
+            A batch of data
+        """
+        batch = self.transform(batch)
+        return batch
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
         """Run :meth:`torchgeo.datasets.LoveDA.plot`.
