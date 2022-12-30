@@ -95,7 +95,9 @@ class ChesapeakeCVPRDataModule(pl.LightningDataModule):
             self.layers = ["naip-new", "lc"]
 
         self.transform = AugmentationSequential(
-            CenterCrop(patch_size), Normalize(mean=0, std=255)
+            CenterCrop(patch_size),
+            Normalize(mean=0, std=255),
+            data_keys=["image", "mask"],
         )
 
     def prepare_data(self) -> None:

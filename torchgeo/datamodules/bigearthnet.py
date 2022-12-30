@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
+import torch
 from kornia.augmentation import Normalize
 from torch import Tensor
 from torch.utils.data import DataLoader
@@ -23,73 +24,51 @@ class BigEarthNetDataModule(pl.LightningDataModule):
 
     # (VV, VH, B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B11, B12)
     # min/max band statistics computed on 100k random samples
-    band_mins_raw = [
-        -70.0,
-        -72.0,
-        1.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        1.0,
-        0.0,
-        0.0,
-    ]
-    band_maxs_raw = [
-        31.0,
-        35.0,
-        18556.0,
-        20528.0,
-        18976.0,
-        17874.0,
-        16611.0,
-        16512.0,
-        16394.0,
-        16672.0,
-        16141.0,
-        16097.0,
-        15336.0,
-        15203.0,
-    ]
+    band_mins_raw = torch.tensor(
+        [-70.0, -72.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+    )
+    band_maxs_raw = torch.tensor(
+        [
+            31.0,
+            35.0,
+            18556.0,
+            20528.0,
+            18976.0,
+            17874.0,
+            16611.0,
+            16512.0,
+            16394.0,
+            16672.0,
+            16141.0,
+            16097.0,
+            15336.0,
+            15203.0,
+        ]
+    )
 
     # min/max band statistics computed by percentile clipping the
     # above to samples to [2, 98]
-    band_mins = [
-        -48.0,
-        -42.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-        1.0,
-    ]
-    band_maxs = [
-        6.0,
-        16.0,
-        9859.0,
-        12872.0,
-        13163.0,
-        14445.0,
-        12477.0,
-        12563.0,
-        12289.0,
-        15596.0,
-        12183.0,
-        9458.0,
-        5897.0,
-        5544.0,
-    ]
+    band_mins = torch.tensor(
+        [-48.0, -42.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    )
+    band_maxs = torch.tensor(
+        [
+            6.0,
+            16.0,
+            9859.0,
+            12872.0,
+            13163.0,
+            14445.0,
+            12477.0,
+            12563.0,
+            12289.0,
+            15596.0,
+            12183.0,
+            9458.0,
+            5897.0,
+            5544.0,
+        ]
+    )
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
