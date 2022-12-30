@@ -65,7 +65,7 @@ class VITSmall16_Weights(WeightsEnum):
             state_dict = adjust_moco_weights_zhu_lab(ckpt["state_dict"])
 
         elif "SENTINEL2_ALL_DINO" in str(self):
-            filename = "vits16_moco_sentinel2_all.pth"
+            filename = "vits16_dino_sentinel2_all.pth"
             ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
             state_dict = adjust_dino_weights_zhu_lab(ckpt["teacher"])
 

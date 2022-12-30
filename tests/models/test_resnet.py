@@ -127,6 +127,29 @@ def test_pretrained_resnet18_from_config(
     trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
 
 
+@pytest.mark.slow
+@pytest.mark.parametrize("weight_name", [(w.name) for w in ResNet18_Weights])
+@pytest.mark.parametrize(
+    "task, task_args",
+    [
+        (ClassificationTask, {"model": "resnet18", "loss": "ce", "num_classes": 1000}),
+        (RegressionTask, {"model": "resnet18", "loss": "mse", "num_outputs": 1000}),
+    ],
+)
+def test_resnet18_weights_download(
+    weight_name: str, task: pl.LightningModule, task_args: Dict[str, Any]
+) -> None:
+    weight = ResNet18_Weights[weight_name]
+    num_input_channels = weight.meta["num_input_channels"]
+
+    task = task(
+        in_channels=num_input_channels, weights=weight.get_state_dict(), **task_args
+    )
+    x = torch.zeros(2, num_input_channels, 64, 64)
+    y = task.forward(x)
+    assert isinstance(y, torch.Tensor)
+
+
 # RESNET 50 Weights
 @pytest.fixture
 def resnet50_googleearth_millionaid_rgb(tmp_path: Path) -> str:

@@ -20,6 +20,7 @@ from torchgeo.datamodules import EuroSATDataModule
 from torchgeo.models import VITSmall16_Weights
 from torchgeo.models.weights import lookup_pretrained_weights
 from torchgeo.trainers import ClassificationTask, RegressionTask
+from torchgeo.transforms import AugmentationSequential
 
 
 def load_state_dict_from_url(
@@ -33,6 +34,17 @@ def adjust_moco_state_dict(state_dict: Dict[str, Tensor]) -> Dict[str, Tensor]:
     """Adjust the moco weight names."""
     new_state_dict = {"module.encoder_q." + key: val for key, val in state_dict.items()}
     return new_state_dict
+
+
+def custom_augmentation(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+    """Custom augmentation to patch datamodules during testing."""
+    sample["image"] = sample["image"].float()
+    transform = AugmentationSequential(
+        K.Normalize(mean=0.0, std=255.0), K.Resize(224), data_keys=["image"]
+    )
+    out = transform(sample)
+    out["image"] = out["image"].squeeze(0)
+    return out
 
 
 # VITSmall16 weights
@@ -101,7 +113,6 @@ def test_vitsmall16_pretrained_weights(
     assert isinstance(y, torch.Tensor)
 
 
-@pytest.mark.slow
 @pytest.mark.parametrize(
     "config_filename, datamodule_name, generate_model",
     [
@@ -126,8 +137,8 @@ def test_pretrained_resnet50_from_config(
     # Instantiate datamodule
     datamodule_kwargs = conf_dict["datamodule"]
     # input size to vit_small_patch16_224 needs to be (224, 224)
-    transforms = K.Resize(224)
-    datamodule = datamodule_name(transforms=transforms, **datamodule_kwargs)
+    monkeypatch.setattr(datamodule_name, "preprocess", custom_augmentation)
+    datamodule = datamodule_name(**datamodule_kwargs)
 
     # Instantiate model
     ckpt_path, _ = request.getfixturevalue(generate_model)
@@ -165,7 +176,7 @@ def test_pretrained_resnet50_from_config(
         ),
     ],
 )
-def test_resnet50_weights_download(
+def test_vit_small_patch16_224_weights_download(
     weight_name: str, task: pl.LightningModule, task_args: Dict[str, Any]
 ) -> None:
     weight = VITSmall16_Weights[weight_name]
