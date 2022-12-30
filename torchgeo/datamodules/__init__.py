@@ -11,6 +11,7 @@ from .deepglobelandcover import DeepGlobeLandCoverDataModule
 from .etci2021 import ETCI2021DataModule
 from .eurosat import EuroSATDataModule
 from .fair1m import FAIR1MDataModule
+from .gid15 import GID15DataModule
 from .inria import InriaAerialImageLabelingDataModule
 from .landcoverai import LandCoverAIDataModule
 from .loveda import LoveDADataModule
@@ -38,6 +39,7 @@ __all__ = (
     "ETCI2021DataModule",
     "EuroSATDataModule",
     "FAIR1MDataModule",
+    "GID15DataModule",
     "InriaAerialImageLabelingDataModule",
     "LandCoverAIDataModule",
     "LoveDADataModule",
