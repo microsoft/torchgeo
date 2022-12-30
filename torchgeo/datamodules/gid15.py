@@ -7,7 +7,6 @@ from typing import Any, Dict, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-from einops import rearrange
 from kornia.augmentation import Normalize
 from torch import Tensor
 from torch.utils.data import DataLoader
@@ -154,10 +153,6 @@ class GID15DataModule(pl.LightningDataModule):
         Returns:
             A batch of data
         """
-        # Kornia requires masks to have a channel dimension
-        if "mask" in batch:
-            batch["mask"] = rearrange(batch["mask"], "b h w -> b () h w")
-
         if self.trainer:
             if self.trainer.training:
                 batch = self.train_transform(batch)
@@ -165,10 +160,6 @@ class GID15DataModule(pl.LightningDataModule):
                 batch = self.val_transform(batch)
             elif self.trainer.predicting:
                 batch = self.predict_transform(batch)
-
-        # Torchmetrics does not support masks with a channel dimension
-        if "mask" in batch:
-            batch["mask"] = rearrange(batch["mask"], "b () h w -> b h w")
 
         return batch
 

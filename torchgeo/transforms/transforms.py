@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import kornia
 import torch
+from einops import rearrange
 from kornia.augmentation import GeometricAugmentationBase2D
 from kornia.augmentation.random_generator import CropGenerator
 from kornia.contrib import compute_padding, extract_tensor_patches
@@ -17,7 +18,11 @@ from torch.nn.modules import Module
 
 # TODO: contribute these to Kornia and delete this file
 class AugmentationSequential(Module):
-    """Wrapper around kornia AugmentationSequential to handle input dicts."""
+    """Wrapper around kornia AugmentationSequential to handle input dicts.
+
+    .. deprecated:: 0.4
+       Use :class:`kornia.augmentation.AugmentationSequential` instead.
+    """
 
     def __init__(self, *args: Module, data_keys: List[str]) -> None:
         """Initialize a new augmentation sequential instance.
@@ -49,13 +54,15 @@ class AugmentationSequential(Module):
         Returns:
             the augmented input
         """
-        # Kornia augmentations require masks & boxes to be float
-        if "mask" in self.data_keys:
-            mask_dtype = sample["mask"].dtype
-            sample["mask"] = sample["mask"].to(torch.float)
-        if "boxes" in self.data_keys:
-            boxes_dtype = sample["boxes"].dtype
-            sample["boxes"] = sample["boxes"].to(torch.float)
+        # Kornia augmentations require all inputs to be float
+        dtypes = {}
+        for key in self.data_keys:
+            dtypes[key] = sample[key].dtype
+            sample[key] = sample[key].float()
+
+        # Kornia requires masks to have a channel dimension
+        if "mask" in sample:
+            sample["mask"] = rearrange(sample["mask"], "b h w -> b () h w")
 
         inputs = [sample[k] for k in self.data_keys]
         outputs_list: Union[Tensor, List[Tensor]] = self.augs(*inputs)
@@ -67,11 +74,13 @@ class AugmentationSequential(Module):
         }
         sample.update(outputs)
 
-        # Convert masks & boxes to previous dtype
-        if "mask" in self.data_keys:
-            sample["mask"] = sample["mask"].to(mask_dtype)
-        if "boxes" in self.data_keys:
-            sample["boxes"] = sample["boxes"].to(boxes_dtype)
+        # Convert all inputs back to their previous dtype
+        for key in self.data_keys:
+            sample[key] = sample[key].to(dtypes[key])
+
+        # Torchmetrics does not support masks with a channel dimension
+        if "mask" in sample:
+            sample["mask"] = rearrange(sample["mask"], "b () h w -> b h w")
 
         return sample
 

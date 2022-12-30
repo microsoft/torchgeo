@@ -8,10 +8,12 @@ from typing import Any, Dict, Optional
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
+from kornia.augmentation import Normalize
+from torch import Tensor
 from torch.utils.data import DataLoader
-from torchvision.transforms import Compose, Normalize
 
 from ..datasets import EuroSAT
+from ..transforms import AugmentationSequential
 
 
 class EuroSATDataModule(pl.LightningDataModule):
@@ -22,46 +24,42 @@ class EuroSATDataModule(pl.LightningDataModule):
     .. versionadded:: 0.2
     """
 
-    band_means = torch.tensor(
-        [
-            1354.40546513,
-            1118.24399958,
-            1042.92983953,
-            947.62620298,
-            1199.47283961,
-            1999.79090914,
-            2369.22292565,
-            2296.82608323,
-            732.08340178,
-            12.11327804,
-            1819.01027855,
-            1118.92391149,
-            2594.14080798,
-        ]
-    )
+    band_means = [
+        1354.40546513,
+        1118.24399958,
+        1042.92983953,
+        947.62620298,
+        1199.47283961,
+        1999.79090914,
+        2369.22292565,
+        2296.82608323,
+        732.08340178,
+        12.11327804,
+        1819.01027855,
+        1118.92391149,
+        2594.14080798,
+    ]
 
-    band_stds = torch.tensor(
-        [
-            245.71762908,
-            333.00778264,
-            395.09249139,
-            593.75055589,
-            566.4170017,
-            861.18399006,
-            1086.63139075,
-            1117.98170791,
-            404.91978886,
-            4.77584468,
-            1002.58768311,
-            761.30323499,
-            1231.58581042,
-        ]
-    )
+    band_stds = [
+        245.71762908,
+        333.00778264,
+        395.09249139,
+        593.75055589,
+        566.4170017,
+        861.18399006,
+        1086.63139075,
+        1117.98170791,
+        404.91978886,
+        4.77584468,
+        1002.58768311,
+        761.30323499,
+        1231.58581042,
+    ]
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
-        """Initialize a LightningDataModule for EuroSAT based DataLoaders.
+        """Initialize a new LightningDataModule instance.
 
         Args:
             batch_size: The batch size to use in all created DataLoaders
@@ -74,20 +72,9 @@ class EuroSATDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.kwargs = kwargs
 
-        self.norm = Normalize(self.band_means, self.band_stds)
-
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
-
-        Args:
-            sample: input image dictionary
-
-        Returns:
-            preprocessed sample
-        """
-        sample["image"] = sample["image"].float()
-        sample["image"] = self.norm(sample["image"])
-        return sample
+        self.transform = AugmentationSequential(
+            Normalize(mean=self.band_means, std=self.band_stds), data_keys=["image"]
+        )
 
     def prepare_data(self) -> None:
         """Make sure that the dataset is downloaded.
@@ -105,15 +92,11 @@ class EuroSATDataModule(pl.LightningDataModule):
         Args:
             stage: stage to set up
         """
-        transforms = Compose([self.preprocess])
+        self.train_dataset = EuroSAT(split="train", **self.kwargs)
+        self.val_dataset = EuroSAT(split="val", **self.kwargs)
+        self.test_dataset = EuroSAT(split="test", **self.kwargs)
 
-        self.train_dataset = EuroSAT(
-            split="train", transforms=transforms, **self.kwargs
-        )
-        self.val_dataset = EuroSAT(split="val", transforms=transforms, **self.kwargs)
-        self.test_dataset = EuroSAT(split="test", transforms=transforms, **self.kwargs)
-
-    def train_dataloader(self) -> DataLoader[Any]:
+    def train_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
         """Return a DataLoader for training.
 
         Returns:
@@ -126,7 +109,7 @@ class EuroSATDataModule(pl.LightningDataModule):
             shuffle=True,
         )
 
-    def val_dataloader(self) -> DataLoader[Any]:
+    def val_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
         """Return a DataLoader for validation.
 
         Returns:
@@ -139,7 +122,7 @@ class EuroSATDataModule(pl.LightningDataModule):
             shuffle=False,
         )
 
-    def test_dataloader(self) -> DataLoader[Any]:
+    def test_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
         """Return a DataLoader for testing.
 
         Returns:
@@ -151,6 +134,20 @@ class EuroSATDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=False,
         )
+
+    def on_after_batch_transfer(
+        self, batch: Dict[str, Tensor], dataloader_idx: int
+    ) -> Dict[str, Tensor]:
+        """Apply augmentations to batch after transferring to GPU.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented
+            dataloader_idx: The index of the dataloader to which the batch belongs
+
+        Returns:
+            A batch of data
+        """
+        return self.transform(batch)
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
         """Run :meth:`torchgeo.datasets.EuroSAT.plot`."""
