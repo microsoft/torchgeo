@@ -14,6 +14,8 @@ experiment:
     ignore_index: null
   datamodule:
     root: "tests/data/deepglobelandcover"
-    val_split_pct: 0.0
-    batch_size: 1
+    num_tiles_per_batch: 1
+    num_patches_per_tile: 1
+    patch_size: 2
+    val_split_pct: 0.5
     num_workers: 0
