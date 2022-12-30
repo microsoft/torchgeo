@@ -187,7 +187,7 @@ class Potsdam2D(NonGeoDataset):
         path = self.files[index]["image"]
         with rasterio.open(path) as f:
             array = f.read()
-            tensor = torch.from_numpy(array)
+            tensor = torch.from_numpy(array).float()
             return tensor
 
     def _load_target(self, index: int) -> Tensor:
