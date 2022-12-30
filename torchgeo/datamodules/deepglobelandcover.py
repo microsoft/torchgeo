@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 from einops import rearrange
 from kornia.augmentation import Normalize
+from torch import Tensor
 from torch.utils.data import DataLoader
 
 from ..datasets import DeepGlobeLandCover
