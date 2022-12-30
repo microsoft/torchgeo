@@ -91,7 +91,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         )
         self.test_dataset = DeepGlobeLandCover(split="test", **self.kwargs)
 
-    def train_dataloader(self) -> DataLoader[Dict[str, Any]]:
+    def train_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
         """Return a DataLoader for training.
 
         Returns:
@@ -104,7 +104,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             shuffle=True,
         )
 
-    def val_dataloader(self) -> DataLoader[Dict[str, Any]]:
+    def val_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
         """Return a DataLoader for validation.
 
         Returns:
@@ -114,7 +114,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             self.val_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
         )
 
-    def test_dataloader(self) -> DataLoader[Dict[str, Any]]:
+    def test_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
         """Return a DataLoader for testing.
 
         Returns:
@@ -125,8 +125,8 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         )
 
     def on_after_batch_transfer(
-        self, batch: Dict[str, Any], dataloader_idx: int
-    ) -> Dict[str, Any]:
+        self, batch: Dict[str, Tensor], dataloader_idx: int
+    ) -> Dict[str, Tensor]:
         """Apply augmentations to batch after transferring to GPU.
 
         Args:
