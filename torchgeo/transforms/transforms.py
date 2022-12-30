@@ -21,7 +21,7 @@ class AugmentationSequential(Module):
     """Wrapper around kornia AugmentationSequential to handle input dicts.
 
     .. deprecated:: 0.4
-       Use :class:`kornia.augmentation.AugmentationSequential` instead.
+       Use :class:`kornia.augmentation.container.AugmentationSequential` instead.
     """
 
     def __init__(self, *args: Module, data_keys: List[str]) -> None:
@@ -55,9 +55,9 @@ class AugmentationSequential(Module):
             the augmented input
         """
         # Kornia augmentations require all inputs to be float
-        dtypes = {}
+        dtype = {}
         for key in self.data_keys:
-            dtypes[key] = sample[key].dtype
+            dtype[key] = sample[key].dtype
             sample[key] = sample[key].float()
 
         # Kornia requires masks to have a channel dimension
@@ -76,7 +76,7 @@ class AugmentationSequential(Module):
 
         # Convert all inputs back to their previous dtype
         for key in self.data_keys:
-            sample[key] = sample[key].to(dtypes[key])
+            sample[key] = sample[key].to(dtype[key])
 
         # Torchmetrics does not support masks with a channel dimension
         if "mask" in sample:

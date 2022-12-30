@@ -7,7 +7,6 @@ from typing import Any, Dict, Optional
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-import torch
 from kornia.augmentation import Normalize
 from torch import Tensor
 from torch.utils.data import DataLoader
@@ -147,7 +146,8 @@ class EuroSATDataModule(pl.LightningDataModule):
         Returns:
             A batch of data
         """
-        return self.transform(batch)
+        batch = self.transform(batch)
+        return batch
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
         """Run :meth:`torchgeo.datasets.EuroSAT.plot`."""
