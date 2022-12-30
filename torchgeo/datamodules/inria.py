@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-from kornia.augmentation import Normalize, RandomVerticalFlip, RandomHorizontalFlip
+from kornia.augmentation import Normalize, RandomHorizontalFlip, RandomVerticalFlip
 from torch import Tensor
 from torch.utils.data import DataLoader
 

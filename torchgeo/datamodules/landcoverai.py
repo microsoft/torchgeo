@@ -5,12 +5,21 @@
 
 from typing import Any, Dict, Optional
 
-import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
+from kornia.augmentation import (
+    ColorJitter,
+    Normalize,
+    RandomHorizontalFlip,
+    RandomRotation,
+    RandomSharpness,
+    RandomVerticalFlip,
+)
+from torch import Tensor
 from torch.utils.data import DataLoader
 
 from ..datasets import LandCoverAI
+from ..transforms import AugmentationSequential
 
 
 class LandCoverAIDataModule(pl.LightningDataModule):
@@ -22,7 +31,7 @@ class LandCoverAIDataModule(pl.LightningDataModule):
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
-        """Initialize a LightningDataModule for LandCover.ai based DataLoaders.
+        """Initialize a new LightningDataModule instance.
 
         Args:
             batch_size: The batch size to use in all created DataLoaders
@@ -35,67 +44,25 @@ class LandCoverAIDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.kwargs = kwargs
 
-    def on_after_batch_transfer(
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> Dict[str, Any]:
-        """Apply batch augmentations after batch is transferred to the device.
-
-        Args:
-            batch: mini-batch of data
-            batch_idx: batch index
-
-        Returns:
-            augmented mini-batch
-        """
-        if (
-            hasattr(self, "trainer")
-            and self.trainer is not None
-            and hasattr(self.trainer, "training")
-            and self.trainer.training
-        ):
-            # Kornia expects masks to be floats with a channel dimension
-            x = batch["image"]
-            y = batch["mask"].float().unsqueeze(1)
-
-            train_augmentations = K.AugmentationSequential(
-                K.RandomRotation(p=0.5, degrees=90),
-                K.RandomHorizontalFlip(p=0.5),
-                K.RandomVerticalFlip(p=0.5),
-                K.RandomSharpness(p=0.5),
-                K.ColorJitter(
-                    p=0.5,
-                    brightness=0.1,
-                    contrast=0.1,
-                    saturation=0.1,
-                    hue=0.1,
-                    silence_instantiation_warning=True,
-                ),
-                data_keys=["input", "mask"],
-            )
-            x, y = train_augmentations(x, y)
-
-            # torchmetrics expects masks to be longs without a channel dimension
-            batch["image"] = x
-            batch["mask"] = y.squeeze(1).long()
-
-        return batch
-
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
-
-        Args:
-            sample: dictionary containing image and mask
-
-        Returns:
-            preprocessed sample
-        """
-        sample["image"] = sample["image"].float()
-        sample["image"] /= 255.0
-
-        if "mask" in sample:
-            sample["mask"] = sample["mask"].long()
-
-        return sample
+        self.train_transform = AugmentationSequential(
+            Normalize(mean=0, std=255),
+            RandomRotation(p=0.5, degrees=90),
+            RandomHorizontalFlip(p=0.5),
+            RandomVerticalFlip(p=0.5),
+            RandomSharpness(p=0.5),
+            ColorJitter(
+                p=0.5,
+                brightness=0.1,
+                contrast=0.1,
+                saturation=0.1,
+                hue=0.1,
+                silence_instantiation_warning=True,
+            ),
+            data_keys=["image", "mask"],
+        )
+        self.test_transform = AugmentationSequential(
+            Normalize(mean=0, std=255), data_keys=["image", "mask"]
+        )
 
     def prepare_data(self) -> None:
         """Make sure that the dataset is downloaded.
@@ -113,20 +80,11 @@ class LandCoverAIDataModule(pl.LightningDataModule):
         Args:
             stage: stage to set up
         """
-        train_transforms = self.preprocess
-        val_test_transforms = self.preprocess
+        self.train_dataset = LandCoverAI(split="train", **self.kwargs)
 
-        self.train_dataset = LandCoverAI(
-            split="train", transforms=train_transforms, **self.kwargs
-        )
+        self.val_dataset = LandCoverAI(split="val", **self.kwargs)
 
-        self.val_dataset = LandCoverAI(
-            split="val", transforms=val_test_transforms, **self.kwargs
-        )
-
-        self.test_dataset = LandCoverAI(
-            split="test", transforms=val_test_transforms, **self.kwargs
-        )
+        self.test_dataset = LandCoverAI(split="test", **self.kwargs)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.
@@ -166,6 +124,26 @@ class LandCoverAIDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=False,
         )
+
+    def on_after_batch_transfer(
+        self, batch: Dict[str, Tensor], dataloader_idx: int
+    ) -> Dict[str, Tensor]:
+        """Apply augmentations to batch after transferring to GPU.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented
+            dataloader_idx: The index of the dataloader to which the batch belongs
+
+        Returns:
+            A batch of data
+        """
+        if self.trainer:
+            if self.trainer.training:
+                batch = self.train_transform(batch)
+            elif self.trainer.validating or self.trainer.testing:
+                batch = self.test_transform(batch)
+
+        return batch
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
         """Run :meth:`torchgeo.datasets.LandCoverAI.plot`.
