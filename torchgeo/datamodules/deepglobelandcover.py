@@ -7,7 +7,9 @@ from typing import Any, Dict, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
+from einops import rearrange
 from kornia.augmentation import Normalize
+from torch import Tensor
 from torch.utils.data import DataLoader
 
 from ..datasets import DeepGlobeLandCover
@@ -90,7 +92,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         )
         self.test_dataset = DeepGlobeLandCover(split="test", **self.kwargs)
 
-    def train_dataloader(self) -> DataLoader[Dict[str, Any]]:
+    def train_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
         """Return a DataLoader for training.
 
         Returns:
@@ -103,7 +105,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             shuffle=True,
         )
 
-    def val_dataloader(self) -> DataLoader[Dict[str, Any]]:
+    def val_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
         """Return a DataLoader for validation.
 
         Returns:
@@ -113,7 +115,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             self.val_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
         )
 
-    def test_dataloader(self) -> DataLoader[Dict[str, Any]]:
+    def test_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
         """Return a DataLoader for testing.
 
         Returns:
@@ -124,8 +126,8 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
         )
 
     def on_after_batch_transfer(
-        self, batch: Dict[str, Any], dataloader_idx: int
-    ) -> Dict[str, Any]:
+        self, batch: Dict[str, Tensor], dataloader_idx: int
+    ) -> Dict[str, Tensor]:
         """Apply augmentations to batch after transferring to GPU.
 
         Args:
@@ -136,7 +138,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             A batch of data
         """
         # Kornia requires masks to have a channel dimension
-        batch["mask"] = batch["mask"].unsqueeze(1)
+        batch["mask"] = rearrange(batch["mask"], "b h w -> b () h w")
 
         if self.trainer:
             if self.trainer.training:
@@ -145,7 +147,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
                 batch = self.test_transform(batch)
 
         # Torchmetrics does not support masks with a channel dimension
-        batch["mask"] = batch["mask"].squeeze(1)
+        batch["mask"] = rearrange(batch["mask"], "b () h w -> b h w")
 
         return batch
 
