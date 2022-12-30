@@ -17,6 +17,7 @@ from torchgeo.datamodules import (
     BigEarthNetDataModule,
     ChesapeakeCVPRDataModule,
     COWCCountingDataModule,
+    DeepGlobeLandCoverDataModule,
     ETCI2021DataModule,
     EuroSATDataModule,
     InriaAerialImageLabelingDataModule,
@@ -30,6 +31,7 @@ from torchgeo.datamodules import (
     SpaceNet1DataModule,
     TropicalCycloneDataModule,
     UCMercedDataModule,
+    Vaihingen2DDataModule,
 )
 from torchgeo.trainers import (
     BYOLTask,
@@ -48,6 +50,7 @@ TASK_TO_MODULES_MAPPING: Dict[
     "chesapeake_cvpr": (SemanticSegmentationTask, ChesapeakeCVPRDataModule),
     "cowc_counting": (RegressionTask, COWCCountingDataModule),
     "cyclone": (RegressionTask, TropicalCycloneDataModule),
+    "deepglobelandcover": (SemanticSegmentationTask, DeepGlobeLandCoverDataModule),
     "eurosat": (ClassificationTask, EuroSATDataModule),
     "etci2021": (SemanticSegmentationTask, ETCI2021DataModule),
     "inria": (SemanticSegmentationTask, InriaAerialImageLabelingDataModule),
@@ -60,6 +63,7 @@ TASK_TO_MODULES_MAPPING: Dict[
     "so2sat": (ClassificationTask, So2SatDataModule),
     "spacenet1": (SemanticSegmentationTask, SpaceNet1DataModule),
     "ucmerced": (ClassificationTask, UCMercedDataModule),
+    "vaihingen2d": (SemanticSegmentationTask, Vaihingen2DDataModule),
 }
 
 

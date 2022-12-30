@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
+from einops import rearrange
 from kornia.augmentation import Normalize
 from torch.utils.data import DataLoader
 
@@ -136,7 +137,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
             A batch of data
         """
         # Kornia requires masks to have a channel dimension
-        batch["mask"] = batch["mask"].unsqueeze(1)
+        batch["mask"] = rearrange(batch["mask"], "b h w -> b () h w")
 
         if self.trainer:
             if self.trainer.training:
@@ -145,7 +146,7 @@ class DeepGlobeLandCoverDataModule(pl.LightningDataModule):
                 batch = self.test_transform(batch)
 
         # Torchmetrics does not support masks with a channel dimension
-        batch["mask"] = batch["mask"].squeeze(1)
+        batch["mask"] = rearrange(batch["mask"], "b () h w -> b h w")
 
         return batch
 
