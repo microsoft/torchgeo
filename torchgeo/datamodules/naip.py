@@ -7,12 +7,13 @@ from typing import Any, Dict, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
+from kornia import Normalize
+from torch import Tensor
 from torch.utils.data import DataLoader
-from torchvision.transforms import Compose
 
 from ..datasets import NAIP, BoundingBox, Chesapeake13, stack_samples
-from ..samplers.batch import RandomBatchGeoSampler
-from ..samplers.single import GridGeoSampler
+from ..samplers import GridGeoSampler, RandomBatchGeoSampler
+from ..transforms import AugmentationSequential
 
 
 class NAIPChesapeakeDataModule(pl.LightningDataModule):
@@ -21,15 +22,13 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
     Uses the train/val/test splits from the dataset.
     """
 
-    # TODO: tune these hyperparams
-    length = 1000
-    stride = 128
-
     def __init__(
         self,
         batch_size: int = 64,
         num_workers: int = 0,
         patch_size: int = 256,
+        stride: int = 128,
+        length: int = 1000,
         **kwargs: Any,
     ) -> None:
         """Initialize a LightningDataModule for NAIP and Chesapeake based DataLoaders.
@@ -38,6 +37,8 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             batch_size: The batch size to use in all created DataLoaders
             num_workers: The number of workers to use in all created DataLoaders
             patch_size: size of patches to sample
+            stride: stride of grid sampler
+            length: epoch size
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.NAIP` (prefix keys with ``naip_``) and
                 :class:`~torchgeo.datasets.Chesapeake13`
@@ -47,6 +48,8 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.patch_size = patch_size
+        self.stride = stride
+        self.length = length
 
         self.naip_kwargs = {}
         self.chesapeake_kwargs = {}
@@ -56,44 +59,9 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             elif key.startswith("chesapeake_"):
                 self.chesapeake_kwargs[key[11:]] = val
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the NAIP Dataset.
-
-        Args:
-            sample: NAIP image dictionary
-
-        Returns:
-            preprocessed NAIP data
-        """
-        sample["image"] = sample["image"].float()
-        sample["image"] /= 255.0
-
-        return sample
-
-    def chesapeake_transform(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Chesapeake Dataset.
-
-        Args:
-            sample: Chesapeake mask dictionary
-
-        Returns:
-            preprocessed Chesapeake data
-        """
-        sample["mask"] = sample["mask"].long()[0]
-
-        return sample
-
-    def remove_bbox(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Removes the bounding box property from a sample.
-
-        Args:
-            sample: dictionary with geographic metadata
-
-        Returns
-            sample without the bbox property
-        """
-        del sample["bbox"]
-        return sample
+        self.transform = AugmentationSequential(
+            Normalize(mean=0, std=255), data_keys=["image", "mask"]
+        )
 
     def prepare_data(self) -> None:
         """Make sure that the dataset is downloaded.
@@ -111,21 +79,8 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         Args:
             stage: state to set up
         """
-        # TODO: these transforms will be applied independently, this won't work if we
-        # add things like random horizontal flip
-
-        naip_transforms = Compose([self.preprocess, self.remove_bbox])
-        chesapeak_transforms = Compose([self.chesapeake_transform, self.remove_bbox])
-
-        self.chesapeake = Chesapeake13(
-            transforms=chesapeak_transforms, **self.chesapeake_kwargs
-        )
-        self.naip = NAIP(
-            crs=self.chesapeake.crs,
-            res=self.chesapeake.res,
-            transforms=naip_transforms,
-            **self.naip_kwargs,
-        )
+        self.chesapeake = Chesapeake13(**self.chesapeake_kwargs)
+        self.naip = NAIP(**self.naip_kwargs)
         self.dataset = self.chesapeake & self.naip
 
         # TODO: figure out better train/val/test split
@@ -186,6 +141,21 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             collate_fn=stack_samples,
         )
+
+    def on_after_batch_transfer(
+        self, batch: Dict[str, Tensor], dataloader_idx: int
+    ) -> Dict[str, Tensor]:
+        """Apply augmentations to batch after transferring to GPU.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented
+            dataloader_idx: The index of the dataloader to which the batch belongs
+
+        Returns:
+            A batch of data
+        """
+        batch = self.transform(batch)
+        return batch
 
     def plot(self, *args: Any, **kwargs: Any) -> Tuple[plt.Figure, plt.Figure]:
         """Run NAIP and Chesapeake plot methods.
