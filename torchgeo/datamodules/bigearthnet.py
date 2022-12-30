@@ -7,11 +7,12 @@ from typing import Any, Dict, Optional
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-import torch
+from kornia.augmentation import Normalize
+from torch import Tensor
 from torch.utils.data import DataLoader
-from torchvision.transforms import Compose
 
 from ..datasets import BigEarthNet
+from ..transforms import AugmentationSequential
 
 
 class BigEarthNetDataModule(pl.LightningDataModule):
@@ -22,51 +23,73 @@ class BigEarthNetDataModule(pl.LightningDataModule):
 
     # (VV, VH, B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B11, B12)
     # min/max band statistics computed on 100k random samples
-    band_mins_raw = torch.tensor(
-        [-70.0, -72.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0]
-    )
-    band_maxs_raw = torch.tensor(
-        [
-            31.0,
-            35.0,
-            18556.0,
-            20528.0,
-            18976.0,
-            17874.0,
-            16611.0,
-            16512.0,
-            16394.0,
-            16672.0,
-            16141.0,
-            16097.0,
-            15336.0,
-            15203.0,
-        ]
-    )
+    band_mins_raw = [
+        -70.0,
+        -72.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+    ]
+    band_maxs_raw = [
+        31.0,
+        35.0,
+        18556.0,
+        20528.0,
+        18976.0,
+        17874.0,
+        16611.0,
+        16512.0,
+        16394.0,
+        16672.0,
+        16141.0,
+        16097.0,
+        15336.0,
+        15203.0,
+    ]
 
     # min/max band statistics computed by percentile clipping the
     # above to samples to [2, 98]
-    band_mins = torch.tensor(
-        [-48.0, -42.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-    )
-    band_maxs = torch.tensor(
-        [
-            6.0,
-            16.0,
-            9859.0,
-            12872.0,
-            13163.0,
-            14445.0,
-            12477.0,
-            12563.0,
-            12289.0,
-            15596.0,
-            12183.0,
-            9458.0,
-            5897.0,
-            5544.0,
-        ]
-    )
+    band_mins = [
+        -48.0,
+        -42.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+    ]
+    band_maxs = [
+        6.0,
+        16.0,
+        9859.0,
+        12872.0,
+        13163.0,
+        14445.0,
+        12477.0,
+        12563.0,
+        12289.0,
+        15596.0,
+        12183.0,
+        9458.0,
+        5897.0,
+        5544.0,
+    ]
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
@@ -95,12 +118,9 @@ class BigEarthNetDataModule(pl.LightningDataModule):
             self.mins = self.band_mins[2:, None, None]
             self.maxs = self.band_maxs[2:, None, None]
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset."""
-        sample["image"] = sample["image"].float()
-        sample["image"] = (sample["image"] - self.mins) / (self.maxs - self.mins)
-        sample["image"] = torch.clip(sample["image"], min=0.0, max=1.0)
-        return sample
+        self.transform = AugmentationSequential(
+            Normalize(mean=self.mins, std=self.maxs - self.mins), data_keys=["image"]
+        )
 
     def prepare_data(self) -> None:
         """Make sure that the dataset is downloaded.
@@ -111,23 +131,23 @@ class BigEarthNetDataModule(pl.LightningDataModule):
             BigEarthNet(split="train", **self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
+        """Initialize the main Dataset objects.
 
         This method is called once per GPU per run.
-        """
-        transforms = Compose([self.preprocess])
-        self.train_dataset = BigEarthNet(
-            split="train", transforms=transforms, **self.kwargs
-        )
-        self.val_dataset = BigEarthNet(
-            split="val", transforms=transforms, **self.kwargs
-        )
-        self.test_dataset = BigEarthNet(
-            split="test", transforms=transforms, **self.kwargs
-        )
 
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training."""
+        Args:
+            stage: stage to set up
+        """
+        self.train_dataset = BigEarthNet(split="train", **self.kwargs)
+        self.val_dataset = BigEarthNet(split="val", **self.kwargs)
+        self.test_dataset = BigEarthNet(split="test", **self.kwargs)
+
+    def train_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
+        """Return a DataLoader for training.
+
+        Returns:
+            training data loader
+        """
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,
@@ -135,8 +155,12 @@ class BigEarthNetDataModule(pl.LightningDataModule):
             shuffle=True,
         )
 
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation."""
+    def val_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
+        """Return a DataLoader for validation.
+
+        Returns:
+            validation data loader
+        """
         return DataLoader(
             self.val_dataset,
             batch_size=self.batch_size,
@@ -144,14 +168,33 @@ class BigEarthNetDataModule(pl.LightningDataModule):
             shuffle=False,
         )
 
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing."""
+    def test_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
+        """Return a DataLoader for testing.
+
+        Returns:
+            testing data loader
+        """
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=False,
         )
+
+    def on_after_batch_transfer(
+        self, batch: Dict[str, Tensor], dataloader_idx: int
+    ) -> Dict[str, Tensor]:
+        """Apply augmentations to batch after transferring to GPU.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented
+            dataloader_idx: The index of the dataloader to which the batch belongs
+
+        Returns:
+            A batch of data
+        """
+        batch = self.transform(batch)
+        return batch
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
         """Run :meth:`torchgeo.datasets.BigEarthNet.plot`.
