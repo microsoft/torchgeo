@@ -136,7 +136,10 @@ class GID15DataModule(pl.LightningDataModule):
             predicting data loader
         """
         return DataLoader(
-            self.predict_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
+            self.predict_dataset,
+            batch_size=1,
+            num_workers=self.num_workers,
+            shuffle=False,
         )
 
     def on_after_batch_transfer(
