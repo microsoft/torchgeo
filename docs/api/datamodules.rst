@@ -52,7 +52,7 @@ FAIR1M
 GID-15
 ^^^^^^
 
-.. autoclass:: GIDDataModule
+.. autoclass:: GID15DataModule
 
 Inria Aerial Image Labeling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -3,172 +3,110 @@
 
 """GID-15 datamodule."""
 
-import warnings
 from typing import Any, Dict, Optional, Tuple, Union
 
-import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-import torch
-from torch.utils.data import DataLoader, Dataset
-from torchvision.transforms import Compose
-
-from torchgeo.datasets.utils import collate_patches_per_tile
-from torchgeo.samplers.utils import _to_tuple
+from einops import rearrange
+from kornia.augmentation import Normalize
+from torch import Tensor
+from torch.utils.data import DataLoader
 
 from ..datasets import GID15
+from ..samplers.utils import _to_tuple
+from ..transforms import AugmentationSequential
+from ..transforms.transforms import _ExtractTensorPatches, _RandomNCrop
 from .utils import dataset_split
 
 
 class GID15DataModule(pl.LightningDataModule):
-    """GID15 LightningDataModule implementation for the GID-15 dataset.
+    """LightningDataModule implementation for the GID-15 dataset.
 
     Uses the train/test splits from the dataset.
 
+    .. versionadded:: 0.4
     """
 
     def __init__(
         self,
-        batch_size: int = 32,
-        num_workers: int = 0,
-        patch_size: Union[Tuple[int, int], int] = (64, 64),
         num_tiles_per_batch: int = 16,
+        num_patches_per_tile: int = 16,
+        patch_size: Union[Tuple[int, int], int] = 64,
         val_split_pct: float = 0.2,
+        num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
-        """Initialize a LightningDataModule for GID-15 based DataLoaders.
+        """Initialize a new LightningDataModule instance.
+
+        The GID-15 dataset contains images that are too large to pass
+        directly through a model. Instead, we randomly sample patches from image tiles
+        during training and chop up image tiles into patch grids during evaluation.
+        During training, the effective batch size is equal to
+        ``num_tiles_per_batch`` x ``num_patches_per_tile``.
 
         Args:
-            batch_size: The batch size used in the train DataLoader
-                (val_batch_size == test_batch_size == 1).
-            num_workers: The number of workers to use in all created DataLoaders
-            val_split_pct: What percentage of the dataset to use as a validation set
-            patch_size: Size of random patch from image and mask (height, width), should
-                be a multiple of 32 for most segmentation architectures
-            num_tiles_per_batch: number of random tiles to consider sampling patches
-                from per sample, should evenly divide batch_size and be less than
-                or equal to batch_size
+            num_tiles_per_batch: The number of image tiles to sample from during
+                training
+            num_patches_per_tile: The number of patches to randomly sample from each
+                image tile during training
+            patch_size: The size of each patch, either ``size`` or ``(height, width)``.
+                Should be a multiple of 32 for most segmentation architectures
+            val_split_pct: The percentage of the dataset to use as a validation set
+            num_workers: The number of workers to use for parallel data loading
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.GID15`
-
-        .. versionadded:: 0.4
         """
         super().__init__()
 
-        self.batch_size = batch_size
-        self.num_workers = num_workers
+        self.num_tiles_per_batch = num_tiles_per_batch
+        self.num_patches_per_tile = num_patches_per_tile
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
+        self.num_workers = num_workers
         self.kwargs = kwargs
 
-        assert (
-            self.batch_size >= num_tiles_per_batch
-        ), "num_tiles_per_batch should be less than or equal to batch_size."
-
-        self.num_patches_per_tile = self.batch_size // num_tiles_per_batch
-        self.num_tiles_per_batch = num_tiles_per_batch
-
-        if (self.num_patches_per_tile % 2) != 0 and (
-            self.num_patches_per_tile != num_tiles_per_batch
-        ):
-            warnings.warn(
-                "The effective batch size"
-                f" will differ from the specified {batch_size}"
-                f" and be {self.num_patches_per_tile * num_tiles_per_batch} instead."
-                " To match the batch_size exactly, ensure that"
-                " num_tiles_per_batch evenly divides batch_size"
-            )
-
-        self.rcrop = K.AugmentationSequential(
-            K.RandomCrop(self.patch_size), data_keys=["input", "mask"]
+        self.train_transform = AugmentationSequential(
+            Normalize(mean=0.0, std=255.0),
+            _RandomNCrop(self.patch_size, self.num_patches_per_tile),
+            data_keys=["image", "mask"],
+        )
+        self.val_transform = AugmentationSequential(
+            Normalize(mean=0.0, std=255.0),
+            _ExtractTensorPatches(self.patch_size),
+            data_keys=["image", "mask"],
+        )
+        self.predict_transform = AugmentationSequential(
+            Normalize(mean=0.0, std=255.0),
+            _ExtractTensorPatches(self.patch_size),
+            data_keys=["image"],
         )
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
+    def prepare_data(self) -> None:
+        """Initialize the main Dataset objects for use in :func:`setup`.
 
-        Args:
-            sample: input image dictionary
-
-        Returns:
-            preprocessed sample
+        This includes optionally downloading the dataset. This is done once per node,
+        while :func:`setup` is done once per GPU.
         """
-        sample["image"] = sample["image"].float()
-        sample["image"] /= 255.0
-        return sample
+        if self.kwargs.get("download", False):
+            GID15(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
+        """Initialize the main Dataset objects.
 
         This method is called once per GPU per run.
 
         Args:
             stage: stage to set up
         """
-
-        def n_random_crop(sample: Dict[str, Any]) -> Dict[str, Any]:
-            """Construct 'num_patches_per_tile' random patches of input tile.
-
-            Args:
-                sample: contains image and mask tile from dataset
-
-            Returns:
-                stacked randomly cropped patches from input tile
-            """
-            images, masks = [], []
-            for i in range(self.num_patches_per_tile):
-                image, mask = self.rcrop(sample["image"], sample["mask"].float())
-                images.append(image.squeeze(0))
-                masks.append(mask.squeeze().long())
-
-            sample["image"] = torch.stack(images)
-            sample["mask"] = torch.stack(masks)
-            return sample
-
-        def pad_to(sample: Dict[str, Any]) -> Dict[str, Any]:
-            """Pad image and mask to next multiple of 32.
-
-            Args:
-                sample: contains image and mask sample from dataset
-
-            Returns:
-                padded image and mask
-            """
-            h, w = sample["image"].shape[1], sample["image"].shape[2]
-            new_h = int(32 * ((h // 32) + 1))
-            new_w = int(32 * ((w // 32) + 1))
-
-            padto = K.PadTo((new_h, new_w))
-
-            sample["image"] = padto(sample["image"])[0]
-            return sample
-
-        train_transforms = Compose([self.preprocess, n_random_crop])
-        # for testing and validation we pad all inputs to next larger multiple of 32
-        # to avoid issues with upsampling paths in encoder-decoder architectures
-        test_transforms = Compose([self.preprocess, pad_to])
-
-        train_dataset = GID15(split="train", transforms=train_transforms, **self.kwargs)
-
-        self.train_dataset: Dataset[Any]
-        self.val_dataset: Dataset[Any]
-
-        if self.val_split_pct > 0.0:
-            val_dataset = GID15(
-                split="train", transforms=test_transforms, **self.kwargs
-            )
-            self.train_dataset, self.val_dataset, _ = dataset_split(
-                train_dataset, val_pct=self.val_split_pct, test_pct=0.0
-            )
-            self.val_dataset.dataset = val_dataset
-        else:
-            self.train_dataset = train_dataset
-            self.val_dataset = train_dataset
-
-        self.test_dataset = GID15(
-            split="test", transforms=test_transforms, **self.kwargs
+        train_dataset = GID15(split="train", **self.kwargs)
+        self.train_dataset, self.val_dataset = dataset_split(
+            train_dataset, self.val_split_pct
         )
 
-    def train_dataloader(self) -> DataLoader[Any]:
+        # Test set masks are not public, use for prediction instead
+        self.predict_dataset = GID15(split="test", **self.kwargs)
+
+    def train_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
         """Return a DataLoader for training.
 
         Returns:
@@ -178,42 +116,59 @@ class GID15DataModule(pl.LightningDataModule):
             self.train_dataset,
             batch_size=self.num_tiles_per_batch,
             num_workers=self.num_workers,
-            collate_fn=collate_patches_per_tile,
             shuffle=True,
         )
 
-    def val_dataloader(self) -> DataLoader[Dict[str, Any]]:
+    def val_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
         """Return a DataLoader for validation.
 
         Returns:
             validation data loader
         """
-        if self.val_split_pct > 0.0:
-            return DataLoader(
-                self.val_dataset,
-                batch_size=1,
-                num_workers=self.num_workers,
-                shuffle=False,
-            )
-        else:
-            return DataLoader(
-                self.val_dataset,
-                batch_size=1,
-                num_workers=self.num_workers,
-                shuffle=False,
-                collate_fn=collate_patches_per_tile,
-            )
+        return DataLoader(
+            self.val_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
+        )
 
-    def test_dataloader(self) -> DataLoader[Dict[str, Any]]:
-        """Return a DataLoader for testing.
+    def predict_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
+        """Return a DataLoader for predicting.
 
         Returns:
-            testing data loader
+            predicting data loader
         """
         return DataLoader(
-            self.test_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
+            self.predict_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
         )
+
+    def on_after_batch_transfer(
+        self, batch: Dict[str, Tensor], dataloader_idx: int
+    ) -> Dict[str, Tensor]:
+        """Apply augmentations to batch after transferring to GPU.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented
+            dataloader_idx: The index of the dataloader to which the batch belongs
+
+        Returns:
+            A batch of data
+        """
+        # Kornia requires masks to have a channel dimension
+        if "mask" in batch:
+            batch["mask"] = rearrange(batch["mask"], "b h w -> b () h w")
+
+        if self.trainer:
+            if self.trainer.training:
+                batch = self.train_transform(batch)
+            elif self.trainer.validating:
+                batch = self.val_transform(batch)
+            elif self.trainer.predicting:
+                batch = self.predict_transform(batch)
+
+        # Torchmetrics does not support masks with a channel dimension
+        if "mask" in batch:
+            batch["mask"] = rearrange(batch["mask"], "b () h w -> b h w")
+
+        return batch
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
         """Run :meth:`torchgeo.datasets.GID15.plot`."""
-        return self.test_dataset.plot(*args, **kwargs)
+        return self.predict_dataset.plot(*args, **kwargs)
