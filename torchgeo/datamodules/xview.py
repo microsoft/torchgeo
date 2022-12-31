@@ -44,7 +44,7 @@ class XView2DataModule(NonGeoDataModule):
         self.kwargs = kwargs
 
         self.aug = AugmentationSequential(
-            Normalize(mean=0.0 std=255.0), data_keys=["image"]
+            Normalize(mean=0.0, std=255.0), data_keys=["image"]
         )
 
     def setup(self, stage: Optional[str] = None) -> None:

@@ -60,7 +60,7 @@ class NAIPChesapeakeDataModule(LightningDataModule):
                 self.chesapeake_kwargs[key[11:]] = val
 
         self.aug = AugmentationSequential(
-            Normalize(mean=0.0 std=255.0), data_keys=["image", "mask"]
+            Normalize(mean=0.0, std=255.0), data_keys=["image", "mask"]
         )
 
     def prepare_data(self) -> None:

@@ -42,7 +42,7 @@ class LandCoverAIDataModule(NonGeoDataModule):
         self.kwargs = kwargs
 
         self.train_aug = AugmentationSequential(
-            Normalize(mean=0.0 std=255.0),
+            Normalize(mean=0.0, std=255.0),
             RandomRotation(p=0.5, degrees=90),
             RandomHorizontalFlip(p=0.5),
             RandomVerticalFlip(p=0.5),
@@ -58,7 +58,7 @@ class LandCoverAIDataModule(NonGeoDataModule):
             data_keys=["image", "mask"],
         )
         self.test_aug = AugmentationSequential(
-            Normalize(mean=0.0 std=255.0), data_keys=["image", "mask"]
+            Normalize(mean=0.0, std=255.0), data_keys=["image", "mask"]
         )
 
     def prepare_data(self) -> None:
