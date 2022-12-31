@@ -3,19 +3,17 @@
 
 """COWC datamodule."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
-import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 from kornia.augmentation import Normalize
-from torch import Tensor
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import random_split
 
 from ..datasets import COWCCounting
 from ..transforms import AugmentationSequential
+from .geo import NonGeoDataModule
 
 
-class COWCCountingDataModule(pl.LightningDataModule):
+class COWCCountingDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the COWC Counting dataset."""
 
     def __init__(
@@ -34,7 +32,7 @@ class COWCCountingDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.kwargs = kwargs
 
-        self.transform = AugmentationSequential(
+        self.aug = AugmentationSequential(
             Normalize(mean=0, std=255), data_keys=["image"]
         )
 
@@ -56,69 +54,8 @@ class COWCCountingDataModule(pl.LightningDataModule):
             stage: stage to set up
         """
         train_val_dataset = COWCCounting(split="train", **self.kwargs)
-        self.test_dataset = COWCCounting(split="test", **self.kwargs)
         self.train_dataset, self.val_dataset = random_split(
             train_val_dataset,
             [len(train_val_dataset) - len(self.test_dataset), len(self.test_dataset)],
         )
-
-    def train_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
-        """Return a DataLoader for training.
-
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-        )
-
-    def val_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def test_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def on_after_batch_transfer(
-        self, batch: Dict[str, Tensor], dataloader_idx: int
-    ) -> Dict[str, Tensor]:
-        """Apply augmentations to batch after transferring to GPU.
-
-        Args:
-            batch: A batch of data that needs to be altered or augmented
-            dataloader_idx: The index of the dataloader to which the batch belongs
-
-        Returns:
-            A batch of data
-        """
-        batch = self.transform(batch)
-        return batch
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.COWC.plot`.
-
-        .. versionadded:: 0.2
-        """
-        return self.test_dataset.plot(*args, **kwargs)
+        self.test_dataset = COWCCounting(split="test", **self.kwargs)

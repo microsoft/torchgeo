@@ -3,20 +3,17 @@
 
 """SpaceNet datamodules."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import kornia.augmentation as K
-import matplotlib.pyplot as plt
-import pytorch_lightning as pl
-from torch import Tensor
-from torch.utils.data import DataLoader
 
 from ..datasets import SpaceNet1
 from ..transforms import AugmentationSequential
+from .geo import NonGeoDataModule
 from .utils import dataset_split
 
 
-class SpaceNet1DataModule(pl.LightningDataModule):
+class SpaceNet1DataModule(NonGeoDataModule):
     """LightningDataModule implementation for the SpaceNet1 dataset.
 
     Randomly splits into train/val/test.
@@ -49,7 +46,7 @@ class SpaceNet1DataModule(pl.LightningDataModule):
         self.test_split_pct = test_split_pct
         self.kwargs = kwargs
 
-        self.train_transform = AugmentationSequential(
+        self.train_aug = AugmentationSequential(
             K.Normalize(mean=0, std=255),
             K.PadTo((448, 448)),
             K.RandomRotation(p=0.5, degrees=90),
@@ -66,7 +63,7 @@ class SpaceNet1DataModule(pl.LightningDataModule):
             ),
             data_keys=["image", "mask"],
         )
-        self.test_transform = AugmentationSequential(
+        self.test_aug = AugmentationSequential(
             K.Normalize(mean=0, std=255),
             K.PadTo((448, 448)),
             data_keys=["image", "mask"],
@@ -92,66 +89,3 @@ class SpaceNet1DataModule(pl.LightningDataModule):
         self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
             self.dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
         )
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training.
-
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def on_after_batch_transfer(
-        self, batch: Dict[str, Tensor], dataloader_idx: int
-    ) -> Dict[str, Tensor]:
-        """Apply augmentations to batch after transferring to GPU.
-
-        Args:
-            batch: A batch of data that needs to be altered or augmented
-            dataloader_idx: The index of the dataloader to which the batch belongs
-
-        Returns:
-            A batch of data
-        """
-        if self.trainer:
-            if self.trainer.training:
-                batch = self.train_transform(batch)
-            elif self.trainer.validating or self.trainer.testing:
-                batch = self.test_transform(batch)
-
-        return batch
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.SpaceNet.plot`."""
-        return self.dataset.plot(*args, **kwargs)

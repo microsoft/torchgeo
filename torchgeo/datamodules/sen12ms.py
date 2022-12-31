@@ -5,16 +5,15 @@
 
 from typing import Any, Optional
 
-import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 import torch
 from sklearn.model_selection import GroupShuffleSplit
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import Subset
 
 from ..datasets import SEN12MS
+from .geo import NonGeoDataModule
 
 
-class SEN12MSDataModule(pl.LightningDataModule):
+class SEN12MSDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the SEN12MS dataset.
 
     Implements 80/20 geographic train/val splits and uses the test split from the
@@ -111,49 +110,3 @@ class SEN12MSDataModule(pl.LightningDataModule):
 
         self.train_dataset = Subset(self.all_train_dataset, train_indices)
         self.val_dataset = Subset(self.all_train_dataset, val_indices)
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training.
-
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.SEN12MS.plot`.
-
-        .. versionadded:: 0.4
-        """
-        return self.test_dataset.plot(*args, **kwargs)

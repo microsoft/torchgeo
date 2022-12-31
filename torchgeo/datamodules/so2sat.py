@@ -3,19 +3,16 @@
 
 """So2Sat datamodule."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
-import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 from kornia.augmentation import Normalize
-from torch import Tensor
-from torch.utils.data import DataLoader
 
 from ..datasets import So2Sat
 from ..transforms import AugmentationSequential
+from .geo import NonGeoDataModule
 
 
-class So2SatDataModule(pl.LightningDataModule):
+class So2SatDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the So2Sat dataset.
 
     Uses the train/val/test splits from the dataset.
@@ -76,7 +73,7 @@ class So2SatDataModule(pl.LightningDataModule):
         self.unsupervised_mode = unsupervised_mode
         self.kwargs = kwargs
 
-        self.transform = AugmentationSequential(
+        self.aug = AugmentationSequential(
             Normalize(mean=self.band_means, std=self.band_stds), data_keys=["image"]
         )
 
@@ -90,68 +87,5 @@ class So2SatDataModule(pl.LightningDataModule):
         """
         bands = So2Sat.BAND_SETS["s2"]
         self.train_dataset = So2Sat(split="train", bands=bands, **self.kwargs)
-
         self.val_dataset = So2Sat(split="validation", bands=bands, **self.kwargs)
-
         self.test_dataset = So2Sat(split="test", bands=bands, **self.kwargs)
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training.
-
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def on_after_batch_transfer(
-        self, batch: Dict[str, Tensor], dataloader_idx: int
-    ) -> Dict[str, Tensor]:
-        """Apply augmentations to batch after transferring to GPU.
-
-        Args:
-            batch: A batch of data that needs to be altered or augmented
-            dataloader_idx: The index of the dataloader to which the batch belongs
-
-        Returns:
-            A batch of data
-        """
-        batch = self.transform(batch)
-        return batch
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.So2Sat.plot`.
-
-        .. versionadded:: 0.4
-        """
-        return self.test_dataset.plot(*args, **kwargs)

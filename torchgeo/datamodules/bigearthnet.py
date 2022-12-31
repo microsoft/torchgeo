@@ -3,20 +3,17 @@
 
 """BigEarthNet datamodule."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
-import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 import torch
 from kornia.augmentation import Normalize
-from torch import Tensor
-from torch.utils.data import DataLoader
 
 from ..datasets import BigEarthNet
 from ..transforms import AugmentationSequential
+from .geo import NonGeoDataModule
 
 
-class BigEarthNetDataModule(pl.LightningDataModule):
+class BigEarthNetDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the BigEarthNet dataset.
 
     Uses the train/val/test splits from the dataset.
@@ -97,7 +94,7 @@ class BigEarthNetDataModule(pl.LightningDataModule):
             self.mins = self.band_mins[2:, None, None]
             self.maxs = self.band_maxs[2:, None, None]
 
-        self.transform = AugmentationSequential(
+        self.aug = AugmentationSequential(
             Normalize(mean=self.mins, std=self.maxs - self.mins), data_keys=["image"]
         )
 
@@ -120,64 +117,3 @@ class BigEarthNetDataModule(pl.LightningDataModule):
         self.train_dataset = BigEarthNet(split="train", **self.kwargs)
         self.val_dataset = BigEarthNet(split="val", **self.kwargs)
         self.test_dataset = BigEarthNet(split="test", **self.kwargs)
-
-    def train_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
-        """Return a DataLoader for training.
-
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-        )
-
-    def val_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def test_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def on_after_batch_transfer(
-        self, batch: Dict[str, Tensor], dataloader_idx: int
-    ) -> Dict[str, Tensor]:
-        """Apply augmentations to batch after transferring to GPU.
-
-        Args:
-            batch: A batch of data that needs to be altered or augmented
-            dataloader_idx: The index of the dataloader to which the batch belongs
-
-        Returns:
-            A batch of data
-        """
-        batch = self.transform(batch)
-        return batch
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.BigEarthNet.plot`.
-
-        .. versionadded:: 0.2
-        """
-        return self.val_dataset.plot(*args, **kwargs)

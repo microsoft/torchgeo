@@ -1,0 +1,151 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+"""Base classes for all :mod:`torchgeo` data modules."""
+
+from typing import Any, Dict, Optional
+
+import matplotlib.pyplot as plt
+from pytorch_lightning import LightningDataModule
+# TODO: import from lightning_lite instead
+from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-defined]
+    MisconfigurationException
+)
+from torch import Tensor
+from torch.utils.data import DataLoader
+
+from ..datasets import NonGeoDataset
+
+
+class NonGeoDataModule(LightningDataModule):
+    """Base class for data modules lacking geospatial information."""
+
+    train_dataset: Optional[NonGeoDataset] = None
+    val_dataset: Optional[NonGeoDataset] = None
+    test_dataset: Optional[NonGeoDataset] = None
+    predict_dataset: Optional[NonGeoDataset] = None
+
+    num_workers = 0
+
+    def train_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
+        """Implement one or more PyTorch DataLoaders for training.
+
+        Returns:
+            A collection of data loaders specifying training samples.
+
+        Raises:
+            MisconfigurationException: If :attr:`train_dataset` is not defined.
+        """
+        batch_size = getattr(self, "train_batch_size", getattr(self, "batch_size", 1))
+        if self.train_dataset is not None:
+            return DataLoader(
+                dataset=self.train_dataset,
+                batch_size=batch_size,
+                shuffle=True,
+                num_workers=self.num_workers,
+            )
+        else:
+            msg = f"{self.__class__.__name__} does not define a 'train_dataset'"
+            raise MisconfigurationException(msg)
+
+    def val_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
+        """Implement one or more PyTorch DataLoaders for validation.
+
+        Returns:
+            A collection of data loaders specifying validation samples.
+
+        Raises:
+            MisconfigurationException: If :attr:`val_dataset` is not defined.
+        """
+        batch_size = getattr(self, "val_batch_size", getattr(self, "batch_size", 1))
+        if self.val_dataset is not None:
+            return DataLoader(
+                dataset=self.val_dataset,
+                batch_size=batch_size,
+                shuffle=False,
+                num_workers=self.num_workers,
+            )
+        else:
+            msg = f"{self.__class__.__name__} does not define a 'val_dataset'"
+            raise MisconfigurationException(msg)
+
+    def test_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
+        """Implement one or more PyTorch DataLoaders for testing.
+
+        Returns:
+            A collection of data loaders specifying testing samples.
+
+        Raises:
+            MisconfigurationException: If :attr:`test_dataset` is not defined.
+        """
+        batch_size = getattr(self, "test_batch_size", getattr(self, "batch_size", 1))
+        if self.test_dataset is not None:
+            return DataLoader(
+                dataset=self.test_dataset,
+                batch_size=batch_size,
+                shuffle=True,
+                num_workers=self.num_workers,
+            )
+        else:
+            msg = f"{self.__class__.__name__} does not define a 'test_dataset'"
+            raise MisconfigurationException(msg)
+
+    def predict_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
+        """Implement one or more PyTorch DataLoaders for prediction.
+
+        Returns:
+            A collection of data loaders specifying prediction samples.
+
+        Raises:
+            MisconfigurationException: If :attr:`predict_dataset` is not defined.
+        """
+        batch_size = getattr(self, "predict_batch_size", getattr(self, "batch_size", 1))
+        if self.predict_dataset is not None:
+            return DataLoader(
+                dataset=self.predict_dataset,
+                batch_size=batch_size,
+                shuffle=True,
+                num_workers=self.num_workers,
+            )
+        else:
+            msg = f"{self.__class__.__name__} does not define a 'predict_dataset'"
+            raise MisconfigurationException(msg)
+
+    def on_after_batch_transfer(
+        self, batch: Dict[str, Tensor], dataloader_idx: int
+    ) -> Dict[str, Tensor]:
+        """Apply batch augmentations to the batch after it is transferred to the device.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented.
+            dataloader_idx: The index of the dataloader to which the batch belongs.
+
+        Returns:
+            A batch of data.
+        """
+        if self.trainer:
+            if self.trainer.training:
+                aug = getattr(self, "train_aug", getattr(self, "aug"))
+            elif self.trainer.validating:
+                aug = getattr(self, "val_aug", getattr(self, "aug"))
+            elif self.trainer.testing:
+                aug = getattr(self, "test_aug", getattr(self, "aug"))
+            elif self.trainer.predicting:
+                aug = getattr(self, "predict_aug", getattr(self, "aug"))
+
+            batch = aug(batch)
+
+        return batch
+
+    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+        """Run the plot method of the dataset if one exists.
+
+        Args:
+            *args: Arguments passed to plot method.
+            **kwargs: Keyword arguments passed to plot method.
+
+        Returns:
+        """
+        if self.train_dataset is not None:
+            if hasattr(self.train_dataset, "plot"):
+                return self.train_dataset.plot(*args, **kwargs)

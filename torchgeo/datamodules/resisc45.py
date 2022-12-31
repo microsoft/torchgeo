@@ -3,19 +3,16 @@
 
 """RESISC45 datamodule."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import kornia.augmentation as K
-import matplotlib.pyplot as plt
-import pytorch_lightning as pl
-from torch import Tensor
-from torch.utils.data import DataLoader
 
 from ..datasets import RESISC45
 from ..transforms import AugmentationSequential
+from .geo import NonGeoDataModule
 
 
-class RESISC45DataModule(pl.LightningDataModule):
+class RESISC45DataModule(NonGeoDataModule):
     """LightningDataModule implementation for the RESISC45 dataset.
 
     Uses the train/val/test splits from the dataset.
@@ -40,7 +37,7 @@ class RESISC45DataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.kwargs = kwargs
 
-        self.train_transform = AugmentationSequential(
+        self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.band_means, std=self.band_stds),
             K.RandomRotation(p=0.5, degrees=90),
             K.RandomHorizontalFlip(p=0.5),
@@ -57,7 +54,7 @@ class RESISC45DataModule(pl.LightningDataModule):
             ),
             data_keys=["image"],
         )
-        self.test_transform = AugmentationSequential(
+        self.test_aug = AugmentationSequential(
             K.Normalize(mean=self.band_means, std=self.band_stds), data_keys=["image"]
         )
 
@@ -80,69 +77,3 @@ class RESISC45DataModule(pl.LightningDataModule):
         self.train_dataset = RESISC45(split="train", **self.kwargs)
         self.val_dataset = RESISC45(split="val", **self.kwargs)
         self.test_dataset = RESISC45(split="test", **self.kwargs)
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training.
-
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def on_after_batch_transfer(
-        self, batch: Dict[str, Tensor], dataloader_idx: int
-    ) -> Dict[str, Tensor]:
-        """Apply augmentations to batch after transferring to GPU.
-
-        Args:
-            batch: A batch of data that needs to be altered or augmented
-            dataloader_idx: The index of the dataloader to which the batch belongs
-
-        Returns:
-            A batch of data
-        """
-        if self.trainer:
-            if self.trainer.training:
-                batch = self.train_transform(batch)
-            elif self.trainer.validating or self.trainer.testing:
-                batch = self.test_transform(batch)
-
-        return batch
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.RESISC45.plot`.
-
-        .. versionadded:: 0.2
-        """
-        return self.val_dataset.plot(*args, **kwargs)

@@ -3,22 +3,19 @@
 
 """InriaAerialImageLabeling datamodule."""
 
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Optional, Tuple, Union
 
-import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 from kornia.augmentation import Normalize, RandomHorizontalFlip, RandomVerticalFlip
-from torch import Tensor
-from torch.utils.data import DataLoader
 
 from ..datasets import InriaAerialImageLabeling
 from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
 from ..transforms.transforms import _ExtractTensorPatches, _RandomNCrop
+from .geo import NonGeoDataModule
 from .utils import dataset_split
 
 
-class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
+class InriaAerialImageLabelingDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the InriaAerialImageLabeling dataset.
 
     Uses the train/test splits from the dataset and further splits
@@ -60,7 +57,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         """
         super().__init__()
 
-        self.num_tiles_per_batch = num_tiles_per_batch
+        self.train_batch_size = num_tiles_per_batch
         self.num_patches_per_tile = num_patches_per_tile
         self.patch_size = _to_tuple(patch_size)
         self.num_workers = num_workers
@@ -68,14 +65,14 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         self.test_split_pct = test_split_pct
         self.kwargs = kwargs
 
-        self.train_transform = AugmentationSequential(
+        self.train_aug = AugmentationSequential(
             Normalize(mean=0, std=255),
             RandomHorizontalFlip(p=0.5),
             RandomVerticalFlip(p=0.5),
             _RandomNCrop(self.patch_size, self.num_patches_per_tile),
             data_keys=["image", "mask"],
         )
-        self.test_transform = AugmentationSequential(
+        self.test_aug = AugmentationSequential(
             Normalize(mean=0, std=255),
             _ExtractTensorPatches(self.patch_size),
             data_keys=["image", "mask"],
@@ -91,80 +88,3 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             dataset, self.val_split_pct, self.test_split_pct
         )
         self.predict_dataset = InriaAerialImageLabeling(split="test", **self.kwargs)
-
-    def train_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
-        """Return a DataLoader for training.
-
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.num_patches_per_tile,
-            num_workers=self.num_workers,
-            shuffle=True,
-        )
-
-    def val_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.val_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
-        )
-
-    def test_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
-        )
-
-    def predict_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
-        """Return a DataLoader for prediction.
-
-        Returns:
-            prediction data loader
-        """
-        return DataLoader(
-            self.predict_dataset,
-            batch_size=1,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def on_after_batch_transfer(
-        self, batch: Dict[str, Tensor], dataloader_idx: int
-    ) -> Dict[str, Tensor]:
-        """Apply augmentations to batch after transferring to GPU.
-
-        Args:
-            batch: A batch of data that needs to be altered or augmented
-            dataloader_idx: The index of the dataloader to which the batch belongs
-
-        Returns:
-            A batch of data
-        """
-        if self.trainer:
-            if self.trainer.training:
-                batch = self.train_transform(batch)
-            elif (
-                self.trainer.validating
-                or self.trainer.testing
-                or self.trainer.predicting
-            ):
-                batch = self.test_transform(batch)
-
-        return batch
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.InriaAerialImageLabeling.plot`.
-
-        .. versionadded:: 0.4
-        """
-        return self.dataset.plot(*args, **kwargs)

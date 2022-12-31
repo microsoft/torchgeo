@@ -3,10 +3,8 @@
 
 """LandCover.ai datamodule."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
-import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 from kornia.augmentation import (
     ColorJitter,
     Normalize,
@@ -15,14 +13,13 @@ from kornia.augmentation import (
     RandomSharpness,
     RandomVerticalFlip,
 )
-from torch import Tensor
-from torch.utils.data import DataLoader
 
 from ..datasets import LandCoverAI
 from ..transforms import AugmentationSequential
+from .geo import NonGeoDataModule
 
 
-class LandCoverAIDataModule(pl.LightningDataModule):
+class LandCoverAIDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the LandCover.ai dataset.
 
     Uses the train/val/test splits from the dataset.
@@ -44,7 +41,7 @@ class LandCoverAIDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.kwargs = kwargs
 
-        self.train_transform = AugmentationSequential(
+        self.train_aug = AugmentationSequential(
             Normalize(mean=0, std=255),
             RandomRotation(p=0.5, degrees=90),
             RandomHorizontalFlip(p=0.5),
@@ -60,7 +57,7 @@ class LandCoverAIDataModule(pl.LightningDataModule):
             ),
             data_keys=["image", "mask"],
         )
-        self.test_transform = AugmentationSequential(
+        self.test_aug = AugmentationSequential(
             Normalize(mean=0, std=255), data_keys=["image", "mask"]
         )
 
@@ -81,73 +78,5 @@ class LandCoverAIDataModule(pl.LightningDataModule):
             stage: stage to set up
         """
         self.train_dataset = LandCoverAI(split="train", **self.kwargs)
-
         self.val_dataset = LandCoverAI(split="val", **self.kwargs)
-
         self.test_dataset = LandCoverAI(split="test", **self.kwargs)
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training.
-
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def on_after_batch_transfer(
-        self, batch: Dict[str, Tensor], dataloader_idx: int
-    ) -> Dict[str, Tensor]:
-        """Apply augmentations to batch after transferring to GPU.
-
-        Args:
-            batch: A batch of data that needs to be altered or augmented
-            dataloader_idx: The index of the dataloader to which the batch belongs
-
-        Returns:
-            A batch of data
-        """
-        if self.trainer:
-            if self.trainer.training:
-                batch = self.train_transform(batch)
-            elif self.trainer.validating or self.trainer.testing:
-                batch = self.test_transform(batch)
-
-        return batch
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.LandCoverAI.plot`.
-
-        .. versionadded:: 0.2
-        """
-        return self.val_dataset.plot(*args, **kwargs)

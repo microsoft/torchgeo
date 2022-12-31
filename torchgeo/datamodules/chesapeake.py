@@ -6,8 +6,8 @@
 from typing import Any, Dict, List, Optional
 
 import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 from kornia.augmentation import CenterCrop, Normalize
+from pytorch_lightning import LightningDataModule
 from torch import Tensor
 from torch.utils.data import DataLoader
 
@@ -17,7 +17,7 @@ from ..samplers.single import GridGeoSampler
 from ..transforms import AugmentationSequential
 
 
-class ChesapeakeCVPRDataModule(pl.LightningDataModule):
+class ChesapeakeCVPRDataModule(LightningDataModule):
     """LightningDataModule implementation for the Chesapeake CVPR Land Cover dataset.
 
     Uses the random splits defined per state to partition tiles into train, val,
@@ -74,7 +74,7 @@ class ChesapeakeCVPRDataModule(pl.LightningDataModule):
         self.train_splits = train_splits
         self.val_splits = val_splits
         self.test_splits = test_splits
-        self.num_tiles_per_batch = num_tiles_per_batch
+        self.train_batch_size = num_tiles_per_batch
         self.num_patches_per_tile = num_patches_per_tile
         self.patch_size = patch_size
         # This is a rough estimate of how large of a patch we will need to sample in
@@ -94,7 +94,7 @@ class ChesapeakeCVPRDataModule(pl.LightningDataModule):
         else:
             self.layers = ["naip-new", "lc"]
 
-        self.transform = AugmentationSequential(
+        self.aug = AugmentationSequential(
             CenterCrop(patch_size),
             Normalize(mean=0, std=255),
             data_keys=["image", "mask"],
@@ -135,7 +135,7 @@ class ChesapeakeCVPRDataModule(pl.LightningDataModule):
         sampler = RandomBatchGeoSampler(
             self.train_dataset,
             size=self.original_patch_size,
-            batch_size=self.num_tiles_per_batch,
+            batch_size=self.train_batch_size,
             length=self.patches_per_tile * len(self.train_dataset),
         )
         return DataLoader(
@@ -158,7 +158,7 @@ class ChesapeakeCVPRDataModule(pl.LightningDataModule):
         )
         return DataLoader(
             self.val_dataset,
-            batch_size=self.num_tiles_per_batch,
+            batch_size=self.train_batch_size,
             sampler=sampler,
             num_workers=self.num_workers,
             collate_fn=stack_samples,
@@ -177,7 +177,7 @@ class ChesapeakeCVPRDataModule(pl.LightningDataModule):
         )
         return DataLoader(
             self.test_dataset,
-            batch_size=self.num_tiles_per_batch,
+            batch_size=self.train_batch_size,
             sampler=sampler,
             num_workers=self.num_workers,
             collate_fn=stack_samples,
@@ -195,7 +195,7 @@ class ChesapeakeCVPRDataModule(pl.LightningDataModule):
         Returns:
             A batch of data
         """
-        batch = self.transform(batch)
+        batch = self.aug(batch)
         return batch
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:

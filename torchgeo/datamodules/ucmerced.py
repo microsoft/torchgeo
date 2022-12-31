@@ -3,19 +3,16 @@
 
 """UC Merced datamodule."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
-import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 from kornia.augmentation import Normalize, Resize
-from torch import Tensor
-from torch.utils.data import DataLoader
 
 from ..datasets import UCMerced
 from ..transforms import AugmentationSequential
+from .geo import NonGeoDataModule
 
 
-class UCMercedDataModule(pl.LightningDataModule):
+class UCMercedDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the UC Merced dataset.
 
     Uses random train/val/test splits.
@@ -37,7 +34,7 @@ class UCMercedDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.kwargs = kwargs
 
-        self.transform = AugmentationSequential(
+        self.aug = AugmentationSequential(
             Normalize(mean=0, std=255), Resize(size=256), data_keys=["image"]
         )
 
@@ -60,64 +57,3 @@ class UCMercedDataModule(pl.LightningDataModule):
         self.train_dataset = UCMerced(split="train", **self.kwargs)
         self.val_dataset = UCMerced(split="val", **self.kwargs)
         self.test_dataset = UCMerced(split="test", **self.kwargs)
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training.
-
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def on_after_batch_transfer(
-        self, batch: Dict[str, Tensor], dataloader_idx: int
-    ) -> Dict[str, Tensor]:
-        """Apply augmentations to batch after transferring to GPU.
-
-        Args:
-            batch: A batch of data that needs to be altered or augmented
-            dataloader_idx: The index of the dataloader to which the batch belongs
-
-        Returns:
-            A batch of data
-        """
-        batch = self.transform(batch)
-        return batch
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.UCMerced.plot`.
-
-        .. versionadded:: 0.2
-        """
-        return self.val_dataset.plot(*args, **kwargs)

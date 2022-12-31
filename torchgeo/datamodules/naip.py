@@ -6,8 +6,8 @@
 from typing import Any, Dict, Optional, Tuple
 
 import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 from kornia.augmentation import Normalize
+from pytorch_lightning import LightningDataModule
 from torch import Tensor
 from torch.utils.data import DataLoader
 
@@ -16,7 +16,7 @@ from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from ..transforms import AugmentationSequential
 
 
-class NAIPChesapeakeDataModule(pl.LightningDataModule):
+class NAIPChesapeakeDataModule(LightningDataModule):
     """LightningDataModule implementation for the NAIP and Chesapeake datasets.
 
     Uses the train/val/test splits from the dataset.
@@ -59,7 +59,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
             elif key.startswith("chesapeake_"):
                 self.chesapeake_kwargs[key[11:]] = val
 
-        self.transform = AugmentationSequential(
+        self.aug = AugmentationSequential(
             Normalize(mean=0, std=255), data_keys=["image", "mask"]
         )
 
@@ -154,7 +154,7 @@ class NAIPChesapeakeDataModule(pl.LightningDataModule):
         Returns:
             A batch of data
         """
-        batch = self.transform(batch)
+        batch = self.aug(batch)
         return batch
 
     def plot(self, *args: Any, **kwargs: Any) -> Tuple[plt.Figure, plt.Figure]:
