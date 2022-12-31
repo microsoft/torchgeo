@@ -3,15 +3,16 @@
 
 """So2Sat datamodule."""
 
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, Optional
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-import torch
+from kornia.augmentation import Normalize
+from torch import Tensor
 from torch.utils.data import DataLoader
-from torchvision.transforms import Compose, Normalize
 
 from ..datasets import So2Sat
+from ..transforms import AugmentationSequential
 
 
 class So2SatDataModule(pl.LightningDataModule):
@@ -20,35 +21,31 @@ class So2SatDataModule(pl.LightningDataModule):
     Uses the train/val/test splits from the dataset.
     """
 
-    band_means = torch.tensor(
-        [
-            0.12375696117681859,
-            0.1092774636368323,
-            0.1010855203267882,
-            0.1142398616114001,
-            0.1592656692023089,
-            0.18147236008771792,
-            0.1745740312291377,
-            0.19501607349635292,
-            0.15428468872076637,
-            0.10905050699570007,
-        ]
-    )
+    band_means = [
+        0.12375696117681859,
+        0.1092774636368323,
+        0.1010855203267882,
+        0.1142398616114001,
+        0.1592656692023089,
+        0.18147236008771792,
+        0.1745740312291377,
+        0.19501607349635292,
+        0.15428468872076637,
+        0.10905050699570007,
+    ]
 
-    band_stds = torch.tensor(
-        [
-            0.03958795985905458,
-            0.047778262752410296,
-            0.06636616706371974,
-            0.06358874912497474,
-            0.07744387147984592,
-            0.09101635085921553,
-            0.09218466562387101,
-            0.10164581233948201,
-            0.09991773043519253,
-            0.08780632509122865,
-        ]
-    )
+    band_stds = [
+        0.03958795985905458,
+        0.047778262752410296,
+        0.06636616706371974,
+        0.06358874912497474,
+        0.07744387147984592,
+        0.09101635085921553,
+        0.09218466562387101,
+        0.10164581233948201,
+        0.09991773043519253,
+        0.08780632509122865,
+    ]
 
     # this reorders the bands to put S2 RGB first, then remainder of S2
     reindex_to_rgb_first = [2, 1, 0, 3, 4, 5, 6, 7, 8, 9]
@@ -61,7 +58,7 @@ class So2SatDataModule(pl.LightningDataModule):
         unsupervised_mode: bool = False,
         **kwargs: Any,
     ) -> None:
-        """Initialize a LightningDataModule for So2Sat based DataLoaders.
+        """Initialize a new LightningDataModule instance.
 
         Args:
             batch_size: The batch size to use in all created DataLoaders
@@ -79,28 +76,12 @@ class So2SatDataModule(pl.LightningDataModule):
         self.unsupervised_mode = unsupervised_mode
         self.kwargs = kwargs
 
-        self.norm = Normalize(self.band_means, self.band_stds)
-
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
-
-        Args:
-            sample: dictionary containing image
-
-        Returns:
-            preprocessed sample
-        """
-        sample["image"] = sample["image"].float()
-        sample["image"] = self.norm(sample["image"])
-        sample["image"] = sample["image"][self.reindex_to_rgb_first, :, :]
-
-        if self.band_set == "rgb":
-            sample["image"] = sample["image"][:3, :, :]
-
-        return sample
+        self.transform = AugmentationSequential(
+            Normalize(mean=self.band_means, std=self.band_stds), data_keys=["image"]
+        )
 
     def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
+        """Initialize the main Dataset objects.
 
         This method is called once per GPU per run.
 
@@ -108,45 +89,11 @@ class So2SatDataModule(pl.LightningDataModule):
             stage: stage to set up
         """
         bands = So2Sat.BAND_SETS["s2"]
-        train_transforms = Compose([self.preprocess])
-        val_test_transforms = self.preprocess
+        self.train_dataset = So2Sat(split="train", bands=bands, **self.kwargs)
 
-        if not self.unsupervised_mode:
-            self.train_dataset = So2Sat(
-                split="train", bands=bands, transforms=train_transforms, **self.kwargs
-            )
+        self.val_dataset = So2Sat(split="validation", bands=bands, **self.kwargs)
 
-            self.val_dataset = So2Sat(
-                split="validation",
-                bands=bands,
-                transforms=val_test_transforms,
-                **self.kwargs,
-            )
-
-            self.test_dataset = So2Sat(
-                split="test", bands=bands, transforms=val_test_transforms, **self.kwargs
-            )
-
-        else:
-
-            temp_train = So2Sat(
-                split="train", bands=bands, transforms=train_transforms, **self.kwargs
-            )
-
-            self.val_dataset = So2Sat(
-                split="validation",
-                bands=bands,
-                transforms=train_transforms,
-                **self.kwargs,
-            )
-
-            self.test_dataset = So2Sat(
-                split="test", bands=bands, transforms=train_transforms, **self.kwargs
-            )
-
-            self.train_dataset = cast(
-                So2Sat, temp_train + self.val_dataset + self.test_dataset
-            )
+        self.test_dataset = So2Sat(split="test", bands=bands, **self.kwargs)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.
@@ -186,6 +133,21 @@ class So2SatDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=False,
         )
+
+    def on_after_batch_transfer(
+        self, batch: Dict[str, Tensor], dataloader_idx: int
+    ) -> Dict[str, Tensor]:
+        """Apply augmentations to batch after transferring to GPU.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented
+            dataloader_idx: The index of the dataloader to which the batch belongs
+
+        Returns:
+            A batch of data
+        """
+        batch = self.transform(batch)
+        return batch
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
         """Run :meth:`torchgeo.datasets.So2Sat.plot`.
