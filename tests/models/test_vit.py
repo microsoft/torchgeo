@@ -161,7 +161,7 @@ def test_pretrained_resnet50_from_config(
     trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
 
 
-@pytest.mark.slow
+@pytest.mark.parametrize
 @pytest.mark.parametrize("weight_name", [(w.name) for w in VITSmall16_Weights])
 @pytest.mark.parametrize(
     "task, task_args",
