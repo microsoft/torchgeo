@@ -11,6 +11,7 @@ from .deepglobelandcover import DeepGlobeLandCoverDataModule
 from .etci2021 import ETCI2021DataModule
 from .eurosat import EuroSATDataModule
 from .fair1m import FAIR1MDataModule
+from .geo import NonGeoDataModule
 from .gid15 import GID15DataModule
 from .inria import InriaAerialImageLabelingDataModule
 from .landcoverai import LandCoverAIDataModule
@@ -55,4 +56,6 @@ __all__ = (
     "USAVarsDataModule",
     "Vaihingen2DDataModule",
     "XView2DataModule",
+    # Base classes
+    "NonGeoDataModule",
 )

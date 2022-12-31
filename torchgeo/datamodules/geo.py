@@ -7,9 +7,10 @@ from typing import Any, Dict, Optional
 
 import matplotlib.pyplot as plt
 from pytorch_lightning import LightningDataModule
+
 # TODO: import from lightning_lite instead
 from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-defined]
-    MisconfigurationException
+    MisconfigurationException,
 )
 from torch import Tensor
 from torch.utils.data import DataLoader
@@ -145,6 +146,7 @@ class NonGeoDataModule(LightningDataModule):
             **kwargs: Keyword arguments passed to plot method.
 
         Returns:
+            a matplotlib Figure with the image, ground truth, and predictions
         """
         if self.train_dataset is not None:
             if hasattr(self.train_dataset, "plot"):

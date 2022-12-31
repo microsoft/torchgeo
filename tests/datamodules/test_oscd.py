@@ -4,8 +4,8 @@
 import os
 
 import pytest
-from pytorch_lightning import Trainer
 from _pytest.fixtures import SubRequest
+from pytorch_lightning import Trainer
 
 from torchgeo.datamodules import OSCDDataModule
 
