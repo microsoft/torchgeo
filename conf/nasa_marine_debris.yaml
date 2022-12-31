@@ -1,5 +1,4 @@
 program:
-  seed: 0
   overwrite: True
 
 trainer:

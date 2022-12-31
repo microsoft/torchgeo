@@ -1,6 +1,5 @@
 program:
   overwrite: False
-  seed: 0
 trainer:
   gpus: [3]
   min_epochs: 50

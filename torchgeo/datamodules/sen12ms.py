@@ -106,7 +106,7 @@ class SEN12MSDataModule(pl.LightningDataModule):
             scenes.append(season_id + scene_id)
 
         train_indices, val_indices = next(
-            GroupShuffleSplit(test_size=0.2, n_splits=2, random_state=self.seed).split(
+            GroupShuffleSplit(test_size=0.2, n_splits=2).split(
                 scenes, groups=scenes
             )
         )
