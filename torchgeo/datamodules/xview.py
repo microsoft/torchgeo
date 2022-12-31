@@ -7,10 +7,12 @@ from typing import Any, Dict, Optional
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-from torch.utils.data import DataLoader, Dataset
-from torchvision.transforms import Compose
+from kornia.augmentation import Normalize
+from torch import Tensor
+from torch.utils.data import DataLoader
 
 from ..datasets import XView2
+from ..transforms import AugmentationSequential
 from .utils import dataset_split
 
 
@@ -44,18 +46,9 @@ class XView2DataModule(pl.LightningDataModule):
         self.val_split_pct = val_split_pct
         self.kwargs = kwargs
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
-
-        Args:
-            sample: input image dictionary
-
-        Returns:
-            preprocessed sample
-        """
-        sample["image"] = sample["image"].float()
-        sample["image"] /= 255.0
-        return sample
+        self.transform = AugmentationSequential(
+            Normalize(mean=0, std=255), data_keys=["image"]
+        )
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -65,22 +58,11 @@ class XView2DataModule(pl.LightningDataModule):
         Args:
             stage: stage to set up
         """
-        transforms = Compose([self.preprocess])
-
-        dataset = XView2(split="train", transforms=transforms, **self.kwargs)
-
-        self.train_dataset: Dataset[Any]
-        self.val_dataset: Dataset[Any]
-
-        if self.val_split_pct > 0.0:
-            self.train_dataset, self.val_dataset, _ = dataset_split(
-                dataset, val_pct=self.val_split_pct, test_pct=0.0
-            )
-        else:
-            self.train_dataset = dataset
-            self.val_dataset = dataset
-
-        self.test_dataset = XView2(split="test", transforms=transforms, **self.kwargs)
+        dataset = XView2(split="train", **self.kwargs)
+        self.train_dataset, self.val_dataset = dataset_split(
+            dataset, val_pct=self.val_split_pct
+        )
+        self.test_dataset = XView2(split="test", **self.kwargs)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.
@@ -120,6 +102,21 @@ class XView2DataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=False,
         )
+
+    def on_after_batch_transfer(
+        self, batch: Dict[str, Tensor], dataloader_idx: int
+    ) -> Dict[str, Tensor]:
+        """Apply augmentations to batch after transferring to GPU.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented
+            dataloader_idx: The index of the dataloader to which the batch belongs
+
+        Returns:
+            A batch of data
+        """
+        batch = self.transform(batch)
+        return batch
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
         """Run :meth:`torchgeo.datasets.XView2.plot`.
