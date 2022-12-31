@@ -110,7 +110,7 @@ class OSCDDataModule(pl.LightningDataModule):
         self.train_transform = AugmentationSequential(
             Normalize(mean=self.band_means, std=self.band_stds),
             _RandomNCrop(self.patch_size, self.num_patches_per_tile),
-            data_keys=["input", "mask"],
+            data_keys=["image", "mask"],
         )
         self.test_transform = AugmentationSequential(
             Normalize(mean=self.band_means, std=self.band_stds),
