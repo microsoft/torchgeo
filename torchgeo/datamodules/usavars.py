@@ -7,9 +7,12 @@ from typing import Any, Dict, Optional
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
+from kornia.augmentation import Normalize
+from torch import Tensor
 from torch.utils.data import DataLoader
 
 from ..datasets import USAVars
+from ..transforms import AugmentationSequential
 
 
 class USAVarsDataModule(pl.LightningModule):
@@ -36,18 +39,9 @@ class USAVarsDataModule(pl.LightningModule):
         self.num_workers = num_workers
         self.kwargs = kwargs
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
-
-        Args:
-            sample: dictionary containing image
-
-        Returns:
-            preprocessed sample
-        """
-        sample["image"] = sample["image"].float()
-        sample["image"] /= 255.0
-        return sample
+        self.transform = AugmentationSequential(
+            Normalize(mean=0, std=255), data_keys=["image"]
+        )
 
     def prepare_data(self) -> None:
         """Make sure that the dataset is downloaded.
@@ -62,15 +56,9 @@ class USAVarsDataModule(pl.LightningModule):
 
         This method is called once per GPU per run.
         """
-        self.train_dataset = USAVars(
-            split="train", transforms=self.preprocess, **self.kwargs
-        )
-        self.val_dataset = USAVars(
-            split="val", transforms=self.preprocess, **self.kwargs
-        )
-        self.test_dataset = USAVars(
-            split="test", transforms=self.preprocess, **self.kwargs
-        )
+        self.train_dataset = USAVars(split="train", **self.kwargs)
+        self.val_dataset = USAVars(split="val", **self.kwargs)
+        self.test_dataset = USAVars(split="test", **self.kwargs)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training."""
@@ -98,6 +86,21 @@ class USAVarsDataModule(pl.LightningModule):
             num_workers=self.num_workers,
             shuffle=False,
         )
+
+    def on_after_batch_transfer(
+        self, batch: Dict[str, Tensor], dataloader_idx: int
+    ) -> Dict[str, Tensor]:
+        """Apply augmentations to batch after transferring to GPU.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented
+            dataloader_idx: The index of the dataloader to which the batch belongs
+
+        Returns:
+            A batch of data
+        """
+        batch = self.transform(batch)
+        return batch
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
         """Run :meth:`torchgeo.datasets.USAVars.plot`.
