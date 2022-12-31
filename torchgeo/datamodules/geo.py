@@ -13,6 +13,7 @@ from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-define
     MisconfigurationException,
 )
 from torch import Tensor
+from torch.nn import Identity, Module
 from torch.utils.data import DataLoader, Dataset
 
 
@@ -31,7 +32,20 @@ class NonGeoDataModule(LightningDataModule):
     #: Prediction dataset
     predict_dataset: Optional[Dataset[Dict[str, Tensor]]] = None
 
+    # DataLoader arguments
+    batch_size: Optional[int] = None
+    train_batch_size: Optional[int] = None
+    val_batch_size: Optional[int] = None
+    test_batch_size: Optional[int] = None
+    predict_patch_size: Optional[int] = None
     num_workers = 0
+
+    # Data augmentation
+    aug: Optional[Module] = None
+    train_aug: Optional[Module] = None
+    val_aug: Optional[Module] = None
+    test_aug: Optional[Module] = None
+    predict_aug: Optional[Module] = None
 
     def train_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
         """Implement one or more PyTorch DataLoaders for training.
@@ -42,11 +56,10 @@ class NonGeoDataModule(LightningDataModule):
         Raises:
             MisconfigurationException: If :attr:`train_dataset` is not defined.
         """
-        batch_size = getattr(self, "train_batch_size", getattr(self, "batch_size", 1))
         if self.train_dataset is not None:
             return DataLoader(
                 dataset=self.train_dataset,
-                batch_size=batch_size,
+                batch_size=self.train_batch_size or self.batch_size or 1,
                 shuffle=True,
                 num_workers=self.num_workers,
             )
@@ -63,11 +76,10 @@ class NonGeoDataModule(LightningDataModule):
         Raises:
             MisconfigurationException: If :attr:`val_dataset` is not defined.
         """
-        batch_size = getattr(self, "val_batch_size", getattr(self, "batch_size", 1))
         if self.val_dataset is not None:
             return DataLoader(
                 dataset=self.val_dataset,
-                batch_size=batch_size,
+                batch_size=self.val_batch_size or self.batch_size or 1,
                 shuffle=False,
                 num_workers=self.num_workers,
             )
@@ -84,12 +96,11 @@ class NonGeoDataModule(LightningDataModule):
         Raises:
             MisconfigurationException: If :attr:`test_dataset` is not defined.
         """
-        batch_size = getattr(self, "test_batch_size", getattr(self, "batch_size", 1))
         if self.test_dataset is not None:
             return DataLoader(
                 dataset=self.test_dataset,
-                batch_size=batch_size,
-                shuffle=True,
+                batch_size=self.test_batch_size or self.batch_size or 1,
+                shuffle=False,
                 num_workers=self.num_workers,
             )
         else:
@@ -105,12 +116,11 @@ class NonGeoDataModule(LightningDataModule):
         Raises:
             MisconfigurationException: If :attr:`predict_dataset` is not defined.
         """
-        batch_size = getattr(self, "predict_batch_size", getattr(self, "batch_size", 1))
         if self.predict_dataset is not None:
             return DataLoader(
                 dataset=self.predict_dataset,
-                batch_size=batch_size,
-                shuffle=True,
+                batch_size=self.predict_batch_size or self.batch_size or 1,
+                shuffle=False,
                 num_workers=self.num_workers,
             )
         else:
@@ -131,13 +141,13 @@ class NonGeoDataModule(LightningDataModule):
         """
         if self.trainer:
             if self.trainer.training:
-                aug = getattr(self, "train_aug", getattr(self, "aug"))
+                aug = self.train_aug or self.aug or Identity()
             elif self.trainer.validating:
-                aug = getattr(self, "val_aug", getattr(self, "aug"))
+                aug = self.val_aug or self.aug or Identity()
             elif self.trainer.testing:
-                aug = getattr(self, "test_aug", getattr(self, "aug"))
+                aug = self.test_aug or self.aug or Identity()
             elif self.trainer.predicting:
-                aug = getattr(self, "predict_aug", getattr(self, "aug"))
+                aug = self.predict_aug or self.aug or Identity()
 
             batch = aug(batch)
 

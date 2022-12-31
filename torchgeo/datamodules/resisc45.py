@@ -54,7 +54,7 @@ class RESISC45DataModule(NonGeoDataModule):
             ),
             data_keys=["image"],
         )
-        self.test_aug = AugmentationSequential(
+        self.aug = AugmentationSequential(
             K.Normalize(mean=self.band_means, std=self.band_stds), data_keys=["image"]
         )
 
