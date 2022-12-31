@@ -15,7 +15,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from torch import Tensor
 
-import torchgeo.models.resnet
+import torchgeo.models.vit
 from torchgeo.datamodules import EuroSATDataModule
 from torchgeo.models import VITSmall16_Weights
 from torchgeo.models.weights import lookup_pretrained_weights
@@ -26,7 +26,7 @@ from torchgeo.transforms import AugmentationSequential
 def load_state_dict_from_url(
     root: str, filename: str, url: str, map_location: torch.device
 ) -> Any:
-    """Mockup of ``torchgeo.models.resnet.load_state_dict_from_url."""
+    """Mockup of ``torchgeo.models.vit.load_state_dict_from_url."""
     return torch.load(url)
 
 
@@ -53,7 +53,9 @@ def vitsmall16_sentinel2_all_moco(tmp_path: Path) -> Tuple[str, int]:
     num_input_channels = 13
     weight_key = "SENTINEL2_ALL_MOCO"
     model = timm.create_model("vit_small_patch16_224", in_chans=num_input_channels)
-    ckpt_path = os.path.join(tmp_path, f"vitsmall16_{weight_key.lower()}.pt")
+    ckpt_path = os.path.join(
+        tmp_path, f"vit_small_patch16_224_{weight_key.lower()}.pth"
+    )
     ckpt_dict = {"state_dict": adjust_moco_state_dict(model.state_dict())}
     torch.save(ckpt_dict, ckpt_path)
     return ckpt_path, num_input_channels
@@ -64,7 +66,9 @@ def vitsmall16_sentinel2_all_dino(tmp_path: Path) -> Tuple[str, int]:
     num_input_channels = 13
     weight_key = "SENTINEL2_ALL_DINO"
     model = timm.create_model("vit_small_patch16_224", in_chans=num_input_channels)
-    ckpt_path = os.path.join(tmp_path, f"vitsmall16_{weight_key.lower()}.pt")
+    ckpt_path = os.path.join(
+        tmp_path, f"vit_small_patch16_224_{weight_key.lower()}.pth"
+    )
     torch.save({"teacher": model.state_dict()}, ckpt_path)
     return ckpt_path, num_input_channels
 
@@ -123,7 +127,7 @@ def test_vitsmall16_pretrained_weights(
         )
     ],
 )
-def test_pretrained_resnet50_from_config(
+def test_pretrained_vit_small_patch16_224_from_config(
     monkeypatch: MonkeyPatch,
     request: SubRequest,
     config_filename: str,
@@ -147,7 +151,7 @@ def test_pretrained_resnet50_from_config(
     )
     monkeypatch.setattr(weight, "url", ckpt_path)
     monkeypatch.setattr(
-        torchgeo.models.resnet, "load_state_dict_from_url", load_state_dict_from_url
+        torchgeo.models.vit, "load_state_dict_from_url", load_state_dict_from_url
     )
     model_kwargs = {
         key: val for key, val in conf_dict["module"].items() if key not in ["weights"]

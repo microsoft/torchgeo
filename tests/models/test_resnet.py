@@ -40,7 +40,7 @@ def resnet18_sentinel2_rgb_moco(tmp_path: Path) -> str:
     num_input_channels = 3
     weight_key = "SENTINEL2_RGB_MOCO"
     model = timm.create_model("resnet18", in_chans=num_input_channels)
-    ckpt_path = os.path.join(tmp_path, f"resnet18_{weight_key.lower()}.pt")
+    ckpt_path = os.path.join(tmp_path, f"resnet18_{weight_key.lower()}.pth")
     ckpt_dict = {"state_dict": adjust_moco_state_dict(model.state_dict())}
     torch.save(ckpt_dict, ckpt_path)
     return ckpt_path, num_input_channels
@@ -51,7 +51,7 @@ def resnet18_sentinel2_all_moco(tmp_path: Path) -> str:
     num_input_channels = 13
     weight_key = "SENTINEL2_ALL_MOCO"
     model = timm.create_model("resnet18", in_chans=num_input_channels)
-    ckpt_path = os.path.join(tmp_path, f"resnet18_{weight_key.lower()}.pt")
+    ckpt_path = os.path.join(tmp_path, f"resnet18_{weight_key.lower()}.pth")
     ckpt_dict = {"state_dict": adjust_moco_state_dict(model.state_dict())}
     torch.save(ckpt_dict, ckpt_path)
     return ckpt_path, num_input_channels
@@ -157,7 +157,7 @@ def resnet50_googleearth_millionaid_rgb(tmp_path: Path) -> str:
     num_input_channels = 3
     weight_key = "GOOGLEEARTH_MILLIONAID_RGB"
     model = timm.create_model("resnet50", in_chans=num_input_channels)
-    ckpt_path = os.path.join(tmp_path, f"resnet50_{weight_key.lower()}.pt")
+    ckpt_path = os.path.join(tmp_path, f"resnet50_{weight_key.lower()}.pth")
     torch.save(model.state_dict(), ckpt_path)
     return ckpt_path, num_input_channels
 
@@ -167,7 +167,7 @@ def resnet50_sentinel2_rgb_moco(tmp_path: Path) -> str:
     num_input_channels = 3
     weight_key = "SENTINEL2_RGB_MOCO"
     model = timm.create_model("resnet50", in_chans=num_input_channels)
-    ckpt_path = os.path.join(tmp_path, f"resnet50_{weight_key.lower()}.pt")
+    ckpt_path = os.path.join(tmp_path, f"resnet50_{weight_key.lower()}.pth")
     ckpt_dict = {"state_dict": adjust_moco_state_dict(model.state_dict())}
     torch.save(ckpt_dict, ckpt_path)
     return ckpt_path, num_input_channels
@@ -178,7 +178,7 @@ def resnet50_sentinel2_all_moco(tmp_path: Path) -> str:
     num_input_channels = 13
     weight_key = "SENTINEL2_ALL_MOCO"
     model = timm.create_model("resnet50", in_chans=num_input_channels)
-    ckpt_path = os.path.join(tmp_path, f"resnet50_{weight_key.lower()}.pt")
+    ckpt_path = os.path.join(tmp_path, f"resnet50_{weight_key.lower()}.pth")
     ckpt_dict = {"state_dict": adjust_moco_state_dict(model.state_dict())}
     torch.save(ckpt_dict, ckpt_path)
     return ckpt_path, num_input_channels
@@ -189,7 +189,7 @@ def resnet50_sentinel1_grd_moco(tmp_path: Path) -> str:
     num_input_channels = 2
     weight_key = "SENTINEL1_GRD_MOCO"
     model = timm.create_model("resnet50", in_chans=num_input_channels)
-    ckpt_path = os.path.join(tmp_path, f"resnet50_{weight_key.lower()}.pt")
+    ckpt_path = os.path.join(tmp_path, f"resnet50_{weight_key.lower()}.pth")
     ckpt_dict = {"state_dict": adjust_moco_state_dict(model.state_dict())}
     torch.save(ckpt_dict, ckpt_path)
     return ckpt_path, num_input_channels
@@ -200,7 +200,7 @@ def resnet50_sentinel2_all_dino(tmp_path: Path) -> str:
     num_input_channels = 13
     weight_key = "SENTINEL2_ALL_DINO"
     model = timm.create_model("resnet50", in_chans=num_input_channels)
-    ckpt_path = os.path.join(tmp_path, f"resnet50_{weight_key.lower()}.pt")
+    ckpt_path = os.path.join(tmp_path, f"resnet50_{weight_key.lower()}.pth")
     torch.save({"teacher": model.state_dict()}, ckpt_path)
     return ckpt_path, num_input_channels
 
