@@ -54,8 +54,8 @@ class COWCCountingDataModule(NonGeoDataModule):
             stage: stage to set up
         """
         train_val_dataset = COWCCounting(split="train", **self.kwargs)
+        self.test_dataset = COWCCounting(split="test", **self.kwargs)
         self.train_dataset, self.val_dataset = random_split(
             train_val_dataset,
             [len(train_val_dataset) - len(self.test_dataset), len(self.test_dataset)],
         )
-        self.test_dataset = COWCCounting(split="test", **self.kwargs)

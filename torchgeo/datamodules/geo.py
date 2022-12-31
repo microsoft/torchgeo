@@ -13,18 +13,23 @@ from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-define
     MisconfigurationException,
 )
 from torch import Tensor
-from torch.utils.data import DataLoader
-
-from ..datasets import NonGeoDataset
+from torch.utils.data import DataLoader, Dataset
 
 
 class NonGeoDataModule(LightningDataModule):
     """Base class for data modules lacking geospatial information."""
 
-    train_dataset: Optional[NonGeoDataset] = None
-    val_dataset: Optional[NonGeoDataset] = None
-    test_dataset: Optional[NonGeoDataset] = None
-    predict_dataset: Optional[NonGeoDataset] = None
+    #: Training dataset
+    train_dataset: Optional[Dataset[Dict[str, Tensor]]] = None
+
+    #: Validation dataset
+    val_dataset: Optional[Dataset[Dict[str, Tensor]]] = None
+
+    #: Testing dataset
+    test_dataset: Optional[Dataset[Dict[str, Tensor]]] = None
+
+    #: Prediction dataset
+    predict_dataset: Optional[Dataset[Dict[str, Tensor]]] = None
 
     num_workers = 0
 

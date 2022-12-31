@@ -99,8 +99,8 @@ class OSCDDataModule(NonGeoDataModule):
         self.num_workers = num_workers
         self.kwargs = kwargs
 
-        bands = kwargs.get("bands", "all")
-        if bands == "rgb":
+        self.bands = kwargs.get("bands", "all")
+        if self.bands == "rgb":
             self.band_means = self.band_means[[3, 2, 1]]
             self.band_stds = self.band_stds[[3, 2, 1]]
 

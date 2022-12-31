@@ -40,7 +40,7 @@ class TestOSCDDataModule:
         sample = datamodule.on_after_batch_transfer(sample, 0)
         assert sample["image"].shape[-2:] == sample["mask"].shape[-2:] == (2, 2)
         assert sample["image"].shape[0] == sample["mask"].shape[0] == 2
-        if datamodule.test_dataset.bands == "all":
+        if datamodule.bands == "all":
             assert sample["image"].shape[1] == 26
         else:
             assert sample["image"].shape[1] == 6
@@ -52,7 +52,7 @@ class TestOSCDDataModule:
         if datamodule.val_split_pct > 0.0:
             assert sample["image"].shape[-2:] == sample["mask"].shape[-2:] == (2, 2)
             assert sample["image"].shape[0] == sample["mask"].shape[0] == 1
-            if datamodule.test_dataset.bands == "all":
+            if datamodule.bands == "all":
                 assert sample["image"].shape[1] == 26
             else:
                 assert sample["image"].shape[1] == 6
@@ -63,7 +63,7 @@ class TestOSCDDataModule:
         sample = datamodule.on_after_batch_transfer(sample, 0)
         assert sample["image"].shape[-2:] == sample["mask"].shape[-2:] == (2, 2)
         assert sample["image"].shape[0] == sample["mask"].shape[0] == 1
-        if datamodule.test_dataset.bands == "all":
+        if datamodule.bands == "all":
             assert sample["image"].shape[1] == 26
         else:
             assert sample["image"].shape[1] == 6
