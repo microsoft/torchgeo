@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-from kornia import Normalize
+from kornia.augmentation import Normalize
 from torch import Tensor
 from torch.utils.data import DataLoader
 

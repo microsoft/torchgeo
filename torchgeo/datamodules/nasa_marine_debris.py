@@ -3,32 +3,17 @@
 
 """NASA Marine Debris datamodule."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-import torch
+from kornia.augmentation import Normalize
 from torch import Tensor
 from torch.utils.data import DataLoader
 
 from ..datasets import NASAMarineDebris
+from ..transforms import AugmentationSequential
 from .utils import dataset_split
-
-
-def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
-    """Custom object detection collate fn to handle variable boxes.
-
-    Args:
-        batch: list of sample dicts return by dataset
-
-    Returns:
-        batch dict output
-    """
-    output: Dict[str, Any] = {}
-    output["image"] = torch.stack([sample["image"] for sample in batch])
-    output["boxes"] = [sample["boxes"] for sample in batch]
-    output["labels"] = [torch.tensor([1] * len(sample["boxes"])) for sample in batch]
-    return output
 
 
 class NASAMarineDebrisDataModule(pl.LightningDataModule):
@@ -45,7 +30,7 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
         test_split_pct: float = 0.2,
         **kwargs: Any,
     ) -> None:
-        """Initialize a LightningDataModule for NASA Marine Debris based DataLoaders.
+        """Initialize a new LightningDataModule instance.
 
         Args:
             batch_size: The batch size to use in all created DataLoaders
@@ -62,18 +47,9 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
         self.test_split_pct = test_split_pct
         self.kwargs = kwargs
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
-
-        Args:
-            sample: input image dictionary
-
-        Returns:
-            preprocessed sample
-        """
-        sample["image"] = sample["image"].float()
-        sample["image"] /= 255.0
-        return sample
+        self.transform = AugmentationSequential(
+            Normalize(mean=0, std=255), data_keys=["image"]
+        )
 
     def prepare_data(self) -> None:
         """Make sure that the dataset is downloaded.
@@ -91,7 +67,7 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
         Args:
             stage: stage to set up
         """
-        self.dataset = NASAMarineDebris(transforms=self.preprocess, **self.kwargs)
+        self.dataset = NASAMarineDebris(**self.kwargs)
         self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
             self.dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
         )
@@ -107,7 +83,6 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=True,
-            collate_fn=collate_fn,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -121,7 +96,6 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=False,
-            collate_fn=collate_fn,
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
@@ -135,8 +109,22 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=False,
-            collate_fn=collate_fn,
         )
+
+    def on_after_batch_transfer(
+        self, batch: Dict[str, Tensor], dataloader_idx: int
+    ) -> Dict[str, Tensor]:
+        """Apply augmentations to batch after transferring to GPU.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented
+            dataloader_idx: The index of the dataloader to which the batch belongs
+
+        Returns:
+            A batch of data
+        """
+        batch = self.transform(batch)
+        return batch
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
         """Run :meth:`torchgeo.datasets.NASAMarineDebris.plot`.
