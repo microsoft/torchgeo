@@ -85,14 +85,14 @@ class BigEarthNetDataModule(NonGeoDataModule):
 
         bands = kwargs.get("bands", "all")
         if bands == "all":
-            self.mins = self.band_mins[:, None, None]
-            self.maxs = self.band_maxs[:, None, None]
+            self.mins = self.band_mins
+            self.maxs = self.band_maxs
         elif bands == "s1":
-            self.mins = self.band_mins[:2, None, None]
-            self.maxs = self.band_maxs[:2, None, None]
+            self.mins = self.band_mins[:2]
+            self.maxs = self.band_maxs[:2]
         else:
-            self.mins = self.band_mins[2:, None, None]
-            self.maxs = self.band_maxs[2:, None, None]
+            self.mins = self.band_mins[2:]
+            self.maxs = self.band_maxs[2:]
 
         self.aug = AugmentationSequential(
             Normalize(mean=self.mins, std=self.maxs - self.mins), data_keys=["image"]
@@ -104,7 +104,7 @@ class BigEarthNetDataModule(NonGeoDataModule):
         This method is only called once per run.
         """
         if self.kwargs.get("download", False):
-            BigEarthNet(split="train", **self.kwargs)
+            BigEarthNet(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main Dataset objects.
