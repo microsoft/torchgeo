@@ -45,7 +45,7 @@ class NASAMarineDebrisDataModule(NonGeoDataModule):
         self.kwargs = kwargs
 
         self.aug = AugmentationSequential(
-            Normalize(mean=0, std=255), data_keys=["image"]
+            Normalize(mean=0.0 std=255.0), data_keys=["image"]
         )
 
     def prepare_data(self) -> None:

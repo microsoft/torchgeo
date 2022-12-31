@@ -96,7 +96,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
 
         self.aug = AugmentationSequential(
             CenterCrop(patch_size),
-            Normalize(mean=0, std=255),
+            Normalize(mean=0.0 std=255.0),
             data_keys=["image", "mask"],
         )
 
