@@ -91,7 +91,7 @@ class SEN12MSDataModule(pl.LightningDataModule):
 
         self.all_train_dataset = SEN12MS(split="train", bands=self.bands, **self.kwargs)
 
-        self.all_test_dataset = SEN12MS(split="test", bands=self.bands, **self.kwargs)
+        self.test_dataset = SEN12MS(split="test", bands=self.bands, **self.kwargs)
 
         # A patch is a filename like: "ROIs{num}_{season}_s2_{scene_id}_p{patch_id}.tif"
         # This patch will belong to the scene that is uniquelly identified by its
@@ -113,9 +113,6 @@ class SEN12MSDataModule(pl.LightningDataModule):
 
         self.train_dataset = Subset(self.all_train_dataset, train_indices)
         self.val_dataset = Subset(self.all_train_dataset, val_indices)
-        self.test_dataset = Subset(
-            self.all_test_dataset, range(len(self.all_test_dataset))
-        )
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Return a DataLoader for training.
