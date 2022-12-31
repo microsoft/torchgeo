@@ -128,3 +128,11 @@ xView2
 ^^^^^^
 
 .. autoclass:: XView2DataModule
+
+Base Classes
+------------
+
+NonGeoDataModule
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: NonGeoDataModule
