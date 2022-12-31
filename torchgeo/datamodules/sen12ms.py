@@ -3,8 +3,9 @@
 
 """SEN12MS datamodule."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 from sklearn.model_selection import GroupShuffleSplit
@@ -50,16 +51,14 @@ class SEN12MSDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        seed: int = 0,
         band_set: str = "all",
         batch_size: int = 64,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
-        """Initialize a LightningDataModule for SEN12MS based DataLoaders.
+        """Initialize a new LightningDataModule instance.
 
         Args:
-            seed: The seed value to use when doing the sklearn based ShuffleSplit
             band_set: The subset of S1/S2 bands to use. Options are: "all",
                 "s1", "s2-all", and "s2-reduced" where the "s2-reduced" set includes:
                 B2, B3, B4, B8, B11, and B12.
@@ -71,43 +70,16 @@ class SEN12MSDataModule(pl.LightningDataModule):
         super().__init__()
         assert band_set in SEN12MS.BAND_SETS.keys()
 
-        self.seed = seed
         self.band_set = band_set
         self.bands = SEN12MS.BAND_SETS[band_set]
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.kwargs = kwargs
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
-
-        Args:
-            sample: dictionary containing image and mask
-
-        Returns:
-            preprocessed sample
-        """
-        sample["image"] = sample["image"].float()
-
-        if self.band_set == "all":
-            sample["image"][:2] = sample["image"][:2].clamp(-25, 0) / -25
-            sample["image"][2:] = sample["image"][2:].clamp(0, 10000) / 10000
-        elif self.band_set == "s1":
-            sample["image"][:2] = sample["image"][:2].clamp(-25, 0) / -25
-        else:
-            sample["image"][:] = sample["image"][:].clamp(0, 10000) / 10000
-
-        if "mask" in sample:
-            sample["mask"] = sample["mask"][0, :, :].long()
-            sample["mask"] = torch.take(self.DFC2020_CLASS_MAPPING, sample["mask"])
-
-        return sample
-
     def setup(self, stage: Optional[str] = None) -> None:
-        """Create the train/val/test splits based on the original Dataset objects.
+        """Initialize the main Dataset objects.
 
-        The splits should be done here vs. in :func:`__init__` per the docs:
-        https://pytorch-lightning.readthedocs.io/en/latest/extensions/datamodules.html#setup.
+        This method is called once per GPU per run.
 
         We split samples between train and val geographically with proportions of 80/20.
         This mimics the geographic test set split.
@@ -117,13 +89,9 @@ class SEN12MSDataModule(pl.LightningDataModule):
         """
         season_to_int = {"winter": 0, "spring": 1000, "summer": 2000, "fall": 3000}
 
-        self.all_train_dataset = SEN12MS(
-            split="train", bands=self.bands, transforms=self.preprocess, **self.kwargs
-        )
+        self.all_train_dataset = SEN12MS(split="train", bands=self.bands, **self.kwargs)
 
-        self.all_test_dataset = SEN12MS(
-            split="test", bands=self.bands, transforms=self.preprocess, **self.kwargs
-        )
+        self.all_test_dataset = SEN12MS(split="test", bands=self.bands, **self.kwargs)
 
         # A patch is a filename like: "ROIs{num}_{season}_s2_{scene_id}_p{patch_id}.tif"
         # This patch will belong to the scene that is uniquelly identified by its
@@ -187,3 +155,10 @@ class SEN12MSDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=False,
         )
+
+    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+        """Run :meth:`torchgeo.datasets.SEN12MS.plot`.
+
+        .. versionadded:: 0.4
+        """
+        return self.test_dataset.plot(*args, **kwargs)
