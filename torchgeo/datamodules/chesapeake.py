@@ -136,7 +136,7 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             self.train_dataset,
             size=self.original_patch_size,
             batch_size=self.train_batch_size,
-            length=self.patches_per_tile * len(self.train_dataset),
+            length=self.num_patches_per_tile * len(self.train_dataset),
         )
         return DataLoader(
             self.train_dataset,
