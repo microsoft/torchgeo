@@ -9,8 +9,8 @@ from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 
-from torchgeo.datasets import NASAMarineDebris
 from torchgeo.datamodules import NASAMarineDebrisDataModule
+from torchgeo.datasets import NASAMarineDebris
 from torchgeo.trainers import ObjectDetectionTask
 
 

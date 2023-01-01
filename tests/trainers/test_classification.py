@@ -15,7 +15,6 @@ from pytorch_lightning import LightningDataModule, Trainer
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datasets import BigEarthNet, EuroSAT
 from torchgeo.datamodules import (
     BigEarthNetDataModule,
     EuroSATDataModule,
@@ -24,6 +23,7 @@ from torchgeo.datamodules import (
     UCMercedDataModule,
 )
 from torchgeo.models import ResNet18_Weights
+from torchgeo.datasets import BigEarthNet, EuroSAT
 from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
 
 from .test_utils import ClassificationTestModel

@@ -11,7 +11,6 @@ from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 from torch.nn.modules import Module
 
-from torchgeo.datasets import LandCoverAI
 from torchgeo.datamodules import (
     ChesapeakeCVPRDataModule,
     DeepGlobeLandCoverDataModule,
