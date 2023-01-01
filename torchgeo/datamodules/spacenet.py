@@ -63,7 +63,7 @@ class SpaceNet1DataModule(NonGeoDataModule):
             ),
             data_keys=["image", "mask"],
         )
-        self.test_aug = AugmentationSequential(
+        self.aug = AugmentationSequential(
             K.Normalize(mean=0.0, std=255.0),
             K.PadTo((448, 448)),
             data_keys=["image", "mask"],

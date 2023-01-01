@@ -11,10 +11,10 @@ experiment:
     num_classes: 2
     ignore_index: null
   datamodule:
-      root: "tests/data/inria"
-      batch_size: 1
-      num_workers: 0
-      val_split_pct: 0.2
-      test_split_pct: 0.2
-      patch_size: 2
-      num_patches_per_tile: 2
+    root: "tests/data/inria"
+    num_tiles_per_batch: 1
+    num_patches_per_tile: 2
+    patch_size: 2
+    num_workers: 0
+    val_split_pct: 0.2
+    test_split_pct: 0.2

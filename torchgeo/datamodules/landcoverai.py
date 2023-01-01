@@ -50,7 +50,7 @@ class LandCoverAIDataModule(NonGeoDataModule):
             ),
             data_keys=["image", "mask"],
         )
-        self.test_aug = AugmentationSequential(
+        self.aug = AugmentationSequential(
             K.Normalize(mean=0.0, std=255.0), data_keys=["image", "mask"]
         )
 

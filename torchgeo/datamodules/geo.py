@@ -37,7 +37,7 @@ class NonGeoDataModule(LightningDataModule):
     train_batch_size: Optional[int] = None
     val_batch_size: Optional[int] = None
     test_batch_size: Optional[int] = None
-    predict_patch_size: Optional[int] = None
+    predict_batch_size: Optional[int] = None
     num_workers = 0
 
     # Data augmentation

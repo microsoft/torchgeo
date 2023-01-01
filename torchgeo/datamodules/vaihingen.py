@@ -70,7 +70,7 @@ class Vaihingen2DDataModule(NonGeoDataModule):
             _RandomNCrop(self.patch_size, self.num_patches_per_tile),
             data_keys=["image", "mask"],
         )
-        self.test_aug = AugmentationSequential(
+        self.aug = AugmentationSequential(
             K.Normalize(mean=0.0, std=255.0),
             _ExtractTensorPatches(self.patch_size),
             data_keys=["image", "mask"],

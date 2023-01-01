@@ -11,6 +11,7 @@ from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 from torch.nn.modules import Module
 
+from torchgeo.datasets import LandCoverAI
 from torchgeo.datamodules import (
     ChesapeakeCVPRDataModule,
     DeepGlobeLandCoverDataModule,
@@ -43,9 +44,7 @@ class TestSemanticSegmentationTask:
             ("deepglobelandcover", DeepGlobeLandCoverDataModule),
             ("etci2021", ETCI2021DataModule),
             ("gid15", GID15DataModule),
-            ("inria_train", InriaAerialImageLabelingDataModule),
-            ("inria_val", InriaAerialImageLabelingDataModule),
-            ("inria_test", InriaAerialImageLabelingDataModule),
+            ("inria", InriaAerialImageLabelingDataModule),
             ("landcoverai", LandCoverAIDataModule),
             ("loveda", LoveDADataModule),
             ("naipchesapeake", NAIPChesapeakeDataModule),
@@ -86,10 +85,10 @@ class TestSemanticSegmentationTask:
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
 
-        if hasattr(datamodule, "test_dataset") or hasattr(datamodule, "test_sampler"):
+        if datamodule.test_dataset is not None or hasattr(datamodule, "test_sampler"):
             trainer.test(model=model, datamodule=datamodule)
 
-        if hasattr(datamodule, "predict_dataset"):
+        if datamodule.predict_dataset is not None:
             trainer.predict(model=model, datamodule=datamodule)
 
     def test_no_logger(self) -> None:
@@ -151,7 +150,7 @@ class TestSemanticSegmentationTask:
     def test_missing_attributes(
         self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
     ) -> None:
-        monkeypatch.delattr(LandCoverAIDataModule, "plot")
+        monkeypatch.delattr(LandCoverAI, "plot")
         datamodule = LandCoverAIDataModule(
             root="tests/data/landcoverai", batch_size=1, num_workers=0
         )

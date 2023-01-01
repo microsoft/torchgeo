@@ -72,10 +72,15 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
             _RandomNCrop(self.patch_size, self.num_patches_per_tile),
             data_keys=["image", "mask"],
         )
-        self.test_aug = AugmentationSequential(
+        self.val_aug = AugmentationSequential(
             K.Normalize(mean=0.0, std=255.0),
             _ExtractTensorPatches(self.patch_size),
             data_keys=["image", "mask"],
+        )
+        self.predict_aug = AugmentationSequential(
+            K.Normalize(mean=0.0, std=255.0),
+            _ExtractTensorPatches(self.patch_size),
+            data_keys=["image"],
         )
 
     def setup(self, stage: Optional[str] = None) -> None:
