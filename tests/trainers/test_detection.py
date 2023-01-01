@@ -9,6 +9,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 
+from torchgeo.datasets import NASAMarineDebris
 from torchgeo.datamodules import NASAMarineDebrisDataModule
 from torchgeo.trainers import ObjectDetectionTask
 
@@ -59,7 +60,7 @@ class TestObjectDetectionTask:
     def test_missing_attributes(
         self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
     ) -> None:
-        monkeypatch.delattr(NASAMarineDebrisDataModule, "plot")
+        monkeypatch.delattr(NASAMarineDebris, "plot")
         datamodule = NASAMarineDebrisDataModule(
             root="tests/data/nasa_marine_debris", batch_size=1, num_workers=0
         )
