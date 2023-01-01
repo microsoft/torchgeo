@@ -5,7 +5,7 @@
 
 from typing import Any, Optional, Tuple, Union
 
-from kornia.augmentation import Normalize
+import kornia.augmentation as K
 
 from ..datasets import Vaihingen2D
 from ..samplers.utils import _to_tuple
@@ -66,12 +66,12 @@ class Vaihingen2DDataModule(NonGeoDataModule):
         self.kwargs = kwargs
 
         self.train_aug = AugmentationSequential(
-            Normalize(mean=0.0, std=255.0),
+            K.Normalize(mean=0.0, std=255.0),
             _RandomNCrop(self.patch_size, self.num_patches_per_tile),
             data_keys=["image", "mask"],
         )
         self.test_aug = AugmentationSequential(
-            Normalize(mean=0.0, std=255.0),
+            K.Normalize(mean=0.0, std=255.0),
             _ExtractTensorPatches(self.patch_size),
             data_keys=["image", "mask"],
         )

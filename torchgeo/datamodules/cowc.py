@@ -5,7 +5,7 @@
 
 from typing import Any, Optional
 
-from kornia.augmentation import Normalize
+import kornia.augmentation as K
 from torch.utils.data import random_split
 
 from ..datasets import COWCCounting
@@ -33,7 +33,7 @@ class COWCCountingDataModule(NonGeoDataModule):
         self.kwargs = kwargs
 
         self.aug = AugmentationSequential(
-            Normalize(mean=0.0, std=255.0), data_keys=["image"]
+            K.Normalize(mean=0.0, std=255.0), data_keys=["image"]
         )
 
     def prepare_data(self) -> None:

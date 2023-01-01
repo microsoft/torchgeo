@@ -5,7 +5,7 @@
 
 from typing import Any, Optional
 
-from kornia.augmentation import Normalize, Resize
+import kornia.augmentation as K
 
 from ..datasets import UCMerced
 from ..transforms import AugmentationSequential
@@ -35,7 +35,7 @@ class UCMercedDataModule(NonGeoDataModule):
         self.kwargs = kwargs
 
         self.aug = AugmentationSequential(
-            Normalize(mean=0.0, std=255.0), Resize(size=256), data_keys=["image"]
+            K.Normalize(mean=0.0, std=255.0), K.Resize(size=256), data_keys=["image"]
         )
 
     def prepare_data(self) -> None:

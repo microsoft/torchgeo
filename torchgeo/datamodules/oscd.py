@@ -5,8 +5,8 @@
 
 from typing import Any, Optional, Tuple, Union
 
+import kornia.augmentation as K
 import torch
-from kornia.augmentation import Normalize
 
 from ..datasets import OSCD
 from ..samplers.utils import _to_tuple
@@ -105,12 +105,12 @@ class OSCDDataModule(NonGeoDataModule):
             self.band_stds = self.band_stds[[3, 2, 1]]
 
         self.train_aug = AugmentationSequential(
-            Normalize(mean=self.band_means, std=self.band_stds),
+            K.Normalize(mean=self.band_means, std=self.band_stds),
             _RandomNCrop(self.patch_size, self.num_patches_per_tile),
             data_keys=["image", "mask"],
         )
         self.test_aug = AugmentationSequential(
-            Normalize(mean=self.band_means, std=self.band_stds),
+            K.Normalize(mean=self.band_means, std=self.band_stds),
             _ExtractTensorPatches(self.patch_size),
             data_keys=["image", "mask"],
         )

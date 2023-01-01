@@ -5,8 +5,8 @@
 
 from typing import Any, Dict, Optional, Tuple
 
+import kornia.augmentation as K
 import matplotlib.pyplot as plt
-from kornia.augmentation import Normalize
 from pytorch_lightning import LightningDataModule
 from torch import Tensor
 from torch.utils.data import DataLoader
@@ -60,7 +60,7 @@ class NAIPChesapeakeDataModule(LightningDataModule):
                 self.chesapeake_kwargs[key[11:]] = val
 
         self.aug = AugmentationSequential(
-            Normalize(mean=0.0, std=255.0), data_keys=["image", "mask"]
+            K.Normalize(mean=0.0, std=255.0), data_keys=["image", "mask"]
         )
 
     def prepare_data(self) -> None:

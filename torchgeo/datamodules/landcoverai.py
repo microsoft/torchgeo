@@ -5,14 +5,7 @@
 
 from typing import Any, Optional
 
-from kornia.augmentation import (
-    ColorJitter,
-    Normalize,
-    RandomHorizontalFlip,
-    RandomRotation,
-    RandomSharpness,
-    RandomVerticalFlip,
-)
+import kornia.augmentation as K
 
 from ..datasets import LandCoverAI
 from ..transforms import AugmentationSequential
@@ -42,12 +35,12 @@ class LandCoverAIDataModule(NonGeoDataModule):
         self.kwargs = kwargs
 
         self.train_aug = AugmentationSequential(
-            Normalize(mean=0.0, std=255.0),
-            RandomRotation(p=0.5, degrees=90),
-            RandomHorizontalFlip(p=0.5),
-            RandomVerticalFlip(p=0.5),
-            RandomSharpness(p=0.5),
-            ColorJitter(
+            K.Normalize(mean=0.0, std=255.0),
+            K.RandomRotation(p=0.5, degrees=90),
+            K.RandomHorizontalFlip(p=0.5),
+            K.RandomVerticalFlip(p=0.5),
+            K.RandomSharpness(p=0.5),
+            K.ColorJitter(
                 p=0.5,
                 brightness=0.1,
                 contrast=0.1,
@@ -58,7 +51,7 @@ class LandCoverAIDataModule(NonGeoDataModule):
             data_keys=["image", "mask"],
         )
         self.test_aug = AugmentationSequential(
-            Normalize(mean=0.0, std=255.0), data_keys=["image", "mask"]
+            K.Normalize(mean=0.0, std=255.0), data_keys=["image", "mask"]
         )
 
     def prepare_data(self) -> None:

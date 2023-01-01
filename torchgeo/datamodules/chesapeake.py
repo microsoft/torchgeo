@@ -5,8 +5,8 @@
 
 from typing import Any, Dict, List, Optional
 
+import kornia.augmentation as K
 import matplotlib.pyplot as plt
-from kornia.augmentation import CenterCrop, Normalize
 from pytorch_lightning import LightningDataModule
 from torch import Tensor
 from torch.utils.data import DataLoader
@@ -95,8 +95,8 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
             self.layers = ["naip-new", "lc"]
 
         self.aug = AugmentationSequential(
-            CenterCrop(patch_size),
-            Normalize(mean=0.0, std=255.0),
+            K.CenterCrop(patch_size),
+            K.Normalize(mean=0.0, std=255.0),
             data_keys=["image", "mask"],
         )
 

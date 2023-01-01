@@ -5,7 +5,7 @@
 
 from typing import Any, Optional
 
-from kornia.augmentation import Normalize
+import kornia.augmentation as K
 from torch.utils.data import random_split
 
 from ..datasets import ETCI2021
@@ -49,7 +49,7 @@ class ETCI2021DataModule(NonGeoDataModule):
         self.kwargs = kwargs
 
         self.aug = AugmentationSequential(
-            Normalize(mean=self.band_means, std=self.band_stds), data_keys=["image"]
+            K.Normalize(mean=self.band_means, std=self.band_stds), data_keys=["image"]
         )
 
     def prepare_data(self) -> None:

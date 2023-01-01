@@ -5,7 +5,7 @@
 
 from typing import Any, Optional
 
-from kornia.augmentation import Normalize
+import kornia.augmentation as K
 
 from ..datasets import So2Sat
 from ..transforms import AugmentationSequential
@@ -74,7 +74,7 @@ class So2SatDataModule(NonGeoDataModule):
         self.kwargs = kwargs
 
         self.aug = AugmentationSequential(
-            Normalize(mean=self.band_means, std=self.band_stds), data_keys=["image"]
+            K.Normalize(mean=self.band_means, std=self.band_stds), data_keys=["image"]
         )
 
     def setup(self, stage: Optional[str] = None) -> None:

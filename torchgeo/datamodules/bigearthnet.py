@@ -5,8 +5,8 @@
 
 from typing import Any, Optional
 
+import kornia.augmentation as K
 import torch
-from kornia.augmentation import Normalize
 
 from ..datasets import BigEarthNet
 from ..transforms import AugmentationSequential
@@ -95,7 +95,7 @@ class BigEarthNetDataModule(NonGeoDataModule):
             self.maxs = self.band_maxs[2:]
 
         self.aug = AugmentationSequential(
-            Normalize(mean=self.mins, std=self.maxs - self.mins), data_keys=["image"]
+            K.Normalize(mean=self.mins, std=self.maxs - self.mins), data_keys=["image"]
         )
 
     def prepare_data(self) -> None:
