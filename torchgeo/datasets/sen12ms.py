@@ -223,7 +223,7 @@ class SEN12MS(NonGeoDataset):
         """
         filename = self.ids[index]
 
-        lc = self._load_raster(filename, "lc")
+        lc = self._load_raster(filename, "lc").long()
         s1 = self._load_raster(filename, "s1")
         s2 = self._load_raster(filename, "s2")
 
