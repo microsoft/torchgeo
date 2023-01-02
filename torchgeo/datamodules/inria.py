@@ -91,6 +91,6 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
             self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
                 dataset, self.val_split_pct, self.test_split_pct
             )
-        elif stage in ["predict"]:
+        if stage in ["predict"]:
             # Test set masks are not public, use for prediction instead
             self.predict_dataset = InriaAerialImageLabeling(split="test", **self.kwargs)

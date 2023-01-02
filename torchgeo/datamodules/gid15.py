@@ -85,6 +85,6 @@ class GID15DataModule(NonGeoDataModule):
             self.train_dataset, self.val_dataset = dataset_split(
                 dataset, self.val_split_pct
             )
-        elif stage in ["test"]:
+        if stage in ["test"]:
             # Test set masks are not public, use for prediction instead
             self.predict_dataset = GID15(split="test", **self.kwargs)

@@ -38,8 +38,8 @@ class LoveDADataModule(NonGeoDataModule):
         """
         if stage in ["fit"]:
             self.train_dataset = LoveDA(split="train", **self.kwargs)
-        elif stage in ["fit", "validate"]:
+        if stage in ["fit", "validate"]:
             self.val_dataset = LoveDA(split="val", **self.kwargs)
-        elif stage in ["predict"]:
+        if stage in ["predict"]:
             # Test set masks are not public, use for prediction instead
             self.predict_dataset = LoveDA(split="test", **self.kwargs)

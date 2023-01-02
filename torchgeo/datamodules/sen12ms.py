@@ -87,5 +87,5 @@ class SEN12MSDataModule(NonGeoDataModule):
 
             self.train_dataset = Subset(self.all_train_dataset, train_indices)
             self.val_dataset = Subset(self.all_train_dataset, val_indices)
-        elif stage in ["test"]:
+        if stage in ["test"]:
             self.test_dataset = SEN12MS(split="test", bands=self.bands, **self.kwargs)

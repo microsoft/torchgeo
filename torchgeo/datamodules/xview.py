@@ -49,5 +49,5 @@ class XView2DataModule(NonGeoDataModule):
             self.train_dataset, self.val_dataset = dataset_split(
                 dataset, val_pct=self.val_split_pct
             )
-        elif stage in ["test"]:
+        if stage in ["test"]:
             self.test_dataset = XView2(split="test", **self.kwargs)

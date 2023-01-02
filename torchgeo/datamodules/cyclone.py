@@ -58,5 +58,5 @@ class TropicalCycloneDataModule(NonGeoDataModule):
 
             self.train_dataset = Subset(dataset, train_indices)
             self.val_dataset = Subset(dataset, val_indices)
-        elif stage in ["test"]:
+        if stage in ["test"]:
             self.test_dataset = TropicalCyclone(split="test", **self.kwargs)

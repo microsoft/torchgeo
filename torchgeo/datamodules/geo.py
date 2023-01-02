@@ -95,11 +95,11 @@ class NonGeoDataModule(LightningDataModule):
             self.train_dataset = self.dataset_class(  # type: ignore[call-arg]
                 split="train", **self.kwargs
             )
-        elif stage in ["fit", "validate"]:
+        if stage in ["fit", "validate"]:
             self.val_dataset = self.dataset_class(  # type: ignore[call-arg]
                 split="val", **self.kwargs
             )
-        elif stage in ["test"]:
+        if stage in ["test"]:
             self.test_dataset = self.dataset_class(  # type: ignore[call-arg]
                 split="test", **self.kwargs
             )

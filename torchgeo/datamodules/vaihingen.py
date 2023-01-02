@@ -84,5 +84,5 @@ class Vaihingen2DDataModule(NonGeoDataModule):
             self.train_dataset, self.val_dataset = dataset_split(
                 dataset, self.val_split_pct
             )
-        elif stage in ["test"]:
+        if stage in ["test"]:
             self.test_dataset = Vaihingen2D(split="test", **self.kwargs)
