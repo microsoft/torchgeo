@@ -3,7 +3,7 @@
 
 """GID-15 datamodule."""
 
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Tuple, Union
 
 import kornia.augmentation as K
 
@@ -32,7 +32,7 @@ class GID15DataModule(NonGeoDataModule):
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
-        """Initialize a new LightningDataModule instance.
+        """Initialize a new GID15DataModule instance.
 
         The GID-15 dataset contains images that are too large to pass
         directly through a model. Instead, we randomly sample patches from image tiles
@@ -41,25 +41,22 @@ class GID15DataModule(NonGeoDataModule):
         ``num_tiles_per_batch`` x ``num_patches_per_tile``.
 
         Args:
-            num_tiles_per_batch: The number of image tiles to sample from during
-                training
-            num_patches_per_tile: The number of patches to randomly sample from each
-                image tile during training
-            patch_size: The size of each patch, either ``size`` or ``(height, width)``.
+            num_tiles_per_batch: Number of image tiles to sample from during training.
+            num_patches_per_tile: Number of patches to randomly sample from each image
+                tile during training.
+            patch_size: Size of each patch, either ``size`` or ``(height, width)``.
                 Should be a multiple of 32 for most segmentation architectures
-            val_split_pct: The percentage of the dataset to use as a validation set
-            num_workers: The number of workers to use for parallel data loading
+            val_split_pct: Percentage of the dataset to use as a validation set
+            num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.GID15`
+                :class:`~torchgeo.datasets.GID15`.
         """
-        super().__init__()
+        super().__init__(GID15, 1, num_workers, **kwargs)
 
         self.train_batch_size = num_tiles_per_batch
         self.num_patches_per_tile = num_patches_per_tile
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
-        self.num_workers = num_workers
-        self.kwargs = kwargs
 
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=0.0, std=255.0),
@@ -77,27 +74,17 @@ class GID15DataModule(NonGeoDataModule):
             data_keys=["image"],
         )
 
-    def prepare_data(self) -> None:
-        """Initialize the main Dataset objects for use in :func:`setup`.
-
-        This includes optionally downloading the dataset. This is done once per node,
-        while :func:`setup` is done once per GPU.
-        """
-        if self.kwargs.get("download", False):
-            GID15(**self.kwargs)
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main Dataset objects.
-
-        This method is called once per GPU per run.
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
 
         Args:
-            stage: stage to set up
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        train_dataset = GID15(split="train", **self.kwargs)
-        self.train_dataset, self.val_dataset = dataset_split(
-            train_dataset, self.val_split_pct
-        )
-
-        # Test set masks are not public, use for prediction instead
-        self.predict_dataset = GID15(split="test", **self.kwargs)
+        if stage in ["fit", "validate"]:
+            dataset = GID15(split="train", **self.kwargs)
+            self.train_dataset, self.val_dataset = dataset_split(
+                dataset, self.val_split_pct
+            )
+        elif stage in ["test"]:
+            # Test set masks are not public, use for prediction instead
+            self.predict_dataset = GID15(split="test", **self.kwargs)

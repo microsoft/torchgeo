@@ -3,7 +3,7 @@
 
 """SpaceNet datamodules."""
 
-from typing import Any, Optional
+from typing import Any
 
 import kornia.augmentation as K
 
@@ -29,22 +29,20 @@ class SpaceNet1DataModule(NonGeoDataModule):
         test_split_pct: float = 0.2,
         **kwargs: Any,
     ) -> None:
-        """Initialize a LightningDataModule for SpaceNet1.
+        """Initialize a new SpaceNet1DataModule instance.
 
         Args:
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
-            val_split_pct: What percentage of the dataset to use as a validation set
-            test_split_pct: What percentage of the dataset to use as a test set
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
+            val_split_pct: Percentage of the dataset to use as a validation set.
+            test_split_pct: Percentage of the dataset to use as a test set.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.SpaceNet1`
+                :class:`~torchgeo.datasets.SpaceNet1`.
         """
-        super().__init__()
-        self.batch_size = batch_size
-        self.num_workers = num_workers
+        super().__init__(SpaceNet1, batch_size, num_workers, **kwargs)
+
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
-        self.kwargs = kwargs
 
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=0.0, std=255.0),
@@ -69,23 +67,13 @@ class SpaceNet1DataModule(NonGeoDataModule):
             data_keys=["image", "mask"],
         )
 
-    def prepare_data(self) -> None:
-        """Make sure that the dataset is downloaded.
-
-        This method is only called once per run.
-        """
-        if self.kwargs.get("download", False):
-            SpaceNet1(**self.kwargs)
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
-
-        This method is called once per GPU per run.
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
 
         Args:
-            stage: stage to set up
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        self.dataset = SpaceNet1(**self.kwargs)
+        dataset = SpaceNet1(**self.kwargs)
         self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-            self.dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
+            dataset, self.val_split_pct, self.test_split_pct
         )

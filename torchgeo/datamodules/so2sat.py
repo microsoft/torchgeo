@@ -3,7 +3,7 @@
 
 """So2Sat datamodule."""
 
-from typing import Any, Optional
+from typing import Any
 
 import kornia.augmentation as K
 
@@ -48,44 +48,18 @@ class So2SatDataModule(NonGeoDataModule):
     reindex_to_rgb_first = [2, 1, 0, 3, 4, 5, 6, 7, 8, 9]
 
     def __init__(
-        self,
-        batch_size: int = 64,
-        num_workers: int = 0,
-        band_set: str = "rgb",
-        unsupervised_mode: bool = False,
-        **kwargs: Any,
+        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
-        """Initialize a new LightningDataModule instance.
+        """Initialize a new So2SatDataModule instance.
 
         Args:
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
-            band_set: Collection of So2Sat bands to use
-            unsupervised_mode: Makes the train dataloader return imagery from the train,
-                val, and test sets
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.So2Sat`
         """
-        super().__init__()
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.band_set = band_set
-        self.unsupervised_mode = unsupervised_mode
-        self.kwargs = kwargs
+        super().__init__(So2Sat, batch_size, num_workers, **kwargs)
 
         self.aug = AugmentationSequential(
             K.Normalize(mean=self.band_means, std=self.band_stds), data_keys=["image"]
         )
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main Dataset objects.
-
-        This method is called once per GPU per run.
-
-        Args:
-            stage: stage to set up
-        """
-        bands = So2Sat.BAND_SETS["s2"]
-        self.train_dataset = So2Sat(split="train", bands=bands, **self.kwargs)
-        self.val_dataset = So2Sat(split="validation", bands=bands, **self.kwargs)
-        self.test_dataset = So2Sat(split="test", bands=bands, **self.kwargs)

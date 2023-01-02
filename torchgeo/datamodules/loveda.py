@@ -3,7 +3,7 @@
 
 """LoveDA datamodule."""
 
-from typing import Any, Optional
+from typing import Any
 
 import kornia.augmentation as K
 
@@ -23,41 +23,30 @@ class LoveDADataModule(NonGeoDataModule):
     def __init__(
         self, batch_size: int = 32, num_workers: int = 0, **kwargs: Any
     ) -> None:
-        """Initialize a LightningDataModule for LoveDA based DataLoaders.
+        """Initialize a new LoveDADataModule instance.
 
         Args:
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.LoveDA`
+                :class:`~torchgeo.datasets.LoveDA`.
         """
-        super().__init__()
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.kwargs = kwargs
+        super().__init__(LoveDA, batch_size, num_workers, **kwargs)
 
         self.aug = AugmentationSequential(
             K.Normalize(mean=0.0, std=255.0), data_keys=["image"]
         )
 
-    def prepare_data(self) -> None:
-        """Make sure that the dataset is downloaded.
-
-        This method is only called once per run.
-        """
-        if self.kwargs.get("download", False):
-            LoveDA(**self.kwargs)
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
-
-        This method is called once per GPU per run.
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
 
         Args:
-            stage: stage to set up
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        self.train_dataset = LoveDA(split="train", **self.kwargs)
-        self.val_dataset = LoveDA(split="val", **self.kwargs)
-
-        # Test set masks are not public, use for prediction instead
-        self.predict_dataset = LoveDA(split="test", **self.kwargs)
+        if stage in ["fit"]:
+            self.train_dataset = LoveDA(split="train", **self.kwargs)
+        elif stage in ["fit", "validate"]:
+            self.val_dataset = LoveDA(split="val", **self.kwargs)
+        elif stage in ["predict"]:
+            # Test set masks are not public, use for prediction instead
+            self.predict_dataset = LoveDA(split="test", **self.kwargs)

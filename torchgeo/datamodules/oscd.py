@@ -3,7 +3,7 @@
 
 """OSCD datamodule."""
 
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Tuple, Union
 
 import kornia.augmentation as K
 import torch
@@ -70,7 +70,7 @@ class OSCDDataModule(NonGeoDataModule):
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
-        """Initialize a new LightningDataModule instance.
+        """Initialize a new OSCDDataModule instance.
 
         The OSCD dataset contains images that are too large to pass
         directly through a model. Instead, we randomly sample patches from image tiles
@@ -79,25 +79,22 @@ class OSCDDataModule(NonGeoDataModule):
         ``num_tiles_per_batch`` x ``num_patches_per_tile``.
 
         Args:
-            num_tiles_per_batch: The number of image tiles to sample from during
-                training
-            num_patches_per_tile: The number of patches to randomly sample from each
-                image tile during training
-            patch_size: The size of each patch, either ``size`` or ``(height, width)``.
-                Should be a multiple of 32 for most segmentation architectures
-            val_split_pct: The percentage of the dataset to use as a validation set
-            num_workers: The number of workers to use for parallel data loading
+            num_tiles_per_batch: Number of image tiles to sample from during training.
+            num_patches_per_tile: Number of patches to randomly sample from each image
+                tile during training.
+            patch_size: Size of each patch, either ``size`` or ``(height, width)``.
+                Should be a multiple of 32 for most segmentation architectures.
+            val_split_pct: Percentage of the dataset to use as a validation set.
+            num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.OSCD`
+                :class:`~torchgeo.datasets.OSCD`.
         """
-        super().__init__()
+        super().__init__(OSCD, 1, num_workers, **kwargs)
 
         self.train_batch_size = num_tiles_per_batch
         self.num_patches_per_tile = num_patches_per_tile
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
-        self.num_workers = num_workers
-        self.kwargs = kwargs
 
         self.bands = kwargs.get("bands", "all")
         if self.bands == "rgb":
@@ -115,21 +112,16 @@ class OSCDDataModule(NonGeoDataModule):
             data_keys=["image", "mask"],
         )
 
-    def prepare_data(self) -> None:
-        """Make sure that the dataset is downloaded.
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
 
-        This method is only called once per run.
+        Args:
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if self.kwargs.get("download", False):
-            OSCD(split="train", **self.kwargs)
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main Dataset objects.
-
-        This method is called once per GPU per run.
-        """
-        train_dataset = OSCD(split="train", **self.kwargs)
-        self.train_dataset, self.val_dataset = dataset_split(
-            train_dataset, val_pct=self.val_split_pct
-        )
-        self.test_dataset = OSCD(split="test", **self.kwargs)
+        if stage in ["fit", "validate"]:
+            dataset = OSCD(split="train", **self.kwargs)
+            self.train_dataset, self.val_dataset = dataset_split(
+                dataset, val_pct=self.val_split_pct
+            )
+        elif stage in ["test"]:
+            self.test_dataset = OSCD(split="test", **self.kwargs)

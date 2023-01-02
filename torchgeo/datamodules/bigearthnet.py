@@ -3,7 +3,7 @@
 
 """BigEarthNet datamodule."""
 
-from typing import Any, Optional
+from typing import Any
 
 import kornia.augmentation as K
 import torch
@@ -70,50 +70,27 @@ class BigEarthNetDataModule(NonGeoDataModule):
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
-        """Initialize a LightningDataModule for BigEarthNet based DataLoaders.
+        """Initialize a new BigEarthNetDataModule instance.
 
         Args:
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.BigEarthNet`
+                :class:`~torchgeo.datasets.BigEarthNet`.
         """
-        super().__init__()
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.kwargs = kwargs
+        super().__init__(BigEarthNet, batch_size, num_workers, **kwargs)
 
         bands = kwargs.get("bands", "all")
         if bands == "all":
-            self.mins = self.band_mins
-            self.maxs = self.band_maxs
+            mins = self.band_mins
+            maxs = self.band_maxs
         elif bands == "s1":
-            self.mins = self.band_mins[:2]
-            self.maxs = self.band_maxs[:2]
+            mins = self.band_mins[:2]
+            maxs = self.band_maxs[:2]
         else:
-            self.mins = self.band_mins[2:]
-            self.maxs = self.band_maxs[2:]
+            mins = self.band_mins[2:]
+            maxs = self.band_maxs[2:]
 
         self.aug = AugmentationSequential(
-            K.Normalize(mean=self.mins, std=self.maxs - self.mins), data_keys=["image"]
+            K.Normalize(mean=mins, std=maxs - mins), data_keys=["image"]
         )
-
-    def prepare_data(self) -> None:
-        """Make sure that the dataset is downloaded.
-
-        This method is only called once per run.
-        """
-        if self.kwargs.get("download", False):
-            BigEarthNet(**self.kwargs)
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main Dataset objects.
-
-        This method is called once per GPU per run.
-
-        Args:
-            stage: stage to set up
-        """
-        self.train_dataset = BigEarthNet(split="train", **self.kwargs)
-        self.val_dataset = BigEarthNet(split="val", **self.kwargs)
-        self.test_dataset = BigEarthNet(split="test", **self.kwargs)

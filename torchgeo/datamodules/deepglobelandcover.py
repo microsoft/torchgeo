@@ -3,7 +3,7 @@
 
 """DeepGlobe Land Cover Classification Challenge datamodule."""
 
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Tuple, Union
 
 import kornia.augmentation as K
 
@@ -30,7 +30,7 @@ class DeepGlobeLandCoverDataModule(NonGeoDataModule):
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
-        """Initialize a new LightningDataModule instance.
+        """Initialize a new DeepGlobeLandCoverDataModule instance.
 
         The DeepGlobe Land Cover dataset contains images that are too large to pass
         directly through a model. Instead, we randomly sample patches from image tiles
@@ -43,26 +43,22 @@ class DeepGlobeLandCoverDataModule(NonGeoDataModule):
            and *patch_size*.
 
         Args:
-            num_tiles_per_batch: The number of image tiles to sample from during
-                training
-            num_patches_per_tile: The number of patches to randomly sample from each
-                image tile during training
-            patch_size: The size of each patch, either ``size`` or ``(height, width)``.
-                Should be a multiple of 32 for most segmentation architectures
-            val_split_pct: The percentage of the dataset to use as a validation set
-            num_workers: The number of workers to use for parallel data loading
+            num_tiles_per_batch: Number of image tiles to sample from during training.
+            num_patches_per_tile: Number of patches to randomly sample from each image
+                tile during training.
+            patch_size: Size of each patch, either ``size`` or ``(height, width)``.
+                Should be a multiple of 32 for most segmentation architectures.
+            val_split_pct: Percentage of the dataset to use as a validation set.
+            num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.DeepGlobeLandCover`
+                :class:`~torchgeo.datasets.DeepGlobeLandCover`.
         """
-        super().__init__()
+        super().__init__(DeepGlobeLandCover, 1, num_workers, **kwargs)
 
         self.train_batch_size = num_tiles_per_batch
-        self.test_batch_size = 1
         self.num_patches_per_tile = num_patches_per_tile
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
-        self.num_workers = num_workers
-        self.kwargs = kwargs
 
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=0.0, std=255.0),
@@ -75,16 +71,16 @@ class DeepGlobeLandCoverDataModule(NonGeoDataModule):
             data_keys=["image", "mask"],
         )
 
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main Dataset objects.
-
-        This method is called once per GPU per run.
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
 
         Args:
-            stage: stage to set up
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        train_dataset = DeepGlobeLandCover(split="train", **self.kwargs)
-        self.train_dataset, self.val_dataset = dataset_split(
-            train_dataset, self.val_split_pct
-        )
-        self.test_dataset = DeepGlobeLandCover(split="test", **self.kwargs)
+        if stage in ["fit", "validate"]:
+            dataset = DeepGlobeLandCover(split="train", **self.kwargs)
+            self.train_dataset, self.val_dataset = dataset_split(
+                dataset, self.val_split_pct
+            )
+        elif stage in ["test"]:
+            self.test_dataset = DeepGlobeLandCover(split="test", **self.kwargs)

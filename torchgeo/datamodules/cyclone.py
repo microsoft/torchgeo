@@ -3,7 +3,7 @@
 
 """Tropical Cyclone Wind Estimation Competition datamodule."""
 
-from typing import Any, Optional
+from typing import Any
 
 import kornia.augmentation as K
 from sklearn.model_selection import GroupShuffleSplit
@@ -28,60 +28,41 @@ class TropicalCycloneDataModule(NonGeoDataModule):
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
-        """Initialize a LightningDataModule for NASA Cyclone based DataLoaders.
+        """Initialize a new TropicalCycloneDataModule instance.
 
         Args:
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.TropicalCyclone`
+                :class:`~torchgeo.datasets.TropicalCyclone`.
         """
-        super().__init__()
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.kwargs = kwargs
+        super().__init__(TropicalCyclone, batch_size, num_workers, **kwargs)
 
         self.aug = AugmentationSequential(
             K.Normalize(mean=0.0, std=255.0), data_keys=["image"]
         )
 
-    def prepare_data(self) -> None:
-        """Initialize the main Dataset objects for use in :func:`setup`.
-
-        This includes optionally downloading the dataset. This is done once per node,
-        while :func:`setup` is done once per GPU.
-        """
-        if self.kwargs.get("download", False):
-            TropicalCyclone(split="train", **self.kwargs)
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Create the train/val/test splits based on the original Dataset objects.
-
-        This method is called once per GPU per run.
-
-        We split samples between train/val by the ``storm_id`` property. I.e. all
-        samples with the same ``storm_id`` value will be either in the train or the val
-        split. This is important to test one type of generalizability -- given a new
-        storm, can we predict its windspeed. The test set, however, contains *some*
-        storms from the training set (specifically, the latter parts of the storms) as
-        well as some novel storms.
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
 
         Args:
-            stage: stage to set up
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        self.all_train_dataset = TropicalCyclone(split="train", **self.kwargs)
+        if stage in ["fit", "validate"]:
+            dataset = TropicalCyclone(split="train", **self.kwargs)
 
-        storm_ids = []
-        for item in self.all_train_dataset.collection:
-            storm_id = item["href"].split("/")[0].split("_")[-2]
-            storm_ids.append(storm_id)
+            storm_ids = []
+            for item in dataset.collection:
+                storm_id = item["href"].split("/")[0].split("_")[-2]
+                storm_ids.append(storm_id)
 
-        train_indices, val_indices = next(
-            GroupShuffleSplit(test_size=0.2, n_splits=2).split(
-                storm_ids, groups=storm_ids
+            train_indices, val_indices = next(
+                GroupShuffleSplit(test_size=0.2, n_splits=2).split(
+                    storm_ids, groups=storm_ids
+                )
             )
-        )
 
-        self.train_dataset = Subset(self.all_train_dataset, train_indices)
-        self.val_dataset = Subset(self.all_train_dataset, val_indices)
-        self.test_dataset = TropicalCyclone(split="test", **self.kwargs)
+            self.train_dataset = Subset(dataset, train_indices)
+            self.val_dataset = Subset(dataset, val_indices)
+        elif stage in ["test"]:
+            self.test_dataset = TropicalCyclone(split="test", **self.kwargs)

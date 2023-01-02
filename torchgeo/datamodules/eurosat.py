@@ -3,7 +3,7 @@
 
 """EuroSAT datamodule."""
 
-from typing import Any, Optional
+from typing import Any
 
 import kornia.augmentation as K
 
@@ -55,39 +55,16 @@ class EuroSATDataModule(NonGeoDataModule):
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
-        """Initialize a new LightningDataModule instance.
+        """Initialize a new EuroSATDataModule instance.
 
         Args:
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.EuroSAT`
+                :class:`~torchgeo.datasets.EuroSAT`.
         """
-        super().__init__()
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.kwargs = kwargs
+        super().__init__(EuroSAT, batch_size, num_workers, **kwargs)
 
         self.aug = AugmentationSequential(
             K.Normalize(mean=self.band_means, std=self.band_stds), data_keys=["image"]
         )
-
-    def prepare_data(self) -> None:
-        """Make sure that the dataset is downloaded.
-
-        This method is only called once per run.
-        """
-        if self.kwargs.get("download", False):
-            EuroSAT(**self.kwargs)
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
-
-        This method is called once per GPU per run.
-
-        Args:
-            stage: stage to set up
-        """
-        self.train_dataset = EuroSAT(split="train", **self.kwargs)
-        self.val_dataset = EuroSAT(split="val", **self.kwargs)
-        self.test_dataset = EuroSAT(split="test", **self.kwargs)
