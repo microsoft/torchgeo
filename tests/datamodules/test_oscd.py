@@ -30,42 +30,42 @@ class TestOSCDDataModule:
             num_workers=num_workers,
         )
         dm.prepare_data()
-        dm.trainer = Trainer()
+        dm.trainer = Trainer(max_epochs=1)
         return dm
 
     def test_train_dataloader(self, datamodule: OSCDDataModule) -> None:
         datamodule.setup("fit")
         datamodule.trainer.training = True  # type: ignore[union-attr]
-        sample = next(iter(datamodule.train_dataloader()))
-        sample = datamodule.on_after_batch_transfer(sample, 0)
-        assert sample["image"].shape[-2:] == sample["mask"].shape[-2:] == (2, 2)
-        assert sample["image"].shape[0] == sample["mask"].shape[0] == 2
+        batch = next(iter(datamodule.train_dataloader()))
+        batch = datamodule.on_after_batch_transfer(batch, 0)
+        assert batch["image"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
+        assert batch["image"].shape[0] == batch["mask"].shape[0] == 2
         if datamodule.bands == "all":
-            assert sample["image"].shape[1] == 26
+            assert batch["image"].shape[1] == 26
         else:
-            assert sample["image"].shape[1] == 6
+            assert batch["image"].shape[1] == 6
 
     def test_val_dataloader(self, datamodule: OSCDDataModule) -> None:
         datamodule.setup("validate")
         datamodule.trainer.validating = True  # type: ignore[union-attr]
-        sample = next(iter(datamodule.val_dataloader()))
-        sample = datamodule.on_after_batch_transfer(sample, 0)
+        batch = next(iter(datamodule.val_dataloader()))
+        batch = datamodule.on_after_batch_transfer(batch, 0)
         if datamodule.val_split_pct > 0.0:
-            assert sample["image"].shape[-2:] == sample["mask"].shape[-2:] == (2, 2)
-            assert sample["image"].shape[0] == sample["mask"].shape[0] == 1024
+            assert batch["image"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
+            assert batch["image"].shape[0] == batch["mask"].shape[0] == 1024
             if datamodule.bands == "all":
-                assert sample["image"].shape[1] == 26
+                assert batch["image"].shape[1] == 26
             else:
-                assert sample["image"].shape[1] == 6
+                assert batch["image"].shape[1] == 6
 
     def test_test_dataloader(self, datamodule: OSCDDataModule) -> None:
         datamodule.setup("test")
         datamodule.trainer.testing = True  # type: ignore[union-attr]
-        sample = next(iter(datamodule.test_dataloader()))
-        sample = datamodule.on_after_batch_transfer(sample, 0)
-        assert sample["image"].shape[-2:] == sample["mask"].shape[-2:] == (2, 2)
-        assert sample["image"].shape[0] == sample["mask"].shape[0] == 1024
+        batch = next(iter(datamodule.test_dataloader()))
+        batch = datamodule.on_after_batch_transfer(batch, 0)
+        assert batch["image"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
+        assert batch["image"].shape[0] == batch["mask"].shape[0] == 1024
         if datamodule.bands == "all":
-            assert sample["image"].shape[1] == 26
+            assert batch["image"].shape[1] == 26
         else:
-            assert sample["image"].shape[1] == 6
+            assert batch["image"].shape[1] == 6

@@ -5,7 +5,6 @@ import os
 
 import matplotlib.pyplot as plt
 import pytest
-from _pytest.fixtures import SubRequest
 
 from torchgeo.datamodules import XView2DataModule
 from torchgeo.datasets import unbind_samples
