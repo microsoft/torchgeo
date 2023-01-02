@@ -3,9 +3,10 @@
 
 """ETCI 2021 datamodule."""
 
-from typing import Any
+from typing import Any, Dict
 
 import torch
+from torch import Tensor
 
 from ..datasets import ETCI2021
 from .geo import NonGeoDataModule
@@ -46,3 +47,35 @@ class ETCI2021DataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.ETCI2021`.
         """
         super().__init__(ETCI2021, batch_size, num_workers, **kwargs)
+
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
+
+        Args:
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
+        """
+        if stage in ["fit"]:
+            self.train_dataset = ETCI2021(split="train", **self.kwargs)
+        if stage in ["fit", "validate"]:
+            self.val_dataset = ETCI2021(split="val", **self.kwargs)
+        if stage in ["predict"]:
+            # Test set masks are not public, use for prediction instead
+            self.predict_dataset = ETCI2021(split="test", **self.kwargs)
+
+    def on_after_batch_transfer(
+        self, batch: Dict[str, Tensor], dataloader_idx: int
+    ) -> Dict[str, Tensor]:
+        """Apply batch augmentations to the batch after it is transferred to the device.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented.
+            dataloader_idx: The index of the dataloader to which the batch belongs.
+
+        Returns:
+            A batch of data.
+        """
+        if "mask" in batch:
+            # Predict flood mask, not water mask
+            batch["mask"] = (batch["mask"][:, 1] > 0).long()
+
+        return super().on_after_batch_transfer(batch, dataloader_idx)
