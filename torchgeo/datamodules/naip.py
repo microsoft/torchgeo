@@ -3,20 +3,16 @@
 
 """National Agriculture Imagery Program (NAIP) datamodule."""
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Tuple, Union
 
-import kornia.augmentation as K
 import matplotlib.pyplot as plt
-from pytorch_lightning import LightningDataModule
-from torch import Tensor
-from torch.utils.data import DataLoader
 
-from ..datasets import NAIP, BoundingBox, Chesapeake13, stack_samples
+from ..datasets import NAIP, BoundingBox, Chesapeake13
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
-from ..transforms import AugmentationSequential
+from .geo import GeoDataModule
 
 
-class NAIPChesapeakeDataModule(LightningDataModule):
+class NAIPChesapeakeDataModule(GeoDataModule):
     """LightningDataModule implementation for the NAIP and Chesapeake datasets.
 
     Uses the train/val/test splits from the dataset.
@@ -25,32 +21,23 @@ class NAIPChesapeakeDataModule(LightningDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        num_workers: int = 0,
-        patch_size: int = 256,
-        stride: int = 128,
+        patch_size: Union[int, Tuple[int, int]] = 256,
         length: int = 1000,
+        num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
-        """Initialize a LightningDataModule for NAIP and Chesapeake based DataLoaders.
+        """Initialize a new NAIPChesapeakeDataModule instance.
 
         Args:
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
-            patch_size: size of patches to sample
-            stride: stride of grid sampler
-            length: epoch size
+            batch_size: Size of each mini-batch.
+            patch_size: Size of each patch, either ``size`` or ``(height, width)``.
+            length: Length of each training epoch.
+            num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.NAIP` (prefix keys with ``naip_``) and
                 :class:`~torchgeo.datasets.Chesapeake13`
                 (prefix keys with ``chesapeake_``)
         """
-        super().__init__()
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.patch_size = patch_size
-        self.stride = stride
-        self.length = length
-
         self.naip_kwargs = {}
         self.chesapeake_kwargs = {}
         for key, val in kwargs.items():
@@ -59,109 +46,57 @@ class NAIPChesapeakeDataModule(LightningDataModule):
             elif key.startswith("chesapeake_"):
                 self.chesapeake_kwargs[key[11:]] = val
 
-        self.aug = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0), data_keys=["image", "mask"]
+        super().__init__(
+            Chesapeake13,
+            batch_size,
+            patch_size,
+            length,
+            num_workers,
+            **self.chesapeake_kwargs,
         )
 
-    def prepare_data(self) -> None:
-        """Make sure that the dataset is downloaded.
-
-        This method is only called once per run.
-        """
-        if self.chesapeake_kwargs.get("download", False):
-            Chesapeake13(**self.chesapeake_kwargs)
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
-
-        This method is called once per GPU per run.
+    def setup(self, stage: str) -> None:
+        """Set up datasets and samplers.
 
         Args:
-            stage: state to set up
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        self.chesapeake = Chesapeake13(**self.chesapeake_kwargs)
-        self.naip = NAIP(**self.naip_kwargs)
-        self.dataset = self.chesapeake & self.naip
+        chesapeake = Chesapeake13(**self.chesapeake_kwargs)
+        naip = NAIP(**self.naip_kwargs)
+        self.dataset = chesapeake & naip
 
-        # TODO: figure out better train/val/test split
         roi = self.dataset.bounds
         midx = roi.minx + (roi.maxx - roi.minx) / 2
         midy = roi.miny + (roi.maxy - roi.miny) / 2
-        train_roi = BoundingBox(roi.minx, midx, roi.miny, roi.maxy, roi.mint, roi.maxt)
-        val_roi = BoundingBox(midx, roi.maxx, roi.miny, midy, roi.mint, roi.maxt)
-        test_roi = BoundingBox(roi.minx, roi.maxx, midy, roi.maxy, roi.mint, roi.maxt)
 
-        self.train_sampler = RandomBatchGeoSampler(
-            self.naip, self.patch_size, self.batch_size, self.length, train_roi
-        )
-        self.val_sampler = GridGeoSampler(
-            self.naip, self.patch_size, self.stride, val_roi
-        )
-        self.test_sampler = GridGeoSampler(
-            self.naip, self.patch_size, self.stride, test_roi
-        )
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training.
-
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.dataset,
-            batch_sampler=self.train_sampler,
-            num_workers=self.num_workers,
-            collate_fn=stack_samples,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.dataset,
-            batch_size=self.batch_size,
-            sampler=self.val_sampler,
-            num_workers=self.num_workers,
-            collate_fn=stack_samples,
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.dataset,
-            batch_size=self.batch_size,
-            sampler=self.test_sampler,
-            num_workers=self.num_workers,
-            collate_fn=stack_samples,
-        )
-
-    def on_after_batch_transfer(
-        self, batch: Dict[str, Tensor], dataloader_idx: int
-    ) -> Dict[str, Tensor]:
-        """Apply augmentations to batch after transferring to GPU.
-
-        Args:
-            batch: A batch of data that needs to be altered or augmented
-            dataloader_idx: The index of the dataloader to which the batch belongs
-
-        Returns:
-            A batch of data
-        """
-        batch = self.aug(batch)
-        return batch
+        if stage in ["fit"]:
+            roi = BoundingBox(roi.minx, midx, roi.miny, roi.maxy, roi.mint, roi.maxt)
+            self.train_batch_sampler = RandomBatchGeoSampler(
+                self.dataset, self.patch_size, self.batch_size, self.length, roi
+            )
+        if stage in ["fit", "validate"]:
+            roi = BoundingBox(midx, roi.maxx, roi.miny, midy, roi.mint, roi.maxt)
+            self.val_sampler = GridGeoSampler(
+                self.dataset, self.patch_size, self.patch_size, roi
+            )
+        if stage in ["test"]:
+            roi = BoundingBox(roi.minx, roi.maxx, midy, roi.maxy, roi.mint, roi.maxt)
+            self.test_sampler = GridGeoSampler(
+                self.dataset, self.patch_size, self.patch_size, roi
+            )
 
     def plot(self, *args: Any, **kwargs: Any) -> Tuple[plt.Figure, plt.Figure]:
         """Run NAIP and Chesapeake plot methods.
 
         See :meth:`torchgeo.datasets.NAIP.plot` and
         :meth:`torchgeo.datasets.Chesapeake.plot`.
+
+        Args:
+            *args: Arguments passed to plot method.
+            **kwargs: Keyword arguments passed to plot method.
+
+        Returns:
+            A list of matplotlib Figures with the image, ground truth, and predictions.
 
         .. versionadded:: 0.4
         """

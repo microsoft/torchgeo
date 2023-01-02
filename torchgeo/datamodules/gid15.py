@@ -45,7 +45,7 @@ class GID15DataModule(NonGeoDataModule):
             num_patches_per_tile: Number of patches to randomly sample from each image
                 tile during training.
             patch_size: Size of each patch, either ``size`` or ``(height, width)``.
-                Should be a multiple of 32 for most segmentation architectures
+                Should be a multiple of 32 for most segmentation architectures.
             val_split_pct: Percentage of the dataset to use as a validation set
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to

@@ -132,6 +132,11 @@ xView2
 Base Classes
 ------------
 
+GeoDataModule
+^^^^^^^^^^^^^
+
+.. autoclass:: GeoDataModule
+
 NonGeoDataModule
 ^^^^^^^^^^^^^^^^
 
