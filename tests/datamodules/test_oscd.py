@@ -30,11 +30,11 @@ class TestOSCDDataModule:
             num_workers=num_workers,
         )
         dm.prepare_data()
-        dm.setup()
         dm.trainer = Trainer()
         return dm
 
     def test_train_dataloader(self, datamodule: OSCDDataModule) -> None:
+        datamodule.setup("fit")
         datamodule.trainer.training = True  # type: ignore[union-attr]
         sample = next(iter(datamodule.train_dataloader()))
         sample = datamodule.on_after_batch_transfer(sample, 0)
@@ -46,6 +46,7 @@ class TestOSCDDataModule:
             assert sample["image"].shape[1] == 6
 
     def test_val_dataloader(self, datamodule: OSCDDataModule) -> None:
+        datamodule.setup("validate")
         datamodule.trainer.validating = True  # type: ignore[union-attr]
         sample = next(iter(datamodule.val_dataloader()))
         sample = datamodule.on_after_batch_transfer(sample, 0)
@@ -58,6 +59,7 @@ class TestOSCDDataModule:
                 assert sample["image"].shape[1] == 6
 
     def test_test_dataloader(self, datamodule: OSCDDataModule) -> None:
+        datamodule.setup("test")
         datamodule.trainer.testing = True  # type: ignore[union-attr]
         sample = next(iter(datamodule.test_dataloader()))
         sample = datamodule.on_after_batch_transfer(sample, 0)

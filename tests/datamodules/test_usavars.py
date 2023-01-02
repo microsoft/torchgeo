@@ -23,26 +23,29 @@ class TestUSAVarsDataModule:
             root=root, batch_size=batch_size, num_workers=num_workers, download=True
         )
         dm.prepare_data()
-        dm.setup()
         return dm
 
     def test_train_dataloader(self, datamodule: USAVarsDataModule) -> None:
+        datamodule.setup("fit")
         assert len(datamodule.train_dataloader()) == 3
         sample = next(iter(datamodule.train_dataloader()))
         assert sample["image"].shape[0] == datamodule.batch_size
 
     def test_val_dataloader(self, datamodule: USAVarsDataModule) -> None:
+        datamodule.setup("validate")
         assert len(datamodule.val_dataloader()) == 2
         sample = next(iter(datamodule.val_dataloader()))
         assert sample["image"].shape[0] == datamodule.batch_size
 
     def test_test_dataloader(self, datamodule: USAVarsDataModule) -> None:
+        datamodule.setup("test")
         assert len(datamodule.test_dataloader()) == 1
         sample = next(iter(datamodule.test_dataloader()))
         assert sample["image"].shape[0] == datamodule.batch_size
 
     def test_plot(self, datamodule: USAVarsDataModule) -> None:
-        batch = next(iter(datamodule.train_dataloader()))
+        datamodule.setup("validate")
+        batch = next(iter(datamodule.val_dataloader()))
         sample = unbind_samples(batch)[0]
         datamodule.plot(sample)
         plt.close()
