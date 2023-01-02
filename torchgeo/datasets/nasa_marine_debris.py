@@ -234,6 +234,7 @@ class NASAMarineDebris(NonGeoDataset):
         """
         ncols = 1
 
+        sample["image"] = sample["image"].byte()
         image = sample["image"]
         if "boxes" in sample and len(sample["boxes"]):
             image = draw_bounding_boxes(image=sample["image"], boxes=sample["boxes"])
