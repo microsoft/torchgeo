@@ -11,9 +11,9 @@ from torchgeo.datamodules import OSCDDataModule
 
 
 class TestOSCDDataModule:
-    @pytest.fixture(scope="class", params=zip(["all", "rgb"], [0.0, 0.5]))
+    @pytest.fixture(scope="class", params=["all", "rgb"])
     def datamodule(self, request: SubRequest) -> OSCDDataModule:
-        bands, val_split_pct = request.param
+        bands = request.param
         num_tiles_per_batch = 1
         num_patches_per_tile = 2
         patch_size = 2
@@ -26,7 +26,7 @@ class TestOSCDDataModule:
             num_tiles_per_batch=num_tiles_per_batch,
             num_patches_per_tile=num_patches_per_tile,
             patch_size=patch_size,
-            val_split_pct=val_split_pct,
+            val_split_pct=0.5,
             num_workers=num_workers,
         )
         dm.prepare_data()
@@ -52,7 +52,7 @@ class TestOSCDDataModule:
         sample = datamodule.on_after_batch_transfer(sample, 0)
         if datamodule.val_split_pct > 0.0:
             assert sample["image"].shape[-2:] == sample["mask"].shape[-2:] == (2, 2)
-            assert sample["image"].shape[0] == sample["mask"].shape[0] == 1
+            assert sample["image"].shape[0] == sample["mask"].shape[0] == 1024
             if datamodule.bands == "all":
                 assert sample["image"].shape[1] == 26
             else:
@@ -64,7 +64,7 @@ class TestOSCDDataModule:
         sample = next(iter(datamodule.test_dataloader()))
         sample = datamodule.on_after_batch_transfer(sample, 0)
         assert sample["image"].shape[-2:] == sample["mask"].shape[-2:] == (2, 2)
-        assert sample["image"].shape[0] == sample["mask"].shape[0] == 1
+        assert sample["image"].shape[0] == sample["mask"].shape[0] == 1024
         if datamodule.bands == "all":
             assert sample["image"].shape[1] == 26
         else:

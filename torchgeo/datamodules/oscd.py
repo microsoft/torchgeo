@@ -7,6 +7,7 @@ from typing import Any, Tuple, Union
 
 import kornia.augmentation as K
 import torch
+from einops import repeat
 
 from ..datasets import OSCD
 from ..samplers.utils import _to_tuple
@@ -100,6 +101,10 @@ class OSCDDataModule(NonGeoDataModule):
         if self.bands == "rgb":
             self.mean = self.mean[[3, 2, 1]]
             self.std = self.std[[3, 2, 1]]
+
+        # Change detection, 2 images from different times
+        self.mean = repeat(self.mean, "c -> (t c)", t=2)
+        self.std = repeat(self.std, "c -> (t c)", t=2)
 
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),

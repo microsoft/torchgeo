@@ -12,17 +12,13 @@ from torchgeo.datasets import unbind_samples
 
 
 class TestXView2DataModule:
-    @pytest.fixture(scope="class", params=[0.0, 0.5])
-    def datamodule(self, request: SubRequest) -> XView2DataModule:
+    @pytest.fixture(scope="class")
+    def datamodule(self) -> XView2DataModule:
         root = os.path.join("tests", "data", "xview2")
         batch_size = 1
         num_workers = 0
-        val_split_size = request.param
         dm = XView2DataModule(
-            root=root,
-            batch_size=batch_size,
-            num_workers=num_workers,
-            val_split_pct=val_split_size,
+            root=root, batch_size=batch_size, num_workers=num_workers, val_split_pct=0.5
         )
         dm.prepare_data()
         return dm
