@@ -32,7 +32,7 @@ class FAIR1MDataModule(NonGeoDataModule):
             val_split_pct: Percentage of the dataset to use as a validation set.
             test_split_pct: Percentage of the dataset to use as a test set.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.FAIR1M`
+                :class:`~torchgeo.datasets.FAIR1M`.
         """
         super().__init__(FAIR1M, batch_size, num_workers, **kwargs)
 

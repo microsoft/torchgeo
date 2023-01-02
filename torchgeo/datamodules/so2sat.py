@@ -17,8 +17,17 @@ class So2SatDataModule(NonGeoDataModule):
     Uses the train/val/test splits from the dataset.
     """
 
+    # TODO: calculate mean/std dev of s1 bands
     mean = torch.tensor(
         [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
             0.12375696117681859,
             0.1092774636368323,
             0.1010855203267882,
@@ -31,9 +40,16 @@ class So2SatDataModule(NonGeoDataModule):
             0.10905050699570007,
         ]
     )
-
     std = torch.tensor(
         [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
             0.03958795985905458,
             0.047778262752410296,
             0.06636616706371974,
@@ -47,18 +63,46 @@ class So2SatDataModule(NonGeoDataModule):
         ]
     )
 
-    # this reorders the bands to put S2 RGB first, then remainder of S2
-    reindex_to_rgb_first = [2, 1, 0, 3, 4, 5, 6, 7, 8, 9]
-
     def __init__(
-        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+        self,
+        batch_size: int = 64,
+        num_workers: int = 0,
+        band_set: str = "all",
+        **kwargs: Any,
     ) -> None:
         """Initialize a new So2SatDataModule instance.
 
         Args:
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
+            band_set: One of 'all', 's1', or 's2'.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.So2Sat`
+                :class:`~torchgeo.datasets.So2Sat`.
         """
+        kwargs["bands"] = So2Sat.BAND_SETS[band_set]
+
+        if band_set == "s1":
+            self.mean = self.mean[:8]
+            self.std = self.std[:8]
+        elif band_set == "s2":
+            self.mean = self.mean[8:]
+            self.std = self.std[8:]
+
         super().__init__(So2Sat, batch_size, num_workers, **kwargs)
+
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
+
+        Called at the beginning of fit, validate, test, or predict. During distributed
+        training, this method is called from every process across all the nodes. Setting
+        state here is recommended.
+
+        Args:
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
+        """
+        if stage in ["fit"]:
+            self.train_dataset = So2Sat(split="train", **self.kwargs)
+        if stage in ["fit", "validate"]:
+            self.val_dataset = So2Sat(split="validation", **self.kwargs)
+        if stage in ["test"]:
+            self.test_dataset = So2Sat(split="test", **self.kwargs)

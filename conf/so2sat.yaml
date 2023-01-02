@@ -11,11 +11,10 @@ experiment:
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
     weights: null
-    in_channels: 3
+    in_channels: 18
     num_classes: 17
   datamodule:
     root: "data/so2sat"
     batch_size: 128
     num_workers: 4
-    band_set: "rgb"
-    unsupervised_mode: False
+    band_set: "all"

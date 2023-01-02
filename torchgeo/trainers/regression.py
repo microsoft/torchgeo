@@ -157,7 +157,7 @@ class RegressionTask(pl.LightningModule):
                     f"image/{batch_idx}", fig, global_step=self.global_step
                 )
                 plt.close()
-            except AttributeError:
+            except (AttributeError, ValueError):
                 pass
 
     def validation_epoch_end(self, outputs: Any) -> None:

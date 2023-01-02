@@ -44,8 +44,9 @@ class TestClassificationTask:
         [
             ("eurosat", EuroSATDataModule),
             ("resisc45", RESISC45DataModule),
-            ("so2sat_supervised", So2SatDataModule),
-            ("so2sat_unsupervised", So2SatDataModule),
+            ("so2sat_all", So2SatDataModule),
+            ("so2sat_s1", So2SatDataModule),
+            ("so2sat_s2", So2SatDataModule),
             ("ucmerced", UCMercedDataModule),
         ],
     )
