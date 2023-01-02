@@ -3,7 +3,7 @@
 
 """Base classes for all :mod:`torchgeo` data modules."""
 
-from typing import Any, Dict, Optional, Type
+from typing import Any, Callable, Dict, Optional, Type
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
@@ -15,7 +15,6 @@ from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-define
     MisconfigurationException,
 )
 from torch import Tensor
-from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
 
 from ..datasets import NonGeoDataset
@@ -63,13 +62,14 @@ class NonGeoDataModule(LightningDataModule):
         self.predict_batch_size: Optional[int] = None
 
         # Data augmentation
-        self.aug: Module = AugmentationSequential(
+        Transform = Callable[[Dict[str, Tensor]], Dict[str, Tensor]]
+        self.aug: Transform = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std), data_keys=["image"]
         )
-        self.train_aug: Optional[Module] = None
-        self.val_aug: Optional[Module] = None
-        self.test_aug: Optional[Module] = None
-        self.predict_aug: Optional[Module] = None
+        self.train_aug: Optional[Transform] = None
+        self.val_aug: Optional[Transform] = None
+        self.test_aug: Optional[Transform] = None
+        self.predict_aug: Optional[Transform] = None
 
     def prepare_data(self) -> None:
         """Download and prepare data.
