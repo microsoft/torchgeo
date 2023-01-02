@@ -25,7 +25,7 @@ class OSCDDataModule(NonGeoDataModule):
     .. versionadded:: 0.2
     """
 
-    band_means = torch.tensor(
+    mean = torch.tensor(
         [
             1583.0741,
             1374.3202,
@@ -43,7 +43,7 @@ class OSCDDataModule(NonGeoDataModule):
         ]
     )
 
-    band_stds = torch.tensor(
+    std = torch.tensor(
         [
             52.1937,
             83.4168,
@@ -98,16 +98,16 @@ class OSCDDataModule(NonGeoDataModule):
 
         self.bands = kwargs.get("bands", "all")
         if self.bands == "rgb":
-            self.band_means = self.band_means[[3, 2, 1]]
-            self.band_stds = self.band_stds[[3, 2, 1]]
+            self.mean = self.mean[[3, 2, 1]]
+            self.std = self.std[[3, 2, 1]]
 
         self.train_aug = AugmentationSequential(
-            K.Normalize(mean=self.band_means, std=self.band_stds),
+            K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, self.num_patches_per_tile),
             data_keys=["image", "mask"],
         )
         self.aug = AugmentationSequential(
-            K.Normalize(mean=self.band_means, std=self.band_stds),
+            K.Normalize(mean=self.mean, std=self.std),
             _ExtractTensorPatches(self.patch_size),
             data_keys=["image", "mask"],
         )

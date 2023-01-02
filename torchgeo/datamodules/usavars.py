@@ -5,10 +5,7 @@
 
 from typing import Any
 
-import kornia.augmentation as K
-
 from ..datasets import USAVars
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
@@ -32,7 +29,3 @@ class USAVarsDataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.USAVars`.
         """
         super().__init__(USAVars, batch_size, num_workers, **kwargs)
-
-        self.aug = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0), data_keys=["image"]
-        )

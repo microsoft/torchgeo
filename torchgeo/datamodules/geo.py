@@ -5,7 +5,9 @@
 
 from typing import Any, Dict, Optional, Type
 
+import kornia.augmentation as K
 import matplotlib.pyplot as plt
+import torch
 from pytorch_lightning import LightningDataModule
 
 # TODO: import from lightning_lite instead
@@ -13,14 +15,18 @@ from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-define
     MisconfigurationException,
 )
 from torch import Tensor
-from torch.nn import Identity, Module
+from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
 
 from ..datasets import NonGeoDataset
+from ..transforms import AugmentationSequential
 
 
 class NonGeoDataModule(LightningDataModule):
     """Base class for data modules lacking geospatial information."""
+
+    mean = torch.tensor(0)
+    std = torch.tensor(255)
 
     def __init__(
         self,
@@ -57,7 +63,9 @@ class NonGeoDataModule(LightningDataModule):
         self.predict_batch_size: Optional[int] = None
 
         # Data augmentation
-        self.aug: Optional[Module] = None
+        self.aug: Module = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=["image"]
+        )
         self.train_aug: Optional[Module] = None
         self.val_aug: Optional[Module] = None
         self.test_aug: Optional[Module] = None
@@ -194,13 +202,13 @@ class NonGeoDataModule(LightningDataModule):
         """
         if self.trainer:
             if self.trainer.training:
-                aug = self.train_aug or self.aug or Identity()
+                aug = self.train_aug or self.aug
             elif self.trainer.validating:
-                aug = self.val_aug or self.aug or Identity()
+                aug = self.val_aug or self.aug
             elif self.trainer.testing:
-                aug = self.test_aug or self.aug or Identity()
+                aug = self.test_aug or self.aug
             elif self.trainer.predicting:
-                aug = self.predict_aug or self.aug or Identity()
+                aug = self.predict_aug or self.aug
 
             batch = aug(batch)
 

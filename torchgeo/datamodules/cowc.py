@@ -5,11 +5,9 @@
 
 from typing import Any
 
-import kornia.augmentation as K
 from torch.utils.data import random_split
 
 from ..datasets import COWCCounting
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
@@ -28,10 +26,6 @@ class COWCCountingDataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.COWCCounting`.
         """
         super().__init__(COWCCounting, batch_size, num_workers, **kwargs)
-
-        self.aug = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0), data_keys=["image"]
-        )
 
     def setup(self, stage: str) -> None:
         """Set up datasets.

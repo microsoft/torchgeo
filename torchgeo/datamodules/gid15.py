@@ -59,17 +59,17 @@ class GID15DataModule(NonGeoDataModule):
         self.val_split_pct = val_split_pct
 
         self.train_aug = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0),
+            K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, self.num_patches_per_tile),
             data_keys=["image", "mask"],
         )
         self.val_aug = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0),
+            K.Normalize(mean=self.mean, std=self.std),
             _ExtractTensorPatches(self.patch_size),
             data_keys=["image", "mask"],
         )
         self.predict_transform = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0),
+            K.Normalize(mean=self.mean, std=self.std),
             _ExtractTensorPatches(self.patch_size),
             data_keys=["image"],
         )

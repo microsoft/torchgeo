@@ -5,10 +5,7 @@
 
 from typing import Any
 
-import kornia.augmentation as K
-
 from ..datasets import XView2
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 from .utils import dataset_split
 
@@ -40,10 +37,6 @@ class XView2DataModule(NonGeoDataModule):
         super().__init__(XView2, batch_size, num_workers, **kwargs)
 
         self.val_split_pct = val_split_pct
-
-        self.aug = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0), data_keys=["image"]
-        )
 
     def setup(self, stage: str) -> None:
         """Set up datasets.

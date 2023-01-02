@@ -5,10 +5,9 @@
 
 from typing import Any
 
-import kornia.augmentation as K
+import torch
 
 from ..datasets import ETCI2021
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
@@ -21,15 +20,19 @@ class ETCI2021DataModule(NonGeoDataModule):
     .. versionadded:: 0.2
     """
 
-    band_means = [
-        128.02253931,
-        128.02253931,
-        128.02253931,
-        128.11221701,
-        128.11221701,
-        128.11221701,
-    ]
-    band_stds = [89.8145088, 89.8145088, 89.8145088, 95.2797861, 95.2797861, 95.2797861]
+    mean = torch.tensor(
+        [
+            128.02253931,
+            128.02253931,
+            128.02253931,
+            128.11221701,
+            128.11221701,
+            128.11221701,
+        ]
+    )
+    std = torch.tensor(
+        [89.8145088, 89.8145088, 89.8145088, 95.2797861, 95.2797861, 95.2797861]
+    )
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
@@ -43,7 +46,3 @@ class ETCI2021DataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.ETCI2021`.
         """
         super().__init__(ETCI2021, batch_size, num_workers, **kwargs)
-
-        self.aug = AugmentationSequential(
-            K.Normalize(mean=self.band_means, std=self.band_stds), data_keys=["image"]
-        )

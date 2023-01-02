@@ -5,10 +5,7 @@
 
 from typing import Any
 
-import kornia.augmentation as K
-
 from ..datasets import NASAMarineDebris
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 from .utils import dataset_split
 
@@ -41,10 +38,6 @@ class NASAMarineDebrisDataModule(NonGeoDataModule):
 
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
-
-        self.aug = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0), data_keys=["image"]
-        )
 
     def setup(self, stage: str) -> None:
         """Set up datasets.

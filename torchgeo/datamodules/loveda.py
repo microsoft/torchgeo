@@ -5,10 +5,7 @@
 
 from typing import Any
 
-import kornia.augmentation as K
-
 from ..datasets import LoveDA
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
@@ -32,10 +29,6 @@ class LoveDADataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.LoveDA`.
         """
         super().__init__(LoveDA, batch_size, num_workers, **kwargs)
-
-        self.aug = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0), data_keys=["image"]
-        )
 
     def setup(self, stage: str) -> None:
         """Set up datasets.

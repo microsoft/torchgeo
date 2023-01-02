@@ -63,19 +63,19 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
         self.test_split_pct = test_split_pct
 
         self.train_aug = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0),
+            K.Normalize(mean=self.mean, std=self.std),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             _RandomNCrop(self.patch_size, self.num_patches_per_tile),
             data_keys=["image", "mask"],
         )
         self.val_aug = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0),
+            K.Normalize(mean=self.mean, std=self.std),
             _ExtractTensorPatches(self.patch_size),
             data_keys=["image", "mask"],
         )
         self.predict_aug = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0),
+            K.Normalize(mean=self.mean, std=self.std),
             _ExtractTensorPatches(self.patch_size),
             data_keys=["image"],
         )

@@ -5,11 +5,9 @@
 
 from typing import Any
 
-import kornia.augmentation as K
 import torch
 
 from ..datasets import BigEarthNet
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
@@ -21,10 +19,10 @@ class BigEarthNetDataModule(NonGeoDataModule):
 
     # (VV, VH, B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B11, B12)
     # min/max band statistics computed on 100k random samples
-    band_mins_raw = torch.tensor(
+    mins_raw = torch.tensor(
         [-70.0, -72.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0]
     )
-    band_maxs_raw = torch.tensor(
+    maxs_raw = torch.tensor(
         [
             31.0,
             35.0,
@@ -45,10 +43,10 @@ class BigEarthNetDataModule(NonGeoDataModule):
 
     # min/max band statistics computed by percentile clipping the
     # above to samples to [2, 98]
-    band_mins = torch.tensor(
+    mins = torch.tensor(
         [-48.0, -42.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
     )
-    band_maxs = torch.tensor(
+    maxs = torch.tensor(
         [
             6.0,
             16.0,
@@ -78,19 +76,17 @@ class BigEarthNetDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.BigEarthNet`.
         """
-        super().__init__(BigEarthNet, batch_size, num_workers, **kwargs)
-
         bands = kwargs.get("bands", "all")
         if bands == "all":
-            mins = self.band_mins
-            maxs = self.band_maxs
+            mins = self.mins
+            maxs = self.maxs
         elif bands == "s1":
-            mins = self.band_mins[:2]
-            maxs = self.band_maxs[:2]
+            mins = self.mins[:2]
+            maxs = self.maxs[:2]
         else:
-            mins = self.band_mins[2:]
-            maxs = self.band_maxs[2:]
+            mins = self.mins[2:]
+            maxs = self.maxs[2:]
+        self.mean = mins
+        self.std = maxs - mins
 
-        self.aug = AugmentationSequential(
-            K.Normalize(mean=mins, std=maxs - mins), data_keys=["image"]
-        )
+        super().__init__(BigEarthNet, batch_size, num_workers, **kwargs)

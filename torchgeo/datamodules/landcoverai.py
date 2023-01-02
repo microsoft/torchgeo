@@ -32,7 +32,7 @@ class LandCoverAIDataModule(NonGeoDataModule):
         super().__init__(LandCoverAI, batch_size, num_workers, **kwargs)
 
         self.train_aug = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0),
+            K.Normalize(mean=self.mean, std=self.std),
             K.RandomRotation(p=0.5, degrees=90),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
@@ -48,5 +48,5 @@ class LandCoverAIDataModule(NonGeoDataModule):
             data_keys=["image", "mask"],
         )
         self.aug = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0), data_keys=["image", "mask"]
+            K.Normalize(mean=self.mean, std=self.std), data_keys=["image", "mask"]
         )

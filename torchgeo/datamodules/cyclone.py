@@ -5,12 +5,10 @@
 
 from typing import Any
 
-import kornia.augmentation as K
 from sklearn.model_selection import GroupShuffleSplit
 from torch.utils.data import Subset
 
 from ..datasets import TropicalCyclone
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
@@ -37,10 +35,6 @@ class TropicalCycloneDataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.TropicalCyclone`.
         """
         super().__init__(TropicalCyclone, batch_size, num_workers, **kwargs)
-
-        self.aug = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0), data_keys=["image"]
-        )
 
     def setup(self, stage: str) -> None:
         """Set up datasets.

@@ -6,6 +6,7 @@
 from typing import Any
 
 import kornia.augmentation as K
+import torch
 
 from ..datasets import RESISC45
 from ..transforms import AugmentationSequential
@@ -18,8 +19,8 @@ class RESISC45DataModule(NonGeoDataModule):
     Uses the train/val/test splits from the dataset.
     """
 
-    band_means = [127.86820969, 127.88083247, 127.84341029]
-    band_stds = [51.8668062, 47.2380768, 47.0613924]
+    mean = torch.tensor([127.86820969, 127.88083247, 127.84341029])
+    std = torch.tensor([51.8668062, 47.2380768, 47.0613924])
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
@@ -35,7 +36,7 @@ class RESISC45DataModule(NonGeoDataModule):
         super().__init__(RESISC45, batch_size, num_workers, **kwargs)
 
         self.train_aug = AugmentationSequential(
-            K.Normalize(mean=self.band_means, std=self.band_stds),
+            K.Normalize(mean=self.mean, std=self.std),
             K.RandomRotation(p=0.5, degrees=90),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
@@ -50,7 +51,4 @@ class RESISC45DataModule(NonGeoDataModule):
                 silence_instantiation_warning=True,
             ),
             data_keys=["image"],
-        )
-        self.aug = AugmentationSequential(
-            K.Normalize(mean=self.band_means, std=self.band_stds), data_keys=["image"]
         )

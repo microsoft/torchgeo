@@ -45,7 +45,7 @@ class SpaceNet1DataModule(NonGeoDataModule):
         self.test_split_pct = test_split_pct
 
         self.train_aug = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0),
+            K.Normalize(mean=self.mean, std=self.std),
             K.PadTo((448, 448)),
             K.RandomRotation(p=0.5, degrees=90),
             K.RandomHorizontalFlip(p=0.5),
@@ -62,7 +62,7 @@ class SpaceNet1DataModule(NonGeoDataModule):
             data_keys=["image", "mask"],
         )
         self.aug = AugmentationSequential(
-            K.Normalize(mean=0.0, std=255.0),
+            K.Normalize(mean=self.mean, std=self.std),
             K.PadTo((448, 448)),
             data_keys=["image", "mask"],
         )
