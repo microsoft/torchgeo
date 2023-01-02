@@ -8,7 +8,7 @@ import pytest
 from _pytest.fixtures import SubRequest
 
 from torchgeo.datamodules import USAVarsDataModule
-from torchgeo.datasets import unbind_batchs
+from torchgeo.datasets import unbind_samples
 
 
 class TestUSAVarsDataModule:
@@ -46,6 +46,6 @@ class TestUSAVarsDataModule:
     def test_plot(self, datamodule: USAVarsDataModule) -> None:
         datamodule.setup("validate")
         batch = next(iter(datamodule.val_dataloader()))
-        sample = unbind_batchs(batch)[0]
+        sample = unbind_samples(batch)[0]
         datamodule.plot(sample)
         plt.close()
