@@ -76,19 +76,23 @@ class NAIPChesapeakeDataModule(GeoDataModule):
         midy = roi.miny + (roi.maxy - roi.miny) / 2
 
         if stage in ["fit"]:
-            roi = BoundingBox(roi.minx, midx, roi.miny, roi.maxy, roi.mint, roi.maxt)
+            train_roi = BoundingBox(
+                roi.minx, midx, roi.miny, roi.maxy, roi.mint, roi.maxt
+            )
             self.train_batch_sampler = RandomBatchGeoSampler(
-                self.dataset, self.patch_size, self.batch_size, self.length, roi
+                self.dataset, self.patch_size, self.batch_size, self.length, train_roi
             )
         if stage in ["fit", "validate"]:
-            roi = BoundingBox(midx, roi.maxx, roi.miny, midy, roi.mint, roi.maxt)
+            val_roi = BoundingBox(midx, roi.maxx, roi.miny, midy, roi.mint, roi.maxt)
             self.val_sampler = GridGeoSampler(
-                self.dataset, self.patch_size, self.patch_size, roi
+                self.dataset, self.patch_size, self.patch_size, val_roi
             )
         if stage in ["test"]:
-            roi = BoundingBox(roi.minx, roi.maxx, midy, roi.maxy, roi.mint, roi.maxt)
+            test_roi = BoundingBox(
+                roi.minx, roi.maxx, midy, roi.maxy, roi.mint, roi.maxt
+            )
             self.test_sampler = GridGeoSampler(
-                self.dataset, self.patch_size, self.patch_size, roi
+                self.dataset, self.patch_size, self.patch_size, test_roi
             )
 
     def plot(self, *args: Any, **kwargs: Any) -> Tuple[plt.Figure, plt.Figure]:
