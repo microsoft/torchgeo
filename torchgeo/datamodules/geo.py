@@ -150,18 +150,22 @@ class GeoDataModule(LightningDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 'train_dataset'.
         """
-        if self.train_dataset is not None or self.dataset is not None:
+        dataset = self.train_dataset or self.dataset
+        if dataset is not None:
+            sampler = self.train_sampler or self.sampler
+            batch_sampler = self.train_batch_sampler or self.batch_sampler
+            assert sampler or batch_sampler
             batch_size = self.train_batch_size or self.batch_size
             shuffle = True
-            if self.train_batch_sampler is not None or self.batch_sampler is not None:
+            if batch_sampler is not None:
                 batch_size = 1
                 shuffle = False
             return DataLoader(
-                dataset=self.train_dataset or self.dataset,  # type: ignore[arg-type]
+                dataset=dataset,
                 batch_size=batch_size,
                 shuffle=shuffle,
-                sampler=self.train_sampler or self.sampler,
-                batch_sampler=self.train_batch_sampler or self.batch_sampler,
+                sampler=sampler,
+                batch_sampler=batch_sampler,
                 num_workers=self.num_workers,
                 collate_fn=stack_samples,
             )
@@ -179,16 +183,20 @@ class GeoDataModule(LightningDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 'val_dataset'.
         """
-        if self.val_dataset is not None or self.dataset is not None:
+        dataset = self.val_dataset or self.dataset
+        if dataset is not None:
+            sampler = self.val_sampler or self.sampler
+            batch_sampler = self.val_batch_sampler or self.batch_sampler
+            assert sampler or batch_sampler
             batch_size = self.val_batch_size or self.batch_size
-            if self.val_batch_sampler is not None or self.batch_sampler is not None:
+            if batch_sampler is not None:
                 batch_size = 1
             return DataLoader(
-                dataset=self.val_dataset or self.dataset,  # type: ignore[arg-type]
+                dataset=dataset,
                 batch_size=batch_size,
                 shuffle=False,
-                sampler=self.val_sampler or self.sampler,
-                batch_sampler=self.val_batch_sampler or self.batch_sampler,
+                sampler=sampler,
+                batch_sampler=batch_sampler,
                 num_workers=self.num_workers,
                 collate_fn=stack_samples,
             )
@@ -206,16 +214,20 @@ class GeoDataModule(LightningDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 'test_dataset'.
         """
-        if self.test_dataset is not None or self.dataset is not None:
+        dataset = self.test_dataset or self.dataset
+        if dataset is not None:
+            sampler = self.test_sampler or self.sampler
+            batch_sampler = self.test_batch_sampler or self.batch_sampler
+            assert sampler or batch_sampler
             batch_size = self.test_batch_size or self.batch_size
-            if self.test_batch_sampler is not None or self.batch_sampler is not None:
+            if batch_sampler is not None:
                 batch_size = 1
             return DataLoader(
-                dataset=self.test_dataset or self.dataset,  # type: ignore[arg-type]
+                dataset=dataset,
                 batch_size=batch_size,
                 shuffle=False,
-                sampler=self.test_sampler or self.sampler,
-                batch_sampler=self.test_batch_sampler or self.batch_sampler,
+                sampler=sampler,
+                batch_sampler=batch_sampler,
                 num_workers=self.num_workers,
                 collate_fn=stack_samples,
             )
@@ -233,16 +245,20 @@ class GeoDataModule(LightningDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 'predict_dataset'.
         """
-        if self.predict_dataset is not None or self.dataset is not None:
+        dataset = self.predict_dataset or self.dataset
+        if dataset is not None:
+            sampler = self.predict_sampler or self.sampler
+            batch_sampler = self.predict_batch_sampler or self.batch_sampler
+            assert sampler or batch_sampler
             batch_size = self.predict_batch_size or self.batch_size
-            if self.predict_batch_sampler is not None or self.batch_sampler is not None:
+            if batch_sampler is not None:
                 batch_size = 1
             return DataLoader(
-                dataset=self.predict_dataset or self.dataset,  # type: ignore[arg-type]
+                dataset=dataset,
                 batch_size=batch_size,
                 shuffle=False,
-                sampler=self.predict_sampler or self.sampler,
-                batch_sampler=self.predict_batch_sampler or self.batch_sampler,
+                sampler=sampler,
+                batch_sampler=batch_sampler,
                 num_workers=self.num_workers,
                 collate_fn=stack_samples,
             )
