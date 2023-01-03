@@ -5,10 +5,12 @@
 
 from typing import Any, Tuple, Union
 
+import kornia.augmentation as K
 import matplotlib.pyplot as plt
 
 from ..datasets import NAIP, BoundingBox, Chesapeake13
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
+from ..transforms import AugmentationSequential
 from .geo import GeoDataModule
 
 
@@ -36,7 +38,7 @@ class NAIPChesapeakeDataModule(GeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.NAIP` (prefix keys with ``naip_``) and
                 :class:`~torchgeo.datasets.Chesapeake13`
-                (prefix keys with ``chesapeake_``)
+                (prefix keys with ``chesapeake_``).
         """
         self.naip_kwargs = {}
         self.chesapeake_kwargs = {}
@@ -53,6 +55,10 @@ class NAIPChesapeakeDataModule(GeoDataModule):
             length,
             num_workers,
             **self.chesapeake_kwargs,
+        )
+
+        self.aug: Transform = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=["image", "mask"]
         )
 
     def setup(self, stage: str) -> None:

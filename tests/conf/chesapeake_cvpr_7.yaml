@@ -20,8 +20,7 @@ experiment:
     - "de-test"
     test_splits:
     - "de-test"
-    num_tiles_per_batch: 2
-    num_patches_per_tile: 2
+    batch_size: 2
     patch_size: 64
     num_workers: 0
     class_set: ${experiment.module.num_classes}

@@ -3,9 +3,11 @@
 
 """Chesapeake Bay High-Resolution Land Cover Project datamodule."""
 
-from typing import Any, List
+from typing import Any, Dict, List
 
 import kornia.augmentation as K
+import torch.nn.functional as F
+from torch import Tensor
 
 from ..datasets import ChesapeakeCVPR
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
@@ -25,8 +27,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         train_splits: List[str],
         val_splits: List[str],
         test_splits: List[str],
-        num_tiles_per_batch: int = 64,
-        num_patches_per_tile: int = 200,
+        batch_size: int = 64,
         patch_size: int = 256,
         length: int = 1000,
         num_workers: int = 0,
@@ -41,9 +42,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
             train_splits: Splits used to train the model, e.g., ["ny-train"].
             val_splits: Splits used to validate the model, e.g., ["ny-val"].
             test_splits: Splits used to test the model, e.g., ["ny-test"].
-            num_tiles_per_batch: Number of image tiles to sample from during training.
-            num_patches_per_tile: Number of patches to randomly sample from each image
-                tile during training
+            batch_size: Size of each mini-batch.
             patch_size: Size of each patch, either ``size`` or ``(height, width)``.
                 Should be a multiple of 32 for most segmentation architectures.
             length: Length of each training epoch.
@@ -58,12 +57,10 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         Raises:
             ValueError: If ``use_prior_labels=True`` is used with ``class_set=7``.
         """
-        super().__init__(ChesapeakeCVPR, 1, patch_size, length, num_workers, **kwargs)
+        super().__init__(ChesapeakeCVPR, batch_size, patch_size, length, num_workers, **kwargs)
 
-        for state in train_splits + val_splits + test_splits:
-            assert state in ChesapeakeCVPR.splits
         assert class_set in [5, 7]
-        if use_prior_labels and class_set != 5:
+        if use_prior_labels and class_set == 7:
             raise ValueError(
                 "The pre-generated prior labels are only valid for the 5"
                 + " class set of labels"
@@ -72,8 +69,6 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         self.train_splits = train_splits
         self.val_splits = val_splits
         self.test_splits = test_splits
-        self.train_batch_size = num_tiles_per_batch
-        self.num_patches_per_tile = num_patches_per_tile
         # This is a rough estimate of how large of a patch we will need to sample in
         # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
         self.original_patch_size = patch_size * 2
@@ -91,7 +86,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
 
         self.aug = AugmentationSequential(
             K.CenterCrop(patch_size),
-            K.Normalize(mean=0.0, std=255.0),
+            K.Normalize(mean=self.mean, std=self.std),
             data_keys=["image", "mask"],
         )
 
@@ -125,3 +120,27 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
             self.test_sampler = GridGeoSampler(
                 self.test_dataset, self.original_patch_size, self.original_patch_size
             )
+
+    def on_after_batch_transfer(
+        self, batch: Dict[str, Tensor], dataloader_idx: int
+    ) -> Dict[str, Tensor]:
+        """Apply batch augmentations to the batch after it is transferred to the device.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented.
+            dataloader_idx: The index of the dataloader to which the batch belongs.
+
+        Returns:
+            A batch of data.
+        """
+        if self.use_prior_labels:
+            batch["mask"] = F.normalize(batch["mask"], p=1, dim=1)
+            batch["mask"] = F.normalize(
+                batch["mask"] + self.prior_smoothing_constant, p=1, dim=1
+            )
+        else:
+            if self.class_set == 5:
+                batch["mask"][batch["mask"] == 5] = 4
+                batch["mask"][batch["mask"] == 6] = 4
+
+        return super().on_after_batch_transfer(batch, dataloader_idx)

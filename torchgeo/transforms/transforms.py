@@ -45,26 +45,30 @@ class AugmentationSequential(Module):
 
         self.augs = kornia.augmentation.AugmentationSequential(*args, data_keys=keys)
 
-    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
+    def forward(self, batch: Dict[str, Tensor]) -> Dict[str, Tensor]:
         """Perform augmentations and update data dict.
 
         Args:
-            sample: the input
+            batch: the input
 
         Returns:
             the augmented input
         """
+        # TorchGeo bbox is very different from Kornia bbox
+        if "bbox" in batch:
+            del batch["bbox"]
+
         # Kornia augmentations require all inputs to be float
         dtype = {}
         for key in self.data_keys:
-            dtype[key] = sample[key].dtype
-            sample[key] = sample[key].float()
+            dtype[key] = batch[key].dtype
+            batch[key] = batch[key].float()
 
         # Kornia requires masks to have a channel dimension
-        if "mask" in sample:
-            sample["mask"] = rearrange(sample["mask"], "b h w -> b () h w")
+        if "mask" in batch:
+            batch["mask"] = rearrange(batch["mask"], "b h w -> b () h w")
 
-        inputs = [sample[k] for k in self.data_keys]
+        inputs = [batch[k] for k in self.data_keys]
         outputs_list: Union[Tensor, List[Tensor]] = self.augs(*inputs)
         outputs_list = (
             outputs_list if isinstance(outputs_list, list) else [outputs_list]
@@ -72,17 +76,17 @@ class AugmentationSequential(Module):
         outputs: Dict[str, Tensor] = {
             k: v for k, v in zip(self.data_keys, outputs_list)
         }
-        sample.update(outputs)
+        batch.update(outputs)
 
         # Convert all inputs back to their previous dtype
         for key in self.data_keys:
-            sample[key] = sample[key].to(dtype[key])
+            batch[key] = batch[key].to(dtype[key])
 
         # Torchmetrics does not support masks with a channel dimension
-        if "mask" in sample:
-            sample["mask"] = rearrange(sample["mask"], "b () h w -> b h w")
+        if "mask" in batch:
+            batch["mask"] = rearrange(batch["mask"], "b () h w -> b h w")
 
-        return sample
+        return batch
 
 
 class _ExtractTensorPatches(GeometricAugmentationBase2D):

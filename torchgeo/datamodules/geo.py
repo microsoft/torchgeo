@@ -151,10 +151,15 @@ class GeoDataModule(LightningDataModule):
                 'train_dataset'.
         """
         if self.train_dataset is not None or self.dataset is not None:
+            batch_size = self.train_batch_size or self.batch_size
+            shuffle = True
+            if self.train_batch_sampler is not None or self.batch_sampler is not None:
+                batch_size = 1
+                shuffle = False
             return DataLoader(
                 dataset=self.train_dataset or self.dataset,  # type: ignore[arg-type]
-                batch_size=self.train_batch_size or self.batch_size,
-                shuffle=True,
+                batch_size=batch_size,
+                shuffle=shuffle,
                 sampler=self.train_sampler or self.sampler,
                 batch_sampler=self.train_batch_sampler or self.batch_sampler,
                 num_workers=self.num_workers,
@@ -175,10 +180,13 @@ class GeoDataModule(LightningDataModule):
                 'val_dataset'.
         """
         if self.val_dataset is not None or self.dataset is not None:
+            batch_size = self.val_batch_size or self.batch_size
+            if self.val_batch_sampler is not None or self.batch_sampler is not None:
+                batch_size = 1
             return DataLoader(
                 dataset=self.val_dataset or self.dataset,  # type: ignore[arg-type]
-                batch_size=self.val_batch_size or self.batch_size,
-                shuffle=True,
+                batch_size=batch_size,
+                shuffle=False,
                 sampler=self.val_sampler or self.sampler,
                 batch_sampler=self.val_batch_sampler or self.batch_sampler,
                 num_workers=self.num_workers,
@@ -199,10 +207,13 @@ class GeoDataModule(LightningDataModule):
                 'test_dataset'.
         """
         if self.test_dataset is not None or self.dataset is not None:
+            batch_size = self.test_batch_size or self.batch_size
+            if self.test_batch_sampler is not None or self.batch_sampler is not None:
+                batch_size = 1
             return DataLoader(
                 dataset=self.test_dataset or self.dataset,  # type: ignore[arg-type]
-                batch_size=self.test_batch_size or self.batch_size,
-                shuffle=True,
+                batch_size=batch_size,
+                shuffle=False,
                 sampler=self.test_sampler or self.sampler,
                 batch_sampler=self.test_batch_sampler or self.batch_sampler,
                 num_workers=self.num_workers,
@@ -223,10 +234,13 @@ class GeoDataModule(LightningDataModule):
                 'predict_dataset'.
         """
         if self.predict_dataset is not None or self.dataset is not None:
+            batch_size = self.predict_batch_size or self.batch_size
+            if self.predict_batch_sampler is not None or self.batch_sampler is not None:
+                batch_size = 1
             return DataLoader(
                 dataset=self.predict_dataset or self.dataset,  # type: ignore[arg-type]
-                batch_size=self.predict_batch_size or self.batch_size,
-                shuffle=True,
+                batch_size=batch_size,
+                shuffle=False,
                 sampler=self.predict_sampler or self.sampler,
                 batch_sampler=self.predict_batch_sampler or self.batch_sampler,
                 num_workers=self.num_workers,
@@ -272,9 +286,10 @@ class GeoDataModule(LightningDataModule):
         Returns:
             A matplotlib Figure with the image, ground truth, and predictions.
         """
-        if self.val_dataset is not None:
-            if hasattr(self.val_dataset, "plot"):
-                return self.val_dataset.plot(*args, **kwargs)
+        dataset = self.val_dataset or self.dataset
+        if dataset is not None:
+            if hasattr(dataset, "plot"):
+                return dataset.plot(*args, **kwargs)
 
 
 class NonGeoDataModule(LightningDataModule):
