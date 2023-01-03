@@ -427,8 +427,11 @@ class RasterDataset(GeoDataset):
         else:
             data = self._merge_files(filepaths, query, self.band_indexes)
 
-        key = "image" if self.is_image else "mask"
-        sample = {key: data, "crs": self.crs, "bbox": query}
+        sample = {"crs": self.crs, "bbox": query}
+        if self.is_image:
+            sample["image"] = data.float()
+        else:
+            sample["mask"] = data.long()
 
         if self.transforms is not None:
             sample = self.transforms(sample)

@@ -65,7 +65,7 @@ class AugmentationSequential(Module):
             batch[key] = batch[key].float()
 
         # Kornia requires masks to have a channel dimension
-        if "mask" in batch:
+        if "mask" in batch and len(batch["mask"].shape) == 3:
             batch["mask"] = rearrange(batch["mask"], "b h w -> b () h w")
 
         inputs = [batch[k] for k in self.data_keys]

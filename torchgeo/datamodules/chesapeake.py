@@ -57,7 +57,9 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         Raises:
             ValueError: If ``use_prior_labels=True`` is used with ``class_set=7``.
         """
-        super().__init__(ChesapeakeCVPR, batch_size, patch_size, length, num_workers, **kwargs)
+        super().__init__(
+            ChesapeakeCVPR, batch_size, patch_size, length, num_workers, **kwargs
+        )
 
         assert class_set in [5, 7]
         if use_prior_labels and class_set == 7:

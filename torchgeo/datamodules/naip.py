@@ -57,7 +57,7 @@ class NAIPChesapeakeDataModule(GeoDataModule):
             **self.chesapeake_kwargs,
         )
 
-        self.aug: Transform = AugmentationSequential(
+        self.aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std), data_keys=["image", "mask"]
         )
 
