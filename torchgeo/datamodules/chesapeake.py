@@ -7,6 +7,7 @@ from typing import Any, Dict, List
 
 import kornia.augmentation as K
 import torch.nn.functional as F
+from einops import rearrange
 from torch import Tensor
 
 from ..datasets import ChesapeakeCVPR
@@ -137,6 +138,10 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         Returns:
             A batch of data.
         """
+        # CenterCrop adds additional dimensions
+        batch["image"] = rearrange(batch["image"], "b () c h w -> b c h w")
+        batch["mask"] = rearrange(batch["mask"], "b () h w -> b h w")
+
         if self.use_prior_labels:
             batch["mask"] = F.normalize(batch["mask"].float(), p=1, dim=1)
             batch["mask"] = F.normalize(
