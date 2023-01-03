@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from math import floor
+from math import floor, isclose
 
 import pytest
 import torch
@@ -11,6 +11,7 @@ from torchgeo.datasets import GeoDataset
 from torchgeo.datasets.splits import (
     random_bbox_assignment,
     random_bbox_splitting,
+    random_grid_cell_assignment,
     random_nongeo_split,
     roi_split,
     time_series_split,
@@ -80,7 +81,7 @@ def test_random_bbox_assignment() -> None:
         random_bbox_assignment(ds, lengths=[1 / 2, 3 / 4, -1 / 4])
 
 
-def get_total_area(dataset: GeoDataset) -> float:
+def _get_total_area(dataset: GeoDataset) -> float:
 
     total_area = 0.0
     for hit in dataset.index.intersection(dataset.index.bounds, objects=True):
@@ -97,15 +98,15 @@ def test_random_bbox_splitting() -> None:
         | CustomGeoDataset(BoundingBox(3, 4, 0, 1, 0, 0))
     )
 
-    ds_area = get_total_area(ds)
+    ds_area = _get_total_area(ds)
 
     # Test list of fractions
     train_ds, val_ds, test_ds = random_bbox_splitting(
         ds, fractions=[1 / 2, 1 / 4, 1 / 4]
     )
-    train_ds_area = get_total_area(train_ds)
-    val_ds_area = get_total_area(val_ds)
-    test_ds_area = get_total_area(test_ds)
+    train_ds_area = _get_total_area(train_ds)
+    val_ds_area = _get_total_area(val_ds)
+    test_ds_area = _get_total_area(test_ds)
 
     assert train_ds_area == ds_area / 2
     assert val_ds_area == ds_area / 4
@@ -113,7 +114,7 @@ def test_random_bbox_splitting() -> None:
     assert len(train_ds & val_ds) == 0
     assert len(val_ds & test_ds) == 0
     assert len(test_ds & train_ds) == 0
-    assert get_total_area(train_ds | val_ds | test_ds) == ds_area
+    assert isclose(_get_total_area(train_ds | val_ds | test_ds), ds_area)
 
     # Test invalid input fractions
     with pytest.raises(ValueError, match="Sum of input fractions must equal 1."):
@@ -122,6 +123,32 @@ def test_random_bbox_splitting() -> None:
         ValueError, match="All items in input fractions must be greater than 0."
     ):
         random_bbox_splitting(ds, fractions=[1 / 2, 3 / 4, -1 / 4])
+
+
+def test_random_grid_cell_assignment() -> None:
+    ds = CustomGeoDataset(BoundingBox(0, 12, 0, 12, 0, 0)) | CustomGeoDataset(
+        BoundingBox(12, 24, 0, 12, 0, 0)
+    )
+
+    train_ds, val_ds, test_ds = random_grid_cell_assignment(
+        ds, fractions=[1 / 2, 1 / 4, 1 / 4], size=5
+    )
+
+    assert len(train_ds) == 1 / 2 * 2 * 5**2 + 1
+    assert len(val_ds) == floor(1 / 4 * 2 * 5**2)
+    assert len(test_ds) == floor(1 / 4 * 2 * 5**2)
+    assert len(train_ds & val_ds) == 0
+    assert len(val_ds & test_ds) == 0
+    assert len(test_ds & train_ds) == 0
+    assert isclose(_get_total_area(train_ds | val_ds | test_ds), _get_total_area(ds))
+
+    # Test invalid input fractions
+    with pytest.raises(ValueError, match="Sum of input fractions must equal 1."):
+        random_grid_cell_assignment(ds, fractions=[1 / 2, 1 / 3, 1 / 4])
+    with pytest.raises(
+        ValueError, match="All items in input fractions must be greater than 0."
+    ):
+        random_grid_cell_assignment(ds, fractions=[1 / 2, 3 / 4, -1 / 4])
 
 
 def test_roi_split() -> None:

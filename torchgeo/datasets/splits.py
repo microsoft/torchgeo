@@ -19,9 +19,48 @@ __all__ = (
     "random_nongeo_split",
     "random_bbox_assignment",
     "random_bbox_splitting",
+    "random_grid_cell_assignment",
     "roi_split",
     "time_series_split",
 )
+
+
+def _fractions_to_lengths(fractions: Sequence[float], total: int) -> Sequence[int]:
+    """Utility to divide a number into a list of integers according to fractions.
+
+    Args:
+        fractions: list of fractions
+        total: total to be divided
+
+    Returns:
+        List of lengths.
+
+    .. versionadded:: 0.4
+    """
+    lengths = [floor(frac * total) for frac in fractions]
+    remainder = int(total - sum(lengths))
+    # add 1 to all the lengths in round-robin fashion until the remainder is 0
+    for i in range(remainder):
+        idx_to_add_at = i % len(lengths)
+        lengths[idx_to_add_at] += 1
+    return lengths
+
+
+def _create_geodataset_like(dataset: GeoDataset, index: Index) -> GeoDataset:
+    """Utility to create a new GeoDataset from an existing one with a different index.
+
+    Args:
+        dataset: dataset to copy
+        index: new index
+
+    Returns:
+        A new GeoDataset.
+
+    .. versionadded:: 0.4
+    """
+    new_dataset = deepcopy(dataset)
+    new_dataset.index = index
+    return new_dataset
 
 
 def random_nongeo_split(
@@ -42,30 +81,8 @@ def random_nongeo_split(
     .. versionadded:: 0.4
     """
     if sum(lengths) == 1:
-        lengths = [floor(frac * len(dataset)) for frac in lengths]
-        remainder = int(len(dataset) - sum(lengths))
-        # add 1 to all the lengths in round-robin fashion until the remainder is 0
-        for i in range(remainder):
-            idx_to_add_at = i % len(lengths)
-            lengths[idx_to_add_at] += 1
+        lengths = _fractions_to_lengths(lengths, len(dataset))
     return random_split(dataset, lengths, generator)
-
-
-def _create_geodataset_like(dataset: GeoDataset, index: Index) -> GeoDataset:
-    """Utility to create a new GeoDataset from an existing one with a different index.
-
-    Args:
-        dataset: dataset to copy
-        index: new index
-
-    Returns:
-        A new GeoDataset.
-
-    .. versionadded:: 0.4
-    """
-    new_dataset = deepcopy(dataset)
-    new_dataset.index = index
-    return new_dataset
 
 
 def random_bbox_assignment(
@@ -94,12 +111,7 @@ def random_bbox_assignment(
         raise ValueError("All items in input lengths must be greater than 0.")
 
     if sum(lengths) == 1:
-        lengths = [floor(frac * len(dataset)) for frac in lengths]
-        remainder = int(len(dataset) - sum(lengths))
-        # add 1 to all the lengths in round-robin fashion until the remainder is 0
-        for i in range(remainder):
-            idx_to_add_at = i % len(lengths)
-            lengths[idx_to_add_at] += 1
+        lengths = _fractions_to_lengths(lengths, len(dataset))
 
     hits = list(dataset.index.intersection(dataset.index.bounds, objects=True))
 
@@ -170,6 +182,74 @@ def random_bbox_splitting(
             new_indexes[j].insert(i, tuple(new_box))
             fraction_left -= frac
             horizontal = not horizontal
+
+    return [_create_geodataset_like(dataset, index) for index in new_indexes]
+
+
+def random_grid_cell_assignment(
+    dataset: GeoDataset,
+    fractions: Sequence[float],
+    size: int = 6,
+    generator: Optional[Generator] = default_generator,
+) -> List[GeoDataset]:
+    """Overlays a grid over a GeoDataset and randomly assigns cells to new GeoDatasets.
+
+    This function will go through each BoundingBox in the GeoDataset's index, overlay
+    a grid over it, and randomly assign each cell to new GeoDatasets.
+
+    Args:
+        dataset: dataset to be split
+        fractions: fractions of splits to be produced
+        size: (optional) size of the grid
+        generator: (optional) generator used for the random permutation
+
+    Returns
+        A list of the subset datasets.
+
+    .. versionadded:: 0.4
+    """
+    if sum(fractions) != 1:
+        raise ValueError("Sum of input fractions must equal 1.")
+
+    if any(n <= 0 for n in fractions):
+        raise ValueError("All items in input fractions must be greater than 0.")
+
+    new_indexes = [
+        Index(interleaved=False, properties=Property(dimension=3)) for _ in fractions
+    ]
+
+    lengths = _fractions_to_lengths(fractions, len(dataset) * size**2)
+
+    cells = []
+
+    for i, hit in enumerate(
+        dataset.index.intersection(dataset.index.bounds, objects=True)
+    ):
+        minx, maxx, miny, maxy, mint, maxt = hit.bounds
+
+        stridex = (maxx - minx) / size
+        stridey = (maxy - miny) / size
+
+        cells.extend(
+            [
+                (
+                    minx + x * stridex,
+                    minx + (x + 1) * stridex,
+                    miny + y * stridey,
+                    miny + (y + 1) * stridey,
+                    mint,
+                    maxt,
+                )
+                for x in range(size)
+                for y in range(size)
+            ]
+        )
+
+    cells = [cells[i] for i in randperm(len(cells), generator=generator)]
+
+    for i, length in enumerate(lengths):
+        for j in range(length):
+            new_indexes[i].insert(j, cells.pop())
 
     return [_create_geodataset_like(dataset, index) for index in new_indexes]
 
