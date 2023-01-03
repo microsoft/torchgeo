@@ -54,10 +54,6 @@ class AugmentationSequential(Module):
         Returns:
             the augmented input
         """
-        # TorchGeo bbox is very different from Kornia bbox
-        if "bbox" in batch:
-            del batch["bbox"]
-
         # Kornia augmentations require all inputs to be float
         dtype = {}
         for key in self.data_keys:

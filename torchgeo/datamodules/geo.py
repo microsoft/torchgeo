@@ -250,6 +250,28 @@ class GeoDataModule(LightningDataModule):
             msg = f"{self.__class__.__name__}.setup does not define a 'predict_dataset'"
             raise MisconfigurationException(msg)
 
+    def transfer_batch_to_device(
+        self, batch: Dict[str, Tensor], device: torch.device, dataloader_idx: int
+    ) -> Dict[str, Tensor]:
+        """Transfer batch to device.
+
+        Defines how custom data types are moved to the target device.
+
+        Args:
+            batch: A batch of data that needs to be transferred to a new device.
+            device: The target device as defined in PyTorch.
+            dataloader_idx: The index of the dataloader to which the batch belongs.
+
+        Returns:
+            A reference to the data on the new device.
+        """
+        # Non-Tensor values cannot be moved to a device
+        del batch["crs"]
+        del batch["bbox"]
+
+        batch = super().transfer_batch_to_device(batch, device, dataloader_idx)
+        return batch
+
     def on_after_batch_transfer(
         self, batch: Dict[str, Tensor], dataloader_idx: int
     ) -> Dict[str, Tensor]:
