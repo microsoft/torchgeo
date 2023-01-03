@@ -115,6 +115,7 @@ def test_random_bbox_splitting() -> None:
     assert len(val_ds & test_ds) == 0
     assert len(test_ds & train_ds) == 0
     assert isclose(_get_total_area(train_ds | val_ds | test_ds), ds_area)
+    assert (train_ds | val_ds | test_ds).bounds == ds.bounds
 
     # Test invalid input fractions
     with pytest.raises(ValueError, match="Sum of input fractions must equal 1."):
@@ -141,6 +142,7 @@ def test_random_grid_cell_assignment() -> None:
     assert len(val_ds & test_ds) == 0
     assert len(test_ds & train_ds) == 0
     assert isclose(_get_total_area(train_ds | val_ds | test_ds), _get_total_area(ds))
+    assert (train_ds | val_ds | test_ds).bounds == ds.bounds
 
     # Test invalid input fractions
     with pytest.raises(ValueError, match="Sum of input fractions must equal 1."):
