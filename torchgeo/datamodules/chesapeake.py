@@ -61,8 +61,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
         self.original_patch_size = patch_size * 2
         kwargs["transforms"] = AugmentationSequential(
-            K.CenterCrop(patch_size),
-            data_keys=["image", "mask"],
+            K.CenterCrop(patch_size), data_keys=["image", "mask"]
         )
 
         super().__init__(
@@ -92,8 +91,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
             self.layers = ["naip-new", "lc"]
 
         self.aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            data_keys=["image", "mask"],
+            K.Normalize(mean=self.mean, std=self.std), data_keys=["image", "mask"]
         )
 
     def setup(self, stage: str) -> None:
