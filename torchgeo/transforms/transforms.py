@@ -79,7 +79,7 @@ class AugmentationSequential(Module):
             batch[key] = batch[key].to(dtype[key])
 
         # Torchmetrics does not support masks with a channel dimension
-        if "mask" in batch:
+        if "mask" in batch and batch["mask"].shape[1] == 1:
             batch["mask"] = rearrange(batch["mask"], "b () h w -> b h w")
 
         return batch

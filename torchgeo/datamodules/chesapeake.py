@@ -57,6 +57,14 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         Raises:
             ValueError: If ``use_prior_labels=True`` is used with ``class_set=7``.
         """
+        # This is a rough estimate of how large of a patch we will need to sample in
+        # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
+        self.original_patch_size = patch_size * 2
+        kwargs["transforms"] = AugmentationSequential(
+            K.CenterCrop(patch_size),
+            data_keys=["image", "mask"],
+        )
+
         super().__init__(
             ChesapeakeCVPR, batch_size, patch_size, length, num_workers, **kwargs
         )
@@ -71,9 +79,6 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         self.train_splits = train_splits
         self.val_splits = val_splits
         self.test_splits = test_splits
-        # This is a rough estimate of how large of a patch we will need to sample in
-        # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
-        self.original_patch_size = patch_size * 2
         self.class_set = class_set
         self.use_prior_labels = use_prior_labels
         self.prior_smoothing_constant = prior_smoothing_constant
@@ -87,7 +92,6 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
             self.layers = ["naip-new", "lc"]
 
         self.aug = AugmentationSequential(
-            K.CenterCrop(patch_size),
             K.Normalize(mean=self.mean, std=self.std),
             data_keys=["image", "mask"],
         )
@@ -136,10 +140,10 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
             A batch of data.
         """
         if self.use_prior_labels:
-            batch["mask"] = F.normalize(batch["mask"], p=1, dim=1)
+            batch["mask"] = F.normalize(batch["mask"].float(), p=1, dim=1)
             batch["mask"] = F.normalize(
                 batch["mask"] + self.prior_smoothing_constant, p=1, dim=1
-            )
+            ).long()
         else:
             if self.class_set == 5:
                 batch["mask"][batch["mask"] == 5] = 4
