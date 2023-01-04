@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 from math import floor, isclose
-from typing import Dict, List, Sequence, Tuple, Union
+from typing import Any, Dict, List, Sequence, Tuple, Union
 
 import pytest
 import torch
@@ -34,7 +34,7 @@ class CustomGeoDataset(GeoDataset):
         self._crs = crs
         self.res = res
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, str]:
+    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         hits = self.index.intersection(tuple(query), objects=True)
         hit = next(iter(hits))
         return {"content": hit.object}
