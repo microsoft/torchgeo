@@ -6,7 +6,6 @@ from typing import Dict
 import kornia.augmentation as K
 import pytest
 import torch
-import torch.nn as nn
 from torch import Tensor
 
 from torchgeo.transforms import indices, transforms
@@ -193,15 +192,14 @@ def test_sequential_transforms_augmentations(
         "boxes": torch.tensor([[[1, 0], [2, 0], [2, 1], [1, 1]]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
-    train_transforms = nn.Sequential(
+    train_transforms = transforms.AugmentationSequential(
         indices.AppendNBR(index_nir=0, index_swir=0),
         indices.AppendNDBI(index_swir=0, index_nir=0),
         indices.AppendNDSI(index_green=0, index_swir=0),
         indices.AppendNDVI(index_red=0, index_nir=0),
         indices.AppendNDWI(index_green=0, index_nir=0),
-        transforms.AugmentationSequential(
-            K.RandomHorizontalFlip(p=1.0), data_keys=["image", "mask", "boxes"]
-        ),
+        K.RandomHorizontalFlip(p=1.0),
+        data_keys=["image", "mask", "boxes"],
     )
     output = train_transforms(batch_multispectral)
     assert_matching(output, expected)
