@@ -3,9 +3,10 @@
 
 """SpaceNet datamodules."""
 
-from typing import Any
+from typing import Any, Dict
 
 import kornia.augmentation as K
+from torch import Tensor
 
 from ..datasets import SpaceNet1
 from ..transforms import AugmentationSequential
