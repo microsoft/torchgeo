@@ -34,7 +34,7 @@ class CustomGeoDataset(GeoDataset):
         self._crs = crs
         self.res = res
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, BoundingBox]:
+    def __getitem__(self, query: BoundingBox) -> Dict[str, str]:
         hits = self.index.intersection(tuple(query), objects=True)
         hit = next(iter(hits))
         return {"content": hit.object}
