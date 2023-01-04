@@ -126,7 +126,8 @@ def random_bbox_assignment(
 
     for i, length in enumerate(lengths):
         for j in range(length):  # type: ignore[arg-type]
-            new_indexes[i].insert(j, hits.pop().bounds)
+            hit = hits.pop()
+            new_indexes[i].insert(j, hit.bounds, hit.object)
 
     return [_create_geodataset_like(dataset, index) for index in new_indexes]
 
@@ -179,7 +180,7 @@ def random_bbox_splitting(
             else:
                 new_box, box = box.split(frac / fraction_left, horizontal)
 
-            new_indexes[j].insert(i, tuple(new_box))
+            new_indexes[j].insert(i, tuple(new_box), hit.object)
             fraction_left -= frac
             horizontal = not horizontal
 
@@ -233,12 +234,15 @@ def random_grid_cell_assignment(
         cells.extend(
             [
                 (
-                    minx + x * stridex,
-                    minx + (x + 1) * stridex,
-                    miny + y * stridey,
-                    miny + (y + 1) * stridey,
-                    mint,
-                    maxt,
+                    (
+                        minx + x * stridex,
+                        minx + (x + 1) * stridex,
+                        miny + y * stridey,
+                        miny + (y + 1) * stridey,
+                        mint,
+                        maxt,
+                    ),
+                    hit.object,
                 )
                 for x in range(size)
                 for y in range(size)
@@ -249,7 +253,8 @@ def random_grid_cell_assignment(
 
     for i, length in enumerate(lengths):
         for j in range(length):
-            new_indexes[i].insert(j, cells.pop())
+            cell = cells.pop()
+            new_indexes[i].insert(j, cell[0], cell[1])
 
     return [_create_geodataset_like(dataset, index) for index in new_indexes]
 
@@ -279,7 +284,7 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> List[GeoDatas
             box = BoundingBox(*hit.bounds)
             new_box = box & roi
             if new_box.area > 0:
-                new_indexes[i].insert(j, tuple(new_box))
+                new_indexes[i].insert(j, tuple(new_box), hit.object)
                 j += 1
 
     return [_create_geodataset_like(dataset, index) for index in new_indexes]
@@ -354,7 +359,7 @@ def time_series_split(
             box = BoundingBox(*hit.bounds)
             new_box = box & roi
             if new_box.volume > 0:
-                new_indexes[i].insert(j, tuple(new_box))
+                new_indexes[i].insert(j, tuple(new_box), hit.object)
                 j += 1
 
         _totalt += end - start
