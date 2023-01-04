@@ -190,7 +190,7 @@ def random_bbox_splitting(
 def random_grid_cell_assignment(
     dataset: GeoDataset,
     fractions: Sequence[float],
-    size: int = 6,
+    grid_size: int = 6,
     generator: Optional[Generator] = default_generator,
 ) -> List[GeoDataset]:
     """Overlays a grid over a GeoDataset and randomly assigns cells to new GeoDatasets.
@@ -201,7 +201,7 @@ def random_grid_cell_assignment(
     Args:
         dataset: dataset to be split
         fractions: fractions of splits to be produced
-        size: (optional) size of the grid
+        grid_size: (optional) size of the grid
         generator: (optional) generator used for the random permutation
 
     Returns
@@ -215,11 +215,14 @@ def random_grid_cell_assignment(
     if any(n <= 0 for n in fractions):
         raise ValueError("All items in input fractions must be greater than 0.")
 
+    if grid_size < 2:
+        raise ValueError("Input grid_size must be greater than 1.")
+
     new_indexes = [
         Index(interleaved=False, properties=Property(dimension=3)) for _ in fractions
     ]
 
-    lengths = _fractions_to_lengths(fractions, len(dataset) * size**2)
+    lengths = _fractions_to_lengths(fractions, len(dataset) * grid_size**2)
 
     cells = []
 
@@ -228,8 +231,8 @@ def random_grid_cell_assignment(
     ):
         minx, maxx, miny, maxy, mint, maxt = hit.bounds
 
-        stridex = (maxx - minx) / size
-        stridey = (maxy - miny) / size
+        stridex = (maxx - minx) / grid_size
+        stridey = (maxy - miny) / grid_size
 
         cells.extend(
             [
@@ -244,8 +247,8 @@ def random_grid_cell_assignment(
                     ),
                     hit.object,
                 )
-                for x in range(size)
-                for y in range(size)
+                for x in range(grid_size)
+                for y in range(grid_size)
             ]
         )
 

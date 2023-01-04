@@ -132,7 +132,7 @@ def test_random_grid_cell_assignment() -> None:
     )
 
     train_ds, val_ds, test_ds = random_grid_cell_assignment(
-        ds, fractions=[1 / 2, 1 / 4, 1 / 4], size=5
+        ds, fractions=[1 / 2, 1 / 4, 1 / 4], grid_size=5
     )
 
     assert len(train_ds) == 1 / 2 * 2 * 5**2 + 1
@@ -151,6 +151,8 @@ def test_random_grid_cell_assignment() -> None:
         ValueError, match="All items in input fractions must be greater than 0."
     ):
         random_grid_cell_assignment(ds, fractions=[1 / 2, 3 / 4, -1 / 4])
+    with pytest.raises(ValueError, match="Input grid_size must be greater than 1."):
+        random_grid_cell_assignment(ds, fractions=[1 / 2, 1 / 4, 1 / 4], grid_size=1)
 
 
 def test_roi_split() -> None:
