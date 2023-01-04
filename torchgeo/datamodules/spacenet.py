@@ -77,3 +77,22 @@ class SpaceNet1DataModule(NonGeoDataModule):
         self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
             dataset, self.val_split_pct, self.test_split_pct
         )
+
+    def on_after_batch_transfer(
+        self, batch: Dict[str, Tensor], dataloader_idx: int
+    ) -> Dict[str, Tensor]:
+        """Apply batch augmentations to the batch after it is transferred to the device.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented.
+            dataloader_idx: The index of the dataloader to which the batch belongs.
+
+        Returns:
+            A batch of data.
+        """
+        # We add 1 to the mask to map the current {background, building} labels to
+        # the values {1, 2}. This is necessary because we add 0 padding to the
+        # mask that we want to ignore in the loss function.
+        batch["mask"] += 1
+
+        return super().on_after_batch_transfer(batch, dataloader_idx)
