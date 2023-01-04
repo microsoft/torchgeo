@@ -57,6 +57,7 @@ needs_sphinx = "4.0"
 nitpicky = True
 nitpick_ignore = [
     # Undocumented classes
+    ("py:class", "kornia.augmentation._2d.intensity.base.IntensityAugmentationBase2D"),
     ("py:class", "segmentation_models_pytorch.base.model.SegmentationModel"),
     ("py:class", "timm.models.resnet.ResNet"),
     ("py:class", "timm.models.vision_transformer.VisionTransformer"),
