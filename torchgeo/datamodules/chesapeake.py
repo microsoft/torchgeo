@@ -108,7 +108,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
             self.train_batch_sampler = RandomBatchGeoSampler(
                 self.train_dataset,
                 self.original_patch_size,
-                self.train_batch_size or 1,
+                self.batch_size,
                 self.length,
             )
         if stage in ["fit", "validate"]:
