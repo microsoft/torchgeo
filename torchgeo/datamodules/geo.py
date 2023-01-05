@@ -42,7 +42,7 @@ class GeoDataModule(LightningDataModule):
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
-        """Initialize a new NonGeoDataModule instance.
+        """Initialize a new GeoDataModule instance.
 
         Args:
             dataset_class: Class used to instantiate a new dataset.
