@@ -11,7 +11,7 @@ from torchgeo.datamodules import OSCDDataModule
 
 
 class TestOSCDDataModule:
-    @pytest.fixture(scope="class", params=["all", "rgb"])
+    @pytest.fixture(params=["all", "rgb"])
     def datamodule(self, request: SubRequest) -> OSCDDataModule:
         bands = request.param
         num_tiles_per_batch = 1

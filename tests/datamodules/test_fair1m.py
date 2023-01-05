@@ -11,7 +11,7 @@ from torchgeo.datasets import unbind_samples
 
 
 class TestFAIR1MDataModule:
-    @pytest.fixture(scope="class")
+    @pytest.fixture
     def datamodule(self) -> FAIR1MDataModule:
         root = os.path.join("tests", "data", "fair1m")
         batch_size = 2

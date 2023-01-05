@@ -11,7 +11,7 @@ from torchgeo.datasets import unbind_samples
 
 
 class TestXView2DataModule:
-    @pytest.fixture(scope="class")
+    @pytest.fixture
     def datamodule(self) -> XView2DataModule:
         root = os.path.join("tests", "data", "xview2")
         batch_size = 1
