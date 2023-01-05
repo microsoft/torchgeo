@@ -303,7 +303,7 @@ class GeoDataModule(LightningDataModule):
         if self.trainer:
             if self.trainer.training:
                 aug = self.train_aug or self.aug
-            elif self.trainer.validating:
+            elif self.trainer.validating or self.trainer.sanity_checking:
                 aug = self.val_aug or self.aug
             elif self.trainer.testing:
                 aug = self.test_aug or self.aug
@@ -517,7 +517,7 @@ class NonGeoDataModule(LightningDataModule):
         if self.trainer:
             if self.trainer.training:
                 aug = self.train_aug or self.aug
-            elif self.trainer.validating:
+            elif self.trainer.validating or self.trainer.sanity_checking:
                 aug = self.val_aug or self.aug
             elif self.trainer.testing:
                 aug = self.test_aug or self.aug
