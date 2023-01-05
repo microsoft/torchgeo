@@ -19,6 +19,7 @@ from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-define
     MisconfigurationException,
 )
 
+from torchgeo.datasets import TropicalCyclone
 from torchgeo.datamodules import COWCCountingDataModule, TropicalCycloneDataModule
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import RegressionTask
@@ -29,6 +30,11 @@ from .test_utils import RegressionTestModel
 def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
     state_dict: Dict[str, Any] = torch.load(url)
     return state_dict
+
+
+class CustomRegressionDataModule(TropicalCycloneDataModule):
+    def setup(self, stage: str) -> None:
+        self.predict_dataset = TropicalCyclone(split="test", **self.kwargs)
 
 
 class TestRegressionTask:
@@ -122,3 +128,11 @@ class TestRegressionTask:
         model_kwargs["weights"] = str(mocked_weights)
         with pytest.warns(UserWarning):
             RegressionTask(**model_kwargs)
+
+    def test_predict(self, model_kwargs: Dict[Any, Any]) -> None:
+        datamodule = CustomRegressionDataModule(
+            root="tests/data/cyclone", batch_size=1, num_workers=0
+        )
+        model = RegressionTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer.predict(model=model, datamodule=datamodule)

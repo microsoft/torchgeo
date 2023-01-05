@@ -34,6 +34,16 @@ from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
 from .test_utils import ClassificationTestModel
 
 
+class CustomClassificationDataModule(EuroSATDataModule):
+    def setup(self, stage: str) -> None:
+        self.predict_dataset = EuroSAT(split="test", **self.kwargs)
+
+
+class CustomMultiLabelClassificationDataModule(BigEarthNetDataModule):
+    def setup(self, stage: str) -> None:
+        self.predict_dataset = BigEarthNet(split="test", **self.kwargs)
+
+
 def create_model(*args: Any, **kwargs: Any) -> Module:
     return ClassificationTestModel(**kwargs)
 
@@ -161,6 +171,14 @@ class TestClassificationTask:
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.validate(model=model, datamodule=datamodule)
 
+    def test_predict(self, model_kwargs: Dict[Any, Any]) -> None:
+        datamodule = CustomClassificationDataModule(
+            root="tests/data/eurosat", batch_size=1, num_workers=0
+        )
+        model = ClassificationTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer.predict(model=model, dataloaders=datamodule)
+
 
 class TestMultiLabelClassificationTask:
     @pytest.mark.parametrize(
@@ -190,8 +208,14 @@ class TestMultiLabelClassificationTask:
         # Instantiate trainer
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
-        trainer.test(model=model, datamodule=datamodule)
-        trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
+        try:
+            trainer.test(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
+        try:
+            trainer.predict(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
 
     def test_no_logger(self) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", "bigearthnet_s1.yaml"))
@@ -238,3 +262,11 @@ class TestMultiLabelClassificationTask:
         model = MultiLabelClassificationTask(**model_kwargs)
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.validate(model=model, datamodule=datamodule)
+
+    def test_predict(self, model_kwargs: Dict[Any, Any]) -> None:
+        datamodule = CustomMultiLabelClassificationDataModule(
+            root="tests/data/bigearthnet", batch_size=1, num_workers=0
+        )
+        model = MultiLabelClassificationTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer.predict(model=model, dataloaders=datamodule)

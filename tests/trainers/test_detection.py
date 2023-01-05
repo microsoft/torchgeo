@@ -19,6 +19,11 @@ from torchgeo.datasets import NASAMarineDebris
 from torchgeo.trainers import ObjectDetectionTask
 
 
+class CustomObjectDetectionDataModule(NASAMarineDebrisDataModule):
+    def setup(self, stage: str) -> None:
+        self.predict_dataset = NASAMarineDebris(**self.kwargs)
+
+
 class TestObjectDetectionTask:
     @pytest.mark.parametrize(
         "name,classname", [("nasa_marine_debris", NASAMarineDebrisDataModule)]
@@ -78,3 +83,11 @@ class TestObjectDetectionTask:
         model = ObjectDetectionTask(**model_kwargs)
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.validate(model=model, datamodule=datamodule)
+
+    def test_predict(self, model_kwargs: Dict[Any, Any]) -> None:
+        datamodule = CustomObjectDetectionDataModule(
+            root="tests/data/nasa_marine_debris", batch_size=1, num_workers=0
+        )
+        model = ObjectDetectionTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer.predict(model=model, datamodule=datamodule)
