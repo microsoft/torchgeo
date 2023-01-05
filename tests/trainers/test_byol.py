@@ -72,8 +72,14 @@ class TestBYOLTask:
         # Instantiate trainer
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
-        trainer.test(model=model, datamodule=datamodule)
-        trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
+
+        if datamodule.test_dataset is not None or hasattr(datamodule, "test_sampler"):
+            trainer.test(model=model, datamodule=datamodule)
+
+        if datamodule.predict_dataset is not None or hasattr(
+            datamodule, "predict_sampler"
+        ):
+            trainer.predict(model=model, datamodule=datamodule)
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[str, Any]:

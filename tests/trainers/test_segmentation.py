@@ -87,7 +87,9 @@ class TestSemanticSegmentationTask:
         if datamodule.test_dataset is not None or hasattr(datamodule, "test_sampler"):
             trainer.test(model=model, datamodule=datamodule)
 
-        if datamodule.predict_dataset is not None:
+        if datamodule.predict_dataset is not None or hasattr(
+            datamodule, "predict_sampler"
+        ):
             trainer.predict(model=model, datamodule=datamodule)
 
     def test_no_logger(self) -> None:
