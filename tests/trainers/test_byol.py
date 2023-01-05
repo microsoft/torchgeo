@@ -13,14 +13,15 @@ import torchvision
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
+
+# TODO: import from lightning_lite instead
+from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-defined]
+    MisconfigurationException,
+)
 from torchvision.models import resnet18
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import (
-    ChesapeakeCVPRDataModule,
-    GeoDataModule,
-    NonGeoDataModule,
-)
+from torchgeo.datamodules import ChesapeakeCVPRDataModule
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import BYOLTask
 from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
@@ -76,17 +77,14 @@ class TestBYOLTask:
         # Instantiate trainer
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
-
-        if isinstance(datamodule, GeoDataModule):
-            if datamodule.test_dataset or datamodule.test_sampler:
-                trainer.test(model=model, datamodule=datamodule)
-            if datamodule.predict_dataset or datamodule.predict_sampler:
-                trainer.predict(model=model, datamodule=datamodule)
-        elif isinstance(datamodule, NonGeoDataModule):
-            if datamodule.test_dataset or datamodule.dataset:
-                trainer.test(model=model, datamodule=datamodule)
-            if datamodule.predict_dataset or datamodule.dataset:
-                trainer.predict(model=model, datamodule=datamodule)
+        try:
+            trainer.test(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
+        try:
+            trainer.predict(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[str, Any]:
