@@ -74,8 +74,9 @@ class ETCI2021DataModule(NonGeoDataModule):
         Returns:
             A batch of data.
         """
-        if "mask" in batch:
-            # Predict flood mask, not water mask
-            batch["mask"] = (batch["mask"][:, 1] > 0).long()
+        if self.trainer:
+            if not self.trainer.predicting:
+                # Evaluate against flood mask, not water mask
+                batch["mask"] = (batch["mask"][:, 1] > 0).long()
 
         return super().on_after_batch_transfer(batch, dataloader_idx)
