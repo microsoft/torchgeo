@@ -6,6 +6,7 @@
 from typing import Any, Dict, List
 
 import kornia.augmentation as K
+import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 from torch import Tensor
@@ -14,6 +15,38 @@ from ..datasets import ChesapeakeCVPR
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from ..transforms import AugmentationSequential
 from .geo import GeoDataModule
+
+
+class _Transform(nn.Module):
+    """Version of AugmentationSequential designed for samples, not batches."""
+
+    def __init__(self, aug: nn.Module) -> None:
+        """Initialize a new _Transform instance.
+
+        Args:
+            aug: Augmentation to apply.
+        """
+        super().__init__()
+        self.aug = aug
+
+    def forward(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        """Apply the augmentation.
+
+        Args:
+            sample: Input sample.
+
+        Returns:
+            Augmented sample.
+        """
+        for key in ["image", "mask"]:
+            dtype = sample[key].dtype
+            # All inputs must be float
+            sample[key] = sample[key].float()
+            sample[key] = self.aug(sample[key])
+            sample[key] = sample[key].to(dtype)
+            # Kornia adds batch dimension
+            sample[key] = rearrange(sample[key], "() c h w -> c h w")
+        return sample
 
 
 class ChesapeakeCVPRDataModule(GeoDataModule):
@@ -61,9 +94,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         # This is a rough estimate of how large of a patch we will need to sample in
         # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
         self.original_patch_size = patch_size * 2
-        kwargs["transforms"] = AugmentationSequential(
-            K.CenterCrop(patch_size), data_keys=["image", "mask"]
-        )
+        kwargs["transforms"] = _Transform(K.CenterCrop(patch_size))
 
         super().__init__(
             ChesapeakeCVPR, batch_size, patch_size, length, num_workers, **kwargs
@@ -138,10 +169,6 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         Returns:
             A batch of data.
         """
-        # CenterCrop adds additional dimensions
-        batch["image"] = rearrange(batch["image"], "b () c h w -> b c h w")
-        batch["mask"] = rearrange(batch["mask"], "b () h w -> b h w")
-
         if self.use_prior_labels:
             batch["mask"] = F.normalize(batch["mask"].float(), p=1, dim=1)
             batch["mask"] = F.normalize(
