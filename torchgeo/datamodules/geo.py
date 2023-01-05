@@ -359,6 +359,7 @@ class NonGeoDataModule(LightningDataModule):
         self.kwargs = kwargs
 
         # Datasets
+        self.dataset: Optional[Dataset[Dict[str, Tensor]]] = None
         self.train_dataset: Optional[Dataset[Dict[str, Tensor]]] = None
         self.val_dataset: Optional[Dataset[Dict[str, Tensor]]] = None
         self.test_dataset: Optional[Dataset[Dict[str, Tensor]]] = None
@@ -423,9 +424,10 @@ class NonGeoDataModule(LightningDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 'train_dataset'.
         """
-        if self.train_dataset is not None:
+        dataset = self.train_dataset or self.dataset
+        if dataset is not None:
             return DataLoader(
-                dataset=self.train_dataset,
+                dataset=dataset,
                 batch_size=self.train_batch_size or self.batch_size,
                 shuffle=True,
                 num_workers=self.num_workers,
@@ -444,9 +446,10 @@ class NonGeoDataModule(LightningDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 'val_dataset'.
         """
-        if self.val_dataset is not None:
+        dataset = self.val_dataset or self.dataset
+        if dataset is not None:
             return DataLoader(
-                dataset=self.val_dataset,
+                dataset=dataset,
                 batch_size=self.val_batch_size or self.batch_size,
                 shuffle=False,
                 num_workers=self.num_workers,
@@ -465,9 +468,10 @@ class NonGeoDataModule(LightningDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 'test_dataset'.
         """
-        if self.test_dataset is not None:
+        dataset = self.test_dataset or self.dataset
+        if dataset is not None:
             return DataLoader(
-                dataset=self.test_dataset,
+                dataset=dataset,
                 batch_size=self.test_batch_size or self.batch_size,
                 shuffle=False,
                 num_workers=self.num_workers,
@@ -486,9 +490,10 @@ class NonGeoDataModule(LightningDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 'predict_dataset'.
         """
-        if self.predict_dataset is not None:
+        dataset = self.predict_dataset or self.dataset
+        if dataset is not None:
             return DataLoader(
-                dataset=self.predict_dataset,
+                dataset=dataset,
                 batch_size=self.predict_batch_size or self.batch_size,
                 shuffle=False,
                 num_workers=self.num_workers,
