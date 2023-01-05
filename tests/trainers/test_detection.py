@@ -9,7 +9,11 @@ from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 
-from torchgeo.datamodules import NASAMarineDebrisDataModule
+from torchgeo.datamodules import (
+    GeoDataModule,
+    NASAMarineDebrisDataModule,
+    NonGeoDataModule,
+)
 from torchgeo.datasets import NASAMarineDebris
 from torchgeo.trainers import ObjectDetectionTask
 
@@ -35,11 +39,16 @@ class TestObjectDetectionTask:
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
 
-        if datamodule.test_dataset or datamodule.dataset:
-            trainer.test(model=model, datamodule=datamodule)
-
-        if datamodule.predict_dataset or datamodule.dataset:
-            trainer.predict(model=model, datamodule=datamodule)
+        if isinstance(datamodule, GeoDataModule):
+            if datamodule.test_dataset or datamodule.test_sampler:
+                trainer.test(model=model, datamodule=datamodule)
+            if datamodule.predict_dataset or datamodule.predict_sampler:
+                trainer.predict(model=model, datamodule=datamodule)
+        elif isinstance(datamodule, NonGeoDataModule):
+            if datamodule.test_dataset or datamodule.dataset:
+                trainer.test(model=model, datamodule=datamodule)
+            if datamodule.predict_dataset or datamodule.dataset:
+                trainer.predict(model=model, datamodule=datamodule)
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:
