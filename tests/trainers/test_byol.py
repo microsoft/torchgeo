@@ -73,12 +73,10 @@ class TestBYOLTask:
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
 
-        if datamodule.test_dataset is not None or hasattr(datamodule, "test_sampler"):
+        if datamodule.test_dataset or datamodule.dataset:
             trainer.test(model=model, datamodule=datamodule)
 
-        if datamodule.predict_dataset is not None or hasattr(
-            datamodule, "predict_sampler"
-        ):
+        if datamodule.predict_dataset or datamodule.predict_dataset:
             trainer.predict(model=model, datamodule=datamodule)
 
     @pytest.fixture
