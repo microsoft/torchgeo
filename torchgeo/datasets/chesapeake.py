@@ -765,7 +765,11 @@ class ChesapeakeCVPR(GeoDataset):
         .. versionadded:: 0.4
         """
         image = np.rollaxis(sample["image"].numpy(), 0, 3)
-        mask = np.rollaxis(sample["mask"].numpy(), 0, 3)
+        mask = sample["mask"].numpy()
+        if mask.ndim == 3:
+            mask = np.rollaxis(mask, 0, 3)
+        else:
+            mask = np.expand_dims(mask, 2)
 
         num_panels = len(self.layers)
         showing_predictions = "prediction" in sample

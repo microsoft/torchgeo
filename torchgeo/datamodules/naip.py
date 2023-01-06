@@ -67,8 +67,8 @@ class NAIPChesapeakeDataModule(GeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        chesapeake = Chesapeake13(**self.chesapeake_kwargs)
-        naip = NAIP(**self.naip_kwargs)
+        self.chesapeake = Chesapeake13(**self.chesapeake_kwargs)
+        self.naip = NAIP(**self.naip_kwargs)
         self.dataset = chesapeake & naip
 
         roi = self.dataset.bounds
