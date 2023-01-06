@@ -69,7 +69,7 @@ class NAIPChesapeakeDataModule(GeoDataModule):
         """
         self.chesapeake = Chesapeake13(**self.chesapeake_kwargs)
         self.naip = NAIP(**self.naip_kwargs)
-        self.dataset = chesapeake & naip
+        self.dataset = self.chesapeake & self.naip
 
         roi = self.dataset.bounds
         midx = roi.minx + (roi.maxx - roi.minx) / 2
