@@ -5,7 +5,6 @@ setuptools==66.1.1
 einops==0.6.0
 fiona==1.9b1
 kornia==0.6.9
-lightning-lite==1.8.6
 matplotlib==3.6.3
 numpy==1.24.1;python_version>='3.8'
 omegaconf==2.3.0

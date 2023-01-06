@@ -24,7 +24,6 @@ dependencies:
     - isort[colors]>=5.8
     - kornia>=0.6.5
     - laspy>=2
-    - lightning-lite>=1.8
     - mypy>=0.900
     - nbmake>=0.1
     - nbsphinx>=0.8.5

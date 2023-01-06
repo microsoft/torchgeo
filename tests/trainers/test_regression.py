@@ -10,10 +10,14 @@ import timm
 import torch
 import torchvision
 from _pytest.monkeypatch import MonkeyPatch
-from lightning_lite.utilities.exceptions import MisconfigurationException
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 from torchvision.models._api import WeightsEnum
+
+# TODO: import from lightning_lite instead
+from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-defined]
+    MisconfigurationException,
+)
 
 # TODO: import from lightning_lite instead
 from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-defined]

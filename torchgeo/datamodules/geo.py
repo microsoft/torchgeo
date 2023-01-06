@@ -8,8 +8,12 @@ from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import torch
-from lightning_lite.utilities.exceptions import MisconfigurationException
 from pytorch_lightning import LightningDataModule
+
+# TODO: import from lightning_lite instead
+from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-defined]
+    MisconfigurationException,
+)
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset
 
