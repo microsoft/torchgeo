@@ -9,11 +9,6 @@ import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import torch
 from pytorch_lightning import LightningDataModule
-
-# TODO: import from lightning_lite instead
-from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-defined]
-    MisconfigurationException,
-)
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset
 
@@ -25,6 +20,7 @@ from ..samplers import (
     RandomBatchGeoSampler,
 )
 from ..transforms import AugmentationSequential
+from .utils import MisconfigurationException
 
 
 class GeoDataModule(LightningDataModule):

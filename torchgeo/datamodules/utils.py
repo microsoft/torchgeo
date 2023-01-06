@@ -10,6 +10,11 @@ from torch.utils.data import Subset, TensorDataset, random_split
 from ..datasets import NonGeoDataset
 
 
+# Based on lightning_lite.utilities.exceptions
+class MisconfigurationException(Exception):
+    """Exception used to inform users of misuse with Lightning."""
+
+
 def dataset_split(
     dataset: Union[TensorDataset, NonGeoDataset],
     val_pct: float,

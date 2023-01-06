@@ -12,17 +12,13 @@ import torchvision
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
-
-# TODO: import from lightning_lite instead
-from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-defined]
-    MisconfigurationException,
-)
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import (
     BigEarthNetDataModule,
     EuroSATDataModule,
+    MisconfigurationException,
     RESISC45DataModule,
     So2SatDataModule,
     UCMercedDataModule,

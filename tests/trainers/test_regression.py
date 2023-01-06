@@ -19,12 +19,11 @@ from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-define
     MisconfigurationException,
 )
 
-# TODO: import from lightning_lite instead
-from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-defined]
+from torchgeo.datamodules import (
+    COWCCountingDataModule,
     MisconfigurationException,
+    TropicalCycloneDataModule,
 )
-
-from torchgeo.datamodules import COWCCountingDataModule, TropicalCycloneDataModule
 from torchgeo.datasets import TropicalCyclone
 from torchgeo.datamodules import COWCCountingDataModule, TropicalCycloneDataModule
 from torchgeo.models import ResNet18_Weights

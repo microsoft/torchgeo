@@ -9,11 +9,6 @@ import segmentation_models_pytorch as smp
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
-
-# TODO: import from lightning_lite instead
-from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-defined]
-    MisconfigurationException,
-)
 from torch.nn.modules import Module
 
 from torchgeo.datamodules import (
@@ -24,6 +19,7 @@ from torchgeo.datamodules import (
     InriaAerialImageLabelingDataModule,
     LandCoverAIDataModule,
     LoveDADataModule,
+    MisconfigurationException,
     NAIPChesapeakeDataModule,
     Potsdam2DDataModule,
     SEN12MSDataModule,

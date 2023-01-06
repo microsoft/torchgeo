@@ -9,12 +9,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 
-# TODO: import from lightning_lite instead
-from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-defined]
-    MisconfigurationException,
-)
-
-from torchgeo.datamodules import NASAMarineDebrisDataModule
+from torchgeo.datamodules import MisconfigurationException, NASAMarineDebrisDataModule
 from torchgeo.datasets import NASAMarineDebris
 from torchgeo.trainers import ObjectDetectionTask
 

@@ -141,3 +141,8 @@ NonGeoDataModule
 ^^^^^^^^^^^^^^^^
 
 .. autoclass:: NonGeoDataModule
+
+Utilities
+---------
+
+.. autoclass:: MisconfigurationException

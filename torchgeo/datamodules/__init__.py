@@ -26,6 +26,7 @@ from .so2sat import So2SatDataModule
 from .spacenet import SpaceNet1DataModule
 from .ucmerced import UCMercedDataModule
 from .usavars import USAVarsDataModule
+from .utils import MisconfigurationException
 from .vaihingen import Vaihingen2DDataModule
 from .xview import XView2DataModule
 
@@ -59,4 +60,6 @@ __all__ = (
     # Base classes
     "GeoDataModule",
     "NonGeoDataModule",
+    # Utilities
+    "MisconfigurationException",
 )
