@@ -28,7 +28,10 @@ from ..transforms import AugmentationSequential
 
 
 class GeoDataModule(LightningDataModule):
-    """Base class for data modules containing geospatial information."""
+    """Base class for data modules containing geospatial information.
+
+    .. versionadded:: 0.4
+    """
 
     mean = torch.tensor(0)
     std = torch.tensor(255)
@@ -331,7 +334,10 @@ class GeoDataModule(LightningDataModule):
 
 
 class NonGeoDataModule(LightningDataModule):
-    """Base class for data modules lacking geospatial information."""
+    """Base class for data modules lacking geospatial information.
+
+    .. versionadded:: 0.4
+    """
 
     mean = torch.tensor(0)
     std = torch.tensor(255)
