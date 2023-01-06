@@ -10,6 +10,7 @@ import timm
 import torch
 import torchvision
 from _pytest.monkeypatch import MonkeyPatch
+from lightning_lite.utilities.exceptions import MisconfigurationException
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 from torchvision.models._api import WeightsEnum
@@ -19,6 +20,7 @@ from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-define
     MisconfigurationException,
 )
 
+from torchgeo.datamodules import COWCCountingDataModule, TropicalCycloneDataModule
 from torchgeo.datasets import TropicalCyclone
 from torchgeo.datamodules import COWCCountingDataModule, TropicalCycloneDataModule
 from torchgeo.models import ResNet18_Weights
