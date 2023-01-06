@@ -154,15 +154,12 @@ class GeoDataModule(LightningDataModule):
         batch_sampler = self.train_batch_sampler or self.batch_sampler
         if dataset is not None and (sampler or batch_sampler) is not None:
             batch_size = self.train_batch_size or self.batch_size
-            shuffle = True
             if batch_sampler is not None:
                 batch_size = 1
-                shuffle = False
                 sampler = None
             return DataLoader(
                 dataset=dataset,
                 batch_size=batch_size,
-                shuffle=shuffle,
                 sampler=sampler,
                 batch_sampler=batch_sampler,
                 num_workers=self.num_workers,
@@ -193,7 +190,6 @@ class GeoDataModule(LightningDataModule):
             return DataLoader(
                 dataset=dataset,
                 batch_size=batch_size,
-                shuffle=False,
                 sampler=sampler,
                 batch_sampler=batch_sampler,
                 num_workers=self.num_workers,
@@ -224,7 +220,6 @@ class GeoDataModule(LightningDataModule):
             return DataLoader(
                 dataset=dataset,
                 batch_size=batch_size,
-                shuffle=False,
                 sampler=sampler,
                 batch_sampler=batch_sampler,
                 num_workers=self.num_workers,
@@ -255,7 +250,6 @@ class GeoDataModule(LightningDataModule):
             return DataLoader(
                 dataset=dataset,
                 batch_size=batch_size,
-                shuffle=False,
                 sampler=sampler,
                 batch_sampler=batch_sampler,
                 num_workers=self.num_workers,
