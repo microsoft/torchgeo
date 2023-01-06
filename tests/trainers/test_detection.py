@@ -5,6 +5,7 @@ import os
 from typing import Any, Dict, Type, cast
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 
@@ -18,9 +19,13 @@ from torchgeo.datasets import NASAMarineDebris
 from torchgeo.trainers import ObjectDetectionTask
 
 
-class CustomObjectDetectionDataModule(NASAMarineDebrisDataModule):
+class PredictObjectDetectionDataModule(NASAMarineDebrisDataModule):
     def setup(self, stage: str) -> None:
         self.predict_dataset = NASAMarineDebris(**self.kwargs)
+
+
+def plot(*args: Any, **kwargs: Any) -> None:
+    raise ValueError
 
 
 class TestObjectDetectionTask:
@@ -72,8 +77,19 @@ class TestObjectDetectionTask:
         model_kwargs["pretrained"] = False
         ObjectDetectionTask(**model_kwargs)
 
+    def test_no_rgb(
+        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any]
+    ) -> None:
+        monkeypatch.setattr(NASAMarineDebrisDataModule, "plot", plot)
+        datamodule = NASAMarineDebrisDataModule(
+            root="tests/data/nasa_marine_debris", batch_size=1, num_workers=0
+        )
+        model = ObjectDetectionTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer.validate(model=model, datamodule=datamodule)
+
     def test_predict(self, model_kwargs: Dict[Any, Any]) -> None:
-        datamodule = CustomObjectDetectionDataModule(
+        datamodule = PredictObjectDetectionDataModule(
             root="tests/data/nasa_marine_debris", batch_size=1, num_workers=0
         )
         model = ObjectDetectionTask(**model_kwargs)

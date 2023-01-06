@@ -34,12 +34,12 @@ from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
 from .test_utils import ClassificationTestModel
 
 
-class CustomClassificationDataModule(EuroSATDataModule):
+class PredictClassificationDataModule(EuroSATDataModule):
     def setup(self, stage: str) -> None:
         self.predict_dataset = EuroSAT(split="test", **self.kwargs)
 
 
-class CustomMultiLabelClassificationDataModule(BigEarthNetDataModule):
+class PredictMultiLabelClassificationDataModule(BigEarthNetDataModule):
     def setup(self, stage: str) -> None:
         self.predict_dataset = BigEarthNet(split="test", **self.kwargs)
 
@@ -51,6 +51,10 @@ def create_model(*args: Any, **kwargs: Any) -> Module:
 def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
     state_dict: Dict[str, Any] = torch.load(url)
     return state_dict
+
+
+def plot(*args: Any, **kwargs: Any) -> None:
+    raise ValueError
 
 
 class TestClassificationTask:
@@ -153,13 +157,24 @@ class TestClassificationTask:
         with pytest.raises(ValueError, match=match):
             ClassificationTask(**model_kwargs)
 
-    def test_predict(self, model_kwargs: Dict[Any, Any]) -> None:
-        datamodule = CustomClassificationDataModule(
+    def test_no_rgb(
+        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any]
+    ) -> None:
+        monkeypatch.setattr(EuroSATDataModule, "plot", plot)
+        datamodule = EuroSATDataModule(
             root="tests/data/eurosat", batch_size=1, num_workers=0
         )
         model = ClassificationTask(**model_kwargs)
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
-        trainer.predict(model=model, dataloaders=datamodule)
+        trainer.validate(model=model, datamodule=datamodule)
+
+    def test_predict(self, model_kwargs: Dict[Any, Any]) -> None:
+        datamodule = PredictClassificationDataModule(
+            root="tests/data/eurosat", batch_size=1, num_workers=0
+        )
+        model = ClassificationTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer.predict(model=model, datamodule=datamodule)
 
 
 class TestMultiLabelClassificationTask:
@@ -215,10 +230,21 @@ class TestMultiLabelClassificationTask:
         with pytest.raises(ValueError, match=match):
             MultiLabelClassificationTask(**model_kwargs)
 
-    def test_predict(self, model_kwargs: Dict[Any, Any]) -> None:
-        datamodule = CustomMultiLabelClassificationDataModule(
+    def test_no_rgb(
+        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any]
+    ) -> None:
+        monkeypatch.setattr(BigEarthNetDataModule, "plot", plot)
+        datamodule = BigEarthNetDataModule(
             root="tests/data/bigearthnet", batch_size=1, num_workers=0
         )
         model = MultiLabelClassificationTask(**model_kwargs)
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
-        trainer.predict(model=model, dataloaders=datamodule)
+        trainer.validate(model=model, datamodule=datamodule)
+
+    def test_predict(self, model_kwargs: Dict[Any, Any]) -> None:
+        datamodule = PredictMultiLabelClassificationDataModule(
+            root="tests/data/bigearthnet", batch_size=1, num_workers=0
+        )
+        model = MultiLabelClassificationTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer.predict(model=model, datamodule=datamodule)

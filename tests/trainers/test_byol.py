@@ -36,7 +36,7 @@ def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
     return state_dict
 
 
-class CustomBYOLDataModule(ChesapeakeCVPRDataModule):
+class PredictBYOLDataModule(ChesapeakeCVPRDataModule):
     def setup(self, stage: str) -> None:
         self.predict_dataset = ChesapeakeCVPR(
             splits=self.test_splits, layers=self.layers, **self.kwargs
@@ -129,7 +129,7 @@ class TestBYOLTask:
         BYOLTask(**model_kwargs)
 
     def test_predict(self, model_kwargs: Dict[Any, Any]) -> None:
-        datamodule = CustomBYOLDataModule(
+        datamodule = PredictBYOLDataModule(
             root="tests/data/chesapeake/cvpr",
             train_splits=["de-test"],
             val_splits=["de-test"],

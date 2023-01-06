@@ -40,6 +40,10 @@ def create_model(**kwargs: Any) -> Module:
     return SegmentationTestModel(**kwargs)
 
 
+def plot(*args: Any, **kwargs: Any) -> None:
+    raise ValueError
+
+
 class TestSemanticSegmentationTask:
     @pytest.mark.parametrize(
         "name,classname",
@@ -133,3 +137,15 @@ class TestSemanticSegmentationTask:
         match = "ignore_index has no effect on training when loss='jaccard'"
         with pytest.warns(UserWarning, match=match):
             SemanticSegmentationTask(**model_kwargs)
+
+    def test_no_rgb(
+        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any]
+    ) -> None:
+        model_kwargs["in_channels"] = 15
+        monkeypatch.setattr(SEN12MSDataModule, "plot", plot)
+        datamodule = SEN12MSDataModule(
+            root="tests/data/sen12ms", batch_size=1, num_workers=0
+        )
+        model = SemanticSegmentationTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer.validate(model=model, datamodule=datamodule)
