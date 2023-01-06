@@ -197,21 +197,23 @@ class SemanticSegmentationTask(pl.LightningModule):
         self.log("val_loss", loss, on_step=False, on_epoch=True)
         self.val_metrics(y_hat_hard, y)
 
-        if batch_idx < 10:
-            try:
-                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
-                batch["prediction"] = y_hat_hard
-                for key in ["image", "mask", "prediction"]:
-                    batch[key] = batch[key].cpu()
-                sample = unbind_samples(batch)[0]
-                fig = datamodule.plot(sample)
-                summary_writer = self.logger.experiment  # type: ignore[union-attr]
-                summary_writer.add_figure(
-                    f"image/{batch_idx}", fig, global_step=self.global_step
-                )
-                plt.close()
-            except (AttributeError, ValueError):
-                pass
+        if (
+            batch_idx < 10
+            and hasattr(self.trainer, "datamodule")
+            and self.logger
+            and hasattr(self.logger, "experiment")
+        ):
+            datamodule = self.trainer.datamodule
+            batch["prediction"] = y_hat_hard
+            for key in ["image", "mask", "prediction"]:
+                batch[key] = batch[key].cpu()
+            sample = unbind_samples(batch)[0]
+            fig = datamodule.plot(sample)
+            summary_writer = self.logger.experiment
+            summary_writer.add_figure(
+                f"image/{batch_idx}", fig, global_step=self.global_step
+            )
+            plt.close()
 
     def validation_epoch_end(self, outputs: Any) -> None:
         """Logs epoch level validation metrics.

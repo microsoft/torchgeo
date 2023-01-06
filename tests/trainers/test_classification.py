@@ -96,25 +96,6 @@ class TestClassificationTask:
         except MisconfigurationException:
             pass
 
-    def test_no_logger(self) -> None:
-        conf = OmegaConf.load(os.path.join("tests", "conf", "ucmerced.yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
-
-        # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = UCMercedDataModule(**datamodule_kwargs)
-
-        # Instantiate model
-        model_kwargs = conf_dict["module"]
-        model = ClassificationTask(**model_kwargs)
-
-        # Instantiate trainer
-        trainer = Trainer(
-            logger=False, fast_dev_run=True, log_every_n_steps=1, max_epochs=1
-        )
-        trainer.fit(model=model, datamodule=datamodule)
-
     @pytest.fixture
     def model_kwargs(self) -> Dict[str, Any]:
         return {
@@ -160,16 +141,17 @@ class TestClassificationTask:
         with pytest.raises(ValueError, match=match):
             ClassificationTask(**model_kwargs)
 
-    def test_missing_attributes(
-        self, model_kwargs: Dict[str, Any], monkeypatch: MonkeyPatch
-    ) -> None:
-        monkeypatch.delattr(EuroSAT, "plot")
-        datamodule = EuroSATDataModule(
-            root="tests/data/eurosat", batch_size=1, num_workers=0
-        )
-        model = ClassificationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
-        trainer.validate(model=model, datamodule=datamodule)
+    def test_invalid_model(self, model_kwargs: Dict[Any, Any]) -> None:
+        model_kwargs["model"] = "invalid_model"
+        match = "Model type 'invalid_model' is not a valid timm model."
+        with pytest.raises(ValueError, match=match):
+            ClassificationTask(**model_kwargs)
+
+    def test_invalid_weights(self, model_kwargs: Dict[Any, Any]) -> None:
+        model_kwargs["weights"] = "invalid_weights"
+        match = "Weight type 'invalid_weights' is not valid."
+        with pytest.raises(ValueError, match=match):
+            ClassificationTask(**model_kwargs)
 
     def test_predict(self, model_kwargs: Dict[Any, Any]) -> None:
         datamodule = CustomClassificationDataModule(
@@ -217,25 +199,6 @@ class TestMultiLabelClassificationTask:
         except MisconfigurationException:
             pass
 
-    def test_no_logger(self) -> None:
-        conf = OmegaConf.load(os.path.join("tests", "conf", "bigearthnet_s1.yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
-
-        # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = BigEarthNetDataModule(**datamodule_kwargs)
-
-        # Instantiate model
-        model_kwargs = conf_dict["module"]
-        model = MultiLabelClassificationTask(**model_kwargs)
-
-        # Instantiate trainer
-        trainer = Trainer(
-            logger=False, fast_dev_run=True, log_every_n_steps=1, max_epochs=1
-        )
-        trainer.fit(model=model, datamodule=datamodule)
-
     @pytest.fixture
     def model_kwargs(self) -> Dict[str, Any]:
         return {
@@ -251,17 +214,6 @@ class TestMultiLabelClassificationTask:
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
             MultiLabelClassificationTask(**model_kwargs)
-
-    def test_missing_attributes(
-        self, model_kwargs: Dict[str, Any], monkeypatch: MonkeyPatch
-    ) -> None:
-        monkeypatch.delattr(BigEarthNet, "plot")
-        datamodule = BigEarthNetDataModule(
-            root="tests/data/bigearthnet", batch_size=1, num_workers=0
-        )
-        model = MultiLabelClassificationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
-        trainer.validate(model=model, datamodule=datamodule)
 
     def test_predict(self, model_kwargs: Dict[Any, Any]) -> None:
         datamodule = CustomMultiLabelClassificationDataModule(

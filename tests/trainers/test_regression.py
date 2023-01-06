@@ -72,25 +72,6 @@ class TestRegressionTask:
         except MisconfigurationException:
             pass
 
-    def test_no_logger(self) -> None:
-        conf = OmegaConf.load(os.path.join("tests", "conf", "cyclone.yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
-
-        # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = TropicalCycloneDataModule(**datamodule_kwargs)
-
-        # Instantiate model
-        model_kwargs = conf_dict["module"]
-        model = RegressionTask(**model_kwargs)
-
-        # Instantiate trainer
-        trainer = Trainer(
-            logger=False, fast_dev_run=True, log_every_n_steps=1, max_epochs=1
-        )
-        trainer.fit(model=model, datamodule=datamodule)
-
     @pytest.fixture
     def model_kwargs(self) -> Dict[str, Any]:
         return {

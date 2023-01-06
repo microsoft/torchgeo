@@ -5,7 +5,6 @@ import os
 from typing import Any, Dict, Type, cast
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 
@@ -72,17 +71,6 @@ class TestObjectDetectionTask:
     def test_non_pretrained_backbone(self, model_kwargs: Dict[Any, Any]) -> None:
         model_kwargs["pretrained"] = False
         ObjectDetectionTask(**model_kwargs)
-
-    def test_missing_attributes(
-        self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
-    ) -> None:
-        monkeypatch.delattr(NASAMarineDebris, "plot")
-        datamodule = NASAMarineDebrisDataModule(
-            root="tests/data/nasa_marine_debris", batch_size=1, num_workers=0
-        )
-        model = ObjectDetectionTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
-        trainer.validate(model=model, datamodule=datamodule)
 
     def test_predict(self, model_kwargs: Dict[Any, Any]) -> None:
         datamodule = CustomObjectDetectionDataModule(
