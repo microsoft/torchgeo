@@ -47,7 +47,9 @@ jobs:
     - name: Setup headless display for pyvista
       uses: pyvista/setup-headless-display-action@v1
     - name: Install apt dependencies (Linux)
-      run: sudo apt-get install unrar
+      run: |
+        sudo apt-get update
+        sudo apt-get install unrar
       if: ${{ runner.os == 'Linux' }}
     - name: Install brew dependencies (macOS)
       run: brew install rar
@@ -92,7 +94,9 @@ jobs:
       with:
         python-version: '3.7'
     - name: Install apt dependencies (Linux)
-      run: sudo apt-get install libgeos-dev libhdf5-dev unrar
+      run: |
+        sudo apt-get update
+        sudo apt-get install libgeos-dev libhdf5-dev unrar
     - name: Install pip dependencies
       run: |
         pip install cython numpy==1.17.2  # needed by pycocotools
