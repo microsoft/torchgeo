@@ -38,15 +38,15 @@ class RCF(Module):
         This is a static model that serves to extract fixed length feature vectors from
         input patches.
 
+        .. versionadded:: 0.2
+           The *seed* parameter.
+
         Args:
             in_channels: number of input channels
             features: number of features to compute, must be divisible by 2
             kernel_size: size of the kernel used to compute the RCFs
             bias: bias of the convolutional layer
             seed: random seed used to initialize the convolutional layer
-
-        .. versionadded:: 0.2
-           The *seed* parameter.
         """
         super().__init__()
 

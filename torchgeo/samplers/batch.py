@@ -80,6 +80,12 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         * a ``tuple`` of two floats - in which case, the first *float* is used for the
           height dimension, and the second *float* for the width dimension
 
+        .. versionchanged:: 0.3
+           Added ``units`` parameter, changed default to pixel units
+
+        .. versionchanged:: 0.4
+           ``length`` parameter is now optional, a reasonable default will be used
+
         Args:
             dataset: dataset to index from
             size: dimensions of each :term:`patch`
@@ -91,12 +97,6 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units
-
-        .. versionchanged:: 0.3
-           Added ``units`` parameter, changed default to pixel units
-
-        .. versionchanged:: 0.4
-           ``length`` parameter is now optional, a reasonable default will be used
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)

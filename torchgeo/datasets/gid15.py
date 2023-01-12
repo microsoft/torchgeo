@@ -250,7 +250,7 @@ class GID15(NonGeoDataset):
             sample: a sample return by :meth:`__getitem__`
             suptitle: optional suptitle to use for figure
 
-        Returns;
+        Returns:
             a matplotlib Figure with the rendered sample
 
         .. versionadded:: 0.2
