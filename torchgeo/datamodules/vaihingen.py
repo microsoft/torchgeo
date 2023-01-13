@@ -44,6 +44,10 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
         During training, the effective batch size is equal to
         ``num_tiles_per_batch`` x ``num_patches_per_tile``.
 
+        .. versionchanged:: 0.4
+           *batch_size* was replaced by *num_tile_per_batch*, *num_patches_per_tile*,
+           and *patch_size*.
+
         Args:
             num_tiles_per_batch: The number of image tiles to sample from during
                 training
@@ -55,10 +59,6 @@ class Vaihingen2DDataModule(pl.LightningDataModule):
             num_workers: The number of workers to use for parallel data loading
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.Vaihingen2D`
-
-        .. versionchanged:: 0.4
-           *batch_size* was replaced by *num_tile_per_batch*, *num_patches_per_tile*,
-           and *patch_size*.
         """
         super().__init__()
 
