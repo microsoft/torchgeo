@@ -1,6 +1,6 @@
 # TorchGeo
 /data/
-/logs/
+/*logs/
 /output/
 *.pdf
 
