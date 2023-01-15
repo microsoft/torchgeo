@@ -26,7 +26,7 @@ class Sentinel(RasterDataset):
 
 
 class Sentinel1(Sentinel):
-    """Sentinel-1 dataset.
+    r"""Sentinel-1 dataset.
 
     The `Sentinel-1 mission
     <https://sentinel.esa.int/web/sentinel/missions/sentinel-1>`_ comprises a
@@ -81,6 +81,11 @@ class Sentinel1(Sentinel):
        radiometrically terrain corrected (RTC). This can be done manually using a DEM,
        or you can download an On Demand RTC product from ASF DAAC.
 
+    .. note::
+       Mixing :math:`\gamma_0` and :math:`\sigma_0` backscatter coefficient data is not
+       recommended. Similarly, power, decibel, and amplitude scale data should not be
+       mixed, and TorchGeo does not attempt to convert all data to a common scale.
+
     .. versionadded:: 0.4
     """
 
@@ -117,8 +122,8 @@ class Sentinel1(Sentinel):
         (?P<orbit>[PRO])
         _RTC(?P<spacing>\d{2})
         _(?P<package>G)
-        _(?P<output1>[gs])
-        (?P<output2>[pda])
+        _(?P<backscatter>[gs])
+        (?P<scale>[pda])
         (?P<mask>[uw])
         (?P<filter>[nf])
         (?P<area>[ec])
@@ -212,17 +217,16 @@ To create a dataset containing both, use:
                 bands = bands[::-1]
                 sample["image"] = torch.flip(sample["image"], dims=[0])
 
-            # Could be horizontal or vertical transmit, doesn't really matter which
-            hh = sample["image"][0]  # transmit == receive (HH or VV)
-            hv = sample["image"][1]  # transmit != receive (HV or VH)
-            hh_hv = hh / hv  # ratio (HH/HV or VV/VH)
+            co_polarization = sample["image"][0]  # transmit == receive
+            cross_polarization = sample["image"][1]  # transmit != receive
+            ratio = co_polarization / cross_polarization
 
             # https://gis.stackexchange.com/a/400780/123758
-            hh = torch.clamp(hh / 0.3, min=0, max=1)
-            hv = torch.clamp(hv / 0.05, min=0, max=1)
-            hh_hv = torch.clamp(hh_hv / 25, min=0, max=1)
+            co_polarization = torch.clamp(co_polarization / 0.3, min=0, max=1)
+            cross_polarization = torch.clamp(cross_polarization / 0.05, min=0, max=1)
+            ratio = torch.clamp(ratio / 25, min=0, max=1)
 
-            image = torch.stack((hh, hv, hh_hv), dim=-1)
+            image = torch.stack((co_polarization, cross_polarization, ratio), dim=-1)
 
             title = "({0}, {1}, {0}/{1})".format(*bands)
 
