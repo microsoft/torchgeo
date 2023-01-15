@@ -74,7 +74,7 @@ class TestGeoDataModule:
 
     def test_sampler(self) -> None:
         dm = SamplerGeoDatModule()
-        dm.setup("train")
+        dm.setup("fit")
         dm.train_dataloader()
         dm.val_dataloader()
         dm.test_dataloader()
@@ -82,7 +82,7 @@ class TestGeoDataModule:
 
     def test_batch_sampler(self) -> None:
         dm = BatchSamplerGeoDatModule()
-        dm.setup("train")
+        dm.setup("fit")
         dm.train_dataloader()
         dm.val_dataloader()
         dm.test_dataloader()
