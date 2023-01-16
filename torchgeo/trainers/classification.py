@@ -80,10 +80,10 @@ class ClassificationTask(pl.LightningModule):
                 # load a checkpoint path
                 name, state_dict = utils.extract_backbone(self.hyperparams["weights"])
 
-                if self.hyperparams["classification_model"] != name:
+                if self.hyperparams["model"] != name:
                     raise ValueError(
                         f"Trying to load {name} weights into a "
-                        f"{self.hyperparams['classification_model']}"
+                        f"{self.hyperparams['model']}"
                     )
                 self.model = utils.load_state_dict(self.model, state_dict)
             else:
