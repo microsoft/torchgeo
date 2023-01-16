@@ -16,7 +16,6 @@ import rasterio
 import shapely
 import shapely.wkt as wkt
 import torch
-from packaging.version import parse
 from rasterio.crs import CRS
 from rtree.index import Index, Property
 
@@ -387,7 +386,7 @@ class OpenBuildings(VectorDataset):
         x = json.loads(x.replace("'", '"'))
         import fiona
 
-        if parse(fiona.__version__) >= parse("1.9a1"):
+        if hasattr(fiona, "model"):
             import fiona.model
 
             geom = fiona.model.Geometry(**x)
