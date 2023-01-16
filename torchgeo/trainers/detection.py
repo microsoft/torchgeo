@@ -8,7 +8,6 @@ from typing import Any, Dict, List, cast
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
-import torchvision
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
@@ -17,6 +16,8 @@ from torchvision.models.detection import FasterRCNN
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.ops import MultiScaleRoIAlign
+
+from ..datasets.utils import unbind_samples
 
 BACKBONE_WEIGHT_MAP = {
     "resnet18": R.ResNet18_Weights.DEFAULT,
@@ -29,8 +30,6 @@ BACKBONE_WEIGHT_MAP = {
     "wide_resnet50_2": R.Wide_ResNet50_2_Weights.DEFAULT,
     "wide_resnet101_2": R.Wide_ResNet101_2_Weights.DEFAULT,
 }
-
-from ..datasets.utils import unbind_samples
 
 
 class ObjectDetectionTask(pl.LightningModule):
