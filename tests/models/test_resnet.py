@@ -152,17 +152,6 @@ def test_resnet18_weights_download(
 
 # RESNET 50 Weights
 @pytest.fixture
-def resnet50_googleearth_millionaid_rgb(tmp_path: Path) -> str:
-    pytest.importorskip("yacs")
-    num_input_channels = 3
-    weight_key = "GOOGLEEARTH_MILLIONAID_RGB"
-    model = timm.create_model("resnet50", in_chans=num_input_channels)
-    ckpt_path = os.path.join(tmp_path, f"resnet50_{weight_key.lower()}.pth")
-    torch.save(model.state_dict(), ckpt_path)
-    return ckpt_path, num_input_channels
-
-
-@pytest.fixture
 def resnet50_sentinel2_rgb_moco(tmp_path: Path) -> str:
     num_input_channels = 3
     weight_key = "SENTINEL2_RGB_MOCO"

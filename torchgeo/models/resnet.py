@@ -80,21 +80,6 @@ class ResNet50_Weights(WeightsEnum):
     *resnet50* implementation.
     """
 
-    GOOGLEEARTH_MILLIONAID_RGB = Weights(
-        url="https://drive.google.com/file/d/1K3P4_fDfcBRGqpKoSdSa6OXS4xC1xLC9",
-        transforms=nn.Identity(),
-        meta={
-            "dataset": "millionaid",
-            "publication": "https://arxiv.org/abs/2204.02825",
-            "ssl_method": None,
-            "repo": (
-                "https://github.com/ViTAE-Transformer/"
-                "ViTAE-Transformer-Remote-Sensing"
-            ),
-            "in_chans": 3,
-        },
-    )
-
     SENTINEL2_ALL_MOCO = Weights(
         url=(
             "https://drive.google.com/file/d/1OrtPfG2wkO05bimstQ_T9Dza8z3zp8i-/"
@@ -178,18 +163,6 @@ class ResNet50_Weights(WeightsEnum):
             filename = "resnet50_" + str(self).lower() + ".pth"
             ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
             state_dict = adjust_moco_weights_zhu_lab(ckpt["state_dict"])
-
-        elif "GOOGLEEARTH_MILLIONAID_RGB" in str(self):
-            try:
-                import yacs  # noqa: F401
-            except ImportError:
-                raise ImportError(
-                    "yacs is not installed but is required to load these weights."
-                )
-            filename = "resnet50_" + str(self).lower() + ".pth"
-            state_dict = load_state_dict_from_url(
-                root, filename, self.url, map_location
-            )
 
         return state_dict
 

@@ -3,7 +3,6 @@ ResNet18_Weights.IMAGENET_RGB," 3"," `link <https://github.com/rwightman/pytorch
 ResNet18_Weights.SENTINEL2_RGB_MOCO," 3"," `link <https://github.com/zhu-xlab/SSL4EO-S12>`__"," `link <https://arxiv.org/abs/2211.07044>`__", " ", " "
 ResNet18_Weights.SENTINEL2_ALL_MOCO," 13"," `link <https://github.com/zhu-xlab/SSL4EO-S12>`__"," `link <https://arxiv.org/abs/2211.07044>`__", " ", " "
 ResNet50_Weights.IMAGENET_RGB," 3"," `link <https://github.com/rwightman/pytorch-image-models/blob/main/timm/models/resnet.py>`__"," `link <https://github.com/rwightman/pytorch-image-models#bibtex>`__ ", " ", " "
-ResNet50_Weights.GOOGLEEARTH_MILLIONAID_RGB," 3"," `link <https://github.com/ViTAE-Transformer/ViTAE-Transformer-Remote-Sensing>`__"," `link <https://arxiv.org/abs/2204.02825>`__", " ", " "
 ResNet50_Weights.SENTINEL2_RGB_MOCO," 3"," `link <https://github.com/zhu-xlab/SSL4EO-S12>`__"," `link <https://arxiv.org/abs/2211.07044>`__", " ", " "
 ResNet50_Weights.SENTINEL2_ALL_MOCO," 13"," `link <https://github.com/zhu-xlab/SSL4EO-S12>`__"," `link <https://arxiv.org/abs/2211.07044>`__", " 91.8", " 99.1"
 ResNet50_Weights.SENTINEL1_GRD_MOCO," 2"," `link <https://github.com/zhu-xlab/SSL4EO-S12>`__"," `link <https://arxiv.org/abs/2211.07044>`__", " ", " "
