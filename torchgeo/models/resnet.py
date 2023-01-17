@@ -35,7 +35,7 @@ class ResNet18_Weights(WeightsEnum):
             "publication": "https://arxiv.org/abs/2211.07044",
             "dataset": "SSL4EO-S12",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
-            "num_input_channels": 3,
+            "in_chans": 3,
         },
     )
 
@@ -50,7 +50,7 @@ class ResNet18_Weights(WeightsEnum):
             "publication": "https://arxiv.org/abs/2211.07044",
             "dataset": "SSL4EO-S12",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
-            "num_input_channels": 13,
+            "in_chans": 13,
         },
     )
 
@@ -91,7 +91,7 @@ class ResNet50_Weights(WeightsEnum):
                 "https://github.com/ViTAE-Transformer/"
                 "ViTAE-Transformer-Remote-Sensing"
             ),
-            "num_input_channels": 3,
+            "in_chans": 3,
         },
     )
 
@@ -106,7 +106,7 @@ class ResNet50_Weights(WeightsEnum):
             "publication": "https://arxiv.org/abs/2211.07044",
             "dataset": "SSL4EO-S12",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
-            "num_input_channels": 13,
+            "in_chans": 13,
         },
     )
 
@@ -121,7 +121,7 @@ class ResNet50_Weights(WeightsEnum):
             "publication": "https://arxiv.org/abs/2211.07044",
             "dataset": "SSL4EO-S12",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
-            "num_input_channels": 3,
+            "in_chans": 3,
         },
     )
 
@@ -136,7 +136,7 @@ class ResNet50_Weights(WeightsEnum):
             "publication": "https://arxiv.org/abs/2211.07044",
             "dataset": "SSL4EO-S12",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
-            "num_input_channels": 2,
+            "in_chans": 2,
         },
     )
 
@@ -148,7 +148,7 @@ class ResNet50_Weights(WeightsEnum):
             "publication": "https://arxiv.org/abs/2211.07044",
             "dataset": "SSL4EO-S12",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
-            "num_input_channels": 13,
+            "in_chans": 13,
         },
     )
 

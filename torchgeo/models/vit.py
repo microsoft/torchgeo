@@ -35,7 +35,7 @@ class VITSmall16_Weights(WeightsEnum):
             "publication": "https://arxiv.org/abs/2211.07044",
             "dataset": "SSL4EO-S12",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
-            "num_input_channels": 13,
+            "in_chans": 13,
         },
     )
 
@@ -50,7 +50,7 @@ class VITSmall16_Weights(WeightsEnum):
             "publication": "https://arxiv.org/abs/2211.07044",
             "dataset": "SSL4EO-S12",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
-            "num_input_channels": 13,
+            "in_chans": 13,
         },
     )
 
