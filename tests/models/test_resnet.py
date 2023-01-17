@@ -197,10 +197,6 @@ def resnet50_sentinel2_all_dino(tmp_path: Path) -> str:
 @pytest.mark.parametrize(
     "generate_model,weight",
     [
-        (
-            "resnet50_googleearth_millionaid_rgb",
-            ResNet50_Weights.GOOGLEEARTH_MILLIONAID_RGB,
-        ),
         ("resnet50_sentinel2_rgb_moco", ResNet50_Weights.SENTINEL2_RGB_MOCO),
         ("resnet50_sentinel2_all_moco", ResNet50_Weights.SENTINEL2_ALL_MOCO),
         ("resnet50_sentinel1_grd_moco", ResNet50_Weights.SENTINEL1_GRD_MOCO),
