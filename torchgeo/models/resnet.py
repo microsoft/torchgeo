@@ -3,15 +3,8 @@
 
 """Pre-trained ResNet models."""
 
-import os
-from typing import Any, Dict
-
-import torch
 import torch.nn as nn
-from torch import Tensor
 from torchvision.models._api import Weights, WeightsEnum
-
-from torchgeo.models.utils import adjust_dino_weights_zhu_lab, load_state_dict_from_url
 
 __all__ = ["ResNet50_Weights", "ResNet18_Weights"]
 
@@ -24,52 +17,37 @@ class ResNet18_Weights(WeightsEnum):
     *resnet18* implementation.
     """
 
-    SENTINEL2_RGB_MOCO = Weights(
-        url=(
-            "https://drive.google.com/file/d/1U_m39Owahk15Vg1uL1MYbPAmAyUWBKfI/"
-            "view?usp=sharing/B3_rn18_moco_0199_ckpt.pth"
-        ),
-        transforms=nn.Identity(),
-        meta={
-            "ssl_method": "moco",
-            "publication": "https://arxiv.org/abs/2211.07044",
-            "dataset": "SSL4EO-S12",
-            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
-            "in_chans": 3,
-        },
-    )
-
     SENTINEL2_ALL_MOCO = Weights(
         url=(
-            "https://drive.google.com/file/d/1iWLm7ljQ6tKZiVp47pJUPDe3Un0BUd9o/"
-            "view?usp=sharing/B13_rn18_moco_0099_ckpt.pth"
+            "https://huggingface.co/torchgeo/resnet18_sentinel2_all_moco/"
+            "resolve/main/resnet18_sentinel2_all_moco.pth"
         ),
         transforms=nn.Identity(),
         meta={
-            "ssl_method": "moco",
-            "publication": "https://arxiv.org/abs/2211.07044",
             "dataset": "SSL4EO-S12",
-            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
             "in_chans": 13,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2211.07044",
+            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "ssl_method": "moco",
         },
     )
 
-    def get_state_dict(self) -> Dict[str, Any]:
-        """Retrieve pretrained weights state_dict."""
-        root = os.path.join(torch.hub.get_dir(), "checkpoints")
-        map_location = torch.device("cpu")
-
-        if "SENTINEL2_ALL_MOCO" in str(self):
-            filename = "resnet18_" + str(self).lower() + ".pth"
-            ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
-            state_dict = adjust_moco_weights_zhu_lab(ckpt["state_dict"])
-
-        elif "SENTINEL2_RGB_MOCO" in str(self):
-            filename = "resnet18_" + str(self).lower() + ".pth"
-            ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
-            state_dict = adjust_moco_weights_zhu_lab(ckpt["state_dict"])
-
-        return state_dict
+    SENTINEL2_RGB_MOCO = Weights(
+        url=(
+            "https://huggingface.co/torchgeo/resnet18_sentinel2_rgb_moco/"
+            "resolve/main/resnet18_sentinel2_rgb_moco.pth"
+        ),
+        transforms=nn.Identity(),
+        meta={
+            "dataset": "SSL4EO-S12",
+            "in_chans": 3,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2211.07044",
+            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "ssl_method": "moco",
+        },
+    )
 
 
 class ResNet50_Weights(WeightsEnum):
@@ -80,104 +58,66 @@ class ResNet50_Weights(WeightsEnum):
     *resnet50* implementation.
     """
 
-    SENTINEL2_ALL_MOCO = Weights(
+    SENTINEL1_ALL_MOCO = Weights(
         url=(
-            "https://drive.google.com/file/d/1OrtPfG2wkO05bimstQ_T9Dza8z3zp8i-/"
-            "view?usp=sharing/B13_rn50_moco_0099_ckpt.pth"
+            "https://huggingface.co/torchgeo/resnet50_sentinel1_all_moco/"
+            "resolve/main/resnet50_sentinel1_all_moco.pth"
         ),
         transforms=nn.Identity(),
         meta={
-            "ssl_method": "moco",
-            "publication": "https://arxiv.org/abs/2211.07044",
             "dataset": "SSL4EO-S12",
+            "in_chans": 2,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2211.07044",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "ssl_method": "moco",
+        },
+    )
+
+    SENTINEL2_ALL_MOCO = Weights(
+        url=(
+            "https://huggingface.co/torchgeo/resnet50_sentinel2_all_moco/"
+            "resolve/main/resnet50_sentinel2_all_moco.pth"
+        ),
+        transforms=nn.Identity(),
+        meta={
+            "dataset": "SSL4EO-S12",
             "in_chans": 13,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2211.07044",
+            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "ssl_method": "moco",
         },
     )
 
     SENTINEL2_RGB_MOCO = Weights(
         url=(
-            "https://drive.google.com/file/d/1UEpA9sOcA47W0cmwQhkSeXfQxrL-EcJB/"
-            "view?usp=sharing/B3_rn50_moco_0099_ckpt.path"
+            "https://huggingface.co/torchgeo/resnet50_sentinel2_rgb_moco/"
+            "resolve/main/resnet50_sentinel2_rgb_moco.pth"
         ),
         transforms=nn.Identity(),
         meta={
-            "ssl_method": "moco",
-            "publication": "https://arxiv.org/abs/2211.07044",
             "dataset": "SSL4EO-S12",
-            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
             "in_chans": 3,
-        },
-    )
-
-    SENTINEL1_GRD_MOCO = Weights(
-        url=(
-            "https://drive.google.com/file/d/1gjTTWikf1qORJyFifWD1ksk9HzezqQ0b/"
-            "view?usp=sharing/B2_moco_rn50_0099_ckpt.pth"
-        ),
-        transforms=nn.Identity(),
-        meta={
-            "ssl_method": "moco",
+            "model": "resnet50",
             "publication": "https://arxiv.org/abs/2211.07044",
-            "dataset": "SSL4EO-S12",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
-            "in_chans": 2,
+            "ssl_method": "moco",
         },
     )
 
     SENTINEL2_ALL_DINO = Weights(
-        url="https://drive.google.com/file/d/1iSHHp_cudPjZlshqWXVZj5TK74P32a2q",
+        url=(
+            "https://huggingface.co/torchgeo/resnet50_sentinel2_all_dino/"
+            "resolve/main/resnet50_sentinel2_all_dino.pth"
+        ),
         transforms=nn.Identity(),
         meta={
-            "ssl_method": "dino",
-            "publication": "https://arxiv.org/abs/2211.07044",
             "dataset": "SSL4EO-S12",
-            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
             "in_chans": 13,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2211.07044",
+            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "ssl_method": "dino",
         },
     )
-
-    def get_state_dict(self) -> Dict[str, Any]:
-        """Retrieve pretrained weights state_dict."""
-        root = os.path.join(torch.hub.get_dir(), "checkpoints")
-        map_location = torch.device("cpu")
-
-        # need to define identifiers for each case
-
-        if "SENTINEL2_ALL_DINO" in str(self):
-            filename = "resnet50_" + str(self).lower() + ".pth"
-            ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
-            state_dict = adjust_dino_weights_zhu_lab(ckpt["teacher"])
-
-        elif "SENTINEL1_GRD_MOCO" in str(self):
-            filename = "resnet50_" + str(self).lower() + ".pth"
-            ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
-            state_dict = adjust_moco_weights_zhu_lab(ckpt["state_dict"])
-
-        elif "SENTINEL2_ALL_MOCO" in str(self):
-            filename = "resnet50_" + str(self).lower() + ".pth"
-            ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
-            state_dict = adjust_moco_weights_zhu_lab(ckpt["state_dict"])
-
-        elif "SENTINEL2_RGB_MOCO" in str(self):
-            filename = "resnet50_" + str(self).lower() + ".pth"
-            ckpt = load_state_dict_from_url(root, filename, self.url, map_location)
-            state_dict = adjust_moco_weights_zhu_lab(ckpt["state_dict"])
-
-        return state_dict
-
-
-def adjust_moco_weights_zhu_lab(state_dict: Dict[str, Tensor]) -> Dict[str, Tensor]:
-    """Loading Moco ResNet weights from https://github.com/zhu-xlab/SSL4EO-S12.
-
-    # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/
-    # src/benchmark/transfer_classification/linear_BE_moco.py#L248-L276
-    """
-    for k in list(state_dict.keys()):
-        # retain only encoder up to before the embedding layer
-        if k.startswith("module.encoder_q") and not k.startswith("module.encoder_q.fc"):
-            # remove prefix
-            state_dict[k[len("module.encoder_q.") :]] = state_dict[k]
-        # delete renamed or unused k
-        del state_dict[k]
-    return state_dict

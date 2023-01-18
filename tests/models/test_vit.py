@@ -17,7 +17,7 @@ from torch import Tensor
 
 import torchgeo.models.vit
 from torchgeo.datamodules import EuroSATDataModule
-from torchgeo.models import VITSmall16_Weights
+from torchgeo.models import ViTSmall16_Weights
 from torchgeo.models.weights import lookup_pretrained_weights
 from torchgeo.trainers import ClassificationTask, RegressionTask
 from torchgeo.transforms import AugmentationSequential
@@ -47,7 +47,7 @@ def custom_augmentation(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
     return out
 
 
-# VITSmall16 weights
+# ViTSmall16 weights
 @pytest.fixture
 def vitsmall16_sentinel2_all_moco(tmp_path: Path) -> Tuple[str, int]:
     num_input_channels = 13
@@ -76,8 +76,8 @@ def vitsmall16_sentinel2_all_dino(tmp_path: Path) -> Tuple[str, int]:
 @pytest.mark.parametrize(
     "generate_model, weight",
     [
-        ("vitsmall16_sentinel2_all_moco", VITSmall16_Weights.SENTINEL2_ALL_MOCO),
-        ("vitsmall16_sentinel2_all_dino", VITSmall16_Weights.SENTINEL2_ALL_DINO),
+        ("vitsmall16_sentinel2_all_moco", ViTSmall16_Weights.SENTINEL2_ALL_MOCO),
+        ("vitsmall16_sentinel2_all_dino", ViTSmall16_Weights.SENTINEL2_ALL_DINO),
     ],
 )
 @pytest.mark.parametrize(
@@ -166,7 +166,7 @@ def test_pretrained_vit_small_patch16_224_from_config(
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("weight_name", [(w.name) for w in VITSmall16_Weights])
+@pytest.mark.parametrize("weight_name", [(w.name) for w in ViTSmall16_Weights])
 @pytest.mark.parametrize(
     "task, task_args",
     [
@@ -183,7 +183,7 @@ def test_pretrained_vit_small_patch16_224_from_config(
 def test_vit_small_patch16_224_weights_download(
     weight_name: str, task: pl.LightningModule, task_args: Dict[str, Any]
 ) -> None:
-    weight = VITSmall16_Weights[weight_name]
+    weight = ViTSmall16_Weights[weight_name]
     num_input_channels = weight.meta["num_input_channels"]
 
     task = task(
