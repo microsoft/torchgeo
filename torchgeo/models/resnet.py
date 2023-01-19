@@ -3,6 +3,9 @@
 
 """Pre-trained ResNet models."""
 
+from typing import Any, Optional
+
+import timm
 import torch.nn as nn
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -12,9 +15,10 @@ __all__ = ["ResNet50_Weights", "ResNet18_Weights"]
 class ResNet18_Weights(WeightsEnum):
     """ResNet18 weights.
 
-    For `timm
-    <https://github.com/rwightman/pytorch-image-models>`_
+    For `timm <https://github.com/rwightman/pytorch-image-models>`_
     *resnet18* implementation.
+
+    .. versionadded:: 0.4
     """
 
     SENTINEL2_ALL_MOCO = Weights(
@@ -53,9 +57,10 @@ class ResNet18_Weights(WeightsEnum):
 class ResNet50_Weights(WeightsEnum):
     """ResNet50 weights.
 
-    For `timm
-    <https://github.com/rwightman/pytorch-image-models>`_
+    For `timm <https://github.com/rwightman/pytorch-image-models>`_
     *resnet50* implementation.
+
+    .. versionadded:: 0.4
     """
 
     SENTINEL1_ALL_MOCO = Weights(
@@ -121,3 +126,64 @@ class ResNet50_Weights(WeightsEnum):
             "ssl_method": "dino",
         },
     )
+
+
+def resnet18(
+    weights: Optional[ResNet18_Weights] = None, *args: Any, **kwargs: Any
+) -> nn.Module:
+    """ResNet-18 model.
+
+    If you use this model in your research, please cite the following paper:
+
+    * https://arxiv.org/pdf/1512.03385.pdf
+
+    .. versionadded:: 0.4
+
+    Args:
+        weights: Pre-trained model weights to use.
+        *args: Additional arguments to pass to :meth:`timm.create_model`.
+        **kwargs: Additional keywork arguments to pass to :meth:`timm.create_model`.
+
+    Returns:
+        A ResNet-18 model.
+    """
+    if weights:
+        kwargs["in_chans"] = weights.meta["in_chans"]
+
+    model = timm.create_model("resnet50", *args, **kwargs)
+
+    if weights:
+        model.load_state_dict(weights.get_state_dict(), strict=False)
+
+    return model
+
+
+def resnet50(
+    weights: Optional[ResNet50_Weights] = None, *args: Any, **kwargs: Any
+) -> nn.Module:
+    """ResNet-50 model.
+
+    If you use this model in your research, please cite the following paper:
+
+    * https://arxiv.org/pdf/1512.03385.pdf
+
+    .. versionchanged:: 0.4
+       Switched to multi-weight support API.
+
+    Args:
+        weights: Pre-trained model weights to use.
+        *args: Additional arguments to pass to :meth:`timm.create_model`.
+        **kwargs: Additional keywork arguments to pass to :meth:`timm.create_model`.
+
+    Returns:
+        A ResNet-50 model.
+    """
+    if weights:
+        kwargs["in_chans"] = weights.meta["in_chans"]
+
+    model = timm.create_model("resnet50", *args, **kwargs)
+
+    if weights:
+        model.load_state_dict(weights.get_state_dict(), strict=False)
+
+    return model
