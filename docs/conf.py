@@ -56,15 +56,6 @@ needs_sphinx = "4.0"
 
 nitpicky = True
 nitpick_ignore = [
-    # https://github.com/sphinx-doc/sphinx/issues/8127
-    ("py:class", ".."),
-    # TODO: can't figure out why this isn't found
-    ("py:class", "LightningDataModule"),
-    ("py:class", "pytorch_lightning.core.module.LightningModule"),
-    # Undocumented class
-    ("py:class", "torchvision.models.resnet.ResNet"),
-    ("py:class", "segmentation_models_pytorch.base.model.SegmentationModel"),
-    ("py:class", "torchvision.models._api.WeightsEnum"),
 ]
 
 
@@ -115,7 +106,6 @@ intersphinx_mapping = {
     "rasterio": ("https://rasterio.readthedocs.io/en/stable/", None),
     "rtree": ("https://rtree.readthedocs.io/en/stable/", None),
     "segmentation_models_pytorch": ("https://smp.readthedocs.io/en/stable/", None),
-    "timm": ("https://huggingface.co/docs/timm/", None),
     "torch": ("https://pytorch.org/docs/stable", None),
     "torchvision": ("https://pytorch.org/vision/stable", None),
 }
