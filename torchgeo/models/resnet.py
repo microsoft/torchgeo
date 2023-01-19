@@ -150,7 +150,7 @@ def resnet18(
     if weights:
         kwargs["in_chans"] = weights.meta["in_chans"]
 
-    model = timm.create_model("resnet50", *args, **kwargs)
+    model = timm.create_model("resnet18", *args, **kwargs)
 
     if weights:
         model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
