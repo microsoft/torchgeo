@@ -5,11 +5,18 @@
 
 from typing import Any, Optional
 
+import kornia.augmentation as K
 import timm
 import torch.nn as nn
 from torchvision.models._api import Weights, WeightsEnum
 
+from ..transforms import AugmentationSequential
+
 __all__ = ["ViTSmall16_Weights"]
+
+_zhu_xlab_transforms = AugmentationSequential(
+    K.Resize(256), K.CenterCrop(224), data_keys=["image"]
+)
 
 
 class ViTSmall16_Weights(WeightsEnum):
@@ -26,7 +33,7 @@ class ViTSmall16_Weights(WeightsEnum):
             "https://huggingface.co/torchgeo/vit_small_patch16_224_sentinel2_all_moco/"
             "resolve/main/vit_small_patch16_224_sentinel2_all_moco.pth"
         ),
-        transforms=nn.Identity(),
+        transforms=_zhu_xlab_transforms,
         meta={
             "dataset": "SSL4EO-S12",
             "in_chans": 13,
@@ -42,7 +49,7 @@ class ViTSmall16_Weights(WeightsEnum):
             "https://huggingface.co/torchgeo/vit_small_patch16_224_sentinel2_all_dino/"
             "resolve/main/vit_small_patch16_224_sentinel2_all_dino.pth"
         ),
-        transforms=nn.Identity(),
+        transforms=_zhu_xlab_transforms,
         meta={
             "dataset": "SSL4EO-S12",
             "in_chans": 13,

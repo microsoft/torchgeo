@@ -5,11 +5,18 @@
 
 from typing import Any, Optional
 
+import kornia.augmentation as K
 import timm
 import torch.nn as nn
 from torchvision.models._api import Weights, WeightsEnum
 
+from ..transforms import AugmentationSequential
+
 __all__ = ["ResNet50_Weights", "ResNet18_Weights"]
+
+_zhu_xlab_transforms = AugmentationSequential(
+    K.Resize(256), K.CenterCrop(224), data_keys=["image"]
+)
 
 
 class ResNet18_Weights(WeightsEnum):
@@ -26,7 +33,7 @@ class ResNet18_Weights(WeightsEnum):
             "https://huggingface.co/torchgeo/resnet18_sentinel2_all_moco/"
             "resolve/main/resnet18_sentinel2_all_moco.pth"
         ),
-        transforms=nn.Identity(),
+        transforms=_zhu_xlab_transforms,
         meta={
             "dataset": "SSL4EO-S12",
             "in_chans": 13,
@@ -42,7 +49,7 @@ class ResNet18_Weights(WeightsEnum):
             "https://huggingface.co/torchgeo/resnet18_sentinel2_rgb_moco/"
             "resolve/main/resnet18_sentinel2_rgb_moco.pth"
         ),
-        transforms=nn.Identity(),
+        transforms=_zhu_xlab_transforms,
         meta={
             "dataset": "SSL4EO-S12",
             "in_chans": 3,
@@ -68,7 +75,7 @@ class ResNet50_Weights(WeightsEnum):
             "https://huggingface.co/torchgeo/resnet50_sentinel1_all_moco/"
             "resolve/main/resnet50_sentinel1_all_moco.pth"
         ),
-        transforms=nn.Identity(),
+        transforms=_zhu_xlab_transforms,
         meta={
             "dataset": "SSL4EO-S12",
             "in_chans": 2,
@@ -84,7 +91,7 @@ class ResNet50_Weights(WeightsEnum):
             "https://huggingface.co/torchgeo/resnet50_sentinel2_all_moco/"
             "resolve/main/resnet50_sentinel2_all_moco.pth"
         ),
-        transforms=nn.Identity(),
+        transforms=_zhu_xlab_transforms,
         meta={
             "dataset": "SSL4EO-S12",
             "in_chans": 13,
@@ -100,7 +107,7 @@ class ResNet50_Weights(WeightsEnum):
             "https://huggingface.co/torchgeo/resnet50_sentinel2_rgb_moco/"
             "resolve/main/resnet50_sentinel2_rgb_moco.pth"
         ),
-        transforms=nn.Identity(),
+        transforms=_zhu_xlab_transforms,
         meta={
             "dataset": "SSL4EO-S12",
             "in_chans": 3,
@@ -116,7 +123,7 @@ class ResNet50_Weights(WeightsEnum):
             "https://huggingface.co/torchgeo/resnet50_sentinel2_all_dino/"
             "resolve/main/resnet50_sentinel2_all_dino.pth"
         ),
-        transforms=nn.Identity(),
+        transforms=_zhu_xlab_transforms,
         meta={
             "dataset": "SSL4EO-S12",
             "in_chans": 13,
