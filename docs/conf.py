@@ -115,7 +115,7 @@ intersphinx_mapping = {
     "rasterio": ("https://rasterio.readthedocs.io/en/stable/", None),
     "rtree": ("https://rtree.readthedocs.io/en/stable/", None),
     "segmentation_models_pytorch": ("https://smp.readthedocs.io/en/stable/", None),
-    "timm": ("https://huggingface.co/docs/timm/index", None),
+    "timm": ("https://huggingface.co/docs/timm/", None),
     "torch": ("https://pytorch.org/docs/stable", None),
     "torchvision": ("https://pytorch.org/vision/stable", None),
 }
