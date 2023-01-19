@@ -8,6 +8,7 @@ from typing import Any, Optional
 import kornia.augmentation as K
 import timm
 import torch.nn as nn
+from timm.models import ResNet
 from torchvision.models._api import Weights, WeightsEnum
 
 from ..transforms import AugmentationSequential
@@ -19,7 +20,7 @@ _zhu_xlab_transforms = AugmentationSequential(
 )
 
 
-class ResNet18_Weights(WeightsEnum):
+class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     """ResNet18 weights.
 
     For `timm <https://github.com/rwightman/pytorch-image-models>`_
@@ -77,7 +78,7 @@ class ResNet18_Weights(WeightsEnum):
     )
 
 
-class ResNet50_Weights(WeightsEnum):
+class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     """ResNet50 weights.
 
     For `timm <https://github.com/rwightman/pytorch-image-models>`_
@@ -169,7 +170,7 @@ class ResNet50_Weights(WeightsEnum):
 
 def resnet18(
     weights: Optional[ResNet18_Weights] = None, *args: Any, **kwargs: Any
-) -> nn.Module:
+) -> ResNet:
     """ResNet-18 model.
 
     If you use this model in your research, please cite the following paper:
@@ -189,7 +190,7 @@ def resnet18(
     if weights:
         kwargs["in_chans"] = weights.meta["in_chans"]
 
-    model = timm.create_model("resnet18", *args, **kwargs)
+    model: ResNet = timm.create_model("resnet18", *args, **kwargs)
 
     if weights:
         model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
@@ -199,7 +200,7 @@ def resnet18(
 
 def resnet50(
     weights: Optional[ResNet50_Weights] = None, *args: Any, **kwargs: Any
-) -> nn.Module:
+) -> ResNet:
     """ResNet-50 model.
 
     If you use this model in your research, please cite the following paper:
@@ -220,7 +221,7 @@ def resnet50(
     if weights:
         kwargs["in_chans"] = weights.meta["in_chans"]
 
-    model = timm.create_model("resnet50", *args, **kwargs)
+    model: ResNet = timm.create_model("resnet50", *args, **kwargs)
 
     if weights:
         model.load_state_dict(weights.get_state_dict(progress=True), strict=False)

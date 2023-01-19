@@ -7,7 +7,7 @@ from typing import Any, Optional
 
 import kornia.augmentation as K
 import timm
-import torch.nn as nn
+from timm.models.vision_transformer import VisionTransformer
 from torchvision.models._api import Weights, WeightsEnum
 
 from ..transforms import AugmentationSequential
@@ -19,7 +19,7 @@ _zhu_xlab_transforms = AugmentationSequential(
 )
 
 
-class ViTSmall16_Weights(WeightsEnum):
+class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
     """Vision Transformer Samll Patch Size 16 weights.
 
     For `timm <https://github.com/rwightman/pytorch-image-models>`_
@@ -63,7 +63,7 @@ class ViTSmall16_Weights(WeightsEnum):
 
 def vit_small_patch16_224(
     weights: Optional[ViTSmall16_Weights] = None, *args: Any, **kwargs: Any
-) -> nn.Module:
+) -> VisionTransformer:
     """Vision Transform (ViT) small patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -83,7 +83,9 @@ def vit_small_patch16_224(
     if weights:
         kwargs["in_chans"] = weights.meta["in_chans"]
 
-    model = timm.create_model("vit_small_patch16_224", *args, **kwargs)
+    model: VisionTransformer = timm.create_model(
+        "vit_small_patch16_224", *args, **kwargs
+    )
 
     if weights:
         model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
