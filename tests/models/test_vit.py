@@ -11,31 +11,32 @@ from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from torchvision.models._api import Weights
 
-from torchgeo.models import ViTSmall16_Weights, vit_small_patch16_224  # noqa: F401
+from torchgeo.models import ViTSmall16_Weights, vit_small_patch16_224
 
 
-@pytest.fixture(params=[*ViTSmall16_Weights])
-def weights(request: SubRequest) -> Weights:
-    return request.param
+class TestViTSmall16:
+    @pytest.fixture(params=[*ViTSmall16_Weights])
+    def weights(self, request: SubRequest) -> Weights:
+        return request.param
 
+    @pytest.fixture
+    def mocked_weights(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: Weights
+    ) -> Weights:
+        path = os.path.join(tmp_path, "weight.pth")
+        model = timm.create_model(
+            weights.meta["model"], in_chans=weights.meta["in_chans"]
+        )
+        torch.save(model.state_dict(), path)
+        monkeypatch.setattr(weights, "url", "file://" + path)
+        return weights
 
-@pytest.fixture
-def mocked_weights(
-    tmp_path: Path, monkeypatch: MonkeyPatch, weights: Weights
-) -> Weights:
-    path = os.path.join(tmp_path, "weight.pth")
-    model = timm.create_model(weights.meta["model"], in_chans=weights.meta["in_chans"])
-    torch.save(model.state_dict(), path)
-    monkeypatch.setattr(weights, "url", "file://" + path)
-    return weights
+    def test_vit(self) -> None:
+        vit_small_patch16_224()
 
+    def test_vit_weights(self, mocked_weights: Weights) -> None:
+        vit_small_patch16_224(weights=mocked_weights)
 
-def test_vit(mocked_weights: Weights) -> None:
-    vit = eval(mocked_weights.meta["model"])
-    vit(weights=mocked_weights)
-
-
-@pytest.mark.slow
-def test_vit_download(weights: Weights) -> None:
-    vit = eval(weights.meta["model"])
-    vit(weights=weights)
+    @pytest.mark.slow
+    def test_vit_download(self, weights: Weights) -> None:
+        vit_small_patch16_224(weights=weights)
