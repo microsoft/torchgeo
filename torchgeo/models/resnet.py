@@ -60,6 +60,22 @@ class ResNet18_Weights(WeightsEnum):
         },
     )
 
+    SENTINEL2_RGB_SECO = Weights(
+        url=(
+            "https://huggingface.co/torchgeo/resnet18_sentinel2_rgb_seco/"
+            "resolve/main/resnet18_sentinel2_rgb_seco.ckpt"
+        ),
+        transforms=nn.Identity(),
+        meta={
+            "dataset": "SeCo Dataset",
+            "in_chans": 3,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2103.16607",
+            "repo": "https://github.com/ServiceNow/seasonal-contrast",
+            "ssl_method": "seco",
+        },
+    )
+
 
 class ResNet50_Weights(WeightsEnum):
     """ResNet50 weights.
@@ -131,6 +147,22 @@ class ResNet50_Weights(WeightsEnum):
             "publication": "https://arxiv.org/abs/2211.07044",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
             "ssl_method": "dino",
+        },
+    )
+
+    SENTINEL2_RGB_SECO = Weights(
+        url=(
+            "https://huggingface.co/torchgeo/resnet50_sentinel2_rgb_seco/"
+            "resolve/main/resnet50_sentinel2_rgb_seco.ckpt"
+        ),
+        transforms=nn.Identity(),
+        meta={
+            "dataset": "SeCo Dataset",
+            "in_chans": 3,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2103.16607",
+            "repo": "https://github.com/ServiceNow/seasonal-contrast",
+            "ssl_method": "seco",
         },
     )
 
