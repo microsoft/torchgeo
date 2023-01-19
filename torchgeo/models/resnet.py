@@ -181,8 +181,10 @@ def resnet18(
 
     Args:
         weights: Pre-trained model weights to use.
-        *args: Additional arguments to pass to :meth:`timm.create_model`.
-        **kwargs: Additional keywork arguments to pass to :meth:`timm.create_model`.
+        *args: Additional arguments to pass to `timm.create_model
+            <https://huggingface.co/docs/timm/reference/models#timm.create_model>`_.
+        **kwargs: Additional keywork arguments to pass to `timm.create_model
+            <https://huggingface.co/docs/timm/reference/models#timm.create_model>`_.
 
     Returns:
         A ResNet-18 model.
@@ -212,8 +214,10 @@ def resnet50(
 
     Args:
         weights: Pre-trained model weights to use.
-        *args: Additional arguments to pass to :meth:`timm.create_model`.
-        **kwargs: Additional keywork arguments to pass to :meth:`timm.create_model`.
+        *args: Additional arguments to pass to `timm.create_model
+            <https://huggingface.co/docs/timm/reference/models#timm.create_model>`_.
+        **kwargs: Additional keywork arguments to pass to `timm.create_model
+            <https://huggingface.co/docs/timm/reference/models#timm.create_model>`_.
 
     Returns:
         A ResNet-50 model.

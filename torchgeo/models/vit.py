@@ -74,8 +74,10 @@ def vit_small_patch16_224(
 
     Args:
         weights: Pre-trained model weights to use.
-        *args: Additional arguments to pass to :meth:`timm.create_model`.
-        **kwargs: Additional keywork arguments to pass to :meth:`timm.create_model`.
+        *args: Additional arguments to pass to `timm.create_model
+            <https://huggingface.co/docs/timm/reference/models#timm.create_model>`_.
+        **kwargs: Additional keywork arguments to pass to `timm.create_model
+            <https://huggingface.co/docs/timm/reference/models#timm.create_model>`_.
 
     Returns:
         A ViT small 16 model.
