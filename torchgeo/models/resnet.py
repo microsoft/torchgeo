@@ -153,7 +153,7 @@ def resnet18(
     model = timm.create_model("resnet50", *args, **kwargs)
 
     if weights:
-        model.load_state_dict(weights.get_state_dict(), strict=False)
+        model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
 
     return model
 
@@ -184,6 +184,6 @@ def resnet50(
     model = timm.create_model("resnet50", *args, **kwargs)
 
     if weights:
-        model.load_state_dict(weights.get_state_dict(), strict=False)
+        model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
 
     return model

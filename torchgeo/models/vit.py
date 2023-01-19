@@ -79,6 +79,6 @@ def vit_small_patch16_224(
     model = timm.create_model("vit_small_patch16_224", *args, **kwargs)
 
     if weights:
-        model.load_state_dict(weights.get_state_dict(), strict=False)
+        model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
 
     return model
