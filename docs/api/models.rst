@@ -55,4 +55,4 @@ Vision Transformer
    :file: vit_pretrained_weights.csv
 
 .. autofunction:: vit_small_patch16_224
-.. autoclass:: VITSmall16_Weights
+.. autoclass:: ViTSmall16_Weights
