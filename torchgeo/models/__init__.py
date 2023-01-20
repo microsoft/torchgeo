@@ -3,6 +3,7 @@
 
 """TorchGeo models."""
 
+from .api import get_model, get_model_weights, get_weight, list_models
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
 from .farseg import FarSeg
 from .fcn import FCN
@@ -28,4 +29,9 @@ __all__ = (
     "ResNet50_Weights",
     "ResNet18_Weights",
     "ViTSmall16_Weights",
+    # utilities
+    "get_model",
+    "get_model_weights",
+    "get_weight",
+    "list_models",
 )

@@ -56,3 +56,11 @@ Vision Transformer
 
 .. autofunction:: vit_small_patch16_224
 .. autoclass:: ViTSmall16_Weights
+
+Utility Functions
+^^^^^^^^^^^^^^^^^
+
+.. autofunction:: get_model
+.. autofunction:: get_model_weights
+.. autofunction:: get_weight
+.. autofunction:: list_models
