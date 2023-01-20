@@ -60,10 +60,6 @@ nitpick_ignore = [
     ("py:class", "segmentation_models_pytorch.base.model.SegmentationModel"),
     ("py:class", "torchvision.models._api.WeightsEnum"),
     ("py:class", "torchvision.models.resnet.ResNet"),
-    # No object inventory
-    # https://github.com/rwightman/pytorch-image-models/issues/1640
-    ("py:class", "timm.models.resnet.ResNet"),
-    ("py:class", "timm.models.vision_transformer.VisionTransformer"),
 ]
 
 
@@ -114,6 +110,7 @@ intersphinx_mapping = {
     "rasterio": ("https://rasterio.readthedocs.io/en/stable/", None),
     "rtree": ("https://rtree.readthedocs.io/en/stable/", None),
     "segmentation_models_pytorch": ("https://smp.readthedocs.io/en/stable/", None),
+    "timm": ("https://huggingface.co/docs/timm/main/en/", None),
     "torch": ("https://pytorch.org/docs/stable", None),
     "torchvision": ("https://pytorch.org/vision/stable", None),
 }
