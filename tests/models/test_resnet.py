@@ -23,7 +23,7 @@ class TestResNet18:
     def mocked_weights(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: Weights
     ) -> Weights:
-        path = os.path.join(tmp_path, "weight.pth")
+        path = os.path.join(tmp_path, f"{str(weights)}_weight.pth")
         model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"])
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights, "url", "file://" + path)
@@ -49,7 +49,7 @@ class TestResNet50:
     def mocked_weights(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: Weights
     ) -> Weights:
-        path = os.path.join(tmp_path, "weight.pth")
+        path = os.path.join(tmp_path, f"{str(weights)}_weight.pth")
         model = timm.create_model("resnet50", in_chans=weights.meta["in_chans"])
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights, "url", "file://" + path)

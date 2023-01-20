@@ -23,7 +23,7 @@ class TestViTSmall16:
     def mocked_weights(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: Weights
     ) -> Weights:
-        path = os.path.join(tmp_path, "weight.pth")
+        path = os.path.join(tmp_path, f"{str(weights)}_weight.pth")
         model = timm.create_model(
             weights.meta["model"], in_chans=weights.meta["in_chans"]
         )
