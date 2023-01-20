@@ -14,11 +14,11 @@ from torchgeo.models import ResNet18_Weights, ResNet50_Weights, resnet18, resnet
 
 
 class TestResNet18:
-    @pytest.fixture(params=[*ResNet18_Weights])
+    @pytest.fixture(scope="function", params=[*ResNet18_Weights])
     def weights(self, request: SubRequest) -> Weights:
         return request.param
 
-    @pytest.fixture
+    @pytest.fixture(scope="function")
     def mocked_weights(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: Weights
     ) -> Weights:
@@ -41,11 +41,11 @@ class TestResNet18:
 
 
 class TestResNet50:
-    @pytest.fixture(params=[*ResNet50_Weights])
+    @pytest.fixture(scope="function", params=[*ResNet50_Weights])
     def weights(self, request: SubRequest) -> Weights:
         return request.param
 
-    @pytest.fixture
+    @pytest.fixture(scope="function")
     def mocked_weights(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: Weights
     ) -> Weights:

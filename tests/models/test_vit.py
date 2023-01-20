@@ -14,11 +14,11 @@ from torchgeo.models import ViTSmall16_Weights, vit_small_patch16_224
 
 
 class TestViTSmall16:
-    @pytest.fixture(params=[*ViTSmall16_Weights])
+    @pytest.fixture(scope="function", params=[*ViTSmall16_Weights])
     def weights(self, request: SubRequest) -> Weights:
         return request.param
 
-    @pytest.fixture
+    @pytest.fixture(scope="function")
     def mocked_weights(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: Weights
     ) -> Weights:

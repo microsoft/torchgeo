@@ -58,6 +58,8 @@ nitpicky = True
 nitpick_ignore = [
     # Undocumented classes
     ("py:class", "segmentation_models_pytorch.base.model.SegmentationModel"),
+    ("py:class", "timm.models.resnet.ResNet"),
+    ("py:class", "timm.models.vision_transformer.VisionTransformer"),
     ("py:class", "torchvision.models._api.WeightsEnum"),
     ("py:class", "torchvision.models.resnet.ResNet"),
 ]
