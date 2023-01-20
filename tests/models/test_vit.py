@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import os
 from pathlib import Path
 
 import pytest
@@ -23,12 +22,12 @@ class TestViTSmall16:
     def mocked_weights(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: Weights
     ) -> Weights:
-        path = os.path.join(tmp_path, f"{str(weights)}_weight.pth")
+        path = tmp_path / "weight.pth"
         model = timm.create_model(
             weights.meta["model"], in_chans=weights.meta["in_chans"]
         )
         torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights, "url", "file://" + path)
+        monkeypatch.setattr(weights, "url", path.as_uri())
         return weights
 
     def test_vit(self) -> None:
