@@ -31,6 +31,11 @@ def create_model(*args: Any, **kwargs: Any) -> Module:
     return ClassificationTestModel(**kwargs)
 
 
+def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+    state_dict: Dict[str, Any] = torch.load(url)
+    return state_dict
+
+
 class TestClassificationTask:
     @pytest.mark.parametrize(
         "name,classname",
@@ -102,7 +107,8 @@ class TestClassificationTask:
         path = tmp_path / f"{weights}.pth"
         model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"])
         torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights, "url", path.as_uri())
+        monkeypatch.setattr(weights, "url", str(path))
+        monkeypatch.setattr(torch.hub, "load_state_dict_from_url", load)
         return weights
 
     def test_weight_file(self, model_kwargs: Dict[str, Any], checkpoint: str) -> None:
