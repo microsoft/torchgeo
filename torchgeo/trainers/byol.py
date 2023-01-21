@@ -339,10 +339,10 @@ class BYOLTask(pl.LightningModule):
             if isinstance(weights, WeightsEnum):
                 state_dict = weights.get_state_dict()
             elif os.path.exists(weights):
-                state_dict = utils.extract_backbone(weights)
+                _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict()
-            backbone.load_state_dict(state_dict, strict=False)
+            backbone = utils.load_state_dict(backbone, state_dict)
 
         self.model = BYOL(backbone, in_channels=in_channels, image_size=(256, 256))
 

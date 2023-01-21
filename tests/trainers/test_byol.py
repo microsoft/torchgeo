@@ -65,29 +65,8 @@ class TestBYOLTask:
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:
-        return {"backbone": "resnet18", "weights": "random", "in_channels": 3}
-
-    def test_invalid_pretrained(
-        self, model_kwargs: Dict[Any, Any], checkpoint: str
-    ) -> None:
-        model_kwargs["weights"] = checkpoint
-        model_kwargs["backbone"] = "resnet50"
-        match = "Trying to load resnet18 weights into a resnet50"
-        with pytest.raises(ValueError, match=match):
-            BYOLTask(**model_kwargs)
+        return {"backbone": "resnet18", "weights": None, "in_channels": 3}
 
     def test_pretrained(self, model_kwargs: Dict[Any, Any], checkpoint: str) -> None:
         model_kwargs["weights"] = checkpoint
         BYOLTask(**model_kwargs)
-
-    def test_invalid_backbone(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["backbone"] = "invalid_backbone"
-        match = "Model type 'invalid_backbone' is not a valid timm model."
-        with pytest.raises(ValueError, match=match):
-            BYOLTask(**model_kwargs)
-
-    def test_invalid_weights(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["weights"] = "invalid_weights"
-        match = "Weight type 'invalid_weights' is not valid."
-        with pytest.raises(ValueError, match=match):
-            BYOLTask(**model_kwargs)
