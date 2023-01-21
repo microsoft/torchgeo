@@ -37,6 +37,8 @@ _model_weights = {
 def get_model(name: str, *args: Any, **kwargs: Any) -> nn.Module:
     """Get an instantiated model from its name.
 
+    .. versionadded:: 0.4
+
     Args:
         name: Name of the model.
         *args: Additional arguments passed to the model builder method.
@@ -52,6 +54,8 @@ def get_model(name: str, *args: Any, **kwargs: Any) -> nn.Module:
 def get_model_weights(name: Union[Callable[..., nn.Module], str]) -> WeightsEnum:
     """Get the weights enum class associated with a given model.
 
+    .. versionadded:: 0.4
+
     Args:
         name: Model builder function or the name under which it is registered.
 
@@ -64,6 +68,8 @@ def get_model_weights(name: Union[Callable[..., nn.Module], str]) -> WeightsEnum
 def get_weight(name: str) -> WeightsEnum:
     """Get the weights enum value by its full name.
 
+    .. versionadded:: 0.4
+
     Args:
         name: Name of the weight enum entry.
 
@@ -75,6 +81,8 @@ def get_weight(name: str) -> WeightsEnum:
 
 def list_models() -> List[str]:
     """List the registered models.
+
+    .. versionadded:: 0.4
 
     Returns:
         A list of registered models.

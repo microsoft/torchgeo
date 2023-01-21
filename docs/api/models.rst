@@ -34,28 +34,28 @@ RCF Extractor
 ResNet
 ^^^^^^
 
-.. csv-table::
-   :widths: 40 10 10 10 10 10 10 10
-   :header-rows: 1
-   :align: center
-   :file: resnet_pretrained_weights.csv
-
 .. autofunction:: resnet18
 .. autofunction:: resnet50
 .. autoclass:: ResNet18_Weights
 .. autoclass:: ResNet50_Weights
 
+.. csv-table::
+   :widths: 40 15 10 10 15 10 10 10
+   :header-rows: 1
+   :align: center
+   :file: resnet_pretrained_weights.csv
+
 Vision Transformer
 ^^^^^^^^^^^^^^^^^^
 
+.. autofunction:: vit_small_patch16_224
+.. autoclass:: ViTSmall16_Weights
+
 .. csv-table::
-   :widths: 40 10 10 10 10 10 10 10
+   :widths: 40 15 10 10 15 10 10 10
    :header-rows: 1
    :align: center
    :file: vit_pretrained_weights.csv
-
-.. autofunction:: vit_small_patch16_224
-.. autoclass:: ViTSmall16_Weights
 
 Utility Functions
 ^^^^^^^^^^^^^^^^^
