@@ -83,7 +83,7 @@ class TestRegressionTask:
         path = tmp_path / f"{weights}.pth"
         model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"])
         torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights, "url", str(path))
+        monkeypatch.setattr(weights, "url", path.as_uri())
         return weights
 
     def test_weight_file(self, model_kwargs: Dict[str, Any], checkpoint: str) -> None:

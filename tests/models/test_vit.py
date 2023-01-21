@@ -27,7 +27,7 @@ class TestViTSmall16:
             weights.meta["model"], in_chans=weights.meta["in_chans"]
         )
         torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights, "url", str(path))
+        monkeypatch.setattr(weights, "url", path.as_uri())
         return weights
 
     def test_vit(self) -> None:
