@@ -66,7 +66,7 @@ class Sentinel2(Sentinel):
         "B11",
         "B12",
     ]
-    RGB_BANDS = ["B04", "B03", "B02"]
+    rgb_bands = ["B04", "B03", "B02"]
 
     separate_files = True
 
@@ -125,7 +125,7 @@ class Sentinel2(Sentinel):
            show subplot titles and/or use a custom suptitle.
         """
         rgb_indices = []
-        for band in self.RGB_BANDS:
+        for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:

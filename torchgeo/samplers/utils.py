@@ -4,11 +4,21 @@
 """Common sampler utilities."""
 
 import math
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, overload
 
 import torch
 
 from ..datasets import BoundingBox
+
+
+@overload
+def _to_tuple(value: Union[Tuple[int, int], int]) -> Tuple[int, int]:
+    ...
+
+
+@overload
+def _to_tuple(value: Union[Tuple[float, float], float]) -> Tuple[float, float]:
+    ...
 
 
 def _to_tuple(value: Union[Tuple[float, float], float]) -> Tuple[float, float]:

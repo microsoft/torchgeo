@@ -1,10 +1,10 @@
 experiment:
-  task: "deepglobelandcover"
+  task: "vaihingen2d"
   module:
     loss: "ce"
-    segmentation_model: "unet"
-    encoder_name: "resnet18"
-    encoder_weights: null
+    model: "unet"
+    backbone: "resnet18"
+    weights: null
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
     verbose: false
@@ -13,7 +13,9 @@ experiment:
     num_filters: 1
     ignore_index: null
   datamodule:
-    root: "tests/data/deepglobelandcover"
-    val_split_pct: 0.0
-    batch_size: 1
+    root: "tests/data/vaihingen"
+    num_tiles_per_batch: 1
+    num_patches_per_tile: 1
+    patch_size: 2
+    val_split_pct: 0.5
     num_workers: 0

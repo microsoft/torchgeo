@@ -30,7 +30,7 @@ For [conda](https://docs.conda.io/) and [spack](https://spack.io/) installation 
 
 ## Documentation
 
-You can find the documentation for TorchGeo on [ReadTheDocs](https://torchgeo.readthedocs.io). This includes API documentation, contributing instructions, and several [tutorials](https://torchgeo.readthedocs.io/en/stable/tutorials/getting_started.html). For more details, check out our [paper](https://arxiv.org/abs/2111.08872) and [blog](https://pytorch.org/blog/geospatial-deep-learning-with-torchgeo/).
+You can find the documentation for TorchGeo on [ReadTheDocs](https://torchgeo.readthedocs.io). This includes API documentation, contributing instructions, and several [tutorials](https://torchgeo.readthedocs.io/en/stable/tutorials/getting_started.html). For more details, check out our [paper](https://dl.acm.org/doi/10.1145/3557915.3560953) and [blog](https://pytorch.org/blog/geospatial-deep-learning-with-torchgeo/).
 
 ## Example Usage
 
@@ -140,15 +140,20 @@ $ python train.py config_file=conf/landcoverai.yaml
 
 ## Citation
 
-If you use this software in your work, please cite our [paper](https://arxiv.org/abs/2111.08872):
+If you use this software in your work, please cite our [paper](https://dl.acm.org/doi/10.1145/3557915.3560953):
 ```
-@article{Stewart_TorchGeo_deep_learning_2021,
+@inproceedings{Stewart_TorchGeo_Deep_Learning_2022,
+    address = {Seattle, Washington},
     author = {Stewart, Adam J. and Robinson, Caleb and Corley, Isaac A. and Ortiz, Anthony and Lavista Ferres, Juan M. and Banerjee, Arindam},
-    journal = {arXiv preprint arXiv:2111.08872},
+    booktitle = {Proceedings of the 30th International Conference on Advances in Geographic Information Systems},
+    doi = {10.1145/3557915.3560953},
     month = {11},
+    pages = {1--12},
+    publisher = {Association for Computing Machinery},
+    series = {SIGSPATIAL '22},
     title = {{TorchGeo}: Deep Learning With Geospatial Data},
-    url = {https://github.com/microsoft/torchgeo},
-    year = {2021}
+    url = {https://dl.acm.org/doi/10.1145/3557915.3560953},
+    year = {2022}
 }
 ```
 

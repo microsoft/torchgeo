@@ -23,7 +23,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestSeasonalContrastS2:
-    @pytest.fixture(params=zip(["100k", "1m"], [["B1"], SeasonalContrastS2.ALL_BANDS]))
+    @pytest.fixture(params=zip(["100k", "1m"], [["B1"], SeasonalContrastS2.all_bands]))
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SeasonalContrastS2:
@@ -87,7 +87,7 @@ class TestSeasonalContrastS2:
             SeasonalContrastS2(str(tmp_path))
 
     def test_plot(self, dataset: SeasonalContrastS2) -> None:
-        if not all(band in dataset.bands for band in dataset.RGB_BANDS):
+        if not all(band in dataset.bands for band in dataset.rgb_bands):
             with pytest.raises(ValueError, match="Dataset doesn't contain"):
                 x = dataset[0].copy()
                 dataset.plot(x, suptitle="Test")

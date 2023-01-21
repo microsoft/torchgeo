@@ -3,7 +3,7 @@
 
 """InriaAerialImageLabeling datamodule."""
 
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
@@ -69,7 +69,7 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
-        self.patch_size = cast(Tuple[int, int], _to_tuple(patch_size))
+        self.patch_size = _to_tuple(patch_size)
         self.num_patches_per_tile = num_patches_per_tile
         self.kwargs = kwargs
 
@@ -98,7 +98,9 @@ class InriaAerialImageLabelingDataModule(pl.LightningDataModule):
             self.patch_size,
             padding=padding,
         )
-        sample["image"] = rearrange(sample["image"], "() t c h w -> t () c h w")
+        # Needed for reconstruction of patches later
+        sample["num_patches"] = sample["image"].shape[1]
+        sample["image"] = rearrange(sample["image"], "b n c h w -> (b n) c h w")
         return sample
 
     def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:

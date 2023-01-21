@@ -12,7 +12,6 @@ import torchvision
 from packaging.version import parse
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torch.utils.data import DataLoader
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models.detection import FasterRCNN
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
@@ -36,13 +35,20 @@ if parse(torchvision.__version__) >= parse("0.13"):
 
 from ..datasets.utils import unbind_samples
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class ObjectDetectionTask(pl.LightningModule):
     """LightningModule for object detection of images.
+
+    Currently, supports a Faster R-CNN model from
+    `torchvision
+    <https://pytorch.org/vision/stable/models/faster_rcnn.html>`_ with
+    one of the following *backbone* arguments:
+
+    .. code-block:: python
+
+        ['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152',
+        'resnext50_32x4d','resnext101_32x8d', 'wide_resnet50_2',
+        'wide_resnet101_2']
 
     .. versionadded:: 0.4
     """
@@ -50,7 +56,7 @@ class ObjectDetectionTask(pl.LightningModule):
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
         backbone_pretrained = self.hyperparams.get("pretrained", True)
-        if self.hyperparams["detection_model"] == "faster-rcnn":
+        if self.hyperparams["model"] == "faster-rcnn":
             if "resnet" in self.hyperparams["backbone"]:
                 kwargs = {
                     "backbone_name": self.hyperparams["backbone"],
@@ -88,21 +94,24 @@ class ObjectDetectionTask(pl.LightningModule):
             )
 
         else:
-            raise ValueError(
-                f"Model type '{self.hyperparams['detection_model']}' is not valid."
-            )
+            raise ValueError(f"Model type '{self.hyperparams['model']}' is not valid.")
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
-            detection_model: Name of the detection model type to use
+            model: Name of the detection model type to use
             backbone: Name of the model backbone to use
             in_channels: Number of channels in input image
             num_classes: Number of semantic classes to predict
+            learning_rate: Learning rate for optimizer
+            learning_rate_schedule_patience: Patience for learning rate scheduler
 
         Raises:
             ValueError: if kwargs arguments are invalid
+
+        .. versionchanged:: 0.4
+           The *detection_model* parameter was renamed to *model*.
         """
         super().__init__()
         # Creates `self.hparams` from kwargs

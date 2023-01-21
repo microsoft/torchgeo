@@ -12,10 +12,6 @@ from torch.utils.data import DataLoader
 
 from ..datasets import LandCoverAI
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class LandCoverAIDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the LandCover.ai dataset.
@@ -97,7 +93,7 @@ class LandCoverAIDataModule(pl.LightningDataModule):
         sample["image"] /= 255.0
 
         if "mask" in sample:
-            sample["mask"] = sample["mask"].long() + 1
+            sample["mask"] = sample["mask"].long()
 
         return sample
 
@@ -106,7 +102,8 @@ class LandCoverAIDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        LandCoverAI(**self.kwargs)
+        if self.kwargs.get("download", False):
+            LandCoverAI(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.

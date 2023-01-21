@@ -15,11 +15,15 @@ from torchgeo.datamodules import (
     ChesapeakeCVPRDataModule,
     DeepGlobeLandCoverDataModule,
     ETCI2021DataModule,
+    GID15DataModule,
     InriaAerialImageLabelingDataModule,
     LandCoverAIDataModule,
+    LoveDADataModule,
     NAIPChesapeakeDataModule,
-    OSCDDataModule,
+    Potsdam2DDataModule,
     SEN12MSDataModule,
+    SpaceNet1DataModule,
+    Vaihingen2DDataModule,
 )
 from torchgeo.datasets import LandCoverAI
 from torchgeo.trainers import SemanticSegmentationTask
@@ -36,18 +40,22 @@ class TestSemanticSegmentationTask:
         "name,classname",
         [
             ("chesapeake_cvpr_5", ChesapeakeCVPRDataModule),
-            ("deepglobelandcover_0", DeepGlobeLandCoverDataModule),
-            ("deepglobelandcover_5", DeepGlobeLandCoverDataModule),
+            ("deepglobelandcover", DeepGlobeLandCoverDataModule),
             ("etci2021", ETCI2021DataModule),
-            ("inria", InriaAerialImageLabelingDataModule),
+            ("gid15", GID15DataModule),
+            ("inria_train", InriaAerialImageLabelingDataModule),
+            ("inria_val", InriaAerialImageLabelingDataModule),
+            ("inria_test", InriaAerialImageLabelingDataModule),
             ("landcoverai", LandCoverAIDataModule),
+            ("loveda", LoveDADataModule),
             ("naipchesapeake", NAIPChesapeakeDataModule),
-            ("oscd_all", OSCDDataModule),
-            ("oscd_rgb", OSCDDataModule),
+            ("potsdam2d", Potsdam2DDataModule),
             ("sen12ms_all", SEN12MSDataModule),
             ("sen12ms_s1", SEN12MSDataModule),
             ("sen12ms_s2_all", SEN12MSDataModule),
             ("sen12ms_s2_reduced", SEN12MSDataModule),
+            ("spacenet1", SpaceNet1DataModule),
+            ("vaihingen2d", Vaihingen2DDataModule),
         ],
     )
     def test_trainer(
@@ -77,7 +85,12 @@ class TestSemanticSegmentationTask:
         # Instantiate trainer
         trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
-        trainer.test(model=model, datamodule=datamodule)
+
+        if hasattr(datamodule, "test_dataset") or hasattr(datamodule, "test_sampler"):
+            trainer.test(model=model, datamodule=datamodule)
+
+        if hasattr(datamodule, "predict_dataset"):
+            trainer.predict(model=model, datamodule=datamodule)
 
     def test_no_logger(self) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", "landcoverai.yaml"))
@@ -101,9 +114,9 @@ class TestSemanticSegmentationTask:
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:
         return {
-            "segmentation_model": "unet",
-            "encoder_name": "resnet18",
-            "encoder_weights": None,
+            "model": "unet",
+            "backbone": "resnet18",
+            "weights": None,
             "in_channels": 3,
             "num_classes": 6,
             "loss": "ce",
@@ -111,7 +124,7 @@ class TestSemanticSegmentationTask:
         }
 
     def test_invalid_model(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["segmentation_model"] = "invalid_model"
+        model_kwargs["model"] = "invalid_model"
         match = "Model type 'invalid_model' is not valid."
         with pytest.raises(ValueError, match=match):
             SemanticSegmentationTask(**model_kwargs)

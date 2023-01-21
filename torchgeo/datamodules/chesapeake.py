@@ -16,10 +16,6 @@ from ..datasets import ChesapeakeCVPR, stack_samples
 from ..samplers.batch import RandomBatchGeoSampler
 from ..samplers.single import GridGeoSampler
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class ChesapeakeCVPRDataModule(LightningDataModule):
     """LightningDataModule implementation for the Chesapeake CVPR Land Cover dataset.
@@ -226,7 +222,8 @@ class ChesapeakeCVPRDataModule(LightningDataModule):
 
         This method is called once per node, while :func:`setup` is called once per GPU.
         """
-        ChesapeakeCVPR(splits=self.train_splits, layers=self.layers, **self.kwargs)
+        if self.kwargs.get("download", False):
+            ChesapeakeCVPR(splits=self.train_splits, layers=self.layers, **self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Create the train/val/test splits based on the original Dataset objects.

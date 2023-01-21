@@ -12,10 +12,6 @@ from torch.utils.data import DataLoader, Subset
 
 from ..datasets import SEN12MS
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class SEN12MSDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the SEN12MS dataset.

@@ -13,10 +13,9 @@ import torch
 import torch.nn as nn
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
-from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MetricCollection
-from torchmetrics.classification import (  # type: ignore[attr-defined]
+from torchmetrics.classification import (
     MulticlassAccuracy,
     MulticlassFBetaScore,
     MulticlassJaccardIndex,
@@ -27,30 +26,25 @@ from torchmetrics.classification import (  # type: ignore[attr-defined]
 from ..datasets.utils import unbind_samples
 from . import utils
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Conv2d.__module__ = "nn.Conv2d"
-Linear.__module__ = "nn.Linear"
-
 
 class ClassificationTask(pl.LightningModule):
     """LightningModule for image classification.
 
     Supports any available `Timm model
     <https://rwightman.github.io/pytorch-image-models/>`_
-    as an architecture choice. To see a list of available pretrained
+    as an architecture choice. To see a list of available
     models, you can do:
 
     .. code-block:: python
 
         import timm
-        print(timm.list_models(pretrained=True))
+        print(timm.list_models())
     """
 
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor."""
         in_channels = self.hyperparams["in_channels"]
-        classification_model = self.hyperparams["classification_model"]
+        model = self.hyperparams["model"]
 
         imagenet_pretrained = False
         custom_pretrained = False
@@ -68,26 +62,24 @@ class ClassificationTask(pl.LightningModule):
             custom_pretrained = True
 
         # Create the model
-        valid_models = timm.list_models(pretrained=True)
-        if classification_model in valid_models:
+        valid_models = timm.list_models(pretrained=imagenet_pretrained)
+        if model in valid_models:
             self.model = timm.create_model(
-                classification_model,
+                model,
                 num_classes=self.hyperparams["num_classes"],
                 in_chans=in_channels,
                 pretrained=imagenet_pretrained,
             )
         else:
-            raise ValueError(
-                f"Model type '{classification_model}' is not a valid timm model."
-            )
+            raise ValueError(f"Model type '{model}' is not a valid timm model.")
 
         if custom_pretrained:
-            name, state_dict = utils.extract_encoder(self.hyperparams["weights"])
+            name, state_dict = utils.extract_backbone(self.hyperparams["weights"])
 
-            if self.hyperparams["classification_model"] != name:
+            if self.hyperparams["model"] != name:
                 raise ValueError(
                     f"Trying to load {name} weights into a "
-                    f"{self.hyperparams['classification_model']}"
+                    f"{self.hyperparams['model']}"
                 )
             self.model = utils.load_state_dict(self.model, state_dict)
 
@@ -108,13 +100,16 @@ class ClassificationTask(pl.LightningModule):
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
-            classification_model: Name of the classification model use
-            loss: Name of the loss function
+            model: Name of the classification model use
+            loss: Name of the loss function, accepts 'ce', 'jaccard', or 'focal'
             weights: Either "random" or "imagenet"
             num_classes: Number of prediction classes
             in_channels: Number of input channels to model
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
+
+        .. versionchanged:: 0.4
+           The *classification_model* parameter was renamed to *model*.
         """
         super().__init__()
 
@@ -313,13 +308,16 @@ class MultiLabelClassificationTask(ClassificationTask):
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
-            classification_model: Name of the classification model use
+            model: Name of the classification model use
             loss: Name of the loss function, currently only supports 'bce'
             weights: Either "random" or 'imagenet'
             num_classes: Number of prediction classes
             in_channels: Number of input channels to model
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
+
+        .. versionchanged:: 0.4
+           The *classification_model* parameter was renamed to *model*.
         """
         super().__init__(**kwargs)
 

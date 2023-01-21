@@ -12,10 +12,6 @@ from torch.utils.data import DataLoader, Subset
 
 from ..datasets import TropicalCyclone
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class TropicalCycloneDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the NASA Cyclone dataset.
@@ -71,7 +67,8 @@ class TropicalCycloneDataModule(pl.LightningDataModule):
         This includes optionally downloading the dataset. This is done once per node,
         while :func:`setup` is done once per GPU.
         """
-        TropicalCyclone(split="train", **self.kwargs)
+        if self.kwargs.get("download", False):
+            TropicalCyclone(split="train", **self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Create the train/val/test splits based on the original Dataset objects.

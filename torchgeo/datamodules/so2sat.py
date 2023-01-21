@@ -13,10 +13,6 @@ from torchvision.transforms import Compose, Normalize
 
 from ..datasets import So2Sat
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class So2SatDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the So2Sat dataset.
@@ -102,13 +98,6 @@ class So2SatDataModule(pl.LightningDataModule):
             sample["image"] = sample["image"][:3, :, :]
 
         return sample
-
-    def prepare_data(self) -> None:
-        """Make sure that the dataset is downloaded.
-
-        This method is only called once per run.
-        """
-        So2Sat(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.

@@ -117,7 +117,8 @@ class OSCDDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        OSCD(split="train", **self.kwargs)
+        if self.kwargs.get("download", False):
+            OSCD(split="train", **self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.

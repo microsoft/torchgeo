@@ -14,10 +14,6 @@ from torch.utils.data import DataLoader
 from ..datasets import NASAMarineDebris
 from .utils import dataset_split
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
     """Custom object detection collate fn to handle variable boxes.
@@ -84,7 +80,8 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
 
         This method is only called once per run.
         """
-        NASAMarineDebris(**self.kwargs)
+        if self.kwargs.get("download", False):
+            NASAMarineDebris(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.

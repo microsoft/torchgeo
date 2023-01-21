@@ -12,10 +12,6 @@ from torch.utils.data import DataLoader, random_split
 
 from ..datasets import COWCCounting
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
-
 
 class COWCCountingDataModule(pl.LightningDataModule):
     """LightningDataModule implementation for the COWC Counting dataset."""
@@ -59,7 +55,8 @@ class COWCCountingDataModule(pl.LightningDataModule):
         This includes optionally downloading the dataset. This is done once per node,
         while :func:`setup` is done once per GPU.
         """
-        COWCCounting(**self.kwargs)
+        if self.kwargs.get("download", False):
+            COWCCounting(**self.kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Create the train/val/test splits based on the original Dataset objects.

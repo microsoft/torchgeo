@@ -16,7 +16,7 @@ DATA_DIR = ""  # path to the ChesapeakeCVPR data directory
 # Hyperparameter options
 training_set_options = ["de"]
 model_options = ["unet"]
-encoder_options = ["resnet18", "resnet50"]
+backbone_options = ["resnet18", "resnet50"]
 lr_options = [1e-2, 1e-3, 1e-4]
 loss_options = ["ce", "jaccard"]
 weight_init_options = ["null", "imagenet"]
@@ -36,16 +36,16 @@ def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
 if __name__ == "__main__":
     work: "Queue[str]" = Queue()
 
-    for (train_state, model, encoder, lr, loss, weight_init) in itertools.product(
+    for (train_state, model, backbone, lr, loss, weight_init) in itertools.product(
         training_set_options,
         model_options,
-        encoder_options,
+        backbone_options,
         lr_options,
         loss_options,
         weight_init_options,
     ):
 
-        experiment_name = f"{train_state}_{model}_{encoder}_{lr}_{loss}_{weight_init}"
+        experiment_name = f"{train_state}_{model}_{backbone}_{lr}_{loss}_{weight_init}"
 
         output_dir = os.path.join("output", "chesapeake-cvpr_experiments")
         log_dir = os.path.join(output_dir, "logs")
@@ -57,9 +57,9 @@ if __name__ == "__main__":
                 "python train.py"
                 + f" config_file={config_file}"
                 + f" experiment.name={experiment_name}"
-                + f" experiment.module.segmentation_model={model}"
-                + f" experiment.module.encoder_name={encoder}"
-                + f" experiment.module.encoder_weights={weight_init}"
+                + f" experiment.module.model={model}"
+                + f" experiment.module.backbone={backbone}"
+                + f" experiment.module.weights={weight_init}"
                 + f" experiment.module.learning_rate={lr}"
                 + f" experiment.module.loss={loss}"
                 + " experiment.module.class_set=7"

@@ -8,7 +8,6 @@ import os
 from typing import Any, Callable, Dict, List, Optional, Tuple, cast, overload
 
 import fiona
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
@@ -567,25 +566,28 @@ class IDTReeS(NonGeoDataset):
 
         return fig
 
-    def plot_las(self, index: int, colormap: Optional[str] = None) -> Any:
+    def plot_las(
+        self, index: int
+    ) -> "pyvista.Plotter":  # type: ignore[name-defined] # noqa: F821
         """Plot a sample point cloud at the index.
 
         Args:
             index: index to plot
-            colormap: a valid matplotlib colormap
 
         Returns:
-            a open3d.visualizer.Visualizer object. Use
-                Visualizer.run() to display
+            pyvista.PolyData object. Run pyvista.plot(point_cloud, ...) to display
 
         Raises:
-            ImportError: if open3d is not installed
+            ImportError: if pyvista is not installed
+
+        .. versionchanged:: 0.4
+           Ported from Open3D to PyVista, *colormap* parameter removed.
         """
         try:
-            import open3d  # noqa: F401
+            import pyvista  # noqa: F401
         except ImportError:
             raise ImportError(
-                "open3d is not installed and is required to plot point clouds"
+                "pyvista is not installed and is required to plot point clouds"
             )
         import laspy
 
@@ -595,27 +597,12 @@ class IDTReeS(NonGeoDataset):
         points: "np.typing.NDArray[np.int_]" = np.stack(
             [las.x, las.y, las.z], axis=0
         ).transpose((1, 0))
+        point_cloud = pyvista.PolyData(points)  # type: ignore[attr-defined]
 
-        if colormap:
-            if hasattr(mpl, "colormaps"):
-                cm = mpl.colormaps[colormap]
-            else:
-                cm = plt.cm.get_cmap(colormap)
-            norm = plt.Normalize()
-            colors = cm(norm(points[:, 2]))[:, :3]
-        else:
-            # Some point cloud files have no color->points mapping
-            if hasattr(las, "red"):
-                colors = np.stack([las.red, las.green, las.blue], axis=0)
-                colors = colors.transpose((1, 0)) / 65535
-            # Default to no colormap if no colors exist in las file
-            else:
-                colors = np.zeros_like(points)
+        # Some point cloud files have no color->points mapping
+        if hasattr(las, "red"):
+            colors = np.stack([las.red, las.green, las.blue], axis=0)
+            colors = colors.transpose((1, 0)) / np.iinfo(np.uint16).max
+            point_cloud["colors"] = colors
 
-        pcd = open3d.geometry.PointCloud()
-        pcd.points = open3d.utility.Vector3dVector(points)
-        pcd.colors = open3d.utility.Vector3dVector(colors)
-        vis = open3d.visualization.Visualizer()
-        vis.create_window()
-        vis.add_geometry(pcd)
-        return vis
+        return point_cloud

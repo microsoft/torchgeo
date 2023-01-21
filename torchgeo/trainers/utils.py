@@ -12,14 +12,9 @@ import torch.nn as nn
 from torch import Tensor
 from torch.nn.modules import Conv2d, Module
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Module.__module__ = "nn.Module"
-Conv2d.__module__ = "nn.Conv2d"
 
-
-def extract_encoder(path: str) -> Tuple[str, "OrderedDict[str, Tensor]"]:
-    """Extracts an encoder from a pytorch lightning checkpoint file.
+def extract_backbone(path: str) -> Tuple[str, "OrderedDict[str, Tensor]"]:
+    """Extracts a backbone from a pytorch lightning checkpoint file.
 
     Args:
         path: path to checkpoint file (.ckpt)
@@ -28,31 +23,32 @@ def extract_encoder(path: str) -> Tuple[str, "OrderedDict[str, Tensor]"]:
         tuple containing model name and state dict
 
     Raises:
-        ValueError: if 'classification_model' or 'encoder' not in
+        ValueError: if 'model' or 'backbone' not in
             checkpoint['hyper_parameters']
+
+    .. versionchanged:: 0.4
+        Renamed from *extract_encoder* to *extract_backbone*
     """
     checkpoint = torch.load(path, map_location=torch.device("cpu"))
-
-    if "classification_model" in checkpoint["hyper_parameters"]:
-        name = checkpoint["hyper_parameters"]["classification_model"]
+    if "model" in checkpoint["hyper_parameters"]:
+        name = checkpoint["hyper_parameters"]["model"]
         state_dict = checkpoint["state_dict"]
         state_dict = OrderedDict({k: v for k, v in state_dict.items() if "model." in k})
         state_dict = OrderedDict(
             {k.replace("model.", ""): v for k, v in state_dict.items()}
         )
-    elif "encoder_name" in checkpoint["hyper_parameters"]:
-        name = checkpoint["hyper_parameters"]["encoder_name"]
+    elif "backbone" in checkpoint["hyper_parameters"]:
+        name = checkpoint["hyper_parameters"]["backbone"]
         state_dict = checkpoint["state_dict"]
         state_dict = OrderedDict(
-            {k: v for k, v in state_dict.items() if "model.encoder.model" in k}
+            {k: v for k, v in state_dict.items() if "model.backbone.model" in k}
         )
         state_dict = OrderedDict(
-            {k.replace("model.encoder.model.", ""): v for k, v in state_dict.items()}
+            {k.replace("model.backbone.model.", ""): v for k, v in state_dict.items()}
         )
     else:
         raise ValueError(
-            "Unknown checkpoint task. Only encoder or classification_model"
-            " extraction is supported"
+            "Unknown checkpoint task. Only backbone or model extraction is supported"
         )
 
     return name, state_dict
@@ -74,6 +70,7 @@ def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Mo
     """
     in_channels = cast(nn.Module, model.conv1).in_channels
     expected_in_channels = state_dict["conv1.weight"].shape[1]
+
     num_classes = cast(nn.Module, model.fc).out_features
     expected_num_classes = state_dict["fc.weight"].shape[0]
 

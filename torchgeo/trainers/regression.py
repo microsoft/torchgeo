@@ -3,59 +3,91 @@
 
 """Regression tasks."""
 
+import os
 from typing import Any, Dict, cast
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
+import timm
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-import torchvision
-from packaging.version import parse
 from torch import Tensor
-from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
 
 from ..datasets.utils import unbind_samples
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Conv2d.__module__ = "nn.Conv2d"
-Linear.__module__ = "nn.Linear"
+from . import utils
 
 
 class RegressionTask(pl.LightningModule):
-    """LightningModule for training models on regression datasets."""
+    """LightningModule for training models on regression datasets.
+
+    Supports any available `Timm model
+    <https://rwightman.github.io/pytorch-image-models/>`_
+    as an architecture choice. To see a list of available
+    models, you can do:
+
+    .. code-block:: python
+
+        import timm
+        print(timm.list_models())
+    """
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters."""
+        in_channels = self.hyperparams["in_channels"]
         model = self.hyperparams["model"]
-        pretrained = self.hyperparams["pretrained"]
 
-        if parse(torchvision.__version__) >= parse("0.13"):
-            if pretrained:
-                kwargs = {
-                    "weights": getattr(
-                        torchvision.models, f"ResNet{model[6:]}_Weights"
-                    ).DEFAULT
-                }
+        imagenet_pretrained = False
+        custom_pretrained = False
+        if self.hyperparams["weights"] and not os.path.exists(
+            self.hyperparams["weights"]
+        ):
+            if self.hyperparams["weights"] not in ["imagenet", "random"]:
+                raise ValueError(
+                    f"Weight type '{self.hyperparams['weights']}' is not valid."
+                )
             else:
-                kwargs = {"weights": None}
+                imagenet_pretrained = self.hyperparams["weights"] == "imagenet"
+            custom_pretrained = False
         else:
-            kwargs = {"pretrained": pretrained}
+            custom_pretrained = True
 
-        self.model = getattr(torchvision.models, model)(**kwargs)
-        in_features = self.model.fc.in_features
-        self.model.fc = nn.Linear(in_features, out_features=1)
+        # Create the model
+        valid_models = timm.list_models(pretrained=imagenet_pretrained)
+        if model in valid_models:
+            self.model = timm.create_model(
+                model,
+                num_classes=self.hyperparams["num_outputs"],
+                in_chans=in_channels,
+                pretrained=imagenet_pretrained,
+            )
+        else:
+            raise ValueError(f"Model type '{model}' is not a valid timm model.")
+
+        if custom_pretrained:
+            name, state_dict = utils.extract_backbone(self.hyperparams["weights"])
+
+            if self.hyperparams["model"] != name:
+                raise ValueError(
+                    f"Trying to load {name} weights into a "
+                    f"{self.hyperparams['model']}"
+                )
+            self.model = utils.load_state_dict(self.model, state_dict)
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize a new LightningModule for training simple regression models.
 
         Keyword Args:
-            model: Name of the model to use
-            learning_rate: Initial learning rate to use in the optimizer
-            learning_rate_schedule_patience: Patience parameter for the LR scheduler
+            model: Name of the timm model to use
+            weights: Either "random" or "imagenet"
+            num_outputs: Number of prediction outputs
+            in_channels: Number of input channels to model
+            learning_rate: Learning rate for optimizer
+            learning_rate_schedule_patience: Patience for learning rate scheduler
+
+        .. versionchanged:: 0.4
+            Change regression model support from torchvision.models to timm
         """
         super().__init__()
 
