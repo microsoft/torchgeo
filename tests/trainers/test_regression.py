@@ -81,9 +81,7 @@ class TestRegressionTask:
     def mocked_weights(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> WeightsEnum:
         weights = ResNet18_Weights.SENTINEL2_RGB_MOCO
         path = tmp_path / f"{weights}.pth"
-        model = timm.create_model(
-            "resnet18", in_chans=weights.meta["in_chans"], num_classes=1
-        )
+        model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"])
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights, "url", path.as_uri())
         return weights
@@ -97,10 +95,12 @@ class TestRegressionTask:
         self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
     ) -> None:
         model_kwargs["weights"] = mocked_weights
-        RegressionTask(**model_kwargs)
+        with pytest.warns(UserWarning):
+            RegressionTask(**model_kwargs)
 
     def test_weight_str(
         self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
     ) -> None:
         model_kwargs["weights"] = str(mocked_weights)
-        RegressionTask(**model_kwargs)
+        with pytest.warns(UserWarning):
+            RegressionTask(**model_kwargs)
