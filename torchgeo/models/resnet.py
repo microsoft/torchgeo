@@ -19,6 +19,11 @@ _zhu_xlab_transforms = AugmentationSequential(
     K.Resize(256), K.CenterCrop(224), data_keys=["image"]
 )
 
+# https://github.com/pytorch/vision/pull/6883
+# https://github.com/pytorch/vision/pull/7107
+# Can be removed once torchvision>=0.15 is required
+Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
+
 
 class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     """ResNet18 weights.
