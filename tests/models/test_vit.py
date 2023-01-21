@@ -7,6 +7,7 @@ from typing import Any, Dict
 import pytest
 import timm
 import torch
+import torchvision
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from torchvision.models._api import WeightsEnum

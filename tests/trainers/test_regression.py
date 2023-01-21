@@ -8,6 +8,7 @@ from typing import Any, Dict, Type, cast
 import pytest
 import timm
 import torch
+import torchvision
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer

@@ -9,6 +9,7 @@ import pytest
 import timm
 import torch
 import torch.nn as nn
+import torchvision
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
