@@ -22,8 +22,10 @@ from torchmetrics.classification import (
     MultilabelAccuracy,
     MultilabelFBetaScore,
 )
+from torchvision.models._api import WeightsEnum
 
-from ..datasets.utils import unbind_samples
+from ..datasets import unbind_samples
+from ..models import get_weight
 from . import utils
 
 
@@ -43,53 +45,26 @@ class ClassificationTask(pl.LightningModule):
 
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor."""
-        in_channels = self.hyperparams["in_channels"]
+
+        # Create model
         model = self.hyperparams["model"]
+        weights = self.hyperparams["weights"]
+        self.model = timm.create_model(
+            model,
+            num_classes=self.hyperparams["num_classes"],
+            in_chans=self.hyperparams["in_channels"],
+            pretrained=weights is True,
+        )
 
-        imagenet_pretrained = False
-        custom_pretrained = False
-        if (
-            self.hyperparams["weights"]
-            and isinstance(self.hyperparams["weights"], str)
-            and not os.path.exists(self.hyperparams["weights"])
-        ):
-            if self.hyperparams["weights"] not in ["imagenet", "random"]:
-                raise ValueError(
-                    f"Weight type '{self.hyperparams['weights']}' is not valid."
-                )
+        # Load weights
+        if weights and weights is not True:
+            if isinstance(weights, WeightsEnum):
+                state_dict = weights.get_state_dict()
+            elif os.path.exists(weights):
+                state_dict = utils.extract_backbone(weights)
             else:
-                imagenet_pretrained = self.hyperparams["weights"] == "imagenet"
-            custom_pretrained = False
-        else:
-            custom_pretrained = True
-
-        # Create the model
-        valid_models = timm.list_models(pretrained=imagenet_pretrained)
-        if model in valid_models:
-            self.model = timm.create_model(
-                model,
-                num_classes=self.hyperparams["num_classes"],
-                in_chans=in_channels,
-                pretrained=imagenet_pretrained,
-            )
-        else:
-            raise ValueError(f"Model type '{model}' is not a valid timm model.")
-
-        if custom_pretrained:
-            if isinstance(self.hyperparams["weights"], str):
-                # load a checkpoint path
-                name, state_dict = utils.extract_backbone(self.hyperparams["weights"])
-
-                if self.hyperparams["model"] != name:
-                    raise ValueError(
-                        f"Trying to load {name} weights into a "
-                        f"{self.hyperparams['model']}"
-                    )
-                self.model = utils.load_state_dict(self.model, state_dict)
-            else:
-                # load a state_dict mapping
-                state_dict = self.hyperparams["weights"]
-                self.model.load_state_dict(state_dict, strict=False)
+                state_dict = get_weight(weights).get_state_dict()
+            self.model.load_state_dict(state_dict, strict=False)
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
@@ -110,7 +85,9 @@ class ClassificationTask(pl.LightningModule):
         Keyword Args:
             model: Name of the classification model use
             loss: Name of the loss function, accepts 'ce', 'jaccard', or 'focal'
-            weights: Either "random" or "imagenet"
+            weights: Either a weight enum, the string representation of a weight enum,
+                True for ImageNet weights, False or None for random weights,
+                or the path to a saved model state dict.
             num_classes: Number of prediction classes
             in_channels: Number of input channels to model
             learning_rate: Learning rate for optimizer
