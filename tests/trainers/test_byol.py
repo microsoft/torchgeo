@@ -23,11 +23,6 @@ from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
 from .test_utils import SegmentationTestModel
 
 
-def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
-    state_dict: Dict[str, Any] = torch.load(url)
-    return state_dict
-
-
 class TestBYOL:
     def test_custom_augment_fn(self) -> None:
         backbone = resnet18()
@@ -84,8 +79,7 @@ class TestBYOLTask:
         path = tmp_path / f"{weights}.pth"
         model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"])
         torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights, "url", str(path))
-        monkeypatch.setattr(torch.hub, "load_state_dict_from_url", load)
+        monkeypatch.setattr(weights, "url", path.as_uri())
         return weights
 
     def test_weight_file(self, model_kwargs: Dict[str, Any], checkpoint: str) -> None:

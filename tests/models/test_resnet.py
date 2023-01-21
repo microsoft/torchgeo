@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 from pathlib import Path
-from typing import Any, Dict
 
 import pytest
 import timm
@@ -12,11 +11,6 @@ from _pytest.monkeypatch import MonkeyPatch
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import ResNet18_Weights, ResNet50_Weights, resnet18, resnet50
-
-
-def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
-    state_dict: Dict[str, Any] = torch.load(url)
-    return state_dict
 
 
 class TestResNet18:
@@ -31,8 +25,7 @@ class TestResNet18:
         path = tmp_path / f"{weights}.pth"
         model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"])
         torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights, "url", str(path))
-        monkeypatch.setattr(torch.hub, "load_state_dict_from_url", load)
+        monkeypatch.setattr(weights, "url", path.as_uri())
         return weights
 
     def test_resnet(self) -> None:
@@ -58,8 +51,7 @@ class TestResNet50:
         path = tmp_path / f"{weights}.pth"
         model = timm.create_model("resnet50", in_chans=weights.meta["in_chans"])
         torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights, "url", str(path))
-        monkeypatch.setattr(torch.hub, "load_state_dict_from_url", load)
+        monkeypatch.setattr(weights, "url", path.as_uri())
         return weights
 
     def test_resnet(self) -> None:
