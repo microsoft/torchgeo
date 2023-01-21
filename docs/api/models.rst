@@ -40,7 +40,7 @@ ResNet
 .. autoclass:: ResNet50_Weights
 
 .. csv-table::
-   :widths: 40 15 10 10 15 10 10 10
+   :widths: 45 10 10 10 15 10 10 10
    :header-rows: 1
    :align: center
    :file: resnet_pretrained_weights.csv
@@ -52,7 +52,7 @@ Vision Transformer
 .. autoclass:: ViTSmall16_Weights
 
 .. csv-table::
-   :widths: 40 15 10 10 15 10 10 10
+   :widths: 45 10 10 10 15 10 10 10
    :header-rows: 1
    :align: center
    :file: vit_pretrained_weights.csv
