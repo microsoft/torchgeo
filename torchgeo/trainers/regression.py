@@ -14,8 +14,10 @@ import torch.nn.functional as F
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
+from torchvision.models._api import WeightsEnum
 
-from ..datasets.utils import unbind_samples
+from ..datasets import unbind_samples
+from ..models import get_weight
 from . import utils
 
 
@@ -35,60 +37,33 @@ class RegressionTask(pl.LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters."""
-        in_channels = self.hyperparams["in_channels"]
-        model = self.hyperparams["model"]
+        # Create model
+        weights = self.hyperparams["weights"]
+        self.model = timm.create_model(
+            self.hyperparams["model"],
+            num_classes=self.hyperparams["num_classes"],
+            in_chans=self.hyperparams["in_channels"],
+            pretrained=weights is True,
+        )
 
-        imagenet_pretrained = False
-        custom_pretrained = False
-        if (
-            self.hyperparams["weights"]
-            and isinstance(self.hyperparams["weights"], str)
-            and not os.path.exists(self.hyperparams["weights"])
-        ):
-            if self.hyperparams["weights"] not in ["imagenet", "random"]:
-                raise ValueError(
-                    f"Weight type '{self.hyperparams['weights']}' is not valid."
-                )
+        # Load weights
+        if weights and weights is not True:
+            if isinstance(weights, WeightsEnum):
+                state_dict = weights.get_state_dict()
+            elif os.path.exists(weights):
+                state_dict = utils.extract_backbone(weights)
             else:
-                imagenet_pretrained = self.hyperparams["weights"] == "imagenet"
-            custom_pretrained = False
-        else:
-            custom_pretrained = True
-
-        # Create the model
-        valid_models = timm.list_models(pretrained=imagenet_pretrained)
-        if model in valid_models:
-            self.model = timm.create_model(
-                model,
-                num_classes=self.hyperparams["num_outputs"],
-                in_chans=in_channels,
-                pretrained=imagenet_pretrained,
-            )
-        else:
-            raise ValueError(f"Model type '{model}' is not a valid timm model.")
-
-        if custom_pretrained:
-            if isinstance(self.hyperparams["weights"], str):
-                # load a checkpoint path
-                name, state_dict = utils.extract_backbone(self.hyperparams["weights"])
-
-                if self.hyperparams["model"] != name:
-                    raise ValueError(
-                        f"Trying to load {name} weights into a "
-                        f"{self.hyperparams['model']}"
-                    )
-                self.model = utils.load_state_dict(self.model, state_dict)
-            else:
-                # load a state_dict mapping
-                state_dict = self.hyperparams["weights"]
-                self.model.load_state_dict(state_dict, strict=False)
+                state_dict = get_weight(weights).get_state_dict()
+            self.model.load_state_dict(state_dict, strict=False)
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize a new LightningModule for training simple regression models.
 
         Keyword Args:
             model: Name of the timm model to use
-            weights: Either "random" or "imagenet"
+            weights: Either a weight enum, the string representation of a weight enum,
+                True for ImageNet weights, False or None for random weights,
+                or the path to a saved model state dict.
             num_outputs: Number of prediction outputs
             in_channels: Number of input channels to model
             learning_rate: Learning rate for optimizer

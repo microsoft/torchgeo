@@ -45,12 +45,10 @@ class ClassificationTask(pl.LightningModule):
 
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor."""
-
         # Create model
-        model = self.hyperparams["model"]
         weights = self.hyperparams["weights"]
         self.model = timm.create_model(
-            model,
+            self.hyperparams["model"],
             num_classes=self.hyperparams["num_classes"],
             in_chans=self.hyperparams["in_channels"],
             pretrained=weights is True,
@@ -305,12 +303,6 @@ class MultiLabelClassificationTask(ClassificationTask):
            The *classification_model* parameter was renamed to *model*.
         """
         super().__init__(**kwargs)
-
-        # Creates `self.hparams` from kwargs
-        self.save_hyperparameters()  # type: ignore[operator]
-        self.hyperparams = cast(Dict[str, Any], self.hparams)
-
-        self.config_task()
 
         self.train_metrics = MetricCollection(
             {

@@ -17,7 +17,9 @@ from kornia.geometry import transform as KorniaTransform
 from torch import Tensor, optim
 from torch.nn.modules import BatchNorm1d, Linear, Module, ReLU, Sequential
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torchvision.models._api import WeightsEnum
 
+from ..models import get_weight
 from . import utils
 
 
@@ -323,42 +325,24 @@ class BYOLTask(pl.LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
+        # Create model
         in_channels = self.hyperparams["in_channels"]
-        backbone_name = self.hyperparams["backbone"]
+        weights = self.hyperparams["weights"]
+        backbone = timm.create_model(
+            self.hyperparams["backbone"],
+            in_chans=in_channels,
+            pretrained=weights is True,
+        )
 
-        imagenet_pretrained = False
-        custom_pretrained = False
-        if self.hyperparams["weights"] and not os.path.exists(
-            self.hyperparams["weights"]
-        ):
-            if self.hyperparams["weights"] not in ["imagenet", "random"]:
-                raise ValueError(
-                    f"Weight type '{self.hyperparams['weights']}' is not valid."
-                )
+        # Load weights
+        if weights and weights is not True:
+            if isinstance(weights, WeightsEnum):
+                state_dict = weights.get_state_dict()
+            elif os.path.exists(weights):
+                state_dict = utils.extract_backbone(weights)
             else:
-                imagenet_pretrained = self.hyperparams["weights"] == "imagenet"
-            custom_pretrained = False
-        else:
-            custom_pretrained = True
-
-        # Create the model
-        valid_models = timm.list_models(pretrained=imagenet_pretrained)
-        if backbone_name in valid_models:
-            backbone = timm.create_model(
-                backbone_name, in_chans=in_channels, pretrained=imagenet_pretrained
-            )
-        else:
-            raise ValueError(f"Model type '{backbone_name}' is not a valid timm model.")
-
-        if custom_pretrained:
-            name, state_dict = utils.extract_backbone(self.hyperparams["weights"])
-
-            if self.hyperparams["backbone"] != name:
-                raise ValueError(
-                    f"Trying to load {name} weights into a "
-                    f"{self.hyperparams['backbone']}"
-                )
-            backbone = utils.load_state_dict(backbone, state_dict)
+                state_dict = get_weight(weights).get_state_dict()
+            backbone.load_state_dict(state_dict, strict=False)
 
         self.model = BYOL(backbone, in_channels=in_channels, image_size=(256, 256))
 
@@ -368,7 +352,9 @@ class BYOLTask(pl.LightningModule):
         Keyword Args:
             in_channels: Number of input channels to model
             backbone: Name of the timm model to use
-            weights: Either "random" or "imagenet"
+            weights: Either a weight enum, the string representation of a weight enum,
+                True for ImageNet weights, False or None for random weights,
+                or the path to a saved model state dict.
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
 
