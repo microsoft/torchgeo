@@ -89,7 +89,7 @@ class TestClassificationTask:
             "in_channels": 13,
             "loss": "ce",
             "num_classes": 10,
-            "weights": "random",
+            "weights": None,
         }
 
     def test_pretrained(self, model_kwargs: Dict[Any, Any], checkpoint: str) -> None:
@@ -97,30 +97,9 @@ class TestClassificationTask:
         with pytest.warns(UserWarning):
             ClassificationTask(**model_kwargs)
 
-    def test_invalid_pretrained(
-        self, model_kwargs: Dict[Any, Any], checkpoint: str
-    ) -> None:
-        model_kwargs["weights"] = checkpoint
-        model_kwargs["model"] = "resnet50"
-        match = "Trying to load resnet18 weights into a resnet50"
-        with pytest.raises(ValueError, match=match):
-            ClassificationTask(**model_kwargs)
-
     def test_invalid_loss(self, model_kwargs: Dict[Any, Any]) -> None:
         model_kwargs["loss"] = "invalid_loss"
         match = "Loss type 'invalid_loss' is not valid."
-        with pytest.raises(ValueError, match=match):
-            ClassificationTask(**model_kwargs)
-
-    def test_invalid_model(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["model"] = "invalid_model"
-        match = "Model type 'invalid_model' is not a valid timm model."
-        with pytest.raises(ValueError, match=match):
-            ClassificationTask(**model_kwargs)
-
-    def test_invalid_weights(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["weights"] = "invalid_weights"
-        match = "Weight type 'invalid_weights' is not valid."
         with pytest.raises(ValueError, match=match):
             ClassificationTask(**model_kwargs)
 
@@ -193,7 +172,7 @@ class TestMultiLabelClassificationTask:
             "in_channels": 14,
             "loss": "bce",
             "num_classes": 19,
-            "weights": "random",
+            "weights": None,
         }
 
     def test_invalid_loss(self, model_kwargs: Dict[Any, Any]) -> None:

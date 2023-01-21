@@ -59,10 +59,10 @@ class ClassificationTask(pl.LightningModule):
             if isinstance(weights, WeightsEnum):
                 state_dict = weights.get_state_dict()
             elif os.path.exists(weights):
-                state_dict = utils.extract_backbone(weights)
+                _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict()
-            self.model.load_state_dict(state_dict, strict=False)
+            self.model = utils.load_state_dict(self.model, state_dict)
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
