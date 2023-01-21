@@ -8,20 +8,20 @@ import timm
 import torch
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
-from torchvision.models._api import Weights
+from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import ResNet18_Weights, ResNet50_Weights, resnet18, resnet50
 
 
 class TestResNet18:
-    @pytest.fixture(scope="function", params=[*ResNet18_Weights])
-    def weights(self, request: SubRequest) -> Weights:
+    @pytest.fixture(params=[*ResNet18_Weights])
+    def weights(self, request: SubRequest) -> WeightsEnum:
         return request.param
 
-    @pytest.fixture(scope="function")
+    @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: Weights
-    ) -> Weights:
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
+    ) -> WeightsEnum:
         path = tmp_path / f"{weights}.pth"
         model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"])
         torch.save(model.state_dict(), path)
@@ -31,23 +31,23 @@ class TestResNet18:
     def test_resnet(self) -> None:
         resnet18()
 
-    def test_resnet_weights(self, mocked_weights: Weights) -> None:
+    def test_resnet_weights(self, mocked_weights: WeightsEnum) -> None:
         resnet18(weights=mocked_weights)
 
     @pytest.mark.slow
-    def test_resnet_download(self, weights: Weights) -> None:
+    def test_resnet_download(self, weights: WeightsEnum) -> None:
         resnet18(weights=weights)
 
 
 class TestResNet50:
-    @pytest.fixture(scope="function", params=[*ResNet50_Weights])
-    def weights(self, request: SubRequest) -> Weights:
+    @pytest.fixture(params=[*ResNet50_Weights])
+    def weights(self, request: SubRequest) -> WeightsEnum:
         return request.param
 
-    @pytest.fixture(scope="function")
+    @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: Weights
-    ) -> Weights:
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
+    ) -> WeightsEnum:
         path = tmp_path / f"{weights}.pth"
         model = timm.create_model("resnet50", in_chans=weights.meta["in_chans"])
         torch.save(model.state_dict(), path)
@@ -57,9 +57,9 @@ class TestResNet50:
     def test_resnet(self) -> None:
         resnet50()
 
-    def test_resnet_weights(self, mocked_weights: Weights) -> None:
+    def test_resnet_weights(self, mocked_weights: WeightsEnum) -> None:
         resnet50(weights=mocked_weights)
 
     @pytest.mark.slow
-    def test_resnet_download(self, weights: Weights) -> None:
+    def test_resnet_download(self, weights: WeightsEnum) -> None:
         resnet50(weights=weights)
