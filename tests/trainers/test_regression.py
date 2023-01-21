@@ -31,7 +31,7 @@ class TestRegressionTask:
     def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+        conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]
@@ -52,7 +52,7 @@ class TestRegressionTask:
     def test_no_logger(self) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", "cyclone.yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+        conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]
