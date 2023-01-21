@@ -35,7 +35,7 @@ ResNet
 ^^^^^^
 
 .. csv-table::
-   :widths: 40 10 10 10 15 15
+   :widths: 40 10 10 10 10 10 10 10
    :header-rows: 1
    :align: center
    :file: resnet_pretrained_weights.csv
@@ -49,7 +49,7 @@ Vision Transformer
 ^^^^^^^^^^^^^^^^^^
 
 .. csv-table::
-   :widths: 40 10 10 10 15 15
+   :widths: 40 10 10 10 10 10 10 10
    :header-rows: 1
    :align: center
    :file: vit_pretrained_weights.csv
