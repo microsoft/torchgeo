@@ -2,13 +2,19 @@
 # Licensed under the MIT License.
 
 import os
+from pathlib import Path
 from typing import Any, Dict, Type, cast
 
 import pytest
+import timm
+import torch
+from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
+from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import COWCCountingDataModule, TropicalCycloneDataModule
+from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import RegressionTask
 
 from .test_utils import RegressionTestModel
@@ -63,7 +69,7 @@ class TestRegressionTask:
         trainer.fit(model=model, datamodule=datamodule)
 
     @pytest.fixture
-    def model_kwargs(self) -> Dict[Any, Any]:
+    def model_kwargs(self) -> Dict[str, Any]:
         return {
             "model": "resnet18",
             "weights": None,
@@ -71,7 +77,30 @@ class TestRegressionTask:
             "in_channels": 3,
         }
 
-    def test_pretrained(self, model_kwargs: Dict[Any, Any], checkpoint: str) -> None:
+    @pytest.fixture
+    def mocked_weights(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> WeightsEnum:
+        weights = ResNet18_Weights.SENTINEL2_RGB_MOCO
+        path = tmp_path / f"{weights}.pth"
+        model = timm.create_model(
+            "resnet18", in_chans=weights.meta["in_chans"], num_classes=1
+        )
+        torch.save(model.state_dict(), path)
+        monkeypatch.setattr(weights, "url", path.as_uri())
+        return weights
+
+    def test_weight_file(self, model_kwargs: Dict[str, Any], checkpoint: str) -> None:
         model_kwargs["weights"] = checkpoint
         with pytest.warns(UserWarning):
             RegressionTask(**model_kwargs)
+
+    def test_weight_enum(
+        self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
+    ) -> None:
+        model_kwargs["weights"] = mocked_weights
+        RegressionTask(**model_kwargs)
+
+    def test_weight_str(
+        self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
+    ) -> None:
+        model_kwargs["weights"] = str(mocked_weights)
+        RegressionTask(**model_kwargs)
