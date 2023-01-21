@@ -15,6 +15,14 @@ from torch import Tensor
 from torch.nn.modules import Module
 
 
+@pytest.fixture(
+    scope="package", params=[True, pytest.param(False, marks=pytest.mark.slow)]
+)
+def fast_dev_run(request: SubRequest) -> bool:
+    flag: bool = request.param
+    return flag
+
+
 @pytest.fixture(scope="package")
 def model() -> Module:
     kwargs: Dict[str, Optional[bool]] = {}

@@ -67,7 +67,9 @@ class TestBYOLTask:
             ("chesapeake_cvpr_prior", ChesapeakeCVPRDataModule),
         ],
     )
-    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
+    def test_trainer(
+        self, name: str, classname: Type[LightningDataModule], fast_dev_run: bool
+    ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
         conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
@@ -83,7 +85,7 @@ class TestBYOLTask:
         model.backbone = SegmentationTestModel(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
         try:
             trainer.test(model=model, datamodule=datamodule)
@@ -124,7 +126,7 @@ class TestBYOLTask:
         model_kwargs["weights"] = str(mocked_weights)
         BYOLTask(**model_kwargs)
 
-    def test_predict(self, model_kwargs: Dict[Any, Any]) -> None:
+    def test_predict(self, model_kwargs: Dict[Any, Any], fast_dev_run: bool) -> None:
         datamodule = PredictBYOLDataModule(
             root="tests/data/chesapeake/cvpr",
             train_splits=["de-test"],
@@ -136,5 +138,5 @@ class TestBYOLTask:
         )
         model_kwargs["in_channels"] = 4
         model = BYOLTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.predict(model=model, datamodule=datamodule)

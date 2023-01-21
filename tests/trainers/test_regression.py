@@ -54,7 +54,9 @@ class TestRegressionTask:
             ("cyclone", TropicalCycloneDataModule),
         ],
     )
-    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
+    def test_trainer(
+        self, name: str, classname: Type[LightningDataModule], fast_dev_run: bool
+    ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
         conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
@@ -70,7 +72,7 @@ class TestRegressionTask:
         model.model = RegressionTestModel()
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
         try:
             trainer.test(model=model, datamodule=datamodule)
@@ -120,20 +122,20 @@ class TestRegressionTask:
             RegressionTask(**model_kwargs)
 
     def test_no_rgb(
-        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any]
+        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any], fast_dev_run: bool
     ) -> None:
         monkeypatch.setattr(TropicalCycloneDataModule, "plot", plot)
         datamodule = TropicalCycloneDataModule(
             root="tests/data/cyclone", batch_size=1, num_workers=0
         )
         model = RegressionTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_predict(self, model_kwargs: Dict[Any, Any]) -> None:
+    def test_predict(self, model_kwargs: Dict[Any, Any], fast_dev_run: bool) -> None:
         datamodule = PredictRegressionDataModule(
             root="tests/data/cyclone", batch_size=1, num_workers=0
         )
         model = RegressionTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.predict(model=model, datamodule=datamodule)

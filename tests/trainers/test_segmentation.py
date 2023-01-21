@@ -62,7 +62,11 @@ class TestSemanticSegmentationTask:
         ],
     )
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, classname: Type[LightningDataModule]
+        self,
+        monkeypatch: MonkeyPatch,
+        name: str,
+        classname: Type[LightningDataModule],
+        fast_dev_run: bool,
     ) -> None:
         if name == "naipchesapeake":
             pytest.importorskip("zipfile_deflate64")
@@ -86,7 +90,7 @@ class TestSemanticSegmentationTask:
         model = SemanticSegmentationTask(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
         try:
             trainer.test(model=model, datamodule=datamodule)
@@ -135,7 +139,7 @@ class TestSemanticSegmentationTask:
             SemanticSegmentationTask(**model_kwargs)
 
     def test_no_rgb(
-        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any]
+        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any], fast_dev_run: bool
     ) -> None:
         model_kwargs["in_channels"] = 15
         monkeypatch.setattr(SEN12MSDataModule, "plot", plot)
@@ -143,5 +147,5 @@ class TestSemanticSegmentationTask:
             root="tests/data/sen12ms", batch_size=1, num_workers=0
         )
         model = SemanticSegmentationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.validate(model=model, datamodule=datamodule)

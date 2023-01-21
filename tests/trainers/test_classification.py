@@ -66,7 +66,11 @@ class TestClassificationTask:
         ],
     )
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, classname: Type[LightningDataModule]
+        self,
+        monkeypatch: MonkeyPatch,
+        name: str,
+        classname: Type[LightningDataModule],
+        fast_dev_run: bool,
     ) -> None:
         if name.startswith("so2sat"):
             pytest.importorskip("h5py", minversion="2.6")
@@ -85,7 +89,7 @@ class TestClassificationTask:
         model = ClassificationTask(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
         try:
             trainer.test(model=model, datamodule=datamodule)
@@ -154,22 +158,22 @@ class TestClassificationTask:
             ClassificationTask(**model_kwargs)
 
     def test_no_rgb(
-        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any]
+        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any], fast_dev_run: bool
     ) -> None:
         monkeypatch.setattr(EuroSATDataModule, "plot", plot)
         datamodule = EuroSATDataModule(
             root="tests/data/eurosat", batch_size=1, num_workers=0
         )
         model = ClassificationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_predict(self, model_kwargs: Dict[Any, Any]) -> None:
+    def test_predict(self, model_kwargs: Dict[Any, Any], fast_dev_run: bool) -> None:
         datamodule = PredictClassificationDataModule(
             root="tests/data/eurosat", batch_size=1, num_workers=0
         )
         model = ClassificationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.predict(model=model, datamodule=datamodule)
 
 
@@ -183,7 +187,11 @@ class TestMultiLabelClassificationTask:
         ],
     )
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, classname: Type[LightningDataModule]
+        self,
+        monkeypatch: MonkeyPatch,
+        name: str,
+        classname: Type[LightningDataModule],
+        fast_dev_run: bool,
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
@@ -199,7 +207,7 @@ class TestMultiLabelClassificationTask:
         model = MultiLabelClassificationTask(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
         try:
             trainer.test(model=model, datamodule=datamodule)
@@ -227,20 +235,20 @@ class TestMultiLabelClassificationTask:
             MultiLabelClassificationTask(**model_kwargs)
 
     def test_no_rgb(
-        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any]
+        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any], fast_dev_run: bool
     ) -> None:
         monkeypatch.setattr(BigEarthNetDataModule, "plot", plot)
         datamodule = BigEarthNetDataModule(
             root="tests/data/bigearthnet", batch_size=1, num_workers=0
         )
         model = MultiLabelClassificationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_predict(self, model_kwargs: Dict[Any, Any]) -> None:
+    def test_predict(self, model_kwargs: Dict[Any, Any], fast_dev_run: bool) -> None:
         datamodule = PredictMultiLabelClassificationDataModule(
             root="tests/data/bigearthnet", batch_size=1, num_workers=0
         )
         model = MultiLabelClassificationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.predict(model=model, datamodule=datamodule)
