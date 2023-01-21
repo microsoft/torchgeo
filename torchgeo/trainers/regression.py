@@ -41,7 +41,7 @@ class RegressionTask(pl.LightningModule):
         weights = self.hyperparams["weights"]
         self.model = timm.create_model(
             self.hyperparams["model"],
-            num_classes=self.hyperparams["num_classes"],
+            num_classes=self.hyperparams["num_outputs"],
             in_chans=self.hyperparams["in_channels"],
             pretrained=weights is True,
         )
@@ -51,10 +51,10 @@ class RegressionTask(pl.LightningModule):
             if isinstance(weights, WeightsEnum):
                 state_dict = weights.get_state_dict()
             elif os.path.exists(weights):
-                state_dict = utils.extract_backbone(weights)
+                _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict()
-            self.model.load_state_dict(state_dict, strict=False)
+            self.model = utils.load_state_dict(self.model, state_dict)
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize a new LightningModule for training simple regression models.
