@@ -32,7 +32,7 @@ class TestResNet18:
         model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"])
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights, "url", str(path))
-        monkeypatch.setattr(torch.hub, "load_state_dict_from_url", load)
+        monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
         return weights
 
     def test_resnet(self) -> None:
@@ -59,7 +59,7 @@ class TestResNet50:
         model = timm.create_model("resnet50", in_chans=weights.meta["in_chans"])
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights, "url", str(path))
-        monkeypatch.setattr(torch.hub, "load_state_dict_from_url", load)
+        monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
         return weights
 
     def test_resnet(self) -> None:

@@ -34,7 +34,7 @@ class TestViTSmall16:
         )
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights, "url", str(path))
-        monkeypatch.setattr(torch.hub, "load_state_dict_from_url", load)
+        monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
         return weights
 
     def test_vit(self) -> None:
