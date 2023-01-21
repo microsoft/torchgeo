@@ -25,7 +25,7 @@ class TestResNet18:
         path = tmp_path / f"{weights}.pth"
         model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"])
         torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights, "url", path.as_uri())
+        monkeypatch.setattr(weights, "url", str(path))
         return weights
 
     def test_resnet(self) -> None:
@@ -51,7 +51,7 @@ class TestResNet50:
         path = tmp_path / f"{weights}.pth"
         model = timm.create_model("resnet50", in_chans=weights.meta["in_chans"])
         torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights, "url", path.as_uri())
+        monkeypatch.setattr(weights, "url", str(path))
         return weights
 
     def test_resnet(self) -> None:
