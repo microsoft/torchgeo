@@ -72,9 +72,9 @@ class DeepGlobeLandCoverDataModule(NonGeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in ["fit", "validate"]:
-            dataset = DeepGlobeLandCover(split="train", **self.kwargs)
+            self.dataset = DeepGlobeLandCover(split="train", **self.kwargs)
             self.train_dataset, self.val_dataset = dataset_split(
-                dataset, self.val_split_pct
+                self.dataset, self.val_split_pct
             )
         if stage in ["test"]:
             self.test_dataset = DeepGlobeLandCover(split="test", **self.kwargs)

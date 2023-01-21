@@ -74,9 +74,9 @@ class SpaceNet1DataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        dataset = SpaceNet1(**self.kwargs)
+        self.dataset = SpaceNet1(**self.kwargs)
         self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-            dataset, self.val_split_pct, self.test_split_pct
+            self.dataset, self.val_split_pct, self.test_split_pct
         )
 
     def on_after_batch_transfer(

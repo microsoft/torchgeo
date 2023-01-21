@@ -74,9 +74,9 @@ class Vaihingen2DDataModule(NonGeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in ["fit", "validate"]:
-            dataset = Vaihingen2D(split="train", **self.kwargs)
+            self.dataset = Vaihingen2D(split="train", **self.kwargs)
             self.train_dataset, self.val_dataset = dataset_split(
-                dataset, self.val_split_pct
+                self.dataset, self.val_split_pct
             )
         if stage in ["test"]:
             self.test_dataset = Vaihingen2D(split="test", **self.kwargs)

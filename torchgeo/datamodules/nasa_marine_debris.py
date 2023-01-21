@@ -45,7 +45,7 @@ class NASAMarineDebrisDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        dataset = NASAMarineDebris(**self.kwargs)
+        self.dataset = NASAMarineDebris(**self.kwargs)
         self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-            dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
+            self.dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
         )

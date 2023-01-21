@@ -72,7 +72,7 @@ class SEN12MSDataModule(NonGeoDataModule):
         if stage in ["fit", "validate"]:
             season_to_int = {"winter": 0, "spring": 1000, "summer": 2000, "fall": 3000}
 
-            dataset = SEN12MS(split="train", **self.kwargs)
+            self.dataset = SEN12MS(split="train", **self.kwargs)
 
             # A patch is a filename like:
             #     "ROIs{num}_{season}_s2_{scene_id}_p{patch_id}.tif"
@@ -81,7 +81,7 @@ class SEN12MSDataModule(NonGeoDataModule):
             # simply give each season a large number and representing a unique_scene_id
             # as (season_id + scene_id).
             scenes = []
-            for scene_fn in dataset.ids:
+            for scene_fn in self.dataset.ids:
                 parts = scene_fn.split("_")
                 season_id = season_to_int[parts[1]]
                 scene_id = int(parts[3])
@@ -93,8 +93,8 @@ class SEN12MSDataModule(NonGeoDataModule):
                 )
             )
 
-            self.train_dataset = Subset(dataset, train_indices)
-            self.val_dataset = Subset(dataset, val_indices)
+            self.train_dataset = Subset(self.dataset, train_indices)
+            self.val_dataset = Subset(self.dataset, val_indices)
         if stage in ["test"]:
             self.test_dataset = SEN12MS(split="test", **self.kwargs)
 
@@ -110,6 +110,6 @@ class SEN12MSDataModule(NonGeoDataModule):
         Returns:
             A batch of data.
         """
-        batch["mask"] = torch.take(self.DFC2020_CLASS_MAPPING, batch["mask"][:, 0])
+        batch["mask"] = torch.take(self.DFC2020_CLASS_MAPPING, batch["mask"])
 
         return super().on_after_batch_transfer(batch, dataloader_idx)

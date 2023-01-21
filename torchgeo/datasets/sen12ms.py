@@ -230,7 +230,7 @@ class SEN12MS(NonGeoDataset):
         image = torch.cat(tensors=[s1, s2], dim=0)
         image = torch.index_select(image, dim=0, index=self.band_indices)
 
-        sample: Dict[str, Tensor] = {"image": image, "mask": lc}
+        sample: Dict[str, Tensor] = {"image": image, "mask": lc[0]}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -336,13 +336,13 @@ class SEN12MS(NonGeoDataset):
             else:
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
-        image, mask = sample["image"][rgb_indices].numpy(), sample["mask"][0]
+        image, mask = sample["image"][rgb_indices].numpy(), sample["mask"]
         image = percentile_normalization(image)
         ncols = 2
 
         showing_predictions = "prediction" in sample
         if showing_predictions:
-            prediction = sample["prediction"][0]
+            prediction = sample["prediction"]
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))

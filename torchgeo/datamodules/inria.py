@@ -86,9 +86,9 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in ["fit", "validate", "test"]:
-            dataset = InriaAerialImageLabeling(split="train", **self.kwargs)
+            self.dataset = InriaAerialImageLabeling(split="train", **self.kwargs)
             self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-                dataset, self.val_split_pct, self.test_split_pct
+                self.dataset, self.val_split_pct, self.test_split_pct
             )
         if stage in ["predict"]:
             # Test set masks are not public, use for prediction instead

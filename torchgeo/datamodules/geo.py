@@ -534,7 +534,7 @@ class NonGeoDataModule(LightningDataModule):
         Returns:
             A matplotlib Figure with the image, ground truth, and predictions.
         """
-        dataset = self.val_dataset or self.dataset
+        dataset = self.dataset or self.val_dataset
         if dataset is not None:
             if hasattr(dataset, "plot"):
                 return dataset.plot(*args, **kwargs)

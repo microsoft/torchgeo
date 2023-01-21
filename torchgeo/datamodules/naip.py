@@ -95,21 +95,16 @@ class NAIPChesapeakeDataModule(GeoDataModule):
                 self.dataset, self.patch_size, self.patch_size, test_roi
             )
 
-    def plot(self, *args: Any, **kwargs: Any) -> Tuple[plt.Figure, plt.Figure]:
-        """Run NAIP and Chesapeake plot methods.
-
-        See :meth:`torchgeo.datasets.NAIP.plot` and
-        :meth:`torchgeo.datasets.Chesapeake.plot`.
+    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+        """Run NAIP plot method.
 
         Args:
             *args: Arguments passed to plot method.
             **kwargs: Keyword arguments passed to plot method.
 
         Returns:
-            A list of matplotlib Figures with the image, ground truth, and predictions.
+            A matplotlib Figure with the image, ground truth, and predictions.
 
         .. versionadded:: 0.4
         """
-        image = self.naip.plot(*args, **kwargs)
-        label = self.chesapeake.plot(*args, **kwargs)
-        return image, label
+        return self.naip.plot(*args, **kwargs)

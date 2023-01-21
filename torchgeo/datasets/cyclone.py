@@ -241,7 +241,7 @@ class TropicalCyclone(NonGeoDataset):
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 
-        ax.imshow(image, cmap="gray")
+        ax.imshow(image.permute(1, 2, 0))
         ax.axis("off")
 
         if show_titles:

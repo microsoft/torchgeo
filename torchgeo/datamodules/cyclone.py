@@ -43,10 +43,10 @@ class TropicalCycloneDataModule(NonGeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in ["fit", "validate"]:
-            dataset = TropicalCyclone(split="train", **self.kwargs)
+            self.dataset = TropicalCyclone(split="train", **self.kwargs)
 
             storm_ids = []
-            for item in dataset.collection:
+            for item in self.dataset.collection:
                 storm_id = item["href"].split("/")[0].split("_")[-2]
                 storm_ids.append(storm_id)
 
@@ -56,7 +56,7 @@ class TropicalCycloneDataModule(NonGeoDataModule):
                 )
             )
 
-            self.train_dataset = Subset(dataset, train_indices)
-            self.val_dataset = Subset(dataset, val_indices)
+            self.train_dataset = Subset(self.dataset, train_indices)
+            self.val_dataset = Subset(self.dataset, val_indices)
         if stage in ["test"]:
             self.test_dataset = TropicalCyclone(split="test", **self.kwargs)
