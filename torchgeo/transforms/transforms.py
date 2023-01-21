@@ -10,7 +10,6 @@ import torch
 from einops import rearrange
 from kornia.augmentation import GeometricAugmentationBase2D
 from kornia.augmentation.random_generator import CropGenerator
-from kornia.contrib import compute_padding, extract_tensor_patches
 from kornia.geometry import crop_by_indices
 from torch import Tensor
 from torch.nn.modules import Module
@@ -83,60 +82,6 @@ class AugmentationSequential(Module):
             batch["mask"] = rearrange(batch["mask"], "b () h w -> b h w")
 
         return batch
-
-
-class _ExtractTensorPatches(GeometricAugmentationBase2D):
-    """Chop up a tensor into a grid."""
-
-    def __init__(self, window_size: Union[int, Tuple[int, int]]) -> None:
-        """Initialize a new _ExtractTensorPatches instance.
-
-        Args:
-            window_size: the size of each patch
-        """
-        super().__init__(p=1)
-        self.flags = {"window_size": window_size}
-
-    def compute_transformation(
-        self, input: Tensor, params: Dict[str, Tensor], flags: Dict[str, Any]
-    ) -> Tensor:
-        """Compute the transformation.
-
-        Args:
-            input: the input tensor
-            params: generated parameters
-            flags: static parameters
-
-        Returns:
-            the transformation
-        """
-        out: Tensor = self.identity_matrix(input)
-        return out
-
-    def apply_transform(
-        self,
-        input: Tensor,
-        params: Dict[str, Tensor],
-        flags: Dict[str, Any],
-        transform: Optional[Tensor] = None,
-    ) -> Tensor:
-        """Apply the transform.
-
-        Args:
-            input: the input tensor
-            params: generated parameters
-            flags: static parameters
-            transform: the geometric transformation tensor
-
-        Returns:
-            the augmented input
-        """
-        size = flags["window_size"]
-        h, w = input.shape[-2:]
-        padding = compute_padding((h, w), size)
-        input = extract_tensor_patches(input, size, size, padding)
-        input = torch.flatten(input, 0, 1)  # [B, N, C?, H, W] -> [B*N, C?, H, W]
-        return input
 
 
 class _RandomNCrop(GeometricAugmentationBase2D):

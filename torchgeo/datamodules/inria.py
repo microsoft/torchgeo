@@ -10,7 +10,7 @@ import kornia.augmentation as K
 from ..datasets import InriaAerialImageLabeling
 from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
-from ..transforms.transforms import _ExtractTensorPatches, _RandomNCrop
+from ..transforms.transforms import _RandomNCrop
 from .geo import NonGeoDataModule
 from .utils import dataset_split
 
@@ -38,14 +38,13 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
 
         The Inria Aerial Image Labeling dataset contains images that are too large to
         pass directly through a model. Instead, we randomly sample patches from image
-        tiles during training and chop up image tiles into patch grids during
-        evaluation. During training, the effective batch size is equal to
+        tiles. The effective batch size is equal to
         ``num_tiles_per_batch`` x ``num_patches_per_tile``.
 
         Args:
-            num_tiles_per_batch: Number of image tiles to sample from during training.
+            num_tiles_per_batch: Number of image tiles to sample from.
             num_patches_per_tile: Number of patches to randomly sample from each image
-                tile during training.
+                tile.
             patch_size: Size of each patch, either ``size`` or ``(height, width)``.
                 Should be a multiple of 32 for most segmentation architectures.
             num_workers: Number of workers for parallel data loading.
@@ -71,12 +70,12 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
         )
         self.val_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            _ExtractTensorPatches(self.patch_size),
+            _RandomNCrop(self.patch_size, self.num_patches_per_tile),
             data_keys=["image", "mask"],
         )
         self.predict_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            _ExtractTensorPatches(self.patch_size),
+            _RandomNCrop(self.patch_size, self.num_patches_per_tile),
             data_keys=["image"],
         )
 
