@@ -2,19 +2,31 @@
 # Licensed under the MIT License.
 
 import os
+from pathlib import Path
 from typing import Any, Dict, Type, cast
 
 import pytest
+import timm
+import torch
 import torch.nn as nn
+import torchvision
+from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 from torchvision.models import resnet18
+from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import ChesapeakeCVPRDataModule
+from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import BYOLTask
 from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
 
 from .test_utils import SegmentationTestModel
+
+
+def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+    state_dict: Dict[str, Any] = torch.load(url)
+    return state_dict
 
 
 class TestBYOL:
@@ -45,7 +57,7 @@ class TestBYOLTask:
     def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+        conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]
@@ -64,30 +76,31 @@ class TestBYOLTask:
         trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
 
     @pytest.fixture
-    def model_kwargs(self) -> Dict[Any, Any]:
-        return {"backbone": "resnet18", "weights": "random", "in_channels": 3}
+    def model_kwargs(self) -> Dict[str, Any]:
+        return {"backbone": "resnet18", "weights": None, "in_channels": 3}
 
-    def test_invalid_pretrained(
-        self, model_kwargs: Dict[Any, Any], checkpoint: str
-    ) -> None:
-        model_kwargs["weights"] = checkpoint
-        model_kwargs["backbone"] = "resnet50"
-        match = "Trying to load resnet18 weights into a resnet50"
-        with pytest.raises(ValueError, match=match):
-            BYOLTask(**model_kwargs)
+    @pytest.fixture
+    def mocked_weights(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> WeightsEnum:
+        weights = ResNet18_Weights.SENTINEL2_RGB_MOCO
+        path = tmp_path / f"{weights}.pth"
+        model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"])
+        torch.save(model.state_dict(), path)
+        monkeypatch.setattr(weights, "url", str(path))
+        monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
+        return weights
 
-    def test_pretrained(self, model_kwargs: Dict[Any, Any], checkpoint: str) -> None:
+    def test_weight_file(self, model_kwargs: Dict[str, Any], checkpoint: str) -> None:
         model_kwargs["weights"] = checkpoint
         BYOLTask(**model_kwargs)
 
-    def test_invalid_backbone(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["backbone"] = "invalid_backbone"
-        match = "Model type 'invalid_backbone' is not a valid timm model."
-        with pytest.raises(ValueError, match=match):
-            BYOLTask(**model_kwargs)
+    def test_weight_enum(
+        self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
+    ) -> None:
+        model_kwargs["weights"] = mocked_weights
+        BYOLTask(**model_kwargs)
 
-    def test_invalid_weights(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["weights"] = "invalid_weights"
-        match = "Weight type 'invalid_weights' is not valid."
-        with pytest.raises(ValueError, match=match):
-            BYOLTask(**model_kwargs)
+    def test_weight_str(
+        self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
+    ) -> None:
+        model_kwargs["weights"] = str(mocked_weights)
+        BYOLTask(**model_kwargs)

@@ -6,9 +6,11 @@ experiment:
   name: cowc_counting_test
   module:
     model: resnet18
+    weights: null
+    num_outputs: 1
+    in_channels: 3
     learning_rate: 1e-3
     learning_rate_schedule_patience: 2
-    pretrained: True
   datamodule:
     root: "data/cowc_counting"
     seed: 0
