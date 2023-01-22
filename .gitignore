@@ -3,6 +3,7 @@
 /*logs/
 /output/
 *.pdf
+/results/
 
 # Spack
 .spack-env/
