@@ -135,7 +135,7 @@ class Sentinel2(Sentinel):
         
         # DN = 10000 * REFLECTANCE
         # https://docs.sentinel-hub.com/api/latest/data/sentinel-2-l2a/
-        image = torch.clamp(image / 10000, min=0)
+        image = torch.clamp(image / 10000, min=0, max=1)
 
         fig, ax = plt.subplots(1, 1, figsize=(4, 4))
 
