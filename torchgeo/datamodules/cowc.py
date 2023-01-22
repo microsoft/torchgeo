@@ -5,6 +5,7 @@
 
 from typing import Any
 
+from torch import Generator
 from torch.utils.data import random_split
 
 from ..datasets import COWCCounting
@@ -38,4 +39,5 @@ class COWCCountingDataModule(NonGeoDataModule):
         self.train_dataset, self.val_dataset = random_split(
             self.dataset,
             [len(self.dataset) - len(self.test_dataset), len(self.test_dataset)],
+            generator=Generator().manual_seed(0),
         )

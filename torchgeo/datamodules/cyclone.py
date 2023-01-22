@@ -51,7 +51,7 @@ class TropicalCycloneDataModule(NonGeoDataModule):
                 storm_ids.append(storm_id)
 
             train_indices, val_indices = next(
-                GroupShuffleSplit(test_size=0.2, n_splits=2).split(
+                GroupShuffleSplit(test_size=0.2, n_splits=2, random_state=0).split(
                     storm_ids, groups=storm_ids
                 )
             )

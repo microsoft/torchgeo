@@ -88,7 +88,7 @@ class SEN12MSDataModule(NonGeoDataModule):
                 scenes.append(season_id + scene_id)
 
             train_indices, val_indices = next(
-                GroupShuffleSplit(test_size=0.2, n_splits=2).split(
+                GroupShuffleSplit(test_size=0.2, n_splits=2, random_state=0).split(
                     scenes, groups=scenes
                 )
             )
