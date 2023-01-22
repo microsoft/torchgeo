@@ -90,8 +90,9 @@ filterwarnings = [
     "ignore:Call to deprecated create function:DeprecationWarning:tensorboardX",
     # https://github.com/kornia/kornia/issues/777
     "ignore:Default upsampling behavior when mode=bilinear is changed to align_corners=False since 0.4.0:UserWarning:torch.nn.functional",
-    "ignore: `np.bool8` is a deprecated alias for `np.bool_`.  (Deprecated NumPy 1.24):DeprecationWarning:skimage.*",
-    "ignore:\n    Importing file_hash from pooch.utils is DEPRECATED. Please import from the\n    top-level namespace (`from pooch import file_hash`) instead, which is fully\n    backwards compatible with pooch >= 0.1.\n    :DeprecationWarning:skimage.*",
+    # https://github.com/scikit-image/scikit-image/issues/6663
+    # https://github.com/scikit-image/scikit-image/pull/6637
+    "ignore:`np.bool8` is a deprecated alias for `np.bool_`.:DeprecationWarning:skimage.util.dtype",
 
     # Expected warnings
     # pytorch-lightning warns us about using num_workers=0, but it's faster on macOS
