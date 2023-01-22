@@ -49,7 +49,7 @@ class TestADVANCE:
         monkeypatch.setattr(builtins, "__import__", mocked_import)
 
     def test_getitem(self, dataset: ADVANCE) -> None:
-        pytest.importorskip("scipy", minversion="1.2")
+        pytest.importorskip("scipy", minversion="1.5.1")
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
