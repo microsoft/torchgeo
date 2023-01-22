@@ -14,20 +14,15 @@ class TestOSCDDataModule:
     @pytest.fixture(params=["all", "rgb"])
     def datamodule(self, request: SubRequest) -> OSCDDataModule:
         bands = request.param
-        num_tiles_per_batch = 1
-        num_patches_per_tile = 2
-        patch_size = 2
         root = os.path.join("tests", "data", "oscd")
-        num_workers = 0
         dm = OSCDDataModule(
             root=root,
             download=True,
             bands=bands,
-            num_tiles_per_batch=num_tiles_per_batch,
-            num_patches_per_tile=num_patches_per_tile,
-            patch_size=patch_size,
+            batch_size=1,
+            patch_size=2,
             val_split_pct=0.5,
-            num_workers=num_workers,
+            num_workers=0,
         )
         dm.prepare_data()
         dm.trainer = Trainer(max_epochs=1)
