@@ -10,7 +10,7 @@ experiment:
     num_classes: 5
     num_filters: 1
     ignore_index: null
-    weights: imagenet
+    weights: null
   datamodule:
     root: "tests/data/chesapeake/cvpr"
     download: true

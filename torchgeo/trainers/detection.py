@@ -8,32 +8,28 @@ from typing import Any, Dict, List, cast
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
-import torchvision
-from packaging.version import parse
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
+from torchvision.models import resnet as R
 from torchvision.models.detection import FasterRCNN
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.ops import MultiScaleRoIAlign
 
-if parse(torchvision.__version__) >= parse("0.13"):
-    from torchvision.models import resnet as R
-
-    BACKBONE_WEIGHT_MAP = {
-        "resnet18": R.ResNet18_Weights.DEFAULT,
-        "resnet34": R.ResNet34_Weights.DEFAULT,
-        "resnet50": R.ResNet50_Weights.DEFAULT,
-        "resnet101": R.ResNet101_Weights.DEFAULT,
-        "resnet152": R.ResNet152_Weights.DEFAULT,
-        "resnext50_32x4d": R.ResNeXt50_32X4D_Weights.DEFAULT,
-        "resnext101_32x8d": R.ResNeXt101_32X8D_Weights.DEFAULT,
-        "wide_resnet50_2": R.Wide_ResNet50_2_Weights.DEFAULT,
-        "wide_resnet101_2": R.Wide_ResNet101_2_Weights.DEFAULT,
-    }
-
 from ..datasets.utils import unbind_samples
+
+BACKBONE_WEIGHT_MAP = {
+    "resnet18": R.ResNet18_Weights.DEFAULT,
+    "resnet34": R.ResNet34_Weights.DEFAULT,
+    "resnet50": R.ResNet50_Weights.DEFAULT,
+    "resnet101": R.ResNet101_Weights.DEFAULT,
+    "resnet152": R.ResNet152_Weights.DEFAULT,
+    "resnext50_32x4d": R.ResNeXt50_32X4D_Weights.DEFAULT,
+    "resnext101_32x8d": R.ResNeXt101_32X8D_Weights.DEFAULT,
+    "wide_resnet50_2": R.Wide_ResNet50_2_Weights.DEFAULT,
+    "wide_resnet101_2": R.Wide_ResNet101_2_Weights.DEFAULT,
+}
 
 
 class ObjectDetectionTask(pl.LightningModule):
@@ -62,15 +58,12 @@ class ObjectDetectionTask(pl.LightningModule):
                     "backbone_name": self.hyperparams["backbone"],
                     "trainable_layers": self.hyperparams.get("trainable_layers", 3),
                 }
-                if parse(torchvision.__version__) >= parse("0.13"):
-                    if backbone_pretrained:
-                        kwargs["weights"] = BACKBONE_WEIGHT_MAP[
-                            self.hyperparams["backbone"]
-                        ]
-                    else:
-                        kwargs["weights"] = None
+                if backbone_pretrained:
+                    kwargs["weights"] = BACKBONE_WEIGHT_MAP[
+                        self.hyperparams["backbone"]
+                    ]
                 else:
-                    kwargs["pretrained"] = backbone_pretrained
+                    kwargs["weights"] = None
 
                 backbone = resnet_fpn_backbone(**kwargs)
             else:
