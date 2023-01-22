@@ -31,8 +31,8 @@ pycocotools==2.0.0
 pyvista==0.20.0
 radiant-mlhub==0.2.1
 rarfile==3.0
-scikit-image==0.17.2
-scipy==1.7.0
+scikit-image==0.18.0
+scipy==1.6.3
 zipfile-deflate64==0.2.0
 
 # docs
