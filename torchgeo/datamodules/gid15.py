@@ -25,8 +25,7 @@ class GID15DataModule(NonGeoDataModule):
 
     def __init__(
         self,
-        num_tiles_per_batch: int = 16,
-        num_patches_per_tile: int = 16,
+        batch_size: int = 64,
         patch_size: Union[Tuple[int, int], int] = 64,
         val_split_pct: float = 0.2,
         num_workers: int = 0,
@@ -34,15 +33,8 @@ class GID15DataModule(NonGeoDataModule):
     ) -> None:
         """Initialize a new GID15DataModule instance.
 
-        The GID-15 dataset contains images that are too large to pass
-        directly through a model. Instead, we randomly sample patches from image tiles.
-        The effective batch size is equal to
-        ``num_tiles_per_batch`` x ``num_patches_per_tile``.
-
         Args:
-            num_tiles_per_batch: Number of image tiles to sample from.
-            num_patches_per_tile: Number of patches to randomly sample from each image
-                tile.
+            batch_size: Size of each mini-batch.
             patch_size: Size of each patch, either ``size`` or ``(height, width)``.
                 Should be a multiple of 32 for most segmentation architectures.
             val_split_pct: Percentage of the dataset to use as a validation set
@@ -52,24 +44,17 @@ class GID15DataModule(NonGeoDataModule):
         """
         super().__init__(GID15, 1, num_workers, **kwargs)
 
-        self.train_batch_size = num_tiles_per_batch
-        self.num_patches_per_tile = num_patches_per_tile
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
 
-        self.train_aug = AugmentationSequential(
+        self.train_aug = self.val_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            _RandomNCrop(self.patch_size, self.num_patches_per_tile),
+            _RandomNCrop(self.patch_size, batch_size),
             data_keys=["image", "mask"],
         )
-        self.val_aug = AugmentationSequential(
+        self.predict_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            _RandomNCrop(self.patch_size, self.num_patches_per_tile),
-            data_keys=["image", "mask"],
-        )
-        self.predict_transform = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            _RandomNCrop(self.patch_size, self.num_patches_per_tile),
+            _RandomNCrop(self.patch_size, batch_size),
             data_keys=["image"],
         )
 

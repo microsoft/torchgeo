@@ -23,8 +23,7 @@ class DeepGlobeLandCoverDataModule(NonGeoDataModule):
 
     def __init__(
         self,
-        num_tiles_per_batch: int = 16,
-        num_patches_per_tile: int = 16,
+        batch_size: int = 64,
         patch_size: Union[Tuple[int, int], int] = 64,
         val_split_pct: float = 0.2,
         num_workers: int = 0,
@@ -32,19 +31,8 @@ class DeepGlobeLandCoverDataModule(NonGeoDataModule):
     ) -> None:
         """Initialize a new DeepGlobeLandCoverDataModule instance.
 
-        The DeepGlobe Land Cover dataset contains images that are too large to pass
-        directly through a model. Instead, we randomly sample patches from image tiles.
-        The effective batch size is equal to
-        ``num_tiles_per_batch`` x ``num_patches_per_tile``.
-
-        .. versionchanged:: 0.4
-           *batch_size* was replaced by *num_tile_per_batch*, *num_patches_per_tile*,
-           and *patch_size*.
-
         Args:
-            num_tiles_per_batch: Number of image tiles to sample from.
-            num_patches_per_tile: Number of patches to randomly sample from each image
-                tile.
+            batch_size: Size of each mini-batch.
             patch_size: Size of each patch, either ``size`` or ``(height, width)``.
                 Should be a multiple of 32 for most segmentation architectures.
             val_split_pct: Percentage of the dataset to use as a validation set.
@@ -54,14 +42,12 @@ class DeepGlobeLandCoverDataModule(NonGeoDataModule):
         """
         super().__init__(DeepGlobeLandCover, 1, num_workers, **kwargs)
 
-        self.train_batch_size = num_tiles_per_batch
-        self.num_patches_per_tile = num_patches_per_tile
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
 
         self.aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            _RandomNCrop(self.patch_size, self.num_patches_per_tile),
+            _RandomNCrop(self.patch_size, batch_size),
             data_keys=["image", "mask"],
         )
 

@@ -19,8 +19,7 @@ experiment:
     ignore_index: 0
   datamodule:
     root: "data/oscd"
-    num_tiles_per_batch: 32
-    num_patches_per_tile: 128
+    batch_size: 1
     patch_size: 64
     val_split_pct: 0.1
     num_workers: 4

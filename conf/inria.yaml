@@ -24,7 +24,6 @@ experiment:
     ignore_index: null
   datamodule:
     root: "data/inria"
-    num_tiles_per_batch: 2
-    num_patches_per_tile: 4
+    batch_size: 1
     patch_size: 512
     num_workers: 32
