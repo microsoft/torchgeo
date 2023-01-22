@@ -34,7 +34,7 @@ class TestOSCDDataModule:
         batch = next(iter(datamodule.train_dataloader()))
         batch = datamodule.on_after_batch_transfer(batch, 0)
         assert batch["image"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
-        assert batch["image"].shape[0] == batch["mask"].shape[0] == 2
+        assert batch["image"].shape[0] == batch["mask"].shape[0] == 1
         if datamodule.bands == "all":
             assert batch["image"].shape[1] == 26
         else:
@@ -47,7 +47,7 @@ class TestOSCDDataModule:
         batch = datamodule.on_after_batch_transfer(batch, 0)
         if datamodule.val_split_pct > 0.0:
             assert batch["image"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
-            assert batch["image"].shape[0] == batch["mask"].shape[0] == 2
+            assert batch["image"].shape[0] == batch["mask"].shape[0] == 1
             if datamodule.bands == "all":
                 assert batch["image"].shape[1] == 26
             else:
@@ -59,7 +59,7 @@ class TestOSCDDataModule:
         batch = next(iter(datamodule.test_dataloader()))
         batch = datamodule.on_after_batch_transfer(batch, 0)
         assert batch["image"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
-        assert batch["image"].shape[0] == batch["mask"].shape[0] == 2
+        assert batch["image"].shape[0] == batch["mask"].shape[0] == 1
         if datamodule.bands == "all":
             assert batch["image"].shape[1] == 26
         else:
