@@ -2,14 +2,18 @@
 # Licensed under the MIT License.
 
 import os
+from pathlib import Path
 from typing import Any, Dict, Type, cast
 
 import pytest
 import timm
+import torch
+import torchvision
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 from torch.nn.modules import Module
+from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import (
     BigEarthNetDataModule,
@@ -18,6 +22,7 @@ from torchgeo.datamodules import (
     So2SatDataModule,
     UCMercedDataModule,
 )
+from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
 
 from .test_utils import ClassificationTestModel
@@ -25,6 +30,11 @@ from .test_utils import ClassificationTestModel
 
 def create_model(*args: Any, **kwargs: Any) -> Module:
     return ClassificationTestModel(**kwargs)
+
+
+def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+    state_dict: Dict[str, Any] = torch.load(url)
+    return state_dict
 
 
 class TestClassificationTask:
@@ -46,7 +56,7 @@ class TestClassificationTask:
 
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+        conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]
@@ -66,7 +76,7 @@ class TestClassificationTask:
     def test_no_logger(self) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", "ucmerced.yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+        conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]
@@ -83,49 +93,52 @@ class TestClassificationTask:
         trainer.fit(model=model, datamodule=datamodule)
 
     @pytest.fixture
-    def model_kwargs(self) -> Dict[Any, Any]:
+    def model_kwargs(self) -> Dict[str, Any]:
         return {
             "model": "resnet18",
             "in_channels": 13,
             "loss": "ce",
             "num_classes": 10,
-            "weights": "random",
+            "weights": None,
         }
 
-    def test_pretrained(self, model_kwargs: Dict[Any, Any], checkpoint: str) -> None:
+    @pytest.fixture
+    def mocked_weights(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> WeightsEnum:
+        weights = ResNet18_Weights.SENTINEL2_ALL_MOCO
+        path = tmp_path / f"{weights}.pth"
+        model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"])
+        torch.save(model.state_dict(), path)
+        monkeypatch.setattr(weights, "url", str(path))
+        monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
+        return weights
+
+    def test_weight_file(self, model_kwargs: Dict[str, Any], checkpoint: str) -> None:
         model_kwargs["weights"] = checkpoint
         with pytest.warns(UserWarning):
             ClassificationTask(**model_kwargs)
 
-    def test_invalid_pretrained(
-        self, model_kwargs: Dict[Any, Any], checkpoint: str
+    def test_weight_enum(
+        self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
     ) -> None:
-        model_kwargs["weights"] = checkpoint
-        model_kwargs["model"] = "resnet50"
-        match = "Trying to load resnet18 weights into a resnet50"
-        with pytest.raises(ValueError, match=match):
+        model_kwargs["weights"] = mocked_weights
+        with pytest.warns(UserWarning):
             ClassificationTask(**model_kwargs)
 
-    def test_invalid_loss(self, model_kwargs: Dict[Any, Any]) -> None:
+    def test_weight_str(
+        self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
+    ) -> None:
+        model_kwargs["weights"] = str(mocked_weights)
+        with pytest.warns(UserWarning):
+            ClassificationTask(**model_kwargs)
+
+    def test_invalid_loss(self, model_kwargs: Dict[str, Any]) -> None:
         model_kwargs["loss"] = "invalid_loss"
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
             ClassificationTask(**model_kwargs)
 
-    def test_invalid_model(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["model"] = "invalid_model"
-        match = "Model type 'invalid_model' is not a valid timm model."
-        with pytest.raises(ValueError, match=match):
-            ClassificationTask(**model_kwargs)
-
-    def test_invalid_weights(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["weights"] = "invalid_weights"
-        match = "Weight type 'invalid_weights' is not valid."
-        with pytest.raises(ValueError, match=match):
-            ClassificationTask(**model_kwargs)
-
     def test_missing_attributes(
-        self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
+        self, model_kwargs: Dict[str, Any], monkeypatch: MonkeyPatch
     ) -> None:
         monkeypatch.delattr(EuroSATDataModule, "plot")
         datamodule = EuroSATDataModule(
@@ -150,7 +163,7 @@ class TestMultiLabelClassificationTask:
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+        conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]
@@ -170,7 +183,7 @@ class TestMultiLabelClassificationTask:
     def test_no_logger(self) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", "bigearthnet_s1.yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+        conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]
@@ -187,23 +200,23 @@ class TestMultiLabelClassificationTask:
         trainer.fit(model=model, datamodule=datamodule)
 
     @pytest.fixture
-    def model_kwargs(self) -> Dict[Any, Any]:
+    def model_kwargs(self) -> Dict[str, Any]:
         return {
             "model": "resnet18",
             "in_channels": 14,
             "loss": "bce",
             "num_classes": 19,
-            "weights": "random",
+            "weights": None,
         }
 
-    def test_invalid_loss(self, model_kwargs: Dict[Any, Any]) -> None:
+    def test_invalid_loss(self, model_kwargs: Dict[str, Any]) -> None:
         model_kwargs["loss"] = "invalid_loss"
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
             MultiLabelClassificationTask(**model_kwargs)
 
     def test_missing_attributes(
-        self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
+        self, model_kwargs: Dict[str, Any], monkeypatch: MonkeyPatch
     ) -> None:
         monkeypatch.delattr(BigEarthNetDataModule, "plot")
         datamodule = BigEarthNetDataModule(

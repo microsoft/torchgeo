@@ -3,83 +3,208 @@
 
 """Pre-trained ResNet models."""
 
-from typing import Any, List, Type, Union
+from typing import Any, Optional
 
+import kornia.augmentation as K
+import timm
 import torch.nn as nn
-from torch.hub import load_state_dict_from_url
-from torchvision.models.resnet import BasicBlock, Bottleneck, ResNet
+from timm.models import ResNet
+from torchvision.models._api import Weights, WeightsEnum
 
-MODEL_URLS = {
-    "sentinel2": {
-        "all": {
-            "resnet50": "https://zenodo.org/record/5610000/files/resnet50-sentinel2.pt"
-        }
-    }
-}
+from ..transforms import AugmentationSequential
+
+__all__ = ["ResNet50_Weights", "ResNet18_Weights"]
+
+_zhu_xlab_transforms = AugmentationSequential(
+    K.Resize(256), K.CenterCrop(224), data_keys=["image"]
+)
+
+# https://github.com/pytorch/vision/pull/6883
+# https://github.com/pytorch/vision/pull/7107
+# Can be removed once torchvision>=0.15 is required
+Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
 
 
-IN_CHANNELS = {"sentinel2": {"all": 10}}
+class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
+    """ResNet18 weights.
 
-NUM_CLASSES = {"sentinel2": 17}
+    For `timm <https://github.com/rwightman/pytorch-image-models>`_
+    *resnet18* implementation.
+
+    .. versionadded:: 0.4
+    """
+
+    SENTINEL2_ALL_MOCO = Weights(
+        url=(
+            "https://huggingface.co/torchgeo/resnet18_sentinel2_all_moco/"
+            "resolve/main/resnet18_sentinel2_all_moco.pth"
+        ),
+        transforms=_zhu_xlab_transforms,
+        meta={
+            "dataset": "SSL4EO-S12",
+            "in_chans": 13,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2211.07044",
+            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "ssl_method": "moco",
+        },
+    )
+
+    SENTINEL2_RGB_MOCO = Weights(
+        url=(
+            "https://huggingface.co/torchgeo/resnet18_sentinel2_rgb_moco/"
+            "resolve/main/resnet18_sentinel2_rgb_moco.pth"
+        ),
+        transforms=_zhu_xlab_transforms,
+        meta={
+            "dataset": "SSL4EO-S12",
+            "in_chans": 3,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2211.07044",
+            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "ssl_method": "moco",
+        },
+    )
+
+    SENTINEL2_RGB_SECO = Weights(
+        url=(
+            "https://huggingface.co/torchgeo/resnet18_sentinel2_rgb_seco/"
+            "resolve/main/resnet18_sentinel2_rgb_seco.ckpt"
+        ),
+        transforms=nn.Identity(),
+        meta={
+            "dataset": "SeCo Dataset",
+            "in_chans": 3,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2103.16607",
+            "repo": "https://github.com/ServiceNow/seasonal-contrast",
+            "ssl_method": "seco",
+        },
+    )
 
 
-def _resnet(
-    sensor: str,
-    bands: str,
-    arch: str,
-    block: Type[Union[BasicBlock, Bottleneck]],
-    layers: List[int],
-    pretrained: bool,
-    progress: bool,
-    **kwargs: Any,
+class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
+    """ResNet50 weights.
+
+    For `timm <https://github.com/rwightman/pytorch-image-models>`_
+    *resnet50* implementation.
+
+    .. versionadded:: 0.4
+    """
+
+    SENTINEL1_ALL_MOCO = Weights(
+        url=(
+            "https://huggingface.co/torchgeo/resnet50_sentinel1_all_moco/"
+            "resolve/main/resnet50_sentinel1_all_moco.pth"
+        ),
+        transforms=_zhu_xlab_transforms,
+        meta={
+            "dataset": "SSL4EO-S12",
+            "in_chans": 2,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2211.07044",
+            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "ssl_method": "moco",
+        },
+    )
+
+    SENTINEL2_ALL_MOCO = Weights(
+        url=(
+            "https://huggingface.co/torchgeo/resnet50_sentinel2_all_moco/"
+            "resolve/main/resnet50_sentinel2_all_moco.pth"
+        ),
+        transforms=_zhu_xlab_transforms,
+        meta={
+            "dataset": "SSL4EO-S12",
+            "in_chans": 13,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2211.07044",
+            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "ssl_method": "moco",
+        },
+    )
+
+    SENTINEL2_RGB_MOCO = Weights(
+        url=(
+            "https://huggingface.co/torchgeo/resnet50_sentinel2_rgb_moco/"
+            "resolve/main/resnet50_sentinel2_rgb_moco.pth"
+        ),
+        transforms=_zhu_xlab_transforms,
+        meta={
+            "dataset": "SSL4EO-S12",
+            "in_chans": 3,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2211.07044",
+            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "ssl_method": "moco",
+        },
+    )
+
+    SENTINEL2_ALL_DINO = Weights(
+        url=(
+            "https://huggingface.co/torchgeo/resnet50_sentinel2_all_dino/"
+            "resolve/main/resnet50_sentinel2_all_dino.pth"
+        ),
+        transforms=_zhu_xlab_transforms,
+        meta={
+            "dataset": "SSL4EO-S12",
+            "in_chans": 13,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2211.07044",
+            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "ssl_method": "dino",
+        },
+    )
+
+    SENTINEL2_RGB_SECO = Weights(
+        url=(
+            "https://huggingface.co/torchgeo/resnet50_sentinel2_rgb_seco/"
+            "resolve/main/resnet50_sentinel2_rgb_seco.ckpt"
+        ),
+        transforms=nn.Identity(),
+        meta={
+            "dataset": "SeCo Dataset",
+            "in_chans": 3,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2103.16607",
+            "repo": "https://github.com/ServiceNow/seasonal-contrast",
+            "ssl_method": "seco",
+        },
+    )
+
+
+def resnet18(
+    weights: Optional[ResNet18_Weights] = None, *args: Any, **kwargs: Any
 ) -> ResNet:
-    """Resnet model.
+    """ResNet-18 model.
 
     If you use this model in your research, please cite the following paper:
 
     * https://arxiv.org/pdf/1512.03385.pdf
 
+    .. versionadded:: 0.4
+
     Args:
-        sensor: imagery source which determines number of input channels
-        bands: which spectral bands to consider: "all", "rgb", etc.
-        arch: ResNet version specifying number of layers
-        block: type of network block
-        layers: number of layers per block
-        pretrained: if True, returns a model pre-trained on ``sensor`` imagery
-        progress: if True, displays a progress bar of the download to stderr
+        weights: Pre-trained model weights to use.
+        *args: Additional arguments to pass to :func:`timm.create_model`
+        **kwargs: Additional keywork arguments to pass to :func:`timm.create_model`
 
     Returns:
-        A ResNet-50 model
+        A ResNet-18 model.
     """
-    # Initialize a new model
-    model = ResNet(block, layers, NUM_CLASSES[sensor], **kwargs)
+    if weights:
+        kwargs["in_chans"] = weights.meta["in_chans"]
 
-    # Replace the first layer with the correct number of input channels
-    model.conv1 = nn.Conv2d(
-        IN_CHANNELS[sensor][bands],
-        out_channels=64,
-        kernel_size=7,
-        stride=1,
-        padding=2,
-        bias=False,
-    )
+    model: ResNet = timm.create_model("resnet18", *args, **kwargs)
 
-    # Load pretrained weights
-    if pretrained:
-        state_dict = load_state_dict_from_url(
-            MODEL_URLS[sensor][bands][arch], progress=progress
-        )
-        model.load_state_dict(state_dict)
+    if weights:
+        model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
 
     return model
 
 
 def resnet50(
-    sensor: str,
-    bands: str,
-    pretrained: bool = False,
-    progress: bool = True,
-    **kwargs: Any,
+    weights: Optional[ResNet50_Weights] = None, *args: Any, **kwargs: Any
 ) -> ResNet:
     """ResNet-50 model.
 
@@ -87,22 +212,23 @@ def resnet50(
 
     * https://arxiv.org/pdf/1512.03385.pdf
 
+    .. versionchanged:: 0.4
+       Switched to multi-weight support API.
+
     Args:
-        sensor: imagery source which determines number of input channels
-        bands: which spectral bands to consider: "all", "rgb", etc.
-        pretrained: if True, returns a model pre-trained on ``sensor`` imagery
-        progress: if True, displays a progress bar of the download to stderr
+        weights: Pre-trained model weights to use.
+        *args: Additional arguments to pass to :func:`timm.create_model`.
+        **kwargs: Additional keywork arguments to pass to :func:`timm.create_model`.
 
     Returns:
-        A ResNet-50 model
+        A ResNet-50 model.
     """
-    return _resnet(
-        sensor,
-        bands,
-        "resnet50",
-        Bottleneck,
-        [3, 4, 6, 3],
-        pretrained,
-        progress,
-        **kwargs,
-    )
+    if weights:
+        kwargs["in_chans"] = weights.meta["in_chans"]
+
+    model: ResNet = timm.create_model("resnet50", *args, **kwargs)
+
+    if weights:
+        model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
+
+    return model
