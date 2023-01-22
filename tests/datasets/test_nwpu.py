@@ -111,6 +111,7 @@ class TestVHR10:
                 dataset.plot(x)
 
     def test_plot(self, dataset: VHR10) -> None:
+        pytest.importorskip("scikit-image", minversion="0.18")
         x = dataset[1].copy()
         dataset.plot(x, suptitle="Test")
         plt.close()

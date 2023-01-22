@@ -201,6 +201,7 @@ class VHR10(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
+            ImportError: if ``split="positive"`` and pycocotools is not installed
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
@@ -387,17 +388,13 @@ class VHR10(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
 
+        Raises:
+            AssertionError: if ``show_feats`` argument is invalid
+            ImportError: if plotting masks and scikit-image is not installed
+
         .. versionadded:: 0.4
         """
         assert show_feats in {"boxes", "masks", "both"}
-
-        if show_feats != "boxes":
-            try:
-                from skimage.measure import find_contours  # noqa: F401
-            except ImportError:
-                raise ImportError(
-                    "scikit-image is not installed and is required to plot masks."
-                )
 
         if self.split == "negative":
             plt.imshow(sample["image"].permute(1, 2, 0))
@@ -407,6 +404,14 @@ class VHR10(NonGeoDataset):
             if suptitle is not None:
                 plt.suptitle(suptitle)
             return plt.gcf()
+
+        if show_feats != "boxes":
+            try:
+                from skimage.measure import find_contours  # noqa: F401
+            except ImportError:
+                raise ImportError(
+                    "scikit-image is not installed and is required to plot masks."
+                )
 
         image = sample["image"].permute(1, 2, 0).numpy()
         boxes = sample["boxes"].cpu().numpy()
