@@ -83,7 +83,7 @@ def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Mo
         )
         del state_dict["conv1.weight"]
 
-    if num_classes != expected_num_classes:
+    if expected_num_classes and num_classes != expected_num_classes:
         warnings.warn(
             f"num classes {num_classes} != num classes in pretrained model"
             f" {expected_num_classes}. Overriding with new num classes"
