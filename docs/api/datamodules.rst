@@ -128,3 +128,21 @@ xView2
 ^^^^^^
 
 .. autoclass:: XView2DataModule
+
+Base Classes
+------------
+
+GeoDataModule
+^^^^^^^^^^^^^
+
+.. autoclass:: GeoDataModule
+
+NonGeoDataModule
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: NonGeoDataModule
+
+Utilities
+---------
+
+.. autoclass:: MisconfigurationException

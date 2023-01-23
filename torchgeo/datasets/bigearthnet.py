@@ -394,7 +394,7 @@ class BigEarthNet(NonGeoDataset):
                 )
                 images.append(array)
         arrays: "np.typing.NDArray[np.int_]" = np.stack(images, axis=0)
-        tensor = torch.from_numpy(arrays)
+        tensor = torch.from_numpy(arrays).float()
         return tensor
 
     def _load_target(self, index: int) -> Tensor:
@@ -538,9 +538,6 @@ class BigEarthNet(NonGeoDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
-
-        Raises:
-            ValueError: if ``self.bands`` is "s1"
 
         .. versionadded:: 0.2
         """

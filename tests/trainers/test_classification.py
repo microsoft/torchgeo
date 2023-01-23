@@ -18,14 +18,26 @@ from torchvision.models._api import WeightsEnum
 from torchgeo.datamodules import (
     BigEarthNetDataModule,
     EuroSATDataModule,
+    MisconfigurationException,
     RESISC45DataModule,
     So2SatDataModule,
     UCMercedDataModule,
 )
+from torchgeo.datasets import BigEarthNet, EuroSAT
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
 
 from .test_utils import ClassificationTestModel
+
+
+class PredictClassificationDataModule(EuroSATDataModule):
+    def setup(self, stage: str) -> None:
+        self.predict_dataset = EuroSAT(split="test", **self.kwargs)
+
+
+class PredictMultiLabelClassificationDataModule(BigEarthNetDataModule):
+    def setup(self, stage: str) -> None:
+        self.predict_dataset = BigEarthNet(split="test", **self.kwargs)
 
 
 def create_model(*args: Any, **kwargs: Any) -> Module:
@@ -37,19 +49,28 @@ def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
     return state_dict
 
 
+def plot(*args: Any, **kwargs: Any) -> None:
+    raise ValueError
+
+
 class TestClassificationTask:
     @pytest.mark.parametrize(
         "name,classname",
         [
             ("eurosat", EuroSATDataModule),
             ("resisc45", RESISC45DataModule),
-            ("so2sat_supervised", So2SatDataModule),
-            ("so2sat_unsupervised", So2SatDataModule),
+            ("so2sat_all", So2SatDataModule),
+            ("so2sat_s1", So2SatDataModule),
+            ("so2sat_s2", So2SatDataModule),
             ("ucmerced", UCMercedDataModule),
         ],
     )
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, classname: Type[LightningDataModule]
+        self,
+        monkeypatch: MonkeyPatch,
+        name: str,
+        classname: Type[LightningDataModule],
+        fast_dev_run: bool,
     ) -> None:
         if name.startswith("so2sat"):
             pytest.importorskip("h5py", minversion="2.6")
@@ -68,29 +89,16 @@ class TestClassificationTask:
         model = ClassificationTask(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
-        trainer.test(model=model, datamodule=datamodule)
-        trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
-
-    def test_no_logger(self) -> None:
-        conf = OmegaConf.load(os.path.join("tests", "conf", "ucmerced.yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
-
-        # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = UCMercedDataModule(**datamodule_kwargs)
-
-        # Instantiate model
-        model_kwargs = conf_dict["module"]
-        model = ClassificationTask(**model_kwargs)
-
-        # Instantiate trainer
-        trainer = Trainer(
-            logger=False, fast_dev_run=True, log_every_n_steps=1, max_epochs=1
-        )
-        trainer.fit(model=model, datamodule=datamodule)
+        try:
+            trainer.test(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
+        try:
+            trainer.predict(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[str, Any]:
@@ -137,16 +145,24 @@ class TestClassificationTask:
         with pytest.raises(ValueError, match=match):
             ClassificationTask(**model_kwargs)
 
-    def test_missing_attributes(
-        self, model_kwargs: Dict[str, Any], monkeypatch: MonkeyPatch
+    def test_no_rgb(
+        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any], fast_dev_run: bool
     ) -> None:
-        monkeypatch.delattr(EuroSATDataModule, "plot")
+        monkeypatch.setattr(EuroSATDataModule, "plot", plot)
         datamodule = EuroSATDataModule(
             root="tests/data/eurosat", batch_size=1, num_workers=0
         )
         model = ClassificationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.validate(model=model, datamodule=datamodule)
+
+    def test_predict(self, model_kwargs: Dict[Any, Any], fast_dev_run: bool) -> None:
+        datamodule = PredictClassificationDataModule(
+            root="tests/data/eurosat", batch_size=1, num_workers=0
+        )
+        model = ClassificationTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer.predict(model=model, datamodule=datamodule)
 
 
 class TestMultiLabelClassificationTask:
@@ -159,7 +175,11 @@ class TestMultiLabelClassificationTask:
         ],
     )
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, classname: Type[LightningDataModule]
+        self,
+        monkeypatch: MonkeyPatch,
+        name: str,
+        classname: Type[LightningDataModule],
+        fast_dev_run: bool,
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
@@ -175,29 +195,16 @@ class TestMultiLabelClassificationTask:
         model = MultiLabelClassificationTask(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
-        trainer.test(model=model, datamodule=datamodule)
-        trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
-
-    def test_no_logger(self) -> None:
-        conf = OmegaConf.load(os.path.join("tests", "conf", "bigearthnet_s1.yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
-
-        # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = BigEarthNetDataModule(**datamodule_kwargs)
-
-        # Instantiate model
-        model_kwargs = conf_dict["module"]
-        model = MultiLabelClassificationTask(**model_kwargs)
-
-        # Instantiate trainer
-        trainer = Trainer(
-            logger=False, fast_dev_run=True, log_every_n_steps=1, max_epochs=1
-        )
-        trainer.fit(model=model, datamodule=datamodule)
+        try:
+            trainer.test(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
+        try:
+            trainer.predict(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[str, Any]:
@@ -215,13 +222,21 @@ class TestMultiLabelClassificationTask:
         with pytest.raises(ValueError, match=match):
             MultiLabelClassificationTask(**model_kwargs)
 
-    def test_missing_attributes(
-        self, model_kwargs: Dict[str, Any], monkeypatch: MonkeyPatch
+    def test_no_rgb(
+        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any], fast_dev_run: bool
     ) -> None:
-        monkeypatch.delattr(BigEarthNetDataModule, "plot")
+        monkeypatch.setattr(BigEarthNetDataModule, "plot", plot)
         datamodule = BigEarthNetDataModule(
             root="tests/data/bigearthnet", batch_size=1, num_workers=0
         )
         model = MultiLabelClassificationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.validate(model=model, datamodule=datamodule)
+
+    def test_predict(self, model_kwargs: Dict[Any, Any], fast_dev_run: bool) -> None:
+        datamodule = PredictMultiLabelClassificationDataModule(
+            root="tests/data/bigearthnet", batch_size=1, num_workers=0
+        )
+        model = MultiLabelClassificationTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer.predict(model=model, datamodule=datamodule)

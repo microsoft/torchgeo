@@ -59,7 +59,6 @@ class TestNASAMarineDebris:
         shutil.rmtree(dataset.root)
         os.makedirs(str(tmp_path), exist_ok=True)
         Dataset().download(output_dir=str(tmp_path))
-        print(os.listdir(str(tmp_path)))
         NASAMarineDebris(root=str(tmp_path), download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
