@@ -21,5 +21,5 @@ experiment:
   datamodule:
     root: "data/nasamr/nasa_marine_debris"
     batch_size: 4
-    num_workers: 56
+    num_workers: 6
     val_split_pct: 0.2
