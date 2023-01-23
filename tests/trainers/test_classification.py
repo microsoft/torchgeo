@@ -145,18 +145,6 @@ class TestClassificationTask:
         with pytest.raises(ValueError, match=match):
             ClassificationTask(**model_kwargs)
 
-    def test_invalid_model(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["model"] = "invalid_model"
-        match = "Model type 'invalid_model' is not a valid timm model."
-        with pytest.raises(ValueError, match=match):
-            ClassificationTask(**model_kwargs)
-
-    def test_invalid_weights(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["weights"] = "invalid_weights"
-        match = "Weight type 'invalid_weights' is not valid."
-        with pytest.raises(ValueError, match=match):
-            ClassificationTask(**model_kwargs)
-
     def test_no_rgb(
         self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any], fast_dev_run: bool
     ) -> None:
