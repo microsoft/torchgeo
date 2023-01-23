@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import torch
 from pytorch_lightning import LightningDataModule
 from torch import Tensor
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, default_collate
 
 from ..datasets import GeoDataset, NonGeoDataset, stack_samples
 from ..samplers import (
@@ -86,6 +86,9 @@ class GeoDataModule(LightningDataModule):
         self.val_batch_size: Optional[int] = None
         self.test_batch_size: Optional[int] = None
         self.predict_batch_size: Optional[int] = None
+
+        # Collation
+        self.collate_fn = stack_samples
 
         # Data augmentation
         Transform = Callable[[Dict[str, Tensor]], Dict[str, Tensor]]
@@ -163,7 +166,7 @@ class GeoDataModule(LightningDataModule):
                 sampler=sampler,
                 batch_sampler=batch_sampler,
                 num_workers=self.num_workers,
-                collate_fn=stack_samples,
+                collate_fn=self.collate_fn,
             )
         else:
             msg = f"{self.__class__.__name__}.setup does not define a 'train_dataset'"
@@ -193,7 +196,7 @@ class GeoDataModule(LightningDataModule):
                 sampler=sampler,
                 batch_sampler=batch_sampler,
                 num_workers=self.num_workers,
-                collate_fn=stack_samples,
+                collate_fn=self.collate_fn,
             )
         else:
             msg = f"{self.__class__.__name__}.setup does not define a 'val_dataset'"
@@ -223,7 +226,7 @@ class GeoDataModule(LightningDataModule):
                 sampler=sampler,
                 batch_sampler=batch_sampler,
                 num_workers=self.num_workers,
-                collate_fn=stack_samples,
+                collate_fn=self.collate_fn,
             )
         else:
             msg = f"{self.__class__.__name__}.setup does not define a 'test_dataset'"
@@ -253,7 +256,7 @@ class GeoDataModule(LightningDataModule):
                 sampler=sampler,
                 batch_sampler=batch_sampler,
                 num_workers=self.num_workers,
-                collate_fn=stack_samples,
+                collate_fn=self.collate_fn,
             )
         else:
             msg = f"{self.__class__.__name__}.setup does not define a 'predict_dataset'"
@@ -370,6 +373,9 @@ class NonGeoDataModule(LightningDataModule):
         self.test_batch_size: Optional[int] = None
         self.predict_batch_size: Optional[int] = None
 
+        # Collation
+        self.collate_fn = default_collate
+
         # Data augmentation
         Transform = Callable[[Dict[str, Tensor]], Dict[str, Tensor]]
         self.aug: Transform = AugmentationSequential(
@@ -430,6 +436,7 @@ class NonGeoDataModule(LightningDataModule):
                 batch_size=self.train_batch_size or self.batch_size,
                 shuffle=True,
                 num_workers=self.num_workers,
+                collate_fn=self.collate_fn,
             )
         else:
             msg = f"{self.__class__.__name__}.setup does not define a 'train_dataset'"
@@ -452,6 +459,7 @@ class NonGeoDataModule(LightningDataModule):
                 batch_size=self.val_batch_size or self.batch_size,
                 shuffle=False,
                 num_workers=self.num_workers,
+                collate_fn=self.collate_fn,
             )
         else:
             msg = f"{self.__class__.__name__}.setup does not define a 'val_dataset'"
@@ -474,6 +482,7 @@ class NonGeoDataModule(LightningDataModule):
                 batch_size=self.test_batch_size or self.batch_size,
                 shuffle=False,
                 num_workers=self.num_workers,
+                collate_fn=self.collate_fn,
             )
         else:
             msg = f"{self.__class__.__name__}.setup does not define a 'test_dataset'"
@@ -496,6 +505,7 @@ class NonGeoDataModule(LightningDataModule):
                 batch_size=self.predict_batch_size or self.batch_size,
                 shuffle=False,
                 num_workers=self.num_workers,
+                collate_fn=self.collate_fn,
             )
         else:
             msg = f"{self.__class__.__name__}.setup does not define a 'predict_dataset'"

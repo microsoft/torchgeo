@@ -3,11 +3,31 @@
 
 """NASA Marine Debris datamodule."""
 
-from typing import Any
+from typing import Any, Dict, List
+
+import torch
+from torch import Tensor
+from torch.utils.data import DataLoader
 
 from ..datasets import NASAMarineDebris
 from .geo import NonGeoDataModule
 from .utils import dataset_split
+
+
+def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
+    """Custom object detection collate fn to handle variable boxes.
+
+    Args:
+        batch: list of sample dicts return by dataset
+
+    Returns:
+        batch dict output
+    """
+    output: Dict[str, Any] = {}
+    output["image"] = torch.stack([sample["image"] for sample in batch])
+    output["boxes"] = [sample["boxes"] for sample in batch]
+    output["labels"] = [torch.tensor([1] * len(sample["boxes"])) for sample in batch]
+    return output
 
 
 class NASAMarineDebrisDataModule(NonGeoDataModule):
@@ -38,6 +58,8 @@ class NASAMarineDebrisDataModule(NonGeoDataModule):
 
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
+
+        self.collate_fn = collate_fn
 
     def setup(self, stage: str) -> None:
         """Set up datasets.

@@ -104,7 +104,6 @@ class NASAMarineDebris(NonGeoDataset):
         h_check = (sample["boxes"][:, 3] - sample["boxes"][:, 1]) > 0
         indices = w_check & h_check
         sample["boxes"] = sample["boxes"][indices]
-        sample["labels"] = torch.ones(len(indices), dtype=torch.int64)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
