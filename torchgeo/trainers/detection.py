@@ -13,12 +13,13 @@ from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models import resnet as R
-from torchvision.models.detection import FasterRCNN, FCOS, RetinaNet
-from torchvision.models.detection.retinanet import RetinaNetHead
+from torchvision.models.detection import FCOS, FasterRCNN, RetinaNet
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from torchvision.models.detection.retinanet import RetinaNetHead
 from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
+
+from ..datasets.utils import unbind_samples
 
 BACKBONE_LAT_DIM_MAP = {
     "resnet18": 512,
@@ -88,9 +89,7 @@ class ObjectDetectionTask(pl.LightningModule):
                 "trainable_layers": self.hyperparams.get("trainable_layers", 3),
             }
             if backbone_pretrained:
-                kwargs["weights"] = BACKBONE_WEIGHT_MAP[
-                    self.hyperparams["backbone"]
-                ]
+                kwargs["weights"] = BACKBONE_WEIGHT_MAP[self.hyperparams["backbone"]]
             else:
                 kwargs["weights"] = None
 
@@ -101,7 +100,6 @@ class ObjectDetectionTask(pl.LightningModule):
             )
 
         num_classes = self.hyperparams["num_classes"]
-
 
         if self.hyperparams["model"] == "faster-rcnn":
             backbone = resnet_fpn_backbone(**kwargs)
@@ -123,7 +121,7 @@ class ObjectDetectionTask(pl.LightningModule):
             kwargs["norm_layer"] = (
                 misc.FrozenBatchNorm2d if kwargs["weights"] else torch.nn.BatchNorm2d
             )
-            
+
             backbone = resnet_fpn_backbone(**kwargs)
             anchor_generator = AnchorGenerator(
                 sizes=((8,), (16,), (32,), (64,), (128,), (256,)),
