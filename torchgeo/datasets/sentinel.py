@@ -132,7 +132,6 @@ class Sentinel2(Sentinel):
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
         image = sample["image"][rgb_indices].permute(1, 2, 0)
-        
         # DN = 10000 * REFLECTANCE
         # https://docs.sentinel-hub.com/api/latest/data/sentinel-2-l2a/
         image = torch.clamp(image / 10000, min=0, max=1)
