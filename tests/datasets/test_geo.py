@@ -16,6 +16,7 @@ from torch.utils.data import ConcatDataset
 from torchgeo.datasets import (
     NAIP,
     BoundingBox,
+    ForecastDataset,
     GeoDataset,
     IntersectionDataset,
     NonGeoClassificationDataset,
@@ -250,14 +251,6 @@ class TestRasterDataset:
 
         with pytest.raises(AssertionError, match=msg):
             CustomSentinelDataset(root, bands=bands, transforms=transforms, cache=cache)
-
-    def test_time_series(self, time_series_ds: RasterDataset) -> None:
-        queries = [time_series_ds.bounds, time_series_ds.bounds]
-        samples = time_series_ds[queries]
-        assert isinstance(samples, list)
-        assert all(isinstance(x, dict) for x in samples)
-        assert all(isinstance(x["image"], torch.Tensor) for x in samples)
-        assert all(x["image"].dtype == torch.int64 for x in samples)
 
 
 class TestVectorDataset:
@@ -530,3 +523,7 @@ class TestUnionDataset:
             IndexError, match="query: .* not found in index with bounds:"
         ):
             dataset[query]
+
+
+class TestForecastDataset:
+    pass

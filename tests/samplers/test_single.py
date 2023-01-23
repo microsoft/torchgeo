@@ -279,3 +279,7 @@ class TestPreChippedGeoSampler:
         )
         for _ in dl:
             continue
+
+
+class TestSequentialGeoSampler:
+    pass

@@ -418,7 +418,6 @@ def disambiguate_timestamp(date_str: str, format: str) -> Tuple[float, float]:
     # TODO: This doesn't correctly handle literal `%%` characters in format
     # TODO: May have issues with time zones, UTC vs. local time, and DST
     # TODO: This is really tedious, is there a better way to do this?
-
     if not any([f"%{c}" in format for c in "yYcxG"]):
         # No temporal info
         return 0, sys.maxsize

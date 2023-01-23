@@ -40,6 +40,7 @@ from .fair1m import FAIR1M
 from .forestdamage import ForestDamage
 from .gbif import GBIF
 from .geo import (
+    ForecastDataset,
     GeoDataset,
     IntersectionDataset,
     NonGeoClassificationDataset,
@@ -204,6 +205,7 @@ __all__ = (
     "VectorDataset",
     "VisionClassificationDataset",
     "VisionDataset",
+    "ForecastDataset",
     # Utilities
     "BoundingBox",
     "concat_samples",

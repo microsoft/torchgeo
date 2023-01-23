@@ -407,7 +407,7 @@ class RasterDataset(GeoDataset):
         self.res = cast(float, res)
 
     def __getitem__(
-        self, query: Union[BoundingBox, Sequence[BoundingBox]]
+        self, query: BoundingBox
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Retrieve image/mask and metadata indexed by query.
 
@@ -420,28 +420,6 @@ class RasterDataset(GeoDataset):
 
         Raises:
             IndexError: if queries is not found in the index
-
-        .. versionchanged:: 0.4
-            *query* parameter can accept one or multiple index queries
-        """
-        if isinstance(query, BoundingBox):
-            return self._query_data_from_bbox(query)
-        else:
-            return [self._query_data_from_bbox(q) for q in query]
-
-    def _query_data_from_bbox(self, query: BoundingBox) -> Dict[str, Any]:
-        """Return data from a query bounding box.
-
-        Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
-
-        Returns:
-            sample of image/mask and metadata for each index in the query
-
-        Raises:
-            IndexError: if queries is not found in the index
-
-        .. versionadded: 0.4
         """
         hits = self.index.intersection(tuple(query), objects=True)
         filepaths = cast(List[str], [hit.object for hit in hits])
@@ -556,7 +534,6 @@ class RasterDataset(GeoDataset):
                 list(date_array_dict.keys()),
                 key=lambda x: datetime.datetime.strptime(x, self.date_format),
             )
-
             # subsequently stack these extracted patches along the timedimension
             # specify bounds and according to these bounds read out
             dest = np.stack([date_array_dict[date] for date in sorted_dates])
@@ -922,7 +899,6 @@ class IntersectionDataset(GeoDataset):
     and can be combined using an :class:`IntersectionDataset`:
 
     .. code-block:: python
-
        dataset = landsat & cdl
 
     .. versionadded:: 0.2
@@ -991,14 +967,11 @@ class IntersectionDataset(GeoDataset):
                 self.index.insert(i, tuple(box1 & box2))
                 i += 1
 
-    def __getitem__(
-        self, query: Union[BoundingBox, Tuple[BoundingBox, BoundingBox]]
-    ) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
 
         Args:
-            query: one or more (minx, maxx, miny, maxy, mint, maxt) coordinates
-                to index datasets
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
             sample of data/labels and metadata at that index
@@ -1031,6 +1004,100 @@ class IntersectionDataset(GeoDataset):
     type: IntersectionDataset
     bbox: {self.bounds}
     size: {len(self)}"""
+
+
+class ForecastDataset(IntersectionDataset):
+    """Dataset used for Forecasting tasks.
+
+    This allows users to do things like:
+
+    * Spatio-temporal predictions where input sequences come from one dataset
+      and target sequences from another (e.g. Landsat and CDL)
+
+    These combinations require that all queries are present in *both* datasets,
+    and can be combined using an :class:`IntersectionDataset`:
+
+    This dataset should be used with :class:'SequentialGeoSampler' sampler.
+
+    .. versionadded:: 0.4
+    """
+
+    def __init__(
+        self,
+        input_dataset: GeoDataset,
+        target_dataset: GeoDataset,
+        collate_fn: Callable[
+            [Sequence[Dict[str, Any]]], Dict[str, Any]
+        ] = concat_samples,
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+    ) -> None:
+        """Initialize a new Dataset instance.
+
+        Args:
+            input_dataset: the input sequence dataset
+            target_dataset: the target sequence dataset
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+
+        Raises:
+            ValueError: if either dataset is not a :class:`GeoDataset`
+        """
+        super().__init__(input_dataset, target_dataset, None, transforms)
+
+        self.input_dataset = input_dataset
+        self.target_dataset = target_dataset
+
+    def __getitem__(self, query: Tuple[BoundingBox, BoundingBox]) -> Dict[str, Any]:
+        """Retrieve image and metadata indexed by query.
+
+        Args:
+            query: two (minx, maxx, miny, maxy, mint, maxt) coordinates
+                to index datasets, where first indexes the input dataset
+                and second indexes the target dataset
+
+        Returns:
+            sample of data/targets and metadata at that index
+
+        Raises:
+            IndexError: if query is not within bounds of the index
+        """
+        if not query[0].intersects(self.bounds):
+            raise IndexError(
+                f"Input query: {query[0]} not found in index with bounds: {self.bounds}"
+            )
+
+        if not query[1].intersects(self.bounds):
+            raise IndexError(
+                f"Target query: {query[1]} not found in index with bounds: {self.bounds}"
+            )
+        # time-series where each query is for a different dataset
+        # assuming 1-to-1 correspondence between query order and dataset order
+        input_samples = self.input_dataset[query[0]]
+        target_samples = self.target_dataset[query[1]]
+        samples = {
+            "input": input_samples["image"],
+            "input_bbox": input_samples["bbox"],
+            "input_crs": input_samples["crs"],
+            "target": target_samples["image"],
+            "target_bbox": target_samples["bbox"],
+            "target_crs": target_samples["crs"],
+        }
+
+        return samples
+
+    def __str__(self) -> str:
+        """Return the informal string representation of the object.
+
+        Returns:
+            informal string representation
+        """
+        return f"""\
+{self.__class__.__name__} Dataset
+    type: ForecastDataset
+    bbox: {self.bounds}
+    size: {len(self)}
+    input_sequences: {self.input_dataset}
+    target_sequences: {self.target_dataset}"""
 
 
 class UnionDataset(GeoDataset):

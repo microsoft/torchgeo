@@ -4,9 +4,11 @@
 """TorchGeo samplers."""
 
 import abc
+from datetime import datetime, timedelta
 from typing import Callable, Iterable, Iterator, Optional, Tuple, Union
 
 import torch
+from dateutil.relativedelta import relativedelta
 from rtree.index import Index, Property
 from torch.utils.data import Sampler
 
@@ -155,7 +157,7 @@ class RandomGeoSampler(GeoSampler):
         return self.length
 
 
-class ForecastingGeoSampler(GeoSampler):
+class SequentialGeoSampler(GeoSampler):
     """Samples consecutive instances for time-series tasks.
 
     This is particularly useful for time-series datasets where you would
@@ -165,6 +167,8 @@ class ForecastingGeoSampler(GeoSampler):
     .. versionadded:: 0.4.0
     """
 
+    allowed_time_units = ["hours", "days", "weeks", "months", "years"]
+
     def __init__(
         self,
         dataset: GeoDataset,
@@ -172,9 +176,10 @@ class ForecastingGeoSampler(GeoSampler):
         length: Optional[int],
         sample_window: int,
         target_window: int,
+        time_unit: str,
         time_range: Optional[Tuple[float, float]] = None,
         roi: Optional[BoundingBox] = None,
-        units: Units = Units.PIXELS,
+        size_units: Units = Units.PIXELS,
     ) -> None:
         """Initialize a new Sampler instance.
 
@@ -197,11 +202,13 @@ class ForecastingGeoSampler(GeoSampler):
                 a week specify sample_window=7
             target_window: time window for corresponding target that follows
                 the ``sample_window`` in units of days
+            time_unit: unit of time, accepting 'hours', 'days', 'weeks', 'months',
+                 'years'
             time_range: beginning and end unix timestamp to consider
                 drawing samples from
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``bounds)
-            units: defines if ``size`` is in pixel or CRS units
+            size_units: defines if ``size`` is in pixel or CRS units
         """
         # roi should be overwritten with time_range specifications
         if roi is None:
@@ -225,17 +232,21 @@ class ForecastingGeoSampler(GeoSampler):
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
 
-        # convert windows to unix timestamps given that 1 day = 86,400 seconds
-        unix_day_duration = 86400
-        self.sample_window = sample_window * unix_day_duration
-        self.target_window = target_window * unix_day_duration
+        # check time unit
+        assert (
+            time_unit in self.allowed_time_units
+        ), f"Currently, only supporting one of {self.allowed_time_units} as unit."
+        self.time_unit = time_unit
+        self.sample_window = sample_window
+        self.target_window = target_window
 
-        if units == Units.PIXELS:
+        if size_units == Units.PIXELS:
             self.size = (self.size[0] * self.res, self.size[1] * self.res)
 
         self.length = 0
         self.hits = []
         areas = []
+
         for hit in self.index.intersection(tuple(self.roi), objects=True):
             bounds = BoundingBox(*hit.bounds)
             if (
@@ -273,7 +284,7 @@ class ForecastingGeoSampler(GeoSampler):
             hit = self.hits[idx]
             bounds = BoundingBox(*hit.bounds)
 
-            # Choose a random index within that tile, the timedimension is
+            # Choose a random sized patch within that tile
             geo_query = get_random_bounding_box(bounds, self.size, self.res)
 
             # mint and maxt are unchanged so from this bounding box find
@@ -309,7 +320,13 @@ class ForecastingGeoSampler(GeoSampler):
             miny=query.miny,
             maxy=query.maxy,
             mint=query.mint,
-            maxt=query.mint + self.sample_window,
+            maxt=(
+                datetime.fromtimestamp(query.mint)
+                + relativedelta(**{self.time_unit: self.sample_window})
+                - timedelta(
+                    microseconds=1
+                )  # subtract otherwise there is overlap to target
+            ).timestamp(),
         )
         target_query = BoundingBox(
             minx=query.minx,
@@ -317,7 +334,10 @@ class ForecastingGeoSampler(GeoSampler):
             miny=query.miny,
             maxy=query.maxy,
             mint=input_query.maxt,
-            maxt=input_query.maxt + self.target_window,
+            maxt=(
+                datetime.fromtimestamp(input_query.maxt)
+                + relativedelta(**{self.time_unit: self.target_window})
+            ).timestamp(),
         )
         return (input_query, target_query)
 
