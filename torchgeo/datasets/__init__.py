@@ -83,7 +83,7 @@ from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
-from .sentinel import Sentinel, Sentinel2
+from .sentinel import Sentinel, Sentinel1, Sentinel2
 from .so2sat import So2Sat
 from .spacenet import (
     SpaceNet,
@@ -146,6 +146,7 @@ __all__ = (
     "NAIP",
     "OpenBuildings",
     "Sentinel",
+    "Sentinel1",
     "Sentinel2",
     # NonGeoDataset
     "ADVANCE",
