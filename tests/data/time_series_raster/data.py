@@ -34,7 +34,7 @@ def generate_test_data(fn: str) -> str:
     }
 
     with rasterio.open(fn, "w", **profile) as f:
-        f.write(np.random.randint(0, 256, size=(1, SIZE, SIZE)))
+        f.write(np.random.randint(0, 64, size=(1, SIZE, SIZE)))
 
 
 if __name__ == "__main__":
@@ -45,8 +45,8 @@ if __name__ == "__main__":
 
     os.makedirs(directory, exist_ok=True)
 
-    dates = ["20220101", "20220102"]
-    bands = ["B01", "B02"]
+    dates = ["20220101", "20220102", "20220103", "20220104", "20220105"]
+    bands = ["B04", "B03", "B02", "target"]
     for d in dates:
         for b in bands:
             fn = os.path.join(directory, f"test_{d}_{b}.tif")

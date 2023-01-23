@@ -1063,12 +1063,14 @@ class ForecastDataset(IntersectionDataset):
         """
         if not query[0].intersects(self.bounds):
             raise IndexError(
-                f"Input query: {query[0]} not found in index with bounds: {self.bounds}"
+                f"Input query: {query[0]} not found in input dataset "
+                "index with bounds: {self.bounds}"
             )
 
         if not query[1].intersects(self.bounds):
             raise IndexError(
-                f"Target query: {query[1]} not found in index with bounds: {self.bounds}"
+                f"Target query: {query[1]} not found in target dataset "
+                "index with bounds: {self.bounds}"
             )
         # time-series where each query is for a different dataset
         # assuming 1-to-1 correspondence between query order and dataset order
@@ -1096,8 +1098,8 @@ class ForecastDataset(IntersectionDataset):
     type: ForecastDataset
     bbox: {self.bounds}
     size: {len(self)}
-    input_sequences: {self.input_dataset}
-    target_sequences: {self.target_dataset}"""
+    input_dataset: {self.input_dataset}
+    target_dataset: {self.target_dataset}"""
 
 
 class UnionDataset(GeoDataset):
