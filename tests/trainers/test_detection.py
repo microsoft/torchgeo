@@ -27,8 +27,13 @@ class TestObjectDetectionTask:
     @pytest.mark.parametrize(
         "name,classname", [("nasa_marine_debris", NASAMarineDebrisDataModule)]
     )
+    @pytest.mark.parametrize("model_name", ["faster-rcnn", "fcos", "retinanet"])
     def test_trainer(
-        self, name: str, classname: Type[LightningDataModule], fast_dev_run: bool
+        self,
+        name: str,
+        classname: Type[LightningDataModule],
+        model_name: str,
+        fast_dev_run: bool,
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", f"{name}.yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
@@ -40,6 +45,7 @@ class TestObjectDetectionTask:
 
         # Instantiate model
         model_kwargs = conf_dict["module"]
+        model_kwargs["model"] = model_name
         model = ObjectDetectionTask(**model_kwargs)
 
         # Instantiate trainer
