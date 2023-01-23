@@ -45,18 +45,6 @@ BACKBONE_WEIGHT_MAP = {
     "wide_resnet101_2": R.Wide_ResNet101_2_Weights.DEFAULT,
 }
 
-BACKBONE_LAT_DIM_MAP = {
-    "resnet18": 512,
-    "resnet34": 512,
-    "resnet50": 2048,
-    "resnet101": 2048,
-    "resnet152": 2048,
-    "resnext50_32x4d": 2048,
-    "resnext101_32x8d": 2048,
-    "wide_resnet50_2": 2048,
-    "wide_resnet101_2": 2048,
-}
-
 
 class ObjectDetectionTask(pl.LightningModule):
     """LightningModule for object detection of images.
@@ -80,10 +68,7 @@ class ObjectDetectionTask(pl.LightningModule):
         """Configures the task based on kwargs parameters passed to the constructor."""
         backbone_pretrained = self.hyperparams.get("pretrained", True)
 
-        if (
-            "resnet" in self.hyperparams["backbone"]
-            or "resnext" in self.hyperparams["backbone"]
-        ):
+        if self.hyperparams["backbone"] in BACKBONE_LAT_DIM_MAP:
             kwargs = {
                 "backbone_name": self.hyperparams["backbone"],
                 "trainable_layers": self.hyperparams.get("trainable_layers", 3),
