@@ -169,9 +169,14 @@ class ObjectDetectionTask(pl.LightningModule):
 
         self.val_metrics.update(y_hat, y)
 
-        if batch_idx < 10:
+        if (
+            batch_idx < 10
+            and hasattr(self.trainer, "datamodule")
+            and self.logger
+            and hasattr(self.logger, "experiment")
+        ):
             try:
-                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                datamodule = self.trainer.datamodule
                 batch["prediction_boxes"] = [b["boxes"].cpu() for b in y_hat]
                 batch["prediction_labels"] = [b["labels"].cpu() for b in y_hat]
                 batch["prediction_scores"] = [b["scores"].cpu() for b in y_hat]
@@ -182,12 +187,12 @@ class ObjectDetectionTask(pl.LightningModule):
                     sample["image"] *= 255
                     sample["image"] = sample["image"].to(torch.uint8)
                 fig = datamodule.plot(sample)
-                summary_writer = self.logger.experiment  # type: ignore[union-attr]
+                summary_writer = self.logger.experiment
                 summary_writer.add_figure(
                     f"image/{batch_idx}", fig, global_step=self.global_step
                 )
                 plt.close()
-            except AttributeError:
+            except ValueError:
                 pass
 
     def validation_epoch_end(self, outputs: Any) -> None:

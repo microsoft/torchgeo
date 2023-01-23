@@ -19,6 +19,7 @@ from torchgeo.datamodules import (
     InriaAerialImageLabelingDataModule,
     LandCoverAIDataModule,
     LoveDADataModule,
+    MisconfigurationException,
     NAIPChesapeakeDataModule,
     Potsdam2DDataModule,
     SEN12MSDataModule,
@@ -35,6 +36,10 @@ def create_model(**kwargs: Any) -> Module:
     return SegmentationTestModel(**kwargs)
 
 
+def plot(*args: Any, **kwargs: Any) -> None:
+    raise ValueError
+
+
 class TestSemanticSegmentationTask:
     @pytest.mark.parametrize(
         "name,classname",
@@ -43,9 +48,7 @@ class TestSemanticSegmentationTask:
             ("deepglobelandcover", DeepGlobeLandCoverDataModule),
             ("etci2021", ETCI2021DataModule),
             ("gid15", GID15DataModule),
-            ("inria_train", InriaAerialImageLabelingDataModule),
-            ("inria_val", InriaAerialImageLabelingDataModule),
-            ("inria_test", InriaAerialImageLabelingDataModule),
+            ("inria", InriaAerialImageLabelingDataModule),
             ("landcoverai", LandCoverAIDataModule),
             ("loveda", LoveDADataModule),
             ("naipchesapeake", NAIPChesapeakeDataModule),
@@ -59,7 +62,11 @@ class TestSemanticSegmentationTask:
         ],
     )
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, classname: Type[LightningDataModule]
+        self,
+        monkeypatch: MonkeyPatch,
+        name: str,
+        classname: Type[LightningDataModule],
+        fast_dev_run: bool,
     ) -> None:
         if name == "naipchesapeake":
             pytest.importorskip("zipfile_deflate64")
@@ -83,33 +90,16 @@ class TestSemanticSegmentationTask:
         model = SemanticSegmentationTask(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
-
-        if hasattr(datamodule, "test_dataset") or hasattr(datamodule, "test_sampler"):
+        try:
             trainer.test(model=model, datamodule=datamodule)
-
-        if hasattr(datamodule, "predict_dataset"):
+        except MisconfigurationException:
+            pass
+        try:
             trainer.predict(model=model, datamodule=datamodule)
-
-    def test_no_logger(self) -> None:
-        conf = OmegaConf.load(os.path.join("tests", "conf", "landcoverai.yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
-
-        # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = LandCoverAIDataModule(**datamodule_kwargs)
-
-        # Instantiate model
-        model_kwargs = conf_dict["module"]
-        model = SemanticSegmentationTask(**model_kwargs)
-
-        # Instantiate trainer
-        trainer = Trainer(
-            logger=False, fast_dev_run=True, log_every_n_steps=1, max_epochs=1
-        )
-        trainer.fit(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:
@@ -148,13 +138,14 @@ class TestSemanticSegmentationTask:
         with pytest.warns(UserWarning, match=match):
             SemanticSegmentationTask(**model_kwargs)
 
-    def test_missing_attributes(
-        self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
+    def test_no_rgb(
+        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any], fast_dev_run: bool
     ) -> None:
-        monkeypatch.delattr(LandCoverAIDataModule, "plot")
-        datamodule = LandCoverAIDataModule(
-            root="tests/data/landcoverai", batch_size=1, num_workers=0
+        model_kwargs["in_channels"] = 15
+        monkeypatch.setattr(SEN12MSDataModule, "plot", plot)
+        datamodule = SEN12MSDataModule(
+            root="tests/data/sen12ms", batch_size=1, num_workers=0
         )
         model = SemanticSegmentationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.validate(model=model, datamodule=datamodule)

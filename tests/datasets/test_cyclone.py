@@ -61,8 +61,8 @@ class TestTropicalCyclone:
         assert isinstance(x["storm_id"], str)
         assert isinstance(x["relative_time"], int)
         assert isinstance(x["ocean"], int)
-        assert isinstance(x["label"], int)
-        assert x["image"].shape == (dataset.size, dataset.size)
+        assert isinstance(x["label"], torch.Tensor)
+        assert x["image"].shape == (3, dataset.size, dataset.size)
 
     def test_len(self, dataset: TropicalCyclone) -> None:
         assert len(dataset) == 5
@@ -88,6 +88,6 @@ class TestTropicalCyclone:
         plt.close()
 
         sample = dataset[0]
-        sample["prediction"] = torch.tensor(sample["label"])
+        sample["prediction"] = sample["label"]
         dataset.plot(sample)
         plt.close()

@@ -129,7 +129,7 @@ class NASAMarineDebris(NonGeoDataset):
         """
         with rasterio.open(path) as f:
             array = f.read()
-        tensor = torch.from_numpy(array)
+        tensor = torch.from_numpy(array).float()
         return tensor
 
     def _load_target(self, path: str) -> Tensor:
@@ -233,6 +233,7 @@ class NASAMarineDebris(NonGeoDataset):
         """
         ncols = 1
 
+        sample["image"] = sample["image"].byte()
         image = sample["image"]
         if "boxes" in sample and len(sample["boxes"]):
             image = draw_bounding_boxes(image=sample["image"], boxes=sample["boxes"])

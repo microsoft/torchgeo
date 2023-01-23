@@ -16,8 +16,10 @@ from pytorch_lightning import LightningDataModule, Trainer
 from torchvision.models import resnet18
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import ChesapeakeCVPRDataModule
+from torchgeo.datamodules import ChesapeakeCVPRDataModule, MisconfigurationException
+from torchgeo.datasets import ChesapeakeCVPR
 from torchgeo.models import ResNet18_Weights
+from torchgeo.samplers import GridGeoSampler
 from torchgeo.trainers import BYOLTask
 from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
 
@@ -27,6 +29,16 @@ from .test_utils import SegmentationTestModel
 def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
     state_dict: Dict[str, Any] = torch.load(url)
     return state_dict
+
+
+class PredictBYOLDataModule(ChesapeakeCVPRDataModule):
+    def setup(self, stage: str) -> None:
+        self.predict_dataset = ChesapeakeCVPR(
+            splits=self.test_splits, layers=self.layers, **self.kwargs
+        )
+        self.predict_sampler = GridGeoSampler(
+            self.predict_dataset, self.original_patch_size, self.original_patch_size
+        )
 
 
 class TestBYOL:
@@ -54,7 +66,9 @@ class TestBYOLTask:
             ("chesapeake_cvpr_prior", ChesapeakeCVPRDataModule),
         ],
     )
-    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
+    def test_trainer(
+        self, name: str, classname: Type[LightningDataModule], fast_dev_run: bool
+    ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
         conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
@@ -70,10 +84,16 @@ class TestBYOLTask:
         model.backbone = SegmentationTestModel(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
-        trainer.test(model=model, datamodule=datamodule)
-        trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
+        try:
+            trainer.test(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
+        try:
+            trainer.predict(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[str, Any]:
@@ -104,3 +124,18 @@ class TestBYOLTask:
     ) -> None:
         model_kwargs["weights"] = str(mocked_weights)
         BYOLTask(**model_kwargs)
+
+    def test_predict(self, model_kwargs: Dict[Any, Any], fast_dev_run: bool) -> None:
+        datamodule = PredictBYOLDataModule(
+            root="tests/data/chesapeake/cvpr",
+            train_splits=["de-test"],
+            val_splits=["de-test"],
+            test_splits=["de-test"],
+            batch_size=1,
+            patch_size=64,
+            num_workers=0,
+        )
+        model_kwargs["in_channels"] = 4
+        model = BYOLTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer.predict(model=model, datamodule=datamodule)

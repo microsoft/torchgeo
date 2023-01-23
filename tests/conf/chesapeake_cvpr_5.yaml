@@ -20,9 +20,8 @@ experiment:
     - "de-test"
     test_splits:
     - "de-test"
-    patches_per_tile: 2
-    patch_size: 64
     batch_size: 2
+    patch_size: 64
     num_workers: 0
     class_set: ${experiment.module.num_classes}
     use_prior_labels: False

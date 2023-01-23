@@ -211,7 +211,7 @@ class TestRasterDataset:
         x = custom_dtype_ds[custom_dtype_ds.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
-        assert x["image"].dtype == torch.int64
+        assert x["image"].dtype == torch.float32
 
     def test_invalid_query(self, sentinel: Sentinel2) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

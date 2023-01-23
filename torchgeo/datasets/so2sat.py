@@ -234,7 +234,7 @@ class So2Sat(NonGeoDataset):
             s1 = torch.from_numpy(s1)
             s2 = torch.from_numpy(s2)
 
-        sample = {"image": torch.cat([s1, s2]), "label": label}
+        sample = {"image": torch.cat([s1, s2]).float(), "label": label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
