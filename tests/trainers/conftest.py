@@ -4,7 +4,7 @@
 import os
 from collections import OrderedDict
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict
 
 import pytest
 import torch
