@@ -13,6 +13,5 @@ experiment:
     learning_rate_schedule_patience: 2
   datamodule:
     root: "data/cowc_counting"
-    seed: 0
     batch_size: 64
     num_workers: 4

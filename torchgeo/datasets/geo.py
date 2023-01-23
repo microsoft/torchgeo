@@ -427,8 +427,11 @@ class RasterDataset(GeoDataset):
         else:
             data = self._merge_files(filepaths, query, self.band_indexes)
 
-        key = "image" if self.is_image else "mask"
-        sample = {key: data, "crs": self.crs, "bbox": query}
+        sample = {"crs": self.crs, "bbox": query}
+        if self.is_image:
+            sample["image"] = data.float()
+        else:
+            sample["mask"] = data.long()
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -777,7 +780,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         """
         img, label = ImageFolder.__getitem__(self, index)
         array: "np.typing.NDArray[np.int_]" = np.array(img)
-        tensor = torch.from_numpy(array)
+        tensor = torch.from_numpy(array).float()
         # Convert from HxWxC to CxHxW
         tensor = tensor.permute((2, 0, 1))
         label = torch.tensor(label)

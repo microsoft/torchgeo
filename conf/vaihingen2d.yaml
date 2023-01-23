@@ -14,8 +14,7 @@ experiment:
     ignore_index: null
   datamodule:
     root: "data/vaihingen"
-    num_tiles_per_batch: 16
-    num_patches_per_tile: 16
+    batch_size: 1
     patch_size: 64
     val_split_pct: 0.5
     num_workers: 0

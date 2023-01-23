@@ -16,4 +16,3 @@ experiment:
     band_set: "s1"
     batch_size: 1
     num_workers: 0
-    seed: 0

@@ -73,14 +73,14 @@ class TestOSCD:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
-        assert x["image"].ndim == 4
+        assert x["image"].ndim == 3
         assert isinstance(x["mask"], torch.Tensor)
         assert x["mask"].ndim == 2
 
         if dataset.bands == "rgb":
-            assert x["image"].shape[:2] == (2, 3)
+            assert x["image"].shape[0] == 6
         else:
-            assert x["image"].shape[:2] == (2, 13)
+            assert x["image"].shape[0] == 26
 
     def test_len(self, dataset: OSCD) -> None:
         if dataset.split == "train":
