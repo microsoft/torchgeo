@@ -7,7 +7,6 @@ from typing import Any, Dict, List
 
 import torch
 from torch import Tensor
-from torch.utils.data import DataLoader
 
 from ..datasets import NASAMarineDebris
 from .geo import NonGeoDataModule
