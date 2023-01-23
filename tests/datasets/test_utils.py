@@ -87,7 +87,7 @@ def test_mock_missing_module(mock_missing_module: None) -> None:
     [
         os.path.join("cowc_detection", "COWC_Detection_Columbus_CSUAV_AFRL.tbz"),
         os.path.join("cowc_detection", "COWC_test_list_detection.txt.bz2"),
-        os.path.join("vhr10", "NWPU VHR-10 dataset.rar"),
+        os.path.join("nwpu", "NWPU VHR-10 dataset.rar"),
         os.path.join("landcoverai", "landcover.ai.v1.zip"),
         os.path.join("chesapeake", "BAYWIDE", "Baywide_13Class_20132014.zip"),
         os.path.join("sen12ms", "ROIs1158_spring_lc.tar.gz"),
@@ -107,7 +107,7 @@ def test_missing_rarfile(mock_missing_module: None) -> None:
         match="rarfile is not installed and is required to extract this dataset",
     ):
         extract_archive(
-            os.path.join("tests", "data", "vhr10", "NWPU VHR-10 dataset.rar")
+            os.path.join("tests", "data", "nwpu", "NWPU VHR-10 dataset.rar")
         )
 
 
