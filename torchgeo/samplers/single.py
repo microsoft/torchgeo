@@ -177,7 +177,7 @@ class SequentialGeoSampler(GeoSampler):
         sample_window: int,
         target_window: int,
         time_unit: str,
-        time_range: Optional[Tuple[float, float]] = None,
+        time_range: Optional[Tuple[str, str]] = None,
         roi: Optional[BoundingBox] = None,
         size_units: Units = Units.PIXELS,
     ) -> None:
@@ -204,15 +204,17 @@ class SequentialGeoSampler(GeoSampler):
                 the ``sample_window`` in units of days
             time_unit: unit of time, accepting 'hours', 'days', 'weeks', 'months',
                  'years'
-            time_range: beginning and end unix timestamp to consider
-                drawing samples from
+            time_range: beginning and end string timestamp to consider
+                drawing samples from, needs to follow the date format convention of
+                ``dataset`` files
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``bounds)
             size_units: defines if ``size`` is in pixel or CRS units
         """
         # roi should be overwritten with time_range specifications
         if roi is None:
-            roi = BoundingBox(*dataset.index)
+            self.index = dataset.index
+            roi = BoundingBox(*self.index.bounds)
 
         # by default take roi of dataset but in case time range
         # is specified overwrite default roi

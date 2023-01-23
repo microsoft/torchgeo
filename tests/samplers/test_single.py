@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import math
+import os
 from itertools import product
 from typing import Dict, Iterator
 
@@ -10,12 +11,19 @@ from _pytest.fixtures import SubRequest
 from rasterio.crs import CRS
 from torch.utils.data import DataLoader
 
-from torchgeo.datasets import BoundingBox, GeoDataset, stack_samples
+from torchgeo.datasets import (
+    BoundingBox,
+    ForecastDataset,
+    GeoDataset,
+    RasterDataset,
+    stack_samples,
+)
 from torchgeo.samplers import (
     GeoSampler,
     GridGeoSampler,
     PreChippedGeoSampler,
     RandomGeoSampler,
+    SequentialGeoSampler,
     Units,
     tile_to_chips,
 )
@@ -282,4 +290,45 @@ class TestPreChippedGeoSampler:
 
 
 class TestSequentialGeoSampler:
-    pass
+    @pytest.fixture()
+    def forecast_ds(self) -> RasterDataset:
+        root = os.path.join("tests", "data", "time_series_raster")
+
+        class TimeSeriesInputRaster(RasterDataset):
+            filename_glob = "test_*.tif"
+            filename_regex = r"test_(?P<date>\d{8})_(?P<band>B0[234])"
+            date_format = "%Y%m%d"
+            is_image = True
+            separate_files = True
+            all_bands = ["B02", "B03", "B04"]
+
+        class TimeSeriesTargetRaster(RasterDataset):
+            filename_glob = "test_*.tif"
+            filename_regex = r"test_(?P<date>\d{8})_(?P<band>target)"
+            date_format = "%Y%m%d"
+            is_image = True
+            separate_files = True
+            all_bands = ["target"]
+
+        return ForecastDataset(
+            input_dataset=TimeSeriesInputRaster(root, as_time_series=True),
+            target_dataset=TimeSeriesTargetRaster(root, as_time_series=True),
+        )
+
+    @pytest.fixture(scope="function", params=zip(["days"], [3], [2]))
+    def sampler(
+        self, forecast_ds: ForecastDataset, request: SubRequest
+    ) -> SequentialGeoSampler:
+        time_unit, sample_window, target_window = request.param
+        return SequentialGeoSampler(
+            forecast_ds,
+            size=32,
+            length=2,
+            sample_window=sample_window,
+            target_window=target_window,
+            time_unit=time_unit,
+        )
+
+    def test_iter(self, sampler: SequentialGeoSampler) -> None:
+        for _ in sampler:
+            continue
