@@ -14,18 +14,12 @@ from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 from torchvision.models._api import WeightsEnum
 
-# TODO: import from lightning_lite instead
-from pytorch_lightning.utilities.exceptions import (  # type: ignore[attr-defined]
-    MisconfigurationException,
-)
-
 from torchgeo.datamodules import (
     COWCCountingDataModule,
     MisconfigurationException,
     TropicalCycloneDataModule,
 )
 from torchgeo.datasets import TropicalCyclone
-from torchgeo.datamodules import COWCCountingDataModule, TropicalCycloneDataModule
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import RegressionTask
 

@@ -11,7 +11,6 @@ import torch
 import torch.nn as nn
 import torchvision
 from _pytest.monkeypatch import MonkeyPatch
-from lightning_lite.utilities.exceptions import MisconfigurationException
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 from torchvision.models import resnet18

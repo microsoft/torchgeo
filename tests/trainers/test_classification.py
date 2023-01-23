@@ -23,8 +23,8 @@ from torchgeo.datamodules import (
     So2SatDataModule,
     UCMercedDataModule,
 )
-from torchgeo.models import ResNet18_Weights
 from torchgeo.datasets import BigEarthNet, EuroSAT
+from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
 
 from .test_utils import ClassificationTestModel
