@@ -30,7 +30,8 @@ pycocotools==2.0.0
 pyvista==0.20.0
 radiant-mlhub==0.2.1
 rarfile==3.0
-scipy==1.2.0
+scikit-image==0.18.0
+scipy==1.6.2
 zipfile-deflate64==0.2.0
 
 # docs
@@ -50,3 +51,6 @@ mypy==0.900
 nbmake==0.1
 pytest==6.1.2
 pytest-cov==2.4.0
+
+# needed for scikit-image compatibility
+pooch==1.4.0
