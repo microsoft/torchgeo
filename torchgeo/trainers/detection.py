@@ -20,7 +20,17 @@ from torchvision.models.detection.retinanet import RetinaNetHead
 from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
-from ..datasets.utils import unbind_samples
+BACKBONE_LAT_DIM_MAP = {
+    "resnet18": 512,
+    "resnet34": 512,
+    "resnet50": 2048,
+    "resnet101": 2048,
+    "resnet152": 2048,
+    "resnext50_32x4d": 2048,
+    "resnext101_32x8d": 2048,
+    "wide_resnet50_2": 2048,
+    "wide_resnet101_2": 2048,
+}
 
 BACKBONE_WEIGHT_MAP = {
     "resnet18": R.ResNet18_Weights.DEFAULT,
@@ -84,7 +94,6 @@ class ObjectDetectionTask(pl.LightningModule):
             else:
                 kwargs["weights"] = None
 
-
             latent_dim = BACKBONE_LAT_DIM_MAP[self.hyperparams["backbone"]]
         else:
             raise ValueError(
@@ -92,6 +101,7 @@ class ObjectDetectionTask(pl.LightningModule):
             )
 
         num_classes = self.hyperparams["num_classes"]
+
 
         if self.hyperparams["model"] == "faster-rcnn":
             backbone = resnet_fpn_backbone(**kwargs)
@@ -110,15 +120,10 @@ class ObjectDetectionTask(pl.LightningModule):
             )
         elif self.hyperparams["model"] == "fcos":
             kwargs["extra_blocks"] = feature_pyramid_network.LastLevelP6P7(256, 256)
-            is_trained = (
-                kwargs["weights"]
-                if parse(torchvision.__version__) >= parse("0.13")
-                else kwargs["pretrained"]
-            )
             kwargs["norm_layer"] = (
-                misc.FrozenBatchNorm2d if is_trained else torch.nn.BatchNorm2d
+                misc.FrozenBatchNorm2d if kwargs["weights"] else torch.nn.BatchNorm2d
             )
-
+            
             backbone = resnet_fpn_backbone(**kwargs)
             anchor_generator = AnchorGenerator(
                 sizes=((8,), (16,), (32,), (64,), (128,), (256,)),
