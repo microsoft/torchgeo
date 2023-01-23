@@ -313,7 +313,7 @@ Vaihingen
 .. autoclass:: Vaihingen2D
 
 VHR-10
-^^^^^^^^^^^
+^^^^^^
 
 .. autoclass:: VHR10
 
