@@ -10,19 +10,13 @@ import pytest
 import torch
 import torchvision
 from _pytest.fixtures import SubRequest
-from packaging.version import parse
 from torch import Tensor
 from torch.nn.modules import Module
 
 
 @pytest.fixture(scope="package")
 def model() -> Module:
-    kwargs: Dict[str, Optional[bool]] = {}
-    if parse(torchvision.__version__) >= parse("0.13"):
-        kwargs = {"weights": None}
-    else:
-        kwargs = {"pretrained": False}
-    model: Module = torchvision.models.resnet18(**kwargs)
+    model: Module = torchvision.models.resnet18(weights=None)
     return model
 
 
