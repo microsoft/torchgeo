@@ -114,7 +114,7 @@ for batch in dataloader:
     # train a model, or make predictions using a pre-trained model
 ```
 
-<img src="https://raw.githubusercontent.com/microsoft/torchgeo/main/images/vhr10.png" alt="Example predictions from a Mask R-CNN model trained on the NWPU VHR-10 dataset"/>
+<img src="https://raw.githubusercontent.com/microsoft/torchgeo/main/images/vhr10.png" alt="Example predictions from a Mask R-CNN model trained on the VHR-10 dataset"/>
 
 All TorchGeo datasets are compatible with PyTorch data loaders, making them easy to integrate into existing training workflows. The only difference between a benchmark dataset in TorchGeo and a similar dataset in torchvision is that each dataset returns a dictionary with keys for each PyTorch `Tensor`.
 
