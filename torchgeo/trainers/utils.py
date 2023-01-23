@@ -72,7 +72,9 @@ def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Mo
     expected_in_channels = state_dict["conv1.weight"].shape[1]
 
     num_classes = cast(nn.Module, model.fc).out_features
-    expected_num_classes = state_dict["fc.weight"].shape[0]
+    expected_num_classes = None
+    if "fc.weight" in state_dict:
+        expected_num_classes = state_dict["fc.weight"].shape[0]
 
     if in_channels != expected_in_channels:
         warnings.warn(
@@ -81,7 +83,9 @@ def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Mo
         )
         del state_dict["conv1.weight"]
 
-    if num_classes != expected_num_classes:
+    if expected_num_classes is None:
+        warnings.warn("pretrained model does not include class weights")
+    elif num_classes != expected_num_classes:
         warnings.warn(
             f"num classes {num_classes} != num classes in pretrained model"
             f" {expected_num_classes}. Overriding with new num classes"
@@ -89,7 +93,6 @@ def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Mo
         del state_dict["fc.weight"], state_dict["fc.bias"]
 
     model.load_state_dict(state_dict, strict=False)
-
     return model
 
 
