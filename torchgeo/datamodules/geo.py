@@ -308,7 +308,10 @@ class GeoDataModule(LightningDataModule):
         return batch
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run the plot method of the dataset if one exists.
+        """Run the plot method of the validation dataset if one exists.
+
+        Should only be called during 'fit' or 'validate' stages as ``val_dataset``
+        may not exist during other stages.
 
         Args:
             *args: Arguments passed to plot method.
@@ -525,7 +528,10 @@ class NonGeoDataModule(LightningDataModule):
         return batch
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run the plot method of the dataset if one exists.
+        """Run the plot method of the validation dataset if one exists.
+
+        Should only be called during 'fit' or 'validate' stages as ``val_dataset``
+        may not exist during other stages.
 
         Args:
             *args: Arguments passed to plot method.
