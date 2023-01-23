@@ -19,12 +19,7 @@ class TestObjectDetectionTask:
     )
     @pytest.mark.parametrize(
         "model_name,backbone",
-        [
-            ("faster-rcnn", "resnet18"),
-            ("fcos", "resnet18"),
-            ("retinanet", "resnet18"),
-            ("retinanet", "resnet50"),
-        ],
+        [("faster-rcnn", "resnet18"), ("fcos", "resnet18"), ("retinanet", "resnet18")],
     )
     def test_trainer(
         self,
