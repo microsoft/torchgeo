@@ -107,7 +107,7 @@ class ConvertCocoAnnotations:
 
 
 class VHR10(NonGeoDataset):
-    """NWPU VHR-10 dataset.
+    """VHR-10 dataset.
 
     Northwestern Polytechnical University (NWPU) very-high-resolution ten-class (VHR-10)
     remote sensing image dataset.
