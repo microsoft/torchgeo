@@ -312,8 +312,8 @@ Vaihingen
 
 .. autoclass:: Vaihingen2D
 
-NWPU VHR-10
-^^^^^^^^^^^
+VHR-10
+^^^^^^
 
 .. autoclass:: VHR10
 

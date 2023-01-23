@@ -31,13 +31,13 @@ class TestVHR10:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> VHR10:
         pytest.importorskip("rarfile", minversion="3")
-        monkeypatch.setattr(torchgeo.datasets.nwpu, "download_url", download_url)
+        monkeypatch.setattr(torchgeo.datasets.vhr10, "download_url", download_url)
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
-        url = os.path.join("tests", "data", "nwpu", "NWPU VHR-10 dataset.rar")
+        url = os.path.join("tests", "data", "vhr10", "NWPU VHR-10 dataset.rar")
         monkeypatch.setitem(VHR10.image_meta, "url", url)
         md5 = "5fddb0dfd56a80638831df9f90cbf37a"
         monkeypatch.setitem(VHR10.image_meta, "md5", md5)
-        url = os.path.join("tests", "data", "nwpu", "annotations.json")
+        url = os.path.join("tests", "data", "vhr10", "annotations.json")
         monkeypatch.setitem(VHR10.target_meta, "url", url)
         md5 = "833899cce369168e0d4ee420dac326dc"
         monkeypatch.setitem(VHR10.target_meta, "md5", md5)
