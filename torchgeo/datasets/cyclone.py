@@ -39,9 +39,9 @@ class TropicalCyclone(NonGeoDataset):
        * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
          imagery and labels from the Radiant Earth MLHub
 
-    .. versionchanged:: 0.4.0
-        Class name changed from TropicalCycloneWindEstimation to TropicalCyclone
-        to be consistent with TropicalCycloneDataModule.
+    .. versionchanged:: 0.4
+       Class name changed from TropicalCycloneWindEstimation to TropicalCyclone
+       to be consistent with TropicalCycloneDataModule.
     """
 
     collection_id = "nasa_tropical_storm_competition"
