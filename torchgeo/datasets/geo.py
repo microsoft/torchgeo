@@ -453,8 +453,10 @@ class RasterDataset(GeoDataset):
         else:
             data = self._merge_files(filepaths, query, self.band_indexes)
 
+        dates = list({int(f.split("/")[-1].split("_")[0]) for f in filepaths})
+        dates = sorted(dates)
         key = "image" if self.is_image else "mask"
-        sample = {key: data, "crs": self.crs, "bbox": query}
+        sample = {key: data, "crs": self.crs, "bbox": query, "dates": dates}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -1080,9 +1082,11 @@ class ForecastDataset(IntersectionDataset):
             "input": input_samples["image"],
             "input_bbox": input_samples["bbox"],
             "input_crs": input_samples["crs"],
+            "input_dates": input_samples["dates"],
             "target": target_samples["image"],
             "target_bbox": target_samples["bbox"],
             "target_crs": target_samples["crs"],
+            "target_dates": target_samples["dates"],
         }
 
         return samples

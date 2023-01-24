@@ -4,11 +4,15 @@
 """TorchGeo samplers."""
 
 import abc
+import itertools
+import random
 from datetime import datetime, timedelta
-from typing import Callable, Iterable, Iterator, Optional, Tuple, Union
+from typing import Callable, Iterable, Iterator, List, Optional, Tuple, Union
 
+import numpy as np
 import torch
 from dateutil.relativedelta import relativedelta
+from dateutil.rrule import DAILY, HOURLY, MONTHLY, WEEKLY, YEARLY, rrule
 from rtree.index import Index, Property
 from torch.utils.data import Sampler
 
@@ -168,6 +172,13 @@ class SequentialGeoSampler(GeoSampler):
     """
 
     allowed_time_units = ["hours", "days", "weeks", "months", "years"]
+    rrule_mappings = {
+        "hours": HOURLY,
+        "days": DAILY,
+        "weeks": WEEKLY,
+        "months": MONTHLY,
+        "years": YEARLY,
+    }
 
     def __init__(
         self,
@@ -180,6 +191,7 @@ class SequentialGeoSampler(GeoSampler):
         time_range: Optional[Tuple[str, str]] = None,
         roi: Optional[BoundingBox] = None,
         size_units: Units = Units.PIXELS,
+        max_samples_per_geolocation: int = None,
     ) -> None:
         """Initialize a new Sampler instance.
 
@@ -210,6 +222,8 @@ class SequentialGeoSampler(GeoSampler):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``bounds)
             size_units: defines if ``size`` is in pixel or CRS units
+            max_samples_per_geolocation: max number of time-series sequences for any
+                randomly sampled geo patch
         """
         # roi should be overwritten with time_range specifications
         if roi is None:
@@ -219,16 +233,17 @@ class SequentialGeoSampler(GeoSampler):
         # by default take roi of dataset but in case time range
         # is specified overwrite default roi
         if time_range is not None:
-            assert (
-                time_range[1] > time_range[0]
-            ), "End time needs to be later than start time."
+            date_format = dataset.input_dataset.date_format
+            end_date = datetime.strptime(time_range[1], date_format)
+            start_date = datetime.strptime(time_range[0], date_format)
+            assert end_date > start_date, "End time needs to be later than start time."
             roi = BoundingBox(
                 minx=roi.minx,
                 maxx=roi.maxx,
                 miny=roi.miny,
                 maxy=roi.maxy,
-                mint=time_range[0],
-                maxt=time_range[1],
+                mint=start_date.timestamp(),
+                maxt=end_date.timestamp(),
             )
 
         super().__init__(dataset, roi)
@@ -246,9 +261,12 @@ class SequentialGeoSampler(GeoSampler):
             self.size = (self.size[0] * self.res, self.size[1] * self.res)
 
         self.length = 0
-        self.hits = []
+        geo_hits = []
         areas = []
 
+        # TODO sample spatial patches first because I don't know
+        # how to make rtree.Index.intersection respect the time dimension
+        # now only sample spatial coordinates
         for hit in self.index.intersection(tuple(self.roi), objects=True):
             bounds = BoundingBox(*hit.bounds)
             if (
@@ -262,16 +280,34 @@ class SequentialGeoSampler(GeoSampler):
                     self.length += rows * cols
                 else:
                     self.length += 1
-                hit.bounds = hit.bounds[0:4] + [self.roi.mint, self.roi.maxt]
-                self.hits.append(hit)
+                hit.bounds = hit.bounds[0:4]  # + [self.roi.mint, self.roi.maxt]
+                geo_hits.append(hit.bounds)
                 areas.append(bounds.area)
+
+        geo_hits = [k for k, _ in itertools.groupby(geo_hits)]
+
+        # generate time rois and for each hit extend hits
+        # with possible time sequences
+        self.hits: List[List[Union[int, float]]] = []
+        subsequence_time_ranges = self._compute_subsequences()
+        random.shuffle(subsequence_time_ranges)
+        if max_samples_per_geolocation is not None:
+            subsequence_time_ranges = subsequence_time_ranges[
+                :max_samples_per_geolocation
+            ]
+        for subsequence in subsequence_time_ranges:
+            mint = subsequence[0].timestamp()
+            maxt = subsequence[1].timestamp()
+            self.hits.extend([geo_hit + [mint, maxt] for geo_hit in geo_hits])
+
         if length is not None:
             self.length = length
 
         # torch.multinomial requires float probabilities > 0
-        self.areas = torch.tensor(areas, dtype=torch.float)
-        if torch.sum(self.areas) == 0:
-            self.areas += 1
+        # self.areas = torch.tensor(areas, dtype=torch.float)
+        # if torch.sum(self.areas) == 0:
+        #     self.areas += 1
+        self.random_seq_idx = np.random.permutation(len(self.hits))[:100]
 
     def __iter__(self) -> Iterator[Tuple[BoundingBox, BoundingBox]]:
         """Return the index of a dataset.
@@ -282,9 +318,10 @@ class SequentialGeoSampler(GeoSampler):
         """
         for _ in range(len(self)):
             # Choose a random tile, weighted by area
-            idx = torch.multinomial(self.areas, 1)
+            # idx = torch.multinomial(self.areas, 1)
+            idx = np.random.choice(self.random_seq_idx, 1)[0]
             hit = self.hits[idx]
-            bounds = BoundingBox(*hit.bounds)
+            bounds = BoundingBox(*hit)
 
             # Choose a random sized patch within that tile
             geo_query = get_random_bounding_box(bounds, self.size, self.res)
@@ -302,6 +339,41 @@ class SequentialGeoSampler(GeoSampler):
             length of the epoch
         """
         return self.length
+
+    def _compute_subsequences(self) -> List[List[datetime]]:
+        """Compute the possible subsequences within the time-horizon.
+
+        Returns:
+            all subsequences in the time dimension
+        """
+        # dates incremented by 1 time unit up to end_time_range - self.target_window
+        # because target window will be sequentially defined in
+        # _retrieve_sequential_query
+        all_timestamps_within_time_range = [
+            dt
+            for dt in rrule(
+                freq=self.rrule_mappings[self.time_unit],
+                dtstart=datetime.fromtimestamp(self.roi.mint),
+                until=datetime.fromtimestamp(self.roi.maxt)
+                - relativedelta(**{self.time_unit: self.target_window}),
+            )
+        ]
+        # list of list with all timestamps in a sequence
+        subsequences: List[List[datetime]] = list(
+            map(
+                list,
+                zip(
+                    *(
+                        all_timestamps_within_time_range[i:]
+                        for i in range(self.sample_window)
+                    )
+                ),
+            )
+        )
+        # only keep start and end date to define new rois with mint and maxt
+        subsequences = [[sub[0], sub[-1]] for sub in subsequences]
+
+        return subsequences
 
     def _retrieve_sequential_query(
         self, query: BoundingBox
