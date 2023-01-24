@@ -58,7 +58,7 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
             _RandomNCrop(self.patch_size, batch_size),
             data_keys=["image", "mask"],
         )
-        self.val_aug = AugmentationSequential(
+        self.aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
             data_keys=["image", "mask"],

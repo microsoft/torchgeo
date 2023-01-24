@@ -93,6 +93,8 @@ filterwarnings = [
     # https://github.com/scikit-image/scikit-image/issues/6663
     # https://github.com/scikit-image/scikit-image/pull/6637
     "ignore:`np.bool8` is a deprecated alias for `np.bool_`.:DeprecationWarning:skimage.util.dtype",
+    # https://github.com/lanpa/tensorboardX/pull/677
+    "ignore:ANTIALIAS is deprecated and will be removed in Pillow 10:DeprecationWarning:tensorboardX.summary",
 
     # Expected warnings
     # pytorch-lightning warns us about using num_workers=0, but it's faster on macOS
