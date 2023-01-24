@@ -71,7 +71,6 @@ def test_overwrite_experiment_dir(tmp_path: Path) -> None:
         "experiment.task=cyclone",
         "experiment.datamodule.root=" + data_dir,
         "program.overwrite=True",
-        "trainer.fast_dev_run=1",
         "trainer.accelerator=cpu",
     ]
     ps = subprocess.run(args, capture_output=True, check=True)
@@ -128,7 +127,6 @@ experiment:
   datamodule:
     root: {data_dir}
 trainer:
-  fast_dev_run: true
   accelerator: cpu
 """
     )
