@@ -71,13 +71,13 @@ jobs:
         pip list
       if: ${{ matrix.python-version == '3.7' }}
     - name: Run pytest checks (Linux/macOS)
-      run: pytest --cov=torchgeo --cov-report=xml
+      run: pytest --cov=torchgeo --cov-report=xml --durations=10
       if: ${{ runner.os != 'Windows' }}
     - name: Run pytest checks (Windows)
       shell: cmd
       run: |
         set "PATH=%PATH%;c:\msys64\usr\bin"
-        pytest --cov=torchgeo --cov-report=xml
+        pytest --cov=torchgeo --cov-report=xml --durations=10
       if: ${{ runner.os == 'Windows' }}
     - name: Report coverage
       uses: codecov/codecov-action@v3.1.1
@@ -103,6 +103,6 @@ jobs:
         pip install -r requirements/min.old
         pip list
     - name: Run pytest checks
-      run: pytest --cov=torchgeo --cov-report=xml
+      run: pytest --cov=torchgeo --cov-report=xml --durations=10
     - name: Report coverage
       uses: codecov/codecov-action@v3.1.1
