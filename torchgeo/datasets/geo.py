@@ -9,7 +9,6 @@ import glob
 import os
 import re
 import sys
-import warnings
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
 
 import fiona
