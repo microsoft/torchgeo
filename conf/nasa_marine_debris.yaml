@@ -2,7 +2,8 @@ program:
   overwrite: True
 
 trainer:
-  gpus: 1
+  accelerator: gpu
+  devices: 1
   min_epochs: 5
   max_epochs: 100
   auto_lr_find: False

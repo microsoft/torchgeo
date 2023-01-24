@@ -1,5 +1,6 @@
 trainer:
-  gpus: 1
+  accelerator: gpu
+  devices: 1
   min_epochs: 15
 experiment:
   task: cowc_counting

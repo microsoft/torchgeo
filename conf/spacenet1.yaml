@@ -1,7 +1,8 @@
 program:
   overwrite: False
 trainer:
-  gpus: [3]
+  accelerator: gpu
+  devices: 3
   min_epochs: 50
   max_epochs: 200
   benchmark: True
