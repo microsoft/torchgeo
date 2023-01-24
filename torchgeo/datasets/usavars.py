@@ -26,7 +26,7 @@ class USAVars(NonGeoDataset):
     imagery <https://doi.org/10.1038/s41467-021-24638-z>`_". Specifically, this dataset
     includes 1 sq km. crops of NAIP imagery resampled to 4m/px cenetered on ~100k points
     that are sampled randomly from the contiguous states in the USA. Each point contains
-    three continous valued labels (taken from the dataset released in the paper): tree
+    three continuous valued labels (taken from the dataset released in the paper): tree
     cover percentage, elevation, and population density.
 
     Dataset format:
