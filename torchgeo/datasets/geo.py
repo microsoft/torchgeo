@@ -693,20 +693,6 @@ class NonGeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     size: {len(self)}"""
 
 
-class VisionDataset(NonGeoDataset):
-    """Abstract base class for datasets lacking geospatial information.
-
-    .. deprecated:: 0.3
-       Use :class:`NonGeoDataset` instead.
-    """
-
-    def __new__(cls, *args: Any, **kwargs: Any) -> "VisionDataset":
-        """Create a new instance of VisionDataset."""
-        msg = "VisionDataset is deprecated, use NonGeoDataset instead."
-        warnings.warn(msg, DeprecationWarning)
-        return super().__new__(cls, *args, **kwargs)
-
-
 class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[misc]
     """Abstract base class for classification datasets lacking geospatial information.
 
@@ -785,21 +771,6 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         tensor = tensor.permute((2, 0, 1))
         label = torch.tensor(label)
         return tensor, label
-
-
-class VisionClassificationDataset(NonGeoClassificationDataset):
-    """Abstract base class for classification datasets lacking geospatial information.
-
-    .. deprecated:: 0.3
-       Use :class:`NonGeoClassificationDataset` instead.
-    """
-
-    def __new__(cls, *args: Any, **kwargs: Any) -> "VisionClassificationDataset":
-        """Create a new instance of VisionClassificationDataset."""
-        msg = "VisionClassificationDataset is deprecated, "
-        msg += "use NonGeoClassificationDataset instead."
-        warnings.warn(msg, DeprecationWarning)
-        return cast(VisionClassificationDataset, super().__new__(cls))
 
 
 class IntersectionDataset(GeoDataset):
