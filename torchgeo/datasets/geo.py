@@ -27,12 +27,14 @@ from typing import (
 
 import fiona
 import fiona.transform
+import matplotlib.pyplot as plt
 import numpy as np
 import pyproj
 import rasterio
 import rasterio.merge
 import shapely
 import torch
+from matplotlib.widgets import Slider
 from rasterio.crs import CRS
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
@@ -1104,6 +1106,44 @@ class ForecastDataset(IntersectionDataset):
     size: {len(self)}
     input_dataset: {self.input_dataset}
     target_dataset: {self.target_dataset}"""
+
+    def plot(self, input_sequence, target_sequence):
+        """Plot sequential sample for input and target.
+
+        Args:
+            input_sequence: unbatched image sequence of shape
+                num_time_steps, num_channels, height, width
+            target_sequence: unbatched target sequence of shape
+                num_time_steps, num_channels, height, width
+        """
+
+        def select_image(image, idx):
+            return image[int(idx), 0, ...]
+
+        fig, axs = plt.subplots(ncols=2)
+
+        input_img = axs[0].imshow(select_image(input_sequence, 0))
+        axs[0].set_title("Input Sequence")
+        slider_ax = fig.add_axes([0.20, 0.1, 0.60, 0.03])
+        input_slider = Slider(
+            ax=slider_ax,
+            label="Input Time Dimension",
+            valmin=0,
+            valmax=input_sequence.shape[0],
+            valinit=0,
+            valstep=1.0,
+        )
+
+        target_img = axs[1].imshow(select_image(target_sequence, 0))
+        axs[1].set_title("Target Sequence")
+
+        def update(val):
+            input_img.array = select_image(input_sequence, 0)
+
+            fig.canvas.draw_idle()
+
+        input_slider.on_changed(update)
+        plt.show()
 
 
 class UnionDataset(GeoDataset):
