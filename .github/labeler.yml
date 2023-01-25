@@ -15,6 +15,10 @@ transforms:
 - "torchgeo/transforms/**"
 
 # Other
+dependencies:
+- "environment.yml"
+- "setup.cfg"
+- "requirements/**"
 documentation:
 - "docs/**"
 scripts:
