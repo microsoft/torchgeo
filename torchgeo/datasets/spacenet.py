@@ -158,7 +158,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         filename = os.path.join(path)
         with rio.open(filename) as img:
             array = img.read().astype(np.int32)
-            tensor = torch.from_numpy(array)
+            tensor = torch.from_numpy(array).float()
             return tensor, img.transform, img.crs
 
     def _load_mask(

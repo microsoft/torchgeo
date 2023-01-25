@@ -2,16 +2,42 @@
 # Licensed under the MIT License.
 
 import os
+from pathlib import Path
 from typing import Any, Dict, Type, cast
 
 import pytest
+import timm
+import torch
+import torchvision
+from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
+from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import COWCCountingDataModule, TropicalCycloneDataModule
+from torchgeo.datamodules import (
+    COWCCountingDataModule,
+    MisconfigurationException,
+    TropicalCycloneDataModule,
+)
+from torchgeo.datasets import TropicalCyclone
+from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import RegressionTask
 
 from .test_utils import RegressionTestModel
+
+
+def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+    state_dict: Dict[str, Any] = torch.load(url)
+    return state_dict
+
+
+class PredictRegressionDataModule(TropicalCycloneDataModule):
+    def setup(self, stage: str) -> None:
+        self.predict_dataset = TropicalCyclone(split="test", **self.kwargs)
+
+
+def plot(*args: Any, **kwargs: Any) -> None:
+    raise ValueError
 
 
 class TestRegressionTask:
@@ -22,10 +48,12 @@ class TestRegressionTask:
             ("cyclone", TropicalCycloneDataModule),
         ],
     )
-    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
+    def test_trainer(
+        self, name: str, classname: Type[LightningDataModule], fast_dev_run: bool
+    ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+        conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]
@@ -38,61 +66,70 @@ class TestRegressionTask:
         model.model = RegressionTestModel()
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
-        trainer.test(model=model, datamodule=datamodule)
-        trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
-
-    def test_no_logger(self) -> None:
-        conf = OmegaConf.load(os.path.join("tests", "conf", "cyclone.yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
-
-        # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = TropicalCycloneDataModule(**datamodule_kwargs)
-
-        # Instantiate model
-        model_kwargs = conf_dict["module"]
-        model = RegressionTask(**model_kwargs)
-
-        # Instantiate trainer
-        trainer = Trainer(
-            logger=False, fast_dev_run=True, log_every_n_steps=1, max_epochs=1
-        )
-        trainer.fit(model=model, datamodule=datamodule)
+        try:
+            trainer.test(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
+        try:
+            trainer.predict(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
 
     @pytest.fixture
-    def model_kwargs(self) -> Dict[Any, Any]:
+    def model_kwargs(self) -> Dict[str, Any]:
         return {
             "model": "resnet18",
-            "weights": "random",
+            "weights": None,
             "num_outputs": 1,
             "in_channels": 3,
         }
 
-    def test_invalid_pretrained(
-        self, model_kwargs: Dict[Any, Any], checkpoint: str
-    ) -> None:
-        model_kwargs["weights"] = checkpoint
-        model_kwargs["model"] = "resnet50"
-        match = "Trying to load resnet18 weights into a resnet50"
-        with pytest.raises(ValueError, match=match):
-            RegressionTask(**model_kwargs)
+    @pytest.fixture
+    def mocked_weights(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> WeightsEnum:
+        weights = ResNet18_Weights.SENTINEL2_RGB_MOCO
+        path = tmp_path / f"{weights}.pth"
+        model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"])
+        torch.save(model.state_dict(), path)
+        monkeypatch.setattr(weights, "url", str(path))
+        monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
+        return weights
 
-    def test_pretrained(self, model_kwargs: Dict[Any, Any], checkpoint: str) -> None:
+    def test_weight_file(self, model_kwargs: Dict[str, Any], checkpoint: str) -> None:
         model_kwargs["weights"] = checkpoint
         with pytest.warns(UserWarning):
             RegressionTask(**model_kwargs)
 
-    def test_invalid_model(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["model"] = "invalid_model"
-        match = "Model type 'invalid_model' is not a valid timm model."
-        with pytest.raises(ValueError, match=match):
+    def test_weight_enum(
+        self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
+    ) -> None:
+        model_kwargs["weights"] = mocked_weights
+        with pytest.warns(UserWarning):
             RegressionTask(**model_kwargs)
 
-    def test_invalid_weights(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["weights"] = "invalid_weights"
-        match = "Weight type 'invalid_weights' is not valid."
-        with pytest.raises(ValueError, match=match):
+    def test_weight_str(
+        self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
+    ) -> None:
+        model_kwargs["weights"] = str(mocked_weights)
+        with pytest.warns(UserWarning):
             RegressionTask(**model_kwargs)
+
+    def test_no_rgb(
+        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any], fast_dev_run: bool
+    ) -> None:
+        monkeypatch.setattr(TropicalCycloneDataModule, "plot", plot)
+        datamodule = TropicalCycloneDataModule(
+            root="tests/data/cyclone", batch_size=1, num_workers=0
+        )
+        model = RegressionTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer.validate(model=model, datamodule=datamodule)
+
+    def test_predict(self, model_kwargs: Dict[Any, Any], fast_dev_run: bool) -> None:
+        datamodule = PredictRegressionDataModule(
+            root="tests/data/cyclone", batch_size=1, num_workers=0
+        )
+        model = RegressionTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer.predict(model=model, datamodule=datamodule)

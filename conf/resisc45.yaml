@@ -10,7 +10,7 @@ experiment:
     model: "resnet18"
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
-    weights: "random"
+    weights: null
     in_channels: 3
     num_classes: 45
   datamodule:

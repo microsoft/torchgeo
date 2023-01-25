@@ -129,7 +129,7 @@ class OSCD(NonGeoDataset):
         image2 = self._load_image(files["images2"])
         mask = self._load_target(str(files["mask"]))
 
-        image = torch.stack(tensors=[image1, image2], dim=0)
+        image = torch.cat([image1, image2])
         sample = {"image": image, "mask": mask}
 
         if self.transforms is not None:
@@ -306,7 +306,9 @@ class OSCD(NonGeoDataset):
             )
             return array
 
-        image1, image2 = get_masked(sample["image"][0]), get_masked(sample["image"][1])
+        idx = sample["image"].shape[0] // 2
+        image1 = get_masked(sample["image"][:idx])
+        image2 = get_masked(sample["image"][idx:])
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
         axs[0].imshow(image1)
         axs[0].axis("off")

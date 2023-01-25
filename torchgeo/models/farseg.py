@@ -9,7 +9,6 @@ from typing import List, cast
 
 import torch.nn.functional as F
 import torchvision
-from packaging.version import parse
 from torch import Tensor
 from torch.nn.modules import (
     BatchNorm2d,
@@ -62,17 +61,14 @@ class FarSeg(Module):
         else:
             raise ValueError(f"unknown backbone: {backbone}.")
         kwargs = {}
-        if parse(torchvision.__version__) >= parse("0.13"):
-            if backbone_pretrained:
-                kwargs = {
-                    "weights": getattr(
-                        torchvision.models, f"ResNet{backbone[6:]}_Weights"
-                    ).DEFAULT
-                }
-            else:
-                kwargs = {"weights": None}
+        if backbone_pretrained:
+            kwargs = {
+                "weights": getattr(
+                    torchvision.models, f"ResNet{backbone[6:]}_Weights"
+                ).DEFAULT
+            }
         else:
-            kwargs = {"pretrained": backbone_pretrained}
+            kwargs = {"weights": None}
 
         self.backbone = getattr(resnet, backbone)(**kwargs)
 

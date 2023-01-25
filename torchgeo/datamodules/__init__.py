@@ -11,6 +11,7 @@ from .deepglobelandcover import DeepGlobeLandCoverDataModule
 from .etci2021 import ETCI2021DataModule
 from .eurosat import EuroSATDataModule
 from .fair1m import FAIR1MDataModule
+from .geo import GeoDataModule, NonGeoDataModule
 from .gid15 import GID15DataModule
 from .inria import InriaAerialImageLabelingDataModule
 from .landcoverai import LandCoverAIDataModule
@@ -25,6 +26,7 @@ from .so2sat import So2SatDataModule
 from .spacenet import SpaceNet1DataModule
 from .ucmerced import UCMercedDataModule
 from .usavars import USAVarsDataModule
+from .utils import MisconfigurationException
 from .vaihingen import Vaihingen2DDataModule
 from .xview import XView2DataModule
 
@@ -55,4 +57,9 @@ __all__ = (
     "USAVarsDataModule",
     "Vaihingen2DDataModule",
     "XView2DataModule",
+    # Base classes
+    "GeoDataModule",
+    "NonGeoDataModule",
+    # Utilities
+    "MisconfigurationException",
 )

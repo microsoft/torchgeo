@@ -1,14 +1,13 @@
 # setup
-setuptools==66.0.0
+setuptools==66.1.1
 
 # install
 einops==0.6.0
-fiona==1.9b1
+fiona==1.9b2
 kornia==0.6.9
 matplotlib==3.6.3
 numpy==1.24.1;python_version>='3.8'
 omegaconf==2.3.0
-packaging==23.0
 pillow==9.4.0
 pyproj==3.4.1;python_version>='3.8'
 pytorch-lightning[extra]==1.9.0

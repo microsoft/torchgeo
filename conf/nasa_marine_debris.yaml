@@ -1,5 +1,4 @@
 program:
-  seed: 0
   overwrite: True
 
 trainer:
@@ -15,7 +14,6 @@ experiment:
   module:
     model: "faster-rcnn"
     backbone: "resnet50"
-    pretrained: True
     num_classes: 2
     learning_rate: 1.2e-4
     learning_rate_schedule_patience: 6
@@ -23,5 +21,5 @@ experiment:
   datamodule:
     root: "data/nasamr/nasa_marine_debris"
     batch_size: 4
-    num_workers: 56
+    num_workers: 6
     val_split_pct: 0.2
