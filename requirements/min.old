@@ -54,3 +54,6 @@ pytest-cov==2.4.0
 
 # needed for scikit-image compatibility
 pooch==1.4.0
+
+# https://github.com/jquast/wcwidth/issues/36
+wcwidth!=0.2.1
