@@ -6,6 +6,7 @@ dependencies:
   - einops>=0.3
   - fiona>=1.8
   - h5py>=2.6
+  - matplotlib>=3.3
   - numpy>=1.17.2
   - pip
   - pycocotools>=2
@@ -36,7 +37,8 @@ dependencies:
     - pytest-cov>=2.4
     - pytorch-lightning>=1.5.1
     - git+https://github.com/pytorch/pytorch_sphinx_theme
-    - radiant-mlhub>=0.2.1
+    - pyupgrade>=1.24
+    - radiant-mlhub>=0.2.1,<0.5
     - rtree>=1
     - scikit-image>=0.18
     - scikit-learn>=0.21
