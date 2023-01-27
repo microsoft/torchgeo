@@ -1,5 +1,5 @@
 # docs
-ipython==8.8.0
+ipython==8.9.0
 ipywidgets==8.0.4
 nbsphinx==0.8.12
 sphinx==6.1.3
