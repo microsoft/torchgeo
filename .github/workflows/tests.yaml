@@ -33,10 +33,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.7', '3.8', '3.9', '3.10']
-        exclude:
-        - os: windows-latest
-          python-version: '3.7'
+        python-version: ['3.8', '3.9', '3.10']
     steps:
     - name: Clone repo
       uses: actions/checkout@v3.3.0
@@ -64,12 +61,6 @@ jobs:
       run: |
         pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
         pip list
-      if: ${{ matrix.python-version != '3.7' }}
-    - name: Install pip dependencies (3.7)
-      run: |
-        pip install -r requirements/required.old -r requirements/datasets.old -r requirements/tests.txt
-        pip list
-      if: ${{ matrix.python-version == '3.7' }}
     - name: Run pytest checks (Linux/macOS)
       run: pytest --cov=torchgeo --cov-report=xml --durations=10
       if: ${{ runner.os != 'Windows' }}
@@ -92,14 +83,13 @@ jobs:
     - name: Set up python
       uses: actions/setup-python@v4.5.0
       with:
-        python-version: '3.7'
+        python-version: '3.8'
     - name: Install apt dependencies (Linux)
       run: |
         sudo apt-get update
-        sudo apt-get install libgeos-dev libhdf5-dev unrar
+        sudo apt-get install unrar
     - name: Install pip dependencies
       run: |
-        pip install cython numpy==1.17.2  # needed by pycocotools
         pip install -r requirements/min-reqs.old -c requirements/min-cons.old
         pip list
     - name: Run pytest checks
