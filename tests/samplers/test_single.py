@@ -319,13 +319,13 @@ class TestSequentialGeoSampler:
     def sampler(
         self, forecast_ds: ForecastDataset, request: SubRequest
     ) -> SequentialGeoSampler:
-        time_unit, sample_window, target_window = request.param
+        time_unit, encoder_length, prediction_length = request.param
         return SequentialGeoSampler(
             forecast_ds,
             size=32,
             length=2,
-            sample_window=sample_window,
-            target_window=target_window,
+            encoder_length=encoder_length,
+            prediction_length=prediction_length,
             time_unit=time_unit,
         )
 

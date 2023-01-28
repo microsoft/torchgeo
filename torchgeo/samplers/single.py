@@ -185,8 +185,8 @@ class SequentialGeoSampler(GeoSampler):
         dataset: GeoDataset,
         size: Union[Tuple[float, float], float],
         length: Optional[int],
-        sample_window: int,
-        target_window: int,
+        encoder_length: int,
+        prediction_length: int,
         time_unit: str,
         time_range: Optional[Tuple[str, str]] = None,
         roi: Optional[BoundingBox] = None,
@@ -209,11 +209,11 @@ class SequentialGeoSampler(GeoSampler):
                 (defaults to approximately the maximal number of non-overlapping
                 :term:`chips <chip>` of size ``size`` that could be sampled from
                 the dataset each with a randomly chosen sequential time-series)
-            sample_window: time window for a single sample from the ``time-range``
+            encoder_length: time window for a single sample from the ``time-range``
                 long time-series in units of days, i.e. to sample data that falls within
-                a week specify sample_window=7
-            target_window: time window for corresponding target that follows
-                the ``sample_window`` in units of days
+                a week specify encoder_length=7
+            prediction_length: time window for corresponding target that follows
+                the ``encoder_length`` in units of days
             time_unit: unit of time, accepting 'hours', 'days', 'weeks', 'months',
                  'years'
             time_range: beginning and end string timestamp to consider
@@ -254,8 +254,8 @@ class SequentialGeoSampler(GeoSampler):
             time_unit in self.allowed_time_units
         ), f"Currently, only supporting one of {self.allowed_time_units} as unit."
         self.time_unit = time_unit
-        self.sample_window = sample_window
-        self.target_window = target_window
+        self.encoder_length = encoder_length
+        self.prediction_length = prediction_length
 
         if size_units == Units.PIXELS:
             self.size = (self.size[0] * self.res, self.size[1] * self.res)
@@ -274,7 +274,7 @@ class SequentialGeoSampler(GeoSampler):
                 and bounds.maxy - bounds.miny >= self.size[0]
             ):
                 # given that we satisfied geographical constraint
-                # need to find a hit for sample_window and sample time dimension here ?
+                # need to find a hit for encoder_length and sample time dimension here ?
                 if bounds.area > 0:
                     rows, cols = tile_to_chips(bounds, self.size)
                     self.length += rows * cols
@@ -346,7 +346,7 @@ class SequentialGeoSampler(GeoSampler):
         Returns:
             all subsequences in the time dimension
         """
-        # dates incremented by 1 time unit up to end_time_range - self.target_window
+        # dates incremented by 1 time unit up to end_time_range - self.prediction_length
         # because target window will be sequentially defined in
         # _retrieve_sequential_query
         all_timestamps_within_time_range = [
@@ -355,7 +355,7 @@ class SequentialGeoSampler(GeoSampler):
                 freq=self.rrule_mappings[self.time_unit],
                 dtstart=datetime.fromtimestamp(self.roi.mint),
                 until=datetime.fromtimestamp(self.roi.maxt)
-                - relativedelta(**{self.time_unit: self.target_window}),
+                - relativedelta(**{self.time_unit: self.prediction_length}),
             )
         ]
         # list of list with all timestamps in a sequence
@@ -365,7 +365,7 @@ class SequentialGeoSampler(GeoSampler):
                 zip(
                     *(
                         all_timestamps_within_time_range[i:]
-                        for i in range(self.sample_window)
+                        for i in range(self.encoder_length)
                     )
                 ),
             )
@@ -378,7 +378,7 @@ class SequentialGeoSampler(GeoSampler):
     def _retrieve_sequential_query(
         self, query: BoundingBox
     ) -> Tuple[BoundingBox, BoundingBox]:
-        """Retrieve a sequential query based on *sample_window* and *target_window*.
+        """Retrieve a sequential query based on *encoder_length* and *prediction_length*.
 
         Args:
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates
@@ -396,7 +396,7 @@ class SequentialGeoSampler(GeoSampler):
             mint=query.mint,
             maxt=(
                 datetime.fromtimestamp(query.mint)
-                + relativedelta(**{self.time_unit: self.sample_window})
+                + relativedelta(**{self.time_unit: self.encoder_length})
                 - timedelta(
                     microseconds=1
                 )  # subtract otherwise there is overlap to target
@@ -410,7 +410,7 @@ class SequentialGeoSampler(GeoSampler):
             mint=input_query.maxt,
             maxt=(
                 datetime.fromtimestamp(input_query.maxt)
-                + relativedelta(**{self.time_unit: self.target_window})
+                + relativedelta(**{self.time_unit: self.prediction_length})
             ).timestamp(),
         )
         return (input_query, target_query)

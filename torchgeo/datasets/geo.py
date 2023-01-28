@@ -1082,11 +1082,11 @@ class ForecastDataset(IntersectionDataset):
         target_samples = self.target_dataset[query[1]]
         samples = {
             "input": input_samples["image"],
-            "input_bbox": list(input_samples["bbox"]),
+            "input_bbox": input_samples["bbox"],
             "input_crs": input_samples["crs"],
             "input_dates": input_samples["dates"],
             "target": target_samples["image"],
-            "target_bbox": list(target_samples["bbox"]),
+            "target_bbox": target_samples["bbox"],
             "target_crs": target_samples["crs"],
             "target_dates": target_samples["dates"],
         }
