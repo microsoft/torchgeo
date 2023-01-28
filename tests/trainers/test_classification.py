@@ -9,6 +9,7 @@ import pytest
 import timm
 import torch
 import torchvision
+from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
@@ -24,7 +25,7 @@ from torchgeo.datamodules import (
     UCMercedDataModule,
 )
 from torchgeo.datasets import BigEarthNet, EuroSAT
-from torchgeo.models import ResNet18_Weights
+from torchgeo.models import ResNet18_Weights, ResNet50_Weights
 from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
 
 from .test_utils import ClassificationTestModel
@@ -109,6 +110,21 @@ class TestClassificationTask:
             "num_classes": 10,
             "weights": None,
         }
+
+    @pytest.fixture(params=[*ResNet50_Weights])
+    def weights(self, request: SubRequest) -> WeightsEnum:
+        return request.param
+
+    @pytest.fixture
+    def mocked_weights(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
+    ) -> WeightsEnum:
+        path = tmp_path / f"{weights}.pth"
+        model = timm.create_model("resnet50", in_chans=weights.meta["in_chans"])
+        torch.save(model.state_dict(), path)
+        monkeypatch.setattr(weights, "url", str(path))
+        monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
+        return weights
 
     @pytest.fixture
     def mocked_weights(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> WeightsEnum:
