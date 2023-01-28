@@ -19,6 +19,11 @@ jobs:
       uses: actions/setup-python@v4.5.0
       with:
         python-version: '3.10'
+        cache: 'pip'
+        cache-dependency-path: |
+          requirements/required.txt
+          requirements/datasets.txt
+          requirements/tests.txt
     - name: Install pip dependencies
       run: |
         pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
@@ -41,6 +46,11 @@ jobs:
       uses: actions/setup-python@v4.5.0
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: |
+          requirements/required.txt
+          requirements/datasets.txt
+          requirements/tests.txt
     - name: Setup headless display for pyvista
       uses: pyvista/setup-headless-display-action@v1
     - name: Install apt dependencies (Linux)
@@ -84,6 +94,8 @@ jobs:
       uses: actions/setup-python@v4.5.0
       with:
         python-version: '3.8'
+        cache: 'pip'
+        cache-dependecy-path: 'requirements/min.old'
     - name: Install apt dependencies (Linux)
       run: |
         sudo apt-get update
