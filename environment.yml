@@ -37,7 +37,7 @@ dependencies:
     - pytest-cov>=2.4
     - pytorch-lightning>=1.5.1
     - git+https://github.com/pytorch/pytorch_sphinx_theme
-    - pyupgrade>=1.24
+    - pyupgrade>=2.4
     - radiant-mlhub>=0.2.1,<0.5
     - rtree>=1
     - scikit-image>=0.18

@@ -44,7 +44,7 @@ black[jupyter]==21.8b0
 flake8==3.8.0
 isort[colors]==5.8.0
 pydocstyle[toml]==6.1.0
-pyupgrade==1.24.0
+pyupgrade==2.4.0
 
 # tests
 mypy==0.900
