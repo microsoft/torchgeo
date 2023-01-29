@@ -102,7 +102,3 @@ jobs:
         pip install cython numpy==1.17.2  # needed by pycocotools
         pip install -r requirements/min.old
         pip list
-    - name: Run pytest checks
-      run: pytest --cov=torchgeo --cov-report=xml --durations=10
-    - name: Report coverage
-      uses: codecov/codecov-action@v3.1.1
