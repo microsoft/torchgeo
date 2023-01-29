@@ -49,7 +49,7 @@ zipp==3.11.0
 
 # Jan 26, 2023
 nbclassic==0.4.8
-tensorboard-data-server==0.6.1
+#tensorboard-data-server==0.6.1
 
 ## Jan 24, 2023
 #jupyter_core==4.12.0
