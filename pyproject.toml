@@ -85,9 +85,6 @@ filterwarnings = [
     "ignore:Call to deprecated create function:DeprecationWarning:tensorboard.compat.proto",
     # https://github.com/treebeardtech/nbmake/issues/68
     'ignore:The \(fspath. py.path.local\) argument to NotebookFile is deprecated:pytest.PytestDeprecationWarning:nbmake.pytest_plugin',
-    # https://github.com/lanpa/tensorboardX/issues/653
-    # https://github.com/lanpa/tensorboardX/pull/654
-    "ignore:Call to deprecated create function:DeprecationWarning:tensorboardX",
     # https://github.com/kornia/kornia/issues/777
     "ignore:Default upsampling behavior when mode=bilinear is changed to align_corners=False since 0.4.0:UserWarning:torch.nn.functional",
     # https://github.com/scikit-image/scikit-image/issues/6663
