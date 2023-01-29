@@ -59,4 +59,4 @@ pooch==1.4.0
 wcwidth!=0.2.1
 
 # https://github.com/pypa/pip/issues/11760
-jupyter_client==7.4.9
+nbconvert<6
