@@ -43,8 +43,8 @@ torchvision==0.13.0
 zipfile-deflate64==0.2.0
 
 # Jan 27, 2023
-ipython==7.34.0
-#jupyter_client==7.4.9
+#ipython==7.34.0
+jupyter_client==7.4.9
 #zipp==3.11.0
 
 # Jan 26, 2023
