@@ -56,4 +56,4 @@ pytest-cov==2.4.0
 #pooch==1.4.0
 #
 ## https://github.com/jquast/wcwidth/issues/36
-#wcwidth!=0.2.1
+wcwidth!=0.2.1
