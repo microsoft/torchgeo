@@ -22,17 +22,17 @@ torchmetrics==0.10.0
 torchvision==0.13.0
 
 ## datasets
-h5py==2.6.0
-laspy==2.0.0
-opencv-python==3.4.2.17
-pandas==0.23.2
-pycocotools==2.0.0
-pyvista==0.20.0
-radiant-mlhub==0.2.1
-rarfile==3.0
-scikit-image==0.18.0
-scipy==1.6.2
-zipfile-deflate64==0.2.0
+#h5py==2.6.0
+#laspy==2.0.0
+#opencv-python==3.4.2.17
+#pandas==0.23.2
+#pycocotools==2.0.0
+#pyvista==0.20.0
+#radiant-mlhub==0.2.1
+#rarfile==3.0
+#scikit-image==0.18.0
+#scipy==1.6.2
+#zipfile-deflate64==0.2.0
 #
 ## docs
 ipywidgets==7.0.0
@@ -47,10 +47,10 @@ sphinx==4.0.0
 #pyupgrade==1.24.0
 #
 ## tests
-mypy==0.900
-nbmake==0.1
-pytest==6.1.2
-pytest-cov==2.4.0
+#mypy==0.900
+#nbmake==0.1
+#pytest==6.1.2
+#pytest-cov==2.4.0
 #
 ## needed for scikit-image compatibility
 #pooch==1.4.0
