@@ -12,7 +12,6 @@ pillow==8.0.0
 pyproj==3.0.0
 rasterio==1.2.0
 rtree==1.0.0
-scikit-learn==0.24
 segmentation-models-pytorch==0.2.0
 shapely==1.7.1
 timm==0.4.12
