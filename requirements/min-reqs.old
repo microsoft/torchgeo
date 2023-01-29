@@ -51,12 +51,3 @@ mypy==0.900
 nbmake==0.1
 pytest==6.1.2
 pytest-cov==2.4.0
-
-# needed for scikit-image compatibility
-pooch==1.4.0
-
-# https://github.com/jquast/wcwidth/issues/36
-wcwidth!=0.2.1
-
-# https://github.com/pypa/pip/issues/11760
-nbconvert<6
