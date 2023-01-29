@@ -21,6 +21,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
+        pip install -U pip
         pip install -r requirements/style.txt
         pip list
     - name: Run black checks
@@ -37,6 +38,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
+        pip install -U pip
         pip install -r requirements/style.txt
         pip list
     - name: Run flake8 checks
@@ -53,6 +55,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
+        pip install -U pip
         pip install -r requirements/style.txt
         pip list
     - name: Run isort checks
@@ -69,6 +72,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
+        pip install -U pip
         pip install -r requirements/style.txt
         pip list
     - name: Run pydocstyle checks
@@ -85,6 +89,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
+        pip install -U pip
         pip install -r requirements/style.txt
         pip list
     - name: Run pyupgrade checks

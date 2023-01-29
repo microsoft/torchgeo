@@ -19,6 +19,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
+        pip install -U pip
         pip install .[tests]
         pip list
     - name: Run pytest checks
@@ -35,6 +36,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
+        pip install -U pip
         pip install .[datasets,tests]
         pip list
     - name: Run integration checks
@@ -51,6 +53,7 @@ jobs:
         python-version: '3.10'
     - name: Install pip dependencies
       run: |
+        pip install -U pip
         pip install .[datasets,docs,tests]
         pip list
     - name: Run notebook checks
