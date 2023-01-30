@@ -358,7 +358,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
         return img, transform, crs
 
-    @lru_cache()
+    @lru_cache
     def _load_mask(self, transform: rasterio.Affine) -> Tensor:
         """Rasterizes the dataset's labels (in geojson format)."""
         # Create a mask layer out of the geojson

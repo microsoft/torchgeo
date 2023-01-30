@@ -134,7 +134,7 @@ class TropicalCyclone(NonGeoDataset):
         """
         return len(self.collection)
 
-    @lru_cache()
+    @lru_cache
     def _load_image(self, directory: str) -> Tensor:
         """Load a single image.
 
