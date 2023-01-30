@@ -51,6 +51,7 @@ class EuroSAT(NonGeoClassificationDataset):
     * https://ieeexplore.ieee.org/document/8519248
     """
 
+    # TODO: Change to https after https://github.com/phelber/EuroSAT/issues/10 is resolved
     url = "http://madm.dfki.de/files/sentinel/EuroSATallBands.zip"  # 2.0 GB download
     filename = "EuroSATallBands.zip"
     md5 = "5ac12b3b2557aa56e1826e981e8e200e"
@@ -104,6 +105,8 @@ class EuroSAT(NonGeoClassificationDataset):
 
     BAND_SETS = {"all": all_band_names, "rgb": rgb_bands}
 
+    # TODO: reset checksum to False after https://github.com/phelber/EuroSAT/issues/10
+    # is resolved
     def __init__(
         self,
         root: str = "data",
@@ -111,7 +114,7 @@ class EuroSAT(NonGeoClassificationDataset):
         bands: Sequence[str] = BAND_SETS["all"],
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new EuroSAT dataset instance.
 
