@@ -95,7 +95,9 @@ jobs:
       with:
         python-version: '3.8'
         cache: 'pip'
-        cache-dependecy-path: 'requirements/min.old'
+        cache-dependecy-path: |
+          requirements/min-reqs.old
+          requirements/min-cons.old
     - name: Install apt dependencies (Linux)
       run: |
         sudo apt-get update
