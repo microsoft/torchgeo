@@ -4,7 +4,7 @@
 """Common datamodule utilities."""
 
 import math
-from typing import Any, Optional, Sequence, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 from torch import Generator
@@ -57,7 +57,7 @@ def dataset_split(
 
 
 def group_shuffle_split(
-    groups: Sequence[Any],
+    groups: Any,
     train_size: Optional[float] = None,
     test_size: Optional[float] = None,
     random_state: Optional[int] = None,
@@ -96,8 +96,10 @@ def group_shuffle_split(
     if test_size is None and train_size is not None:
         test_size = 1 - train_size
 
+    assert train_size is not None and test_size is not None
+
     if train_size <= 0 or train_size >= 1 or test_size <= 0 or test_size >= 1:
-        raise ValueError("`train_size` and `test_size` must be in the range (0,1)")
+        raise ValueError("`train_size` and `test_size` must be in the range (0,1).")
 
     group_vals = set(groups)
     n_groups = len(group_vals)
@@ -106,8 +108,8 @@ def group_shuffle_split(
 
     if n_train_groups == 0 or n_test_groups == 0:
         raise ValueError(
-            f"{n_groups} were found, however the current settings of `train_size` and"
-            + "`test_size` result in 0 training or testing groups."
+            f"{n_groups} groups were found, however the current settings of "
+            + "`train_size` and `test_size` result in 0 training or testing groups."
         )
 
     generator = np.random.default_rng(seed=random_state)
