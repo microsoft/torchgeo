@@ -72,6 +72,8 @@ jobs:
       if: ${{ runner.os == 'Windows' }}
     - name: Report coverage
       uses: codecov/codecov-action@v3.1.1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
   minimum:
     name: minimum
     runs-on: ubuntu-latest
@@ -96,3 +98,5 @@ jobs:
       run: pytest --cov=torchgeo --cov-report=xml --durations=10
     - name: Report coverage
       uses: codecov/codecov-action@v3.1.1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
