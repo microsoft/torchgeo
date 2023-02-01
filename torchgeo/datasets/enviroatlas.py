@@ -416,10 +416,10 @@ class EnviroAtlas(GeoDataset):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
 
-        # Check if the extracted files already exist
         def exists(filename: str) -> bool:
             return os.path.exists(os.path.join(self.root, "enviroatlas_lotp", filename))
 
+        # Check if the extracted files already exist
         if all(map(exists, self.files)):
             return
 
