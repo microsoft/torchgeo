@@ -14,9 +14,9 @@ from .utils import check_integrity, download_url, extract_archive
 
 
 class UCMerced(NonGeoClassificationDataset):
-    """UC Merced dataset.
+    """UC Merced Land Use dataset.
 
-    The `UC Merced <http://weegee.vision.ucmerced.edu/datasets/landuse.html>`__
+    The `UC Merced Land Use <http://weegee.vision.ucmerced.edu/datasets/landuse.html>`_
     dataset is a land use classification dataset of 2.1k 256x256 1ft resolution RGB
     images of urban locations around the U.S. extracted from the USGS National Map Urban
     Area Imagery collection with 21 land use classes (100 images per class).
@@ -61,7 +61,7 @@ class UCMerced(NonGeoClassificationDataset):
     * https://dl.acm.org/doi/10.1145/1869790.1869829
     """
 
-    url = "http://weegee.vision.ucmerced.edu/datasets/UCMerced_LandUse.zip"  # 318 MB
+    url = "https://huggingface.co/datasets/torchgeo/ucmerced/resolve/main/UCMerced_LandUse.zip"  # noqa: E501
     filename = "UCMerced_LandUse.zip"
     md5 = "5b7ec56793786b6dc8a908e8854ac0e4"
 
