@@ -359,7 +359,6 @@ class EnviroAtlas(GeoDataset):
             query_box = shapely.geometry.box(minx, miny, maxx, maxy)
 
             for layer in self.layers:
-
                 fn = filenames[layer]
 
                 with rasterio.open(
@@ -416,6 +415,7 @@ class EnviroAtlas(GeoDataset):
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
+
         # Check if the extracted files already exist
         def exists(filename: str) -> bool:
             return os.path.exists(os.path.join(self.root, "enviroatlas_lotp", filename))

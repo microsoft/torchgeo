@@ -35,7 +35,7 @@ def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
 if __name__ == "__main__":
     work: "Queue[str]" = Queue()
 
-    for (model, lr, pretrained) in itertools.product(
+    for model, lr, pretrained in itertools.product(
         model_options, lr_options, pretrained_options
     ):
         experiment_name = f"{model}_{lr}_{pretrained}"
