@@ -34,10 +34,9 @@ def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
 if __name__ == "__main__":
     work: "Queue[str]" = Queue()
 
-    for (model, lr, loss, weights) in itertools.product(
+    for model, lr, loss, weights in itertools.product(
         model_options, lr_options, loss_options, weight_options
     ):
-
         experiment_name = f"{model}_{lr}_{loss}_{weights.replace('_','-')}"
 
         output_dir = os.path.join("output", "resisc45_experiments")
@@ -45,7 +44,6 @@ if __name__ == "__main__":
         config_file = os.path.join("conf", "resisc45.yaml")
 
         if not os.path.exists(os.path.join(output_dir, experiment_name)):
-
             command = (
                 "python train.py"
                 + f" config_file={config_file}"

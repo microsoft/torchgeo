@@ -29,7 +29,6 @@ class TestAbovegroundLiveWoodyBiomassDensity:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> AbovegroundLiveWoodyBiomassDensity:
-
         transforms = nn.Identity()
         monkeypatch.setattr(
             torchgeo.datasets.agb_live_woody_density, "download_url", download_url

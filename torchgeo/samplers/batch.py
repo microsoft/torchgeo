@@ -144,7 +144,6 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             # Choose random indices within that tile
             batch = []
             for _ in range(self.batch_size):
-
                 bounding_box = get_random_bounding_box(bounds, self.size, self.res)
                 batch.append(bounding_box)
 

@@ -1,5 +1,5 @@
 # style
-black[jupyter]==22.12.0
+black[jupyter]==23.1.0
 flake8==6.0.0
 isort[colors]==5.12.0
 pydocstyle[toml]==6.3.0
