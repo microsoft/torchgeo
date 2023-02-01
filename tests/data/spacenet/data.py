@@ -175,7 +175,6 @@ def main() -> None:
     ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 
     for dataset in datasets:
-
         collections = list(dataset.collection_md5_dict.keys())
         for collection in collections:
             dataset = cast(SpaceNet, dataset)

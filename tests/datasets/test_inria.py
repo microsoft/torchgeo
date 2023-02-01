@@ -19,7 +19,6 @@ class TestInriaAerialImageLabeling:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch
     ) -> InriaAerialImageLabeling:
-
         root = os.path.join("tests", "data", "inria")
         test_md5 = "478688944e4797c097d9387fd0b3f038"
         monkeypatch.setattr(InriaAerialImageLabeling, "md5", test_md5)

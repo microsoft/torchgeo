@@ -94,7 +94,6 @@ def main(args: argparse.Namespace) -> None:
     )
 
     for experiment_dir in os.listdir(args.input_dir):
-
         checkpoint_fn = None
         for fn in os.listdir(os.path.join(args.input_dir, experiment_dir)):
             if fn.startswith("epoch") and fn.endswith(".ckpt"):
@@ -109,7 +108,6 @@ def main(args: argparse.Namespace) -> None:
         checkpoint_fn = os.path.join(args.input_dir, experiment_dir, checkpoint_fn)
 
         try:
-
             model = ChesapeakeCVPRSegmentationTask.load_from_checkpoint(checkpoint_fn)
             model.freeze()
             model.eval()
@@ -136,7 +134,6 @@ def main(args: argparse.Namespace) -> None:
 
         # Test the loaded model against the test set from all states
         for test_splits in ALL_TEST_SPLITS:
-
             dm = ChesapeakeCVPRDataModule(
                 root=args.chesapeakecvpr_root,
                 train_splits=["de-train"],

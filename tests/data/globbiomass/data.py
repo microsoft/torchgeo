@@ -41,7 +41,6 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
 
 
 if __name__ == "__main__":
-
     for measurement, file_paths in files.items():
         zipfilename = f"N00E020_{measurement}.zip"
         files_to_zip = []
