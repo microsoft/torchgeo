@@ -3,7 +3,7 @@
 
 """NWPU VHR-10 datamodule."""
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple, Union
 
 import torch
 import torchvision
@@ -42,7 +42,7 @@ class VHR10DataModule(NonGeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: int = 512,
+        patch_size: Union[Tuple[int, int], int] = 512,
         num_workers: int = 0,
         val_split_pct: float = 0.2,
         test_split_pct: float = 0.2,
