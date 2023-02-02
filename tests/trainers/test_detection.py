@@ -12,7 +12,11 @@ from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 from torch.nn.modules import Module
 
-from torchgeo.datamodules import MisconfigurationException, NASAMarineDebrisDataModule
+from torchgeo.datamodules import (
+    MisconfigurationException,
+    NASAMarineDebrisDataModule,
+    VHR10DataModule,
+)
 from torchgeo.datasets import NASAMarineDebris, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.trainers import ObjectDetectionTask
@@ -67,7 +71,7 @@ def plot(*args: Any, **kwargs: Any) -> None:
 
 
 class TestObjectDetectionTask:
-    @pytest.mark.parametrize("name", ["nasa_marine_debris"])
+    @pytest.mark.parametrize("name", ["nasa_marine_debris", "vhr10"])
     @pytest.mark.parametrize("model_name", ["faster-rcnn", "fcos", "retinanet"])
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, model_name: str, fast_dev_run: bool

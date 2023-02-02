@@ -1,0 +1,28 @@
+program:
+  seed: 0
+  overwrite: True
+
+trainer:
+  accelerator: gpu
+  devices: 1
+  min_epochs: 5
+  max_epochs: 100
+  auto_lr_find: False
+  benchmark: True
+
+experiment:
+  task: "vhr10"
+  name: "vhr10_test"
+  module:
+    model: "faster-rcnn"
+    backbone: "resnet18"
+    pretrained: True
+    num_classes: 11
+    learning_rate: 1.3e-5
+    learning_rate_schedule_patience: 6
+    verbose: false
+  datamodule:
+    root: "data/vhr10"
+    batch_size: 3
+    num_workers: 12
+    patch_size: 512

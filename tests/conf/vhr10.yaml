@@ -1,0 +1,14 @@
+experiment:
+  task: "vhr10"
+  module:
+    detection_model: "faster-rcnn"
+    backbone: "resnet18"
+    num_classes: 11
+    learning_rate: 1e-4
+    learning_rate_schedule_patience: 6
+    verbose: false
+  datamodule:
+    root: "tests/data/vhr10"
+    batch_size: 1
+    num_workers: 0
+    patch_size: 4
