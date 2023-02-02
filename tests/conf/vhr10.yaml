@@ -1,7 +1,7 @@
 experiment:
   task: "vhr10"
   module:
-    detection_model: "faster-rcnn"
+    model: "faster-rcnn"
     backbone: "resnet18"
     num_classes: 11
     learning_rate: 1e-4

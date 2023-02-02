@@ -15,10 +15,9 @@ experiment:
   name: "vhr10_test"
   module:
     model: "faster-rcnn"
-    backbone: "resnet18"
-    pretrained: True
+    backbone: "resnet50"
     num_classes: 11
-    learning_rate: 1.3e-5
+    learning_rate: 1.6e-5
     learning_rate_schedule_patience: 6
     verbose: false
   datamodule:
