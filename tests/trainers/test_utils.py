@@ -6,12 +6,14 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
+import timm
 import torch
 import torch.nn as nn
 from torch.nn.modules import Module
 
 from torchgeo.trainers.utils import (
     extract_backbone,
+    get_input_layer_name_and_module,
     load_state_dict,
     reinit_initial_conv_layer,
 )
@@ -115,3 +117,10 @@ def test_reinit_initial_conv_layer() -> None:
     assert in_channels == 4
     assert k1 == 3 and k2 == 3
     assert new_conv_layer.stride[0] == 2
+
+
+def test_get_input_layer_name_and_module() -> None:
+    key, module = get_input_layer_name_and_module(timm.create_model("resnet18"))
+    assert key == "conv1"
+    assert isinstance(module, nn.Conv2d)
+    assert module.in_channels == 3
