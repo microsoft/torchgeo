@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.black]
 target-version = ["py38", "py39", "py310"]
-color = true
+# color = true # Problem with vscode autoformat see: https://github.com/microsoft/vscode-python/issues/16341
 skip_magic_trailing_comma = true
 
 [tool.coverage.report]
