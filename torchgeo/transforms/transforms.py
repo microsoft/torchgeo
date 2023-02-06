@@ -5,11 +5,10 @@
 
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import kornia
+import kornia.augmentation as K
 import torch
 from einops import rearrange
-from kornia.augmentation import GeometricAugmentationBase2D
-from kornia.augmentation.random_generator import CropGenerator
+from kornia.constants import DataKey
 from kornia.geometry import crop_by_indices
 from torch import Tensor
 from torch.nn.modules import Module
@@ -23,17 +22,21 @@ class AugmentationSequential(Module):
        Use :class:`kornia.augmentation.container.AugmentationSequential` instead.
     """
 
-    def __init__(self, *args: Module, data_keys: List[str]) -> None:
+    def __init__(
+        self,
+        *args: Union[K.base._AugmentationBase, K.ImageSequential],
+        data_keys: List[str],
+    ) -> None:
         """Initialize a new augmentation sequential instance.
 
         Args:
             *args: Sequence of kornia augmentations
-            data_keys: List of inputs to augment (e.g. ["image", "mask", "boxes"])
+            data_keys: List of inputs to augment (e.g., ["image", "mask", "boxes"])
         """
         super().__init__()
         self.data_keys = data_keys
 
-        keys = []
+        keys: List[Union[str, int, DataKey]] = []
         for key in data_keys:
             if key == "image":
                 keys.append("input")
@@ -42,7 +45,7 @@ class AugmentationSequential(Module):
             else:
                 keys.append(key)
 
-        self.augs = kornia.augmentation.AugmentationSequential(*args, data_keys=keys)
+        self.augs = K.AugmentationSequential(*args, data_keys=keys)
 
     def forward(self, batch: Dict[str, Tensor]) -> Dict[str, Tensor]:
         """Perform augmentations and update data dict.
@@ -84,7 +87,7 @@ class AugmentationSequential(Module):
         return batch
 
 
-class _RandomNCrop(GeometricAugmentationBase2D):
+class _RandomNCrop(K.GeometricAugmentationBase2D):
     """Take N random crops of a tensor."""
 
     def __init__(self, size: Tuple[int, int], num: int) -> None:
@@ -138,7 +141,7 @@ class _RandomNCrop(GeometricAugmentationBase2D):
         return torch.cat(out)
 
 
-class _NCropGenerator(CropGenerator):
+class _NCropGenerator(K.random_generator.CropGenerator):
     """Generate N random crops."""
 
     def __init__(self, size: Union[Tuple[int, int], Tensor], num: int) -> None:
