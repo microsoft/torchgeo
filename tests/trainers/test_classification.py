@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, Dict, Type, cast
+from typing import Any, Dict, Tuple, Type, cast
 
 import pytest
 import timm
@@ -25,7 +25,7 @@ from torchgeo.datamodules import (
     UCMercedDataModule,
 )
 from torchgeo.datasets import BigEarthNet, EuroSAT
-from torchgeo.models import ResNet18_Weights, ResNet50_Weights
+from torchgeo.models import get_model_weights, list_models
 from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
 
 from .test_utils import ClassificationTestModel
@@ -111,30 +111,27 @@ class TestClassificationTask:
             "weights": None,
         }
 
-    @pytest.fixture(params=[*ResNet50_Weights])
+    @pytest.fixture(
+        params=[
+            (model, weight)
+            for model in list_models()
+            for weight in get_model_weights(model)
+        ]
+    )
     def weights(self, request: SubRequest) -> WeightsEnum:
         return request.param
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: Tuple[str, WeightsEnum]
     ) -> WeightsEnum:
-        path = tmp_path / f"{weights}.pth"
-        model = timm.create_model("resnet50", in_chans=weights.meta["in_chans"])
+        model_name, weight = weights
+        path = tmp_path / f"{weight}.pth"
+        model = timm.create_model(model_name, in_chans=weight.meta["in_chans"])
         torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights, "url", str(path))
+        monkeypatch.setattr(weight, "url", str(path))
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
-        return weights
-
-    @pytest.fixture
-    def mocked_weights(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> WeightsEnum:
-        weights = ResNet18_Weights.SENTINEL2_ALL_MOCO
-        path = tmp_path / f"{weights}.pth"
-        model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"])
-        torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights, "url", str(path))
-        monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
-        return weights
+        return weight
 
     def test_weight_file(self, model_kwargs: Dict[str, Any], checkpoint: str) -> None:
         model_kwargs["weights"] = checkpoint

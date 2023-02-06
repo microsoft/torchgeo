@@ -54,13 +54,11 @@ def extract_backbone(path: str) -> Tuple[str, "OrderedDict[str, Tensor]"]:
     return name, state_dict
 
 
-def get_input_layer_name_and_module(model: Module) -> Tuple[str, Module]:
+def _get_input_layer_name_and_module(model: Module) -> Tuple[str, Module]:
     """Retrieve the input layer name and module from a timm model.
 
     Args:
         model: timm model
-
-    .. versionadded: 0.4.1
     """
     keys = []
     children = list(model.named_children())
@@ -87,7 +85,7 @@ def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Mo
         If input channels in model != pretrained model input channels
         If num output classes in model != pretrained model num classes
     """
-    input_module_key, input_module = get_input_layer_name_and_module(model)
+    input_module_key, input_module = _get_input_layer_name_and_module(model)
     in_channels = input_module.in_channels
     expected_in_channels = state_dict[input_module_key + ".weight"].shape[1]
 

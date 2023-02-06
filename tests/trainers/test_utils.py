@@ -12,8 +12,8 @@ import torch.nn as nn
 from torch.nn.modules import Module
 
 from torchgeo.trainers.utils import (
+    _get_input_layer_name_and_module,
     extract_backbone,
-    get_input_layer_name_and_module,
     load_state_dict,
     reinit_initial_conv_layer,
 )
@@ -120,7 +120,7 @@ def test_reinit_initial_conv_layer() -> None:
 
 
 def test_get_input_layer_name_and_module() -> None:
-    key, module = get_input_layer_name_and_module(timm.create_model("resnet18"))
+    key, module = _get_input_layer_name_and_module(timm.create_model("resnet18"))
     assert key == "conv1"
     assert isinstance(module, nn.Conv2d)
     assert module.in_channels == 3
