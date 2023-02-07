@@ -140,6 +140,7 @@ class TestClassificationTask:
     def test_weight_enum(
         self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
     ) -> None:
+        model_kwargs["model"] = mocked_weights.meta["model"]
         model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
         model_kwargs["weights"] = mocked_weights
         with pytest.warns(UserWarning):
@@ -148,6 +149,7 @@ class TestClassificationTask:
     def test_weight_str(
         self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
     ) -> None:
+        model_kwargs["model"] = mocked_weights.meta["model"]
         model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
         model_kwargs["weights"] = str(mocked_weights)
         with pytest.warns(UserWarning):
