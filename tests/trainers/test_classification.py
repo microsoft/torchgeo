@@ -113,9 +113,9 @@ class TestClassificationTask:
 
     @pytest.fixture(
         params=[
-            (model, weight)
+            weights
             for model in list_models()
-            for weight in get_model_weights(model)
+            for weights in get_model_weights(model)
         ]
     )
     def weights(self, request: SubRequest) -> WeightsEnum:
@@ -123,15 +123,14 @@ class TestClassificationTask:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: Tuple[str, WeightsEnum]
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
     ) -> WeightsEnum:
-        model_name, weight = weights
-        path = tmp_path / f"{weight}.pth"
-        model = timm.create_model(model_name, in_chans=weight.meta["in_chans"])
+        path = tmp_path / f"{weights}.pth"
+        model = timm.create_model(weights.meta["model"], in_chans=weights.meta["in_chans"])
         torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weight, "url", str(path))
+        monkeypatch.setattr(weights, "url", str(path))
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
-        return weight
+        return weights
 
     def test_weight_file(self, model_kwargs: Dict[str, Any], checkpoint: str) -> None:
         model_kwargs["weights"] = checkpoint
@@ -141,6 +140,7 @@ class TestClassificationTask:
     def test_weight_enum(
         self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
     ) -> None:
+        model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
         model_kwargs["weights"] = mocked_weights
         with pytest.warns(UserWarning):
             ClassificationTask(**model_kwargs)
@@ -148,6 +148,7 @@ class TestClassificationTask:
     def test_weight_str(
         self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
     ) -> None:
+        model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
         model_kwargs["weights"] = str(mocked_weights)
         with pytest.warns(UserWarning):
             ClassificationTask(**model_kwargs)
