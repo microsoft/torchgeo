@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, Dict, Tuple, Type, cast
+from typing import Any, Dict, Type, cast
 
 import pytest
 import timm
@@ -113,9 +113,7 @@ class TestClassificationTask:
 
     @pytest.fixture(
         params=[
-            weights
-            for model in list_models()
-            for weights in get_model_weights(model)
+            weights for model in list_models() for weights in get_model_weights(model)
         ]
     )
     def weights(self, request: SubRequest) -> WeightsEnum:
@@ -126,7 +124,9 @@ class TestClassificationTask:
         self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
     ) -> WeightsEnum:
         path = tmp_path / f"{weights}.pth"
-        model = timm.create_model(weights.meta["model"], in_chans=weights.meta["in_chans"])
+        model = timm.create_model(
+            weights.meta["model"], in_chans=weights.meta["in_chans"]
+        )
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights, "url", str(path))
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
@@ -165,7 +165,7 @@ class TestClassificationTask:
         ClassificationTask(**model_kwargs)
 
     @pytest.mark.slow
-    def test_weight_str(
+    def test_weight_str_download(
         self, model_kwargs: Dict[str, Any], weights: WeightsEnum
     ) -> None:
         model_kwargs["model"] = weights.meta["model"]
