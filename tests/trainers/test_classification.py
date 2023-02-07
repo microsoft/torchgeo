@@ -155,6 +155,26 @@ class TestClassificationTask:
         with pytest.warns(UserWarning):
             ClassificationTask(**model_kwargs)
 
+    @pytest.mark.slow
+    def test_weight_enum_download(
+        self, model_kwargs: Dict[str, Any], weights: WeightsEnum
+    ) -> None:
+        model_kwargs["model"] = weights.meta["model"]
+        model_kwargs["in_channels"] = weights.meta["in_chans"]
+        model_kwargs["weights"] = weights
+        with pytest.warns(UserWarning):
+            ClassificationTask(**model_kwargs)
+
+    @pytest.mark.slow
+    def test_weight_str(
+        self, model_kwargs: Dict[str, Any], weights: WeightsEnum
+    ) -> None:
+        model_kwargs["model"] = weights.meta["model"]
+        model_kwargs["in_channels"] = weights.meta["in_chans"]
+        model_kwargs["weights"] = str(weights)
+        with pytest.warns(UserWarning):
+            ClassificationTask(**model_kwargs)
+
     def test_invalid_loss(self, model_kwargs: Dict[str, Any]) -> None:
         model_kwargs["loss"] = "invalid_loss"
         match = "Loss type 'invalid_loss' is not valid."
