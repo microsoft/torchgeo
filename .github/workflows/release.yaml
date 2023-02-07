@@ -78,3 +78,6 @@ jobs:
       env:
         MLHUB_API_KEY: ${{ secrets.MLHUB_API_KEY }}
       run: pytest --nbmake docs/tutorials --durations=10
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
