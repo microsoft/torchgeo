@@ -80,10 +80,6 @@ class TestBYOLTask:
 
         # Instantiate model
         model_kwargs = conf_dict["module"]
-        model_kwargs["image_sizes"] = (
-            datamodule_kwargs["patch_size"],
-            datamodule_kwargs["patch_size"],
-        )
         model = BYOLTask(**model_kwargs)
 
         model.backbone = SegmentationTestModel(**model_kwargs)
@@ -108,7 +104,6 @@ class TestBYOLTask:
             "loss": "ce",
             "num_classes": 10,
             "weights": None,
-            "image_sizes": (224, 224),
         }
 
     @pytest.fixture(
