@@ -313,7 +313,11 @@ class BYOLTask(pl.LightningModule):
                 state_dict = get_weight(weights).get_state_dict(progress=True)
             backbone = utils.load_state_dict(backbone, state_dict)
 
-        self.model = BYOL(backbone, in_channels=in_channels, image_size=(256, 256))
+        self.model = BYOL(
+            backbone,
+            in_channels=in_channels,
+            image_size=self.hyperparams["image_sizes"],
+        )
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize a LightningModule for pre-training a model with BYOL.
@@ -326,6 +330,8 @@ class BYOLTask(pl.LightningModule):
                 or the path to a saved model state dict.
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
+            image_size: tuple of height, width that define image size
+                used in BYOL Task
 
         Raises:
             ValueError: if kwargs arguments are invalid
@@ -333,6 +339,9 @@ class BYOLTask(pl.LightningModule):
         .. versionchanged:: 0.4
            The *backbone_name* parameter was renamed to *backbone*. Change backbone
            support from torchvision.models to timm.
+
+        .. versionchanged:: 0.4.1
+            The *image_size* parameter is introduced to give more flexibility.
         """
         super().__init__()
 
