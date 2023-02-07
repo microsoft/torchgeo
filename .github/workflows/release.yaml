@@ -17,7 +17,14 @@ jobs:
       uses: actions/setup-python@v4.5.0
       with:
         python-version: '3.10'
+    - name: Cache dependencies
+      uses: actions/cache@v3.2.4
+      id: cache
+      with:
+        path: ${{ env.pythonLocation }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('setup.cfg') }}
     - name: Install pip dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         pip install .[tests]
         pip list
@@ -33,7 +40,14 @@ jobs:
       uses: actions/setup-python@v4.5.0
       with:
         python-version: '3.10'
+    - name: Cache dependencies
+      uses: actions/cache@v3.2.4
+      id: cache
+      with:
+        path: ${{ env.pythonLocation }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('setup.cfg') }}
     - name: Install pip dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         pip install .[datasets,tests]
         pip list
@@ -49,7 +63,14 @@ jobs:
       uses: actions/setup-python@v4.5.0
       with:
         python-version: '3.10'
+    - name: Cache dependencies
+      uses: actions/cache@v3.2.4
+      id: cache
+      with:
+        path: ${{ env.pythonLocation }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('setup.cfg') }}
     - name: Install pip dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         pip install .[datasets,docs,tests]
         pip list
