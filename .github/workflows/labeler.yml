@@ -1,7 +1,6 @@
 name: "labeler"
 on:
 - pull_request_target
-
 jobs:
   label:
     runs-on: ubuntu-latest
@@ -10,3 +9,6 @@ jobs:
       with:
         repo-token: "${{ secrets.GITHUB_TOKEN }}"
         sync-labels: true
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
