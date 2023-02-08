@@ -157,7 +157,7 @@ class FAIR1M(NonGeoDataset):
     }
 
     image_root: str = "images"
-    labels_root: str = "labelXmls"
+    labels_root: str = "labelXml"
     filenames = ["images.zip", "labelXmls.zip"]
     md5s = ["a460fe6b1b5b276bf856ce9ac72d6568", "ca8666dc43a553f8d65e5dc671a8ac3c"]
 
