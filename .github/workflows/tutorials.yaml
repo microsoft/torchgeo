@@ -1,0 +1,41 @@
+name: tutorials
+on:
+  push:
+    branches:
+    - main
+    paths:
+    - docs/tutorials/**
+  pull_request:
+    branches:
+    - main
+    paths:
+    - docs/tutorials/**
+jobs:
+  notebooks:
+    name: notebooks
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone repo
+      uses: actions/checkout@v3.3.0
+    - name: Set up python
+      uses: actions/setup-python@v4.5.0
+      with:
+        python-version: '3.10'
+    - name: Cache dependencies
+      uses: actions/cache@v3.2.4
+      id: cache
+      with:
+        path: ${{ env.pythonLocation }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/datasets.txt') }}-${{ hashFiles('requirements/tests.txt') }}
+    - name: Install pip dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
+        pip list
+    - name: Run notebook checks
+      env:
+        MLHUB_API_KEY: ${{ secrets.MLHUB_API_KEY }}
+      run: pytest --nbmake docs/tutorials --durations=10
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
