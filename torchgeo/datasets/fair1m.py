@@ -53,7 +53,7 @@ def parse_pascal_voc(path: str) -> Dict[str, Any]:
 class FAIR1M(NonGeoDataset):
     """FAIR1M dataset.
 
-    The `FAIR1M <http://gaofen-challenge.com/benchmark>`__
+    The `FAIR1M <https://www.gaofen-challenge.com/benchmark>`__
     dataset is a dataset for remote sensing fine-grained oriented object detection.
 
     Dataset features:
@@ -159,7 +159,7 @@ class FAIR1M(NonGeoDataset):
     image_root: str = "images"
     labels_root: str = "labelXml"
     filenames = ["images.zip", "labelXmls.zip"]
-    md5s = ["a460fe6b1b5b276bf856ce9ac72d6568", "ecef7bd264fcbc533bec5e9e1cacaff1"]
+    md5s = ["a460fe6b1b5b276bf856ce9ac72d6568", "80f833ff355f91445c92a0c0c1fa7414"]
 
     def __init__(
         self,
