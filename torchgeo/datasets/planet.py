@@ -8,7 +8,6 @@ from .utils import percentile_normalization
 class PlanetscopeAnalyticSR(RasterDataset):
 
     filename_glob = "*AnalyticMS_SR*.tif"
-    # filename_regex = r"^.(?P<date>\d{8}_\d{6})_"
     # date_format = "%Y%m%d_%H%M%S"
     is_image = True
     separate_files = False
