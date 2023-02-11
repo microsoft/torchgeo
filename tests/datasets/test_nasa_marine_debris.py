@@ -34,7 +34,7 @@ class Collection_corrupted:
                 f.write("bad")
 
 
-def fetch_corrupted(collection_id: str, **kwargs: str) -> Collection:
+def fetch_corrupted(collection_id: str, **kwargs: str) -> Collection_corrupted:
     return Collection_corrupted()
 
 
