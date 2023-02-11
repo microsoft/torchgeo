@@ -25,6 +25,7 @@ class Collection:
 def fetch(collection_id: str, **kwargs: str) -> Collection:
     return Collection()
 
+
 class Collection_corrupted:
     def download(self, output_dir: str, **kwargs: str) -> None:
         filenames = NASAMarineDebris.filenames
@@ -80,7 +81,9 @@ class TestNASAMarineDebris:
         with pytest.raises(RuntimeError, match="Dataset checksum mismatch."):
             NASAMarineDebris(root=str(tmp_path), download=False, checksum=True)
 
-    def test_corrupted_new_download(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    def test_corrupted_new_download(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
         with pytest.raises(RuntimeError, match="Dataset checksum mismatch."):
             radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
             monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_corrupted)
