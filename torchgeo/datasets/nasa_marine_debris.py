@@ -193,7 +193,7 @@ class NASAMarineDebris(NonGeoDataset):
             filepath = os.path.join(self.root, filename)
             if os.path.exists(filepath):
                 if self.checksum and not check_integrity(filepath, md5):
-                    raise RuntimeError("Dataset found, but corrupted.")
+                    raise RuntimeError("Dataset checksum mismatch.")
                 exists.append(True)
                 extract_archive(filepath)
             else:

@@ -25,6 +25,17 @@ class Collection:
 def fetch(collection_id: str, **kwargs: str) -> Collection:
     return Collection()
 
+class Collection_corrupted:
+    def download(self, output_dir: str, **kwargs: str) -> None:
+        filenames = NASAMarineDebris.filenames
+        for filename in filenames:
+            with open(os.path.join(output_dir, filename), "w") as f:
+                f.write("bad")
+
+
+def fetch_corrupted(collection_id: str, **kwargs: str) -> Collection:
+    return Collection_corrupted()
+
 
 class TestNASAMarineDebris:
     @pytest.fixture()
@@ -60,6 +71,20 @@ class TestNASAMarineDebris:
         os.makedirs(str(tmp_path), exist_ok=True)
         Collection().download(output_dir=str(tmp_path))
         NASAMarineDebris(root=str(tmp_path), download=False)
+
+    def test_corrupted_previously_downloaded(self, tmp_path: Path) -> None:
+        filenames = NASAMarineDebris.filenames
+        for filename in filenames:
+            with open(os.path.join(tmp_path, filename), "w") as f:
+                f.write("bad")
+        with pytest.raises(RuntimeError, match="Dataset checksum mismatch."):
+            NASAMarineDebris(root=str(tmp_path), download=False, checksum=True)
+
+    def test_corrupted_new_download(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+        with pytest.raises(RuntimeError, match="Dataset checksum mismatch."):
+            radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+            monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_corrupted)
+            NASAMarineDebris(root=str(tmp_path), download=True, checksum=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         err = "Dataset not found in `root` directory and `download=False`, "
