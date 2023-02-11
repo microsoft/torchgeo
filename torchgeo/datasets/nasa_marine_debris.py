@@ -14,7 +14,7 @@ from torch import Tensor
 from torchvision.utils import draw_bounding_boxes
 
 from .geo import NonGeoDataset
-from .utils import download_radiant_mlhub_dataset, extract_archive
+from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
 
 
 class NASAMarineDebris(NonGeoDataset):
@@ -51,7 +51,7 @@ class NASAMarineDebris(NonGeoDataset):
     .. versionadded:: 0.2
     """
 
-    dataset_id = "nasa_marine_debris"
+    collection_ids = ["nasa_marine_debris_source", "nasa_marine_debris_labels"]
     directories = ["nasa_marine_debris_source", "nasa_marine_debris_labels"]
     filenames = ["nasa_marine_debris_source.tar.gz", "nasa_marine_debris_labels.tar.gz"]
     md5s = ["fe8698d1e68b3f24f0b86b04419a797d", "d8084f5a72778349e07ac90ec1e1d990"]
@@ -189,9 +189,11 @@ class NASAMarineDebris(NonGeoDataset):
 
         # Check if zip file already exists (if so then extract)
         exists = []
-        for filename in self.filenames:
+        for filename, md5 in zip(self.filenames, self.md5s):
             filepath = os.path.join(self.root, filename)
             if os.path.exists(filepath):
+                if self.checksum and not check_integrity(filepath, md5):
+                    raise RuntimeError("Dataset found, but corrupted.")
                 exists.append(True)
                 extract_archive(filepath)
             else:
@@ -208,11 +210,13 @@ class NASAMarineDebris(NonGeoDataset):
                 "to automatically download the dataset."
             )
 
-        # TODO: need a checksum check in here post downloading
         # Download and extract the dataset
-        download_radiant_mlhub_dataset(self.dataset_id, self.root, self.api_key)
-        for filename in self.filenames:
+        for collection_id in self.collection_ids:
+            download_radiant_mlhub_collection(collection_id, self.root, self.api_key)
+        for filename, md5 in zip(self.filenames, self.md5s):
             filepath = os.path.join(self.root, filename)
+            if self.checksum and not check_integrity(filepath, md5):
+                raise RuntimeError("Dataset checksum mismatch.")
             extract_archive(filepath)
 
     def plot(
