@@ -54,6 +54,23 @@ def extract_backbone(path: str) -> Tuple[str, "OrderedDict[str, Tensor]"]:
     return name, state_dict
 
 
+def _get_input_layer_name_and_module(model: Module) -> Tuple[str, Module]:
+    """Retrieve the input layer name and module from a timm model.
+
+    Args:
+        model: timm model
+    """
+    keys = []
+    children = list(model.named_children())
+    while children != []:
+        name, module = children[0]
+        keys.append(name)
+        children = list(module.named_children())
+
+    key = ".".join(keys)
+    return key, module
+
+
 def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Module:
     """Load pretrained resnet weights to a model.
 
@@ -68,27 +85,32 @@ def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Mo
         If input channels in model != pretrained model input channels
         If num output classes in model != pretrained model num classes
     """
-    in_channels = cast(nn.Module, model.conv1).in_channels
-    expected_in_channels = state_dict["conv1.weight"].shape[1]
+    input_module_key, input_module = _get_input_layer_name_and_module(model)
+    in_channels = input_module.in_channels
+    expected_in_channels = state_dict[input_module_key + ".weight"].shape[1]
 
-    num_classes = cast(nn.Module, model.fc).out_features
+    output_module_key, output_module = list(model.named_children())[-1]
+    num_classes = output_module.out_features
     expected_num_classes = None
-    if "fc.weight" in state_dict:
-        expected_num_classes = state_dict["fc.weight"].shape[0]
+    if output_module_key + ".weight" in state_dict:
+        expected_num_classes = state_dict[output_module_key + ".weight"].shape[0]
 
     if in_channels != expected_in_channels:
         warnings.warn(
             f"input channels {in_channels} != input channels in pretrained"
             f" model {expected_in_channels}. Overriding with new input channels"
         )
-        del state_dict["conv1.weight"]
+        del state_dict[input_module_key + ".weight"]
 
     if expected_num_classes and num_classes != expected_num_classes:
         warnings.warn(
             f"num classes {num_classes} != num classes in pretrained model"
             f" {expected_num_classes}. Overriding with new num classes"
         )
-        del state_dict["fc.weight"], state_dict["fc.bias"]
+        del (
+            state_dict[output_module_key + ".weight"],
+            state_dict[output_module_key + ".bias"],
+        )
 
     model.load_state_dict(state_dict, strict=False)
     return model
