@@ -9,6 +9,7 @@ import pytest
 import timm
 import torch
 import torchvision
+from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
@@ -20,7 +21,7 @@ from torchgeo.datamodules import (
     TropicalCycloneDataModule,
 )
 from torchgeo.datasets import TropicalCyclone
-from torchgeo.models import ResNet18_Weights
+from torchgeo.models import get_model_weights, list_models
 from torchgeo.trainers import RegressionTask
 
 from .test_utils import RegressionTestModel
@@ -86,11 +87,22 @@ class TestRegressionTask:
             "in_channels": 3,
         }
 
+    @pytest.fixture(
+        params=[
+            weights for model in list_models() for weights in get_model_weights(model)
+        ]
+    )
+    def weights(self, request: SubRequest) -> WeightsEnum:
+        return request.param
+
     @pytest.fixture
-    def mocked_weights(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> WeightsEnum:
-        weights = ResNet18_Weights.SENTINEL2_RGB_MOCO
+    def mocked_weights(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
+    ) -> WeightsEnum:
         path = tmp_path / f"{weights}.pth"
-        model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"])
+        model = timm.create_model(
+            weights.meta["model"], in_chans=weights.meta["in_chans"]
+        )
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights, "url", str(path))
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
@@ -104,6 +116,8 @@ class TestRegressionTask:
     def test_weight_enum(
         self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
     ) -> None:
+        model_kwargs["model"] = mocked_weights.meta["model"]
+        model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
         model_kwargs["weights"] = mocked_weights
         with pytest.warns(UserWarning):
             RegressionTask(**model_kwargs)
@@ -111,9 +125,29 @@ class TestRegressionTask:
     def test_weight_str(
         self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
     ) -> None:
+        model_kwargs["model"] = mocked_weights.meta["model"]
+        model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
         model_kwargs["weights"] = str(mocked_weights)
         with pytest.warns(UserWarning):
             RegressionTask(**model_kwargs)
+
+    @pytest.mark.slow
+    def test_weight_enum_download(
+        self, model_kwargs: Dict[str, Any], weights: WeightsEnum
+    ) -> None:
+        model_kwargs["model"] = weights.meta["model"]
+        model_kwargs["in_channels"] = weights.meta["in_chans"]
+        model_kwargs["weights"] = weights
+        RegressionTask(**model_kwargs)
+
+    @pytest.mark.slow
+    def test_weight_str_download(
+        self, model_kwargs: Dict[str, Any], weights: WeightsEnum
+    ) -> None:
+        model_kwargs["model"] = weights.meta["model"]
+        model_kwargs["in_channels"] = weights.meta["in_chans"]
+        model_kwargs["weights"] = str(weights)
+        RegressionTask(**model_kwargs)
 
     def test_no_rgb(
         self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any], fast_dev_run: bool

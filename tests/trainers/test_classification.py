@@ -9,6 +9,7 @@ import pytest
 import timm
 import torch
 import torchvision
+from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
@@ -24,7 +25,7 @@ from torchgeo.datamodules import (
     UCMercedDataModule,
 )
 from torchgeo.datasets import BigEarthNet, EuroSAT
-from torchgeo.models import ResNet18_Weights
+from torchgeo.models import get_model_weights, list_models
 from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
 
 from .test_utils import ClassificationTestModel
@@ -110,11 +111,22 @@ class TestClassificationTask:
             "weights": None,
         }
 
+    @pytest.fixture(
+        params=[
+            weights for model in list_models() for weights in get_model_weights(model)
+        ]
+    )
+    def weights(self, request: SubRequest) -> WeightsEnum:
+        return request.param
+
     @pytest.fixture
-    def mocked_weights(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> WeightsEnum:
-        weights = ResNet18_Weights.SENTINEL2_ALL_MOCO
+    def mocked_weights(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
+    ) -> WeightsEnum:
         path = tmp_path / f"{weights}.pth"
-        model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"])
+        model = timm.create_model(
+            weights.meta["model"], in_chans=weights.meta["in_chans"]
+        )
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights, "url", str(path))
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
@@ -128,6 +140,8 @@ class TestClassificationTask:
     def test_weight_enum(
         self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
     ) -> None:
+        model_kwargs["model"] = mocked_weights.meta["model"]
+        model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
         model_kwargs["weights"] = mocked_weights
         with pytest.warns(UserWarning):
             ClassificationTask(**model_kwargs)
@@ -135,9 +149,29 @@ class TestClassificationTask:
     def test_weight_str(
         self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
     ) -> None:
+        model_kwargs["model"] = mocked_weights.meta["model"]
+        model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
         model_kwargs["weights"] = str(mocked_weights)
         with pytest.warns(UserWarning):
             ClassificationTask(**model_kwargs)
+
+    @pytest.mark.slow
+    def test_weight_enum_download(
+        self, model_kwargs: Dict[str, Any], weights: WeightsEnum
+    ) -> None:
+        model_kwargs["model"] = weights.meta["model"]
+        model_kwargs["in_channels"] = weights.meta["in_chans"]
+        model_kwargs["weights"] = weights
+        ClassificationTask(**model_kwargs)
+
+    @pytest.mark.slow
+    def test_weight_str_download(
+        self, model_kwargs: Dict[str, Any], weights: WeightsEnum
+    ) -> None:
+        model_kwargs["model"] = weights.meta["model"]
+        model_kwargs["in_channels"] = weights.meta["in_chans"]
+        model_kwargs["weights"] = str(weights)
+        ClassificationTask(**model_kwargs)
 
     def test_invalid_loss(self, model_kwargs: Dict[str, Any]) -> None:
         model_kwargs["loss"] = "invalid_loss"
