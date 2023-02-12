@@ -136,7 +136,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_RGB_SECO = Weights(
-        url="https://huggingface.co/torchgeo/resnet50_sentinel2_rgb_seco/blob/main/resnet50_sentinel2_rgb_seco-584035db.pth",  # noqa: E501
+        url="https://huggingface.co/torchgeo/resnet50_sentinel2_rgb_seco/resolve/main/resnet50_sentinel2_rgb_seco-584035db.pth",  # noqa: E501
         transforms=nn.Identity(),
         meta={
             "dataset": "SeCo Dataset",
