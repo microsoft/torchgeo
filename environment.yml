@@ -38,7 +38,7 @@ dependencies:
     - pytorch-lightning>=1.5.1
     - git+https://github.com/pytorch/pytorch_sphinx_theme
     - pyupgrade>=2.4
-    - radiant-mlhub>=0.2.1
+    - radiant-mlhub>=0.2.1,<0.6
     - rtree>=1
     - scikit-image>=0.18
     - scikit-learn>=0.22
