@@ -1,9 +1,9 @@
 name: tests
 on:
-  push:
-    branches:
-    - main
-    - release**
+  # push:
+  #   branches:
+  #   - main
+  #   - release**
   pull_request:
     branches:
     - main
