@@ -94,6 +94,7 @@ filterwarnings = [
     # https://github.com/lanpa/tensorboardX/pull/677
     "ignore:ANTIALIAS is deprecated and will be removed in Pillow 10:DeprecationWarning:tensorboardX.summary",
     # https://github.com/Lightning-AI/lightning/issues/16756
+    'ignore:Implementing implicit namespace packages \(as specified in PEP 420\) is preferred:DeprecationWarning:lightning_fabric',
     'ignore:Implementing implicit namespace packages \(as specified in PEP 420\) is preferred:DeprecationWarning:pytorch_lightning',
 
     # Expected warnings
