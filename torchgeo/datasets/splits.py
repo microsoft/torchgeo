@@ -201,7 +201,7 @@ def random_grid_cell_assignment(
     Args:
         dataset: dataset to be split
         fractions: fractions of splits to be produced
-        grid_size: (optional) size of the grid
+        grid_size: (optional) number of rows and columns for the grid
         generator: (optional) generator used for the random permutation
 
     Returns
