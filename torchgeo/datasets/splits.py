@@ -296,7 +296,7 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> List[GeoDatas
 def time_series_split(
     dataset: GeoDataset, lengths: Sequence[Union[int, float, Tuple[int, int]]]
 ) -> List[GeoDataset]:
-    """Split a GeoDataset on it's time dimension to create non-overlapping GeoDatasets.
+    """Split a GeoDataset on its time dimension to create non-overlapping GeoDatasets.
 
     Args:
         dataset: dataset to be split
