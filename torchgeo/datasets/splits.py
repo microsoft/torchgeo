@@ -35,7 +35,7 @@ def _fractions_to_lengths(fractions: Sequence[float], total: int) -> Sequence[in
     Returns:
         List of lengths.
 
-    .. versionadded:: 0.4
+    .. versionadded:: 0.5
     """
     lengths = [floor(frac * total) for frac in fractions]
     remainder = int(total - sum(lengths))
@@ -56,7 +56,7 @@ def _create_geodataset_like(dataset: GeoDataset, index: Index) -> GeoDataset:
     Returns:
         A new GeoDataset.
 
-    .. versionadded:: 0.4
+    .. versionadded:: 0.5
     """
     new_dataset = deepcopy(dataset)
     new_dataset.index = index
@@ -78,7 +78,7 @@ def random_nongeo_split(
     Returns:
         A list of the subset datasets.
 
-    .. versionadded:: 0.4
+    .. versionadded:: 0.5
     """
     if sum(lengths) == 1:
         lengths = _fractions_to_lengths(lengths, len(dataset))
@@ -100,7 +100,7 @@ def random_bbox_assignment(
     Returns
         A list of the subset datasets.
 
-    .. versionadded:: 0.4
+    .. versionadded:: 0.5
     """
     if not (sum(lengths) == 1 or sum(lengths) == len(dataset)):
         raise ValueError(
@@ -150,7 +150,7 @@ def random_bbox_splitting(
     Returns
         A list of the subset datasets.
 
-    .. versionadded:: 0.4
+    .. versionadded:: 0.5
     """
     if sum(fractions) != 1:
         raise ValueError("Sum of input fractions must equal 1.")
@@ -207,7 +207,7 @@ def random_grid_cell_assignment(
     Returns
         A list of the subset datasets.
 
-    .. versionadded:: 0.4
+    .. versionadded:: 0.5
     """
     if sum(fractions) != 1:
         raise ValueError("Sum of input fractions must equal 1.")
@@ -272,7 +272,7 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> List[GeoDatas
     Returns
         A list of the subset datasets.
 
-    .. versionadded:: 0.4
+    .. versionadded:: 0.5
     """
     new_indexes = [
         Index(interleaved=False, properties=Property(dimension=3)) for _ in rois
@@ -306,7 +306,7 @@ def time_series_split(
     Returns
         A list of the subset datasets.
 
-    .. versionadded:: 0.4
+    .. versionadded:: 0.5
     """
     minx, maxx, miny, maxy, mint, maxt = dataset.bounds
 

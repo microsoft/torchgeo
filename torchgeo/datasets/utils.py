@@ -408,7 +408,7 @@ class BoundingBox:
         Returns:
             A tuple with the resulting BoundingBoxes
 
-        .. versionadded:: 0.4
+        .. versionadded:: 0.5
         """
         if not (0.0 < proportion < 1.0):
             raise ValueError("Input proportion must be between 0 and 1.")
