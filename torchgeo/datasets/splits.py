@@ -4,12 +4,12 @@
 """Dataset splitting utilities."""
 
 from copy import deepcopy
+from itertools import accumulate
 from math import floor
 from typing import Any, List, Optional, Sequence, Tuple, Union
 
 from rtree.index import Index, Property
 from torch import Generator, default_generator, randint, randperm
-from torch._utils import _accumulate
 from torch.utils.data import Subset, TensorDataset, random_split
 
 from ..datasets import GeoDataset, NonGeoDataset
@@ -326,10 +326,8 @@ def time_series_split(
             lengths = [totalt * f for f in lengths]  # type: ignore[operator]
 
         lengths = [
-            (mint + offset - length, mint + offset)
-            for offset, length in zip(
-                _accumulate(lengths), lengths  # type: ignore[no-untyped-call]
-            )
+            (mint + offset - length, mint + offset)  # type: ignore[operator, misc]
+            for offset, length in zip(accumulate(lengths), lengths)
         ]
 
     new_indexes = [
