@@ -12,7 +12,7 @@ import pytorch_lightning as pl
 import torch
 
 from torchgeo.datamodules import ChesapeakeCVPRDataModule
-from torchgeo.trainers.chesapeake import ChesapeakeCVPRSegmentationTask
+from torchgeo.trainers.chesapeake import SemanticSegmentationTask
 
 ALL_TEST_SPLITS = [["de-val"], ["pa-test"], ["ny-test"], ["pa-test", "ny-test"]]
 
@@ -108,13 +108,13 @@ def main(args: argparse.Namespace) -> None:
         checkpoint_fn = os.path.join(args.input_dir, experiment_dir, checkpoint_fn)
 
         try:
-            model = ChesapeakeCVPRSegmentationTask.load_from_checkpoint(checkpoint_fn)
+            model = SemanticSegmentationTask.load_from_checkpoint(checkpoint_fn)
             model.freeze()
             model.eval()
         except KeyError:
             print(
                 f"Skipping {experiment_dir} as we are not able to load a valid"
-                + f" ChesapeakeCVPRSegmentationTask from {checkpoint_fn}"
+                + f" SemanticSegmentationTask from {checkpoint_fn}"
             )
             continue
 
