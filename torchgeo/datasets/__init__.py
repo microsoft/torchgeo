@@ -92,6 +92,13 @@ from .spacenet import (
     SpaceNet6,
     SpaceNet7,
 )
+from .splits import (
+    random_bbox_assignment,
+    random_bbox_splitting,
+    random_grid_cell_assignment,
+    roi_split,
+    time_series_split,
+)
 from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
@@ -207,4 +214,10 @@ __all__ = (
     "merge_samples",
     "stack_samples",
     "unbind_samples",
+    # Splits
+    "random_bbox_assignment",
+    "random_bbox_splitting",
+    "random_grid_cell_assignment",
+    "roi_split",
+    "time_series_split",
 )
