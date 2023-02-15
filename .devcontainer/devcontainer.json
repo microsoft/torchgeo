@@ -27,5 +27,10 @@
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
   "postCreateCommand": "pip install  '.[datasets,docs,tests]'",
-  "remoteUser": "vscode"
+  "remoteUser": "vscode",
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "8gb",
+    "storage": "32gb"
+  }
 }
