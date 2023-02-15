@@ -135,7 +135,6 @@ def random_bbox_splitting(
 
         horizontal, flip = randint(0, 2, (2,), generator=generator)
         for j, frac in enumerate(fractions):
-
             if fraction_left == frac:
                 new_box = box
             elif flip:
@@ -296,7 +295,6 @@ def time_series_split(
     totalt = maxt - mint
 
     if not all(isinstance(x, tuple) for x in lengths):
-
         if not (sum(lengths) == 1 or sum(lengths) == totalt):  # type: ignore[arg-type]
             raise ValueError(
                 "Sum of input lengths must equal 1 or the dataset's time length."
@@ -319,7 +317,6 @@ def time_series_split(
 
     _totalt = 0
     for i, (start, end) in enumerate(lengths):  # type: ignore[misc]
-
         if start >= end:
             raise ValueError(
                 "Pairs of timestamps in lengths must have end greater than start."

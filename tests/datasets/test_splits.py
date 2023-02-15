@@ -92,7 +92,6 @@ def test_random_bbox_assignment_invalid_inputs() -> None:
 
 
 def _get_total_area(dataset: GeoDataset) -> float:
-
     total_area = 0.0
     for hit in dataset.index.intersection(dataset.index.bounds, objects=True):
         total_area += BoundingBox(*hit.bounds).area
