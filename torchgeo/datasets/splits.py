@@ -6,13 +6,12 @@
 from copy import deepcopy
 from itertools import accumulate
 from math import floor
-from typing import Any, List, Optional, Sequence, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union
 
 from rtree.index import Index, Property
 from torch import Generator, default_generator, randint, randperm
-from torch.utils.data import Subset, TensorDataset, random_split
 
-from ..datasets import GeoDataset, NonGeoDataset
+from ..datasets import GeoDataset
 from .utils import BoundingBox
 
 __all__ = (
@@ -43,23 +42,6 @@ def _fractions_to_lengths(fractions: Sequence[float], total: int) -> Sequence[in
         idx_to_add_at = i % len(lengths)
         lengths[idx_to_add_at] += 1
     return lengths
-
-
-def _create_geodataset_like(dataset: GeoDataset, index: Index) -> GeoDataset:
-    """Utility to create a new GeoDataset from an existing one with a different index.
-
-    Args:
-        dataset: dataset to copy
-        index: new index
-
-    Returns:
-        A new GeoDataset.
-
-    .. versionadded:: 0.5
-    """
-    new_dataset = deepcopy(dataset)
-    new_dataset.index = index
-    return new_dataset
 
 
 def random_bbox_assignment(
@@ -106,7 +88,13 @@ def random_bbox_assignment(
             hit = hits.pop()
             new_indexes[i].insert(j, hit.bounds, hit.object)
 
-    return [_create_geodataset_like(dataset, index) for index in new_indexes]
+    new_datasets = []
+    for index in new_indexes:
+        ds = deepcopy(dataset)
+        ds.index = index
+        new_datasets.append(ds)
+
+    return new_datasets
 
 
 def random_bbox_splitting(
@@ -161,7 +149,13 @@ def random_bbox_splitting(
             fraction_left -= frac
             horizontal = not horizontal
 
-    return [_create_geodataset_like(dataset, index) for index in new_indexes]
+    new_datasets = []
+    for index in new_indexes:
+        ds = deepcopy(dataset)
+        ds.index = index
+        new_datasets.append(ds)
+
+    return new_datasets
 
 
 def random_grid_cell_assignment(
@@ -236,7 +230,13 @@ def random_grid_cell_assignment(
             cell = cells.pop()
             new_indexes[i].insert(j, cell[0], cell[1])
 
-    return [_create_geodataset_like(dataset, index) for index in new_indexes]
+    new_datasets = []
+    for index in new_indexes:
+        ds = deepcopy(dataset)
+        ds.index = index
+        new_datasets.append(ds)
+
+    return new_datasets
 
 
 def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> List[GeoDataset]:
@@ -267,7 +267,13 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> List[GeoDatas
                 new_indexes[i].insert(j, tuple(new_box), hit.object)
                 j += 1
 
-    return [_create_geodataset_like(dataset, index) for index in new_indexes]
+    new_datasets = []
+    for index in new_indexes:
+        ds = deepcopy(dataset)
+        ds.index = index
+        new_datasets.append(ds)
+
+    return new_datasets
 
 
 def time_series_split(
@@ -347,4 +353,10 @@ def time_series_split(
             "Pairs of timestamps in lengths must cover dataset's time bounds."
         )
 
-    return [_create_geodataset_like(dataset, index) for index in new_indexes]
+    new_datasets = []
+    for index in new_indexes:
+        ds = deepcopy(dataset)
+        ds.index = index
+        new_datasets.append(ds)
+
+    return new_datasets
