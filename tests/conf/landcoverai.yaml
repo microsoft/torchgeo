@@ -14,5 +14,6 @@ experiment:
     ignore_index: null
   datamodule:
     root: "tests/data/landcoverai"
+    download: true
     batch_size: 1
     num_workers: 0

@@ -3,29 +3,31 @@
 
 """So2Sat datamodule."""
 
-from typing import Any, Dict, Optional, cast
+from typing import Any
 
-import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 import torch
-from torch.utils.data import DataLoader
-from torchvision.transforms import Compose, Normalize
 
 from ..datasets import So2Sat
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
+from .geo import NonGeoDataModule
 
 
-class So2SatDataModule(pl.LightningDataModule):
+class So2SatDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the So2Sat dataset.
 
     Uses the train/val/test splits from the dataset.
     """
 
-    band_means = torch.tensor(
+    # TODO: calculate mean/std dev of s1 bands
+    mean = torch.tensor(
         [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
             0.12375696117681859,
             0.1092774636368323,
             0.1010855203267882,
@@ -38,9 +40,16 @@ class So2SatDataModule(pl.LightningDataModule):
             0.10905050699570007,
         ]
     )
-
-    band_stds = torch.tensor(
+    std = torch.tensor(
         [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
             0.03958795985905458,
             0.047778262752410296,
             0.06636616706371974,
@@ -54,153 +63,46 @@ class So2SatDataModule(pl.LightningDataModule):
         ]
     )
 
-    # this reorders the bands to put S2 RGB first, then remainder of S2
-    reindex_to_rgb_first = [2, 1, 0, 3, 4, 5, 6, 7, 8, 9]
-
     def __init__(
         self,
         batch_size: int = 64,
         num_workers: int = 0,
-        band_set: str = "rgb",
-        unsupervised_mode: bool = False,
+        band_set: str = "all",
         **kwargs: Any,
     ) -> None:
-        """Initialize a LightningDataModule for So2Sat based DataLoaders.
+        """Initialize a new So2SatDataModule instance.
 
         Args:
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
-            band_set: Collection of So2Sat bands to use
-            unsupervised_mode: Makes the train dataloader return imagery from the train,
-                val, and test sets
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
+            band_set: One of 'all', 's1', or 's2'.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.So2Sat`
+                :class:`~torchgeo.datasets.So2Sat`.
         """
-        super().__init__()
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.band_set = band_set
-        self.unsupervised_mode = unsupervised_mode
-        self.kwargs = kwargs
+        kwargs["bands"] = So2Sat.BAND_SETS[band_set]
 
-        self.norm = Normalize(self.band_means, self.band_stds)
+        if band_set == "s1":
+            self.mean = self.mean[:8]
+            self.std = self.std[:8]
+        elif band_set == "s2":
+            self.mean = self.mean[8:]
+            self.std = self.std[8:]
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
+        super().__init__(So2Sat, batch_size, num_workers, **kwargs)
+
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
+
+        Called at the beginning of fit, validate, test, or predict. During distributed
+        training, this method is called from every process across all the nodes. Setting
+        state here is recommended.
 
         Args:
-            sample: dictionary containing image
-
-        Returns:
-            preprocessed sample
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        sample["image"] = sample["image"].float()
-        sample["image"] = self.norm(sample["image"])
-        sample["image"] = sample["image"][self.reindex_to_rgb_first, :, :]
-
-        if self.band_set == "rgb":
-            sample["image"] = sample["image"][:3, :, :]
-
-        return sample
-
-    def prepare_data(self) -> None:
-        """Make sure that the dataset is downloaded.
-
-        This method is only called once per run.
-        """
-        So2Sat(**self.kwargs)
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
-
-        This method is called once per GPU per run.
-
-        Args:
-            stage: stage to set up
-        """
-        bands = So2Sat.BAND_SETS["s2"]
-        train_transforms = Compose([self.preprocess])
-        val_test_transforms = self.preprocess
-
-        if not self.unsupervised_mode:
-            self.train_dataset = So2Sat(
-                split="train", bands=bands, transforms=train_transforms, **self.kwargs
-            )
-
-            self.val_dataset = So2Sat(
-                split="validation",
-                bands=bands,
-                transforms=val_test_transforms,
-                **self.kwargs,
-            )
-
-            self.test_dataset = So2Sat(
-                split="test", bands=bands, transforms=val_test_transforms, **self.kwargs
-            )
-
-        else:
-
-            temp_train = So2Sat(
-                split="train", bands=bands, transforms=train_transforms, **self.kwargs
-            )
-
-            self.val_dataset = So2Sat(
-                split="validation",
-                bands=bands,
-                transforms=train_transforms,
-                **self.kwargs,
-            )
-
-            self.test_dataset = So2Sat(
-                split="test", bands=bands, transforms=train_transforms, **self.kwargs
-            )
-
-            self.train_dataset = cast(
-                So2Sat, temp_train + self.val_dataset + self.test_dataset
-            )
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training.
-
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.So2Sat.plot`.
-
-        .. versionadded:: 0.4
-        """
-        return self.test_dataset.plot(*args, **kwargs)
+        if stage in ["fit"]:
+            self.train_dataset = So2Sat(split="train", **self.kwargs)
+        if stage in ["fit", "validate"]:
+            self.val_dataset = So2Sat(split="validation", **self.kwargs)
+        if stage in ["test"]:
+            self.test_dataset = So2Sat(split="test", **self.kwargs)

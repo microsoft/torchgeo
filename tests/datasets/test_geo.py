@@ -24,8 +24,6 @@ from torchgeo.datasets import (
     Sentinel2,
     UnionDataset,
     VectorDataset,
-    VisionClassificationDataset,
-    VisionDataset,
 )
 
 
@@ -57,14 +55,6 @@ class CustomSentinelDataset(Sentinel2):
 
 
 class CustomNonGeoDataset(NonGeoDataset):
-    def __getitem__(self, index: int) -> Dict[str, int]:
-        return {"index": index}
-
-    def __len__(self) -> int:
-        return 2
-
-
-class CustomVisionDataset(VisionDataset):
     def __getitem__(self, index: int) -> Dict[str, int]:
         return {"index": index}
 
@@ -211,7 +201,7 @@ class TestRasterDataset:
         x = custom_dtype_ds[custom_dtype_ds.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
-        assert x["image"].dtype == torch.int64
+        assert x["image"].dtype == torch.float32
 
     def test_invalid_query(self, sentinel: Sentinel2) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
@@ -334,13 +324,6 @@ class TestNonGeoDataset:
             NonGeoDataset()  # type: ignore[abstract]
 
 
-class TestVisionDataset:
-    def test_deprecation(self) -> None:
-        match = "VisionDataset is deprecated, use NonGeoDataset instead."
-        with pytest.warns(DeprecationWarning, match=match):
-            CustomVisionDataset()
-
-
 class TestNonGeoClassificationDataset:
     @pytest.fixture(scope="class")
     def dataset(self, root: str) -> NonGeoClassificationDataset:
@@ -389,15 +372,6 @@ class TestNonGeoClassificationDataset:
     def test_str(self, dataset: NonGeoClassificationDataset) -> None:
         assert "type: NonGeoDataset" in str(dataset)
         assert "size: 2" in str(dataset)
-
-
-class TestVisionClassificationDataset:
-    def test_deprecation(self) -> None:
-        root = os.path.join("tests", "data", "nongeoclassification")
-        match = "VisionClassificationDataset is deprecated, "
-        match += "use NonGeoClassificationDataset instead."
-        with pytest.warns(DeprecationWarning, match=match):
-            VisionClassificationDataset(root)
 
 
 class TestIntersectionDataset:

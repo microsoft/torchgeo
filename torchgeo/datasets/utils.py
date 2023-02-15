@@ -89,7 +89,7 @@ class _zipfile:
             except ImportError:
                 # Only supports normal zip files
                 # https://github.com/python/mypy/issues/1153
-                import zipfile  # type: ignore[no-redef]
+                import zipfile
 
             return zipfile.ZipFile(*self.args, **self.kwargs)
 
@@ -742,6 +742,6 @@ def percentile_normalization(
     lower_percentile = np.percentile(img, lower, axis=axis)
     upper_percentile = np.percentile(img, upper, axis=axis)
     img_normalized: "np.typing.NDArray[np.int_]" = np.clip(
-        (img - lower_percentile) / (upper_percentile - lower_percentile), 0, 1
+        (img - lower_percentile) / (upper_percentile - lower_percentile + 1e-5), 0, 1
     )
     return img_normalized

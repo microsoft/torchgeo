@@ -15,11 +15,16 @@ from torchgeo.datamodules import (
     ChesapeakeCVPRDataModule,
     DeepGlobeLandCoverDataModule,
     ETCI2021DataModule,
+    GID15DataModule,
     InriaAerialImageLabelingDataModule,
     LandCoverAIDataModule,
+    LoveDADataModule,
+    MisconfigurationException,
     NAIPChesapeakeDataModule,
-    OSCDDataModule,
+    Potsdam2DDataModule,
     SEN12MSDataModule,
+    SpaceNet1DataModule,
+    Vaihingen2DDataModule,
 )
 from torchgeo.datasets import LandCoverAI
 from torchgeo.trainers import SemanticSegmentationTask
@@ -31,27 +36,37 @@ def create_model(**kwargs: Any) -> Module:
     return SegmentationTestModel(**kwargs)
 
 
+def plot(*args: Any, **kwargs: Any) -> None:
+    raise ValueError
+
+
 class TestSemanticSegmentationTask:
     @pytest.mark.parametrize(
         "name,classname",
         [
             ("chesapeake_cvpr_5", ChesapeakeCVPRDataModule),
-            ("deepglobelandcover_0", DeepGlobeLandCoverDataModule),
-            ("deepglobelandcover_5", DeepGlobeLandCoverDataModule),
+            ("deepglobelandcover", DeepGlobeLandCoverDataModule),
             ("etci2021", ETCI2021DataModule),
+            ("gid15", GID15DataModule),
             ("inria", InriaAerialImageLabelingDataModule),
             ("landcoverai", LandCoverAIDataModule),
+            ("loveda", LoveDADataModule),
             ("naipchesapeake", NAIPChesapeakeDataModule),
-            ("oscd_all", OSCDDataModule),
-            ("oscd_rgb", OSCDDataModule),
+            ("potsdam2d", Potsdam2DDataModule),
             ("sen12ms_all", SEN12MSDataModule),
             ("sen12ms_s1", SEN12MSDataModule),
             ("sen12ms_s2_all", SEN12MSDataModule),
             ("sen12ms_s2_reduced", SEN12MSDataModule),
+            ("spacenet1", SpaceNet1DataModule),
+            ("vaihingen2d", Vaihingen2DDataModule),
         ],
     )
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, classname: Type[LightningDataModule]
+        self,
+        monkeypatch: MonkeyPatch,
+        name: str,
+        classname: Type[LightningDataModule],
+        fast_dev_run: bool,
     ) -> None:
         if name == "naipchesapeake":
             pytest.importorskip("zipfile_deflate64")
@@ -75,29 +90,16 @@ class TestSemanticSegmentationTask:
         model = SemanticSegmentationTask(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
-        trainer.test(model=model, datamodule=datamodule)
-        trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
-
-    def test_no_logger(self) -> None:
-        conf = OmegaConf.load(os.path.join("tests", "conf", "landcoverai.yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
-
-        # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = LandCoverAIDataModule(**datamodule_kwargs)
-
-        # Instantiate model
-        model_kwargs = conf_dict["module"]
-        model = SemanticSegmentationTask(**model_kwargs)
-
-        # Instantiate trainer
-        trainer = Trainer(
-            logger=False, fast_dev_run=True, log_every_n_steps=1, max_epochs=1
-        )
-        trainer.fit(model=model, datamodule=datamodule)
+        try:
+            trainer.test(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
+        try:
+            trainer.predict(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:
@@ -136,13 +138,14 @@ class TestSemanticSegmentationTask:
         with pytest.warns(UserWarning, match=match):
             SemanticSegmentationTask(**model_kwargs)
 
-    def test_missing_attributes(
-        self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
+    def test_no_rgb(
+        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any], fast_dev_run: bool
     ) -> None:
-        monkeypatch.delattr(LandCoverAIDataModule, "plot")
-        datamodule = LandCoverAIDataModule(
-            root="tests/data/landcoverai", batch_size=1, num_workers=0
+        model_kwargs["in_channels"] = 15
+        monkeypatch.setattr(SEN12MSDataModule, "plot", plot)
+        datamodule = SEN12MSDataModule(
+            root="tests/data/sen12ms", batch_size=1, num_workers=0
         )
         model = SemanticSegmentationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.validate(model=model, datamodule=datamodule)

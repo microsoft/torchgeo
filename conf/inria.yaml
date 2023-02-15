@@ -1,9 +1,9 @@
 program:
   overwrite: True
 
-  
 trainer:
-  gpus: 1
+  accelerator: gpu
+  devices: 1
   min_epochs: 5
   max_epochs: 100
   benchmark: True
@@ -23,8 +23,7 @@ experiment:
     num_classes: 2
     ignore_index: null
   datamodule:
-      root: "data/inria"
-      batch_size: 2
-      num_workers: 32
-      patch_size: 512
-      num_patches_per_tile: 4
+    root: "data/inria"
+    batch_size: 1
+    patch_size: 512
+    num_workers: 32

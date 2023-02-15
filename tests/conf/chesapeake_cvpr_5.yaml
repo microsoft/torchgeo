@@ -11,18 +11,17 @@ experiment:
     num_classes: 5
     num_filters: 1
     ignore_index: null
-    imagenet_pretraining: False
   datamodule:
     root: "tests/data/chesapeake/cvpr"
+    download: true
     train_splits:
     - "de-test"
     val_splits:
     - "de-test"
     test_splits:
     - "de-test"
-    patches_per_tile: 2
-    patch_size: 64
     batch_size: 2
+    patch_size: 64
     num_workers: 0
     class_set: ${experiment.module.num_classes}
     use_prior_labels: False

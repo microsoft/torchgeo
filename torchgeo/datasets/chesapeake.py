@@ -650,7 +650,6 @@ class ChesapeakeCVPR(GeoDataset):
             query_box = shapely.geometry.box(minx, miny, maxx, maxy)
 
             for layer in self.layers:
-
                 fn = filenames[layer]
 
                 with rasterio.open(os.path.join(self.root, fn)) as f:
@@ -688,8 +687,8 @@ class ChesapeakeCVPR(GeoDataset):
         sample["image"] = np.concatenate(sample["image"], axis=0)
         sample["mask"] = np.concatenate(sample["mask"], axis=0)
 
-        sample["image"] = torch.from_numpy(sample["image"])
-        sample["mask"] = torch.from_numpy(sample["mask"])
+        sample["image"] = torch.from_numpy(sample["image"]).float()
+        sample["mask"] = torch.from_numpy(sample["mask"]).long()
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -702,10 +701,11 @@ class ChesapeakeCVPR(GeoDataset):
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        # Check if the extracted files already exist
+
         def exists(filename: str) -> bool:
             return os.path.exists(os.path.join(self.root, filename))
 
+        # Check if the extracted files already exist
         if all(map(exists, self.files)):
             return
 
@@ -765,7 +765,11 @@ class ChesapeakeCVPR(GeoDataset):
         .. versionadded:: 0.4
         """
         image = np.rollaxis(sample["image"].numpy(), 0, 3)
-        mask = np.rollaxis(sample["mask"].numpy(), 0, 3)
+        mask = sample["mask"].numpy()
+        if mask.ndim == 3:
+            mask = np.rollaxis(mask, 0, 3)
+        else:
+            mask = np.expand_dims(mask, 2)
 
         num_panels = len(self.layers)
         showing_predictions = "prediction" in sample

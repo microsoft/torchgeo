@@ -1,5 +1,6 @@
 trainer:
-  gpus: 1
+  accelerator: gpu
+  devices: 1
   min_epochs: 20
   max_epochs: 100
   benchmark: True
@@ -17,7 +18,6 @@ experiment:
     num_classes: 7
     num_filters: 256
     ignore_index: null
-    imagenet_pretraining: True
   datamodule:
     root: "data/chesapeake/cvpr"
     train_splits:
@@ -26,9 +26,8 @@ experiment:
       - "de-val"
     test_splits:
       - "de-test"
-    patches_per_tile: 200
+    batch_size: 200
     patch_size: 256
-    batch_size: 64
     num_workers: 4
     class_set: ${experiment.module.num_classes}
     use_prior_labels: False

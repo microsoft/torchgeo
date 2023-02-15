@@ -14,10 +14,6 @@ from ..datasets import BoundingBox, GeoDataset
 from .constants import Units
 from .utils import _to_tuple, get_random_bounding_box, tile_to_chips
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Sampler.__module__ = "torch.utils.data"
-
 
 class BatchGeoSampler(Sampler[List[BoundingBox]], abc.ABC):
     """Abstract base class for sampling from :class:`~torchgeo.datasets.GeoDataset`.
@@ -84,6 +80,12 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         * a ``tuple`` of two floats - in which case, the first *float* is used for the
           height dimension, and the second *float* for the width dimension
 
+        .. versionchanged:: 0.3
+           Added ``units`` parameter, changed default to pixel units
+
+        .. versionchanged:: 0.4
+           ``length`` parameter is now optional, a reasonable default will be used
+
         Args:
             dataset: dataset to index from
             size: dimensions of each :term:`patch`
@@ -95,12 +97,6 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units
-
-        .. versionchanged:: 0.3
-           Added ``units`` parameter, changed default to pixel units
-
-        .. versionchanged:: 0.4
-           ``length`` parameter is now optional, a reasonable default will be used
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
@@ -148,7 +144,6 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             # Choose random indices within that tile
             batch = []
             for _ in range(self.batch_size):
-
                 bounding_box = get_random_bounding_box(bounds, self.size, self.res)
                 batch.append(bounding_box)
 

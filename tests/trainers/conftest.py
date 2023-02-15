@@ -4,25 +4,27 @@
 import os
 from collections import OrderedDict
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict
 
 import pytest
 import torch
 import torchvision
 from _pytest.fixtures import SubRequest
-from packaging.version import parse
 from torch import Tensor
 from torch.nn.modules import Module
 
 
+@pytest.fixture(
+    scope="package", params=[True, pytest.param(False, marks=pytest.mark.slow)]
+)
+def fast_dev_run(request: SubRequest) -> bool:
+    flag: bool = request.param
+    return flag
+
+
 @pytest.fixture(scope="package")
 def model() -> Module:
-    kwargs: Dict[str, Optional[bool]] = {}
-    if parse(torchvision.__version__) >= parse("0.13"):
-        kwargs = {"weights": None}
-    else:
-        kwargs = {"pretrained": False}
-    model: Module = torchvision.models.resnet18(**kwargs)
+    model: Module = torchvision.models.resnet18(weights=None)
     return model
 
 
@@ -31,7 +33,7 @@ def state_dict(model: Module) -> Dict[str, Tensor]:
     return model.state_dict()
 
 
-@pytest.fixture(params=["model", "encoder_name"])
+@pytest.fixture(params=["model", "backbone"])
 def checkpoint(
     state_dict: Dict[str, Tensor], request: SubRequest, tmp_path: Path
 ) -> str:
@@ -39,7 +41,7 @@ def checkpoint(
         state_dict = OrderedDict({"model." + k: v for k, v in state_dict.items()})
     else:
         state_dict = OrderedDict(
-            {"model.encoder.model." + k: v for k, v in state_dict.items()}
+            {"model.backbone.model." + k: v for k, v in state_dict.items()}
         )
     checkpoint = {
         "hyper_parameters": {request.param: "resnet18"},

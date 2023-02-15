@@ -3,14 +3,17 @@
 
 """TorchGeo models."""
 
+from .api import get_model, get_model_weights, get_weight, list_models
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
 from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
 from .rcf import RCF
-from .resnet import resnet50
+from .resnet import ResNet18_Weights, ResNet50_Weights, resnet18, resnet50
+from .vit import ViTSmall16_Weights, vit_small_patch16_224
 
 __all__ = (
+    # models
     "ChangeMixin",
     "ChangeStar",
     "ChangeStarFarSeg",
@@ -19,9 +22,16 @@ __all__ = (
     "FCSiamConc",
     "FCSiamDiff",
     "RCF",
+    "resnet18",
     "resnet50",
+    "vit_small_patch16_224",
+    # weights
+    "ResNet50_Weights",
+    "ResNet18_Weights",
+    "ViTSmall16_Weights",
+    # utilities
+    "get_model",
+    "get_model_weights",
+    "get_weight",
+    "list_models",
 )
-
-# https://stackoverflow.com/questions/40018681
-for module in __all__:
-    globals()[module].__module__ = "torchgeo.models"

@@ -174,10 +174,7 @@ def create_test_label(
 def main() -> None:
     ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 
-    num_samples = 2
-
     for dataset in datasets:
-
         collections = list(dataset.collection_md5_dict.keys())
         for collection in collections:
             dataset = cast(SpaceNet, dataset)
@@ -187,11 +184,12 @@ def main() -> None:
                 "sn5_AOI_8_Mumbai",
                 "sn7_test_source",
             ]:
-                num_samples = 2
+                num_samples = 3
             elif collection == "sn5_AOI_8_Mumbai":
                 num_samples = 3
             else:
                 num_samples = 1
+
             for sample in range(num_samples):
                 out_dir = os.path.join(ROOT_DIR, collection)
                 if collection == "sn6_AOI_11_Rotterdam":

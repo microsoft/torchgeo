@@ -9,7 +9,6 @@ import glob
 import os
 import re
 import sys
-import warnings
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
 
 import fiona
@@ -31,11 +30,6 @@ from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
 
 from .utils import BoundingBox, concat_samples, disambiguate_timestamp, merge_samples
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Dataset.__module__ = "torch.utils.data"
-ImageFolder.__module__ = "torchvision.datasets"
 
 
 class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
@@ -275,8 +269,8 @@ class RasterDataset(GeoDataset):
     #:
     #: * ``date``: used to calculate ``mint`` and ``maxt`` for ``index`` insertion
     #:
-    #: When :attr:`separate_files`` is True, the following additional groups are
-    #: searched for to find other files:
+    #: When :attr:`~RasterDataset.separate_files` is True, the following additional
+    #: groups are searched for to find other files:
     #:
     #: * ``band``: replaced with requested band name
     filename_regex = ".*"
@@ -432,8 +426,11 @@ class RasterDataset(GeoDataset):
         else:
             data = self._merge_files(filepaths, query, self.band_indexes)
 
-        key = "image" if self.is_image else "mask"
-        sample = {key: data, "crs": self.crs, "bbox": query}
+        sample = {"crs": self.crs, "bbox": query}
+        if self.is_image:
+            sample["image"] = data.float()
+        else:
+            sample["mask"] = data.long()
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -695,20 +692,6 @@ class NonGeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     size: {len(self)}"""
 
 
-class VisionDataset(NonGeoDataset):
-    """Abstract base class for datasets lacking geospatial information.
-
-    .. deprecated:: 0.3
-       Use :class:`NonGeoDataset` instead.
-    """
-
-    def __new__(cls, *args: Any, **kwargs: Any) -> "VisionDataset":
-        """Create a new instance of VisionDataset."""
-        msg = "VisionDataset is deprecated, use NonGeoDataset instead."
-        warnings.warn(msg, DeprecationWarning)
-        return super().__new__(cls, *args, **kwargs)
-
-
 class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[misc]
     """Abstract base class for classification datasets lacking geospatial information.
 
@@ -782,26 +765,11 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         """
         img, label = ImageFolder.__getitem__(self, index)
         array: "np.typing.NDArray[np.int_]" = np.array(img)
-        tensor = torch.from_numpy(array)
+        tensor = torch.from_numpy(array).float()
         # Convert from HxWxC to CxHxW
         tensor = tensor.permute((2, 0, 1))
         label = torch.tensor(label)
         return tensor, label
-
-
-class VisionClassificationDataset(NonGeoClassificationDataset):
-    """Abstract base class for classification datasets lacking geospatial information.
-
-    .. deprecated:: 0.3
-       Use :class:`NonGeoClassificationDataset` instead.
-    """
-
-    def __new__(cls, *args: Any, **kwargs: Any) -> "VisionClassificationDataset":
-        """Create a new instance of VisionClassificationDataset."""
-        msg = "VisionClassificationDataset is deprecated, "
-        msg += "use NonGeoClassificationDataset instead."
-        warnings.warn(msg, DeprecationWarning)
-        return cast(VisionClassificationDataset, super().__new__(cls))
 
 
 class IntersectionDataset(GeoDataset):

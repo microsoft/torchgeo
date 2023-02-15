@@ -15,4 +15,3 @@ experiment:
     band_set: "s2-all"
     batch_size: 1
     num_workers: 0
-    seed: 0

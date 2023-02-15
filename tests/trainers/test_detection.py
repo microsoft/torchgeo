@@ -9,15 +9,32 @@ from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
 
-from torchgeo.datamodules import NASAMarineDebrisDataModule
+from torchgeo.datamodules import MisconfigurationException, NASAMarineDebrisDataModule
+from torchgeo.datasets import NASAMarineDebris
 from torchgeo.trainers import ObjectDetectionTask
+
+
+class PredictObjectDetectionDataModule(NASAMarineDebrisDataModule):
+    def setup(self, stage: str) -> None:
+        self.predict_dataset = NASAMarineDebris(**self.kwargs)
+
+
+def plot(*args: Any, **kwargs: Any) -> None:
+    raise ValueError
 
 
 class TestObjectDetectionTask:
     @pytest.mark.parametrize(
         "name,classname", [("nasa_marine_debris", NASAMarineDebrisDataModule)]
     )
-    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
+    @pytest.mark.parametrize("model_name", ["faster-rcnn", "fcos", "retinanet"])
+    def test_trainer(
+        self,
+        name: str,
+        classname: Type[LightningDataModule],
+        model_name: str,
+        fast_dev_run: bool,
+    ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", f"{name}.yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
         conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
@@ -28,13 +45,20 @@ class TestObjectDetectionTask:
 
         # Instantiate model
         model_kwargs = conf_dict["module"]
+        model_kwargs["model"] = model_name
         model = ObjectDetectionTask(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
-        trainer.test(model=model, datamodule=datamodule)
-        trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
+        try:
+            trainer.test(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
+        try:
+            trainer.predict(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[Any, Any]:
@@ -56,13 +80,21 @@ class TestObjectDetectionTask:
         model_kwargs["pretrained"] = False
         ObjectDetectionTask(**model_kwargs)
 
-    def test_missing_attributes(
-        self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
+    def test_no_rgb(
+        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any], fast_dev_run: bool
     ) -> None:
-        monkeypatch.delattr(NASAMarineDebrisDataModule, "plot")
+        monkeypatch.setattr(NASAMarineDebrisDataModule, "plot", plot)
         datamodule = NASAMarineDebrisDataModule(
             root="tests/data/nasa_marine_debris", batch_size=1, num_workers=0
         )
         model = ObjectDetectionTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.validate(model=model, datamodule=datamodule)
+
+    def test_predict(self, model_kwargs: Dict[Any, Any], fast_dev_run: bool) -> None:
+        datamodule = PredictObjectDetectionDataModule(
+            root="tests/data/nasa_marine_debris", batch_size=1, num_workers=0
+        )
+        model = ObjectDetectionTask(**model_kwargs)
+        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer.predict(model=model, datamodule=datamodule)

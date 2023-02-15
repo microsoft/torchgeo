@@ -194,7 +194,7 @@ class GID15(NonGeoDataset):
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
-            tensor = tensor.permute((2, 0, 1))
+            tensor = tensor.permute((2, 0, 1)).float()
             return tensor
 
     def _load_target(self, path: str) -> Tensor:
@@ -250,7 +250,7 @@ class GID15(NonGeoDataset):
             sample: a sample return by :meth:`__getitem__`
             suptitle: optional suptitle to use for figure
 
-        Returns;
+        Returns:
             a matplotlib Figure with the rendered sample
 
         .. versionadded:: 0.2

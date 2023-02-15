@@ -3,21 +3,21 @@
 
 """OSCD datamodule."""
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Tuple, Union
 
 import kornia.augmentation as K
-import pytorch_lightning as pl
 import torch
 from einops import repeat
-from torch.utils.data import DataLoader, Dataset
-from torch.utils.data._utils.collate import default_collate
-from torchvision.transforms import Compose, Normalize
 
 from ..datasets import OSCD
+from ..samplers.utils import _to_tuple
+from ..transforms import AugmentationSequential
+from ..transforms.transforms import _RandomNCrop
+from .geo import NonGeoDataModule
 from .utils import dataset_split
 
 
-class OSCDDataModule(pl.LightningDataModule):
+class OSCDDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the OSCD dataset.
 
     Uses the train/test splits from the dataset and further splits
@@ -26,7 +26,7 @@ class OSCDDataModule(pl.LightningDataModule):
     .. versionadded:: 0.2
     """
 
-    band_means = torch.tensor(
+    mean = torch.tensor(
         [
             1583.0741,
             1374.3202,
@@ -44,7 +44,7 @@ class OSCDDataModule(pl.LightningDataModule):
         ]
     )
 
-    band_stds = torch.tensor(
+    std = torch.tensor(
         [
             52.1937,
             83.4168,
@@ -64,135 +64,53 @@ class OSCDDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        train_batch_size: int = 32,
-        num_workers: int = 0,
+        batch_size: int = 64,
+        patch_size: Union[Tuple[int, int], int] = 64,
         val_split_pct: float = 0.2,
-        patch_size: Tuple[int, int] = (64, 64),
-        num_patches_per_tile: int = 32,
-        pad_size: Tuple[int, int] = (1280, 1280),
+        num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
-        """Initialize a LightningDataModule for OSCD based DataLoaders.
+        """Initialize a new OSCDDataModule instance.
 
         Args:
-            train_batch_size: The batch size used in the train DataLoader
-                (val_batch_size == test_batch_size == 1)
-            num_workers: The number of workers to use in all created DataLoaders
-            val_split_pct: What percentage of the dataset to use as a validation set
-            patch_size: Size of random patch from image and mask (height, width)
-            num_patches_per_tile: number of random patches per sample
-            pad_size: size to pad images to during val/test steps
+            batch_size: Size of each mini-batch.
+            patch_size: Size of each patch, either ``size`` or ``(height, width)``.
+                Should be a multiple of 32 for most segmentation architectures.
+            val_split_pct: Percentage of the dataset to use as a validation set.
+            num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.OSCD`
+                :class:`~torchgeo.datasets.OSCD`.
         """
-        super().__init__()
-        self.train_batch_size = train_batch_size
-        self.num_workers = num_workers
+        super().__init__(OSCD, 1, num_workers, **kwargs)
+
+        self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
-        self.patch_size = patch_size
-        self.num_patches_per_tile = num_patches_per_tile
-        self.kwargs = kwargs
 
-        bands = kwargs.get("bands", "all")
-        if bands == "rgb":
-            self.band_means = self.band_means[[3, 2, 1]]
-            self.band_stds = self.band_stds[[3, 2, 1]]
+        self.bands = kwargs.get("bands", "all")
+        if self.bands == "rgb":
+            self.mean = self.mean[[3, 2, 1]]
+            self.std = self.std[[3, 2, 1]]
 
-        self.rcrop = K.AugmentationSequential(
-            K.RandomCrop(patch_size), data_keys=["input", "mask"], same_on_batch=True
+        # Change detection, 2 images from different times
+        self.mean = repeat(self.mean, "c -> (t c)", t=2)
+        self.std = repeat(self.std, "c -> (t c)", t=2)
+
+        self.aug = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            _RandomNCrop(self.patch_size, batch_size),
+            data_keys=["image", "mask"],
         )
-        self.padto = K.PadTo(pad_size)
 
-        self.norm = Normalize(self.band_means, self.band_stds)
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset."""
-        sample["image"] = sample["image"].float()
-        sample["image"] = self.norm(sample["image"])
-        sample["image"] = torch.flatten(sample["image"], 0, 1)
-        return sample
-
-    def prepare_data(self) -> None:
-        """Make sure that the dataset is downloaded.
-
-        This method is only called once per run.
+        Args:
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        OSCD(split="train", **self.kwargs)
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
-
-        This method is called once per GPU per run.
-        """
-
-        def n_random_crop(sample: Dict[str, Any]) -> Dict[str, Any]:
-            images, masks = [], []
-            for i in range(self.num_patches_per_tile):
-                mask = repeat(sample["mask"], "h w -> t h w", t=2).float()
-                image, mask = self.rcrop(sample["image"], mask)
-                mask = mask.squeeze()[0]
-                images.append(image.squeeze())
-                masks.append(mask.long())
-            sample["image"] = torch.stack(images)
-            sample["mask"] = torch.stack(masks)
-            return sample
-
-        def pad_to(sample: Dict[str, Any]) -> Dict[str, Any]:
-            sample["image"] = self.padto(sample["image"])[0]
-            sample["mask"] = self.padto(sample["mask"].float()).long()[0, 0]
-            return sample
-
-        train_transforms = Compose([self.preprocess, n_random_crop])
-        # for testing and validation we pad all inputs to a fixed size to avoid issues
-        # with the upsampling paths in encoder-decoder architectures
-        test_transforms = Compose([self.preprocess, pad_to])
-
-        train_dataset = OSCD(split="train", transforms=train_transforms, **self.kwargs)
-
-        self.train_dataset: Dataset[Any]
-        self.val_dataset: Dataset[Any]
-
-        if self.val_split_pct > 0.0:
-            val_dataset = OSCD(split="train", transforms=test_transforms, **self.kwargs)
-            self.train_dataset, self.val_dataset, _ = dataset_split(
-                train_dataset, val_pct=self.val_split_pct, test_pct=0.0
+        if stage in ["fit", "validate"]:
+            self.dataset = OSCD(split="train", **self.kwargs)
+            self.train_dataset, self.val_dataset = dataset_split(
+                self.dataset, val_pct=self.val_split_pct
             )
-            self.val_dataset.dataset = val_dataset
-        else:
-            self.train_dataset = train_dataset
-            self.val_dataset = train_dataset
-
-        self.test_dataset = OSCD(
-            split="test", transforms=test_transforms, **self.kwargs
-        )
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training."""
-
-        def collate_wrapper(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
-            r_batch: Dict[str, Any] = default_collate(  # type: ignore[no-untyped-call]
-                batch
-            )
-            r_batch["image"] = torch.flatten(r_batch["image"], 0, 1)
-            r_batch["mask"] = torch.flatten(r_batch["mask"], 0, 1)
-            return r_batch
-
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.train_batch_size,
-            num_workers=self.num_workers,
-            collate_fn=collate_wrapper,
-            shuffle=True,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation."""
-        return DataLoader(
-            self.val_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing."""
-        return DataLoader(
-            self.test_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
-        )
+        if stage in ["test"]:
+            self.test_dataset = OSCD(split="test", **self.kwargs)

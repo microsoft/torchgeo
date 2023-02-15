@@ -51,7 +51,7 @@ class EuroSAT(NonGeoClassificationDataset):
     * https://ieeexplore.ieee.org/document/8519248
     """
 
-    url = "https://madm.dfki.de/files/sentinel/EuroSATallBands.zip"  # 2.0 GB download
+    url = "https://huggingface.co/datasets/torchgeo/eurosat/resolve/main/EuroSATallBands.zip"  # noqa: E501
     filename = "EuroSATallBands.zip"
     md5 = "5ac12b3b2557aa56e1826e981e8e200e"
 
@@ -100,9 +100,9 @@ class EuroSAT(NonGeoClassificationDataset):
         "B12",
     )
 
-    RGB_BANDS = ("B04", "B03", "B02")
+    rgb_bands = ("B04", "B03", "B02")
 
-    BAND_SETS = {"all": all_band_names, "rgb": RGB_BANDS}
+    BAND_SETS = {"all": all_band_names, "rgb": rgb_bands}
 
     def __init__(
         self,
@@ -170,7 +170,7 @@ class EuroSAT(NonGeoClassificationDataset):
         """
         image, label = self._load_image(index)
 
-        image = torch.index_select(image, dim=0, index=self.band_indices)
+        image = torch.index_select(image, dim=0, index=self.band_indices).float()
         sample = {"image": image, "label": label}
 
         if self.transforms is not None:
@@ -277,7 +277,7 @@ class EuroSAT(NonGeoClassificationDataset):
         .. versionadded:: 0.2
         """
         rgb_indices = []
-        for band in self.RGB_BANDS:
+        for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:

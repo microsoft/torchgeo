@@ -39,7 +39,6 @@ class TestUSAVars:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> USAVars:
-
         monkeypatch.setattr(torchgeo.datasets.usavars, "download_url", download_url)
 
         md5 = "b504580a00bdc27097d5421dec50481b"

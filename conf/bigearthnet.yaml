@@ -1,5 +1,6 @@
 trainer:
-  gpus: 1
+  accelerator: gpu
+  devices: 1
   min_epochs: 10
   max_epochs: 40
   benchmark: True
@@ -10,7 +11,7 @@ experiment:
     model: "resnet18"
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
-    weights: "random"
+    weights: null
     in_channels: 14
     num_classes: 19
   datamodule:

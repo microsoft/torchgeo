@@ -14,12 +14,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.2.0
+      uses: actions/checkout@v3.3.0
     - name: Set up python
-      uses: actions/setup-python@v4.3.1
+      uses: actions/setup-python@v4.5.0
       with:
         python-version: '3.10'
+    - name: Cache dependencies
+      uses: actions/cache@v3.2.5
+      id: cache
+      with:
+        path: ${{ env.pythonLocation }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/datasets.txt') }}-${{ hashFiles('requirements/tests.txt') }}
     - name: Install pip dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
         pip list
@@ -33,19 +40,26 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.7', '3.8', '3.9', '3.10']
-        exclude:
-        - os: windows-latest
-          python-version: '3.7'
+        python-version: ['3.8', '3.9', '3.10']
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.2.0
+      uses: actions/checkout@v3.3.0
     - name: Set up python
-      uses: actions/setup-python@v4.3.1
+      uses: actions/setup-python@v4.5.0
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Cache dependencies
+      uses: actions/cache@v3.2.5
+      id: cache
+      with:
+        path: ${{ env.pythonLocation }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/datasets.txt') }}-${{ hashFiles('requirements/tests.txt') }}
+    - name: Setup headless display for pyvista
+      uses: pyvista/setup-headless-display-action@v1
     - name: Install apt dependencies (Linux)
-      run: sudo apt-get install unrar
+      run: |
+        sudo apt-get update
+        sudo apt-get install unrar
       if: ${{ runner.os == 'Linux' }}
     - name: Install brew dependencies (macOS)
       run: brew install rar
@@ -56,27 +70,24 @@ jobs:
         set "PATH=%PATH%;c:\msys64\usr\bin"
         pacman -S --noconfirm --needed unrar
       if: ${{ runner.os == 'Windows' }}
-    - name: Install pip dependencies (3.8+)
+    - name: Install pip dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
         pip list
-      if: ${{ matrix.python-version != '3.7' }}
-    - name: Install pip dependencies (3.7)
-      run: |
-        pip install -r requirements/required.old -r requirements/datasets.old -r requirements/tests.txt
-        pip list
-      if: ${{ matrix.python-version == '3.7' }}
     - name: Run pytest checks (Linux/macOS)
-      run: pytest --cov=torchgeo --cov-report=xml
+      run: pytest --cov=torchgeo --cov-report=xml --durations=10
       if: ${{ runner.os != 'Windows' }}
     - name: Run pytest checks (Windows)
       shell: cmd
       run: |
         set "PATH=%PATH%;c:\msys64\usr\bin"
-        pytest --cov=torchgeo --cov-report=xml
+        pytest --cov=torchgeo --cov-report=xml --durations=10
       if: ${{ runner.os == 'Windows' }}
     - name: Report coverage
       uses: codecov/codecov-action@v3.1.1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
   minimum:
     name: minimum
     runs-on: ubuntu-latest
@@ -84,19 +95,32 @@ jobs:
       MPLBACKEND: Agg
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.2.0
+      uses: actions/checkout@v3.3.0
     - name: Set up python
-      uses: actions/setup-python@v4.3.1
+      uses: actions/setup-python@v4.5.0
       with:
-        python-version: '3.7'
+        python-version: '3.8'
+    - name: Cache dependencies
+      uses: actions/cache@v3.2.5
+      id: cache
+      with:
+        path: ${{ env.pythonLocation }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/min-reqs.old') }}-${{ hashFiles('requirements/mins-cons.old') }}
     - name: Install apt dependencies (Linux)
-      run: sudo apt-get install libgeos-dev libhdf5-dev unrar
-    - name: Install pip dependencies
       run: |
-        pip install cython numpy==1.17.2  # needed by pycocotools
-        pip install -r requirements/min.old
+        sudo apt-get update
+        sudo apt-get install unrar
+    - name: Install pip dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        pip install -r requirements/min-reqs.old -c requirements/min-cons.old
         pip list
     - name: Run pytest checks
-      run: pytest --cov=torchgeo --cov-report=xml
+      run: pytest --cov=torchgeo --cov-report=xml --durations=10
     - name: Report coverage
       uses: codecov/codecov-action@v3.1.1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true

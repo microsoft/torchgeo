@@ -119,7 +119,7 @@ def run_eval_loop(
                 }
                 for i in range(len(batch["image"]))
             ]
-        with torch.inference_mode():
+        with torch.inference_mode():  # type: ignore[no-untyped-call]
             y_pred = model(x)
         metrics(y_pred, y)
     results = metrics.compute()
@@ -143,7 +143,6 @@ def main(args: argparse.Namespace) -> None:
     # Loads the saved model from checkpoint based on the `args.task` name that was
     # passed as input
     model = TASK.load_from_checkpoint(args.input_checkpoint)
-    model = cast(pl.LightningModule, model)
     model.freeze()
     model.eval()
 
@@ -213,7 +212,6 @@ def main(args: argparse.Namespace) -> None:
     model = model.to(device)
 
     if args.task == "etci2021":  # Custom metric setup for testing ETCI2021
-
         metrics = MetricCollection([BinaryAccuracy(), BinaryJaccardIndex()]).to(device)
 
         val_results = run_eval_loop(model, dm.val_dataloader(), device, metrics)

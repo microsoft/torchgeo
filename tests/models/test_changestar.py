@@ -6,13 +6,8 @@ import itertools
 import pytest
 import torch
 import torch.nn as nn
-from torch.nn.modules import Module
 
 from torchgeo.models import ChangeMixin, ChangeStar, ChangeStarFarSeg
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Module.__module__ = "torch.nn"
 
 BACKBONE = ["resnet18", "resnet34", "resnet50", "resnet101"]
 IN_CHANNELS = [64, 128]
@@ -22,7 +17,7 @@ SF = [4, 8, 1]
 
 
 class TestChangeStar:
-    @torch.no_grad()  # type: ignore[misc]
+    @torch.no_grad()
     def test_changestar_farseg_classes(self) -> None:
         model = ChangeStarFarSeg(
             classes=4, backbone="resnet50", backbone_pretrained=False
@@ -32,7 +27,7 @@ class TestChangeStar:
 
         assert y["bi_seg_logit"].shape[2] == 4
 
-    @torch.no_grad()  # type: ignore[misc]
+    @torch.no_grad()
     def test_changestar_farseg_output_size(self) -> None:
         model = ChangeStarFarSeg(
             classes=4, backbone="resnet50", backbone_pretrained=False
@@ -60,7 +55,7 @@ class TestChangeStar:
         with pytest.raises(ValueError, match=match):
             ChangeStarFarSeg(classes=4, backbone="anynet", backbone_pretrained=False)
 
-    @torch.no_grad()  # type: ignore[misc]
+    @torch.no_grad()
     @pytest.mark.parametrize(
         "inc,innerc,nc,sf", list(itertools.product(IN_CHANNELS, INNNR_CHANNELS, NC, SF))
     )
@@ -75,7 +70,7 @@ class TestChangeStar:
         assert y[0].shape == y[1].shape
         assert y[0].shape == (3, 1, 32 * sf, 32 * sf)
 
-    @torch.no_grad()  # type: ignore[misc]
+    @torch.no_grad()
     def test_changestar(self) -> None:
         dense_feature_extractor = nn.modules.Sequential(
             nn.modules.Conv2d(3, 32, 3, 1, 1),
@@ -102,7 +97,7 @@ class TestChangeStar:
         assert y["bi_seg_logit"].shape == (3, 2, 2, 64, 64)
         assert y["change_prob"].shape == (3, 1, 64, 64)
 
-    @torch.no_grad()  # type: ignore[misc]
+    @torch.no_grad()
     def test_changestar_invalid_inference_mode(self) -> None:
         dense_feature_extractor = nn.modules.Sequential(
             nn.modules.Conv2d(3, 32, 3, 1, 1),
@@ -127,7 +122,7 @@ class TestChangeStar:
                 inference_mode="random",
             )
 
-    @torch.no_grad()  # type: ignore[misc]
+    @torch.no_grad()
     @pytest.mark.parametrize("inference_mode", ["t1t2", "t2t1", "mean"])
     def test_changestar_inference_output_size(self, inference_mode: str) -> None:
         dense_feature_extractor = nn.modules.Sequential(

@@ -137,7 +137,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
         "2020_10_30",
     )
 
-    ALL_BANDS = (
+    all_bands = (
         "B01",
         "B02",
         "B03",
@@ -152,7 +152,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
         "B12",
         "CLD",
     )
-    RGB_BANDS = ("B04", "B03", "B02")
+    rgb_bands = ("B04", "B03", "B02")
 
     classes = [
         "No data",
@@ -173,7 +173,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
         root: str = "data",
         chip_size: int = 256,
         stride: int = 128,
-        bands: Tuple[str, ...] = ALL_BANDS,
+        bands: Tuple[str, ...] = all_bands,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
@@ -278,12 +278,12 @@ class BeninSmallHolderCashews(NonGeoDataset):
         """
         assert isinstance(bands, tuple), "The list of bands must be a tuple"
         for band in bands:
-            if band not in self.ALL_BANDS:
+            if band not in self.all_bands:
                 raise ValueError(f"'{band}' is an invalid band name.")
 
     @lru_cache(maxsize=128)
     def _load_all_imagery(
-        self, bands: Tuple[str, ...] = ALL_BANDS
+        self, bands: Tuple[str, ...] = all_bands
     ) -> Tuple[Tensor, rasterio.Affine, CRS]:
         """Load all the imagery (across time) for the dataset.
 
@@ -358,7 +358,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
         return img, transform, crs
 
-    @lru_cache()
+    @lru_cache
     def _load_mask(self, transform: rasterio.Affine) -> Tensor:
         """Rasterizes the dataset's labels (in geojson format)."""
         # Create a mask layer out of the geojson
@@ -447,7 +447,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
         .. versionadded:: 0.2
         """
         rgb_indices = []
-        for band in self.RGB_BANDS:
+        for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:

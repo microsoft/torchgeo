@@ -49,6 +49,11 @@ FAIR1M
 
 .. autoclass:: FAIR1MDataModule
 
+GID-15
+^^^^^^
+
+.. autoclass:: GID15DataModule
+
 Inria Aerial Image Labeling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -94,6 +99,11 @@ So2Sat
 
 .. autoclass:: So2SatDataModule
 
+SpaceNet
+^^^^^^^^
+
+.. autoclass:: SpaceNet1DataModule
+
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
 
@@ -118,3 +128,21 @@ xView2
 ^^^^^^
 
 .. autoclass:: XView2DataModule
+
+Base Classes
+------------
+
+GeoDataModule
+^^^^^^^^^^^^^
+
+.. autoclass:: GeoDataModule
+
+NonGeoDataModule
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: NonGeoDataModule
+
+Utilities
+---------
+
+.. autoclass:: MisconfigurationException

@@ -6,7 +6,6 @@ from typing import Dict
 import kornia.augmentation as K
 import pytest
 import torch
-import torch.nn as nn
 from torch import Tensor
 
 from torchgeo.transforms import indices, transforms
@@ -24,7 +23,7 @@ from torchgeo.transforms import indices, transforms
 def batch_gray() -> Dict[str, Tensor]:
     return {
         "image": torch.tensor([[[[1, 2, 3], [4, 5, 6], [7, 8, 9]]]], dtype=torch.float),
-        "mask": torch.tensor([[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]], dtype=torch.long),
+        "mask": torch.tensor([[[0, 0, 1], [0, 1, 1], [1, 1, 1]]], dtype=torch.long),
         "boxes": torch.tensor([[[0, 1], [1, 1], [1, 0], [0, 0]]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
@@ -43,7 +42,7 @@ def batch_rgb() -> Dict[str, Tensor]:
             ],
             dtype=torch.float,
         ),
-        "mask": torch.tensor([[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]], dtype=torch.long),
+        "mask": torch.tensor([[[0, 0, 1], [0, 1, 1], [1, 1, 1]]], dtype=torch.long),
         "boxes": torch.tensor([[[0, 1], [1, 1], [1, 0], [0, 0]]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
@@ -64,7 +63,7 @@ def batch_multispectral() -> Dict[str, Tensor]:
             ],
             dtype=torch.float,
         ),
-        "mask": torch.tensor([[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]], dtype=torch.long),
+        "mask": torch.tensor([[[0, 0, 1], [0, 1, 1], [1, 1, 1]]], dtype=torch.long),
         "boxes": torch.tensor([[[0, 1], [1, 1], [1, 0], [0, 0]]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
@@ -80,7 +79,7 @@ def assert_matching(output: Dict[str, Tensor], expected: Dict[str, Tensor]) -> N
 def test_augmentation_sequential_gray(batch_gray: Dict[str, Tensor]) -> None:
     expected = {
         "image": torch.tensor([[[[3, 2, 1], [6, 5, 4], [9, 8, 7]]]], dtype=torch.float),
-        "mask": torch.tensor([[[[1, 0, 0], [1, 1, 0], [1, 1, 1]]]], dtype=torch.long),
+        "mask": torch.tensor([[[1, 0, 0], [1, 1, 0], [1, 1, 1]]], dtype=torch.long),
         "boxes": torch.tensor([[[1, 0], [2, 0], [2, 1], [1, 1]]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
@@ -103,7 +102,7 @@ def test_augmentation_sequential_rgb(batch_rgb: Dict[str, Tensor]) -> None:
             ],
             dtype=torch.float,
         ),
-        "mask": torch.tensor([[[[1, 0, 0], [1, 1, 0], [1, 1, 1]]]], dtype=torch.long),
+        "mask": torch.tensor([[[1, 0, 0], [1, 1, 0], [1, 1, 1]]], dtype=torch.long),
         "boxes": torch.tensor([[[1, 0], [2, 0], [2, 1], [1, 1]]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
@@ -130,7 +129,7 @@ def test_augmentation_sequential_multispectral(
             ],
             dtype=torch.float,
         ),
-        "mask": torch.tensor([[[[1, 0, 0], [1, 1, 0], [1, 1, 1]]]], dtype=torch.long),
+        "mask": torch.tensor([[[1, 0, 0], [1, 1, 0], [1, 1, 1]]], dtype=torch.long),
         "boxes": torch.tensor([[[1, 0], [2, 0], [2, 1], [1, 1]]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
@@ -157,7 +156,7 @@ def test_augmentation_sequential_image_only(
             ],
             dtype=torch.float,
         ),
-        "mask": torch.tensor([[[[0, 0, 1], [0, 1, 1], [1, 1, 1]]]], dtype=torch.long),
+        "mask": torch.tensor([[[0, 0, 1], [0, 1, 1], [1, 1, 1]]], dtype=torch.long),
         "boxes": torch.tensor([[[0, 1], [1, 1], [1, 0], [0, 0]]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
@@ -189,19 +188,18 @@ def test_sequential_transforms_augmentations(
             ],
             dtype=torch.float,
         ),
-        "mask": torch.tensor([[[[1, 0, 0], [1, 1, 0], [1, 1, 1]]]], dtype=torch.long),
+        "mask": torch.tensor([[[1, 0, 0], [1, 1, 0], [1, 1, 1]]], dtype=torch.long),
         "boxes": torch.tensor([[[1, 0], [2, 0], [2, 1], [1, 1]]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
-    train_transforms = nn.Sequential(
+    train_transforms = transforms.AugmentationSequential(
         indices.AppendNBR(index_nir=0, index_swir=0),
         indices.AppendNDBI(index_swir=0, index_nir=0),
         indices.AppendNDSI(index_green=0, index_swir=0),
         indices.AppendNDVI(index_red=0, index_nir=0),
         indices.AppendNDWI(index_green=0, index_nir=0),
-        transforms.AugmentationSequential(
-            K.RandomHorizontalFlip(p=1.0), data_keys=["image", "mask", "boxes"]
-        ),
+        K.RandomHorizontalFlip(p=1.0),
+        data_keys=["image", "mask", "boxes"],
     )
     output = train_transforms(batch_multispectral)
     assert_matching(output, expected)

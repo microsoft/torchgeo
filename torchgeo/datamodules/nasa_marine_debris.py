@@ -3,20 +3,14 @@
 
 """NASA Marine Debris datamodule."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 import torch
 from torch import Tensor
-from torch.utils.data import DataLoader
 
 from ..datasets import NASAMarineDebris
+from .geo import NonGeoDataModule
 from .utils import dataset_split
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
 
 
 def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
@@ -35,7 +29,7 @@ def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
     return output
 
 
-class NASAMarineDebrisDataModule(pl.LightningDataModule):
+class NASAMarineDebrisDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the NASA Marine Debris dataset.
 
     .. versionadded:: 0.2
@@ -49,101 +43,30 @@ class NASAMarineDebrisDataModule(pl.LightningDataModule):
         test_split_pct: float = 0.2,
         **kwargs: Any,
     ) -> None:
-        """Initialize a LightningDataModule for NASA Marine Debris based DataLoaders.
+        """Initialize a new NASAMarineDebrisDataModule instance.
 
         Args:
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
-            val_split_pct: What percentage of the dataset to use as a validation set
-            test_split_pct: What percentage of the dataset to use as a test set
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
+            val_split_pct: Percentage of the dataset to use as a validation set.
+            test_split_pct: Percentage of the dataset to use as a test set.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.NASAMarineDebris`
+                :class:`~torchgeo.datasets.NASAMarineDebris`.
         """
-        super().__init__()
-        self.batch_size = batch_size
-        self.num_workers = num_workers
+        super().__init__(NASAMarineDebris, batch_size, num_workers, **kwargs)
+
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
-        self.kwargs = kwargs
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
+        self.collate_fn = collate_fn
 
-        Args:
-            sample: input image dictionary
-
-        Returns:
-            preprocessed sample
-        """
-        sample["image"] = sample["image"].float()
-        sample["image"] /= 255.0
-        return sample
-
-    def prepare_data(self) -> None:
-        """Make sure that the dataset is downloaded.
-
-        This method is only called once per run.
-        """
-        NASAMarineDebris(**self.kwargs)
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
-
-        This method is called once per GPU per run.
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
 
         Args:
-            stage: stage to set up
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        self.dataset = NASAMarineDebris(transforms=self.preprocess, **self.kwargs)
+        self.dataset = NASAMarineDebris(**self.kwargs)
         self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
             self.dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
         )
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training.
-
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-            collate_fn=collate_fn,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-            collate_fn=collate_fn,
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-            collate_fn=collate_fn,
-        )
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.NASAMarineDebris.plot`.
-
-        .. versionadded:: 0.4
-        """
-        return self.dataset.plot(*args, **kwargs)

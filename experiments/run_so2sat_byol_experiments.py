@@ -36,10 +36,9 @@ def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
 if __name__ == "__main__":
     work: "Queue[str]" = Queue()
 
-    for (model, lr, loss, weights, bands) in itertools.product(
+    for model, lr, loss, weights, bands in itertools.product(
         model_options, lr_options, loss_options, weight_options, bands_options
     ):
-
         experiment_name = f"{model}_{lr}_{loss}_byol_{bands}-{weights.split('/')[-2]}"
 
         output_dir = os.path.join("output", "so2sat_experiments")
@@ -47,7 +46,6 @@ if __name__ == "__main__":
         config_file = os.path.join("conf", "so2sat.yaml")
 
         if not os.path.exists(os.path.join(output_dir, experiment_name)):
-
             command = (
                 "python train.py"
                 + f" config_file={config_file}"

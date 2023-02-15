@@ -118,7 +118,7 @@ class SEN12MS(NonGeoDataset):
         "B12",
     )
 
-    RGB_BANDS = ["B04", "B03", "B02"]
+    rgb_bands = ["B04", "B03", "B02"]
 
     filenames = [
         "ROIs1158_spring_lc.tar.gz",
@@ -223,14 +223,14 @@ class SEN12MS(NonGeoDataset):
         """
         filename = self.ids[index]
 
-        lc = self._load_raster(filename, "lc")
+        lc = self._load_raster(filename, "lc").long()
         s1 = self._load_raster(filename, "s1")
         s2 = self._load_raster(filename, "s2")
 
         image = torch.cat(tensors=[s1, s2], dim=0)
         image = torch.index_select(image, dim=0, index=self.band_indices)
 
-        sample: Dict[str, Tensor] = {"image": image, "mask": lc}
+        sample: Dict[str, Tensor] = {"image": image, "mask": lc[0]}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -330,19 +330,19 @@ class SEN12MS(NonGeoDataset):
         .. versionadded:: 0.2
         """
         rgb_indices = []
-        for band in self.RGB_BANDS:
+        for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
-        image, mask = sample["image"][rgb_indices].numpy(), sample["mask"][0]
+        image, mask = sample["image"][rgb_indices].numpy(), sample["mask"]
         image = percentile_normalization(image)
         ncols = 2
 
         showing_predictions = "prediction" in sample
         if showing_predictions:
-            prediction = sample["prediction"][0]
+            prediction = sample["prediction"]
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))

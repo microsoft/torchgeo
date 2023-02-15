@@ -47,8 +47,6 @@ from .geo import (
     RasterDataset,
     UnionDataset,
     VectorDataset,
-    VisionClassificationDataset,
-    VisionDataset,
 )
 from .gid15 import GID15
 from .globbiomass import GlobBiomass
@@ -74,7 +72,6 @@ from .loveda import LoveDA
 from .millionaid import MillionAID
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
-from .nwpu import VHR10
 from .openbuildings import OpenBuildings
 from .oscd import OSCD
 from .patternnet import PatternNet
@@ -83,7 +80,7 @@ from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
-from .sentinel import Sentinel, Sentinel2
+from .sentinel import Sentinel, Sentinel1, Sentinel2
 from .so2sat import So2Sat
 from .spacenet import (
     SpaceNet,
@@ -105,6 +102,7 @@ from .utils import (
     unbind_samples,
 )
 from .vaihingen import Vaihingen2D
+from .vhr10 import VHR10
 from .xview import XView2
 from .zuericrop import ZueriCrop
 
@@ -146,6 +144,7 @@ __all__ = (
     "NAIP",
     "OpenBuildings",
     "Sentinel",
+    "Sentinel1",
     "Sentinel2",
     # NonGeoDataset
     "ADVANCE",
@@ -202,8 +201,6 @@ __all__ = (
     "RasterDataset",
     "UnionDataset",
     "VectorDataset",
-    "VisionClassificationDataset",
-    "VisionDataset",
     # Utilities
     "BoundingBox",
     "concat_samples",
@@ -211,7 +208,3 @@ __all__ = (
     "stack_samples",
     "unbind_samples",
 )
-
-# https://stackoverflow.com/questions/40018681
-for module in __all__:
-    globals()[module].__module__ = "torchgeo.datasets"

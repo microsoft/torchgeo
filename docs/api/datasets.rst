@@ -122,6 +122,7 @@ Sentinel
 ^^^^^^^^
 
 .. autoclass:: Sentinel
+.. autoclass:: Sentinel1
 .. autoclass:: Sentinel2
 
 .. _Non-geospatial Datasets:
@@ -169,8 +170,8 @@ Kenya Crop Type
 
 .. autoclass:: CV4AKenyaCropType
 
-Deep Globe Land Cover
-^^^^^^^^^^^^^^^^^^^^^
+DeepGlobe Land Cover
+^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: DeepGlobeLandCover
 
@@ -311,8 +312,8 @@ Vaihingen
 
 .. autoclass:: Vaihingen2D
 
-NWPU VHR-10
-^^^^^^^^^^^
+VHR-10
+^^^^^^
 
 .. autoclass:: VHR10
 

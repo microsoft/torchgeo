@@ -6,12 +6,14 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
+import timm
 import torch
 import torch.nn as nn
 from torch.nn.modules import Module
 
 from torchgeo.trainers.utils import (
-    extract_encoder,
+    _get_input_layer_name_and_module,
+    extract_backbone,
     load_state_dict,
     reinit_initial_conv_layer,
 )
@@ -52,26 +54,26 @@ class SegmentationTestModel(Module):
         return cast(torch.Tensor, self.conv1(x))
 
 
-def test_extract_encoder_unsupported_model(tmp_path: Path) -> None:
+def test_extract_backbone_unsupported_model(tmp_path: Path) -> None:
     checkpoint = {"hyper_parameters": {"some_unsupported_model": "resnet18"}}
     path = os.path.join(str(tmp_path), "dummy.ckpt")
     torch.save(checkpoint, path)
-    err = "Unknown checkpoint task. Only encoder or model extraction is supported"
+    err = "Unknown checkpoint task. Only backbone or model extraction is supported"
     with pytest.raises(ValueError, match=err):
-        extract_encoder(path)
+        extract_backbone(path)
 
 
-def test_extract_encoder(checkpoint: str) -> None:
-    extract_encoder(checkpoint)
+def test_extract_backbone(checkpoint: str) -> None:
+    extract_backbone(checkpoint)
 
 
 def test_load_state_dict(checkpoint: str, model: Module) -> None:
-    _, state_dict = extract_encoder(checkpoint)
+    _, state_dict = extract_backbone(checkpoint)
     model = load_state_dict(model, state_dict)
 
 
 def test_load_state_dict_unequal_input_channels(checkpoint: str, model: Module) -> None:
-    _, state_dict = extract_encoder(checkpoint)
+    _, state_dict = extract_backbone(checkpoint)
     expected_in_channels = state_dict["conv1.weight"].shape[1]
 
     in_channels = 7
@@ -88,7 +90,7 @@ def test_load_state_dict_unequal_input_channels(checkpoint: str, model: Module) 
 
 
 def test_load_state_dict_unequal_classes(checkpoint: str, model: Module) -> None:
-    _, state_dict = extract_encoder(checkpoint)
+    _, state_dict = extract_backbone(checkpoint)
     expected_num_classes = state_dict["fc.weight"].shape[0]
 
     num_classes = 10
@@ -115,3 +117,10 @@ def test_reinit_initial_conv_layer() -> None:
     assert in_channels == 4
     assert k1 == 3 and k2 == 3
     assert new_conv_layer.stride[0] == 2
+
+
+def test_get_input_layer_name_and_module() -> None:
+    key, module = _get_input_layer_name_and_module(timm.create_model("resnet18"))
+    assert key == "conv1"
+    assert isinstance(module, nn.Conv2d)
+    assert module.in_channels == 3

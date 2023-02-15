@@ -17,18 +17,23 @@ from torchgeo.datamodules import (
     BigEarthNetDataModule,
     ChesapeakeCVPRDataModule,
     COWCCountingDataModule,
+    DeepGlobeLandCoverDataModule,
     ETCI2021DataModule,
     EuroSATDataModule,
+    GID15DataModule,
     InriaAerialImageLabelingDataModule,
     LandCoverAIDataModule,
+    LoveDADataModule,
     NAIPChesapeakeDataModule,
     NASAMarineDebrisDataModule,
-    OSCDDataModule,
+    Potsdam2DDataModule,
     RESISC45DataModule,
     SEN12MSDataModule,
     So2SatDataModule,
+    SpaceNet1DataModule,
     TropicalCycloneDataModule,
     UCMercedDataModule,
+    Vaihingen2DDataModule,
 )
 from torchgeo.trainers import (
     BYOLTask,
@@ -47,17 +52,22 @@ TASK_TO_MODULES_MAPPING: Dict[
     "chesapeake_cvpr": (SemanticSegmentationTask, ChesapeakeCVPRDataModule),
     "cowc_counting": (RegressionTask, COWCCountingDataModule),
     "cyclone": (RegressionTask, TropicalCycloneDataModule),
+    "deepglobelandcover": (SemanticSegmentationTask, DeepGlobeLandCoverDataModule),
     "eurosat": (ClassificationTask, EuroSATDataModule),
     "etci2021": (SemanticSegmentationTask, ETCI2021DataModule),
+    "gid15": (SemanticSegmentationTask, GID15DataModule),
     "inria": (SemanticSegmentationTask, InriaAerialImageLabelingDataModule),
     "landcoverai": (SemanticSegmentationTask, LandCoverAIDataModule),
+    "loveda": (SemanticSegmentationTask, LoveDADataModule),
     "naipchesapeake": (SemanticSegmentationTask, NAIPChesapeakeDataModule),
     "nasa_marine_debris": (ObjectDetectionTask, NASAMarineDebrisDataModule),
-    "oscd": (SemanticSegmentationTask, OSCDDataModule),
+    "potsdam2d": (SemanticSegmentationTask, Potsdam2DDataModule),
     "resisc45": (ClassificationTask, RESISC45DataModule),
     "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),
     "so2sat": (ClassificationTask, So2SatDataModule),
+    "spacenet1": (SemanticSegmentationTask, SpaceNet1DataModule),
     "ucmerced": (ClassificationTask, UCMercedDataModule),
+    "vaihingen2d": (SemanticSegmentationTask, Vaihingen2DDataModule),
 }
 
 
@@ -170,6 +180,7 @@ def main(conf: DictConfig) -> None:
     # Setup trainer
     ######################################
     tb_logger = pl_loggers.TensorBoardLogger(conf.program.log_dir, name=experiment_name)
+    csv_logger = pl_loggers.CSVLogger(conf.program.log_dir, name=experiment_name)
 
     if isinstance(task, ObjectDetectionTask):
         monitor_metric = "val_map"
@@ -179,7 +190,11 @@ def main(conf: DictConfig) -> None:
         mode = "min"
 
     checkpoint_callback = ModelCheckpoint(
-        monitor=monitor_metric, dirpath=experiment_dir, save_top_k=1, save_last=True
+        monitor=monitor_metric,
+        filename="checkpoint-epoch{epoch:02d}-val_loss{val_loss:.2f}",
+        dirpath=experiment_dir,
+        save_top_k=1,
+        save_last=True,
     )
     early_stopping_callback = EarlyStopping(
         monitor=monitor_metric, min_delta=0.00, patience=18, mode=mode
@@ -188,7 +203,7 @@ def main(conf: DictConfig) -> None:
     trainer_args = cast(Dict[str, Any], OmegaConf.to_object(conf.trainer))
 
     trainer_args["callbacks"] = [checkpoint_callback, early_stopping_callback]
-    trainer_args["logger"] = tb_logger
+    trainer_args["logger"] = [tb_logger, csv_logger]
     trainer_args["default_root_dir"] = experiment_dir
     trainer = pl.Trainer(**trainer_args)
 
@@ -199,7 +214,7 @@ def main(conf: DictConfig) -> None:
     # Run experiment
     ######################################
     trainer.fit(model=task, datamodule=datamodule)
-    trainer.test(model=task, datamodule=datamodule)
+    trainer.test(ckpt_path="best", datamodule=datamodule)
 
 
 if __name__ == "__main__":

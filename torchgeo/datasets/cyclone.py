@@ -39,9 +39,9 @@ class TropicalCyclone(NonGeoDataset):
        * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
          imagery and labels from the Radiant Earth MLHub
 
-    .. versionchanged:: 0.4.0
-        Class name changed from TropicalCycloneWindEstimation to TropicalCyclone
-        to be consistent with TropicalCycloneDataModule.
+    .. versionchanged:: 0.4
+       Class name changed from TropicalCycloneWindEstimation to TropicalCyclone
+       to be consistent with TropicalCycloneDataModule.
     """
 
     collection_id = "nasa_tropical_storm_competition"
@@ -134,7 +134,7 @@ class TropicalCyclone(NonGeoDataset):
         """
         return len(self.collection)
 
-    @lru_cache()
+    @lru_cache
     def _load_image(self, directory: str) -> Tensor:
         """Load a single image.
 
@@ -153,10 +153,8 @@ class TropicalCyclone(NonGeoDataset):
                 except AttributeError:
                     resample = Image.BILINEAR
                 img = img.resize(size=(self.size, self.size), resample=resample)
-            array: "np.typing.NDArray[np.int_]" = np.array(img)
-            if len(array.shape) == 3:
-                array = array[:, :, 0]
-            tensor = torch.from_numpy(array)
+            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
+            tensor = torch.from_numpy(array).permute((2, 0, 1)).float()
             return tensor
 
     def _load_features(self, directory: str) -> Dict[str, Any]:
@@ -178,7 +176,7 @@ class TropicalCyclone(NonGeoDataset):
 
         features["relative_time"] = int(features["relative_time"])
         features["ocean"] = int(features["ocean"])
-        features["label"] = int(features["wind_speed"])
+        features["label"] = torch.tensor(int(features["wind_speed"])).float()
 
         return features
 
@@ -230,7 +228,7 @@ class TropicalCyclone(NonGeoDataset):
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for figure
 
-        Returns;
+        Returns:
             a matplotlib Figure with the rendered sample
 
         .. versionadded:: 0.2
@@ -243,7 +241,7 @@ class TropicalCyclone(NonGeoDataset):
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 
-        ax.imshow(image, cmap="gray")
+        ax.imshow(image.permute(1, 2, 0))
         ax.axis("off")
 
         if show_titles:

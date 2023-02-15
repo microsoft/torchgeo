@@ -1,12 +1,12 @@
 [build-system]
 requires = [
     # setuptools 42+ required for metadata.license_files support in setup.cfg
-    "setuptools>=42,<66",
+    "setuptools>=42,<68",
 ]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
-target-version = ["py37", "py38", "py39"]
+target-version = ["py38", "py39", "py310"]
 color = true
 skip_magic_trailing_comma = true
 
@@ -25,6 +25,7 @@ skip_gitignore = true
 color_output = true
 
 [tool.mypy]
+python_version = "3.8"
 ignore_missing_imports = true
 show_error_codes = true
 exclude = "(build|data|dist|docs/src|images|logo|logs|output)/"
@@ -85,6 +86,16 @@ filterwarnings = [
     "ignore:Call to deprecated create function:DeprecationWarning:tensorboard.compat.proto",
     # https://github.com/treebeardtech/nbmake/issues/68
     'ignore:The \(fspath. py.path.local\) argument to NotebookFile is deprecated:pytest.PytestDeprecationWarning:nbmake.pytest_plugin',
+    # https://github.com/kornia/kornia/issues/777
+    "ignore:Default upsampling behavior when mode=bilinear is changed to align_corners=False since 0.4.0:UserWarning:torch.nn.functional",
+    # https://github.com/scikit-image/scikit-image/issues/6663
+    # https://github.com/scikit-image/scikit-image/pull/6637
+    "ignore:`np.bool8` is a deprecated alias for `np.bool_`.:DeprecationWarning:skimage.util.dtype",
+    # https://github.com/lanpa/tensorboardX/pull/677
+    "ignore:ANTIALIAS is deprecated and will be removed in Pillow 10:DeprecationWarning:tensorboardX.summary",
+    # https://github.com/Lightning-AI/lightning/issues/16756
+    'ignore:Implementing implicit namespace packages \(as specified in PEP 420\) is preferred:DeprecationWarning:lightning_fabric',
+    'ignore:Implementing implicit namespace packages \(as specified in PEP 420\) is preferred:DeprecationWarning:pytorch_lightning',
 
     # Expected warnings
     # pytorch-lightning warns us about using num_workers=0, but it's faster on macOS

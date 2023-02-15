@@ -129,7 +129,7 @@ class So2Sat(NonGeoDataset):
     )
     all_band_names = all_s1_band_names + all_s2_band_names
 
-    RGB_BANDS = ["S2_B04", "S2_B03", "S2_B02"]
+    rgb_bands = ["S2_B04", "S2_B03", "S2_B02"]
 
     BAND_SETS = {
         "all": all_band_names,
@@ -234,7 +234,7 @@ class So2Sat(NonGeoDataset):
             s1 = torch.from_numpy(s1)
             s2 = torch.from_numpy(s2)
 
-        sample = {"image": torch.cat([s1, s2]), "label": label}
+        sample = {"image": torch.cat([s1, s2]).float(), "label": label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -299,7 +299,7 @@ class So2Sat(NonGeoDataset):
         .. versionadded:: 0.2
         """
         rgb_indices = []
-        for band in self.RGB_BANDS:
+        for band in self.rgb_bands:
             if band in self.s2_band_names:
                 idx = self.s2_band_names.index(band) + len(self.s1_band_names)
                 rgb_indices.append(idx)

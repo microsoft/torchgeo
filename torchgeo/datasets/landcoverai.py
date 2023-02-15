@@ -136,7 +136,7 @@ class LandCoverAI(NonGeoDataset):
         """
         return len(self.ids)
 
-    @lru_cache()
+    @lru_cache
     def _load_image(self, id_: str) -> Tensor:
         """Load a single image.
 
@@ -149,12 +149,12 @@ class LandCoverAI(NonGeoDataset):
         filename = os.path.join(self.root, "output", id_ + ".jpg")
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img)
-            tensor = torch.from_numpy(array)
+            tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    @lru_cache()
+    @lru_cache
     def _load_target(self, id_: str) -> Tensor:
         """Load the target mask for a single image.
 
@@ -167,7 +167,7 @@ class LandCoverAI(NonGeoDataset):
         filename = os.path.join(self.root, "output", id_ + "_m.png")
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("L"))
-            tensor = torch.from_numpy(array)
+            tensor = torch.from_numpy(array).long()
             return tensor
 
     def _verify(self) -> None:

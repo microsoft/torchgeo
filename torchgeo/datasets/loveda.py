@@ -50,7 +50,7 @@ class LoveDA(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * <https://arxiv.org/abs/2110.08733>
+    * https://arxiv.org/abs/2110.08733
 
     .. versionadded:: 0.2
     """
@@ -214,7 +214,7 @@ class LoveDA(NonGeoDataset):
         filename = os.path.join(path)
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
-            tensor = torch.from_numpy(array)
+            tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
