@@ -5,16 +5,13 @@ from math import floor, isclose
 from typing import Any, Dict, List, Sequence, Tuple, Union
 
 import pytest
-import torch
 from rasterio.crs import CRS
-from torch.utils.data import TensorDataset
 
 from torchgeo.datasets import GeoDataset
 from torchgeo.datasets.splits import (
     random_bbox_assignment,
     random_bbox_splitting,
     random_grid_cell_assignment,
-    random_nongeo_split,
     roi_split,
     time_series_split,
 )
@@ -38,24 +35,6 @@ class CustomGeoDataset(GeoDataset):
         hits = self.index.intersection(tuple(query), objects=True)
         hit = next(iter(hits))
         return {"content": hit.object}
-
-
-def test_random_nongeo_split() -> None:
-    num_samples = 26
-    x = torch.ones(num_samples, 5)
-    y = torch.randint(low=0, high=2, size=(num_samples,))
-    ds = TensorDataset(x, y)
-
-    # Test only train/val set split
-    train_ds, val_ds = random_nongeo_split(ds, lengths=[1 / 2, 1 / 2])
-    assert len(train_ds) == round(num_samples / 2)
-    assert len(val_ds) == round(num_samples / 2)
-
-    # Test train/val/test set split with remainder
-    train_ds, val_ds, test_ds = random_nongeo_split(ds, lengths=[1 / 3, 1 / 3, 1 / 3])
-    assert len(train_ds) == floor(num_samples / 3) + 1
-    assert len(val_ds) == floor(num_samples / 3) + 1
-    assert len(test_ds) == floor(num_samples / 3)
 
 
 @pytest.mark.parametrize(

@@ -16,7 +16,6 @@ from ..datasets import GeoDataset, NonGeoDataset
 from .utils import BoundingBox
 
 __all__ = (
-    "random_nongeo_split",
     "random_bbox_assignment",
     "random_bbox_splitting",
     "random_grid_cell_assignment",
@@ -61,28 +60,6 @@ def _create_geodataset_like(dataset: GeoDataset, index: Index) -> GeoDataset:
     new_dataset = deepcopy(dataset)
     new_dataset.index = index
     return new_dataset
-
-
-def random_nongeo_split(
-    dataset: Union[TensorDataset, NonGeoDataset],
-    lengths: Sequence[Union[int, float]],
-    generator: Optional[Generator] = default_generator,
-) -> List[Subset[Any]]:
-    """Randomly split a NonGeoDataset into non-overlapping new NonGeoDatasets.
-
-    Args:
-        dataset: dataset to be split
-        lengths: lengths or fractions of splits to be produced
-        generator: (optional) generator used for the random permutation
-
-    Returns:
-        A list of the subset datasets.
-
-    .. versionadded:: 0.5
-    """
-    if sum(lengths) == 1:
-        lengths = _fractions_to_lengths(lengths, len(dataset))
-    return random_split(dataset, lengths, generator)
 
 
 def random_bbox_assignment(
