@@ -62,7 +62,9 @@ class SimCLRAugmentation(nn.Module):
             # K.ColorJitter(0.8, 0.8, 0.8, 0.8, 0.2),
             # K.RandomGrayscale(p=0.2),
             K.RandomHorizontalFlip(),
-            K.RandomGaussianBlur((3, 3), (1.5, 1.5), p=0.1),
+            K.RandomGaussianBlur(
+                (3, 3), (1.5, 1.5), p=0.1, silence_instantiation_warning=True
+            ),
             K.RandomResizedCrop(size=image_size),
         )
 
