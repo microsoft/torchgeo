@@ -7,7 +7,7 @@ from typing import Any, Optional
 
 import kornia.augmentation as K
 import timm
-import torch.nn as nn
+import torch
 from timm.models import ResNet
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -16,7 +16,51 @@ from ..transforms import AugmentationSequential
 __all__ = ["ResNet50_Weights", "ResNet18_Weights"]
 
 _zhu_xlab_transforms = AugmentationSequential(
-    K.Resize(256), K.CenterCrop(224), data_keys=["image"]
+    K.Resize(256),
+    K.CenterCrop(224),
+    K.Normalize(mean=0, std=10000),
+    data_keys=["image"],
+)
+
+# https://github.com/ServiceNow/seasonal-contrast/
+# blob/8285173ec205b64bc3e53b880344dd6c3f79fa7a/datasets/bigearthnet_dataset.py#L13
+_seco_transforms = AugmentationSequential(
+    K.Resize(128),
+    K.Normalize(
+        mean=torch.Tensor(
+            [
+                340.76769064,
+                429.9430203,
+                614.21682446,
+                590.23569706,
+                950.68368468,
+                1792.46290469,
+                2075.46795189,
+                2218.94553375,
+                2266.46036911,
+                2246.0605464,
+                1594.42694882,
+                1009.32729131,
+            ]
+        ),
+        std=torch.Tensor(
+            [
+                554.81258967,
+                572.41639287,
+                582.87945694,
+                675.88746967,
+                729.89827633,
+                1096.01480586,
+                1273.45393088,
+                1365.45589904,
+                1356.13789355,
+                1302.3292881,
+                1079.19066363,
+                818.86747235,
+            ]
+        ),
+    ),
+    data_keys=["image"],
 )
 
 # https://github.com/pytorch/vision/pull/6883
@@ -71,7 +115,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             "https://huggingface.co/torchgeo/resnet18_sentinel2_rgb_seco/"
             "resolve/main/resnet18_sentinel2_rgb_seco.ckpt"
         ),
-        transforms=nn.Identity(),
+        transforms=_seco_transforms,
         meta={
             "dataset": "SeCo Dataset",
             "in_chans": 3,
@@ -161,7 +205,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             "https://huggingface.co/torchgeo/resnet50_sentinel2_rgb_seco/"
             "resolve/main/resnet50_sentinel2_rgb_seco.ckpt"
         ),
-        transforms=nn.Identity(),
+        transforms=_seco_transforms,
         meta={
             "dataset": "SeCo Dataset",
             "in_chans": 3,

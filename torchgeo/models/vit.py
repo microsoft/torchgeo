@@ -15,7 +15,10 @@ from ..transforms import AugmentationSequential
 __all__ = ["ViTSmall16_Weights"]
 
 _zhu_xlab_transforms = AugmentationSequential(
-    K.Resize(256), K.CenterCrop(224), data_keys=["image"]
+    K.Resize(256),
+    K.CenterCrop(224),
+    K.Normalize(mean=0, std=10000),
+    data_keys=["image"],
 )
 
 # https://github.com/pytorch/vision/pull/6883
