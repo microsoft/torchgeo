@@ -17,7 +17,7 @@ from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_dataset, extract_archive
+from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
 
 
 # TODO: read geospatial information from stac.json files
@@ -56,6 +56,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
     """
 
     dataset_id = "ts_cashew_benin"
+    collection_ids = ["ts_cashew_benin_source", "ts_cashew_benin_labels"]
     image_meta = {
         "filename": "ts_cashew_benin_source.tar.gz",
         "md5": "957272c86e518a925a4e0d90dab4f92d",
@@ -416,7 +417,8 @@ class BeninSmallHolderCashews(NonGeoDataset):
             print("Files already downloaded and verified")
             return
 
-        download_radiant_mlhub_dataset(self.dataset_id, self.root, api_key)
+        for collection_id in self.collection_ids:
+            download_radiant_mlhub_collection(collection_id, self.root, api_key)
 
         image_archive_path = os.path.join(self.root, self.image_meta["filename"])
         target_archive_path = os.path.join(self.root, self.target_meta["filename"])

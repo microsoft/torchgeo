@@ -15,7 +15,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_dataset, extract_archive
+from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
 
 
 # TODO: read geospatial information from stac.json files
@@ -56,7 +56,10 @@ class CV4AKenyaCropType(NonGeoDataset):
          imagery and labels from the Radiant Earth MLHub
     """
 
-    dataset_id = "ref_african_crops_kenya_02"
+    collection_ids = [
+        "ref_african_crops_kenya_02_labels",
+        "ref_african_crops_kenya_02_source",
+    ]
     image_meta = {
         "filename": "ref_african_crops_kenya_02_source.tar.gz",
         "md5": "9c2004782f6dc83abb1bf45ba4d0da46",
@@ -394,7 +397,8 @@ class CV4AKenyaCropType(NonGeoDataset):
             print("Files already downloaded and verified")
             return
 
-        download_radiant_mlhub_dataset(self.dataset_id, self.root, api_key)
+        for collection_id in self.collection_ids:
+            download_radiant_mlhub_collection(collection_id, self.root, api_key)
 
         image_archive_path = os.path.join(self.root, self.image_meta["filename"])
         target_archive_path = os.path.join(self.root, self.target_meta["filename"])

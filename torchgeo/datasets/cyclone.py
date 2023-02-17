@@ -15,7 +15,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_dataset, extract_archive
+from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
 
 
 class TropicalCyclone(NonGeoDataset):
@@ -45,6 +45,12 @@ class TropicalCyclone(NonGeoDataset):
     """
 
     collection_id = "nasa_tropical_storm_competition"
+    collection_ids = [
+        "nasa_tropical_storm_competition_train_source",
+        "nasa_tropical_storm_competition_test_source",
+        "nasa_tropical_storm_competition_train_labels",
+        "nasa_tropical_storm_competition_test_labels",
+    ]
     md5s = {
         "train": {
             "source": "97e913667a398704ea8d28196d91dad6",
@@ -207,7 +213,8 @@ class TropicalCyclone(NonGeoDataset):
             print("Files already downloaded and verified")
             return
 
-        download_radiant_mlhub_dataset(self.collection_id, self.root, api_key)
+        for collection_id in self.collection_ids:
+            download_radiant_mlhub_collection(collection_id, self.root, api_key)
 
         for split, resources in self.md5s.items():
             for resource_type in resources:
