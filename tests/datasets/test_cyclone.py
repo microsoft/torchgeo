@@ -17,14 +17,14 @@ from torch.utils.data import ConcatDataset
 from torchgeo.datasets import TropicalCyclone
 
 
-class Dataset:
+class Collection:
     def download(self, output_dir: str, **kwargs: str) -> None:
         for tarball in glob.iglob(os.path.join("tests", "data", "cyclone", "*.tar.gz")):
             shutil.copy(tarball, output_dir)
 
 
-def fetch(collection_id: str, **kwargs: str) -> Dataset:
-    return Dataset()
+def fetch(collection_id: str, **kwargs: str) -> Collection:
+    return Collection()
 
 
 class TestTropicalCyclone:
@@ -33,7 +33,7 @@ class TestTropicalCyclone:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> TropicalCyclone:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
-        monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch)
+        monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch)
         md5s = {
             "train": {
                 "source": "2b818e0a0873728dabf52c7054a0ce4c",

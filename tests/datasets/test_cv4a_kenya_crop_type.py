@@ -16,7 +16,7 @@ from torch.utils.data import ConcatDataset
 from torchgeo.datasets import CV4AKenyaCropType
 
 
-class Dataset:
+class Collection:
     def download(self, output_dir: str, **kwargs: str) -> None:
         glob_path = os.path.join(
             "tests", "data", "ref_african_crops_kenya_02", "*.tar.gz"
@@ -25,15 +25,15 @@ class Dataset:
             shutil.copy(tarball, output_dir)
 
 
-def fetch(dataset_id: str, **kwargs: str) -> Dataset:
-    return Dataset()
+def fetch(dataset_id: str, **kwargs: str) -> Collection:
+    return Collection()
 
 
 class TestCV4AKenyaCropType:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CV4AKenyaCropType:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
-        monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch)
+        monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch)
         source_md5 = "7f4dcb3f33743dddd73f453176308bfb"
         labels_md5 = "95fc59f1d94a85ec00931d4d1280bec9"
         monkeypatch.setitem(CV4AKenyaCropType.image_meta, "md5", source_md5)
