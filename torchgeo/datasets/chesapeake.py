@@ -29,7 +29,7 @@ class Chesapeake(RasterDataset, abc.ABC):
     """Abstract base class for all Chesapeake datasets.
 
     `Chesapeake Bay High-Resolution Land Cover Project
-    <https://www.chesapeakeconservancy.org/conservation-innovation-center/high-resolution-data/land-cover-data-project/>`_
+    <https://www.chesapeakeconservancy.org/conservation-innovation-center/high-resolution-data/lulc-data-project-2022/>`_
     dataset.
 
     This dataset was collected by the Chesapeake Conservancy's Conservation Innovation
