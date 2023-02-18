@@ -35,7 +35,7 @@ class EnviroAtlas(GeoDataset):
     This dataset was organized to accompany the 2022 paper, `"Resolving label
     uncertainty with implicit generative models"
     <https://openreview.net/forum?id=AEa_UepnMDX>`_. More details can be found at
-    https://github.com/estherrolf/qr_for_landcover.
+    https://github.com/estherrolf/implicit-posterior.
 
     If you use this dataset in your research, please cite the following paper:
 

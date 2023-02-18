@@ -23,7 +23,7 @@ class CV4AKenyaCropType(NonGeoDataset):
     """CV4A Kenya Crop Type dataset.
 
     Used in a competition in the Computer NonGeo for Agriculture (CV4A) workshop in
-    ICLR 2020. See `this website <https://registry.mlhub.earth/10.34911/rdnt.dw605x/>`__
+    ICLR 2020. See `this website <https://mlhub.earth/10.34911/rdnt.dw605x>`__
     for dataset details.
 
     Consists of 4 tiles of Sentinel 2 imagery from 13 different points in time.
