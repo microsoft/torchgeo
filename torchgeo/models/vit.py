@@ -14,6 +14,7 @@ from ..transforms import AugmentationSequential
 
 __all__ = ["ViTSmall16_Weights"]
 
+# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167 # noqa: E501
 _zhu_xlab_transforms = AugmentationSequential(
     K.Resize(256),
     K.CenterCrop(224),

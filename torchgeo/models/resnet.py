@@ -15,6 +15,7 @@ from ..transforms import AugmentationSequential
 
 __all__ = ["ResNet50_Weights", "ResNet18_Weights"]
 
+# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167 # noqa: E501
 _zhu_xlab_transforms = AugmentationSequential(
     K.Resize(256),
     K.CenterCrop(224),
@@ -22,8 +23,7 @@ _zhu_xlab_transforms = AugmentationSequential(
     data_keys=["image"],
 )
 
-# https://github.com/ServiceNow/seasonal-contrast/
-# blob/8285173ec205b64bc3e53b880344dd6c3f79fa7a/datasets/bigearthnet_dataset.py#L13
+# https://github.com/ServiceNow/seasonal-contrast/blob/8285173ec205b64bc3e53b880344dd6c3f79fa7a/datasets/bigearthnet_dataset.py#L13 # noqa: E501
 _seco_transforms = AugmentationSequential(
     K.Resize(128),
     K.Normalize(
