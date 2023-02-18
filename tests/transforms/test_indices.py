@@ -30,7 +30,7 @@ from torchgeo.transforms import (
 def sample() -> Dict[str, Tensor]:
     return {
         "image": torch.arange(3 * 4 * 4, dtype=torch.float).view(3, 4, 4),
-        "mask": torch.arange(4 * 4, dtype=torch.long).view(4, 4),
+        "mask": torch.arange(4 * 4, dtype=torch.long).view(1, 4, 4),
     }
 
 
@@ -38,7 +38,7 @@ def sample() -> Dict[str, Tensor]:
 def batch() -> Dict[str, Tensor]:
     return {
         "image": torch.arange(2 * 3 * 4 * 4, dtype=torch.float).view(2, 3, 4, 4),
-        "mask": torch.arange(2 * 4 * 4, dtype=torch.long).view(2, 4, 4),
+        "mask": torch.arange(2 * 4 * 4, dtype=torch.long).view(2, 1, 4, 4),
     }
 
 
