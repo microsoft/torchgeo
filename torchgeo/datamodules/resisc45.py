@@ -42,13 +42,6 @@ class RESISC45DataModule(NonGeoDataModule):
             K.RandomVerticalFlip(p=0.5),
             K.RandomSharpness(p=0.5),
             K.RandomErasing(p=0.1),
-            K.ColorJitter(
-                p=0.5,
-                brightness=0.1,
-                contrast=0.1,
-                saturation=0.1,
-                hue=0.1,
-                silence_instantiation_warning=True,
-            ),
+            K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
             data_keys=["image"],
         )

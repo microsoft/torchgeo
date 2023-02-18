@@ -102,6 +102,10 @@ filterwarnings = [
     "ignore:The dataloader, .*, does not have many workers which may be a bottleneck:UserWarning",
     # pytorch-lightning warns us about using the CPU when a GPU is available
     "ignore:GPU available but not used.:UserWarning",
+    # https://github.com/kornia/kornia/pull/1611
+    "ignore:`ColorJitter` is now following Torchvision implementation.:DeprecationWarning:kornia.augmentation._2d.intensity.color_jitter",
+    # https://github.com/kornia/kornia/pull/1663
+    "ignore:`RandomGaussianBlur` has changed its behavior and now randomly sample sigma for both axes.:DeprecationWarning:kornia.augmentation._2d.intensity.gaussian_blur",
 
     # Unexpected warnings, worth investigating
     # pytorch-lightning is having trouble inferring the batch size for ChesapeakeCVPRDataModule and CycloneDataModule for some reason
