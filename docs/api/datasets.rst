@@ -93,6 +93,12 @@ iNaturalist
 
 .. autoclass:: INaturalist
 
+LandCover.ai
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: LandCoverAI
+.. autoclass:: LandCoverAIGeo
+
 Landsat
 ^^^^^^^
 
@@ -216,9 +222,10 @@ Inria Aerial Image Labeling
 .. autoclass:: InriaAerialImageLabeling
 
 LandCover.ai
-^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
 
 .. autoclass:: LandCoverAI
+.. autoclass:: LandCoverAINonGeo
 
 LEVIR-CD+
 ^^^^^^^^^
