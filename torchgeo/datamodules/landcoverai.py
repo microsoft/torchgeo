@@ -7,13 +7,13 @@ from typing import Any
 
 import kornia.augmentation as K
 
-from ..datasets import LandCoverAI
+from ..datasets import LandCoverAINonGeo
 from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
 class LandCoverAIDataModule(NonGeoDataModule):
-    """LightningDataModule implementation for the LandCover.ai dataset.
+    """LightningDataModule implementation for the LandCover.ai NonGeo dataset.
 
     Uses the train/val/test splits from the dataset.
     """
@@ -27,9 +27,9 @@ class LandCoverAIDataModule(NonGeoDataModule):
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.LandCoverAI`.
+                :class:`~torchgeo.datasets.LandCoverAINonGeo`.
         """
-        super().__init__(LandCoverAI, batch_size, num_workers, **kwargs)
+        super().__init__(LandCoverAINonGeo, batch_size, num_workers, **kwargs)
 
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),

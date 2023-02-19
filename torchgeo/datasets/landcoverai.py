@@ -2,31 +2,32 @@
 # Licensed under the MIT License.
 
 """LandCover.ai dataset."""
-
+import abc
 import glob
 import hashlib
 import os
 from functools import lru_cache
-from typing import Callable, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from matplotlib.colors import ListedColormap
 from PIL import Image
+from rasterio.crs import CRS
 from torch import Tensor
 
-from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, working_dir
+from .geo import NonGeoDataset, RasterDataset
+from .utils import BoundingBox, download_url, extract_archive, working_dir
 
 
-class LandCoverAI(NonGeoDataset):
-    r"""LandCover.ai dataset.
+class LandCoverAI(abc.ABC):
+    r"""Abstract base class for LandCover.ai Geo and NonGeo datasets.
 
     The `LandCover.ai <https://landcover.ai/>`__ (Land Cover from Aerial Imagery)
     dataset is a dataset for automatic mapping of buildings, woodlands, water and
     roads from aerial images. This implementation is specifically for Version 1 of
-    Landcover.ai.
+    LandCover.ai.
 
     Dataset features:
 
@@ -50,7 +51,223 @@ class LandCoverAI(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/2005.02264v3
+    * https://openaccess.thecvf.com/content/CVPR2021W/EarthVision/html/Boguszewski_LandCover.ai_Dataset_for_Automatic_Mapping_of_Buildings_Woodlands_Water_and_CVPRW_2021_paper.html
+    """
+    url = "https://landcover.ai.linuxpolska.com/download/landcover.ai.v1.zip"
+    filename = "landcover.ai.v1.zip"
+    md5 = "3268c89070e8734b4e91d531c0617e03"
+    classes = ["Background", "Building", "Woodland", "Water", "Road"]
+    cmap = {
+        0: (0, 0, 0, 0),
+        1: (97, 74, 74, 255),
+        2: (38, 115, 0, 255),
+        3: (0, 197, 255, 255),
+        4: (207, 207, 207, 255),
+    }
+
+    def __init__(
+        self, root: str = "data", download: bool = False, checksum: bool = False
+    ) -> None:
+        """Initialize a new LandCover.ai dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            cache: if True, cache file handle to speed up repeated sampling
+            download: if True, download dataset and store it in the root directory
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
+        """
+        self.root = root
+        self.download = download
+        self.checksum = checksum
+
+        lc_colors = np.zeros((max(self.cmap.keys()) + 1, 4))
+        lc_colors[list(self.cmap.keys())] = list(self.cmap.values())
+        lc_colors = lc_colors[:, :3] / 255
+        self._lc_cmap = ListedColormap(lc_colors)
+
+        self._verify()
+
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
+        if self._verify_data():
+            return
+
+        # Check if the zip file has already been downloaded
+        pathname = os.path.join(self.root, self.filename)
+        if os.path.exists(pathname):
+            self._extract()
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
+
+        # Download the dataset
+        self._download()
+        self._extract()
+
+    @abc.abstractmethod
+    def _verify_data(self) -> bool:
+        """Verify if the images and masks are present."""
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        download_url(self.url, self.root, md5=self.md5 if self.checksum else None)
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        extract_archive(os.path.join(self.root, self.filename))
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        image = np.rollaxis(sample["image"].numpy().astype("uint8").squeeze(), 0, 3)
+        mask = sample["mask"].numpy().astype("uint8").squeeze()
+
+        num_panels = 2
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            predictions = sample["prediction"].numpy()
+            num_panels += 1
+
+        fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
+        axs[0].imshow(image)
+        axs[0].axis("off")
+        axs[1].imshow(mask, vmin=0, vmax=4, cmap=self._lc_cmap, interpolation="none")
+        axs[1].axis("off")
+        if show_titles:
+            axs[0].set_title("Image")
+            axs[1].set_title("Mask")
+
+        if showing_predictions:
+            axs[2].imshow(
+                predictions, vmin=0, vmax=4, cmap=self._lc_cmap, interpolation="none"
+            )
+            axs[2].axis("off")
+            if show_titles:
+                axs[2].set_title("Predictions")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig
+
+
+class LandCoverAIGeo(LandCoverAI, RasterDataset):
+    r"""LandCover.ai Geo dataset.
+
+    See the abstract base LandCoverAI class to find out more.
+    """
+    filename_glob = "images/*.tif"
+    filename_regex = ".*tif"
+    crs = CRS.from_epsg(2180)
+
+    def __init__(
+        self,
+        root: str = "data",
+        res: Optional[float] = None,
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        cache: bool = True,
+        download: bool = False,
+        checksum: bool = False,
+    ) -> None:
+        """Initialize a new LandCover.ai NonGeo dataset instance.
+
+        Args:
+           root: root directory where dataset can be found
+           res: resolution of the dataset in units of CRS
+                (defaults to the resolution of the first file found)
+           transforms: a function/transform that takes input sample and its target as
+               entry and returns a transformed version
+           cache: if True, cache file handle to speed up repeated sampling
+           download: if True, download dataset and store it in the root directory
+           checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+           RuntimeError: if ``download=False`` and data is not found, or checksums
+               don't match
+        """
+        LandCoverAI.__init__(self, root, download, checksum)
+        RasterDataset.__init__(
+            self, root, self.crs, res, transforms=transforms, cache=cache
+        )
+
+    def _verify_data(self) -> bool:
+        """Verify if the images and masks are present."""
+        images = os.path.join(self.root, "images", "*.tif")
+        masks = os.path.join(self.root, "masks", "*.tif")
+        return len(glob.glob(images)) > 0 and len(glob.glob(images)) == len(
+            glob.glob(masks)
+        )
+
+    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+        """Retrieve image/mask and metadata indexed by query.
+
+        Args:
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+
+        Returns:
+            sample of image, mask and metadata at that index
+
+        Raises:
+            IndexError: if query is not found in the index
+        """
+        hits = self.index.intersection(tuple(query), objects=True)
+        img_filepaths = cast(List[str], [hit.object for hit in hits])
+        mask_filepaths = [path.replace("images", "masks") for path in img_filepaths]
+
+        if not img_filepaths:
+            raise IndexError(
+                f"query: {query} not found in index with bounds: {self.bounds}"
+            )
+
+        img = self._merge_files(img_filepaths, query, self.band_indexes)
+        mask = self._merge_files(mask_filepaths, query, self.band_indexes)
+        sample = {
+            "crs": self.crs,
+            "bbox": query,
+            "image": img.float(),
+            "mask": mask.long(),
+        }
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+
+class LandCoverAINonGeo(LandCoverAI, NonGeoDataset):
+    r"""LandCover.ai NonGeo dataset.
+
+    See the abstract base LandCoverAI class to find out more.
 
     .. note::
 
@@ -59,21 +276,7 @@ class LandCoverAI(NonGeoDataset):
        * `opencv-python <https://pypi.org/project/opencv-python/>`_ to generate
          the train/val/test split
     """
-
-    url = "https://landcover.ai.linuxpolska.com/download/landcover.ai.v1.zip"
-    filename = "landcover.ai.v1.zip"
-    md5 = "3268c89070e8734b4e91d531c0617e03"
     sha256 = "15ee4ca9e3fd187957addfa8f0d74ac31bc928a966f76926e11b3c33ea76daa1"
-    classes = ["Background", "Building", "Woodland", "Water", "Road"]
-    cmap = ListedColormap(
-        [
-            [0.63921569, 1.0, 0.45098039],
-            [0.61176471, 0.61176471, 0.61176471],
-            [0.14901961, 0.45098039, 0.0],
-            [0.0, 0.77254902, 1.0],
-            [0.0, 0.0, 0.0],
-        ]
-    )
 
     def __init__(
         self,
@@ -83,7 +286,7 @@ class LandCoverAI(NonGeoDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new LandCover.ai dataset instance.
+        """Initialize a new LandCover.ai NonGeo dataset instance.
 
         Args:
             root: root directory where dataset can be found
@@ -100,14 +303,10 @@ class LandCoverAI(NonGeoDataset):
         """
         assert split in ["train", "val", "test"]
 
-        self.root = root
-        self.split = split
+        super().__init__(root, download, checksum)
+
         self.transforms = transforms
-        self.download = download
-        self.checksum = checksum
-
-        self._verify()
-
+        self.split = split
         with open(os.path.join(self.root, split + ".txt")) as f:
             self.ids = f.readlines()
 
@@ -170,39 +369,13 @@ class LandCoverAI(NonGeoDataset):
             tensor = torch.from_numpy(array).long()
             return tensor
 
-    def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
-        # Check if the extracted files already exist
-        jpg = os.path.join(self.root, "output", "*_*.jpg")
-        png = os.path.join(self.root, "output", "*_*_m.png")
-        if glob.glob(jpg) and glob.glob(png):
-            return
-
-        # Check if the zip file has already been downloaded
-        pathname = os.path.join(self.root, self.filename)
-        if os.path.exists(pathname):
-            self._extract()
-            return
-
-        # Check if the user requested to download the dataset
-        if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
-
-        # Download the dataset
-        self._download()
-        self._extract()
-
-    def _download(self) -> None:
-        """Download the dataset."""
-        download_url(self.url, self.root, md5=self.md5 if self.checksum else None)
+    def _verify_data(self) -> bool:
+        """Verify if the images and masks are present."""
+        images = os.path.join(self.root, "output", "*_*.jpg")
+        masks = os.path.join(self.root, "output", "*_*_m.png")
+        return len(glob.glob(images)) > 0 and len(glob.glob(images)) == len(
+            glob.glob(masks)
+        )
 
     def _extract(self) -> None:
         """Extract the dataset.
@@ -210,7 +383,7 @@ class LandCoverAI(NonGeoDataset):
         Raises:
             AssertionError: if the checksum of split.py does not match
         """
-        extract_archive(os.path.join(self.root, self.filename))
+        super()._extract()
 
         # Generate train/val/test splits
         # Always check the sha256 of this file before executing
@@ -220,51 +393,3 @@ class LandCoverAI(NonGeoDataset):
                 split = f.read().encode("utf-8")
                 assert hashlib.sha256(split).hexdigest() == self.sha256
                 exec(split)
-
-    def plot(
-        self,
-        sample: Dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: Optional[str] = None,
-    ) -> plt.Figure:
-        """Plot a sample from the dataset.
-
-        Args:
-            sample: a sample returned by :meth:`__getitem__`
-            show_titles: flag indicating whether to show titles above each panel
-            suptitle: optional string to use as a suptitle
-
-        Returns:
-            a matplotlib Figure with the rendered sample
-
-        .. versionadded:: 0.2
-        """
-        image = np.rollaxis(sample["image"].numpy(), 0, 3)
-        mask = sample["mask"].numpy()
-
-        num_panels = 2
-        showing_predictions = "prediction" in sample
-        if showing_predictions:
-            predictions = sample["prediction"].numpy()
-            num_panels += 1
-
-        fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
-        axs[0].imshow(image)
-        axs[0].axis("off")
-        axs[1].imshow(mask, vmin=0, vmax=4, cmap=self.cmap, interpolation="none")
-        axs[1].axis("off")
-        if show_titles:
-            axs[0].set_title("Image")
-            axs[1].set_title("Mask")
-
-        if showing_predictions:
-            axs[2].imshow(
-                predictions, vmin=0, vmax=4, cmap=self.cmap, interpolation="none"
-            )
-            axs[2].axis("off")
-            if show_titles:
-                axs[2].set_title("Predictions")
-
-        if suptitle is not None:
-            plt.suptitle(suptitle)
-        return fig
