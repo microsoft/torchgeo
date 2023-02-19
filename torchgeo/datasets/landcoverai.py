@@ -16,12 +16,13 @@ from matplotlib.colors import ListedColormap
 from PIL import Image
 from rasterio.crs import CRS
 from torch import Tensor
+from torch.utils.data import Dataset
 
 from .geo import NonGeoDataset, RasterDataset
 from .utils import BoundingBox, download_url, extract_archive, working_dir
 
 
-class LandCoverAI(abc.ABC):
+class LandCoverAI(Dataset[Dict[str, Any]], abc.ABC):
     r"""Abstract base class for LandCover.ai Geo and NonGeo datasets.
 
     The `LandCover.ai <https://landcover.ai/>`__ (Land Cover from Aerial Imagery)
