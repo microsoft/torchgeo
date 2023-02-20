@@ -22,7 +22,7 @@ from .geo import NonGeoDataset, RasterDataset
 from .utils import BoundingBox, download_url, extract_archive, working_dir
 
 
-class LandCoverAI(Dataset[Dict[str, Any]], abc.ABC):
+class LandCoverAIBase(Dataset[Dict[str, Any]], abc.ABC):
     r"""Abstract base class for LandCover.ai Geo and NonGeo datasets.
 
     The `LandCover.ai <https://landcover.ai/>`__ (Land Cover from Aerial Imagery)
@@ -52,7 +52,7 @@ class LandCoverAI(Dataset[Dict[str, Any]], abc.ABC):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://openaccess.thecvf.com/content/CVPR2021W/EarthVision/html/Boguszewski_LandCover.ai_Dataset_for_Automatic_Mapping_of_Buildings_Woodlands_Water_and_CVPRW_2021_paper.html
+    * https://arxiv.org/abs/2005.02264v4
     """
     url = "https://landcover.ai.linuxpolska.com/download/landcover.ai.v1.zip"
     filename = "landcover.ai.v1.zip"
@@ -182,18 +182,19 @@ class LandCoverAI(Dataset[Dict[str, Any]], abc.ABC):
         return fig
 
 
-class LandCoverAIGeo(LandCoverAI, RasterDataset):
-    r"""LandCover.ai Geo dataset.
+class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
+    """LandCover.ai Geo dataset.
 
     See the abstract base LandCoverAI class to find out more.
     """
-    filename_glob = "images/*.tif"
+
+    filename_glob = os.path.join("images", "*.tif")
     filename_regex = ".*tif"
-    crs = CRS.from_epsg(2180)
 
     def __init__(
         self,
         root: str = "data",
+        crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         cache: bool = True,
@@ -204,8 +205,10 @@ class LandCoverAIGeo(LandCoverAI, RasterDataset):
 
         Args:
            root: root directory where dataset can be found
+           crs: :term:`coordinate reference system (CRS)` to warp to
+               (defaults to the CRS of the first file found)
            res: resolution of the dataset in units of CRS
-                (defaults to the resolution of the first file found)
+               (defaults to the resolution of the first file found)
            transforms: a function/transform that takes input sample and its target as
                entry and returns a transformed version
            cache: if True, cache file handle to speed up repeated sampling
@@ -216,18 +219,16 @@ class LandCoverAIGeo(LandCoverAI, RasterDataset):
            RuntimeError: if ``download=False`` and data is not found, or checksums
                don't match
         """
-        LandCoverAI.__init__(self, root, download, checksum)
-        RasterDataset.__init__(
-            self, root, self.crs, res, transforms=transforms, cache=cache
-        )
+        LandCoverAIBase.__init__(self, root, download, checksum)
+        RasterDataset.__init__(self, root, crs, res, transforms=transforms, cache=cache)
 
     def _verify_data(self) -> bool:
         """Verify if the images and masks are present."""
-        images = os.path.join(self.root, "images", "*.tif")
-        masks = os.path.join(self.root, "masks", "*.tif")
-        return len(glob.glob(images)) > 0 and len(glob.glob(images)) == len(
-            glob.glob(masks)
-        )
+        img_query = os.path.join(self.root, "images", "*.tif")
+        mask_query = os.path.join(self.root, "masks", "*.tif")
+        images = glob.glob(img_query)
+        masks = glob.glob(mask_query)
+        return len(images) > 0 and len(images) == len(masks)
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
@@ -265,8 +266,8 @@ class LandCoverAIGeo(LandCoverAI, RasterDataset):
         return sample
 
 
-class LandCoverAINonGeo(LandCoverAI, NonGeoDataset):
-    r"""LandCover.ai NonGeo dataset.
+class LandCoverAI(LandCoverAIBase, NonGeoDataset):
+    """LandCover.ai NonGeo dataset.
 
     See the abstract base LandCoverAI class to find out more.
 
@@ -277,6 +278,7 @@ class LandCoverAINonGeo(LandCoverAI, NonGeoDataset):
        * `opencv-python <https://pypi.org/project/opencv-python/>`_ to generate
          the train/val/test split
     """
+
     sha256 = "15ee4ca9e3fd187957addfa8f0d74ac31bc928a966f76926e11b3c33ea76daa1"
 
     def __init__(
@@ -372,11 +374,11 @@ class LandCoverAINonGeo(LandCoverAI, NonGeoDataset):
 
     def _verify_data(self) -> bool:
         """Verify if the images and masks are present."""
-        images = os.path.join(self.root, "output", "*_*.jpg")
-        masks = os.path.join(self.root, "output", "*_*_m.png")
-        return len(glob.glob(images)) > 0 and len(glob.glob(images)) == len(
-            glob.glob(masks)
-        )
+        img_query = os.path.join(self.root, "output", "*_*.jpg")
+        mask_query = os.path.join(self.root, "output", "*_*_m.png")
+        images = glob.glob(img_query)
+        masks = glob.glob(mask_query)
+        return len(images) > 0 and len(images) == len(masks)
 
     def _extract(self) -> None:
         """Extract the dataset.

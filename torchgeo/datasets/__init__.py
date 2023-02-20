@@ -53,7 +53,7 @@ from .globbiomass import GlobBiomass
 from .idtrees import IDTReeS
 from .inaturalist import INaturalist
 from .inria import InriaAerialImageLabeling
-from .landcoverai import LandCoverAI, LandCoverAIGeo, LandCoverAINonGeo
+from .landcoverai import LandCoverAI, LandCoverAIBase, LandCoverAIGeo
 from .landsat import (
     Landsat,
     Landsat1,
@@ -130,7 +130,7 @@ __all__ = (
     "GBIF",
     "GlobBiomass",
     "INaturalist",
-    "LandCoverAI",
+    "LandCoverAIBase",
     "LandCoverAIGeo",
     "Landsat",
     "Landsat1",
@@ -167,7 +167,7 @@ __all__ = (
     "GID15",
     "IDTReeS",
     "InriaAerialImageLabeling",
-    "LandCoverAINonGeo",
+    "LandCoverAI",
     "LEVIRCDPlus",
     "LoveDA",
     "MillionAID",

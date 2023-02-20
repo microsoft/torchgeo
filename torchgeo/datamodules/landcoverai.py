@@ -7,7 +7,7 @@ from typing import Any
 
 import kornia.augmentation as K
 
-from ..datasets import LandCoverAINonGeo
+from ..datasets import LandCoverAI
 from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
@@ -29,7 +29,7 @@ class LandCoverAIDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.LandCoverAINonGeo`.
         """
-        super().__init__(LandCoverAINonGeo, batch_size, num_workers, **kwargs)
+        super().__init__(LandCoverAI, batch_size, num_workers, **kwargs)
 
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
