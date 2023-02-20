@@ -73,7 +73,7 @@ def test_random_bbox_assignment(
     # Union equals original
     assert (train_ds | val_ds | test_ds).bounds == ds.bounds
 
-    # Test __get_item__
+    # Test __getitem__
     x = train_ds[train_ds.bounds]
     assert isinstance(x, dict)
     assert isinstance(x["content"], str)
