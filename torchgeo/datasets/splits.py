@@ -338,8 +338,8 @@ def time_series_split(
         ):
             raise ValueError("Pairs of timestamps in lengths can't overlap.")
 
-        # remove one second from each BoundingBox's maxt to avoid overlapping
-        offset = 0 if i == len(lengths) - 1 else 1
+        # remove one microsecond from each BoundingBox's maxt to avoid overlapping
+        offset = 0 if i == len(lengths) - 1 else 1e-6
         roi = BoundingBox(minx, maxx, miny, maxy, start, end - offset)
         j = 0
         for hit in dataset.index.intersection(tuple(roi), objects=True):
