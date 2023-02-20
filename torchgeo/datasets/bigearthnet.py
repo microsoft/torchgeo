@@ -45,50 +45,50 @@ class BigEarthNet(NonGeoDataset):
 
     Dataset classes (43):
 
-    0: Continuous urban fabric
-    1: Discontinuous urban fabric
-    2: Industrial or commercial units
-    3: Road and rail networks and associated land
-    4: Port areas
-    5: Airports
-    6: Mineral extraction sites
-    7: Dump sites
-    8: Construction sites
-    9: Green urban areas
-    10: Sport and leisure facilities
-    11: Non-irrigated arable land
-    12: Permanently irrigated land
-    13: Rice fields
-    14: Vineyards
-    15: Fruit trees and berry plantations
-    16: Olive groves
-    17: Pastures
-    18: Annual crops associated with permanent crops
-    19: Complex cultivation patterns
-    20: Land principally occupied by agriculture, with significant
+    0. Continuous urban fabric
+    1. Discontinuous urban fabric
+    2. Industrial or commercial units
+    3. Road and rail networks and associated land
+    4. Port areas
+    5. Airports
+    6. Mineral extraction sites
+    7. Dump sites
+    8. Construction sites
+    9. Green urban areas
+    10. Sport and leisure facilities
+    11. Non-irrigated arable land
+    12. Permanently irrigated land
+    13. Rice fields
+    14. Vineyards
+    15. Fruit trees and berry plantations
+    16. Olive groves
+    17. Pastures
+    18. Annual crops associated with permanent crops
+    19. Complex cultivation patterns
+    20. Land principally occupied by agriculture, with significant
         areas of natural vegetation
-    21: Agro-forestry areas
-    22: Broad-leaved forest
-    23: Coniferous forest
-    24: Mixed forest
-    25: Natural grassland
-    26: Moors and heathland
-    27: Sclerophyllous vegetation
-    28: Transitional woodland/shrub
-    29: Beaches, dunes, sands
-    30: Bare rock
-    31: Sparsely vegetated areas
-    32: Burnt areas
-    33: Inland marshes
-    34: Peatbogs
-    35: Salt marshes
-    36: Salines
-    37: Intertidal flats
-    38: Water courses
-    39: Water bodies
-    40: Coastal lagoons
-    41: Estuaries
-    42: Sea and ocean
+    21. Agro-forestry areas
+    22. Broad-leaved forest
+    23. Coniferous forest
+    24. Mixed forest
+    25. Natural grassland
+    26. Moors and heathland
+    27. Sclerophyllous vegetation
+    28. Transitional woodland/shrub
+    29. Beaches, dunes, sands
+    30. Bare rock
+    31. Sparsely vegetated areas
+    32. Burnt areas
+    33. Inland marshes
+    34. Peatbogs
+    35. Salt marshes
+    36. Salines
+    37. Intertidal flats
+    38. Water courses
+    39. Water bodies
+    40. Coastal lagoons
+    41. Estuaries
+    42. Sea and ocean
 
     Dataset classes (19):
 
@@ -112,6 +112,11 @@ class BigEarthNet(NonGeoDataset):
     16. Coastal wetlands
     17. Inland waters
     18. Marine waters
+
+    The source for the above dataset classes, their respective ordering, and
+    43-to-19-class mappings can be found here:
+
+    * https://git.tu-berlin.de/rsim/BigEarthNet-S2_19-classes_models/-/blob/master/label_indices.json
 
     If you use this dataset in your research, please cite the following paper:
 
