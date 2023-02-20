@@ -5,7 +5,7 @@
 
 from copy import deepcopy
 from itertools import accumulate
-from math import floor
+from math import floor, isclose
 from typing import List, Optional, Sequence, Tuple, Union
 
 from rtree.index import Index, Property
@@ -66,7 +66,7 @@ def random_bbox_assignment(
 
     .. versionadded:: 0.5
     """
-    if not (sum(lengths) == 1 or sum(lengths) == len(dataset)):
+    if not (isclose(sum(lengths), 1) or isclose(sum(lengths), len(dataset))):
         raise ValueError(
             "Sum of input lengths must equal 1 or the length of dataset's index."
         )
@@ -74,7 +74,7 @@ def random_bbox_assignment(
     if any(n <= 0 for n in lengths):
         raise ValueError("All items in input lengths must be greater than 0.")
 
-    if sum(lengths) == 1:
+    if isclose(sum(lengths), 1):
         lengths = _fractions_to_lengths(lengths, len(dataset))
 
     hits = list(dataset.index.intersection(dataset.index.bounds, objects=True))
@@ -123,7 +123,7 @@ def random_bbox_splitting(
 
     .. versionadded:: 0.5
     """
-    if sum(fractions) != 1:
+    if not isclose(sum(fractions), 1):
         raise ValueError("Sum of input fractions must equal 1.")
 
     if any(n <= 0 for n in fractions):
@@ -185,7 +185,7 @@ def random_grid_cell_assignment(
 
     .. versionadded:: 0.5
     """
-    if sum(fractions) != 1:
+    if not isclose(sum(fractions), 1):
         raise ValueError("Sum of input fractions must equal 1.")
 
     if any(n <= 0 for n in fractions):
@@ -301,7 +301,7 @@ def time_series_split(
     totalt = maxt - mint
 
     if not all(isinstance(x, tuple) for x in lengths):
-        if not (sum(lengths) == 1 or sum(lengths) == totalt):  # type: ignore[arg-type]
+        if not (isclose(sum(lengths), 1) or isclose(sum(lengths), totalt)):  # type: ignore[arg-type]
             raise ValueError(
                 "Sum of input lengths must equal 1 or the dataset's time length."
             )
@@ -309,7 +309,7 @@ def time_series_split(
         if any(n <= 0 for n in lengths):  # type: ignore[operator]
             raise ValueError("All items in input lengths must be greater than 0.")
 
-        if sum(lengths) == 1:  # type: ignore[arg-type]
+        if isclose(sum(lengths), 1):  # type: ignore[arg-type]
             lengths = [totalt * f for f in lengths]  # type: ignore[operator]
 
         lengths = [
@@ -351,7 +351,7 @@ def time_series_split(
 
         _totalt += end - start
 
-    if not _totalt == totalt:
+    if not isclose(_totalt, totalt):
         raise ValueError(
             "Pairs of timestamps in lengths must cover dataset's time bounds."
         )
