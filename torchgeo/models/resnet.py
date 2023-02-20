@@ -183,11 +183,6 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_RGB_SECO = Weights(
-        url=(
-            "https://huggingface.co/torchgeo/resnet50_sentinel2_rgb_seco/"
-            "resolve/main/resnet50_sentinel2_rgb_seco.ckpt"
-        ),
-        transforms=_seco_transforms,
         url="https://huggingface.co/torchgeo/resnet50_sentinel2_rgb_seco/resolve/main/resnet50_sentinel2_rgb_seco-584035db.pth",  # noqa: E501
         transforms=_seco_transforms,
         meta={
