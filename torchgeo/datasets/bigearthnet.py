@@ -122,7 +122,7 @@ class BigEarthNet(NonGeoDataset):
 
     * https://doi.org/10.1109/IGARSS.2019.8900532
 
-    """
+    """ # noqa: E501
 
     class_sets = {
         19: [
