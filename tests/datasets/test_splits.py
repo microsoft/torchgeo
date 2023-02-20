@@ -7,15 +7,15 @@ from typing import Any, Dict, List, Sequence, Tuple, Union
 import pytest
 from rasterio.crs import CRS
 
-from torchgeo.datasets import GeoDataset
-from torchgeo.datasets.splits import (
+from torchgeo.datasets import (
+    BoundingBox,
+    GeoDataset,
     random_bbox_assignment,
     random_bbox_splitting,
     random_grid_cell_assignment,
     roi_split,
     time_series_split,
 )
-from torchgeo.datasets.utils import BoundingBox
 
 
 class CustomGeoDataset(GeoDataset):
