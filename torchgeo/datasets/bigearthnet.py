@@ -45,50 +45,50 @@ class BigEarthNet(NonGeoDataset):
 
     Dataset classes (43):
 
-    0. Agro-forestry areas
-    1. Airports
-    2. Annual crops associated with permanent crops
-    3. Bare rock
-    4. Beaches, dunes, sands
-    5. Broad-leaved forest
-    6. Burnt areas
-    7. Coastal lagoons
-    8. Complex cultivation patterns
-    9. Coniferous forest
-    10. Construction sites
-    11. Continuous urban fabric
-    12. Discontinuous urban fabric
-    13. Dump sites
-    14. Estuaries
-    15. Fruit trees and berry plantations
-    16. Green urban areas
-    17. Industrial or commercial units
-    18. Inland marshes
-    19. Intertidal flats
-    20. Land principally occupied by agriculture, with significant
+    0: Continuous urban fabric
+    1: Discontinuous urban fabric
+    2: Industrial or commercial units
+    3: Road and rail networks and associated land
+    4: Port areas
+    5: Airports
+    6: Mineral extraction sites
+    7: Dump sites
+    8: Construction sites
+    9: Green urban areas
+    10: Sport and leisure facilities
+    11: Non-irrigated arable land
+    12: Permanently irrigated land
+    13: Rice fields
+    14: Vineyards
+    15: Fruit trees and berry plantations
+    16: Olive groves
+    17: Pastures
+    18: Annual crops associated with permanent crops
+    19: Complex cultivation patterns
+    20: Land principally occupied by agriculture, with significant
         areas of natural vegetation
-    21. Mineral extraction sites
-    22. Mixed forest
-    23. Moors and heathland
-    24. Natural grassland
-    25. Non-irrigated arable land
-    26. Olive groves
-    27. Pastures
-    28. Peatbogs
-    29. Permanently irrigated land
-    30. Port areas
-    31. Rice fields
-    32. Road and rail networks and associated land
-    33. Salines
-    34. Salt marshes
-    35. Sclerophyllous vegetation
-    36. Sea and ocean
-    37. Sparsely vegetated areas
-    38. Sport and leisure facilities
-    39. Transitional woodland/shrub
-    40. Vineyards
-    41. Water bodies
-    42. Water courses
+    21: Agro-forestry areas
+    22: Broad-leaved forest
+    23: Coniferous forest
+    24: Mixed forest
+    25: Natural grassland
+    26: Moors and heathland
+    27: Sclerophyllous vegetation
+    28: Transitional woodland/shrub
+    29: Beaches, dunes, sands
+    30: Bare rock
+    31: Sparsely vegetated areas
+    32: Burnt areas
+    33: Inland marshes
+    34: Peatbogs
+    35: Salt marshes
+    36: Salines
+    37: Intertidal flats
+    38: Water courses
+    39: Water bodies
+    40: Coastal lagoons
+    41: Estuaries
+    42: Sea and ocean
 
     Dataset classes (19):
 
@@ -143,50 +143,50 @@ class BigEarthNet(NonGeoDataset):
             "Marine waters",
         ],
         43: [
-            "Agro-forestry areas",
-            "Airports",
-            "Annual crops associated with permanent crops",
-            "Bare rock",
-            "Beaches, dunes, sands",
-            "Broad-leaved forest",
-            "Burnt areas",
-            "Coastal lagoons",
-            "Complex cultivation patterns",
-            "Coniferous forest",
-            "Construction sites",
             "Continuous urban fabric",
             "Discontinuous urban fabric",
-            "Dump sites",
-            "Estuaries",
-            "Fruit trees and berry plantations",
-            "Green urban areas",
             "Industrial or commercial units",
-            "Inland marshes",
-            "Intertidal flats",
-            "Land principally occupied by agriculture, with significant areas of"
-            " natural vegetation",
+            "Road and rail networks and associated land",
+            "Port areas",
+            "Airports",
             "Mineral extraction sites",
-            "Mixed forest",
-            "Moors and heathland",
-            "Natural grassland",
+            "Dump sites",
+            "Construction sites",
+            "Green urban areas",
+            "Sport and leisure facilities",
             "Non-irrigated arable land",
+            "Permanently irrigated land",
+            "Rice fields",
+            "Vineyards",
+            "Fruit trees and berry plantations",
             "Olive groves",
             "Pastures",
-            "Peatbogs",
-            "Permanently irrigated land",
-            "Port areas",
-            "Rice fields",
-            "Road and rail networks and associated land",
-            "Salines",
-            "Salt marshes",
+            "Annual crops associated with permanent crops",
+            "Complex cultivation patterns",
+            "Land principally occupied by agriculture, with significant areas of"
+            " natural vegetation",
+            "Agro-forestry areas",
+            "Broad-leaved forest",
+            "Coniferous forest",
+            "Mixed forest",
+            "Natural grassland",
+            "Moors and heathland",
             "Sclerophyllous vegetation",
-            "Sea and ocean",
-            "Sparsely vegetated areas",
-            "Sport and leisure facilities",
             "Transitional woodland/shrub",
-            "Vineyards",
-            "Water bodies",
+            "Beaches, dunes, sands",
+            "Bare rock",
+            "Sparsely vegetated areas",
+            "Burnt areas",
+            "Inland marshes",
+            "Peatbogs",
+            "Salt marshes",
+            "Salines",
+            "Intertidal flats",
             "Water courses",
+            "Water bodies",
+            "Coastal lagoons",
+            "Estuaries",
+            "Sea and ocean",
         ],
     }
 
