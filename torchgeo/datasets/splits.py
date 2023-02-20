@@ -26,6 +26,8 @@ __all__ = (
 def _fractions_to_lengths(fractions: Sequence[float], total: int) -> Sequence[int]:
     """Utility to divide a number into a list of integers according to fractions.
 
+    Implementation based on :meth:`torch.utils.data.random_split`.
+
     Args:
         fractions: list of fractions
         total: total to be divided
@@ -50,6 +52,9 @@ def random_bbox_assignment(
     generator: Optional[Generator] = default_generator,
 ) -> List[GeoDataset]:
     """Split a GeoDataset randomly assigning its index's BoundingBoxes.
+
+    This function will go through each BoundingBox in the GeoDataset's index and
+    randomly assign it to new GeoDatasets.
 
     Args:
         dataset: dataset to be split
@@ -104,13 +109,14 @@ def random_bbox_splitting(
 ) -> List[GeoDataset]:
     """Split a GeoDataset randomly splitting its index's BoundingBoxes.
 
-    This function will go through each BoundingBox in the GeoDataset's index and
-    split it in a random direction.
+    This function will go through each BoundingBox in the GeoDataset's index,
+    split it in a random direction and assign the resulting BoundingBoxes to
+    new GeoDatasets.
 
     Args:
         dataset: dataset to be split
         fractions: fractions of splits to be produced
-        generator: (optional) generator used for the random permutation
+        generator: generator used for the random permutation
 
     Returns
         A list of the subset datasets.
@@ -171,8 +177,8 @@ def random_grid_cell_assignment(
     Args:
         dataset: dataset to be split
         fractions: fractions of splits to be produced
-        grid_size: (optional) number of rows and columns for the grid
-        generator: (optional) generator used for the random permutation
+        grid_size: number of rows and columns for the grid
+        generator: generator used for the random permutation
 
     Returns
         A list of the subset datasets.
