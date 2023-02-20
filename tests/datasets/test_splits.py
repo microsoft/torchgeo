@@ -68,7 +68,9 @@ def test_random_bbox_assignment(
     # No overlap
     assert len(train_ds & val_ds) == 0 or isclose(_get_total_area(train_ds & val_ds), 0)
     assert len(val_ds & test_ds) == 0 or isclose(_get_total_area(val_ds & test_ds), 0)
-    assert len(test_ds & train_ds) == 0 or isclose(_get_total_area(test_ds & train_ds), 0)
+    assert len(test_ds & train_ds) == 0 or isclose(
+        _get_total_area(test_ds & train_ds), 0
+    )
 
     # Union equals original
     assert (train_ds | val_ds | test_ds).bounds == ds.bounds
@@ -126,7 +128,9 @@ def test_random_bbox_splitting() -> None:
     # No overlap
     assert len(train_ds & val_ds) == 0 or isclose(_get_total_area(train_ds & val_ds), 0)
     assert len(val_ds & test_ds) == 0 or isclose(_get_total_area(val_ds & test_ds), 0)
-    assert len(test_ds & train_ds) == 0 or isclose(_get_total_area(test_ds & train_ds), 0)
+    assert len(test_ds & train_ds) == 0 or isclose(
+        _get_total_area(test_ds & train_ds), 0
+    )
 
     # Union equals original
     assert (train_ds | val_ds | test_ds).bounds == ds.bounds
@@ -166,7 +170,9 @@ def test_random_grid_cell_assignment() -> None:
     # No overlap
     assert len(train_ds & val_ds) == 0 or isclose(_get_total_area(train_ds & val_ds), 0)
     assert len(val_ds & test_ds) == 0 or isclose(_get_total_area(val_ds & test_ds), 0)
-    assert len(test_ds & train_ds) == 0 or isclose(_get_total_area(test_ds & train_ds), 0)
+    assert len(test_ds & train_ds) == 0 or isclose(
+        _get_total_area(test_ds & train_ds), 0
+    )
 
     # Union equals original
     assert (train_ds | val_ds | test_ds).bounds == ds.bounds
@@ -215,7 +221,9 @@ def test_roi_split() -> None:
     # No overlap
     assert len(train_ds & val_ds) == 0 or isclose(_get_total_area(train_ds & val_ds), 0)
     assert len(val_ds & test_ds) == 0 or isclose(_get_total_area(val_ds & test_ds), 0)
-    assert len(test_ds & train_ds) == 0 or isclose(_get_total_area(test_ds & train_ds), 0)
+    assert len(test_ds & train_ds) == 0 or isclose(
+        _get_total_area(test_ds & train_ds), 0
+    )
 
     # Union equals original
     assert (train_ds | val_ds | test_ds).bounds == ds.bounds
