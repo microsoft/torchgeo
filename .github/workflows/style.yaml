@@ -19,7 +19,14 @@ jobs:
       uses: actions/setup-python@v4.5.0
       with:
         python-version: '3.10'
+    - name: Cache dependencies
+      uses: actions/cache@v3.2.5
+      id: cache
+      with:
+        path: ${{ env.pythonLocation }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
     - name: Install pip dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         pip install -r requirements/style.txt
         pip list
@@ -35,7 +42,14 @@ jobs:
       uses: actions/setup-python@v4.5.0
       with:
         python-version: '3.10'
+    - name: Cache dependencies
+      uses: actions/cache@v3.2.5
+      id: cache
+      with:
+        path: ${{ env.pythonLocation }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
     - name: Install pip dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         pip install -r requirements/style.txt
         pip list
@@ -51,7 +65,14 @@ jobs:
       uses: actions/setup-python@v4.5.0
       with:
         python-version: '3.10'
+    - name: Cache dependencies
+      uses: actions/cache@v3.2.5
+      id: cache
+      with:
+        path: ${{ env.pythonLocation }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
     - name: Install pip dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         pip install -r requirements/style.txt
         pip list
@@ -67,7 +88,14 @@ jobs:
       uses: actions/setup-python@v4.5.0
       with:
         python-version: '3.10'
+    - name: Cache dependencies
+      uses: actions/cache@v3.2.5
+      id: cache
+      with:
+        path: ${{ env.pythonLocation }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
     - name: Install pip dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         pip install -r requirements/style.txt
         pip list
@@ -83,9 +111,19 @@ jobs:
       uses: actions/setup-python@v4.5.0
       with:
         python-version: '3.10'
+    - name: Cache dependencies
+      uses: actions/cache@v3.2.5
+      id: cache
+      with:
+        path: ${{ env.pythonLocation }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
     - name: Install pip dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         pip install -r requirements/style.txt
         pip list
     - name: Run pyupgrade checks
       run: pyupgrade --py38-plus $(find . -path ./docs/src -prune -o -name "*.py" -print)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true

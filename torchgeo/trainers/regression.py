@@ -75,7 +75,7 @@ class RegressionTask(pl.LightningModule):
         super().__init__()
 
         # Creates `self.hparams` from kwargs
-        self.save_hyperparameters()  # type: ignore[operator]
+        self.save_hyperparameters()
         self.hyperparams = cast(Dict[str, Any], self.hparams)
         self.config_task()
 

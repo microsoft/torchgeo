@@ -93,12 +93,19 @@ filterwarnings = [
     "ignore:`np.bool8` is a deprecated alias for `np.bool_`.:DeprecationWarning:skimage.util.dtype",
     # https://github.com/lanpa/tensorboardX/pull/677
     "ignore:ANTIALIAS is deprecated and will be removed in Pillow 10:DeprecationWarning:tensorboardX.summary",
+    # https://github.com/Lightning-AI/lightning/issues/16756
+    'ignore:Implementing implicit namespace packages \(as specified in PEP 420\) is preferred:DeprecationWarning:lightning_fabric',
+    'ignore:Implementing implicit namespace packages \(as specified in PEP 420\) is preferred:DeprecationWarning:pytorch_lightning',
 
     # Expected warnings
     # pytorch-lightning warns us about using num_workers=0, but it's faster on macOS
     "ignore:The dataloader, .*, does not have many workers which may be a bottleneck:UserWarning",
     # pytorch-lightning warns us about using the CPU when a GPU is available
     "ignore:GPU available but not used.:UserWarning",
+    # https://github.com/kornia/kornia/pull/1611
+    "ignore:`ColorJitter` is now following Torchvision implementation.:DeprecationWarning:kornia.augmentation._2d.intensity.color_jitter",
+    # https://github.com/kornia/kornia/pull/1663
+    "ignore:`RandomGaussianBlur` has changed its behavior and now randomly sample sigma for both axes.:DeprecationWarning:kornia.augmentation._2d.intensity.gaussian_blur",
 
     # Unexpected warnings, worth investigating
     # pytorch-lightning is having trouble inferring the batch size for ChesapeakeCVPRDataModule and CycloneDataModule for some reason

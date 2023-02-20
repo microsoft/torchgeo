@@ -89,7 +89,7 @@ class _zipfile:
             except ImportError:
                 # Only supports normal zip files
                 # https://github.com/python/mypy/issues/1153
-                import zipfile  # type: ignore[no-redef]
+                import zipfile
 
             return zipfile.ZipFile(*self.args, **self.kwargs)
 

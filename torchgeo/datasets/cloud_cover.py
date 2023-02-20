@@ -14,7 +14,7 @@ import torch
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_dataset, extract_archive
+from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
 
 
 # TODO: read geospatial information from stac.json files
@@ -54,7 +54,12 @@ class CloudCoverDetection(NonGeoDataset):
     .. versionadded:: 0.4
     """
 
-    dataset_id = "ref_cloud_cover_detection_challenge_v1"
+    collection_ids = [
+        "ref_cloud_cover_detection_challenge_v1_train_source",
+        "ref_cloud_cover_detection_challenge_v1_train_labels",
+        "ref_cloud_cover_detection_challenge_v1_test_source",
+        "ref_cloud_cover_detection_challenge_v1_test_labels",
+    ]
 
     image_meta = {
         "train": {
@@ -332,7 +337,8 @@ class CloudCoverDetection(NonGeoDataset):
             print("Files already downloaded and verified")
             return
 
-        download_radiant_mlhub_dataset(self.dataset_id, self.root, api_key)
+        for collection_id in self.collection_ids:
+            download_radiant_mlhub_collection(collection_id, self.root, api_key)
 
         image_archive_path = os.path.join(
             self.root, self.image_meta[self.split]["filename"]

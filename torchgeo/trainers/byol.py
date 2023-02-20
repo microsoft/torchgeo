@@ -313,7 +313,7 @@ class BYOLTask(pl.LightningModule):
                 state_dict = get_weight(weights).get_state_dict(progress=True)
             backbone = utils.load_state_dict(backbone, state_dict)
 
-        self.model = BYOL(backbone, in_channels=in_channels, image_size=(256, 256))
+        self.model = BYOL(backbone, in_channels=in_channels, image_size=(224, 224))
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize a LightningModule for pre-training a model with BYOL.
@@ -337,7 +337,7 @@ class BYOLTask(pl.LightningModule):
         super().__init__()
 
         # Creates `self.hparams` from kwargs
-        self.save_hyperparameters()  # type: ignore[operator]
+        self.save_hyperparameters()
         self.hyperparams = cast(Dict[str, Any], self.hparams)
 
         self.config_task()
