@@ -70,7 +70,7 @@ class TestLandCoverAIGeo:
         plt.close()
 
 
-class TestLandCoverAINonGeo:
+class TestLandCoverAI:
     @pytest.fixture(params=["train", "val", "test"])
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest

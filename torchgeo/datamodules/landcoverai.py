@@ -13,7 +13,7 @@ from .geo import NonGeoDataModule
 
 
 class LandCoverAIDataModule(NonGeoDataModule):
-    """LightningDataModule implementation for the LandCover.ai NonGeo dataset.
+    """LightningDataModule implementation for the LandCover.ai dataset.
 
     Uses the train/val/test splits from the dataset.
     """
@@ -27,7 +27,7 @@ class LandCoverAIDataModule(NonGeoDataModule):
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.LandCoverAINonGeo`.
+                :class:`~torchgeo.datasets.LandCoverAI`.
         """
         super().__init__(LandCoverAI, batch_size, num_workers, **kwargs)
 

@@ -185,7 +185,7 @@ class LandCoverAIBase(Dataset[Dict[str, Any]], abc.ABC):
 class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
     """LandCover.ai Geo dataset.
 
-    See the abstract base LandCoverAI class to find out more.
+    See the abstract LandCoverAIBase class to find out more.
     """
 
     filename_glob = os.path.join("images", "*.tif")
@@ -267,9 +267,9 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
 
 
 class LandCoverAI(LandCoverAIBase, NonGeoDataset):
-    """LandCover.ai NonGeo dataset.
+    """LandCover.ai dataset.
 
-    See the abstract base LandCoverAI class to find out more.
+    See the abstract LandCoverAIBase class to find out more.
 
     .. note::
 
@@ -289,7 +289,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new LandCover.ai NonGeo dataset instance.
+        """Initialize a new LandCover.ai dataset instance.
 
         Args:
             root: root directory where dataset can be found
