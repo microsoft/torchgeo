@@ -33,27 +33,8 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
     .. versionadded:: 0.4
     """
 
-    SENTINEL2_ALL_MOCO = Weights(
-        url=(
-            "https://huggingface.co/torchgeo/vit_small_patch16_224_sentinel2_all_moco/"
-            "resolve/main/vit_small_patch16_224_sentinel2_all_moco.pth"
-        ),
-        transforms=_zhu_xlab_transforms,
-        meta={
-            "dataset": "SSL4EO-S12",
-            "in_chans": 13,
-            "model": "vit_small_patch16_224",
-            "publication": "https://arxiv.org/abs/2211.07044",
-            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
-            "ssl_method": "moco",
-        },
-    )
-
     SENTINEL2_ALL_DINO = Weights(
-        url=(
-            "https://huggingface.co/torchgeo/vit_small_patch16_224_sentinel2_all_dino/"
-            "resolve/main/vit_small_patch16_224_sentinel2_all_dino.pth"
-        ),
+        url="https://huggingface.co/torchgeo/vit_small_patch16_224_sentinel2_all_dino/resolve/main/vit_small_patch16_224_sentinel2_all_dino-36bcc127.pth",  # noqa: E501
         transforms=_zhu_xlab_transforms,
         meta={
             "dataset": "SSL4EO-S12",
@@ -62,6 +43,19 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             "publication": "https://arxiv.org/abs/2211.07044",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
             "ssl_method": "dino",
+        },
+    )
+
+    SENTINEL2_ALL_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/vit_small_patch16_224_sentinel2_all_moco/resolve/main/vit_small_patch16_224_sentinel2_all_moco-67c9032d.pth",  # noqa: E501
+        transforms=_zhu_xlab_transforms,
+        meta={
+            "dataset": "SSL4EO-S12",
+            "in_chans": 13,
+            "model": "vit_small_patch16_224",
+            "publication": "https://arxiv.org/abs/2211.07044",
+            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "ssl_method": "moco",
         },
     )
 
