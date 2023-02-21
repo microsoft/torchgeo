@@ -6,7 +6,7 @@
 from copy import deepcopy
 from itertools import accumulate
 from math import floor, isclose
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union, cast
 
 from rtree.index import Index, Property
 from torch import Generator, default_generator, randint, randperm
@@ -48,7 +48,7 @@ def _fractions_to_lengths(fractions: Sequence[float], total: int) -> Sequence[in
 
 def random_bbox_assignment(
     dataset: GeoDataset,
-    lengths: Sequence[Union[int, float]],
+    lengths: Sequence[float],
     generator: Optional[Generator] = default_generator,
 ) -> List[GeoDataset]:
     """Split a GeoDataset randomly assigning its index's BoundingBoxes.
@@ -76,20 +76,18 @@ def random_bbox_assignment(
 
     if isclose(sum(lengths), 1):
         lengths = _fractions_to_lengths(lengths, len(dataset))
+    lengths = cast(Sequence[int], lengths)
 
     hits = list(dataset.index.intersection(dataset.index.bounds, objects=True))
 
-    hits = [
-        hits[i]
-        for i in randperm(sum(lengths), generator=generator)  # type: ignore[arg-type]
-    ]
+    hits = [hits[i] for i in randperm(sum(lengths), generator=generator)]
 
     new_indexes = [
         Index(interleaved=False, properties=Property(dimension=3)) for _ in lengths
     ]
 
     for i, length in enumerate(lengths):
-        for j in range(length):  # type: ignore[arg-type]
+        for j in range(length):
             hit = hits.pop()
             new_indexes[i].insert(j, hit.bounds, hit.object)
 
@@ -282,7 +280,7 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> List[GeoDatas
 
 
 def time_series_split(
-    dataset: GeoDataset, lengths: Sequence[Union[int, float, Tuple[int, int]]]
+    dataset: GeoDataset, lengths: Sequence[Union[float, Tuple[float, float]]]
 ) -> List[GeoDataset]:
     """Split a GeoDataset on its time dimension to create non-overlapping GeoDatasets.
 
@@ -301,28 +299,32 @@ def time_series_split(
     totalt = maxt - mint
 
     if not all(isinstance(x, tuple) for x in lengths):
-        if not (isclose(sum(lengths), 1) or isclose(sum(lengths), totalt)):  # type: ignore[arg-type]
+        lengths = cast(Sequence[float], lengths)
+
+        if not (isclose(sum(lengths), 1) or isclose(sum(lengths), totalt)):
             raise ValueError(
                 "Sum of input lengths must equal 1 or the dataset's time length."
             )
 
-        if any(n <= 0 for n in lengths):  # type: ignore[operator]
+        if any(n <= 0 for n in lengths):
             raise ValueError("All items in input lengths must be greater than 0.")
 
-        if isclose(sum(lengths), 1):  # type: ignore[arg-type]
-            lengths = [totalt * f for f in lengths]  # type: ignore[operator]
+        if isclose(sum(lengths), 1):
+            lengths = [totalt * f for f in lengths]
 
         lengths = [
-            (mint + offset - length, mint + offset)  # type: ignore[operator, misc]
+            (mint + offset - length, mint + offset)  # type: ignore[operator]
             for offset, length in zip(accumulate(lengths), lengths)
         ]
+
+    lengths = cast(Sequence[Tuple[float, float]], lengths)
 
     new_indexes = [
         Index(interleaved=False, properties=Property(dimension=3)) for _ in lengths
     ]
 
-    _totalt = 0
-    for i, (start, end) in enumerate(lengths):  # type: ignore[misc]
+    _totalt = 0.0
+    for i, (start, end) in enumerate(lengths):
         if start >= end:
             raise ValueError(
                 "Pairs of timestamps in lengths must have end greater than start."
@@ -333,9 +335,7 @@ def time_series_split(
                 "Pairs of timestamps in lengths can't be out of dataset's time bounds."
             )
 
-        if any(  # type: ignore[misc]
-            start < x < end or start < y < end for x, y in lengths[i + 1 :]
-        ):
+        if any(start < x < end or start < y < end for x, y in lengths[i + 1 :]):
             raise ValueError("Pairs of timestamps in lengths can't overlap.")
 
         # remove one microsecond from each BoundingBox's maxt to avoid overlapping
