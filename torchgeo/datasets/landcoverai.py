@@ -137,7 +137,6 @@ class LandCoverAIBase(Dataset[Dict[str, Any]], abc.ABC):
         Raises:
             IndexError: if query is not found in the index
         """
-        pass
 
     @abc.abstractmethod
     def _verify_data(self) -> bool:
