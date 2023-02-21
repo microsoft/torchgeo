@@ -25,7 +25,7 @@ from .utils import BoundingBox, download_url, extract_archive, working_dir
 class LandCoverAIBase(Dataset[Dict[str, Any]], abc.ABC):
     r"""Abstract base class for LandCover.ai Geo and NonGeo datasets.
 
-    The `LandCover.ai <https://landcover.ai/>`__ (Land Cover from Aerial Imagery)
+    The `LandCover.ai <https://landcover.ai.linuxpolska.com/>`__ (Land Cover from Aerial Imagery)
     dataset is a dataset for automatic mapping of buildings, woodlands, water and
     roads from aerial images. This implementation is specifically for Version 1 of
     LandCover.ai.
@@ -53,7 +53,10 @@ class LandCoverAIBase(Dataset[Dict[str, Any]], abc.ABC):
     If you use this dataset in your research, please cite the following paper:
 
     * https://arxiv.org/abs/2005.02264v4
+
+    .. versionadded:: 0.5
     """
+
     url = "https://landcover.ai.linuxpolska.com/download/landcover.ai.v1.zip"
     filename = "landcover.ai.v1.zip"
     md5 = "3268c89070e8734b4e91d531c0617e03"
@@ -148,8 +151,6 @@ class LandCoverAIBase(Dataset[Dict[str, Any]], abc.ABC):
 
         Returns:
             a matplotlib Figure with the rendered sample
-
-        .. versionadded:: 0.2
         """
         image = np.rollaxis(sample["image"].numpy().astype("uint8").squeeze(), 0, 3)
         mask = sample["mask"].numpy().astype("uint8").squeeze()
@@ -186,6 +187,8 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
     """LandCover.ai Geo dataset.
 
     See the abstract LandCoverAIBase class to find out more.
+
+    .. versionadded:: 0.5
     """
 
     filename_glob = os.path.join("images", "*.tif")
