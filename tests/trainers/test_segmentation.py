@@ -6,6 +6,8 @@ from typing import Any, Dict, Type, cast
 
 import pytest
 import segmentation_models_pytorch as smp
+import torch
+import torch.nn as nn
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
 from pytorch_lightning import LightningDataModule, Trainer
@@ -29,7 +31,18 @@ from torchgeo.datamodules import (
 from torchgeo.datasets import LandCoverAI
 from torchgeo.trainers import SemanticSegmentationTask
 
-from .test_utils import SegmentationTestModel
+
+class SegmentationTestModel(Module):
+    def __init__(
+        self, in_channels: int = 3, classes: int = 1000, **kwargs: Any
+    ) -> None:
+        super().__init__()
+        self.conv1 = nn.Conv2d(
+            in_channels=in_channels, out_channels=classes, kernel_size=1, padding=0
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return cast(torch.Tensor, self.conv1(x))
 
 
 def create_model(**kwargs: Any) -> Module:

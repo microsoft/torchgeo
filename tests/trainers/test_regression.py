@@ -24,17 +24,22 @@ from torchgeo.datasets import TropicalCyclone
 from torchgeo.models import get_model_weights, list_models
 from torchgeo.trainers import RegressionTask
 
-from .test_utils import RegressionTestModel
+from .test_classification import ClassificationTestModel
 
 
-def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
-    state_dict: Dict[str, Any] = torch.load(url)
-    return state_dict
+class RegressionTestModel(ClassificationTestModel):
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(in_chans=3, num_classes=1)
 
 
 class PredictRegressionDataModule(TropicalCycloneDataModule):
     def setup(self, stage: str) -> None:
         self.predict_dataset = TropicalCyclone(split="test", **self.kwargs)
+
+
+def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+    state_dict: Dict[str, Any] = torch.load(url)
+    return state_dict
 
 
 def plot(*args: Any, **kwargs: Any) -> None:

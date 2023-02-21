@@ -24,7 +24,7 @@ from torchgeo.samplers import GridGeoSampler
 from torchgeo.trainers import BYOLTask
 from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
 
-from .test_utils import SegmentationTestModel
+from .test_segmentation import SegmentationTestModel
 
 
 def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
