@@ -69,6 +69,7 @@ from .landsat import (
 )
 from .levircd import LEVIRCDPlus
 from .loveda import LoveDA
+from .mapinwild import MapInWild
 from .millionaid import MillionAID
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
@@ -168,6 +169,7 @@ __all__ = (
     "LandCoverAI",
     "LEVIRCDPlus",
     "LoveDA",
+    "MapInWild",
     "MillionAID",
     "NASAMarineDebris",
     "OSCD",
