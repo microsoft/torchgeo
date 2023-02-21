@@ -25,10 +25,10 @@ from .utils import BoundingBox, download_url, extract_archive, working_dir
 class LandCoverAIBase(Dataset[Dict[str, Any]], abc.ABC):
     r"""Abstract base class for LandCover.ai Geo and NonGeo datasets.
 
-    The `LandCover.ai <https://landcover.ai.linuxpolska.com/>`__ (Land Cover from Aerial Imagery)
-    dataset is a dataset for automatic mapping of buildings, woodlands, water and
-    roads from aerial images. This implementation is specifically for Version 1 of
-    LandCover.ai.
+    The `LandCover.ai <https://landcover.ai.linuxpolska.com/>`__ (Land Cover from
+    Aerial Imagery) dataset is a dataset for automatic mapping of buildings, woodlands,
+    water and roads from aerial images. This implementation is specifically for
+    Version 1 of LandCover.ai.
 
     Dataset features:
 
@@ -123,6 +123,21 @@ class LandCoverAIBase(Dataset[Dict[str, Any]], abc.ABC):
         # Download the dataset
         self._download()
         self._extract()
+
+    @abc.abstractmethod
+    def __getitem__(self, query: Any) -> Dict[str, Any]:
+        """Retrieve image, mask and metadata indexed by index.
+
+        Args:
+            query: coordinates or an index
+
+        Returns:
+            sample of image, mask and metadata at that index
+
+        Raises:
+            IndexError: if query is not found in the index
+        """
+        pass
 
     @abc.abstractmethod
     def _verify_data(self) -> bool:
