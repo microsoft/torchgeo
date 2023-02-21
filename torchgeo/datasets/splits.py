@@ -39,7 +39,7 @@ def _fractions_to_lengths(fractions: Sequence[float], total: int) -> Sequence[in
     """
     lengths = [floor(frac * total) for frac in fractions]
     remainder = int(total - sum(lengths))
-    # add 1 to all the lengths in round-robin fashion until the remainder is 0
+    # Add 1 to all the lengths in round-robin fashion until the remainder is 0
     for i in range(remainder):
         idx_to_add_at = i % len(lengths)
         lengths[idx_to_add_at] += 1
@@ -137,19 +137,25 @@ def random_bbox_splitting(
         box = BoundingBox(*hit.bounds)
         fraction_left = 1.0
 
+        # Randomly choose the split direction
         horizontal, flip = randint(0, 2, (2,), generator=generator)
-        for j, frac in enumerate(fractions):
-            if fraction_left == frac:
+        for j, fraction in enumerate(fractions):
+            if fraction_left == fraction:
+                # For the last fraction, no need to split again
                 new_box = box
             elif flip:
+                # new_box corresponds to fraction, box is the remainder that we might
+                # split again in the next iteration. Each split is done according to
+                # fraction wrt what's left
                 box, new_box = box.split(
-                    (fraction_left - frac) / fraction_left, horizontal
+                    (fraction_left - fraction) / fraction_left, horizontal
                 )
             else:
-                new_box, box = box.split(frac / fraction_left, horizontal)
+                # Same as above, but without flipping
+                new_box, box = box.split(fraction / fraction_left, horizontal)
 
             new_indexes[j].insert(i, tuple(new_box), hit.object)
-            fraction_left -= frac
+            fraction_left -= fraction
             horizontal = not horizontal
 
     new_datasets = []
@@ -200,6 +206,7 @@ def random_grid_cell_assignment(
 
     cells = []
 
+    # Generate the grid's cells for each bbox in index
     for i, hit in enumerate(
         dataset.index.intersection(dataset.index.bounds, objects=True)
     ):
@@ -226,6 +233,7 @@ def random_grid_cell_assignment(
             ]
         )
 
+    # Randomly assign cells to each new index
     cells = [cells[i] for i in randperm(len(cells), generator=generator)]
 
     for i, length in enumerate(lengths):
@@ -338,7 +346,7 @@ def time_series_split(
         if any(start < x < end or start < y < end for x, y in lengths[i + 1 :]):
             raise ValueError("Pairs of timestamps in lengths can't overlap.")
 
-        # remove one microsecond from each BoundingBox's maxt to avoid overlapping
+        # Remove one microsecond from each BoundingBox's maxt to avoid overlapping
         offset = 0 if i == len(lengths) - 1 else 1e-6
         roi = BoundingBox(minx, maxx, miny, maxy, start, end - offset)
         j = 0
