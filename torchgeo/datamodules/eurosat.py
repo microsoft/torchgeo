@@ -7,7 +7,7 @@ from typing import Any
 
 import torch
 
-from ..datasets import EuroSAT
+from ..datasets import EuroSAT, EuroSAT100
 from .geo import NonGeoDataModule
 
 
@@ -67,3 +67,23 @@ class EuroSATDataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.EuroSAT`.
         """
         super().__init__(EuroSAT, batch_size, num_workers, **kwargs)
+
+
+class EuroSAT100DataModule(EuroSATDataModule):
+    """LightningDataModule implementation for the EuroSAT100 dataset.
+
+    .. versionadded:: 0.5
+    """
+
+    def __init__(
+        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+    ) -> None:
+        """Initialize a new EuroSAT100DataModule instance.
+
+        Args:
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.EuroSAT100`.
+        """
+        super().__init__(EuroSAT100, batch_size, num_workers, **kwargs)
