@@ -396,6 +396,44 @@ class BoundingBox:
             and self.maxt >= other.mint
         )
 
+    def split(
+        self, proportion: float, horizontal: bool = True
+    ) -> Tuple["BoundingBox", "BoundingBox"]:
+        """Split BoundingBox in two.
+
+        Args:
+            proportion: split proportion in range (0,1)
+            horizontal: whether the split is horizontal or vertical
+
+        Returns:
+            A tuple with the resulting BoundingBoxes
+
+        .. versionadded:: 0.5
+        """
+        if not (0.0 < proportion < 1.0):
+            raise ValueError("Input proportion must be between 0 and 1.")
+
+        if horizontal:
+            w = self.maxx - self.minx
+            splitx = self.minx + w * proportion
+            bbox1 = BoundingBox(
+                self.minx, splitx, self.miny, self.maxy, self.mint, self.maxt
+            )
+            bbox2 = BoundingBox(
+                splitx, self.maxx, self.miny, self.maxy, self.mint, self.maxt
+            )
+        else:
+            h = self.maxy - self.miny
+            splity = self.miny + h * proportion
+            bbox1 = BoundingBox(
+                self.minx, self.maxx, self.miny, splity, self.mint, self.maxt
+            )
+            bbox2 = BoundingBox(
+                self.minx, self.maxx, splity, self.maxy, self.mint, self.maxt
+            )
+
+        return bbox1, bbox2
+
 
 def disambiguate_timestamp(date_str: str, format: str) -> Tuple[float, float]:
     """Disambiguate partial timestamps.

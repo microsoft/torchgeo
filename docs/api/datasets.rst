@@ -387,3 +387,12 @@ Collation Functions
 .. autofunction:: concat_samples
 .. autofunction:: merge_samples
 .. autofunction:: unbind_samples
+
+Splitting Functions
+^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: random_bbox_assignment
+.. autofunction:: random_bbox_splitting
+.. autofunction:: random_grid_cell_assignment
+.. autofunction:: roi_split
+.. autofunction:: time_series_split
