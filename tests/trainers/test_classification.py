@@ -18,8 +18,8 @@ from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import (
     BigEarthNetDataModule,
-    EuroSATDataModule,
     EuroSAT100DataModule,
+    EuroSATDataModule,
     MisconfigurationException,
     RESISC45DataModule,
     So2SatDataModule,
