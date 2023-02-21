@@ -394,6 +394,35 @@ class TestBoundingBox:
         bbox2 = BoundingBox(*test_input)
         assert bbox1.intersects(bbox2) == bbox2.intersects(bbox1) == expected
 
+    @pytest.mark.parametrize(
+        "proportion,horizontal,expected",
+        [
+            (0.25, True, ((0, 0.25, 0, 1, 0, 1), (0.25, 1, 0, 1, 0, 1))),
+            (0.25, False, ((0, 1, 0, 0.25, 0, 1), (0, 1, 0.25, 1, 0, 1))),
+        ],
+    )
+    def test_split(
+        self,
+        proportion: float,
+        horizontal: bool,
+        expected: Tuple[
+            Tuple[float, float, float, float, float, float],
+            Tuple[float, float, float, float, float, float],
+        ],
+    ) -> None:
+        bbox = BoundingBox(0, 1, 0, 1, 0, 1)
+        bbox1, bbox2 = bbox.split(proportion, horizontal)
+        assert bbox1 == BoundingBox(*expected[0])
+        assert bbox2 == BoundingBox(*expected[1])
+        assert bbox1 | bbox2 == bbox
+
+    def test_split_error(self) -> None:
+        bbox = BoundingBox(0, 1, 0, 1, 0, 1)
+        with pytest.raises(
+            ValueError, match="Input proportion must be between 0 and 1."
+        ):
+            bbox.split(1.5)
+
     def test_picklable(self) -> None:
         bbox = BoundingBox(0, 1, 2, 3, 4, 5)
         x = pickle.dumps(bbox)
