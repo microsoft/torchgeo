@@ -220,16 +220,13 @@ class TestRasterDataset:
         bands = ["B04", "B03", "B02"]
         transforms = nn.Identity()
         cache = True
-        ds = CustomSentinelDataset(
-            root, bands=bands, transforms=transforms, cache=cache
-        )
-
         msg = (
             "CustomSentinelDataset is missing an `all_bands` attribute,"
             " so `bands` cannot be specified."
         )
+
         with pytest.raises(AssertionError, match=msg):
-            ds[ds.index.bounds]
+            CustomSentinelDataset(root, bands=bands, transforms=transforms, cache=cache)
 
 
 class TestVectorDataset:

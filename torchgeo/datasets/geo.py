@@ -368,6 +368,18 @@ class RasterDataset(GeoDataset):
                 f"No {self.__class__.__name__} data was found in '{root}'"
             )
 
+        if not self.separate_files:
+            if self.bands and self.all_bands:
+                band_indexes = [self.all_bands.index(i) + 1 for i in self.bands]
+            elif self.bands:
+                msg = (
+                    f"{self.__class__.__name__} is missing an `all_bands` attribute,"
+                    " so `bands` cannot be specified."
+                )
+                raise AssertionError(msg)
+            else:
+                band_indexes = None
+
         self._crs = cast(CRS, crs)
         self.res = cast(float, res)
 
@@ -410,18 +422,7 @@ class RasterDataset(GeoDataset):
                 data_list.append(self._merge_files(band_filepaths, query))
             data = torch.cat(data_list)
         else:
-            if self.bands and self.all_bands:
-                band_indexes = [self.all_bands.index(i) + 1 for i in self.bands]
-            elif self.bands:
-                msg = (
-                    f"{self.__class__.__name__} is missing an `all_bands` attribute,"
-                    " so `bands` cannot be specified."
-                )
-                raise AssertionError(msg)
-            else:
-                band_indexes = None
-
-            data = self._merge_files(filepaths, query, band_indexes)
+            data = self._merge_files(filepaths, query, self.band_indexes)
 
         sample = {"crs": self.crs, "bbox": query}
         if self.is_image:
