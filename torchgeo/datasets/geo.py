@@ -370,7 +370,7 @@ class RasterDataset(GeoDataset):
 
         if not self.separate_files:
             if self.bands and self.all_bands:
-                band_indexes = [self.all_bands.index(i) + 1 for i in self.bands]
+                self.band_indexes = [self.all_bands.index(i) + 1 for i in self.bands]
             elif self.bands:
                 msg = (
                     f"{self.__class__.__name__} is missing an `all_bands` attribute,"
@@ -378,7 +378,7 @@ class RasterDataset(GeoDataset):
                 )
                 raise AssertionError(msg)
             else:
-                band_indexes = None
+                self.band_indexes = None
 
         self._crs = cast(CRS, crs)
         self.res = cast(float, res)
