@@ -20,11 +20,11 @@ from .utils import check_integrity, extract_archive, download_url
 class MapInWild(NonGeoDataset):
     """MapInWild dataset.
 
-        The `MapInWild <https://arxiv.org/abs/2212.02265>` is curated for the task of wilderness mapping on a pixel-level. 
+        The `MapInWild <https://arxiv.org/abs/2212.02265>`_ is curated for the task of wilderness mapping on a pixel-level. 
         MapInWild is a multi-modal dataset and comprises various geodata acquired and formed from different RS sensors over 1018 locations:
-        dual-pol Sentinel1, four-season Sentinel-2 with 10 bands, ESA WorldCover map, and Visible Infrared Imaging Radiometer Suite NightTime Day/Night band.
+        dual-pol Sentinel-1, four-season Sentinel-2 with 10 bands, ESA WorldCover map, and Visible Infrared Imaging Radiometer Suite NightTime Day/Night band.
         The dataset consists of 8144 images with the shape of 1920 × 1920 pixels. 
-        The images are weakly annotated from the World Database of Protected Areas(WDPA).
+        The images are weakly annotated from the World Database of Protected Areas (WDPA).
 
         Dataset features:
         * 1018 areas globally sampled from the WDPA 
@@ -67,8 +67,8 @@ class MapInWild(NonGeoDataset):
             "B11",
             "B12"
         ),
-        "esa_wc":{"2020_Map"},
-        "viirs":{"avg_rad"}
+        "esa_wc": ("2020_Map",),
+        "viirs": ("avg_rad",),
     }
 
     band_names = (
