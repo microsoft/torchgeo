@@ -93,6 +93,12 @@ iNaturalist
 
 .. autoclass:: INaturalist
 
+LandCover.ai Geo
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: LandCoverAIBase
+.. autoclass:: LandCoverAIGeo
+
 Landsat
 ^^^^^^^
 
