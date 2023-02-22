@@ -5,17 +5,17 @@
 
 import os
 import shutil
+from typing import Callable, Dict, Optional, Tuple
 
-from torch import Tensor
-from typing import Callable, Optional, Dict, Tuple
-import rasterio
-import numpy as np
-import torch
-import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import rasterio
+import torch
+from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, extract_archive, download_url
+from .utils import check_integrity, download_url, extract_archive
 
 
 class MapInWild(NonGeoDataset):
