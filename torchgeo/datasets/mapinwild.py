@@ -1,3 +1,8 @@
+"""MapInWild dataset."""
+
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import os
 import shutil
 
@@ -11,8 +16,6 @@ import matplotlib.pyplot as plt
 
 from .geo import NonGeoDataset
 from .utils import check_integrity, extract_archive, download_url
-
-"""MapInWild dataset."""
 
 class MapInWild(NonGeoDataset):
     """MapInWild dataset.
