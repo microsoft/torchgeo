@@ -47,8 +47,12 @@ class Landsat(RasterDataset, abc.ABC):
         \.
     """
 
-    default_bands: List[str] = []
     separate_files = True
+
+    @property
+    @abc.abstractmethod
+    def default_bands(self) -> List[str]:
+        """Bands to load by default."""
 
     def __init__(
         self,
