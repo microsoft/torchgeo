@@ -421,7 +421,7 @@ class RasterDataset(GeoDataset):
             else:
                 band_indexes = None
 
-            data = self._merge_files(filepaths, query, self.band_indexes)
+            data = self._merge_files(filepaths, query, band_indexes)
 
         sample = {"crs": self.crs, "bbox": query}
         if self.is_image:
