@@ -74,7 +74,7 @@ class Landsat(RasterDataset, abc.ABC):
         Raises:
             FileNotFoundError: if no files are found in ``root``
         """
-        bands = bands or self.all_bands
+        bands = bands or self.default_bands
         self.filename_glob = self.filename_glob.format(bands[0])
 
         super().__init__(root, crs, res, bands, transforms, cache)
@@ -133,7 +133,7 @@ class Landsat1(Landsat):
 
     filename_glob = "LM01_*_{}.*"
 
-    all_bands = ["SR_B4", "SR_B5", "SR_B6", "SR_B7"]
+    default_bands = ["SR_B4", "SR_B5", "SR_B6", "SR_B7"]
     rgb_bands = ["SR_B6", "SR_B5", "SR_B4"]
 
 
@@ -154,7 +154,7 @@ class Landsat4MSS(Landsat):
 
     filename_glob = "LM04_*_{}.*"
 
-    all_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4"]
+    default_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4"]
     rgb_bands = ["SR_B3", "SR_B2", "SR_B1"]
 
 
@@ -163,7 +163,7 @@ class Landsat4TM(Landsat):
 
     filename_glob = "LT04_*_{}.*"
 
-    all_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"]
+    default_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"]
     rgb_bands = ["SR_B3", "SR_B2", "SR_B1"]
 
 
@@ -184,7 +184,16 @@ class Landsat7(Landsat):
 
     filename_glob = "LE07_*_{}.*"
 
-    all_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7", "SR_B8"]
+    default_bands = [
+        "SR_B1",
+        "SR_B2",
+        "SR_B3",
+        "SR_B4",
+        "SR_B5",
+        "SR_B6",
+        "SR_B7",
+        "SR_B8",
+    ]
     rgb_bands = ["SR_B3", "SR_B2", "SR_B1"]
 
 
@@ -193,7 +202,7 @@ class Landsat8(Landsat):
 
     filename_glob = "LC08_*_{}.*"
 
-    all_bands = [
+    default_bands = [
         "SR_B1",
         "SR_B2",
         "SR_B3",
