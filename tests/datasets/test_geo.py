@@ -52,6 +52,7 @@ class CustomVectorDataset(VectorDataset):
 
 class CustomSentinelDataset(Sentinel2):
     all_bands: List[str] = []
+    separate_files = False
 
 
 class CustomNonGeoDataset(NonGeoDataset):
@@ -214,18 +215,21 @@ class TestRasterDataset:
         with pytest.raises(FileNotFoundError, match="No RasterDataset data was found"):
             RasterDataset(str(tmp_path))
 
-    def test_no_allbands(self) -> None:
+    def test_no_all_bands(self) -> None:
         root = os.path.join("tests", "data", "sentinel2")
         bands = ["B04", "B03", "B02"]
         transforms = nn.Identity()
         cache = True
+        ds = CustomSentinelDataset(
+            root, bands=bands, transforms=transforms, cache=cache
+        )
+
         msg = (
             "CustomSentinelDataset is missing an `all_bands` attribute,"
             " so `bands` cannot be specified."
         )
-
         with pytest.raises(AssertionError, match=msg):
-            CustomSentinelDataset(root, bands=bands, transforms=transforms, cache=cache)
+            ds[ds.index.bounds]
 
 
 class TestVectorDataset:
