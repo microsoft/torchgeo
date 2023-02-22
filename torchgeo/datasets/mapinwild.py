@@ -21,11 +21,15 @@ from .utils import check_integrity, download_url, extract_archive
 class MapInWild(NonGeoDataset):
     """MapInWild dataset.
 
-    The `MapInWild <https://arxiv.org/abs/2212.02265>`_ is curated for the task of wilderness mapping on a pixel-level.
-    MapInWild is a multi-modal dataset and comprises various geodata acquired and formed from different RS sensors over 1018 locations:
-    dual-pol Sentinel-1, four-season Sentinel-2 with 10 bands, ESA WorldCover map, and Visible Infrared Imaging Radiometer Suite NightTime Day/Night band.
-    The dataset consists of 8144 images with the shape of 1920 × 1920 pixels.
-    The images are weakly annotated from the World Database of Protected Areas (WDPA).
+    The `MapInWild <https://arxiv.org/abs/2212.02265>`_ is curated for the task of
+    wilderness mapping on a pixel-level. MapInWild is a multi-modal dataset and
+    comprises various geodata acquired and formed from different RS sensors
+    over 1018 locations: dual-pol Sentinel-1, four-season Sentinel-2 with 10 bands,
+    ESA WorldCover map, and Visible Infrared Imaging Radiometer Suite
+    NightTime Day/Night band. The dataset consists of 8144 images with the shape
+    of 1920 × 1920 pixels. The images are weakly annotated from the
+    World Database of Protected Areas (WDPA).
+
 
     Dataset features:
     * 1018 areas globally sampled from the WDPA
@@ -82,41 +86,41 @@ class MapInWild(NonGeoDataset):
     rgb_bands = ["B4", "B3", "B2"]
     modality_urls = {
         "esa_wc": {
-            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/esa_wc/ESA_WC.zip"
+            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/esa_wc/ESA_WC.zip"  # noqa: E501
         },
         "viirs": {
-            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/viirs/VIIRS.zip"
+            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/viirs/VIIRS.zip"  # noqa: E501
         },
         "mask": {
-            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/mask/mask.zip"
+            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/mask/mask.zip"  # noqa: E501
         },
         "s1": {
-            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s1/s1_part1.zip",
-            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s1/s1_part2.zip",
+            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s1/s1_part1.zip",  # noqa: E501
+            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s1/s1_part2.zip",  # noqa: E501
         },
         "s2_temporal_subset": {
-            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_temporal_subset/s2_temporal_subset_part1.zip",
-            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_temporal_subset/s2_temporal_subset_part2.zip",
+            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_temporal_subset/s2_temporal_subset_part1.zip",  # noqa: E501
+            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_temporal_subset/s2_temporal_subset_part2.zip",  # noqa: E501
         },
         "s2_autumn": {
-            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_autumn/s2_autumn_part1.zip",
-            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_autumn/s2_autumn_part2.zip",
+            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_autumn/s2_autumn_part1.zip",  # noqa: E501
+            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_autumn/s2_autumn_part2.zip",  # noqa: E501
         },
         "s2_spring": {
-            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_spring/s2_spring_part1.zip",
-            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_spring/s2_spring_part2.zip",
+            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_spring/s2_spring_part1.zip",  # noqa: E501
+            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_spring/s2_spring_part2.zip",  # noqa: E501
         },
         "s2_summer": {
-            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_summer/s2_summer_part1.zip",
-            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_summer/s2_summer_part2.zip",
+            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_summer/s2_summer_part1.zip",  # noqa: E501
+            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_summer/s2_summer_part2.zip",  # noqa: E501
         },
         "s2_winter": {
-            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_winter/s2_winter_part1.zip",
-            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_winter/s2_winter_part2.zip",
+            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_winter/s2_winter_part1.zip",  # noqa: E501
+            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/s2_winter/s2_winter_part2.zip",  # noqa: E501
         },
     }
 
-    split_url = "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/split_IDs/split_IDs.csv"
+    split_url = "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/split_IDs/split_IDs.csv"  # noqa: E501
     main_directory = os.path.join(os.getcwd(), "data")
     mask_palette = {1: (0, 153, 0), 0: (255, 255, 255)}
 
