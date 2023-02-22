@@ -4,7 +4,7 @@
 """Landsat datasets."""
 
 import abc
-from typing import Any, Callable, Dict, Optional, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence
 
 import matplotlib.pyplot as plt
 from rasterio.crs import CRS
@@ -47,6 +47,7 @@ class Landsat(RasterDataset, abc.ABC):
         \.
     """
 
+    default_bands: List[str] = []
     separate_files = True
 
     def __init__(
