@@ -122,6 +122,7 @@ class MapInWild(NonGeoDataset):
         checksum: bool = False
     ) -> None:
         """Initialize a new MapInWild dataset instance.
+
         Args:
             root: root directory where dataset can be found
             modality: the modality to download
@@ -163,8 +164,10 @@ class MapInWild(NonGeoDataset):
         
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset.
+
         Args:
             index: index to return
+
         Returns:
             data and label at that index
         """
@@ -188,6 +191,7 @@ class MapInWild(NonGeoDataset):
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.
+
         Returns:
             length of the dataset
         """
@@ -195,9 +199,11 @@ class MapInWild(NonGeoDataset):
 
     def _load_raster(self, filename: str, source: str) -> Tensor:
         """Load a single raster image or target.
+
         Args:
             filename: name of the file to load
             source: the filename of the modality
+
         Returns:
             the raster image or target
         """
@@ -215,6 +221,7 @@ class MapInWild(NonGeoDataset):
             
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
+
         Returns:
             True if dataset files are found and/or MD5s match, else False
         """
@@ -292,10 +299,12 @@ class MapInWild(NonGeoDataset):
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
         """Plot a sample from the dataset.
+
         Args:
             sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
+            
         Returns:
             a matplotlib Figure with the rendered sample
         """
