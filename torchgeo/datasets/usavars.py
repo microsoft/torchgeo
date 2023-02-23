@@ -30,13 +30,15 @@ class USAVars(NonGeoDataset):
     cover percentage, elevation, and population density.
 
     Dataset format:
+
     * images are 4-channel GeoTIFFs
     * labels are singular float values
 
     Dataset labels:
-    * tree cover ('treecover')
-    * elevation ('elevation')
-    * population density ('population')
+
+    * tree cover
+    * elevation
+    * population density
 
     If you use this dataset in your research, please cite the following paper:
 
