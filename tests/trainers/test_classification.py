@@ -8,6 +8,7 @@ from typing import Any, Dict, Type, cast
 import pytest
 import timm
 import torch
+import torch.nn as nn
 import torchvision
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
@@ -28,7 +29,22 @@ from torchgeo.datasets import BigEarthNet, EuroSAT
 from torchgeo.models import get_model_weights, list_models
 from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
 
-from .test_utils import ClassificationTestModel
+
+class ClassificationTestModel(Module):
+    def __init__(
+        self, in_chans: int = 3, num_classes: int = 1000, **kwargs: Any
+    ) -> None:
+        super().__init__()
+        self.conv1 = nn.Conv2d(in_channels=in_chans, out_channels=1, kernel_size=1)
+        self.pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(1, num_classes)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.conv1(x)
+        x = self.pool(x)
+        x = torch.flatten(x, 1)
+        x = self.fc(x)
+        return x
 
 
 class PredictClassificationDataModule(EuroSATDataModule):
