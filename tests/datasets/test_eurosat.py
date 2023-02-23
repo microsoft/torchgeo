@@ -3,7 +3,9 @@
 
 import os
 import shutil
+from itertools import product
 from pathlib import Path
+from typing import Type
 
 import matplotlib.pyplot as plt
 import pytest
@@ -14,7 +16,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import EuroSAT
+from torchgeo.datasets import EuroSAT, EuroSAT100
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -22,17 +24,20 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestEuroSAT:
-    @pytest.fixture(params=["train", "val", "test"])
+    @pytest.fixture(params=product([EuroSAT, EuroSAT100], ["train", "val", "test"]))
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> EuroSAT:
+        base_class: Type[EuroSAT] = request.param[0]
+        split: str = request.param[1]
         monkeypatch.setattr(torchgeo.datasets.eurosat, "download_url", download_url)
         md5 = "aa051207b0547daba0ac6af57808d68e"
-        monkeypatch.setattr(EuroSAT, "md5", md5)
+        monkeypatch.setattr(base_class, "md5", md5)
         url = os.path.join("tests", "data", "eurosat", "EuroSATallBands.zip")
-        monkeypatch.setattr(EuroSAT, "url", url)
+        monkeypatch.setattr(base_class, "url", url)
+        monkeypatch.setattr(base_class, "filename", "EuroSATallBands.zip")
         monkeypatch.setattr(
-            EuroSAT,
+            base_class,
             "split_urls",
             {
                 "train": os.path.join("tests", "data", "eurosat", "eurosat-train.txt"),
@@ -41,7 +46,7 @@ class TestEuroSAT:
             },
         )
         monkeypatch.setattr(
-            EuroSAT,
+            base_class,
             "split_md5s",
             {
                 "train": "4af60a00fdfdf8500572ae5360694b71",
@@ -50,9 +55,8 @@ class TestEuroSAT:
             },
         )
         root = str(tmp_path)
-        split = request.param
         transforms = nn.Identity()
-        return EuroSAT(
+        return base_class(
             root=root, split=split, transforms=transforms, download=True, checksum=True
         )
 
