@@ -30,10 +30,12 @@ class USAVars(NonGeoDataset):
     cover percentage, elevation, and population density.
 
     Dataset format:
+
     * images are 4-channel GeoTIFFs
     * labels are singular float values
 
     Dataset labels:
+
     * tree cover
     * elevation
     * population density
@@ -89,7 +91,7 @@ class USAVars(NonGeoDataset):
         },
     }
 
-    ALL_LABELS = list(label_urls.keys())
+    ALL_LABELS = ["treecover", "elevation", "population"]
 
     def __init__(
         self,
