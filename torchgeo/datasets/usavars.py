@@ -34,9 +34,9 @@ class USAVars(NonGeoDataset):
     * labels are singular float values
 
     Dataset labels:
-    * tree cover
-    * elevation
-    * population density
+    * tree cover ('treecover')
+    * elevation ('elevation')
+    * population density ('population')
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -89,7 +89,7 @@ class USAVars(NonGeoDataset):
         },
     }
 
-    ALL_LABELS = list(label_urls.keys())
+    ALL_LABELS = ["treecover", "elevation", "population"]
 
     def __init__(
         self,
