@@ -323,6 +323,7 @@ class RasterDataset(GeoDataset):
         super().__init__(transforms)
 
         self.root = root
+        self.bands = bands or self.all_bands
         self.cache = cache
 
         # Populate the dataset index
@@ -367,21 +368,20 @@ class RasterDataset(GeoDataset):
                 f"No {self.__class__.__name__} data was found in '{root}'"
             )
 
-        if bands and self.all_bands:
-            band_indexes = [self.all_bands.index(i) + 1 for i in bands]
-            self.bands = bands
-            assert len(band_indexes) == len(self.bands)
-        elif bands:
-            msg = (
-                f"{self.__class__.__name__} is missing an `all_bands` attribute,"
-                " so `bands` cannot be specified."
-            )
-            raise AssertionError(msg)
-        else:
-            band_indexes = None
-            self.bands = self.all_bands
+        if not self.separate_files:
+            self.band_indexes = None
+            if self.bands:
+                if self.all_bands:
+                    self.band_indexes = [
+                        self.all_bands.index(i) + 1 for i in self.bands
+                    ]
+                else:
+                    msg = (
+                        f"{self.__class__.__name__} is missing an `all_bands` "
+                        "attribute, so `bands` cannot be specified."
+                    )
+                    raise AssertionError(msg)
 
-        self.band_indexes = band_indexes
         self._crs = cast(CRS, crs)
         self.res = cast(float, res)
 
