@@ -9,7 +9,7 @@ from .cowc import COWCCountingDataModule
 from .cyclone import TropicalCycloneDataModule
 from .deepglobelandcover import DeepGlobeLandCoverDataModule
 from .etci2021 import ETCI2021DataModule
-from .eurosat import EuroSATDataModule
+from .eurosat import EuroSAT100DataModule, EuroSATDataModule
 from .fair1m import FAIR1MDataModule
 from .geo import GeoDataModule, NonGeoDataModule
 from .gid15 import GID15DataModule
@@ -40,6 +40,7 @@ __all__ = (
     "DeepGlobeLandCoverDataModule",
     "ETCI2021DataModule",
     "EuroSATDataModule",
+    "EuroSAT100DataModule",
     "FAIR1MDataModule",
     "GID15DataModule",
     "InriaAerialImageLabelingDataModule",
