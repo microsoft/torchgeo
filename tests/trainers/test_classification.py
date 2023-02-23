@@ -18,6 +18,7 @@ from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import (
     BigEarthNetDataModule,
+    EuroSAT100DataModule,
     EuroSATDataModule,
     MisconfigurationException,
     RESISC45DataModule,
@@ -59,6 +60,7 @@ class TestClassificationTask:
         "name,classname",
         [
             ("eurosat", EuroSATDataModule),
+            ("eurosat", EuroSAT100DataModule),
             ("resisc45", RESISC45DataModule),
             ("so2sat_all", So2SatDataModule),
             ("so2sat_s1", So2SatDataModule),
