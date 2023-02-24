@@ -28,8 +28,8 @@ from .utils import BoundingBox, download_url, extract_archive
 class Chesapeake(RasterDataset, abc.ABC):
     """Abstract base class for all Chesapeake datasets.
 
-    `Chesapeake Bay Program Land Use/Land Cover Data Project
-    <https://www.chesapeakeconservancy.org/conservation-innovation-center/high-resolution-data/lulc-data-project-2022/>`_
+    `Chesapeake Bay High-Resolution Land Cover Project
+    <https://www.chesapeakeconservancy.org/conservation-innovation-center/high-resolution-data/land-cover-data-project/>`_
     dataset.
 
     This dataset was collected by the Chesapeake Conservancy's Conservation Innovation
