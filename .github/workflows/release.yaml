@@ -76,11 +76,9 @@ jobs:
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
-        pip install .[datasets,docs,tests]
+        pip install .[docs,tests] planetary_computer pystac
         pip list
     - name: Run notebook checks
-      env:
-        MLHUB_API_KEY: ${{ secrets.MLHUB_API_KEY }}
       run: pytest --nbmake --durations=10 docs/tutorials
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
