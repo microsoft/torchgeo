@@ -14,8 +14,6 @@ jobs:
   notebooks:
     name: notebooks
     runs-on: ubuntu-latest
-    env:
-      MPLBACKEND: Agg
     steps:
     - name: Clone repo
       uses: actions/checkout@v3.3.0
