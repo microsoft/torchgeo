@@ -192,6 +192,7 @@ class ClassificationTask(pl.LightningModule):
             and hasattr(self.trainer, "datamodule")
             and self.logger
             and hasattr(self.logger, "experiment")
+            and hasattr(self.logger.experiment, "add_figure")
         ):
             try:
                 datamodule = self.trainer.datamodule
@@ -376,6 +377,7 @@ class MultiLabelClassificationTask(ClassificationTask):
             and hasattr(self.trainer, "datamodule")
             and self.logger
             and hasattr(self.logger, "experiment")
+            and hasattr(self.logger.experiment, "add_figure")
         ):
             try:
                 datamodule = self.trainer.datamodule
