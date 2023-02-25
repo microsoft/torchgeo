@@ -190,7 +190,6 @@ class ClassificationTask(pl.LightningModule):
         if (
             batch_idx < 10
             and hasattr(self.trainer, "datamodule")
-            and self.logger
             and hasattr(self.logger, "experiment")
             and hasattr(self.logger.experiment, "add_figure")
         ):
@@ -375,7 +374,6 @@ class MultiLabelClassificationTask(ClassificationTask):
         if (
             batch_idx < 10
             and hasattr(self.trainer, "datamodule")
-            and self.logger
             and hasattr(self.logger, "experiment")
             and hasattr(self.logger.experiment, "add_figure")
         ):
