@@ -55,7 +55,7 @@ class SEN12MS(NonGeoDataset):
 
           for split in train test
           do
-              wget "https://raw.githubusercontent.com/schmitt-muc/SEN12MS/master/splits/${split}_list.txt"
+              wget "https://raw.githubusercontent.com/schmitt-muc/SEN12MS/3a41236a28d08d253ebe2fa1a081e5e32aa7eab4/splits/${split}_list.txt"
           done
 
        or manually downloaded from https://dataserv.ub.tum.de/s/m1474000
