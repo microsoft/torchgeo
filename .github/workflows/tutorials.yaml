@@ -1,6 +1,4 @@
 name: tutorials
-env:
-  TMPDIR: ${{ runner.temp }}
 on:
   push:
     branches:
