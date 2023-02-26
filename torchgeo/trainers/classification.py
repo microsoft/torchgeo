@@ -33,7 +33,7 @@ class ClassificationTask(pl.LightningModule):
     """LightningModule for image classification.
 
     Supports any available `Timm model
-    <https://rwightman.github.io/pytorch-image-models/>`_
+    <https://huggingface.co/docs/timm/index>`_
     as an architecture choice. To see a list of available
     models, you can do:
 

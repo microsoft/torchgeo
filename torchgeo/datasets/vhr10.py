@@ -159,10 +159,7 @@ class VHR10(NonGeoDataset):
         "md5": "d30a7ff99d92123ebb0b3a14d9102081",
     }
     target_meta = {
-        "url": (
-            "https://raw.githubusercontent.com/chaozhong2010/VHR-10_dataset_coco/"
-            "master/NWPU%20VHR-10_dataset_coco/annotations.json"
-        ),
+        "url": "https://raw.githubusercontent.com/chaozhong2010/VHR-10_dataset_coco/ce0ba0f5f6a0737031f1cbe05e785ddd5ef05bd7/NWPU%20VHR-10_dataset_coco/annotations.json",  # noqa: E501
         "filename": "annotations.json",
         "md5": "7c76ec50c17a61bb0514050d20f22c08",
     }

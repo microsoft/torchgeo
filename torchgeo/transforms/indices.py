@@ -5,7 +5,7 @@
 
 For more information about indices see the following references:
 - https://www.indexdatabase.de/db/i.php
-- https://github.com/davemlz/awesome-spectral-indices
+- https://github.com/awesome-spectral-indices/awesome-spectral-indices
 """
 
 from typing import Dict, Optional

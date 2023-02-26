@@ -17,7 +17,7 @@ from .utils import download_url, extract_archive
 class RESISC45(NonGeoClassificationDataset):
     """NWPU-RESISC45 dataset.
 
-    The `RESISC45 <http://www.escience.cn/people/JunweiHan/NWPU-RESISC45.html>`__
+    The `RESISC45 <https://doi.org/10.1109/jproc.2017.2675998>`__
     dataset is a dataset for remote sensing image scene classification.
 
     Dataset features:

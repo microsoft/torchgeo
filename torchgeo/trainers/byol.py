@@ -282,7 +282,7 @@ class BYOLTask(pl.LightningModule):
     """Class for pre-training any PyTorch model using BYOL.
 
     Supports any available `Timm model
-    <https://rwightman.github.io/pytorch-image-models/>`_
+    <https://huggingface.co/docs/timm/index>`_
     as an architecture choice. To see a list of available pretrained
     models, you can do:
 
