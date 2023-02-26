@@ -1,4 +1,6 @@
 name: tutorials
+env:
+  TMPDIR: ${{ runner.temp }}
 on:
   push:
     branches:
@@ -13,8 +15,6 @@ on:
 jobs:
   notebooks:
     name: notebooks
-    env:
-      TMPDIR: runner.temp
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
