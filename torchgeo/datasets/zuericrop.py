@@ -17,7 +17,7 @@ from .utils import download_url, percentile_normalization
 class ZueriCrop(NonGeoDataset):
     """ZueriCrop dataset.
 
-    The `ZueriCrop <https://github.com/0zgur0/ms-convSTAR>`__
+    The `ZueriCrop <https://github.com/0zgur0/multi-stage-convSTAR-network>`__
     dataset is a dataset for time-series instance segmentation of crops.
 
     Dataset features:
@@ -36,8 +36,8 @@ class ZueriCrop(NonGeoDataset):
 
     Dataset classes:
 
-    * 48 fine-grained hierarchical crop
-      `categories <https://github.com/0zgur0/ms-convSTAR/blob/master/labels.csv>`_
+    * 48 fine-grained hierarchical crop `categories
+      <https://github.com/0zgur0/multi-stage-convSTAR-network/blob/fa92b5b3cb77f5171c5c3be740cd6e6395cc29b6/labels.csv>`_
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -52,7 +52,7 @@ class ZueriCrop(NonGeoDataset):
 
     urls = [
         "https://polybox.ethz.ch/index.php/s/uXfdr2AcXE3QNB6/download",
-        "https://raw.githubusercontent.com/0zgur0/ms-convSTAR/master/labels.csv",
+        "https://raw.githubusercontent.com/0zgur0/multi-stage-convSTAR-network/fa92b5b3cb77f5171c5c3be740cd6e6395cc29b6/labels.csv",  # noqa: E501
     ]
     md5s = ["1635231df67f3d25f4f1e62c98e221a4", "5118398c7a5bbc246f5f6bb35d8d529b"]
     filenames = ["ZueriCrop.hdf5", "labels.csv"]

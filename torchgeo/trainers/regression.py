@@ -25,7 +25,7 @@ class RegressionTask(pl.LightningModule):
     """LightningModule for training models on regression datasets.
 
     Supports any available `Timm model
-    <https://rwightman.github.io/pytorch-image-models/>`_
+    <https://huggingface.co/docs/timm/index>`_
     as an architecture choice. To see a list of available
     models, you can do:
 
