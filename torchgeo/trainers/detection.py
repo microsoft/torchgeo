@@ -9,11 +9,11 @@ from typing import Any, Dict, List, cast
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
+import torchvision.models.detection
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models import resnet as R
-from torchvision.models.detection import FCOS, FasterRCNN, RetinaNet
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from torchvision.models.detection.retinanet import RetinaNetHead
 from torchvision.models.detection.rpn import AnchorGenerator
@@ -95,7 +95,7 @@ class ObjectDetectionTask(pl.LightningModule):
             roi_pooler = MultiScaleRoIAlign(
                 featmap_names=["0", "1", "2", "3"], output_size=7, sampling_ratio=2
             )
-            self.model = FasterRCNN(
+            self.model = torchvision.models.detection.FasterRCNN(
                 backbone,
                 num_classes,
                 rpn_anchor_generator=anchor_generator,
@@ -113,8 +113,9 @@ class ObjectDetectionTask(pl.LightningModule):
                 aspect_ratios=((1.0,), (1.0,), (1.0,), (1.0,), (1.0,), (1.0,)),
             )
 
-            self.model = FCOS(backbone, num_classes, anchor_generator=anchor_generator)
-
+            self.model = torchvision.models.detection.FCOS(
+                backbone, num_classes, anchor_generator=anchor_generator
+            )
         elif self.hyperparams["model"] == "retinanet":
             kwargs["extra_blocks"] = feature_pyramid_network.LastLevelP6P7(
                 latent_dim, 256
@@ -139,7 +140,7 @@ class ObjectDetectionTask(pl.LightningModule):
                 norm_layer=partial(torch.nn.GroupNorm, 32),
             )
 
-            self.model = RetinaNet(
+            self.model = torchvision.models.detection.RetinaNet(
                 backbone, num_classes, anchor_generator=anchor_generator, head=head
             )
         else:
