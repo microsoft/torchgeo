@@ -13,6 +13,8 @@ on:
 jobs:
   notebooks:
     name: notebooks
+    env:
+      TMPDIR: ${{ runner.temp }}
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
@@ -25,8 +27,10 @@ jobs:
       uses: actions/cache@v3.2.4
       id: cache
       with:
-        path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('setup.cfg') }}
+        path: |
+          ${{ env.pythonLocation }}
+          ${{ runner.temp }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('setup.cfg') }}-${{ hashFiles('docs/tutorial/**') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
