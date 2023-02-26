@@ -12,5 +12,8 @@ updates:
       # setuptools releases new versions almost daily
       - dependency-name: "setuptools"
         update-types: ["version-update:semver-patch"]
-      # segmentation-models-pytorch requires older timm, can't update
+      # Sphinx 6 is incompatible with pytorch-sphinx-theme
+      # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
+      - dependency-name: "sphinx"
+      # segmentation-models-pytorch pins timm, must update in unison
       - dependency-name: "timm"
