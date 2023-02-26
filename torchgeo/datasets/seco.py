@@ -21,7 +21,7 @@ from .utils import download_url, extract_archive, percentile_normalization
 class SeasonalContrastS2(NonGeoDataset):
     """Sentinel 2 imagery from the Seasonal Contrast paper.
 
-    The `Seasonal Contrast imagery <https://github.com/ElementAI/seasonal-contrast/>`_
+    The `Seasonal Contrast imagery <https://github.com/ServiceNow/seasonal-contrast>`_
     dataset contains Sentinel 2 imagery patches sampled from different points in time
     around the 10k most populated cities on Earth.
 

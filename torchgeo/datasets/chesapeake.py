@@ -36,15 +36,6 @@ class Chesapeake(RasterDataset, abc.ABC):
     Center (CIC) in partnership with the University of Vermont and WorldView Solutions,
     Inc. It consists of one-meter resolution land cover information for the Chesapeake
     Bay watershed (~100,000 square miles of land).
-
-    For more information, see:
-
-    * `User Guide
-      <https://chesapeakeconservancy.org/wp-content/uploads/2017/01/LandCover101Guide.pdf>`_
-    * `Class Descriptions
-      <https://chesapeakeconservancy.org/wp-content/uploads/2020/03/LC_Class_Descriptions.pdf>`_
-    * `Accuracy Assessment
-      <https://chesapeakeconservancy.org/wp-content/uploads/2017/01/Chesapeake_Conservancy_Accuracy_Assessment_Methodology.pdf>`_
     """
 
     is_image = False
@@ -415,7 +406,7 @@ class ChesapeakeCVPR(GeoDataset):
     additional layer of data to this dataset containing a prior over the Chesapeake Bay
     land cover classes generated from the NLCD land cover labels. For more information
     about this layer see `the dataset documentation
-    <https://zenodo.org/record/5652512#.YcuAIZLMIQ8>`_.
+    <https://zenodo.org/record/5866525>`_.
 
     If you use this dataset in your research, please cite the following paper:
 

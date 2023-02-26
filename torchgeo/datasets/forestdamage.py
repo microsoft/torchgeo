@@ -71,7 +71,7 @@ class ForestDamage(NonGeoDataset):
 
     * images are three-channel jpgs
     * annotations are in `Pascal VOC XML format
-      <https://roboflow.com/formats/pascal-voc-xml#w-tabs-0-data-w-pane-3>`_
+      <https://roboflow.com/formats/pascal-voc-xml>`_
 
     Dataset Classes:
 
