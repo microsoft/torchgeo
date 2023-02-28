@@ -99,6 +99,7 @@ from .splits import (
     roi_split,
     time_series_split,
 )
+from .ssl4eo import SSL4EOS12
 from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
@@ -196,6 +197,7 @@ __all__ = (
     "SpaceNet5",
     "SpaceNet6",
     "SpaceNet7",
+    "SSL4EOS12",
     "TropicalCyclone",
     "UCMerced",
     "USAVars",

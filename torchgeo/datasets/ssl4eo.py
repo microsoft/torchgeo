@@ -1,0 +1,229 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+"""Self-Supervised Learning for Earth Observation."""
+
+import os
+from typing import Callable, Dict, Optional
+
+import matplotlib.pyplot as plt
+import numpy as np
+import rasterio
+import torch
+from torch import Tensor
+
+from .geo import NonGeoDataset
+from .utils import check_integrity, extract_archive
+
+
+class SSL4EOS12(NonGeoDataset):
+    """SSL4EO-S12 dataset.
+
+    The `Self-Supervised Learning for Earth Observation - Sentinel-1/2
+    <https://github.com/zhu-xlab/SSL4EO-S12>`_ dataset is a large-scale mutilmodal
+    multitemporal dataset for unsupervised/self-supervised pre-training in Earth
+    observation.
+
+    The dataset consists of unlabeled patch triplets (Sentinel-1 dual-pol SAR,
+    Sentinel-2 top-of-atmosphere multispectral, Sentinel-2 surface reflectance
+    multispectral) from 251079 locations across the globe, each patch covering
+    2640mx2640m and including four seasonal time stamps.
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2211.07044
+
+    .. note::
+
+       This dataset can be downloaded using:
+
+       .. code-block:: console
+
+          $ RSYNC_PASSWORD=m1660427.001 rsync -av rsync://m1660427.001@dataserv.ub.tum.de/m1660427.001/ .
+
+       The dataset is about 1.5 TB when compressed and 3.7 TB when uncompressed, and
+       takes roughly 36 hrs to download, 1 hr to checksum, and XX hrs to extract.
+
+    .. versionadded:: 0.5
+    """  # noqa: E501
+
+    locations = 251079
+    times = 4
+    size = 264
+
+    metadata = {
+        "s1": {
+            "filename": "s1.tar.gz",
+            "md5": "51ee23b33eb0a2f920bda25225072f3a",
+            "bands": ["VV", "VH"],
+        },
+        "s2c": {
+            "filename": "s2_l1c.tar.gz",
+            "md5": "b4f8b03c365e4a85780ded600b7497ab",
+            "bands": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8",
+                "B8A",
+                "B9",
+                "B11",
+                "B12",
+            ],
+        },
+        "s2a": {
+            "filename": "s2_l2a.tar.gz",
+            "md5": "85496cd9d6742aee03b6a1c99cee0ac1",
+            "bands": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8",
+                "B8A",
+                "B9",
+                "B11",
+                "B12",
+            ],
+        },
+    }
+
+    def __init__(
+        self,
+        root: str = "data",
+        split: str = "s2c",
+        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        checksum: bool = False,
+    ) -> None:
+        """Initialize a new SeCo dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            split: one of "s1" (Sentinel-1 dual-pol SAR), "s2c" (Sentinel-2 Level-1C
+                top-of-atmosphere reflectance), and "s2a" (Sentinel-2 Level-2a surface
+                reflectance
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            AssertionError: if ``split`` argument is invalid
+            RuntimeError: if dataset is missing or checksum fails
+        """
+        assert split in self.metadata
+
+        self.root = root
+        self.split = split
+        self.transforms = transforms
+        self.checksum = checksum
+
+        self._verify()
+
+    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+        """Return an index within the dataset.
+
+        Args:
+            index: index to return
+
+        Returns:
+            sample with an "image" in 5xCxHxW format where the 5 indexes over the same
+                patch sampled from different points in time by the SeCo method
+        """
+        directory = os.path.join(self.root, self.split, f"{index // self.times:07}")
+        subdirs = sorted(os.listdir(directory))
+        directory = os.path.join(directory, subdirs[index % self.times])
+
+        images = []
+        for band in self.metadata[self.split]["bands"]:
+            filename = os.path.join(directory, f"{band}.tif")
+            with rasterio.open(filename) as f:
+                image = f.read(out_shape=(1, self.size, self.size)).astype(np.float32)
+                images.append(torch.from_numpy(image))
+
+        sample = {"image": torch.cat(images)}
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+    def __len__(self) -> int:
+        """Return the number of data points in the dataset.
+
+        Returns:
+            length of the dataset
+        """
+        return self.locations * self.times
+
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if dataset is missing or checksum fails
+        """
+        # Check if the extracted files already exist
+        directory_path = os.path.join(self.root, self.split)
+        if os.path.exists(directory_path):
+            return
+
+        # Check if the zip files have already been downloaded
+        zip_path = os.path.join(self.root, self.metadata[self.split]["filename"])
+        md5 = self.metadata[self.split]["md5"] if self.checksum else None
+        integrity = check_integrity(zip_path, md5)
+        if integrity:
+            self._extract()
+        else:
+            raise RuntimeError(f"Dataset not found in `root={self.root}`")
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        extract_archive(os.path.join(self.root, self.metadata[self.split]["filename"]))
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        if self.split == "s1":
+            # See Sentinel1.plot
+            co_polarization = sample["image"][0]
+            cross_polarization = sample["image"][1]
+            ratio = co_polarization / cross_polarization
+
+            co_polarization = torch.clamp(co_polarization / 0.3, min=0, max=1)
+            cross_polarization = torch.clamp(cross_polarization / 0.05, min=0, max=1)
+            ratio = torch.clamp(ratio / 25, min=0, max=1)
+
+            image = torch.stack((co_polarization, cross_polarization, ratio), dim=-1)
+        else:
+            # See Sentinel2.plot
+            image = sample["image"][[3, 2, 1]].permute(1, 2, 0)
+            image = torch.clamp(image / 10000, min=0, max=1)
+
+        fig, ax = plt.subplots(figsize=(4, 4))
+
+        ax.imshow(image)
+        ax.axis("off")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig

@@ -1,0 +1,63 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+import os
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import pytest
+import torch
+import torch.nn as nn
+from _pytest.fixtures import SubRequest
+from _pytest.monkeypatch import MonkeyPatch
+from torch.utils.data import ConcatDataset
+
+from torchgeo.datasets import SSL4EOS12
+
+
+class TestSSL4EOS12:
+    @pytest.fixture(params=SSL4EOS12.metadata.keys())
+    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> SSL4EOS12:
+        monkeypatch.setattr(SSL4EOS12, "locations", 1)
+        monkeypatch.setitem(
+            SSL4EOS12.metadata["s1"], "md5", "2d56f6279809738de42370b65d9ac0a6"
+        )
+        monkeypatch.setitem(
+            SSL4EOS12.metadata["s2c"], "md5", "80338f8e0cdeab4d5e0549d6d1fc3b7a"
+        )
+        monkeypatch.setitem(
+            SSL4EOS12.metadata["s2a"], "md5", "bc0bc2e5e0ad93a510330b90cd157c95"
+        )
+
+        root = os.path.join("tests", "data", "ssl4eo")
+        split = request.param
+        transforms = nn.Identity()
+        return SSL4EOS12(root, split, transforms, checksum=True)
+
+    def test_getitem(self, dataset: SSL4EOS12) -> None:
+        x = dataset[0]
+        assert isinstance(x, dict)
+        assert isinstance(x["image"], torch.Tensor)
+
+    def test_len(self, dataset: SSL4EOS12) -> None:
+        assert len(dataset) == 4
+
+    def test_add(self, dataset: SSL4EOS12) -> None:
+        ds = dataset + dataset
+        assert isinstance(ds, ConcatDataset)
+        assert len(ds) == 8
+
+    def test_invalid_split(self) -> None:
+        with pytest.raises(AssertionError):
+            SSL4EOS12(split="foo")
+
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(RuntimeError, match="Dataset not found"):
+            SSL4EOS12(str(tmp_path))
+
+    def test_plot(self, dataset: SSL4EOS12) -> None:
+        sample = dataset[0]
+        dataset.plot(sample, suptitle="Test")
+        plt.close()
+        dataset.plot(sample, show_titles=False)
+        plt.close()
