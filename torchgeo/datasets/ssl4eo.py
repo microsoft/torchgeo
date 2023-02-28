@@ -4,7 +4,7 @@
 """Self-Supervised Learning for Earth Observation."""
 
 import os
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -174,7 +174,8 @@ class SSL4EOS12(NonGeoDataset):
             return
 
         # Check if the zip files have already been downloaded
-        zip_path = os.path.join(self.root, self.metadata[self.split]["filename"])
+        filename = cast(str, self.metadata[self.split]["filename"])
+        zip_path = os.path.join(self.root, filename)
         md5 = self.metadata[self.split]["md5"] if self.checksum else None
         integrity = check_integrity(zip_path, md5)
         if integrity:
@@ -184,7 +185,8 @@ class SSL4EOS12(NonGeoDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        extract_archive(os.path.join(self.root, self.metadata[self.split]["filename"]))
+        filename = cast(str, self.metadata[self.split]["filename"])
+        extract_archive(os.path.join(self.root, filename))
 
     def plot(
         self,
