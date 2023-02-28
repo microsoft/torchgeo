@@ -296,6 +296,9 @@ class RasterDataset(GeoDataset):
     #: Color map for the dataset, used for plotting
     cmap: dict[int, tuple[int, int, int, int]] = {}
 
+    #: dtype to force onto the dataset (overrides the dtype of the file via a cast)
+    dtype: Optional[torch.dtype] = None
+
     def __init__(
         self,
         root: str = "data",
@@ -429,10 +432,14 @@ class RasterDataset(GeoDataset):
             data = self._merge_files(filepaths, query, self.band_indexes)
 
         sample = {"crs": self.crs, "bbox": query}
+
+        if self.dtype is not None:
+            data = data.to(self.dtype)
+
         if self.is_image:
             sample["image"] = data.float()
         else:
-            sample["mask"] = data.long()
+            sample["mask"] = data
 
         if self.transforms is not None:
             sample = self.transforms(sample)
