@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -46,6 +47,15 @@ class TestSSL4EOS12:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
         assert len(ds) == 8
+
+    def test_extract(self, tmp_path: Path) -> None:
+        for split in SSL4EOS12.metadata:
+            filename = SSL4EOS12.metadata[split]["filename"]
+            shutil.copyfile(
+                os.path.join("tests", "data", "ssl4eo", filename),
+                tmp_path / filename
+            )
+        SSL4EOS12(tmp_path)
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
