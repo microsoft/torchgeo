@@ -4,6 +4,7 @@
 import os
 import shutil
 from pathlib import Path
+from typing import cast
 
 import matplotlib.pyplot as plt
 import pytest
@@ -50,7 +51,7 @@ class TestSSL4EOS12:
 
     def test_extract(self, tmp_path: Path) -> None:
         for split in SSL4EOS12.metadata:
-            filename = SSL4EOS12.metadata[split]["filename"]
+            filename = cast(str, SSL4EOS12.metadata[split]["filename"])
             shutil.copyfile(
                 os.path.join("tests", "data", "ssl4eo", filename),
                 tmp_path / filename
