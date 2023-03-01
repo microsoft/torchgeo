@@ -55,7 +55,7 @@ class TestSSL4EOS12:
             shutil.copyfile(
                 os.path.join("tests", "data", "ssl4eo", filename), tmp_path / filename
             )
-        SSL4EOS12(tmp_path)
+        SSL4EOS12(str(tmp_path))
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
