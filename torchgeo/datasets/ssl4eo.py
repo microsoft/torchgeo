@@ -205,9 +205,12 @@ class SSL4EOS12(NonGeoDataset):
             a matplotlib Figure with the rendered sample
         """
         if self.split == "s1":
+            # Convert from decibel to power scale
+            image = np.exp(sample["image"] / 10)
+
             # See Sentinel1.plot
-            co_polarization = sample["image"][0]
-            cross_polarization = sample["image"][1]
+            co_polarization = image[0]
+            cross_polarization = image[1]
             ratio = co_polarization / cross_polarization
 
             co_polarization = torch.clamp(co_polarization / 0.3, min=0, max=1)
