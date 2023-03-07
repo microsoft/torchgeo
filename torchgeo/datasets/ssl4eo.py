@@ -206,7 +206,7 @@ class SSL4EOS12(NonGeoDataset):
         """
         if self.split == "s1":
             # Convert from decibel to power scale
-            image = np.exp(sample["image"] / 10)
+            image = torch.exp(sample["image"] / 10)
 
             # See Sentinel1.plot
             co_polarization = image[0]
