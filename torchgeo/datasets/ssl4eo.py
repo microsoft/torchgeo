@@ -102,7 +102,7 @@ class SSL4EOS12(NonGeoDataset):
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new SeCo dataset instance.
+        """Initialize a new SSL4EOS12 instance.
 
         Args:
             root: root directory where dataset can be found
@@ -133,8 +133,7 @@ class SSL4EOS12(NonGeoDataset):
             index: index to return
 
         Returns:
-            sample with an "image" in 5xCxHxW format where the 5 indexes over the same
-                patch sampled from different points in time by the SeCo method
+            image sample
         """
         directory = os.path.join(self.root, self.split, f"{index // self.times:07}")
         subdirs = sorted(os.listdir(directory))
