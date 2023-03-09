@@ -17,7 +17,7 @@ from pytorch_lightning import LightningDataModule, Trainer
 from torchvision.models import resnet18
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import SeasonalContrastS2DataModule, MisconfigurationException
+from torchgeo.datamodules import SeasonalContrastS2DataModule
 from torchgeo.datasets import SeasonalContrastS2
 from torchgeo.models import get_model_weights, list_models
 from torchgeo.trainers import BYOLTask
@@ -49,12 +49,19 @@ class TestBYOL:
 
 
 class TestBYOLTask:
-    @pytest.mark.parametrize("name,classname", [
-        ("seco_1", SeasonalContrastS2DataModule),
-        ("seco_2", SeasonalContrastS2DataModule),
-    ])
+    @pytest.mark.parametrize(
+        "name,classname",
+        [
+            ("seco_1", SeasonalContrastS2DataModule),
+            ("seco_2", SeasonalContrastS2DataModule),
+        ],
+    )
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, classname: Type[LightningDataModule], fast_dev_run: bool
+        self,
+        monkeypatch: MonkeyPatch,
+        name: str,
+        classname: Type[LightningDataModule],
+        fast_dev_run: bool,
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
