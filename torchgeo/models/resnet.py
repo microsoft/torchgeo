@@ -31,7 +31,7 @@ _seco_transforms = AugmentationSequential(
     K.Resize(128),
     K.Normalize(
         mean=torch.tensor([590.23569706, 614.21682446, 429.9430203]),
-        std=torch.tensor([675.88746967, 582.87945694, 572.41639287]),
+        std=2*torch.tensor([675.88746967, 582.87945694, 572.41639287]),
     ),
     data_keys=["image"],
 )
