@@ -42,7 +42,7 @@ class SSL4EOS12(NonGeoDataset):
           $ RSYNC_PASSWORD=m1660427.001 rsync -av rsync://m1660427.001@dataserv.ub.tum.de/m1660427.001/ .
 
        The dataset is about 1.5 TB when compressed and 3.7 TB when uncompressed, and
-       takes roughly 36 hrs to download, 1 hr to checksum, and XX hrs to extract.
+       takes roughly 36 hrs to download, 1 hr to checksum, and 12 hrs to extract.
 
     .. versionadded:: 0.5
     """  # noqa: E501
