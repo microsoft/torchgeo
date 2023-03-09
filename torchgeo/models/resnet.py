@@ -22,7 +22,7 @@ __all__ = ["ResNet50_Weights", "ResNet18_Weights"]
 _zhu_xlab_transforms = AugmentationSequential(
     K.Resize(256),
     K.CenterCrop(224),
-    K.Normalize(mean=0, std=10000),
+    K.Normalize(mean=torch.tensor(0), std=torch.tensor(10000)),
     data_keys=["image"],
 )
 
@@ -30,38 +30,8 @@ _zhu_xlab_transforms = AugmentationSequential(
 _seco_transforms = AugmentationSequential(
     K.Resize(128),
     K.Normalize(
-        mean=torch.Tensor(
-            [
-                340.76769064,
-                429.9430203,
-                614.21682446,
-                590.23569706,
-                950.68368468,
-                1792.46290469,
-                2075.46795189,
-                2218.94553375,
-                2266.46036911,
-                2246.0605464,
-                1594.42694882,
-                1009.32729131,
-            ]
-        ),
-        std=torch.Tensor(
-            [
-                554.81258967,
-                572.41639287,
-                582.87945694,
-                675.88746967,
-                729.89827633,
-                1096.01480586,
-                1273.45393088,
-                1365.45589904,
-                1356.13789355,
-                1302.3292881,
-                1079.19066363,
-                818.86747235,
-            ]
-        ),
+        mean=torch.tensor([590.23569706, 614.21682446, 429.9430203]),
+        std=torch.tensor([675.88746967, 582.87945694, 572.41639287]),
     ),
     data_keys=["image"],
 )
