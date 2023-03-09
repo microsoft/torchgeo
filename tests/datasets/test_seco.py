@@ -23,46 +23,57 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestSeasonalContrastS2:
-    @pytest.fixture(params=zip(["100k", "1m"], [["B1"], SeasonalContrastS2.all_bands]))
+    @pytest.fixture(
+        params=zip(["100k", "1m"], [1, 2], [["B1"], SeasonalContrastS2.all_bands])
+    )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SeasonalContrastS2:
         monkeypatch.setattr(torchgeo.datasets.seco, "download_url", download_url)
-        monkeypatch.setattr(
-            SeasonalContrastS2,
-            "md5s",
-            {
-                "100k": "4d3e6e4afed7e581b7de1bfa2f7c29da",
-                "1m": "3bb3fcf90f5de7d5781ce0cb85fd20af",
-            },
+        monkeypatch.setitem(
+            SeasonalContrastS2.metadata["100k"],
+            "url",
+            os.path.join("tests", "data", "seco", "seco_100k.zip"),
         )
-        monkeypatch.setattr(
-            SeasonalContrastS2,
-            "urls",
-            {
-                "100k": os.path.join("tests", "data", "seco", "seco_100k.zip"),
-                "1m": os.path.join("tests", "data", "seco", "seco_1m.zip"),
-            },
+        monkeypatch.setitem(
+            SeasonalContrastS2.metadata["100k"],
+            "md5",
+            "4d3e6e4afed7e581b7de1bfa2f7c29da",
+        )
+        monkeypatch.setitem(
+            SeasonalContrastS2.metadata["1m"],
+            "url",
+            os.path.join("tests", "data", "seco", "seco_1m.zip"),
+        )
+        monkeypatch.setitem(
+            SeasonalContrastS2.metadata["1m"], "md5", "3bb3fcf90f5de7d5781ce0cb85fd20af"
         )
         root = str(tmp_path)
-        version, bands = request.param
+        version, seasons, bands = request.param
         transforms = nn.Identity()
         return SeasonalContrastS2(
-            root, version, bands, transforms, download=True, checksum=True
+            root, version, seasons, bands, transforms, download=True, checksum=True
         )
 
     def test_getitem(self, dataset: SeasonalContrastS2) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
+        assert x["image"].size(0) == dataset.seasons * len(dataset.bands)
 
     def test_len(self, dataset: SeasonalContrastS2) -> None:
-        assert len(dataset) == 2
+        if dataset.version == "100k":
+            assert len(dataset) == 10**5
+        else:
+            assert len(dataset) == 10**6
 
     def test_add(self, dataset: SeasonalContrastS2) -> None:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
-        assert len(ds) == 4
+        if dataset.version == "100k":
+            assert len(ds) == 2 * 10**5
+        else:
+            assert len(ds) == 2 * 10**6
 
     def test_already_extracted(self, dataset: SeasonalContrastS2) -> None:
         SeasonalContrastS2(root=dataset.root, download=True)
