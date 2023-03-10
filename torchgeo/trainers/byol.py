@@ -372,7 +372,7 @@ class BYOLTask(pl.LightningModule):
                     optimizer,
                     patience=self.hyperparams["learning_rate_schedule_patience"],
                 ),
-                "monitor": "val_loss",
+                "monitor": "train_loss",
             },
         }
 
@@ -390,17 +390,24 @@ class BYOLTask(pl.LightningModule):
 
         in_channels = self.hyperparams["in_channels"]
         assert x.size(1) == in_channels or x.size(1) == 2 * in_channels
+
         if x.size(1) == in_channels:
-            x1, x2 = x
+            x1 = x
+            x2 = x
         else:
-            x1, x2 = x[:, :in_channels], x[:, in_channels:]
+            x1 = x[:, :in_channels]
+            x2 = x[:, in_channels:]
 
         with torch.no_grad():
-            x1, x2 = self.model.augment(x1), self.model.augment(x2)
+            x1 = self.model.augment(x1)
+            x2 = self.model.augment(x2)
 
-        pred1, pred2 = self(x1), self(x2)
+        pred1 = self(x1)
+        pred2 = self(x2)
         with torch.no_grad():
-            targ1, targ2 = self.model.target(x1), self.model.target(x2)
+            targ1 = self.model.target(x1)
+            targ2 = self.model.target(x2)
+
         loss = torch.mean(normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1))
 
         self.log("train_loss", loss, on_step=True, on_epoch=False)

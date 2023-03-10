@@ -6,6 +6,7 @@
 from typing import Any
 
 import torch
+from einops import repeat
 
 from ..datasets import SeasonalContrastS2
 from .geo import NonGeoDataModule
@@ -67,6 +68,10 @@ class SeasonalContrastS2DataModule(NonGeoDataModule):
         indices = [all_bands.index(band) for band in bands]
         self.mean = self.mean[indices]
         self.std = self.std[indices]
+
+        seasons = kwargs.get("seasons", 1)
+        self.mean = repeat(self.mean, "c -> (t c)", t=seasons)
+        self.std = repeat(self.std, "c -> (t c)", t=seasons)
 
         super().__init__(SeasonalContrastS2, batch_size, num_workers, **kwargs)
 
