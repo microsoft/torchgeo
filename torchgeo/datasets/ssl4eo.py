@@ -211,7 +211,9 @@ class SSL4EOS12(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        fig, axs = plt.subplots(ncols=self.seasons, figsize=(4, 4))
+        fig, axes = plt.subplots(ncols=self.seasons, figsize=(4, 4))
+        if self.seasons == 1:
+            axes = [axes]
 
         for i in range(self.seasons):
             image = sample["image"][i * len(self.bands) : (i + 1) * len(self.bands)]
@@ -239,8 +241,8 @@ class SSL4EOS12(NonGeoDataset):
                 image = image[[3, 2, 1]].permute(1, 2, 0)
                 image = torch.clamp(image / 10000, min=0, max=1)
 
-            axs[i].imshow(image)
-            axs[i].axis("off")
+            axes[i].imshow(image)
+            axes[i].axis("off")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
