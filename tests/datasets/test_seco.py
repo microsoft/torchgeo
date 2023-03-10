@@ -24,7 +24,11 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 class TestSeasonalContrastS2:
     @pytest.fixture(
-        params=zip(["100k", "1m"], [1, 2], [["B1"], SeasonalContrastS2.all_bands])
+        params=zip(
+            ["100k", "1m"],
+            [1, 2],
+            [SeasonalContrastS2.rgb_bands, SeasonalContrastS2.all_bands],
+        )
     )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
@@ -98,17 +102,19 @@ class TestSeasonalContrastS2:
             SeasonalContrastS2(str(tmp_path))
 
     def test_plot(self, dataset: SeasonalContrastS2) -> None:
-        if not all(band in dataset.bands for band in dataset.rgb_bands):
-            with pytest.raises(ValueError, match="Dataset doesn't contain"):
-                x = dataset[0].copy()
-                dataset.plot(x, suptitle="Test")
-        else:
-            x = dataset[0].copy()
-            dataset.plot(x, suptitle="Test")
-            plt.close()
-            dataset.plot(x, show_titles=False)
-            plt.close()
+        x = dataset[0]
+        dataset.plot(x, suptitle="Test")
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
 
-            with pytest.raises(ValueError, match="doesn't support plotting"):
-                x["prediction"] = torch.tensor(1)
-                dataset.plot(x)
+        with pytest.raises(ValueError, match="doesn't support plotting"):
+            x["prediction"] = torch.tensor(1)
+            dataset.plot(x)
+
+    def test_no_rgb_plot(self) -> None:
+        with pytest.raises(ValueError, match="Dataset doesn't contain"):
+            root = os.path.join("tests", "data", "seco")
+            dataset = SeasonalContrastS2(root, bands=["B1"])
+            x = dataset[0]
+            dataset.plot(x, suptitle="Test")
