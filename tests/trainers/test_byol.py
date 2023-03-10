@@ -17,7 +17,7 @@ from pytorch_lightning import LightningDataModule, Trainer
 from torchvision.models import resnet18
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import SeasonalContrastS2DataModule
+from torchgeo.datamodules import ChesapeakeCVPRDataModule, SeasonalContrastS2DataModule
 from torchgeo.datasets import SeasonalContrastS2
 from torchgeo.models import get_model_weights, list_models
 from torchgeo.trainers import BYOLTask
@@ -52,6 +52,7 @@ class TestBYOLTask:
     @pytest.mark.parametrize(
         "name,classname",
         [
+            ("chesapeake_cvpr_prior", ChesapeakeCVPRDataModule),
             ("seco_1", SeasonalContrastS2DataModule),
             ("seco_2", SeasonalContrastS2DataModule),
         ],

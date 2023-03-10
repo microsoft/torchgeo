@@ -59,7 +59,6 @@ class TestSemanticSegmentationTask:
         [
             ("chesapeake_cvpr_5", ChesapeakeCVPRDataModule),
             ("chesapeake_cvpr_7", ChesapeakeCVPRDataModule),
-            ("chesapeake_cvpr_prior", ChesapeakeCVPRDataModule),
             ("deepglobelandcover", DeepGlobeLandCoverDataModule),
             ("etci2021", ETCI2021DataModule),
             ("gid15", GID15DataModule),
