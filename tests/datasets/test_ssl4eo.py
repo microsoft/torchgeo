@@ -18,9 +18,8 @@ from torchgeo.datasets import SSL4EOS12
 
 
 class TestSSL4EOS12:
-    @pytest.fixture(params=SSL4EOS12.metadata.keys())
+    @pytest.fixture(params=zip(SSL4EOS12.metadata.keys(), [1, 1, 2]))
     def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> SSL4EOS12:
-        monkeypatch.setattr(SSL4EOS12, "locations", 1)
         monkeypatch.setitem(
             SSL4EOS12.metadata["s1"], "md5", "2d56f6279809738de42370b65d9ac0a6"
         )
@@ -32,22 +31,23 @@ class TestSSL4EOS12:
         )
 
         root = os.path.join("tests", "data", "ssl4eo")
-        split = request.param
+        split, seasons = request.param
         transforms = nn.Identity()
-        return SSL4EOS12(root, split, transforms, checksum=True)
+        return SSL4EOS12(root, split, seasons, transforms, checksum=True)
 
     def test_getitem(self, dataset: SSL4EOS12) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
+        assert x["image"].size(0) == dataset.seasons * len(dataset.bands)
 
     def test_len(self, dataset: SSL4EOS12) -> None:
-        assert len(dataset) == 4
+        assert len(dataset) == 251079
 
     def test_add(self, dataset: SSL4EOS12) -> None:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
-        assert len(ds) == 8
+        assert len(ds) == 2 * 251079
 
     def test_extract(self, tmp_path: Path) -> None:
         for split in SSL4EOS12.metadata:

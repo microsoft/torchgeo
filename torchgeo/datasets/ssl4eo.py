@@ -4,6 +4,7 @@
 """Self-Supervised Learning for Earth Observation."""
 
 import os
+import random
 from typing import Callable, Dict, Optional, cast
 
 import matplotlib.pyplot as plt
@@ -39,16 +40,15 @@ class SSL4EOS12(NonGeoDataset):
 
        .. code-block:: console
 
-          $ RSYNC_PASSWORD=m1660427.001 rsync -av rsync://m1660427.001@dataserv.ub.tum.de/m1660427.001/ .
+          $ export RSYNC_PASSWORD=m1660427.001
+          $ rsync -av rsync://m1660427.001@dataserv.ub.tum.de/m1660427.001/ .
 
        The dataset is about 1.5 TB when compressed and 3.7 TB when uncompressed, and
        takes roughly 36 hrs to download, 1 hr to checksum, and 12 hrs to extract.
 
     .. versionadded:: 0.5
-    """  # noqa: E501
+    """
 
-    locations = 251079
-    times = 4
     size = 264
 
     metadata = {
@@ -99,6 +99,7 @@ class SSL4EOS12(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "s2c",
+        seasons: int = 1,
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
@@ -109,6 +110,7 @@ class SSL4EOS12(NonGeoDataset):
             split: one of "s1" (Sentinel-1 dual-pol SAR), "s2c" (Sentinel-2 Level-1C
                 top-of-atmosphere reflectance), and "s2a" (Sentinel-2 Level-2a surface
                 reflectance
+            seasons: number of seasonal patches to sample per location, 1--4
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             checksum: if True, check the MD5 of the downloaded files (may be slow)
@@ -118,11 +120,15 @@ class SSL4EOS12(NonGeoDataset):
             RuntimeError: if dataset is missing or checksum fails
         """
         assert split in self.metadata
+        assert seasons in range(4)
 
         self.root = root
         self.split = split
+        self.seasons = seasons
         self.transforms = transforms
         self.checksum = checksum
+
+        self.bands = self.metadata[self.split]["bands"]
 
         self._verify()
 
@@ -135,16 +141,18 @@ class SSL4EOS12(NonGeoDataset):
         Returns:
             image sample
         """
-        directory = os.path.join(self.root, self.split, f"{index // self.times:07}")
-        subdirs = sorted(os.listdir(directory))
-        directory = os.path.join(directory, subdirs[index % self.times])
+        root = os.path.join(self.root, self.split, f"{index:07}")
+        subdirs = os.listdir(root)
+        subdirs = random.sample(subdirs, self.seasons)
 
         images = []
-        for band in self.metadata[self.split]["bands"]:
-            filename = os.path.join(directory, f"{band}.tif")
-            with rasterio.open(filename) as f:
-                image = f.read(out_shape=(1, self.size, self.size)).astype(np.float32)
-                images.append(torch.from_numpy(image))
+        for subdir in subdirs:
+            directory = os.path.join(root, subdir)
+            for band in self.bands:
+                filename = os.path.join(directory, f"{band}.tif")
+                with rasterio.open(filename) as f:
+                    image = f.read(out_shape=(1, self.size, self.size))
+                    images.append(torch.from_numpy(image.astype(np.float32)))
 
         sample = {"image": torch.cat(images)}
 
@@ -159,7 +167,7 @@ class SSL4EOS12(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        return self.locations * self.times
+        return 251079
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
@@ -203,29 +211,36 @@ class SSL4EOS12(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        if self.split == "s1":
-            # Convert from decibel to power scale
-            image = torch.exp(sample["image"] / 10)
+        fig, axs = plt.subplots(ncols=self.seasons, figsize=(4, 4))
 
-            # See Sentinel1.plot
-            co_polarization = image[0]
-            cross_polarization = image[1]
-            ratio = co_polarization / cross_polarization
+        for i in range(self.seasons):
+            image = sample["image"][i * len(self.bands) : (i + 1) * len(self.bands)]
 
-            co_polarization = torch.clamp(co_polarization / 0.3, min=0, max=1)
-            cross_polarization = torch.clamp(cross_polarization / 0.05, min=0, max=1)
-            ratio = torch.clamp(ratio / 25, min=0, max=1)
+            if self.split == "s1":
+                # Convert from decibel to power scale
+                image = torch.exp(image / 10)
 
-            image = torch.stack((co_polarization, cross_polarization, ratio), dim=-1)
-        else:
-            # See Sentinel2.plot
-            image = sample["image"][[3, 2, 1]].permute(1, 2, 0)
-            image = torch.clamp(image / 10000, min=0, max=1)
+                # See Sentinel1.plot
+                co_polarization = image[0]
+                cross_polarization = image[1]
+                ratio = co_polarization / cross_polarization
 
-        fig, ax = plt.subplots(figsize=(4, 4))
+                co_polarization = torch.clamp(co_polarization / 0.3, min=0, max=1)
+                cross_polarization = torch.clamp(
+                    cross_polarization / 0.05, min=0, max=1
+                )
+                ratio = torch.clamp(ratio / 25, min=0, max=1)
 
-        ax.imshow(image)
-        ax.axis("off")
+                image = torch.stack(
+                    (co_polarization, cross_polarization, ratio), dim=-1
+                )
+            else:
+                # See Sentinel2.plot
+                image = image[[3, 2, 1]].permute(1, 2, 0)
+                image = torch.clamp(image / 10000, min=0, max=1)
+
+            axs[i].imshow(image)
+            axs[i].axis("off")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
