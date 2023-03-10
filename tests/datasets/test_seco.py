@@ -63,17 +63,17 @@ class TestSeasonalContrastS2:
 
     def test_len(self, dataset: SeasonalContrastS2) -> None:
         if dataset.version == "100k":
-            assert len(dataset) == 10**5
+            assert len(dataset) == 10**5 // 5
         else:
-            assert len(dataset) == 10**6
+            assert len(dataset) == 10**6 // 5
 
     def test_add(self, dataset: SeasonalContrastS2) -> None:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
         if dataset.version == "100k":
-            assert len(ds) == 2 * 10**5
+            assert len(ds) == 2 * 10**5 // 5
         else:
-            assert len(ds) == 2 * 10**6
+            assert len(ds) == 2 * 10**6 // 5
 
     def test_already_extracted(self, dataset: SeasonalContrastS2) -> None:
         SeasonalContrastS2(root=dataset.root, download=True)

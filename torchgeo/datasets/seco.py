@@ -3,7 +3,6 @@
 
 """Sentinel 2 imagery from the Seasonal Contrast paper."""
 
-import glob
 import os
 import random
 from typing import Callable, Dict, List, Optional
@@ -124,15 +123,15 @@ class SeasonalContrastS2(NonGeoDataset):
         .. versionchanged:: 0.5
            Image shape changed from 5xCxHxW to SCxHxW
         """
-        directory = os.path.join(
+        root = os.path.join(
             self.root, self.metadata[self.version]["directory"], f"{index:06}"
         )
-        patch_dirs = glob.glob(os.path.join(directory, "*"))
-        patch_dirs = random.sample(patch_dirs, self.seasons)
+        subdirs = os.listdir(root)
+        subdirs = random.sample(subdirs, self.seasons)
 
-        imagery = [self._load_patch(patch_dir) for patch_dir in patch_dirs]
+        images = [self._load_patch(root, subdir) for subdir in subdirs]
 
-        sample = {"image": torch.cat(imagery)}
+        sample = {"image": torch.cat(images)}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -147,18 +146,19 @@ class SeasonalContrastS2(NonGeoDataset):
         """
         return (10**5 if self.version == "100k" else 10**6) // 5
 
-    def _load_patch(self, patch_dir: str) -> Tensor:
+    def _load_patch(self, root: str, subdir: str) -> Tensor:
         """Load a single image patch.
 
         Args:
-            patch_dir: directory containing band files
+            root: root directory containing all seasons
+            subdir: season to load
 
         Returns:
             the image with the subset of bands specified by ``self.bands``
         """
         all_data = []
         for band in self.bands:
-            fn = os.path.join(patch_dir, f"{band}.tif")
+            fn = os.path.join(root, subdir, f"{band}.tif")
             with rasterio.open(fn) as f:
                 band_data = f.read(1).astype(np.float32)
                 height, width = band_data.shape
@@ -259,21 +259,18 @@ class SeasonalContrastS2(NonGeoDataset):
             else:
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
-        images = []
+        fig, axs = plt.subplots(ncols=self.seasons, figsize=(20, 4))
+
         indices = torch.tensor(rgb_indices)
         for i in range(self.seasons):
             image = sample["image"][indices + i * len(self.bands)].numpy()
             image = np.rollaxis(image, 0, 3)
             image = percentile_normalization(image, 0, 100)
-            images.append(image)
 
-        fig, axs = plt.subplots(ncols=self.seasons, figsize=(20, 4))
-        for i in range(self.seasons):
-            axs[i].imshow(images[i])
+            axs[i].imshow(image)
             axs[i].axis("off")
-            if show_titles:
-                axs[i].set_title(f"t={i+1}")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
+
         return fig
