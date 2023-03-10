@@ -203,6 +203,7 @@ class Landsat8(Landsat):
 
 
 class Landsat9(Landsat8):
-    """Landsat 9 Operational Land Imager (OLI) and Thermal Infrared Sensor (TIRS)."""
+    """Landsat 9 Operational Land Imager (OLI-2) and Thermal Infrared Sensor (TIRS-2).
+    """
 
     filename_glob = "LC09_*_{}.*"
