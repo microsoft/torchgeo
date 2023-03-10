@@ -85,7 +85,7 @@ class CustomNonGeoDataModule(NonGeoDataModule):
 class TestGeoDataModule:
     @pytest.fixture(params=[SamplerGeoDataModule, BatchSamplerGeoDataModule])
     def datamodule(self, request: SubRequest) -> CustomGeoDataModule:
-        dm = request.param()
+        dm: CustomGeoDataModule = request.param()
         dm.trainer = Trainer(max_epochs=1)
         return dm
 
