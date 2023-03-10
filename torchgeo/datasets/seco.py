@@ -145,7 +145,7 @@ class SeasonalContrastS2(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        return 10**5 if self.version == "100k" else 10**6
+        return 10**5 / 5 if self.version == "100k" else 10**6 / 5
 
     def _load_patch(self, patch_dir: str) -> Tensor:
         """Load a single image patch.
@@ -260,7 +260,7 @@ class SeasonalContrastS2(NonGeoDataset):
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
         images = []
-        indices = np.array(rgb_indices)
+        indices = torch.tensor(rgb_indices)
         for i in range(self.seasons):
             image = sample["image"][indices + i * len(self.bands)].numpy()
             image = np.rollaxis(image, 0, 3)
