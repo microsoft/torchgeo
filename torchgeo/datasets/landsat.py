@@ -189,16 +189,7 @@ class Landsat7(Landsat):
 
     filename_glob = "LE07_*_{}.*"
 
-    default_bands = [
-        "SR_B1",
-        "SR_B2",
-        "SR_B3",
-        "SR_B4",
-        "SR_B5",
-        "SR_B6",
-        "SR_B7",
-        "SR_B8",
-    ]
+    default_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"]
     rgb_bands = ["SR_B3", "SR_B2", "SR_B1"]
 
 
@@ -207,19 +198,7 @@ class Landsat8(Landsat):
 
     filename_glob = "LC08_*_{}.*"
 
-    default_bands = [
-        "SR_B1",
-        "SR_B2",
-        "SR_B3",
-        "SR_B4",
-        "SR_B5",
-        "SR_B6",
-        "SR_B7",
-        "SR_B8",
-        "SR_B9",
-        "SR_B10",
-        "SR_B11",
-    ]
+    default_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"]
     rgb_bands = ["SR_B4", "SR_B3", "SR_B2"]
 
 
