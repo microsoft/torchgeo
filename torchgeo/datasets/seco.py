@@ -145,7 +145,7 @@ class SeasonalContrastS2(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        return 10**5 // 5 if self.version == "100k" else 10**6 // 5
+        return (10**5 if self.version == "100k" else 10**6) // 5
 
     def _load_patch(self, patch_dir: str) -> Tensor:
         """Load a single image patch.
