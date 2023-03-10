@@ -259,7 +259,9 @@ class SeasonalContrastS2(NonGeoDataset):
             else:
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
-        fig, axs = plt.subplots(ncols=self.seasons, figsize=(20, 4))
+        fig, axes = plt.subplots(ncols=self.seasons, figsize=(20, 4))
+        if self.seasons == 1:
+            axes = [axes]
 
         indices = torch.tensor(rgb_indices)
         for i in range(self.seasons):
@@ -267,8 +269,8 @@ class SeasonalContrastS2(NonGeoDataset):
             image = np.rollaxis(image, 0, 3)
             image = percentile_normalization(image, 0, 100)
 
-            axs[i].imshow(image)
-            axs[i].axis("off")
+            axes[i].imshow(image)
+            axes[i].axis("off")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
