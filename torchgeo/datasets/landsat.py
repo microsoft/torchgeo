@@ -138,8 +138,8 @@ class Landsat1(Landsat):
 
     filename_glob = "LM01_*_{}.*"
 
-    default_bands = ["SR_B4", "SR_B5", "SR_B6", "SR_B7"]
-    rgb_bands = ["SR_B6", "SR_B5", "SR_B4"]
+    default_bands = ["B4", "B5", "B6", "B7"]
+    rgb_bands = ["B6", "B5", "B4"]
 
 
 class Landsat2(Landsat1):
@@ -159,8 +159,8 @@ class Landsat4MSS(Landsat):
 
     filename_glob = "LM04_*_{}.*"
 
-    default_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4"]
-    rgb_bands = ["SR_B3", "SR_B2", "SR_B1"]
+    default_bands = ["B1", "B2", "B3", "B4"]
+    rgb_bands = ["B3", "B2", "B1"]
 
 
 class Landsat4TM(Landsat):
