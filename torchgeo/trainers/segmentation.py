@@ -169,7 +169,7 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
 
         return cast(Tensor, loss)
 
-    def on_training_epoch_end(self) -> None:
+    def on_train_epoch_end(self) -> None:
         """Logs epoch level training metrics."""
         self.log_dict(self.train_metrics.compute())
         self.train_metrics.reset()
