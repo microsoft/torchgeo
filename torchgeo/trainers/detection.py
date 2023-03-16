@@ -7,9 +7,9 @@ from functools import partial
 from typing import Any, Dict, List, cast
 
 import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 import torch
 import torchvision.models.detection
+from lightning import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
@@ -46,7 +46,7 @@ BACKBONE_WEIGHT_MAP = {
 }
 
 
-class ObjectDetectionTask(pl.LightningModule):
+class ObjectDetectionTask(LightningModule):
     """LightningModule for object detection of images.
 
     Currently, supports Faster R-CNN, FCOS, and RetinaNet models from
@@ -302,8 +302,7 @@ class ObjectDetectionTask(pl.LightningModule):
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+            learning rate dictionary
         """
         optimizer = torch.optim.Adam(
             self.model.parameters(), lr=self.hyperparams["learning_rate"]

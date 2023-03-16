@@ -12,7 +12,7 @@ import torchvision
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
-from pytorch_lightning import LightningDataModule, Trainer
+from lightning import LightningDataModule, Trainer
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import (

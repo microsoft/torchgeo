@@ -7,10 +7,10 @@ import warnings
 from typing import Any, Dict, cast
 
 import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
+from lightning import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MetricCollection
@@ -20,7 +20,7 @@ from ..datasets.utils import unbind_samples
 from ..models import FCN
 
 
-class SemanticSegmentationTask(pl.LightningModule):
+class SemanticSegmentationTask(LightningModule):
     """LightningModule for semantic segmentation of images.
 
     Supports `Segmentation Models Pytorch
@@ -266,8 +266,7 @@ class SemanticSegmentationTask(pl.LightningModule):
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+            learning rate dictionary
         """
         optimizer = torch.optim.Adam(
             self.model.parameters(), lr=self.hyperparams["learning_rate"]

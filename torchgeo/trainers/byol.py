@@ -6,12 +6,12 @@
 import os
 from typing import Any, Dict, Optional, Tuple, cast
 
-import pytorch_lightning as pl
 import timm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from kornia import augmentation as K
+from lightning import LightningModule
 from torch import Tensor, optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchvision.models._api import WeightsEnum
@@ -278,7 +278,7 @@ class BYOL(nn.Module):
             pt.data = self.beta * pt.data + (1 - self.beta) * p.data
 
 
-class BYOLTask(pl.LightningModule):
+class BYOLTask(LightningModule):
     """Class for pre-training any PyTorch model using BYOL.
 
     Supports any available `Timm model
@@ -357,8 +357,7 @@ class BYOLTask(pl.LightningModule):
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+            learning rate dictionary.
         """
         optimizer_class = getattr(optim, self.hyperparams.get("optimizer", "Adam"))
         lr = self.hyperparams.get("learning_rate", 1e-4)

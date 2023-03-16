@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 from _pytest.monkeypatch import MonkeyPatch
 from omegaconf import OmegaConf
-from pytorch_lightning import LightningDataModule, Trainer
+from lightning import LightningDataModule, Trainer
 from torch.nn.modules import Module
 
 from torchgeo.datamodules import (
