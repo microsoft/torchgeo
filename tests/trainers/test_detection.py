@@ -5,9 +5,13 @@ import os
 from typing import Any, Dict, Type, cast
 
 import pytest
+import torch
+import torch.nn as nn
+import torchvision.models.detection
 from _pytest.monkeypatch import MonkeyPatch
+from lightning import LightningDataModule, Trainer
 from omegaconf import OmegaConf
-from pytorch_lightning import LightningDataModule, Trainer
+from torch.nn.modules import Module
 
 from torchgeo.datamodules import MisconfigurationException, NASAMarineDebrisDataModule
 from torchgeo.datasets import NASAMarineDebris
@@ -17,6 +21,35 @@ from torchgeo.trainers import ObjectDetectionTask
 class PredictObjectDetectionDataModule(NASAMarineDebrisDataModule):
     def setup(self, stage: str) -> None:
         self.predict_dataset = NASAMarineDebris(**self.kwargs)
+
+
+class ObjectDetectionTestModel(Module):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__()
+        self.fc = nn.Linear(1, 1)
+
+    def forward(self, images: Any, targets: Any = None) -> Any:
+        batch_size = len(images)
+        if self.training:
+            assert batch_size == len(targets)
+            # use the Linear layer to generate a tensor that has a gradient
+            return {
+                "loss_classifier": self.fc(torch.rand(1)),
+                "loss_box_reg": self.fc(torch.rand(1)),
+                "loss_objectness": self.fc(torch.rand(1)),
+                "loss_rpn_box_reg": self.fc(torch.rand(1)),
+            }
+        else:  # eval mode
+            output = []
+            for i in range(batch_size):
+                output.append(
+                    {
+                        "boxes": torch.rand(10, 4),
+                        "labels": torch.randint(0, 2, (10,)),
+                        "scores": torch.rand(10),
+                    }
+                )
+            return output
 
 
 def plot(*args: Any, **kwargs: Any) -> None:
@@ -30,6 +63,7 @@ class TestObjectDetectionTask:
     @pytest.mark.parametrize("model_name", ["faster-rcnn", "fcos", "retinanet"])
     def test_trainer(
         self,
+        monkeypatch: MonkeyPatch,
         name: str,
         classname: Type[LightningDataModule],
         model_name: str,
@@ -44,6 +78,15 @@ class TestObjectDetectionTask:
         datamodule = classname(**datamodule_kwargs)
 
         # Instantiate model
+        monkeypatch.setattr(
+            torchvision.models.detection, "FasterRCNN", ObjectDetectionTestModel
+        )
+        monkeypatch.setattr(
+            torchvision.models.detection, "FCOS", ObjectDetectionTestModel
+        )
+        monkeypatch.setattr(
+            torchvision.models.detection, "RetinaNet", ObjectDetectionTestModel
+        )
         model_kwargs = conf_dict["module"]
         model_kwargs["model"] = model_name
         model = ObjectDetectionTask(**model_kwargs)

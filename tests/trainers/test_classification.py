@@ -12,8 +12,8 @@ import torch.nn as nn
 import torchvision
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
+from lightning import LightningDataModule, Trainer
 from omegaconf import OmegaConf
-from pytorch_lightning import LightningDataModule, Trainer
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 

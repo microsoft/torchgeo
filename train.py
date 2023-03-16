@@ -8,10 +8,10 @@
 import os
 from typing import Any, Dict, Tuple, Type, cast
 
-import pytorch_lightning as pl
+import lightning as L
+from lightning import loggers
+from lightning.callbacks import EarlyStopping, ModelCheckpoint
 from omegaconf import DictConfig, OmegaConf
-from pytorch_lightning import loggers as pl_loggers
-from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 
 from torchgeo.datamodules import (
     BigEarthNetDataModule,
@@ -45,7 +45,7 @@ from torchgeo.trainers import (
 )
 
 TASK_TO_MODULES_MAPPING: Dict[
-    str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
+    str, Tuple[Type[L.LightningModule], Type[L.LightningDataModule]]
 ] = {
     "bigearthnet": (MultiLabelClassificationTask, BigEarthNetDataModule),
     "byol": (BYOLTask, ChesapeakeCVPRDataModule),
@@ -165,8 +165,8 @@ def main(conf: DictConfig) -> None:
         Dict[str, Any], OmegaConf.to_object(conf.experiment.datamodule)
     )
 
-    datamodule: pl.LightningDataModule
-    task: pl.LightningModule
+    datamodule: L.LightningDataModule
+    task: L.LightningModule
     if task_name in TASK_TO_MODULES_MAPPING:
         task_class, datamodule_class = TASK_TO_MODULES_MAPPING[task_name]
         task = task_class(**task_args)
@@ -179,8 +179,8 @@ def main(conf: DictConfig) -> None:
     ######################################
     # Setup trainer
     ######################################
-    tb_logger = pl_loggers.TensorBoardLogger(conf.program.log_dir, name=experiment_name)
-    csv_logger = pl_loggers.CSVLogger(conf.program.log_dir, name=experiment_name)
+    tb_logger = loggers.TensorBoardLogger(conf.program.log_dir, name=experiment_name)
+    csv_logger = loggers.CSVLogger(conf.program.log_dir, name=experiment_name)
 
     if isinstance(task, ObjectDetectionTask):
         monitor_metric = "val_map"
@@ -205,10 +205,7 @@ def main(conf: DictConfig) -> None:
     trainer_args["callbacks"] = [checkpoint_callback, early_stopping_callback]
     trainer_args["logger"] = [tb_logger, csv_logger]
     trainer_args["default_root_dir"] = experiment_dir
-    trainer = pl.Trainer(**trainer_args)
-
-    if trainer_args.get("auto_lr_find"):
-        trainer.tune(model=task, datamodule=datamodule)
+    trainer = L.Trainer(**trainer_args)
 
     ######################################
     # Run experiment
@@ -232,7 +229,7 @@ if __name__ == "__main__":
 
     # Set random seed for reproducibility
     # https://pytorch-lightning.readthedocs.io/en/latest/api/pytorch_lightning.utilities.seed.html#pytorch_lightning.utilities.seed.seed_everything
-    pl.seed_everything(conf.program.seed)
+    L.seed_everything(conf.program.seed)
 
     # Main training procedure
     main(conf)
