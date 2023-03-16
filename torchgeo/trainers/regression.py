@@ -7,10 +7,10 @@ import os
 from typing import Any, Dict, cast
 
 import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 import timm
 import torch
 import torch.nn.functional as F
+from lightning import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
@@ -21,7 +21,7 @@ from ..models import get_weight
 from . import utils
 
 
-class RegressionTask(pl.LightningModule):
+class RegressionTask(LightningModule):  # type: ignore[misc]
     """LightningModule for training models on regression datasets.
 
     Supports any available `Timm model
@@ -118,12 +118,8 @@ class RegressionTask(pl.LightningModule):
 
         return loss
 
-    def training_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch-level training metrics.
-
-        Args:
-            outputs: list of items returned by training_step
-        """
+    def on_train_epoch_end(self) -> None:
+        """Logs epoch-level training metrics."""
         self.log_dict(self.train_metrics.compute())
         self.train_metrics.reset()
 
@@ -166,12 +162,8 @@ class RegressionTask(pl.LightningModule):
             except ValueError:
                 pass
 
-    def validation_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level validation metrics.
-
-        Args:
-            outputs: list of items returned by validation_step
-        """
+    def on_validation_epoch_end(self) -> None:
+        """Logs epoch level validation metrics."""
         self.log_dict(self.val_metrics.compute())
         self.val_metrics.reset()
 
@@ -190,12 +182,8 @@ class RegressionTask(pl.LightningModule):
         self.log("test_loss", loss)
         self.test_metrics(y_hat, y)
 
-    def test_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level test metrics.
-
-        Args:
-            outputs: list of items returned by test_step
-        """
+    def on_test_epoch_end(self) -> None:
+        """Logs epoch level test metrics."""
         self.log_dict(self.test_metrics.compute())
         self.test_metrics.reset()
 
@@ -216,8 +204,7 @@ class RegressionTask(pl.LightningModule):
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+            learning rate dictionary
         """
         optimizer = torch.optim.AdamW(
             self.model.parameters(), lr=self.hyperparams["learning_rate"]

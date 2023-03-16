@@ -72,9 +72,9 @@ filterwarnings = [
     # https://github.com/Lightning-AI/lightning/pull/13261
     "ignore:torch.distributed._sharded_tensor will be deprecated:DeprecationWarning:torch.distributed._sharded_tensor",
     # https://github.com/Lightning-AI/lightning/issues/13989
-    "ignore:SelectableGroups dict interface is deprecated. Use select.:DeprecationWarning:pytorch_lightning.trainer.connectors.callback_connector",
+    "ignore:SelectableGroups dict interface is deprecated. Use select.:DeprecationWarning:lightning.pytorch.trainer.connectors.callback_connector",
     # https://github.com/Lightning-AI/lightning/issues/14594
-    "ignore:To copy construct from a tensor, it is recommended to use:UserWarning:pytorch_lightning.core.module",
+    "ignore:To copy construct from a tensor, it is recommended to use:UserWarning:lightning.pytorch.core.module",
     # https://github.com/rasterio/rasterio/issues/1742
     # https://github.com/rasterio/rasterio/pull/1753
     "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:rasterio.crs",
@@ -96,13 +96,12 @@ filterwarnings = [
     # https://github.com/lanpa/tensorboardX/pull/677
     "ignore:ANTIALIAS is deprecated and will be removed in Pillow 10:DeprecationWarning:tensorboardX.summary",
     # https://github.com/Lightning-AI/lightning/issues/16756
-    "ignore:Deprecated call to `pkg_resources.declare_namespace:DeprecationWarning:lightning_fabric",
-    "ignore:Deprecated call to `pkg_resources.declare_namespace:DeprecationWarning:pytorch_lightning",
+    "ignore:Deprecated call to `pkg_resources.declare_namespace:DeprecationWarning",
 
     # Expected warnings
-    # pytorch-lightning warns us about using num_workers=0, but it's faster on macOS
+    # Lightning warns us about using num_workers=0, but it's faster on macOS
     "ignore:The dataloader, .*, does not have many workers which may be a bottleneck:UserWarning",
-    # pytorch-lightning warns us about using the CPU when a GPU is available
+    # Lightning warns us about using the CPU when a GPU is available
     "ignore:GPU available but not used.:UserWarning",
     # https://github.com/kornia/kornia/pull/1611
     "ignore:`ColorJitter` is now following Torchvision implementation.:DeprecationWarning:kornia.augmentation._2d.intensity.color_jitter",
@@ -110,7 +109,7 @@ filterwarnings = [
     "ignore:`RandomGaussianBlur` has changed its behavior and now randomly sample sigma for both axes.:DeprecationWarning:kornia.augmentation._2d.intensity.gaussian_blur",
 
     # Unexpected warnings, worth investigating
-    # pytorch-lightning is having trouble inferring the batch size for ChesapeakeCVPRDataModule and CycloneDataModule for some reason
+    # Lightning is having trouble inferring the batch size for ChesapeakeCVPRDataModule and CycloneDataModule for some reason
     "ignore:Trying to infer the `batch_size` from an ambiguous collection:UserWarning",
 ]
 markers = [
