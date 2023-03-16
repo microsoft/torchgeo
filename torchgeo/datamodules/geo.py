@@ -23,7 +23,7 @@ from ..transforms import AugmentationSequential
 from .utils import MisconfigurationException
 
 
-class GeoDataModule(LightningDataModule):
+class GeoDataModule(LightningDataModule):  # type: ignore[misc]
     """Base class for data modules containing geospatial information.
 
     .. versionadded:: 0.4
@@ -329,7 +329,7 @@ class GeoDataModule(LightningDataModule):
                 return dataset.plot(*args, **kwargs)
 
 
-class NonGeoDataModule(LightningDataModule):
+class NonGeoDataModule(LightningDataModule):  # type: ignore[misc]
     """Base class for data modules lacking geospatial information.
 
     .. versionadded:: 0.4
