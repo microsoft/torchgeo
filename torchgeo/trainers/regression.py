@@ -118,12 +118,8 @@ class RegressionTask(pl.LightningModule):
 
         return loss
 
-    def training_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch-level training metrics.
-
-        Args:
-            outputs: list of items returned by training_step
-        """
+    def on_training_epoch_end(self) -> None:
+        """Logs epoch-level training metrics."""
         self.log_dict(self.train_metrics.compute())
         self.train_metrics.reset()
 
@@ -166,12 +162,8 @@ class RegressionTask(pl.LightningModule):
             except ValueError:
                 pass
 
-    def validation_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level validation metrics.
-
-        Args:
-            outputs: list of items returned by validation_step
-        """
+    def on_validation_epoch_end(self) -> None:
+        """Logs epoch level validation metrics."""
         self.log_dict(self.val_metrics.compute())
         self.val_metrics.reset()
 
@@ -190,12 +182,8 @@ class RegressionTask(pl.LightningModule):
         self.log("test_loss", loss)
         self.test_metrics(y_hat, y)
 
-    def test_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level test metrics.
-
-        Args:
-            outputs: list of items returned by test_step
-        """
+    def on_test_epoch_end(self) -> None:
+        """Logs epoch level test metrics."""
         self.log_dict(self.test_metrics.compute())
         self.test_metrics.reset()
 

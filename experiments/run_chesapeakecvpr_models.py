@@ -87,7 +87,8 @@ def main(args: argparse.Namespace) -> None:
 
     # Test loop
     trainer = pl.Trainer(
-        gpus=[args.device] if torch.cuda.is_available() else None,
+        accelerator="auto",
+        devices=[args.device],
         logger=False,
         enable_progress_bar=False,
         enable_checkpointing=False,

@@ -207,9 +207,6 @@ def main(conf: DictConfig) -> None:
     trainer_args["default_root_dir"] = experiment_dir
     trainer = pl.Trainer(**trainer_args)
 
-    if trainer_args.get("auto_lr_find"):
-        trainer.tune(model=task, datamodule=datamodule)
-
     ######################################
     # Run experiment
     ######################################

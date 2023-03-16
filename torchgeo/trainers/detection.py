@@ -253,12 +253,8 @@ class ObjectDetectionTask(pl.LightningModule):
             except ValueError:
                 pass
 
-    def validation_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level validation metrics.
-
-        Args:
-            outputs: list of items returned by validation_step
-        """
+    def on_validation_epoch_end(self) -> None:
+        """Logs epoch level validation metrics."""
         metrics = self.val_metrics.compute()
         renamed_metrics = {f"val_{i}": metrics[i] for i in metrics.keys()}
         self.log_dict(renamed_metrics)
@@ -281,12 +277,8 @@ class ObjectDetectionTask(pl.LightningModule):
 
         self.test_metrics.update(y_hat, y)
 
-    def test_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level test metrics.
-
-        Args:
-            outputs: list of items returned by test_step
-        """
+    def on_test_epoch_end(self) -> None:
+        """Logs epoch level test metrics."""
         metrics = self.test_metrics.compute()
         renamed_metrics = {f"test_{i}": metrics[i] for i in metrics.keys()}
         self.log_dict(renamed_metrics)
