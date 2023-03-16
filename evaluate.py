@@ -10,7 +10,7 @@ import csv
 import os
 from typing import Any, Dict, Union, cast
 
-import pytorch_lightning as pl
+import lightning as pl
 import torch
 from torchmetrics import MetricCollection
 from torchmetrics.classification import BinaryAccuracy, BinaryJaccardIndex
@@ -146,7 +146,7 @@ def main(args: argparse.Namespace) -> None:
     model.freeze()
     model.eval()
 
-    dm = DATAMODULE(  # type: ignore[call-arg]
+    dm = DATAMODULE(
         seed=args.seed,
         root=args.root,
         num_workers=args.num_workers,

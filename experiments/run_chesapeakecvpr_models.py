@@ -8,8 +8,7 @@ import argparse
 import csv
 import os
 
-import pytorch_lightning as pl
-import torch
+from lightning import Trainer
 
 from torchgeo.datamodules import ChesapeakeCVPRDataModule
 from torchgeo.trainers.chesapeake import SemanticSegmentationTask
@@ -86,8 +85,9 @@ def main(args: argparse.Namespace) -> None:
         writer.writeheader()
 
     # Test loop
-    trainer = pl.Trainer(
-        gpus=[args.device] if torch.cuda.is_available() else None,
+    trainer = Trainer(
+        accelerator="auto",
+        devices=[args.device],
         logger=False,
         enable_progress_bar=False,
         enable_checkpointing=False,
