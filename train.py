@@ -9,9 +9,9 @@ import os
 from typing import Any, Dict, Tuple, Type, cast
 
 import lightning.pytorch as pl
-from lightning.pytorch import Trainer
-from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
+from lightning.pytorch import LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
+from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from omegaconf import DictConfig, OmegaConf
 
 from torchgeo.datamodules import (
@@ -46,7 +46,7 @@ from torchgeo.trainers import (
 )
 
 TASK_TO_MODULES_MAPPING: Dict[
-    str, Tuple[Type[L.LightningModule], Type[L.LightningDataModule]]
+    str, Tuple[Type[LightningModule], Type[LightningDataModule]]
 ] = {
     "bigearthnet": (MultiLabelClassificationTask, BigEarthNetDataModule),
     "byol": (BYOLTask, ChesapeakeCVPRDataModule),
@@ -166,8 +166,8 @@ def main(conf: DictConfig) -> None:
         Dict[str, Any], OmegaConf.to_object(conf.experiment.datamodule)
     )
 
-    datamodule: L.LightningDataModule
-    task: L.LightningModule
+    datamodule: LightningDataModule
+    task: LightningModule
     if task_name in TASK_TO_MODULES_MAPPING:
         task_class, datamodule_class = TASK_TO_MODULES_MAPPING[task_name]
         task = task_class(**task_args)
