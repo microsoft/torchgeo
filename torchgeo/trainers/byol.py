@@ -278,7 +278,7 @@ class BYOL(nn.Module):
             pt.data = self.beta * pt.data + (1 - self.beta) * p.data
 
 
-class BYOLTask(LightningModule):
+class BYOLTask(LightningModule):  # type: ignore[misc]
     """Class for pre-training any PyTorch model using BYOL.
 
     Supports any available `Timm model

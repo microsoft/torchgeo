@@ -20,7 +20,7 @@ from ..datasets.utils import unbind_samples
 from ..models import FCN
 
 
-class SemanticSegmentationTask(LightningModule):
+class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
     """LightningModule for semantic segmentation of images.
 
     Supports `Segmentation Models Pytorch

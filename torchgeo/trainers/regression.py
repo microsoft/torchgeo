@@ -21,7 +21,7 @@ from ..models import get_weight
 from . import utils
 
 
-class RegressionTask(LightningModule):
+class RegressionTask(LightningModule):  # type: ignore[misc]
     """LightningModule for training models on regression datasets.
 
     Supports any available `Timm model

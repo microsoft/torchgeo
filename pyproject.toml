@@ -94,8 +94,7 @@ filterwarnings = [
     # https://github.com/lanpa/tensorboardX/pull/677
     "ignore:ANTIALIAS is deprecated and will be removed in Pillow 10:DeprecationWarning:tensorboardX.summary",
     # https://github.com/Lightning-AI/lightning/issues/16756
-    "ignore:Deprecated call to `pkg_resources.declare_namespace:DeprecationWarning:lightning_fabric",
-    "ignore:Deprecated call to `pkg_resources.declare_namespace:DeprecationWarning:lightning",
+    "ignore:Deprecated call to `pkg_resources.declare_namespace:DeprecationWarning:lightning.fabric",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS

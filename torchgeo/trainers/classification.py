@@ -29,7 +29,7 @@ from ..models import get_weight
 from . import utils
 
 
-class ClassificationTask(LightningModule):
+class ClassificationTask(LightningModule):  # type: ignore[misc]
     """LightningModule for image classification.
 
     Supports any available `Timm model

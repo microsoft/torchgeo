@@ -146,7 +146,7 @@ def main(args: argparse.Namespace) -> None:
     model.freeze()
     model.eval()
 
-    dm = DATAMODULE(  # type: ignore[call-arg]
+    dm = DATAMODULE(
         seed=args.seed,
         root=args.root,
         num_workers=args.num_workers,
