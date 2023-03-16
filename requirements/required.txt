@@ -17,6 +17,6 @@ scikit-learn==1.2.0;python_version>='3.8'
 segmentation-models-pytorch==0.3.2
 shapely==2.0.0
 timm==0.6.12
-torch==1.13.1
-torchmetrics==0.11.0
-torchvision==0.14.1
+torch==2.0.0
+torchmetrics==0.11.4
+torchvision==0.15.1

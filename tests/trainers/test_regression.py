@@ -104,7 +104,10 @@ class TestRegressionTask:
             weights.meta["model"], in_chans=weights.meta["in_chans"]
         )
         torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights, "url", str(path))
+        try:
+            monkeypatch.setattr(weights.value, "url", str(path))
+        except AttributeError:
+            monkeypatch.setattr(weights, "url", str(path))
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
         return weights
 
