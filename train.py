@@ -9,9 +9,9 @@ import os
 from typing import Any, Dict, Tuple, Type, cast
 
 import lightning as L
-from omegaconf import DictConfig, OmegaConf
 from lightning import loggers
 from lightning.callbacks import EarlyStopping, ModelCheckpoint
+from omegaconf import DictConfig, OmegaConf
 
 from torchgeo.datamodules import (
     BigEarthNetDataModule,

@@ -9,8 +9,8 @@ import torch
 import torch.nn as nn
 import torchvision.models.detection
 from _pytest.monkeypatch import MonkeyPatch
-from omegaconf import OmegaConf
 from lightning import LightningDataModule, Trainer
+from omegaconf import OmegaConf
 from torch.nn.modules import Module
 
 from torchgeo.datamodules import MisconfigurationException, NASAMarineDebrisDataModule
