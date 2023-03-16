@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
-from lightning import LightningModule
+from lightning.pytorch import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MetricCollection

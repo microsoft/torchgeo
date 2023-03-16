@@ -9,7 +9,7 @@ from typing import Any, Dict, List, cast
 import matplotlib.pyplot as plt
 import torch
 import torchvision.models.detection
-from lightning import LightningModule
+from lightning.pytorch import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
