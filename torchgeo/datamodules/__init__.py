@@ -25,6 +25,7 @@ from .seco import SeasonalContrastS2DataModule
 from .sen12ms import SEN12MSDataModule
 from .so2sat import So2SatDataModule
 from .spacenet import SpaceNet1DataModule
+from .ssl4eo import SSL4EOS12DataModule
 from .ucmerced import UCMercedDataModule
 from .usavars import USAVarsDataModule
 from .utils import MisconfigurationException
@@ -55,6 +56,7 @@ __all__ = (
     "SEN12MSDataModule",
     "So2SatDataModule",
     "SpaceNet1DataModule",
+    "SSL4EOS12DataModule",
     "TropicalCycloneDataModule",
     "UCMercedDataModule",
     "USAVarsDataModule",

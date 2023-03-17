@@ -17,7 +17,7 @@ from omegaconf import OmegaConf
 from torchvision.models import resnet18
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import ChesapeakeCVPRDataModule, SeasonalContrastS2DataModule
+from torchgeo.datamodules import ChesapeakeCVPRDataModule, SeasonalContrastS2DataModule, SSL4EOS12DataModule
 from torchgeo.datasets import SeasonalContrastS2
 from torchgeo.models import get_model_weights, list_models
 from torchgeo.trainers import BYOLTask
@@ -55,6 +55,8 @@ class TestBYOLTask:
             ("chesapeake_cvpr_prior", ChesapeakeCVPRDataModule),
             ("seco_1", SeasonalContrastS2DataModule),
             ("seco_2", SeasonalContrastS2DataModule),
+            ("ssl4eo_s12_1", SSL4EOS12DataModule),
+            ("ssl4eo_s12_2", SSL4EOS12DataModule),
         ],
     )
     def test_trainer(
