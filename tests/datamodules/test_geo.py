@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 from _pytest.fixtures import SubRequest
-from pytorch_lightning import Trainer
+from lightning.pytorch import Trainer
 from rasterio.crs import CRS
 from torch import Tensor
 
