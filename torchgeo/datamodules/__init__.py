@@ -21,6 +21,7 @@ from .nasa_marine_debris import NASAMarineDebrisDataModule
 from .oscd import OSCDDataModule
 from .potsdam import Potsdam2DDataModule
 from .resisc45 import RESISC45DataModule
+from .seco import SeasonalContrastS2DataModule
 from .sen12ms import SEN12MSDataModule
 from .so2sat import So2SatDataModule
 from .spacenet import SpaceNet1DataModule
@@ -50,6 +51,7 @@ __all__ = (
     "OSCDDataModule",
     "Potsdam2DDataModule",
     "RESISC45DataModule",
+    "SeasonalContrastS2DataModule",
     "SEN12MSDataModule",
     "So2SatDataModule",
     "SpaceNet1DataModule",
