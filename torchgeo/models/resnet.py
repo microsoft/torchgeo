@@ -16,8 +16,8 @@ from ..transforms import AugmentationSequential
 __all__ = ["ResNet50_Weights", "ResNet18_Weights"]
 
 
-# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167 # noqa: E501
-# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97 # noqa: E501
+# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167  # noqa: E501
+# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97  # noqa: E501
 # Normalization either by 10K or channel-wise with band statistics
 _zhu_xlab_transforms = AugmentationSequential(
     K.Resize(256),
@@ -26,13 +26,17 @@ _zhu_xlab_transforms = AugmentationSequential(
     data_keys=["image"],
 )
 
-# https://github.com/ServiceNow/seasonal-contrast/blob/8285173ec205b64bc3e53b880344dd6c3f79fa7a/datasets/bigearthnet_dataset.py#L13 # noqa: E501
+# https://github.com/ServiceNow/seasonal-contrast/blob/8285173ec205b64bc3e53b880344dd6c3f79fa7a/datasets/seco_dataset.py  # noqa: E501
+_min = torch.tensor([3, 2, 0])
+_max = torch.tensor([88, 103, 129])
+_mean = torch.tensor([0.485, 0.456, 0.406])
+_std = torch.tensor([0.229, 0.224, 0.225])
 _seco_transforms = AugmentationSequential(
-    K.Resize(128),
-    K.Normalize(
-        mean=torch.tensor([590.23569706, 614.21682446, 429.9430203]),
-        std=2 * torch.tensor([675.88746967, 582.87945694, 572.41639287]),
-    ),
+    K.Resize(256),
+    K.CenterCrop(224),
+    K.Normalize(mean=_min, std=_max - _min),
+    K.Normalize(mean=torch.tensor(0), std=1 / torch.tensor(255)),
+    K.Normalize(mean=_mean, std=_std),
     data_keys=["image"],
 )
 
