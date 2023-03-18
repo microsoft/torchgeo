@@ -21,16 +21,16 @@ class TestSSL4EOS12:
     @pytest.fixture(params=zip(SSL4EOS12.metadata.keys(), [1, 1, 2]))
     def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> SSL4EOS12:
         monkeypatch.setitem(
-            SSL4EOS12.metadata["s1"], "md5", "2d56f6279809738de42370b65d9ac0a6"
+            SSL4EOS12.metadata["s1"], "md5", "1e161086eeeda0571643fcea887f4fa4"
         )
         monkeypatch.setitem(
-            SSL4EOS12.metadata["s2c"], "md5", "80338f8e0cdeab4d5e0549d6d1fc3b7a"
+            SSL4EOS12.metadata["s2c"], "md5", "fe06c6d1e51056686e9c664aa7f8aec4"
         )
         monkeypatch.setitem(
-            SSL4EOS12.metadata["s2a"], "md5", "bc0bc2e5e0ad93a510330b90cd157c95"
+            SSL4EOS12.metadata["s2a"], "md5", "0c7d7dfcb83917a4ec297187f66ea91b"
         )
 
-        root = os.path.join("tests", "data", "ssl4eo_s12")
+        root = os.path.join("tests", "data", "ssl4eo", "s12")
         split, seasons = request.param
         transforms = nn.Identity()
         return SSL4EOS12(root, split, seasons, transforms, checksum=True)
@@ -53,7 +53,7 @@ class TestSSL4EOS12:
         for split in SSL4EOS12.metadata:
             filename = cast(str, SSL4EOS12.metadata[split]["filename"])
             shutil.copyfile(
-                os.path.join("tests", "data", "ssl4eo_s12", filename),
+                os.path.join("tests", "data", "ssl4eo", "s12", filename),
                 tmp_path / filename,
             )
         SSL4EOS12(str(tmp_path))

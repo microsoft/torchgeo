@@ -78,7 +78,7 @@ class TestBYOLTask:
             monkeypatch.setattr(SeasonalContrastS2, "__len__", lambda self: 2)
 
         if name.startswith("ssl4eo_s12"):
-            monkeypatch.setattr(SSL4EOS12, "__len__", lambda self: 1)
+            monkeypatch.setattr(SSL4EOS12, "__len__", lambda self: 2)
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]
