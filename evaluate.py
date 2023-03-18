@@ -119,7 +119,7 @@ def run_eval_loop(
                 }
                 for i in range(len(batch["image"]))
             ]
-        with torch.inference_mode():  # type: ignore[no-untyped-call]
+        with torch.inference_mode():
             y_pred = model(x)
         metrics(y_pred, y)
     results = metrics.compute()

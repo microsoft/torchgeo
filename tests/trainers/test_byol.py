@@ -17,10 +17,9 @@ from omegaconf import OmegaConf
 from torchvision.models import resnet18
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import ChesapeakeCVPRDataModule, MisconfigurationException
-from torchgeo.datasets import ChesapeakeCVPR
+from torchgeo.datamodules import ChesapeakeCVPRDataModule, SeasonalContrastS2DataModule
+from torchgeo.datasets import SeasonalContrastS2
 from torchgeo.models import get_model_weights, list_models
-from torchgeo.samplers import GridGeoSampler
 from torchgeo.trainers import BYOLTask
 from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
 
@@ -30,16 +29,6 @@ from .test_segmentation import SegmentationTestModel
 def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
     state_dict: Dict[str, Any] = torch.load(url)
     return state_dict
-
-
-class PredictBYOLDataModule(ChesapeakeCVPRDataModule):
-    def setup(self, stage: str) -> None:
-        self.predict_dataset = ChesapeakeCVPR(
-            splits=self.test_splits, layers=self.layers, **self.kwargs
-        )
-        self.predict_sampler = GridGeoSampler(
-            self.predict_dataset, self.original_patch_size, self.original_patch_size
-        )
 
 
 class TestBYOL:
@@ -63,16 +52,24 @@ class TestBYOLTask:
     @pytest.mark.parametrize(
         "name,classname",
         [
-            ("chesapeake_cvpr_7", ChesapeakeCVPRDataModule),
             ("chesapeake_cvpr_prior", ChesapeakeCVPRDataModule),
+            ("seco_1", SeasonalContrastS2DataModule),
+            ("seco_2", SeasonalContrastS2DataModule),
         ],
     )
     def test_trainer(
-        self, name: str, classname: Type[LightningDataModule], fast_dev_run: bool
+        self,
+        monkeypatch: MonkeyPatch,
+        name: str,
+        classname: Type[LightningDataModule],
+        fast_dev_run: bool,
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
         conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
+
+        if name.startswith("seco"):
+            monkeypatch.setattr(SeasonalContrastS2, "__len__", lambda self: 2)
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]
@@ -87,14 +84,6 @@ class TestBYOLTask:
         # Instantiate trainer
         trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
         trainer.fit(model=model, datamodule=datamodule)
-        try:
-            trainer.test(model=model, datamodule=datamodule)
-        except MisconfigurationException:
-            pass
-        try:
-            trainer.predict(model=model, datamodule=datamodule)
-        except MisconfigurationException:
-            pass
 
     @pytest.fixture
     def model_kwargs(self) -> Dict[str, Any]:
@@ -123,7 +112,10 @@ class TestBYOLTask:
             weights.meta["model"], in_chans=weights.meta["in_chans"]
         )
         torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights, "url", str(path))
+        try:
+            monkeypatch.setattr(weights.value, "url", str(path))
+        except AttributeError:
+            monkeypatch.setattr(weights, "url", str(path))
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
         return weights
 
@@ -165,18 +157,3 @@ class TestBYOLTask:
         model_kwargs["in_channels"] = weights.meta["in_chans"]
         model_kwargs["weights"] = str(weights)
         BYOLTask(**model_kwargs)
-
-    def test_predict(self, model_kwargs: Dict[Any, Any], fast_dev_run: bool) -> None:
-        datamodule = PredictBYOLDataModule(
-            root="tests/data/chesapeake/cvpr",
-            train_splits=["de-test"],
-            val_splits=["de-test"],
-            test_splits=["de-test"],
-            batch_size=1,
-            patch_size=64,
-            num_workers=0,
-        )
-        model_kwargs["in_channels"] = 4
-        model = BYOLTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
-        trainer.predict(model=model, datamodule=datamodule)

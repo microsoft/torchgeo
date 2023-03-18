@@ -89,6 +89,11 @@ RESISC45
 
 .. autoclass:: RESISC45DataModule
 
+Seasonal Contrast
+^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SeasonalContrastS2DataModule
+
 SEN12MS
 ^^^^^^^
 
