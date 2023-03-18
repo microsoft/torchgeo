@@ -17,7 +17,11 @@ from omegaconf import OmegaConf
 from torchvision.models import resnet18
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import ChesapeakeCVPRDataModule, SeasonalContrastS2DataModule, SSL4EOS12DataModule
+from torchgeo.datamodules import (
+    ChesapeakeCVPRDataModule,
+    SeasonalContrastS2DataModule,
+    SSL4EOS12DataModule,
+)
 from torchgeo.datasets import SeasonalContrastS2
 from torchgeo.models import get_model_weights, list_models
 from torchgeo.trainers import BYOLTask
@@ -72,6 +76,9 @@ class TestBYOLTask:
 
         if name.startswith("seco"):
             monkeypatch.setattr(SeasonalContrastS2, "__len__", lambda self: 2)
+
+        if name.startswith("ssl4eo_s12"):
+            monkeypatch.setattr(SSL4EOS12, "__len__", lambda self: 1)
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]

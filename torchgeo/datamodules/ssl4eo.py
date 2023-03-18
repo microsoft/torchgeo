@@ -5,6 +5,8 @@
 
 from typing import Any
 
+import torch
+
 from ..datasets import SSL4EOS12
 from .geo import NonGeoDataModule
 
@@ -16,8 +18,8 @@ class SSL4EOS12DataModule(NonGeoDataModule):
     """
 
     # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97  # noqa: E501
-    mean = 0.0
-    std = 10000.0
+    mean = torch.tensor(0)
+    std = torch.tensor(10000)
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any

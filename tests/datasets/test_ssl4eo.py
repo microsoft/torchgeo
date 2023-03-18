@@ -53,7 +53,8 @@ class TestSSL4EOS12:
         for split in SSL4EOS12.metadata:
             filename = cast(str, SSL4EOS12.metadata[split]["filename"])
             shutil.copyfile(
-                os.path.join("tests", "data", "ssl4eo_s12", filename), tmp_path / filename
+                os.path.join("tests", "data", "ssl4eo_s12", filename),
+                tmp_path / filename,
             )
         SSL4EOS12(str(tmp_path))
 
