@@ -22,7 +22,7 @@ from torchgeo.datamodules import (
     SeasonalContrastS2DataModule,
     SSL4EOS12DataModule,
 )
-from torchgeo.datasets import SeasonalContrastS2
+from torchgeo.datasets import SeasonalContrastS2, SSL4EOS12
 from torchgeo.models import get_model_weights, list_models
 from torchgeo.trainers import BYOLTask
 from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
