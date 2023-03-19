@@ -11,7 +11,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from kornia import augmentation as K
-from lightning import LightningModule
+from lightning.pytorch import LightningModule
 from torch import Tensor, optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchvision.models._api import WeightsEnum
