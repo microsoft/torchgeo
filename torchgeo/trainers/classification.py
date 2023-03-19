@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import timm
 import torch
 import torch.nn as nn
-from lightning import LightningModule
+from lightning.pytorch import LightningModule
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau

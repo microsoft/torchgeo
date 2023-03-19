@@ -5,7 +5,7 @@ import os
 
 import pytest
 from _pytest.fixtures import SubRequest
-from lightning import Trainer
+from lightning.pytorch import Trainer
 
 from torchgeo.datamodules import OSCDDataModule
 

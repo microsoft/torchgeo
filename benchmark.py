@@ -7,7 +7,7 @@ import csv
 import os
 import time
 
-import lightning as pl
+import lightning.pytorch as pl
 import torch
 import torch.nn as nn
 import torch.optim as optim
