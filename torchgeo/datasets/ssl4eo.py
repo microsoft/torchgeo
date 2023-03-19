@@ -21,7 +21,7 @@ class SSL4EOS12(NonGeoDataset):
     """SSL4EO-S12 dataset.
 
     The `Self-Supervised Learning for Earth Observation - Sentinel-1/2
-    <https://github.com/zhu-xlab/SSL4EO-S12>`_ dataset is a large-scale mutilmodal
+    <https://github.com/zhu-xlab/SSL4EO-S12>`_ dataset is a large-scale multimodal
     multitemporal dataset for unsupervised/self-supervised pre-training in Earth
     observation.
 
