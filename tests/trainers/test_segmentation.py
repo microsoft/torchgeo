@@ -7,7 +7,7 @@ from typing import Any, Dict, Type, cast
 import pytest
 import segmentation_models_pytorch as smp
 from _pytest.monkeypatch import MonkeyPatch
-from lightning import LightningDataModule, Trainer
+from lightning.pytorch import LightningDataModule, Trainer
 from omegaconf import OmegaConf
 from torch.nn.modules import Module
 

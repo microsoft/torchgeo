@@ -8,7 +8,7 @@ from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import torch
-from lightning import LightningDataModule
+from lightning.pytorch import LightningDataModule
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset, default_collate
 
