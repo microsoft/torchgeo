@@ -67,7 +67,12 @@ class TestRegressionTask:
         model.model = RegressionTestModel()
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.fit(model=model, datamodule=datamodule)
         try:
             trainer.test(model=model, datamodule=datamodule)
@@ -160,7 +165,12 @@ class TestRegressionTask:
             root="tests/data/cyclone", batch_size=1, num_workers=0
         )
         model = RegressionTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.validate(model=model, datamodule=datamodule)
 
     def test_predict(self, model_kwargs: Dict[Any, Any], fast_dev_run: bool) -> None:
@@ -168,5 +178,10 @@ class TestRegressionTask:
             root="tests/data/cyclone", batch_size=1, num_workers=0
         )
         model = RegressionTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.predict(model=model, datamodule=datamodule)

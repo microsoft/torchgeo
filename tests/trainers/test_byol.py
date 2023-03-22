@@ -85,7 +85,12 @@ class TestBYOLTask:
         model.backbone = SegmentationTestModel(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.fit(model=model, datamodule=datamodule)
         try:
             trainer.test(model=model, datamodule=datamodule)

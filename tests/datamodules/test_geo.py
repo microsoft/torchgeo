@@ -66,6 +66,12 @@ class CustomNonGeoDataModule(NonGeoDataModule):
 
 
 class TestGeoDataModule:
+    @pytest.fixture(params=[SamplerGeoDataModule, BatchSamplerGeoDataModule])
+    def datamodule(self, request: SubRequest) -> CustomGeoDataModule:
+        dm: CustomGeoDataModule = request.param()
+        dm.trainer = Trainer(accelerator="cpu", max_epochs=1)
+        return dm
+
     @pytest.mark.parametrize("stage", ["fit", "validate", "test"])
     def test_setup(self, stage: str) -> None:
         dm = CustomGeoDataModule()
@@ -102,7 +108,13 @@ class TestGeoDataModule:
 
 
 class TestNonGeoDataModule:
-    @pytest.mark.parametrize("stage", ["fit", "validate", "test"])
+    @pytest.fixture
+    def datamodule(self) -> CustomNonGeoDataModule:
+        dm = CustomNonGeoDataModule()
+        dm.trainer = Trainer(accelerator="cpu", max_epochs=1)
+        return dm
+
+    @pytest.mark.parametrize("stage", ["fit", "validate", "test", "predict"])
     def test_setup(self, stage: str) -> None:
         dm = CustomNonGeoDataModule()
         dm.prepare_data()
