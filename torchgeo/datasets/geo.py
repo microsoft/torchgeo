@@ -437,7 +437,7 @@ class RasterDataset(GeoDataset):
             data = data.to(self.dtype)
 
         if self.is_image:
-            sample["image"] = data
+            sample["image"] = data.float()
         else:
             sample["mask"] = data
 
