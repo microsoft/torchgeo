@@ -63,6 +63,7 @@ filterwarnings = [
     "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:pretrainedmodels.datasets.utils",
     # https://github.com/pytorch/vision/pull/5898
     "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:torchvision.transforms.functional_pil",
+    "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:torchvision.transforms._functional_pil",
     # https://github.com/rwightman/pytorch-image-models/pull/1256
     "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:timm.data",
     # https://github.com/pytorch/pytorch/issues/72906
@@ -99,8 +100,11 @@ filterwarnings = [
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
     "ignore:The dataloader, .*, does not have many workers which may be a bottleneck:UserWarning",
-    # Lightning warns us about using the CPU when a GPU is available
+    # Lightning warns us about using the CPU when GPU/MPS is available
     "ignore:GPU available but not used.:UserWarning",
+    "ignore:MPS available but not used.:UserWarning",
+    # Lightning warns us if TensorBoard is not installed
+    "ignore:Starting from v1.9.0, `tensorboardX` has been removed as a dependency of the `lightning.pytorch` package:UserWarning",
     # https://github.com/kornia/kornia/pull/1611
     "ignore:`ColorJitter` is now following Torchvision implementation.:DeprecationWarning:kornia.augmentation._2d.intensity.color_jitter",
     # https://github.com/kornia/kornia/pull/1663
