@@ -181,7 +181,9 @@ class TestRasterDataset:
     @pytest.fixture()
     def custom_dtype_ds(self) -> RasterDataset:
         root = os.path.join("tests", "data", "raster")
-        return RasterDataset(root)
+        ds = RasterDataset(root)
+        ds.dtype = torch.long
+        return ds
 
     def test_getitem_single_file(self, naip: NAIP) -> None:
         x = naip[naip.bounds]
