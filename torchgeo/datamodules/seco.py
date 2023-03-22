@@ -36,7 +36,7 @@ class SeasonalContrastS2DataModule(NonGeoDataModule):
         bands = kwargs.get("bands", SeasonalContrastS2.rgb_bands)
         seasons = kwargs.get("seasons", 1)
 
-        # Normalization only available for RGB dataset
+        # Normalization only available for RGB dataset, defined here:
         # https://github.com/ServiceNow/seasonal-contrast/blob/8285173ec205b64bc3e53b880344dd6c3f79fa7a/datasets/seco_dataset.py  # noqa: E501
         if bands == SeasonalContrastS2.rgb_bands:
             _min = torch.tensor([3, 2, 0])
