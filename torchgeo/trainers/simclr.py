@@ -146,6 +146,16 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
 
         return nll
 
+    def validation_step(self, batch: Dict[str, Tensor], batch_idx: int) -> None:
+        """No-op, does nothing."""
+
+    def test_step(self, batch: Dict[str, Tensor], batch_idx: int) -> None:
+        """No-op, does nothing."""
+        # TODO: add distillation step
+
+    def predict_step(self, batch: Dict[str, Tensor], batch_idx: int) -> None:
+        """No-op, does nothing."""
+
     def configure_optimizers(self) -> Tuple[List[Optimizer], List[_LRScheduler]]:
         """Initialize the optimizer and learning rate scheduler.
 
