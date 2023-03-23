@@ -415,7 +415,7 @@ class RasterDataset(GeoDataset):
                     directory = os.path.dirname(filepath)
                     match = re.match(filename_regex, filename)
                     if match:
-                        if "date" in match.groupdict():
+                        if "band" in match.groupdict():
                             start = match.start("band")
                             end = match.end("band")
                             filename = filename[:start] + band + filename[end:]
