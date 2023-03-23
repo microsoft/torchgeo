@@ -45,6 +45,11 @@ class TestResNet18:
     def test_resnet_weights(self, mocked_weights: WeightsEnum) -> None:
         resnet18(weights=mocked_weights)
 
+    def test_transforms(self, mocked_weights: WeightsEnum) -> None:
+        c = mocked_weights.meta["in_chans"]
+        sample = {"image": torch.arange(c * 4 * 4, dtype=torch.float).view(c, 4, 4)}
+        mocked_weights.transforms(sample)
+
     @pytest.mark.slow
     def test_resnet_download(self, weights: WeightsEnum) -> None:
         resnet18(weights=weights)
@@ -74,6 +79,11 @@ class TestResNet50:
 
     def test_resnet_weights(self, mocked_weights: WeightsEnum) -> None:
         resnet50(weights=mocked_weights)
+
+    def test_transforms(self, mocked_weights: WeightsEnum) -> None:
+        c = mocked_weights.meta["in_chans"]
+        sample = {"image": torch.arange(c * 4 * 4, dtype=torch.float).view(c, 4, 4)}
+        mocked_weights.transforms(sample)
 
     @pytest.mark.slow
     def test_resnet_download(self, weights: WeightsEnum) -> None:

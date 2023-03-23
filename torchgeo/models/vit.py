@@ -7,6 +7,7 @@ from typing import Any, Optional
 
 import kornia.augmentation as K
 import timm
+import torch
 from timm.models.vision_transformer import VisionTransformer
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -20,7 +21,7 @@ __all__ = ["ViTSmall16_Weights"]
 _zhu_xlab_transforms = AugmentationSequential(
     K.Resize(256),
     K.CenterCrop(224),
-    K.Normalize(mean=0, std=10000),
+    K.Normalize(mean=torch.tensor(0), std=torch.tensor(10000)),
     data_keys=["image"],
 )
 

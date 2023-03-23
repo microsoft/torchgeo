@@ -16,53 +16,28 @@ from ..transforms import AugmentationSequential
 __all__ = ["ResNet50_Weights", "ResNet18_Weights"]
 
 
-# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167 # noqa: E501
-# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97 # noqa: E501
+# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167  # noqa: E501
+# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97  # noqa: E501
 # Normalization either by 10K or channel-wise with band statistics
 _zhu_xlab_transforms = AugmentationSequential(
     K.Resize(256),
     K.CenterCrop(224),
-    K.Normalize(mean=0, std=10000),
+    K.Normalize(mean=torch.tensor(0), std=torch.tensor(10000)),
     data_keys=["image"],
 )
 
-# https://github.com/ServiceNow/seasonal-contrast/blob/8285173ec205b64bc3e53b880344dd6c3f79fa7a/datasets/bigearthnet_dataset.py#L13 # noqa: E501
+# Normalization only available for RGB dataset, defined here:
+# https://github.com/ServiceNow/seasonal-contrast/blob/8285173ec205b64bc3e53b880344dd6c3f79fa7a/datasets/seco_dataset.py  # noqa: E501
+_min = torch.tensor([3, 2, 0])
+_max = torch.tensor([88, 103, 129])
+_mean = torch.tensor([0.485, 0.456, 0.406])
+_std = torch.tensor([0.229, 0.224, 0.225])
 _seco_transforms = AugmentationSequential(
-    K.Resize(128),
-    K.Normalize(
-        mean=torch.Tensor(
-            [
-                340.76769064,
-                429.9430203,
-                614.21682446,
-                590.23569706,
-                950.68368468,
-                1792.46290469,
-                2075.46795189,
-                2218.94553375,
-                2266.46036911,
-                2246.0605464,
-                1594.42694882,
-                1009.32729131,
-            ]
-        ),
-        std=torch.Tensor(
-            [
-                554.81258967,
-                572.41639287,
-                582.87945694,
-                675.88746967,
-                729.89827633,
-                1096.01480586,
-                1273.45393088,
-                1365.45589904,
-                1356.13789355,
-                1302.3292881,
-                1079.19066363,
-                818.86747235,
-            ]
-        ),
-    ),
+    K.Resize(256),
+    K.CenterCrop(224),
+    K.Normalize(mean=_min, std=_max - _min),
+    K.Normalize(mean=torch.tensor(0), std=1 / torch.tensor(255)),
+    K.Normalize(mean=_mean, std=_std),
     data_keys=["image"],
 )
 
