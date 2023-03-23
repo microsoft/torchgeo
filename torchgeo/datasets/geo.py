@@ -855,6 +855,9 @@ class IntersectionDataset(GeoDataset):
                 self.index.insert(i, tuple(box1 & box2))
                 i += 1
 
+        if i == 0:
+            raise RuntimeError("Datasets have no spatiotemporal intersection")
+
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
 
