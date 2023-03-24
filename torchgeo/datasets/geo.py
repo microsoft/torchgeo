@@ -811,6 +811,7 @@ class IntersectionDataset(GeoDataset):
                 entry and returns a transformed version
 
         Raises:
+            RuntimeError: if datasets have no spatiotemporal intersection
             ValueError: if either dataset is not a :class:`GeoDataset`
 
         .. versionadded:: 0.4
