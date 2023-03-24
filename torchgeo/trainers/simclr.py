@@ -39,6 +39,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         model: str = "resnet50",
         in_channels: int = 3,
         version: int = 2,
+        layers: int = 3,
         hidden_dim: int = 128,
         lr: float = 4.8,
         weight_decay: float = 1e-6,
@@ -51,7 +52,8 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             model: Name of the timm model to use.
             in_channels: Number of input channels to model.
             version: Version of SimCLR, 1--2.
-            hidden_dim: Number of hidden dimensions.
+            layers: Number of layers in projection head.
+            hidden_dim: Number of hidden dimensions in projection head.
             lr: Learning rate (0.3 x batch_size / 256 is recommended).
             weight_decay: Weight decay coefficient.
             max_epochs: Maximum number of epochs to train for.
@@ -66,9 +68,20 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         self.model = timm.create_model(model, in_chans=in_channels)
 
         # Add projection head
-        self.model.fc = nn.Sequential(
-            self.model.fc, nn.ReLU(inplace=True), nn.Linear(4 * hidden_dim, hidden_dim)
-        )
+        # https://github.com/google-research/simclr/blob/2fc637bdd6a723130db91b377ac15151e01e4fc2/model_util.py#L141  # noqa: E501
+        for i in range(layers):
+            if i == layers - 1:
+                # For the final layer, skip bias and ReLU
+                self.model.fc = nn.Sequential(
+                    self.model.fc, nn.Linear(hidden_dim, hidden_dim, bias=False)
+                )
+            else:
+                # For the middle layers, use bias and ReLU
+                self.model.fc = nn.Sequential(
+                    self.model.fc,
+                    nn.ReLU(inplace=True),
+                    nn.Linear(hidden_dim, hidden_dim, bias=True),
+                )
 
         # Data augmentation
         self.aug = AugmentationSequential(
