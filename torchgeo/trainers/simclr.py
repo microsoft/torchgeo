@@ -13,7 +13,11 @@ import torch.nn.functional as F
 from lightning.pytorch import LightningModule
 from torch import Tensor
 from torch.optim import AdamW, Optimizer
-from torch.optim.lr_scheduler import CosineAnnealingLR, _LRScheduler
+from torch.optim.lr_scheduler import CosineAnnealingLR
+try:
+    from torch.optim.lr_scheduler import LRScheduler
+except ImportError:
+    from torch.optim.lr_scheduler import _LRScheduler as LRScheduler
 
 from ..transforms import AugmentationSequential
 
@@ -175,7 +179,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
     def predict_step(self, batch: Dict[str, Tensor], batch_idx: int) -> None:
         """No-op, does nothing."""
 
-    def configure_optimizers(self) -> Tuple[List[Optimizer], List[_LRScheduler]]:
+    def configure_optimizers(self) -> Tuple[List[Optimizer], List[LRScheduler]]:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
