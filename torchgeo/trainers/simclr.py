@@ -42,7 +42,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         layers: int = 3,
         hidden_dim: int = 128,
         lr: float = 4.8,
-        weight_decay: float = 1e-6,
+        weight_decay: float = 1e-4,
         max_epochs: int = 100,
         temperature: float = 0.07,
     ) -> None:
@@ -52,23 +52,23 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             model: Name of the timm model to use.
             in_channels: Number of input channels to model.
             version: Version of SimCLR, 1--2.
-            layers: Number of layers in projection head.
+            layers: Number of layers in projection head (2 for v1 or 3+ for v2).
             hidden_dim: Number of hidden dimensions in projection head.
             lr: Learning rate (0.3 x batch_size / 256 is recommended).
-            weight_decay: Weight decay coefficient.
+            weight_decay: Weight decay coefficient (1e-6 for v1 or 1e-4 for v2).
             max_epochs: Maximum number of epochs to train for.
             temperature: Temperature used in InfoNCE loss.
         """
         super().__init__()
 
-        assert version in range(2)
+        assert version in range(1, 3)
 
         self.save_hyperparameters()
 
         self.model = timm.create_model(model, in_chans=in_channels)
 
-        # Add projection head
-        # https://github.com/google-research/simclr/blob/2fc637bdd6a723130db91b377ac15151e01e4fc2/model_util.py#L141  # noqa: E501
+        # Projection head
+        # https://github.com/google-research/simclr/blob/master/model_util.py#L141
         for i in range(layers):
             if i == layers - 1:
                 # For the final layer, skip bias and ReLU
@@ -83,11 +83,16 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
                     nn.Linear(hidden_dim, hidden_dim, bias=True),
                 )
 
+        # TODO
+        # v1+: add global batch norm
+        # v2: add selective kernels, channel-wise attention mechanism, memory bank
+
         # Data augmentation
+        # https://github.com/google-research/simclr/blob/master/data_util.py
         self.aug = AugmentationSequential(
+            K.RandomResizedCrop(size=96),
             K.RandomHorizontalFlip(),
             K.RandomVerticalFlip(),  # added
-            K.RandomResizedCrop(size=96),
             # Not appropriate for multispectral imagery, seasonal contrast used instead
             # K.ColorJitter(
             #     brightness=0.8, contrast=0.8, saturation=0.8, hue=0.2, p=0.8
@@ -164,7 +169,8 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
 
     def test_step(self, batch: Dict[str, Tensor], batch_idx: int) -> None:
         """No-op, does nothing."""
-        # TODO: add distillation step
+        # TODO
+        # v2: add distillation step
 
     def predict_step(self, batch: Dict[str, Tensor], batch_idx: int) -> None:
         """No-op, does nothing."""
