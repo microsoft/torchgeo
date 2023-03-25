@@ -104,7 +104,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             # )
             # K.RandomGrayscale(p=0.2),
             K.RandomGaussianBlur(kernel_size=9, sigma=(0.1, 2)),
-            data_keys=["image"],
+            data_keys=["input"],
         )
 
     def forward(self, batch: Tensor) -> Tensor:
