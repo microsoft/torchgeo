@@ -20,9 +20,10 @@ class TestSimCLRTask:
     @pytest.mark.parametrize(
         "name,classname",
         [
-            ("chesapeake_cvpr_prior", ChesapeakeCVPRDataModule),
-            ("seco_1", SeasonalContrastS2DataModule),
-            ("seco_2", SeasonalContrastS2DataModule),
+            ("chesapeake_cvpr_prior_simclr_1", ChesapeakeCVPRDataModule),
+            ("chesapeake_cvpr_prior_simclr_2", ChesapeakeCVPRDataModule),
+            ("seco_simclr_1", SeasonalContrastS2DataModule),
+            ("seco_simclr_2", SeasonalContrastS2DataModule),
         ],
     )
     def test_trainer(

@@ -14,6 +14,7 @@ from lightning.pytorch import LightningModule
 from torch import Tensor
 from torch.optim import AdamW, Optimizer
 from torch.optim.lr_scheduler import CosineAnnealingLR
+
 try:
     from torch.optim.lr_scheduler import LRScheduler
 except ImportError:
@@ -94,7 +95,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         # Data augmentation
         # https://github.com/google-research/simclr/blob/master/data_util.py
         self.aug = AugmentationSequential(
-            K.RandomResizedCrop(size=96),
+            K.RandomResizedCrop(size=(96, 96)),
             K.RandomHorizontalFlip(),
             K.RandomVerticalFlip(),  # added
             # Not appropriate for multispectral imagery, seasonal contrast used instead
@@ -102,7 +103,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             #     brightness=0.8, contrast=0.8, saturation=0.8, hue=0.2, p=0.8
             # )
             # K.RandomGrayscale(p=0.2),
-            K.RandomGaussianBlur(kernel_size=9),
+            K.RandomGaussianBlur(kernel_size=9, sigma=(0.1, 2)),
             data_keys=["image"],
         )
 
