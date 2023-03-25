@@ -5,15 +5,21 @@ import os
 from typing import Any, Dict, Type, cast
 
 import pytest
+import timm
 from _pytest.monkeypatch import MonkeyPatch
 from lightning.pytorch import LightningDataModule, Trainer
 from omegaconf import OmegaConf
+from torch.nn import Module
 
 from torchgeo.datamodules import ChesapeakeCVPRDataModule, SeasonalContrastS2DataModule
 from torchgeo.datasets import SeasonalContrastS2
 from torchgeo.trainers import SimCLRTask
 
 from .test_classification import ClassificationTestModel
+
+
+def create_model(*args: Any, **kwargs: Any) -> Module:
+    return ClassificationTestModel(**kwargs)
 
 
 class TestSimCLRTask:
@@ -45,9 +51,9 @@ class TestSimCLRTask:
         datamodule = classname(**datamodule_kwargs)
 
         # Instantiate model
+        monkeypatch.setattr(timm, "create_model", create_model)
         model_kwargs = conf_dict["module"]
         model = SimCLRTask(**model_kwargs)
-        model.model = ClassificationTestModel()
 
         # Instantiate trainer
         trainer = Trainer(

@@ -20,8 +20,6 @@ try:
 except ImportError:
     from torch.optim.lr_scheduler import _LRScheduler as LRScheduler
 
-from ..transforms import AugmentationSequential
-
 
 class SimCLRTask(LightningModule):  # type: ignore[misc]
     """SimCLR: a simple framework for contrastive learning of visual representations.
@@ -70,7 +68,9 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
 
         self.save_hyperparameters()
 
-        self.model = timm.create_model(model, in_chans=in_channels)
+        self.model = timm.create_model(
+            model, in_chans=in_channels, num_classes=hidden_dim
+        )
 
         # Projection head
         # https://github.com/google-research/simclr/blob/master/model_util.py#L141
@@ -94,7 +94,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
 
         # Data augmentation
         # https://github.com/google-research/simclr/blob/master/data_util.py
-        self.aug = AugmentationSequential(
+        self.aug = K.AugmentationSequential(
             K.RandomResizedCrop(size=(96, 96)),
             K.RandomHorizontalFlip(),
             K.RandomVerticalFlip(),  # added
