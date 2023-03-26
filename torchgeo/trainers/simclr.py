@@ -103,7 +103,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             #     brightness=0.8, contrast=0.8, saturation=0.8, hue=0.2, p=0.8
             # )
             # K.RandomGrayscale(p=0.2),
-            K.RandomGaussianBlur(kernel_size=9, sigma=(0.1, 2)),
+            K.RandomGaussianBlur(kernel_size=(9, 9), sigma=(0.1, 2)),
             data_keys=["input"],
         )
 
