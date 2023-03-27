@@ -95,7 +95,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         # Data augmentation
         # https://github.com/google-research/simclr/blob/master/data_util.py
         self.aug = K.AugmentationSequential(
-            K.RandomResizedCrop(size=(96, 96)),
+            K.RandomResizedCrop(size=(224, 224)),
             K.RandomHorizontalFlip(),
             K.RandomVerticalFlip(),  # added
             # Not appropriate for multispectral imagery, seasonal contrast used instead
