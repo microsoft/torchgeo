@@ -71,6 +71,7 @@ class SSL4EOS12(NonGeoDataset):
                 "B8",
                 "B8A",
                 "B9",
+                "B10",
                 "B11",
                 "B12",
             ],

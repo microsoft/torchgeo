@@ -21,13 +21,13 @@ class TestSSL4EOS12:
     @pytest.fixture(params=zip(SSL4EOS12.metadata.keys(), [1, 1, 2]))
     def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> SSL4EOS12:
         monkeypatch.setitem(
-            SSL4EOS12.metadata["s1"], "md5", "1e161086eeeda0571643fcea887f4fa4"
+            SSL4EOS12.metadata["s1"], "md5", "1661fd407a49a0fbe8c6a5073734a731"
         )
         monkeypatch.setitem(
-            SSL4EOS12.metadata["s2c"], "md5", "fe06c6d1e51056686e9c664aa7f8aec4"
+            SSL4EOS12.metadata["s2c"], "md5", "4946a093ea88db0f75955be318901b82"
         )
         monkeypatch.setitem(
-            SSL4EOS12.metadata["s2a"], "md5", "0c7d7dfcb83917a4ec297187f66ea91b"
+            SSL4EOS12.metadata["s2a"], "md5", "36944718ff658b65ca4d8724918500ac"
         )
 
         root = os.path.join("tests", "data", "ssl4eo", "s12")
