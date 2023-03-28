@@ -27,7 +27,7 @@ from .utils import BoundingBox, download_url, extract_archive, working_dir
 class L8Biome(RasterDataset):
     r"""L8 Biome datasets.
 
-    The `L8 Biome <https://landsat.usgs.gov/landsat-8-cloud-cover-assessment-validation-data>`__ dataset 
+    The `L8 Biome <https://landsat.usgs.gov/landsat-8-cloud-cover-assessment-validation-data>`__ dataset
     is a cloud validation dataset of Pre-Collection Landsat 8 Operational Land Imager (OLI) Thermal Infrared Sensor (TIRS) terrain-corrected (Level-1T) scenes.
     
     Dataset features:
