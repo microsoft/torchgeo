@@ -27,13 +27,13 @@ from .utils import BoundingBox, download_url, extract_archive, working_dir
 class L8Biome(RasterDataset):
     r"""L8 Biome datasets.
 
-    The L8 Biome dataset `<https://landsat.usgs.gov/landsat-8-cloud-cover-assessment-validation-data>`__ (Landsat 8 Cloud Cover Assessment Validation Data) 
+    The `L8 Biome <https://landsat.usgs.gov/landsat-8-cloud-cover-assessment-validation-data>`__ dataset 
     is a cloud validation dataset of Pre-Collection Landsat 8 Operational Land Imager (OLI) Thermal Infrared Sensor (TIRS) terrain-corrected (Level-1T) scenes.
     
     Dataset features:
 
     * images evenly divided between eight unique biomes
-    * three cloud cover categories
+    * 3 cloud cover categories
 
     Dataset format:
 
@@ -41,22 +41,22 @@ class L8Biome(RasterDataset):
 
     If you use this dataset in your research, please cite the following:
 
-    * doi:10.5066/F7251GDH
-    * 10.1016/j.rse.2017.03.026
+    * https://doi.org/10.5066/F7251GDH
+    * https://doi.org/10.1016/j.rse.2017.03.026
 
     .. versionadded:: 0.5
     """
 
     url = "https://huggingface.co/datasets/torchgeo/l8biome" # redistributed from https://landsat.usgs.gov/landsat-8-cloud-cover-assessment-validation-data
     filenames_to_md5 = {
-        "barren": "0ff8e32511e3e62fce9a08bed88bebab",
-        "forest": "8adf6b7b33b65e16c0f692c227cd38de",
-        "grass_crops": "fd38f2b6ff00cce8cd14ea6db82f10f4",
-        "shrubland": "2de5cdeea89390f5908663dcab5ca869",
-        "snow_ice": "e431f0b8e8431f8b04a440bf5083a91c",
-        "urban": "b6d39858117940930bf6fa4d63488374",
-        "water": "8ce42b9f7f58f4d9f8fd6801aa894421",
-        "wetlands": "ccd193eb7509e262cbe9588ecb8eddb4"
+        "barren": "bb446fda3f6af50930849bb135e99f9c",
+        "forest": "21505d878abac830890ea84abddc3c46",
+        "grass_crops": "33d0c553357f5a439aa85a45916ac89a",
+        "shrubland": "f19afc6dfa818ee3868e7040441d4c6d",
+        "snow_ice": "d7b56084e6267ee114419efdc7f664c9",
+        "urban": "b5f6aabbb380e108c408a8ea5dae3835",
+        "water": "d143049ef64e6e681cea380dd84680e9",
+        "wetlands": "bff0d51db84e26a2a8e776c83ab2d331"
     }
 
     cmap = {
@@ -67,6 +67,12 @@ class L8Biome(RasterDataset):
         255: (255,255,255),
     }
     
+    filename_glob = "*_30m_cdls.tif"
+    filename_regex = r"""
+        ^(?P<date>\d+)
+        _30m_cdls\..*$
+    """
+
     def __init__(
         self, 
         root: str = "data",
@@ -74,6 +80,8 @@ class L8Biome(RasterDataset):
         res: Optional[float] = None,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None, 
         cache: bool = True,
+        download: bool = False,
+        checksum: bool = False,
     ) -> None:
         """Initialize a new L8Biome dataset instance.
 
@@ -82,6 +90,13 @@ class L8Biome(RasterDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
+            res: resolution of the dataset in units of CRS
+                (defaults to the resolution of the first file found)
+            transforms: a function/transform that takes an input sample
+                and returns a transformed version
+            cache: if True, cache file handle to speed up repeated sampling
+            download: if True, download dataset and store it in the root directory
+            checksum: if True, check the MD5 after downloading files (may be slow)
 
         Raises:
             RuntimeError: if ``download=False`` and data is not found, or checksums
@@ -112,10 +127,13 @@ class L8Biome(RasterDataset):
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
+        
         Args:
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+        
         Returns:
             sample of image, mask and metadata at that index
+        
         Raises:
             IndexError: if query is not found in the index
         """
