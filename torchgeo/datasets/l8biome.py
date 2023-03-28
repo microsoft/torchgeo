@@ -59,7 +59,14 @@ class L8Biome(RasterDataset):
         "wetlands": "ccd193eb7509e262cbe9588ecb8eddb4"
     }
 
-
+    cmap = {
+        0: (0,0,0),
+        64: (64,64,64),
+        128: (128,128,128),
+        192: (192,192,192),
+        255: (255,255,255),
+    }
+    
     def __init__(
         self, 
         root: str = "data",
@@ -103,21 +110,37 @@ class L8Biome(RasterDataset):
             else:
                 raise RuntimeError(f"Dataset not found or corrupted.")
 
-    def __getitem__(self, query: Any) -> Dict[str, Any]:
-        """Retrieve image, mask and metadata indexed by index.
-
+    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+        """Retrieve image/mask and metadata indexed by query.
         Args:
-            query: coordinates or an index
-
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
         Returns:
             sample of image, mask and metadata at that index
-
         Raises:
             IndexError: if query is not found in the index
         """
+        hits = self.index.intersection(tuple(query), objects=True)
+        img_filepaths = cast(List[str], [hit.object for hit in hits])
+        mask_filepaths = [path.replace("images", "masks") for path in img_filepaths] # need to change
 
-    def _verify_data(self) -> bool:
-        """Verify if the images and masks are present."""
+        if not img_filepaths:
+            raise IndexError(
+                f"query: {query} not found in index with bounds: {self.bounds}"
+            )
+
+        img = self._merge_files(img_filepaths, query, self.band_indexes)
+        mask = self._merge_files(mask_filepaths, query, self.band_indexes)
+        sample = {
+            "crs": self.crs,
+            "bbox": query,
+            "image": img.float(),
+            "mask": mask.long(),
+        }
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
 
     def plot(
         self,
@@ -147,7 +170,7 @@ class L8Biome(RasterDataset):
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
         axs[0].imshow(image)
         axs[0].axis("off")
-        axs[1].imshow(mask, vmin=0, vmax=4, cmap=self._lc_cmap, interpolation="none")
+        axs[1].imshow(mask, vmin=0, vmax=4, cmap=self.cmap, interpolation="none")
         axs[1].axis("off")
         if show_titles:
             axs[0].set_title("Image")
@@ -155,7 +178,7 @@ class L8Biome(RasterDataset):
 
         if showing_predictions:
             axs[2].imshow(
-                predictions, vmin=0, vmax=4, cmap=self._lc_cmap, interpolation="none"
+                predictions, vmin=0, vmax=4, cmap=self.cmap, interpolation="none"
             )
             axs[2].axis("off")
             if show_titles:
