@@ -23,17 +23,17 @@ from .landsat import Landsat7
 from .utils import BoundingBox, download_url, extract_archive, working_dir
 
 
-class Landsat7Irish(RasterDataset):
-    
-    """ Landsat 7 Cloud Cover Assessment Validation Data.
+class L7Irish(RasterDataset):    
+    """L7 Irish dataset.
 
-    The `Landsat 7 Cloud Cover Assessment Validation Data <https://landsat.usgs.gov/landsat-7-cloud-cover-assessment-validation-data>`__ dataset is based on Landsat 7
-    Enhanced Thematic Mapper Plus (ETM+) Level-1G scenes, displayed in the biomes listed below. Manually generated cloud masks are used to train and validate cloud cover 
-    assessment algorithms, which in turn are intended to compute the percentage of cloud cover in each scene. *Originally, this was reported as 207 masks, but one mask 
-    was erroneously counted.
+    The `L7 Irish <https://landsat.usgs.gov/landsat-7-cloud-cover-assessment-validation-data>`__ dataset is based on Landsat 7
 
     Dataset format:
-    * 102 scenes from this dataset were used in a cloud validation study described in Foga, Scaramuzza et al. (2017)
+    * # images: 
+    * image size: 
+    * # spectral bands: 
+    * Level-1G
+    
     * labels are values [0, 64, 128, 192, 255]
 
      Dataset classes:
@@ -45,34 +45,49 @@ class Landsat7Irish(RasterDataset):
 
      If you use this dataset in your research, please cite the following papers:
 
-     * U.S. Geological Survey, 2016. L7 Irish Cloud Validation Masks. U.S. Geological Survey data release. doi:10.5066/F7XD0ZWC.
-     * Scaramuzza, P.L., Bouchard, M.A. & Dwyer, J.L. (2012). Development of the Landsat data continuity mission cloud-cover assessment algorithms. IEEE Transactions on Geoscience and Remote Sensing, 50(4), 1140-1154. doi:10.1109/TGRS.2011.2164087.
+     * https://doi.org/10.5066/F7XD0ZWC
+     * https://doi.org/10.1109/TGRS.2011.2164087
      """
+    
+    # naming... [need to change]
+    filename_regex = r"""
+        ^L
+        (?P<sensor>[COTEM])
+        (?P<satellite>\d{2})
+        _(?P<processing_correction_level>[A-Z0-9]{4})
+        _(?P<wrs_path>\d{3})
+        (?P<wrs_row>\d{3})
+        _(?P<date>\d{8})
+        _(?P<processing_date>\d{8})
+        _(?P<collection_number>\d{2})
+        _(?P<collection_category>[A-Z0-9]{2})
+        _(?P<band>[A-Z0-9_]+)
+        \.
+    """
 
-    url = "https://huggingface.co/datasets/torchgeo/l7irish"
+    tarfile_glob = "*.tar.gz"
+
+    url = "https://huggingface.co/datasets/torchgeo/l7irish/resolve/main/{}.tar.gz"
     
-    md5 = ["dbb6b5628f50861b9b89f548d25a925f",
-           "cecc72de09aacde4c4f8d7f0cf0d3f6f",
-           "0f8382ca6554fb7cf9aff42226a14f9d",
-           "b17cf6d023f752c533211fdb742f296b",
-           "73923dcaf1b9b79bad82de1aa0740d1e",
-           "3bc9f4c6f8955b10b4d55d23e0ab2da7",
-           "f8f039970256902e6e9ebd6747589294",
-           "8346d73a983396c5d41b577c3a94bc26",
-           "abe19b22b5d031e6b609cc7207706c3d"]
-    
-    biomes = ["austral","boreal","mid_latitude_north","mid_latitude_south",
-              "polar_north","polar_south","subtropical_north",
-              "subtropical_south","tropical"]
-    
+    md5s = [("austral", "dbb6b5628f50861b9b89f548d25a925f"),
+           ("boreal", "cecc72de09aacde4c4f8d7f0cf0d3f6f"),
+           ("mid_latitude_north", "0f8382ca6554fb7cf9aff42226a14f9d"),
+           ("mid_latitude_south", "b17cf6d023f752c533211fdb742f296b"),
+           ("polar_north", "73923dcaf1b9b79bad82de1aa0740d1e"),
+           ("polar_south", "3bc9f4c6f8955b10b4d55d23e0ab2da7"),
+           ("subtropical_north", "f8f039970256902e6e9ebd6747589294"),
+           ("subtropical_south", "8346d73a983396c5d41b577c3a94bc26"),
+           ("tropical", "abe19b22b5d031e6b609cc7207706c3d")
+           ]
+        
     classes = ["Fill", "Cloud Shadow", "Clear", "Thin Cloud", "Cloud"]
     
     cmap = {
-        0: (0,0,0),
-        64: (64,64,64),
-        128: (128,128,128),
-        192: (192,192,192),
-        255: (255,255,255),
+        0: (0, 0, 0),
+        64: (64, 64, 64),
+        128: (128, 128, 128),
+        192: (192, 192, 192),
+        255: (255, 255, 255),
     }
 
     def __init__(
@@ -96,22 +111,33 @@ class Landsat7Irish(RasterDataset):
         self.root = root
         self.download = download
         self.checksum = checksum
+    
+        for i in list(self.cmap.keys()):
+            self.cmap[np.ceil(i/64).astype(int)] = self.cmap.pop(i)
+
+        lc_colors = np.zeros((max(self.cmap.keys()) + 1, 3))
+        lc_colors[list(self.cmap.keys())] = list(self.cmap.values())
+        lc_colors = lc_colors / 255
+        _lc_cmap = ListedColormap(lc_colors)
 
         self._verify()
         super().__init__(root, download, checksum)
 
-    def _verify(self) -> None: # copy from CDL.
+    def _verify(self) -> None:
         """Verify the integrity of the dataset.
 
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        if self._verify_data():
-            return
+        # Check if the extracted files already exist
+        pathname = os.path.join(self.root, "**", self.filename_glob)
+        for fname in glob.iglob(pathname, recursive=True):
+            if not fname.endswith(".zip"):
+                return
 
-        # Check if the zip file has already been downloaded
-        pathname = os.path.join(self.root, self.filename)
-        if os.path.exists(pathname):
+        # Check if the zip files have already been downloaded
+        pathname = os.path.join(self.root, self.tarfile_glob)
+        if glob.glob(pathname):
             self._extract()
             return
 
@@ -122,12 +148,23 @@ class Landsat7Irish(RasterDataset):
                 "either specify a different `root` directory or use `download=True` "
                 "to automatically download the dataset."
             )
-
         # Download the dataset
         self._download()
         self._extract()
 
-    @abc.abstractmethod
+    def _download(self) -> None:
+        """Download the dataset."""
+        for biome, md5 in self.md5s:
+            download_url(
+                self.url.format(biome), self.root, md5=md5 if self.checksum else None
+            )
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        pathname = os.path.join(self.root, self.tarfile_glob)
+        for tarfile in glob.iglob(pathname):
+            extract_archive(tarfile)
+    
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
@@ -142,7 +179,8 @@ class Landsat7Irish(RasterDataset):
         """
         hits = self.index.intersection(tuple(query), objects=True)
         img_filepaths = cast(List[str], [hit.object for hit in hits])
-        mask_filepaths = [path.replace("images", "masks") for path in img_filepaths] # need to change
+        mask_filepaths = [path.replace("","") for path in img_filepaths]
+        # mask_filepaths = [path.replace("images", "masks") for path in img_filepaths]
 
         if not img_filepaths:
             raise IndexError(
@@ -151,6 +189,8 @@ class Landsat7Irish(RasterDataset):
 
         img = self._merge_files(img_filepaths, query, self.band_indexes)
         mask = self._merge_files(mask_filepaths, query, self.band_indexes)
+        # Mask needs to be converted from 0, 64, 128, 192, 255 to 0, 1, 2, 3, 4
+        
         sample = {
             "crs": self.crs,
             "bbox": query,
@@ -162,48 +202,6 @@ class Landsat7Irish(RasterDataset):
             sample = self.transforms(sample)
 
         return sample
-
-    def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
-        # Check if the extracted files already exist
-        pathname = os.path.join(self.root, "**", self.filename_glob)
-        for fname in glob.iglob(pathname, recursive=True):
-            if not fname.endswith(".zip"):
-                return
-
-        # Check if the zip files have already been downloaded
-        pathname = os.path.join(self.root, self.zipfile_glob)
-        if glob.glob(pathname):
-            self._extract()
-            return
-
-        # Check if the user requested to download the dataset
-        if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
-
-        # Download the dataset
-        self._download()
-        self._extract()
-
-    def _download(self) -> None:
-        """Download the dataset."""
-        for year, md5 in self.md5s:
-            download_url(
-                self.url.format(year), self.root, md5=md5 if self.checksum else None
-            )
-
-    def _extract(self) -> None:
-        """Extract the dataset."""
-        pathname = os.path.join(self.root, self.zipfile_glob)
-        for zipfile in glob.iglob(pathname):
-            extract_archive(zipfile)
 
     def plot(
         self,
