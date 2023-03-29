@@ -238,9 +238,8 @@ class SSL4EOS12(NonGeoDataset):
                     (co_polarization, cross_polarization, ratio), dim=-1
                 )
             else:
-                # See Sentinel2.plot
                 image = image[[3, 2, 1]].permute(1, 2, 0)
-                image = torch.clamp(image / 10000, min=0, max=1)
+                image = torch.clamp(image / 3000, min=0, max=1)
 
             axes[i].imshow(image)
             axes[i].axis("off")
