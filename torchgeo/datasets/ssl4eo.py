@@ -212,7 +212,7 @@ class SSL4EOS12(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        fig, axes = plt.subplots(ncols=self.seasons, figsize=(4*self.seasons, 4))
+        fig, axes = plt.subplots(ncols=self.seasons, figsize=(4 * self.seasons, 4))
         if self.seasons == 1:
             axes = [axes]
 
