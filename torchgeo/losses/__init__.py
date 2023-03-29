@@ -4,5 +4,6 @@
 """TorchGeo losses."""
 
 from .qr import QRLoss, RQLoss
+from .ssl import NTXentLoss
 
-__all__ = ("QRLoss", "RQLoss")
+__all__ = ("NTXentLoss", "QRLoss", "RQLoss")
