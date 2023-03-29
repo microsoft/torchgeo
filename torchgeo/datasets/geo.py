@@ -811,6 +811,7 @@ class IntersectionDataset(GeoDataset):
                 entry and returns a transformed version
 
         Raises:
+            RuntimeError: if datasets have no spatiotemporal intersection
             ValueError: if either dataset is not a :class:`GeoDataset`
 
         .. versionadded:: 0.4
@@ -854,6 +855,9 @@ class IntersectionDataset(GeoDataset):
                 box2 = BoundingBox(*hit2.bounds)
                 self.index.insert(i, tuple(box1 & box2))
                 i += 1
+
+        if i == 0:
+            raise RuntimeError("Datasets have no spatiotemporal intersection")
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.
