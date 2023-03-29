@@ -1,0 +1,23 @@
+experiment:
+  task: "chesapeake_cvpr"
+  module:
+    model: "resnet18"
+    in_channels: 4
+    version: 1
+    layers: 2
+    weight_decay: 1e-6
+    max_epochs: 1
+  datamodule:
+    root: "tests/data/chesapeake/cvpr"
+    download: false
+    train_splits:
+    - "de-test"
+    val_splits:
+    - "de-test"
+    test_splits:
+    - "de-test"
+    batch_size: 2
+    patch_size: 64
+    num_workers: 0
+    class_set: 5
+    use_prior_labels: True

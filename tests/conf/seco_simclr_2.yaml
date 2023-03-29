@@ -1,0 +1,14 @@
+experiment:
+  task: "seco"
+  module:
+    model: "resnet18"
+    in_channels: 3
+    version: 2
+    layers: 3
+    weight_decay: 1e-4
+    max_epochs: 1
+  datamodule:
+    root: "tests/data/seco"
+    seasons: 2
+    batch_size: 2
+    num_workers: 0
