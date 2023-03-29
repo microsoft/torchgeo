@@ -44,6 +44,7 @@ class CDL(RasterDataset):
 
     url = "https://www.nass.usda.gov/Research_and_Science/Cropland/Release/datasets/{}_30m_cdls.zip"  # noqa: E501
     md5s = [
+        (2022, "754cf50670cdfee511937554785de3e6"),
         (2021, "27606eab08fe975aa138baad3e5dfcd8"),
         (2020, "483ee48c503aa81b684225179b402d42"),
         (2019, "a5168a2fc93acbeaa93e24eee3d8c696"),
