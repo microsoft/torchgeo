@@ -52,9 +52,9 @@ class TestBYOLTask:
     @pytest.mark.parametrize(
         "name,classname",
         [
-            ("chesapeake_cvpr_prior_byol", ChesapeakeCVPRDataModule),
-            ("seco_byol_1", SeasonalContrastS2DataModule),
-            ("seco_byol_2", SeasonalContrastS2DataModule),
+            ("chesapeake_cvpr_prior", ChesapeakeCVPRDataModule),
+            ("seco_1", SeasonalContrastS2DataModule),
+            ("seco_2", SeasonalContrastS2DataModule),
         ],
     )
     def test_trainer(
