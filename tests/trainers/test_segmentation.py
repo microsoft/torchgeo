@@ -9,7 +9,7 @@ import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 from _pytest.monkeypatch import MonkeyPatch
-from lightning import LightningDataModule, Trainer
+from lightning.pytorch import LightningDataModule, Trainer
 from omegaconf import OmegaConf
 from torch.nn.modules import Module
 
@@ -104,7 +104,12 @@ class TestSemanticSegmentationTask:
         model = SemanticSegmentationTask(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.fit(model=model, datamodule=datamodule)
         try:
             trainer.test(model=model, datamodule=datamodule)
@@ -161,5 +166,10 @@ class TestSemanticSegmentationTask:
             root="tests/data/sen12ms", batch_size=1, num_workers=0
         )
         model = SemanticSegmentationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.validate(model=model, datamodule=datamodule)

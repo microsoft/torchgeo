@@ -18,6 +18,23 @@ from torchgeo.datasets import (
 )
 
 
+def total_area(dataset: GeoDataset) -> float:
+    total_area = 0.0
+    for hit in dataset.index.intersection(dataset.index.bounds, objects=True):
+        total_area += BoundingBox(*hit.bounds).area
+
+    return total_area
+
+
+def no_overlap(ds1: GeoDataset, ds2: GeoDataset) -> bool:
+    try:
+        ds = ds1 & ds2
+    except RuntimeError:
+        return True
+    else:
+        return isclose(total_area(ds), 0)
+
+
 class CustomGeoDataset(GeoDataset):
     def __init__(
         self,
@@ -66,11 +83,9 @@ def test_random_bbox_assignment(
     assert len(test_ds) == expected_lengths[2]
 
     # No overlap
-    assert len(train_ds & val_ds) == 0 or isclose(_get_total_area(train_ds & val_ds), 0)
-    assert len(val_ds & test_ds) == 0 or isclose(_get_total_area(val_ds & test_ds), 0)
-    assert len(test_ds & train_ds) == 0 or isclose(
-        _get_total_area(test_ds & train_ds), 0
-    )
+    assert no_overlap(train_ds, val_ds)
+    assert no_overlap(val_ds, test_ds)
+    assert no_overlap(test_ds, train_ds)
 
     # Union equals original
     assert (train_ds | val_ds | test_ds).bounds == ds.bounds
@@ -93,14 +108,6 @@ def test_random_bbox_assignment_invalid_inputs() -> None:
         random_bbox_assignment(CustomGeoDataset(), lengths=[1 / 2, 3 / 4, -1 / 4])
 
 
-def _get_total_area(dataset: GeoDataset) -> float:
-    total_area = 0.0
-    for hit in dataset.index.intersection(dataset.index.bounds, objects=True):
-        total_area += BoundingBox(*hit.bounds).area
-
-    return total_area
-
-
 def test_random_bbox_splitting() -> None:
     ds = CustomGeoDataset(
         [
@@ -111,14 +118,14 @@ def test_random_bbox_splitting() -> None:
         ]
     )
 
-    ds_area = _get_total_area(ds)
+    ds_area = total_area(ds)
 
     train_ds, val_ds, test_ds = random_bbox_splitting(
         ds, fractions=[1 / 2, 1 / 4, 1 / 4]
     )
-    train_ds_area = _get_total_area(train_ds)
-    val_ds_area = _get_total_area(val_ds)
-    test_ds_area = _get_total_area(test_ds)
+    train_ds_area = total_area(train_ds)
+    val_ds_area = total_area(val_ds)
+    test_ds_area = total_area(test_ds)
 
     # Check datasets areas
     assert train_ds_area == ds_area / 2
@@ -126,15 +133,13 @@ def test_random_bbox_splitting() -> None:
     assert test_ds_area == ds_area / 4
 
     # No overlap
-    assert len(train_ds & val_ds) == 0 or isclose(_get_total_area(train_ds & val_ds), 0)
-    assert len(val_ds & test_ds) == 0 or isclose(_get_total_area(val_ds & test_ds), 0)
-    assert len(test_ds & train_ds) == 0 or isclose(
-        _get_total_area(test_ds & train_ds), 0
-    )
+    assert no_overlap(train_ds, val_ds)
+    assert no_overlap(val_ds, test_ds)
+    assert no_overlap(test_ds, train_ds)
 
     # Union equals original
     assert (train_ds | val_ds | test_ds).bounds == ds.bounds
-    assert isclose(_get_total_area(train_ds | val_ds | test_ds), ds_area)
+    assert isclose(total_area(train_ds | val_ds | test_ds), ds_area)
 
     # Test __get_item__
     x = train_ds[train_ds.bounds]
@@ -168,15 +173,13 @@ def test_random_grid_cell_assignment() -> None:
     assert len(test_ds) == floor(1 / 4 * 2 * 5**2)
 
     # No overlap
-    assert len(train_ds & val_ds) == 0 or isclose(_get_total_area(train_ds & val_ds), 0)
-    assert len(val_ds & test_ds) == 0 or isclose(_get_total_area(val_ds & test_ds), 0)
-    assert len(test_ds & train_ds) == 0 or isclose(
-        _get_total_area(test_ds & train_ds), 0
-    )
+    assert no_overlap(train_ds, val_ds)
+    assert no_overlap(val_ds, test_ds)
+    assert no_overlap(test_ds, train_ds)
 
     # Union equals original
     assert (train_ds | val_ds | test_ds).bounds == ds.bounds
-    assert isclose(_get_total_area(train_ds | val_ds | test_ds), _get_total_area(ds))
+    assert isclose(total_area(train_ds | val_ds | test_ds), total_area(ds))
 
     # Test __get_item__
     x = train_ds[train_ds.bounds]
@@ -219,15 +222,13 @@ def test_roi_split() -> None:
     assert len(test_ds) == 1
 
     # No overlap
-    assert len(train_ds & val_ds) == 0 or isclose(_get_total_area(train_ds & val_ds), 0)
-    assert len(val_ds & test_ds) == 0 or isclose(_get_total_area(val_ds & test_ds), 0)
-    assert len(test_ds & train_ds) == 0 or isclose(
-        _get_total_area(test_ds & train_ds), 0
-    )
+    assert no_overlap(train_ds, val_ds)
+    assert no_overlap(val_ds, test_ds)
+    assert no_overlap(test_ds, train_ds)
 
     # Union equals original
     assert (train_ds | val_ds | test_ds).bounds == ds.bounds
-    assert isclose(_get_total_area(train_ds | val_ds | test_ds), _get_total_area(ds))
+    assert isclose(total_area(train_ds | val_ds | test_ds), total_area(ds))
 
     # Test __get_item__
     x = train_ds[train_ds.bounds]
@@ -273,9 +274,9 @@ def test_time_series_split(
     assert len(test_ds) == expected_lengths[2]
 
     # No overlap
-    assert len(train_ds & val_ds) == 0
-    assert len(val_ds & test_ds) == 0
-    assert len(test_ds & train_ds) == 0
+    assert no_overlap(train_ds, val_ds)
+    assert no_overlap(val_ds, test_ds)
+    assert no_overlap(test_ds, train_ds)
 
     # Union equals original
     assert (train_ds | val_ds | test_ds).bounds == ds.bounds

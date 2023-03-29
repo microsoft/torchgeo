@@ -364,9 +364,10 @@ class RasterDataset(GeoDataset):
                     i += 1
 
         if i == 0:
-            raise FileNotFoundError(
-                f"No {self.__class__.__name__} data was found in '{root}'"
-            )
+            msg = f"No {self.__class__.__name__} data was found in `root='{self.root}'`"
+            if self.bands:
+                msg += f" with `bands={self.bands}`"
+            raise FileNotFoundError(msg)
 
         if not self.separate_files:
             self.band_indexes = None
@@ -415,7 +416,7 @@ class RasterDataset(GeoDataset):
                     directory = os.path.dirname(filepath)
                     match = re.match(filename_regex, filename)
                     if match:
-                        if "date" in match.groupdict():
+                        if "band" in match.groupdict():
                             start = match.start("band")
                             end = match.end("band")
                             filename = filename[:start] + band + filename[end:]
@@ -582,9 +583,8 @@ class VectorDataset(GeoDataset):
                 i += 1
 
         if i == 0:
-            raise FileNotFoundError(
-                f"No {self.__class__.__name__} data was found in '{root}'"
-            )
+            msg = f"No {self.__class__.__name__} data was found in `root='{root}'`"
+            raise FileNotFoundError(msg)
 
         self._crs = crs
 
@@ -811,6 +811,7 @@ class IntersectionDataset(GeoDataset):
                 entry and returns a transformed version
 
         Raises:
+            RuntimeError: if datasets have no spatiotemporal intersection
             ValueError: if either dataset is not a :class:`GeoDataset`
 
         .. versionadded:: 0.4
@@ -854,6 +855,9 @@ class IntersectionDataset(GeoDataset):
                 box2 = BoundingBox(*hit2.bounds)
                 self.index.insert(i, tuple(box1 & box2))
                 i += 1
+
+        if i == 0:
+            raise RuntimeError("Datasets have no spatiotemporal intersection")
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image and metadata indexed by query.

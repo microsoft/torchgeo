@@ -5,7 +5,7 @@ import os
 
 import pytest
 from _pytest.fixtures import SubRequest
-from lightning import Trainer
+from lightning.pytorch import Trainer
 
 from torchgeo.datamodules import OSCDDataModule
 
@@ -25,7 +25,7 @@ class TestOSCDDataModule:
             num_workers=0,
         )
         dm.prepare_data()
-        dm.trainer = Trainer(max_epochs=1)
+        dm.trainer = Trainer(accelerator="cpu", max_epochs=1)
         return dm
 
     def test_train_dataloader(self, datamodule: OSCDDataModule) -> None:

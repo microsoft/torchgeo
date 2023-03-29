@@ -10,7 +10,7 @@ import csv
 import os
 from typing import Any, Dict, Union, cast
 
-import lightning as pl
+import lightning.pytorch as pl
 import torch
 from torchmetrics import MetricCollection
 from torchmetrics.classification import BinaryAccuracy, BinaryJaccardIndex

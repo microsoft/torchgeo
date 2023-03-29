@@ -12,7 +12,7 @@ import torch.nn as nn
 import torchvision
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
-from lightning import LightningDataModule, Trainer
+from lightning.pytorch import LightningDataModule, Trainer
 from omegaconf import OmegaConf
 from torchvision.models import resnet18
 from torchvision.models._api import WeightsEnum
@@ -56,11 +56,11 @@ class TestBYOLTask:
     @pytest.mark.parametrize(
         "name,classname",
         [
-            ("chesapeake_cvpr_prior", ChesapeakeCVPRDataModule),
-            ("seco_1", SeasonalContrastS2DataModule),
-            ("seco_2", SeasonalContrastS2DataModule),
-            ("ssl4eo_s12_1", SSL4EOS12DataModule),
-            ("ssl4eo_s12_2", SSL4EOS12DataModule),
+            ("chesapeake_cvpr_prior_byol", ChesapeakeCVPRDataModule),
+            ("seco_byol_1", SeasonalContrastS2DataModule),
+            ("seco_byol_2", SeasonalContrastS2DataModule),
+            ("ssl4eo_s12_byol_1", SSL4EOS12DataModule),
+            ("ssl4eo_s12_byol_2", SSL4EOS12DataModule),
         ],
     )
     def test_trainer(
@@ -91,7 +91,12 @@ class TestBYOLTask:
         model.backbone = SegmentationTestModel(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.fit(model=model, datamodule=datamodule)
 
     @pytest.fixture

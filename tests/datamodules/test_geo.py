@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 from _pytest.fixtures import SubRequest
-from pytorch_lightning import Trainer
+from lightning.pytorch import Trainer
 from rasterio.crs import CRS
 from torch import Tensor
 
@@ -86,7 +86,7 @@ class TestGeoDataModule:
     @pytest.fixture(params=[SamplerGeoDataModule, BatchSamplerGeoDataModule])
     def datamodule(self, request: SubRequest) -> CustomGeoDataModule:
         dm: CustomGeoDataModule = request.param()
-        dm.trainer = Trainer(max_epochs=1)
+        dm.trainer = Trainer(accelerator="cpu", max_epochs=1)
         return dm
 
     @pytest.mark.parametrize("stage", ["fit", "validate", "test"])
@@ -145,7 +145,7 @@ class TestNonGeoDataModule:
     @pytest.fixture
     def datamodule(self) -> CustomNonGeoDataModule:
         dm = CustomNonGeoDataModule()
-        dm.trainer = Trainer(max_epochs=1)
+        dm.trainer = Trainer(accelerator="cpu", max_epochs=1)
         return dm
 
     @pytest.mark.parametrize("stage", ["fit", "validate", "test", "predict"])

@@ -8,7 +8,7 @@ import argparse
 import csv
 import os
 
-from lightning import Trainer
+from lightning.pytorch import Trainer
 
 from torchgeo.datamodules import ChesapeakeCVPRDataModule
 from torchgeo.trainers.chesapeake import SemanticSegmentationTask
