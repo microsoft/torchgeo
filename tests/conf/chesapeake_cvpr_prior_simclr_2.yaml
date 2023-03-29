@@ -1,19 +1,15 @@
 experiment:
   task: "chesapeake_cvpr"
   module:
-    loss: "ce"
-    model: "unet"
-    backbone: "resnet50"
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 6
+    model: "resnet18"
     in_channels: 4
-    num_classes: 5
-    num_filters: 1
-    ignore_index: null
-    weights: null
+    version: 2
+    layers: 3
+    weight_decay: 1e-4
+    max_epochs: 1
   datamodule:
     root: "tests/data/chesapeake/cvpr"
-    download: true
+    download: false
     train_splits:
     - "de-test"
     val_splits:
@@ -23,5 +19,5 @@ experiment:
     batch_size: 2
     patch_size: 64
     num_workers: 0
-    class_set: ${experiment.module.num_classes}
+    class_set: 5
     use_prior_labels: True

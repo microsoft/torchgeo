@@ -48,6 +48,6 @@ pyupgrade==2.4.0
 
 # tests
 mypy==0.900
-nbmake==0.1
+nbmake==1.3.3
 pytest==6.1.2
 pytest-cov==2.4.0
