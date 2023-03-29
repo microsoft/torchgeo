@@ -364,9 +364,10 @@ class RasterDataset(GeoDataset):
                     i += 1
 
         if i == 0:
-            raise FileNotFoundError(
-                f"No {self.__class__.__name__} data was found in '{root}'"
-            )
+            msg = f"No {self.__class__.__name__} data was found in `root='{self.root}'`"
+            if self.bands:
+                msg += f" with `bands={self.bands}`"
+            raise FileNotFoundError(msg)
 
         if not self.separate_files:
             self.band_indexes = None
@@ -582,9 +583,8 @@ class VectorDataset(GeoDataset):
                 i += 1
 
         if i == 0:
-            raise FileNotFoundError(
-                f"No {self.__class__.__name__} data was found in '{root}'"
-            )
+            msg = f"No {self.__class__.__name__} data was found in `root='{root}'`"
+            raise FileNotFoundError(msg)
 
         self._crs = crs
 
