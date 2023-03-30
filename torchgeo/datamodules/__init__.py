@@ -14,8 +14,8 @@ from .fair1m import FAIR1MDataModule
 from .geo import GeoDataModule, NonGeoDataModule
 from .gid15 import GID15DataModule
 from .inria import InriaAerialImageLabelingDataModule
-from .landcoverai import LandCoverAIDataModule
 from .l8biome import L8BiomeDataModule
+from .landcoverai import LandCoverAIDataModule
 from .loveda import LoveDADataModule
 from .naip import NAIPChesapeakeDataModule
 from .nasa_marine_debris import NASAMarineDebrisDataModule

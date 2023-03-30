@@ -18,10 +18,15 @@ from PIL import Image
 from rasterio.crs import CRS
 from torch import Tensor
 from torch.utils.data import Dataset
-from .utils import check_integrity
 
 from .geo import NonGeoDataset, RasterDataset
-from .utils import BoundingBox, download_url, extract_archive, working_dir
+from .utils import (
+    BoundingBox,
+    check_integrity,
+    download_url,
+    extract_archive,
+    working_dir,
+)
 
 
 class L8Biome(RasterDataset):
@@ -29,7 +34,7 @@ class L8Biome(RasterDataset):
 
     The `L8 Biome <https://landsat.usgs.gov/landsat-8-cloud-cover-assessment-validation-data>`__ dataset
     is a cloud validation dataset of Pre-Collection Landsat 8 Operational Land Imager (OLI) Thermal Infrared Sensor (TIRS) terrain-corrected (Level-1T) scenes.
-    
+
     Dataset features:
 
     * images evenly divided between eight unique biomes
@@ -37,7 +42,8 @@ class L8Biome(RasterDataset):
 
     Dataset format:
 
-    * Each cloud mask is in ENVI binary format. Includes all bands from the original Landsat Level-1 data product (GeoTIFF), and its associated Level-1 metadata (MTL.txt file)
+    * Each cloud mask is in ENVI binary format. 
+    Includes all bands from the original Landsat Level-1 data product (GeoTIFF), and its associated Level-1 metadata (MTL.txt file)
 
     If you use this dataset in your research, please cite the following:
 
@@ -47,7 +53,9 @@ class L8Biome(RasterDataset):
     .. versionadded:: 0.5
     """
 
-    url = "https://huggingface.co/datasets/torchgeo/l8biome/blob/main/{}.tar.gz" # redistributed from https://landsat.usgs.gov/landsat-8-cloud-cover-assessment-validation-data
+    url = "https://huggingface.co/datasets/torchgeo/l8biome/blob/main/{}.tar.gz" 
+    # redistributed from https://landsat.usgs.gov/landsat-8-cloud-cover-assessment-validation-data
+    
     filenames_to_md5 = {
         "barren": "bb446fda3f6af50930849bb135e99f9c",
         "forest": "21505d878abac830890ea84abddc3c46",
@@ -56,27 +64,26 @@ class L8Biome(RasterDataset):
         "snow_ice": "d7b56084e6267ee114419efdc7f664c9",
         "urban": "b5f6aabbb380e108c408a8ea5dae3835",
         "water": "d143049ef64e6e681cea380dd84680e9",
-        "wetlands": "bff0d51db84e26a2a8e776c83ab2d331"
+        "wetlands": "bff0d51db84e26a2a8e776c83ab2d331",
     }
-    
+
     cmap = {
         0: (0, 0, 0, 0),
         1: (97, 74, 74, 255),
         2: (38, 115, 0, 255),
         3: (0, 197, 255, 255),
         4: (207, 207, 207, 255),
-    } 
+    }
 
-    
     filename_glob = "LC*_B2.TIF"
     targz_file_glob = "*.tar.gz"
 
     def __init__(
-        self, 
+        self,
         root: str = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None, 
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -106,8 +113,7 @@ class L8Biome(RasterDataset):
 
         self._verify()
 
-        super().__init__(root, crs = crs, res=res, transforms = transforms, cache = cache)
-    
+        super().__init__(root, crs=crs, res=res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
@@ -151,7 +157,6 @@ class L8Biome(RasterDataset):
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)
 
-
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
         Args:
@@ -184,8 +189,8 @@ class L8Biome(RasterDataset):
 
         return sample
 
-    
-    # Plotting code added as placeholder for now till I get it working. Using LandCoverAI plotting as reference.
+    # Plotting code added as placeholder for now till I get it working. 
+    # Using LandCoverAI plotting as reference.
 
     # def plot(
     #     self,
@@ -232,4 +237,3 @@ class L8Biome(RasterDataset):
     #     if suptitle is not None:
     #         plt.suptitle(suptitle)
     #     return fig
-

@@ -53,6 +53,7 @@ from .globbiomass import GlobBiomass
 from .idtrees import IDTReeS
 from .inaturalist import INaturalist
 from .inria import InriaAerialImageLabeling
+from .l8biome import L8Biome
 from .landcoverai import LandCoverAI, LandCoverAIBase, LandCoverAIGeo
 from .landsat import (
     Landsat,
@@ -67,7 +68,6 @@ from .landsat import (
     Landsat8,
     Landsat9,
 )
-from .l8biome import L8Biome
 from .levircd import LEVIRCDPlus
 from .loveda import LoveDA
 from .millionaid import MillionAID
