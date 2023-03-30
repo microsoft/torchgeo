@@ -2,7 +2,7 @@
 
 #### run the script:
 # resample new ids with grid overlap search
-!python ssl4eo_s12_downloader.py \
+python ssl4eo_s12_downloader.py \
     --save_path ./data \
     --num_workers 8 \
     --cloud_pct 20 \
@@ -10,7 +10,7 @@
     --indices_range 0 250000
 
 ### resume from interruption
-!python ssl4eo_s12_downloader.py \
+python ssl4eo_s12_downloader.py \
     --save_path ./data \
     --num_workers 8 \
     --cloud_pct 20 \
@@ -112,8 +112,7 @@ class GaussianSampler:
     def get_world_cities(
         download_root: str = os.path.expanduser("./world_cities/"),
     ) -> List[Dict[str, Any]]:
-        url = "https://simplemaps.com/static/data/world-cities/basic/ \
-        simplemaps_worldcities_basicv1.71.zip"
+        url = "https://simplemaps.com/static/data/world-cities/basic/simplemaps_worldcities_basicv1.71.zip"  # noqa
         filename = "worldcities.csv"
         if not os.path.exists(os.path.join(download_root, os.path.basename(url))):
             download_and_extract_archive(url, download_root)
@@ -165,8 +164,7 @@ class BoundedUniformSampler:
     def get_country_boundaries(
         download_root: str = os.path.expanduser("~/.cache/naturalearth"),
     ) -> shape:
-        url = "https://www.naturalearthdata.com/http//www.naturalearthdata.com/ \
-        download/110m/cultural/ne_110m_admin_0_countries.zip"
+        url = "https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_countries.zip"  # noqa
         filename = "ne_110m_admin_0_countries.shp"
         if not os.path.exists(os.path.join(download_root, os.path.basename(url))):
             download_and_extract_archive(url, download_root)
@@ -655,12 +653,8 @@ if __name__ == "__main__":
 
     def worker(idx: int) -> None:
         if str(idx) in ext_coords.keys():
-            if args.match_file:  # skip all processed ids
-                # print('Already processed:',idx)
+            if ext_flags[str(idx)] != 0:  # only skip downloaded ids
                 return
-            else:
-                if ext_flags[str(idx)] != 0:  # only skip downloaded ids
-                    return
 
         patches_s1, patches_s2c, patches_s2a, center_coord = get_random_patches_grid(
             idx,
@@ -720,10 +714,7 @@ if __name__ == "__main__":
         with open(ext_path, "a") as f:
             writer = csv.writer(f)
             if patches_s2c is not None:
-                if args.match_file:
-                    success = 2
-                else:
-                    success = 1
+                success = 1
             else:
                 success = 0
             data = [idx, center_coord[0], center_coord[1], success]
