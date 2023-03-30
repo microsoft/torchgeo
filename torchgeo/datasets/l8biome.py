@@ -33,7 +33,7 @@ class L8Biome(RasterDataset):
     Dataset features:
 
     * images evenly divided between eight unique biomes
-    * 3 cloud cover categories
+    * 5 cloud cover categories
 
     Dataset format:
 
@@ -67,7 +67,7 @@ class L8Biome(RasterDataset):
         255: (255,255,255),
     }
     
-    filename_glob = "*_30m_cdls.tif"
+    filename_glob = "LC8*_B2.TIF"
     filename_regex = r"""
         ^(?P<date>\d+)
         _30m_cdls\..*$

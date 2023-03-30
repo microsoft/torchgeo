@@ -15,6 +15,7 @@ from .geo import GeoDataModule, NonGeoDataModule
 from .gid15 import GID15DataModule
 from .inria import InriaAerialImageLabelingDataModule
 from .landcoverai import LandCoverAIDataModule
+from .l8biome import L8BiomeDataModule
 from .loveda import LoveDADataModule
 from .naip import NAIPChesapeakeDataModule
 from .nasa_marine_debris import NASAMarineDebrisDataModule
@@ -46,6 +47,7 @@ __all__ = (
     "GID15DataModule",
     "InriaAerialImageLabelingDataModule",
     "LandCoverAIDataModule",
+    "L8BiomeDataModule",
     "LoveDADataModule",
     "NASAMarineDebrisDataModule",
     "OSCDDataModule",

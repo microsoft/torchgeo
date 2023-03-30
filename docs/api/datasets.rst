@@ -113,6 +113,7 @@ Landsat
 .. autoclass:: Landsat3
 .. autoclass:: Landsat2
 .. autoclass:: Landsat1
+.. autoclass:: L8Biome
 
 NAIP
 ^^^^

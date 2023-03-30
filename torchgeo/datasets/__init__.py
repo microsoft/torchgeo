@@ -67,6 +67,7 @@ from .landsat import (
     Landsat8,
     Landsat9,
 )
+from .l8biome import L8Biome
 from .levircd import LEVIRCDPlus
 from .loveda import LoveDA
 from .millionaid import MillionAID
@@ -150,6 +151,7 @@ __all__ = (
     "Landsat7",
     "Landsat8",
     "Landsat9",
+    "L8Biome",
     "NAIP",
     "OpenBuildings",
     "Sentinel",
