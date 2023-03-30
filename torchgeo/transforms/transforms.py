@@ -155,7 +155,7 @@ class _NCropGenerator(K.random_generator.CropGenerator):
         self.num = num
 
     def forward(
-        self, batch_shape: torch.Size, same_on_batch: bool = False
+        self, batch_shape: Tuple[int, ...], same_on_batch: bool = False
     ) -> Dict[str, Tensor]:
         """Generate the crops.
 
