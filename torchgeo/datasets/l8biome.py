@@ -25,6 +25,7 @@ class L8Biome(RasterDataset):
 
     Dataset format:
 
+    
     * Each cloud mask is in ENVI binary format.
     Includes all bands from the original Landsat Level-1 data product (GeoTIFF), and its associated Level-1 metadata (MTL.txt file)
 
@@ -37,7 +38,6 @@ class L8Biome(RasterDataset):
     """
 
     url = "https://huggingface.co/datasets/torchgeo/l8biome/blob/main/{}.tar.gz"
-    # redistributed from https://landsat.usgs.gov/landsat-8-cloud-cover-assessment-validation-data
 
     filenames_to_md5 = {
         "barren": "bb446fda3f6af50930849bb135e99f9c",
@@ -59,7 +59,7 @@ class L8Biome(RasterDataset):
     }
 
     filename_glob = "LC*_B2.TIF"
-    targz_file_glob = "*.tar.gz"
+    targz_file_extension = "*.tar.gz"
 
     def __init__(
         self,
@@ -111,7 +111,7 @@ class L8Biome(RasterDataset):
                 return
 
         # Check if the tar.gz files have already been downloaded
-        pathname = os.path.join(self.root, self.targz_file_glob)
+        pathname = os.path.join(self.root, self.targz_file_extension)
         if glob.glob(pathname):
             self._extract()
             return
@@ -137,7 +137,7 @@ class L8Biome(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        pathname = os.path.join(self.root, self.targz_file_glob)
+        pathname = os.path.join(self.root, self.targz_file_extension)
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)
 
