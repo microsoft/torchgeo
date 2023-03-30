@@ -266,6 +266,7 @@ filterwarnings = [
     # Unexpected warnings, worth investigating
     # Lightning is having trouble inferring the batch size for ChesapeakeCVPRDataModule and CycloneDataModule for some reason
     "ignore:Trying to infer the `batch_size` from an ambiguous collection:UserWarning",
+    "ignore: Tight layout not applied. The bottom and top margins cannot be made large enough:UserWarning",
     # https://github.com/pytest-dev/pytest/issues/11461
     "ignore::pytest.PytestUnraisableExceptionWarning",
 ]

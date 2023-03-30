@@ -10,6 +10,7 @@ import torch
 from einops import rearrange
 from kornia.contrib import extract_tensor_patches
 from kornia.geometry import crop_by_indices
+from kornia.geometry.boxes import Boxes
 from torch import Tensor
 from torch.nn.modules import Module
 
@@ -67,9 +68,19 @@ class AugmentationSequential(Module):
             dtype[key] = batch[key].dtype
             batch[key] = batch[key].float()
 
+        # Convert shape of boxes from [N, 4] to [N, 4, 2]
+        if "boxes" in batch and (
+            isinstance(batch["boxes"], list) or batch["boxes"].ndim == 2
+        ):
+            # batch["boxes"] = batch["boxes"].unsqueeze(0)
+            batch["boxes"] = Boxes.from_tensor(batch["boxes"]).data
+
         # Kornia requires masks to have a channel dimension
         if "mask" in batch and len(batch["mask"].shape) == 3:
             batch["mask"] = rearrange(batch["mask"], "b h w -> b () h w")
+
+        if "masks" in batch and len(batch["masks"].shape) == 3:
+            batch["masks"] = rearrange(batch["masks"], "c h w -> () c h w")
 
         inputs = [batch[k] for k in self.data_keys]
         outputs_list: Union[Tensor, list[Tensor]] = self.augs(*inputs)
@@ -85,9 +96,17 @@ class AugmentationSequential(Module):
         for key in self.data_keys:
             batch[key] = batch[key].to(dtype[key])
 
+        # Convert boxes to default [N, 4]
+        if "boxes" in batch:
+            batch["boxes"] = Boxes(batch["boxes"]).to_tensor(
+                mode="xyxy"
+            )  # type:ignore[assignment]
+
         # Torchmetrics does not support masks with a channel dimension
         if "mask" in batch and batch["mask"].shape[1] == 1:
             batch["mask"] = rearrange(batch["mask"], "b () h w -> b h w")
+        if "masks" in batch and len(batch["masks"].shape) == 4:
+            batch["masks"] = rearrange(batch["masks"], "() c h w -> c h w")
 
         return batch
 
