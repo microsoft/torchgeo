@@ -28,8 +28,9 @@ import os
 import time
 import warnings
 from collections import OrderedDict
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from multiprocessing.dummy import Lock, Pool
+from typing import Any, Dict, List, Optional, Tuple
 
 import ee
 import numpy as np
@@ -38,8 +39,6 @@ import shapefile
 import urllib3
 from rasterio.transform import Affine
 from shapely.geometry import Point, shape
-
-# from skimage.exposure import rescale_intensity
 from torchvision.datasets.utils import download_and_extract_archive
 from tqdm import tqdm
 
@@ -81,21 +80,20 @@ ALL_BANDS_GRD = ["VV", "VH"]
 """ samplers to get locations of interest points"""
 
 
-class GeoSampler:
-    def sample_point(self):
-        raise NotImplementedError()
-
-
-class UniformSampler(GeoSampler):
-    def sample_point(self):
-        # fix_random_seeds()
+class UniformSampler:
+    def sample_point(self) -> List[float]:
         lon = np.random.uniform(-180, 180)
         lat = np.random.uniform(-90, 90)
         return [lon, lat]
 
 
-class GaussianSampler(GeoSampler):
-    def __init__(self, interest_points=None, num_cities=1000, std=20):
+class GaussianSampler:
+    def __init__(
+        self,
+        interest_points: Optional[List[List[float]]] = None,
+        num_cities: int = 1000,
+        std: float = 20,
+    ) -> None:
         if interest_points is None:
             cities = self.get_world_cities()
             self.interest_points = self.get_interest_points(cities, size=num_cities)
@@ -103,20 +101,19 @@ class GaussianSampler(GeoSampler):
             self.interest_points = interest_points
         self.std = std
 
-    def sample_point(self, idx):
-        # pdb.set_trace()
-
-        # rng = np.random.default_rng(seed=idx)
+    def sample_point(self) -> List[float]:
         rng = np.random.default_rng()
         point = rng.choice(self.interest_points)
         std = self.km2deg(self.std)
-        # fix_random_seeds(idx)
         lon, lat = np.random.normal(loc=point, scale=[std, std])
         return [lon, lat]
 
     @staticmethod
-    def get_world_cities(download_root=os.path.expanduser("./world_cities/")):
-        url = "https://simplemaps.com/static/data/world-cities/basic/simplemaps_worldcities_basicv1.71.zip"
+    def get_world_cities(
+        download_root: str = os.path.expanduser("./world_cities/"),
+    ) -> List[Dict[str, Any]]:
+        url = "https://simplemaps.com/static/data/world-cities/basic/ \
+        simplemaps_worldcities_basicv1.71.zip"
         filename = "worldcities.csv"
         if not os.path.exists(os.path.join(download_root, os.path.basename(url))):
             download_and_extract_archive(url, download_root)
@@ -131,30 +128,31 @@ class GaussianSampler(GeoSampler):
         return cities
 
     @staticmethod
-    def get_interest_points(cities, size=10000):
+    def get_interest_points(
+        cities: List[Dict[str, str]], size: int = 10000
+    ) -> List[List[float]]:
         cities = sorted(cities, key=lambda c: int(c["population"]), reverse=True)[:size]
         points = [[float(c["lng"]), float(c["lat"])] for c in cities]
         return points
 
     @staticmethod
-    def km2deg(kms, radius=6371):
+    def km2deg(kms: float, radius: float = 6371) -> float:
         return kms / (2.0 * radius * np.pi / 360.0)
 
     @staticmethod
-    def deg2km(deg, radius=6371):
+    def deg2km(deg: float, radius: float = 6371) -> float:
         return deg * (2.0 * radius * np.pi / 360.0)
 
 
-class BoundedUniformSampler(GeoSampler):
-    def __init__(self, boundaries=None):
+class BoundedUniformSampler:
+    def __init__(self, boundaries: shape = None) -> None:
         if boundaries is None:
             self.boundaries = self.get_country_boundaries()
         else:
             self.boundaries = boundaries
 
-    def sample_point(self):
+    def sample_point(self) -> List[float]:
         minx, miny, maxx, maxy = self.boundaries.bounds
-        # fix_random_seeds()
         lon = np.random.uniform(minx, maxx)
         lat = np.random.uniform(miny, maxy)
         p = Point(lon, lat)
@@ -165,9 +163,10 @@ class BoundedUniformSampler(GeoSampler):
 
     @staticmethod
     def get_country_boundaries(
-        download_root=os.path.expanduser("~/.cache/naturalearth"),
-    ):
-        url = "https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_countries.zip"
+        download_root: str = os.path.expanduser("~/.cache/naturalearth"),
+    ) -> shape:
+        url = "https://www.naturalearthdata.com/http//www.naturalearthdata.com/ \
+        download/110m/cultural/ne_110m_admin_0_countries.zip"
         filename = "ne_110m_admin_0_countries.shp"
         if not os.path.exists(os.path.join(download_root, os.path.basename(url))):
             download_and_extract_archive(url, download_root)
@@ -179,11 +178,11 @@ class OverlapError(Exception):
     pass
 
 
-def date2str(date):
+def date2str(date: datetime) -> str:
     return date.strftime("%Y-%m-%d")
 
 
-def get_period(date, days=5):
+def get_period(date: datetime, days: int = 5) -> Tuple[str, str]:
     date1 = date - timedelta(days=days / 2)
     date2 = date + timedelta(days=days / 2)
     return date2str(date1), date2str(date2)
@@ -192,7 +191,7 @@ def get_period(date, days=5):
 """get collection and remove clouds from ee"""
 
 
-def maskS2clouds(image):
+def maskS2clouds(image: ee.Image) -> ee.Image:
     qa = image.select("QA60")
     # Bits 10 and 11 are clouds and cirrus, respectively.
     cloudBitMask = 1 << 10
@@ -203,42 +202,44 @@ def maskS2clouds(image):
     return image.updateMask(mask)
 
 
-def get_collection_s2a(cloud_pct=20):
+def get_collection_s2a(cloud_pct: float = 20) -> ee.ImageCollection:
     collection = ee.ImageCollection("COPERNICUS/S2_SR")
     collection = collection.filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", cloud_pct))
     # collection = collection.map(maskS2clouds)
     return collection
 
 
-def get_collection_s2c(cloud_pct=20):
+def get_collection_s2c(cloud_pct: float = 20) -> ee.ImageCollection:
     collection = ee.ImageCollection("COPERNICUS/S2")
     collection = collection.filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", cloud_pct))
     # collection = collection.map(maskS2clouds)
     return collection
 
 
-def get_collection_s1():
+def get_collection_s1() -> ee.ImageCollection:
     collection = ee.ImageCollection("COPERNICUS/S1_GRD")
     return collection
 
 
-def filter_collection(collection, coords, period=None):
-    # pdb.set_trace()
+def filter_collection(
+    collection: ee.ImageCollection, coords: List[float], period: Tuple[str, str]
+) -> ee.ImageCollection:
     filtered = collection
     if period is not None:
         filtered = filtered.filterDate(*period)  # filter time
     filtered = filtered.filterBounds(ee.Geometry.Point(coords))  # filter region
 
     if filtered.size().getInfo() == 0:
-        # pdb.set_trace()
         raise ee.EEException(
-            f"ImageCollection.filter: No suitable images found in ({coords[1]:.4f}, {coords[0]:.4f}) between {period[0]} and {period[1]}."
+            f"ImageCollection.filter: No suitable images found in \
+                ({coords[1]:.4f}, {coords[0]:.4f}) between {period[0]} and {period[1]}."
         )
     return filtered
 
 
-def filter_collection_s1(collection, coords, period=None):
-    # pdb.set_trace()
+def filter_collection_s1(
+    collection: ee.ImageCollection, coords: List[float], period: Tuple[str, str]
+) -> ee.ImageCollection:
     filtered = collection
     if period is not None:
         filtered = filtered.filterDate(*period)  # filter time
@@ -253,12 +254,15 @@ def filter_collection_s1(collection, coords, period=None):
 
     if filtered.size().getInfo() == 0:
         raise ee.EEException(
-            f"ImageCollection.filter: No suitable images found in ({coords[1]:.4f}, {coords[0]:.4f}) between {period[0]} and {period[1]}."
+            f"ImageCollection.filter: No suitable images found in \
+            ({coords[1]:.4f}, {coords[0]:.4f}) between {period[0]} and {period[1]}."
         )
     return filtered
 
 
-def center_crop(img, out_size):
+def center_crop(
+    img: np.ndarray[Any, np.dtype[Any]], out_size: Tuple[int, int]
+) -> np.ndarray[Any, np.dtype[Any]]:
     image_height, image_width = img.shape[:2]
     crop_height, crop_width = out_size
     crop_top = int((image_height - crop_height + 1) * 0.5)
@@ -266,7 +270,9 @@ def center_crop(img, out_size):
     return img[crop_top : crop_top + crop_height, crop_left : crop_left + crop_width]
 
 
-def adjust_coords(coords, old_size, new_size):
+def adjust_coords(
+    coords: List[List[float]], old_size: Tuple[int, int], new_size: Tuple[int, int]
+) -> List[List[float]]:
     xres = (coords[1][0] - coords[0][0]) / old_size[1]
     yres = (coords[0][1] - coords[1][1]) / old_size[0]
     xoff = int((old_size[1] - new_size[1] + 1) * 0.5)
@@ -280,7 +286,7 @@ def adjust_coords(coords, old_size, new_size):
     ]
 
 
-def get_properties(image):
+def get_properties(image: ee.Image) -> Any:
     # properties = {}
     # for property in image.propertyNames().getInfo():
     #    properties[property] = image.get(property)
@@ -288,12 +294,20 @@ def get_properties(image):
     return image.getInfo()
 
 
-def get_patch_s1(collection, coords, radius, bands=None, crop=None):
+def get_patch_s1(
+    collection: ee.ImageCollection,
+    center_coord: List[float],
+    radius: float,
+    bands: Optional[List[str]] = None,
+    crop: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     if bands is None:
         bands = RGB_BANDS
 
     image = collection.sort("system:time_start", False).first()  # get most recent
-    region = ee.Geometry.Point(coords).buffer(radius).bounds()  # sample region bound
+    region = (
+        ee.Geometry.Point(center_coord).buffer(radius).bounds()
+    )  # sample region bound
 
     patch = image.select(*bands).sampleRectangle(region, defaultValue=0)
     features = patch.getInfo()  # the actual download
@@ -306,10 +320,10 @@ def get_patch_s1(collection, coords, radius, bands=None, crop=None):
         # img = rescale_intensity(img, in_range=(0, 1), out_range=np.uint8)
         raster[band] = img.astype("float32")
 
-    coords = np.array(features["geometry"]["coordinates"][0])
+    coords0 = np.array(features["geometry"]["coordinates"][0])
     coords = [
-        [coords[:, 0].min(), coords[:, 1].max()],
-        [coords[:, 0].max(), coords[:, 1].min()],
+        [coords0[:, 0].min(), coords0[:, 1].max()],
+        [coords0[:, 0].max(), coords0[:, 1].min()],
     ]
     if crop is not None:
         band = bands[0]
@@ -325,14 +339,20 @@ def get_patch_s1(collection, coords, radius, bands=None, crop=None):
     )
 
 
-def get_patch_s2(collection, coords, radius, bands=None, crop=None):
-    # pdb.set_trace()
+def get_patch_s2(
+    collection: ee.ImageCollection,
+    center_coord: List[float],
+    radius: float,
+    bands: Optional[List[str]] = None,
+    crop: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     if bands is None:
         bands = RGB_BANDS
 
     image = collection.sort("system:time_start", False).first()  # get most recent
-    region = ee.Geometry.Point(coords).buffer(radius).bounds()  # sample region bound
-    # pdb.set_trace()
+    region = (
+        ee.Geometry.Point(center_coord).buffer(radius).bounds()
+    )  # sample region bound
     patch = image.select(*bands).sampleRectangle(region, defaultValue=0)
 
     features = patch.getInfo()  # the actual download
@@ -342,13 +362,12 @@ def get_patch_s2(collection, coords, radius, bands=None, crop=None):
         img = np.atleast_3d(features["properties"][band])
         if crop is not None:
             img = center_crop(img, out_size=crop[band])
-        # img = rescale_intensity(img, in_range=(0, 1), out_range=np.uint8)
         raster[band] = img.astype("uint16")
 
-    coords = np.array(features["geometry"]["coordinates"][0])
+    coords0 = np.array(features["geometry"]["coordinates"][0])
     coords = [
-        [coords[:, 0].min(), coords[:, 1].max()],
-        [coords[:, 0].max(), coords[:, 1].min()],
+        [coords0[:, 0].min(), coords0[:, 1].max()],
+        [coords0[:, 0].max(), coords0[:, 1].min()],
     ]
     if crop is not None:
         band = bands[0]
@@ -365,10 +384,20 @@ def get_patch_s2(collection, coords, radius, bands=None, crop=None):
 
 
 def get_random_patches_grid(
-    idx, collections, bands, crops, sampler, dates, radius, debug=False, grid_dict={}
-):
+    idx: int,
+    collections: Dict[str, Any],
+    bands: Dict[str, Any],
+    crops: Dict[str, Any],
+    sampler: GaussianSampler,
+    dates: List[Any],
+    radius: int,
+    debug: bool = False,
+    grid_dict: Dict[Tuple[int, int], Any] = {},
+) -> Tuple[
+    List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]], List[float]
+]:
     # (lon,lat) of top-10000 cities
-    coords = sampler.sample_point(idx)
+    coords = sampler.sample_point()
 
     # avoid strong overlap
     try:
@@ -444,7 +473,9 @@ def get_random_patches_grid(
     return patches_s1, patches_s2c, patches_s2a, center_coord
 
 
-def save_geotiff(img, coords, filename):
+def save_geotiff(
+    img: np.ndarray[Any, np.dtype[Any]], coords: List[List[float]], filename: str
+) -> None:
     # pdb.set_trace()
     height, width, channels = img.shape
     xres = (coords[1][0] - coords[0][0]) / width
@@ -466,38 +497,36 @@ def save_geotiff(img, coords, filename):
         f.write(img.transpose(2, 0, 1))
 
 
-def save_patch(raster, coords, metadata, path, preview=False):
-    # pdb.set_trace()
+def save_patch(
+    raster: Dict[str, Any],
+    coords: List[List[float]],
+    metadata: Dict[str, Any],
+    path: str,
+    preview: bool = False,
+) -> None:
     patch_id = metadata["properties"]["system:index"]
     patch_path = os.path.join(path, patch_id)
     os.makedirs(patch_path, exist_ok=True)
 
     for band, img in raster.items():
         save_geotiff(img, coords, os.path.join(patch_path, f"{band}.tif"))
-    '''
-    if preview:
-        rgb = np.dstack([raster[band] for band in RGB_BANDS])
-        rgb = rescale_intensity(
-            rgb, in_range=(0, 255 * 0.3), out_range=(0, 255)
-        ).astype(np.uint8)
-        save_geotiff(rgb, coords, os.path.join(path, f"{patch_id}.tif"))
-    '''
+
     with open(os.path.join(patch_path, "metadata.json"), "w") as f:
         json.dump(metadata, f)
 
 
 class Counter:
-    def __init__(self, start=0):
+    def __init__(self, start: int = 0) -> None:
         self.value = start
         self.lock = Lock()
 
-    def update(self, delta=1):
+    def update(self, delta: int = 1) -> int:
         with self.lock:
             self.value += delta
             return self.value
 
 
-def fix_random_seeds(seed=42):
+def fix_random_seeds(seed: int = 42) -> None:
     """
     Fix random seeds.
     """
@@ -610,7 +639,7 @@ if __name__ == "__main__":
 
     # build the grid from existing coordinates
 
-    grid_dict = {}
+    grid_dict: Dict[Tuple[int, int], Any] = {}
     if args.resume:
         print("Load existing locations.")
         for i, key in enumerate(tqdm(ext_coords.keys())):
@@ -624,7 +653,7 @@ if __name__ == "__main__":
     start_time = time.time()
     counter = Counter()
 
-    def worker(idx):
+    def worker(idx: int) -> None:
         if str(idx) in ext_coords.keys():
             if args.match_file:  # skip all processed ids
                 # print('Already processed:',idx)
