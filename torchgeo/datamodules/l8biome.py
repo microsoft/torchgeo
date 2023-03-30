@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""SSL4EO datamodule."""
+"""L8Biome datamodule."""
 
 from typing import Any
 
@@ -13,6 +13,7 @@ from .geo import GeoDataModule
 
 class L8BiomeDataModule(GeoDataModule):
     """LightningDataModule implementation for the L8 Biome dataset.
+    
     .. versionadded:: 0.5
     """
 
@@ -23,6 +24,7 @@ class L8BiomeDataModule(GeoDataModule):
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
         """Initialize a new L8BiomeDataModule instance.
+
         Args:
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
@@ -33,6 +35,7 @@ class L8BiomeDataModule(GeoDataModule):
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
+
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """

@@ -3,30 +3,14 @@
 
 """L8Biome dataset."""
 
-import abc
 import glob
-import hashlib
 import os
-from functools import lru_cache
 from typing import Any, Callable, Dict, List, Optional, cast
 
-import matplotlib.pyplot as plt
-import numpy as np
-import torch
-from matplotlib.colors import ListedColormap
-from PIL import Image
 from rasterio.crs import CRS
-from torch import Tensor
-from torch.utils.data import Dataset
 
-from .geo import NonGeoDataset, RasterDataset
-from .utils import (
-    BoundingBox,
-    check_integrity,
-    download_url,
-    extract_archive,
-    working_dir,
-)
+from .geo import RasterDataset
+from .utils import BoundingBox, download_url, extract_archive
 
 
 class L8Biome(RasterDataset):
@@ -36,13 +20,12 @@ class L8Biome(RasterDataset):
     is a cloud validation dataset of Pre-Collection Landsat 8 Operational Land Imager (OLI) Thermal Infrared Sensor (TIRS) terrain-corrected (Level-1T) scenes.
 
     Dataset features:
-
     * images evenly divided between eight unique biomes
     * 5 cloud cover categories
 
     Dataset format:
 
-    * Each cloud mask is in ENVI binary format. 
+    * Each cloud mask is in ENVI binary format.
     Includes all bands from the original Landsat Level-1 data product (GeoTIFF), and its associated Level-1 metadata (MTL.txt file)
 
     If you use this dataset in your research, please cite the following:
@@ -53,9 +36,9 @@ class L8Biome(RasterDataset):
     .. versionadded:: 0.5
     """
 
-    url = "https://huggingface.co/datasets/torchgeo/l8biome/blob/main/{}.tar.gz" 
+    url = "https://huggingface.co/datasets/torchgeo/l8biome/blob/main/{}.tar.gz"
     # redistributed from https://landsat.usgs.gov/landsat-8-cloud-cover-assessment-validation-data
-    
+
     filenames_to_md5 = {
         "barren": "bb446fda3f6af50930849bb135e99f9c",
         "forest": "21505d878abac830890ea84abddc3c46",
@@ -117,6 +100,7 @@ class L8Biome(RasterDataset):
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
+
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
@@ -159,10 +143,12 @@ class L8Biome(RasterDataset):
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
+        
         Args:
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
         Returns:
             sample of image, mask and metadata at that index
+
         Raises:
             IndexError: if query is not found in the index
         """
@@ -189,7 +175,7 @@ class L8Biome(RasterDataset):
 
         return sample
 
-    # Plotting code added as placeholder for now till I get it working. 
+    # Plotting code added as placeholder for now till I get it working.
     # Using LandCoverAI plotting as reference.
 
     # def plot(
