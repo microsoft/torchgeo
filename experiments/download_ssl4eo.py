@@ -1,8 +1,8 @@
-""" Sample and download Sentinel-1/2 tiles with Google Earth Engine
+""" Sample and download Satellite tiles with Google Earth Engine
 
 #### run the script:
 ### resample new ids with grid overlap search
-python ssl4eo_s12_downloader.py \
+python download_ssl4eo.py \
     --save_path ./data \
     --num_workers 8 \
     --cloud_pct 20 \
@@ -10,7 +10,7 @@ python ssl4eo_s12_downloader.py \
     --indices_range 0 250000
 
 ### resume from interruption
-python ssl4eo_s12_downloader.py \
+python download_ssl4eo.py \
     --save_path ./data \
     --num_workers 8 \
     --cloud_pct 20 \
