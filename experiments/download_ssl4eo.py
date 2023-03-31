@@ -1,7 +1,7 @@
 """ Sample and download Sentinel-1/2 tiles with Google Earth Engine
 
 #### run the script:
-# resample new ids with grid overlap search
+### resample new ids with grid overlap search
 python ssl4eo_s12_downloader.py \
     --save_path ./data \
     --num_workers 8 \
@@ -109,9 +109,7 @@ class GaussianSampler:
         return [lon, lat]
 
     @staticmethod
-    def get_world_cities(
-        download_root: str = "world_cities",
-    ) -> List[Dict[str, Any]]:
+    def get_world_cities(download_root: str = "world_cities") -> List[Dict[str, Any]]:
         url = "https://simplemaps.com/static/data/world-cities/basic/simplemaps_worldcities_basicv1.71.zip"  # noqa: E501
         filename = "worldcities.csv"
         if not os.path.exists(os.path.join(download_root, os.path.basename(url))):
@@ -203,6 +201,7 @@ def maskS2clouds(image: ee.Image) -> ee.Image:
 def get_collection_s2a(cloud_pct: float = 20) -> ee.ImageCollection:
     collection = ee.ImageCollection("COPERNICUS/S2_SR")
     collection = collection.filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", cloud_pct))
+    # Uncomment the following line if you want to apply cloud masking.
     # collection = collection.map(maskS2clouds)
     return collection
 
@@ -210,6 +209,7 @@ def get_collection_s2a(cloud_pct: float = 20) -> ee.ImageCollection:
 def get_collection_s2c(cloud_pct: float = 20) -> ee.ImageCollection:
     collection = ee.ImageCollection("COPERNICUS/S2")
     collection = collection.filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", cloud_pct))
+    # Uncomment the following line if you want to apply cloud masking.
     # collection = collection.map(maskS2clouds)
     return collection
 
@@ -247,6 +247,7 @@ def filter_collection_s1(
         ee.Filter.listContains("transmitterReceiverPolarisation", "VV")
     ).filter(ee.Filter.listContains("transmitterReceiverPolarisation", "VH"))
     filtered = filtered.filter(ee.Filter.eq("instrumentMode", "IW"))
+    # If you want to filter by orbit properties, uncomment the following line.
     # filtered = filtered.filter(ee.Filter.eq('orbitProperties_pass', 'ASCENDING'))
     # filtered = filtered.filter(ee.Filter.eq('orbitProperties_pass', 'DESCENDING'))
 
@@ -263,8 +264,8 @@ def center_crop(
 ) -> np.ndarray[Any, np.dtype[Any]]:
     image_height, image_width = img.shape[:2]
     crop_height, crop_width = out_size
-    crop_top = int((image_height - crop_height + 1) * 0.5)
-    crop_left = int((image_width - crop_width + 1) * 0.5)
+    crop_top = (image_height - crop_height + 1) // 2
+    crop_left = (image_width - crop_width + 1) // 2
     return img[crop_top : crop_top + crop_height, crop_left : crop_left + crop_width]
 
 
@@ -285,10 +286,6 @@ def adjust_coords(
 
 
 def get_properties(image: ee.Image) -> Any:
-    # properties = {}
-    # for property in image.propertyNames().getInfo():
-    #    properties[property] = image.get(property)
-    # return ee.Dictionary(properties).getInfo()
     return image.getInfo()
 
 
@@ -315,7 +312,6 @@ def get_patch_s1(
         img = np.atleast_3d(features["properties"][band])
         if crop is not None:
             img = center_crop(img, out_size=crop[band])
-        # img = rescale_intensity(img, in_range=(0, 1), out_range=np.uint8)
         raster[band] = img.astype("float32")
 
     coords0 = np.array(features["geometry"]["coordinates"][0])
@@ -420,7 +416,6 @@ def get_random_patches_grid(
         )
 
     # random +- 15 days of random days within 1 year from the reference dates
-    # fix_random_seeds(idx)
     delta = timedelta(days=np.random.randint(365))
     periods = [get_period(date - delta, days=30) for date in dates]
 
@@ -474,7 +469,6 @@ def get_random_patches_grid(
 def save_geotiff(
     img: np.ndarray[Any, np.dtype[Any]], coords: List[List[float]], filename: str
 ) -> None:
-    # pdb.set_trace()
     height, width, channels = img.shape
     xres = (coords[1][0] - coords[0][0]) / width
     yres = (coords[0][1] - coords[1][1]) / height
@@ -528,8 +522,6 @@ def fix_random_seeds(seed: int = 42) -> None:
     """
     Fix random seeds.
     """
-    # torch.manual_seed(seed)
-    # torch.cuda.manual_seed_all(seed)
     np.random.seed(seed)
 
 
@@ -555,8 +547,8 @@ if __name__ == "__main__":
 
     # initialize ee
     ee.Initialize()
-    # get data collection (remove clouds)
 
+    # get data collection (remove clouds)
     collection_s2a = get_collection_s2a(cloud_pct=args.cloud_pct)
     collection_s2c = get_collection_s2c(cloud_pct=args.cloud_pct)
     collection_s1 = get_collection_s1()
@@ -636,7 +628,6 @@ if __name__ == "__main__":
         ext_path = os.path.join(args.save_path, "checked_locations.csv")
 
     # build the grid from existing coordinates
-
     grid_dict: Dict[Tuple[int, int], Any] = {}
     if args.resume:
         print("Load existing locations.")
