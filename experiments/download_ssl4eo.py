@@ -110,7 +110,7 @@ class GaussianSampler:
 
     @staticmethod
     def get_world_cities(
-        download_root: str = os.path.expanduser("./world_cities/"),
+        download_root: str = "world_cities",
     ) -> List[Dict[str, Any]]:
         url = "https://simplemaps.com/static/data/world-cities/basic/simplemaps_worldcities_basicv1.71.zip"  # noqa: E501
         filename = "worldcities.csv"
