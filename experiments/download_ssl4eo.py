@@ -386,7 +386,7 @@ def get_random_patches_rtree(
     dates: List[Any],
     radius: int,
     debug: bool = False,
-    rtree_obj: index.Index = None,
+    rtree_obj: index.Index = index.Index(),
 ) -> Tuple[
     List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]], List[float]
 ]:
