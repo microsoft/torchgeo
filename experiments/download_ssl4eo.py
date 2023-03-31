@@ -164,7 +164,7 @@ class BoundedUniformSampler:
     def get_country_boundaries(
         download_root: str = os.path.expanduser("~/.cache/naturalearth"),
     ) -> shape:
-        url = "https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_countries.zip"  # noqa
+        url = "https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_countries.zip"  # noqa: E501
         filename = "ne_110m_admin_0_countries.shp"
         if not os.path.exists(os.path.join(download_root, os.path.basename(url))):
             download_and_extract_archive(url, download_root)
