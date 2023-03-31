@@ -43,6 +43,7 @@ EuroSAT
 ^^^^^^^
 
 .. autoclass:: EuroSATDataModule
+.. autoclass:: EuroSAT100DataModule
 
 FAIR1M
 ^^^^^^
@@ -88,6 +89,11 @@ RESISC45
 ^^^^^^^^
 
 .. autoclass:: RESISC45DataModule
+
+Seasonal Contrast
+^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SeasonalContrastS2DataModule
 
 SEN12MS
 ^^^^^^^

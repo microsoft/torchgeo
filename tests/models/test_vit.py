@@ -34,7 +34,10 @@ class TestViTSmall16:
             weights.meta["model"], in_chans=weights.meta["in_chans"]
         )
         torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights, "url", str(path))
+        try:
+            monkeypatch.setattr(weights.value, "url", str(path))
+        except AttributeError:
+            monkeypatch.setattr(weights, "url", str(path))
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
         return weights
 
@@ -43,6 +46,11 @@ class TestViTSmall16:
 
     def test_vit_weights(self, mocked_weights: WeightsEnum) -> None:
         vit_small_patch16_224(weights=mocked_weights)
+
+    def test_transforms(self, mocked_weights: WeightsEnum) -> None:
+        c = mocked_weights.meta["in_chans"]
+        sample = {"image": torch.arange(c * 4 * 4, dtype=torch.float).view(c, 4, 4)}
+        mocked_weights.transforms(sample)
 
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:

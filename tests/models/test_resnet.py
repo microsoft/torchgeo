@@ -32,7 +32,10 @@ class TestResNet18:
         path = tmp_path / f"{weights}.pth"
         model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"])
         torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights, "url", str(path))
+        try:
+            monkeypatch.setattr(weights.value, "url", str(path))
+        except AttributeError:
+            monkeypatch.setattr(weights, "url", str(path))
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
         return weights
 
@@ -41,6 +44,11 @@ class TestResNet18:
 
     def test_resnet_weights(self, mocked_weights: WeightsEnum) -> None:
         resnet18(weights=mocked_weights)
+
+    def test_transforms(self, mocked_weights: WeightsEnum) -> None:
+        c = mocked_weights.meta["in_chans"]
+        sample = {"image": torch.arange(c * 4 * 4, dtype=torch.float).view(c, 4, 4)}
+        mocked_weights.transforms(sample)
 
     @pytest.mark.slow
     def test_resnet_download(self, weights: WeightsEnum) -> None:
@@ -59,7 +67,10 @@ class TestResNet50:
         path = tmp_path / f"{weights}.pth"
         model = timm.create_model("resnet50", in_chans=weights.meta["in_chans"])
         torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights, "url", str(path))
+        try:
+            monkeypatch.setattr(weights.value, "url", str(path))
+        except AttributeError:
+            monkeypatch.setattr(weights, "url", str(path))
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
         return weights
 
@@ -68,6 +79,11 @@ class TestResNet50:
 
     def test_resnet_weights(self, mocked_weights: WeightsEnum) -> None:
         resnet50(weights=mocked_weights)
+
+    def test_transforms(self, mocked_weights: WeightsEnum) -> None:
+        c = mocked_weights.meta["in_chans"]
+        sample = {"image": torch.arange(c * 4 * 4, dtype=torch.float).view(c, 4, 4)}
+        mocked_weights.transforms(sample)
 
     @pytest.mark.slow
     def test_resnet_download(self, weights: WeightsEnum) -> None:

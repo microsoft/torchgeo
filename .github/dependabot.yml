@@ -9,9 +9,15 @@ updates:
     schedule:
       interval: "daily"
     ignore:
+      # scikit-image does not support latest scipy
+      # https://github.com/scikit-image/scikit-image/pull/6773
+      - dependency-name: "scipy"
       # setuptools releases new versions almost daily
       - dependency-name: "setuptools"
         update-types: ["version-update:semver-patch"]
+      # Sphinx 6 is incompatible with pytorch-sphinx-theme
+      # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
+      - dependency-name: "sphinx"
       # segmentation-models-pytorch pins timm, must update in unison
       - dependency-name: "timm"
       # torchvision pins torch, must update in unison

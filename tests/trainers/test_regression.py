@@ -11,8 +11,8 @@ import torch
 import torchvision
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
+from lightning.pytorch import LightningDataModule, Trainer
 from omegaconf import OmegaConf
-from pytorch_lightning import LightningDataModule, Trainer
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import (
@@ -24,17 +24,22 @@ from torchgeo.datasets import TropicalCyclone
 from torchgeo.models import get_model_weights, list_models
 from torchgeo.trainers import RegressionTask
 
-from .test_utils import RegressionTestModel
+from .test_classification import ClassificationTestModel
 
 
-def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
-    state_dict: Dict[str, Any] = torch.load(url)
-    return state_dict
+class RegressionTestModel(ClassificationTestModel):
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(in_chans=3, num_classes=1)
 
 
 class PredictRegressionDataModule(TropicalCycloneDataModule):
     def setup(self, stage: str) -> None:
         self.predict_dataset = TropicalCyclone(split="test", **self.kwargs)
+
+
+def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+    state_dict: Dict[str, Any] = torch.load(url)
+    return state_dict
 
 
 def plot(*args: Any, **kwargs: Any) -> None:
@@ -67,7 +72,12 @@ class TestRegressionTask:
         model.model = RegressionTestModel()
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.fit(model=model, datamodule=datamodule)
         try:
             trainer.test(model=model, datamodule=datamodule)
@@ -104,7 +114,10 @@ class TestRegressionTask:
             weights.meta["model"], in_chans=weights.meta["in_chans"]
         )
         torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights, "url", str(path))
+        try:
+            monkeypatch.setattr(weights.value, "url", str(path))
+        except AttributeError:
+            monkeypatch.setattr(weights, "url", str(path))
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
         return weights
 
@@ -157,7 +170,12 @@ class TestRegressionTask:
             root="tests/data/cyclone", batch_size=1, num_workers=0
         )
         model = RegressionTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.validate(model=model, datamodule=datamodule)
 
     def test_predict(self, model_kwargs: Dict[Any, Any], fast_dev_run: bool) -> None:
@@ -165,5 +183,10 @@ class TestRegressionTask:
             root="tests/data/cyclone", batch_size=1, num_workers=0
         )
         model = RegressionTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.predict(model=model, datamodule=datamodule)

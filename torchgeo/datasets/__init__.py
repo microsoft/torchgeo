@@ -35,7 +35,7 @@ from .enviroatlas import EnviroAtlas
 from .esri2020 import Esri2020
 from .etci2021 import ETCI2021
 from .eudem import EUDEM
-from .eurosat import EuroSAT
+from .eurosat import EuroSAT, EuroSAT100
 from .fair1m import FAIR1M
 from .forestdamage import ForestDamage
 from .gbif import GBIF
@@ -53,7 +53,7 @@ from .globbiomass import GlobBiomass
 from .idtrees import IDTReeS
 from .inaturalist import INaturalist
 from .inria import InriaAerialImageLabeling
-from .landcoverai import LandCoverAI
+from .landcoverai import LandCoverAI, LandCoverAIBase, LandCoverAIGeo
 from .landsat import (
     Landsat,
     Landsat1,
@@ -93,6 +93,13 @@ from .spacenet import (
     SpaceNet6,
     SpaceNet7,
 )
+from .splits import (
+    random_bbox_assignment,
+    random_bbox_splitting,
+    random_grid_cell_assignment,
+    roi_split,
+    time_series_split,
+)
 from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
@@ -131,6 +138,8 @@ __all__ = (
     "GBIF",
     "GlobBiomass",
     "INaturalist",
+    "LandCoverAIBase",
+    "LandCoverAIGeo",
     "Landsat",
     "Landsat1",
     "Landsat2",
@@ -161,6 +170,7 @@ __all__ = (
     "EnviroAtlas",
     "ETCI2021",
     "EuroSAT",
+    "EuroSAT100",
     "FAIR1M",
     "ForestDamage",
     "GID15",
@@ -209,4 +219,10 @@ __all__ = (
     "merge_samples",
     "stack_samples",
     "unbind_samples",
+    # Splits
+    "random_bbox_assignment",
+    "random_bbox_splitting",
+    "random_grid_cell_assignment",
+    "roi_split",
+    "time_series_split",
 )

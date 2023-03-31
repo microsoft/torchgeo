@@ -8,16 +8,18 @@ from typing import Any, Dict, Type, cast
 import pytest
 import timm
 import torch
+import torch.nn as nn
 import torchvision
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
+from lightning.pytorch import LightningDataModule, Trainer
 from omegaconf import OmegaConf
-from pytorch_lightning import LightningDataModule, Trainer
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import (
     BigEarthNetDataModule,
+    EuroSAT100DataModule,
     EuroSATDataModule,
     MisconfigurationException,
     RESISC45DataModule,
@@ -28,7 +30,22 @@ from torchgeo.datasets import BigEarthNet, EuroSAT
 from torchgeo.models import get_model_weights, list_models
 from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
 
-from .test_utils import ClassificationTestModel
+
+class ClassificationTestModel(Module):
+    def __init__(
+        self, in_chans: int = 3, num_classes: int = 1000, **kwargs: Any
+    ) -> None:
+        super().__init__()
+        self.conv1 = nn.Conv2d(in_channels=in_chans, out_channels=1, kernel_size=1)
+        self.pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(1, num_classes)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.conv1(x)
+        x = self.pool(x)
+        x = torch.flatten(x, 1)
+        x = self.fc(x)
+        return x
 
 
 class PredictClassificationDataModule(EuroSATDataModule):
@@ -59,6 +76,7 @@ class TestClassificationTask:
         "name,classname",
         [
             ("eurosat", EuroSATDataModule),
+            ("eurosat", EuroSAT100DataModule),
             ("resisc45", RESISC45DataModule),
             ("so2sat_all", So2SatDataModule),
             ("so2sat_s1", So2SatDataModule),
@@ -90,7 +108,12 @@ class TestClassificationTask:
         model = ClassificationTask(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.fit(model=model, datamodule=datamodule)
         try:
             trainer.test(model=model, datamodule=datamodule)
@@ -128,7 +151,10 @@ class TestClassificationTask:
             weights.meta["model"], in_chans=weights.meta["in_chans"]
         )
         torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights, "url", str(path))
+        try:
+            monkeypatch.setattr(weights.value, "url", str(path))
+        except AttributeError:
+            monkeypatch.setattr(weights, "url", str(path))
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
         return weights
 
@@ -187,7 +213,12 @@ class TestClassificationTask:
             root="tests/data/eurosat", batch_size=1, num_workers=0
         )
         model = ClassificationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.validate(model=model, datamodule=datamodule)
 
     def test_predict(self, model_kwargs: Dict[Any, Any], fast_dev_run: bool) -> None:
@@ -195,7 +226,12 @@ class TestClassificationTask:
             root="tests/data/eurosat", batch_size=1, num_workers=0
         )
         model = ClassificationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.predict(model=model, datamodule=datamodule)
 
 
@@ -229,7 +265,12 @@ class TestMultiLabelClassificationTask:
         model = MultiLabelClassificationTask(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.fit(model=model, datamodule=datamodule)
         try:
             trainer.test(model=model, datamodule=datamodule)
@@ -264,7 +305,12 @@ class TestMultiLabelClassificationTask:
             root="tests/data/bigearthnet", batch_size=1, num_workers=0
         )
         model = MultiLabelClassificationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.validate(model=model, datamodule=datamodule)
 
     def test_predict(self, model_kwargs: Dict[Any, Any], fast_dev_run: bool) -> None:
@@ -272,5 +318,10 @@ class TestMultiLabelClassificationTask:
             root="tests/data/bigearthnet", batch_size=1, num_workers=0
         )
         model = MultiLabelClassificationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.predict(model=model, datamodule=datamodule)

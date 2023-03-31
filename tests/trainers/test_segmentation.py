@@ -6,9 +6,11 @@ from typing import Any, Dict, Type, cast
 
 import pytest
 import segmentation_models_pytorch as smp
+import torch
+import torch.nn as nn
 from _pytest.monkeypatch import MonkeyPatch
+from lightning.pytorch import LightningDataModule, Trainer
 from omegaconf import OmegaConf
-from pytorch_lightning import LightningDataModule, Trainer
 from torch.nn.modules import Module
 
 from torchgeo.datamodules import (
@@ -29,7 +31,18 @@ from torchgeo.datamodules import (
 from torchgeo.datasets import LandCoverAI
 from torchgeo.trainers import SemanticSegmentationTask
 
-from .test_utils import SegmentationTestModel
+
+class SegmentationTestModel(Module):
+    def __init__(
+        self, in_channels: int = 3, classes: int = 1000, **kwargs: Any
+    ) -> None:
+        super().__init__()
+        self.conv1 = nn.Conv2d(
+            in_channels=in_channels, out_channels=classes, kernel_size=1, padding=0
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return cast(torch.Tensor, self.conv1(x))
 
 
 def create_model(**kwargs: Any) -> Module:
@@ -45,6 +58,7 @@ class TestSemanticSegmentationTask:
         "name,classname",
         [
             ("chesapeake_cvpr_5", ChesapeakeCVPRDataModule),
+            ("chesapeake_cvpr_7", ChesapeakeCVPRDataModule),
             ("deepglobelandcover", DeepGlobeLandCoverDataModule),
             ("etci2021", ETCI2021DataModule),
             ("gid15", GID15DataModule),
@@ -90,7 +104,12 @@ class TestSemanticSegmentationTask:
         model = SemanticSegmentationTask(**model_kwargs)
 
         # Instantiate trainer
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.fit(model=model, datamodule=datamodule)
         try:
             trainer.test(model=model, datamodule=datamodule)
@@ -147,5 +166,10 @@ class TestSemanticSegmentationTask:
             root="tests/data/sen12ms", batch_size=1, num_workers=0
         )
         model = SemanticSegmentationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=fast_dev_run, log_every_n_steps=1, max_epochs=1)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.validate(model=model, datamodule=datamodule)

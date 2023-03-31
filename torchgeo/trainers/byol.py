@@ -6,12 +6,12 @@
 import os
 from typing import Any, Dict, Optional, Tuple, cast
 
-import pytorch_lightning as pl
 import timm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from kornia import augmentation as K
+from lightning.pytorch import LightningModule
 from torch import Tensor, optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchvision.models._api import WeightsEnum
@@ -278,11 +278,11 @@ class BYOL(nn.Module):
             pt.data = self.beta * pt.data + (1 - self.beta) * p.data
 
 
-class BYOLTask(pl.LightningModule):
+class BYOLTask(LightningModule):  # type: ignore[misc]
     """Class for pre-training any PyTorch model using BYOL.
 
     Supports any available `Timm model
-    <https://rwightman.github.io/pytorch-image-models/>`_
+    <https://huggingface.co/docs/timm/index>`_
     as an architecture choice. To see a list of available pretrained
     models, you can do:
 
@@ -357,8 +357,7 @@ class BYOLTask(pl.LightningModule):
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+            learning rate dictionary.
         """
         optimizer_class = getattr(optim, self.hyperparams.get("optimizer", "Adam"))
         lr = self.hyperparams.get("learning_rate", 1e-4)
@@ -372,7 +371,7 @@ class BYOLTask(pl.LightningModule):
                     optimizer,
                     patience=self.hyperparams["learning_rate_schedule_patience"],
                 ),
-                "monitor": "val_loss",
+                "monitor": "train_loss",
             },
         }
 
@@ -387,12 +386,27 @@ class BYOLTask(pl.LightningModule):
         """
         batch = args[0]
         x = batch["image"]
-        with torch.no_grad():
-            x1, x2 = self.model.augment(x), self.model.augment(x)
 
-        pred1, pred2 = self(x1), self(x2)
+        in_channels = self.hyperparams["in_channels"]
+        assert x.size(1) == in_channels or x.size(1) == 2 * in_channels
+
+        if x.size(1) == in_channels:
+            x1 = x
+            x2 = x
+        else:
+            x1 = x[:, :in_channels]
+            x2 = x[:, in_channels:]
+
         with torch.no_grad():
-            targ1, targ2 = self.model.target(x1), self.model.target(x2)
+            x1 = self.model.augment(x1)
+            x2 = self.model.augment(x2)
+
+        pred1 = self(x1)
+        pred2 = self(x2)
+        with torch.no_grad():
+            targ1 = self.model.target(x1)
+            targ2 = self.model.target(x2)
+
         loss = torch.mean(normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1))
 
         self.log("train_loss", loss, on_step=True, on_epoch=False)
@@ -401,33 +415,10 @@ class BYOLTask(pl.LightningModule):
         return loss
 
     def validation_step(self, *args: Any, **kwargs: Any) -> None:
-        """Compute validation loss.
-
-        Args:
-            batch: the output of your DataLoader
-        """
-        batch = args[0]
-        x = batch["image"]
-        x1, x2 = self.model.augment(x), self.model.augment(x)
-        pred1, pred2 = self(x1), self(x2)
-        targ1, targ2 = self.model.target(x1), self.model.target(x2)
-        loss = torch.mean(normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1))
-
-        self.log("val_loss", loss, on_step=False, on_epoch=True)
-
-    def test_step(self, *args: Any, **kwargs: Any) -> Any:
         """No-op, does nothing."""
 
-    def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
-        """Compute and return the output embeddings of the image backbone.
+    def test_step(self, *args: Any, **kwargs: Any) -> None:
+        """No-op, does nothing."""
 
-        Args:
-            batch: the output of your DataLoader
-
-        Returns:
-            image embeddings
-        """
-        batch = args[0]
-        x = batch["image"]
-        self(x)
-        return self.model.backbone._embedding
+    def predict_step(self, *args: Any, **kwargs: Any) -> None:
+        """No-op, does nothing."""

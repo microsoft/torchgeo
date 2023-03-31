@@ -7,10 +7,10 @@ import os
 from typing import Any, Dict, cast
 
 import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 import timm
 import torch
 import torch.nn as nn
+from lightning.pytorch import LightningModule
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -29,11 +29,11 @@ from ..models import get_weight
 from . import utils
 
 
-class ClassificationTask(pl.LightningModule):
+class ClassificationTask(LightningModule):  # type: ignore[misc]
     """LightningModule for image classification.
 
     Supports any available `Timm model
-    <https://rwightman.github.io/pytorch-image-models/>`_
+    <https://huggingface.co/docs/timm/index>`_
     as an architecture choice. To see a list of available
     models, you can do:
 
@@ -159,12 +159,8 @@ class ClassificationTask(pl.LightningModule):
 
         return cast(Tensor, loss)
 
-    def training_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch-level training metrics.
-
-        Args:
-            outputs: list of items returned by training_step
-        """
+    def on_train_epoch_end(self) -> None:
+        """Logs epoch-level training metrics."""
         self.log_dict(self.train_metrics.compute())
         self.train_metrics.reset()
 
@@ -192,6 +188,7 @@ class ClassificationTask(pl.LightningModule):
             and hasattr(self.trainer, "datamodule")
             and self.logger
             and hasattr(self.logger, "experiment")
+            and hasattr(self.logger.experiment, "add_figure")
         ):
             try:
                 datamodule = self.trainer.datamodule
@@ -208,12 +205,8 @@ class ClassificationTask(pl.LightningModule):
             except ValueError:
                 pass
 
-    def validation_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level validation metrics.
-
-        Args:
-            outputs: list of items returned by validation_step
-        """
+    def on_validation_epoch_end(self) -> None:
+        """Logs epoch level validation metrics."""
         self.log_dict(self.val_metrics.compute())
         self.val_metrics.reset()
 
@@ -235,12 +228,8 @@ class ClassificationTask(pl.LightningModule):
         self.log("test_loss", loss, on_step=False, on_epoch=True)
         self.test_metrics(y_hat_hard, y)
 
-    def test_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level test metrics.
-
-        Args:
-            outputs: list of items returned by test_step
-        """
+    def on_test_epoch_end(self) -> None:
+        """Logs epoch level test metrics."""
         self.log_dict(self.test_metrics.compute())
         self.test_metrics.reset()
 
@@ -262,8 +251,7 @@ class ClassificationTask(pl.LightningModule):
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+            learning rate dictionary
         """
         optimizer = torch.optim.AdamW(
             self.model.parameters(), lr=self.hyperparams["learning_rate"]
@@ -376,6 +364,7 @@ class MultiLabelClassificationTask(ClassificationTask):
             and hasattr(self.trainer, "datamodule")
             and self.logger
             and hasattr(self.logger, "experiment")
+            and hasattr(self.logger.experiment, "add_figure")
         ):
             try:
                 datamodule = self.trainer.datamodule

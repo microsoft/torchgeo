@@ -6,10 +6,10 @@ repos:
             args: [--py38-plus]
 
     -   repo: https://github.com/pycqa/isort
-        rev: 5.11.4
+        rev: 5.12.0
         hooks:
         -    id: isort
-             additional_dependencies: ["colorama>=0.4.3"]
+             additional_dependencies: ['.[colors]']
 
     -   repo: https://github.com/psf/black
         rev: 23.1.0
@@ -23,16 +23,16 @@ repos:
         -   id: flake8
 
     -   repo: https://github.com/pycqa/pydocstyle
-        rev: 6.1.1
+        rev: 6.3.0
         hooks:
         -   id: pydocstyle
             exclude: (tests|docs|experiments)
-            additional_dependencies: ["toml"]
+            additional_dependencies: ['.[toml]']
 
     -   repo: https://github.com/pre-commit/mirrors-mypy
-        rev: v1.0.0
+        rev: v1.0.1
         hooks:
         -   id: mypy
             args: [--strict, --ignore-missing-imports, --show-error-codes]
-            additional_dependencies: [torch>=1.13, torchmetrics>=0.10, pytorch-lightning>=1.7, pytest>=6, pyvista>=0.20, omegaconf>=2.1, kornia>=0.6, numpy>=1.22.0]
+            additional_dependencies: [torch>=2, torchmetrics>=0.10, lightning>=1.8, pytest>=6, pyvista>=0.20, omegaconf>=2.1, kornia>=0.6, numpy>=1.22.0]
             exclude: (build|data|dist|logo|logs|output)/

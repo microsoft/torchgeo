@@ -14,7 +14,7 @@ from torch.nn.modules import Conv2d, Module
 
 
 def extract_backbone(path: str) -> Tuple[str, "OrderedDict[str, Tensor]"]:
-    """Extracts a backbone from a pytorch lightning checkpoint file.
+    """Extracts a backbone from a lightning checkpoint file.
 
     Args:
         path: path to checkpoint file (.ckpt)

@@ -31,7 +31,7 @@ class EUDEM(RasterDataset):
     * vertical accuracy of +/- 7 m RMSE
     * data fused from `ASTER GDEM
       <https://lpdaac.usgs.gov/news/nasa-and-meti-release-aster-global-dem-version-3/>`_,
-      `SRTM <https://www2.jpl.nasa.gov/srtm/>`_ and Russian topomaps
+      `SRTM <https://science.jpl.nasa.gov/projects/srtm/>`_ and Russian topomaps
 
     Dataset format:
 

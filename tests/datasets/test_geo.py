@@ -52,6 +52,7 @@ class CustomVectorDataset(VectorDataset):
 
 class CustomSentinelDataset(Sentinel2):
     all_bands: List[str] = []
+    separate_files = False
 
 
 class CustomNonGeoDataset(NonGeoDataset):
@@ -214,7 +215,7 @@ class TestRasterDataset:
         with pytest.raises(FileNotFoundError, match="No RasterDataset data was found"):
             RasterDataset(str(tmp_path))
 
-    def test_no_allbands(self) -> None:
+    def test_no_all_bands(self) -> None:
         root = os.path.join("tests", "data", "sentinel2")
         bands = ["B04", "B03", "B02"]
         transforms = nn.Identity()
@@ -404,10 +405,20 @@ class TestIntersectionDataset:
             IntersectionDataset(ds1, ds2)  # type: ignore[arg-type]
 
     def test_different_crs(self) -> None:
-        ds1 = CustomGeoDataset(crs=CRS.from_epsg(3005))
-        ds2 = CustomGeoDataset(crs=CRS.from_epsg(32616))
+        ds1 = CustomGeoDataset(BoundingBox(0, 1, 0, 1, 0, 1), crs=CRS.from_epsg(3005))
+        ds2 = CustomGeoDataset(
+            BoundingBox(
+                -3547229.913123814,
+                6360089.518213182,
+                -3547229.913123814,
+                6360089.518213182,
+                -3547229.913123814,
+                6360089.518213182,
+            ),
+            crs=CRS.from_epsg(32616),
+        )
         ds = IntersectionDataset(ds1, ds2)
-        assert len(ds) == 0
+        assert len(ds) == 1
 
     def test_different_res(self) -> None:
         ds1 = CustomGeoDataset(res=1)
@@ -418,8 +429,9 @@ class TestIntersectionDataset:
     def test_no_overlap(self) -> None:
         ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
         ds2 = CustomGeoDataset(BoundingBox(6, 7, 8, 9, 10, 11))
-        ds = IntersectionDataset(ds1, ds2)
-        assert len(ds) == 0
+        msg = "Datasets have no spatiotemporal intersection"
+        with pytest.raises(RuntimeError, match=msg):
+            IntersectionDataset(ds1, ds2)
 
     def test_invalid_query(self, dataset: IntersectionDataset) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

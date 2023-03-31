@@ -7,13 +7,13 @@ from functools import partial
 from typing import Any, Dict, List, cast
 
 import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 import torch
+import torchvision.models.detection
+from lightning.pytorch import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models import resnet as R
-from torchvision.models.detection import FCOS, FasterRCNN, RetinaNet
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from torchvision.models.detection.retinanet import RetinaNetHead
 from torchvision.models.detection.rpn import AnchorGenerator
@@ -46,7 +46,7 @@ BACKBONE_WEIGHT_MAP = {
 }
 
 
-class ObjectDetectionTask(pl.LightningModule):
+class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
     """LightningModule for object detection of images.
 
     Currently, supports Faster R-CNN, FCOS, and RetinaNet models from
@@ -95,7 +95,7 @@ class ObjectDetectionTask(pl.LightningModule):
             roi_pooler = MultiScaleRoIAlign(
                 featmap_names=["0", "1", "2", "3"], output_size=7, sampling_ratio=2
             )
-            self.model = FasterRCNN(
+            self.model = torchvision.models.detection.FasterRCNN(
                 backbone,
                 num_classes,
                 rpn_anchor_generator=anchor_generator,
@@ -113,8 +113,9 @@ class ObjectDetectionTask(pl.LightningModule):
                 aspect_ratios=((1.0,), (1.0,), (1.0,), (1.0,), (1.0,), (1.0,)),
             )
 
-            self.model = FCOS(backbone, num_classes, anchor_generator=anchor_generator)
-
+            self.model = torchvision.models.detection.FCOS(
+                backbone, num_classes, anchor_generator=anchor_generator
+            )
         elif self.hyperparams["model"] == "retinanet":
             kwargs["extra_blocks"] = feature_pyramid_network.LastLevelP6P7(
                 latent_dim, 256
@@ -139,7 +140,7 @@ class ObjectDetectionTask(pl.LightningModule):
                 norm_layer=partial(torch.nn.GroupNorm, 32),
             )
 
-            self.model = RetinaNet(
+            self.model = torchvision.models.detection.RetinaNet(
                 backbone, num_classes, anchor_generator=anchor_generator, head=head
             )
         else:
@@ -230,6 +231,7 @@ class ObjectDetectionTask(pl.LightningModule):
             and hasattr(self.trainer, "datamodule")
             and self.logger
             and hasattr(self.logger, "experiment")
+            and hasattr(self.logger.experiment, "add_figure")
         ):
             try:
                 datamodule = self.trainer.datamodule
@@ -251,12 +253,8 @@ class ObjectDetectionTask(pl.LightningModule):
             except ValueError:
                 pass
 
-    def validation_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level validation metrics.
-
-        Args:
-            outputs: list of items returned by validation_step
-        """
+    def on_validation_epoch_end(self) -> None:
+        """Logs epoch level validation metrics."""
         metrics = self.val_metrics.compute()
         renamed_metrics = {f"val_{i}": metrics[i] for i in metrics.keys()}
         self.log_dict(renamed_metrics)
@@ -279,12 +277,8 @@ class ObjectDetectionTask(pl.LightningModule):
 
         self.test_metrics.update(y_hat, y)
 
-    def test_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level test metrics.
-
-        Args:
-            outputs: list of items returned by test_step
-        """
+    def on_test_epoch_end(self) -> None:
+        """Logs epoch level test metrics."""
         metrics = self.test_metrics.compute()
         renamed_metrics = {f"test_{i}": metrics[i] for i in metrics.keys()}
         self.log_dict(renamed_metrics)
@@ -308,8 +302,7 @@ class ObjectDetectionTask(pl.LightningModule):
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+            learning rate dictionary
         """
         optimizer = torch.optim.Adam(
             self.model.parameters(), lr=self.hyperparams["learning_rate"]

@@ -14,13 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.3.0
+      uses: actions/checkout@v3.5.0
     - name: Set up python
       uses: actions/setup-python@v4.5.0
       with:
         python-version: '3.10'
     - name: Cache dependencies
-      uses: actions/cache@v3.2.5
+      uses: actions/cache@v3.3.1
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -37,13 +37,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.3.0
+      uses: actions/checkout@v3.5.0
     - name: Set up python
       uses: actions/setup-python@v4.5.0
       with:
         python-version: '3.10'
     - name: Cache dependencies
-      uses: actions/cache@v3.2.5
+      uses: actions/cache@v3.3.1
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -60,13 +60,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.3.0
+      uses: actions/checkout@v3.5.0
     - name: Set up python
       uses: actions/setup-python@v4.5.0
       with:
         python-version: '3.10'
     - name: Cache dependencies
-      uses: actions/cache@v3.2.5
+      uses: actions/cache@v3.3.1
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -83,13 +83,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.3.0
+      uses: actions/checkout@v3.5.0
     - name: Set up python
       uses: actions/setup-python@v4.5.0
       with:
         python-version: '3.10'
     - name: Cache dependencies
-      uses: actions/cache@v3.2.5
+      uses: actions/cache@v3.3.1
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -106,13 +106,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.3.0
+      uses: actions/checkout@v3.5.0
     - name: Set up python
       uses: actions/setup-python@v4.5.0
       with:
         python-version: '3.10'
     - name: Cache dependencies
-      uses: actions/cache@v3.2.5
+      uses: actions/cache@v3.3.1
       id: cache
       with:
         path: ${{ env.pythonLocation }}

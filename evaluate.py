@@ -10,7 +10,7 @@ import csv
 import os
 from typing import Any, Dict, Union, cast
 
-import pytorch_lightning as pl
+import lightning.pytorch as pl
 import torch
 from torchmetrics import MetricCollection
 from torchmetrics.classification import BinaryAccuracy, BinaryJaccardIndex
@@ -119,7 +119,7 @@ def run_eval_loop(
                 }
                 for i in range(len(batch["image"]))
             ]
-        with torch.inference_mode():  # type: ignore[no-untyped-call]
+        with torch.inference_mode():
             y_pred = model(x)
         metrics(y_pred, y)
     results = metrics.compute()
@@ -146,7 +146,7 @@ def main(args: argparse.Namespace) -> None:
     model.freeze()
     model.eval()
 
-    dm = DATAMODULE(  # type: ignore[call-arg]
+    dm = DATAMODULE(
         seed=args.seed,
         root=args.root,
         num_workers=args.num_workers,
