@@ -80,7 +80,7 @@ RGB_BANDS = ["B4", "B3", "B2"]
 ALL_BANDS_GRD = ["VV", "VH"]
 
 
-""" samplers to get locations of interest points"""
+""" samplers to get locations of interest points """
 
 
 class UniformSampler:
@@ -296,12 +296,9 @@ def get_patch_s1(
     collection: ee.ImageCollection,
     center_coord: List[float],
     radius: float,
-    bands: Optional[List[str]] = None,
+    bands: List[str],
     crop: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    if bands is None:
-        bands = RGB_BANDS
-
     image = collection.sort("system:time_start", False).first()  # get most recent
     region = (
         ee.Geometry.Point(center_coord).buffer(radius).bounds()
