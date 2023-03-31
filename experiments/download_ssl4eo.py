@@ -1,12 +1,13 @@
-""" Sample and download Satellite tiles with Google Earth Engine
+""" Sample and download Sentinel-1/2 images with Google Earth Engine
 
 #### run the script:
-### resample new ids with grid overlap search
+### resample new ids with rtree/grid overlap search
 python download_ssl4eo.py \
     --save_path ./data \
     --num_workers 8 \
     --cloud_pct 20 \
     --log_freq 100 \
+    --overlap_check rtree \
     --indices_range 0 250000
 
 ### resume from interruption
@@ -15,6 +16,7 @@ python download_ssl4eo.py \
     --num_workers 8 \
     --cloud_pct 20 \
     --log_freq 100 \
+    --overlap_check rtree \
     --resume ./data/checked_locations.csv \
     --indices_range 0 250000
 
@@ -38,6 +40,7 @@ import rasterio
 import shapefile
 import urllib3
 from rasterio.transform import Affine
+from rtree import index
 from shapely.geometry import Point, shape
 from torchvision.datasets.utils import download_and_extract_archive
 from tqdm import tqdm
@@ -377,6 +380,95 @@ def get_patch_s2(
     )
 
 
+def get_random_patches_rtree(
+    idx: int,
+    collections: Dict[str, Any],
+    bands: Dict[str, Any],
+    crops: Dict[str, Any],
+    sampler: GaussianSampler,
+    dates: List[Any],
+    radius: int,
+    debug: bool = False,
+    rtree_obj: index.Index = None,
+) -> Tuple[
+    List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]], List[float]
+]:
+    # (lon,lat) of top-10000 cities
+    coords = sampler.sample_point()
+
+    # avoid strong overlap
+    try:
+        new_coord = (coords[0], coords[1])
+        for i in rtree_obj.nearest(new_coord, objects=True):
+            distance = np.sqrt(
+                sampler.deg2km(abs(new_coord[0] - i.bbox[2])) ** 2
+                + sampler.deg2km(abs(new_coord[1] - i.bbox[3])) ** 2
+            )
+            if distance < (1.5 * radius / 1000):
+                raise OverlapError
+        rtree_obj.insert(
+            len(rtree_obj) - 1, (new_coord[0], new_coord[1], new_coord[0], new_coord[1])
+        )
+
+    except OverlapError:
+        patches_s1, patches_s2c, patches_s2a, center_coord = get_random_patches_rtree(
+            idx, collections, bands, crops, sampler, dates, radius, debug, rtree_obj
+        )
+
+    # random +- 15 days of random days within 1 year from the reference dates
+    delta = timedelta(days=np.random.randint(365))
+    periods = [get_period(date - delta, days=30) for date in dates]
+
+    collection_s1 = collections["s1_grd"]
+    collection_s2c = collections["s2_l1c"]
+    collection_s2a = collections["s2_l2a"]
+
+    bands_s1 = bands["s1_grd"]
+    bands_s2c = bands["s2_l1c"]
+    bands_s2a = bands["s2_l2a"]
+
+    crop_s1 = crops["s1_grd"]
+    crop_s2c = crops["s2_l1c"]
+    crop_s2a = crops["s2_l2a"]
+
+    try:
+        filtered_collections_s2c = [
+            filter_collection(collection_s2c, coords, p) for p in periods
+        ]
+        patches_s2c = [
+            get_patch_s2(c, coords, radius, bands=bands_s2c, crop=crop_s2c)
+            for c in filtered_collections_s2c
+        ]
+        filtered_collections_s2a = [
+            filter_collection(collection_s2a, coords, p) for p in periods
+        ]
+        patches_s2a = [
+            get_patch_s2(c, coords, radius, bands=bands_s2a, crop=crop_s2a)
+            for c in filtered_collections_s2a
+        ]
+        filtered_collections_s1 = [
+            filter_collection_s1(collection_s1, coords, p) for p in periods
+        ]
+        patches_s1 = [
+            get_patch_s1(c, coords, radius, bands=bands_s1, crop=crop_s1)
+            for c in filtered_collections_s1
+        ]
+
+        center_coord = coords
+
+    except (ee.EEException, urllib3.exceptions.HTTPError) as e:
+        if debug:
+            print(e)
+        rtree_obj.insert(
+            len(rtree_obj) - 1, (new_coord[0], new_coord[1], new_coord[0], new_coord[1])
+        )  # prevent from sampling an old coord that doesn't fit the collection
+        patches_s1, patches_s2c, patches_s2a, center_coord = get_random_patches_rtree(
+            idx, collections, bands, crops, sampler, dates, radius, debug, rtree_obj
+        )
+
+    return patches_s1, patches_s2c, patches_s2a, center_coord
+
+
 def get_random_patches_grid(
     idx: int,
     collections: Dict[str, Any],
@@ -412,7 +504,7 @@ def get_random_patches_grid(
 
     except OverlapError:
         patches_s1, patches_s2c, patches_s2a, center_coord = get_random_patches_grid(
-            idx, collections, bands, crops, sampler, dates, radius, debug
+            idx, collections, bands, crops, sampler, dates, radius, debug, grid_dict
         )
 
     # random +- 15 days of random days within 1 year from the reference dates
@@ -460,7 +552,7 @@ def get_random_patches_grid(
         if debug:
             print(e)
         patches_s1, patches_s2c, patches_s2a, center_coord = get_random_patches_grid(
-            idx, collections, bands, crops, sampler, dates, radius, debug
+            idx, collections, bands, crops, sampler, dates, radius, debug, grid_dict
         )
 
     return patches_s1, patches_s2c, patches_s2a, center_coord
@@ -494,7 +586,6 @@ def save_patch(
     coords: List[List[float]],
     metadata: Dict[str, Any],
     path: str,
-    preview: bool = False,
 ) -> None:
     patch_id = metadata["properties"]["system:index"]
     patch_path = os.path.join(path, patch_id)
@@ -534,10 +625,12 @@ if __name__ == "__main__":
     parser.add_argument("--cloud_pct", type=int, default=20)
     parser.add_argument("--num_workers", type=int, default=8)
     parser.add_argument("--log_freq", type=int, default=10)  # print frequency
-    parser.add_argument("--preview", action="store_true")
     parser.add_argument(
         "--resume", type=str, default=None
     )  # resume from existing coordinates
+    parser.add_argument(
+        "--overlap_check", type=str, default="rtree", choices=["grid", "rtree", None]
+    )  # overlap check method
     parser.add_argument(
         "--indices_range", type=int, nargs=2, default=[0, 250000]
     )  # range of download indices --> number of locations
@@ -629,15 +722,21 @@ if __name__ == "__main__":
 
     # build the grid from existing coordinates
     grid_dict: Dict[Tuple[int, int], Any] = {}
+    rtree_coords = index.Index()
     if args.resume:
         print("Load existing locations.")
         for i, key in enumerate(tqdm(ext_coords.keys())):
             c = ext_coords[key]
-            gridIndex = (math.floor(c[0] + 180), math.floor(c[1] + 90))
-            if gridIndex not in grid_dict.keys():
-                grid_dict[gridIndex] = {c}
+            if args.overlap_check == "rtree":
+                rtree_coords.insert(i, (c[0], c[1], c[0], c[1]))
+            elif args.overlap_check == "grid":
+                gridIndex = (math.floor(c[0] + 180), math.floor(c[1] + 90))
+                if gridIndex not in grid_dict.keys():
+                    grid_dict[gridIndex] = {c}
+                else:
+                    grid_dict[gridIndex].add(c)
             else:
-                grid_dict[gridIndex].add(c)
+                raise NotImplementedError
 
     start_time = time.time()
     counter = Counter()
@@ -646,18 +745,40 @@ if __name__ == "__main__":
         if str(idx) in ext_coords.keys():
             if ext_flags[str(idx)] != 0:  # only skip downloaded ids
                 return
-
-        patches_s1, patches_s2c, patches_s2a, center_coord = get_random_patches_grid(
-            idx,
-            collections,
-            bands,
-            crops,
-            sampler,
-            dates,
-            radius=radius,
-            debug=args.debug,
-            grid_dict=grid_dict,
-        )
+        if args.overlap_check == "rtree":
+            (
+                patches_s1,
+                patches_s2c,
+                patches_s2a,
+                center_coord,
+            ) = get_random_patches_rtree(
+                idx,
+                collections,
+                bands,
+                crops,
+                sampler,
+                dates,
+                radius=radius,
+                debug=args.debug,
+                rtree_obj=rtree_coords,
+            )
+        elif args.overlap_check == "grid":
+            (
+                patches_s1,
+                patches_s2c,
+                patches_s2a,
+                center_coord,
+            ) = get_random_patches_grid(
+                idx,
+                collections,
+                bands,
+                crops,
+                sampler,
+                dates,
+                radius=radius,
+                debug=args.debug,
+                grid_dict=grid_dict,
+            )
 
         if patches_s2c is not None:
             if args.save_path is not None:
@@ -670,7 +791,6 @@ if __name__ == "__main__":
                         coords=patch["coords"],
                         metadata=patch["metadata"],
                         path=location_path_s2c,
-                        preview=args.preview,
                     )
                 # s2a
                 location_path_s2a = os.path.join(args.save_path, "s2a", f"{idx:06d}")
@@ -681,7 +801,6 @@ if __name__ == "__main__":
                         coords=patch["coords"],
                         metadata=patch["metadata"],
                         path=location_path_s2a,
-                        preview=args.preview,
                     )
                 # s1
                 location_path_s1 = os.path.join(args.save_path, "s1", f"{idx:06d}")
@@ -692,7 +811,6 @@ if __name__ == "__main__":
                         coords=patch["coords"],
                         metadata=patch["metadata"],
                         path=location_path_s1,
-                        preview=args.preview,
                     )
 
             count = counter.update(1)
