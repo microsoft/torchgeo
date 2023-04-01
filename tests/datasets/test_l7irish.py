@@ -127,7 +127,6 @@ class TestL7Irish:
 
 # make new file for test l7irish in test directory
 # don't need params
-# replace Landsat8 with l7irish
 # monkeypatch: make fake data and checksums and use it for testing
 # create fake data: /tests/data/ to see example, be careful about different resolutions,
 # black

@@ -78,7 +78,6 @@ class L7Irish(RasterDataset):
         255: (255, 255, 255),
     }
 
-    # from adam: I don't think you need this as a separate variable, it isn't specific to this dataset
     tarfile_glob = "*.tar.gz"
     filename_glob = "L*.TIF"
 
@@ -134,10 +133,10 @@ class L7Irish(RasterDataset):
         # Check if the extracted files already exist
         pathname = os.path.join(self.root, "**", self.filename_glob)
         for fname in glob.iglob(pathname, recursive=True):
-            if not fname.endswith(".zip"):
+            if not fname.endswith(".tar.gz"):
                 return
 
-        # Check if the zip files have already been downloaded
+        # Check if the tar files have already been downloaded
         pathname = os.path.join(self.root, self.tarfile_glob)
         if glob.glob(pathname):
             self._extract()
@@ -167,7 +166,6 @@ class L7Irish(RasterDataset):
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)
     
-    # from LandcoverAIGeo __getitem__
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
@@ -184,19 +182,6 @@ class L7Irish(RasterDataset):
         img_filepaths = cast(List[str], [hit.object for hit in hits])
         mask_filepaths = [path.replace(path.split("/")[-1], path.split("/")[-2]+"_mask2019.TIF") for path in img_filepaths]
         
-        # my testing
-        # path = "/Users/yc/Downloads/austral/p74_r92/L71074092_09220011103_B10.TIF"
-        # dir_name, img_name = path.split("/")[-2:]  # ex: dir_name = p74_r92 and img_name = L71074092_09220011103_B10.TIF
-        # mask_path = path.replace(img, dir_name+"_mask2019.TIF")
-        # mask = "/Users/yc/Downloads/austral/p74_r92/p74_r92_mask2019.TIF"
-        
-        # "/Users/yc/Downloads/austral/p228_r97/L72228097_09720011126_B70.TIF"
-        # "/Users/yc/Downloads/austral/p228_r97/p228_r97_mask2019.TIF"
-        
-        # "/Users/yc/Downloads/austral/p231_r93_3/L71231093_09320010811_B10.TIF"
-        # "/Users/yc/Downloads/austral/p231_r93_3/p231_r93_3_mask2019.TIF"
-
-
         if not img_filepaths:
             raise IndexError(
                 f"query: {query} not found in index with bounds: {self.bounds}"
