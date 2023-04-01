@@ -55,6 +55,7 @@ ROOT = f"../../../../BC/{barren_prefix}"
 FILENAME = f"{barren_prefix}_B1.TIF"
 src = rasterio.open(os.path.join(ROOT, FILENAME))
 
+
 profile = {
     "driver": src.driver,
     "dtype": src.read().dtype,
@@ -65,7 +66,24 @@ profile = {
     "transform": src.transform,
 }
 
+print(profile)
 def create_file(path: str) -> None:
+    profile = {
+        'driver': 'GTiff', 
+        'dtype': 'uint16', 
+        'width': SIZE, 
+        'height': SIZE, 
+        'count': 1, 
+        'crs': CRS.from_epsg(32615), 
+        'transform': Affine(
+            30.0,    
+            0.0, 
+            339885.0,
+            0.0, 
+            -30.0, 
+            8286915.0
+        )
+    }
     
     if path.endswith("B8.TIF"):
         profile["width"] = profile["height"] = SIZE * 2
