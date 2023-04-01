@@ -396,7 +396,7 @@ def get_random_patches_rtree(
     # avoid strong overlap
     try:
         new_coord = (coords[0], coords[1])
-        for i in rtree_obj.nearest(new_coord, objects=True):
+        for i in rtree_obj.nearest(new_coord, num_results=1, objects=True):
             distance = np.sqrt(
                 sampler.deg2km(abs(new_coord[0] - i.bbox[2])) ** 2
                 + sampler.deg2km(abs(new_coord[1] - i.bbox[3])) ** 2
