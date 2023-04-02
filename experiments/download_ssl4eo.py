@@ -387,27 +387,22 @@ def get_random_patches_rtree(
 ) -> Tuple[
     List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]], List[float]
 ]:
-    # (lon,lat) of top-10000 cities
-    coords = sampler.sample_point()
-
-    # avoid strong overlap
-    try:
-        new_coord = (coords[0], coords[1])
-        for i in rtree_obj.nearest(new_coord, num_results=1, objects=True):
-            distance = np.sqrt(
-                sampler.deg2km(abs(new_coord[0] - i.bbox[2])) ** 2
-                + sampler.deg2km(abs(new_coord[1] - i.bbox[3])) ** 2
-            )
-            if distance < (1.5 * radius / 1000):
-                raise OverlapError
-        rtree_obj.insert(
-            len(rtree_obj) - 1, (new_coord[0], new_coord[1], new_coord[0], new_coord[1])
+    # sample new coord without strong overlap with existing coords
+    count = 0
+    bbox_radius = (1 - 0.25) * radius / 1000
+    while count < 1:
+        new_coord = sampler.sample_point()  # (lon,lat) of top-10000 cities
+        bbox = (
+            new_coord[0] - sampler.km2deg(bbox_radius),
+            new_coord[1] - sampler.km2deg(bbox_radius),
+            new_coord[0] + sampler.km2deg(bbox_radius),
+            new_coord[1] + sampler.km2deg(bbox_radius),
         )
-
-    except OverlapError:
-        patches_s1, patches_s2c, patches_s2a, center_coord = get_random_patches_rtree(
-            idx, collections, bands, crops, sampler, dates, radius, debug, rtree_obj
-        )
+        if list(rtree_obj.intersection(bbox)):
+            continue
+        rtree_obj.insert(idx, bbox)
+        count += 1
+        coords = [new_coord[0], new_coord[1]]
 
     # random +- 15 days of random days within 1 year from the reference dates
     delta = timedelta(days=np.random.randint(365))
@@ -453,9 +448,6 @@ def get_random_patches_rtree(
     except (ee.EEException, urllib3.exceptions.HTTPError) as e:
         if debug:
             print(e)
-        rtree_obj.insert(
-            len(rtree_obj) - 1, (new_coord[0], new_coord[1], new_coord[0], new_coord[1])
-        )  # prevent from sampling an old coord that doesn't fit the collection
         patches_s1, patches_s2c, patches_s2a, center_coord = get_random_patches_rtree(
             idx, collections, bands, crops, sampler, dates, radius, debug, rtree_obj
         )
@@ -624,11 +616,22 @@ if __name__ == "__main__":
 
     # build the rtree from existing coordinates
     rtree_coords = index.Index()
+    bbox_radius = (
+        (1 - 0.25) * radius / 1000
+    )  # allow maximum 25% overlap between adjacent patches
     if args.resume:
         print("Load existing locations.")
         for i, key in enumerate(tqdm(ext_coords.keys())):
             c = ext_coords[key]
-            rtree_coords.insert(i, (c[0], c[1], c[0], c[1]))
+            rtree_coords.insert(
+                i,
+                (
+                    c[0] - sampler.km2deg(bbox_radius),
+                    c[1] - sampler.km2deg(bbox_radius),
+                    c[0] + sampler.km2deg(bbox_radius),
+                    c[1] + sampler.km2deg(bbox_radius),
+                ),
+            )
 
     start_time = time.time()
     counter = Counter()
