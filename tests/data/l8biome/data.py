@@ -51,22 +51,6 @@ for band in bands:
     filenames["barren"][barren_prefix].append(f'{barren_prefix}_{band}')
     filenames["forest"][forest_prefix].append(f'{forest_prefix}_{band}')
 
-ROOT = f"../../../../BC/{barren_prefix}"
-FILENAME = f"{barren_prefix}_B1.TIF"
-src = rasterio.open(os.path.join(ROOT, FILENAME))
-
-
-profile = {
-    "driver": src.driver,
-    "dtype": src.read().dtype,
-    "width": SIZE,
-    "height": SIZE,
-    "count": 1,
-    "crs": src.crs,
-    "transform": src.transform,
-}
-
-print(profile)
 def create_file(path: str) -> None:
     profile = {
         'driver': 'GTiff', 

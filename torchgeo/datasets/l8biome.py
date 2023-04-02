@@ -6,12 +6,19 @@
 import glob
 import os
 from typing import Any, Callable, Dict, List, Optional, cast
+import re
 
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
 from .utils import BoundingBox, download_url, extract_archive
-
+from matplotlib.colors import ListedColormap
+from PIL import Image
+from rasterio.crs import CRS
+from torch import Tensor
+from torch.utils.data import Dataset
+import matplotlib.pyplot as plt
+import numpy as np
 
 class L8Biome(RasterDataset):
     r"""L8 Biome datasets.
@@ -154,7 +161,12 @@ class L8Biome(RasterDataset):
         """
         hits = self.index.intersection(tuple(query), objects=True)
         img_filepaths = cast(List[str], [hit.object for hit in hits])
-        mask_filepaths = [path.replace("images", "masks") for path in img_filepaths]
+        mask_filepaths = []
+
+        for path in img_filepaths:
+            mask_file_path = re.sub("B[1-9][0-9]*\.TIF", "fixedmask.img", path)
+            print(mask_file_path)
+            mask_filepaths.append(mask_file_path)
 
         if not img_filepaths:
             raise IndexError(
@@ -178,48 +190,48 @@ class L8Biome(RasterDataset):
     # Plotting code added as placeholder for now till I get it working.
     # Using LandCoverAI plotting as reference.
 
-    # def plot(
-    #     self,
-    #     sample: Dict[str, Tensor],
-    #     show_titles: bool = True,
-    #     suptitle: Optional[str] = None,
-    # ) -> plt.Figure:
-    #     """Plot a sample from the dataset.
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
 
-    #     Args:
-    #         sample: a sample returned by :meth:`__getitem__`
-    #         show_titles: flag indicating whether to show titles above each panel
-    #         suptitle: optional string to use as a suptitle
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
 
-    #     Returns:
-    #         a matplotlib Figure with the rendered sample
-    #     """
-    #     image = np.rollaxis(sample["image"].numpy().astype("uint8").squeeze(), 0, 3)
-    #     mask = sample["mask"].numpy().astype("uint8").squeeze()
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        image = np.rollaxis(sample["image"].numpy().astype("uint8").squeeze(), 0, 3)
+        mask = sample["mask"].numpy().astype("uint8").squeeze()
 
-    #     num_panels = 2
-    #     showing_predictions = "prediction" in sample
-    #     if showing_predictions:
-    #         predictions = sample["prediction"].numpy()
-    #         num_panels += 1
+        num_panels = 2
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            predictions = sample["prediction"].numpy()
+            num_panels += 1
 
-    #     fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
-    #     axs[0].imshow(image)
-    #     axs[0].axis("off")
-    #     axs[1].imshow(mask, vmin=0, vmax=4, cmap=self.cmap, interpolation="none")
-    #     axs[1].axis("off")
-    #     if show_titles:
-    #         axs[0].set_title("Image")
-    #         axs[1].set_title("Mask")
+        fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
+        axs[0].imshow(image)
+        axs[0].axis("off")
+        axs[1].imshow(mask, vmin=0, vmax=4, cmap=self.cmap, interpolation="none")
+        axs[1].axis("off")
+        if show_titles:
+            axs[0].set_title("Image")
+            axs[1].set_title("Mask")
 
-    #     if showing_predictions:
-    #         axs[2].imshow(
-    #             predictions, vmin=0, vmax=4, cmap=self.cmap, interpolation="none"
-    #         )
-    #         axs[2].axis("off")
-    #         if show_titles:
-    #             axs[2].set_title("Predictions")
+        if showing_predictions:
+            axs[2].imshow(
+                predictions, vmin=0, vmax=4, cmap=self.cmap, interpolation="none"
+            )
+            axs[2].axis("off")
+            if show_titles:
+                axs[2].set_title("Predictions")
 
-    #     if suptitle is not None:
-    #         plt.suptitle(suptitle)
-    #     return fig
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig
