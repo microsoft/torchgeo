@@ -1,7 +1,16 @@
 """ Sample and download Sentinel-1/2 images with Google Earth Engine
 
 #### run the script:
-### resample new ids with rtree overlap search
+### (op1) match and download pre-sampled locations
+python download_ssl4eo.py \
+    --save_path ./data \
+    --num_workers 8 \
+    --cloud_pct 20 \
+    --log_freq 100 \
+    --match_file ./data/sampled_locations.csv \
+    --indices_range 0 250000
+
+### (op2) resample and download new ids with rtree overlap search
 python download_ssl4eo.py \
     --save_path ./data \
     --num_workers 8 \
@@ -11,10 +20,7 @@ python download_ssl4eo.py \
 
 ### resume from interruption
 python download_ssl4eo.py \
-    --save_path ./data \
-    --num_workers 8 \
-    --cloud_pct 20 \
-    --log_freq 100 \
+    -- ... \
     --resume ./data/checked_locations.csv \
     --indices_range 0 250000
 
@@ -374,6 +380,74 @@ def get_patch_s2(
     )
 
 
+def get_random_patches_match(
+    idx: int,
+    collections: Dict[str, Any],
+    bands: Dict[str, Any],
+    crops: Dict[str, Any],
+    sampler: GaussianSampler,
+    dates: List[Any],
+    radius: int,
+    debug: bool = False,
+    match_coords: Dict[str, Any] = {},
+) -> Tuple[
+    Optional[List[Dict[str, Any]]],
+    Optional[List[Dict[str, Any]]],
+    Optional[List[Dict[str, Any]]],
+    List[float],
+]:
+    # (lon,lat) of idx patch
+    coords = match_coords[str(idx)]
+
+    # random +- 15 days of random days within 1 year from the reference dates
+    delta = timedelta(days=np.random.randint(365))
+    periods = [get_period(date - delta, days=30) for date in dates]
+
+    collection_s1 = collections["s1_grd"]
+    collection_s2c = collections["s2_l1c"]
+    collection_s2a = collections["s2_l2a"]
+
+    bands_s1 = bands["s1_grd"]
+    bands_s2c = bands["s2_l1c"]
+    bands_s2a = bands["s2_l2a"]
+
+    crop_s1 = crops["s1_grd"]
+    crop_s2c = crops["s2_l1c"]
+    crop_s2a = crops["s2_l2a"]
+
+    try:
+        filtered_collections_s2c = [
+            filter_collection(collection_s2c, coords, p) for p in periods
+        ]
+        patches_s2c = [
+            get_patch_s2(c, coords, radius, bands=bands_s2c, crop=crop_s2c)
+            for c in filtered_collections_s2c
+        ]
+        filtered_collections_s2a = [
+            filter_collection(collection_s2a, coords, p) for p in periods
+        ]
+        patches_s2a = [
+            get_patch_s2(c, coords, radius, bands=bands_s2a, crop=crop_s2a)
+            for c in filtered_collections_s2a
+        ]
+        filtered_collections_s1 = [
+            filter_collection_s1(collection_s1, coords, p) for p in periods
+        ]
+        patches_s1 = [
+            get_patch_s1(c, coords, radius, bands=bands_s1, crop=crop_s1)
+            for c in filtered_collections_s1
+        ]
+
+        center_coord = coords
+
+    except (ee.EEException, urllib3.exceptions.HTTPError) as e:
+        if debug:
+            print(e)
+        return None, None, None, coords
+
+    return patches_s1, patches_s2c, patches_s2a, center_coord
+
+
 def get_random_patches_rtree(
     idx: int,
     collections: Dict[str, Any],
@@ -526,6 +600,12 @@ if __name__ == "__main__":
         "--resume", type=str, default=None
     )  # resume from existing coordinates
     parser.add_argument(
+        "--match_file",
+        type=str,
+        default=None,
+        help="match pre-sampled coordinates and indexes",
+    )
+    parser.add_argument(
         "--indices_range", type=int, nargs=2, default=[0, 250000]
     )  # range of download indices --> number of locations
     args = parser.parse_args()
@@ -614,46 +694,88 @@ if __name__ == "__main__":
     else:
         ext_path = os.path.join(args.save_path, "checked_locations.csv")
 
-    # build the rtree from existing coordinates
-    rtree_coords = index.Index()
-    bbox_radius = (
-        (1 - 0.25) * radius / 1000
-    )  # allow maximum 25% overlap between adjacent patches
-    if args.resume:
-        print("Load existing locations.")
-        for i, key in enumerate(tqdm(ext_coords.keys())):
-            c = ext_coords[key]
-            rtree_coords.insert(
-                i,
-                (
-                    c[0] - sampler.km2deg(bbox_radius),
-                    c[1] - sampler.km2deg(bbox_radius),
-                    c[0] + sampler.km2deg(bbox_radius),
-                    c[1] + sampler.km2deg(bbox_radius),
-                ),
-            )
+    # if match from pre-sampled coords (e.g. SSL4EO-S12)
+    if args.match_file:
+        match_coords = {}
+        with open(args.match_file) as csv_file:
+            reader = csv.reader(csv_file)
+            for row in reader:
+                key = row[0]
+                val1 = float(row[1])
+                val2 = float(row[2])
+                match_coords[key] = (val1, val2)  # lon, lat
+    # else need to check overlap
+    # build rtree from existing coordinates
+    else:
+        rtree_coords = index.Index()
+        bbox_radius = (
+            (1 - 0.25) * radius / 1000
+        )  # allow maximum 25% overlap between adjacent patches
+        if args.resume:
+            print("Load existing locations.")
+            for i, key in enumerate(tqdm(ext_coords.keys())):
+                c = ext_coords[key]
+                rtree_coords.insert(
+                    i,
+                    (
+                        c[0] - sampler.km2deg(bbox_radius),
+                        c[1] - sampler.km2deg(bbox_radius),
+                        c[0] + sampler.km2deg(bbox_radius),
+                        c[1] + sampler.km2deg(bbox_radius),
+                    ),
+                )
 
     start_time = time.time()
     counter = Counter()
 
     def worker(idx: int) -> None:
         if str(idx) in ext_coords.keys():
-            if ext_flags[str(idx)] != 0:  # only skip downloaded ids
+            if args.match_file:  # skip all processed ids
                 return
+            else:
+                if ext_flags[str(idx)] != 0:  # only skip downloaded ids
+                    return
 
-        (patches_s1, patches_s2c, patches_s2a, center_coord) = get_random_patches_rtree(
-            idx,
-            collections,
-            bands,
-            crops,
-            sampler,
-            dates,
-            radius=radius,
-            debug=args.debug,
-            rtree_obj=rtree_coords,
-        )
+        if args.match_file:
+            (
+                patches_s1,
+                patches_s2c,
+                patches_s2a,
+                center_coord,
+            ) = get_random_patches_match(
+                idx,
+                collections,
+                bands,
+                crops,
+                sampler,
+                dates,
+                radius=radius,
+                debug=args.debug,
+                match_coords=match_coords,
+            )
+        else:
+            (
+                patches_s1,
+                patches_s2c,
+                patches_s2a,
+                center_coord,
+            ) = get_random_patches_rtree(
+                idx,
+                collections,
+                bands,
+                crops,
+                sampler,
+                dates,
+                radius=radius,
+                debug=args.debug,
+                rtree_obj=rtree_coords,
+            )
 
-        if patches_s2c is not None:
+        if (
+            patches_s1 is not None
+            and patches_s2c is not None
+            and patches_s2a is not None
+        ):
             if args.save_path is not None:
                 # s2c
                 location_path_s2c = os.path.join(args.save_path, "s2c", f"{idx:06d}")
@@ -696,7 +818,10 @@ if __name__ == "__main__":
         with open(ext_path, "a") as f:
             writer = csv.writer(f)
             if patches_s2c is not None:
-                success = 1
+                if args.match_file:
+                    success = 2
+                else:
+                    success = 1
             else:
                 success = 0
             data = [idx, center_coord[0], center_coord[1], success]
