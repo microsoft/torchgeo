@@ -13,7 +13,7 @@ from .geo import GeoDataModule
 
 class L8BiomeDataModule(GeoDataModule):
     """LightningDataModule implementation for the L8 Biome dataset.
-    
+
     .. versionadded:: 0.5
     """
 
@@ -29,7 +29,7 @@ class L8BiomeDataModule(GeoDataModule):
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.SSL4EOS12`.
+                :class:`~torchgeo.datasets.L8Biome`.
         """
         super().__init__(L8Biome, batch_size, num_workers, **kwargs)
 

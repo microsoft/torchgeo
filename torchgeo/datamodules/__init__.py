@@ -35,6 +35,7 @@ from .xview import XView2DataModule
 __all__ = (
     # GeoDataset
     "ChesapeakeCVPRDataModule",
+    "L8BiomeDataModule",
     "NAIPChesapeakeDataModule",
     # NonGeoDataset
     "BigEarthNetDataModule",
@@ -46,7 +47,6 @@ __all__ = (
     "FAIR1MDataModule",
     "GID15DataModule",
     "InriaAerialImageLabelingDataModule",
-    "L8BiomeDataModule",
     "LandCoverAIDataModule",
     "LoveDADataModule",
     "NASAMarineDebrisDataModule",

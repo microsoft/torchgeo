@@ -39,36 +39,26 @@ barren_prefix = "LC80420082013220LGN00"
 forest_prefix = "LC80070662014234LGN00"
 
 filenames: FILENAME_HIERARCHY = {
-    "barren": {
-        barren_prefix: []
-    },
-    "forest": {
-        forest_prefix: []
-    }
+    "barren": {barren_prefix: []},
+    "forest": {forest_prefix: []},
 }
 
 for band in bands:
-    filenames["barren"][barren_prefix].append(f'{barren_prefix}_{band}')
-    filenames["forest"][forest_prefix].append(f'{forest_prefix}_{band}')
+    filenames["barren"][barren_prefix].append(f"{barren_prefix}_{band}")
+    filenames["forest"][forest_prefix].append(f"{forest_prefix}_{band}")
+
 
 def create_file(path: str) -> None:
     profile = {
-        'driver': 'GTiff', 
-        'dtype': 'uint16', 
-        'width': SIZE, 
-        'height': SIZE, 
-        'count': 1, 
-        'crs': CRS.from_epsg(32615), 
-        'transform': Affine(
-            30.0,    
-            0.0, 
-            339885.0,
-            0.0, 
-            -30.0, 
-            8286915.0
-        )
+        "driver": "GTiff",
+        "dtype": "uint16",
+        "width": SIZE,
+        "height": SIZE,
+        "count": 1,
+        "crs": CRS.from_epsg(32615),
+        "transform": Affine(30.0, 0.0, 339885.0, 0.0, -30.0, 8286915.0),
     }
-    
+
     if path.endswith("B8.TIF"):
         profile["width"] = profile["height"] = SIZE * 2
 
@@ -98,7 +88,7 @@ if __name__ == "__main__":
     directories = ["barren", "forest"]
     for directory in directories:
         filename = str(directory)
-        
+
         # Create tarballs
         shutil.make_archive(filename, "gztar", ".", directory)
 
