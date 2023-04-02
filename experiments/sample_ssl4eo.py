@@ -10,7 +10,7 @@ python sample_ssl4eo.py \
     --indices_range 0 250000
 
 ## resume from interruption
-python download_ssl4eo.py \
+python sample_ssl4eo.py \
     --save_path ./data \
     --radius 1320 \
     --num_cities 10000 \
