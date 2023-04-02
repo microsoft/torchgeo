@@ -26,7 +26,7 @@ jobs:
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
-        pip install .[tests] tensorboard
+        pip install .[tests]
         pip list
     - name: Run pytest checks
       run: pytest --cov=torchgeo --cov-report=xml --durations=10
@@ -49,7 +49,7 @@ jobs:
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
-        pip install .[datasets,tests] tensorboard
+        pip install .[datasets,tests]
         pip list
     - name: Run integration checks
       run: pytest -m slow --durations=10
