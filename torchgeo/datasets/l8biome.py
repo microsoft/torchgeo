@@ -14,6 +14,7 @@ from PIL import Image
 from rasterio.crs import CRS
 from torch import Tensor
 from torch.utils.data import Dataset
+import torch
 
 from .geo import RasterDataset
 from .utils import BoundingBox, download_url, extract_archive
@@ -64,8 +65,8 @@ class L8Biome(RasterDataset):
     filename_glob = "LC*_B2.TIF"
 
     separate_files = True
-    rgb_bands = ["B2", "B3", "B4"]
-    all_bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12"]
+    rgb_bands = ["B4", "B2", "B3"]
+    all_bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11"]
 
     def __init__(
         self,
@@ -163,25 +164,30 @@ class L8Biome(RasterDataset):
         Raises:
             IndexError: if query is not found in the index
         """
+
         hits = self.index.intersection(tuple(query), objects=True)
-        img_filepaths = cast(List[str], [hit.object for hit in hits])
+        filepaths = cast(List[str], [hit.object for hit in hits])
 
-        # print(img_filepaths)
-        mask_filepaths = []
-
-        for path in img_filepaths:
-            mask_file_path = path.replace("B2.TIF", "fixedmask.img")
-            mask_filepaths.append(mask_file_path)
-
-        if not img_filepaths:
+        if not filepaths:
             raise IndexError(
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
         
-        img = self._merge_files(img_filepaths, query, self.band_indexes)
-        # print(self.band_indexes)
-        mask = self._merge_files(mask_filepaths, query, self.band_indexes)
-        mask_mapping = {0: 0, 64: 1, 128: 2, 192: 3, 255: 4}
+        data_list: List[Tensor] = []
+        for band in self.bands:
+            band_filepaths = []
+            filepath = filepaths[0].replace("B2", band)
+            band_filepaths.append(filepath)
+            data_list.append(self._merge_files(band_filepaths, query))
+        img = torch.cat(data_list)
+        mask_filepaths = []
+
+        for path in filepaths:
+            mask_file_path = path.replace("B2.TIF", "fixedmask.img")
+            mask_filepaths.append(mask_file_path)
+
+        mask = self._merge_files(mask_filepaths, query)
+        mask_mapping = {64: 1, 128: 2, 192: 3, 255: 4}
 
         for k, v in mask_mapping.items():
             mask[mask == k] = v
@@ -220,13 +226,19 @@ class L8Biome(RasterDataset):
 
         rgb_indices = []
         for band in self.rgb_bands:
-            print(band, self.bands)
+            # print(band, self.bands)
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
-        image = sample["image"][rgb_indices].permute(1, 2, 0).numpy()
+        
+
+
+        image = sample["image"][rgb_indices].permute(1, 2, 0)
+        print(image.shape)
+        image = torch.clamp(image/50000, min=0, max=1).numpy()
+
 
         # image = sample["image"].numpy().astype("uint16").squeeze()
         mask = sample["mask"].numpy().astype("uint8").squeeze()
