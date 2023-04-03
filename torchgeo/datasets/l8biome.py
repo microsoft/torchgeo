@@ -95,7 +95,6 @@ class L8Biome(RasterDataset):
                 don't match
         """
         self.root = root
-        self.bands = bands
         self.download = download
         self.checksum = checksum
 
@@ -114,8 +113,7 @@ class L8Biome(RasterDataset):
         # Check if the extracted files already exist
         pathname = os.path.join(self.root, "**", self.filename_glob)
         for fname in glob.iglob(pathname, recursive=True):
-            if not fname.endswith(".tar.gz"):
-                return
+            return
 
         # Check if the tar.gz files have already been downloaded
         pathname = os.path.join(self.root, "*.tar.gz")
@@ -153,6 +151,7 @@ class L8Biome(RasterDataset):
 
         Args:
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+        
         Returns:
             sample of image, mask and metadata at that index
 
@@ -198,9 +197,6 @@ class L8Biome(RasterDataset):
 
         return sample
 
-    # Plotting code added as placeholder for now till I get it working.
-    # Using LandCoverAI plotting as reference.
-
     def plot(
         self,
         sample: Dict[str, Tensor],
@@ -219,17 +215,15 @@ class L8Biome(RasterDataset):
         """
         rgb_indices = []
         for band in self.rgb_bands:
-            # print(band, self.bands)
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
         image = sample["image"][rgb_indices].permute(1, 2, 0)
-        print(image.shape)
-        image = torch.clamp(image / 50000, min=0, max=1).numpy()
+        # Stretch to the full range
+        image = (image - image.min()) / (image.max() - image.min())
 
-        # image = sample["image"].numpy().astype("uint16").squeeze()
         mask = sample["mask"].numpy().astype("uint8").squeeze()
 
         num_panels = 2
