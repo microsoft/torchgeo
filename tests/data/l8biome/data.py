@@ -47,11 +47,14 @@ for band in bands:
     filenames["barren"][barren_prefix].append(f"{barren_prefix}_{band}")
     filenames["forest"][forest_prefix].append(f"{forest_prefix}_{band}")
 
+filenames["barren"][barren_prefix].append(f"{barren_prefix}_fixedmask.img")
+filenames["forest"][forest_prefix].append(f"{forest_prefix}_fixedmask.img")
 
 def create_file(path: str) -> None:
+    dtype = "uint16"
     profile = {
         "driver": "GTiff",
-        "dtype": "uint16",
+        "dtype": dtype,
         "width": SIZE,
         "height": SIZE,
         "count": 1,
@@ -63,6 +66,9 @@ def create_file(path: str) -> None:
         profile["width"] = profile["height"] = SIZE * 2
 
     Z = np.random.randn(SIZE, SIZE).astype(profile["dtype"])
+
+    if path.endswith("fixedmask.img"):
+        Z = np.random.randint(4, size=(SIZE, SIZE), dtype=dtype)
 
     with rasterio.open(path, "w", **profile) as src:
         src.write(Z, 1)

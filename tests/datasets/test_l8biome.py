@@ -16,9 +16,11 @@ from torchgeo.datasets import BoundingBox, IntersectionDataset, L8Biome, UnionDa
 
 
 class TestL8Biome:
-    def dataset(self, monkeypatch: MonkeyPatch) -> L8Biome:
+    @pytest.fixture
+    def dataset(self) -> L8Biome:
         root = os.path.join("tests", "data", "l8biome")
         transforms = nn.Identity()
+        print("test")
         return L8Biome(root, transforms=transforms)
 
     def test_getitem(self, dataset: L8Biome) -> None:
@@ -40,8 +42,8 @@ class TestL8Biome:
         dataset.plot(x, suptitle="Test")
         plt.close()
 
-    def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="No L8Biome data was found in "):
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(RuntimeError, match="Dataset not found"):
             L8Biome(str(tmp_path))
 
     def test_invalid_query(self, dataset: L8Biome) -> None:
