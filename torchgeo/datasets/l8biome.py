@@ -5,16 +5,12 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, cast, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence, cast
 
 import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib.colors import ListedColormap
-from PIL import Image
+import torch
 from rasterio.crs import CRS
 from torch import Tensor
-from torch.utils.data import Dataset
-import torch
 
 from .geo import RasterDataset
 from .utils import BoundingBox, download_url, extract_archive
@@ -24,8 +20,8 @@ class L8Biome(RasterDataset):
     """L8 Biome datasets.
 
     The `L8 Biome <https://landsat.usgs.gov/landsat-8-cloud-cover-assessment-validation-data>`__ dataset # noqa: E501
-    is a cloud validation dataset of Pre-Collection Landsat 8 
-    Operational Land Imager (OLI) Thermal Infrared Sensor (TIRS) 
+    is a cloud validation dataset of Pre-Collection Landsat 8
+    Operational Land Imager (OLI) Thermal Infrared Sensor (TIRS)
     terrain-corrected (Level-1T) scenes.
 
     Dataset features:
@@ -74,7 +70,7 @@ class L8Biome(RasterDataset):
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
-        bands: Optional[Sequence[str]] = all_bands,
+        bands: Sequence[str] = all_bands,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -102,13 +98,14 @@ class L8Biome(RasterDataset):
         """
         self.root = root
         self.bands = bands
-        self.band_indexes = [self.bands.index(i) for i in self.bands]
         self.download = download
         self.checksum = checksum
 
         self._verify()
 
-        super().__init__(root, crs=crs, res=res, bands=bands, transforms=transforms, cache=cache)
+        super().__init__(
+            root, crs=crs, res=res, bands=bands, transforms=transforms, cache=cache
+        )
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
@@ -164,7 +161,6 @@ class L8Biome(RasterDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-
         hits = self.index.intersection(tuple(query), objects=True)
         filepaths = cast(List[str], [hit.object for hit in hits])
 
@@ -172,7 +168,7 @@ class L8Biome(RasterDataset):
             raise IndexError(
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
-        
+
         data_list: List[Tensor] = []
         for band in self.bands:
             band_filepaths = []
@@ -223,7 +219,6 @@ class L8Biome(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-
         rgb_indices = []
         for band in self.rgb_bands:
             # print(band, self.bands)
@@ -232,13 +227,9 @@ class L8Biome(RasterDataset):
             else:
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
-        
-
-
         image = sample["image"][rgb_indices].permute(1, 2, 0)
         print(image.shape)
-        image = torch.clamp(image/50000, min=0, max=1).numpy()
-
+        image = torch.clamp(image / 50000, min=0, max=1).numpy()
 
         # image = sample["image"].numpy().astype("uint16").squeeze()
         mask = sample["mask"].numpy().astype("uint8").squeeze()
@@ -252,12 +243,6 @@ class L8Biome(RasterDataset):
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
         axs[0].imshow(image)
         axs[0].axis("off")
-        for k, v in self.cmap.items():
-            res = []
-            for i in range(0, len(v)):
-                res.append(v[i] // 4)
-            res = tuple(res)
-            self.cmap[k] = res
         axs[1].imshow(mask, vmin=0, vmax=4, cmap="gray")
         axs[1].axis("off")
         if show_titles:
@@ -266,7 +251,7 @@ class L8Biome(RasterDataset):
 
         if showing_predictions:
             axs[2].imshow(
-                predictions, vmin=0, vmax=4, cmap=self.cmap, interpolation="none"
+                predictions, vmin=0, vmax=4, cmap="gray", interpolation="none"
             )
             axs[2].axis("off")
             if show_titles:

@@ -50,6 +50,7 @@ for band in bands:
 filenames["barren"][barren_prefix].append(f"{barren_prefix}_fixedmask.img")
 filenames["forest"][forest_prefix].append(f"{forest_prefix}_fixedmask.img")
 
+
 def create_file(path: str) -> None:
     dtype = "uint16"
     profile = {
