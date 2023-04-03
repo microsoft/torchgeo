@@ -398,8 +398,6 @@ def fix_random_seeds(seed: int = 42) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--save_path", type=str, default="./data/")  # dir to save data
-    parser.add_argument("--num_cities", type=int, default=10000)
-    parser.add_argument("--std", type=int, default=50)
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--cloud_pct", type=int, default=20)
     parser.add_argument("--num_workers", type=int, default=8)
@@ -517,11 +515,7 @@ if __name__ == "__main__":
 
     def worker(idx: int) -> None:
         if str(idx) in ext_coords.keys():
-            if args.match_file:  # skip all processed ids
-                return
-            else:
-                if ext_flags[str(idx)] != 0:  # only skip downloaded ids
-                    return
+            return
 
         (patches_s1, patches_s2c, patches_s2a, center_coord) = get_random_patches_match(
             idx,
