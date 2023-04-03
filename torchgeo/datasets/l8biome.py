@@ -32,10 +32,8 @@ class L8Biome(RasterDataset):
     Dataset format:
 
     * Each cloud mask is in ENVI binary format.
-    Includes all bands from the original Landsat Level-1 data product (GeoTIFF),
-    and its associated Level-1 metadata (MTL.txt file).
     * Interpretation for bits in each manual mask are as follows:
-    0: Fill, 64: Cloud Shadow, 128: Clear, 192: Thin Cloud, 255: Cloud
+    * 0: Fill, 64: Cloud Shadow, 128: Clear, 192: Thin Cloud, 255: Cloud
 
     If you use this dataset in your research, please cite the following:
 
