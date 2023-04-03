@@ -1,7 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import glob
 import os
+import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -9,8 +11,6 @@ import pytest
 import torch
 import torch.nn as nn
 from rasterio.crs import CRS
-import glob
-import shutil
 
 from torchgeo.datasets import BoundingBox, IntersectionDataset, L8Biome, UnionDataset
 

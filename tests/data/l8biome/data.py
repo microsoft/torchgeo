@@ -30,7 +30,7 @@ bands = [
     "B8.TIF",
     "B9.TIF",
     "B10.TIF",
-    "B11.TIF"
+    "B11.TIF",
 ]
 
 barren_prefix = "LC80420082013220LGN00"
