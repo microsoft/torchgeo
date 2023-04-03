@@ -93,8 +93,8 @@ iNaturalist
 
 .. autoclass:: INaturalist
 
-L8Biome
-^^^^^^^
+L8 Biome
+^^^^^^^^
 
 .. autoclass:: L8Biome
 

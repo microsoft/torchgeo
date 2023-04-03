@@ -19,7 +19,7 @@ from .utils import BoundingBox, download_url, extract_archive
 class L8Biome(RasterDataset):
     """L8 Biome datasets.
 
-    The `L8 Biome <https://landsat.usgs.gov/landsat-8-cloud-cover-assessment-validation-data>`__ dataset # noqa: E501
+    The `L8 Biome <https://landsat.usgs.gov/landsat-8-cloud-cover-assessment-validation-data>`__ dataset
     is a cloud validation dataset of Pre-Collection Landsat 8
     Operational Land Imager (OLI) Thermal Infrared Sensor (TIRS)
     terrain-corrected (Level-1T) scenes.
@@ -32,8 +32,14 @@ class L8Biome(RasterDataset):
     Dataset format:
 
     * Each cloud mask is in ENVI binary format.
-    * Interpretation for bits in each manual mask are as follows:
-    * 0: Fill, 64: Cloud Shadow, 128: Clear, 192: Thin Cloud, 255: Cloud
+
+    Dataset classes:
+    
+    0. Fill
+    1. Cloud Shadow
+    2. Clear
+    3. Thin Cloud
+    4. Cloud
 
     If you use this dataset in your research, please cite the following:
 
@@ -41,7 +47,7 @@ class L8Biome(RasterDataset):
     * https://doi.org/10.1016/j.rse.2017.03.026
 
     .. versionadded:: 0.5
-    """
+    """  # noqa: E501
 
     url = "https://huggingface.co/datasets/torchgeo/l8biome/blob/main/{}.tar.gz"
 
@@ -57,6 +63,18 @@ class L8Biome(RasterDataset):
     }
 
     filename_glob = "LC*_B2.TIF"
+    filename_regex = r"""
+        ^LC8
+        (?P<wrs_path>\d{3})
+        (?P<wrs_row>\d{3})
+        (?P<date>\d{7})
+        (?P<gsi>[A-Z]{3})
+        (?P<version>\d{2})
+        _(?P<band>B\d{1,2})
+        \.TIF$
+    """
+    date_format = "%Y%j"
+
 
     separate_files = True
     rgb_bands = ["B4", "B2", "B3"]
@@ -224,12 +242,12 @@ class L8Biome(RasterDataset):
         # Stretch to the full range
         image = (image - image.min()) / (image.max() - image.min())
 
-        mask = sample["mask"].numpy().astype("uint8").squeeze()
+        mask = sample["mask"].numpy().astype("uint16").squeeze()
 
         num_panels = 2
         showing_predictions = "prediction" in sample
         if showing_predictions:
-            predictions = sample["prediction"].numpy()
+            predictions = sample["prediction"].numpy().astype("uint16").squeeze()
             num_panels += 1
 
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
@@ -243,7 +261,7 @@ class L8Biome(RasterDataset):
 
         if showing_predictions:
             axs[2].imshow(
-                predictions, vmin=0, vmax=4, cmap="gray", interpolation="none"
+                predictions, vmin=0, vmax=4, cmap="gray"
             )
             axs[2].axis("off")
             if show_titles:

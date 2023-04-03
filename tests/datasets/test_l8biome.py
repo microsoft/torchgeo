@@ -9,6 +9,8 @@ import pytest
 import torch
 import torch.nn as nn
 from rasterio.crs import CRS
+import glob
+import shutil
 
 from torchgeo.datasets import BoundingBox, IntersectionDataset, L8Biome, UnionDataset
 
@@ -18,7 +20,6 @@ class TestL8Biome:
     def dataset(self) -> L8Biome:
         root = os.path.join("tests", "data", "l8biome")
         transforms = nn.Identity()
-        print("test")
         return L8Biome(root, transforms=transforms)
 
     def test_getitem(self, dataset: L8Biome) -> None:
@@ -40,9 +41,26 @@ class TestL8Biome:
         dataset.plot(x, suptitle="Test")
         plt.close()
 
+    def test_already_extracted(self, dataset: L8Biome) -> None:
+        L8Biome(root=dataset.root, download=True)
+
+    def test_already_downloaded(self, tmp_path: Path) -> None:
+        pathname = os.path.join("tests", "data", "L8Biome", "*.tar.gz")
+        root = str(tmp_path)
+        for tarfile in glob.iglob(pathname):
+            shutil.copy(tarfile, root)
+        L8Biome(root)
+
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):
             L8Biome(str(tmp_path))
+
+    def test_plot_prediction(self, dataset: L8Biome) -> None:
+        query = dataset.bounds
+        x = dataset[query]
+        x["prediction"] = x["mask"].clone()
+        dataset.plot(x, suptitle="Prediction")
+        plt.close()
 
     def test_invalid_query(self, dataset: L8Biome) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
