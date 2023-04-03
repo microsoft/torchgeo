@@ -63,8 +63,9 @@ class L8Biome(RasterDataset):
 
     filename_glob = "LC*_B2.TIF"
 
+    separate_files = True
     rgb_bands = ["B2", "B3", "B4"]
-    all_bands_list = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12"]
+    all_bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12"]
 
     def __init__(
         self,
@@ -72,7 +73,7 @@ class L8Biome(RasterDataset):
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
-        bands: Optional[Sequence[str]] = all_bands_list,
+        bands: Optional[Sequence[str]] = all_bands,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -100,6 +101,7 @@ class L8Biome(RasterDataset):
         """
         self.root = root
         self.bands = bands
+        self.band_indexes = [self.bands.index(i) for i in self.bands]
         self.download = download
         self.checksum = checksum
 
@@ -163,9 +165,6 @@ class L8Biome(RasterDataset):
         """
         hits = self.index.intersection(tuple(query), objects=True)
         img_filepaths = cast(List[str], [hit.object for hit in hits])
-        img_filepaths.append(img_filepaths[0].replace("B2", "B3"))
-        img_filepaths.append(img_filepaths[0].replace("B2", "B4"))
-
 
         # print(img_filepaths)
         mask_filepaths = []
@@ -227,7 +226,7 @@ class L8Biome(RasterDataset):
             else:
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
-        image = sample["image"][rgb_indices].numpy()
+        image = sample["image"][rgb_indices].permute(1, 2, 0).numpy()
 
         # image = sample["image"].numpy().astype("uint16").squeeze()
         mask = sample["mask"].numpy().astype("uint8").squeeze()
