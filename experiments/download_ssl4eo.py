@@ -1,21 +1,13 @@
 """ Sample and download Sentinel-1/2 images with Google Earth Engine
 
 #### run the script:
-### (op1) match and download pre-sampled locations
+### match and download pre-sampled locations
 python download_ssl4eo.py \
     --save_path ./data \
     --num_workers 8 \
     --cloud_pct 20 \
     --log_freq 100 \
     --match_file ./data/sampled_locations.csv \
-    --indices_range 0 250000
-
-### (op2) resample and download new ids with rtree overlap search
-python download_ssl4eo.py \
-    --save_path ./data \
-    --num_workers 8 \
-    --cloud_pct 20 \
-    --log_freq 100 \
     --indices_range 0 250000
 
 ### resume from interruption
@@ -40,13 +32,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import ee
 import numpy as np
 import rasterio
-import shapefile
 import urllib3
 from rasterio.transform import Affine
-from rtree import index
-from shapely.geometry import Point, shape
-from torchvision.datasets.utils import download_and_extract_archive
-from tqdm import tqdm
 
 warnings.simplefilter("ignore", UserWarning)
 
@@ -81,103 +68,6 @@ ALL_BANDS_L1C = [
 ]
 RGB_BANDS = ["B4", "B3", "B2"]
 ALL_BANDS_GRD = ["VV", "VH"]
-
-
-""" samplers to get locations of interest points """
-
-
-class UniformSampler:
-    def sample_point(self) -> List[float]:
-        lon = np.random.uniform(-180, 180)
-        lat = np.random.uniform(-90, 90)
-        return [lon, lat]
-
-
-class GaussianSampler:
-    def __init__(
-        self,
-        interest_points: Optional[List[List[float]]] = None,
-        num_cities: int = 1000,
-        std: float = 20,
-    ) -> None:
-        if interest_points is None:
-            cities = self.get_world_cities()
-            self.interest_points = self.get_interest_points(cities, size=num_cities)
-        else:
-            self.interest_points = interest_points
-        self.std = std
-
-    def sample_point(self) -> List[float]:
-        rng = np.random.default_rng()
-        point = rng.choice(self.interest_points)
-        std = self.km2deg(self.std)
-        lon, lat = np.random.normal(loc=point, scale=[std, std])
-        return [lon, lat]
-
-    @staticmethod
-    def get_world_cities(download_root: str = "world_cities") -> List[Dict[str, Any]]:
-        url = "https://simplemaps.com/static/data/world-cities/basic/simplemaps_worldcities_basicv1.71.zip"  # noqa: E501
-        filename = "worldcities.csv"
-        if not os.path.exists(os.path.join(download_root, os.path.basename(url))):
-            download_and_extract_archive(url, download_root)
-        with open(os.path.join(download_root, filename), encoding="UTF-8") as csvfile:
-            reader = csv.DictReader(csvfile, delimiter=",", quotechar='"')
-            cities = []
-            for row in reader:
-                row["population"] = (
-                    row["population"].replace(".", "") if row["population"] else "0"
-                )
-                cities.append(row)
-        return cities
-
-    @staticmethod
-    def get_interest_points(
-        cities: List[Dict[str, str]], size: int = 10000
-    ) -> List[List[float]]:
-        cities = sorted(cities, key=lambda c: int(c["population"]), reverse=True)[:size]
-        points = [[float(c["lng"]), float(c["lat"])] for c in cities]
-        return points
-
-    @staticmethod
-    def km2deg(kms: float, radius: float = 6371) -> float:
-        return kms / (2.0 * radius * np.pi / 360.0)
-
-    @staticmethod
-    def deg2km(deg: float, radius: float = 6371) -> float:
-        return deg * (2.0 * radius * np.pi / 360.0)
-
-
-class BoundedUniformSampler:
-    def __init__(self, boundaries: shape = None) -> None:
-        if boundaries is None:
-            self.boundaries = self.get_country_boundaries()
-        else:
-            self.boundaries = boundaries
-
-    def sample_point(self) -> List[float]:
-        minx, miny, maxx, maxy = self.boundaries.bounds
-        lon = np.random.uniform(minx, maxx)
-        lat = np.random.uniform(miny, maxy)
-        p = Point(lon, lat)
-        if self.boundaries.contains(p):
-            return [p.x, p.y]
-        else:
-            return self.sample_point()
-
-    @staticmethod
-    def get_country_boundaries(
-        download_root: str = os.path.expanduser("~/.cache/naturalearth"),
-    ) -> shape:
-        url = "https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_countries.zip"  # noqa: E501
-        filename = "ne_110m_admin_0_countries.shp"
-        if not os.path.exists(os.path.join(download_root, os.path.basename(url))):
-            download_and_extract_archive(url, download_root)
-        sf = shapefile.Reader(os.path.join(download_root, filename))
-        return shape(sf.shapes().__geo_interface__)
-
-
-class OverlapError(Exception):
-    pass
 
 
 def date2str(date: datetime) -> str:
@@ -385,7 +275,6 @@ def get_random_patches_match(
     collections: Dict[str, Any],
     bands: Dict[str, Any],
     crops: Dict[str, Any],
-    sampler: GaussianSampler,
     dates: List[Any],
     radius: int,
     debug: bool = False,
@@ -444,87 +333,6 @@ def get_random_patches_match(
         if debug:
             print(e)
         return None, None, None, coords
-
-    return patches_s1, patches_s2c, patches_s2a, center_coord
-
-
-def get_random_patches_rtree(
-    idx: int,
-    collections: Dict[str, Any],
-    bands: Dict[str, Any],
-    crops: Dict[str, Any],
-    sampler: GaussianSampler,
-    dates: List[Any],
-    radius: int,
-    debug: bool = False,
-    rtree_obj: index.Index = index.Index(),
-) -> Tuple[
-    List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]], List[float]
-]:
-    # sample new coord without strong overlap with existing coords
-    count = 0
-    bbox_radius = (1 - 0.25) * radius / 1000
-    while count < 1:
-        new_coord = sampler.sample_point()  # (lon,lat) of top-10000 cities
-        bbox = (
-            new_coord[0] - sampler.km2deg(bbox_radius),
-            new_coord[1] - sampler.km2deg(bbox_radius),
-            new_coord[0] + sampler.km2deg(bbox_radius),
-            new_coord[1] + sampler.km2deg(bbox_radius),
-        )
-        if list(rtree_obj.intersection(bbox)):
-            continue
-        rtree_obj.insert(idx, bbox)
-        count += 1
-        coords = [new_coord[0], new_coord[1]]
-
-    # random +- 15 days of random days within 1 year from the reference dates
-    delta = timedelta(days=np.random.randint(365))
-    periods = [get_period(date - delta, days=30) for date in dates]
-
-    collection_s1 = collections["s1_grd"]
-    collection_s2c = collections["s2_l1c"]
-    collection_s2a = collections["s2_l2a"]
-
-    bands_s1 = bands["s1_grd"]
-    bands_s2c = bands["s2_l1c"]
-    bands_s2a = bands["s2_l2a"]
-
-    crop_s1 = crops["s1_grd"]
-    crop_s2c = crops["s2_l1c"]
-    crop_s2a = crops["s2_l2a"]
-
-    try:
-        filtered_collections_s2c = [
-            filter_collection(collection_s2c, coords, p) for p in periods
-        ]
-        patches_s2c = [
-            get_patch_s2(c, coords, radius, bands=bands_s2c, crop=crop_s2c)
-            for c in filtered_collections_s2c
-        ]
-        filtered_collections_s2a = [
-            filter_collection(collection_s2a, coords, p) for p in periods
-        ]
-        patches_s2a = [
-            get_patch_s2(c, coords, radius, bands=bands_s2a, crop=crop_s2a)
-            for c in filtered_collections_s2a
-        ]
-        filtered_collections_s1 = [
-            filter_collection_s1(collection_s1, coords, p) for p in periods
-        ]
-        patches_s1 = [
-            get_patch_s1(c, coords, radius, bands=bands_s1, crop=crop_s1)
-            for c in filtered_collections_s1
-        ]
-
-        center_coord = coords
-
-    except (ee.EEException, urllib3.exceptions.HTTPError) as e:
-        if debug:
-            print(e)
-        patches_s1, patches_s2c, patches_s2a, center_coord = get_random_patches_rtree(
-            idx, collections, bands, crops, sampler, dates, radius, debug, rtree_obj
-        )
 
     return patches_s1, patches_s2c, patches_s2a, center_coord
 
@@ -626,9 +434,6 @@ if __name__ == "__main__":
         "s2_l1c": collection_s2c,
     }
 
-    # initialize sampler
-    sampler = GaussianSampler(num_cities=args.num_cities, std=args.std)
-
     reference = date.fromisoformat("2021-09-22")
     date1 = date.fromisoformat("2021-06-21")
     date2 = date.fromisoformat("2021-03-20")
@@ -704,26 +509,8 @@ if __name__ == "__main__":
                 val1 = float(row[1])
                 val2 = float(row[2])
                 match_coords[key] = (val1, val2)  # lon, lat
-    # else need to check overlap
-    # build rtree from existing coordinates
     else:
-        rtree_coords = index.Index()
-        bbox_radius = (
-            (1 - 0.25) * radius / 1000
-        )  # allow maximum 25% overlap between adjacent patches
-        if args.resume:
-            print("Load existing locations.")
-            for i, key in enumerate(tqdm(ext_coords.keys())):
-                c = ext_coords[key]
-                rtree_coords.insert(
-                    i,
-                    (
-                        c[0] - sampler.km2deg(bbox_radius),
-                        c[1] - sampler.km2deg(bbox_radius),
-                        c[0] + sampler.km2deg(bbox_radius),
-                        c[1] + sampler.km2deg(bbox_radius),
-                    ),
-                )
+        raise NotImplementedError
 
     start_time = time.time()
     counter = Counter()
@@ -736,40 +523,16 @@ if __name__ == "__main__":
                 if ext_flags[str(idx)] != 0:  # only skip downloaded ids
                     return
 
-        if args.match_file:
-            (
-                patches_s1,
-                patches_s2c,
-                patches_s2a,
-                center_coord,
-            ) = get_random_patches_match(
-                idx,
-                collections,
-                bands,
-                crops,
-                sampler,
-                dates,
-                radius=radius,
-                debug=args.debug,
-                match_coords=match_coords,
-            )
-        else:
-            (
-                patches_s1,
-                patches_s2c,
-                patches_s2a,
-                center_coord,
-            ) = get_random_patches_rtree(
-                idx,
-                collections,
-                bands,
-                crops,
-                sampler,
-                dates,
-                radius=radius,
-                debug=args.debug,
-                rtree_obj=rtree_coords,
-            )
+        (patches_s1, patches_s2c, patches_s2a, center_coord) = get_random_patches_match(
+            idx,
+            collections,
+            bands,
+            crops,
+            dates,
+            radius=radius,
+            debug=args.debug,
+            match_coords=match_coords,
+        )
 
         if (
             patches_s1 is not None
@@ -818,10 +581,7 @@ if __name__ == "__main__":
         with open(ext_path, "a") as f:
             writer = csv.writer(f)
             if patches_s2c is not None:
-                if args.match_file:
-                    success = 2
-                else:
-                    success = 1
+                success = 1
             else:
                 success = 0
             data = [idx, center_coord[0], center_coord[1], success]
