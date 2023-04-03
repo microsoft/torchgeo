@@ -64,6 +64,7 @@ def create_file(path: str) -> None:
     }
 
     if path.endswith("B8.TIF"):
+        profile["transform"] = Affine(15.0, 0.0, 339892.5, 0.0, -15.0, 8286907.5)
         profile["width"] = profile["height"] = SIZE * 2
 
     Z = np.random.randn(SIZE, SIZE).astype(profile["dtype"])
