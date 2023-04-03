@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, cast
+from typing import Any, Callable, Dict, List, Optional, cast, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -63,12 +63,16 @@ class L8Biome(RasterDataset):
 
     filename_glob = "LC*_B2.TIF"
 
+    rgb_bands = ["B2", "B3", "B4"]
+    all_bands_list = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12"]
+
     def __init__(
         self,
         root: str = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        bands: Optional[Sequence[str]] = all_bands_list,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -85,6 +89,7 @@ class L8Biome(RasterDataset):
                 (defaults to the resolution of the first file found)
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
+            bands: bands to return
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 after downloading files (may be slow)
@@ -94,12 +99,13 @@ class L8Biome(RasterDataset):
                 don't match
         """
         self.root = root
+        self.bands = bands
         self.download = download
         self.checksum = checksum
 
         self._verify()
 
-        super().__init__(root, crs=crs, res=res, transforms=transforms, cache=cache)
+        super().__init__(root, crs=crs, res=res, bands=bands, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
@@ -157,6 +163,11 @@ class L8Biome(RasterDataset):
         """
         hits = self.index.intersection(tuple(query), objects=True)
         img_filepaths = cast(List[str], [hit.object for hit in hits])
+        img_filepaths.append(img_filepaths[0].replace("B2", "B3"))
+        img_filepaths.append(img_filepaths[0].replace("B2", "B4"))
+
+
+        # print(img_filepaths)
         mask_filepaths = []
 
         for path in img_filepaths:
@@ -167,8 +178,9 @@ class L8Biome(RasterDataset):
             raise IndexError(
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
-
+        
         img = self._merge_files(img_filepaths, query, self.band_indexes)
+        # print(self.band_indexes)
         mask = self._merge_files(mask_filepaths, query, self.band_indexes)
         mask_mapping = {0: 0, 64: 1, 128: 2, 192: 3, 255: 4}
 
@@ -207,9 +219,18 @@ class L8Biome(RasterDataset):
             a matplotlib Figure with the rendered sample
         """
 
-        image = np.rollaxis(sample["image"].numpy().astype("uint16").squeeze(), 0, 2)
+        rgb_indices = []
+        for band in self.rgb_bands:
+            print(band, self.bands)
+            if band in self.bands:
+                rgb_indices.append(self.bands.index(band))
+            else:
+                raise ValueError("Dataset doesn't contain some of the RGB bands")
+
+        image = sample["image"][rgb_indices].numpy()
+
+        # image = sample["image"].numpy().astype("uint16").squeeze()
         mask = sample["mask"].numpy().astype("uint8").squeeze()
-        # image = np.rollaxis(sample["image"].numpy().astype("uint16").squeeze(), 0, 3)
 
         num_panels = 2
         showing_predictions = "prediction" in sample
