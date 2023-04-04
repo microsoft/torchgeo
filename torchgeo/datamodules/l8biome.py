@@ -25,7 +25,7 @@ class L8BiomeDataModule(GeoDataModule):
         self,
         batch_size: int = 1,
         patch_size: Union[int, Tuple[int, int]] = 64,
-        length: int = 1000,
+        length: int = 5,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
@@ -33,6 +33,8 @@ class L8BiomeDataModule(GeoDataModule):
 
         Args:
             batch_size: Size of each mini-batch.
+            patch_size: Size of each patch, either ``size`` or ``(height, width)``.
+            length: Length of each training epoch.
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.L8Biome`.

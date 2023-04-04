@@ -17,5 +17,5 @@ experiment:
     download: true
     batch_size: 1
     patch_size: 64
-    length: 1000,
+    length: 10
     num_workers: 0
