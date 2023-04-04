@@ -5,6 +5,7 @@
 
 import glob
 import os
+import re
 from typing import Any, Callable, Dict, List, Optional, Sequence, cast
 
 import matplotlib.pyplot as plt
@@ -34,7 +35,7 @@ class L8Biome(RasterDataset):
     * Each cloud mask is in ENVI binary format.
 
     Dataset classes:
-    
+
     0. Fill
     1. Cloud Shadow
     2. Clear
@@ -74,7 +75,6 @@ class L8Biome(RasterDataset):
         \.TIF$
     """
     date_format = "%Y%j"
-
 
     separate_files = True
     rgb_bands = ["B4", "B2", "B3"]
@@ -169,7 +169,7 @@ class L8Biome(RasterDataset):
 
         Args:
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
-        
+
         Returns:
             sample of image, mask and metadata at that index
 
@@ -187,9 +187,17 @@ class L8Biome(RasterDataset):
         data_list: List[Tensor] = []
         for band in self.bands:
             band_filepaths = []
-            filepath = filepaths[0].replace("B2", band)
+            filepath = filepaths[0]
+            filename = os.path.basename(filepath)
+            directory = os.path.dirname(filepath)
+            match = re.match(self.filename_regex, filename)
+            if match:
+                filename = filename.replace("B2", band)
+            filepath = os.path.join(directory, filename)
+
             band_filepaths.append(filepath)
             data_list.append(self._merge_files(band_filepaths, query))
+
         img = torch.cat(data_list)
         mask_filepaths = []
 
@@ -260,9 +268,7 @@ class L8Biome(RasterDataset):
             axs[1].set_title("Mask")
 
         if showing_predictions:
-            axs[2].imshow(
-                predictions, vmin=0, vmax=4, cmap="gray"
-            )
+            axs[2].imshow(predictions, vmin=0, vmax=4, cmap="gray")
             axs[2].axis("off")
             if show_titles:
                 axs[2].set_title("Predictions")

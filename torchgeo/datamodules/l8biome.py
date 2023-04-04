@@ -7,9 +7,8 @@ from typing import Any
 
 import torch
 
-from ..datasets import L8Biome
+from ..datasets import L8Biome, random_bbox_assignment
 from .geo import GeoDataModule
-from ..datasets import random_bbox_assignment
 
 
 class L8BiomeDataModule(GeoDataModule):
@@ -42,6 +41,8 @@ class L8BiomeDataModule(GeoDataModule):
         """
         dataset = L8Biome(**self.kwargs)
         generator = torch.Generator().manual_seed(0)
-        self.train_dataset, self.val_dataset, self.test_dataset = random_bbox_assignment(
-            dataset, [0.6, 0.2, 0.2], generator
-        )
+        (
+            self.train_dataset,
+            self.val_dataset,
+            self.test_dataset,
+        ) = random_bbox_assignment(dataset, [0.6, 0.2, 0.2], generator)
