@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 from _pytest.fixtures import SubRequest
-from pytorch_lightning import Trainer
+from lightning.pytorch import Trainer
 from rasterio.crs import CRS
 from torch import Tensor
 
@@ -86,7 +86,7 @@ class TestGeoDataModule:
     @pytest.fixture(params=[SamplerGeoDataModule, BatchSamplerGeoDataModule])
     def datamodule(self, request: SubRequest) -> CustomGeoDataModule:
         dm: CustomGeoDataModule = request.param()
-        dm.trainer = Trainer(max_epochs=1)
+        dm.trainer = Trainer(accelerator="cpu", max_epochs=1)
         return dm
 
     @pytest.mark.parametrize("stage", ["fit", "validate", "test"])
@@ -97,28 +97,28 @@ class TestGeoDataModule:
 
     def test_train(self, datamodule: CustomGeoDataModule) -> None:
         datamodule.setup("fit")
-        datamodule.trainer.training = True  # type: ignore[union-attr]
+        datamodule.trainer.training = True
         batch = next(iter(datamodule.train_dataloader()))
         batch = datamodule.transfer_batch_to_device(batch, torch.device("cpu"), 1)
         batch = datamodule.on_after_batch_transfer(batch, 0)
 
     def test_val(self, datamodule: CustomGeoDataModule) -> None:
         datamodule.setup("validate")
-        datamodule.trainer.validating = True  # type: ignore[union-attr]
+        datamodule.trainer.validating = True
         batch = next(iter(datamodule.val_dataloader()))
         batch = datamodule.transfer_batch_to_device(batch, torch.device("cpu"), 1)
         batch = datamodule.on_after_batch_transfer(batch, 0)
 
     def test_test(self, datamodule: CustomGeoDataModule) -> None:
         datamodule.setup("test")
-        datamodule.trainer.testing = True  # type: ignore[union-attr]
+        datamodule.trainer.testing = True
         batch = next(iter(datamodule.test_dataloader()))
         batch = datamodule.transfer_batch_to_device(batch, torch.device("cpu"), 1)
         batch = datamodule.on_after_batch_transfer(batch, 0)
 
     def test_predict(self, datamodule: CustomGeoDataModule) -> None:
         datamodule.setup("predict")
-        datamodule.trainer.predicting = True  # type: ignore[union-attr]
+        datamodule.trainer.predicting = True
         batch = next(iter(datamodule.predict_dataloader()))
         batch = datamodule.transfer_batch_to_device(batch, torch.device("cpu"), 1)
         batch = datamodule.on_after_batch_transfer(batch, 0)
@@ -145,7 +145,7 @@ class TestNonGeoDataModule:
     @pytest.fixture
     def datamodule(self) -> CustomNonGeoDataModule:
         dm = CustomNonGeoDataModule()
-        dm.trainer = Trainer(max_epochs=1)
+        dm.trainer = Trainer(accelerator="cpu", max_epochs=1)
         return dm
 
     @pytest.mark.parametrize("stage", ["fit", "validate", "test", "predict"])
@@ -156,25 +156,25 @@ class TestNonGeoDataModule:
 
     def test_train(self, datamodule: CustomNonGeoDataModule) -> None:
         datamodule.setup("fit")
-        datamodule.trainer.training = True  # type: ignore[union-attr]
+        datamodule.trainer.training = True
         batch = next(iter(datamodule.train_dataloader()))
         batch = datamodule.on_after_batch_transfer(batch, 0)
 
     def test_val(self, datamodule: CustomNonGeoDataModule) -> None:
         datamodule.setup("validate")
-        datamodule.trainer.validating = True  # type: ignore[union-attr]
+        datamodule.trainer.validating = True
         batch = next(iter(datamodule.val_dataloader()))
         batch = datamodule.on_after_batch_transfer(batch, 0)
 
     def test_test(self, datamodule: CustomNonGeoDataModule) -> None:
         datamodule.setup("test")
-        datamodule.trainer.testing = True  # type: ignore[union-attr]
+        datamodule.trainer.testing = True
         batch = next(iter(datamodule.test_dataloader()))
         batch = datamodule.on_after_batch_transfer(batch, 0)
 
     def test_predict(self, datamodule: CustomNonGeoDataModule) -> None:
         datamodule.setup("predict")
-        datamodule.trainer.predicting = True  # type: ignore[union-attr]
+        datamodule.trainer.predicting = True
         batch = next(iter(datamodule.predict_dataloader()))
         batch = datamodule.on_after_batch_transfer(batch, 0)
 
