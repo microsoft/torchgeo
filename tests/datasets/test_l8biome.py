@@ -45,7 +45,7 @@ class TestL8Biome:
         L8Biome(root=dataset.root, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join("tests", "data", "L8Biome", "*.tar.gz")
+        pathname = os.path.join("tests", "data", "l8biome", "*.tar.gz")
         root = str(tmp_path)
         for tarfile in glob.iglob(pathname):
             shutil.copy(tarfile, root)

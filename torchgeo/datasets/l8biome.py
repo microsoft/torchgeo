@@ -193,7 +193,10 @@ class L8Biome(RasterDataset):
             directory = os.path.dirname(filepath)
             match = re.match(self.filename_regex, filename)
             if match:
-                filename = filename.replace("B2", band)
+                if "date" in match.groupdict():
+                    start = match.start("band")
+                    end = match.end("band")
+                    filename = filename[:start] + band + filename[end:]
             filepath = os.path.join(directory, filename)
 
             band_filepaths.append(filepath)

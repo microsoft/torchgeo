@@ -8,6 +8,7 @@ from typing import Any
 import torch
 
 from ..datasets import L8Biome, random_bbox_assignment
+from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from .geo import GeoDataModule
 
 
@@ -46,3 +47,16 @@ class L8BiomeDataModule(GeoDataModule):
             self.val_dataset,
             self.test_dataset,
         ) = random_bbox_assignment(dataset, [0.6, 0.2, 0.2], generator)
+
+        if stage in ["fit"]:
+            self.train_batch_sampler = RandomBatchGeoSampler(
+                self.train_dataset, self.patch_size, self.batch_size, self.length
+            )
+        if stage in ["fit", "validate"]:
+            self.val_sampler = GridGeoSampler(
+                self.val_dataset, self.patch_size, self.patch_size
+            )
+        if stage in ["test"]:
+            self.test_sampler = GridGeoSampler(
+                self.test_dataset, self.patch_size, self.patch_size
+            )
