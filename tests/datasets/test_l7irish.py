@@ -4,32 +4,32 @@
 import glob
 import os
 import shutil
-from datetime import datetime
+# from datetime import datetime
 from pathlib import Path
 
-import pytest
 import matplotlib.pyplot as plt
+import pytest
 import torch
 import torch.nn as nn
+
 # from torch.utils.data import DataLoader
 from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.samplers import RandomGeoSampler
-from torchgeo.datasets import L7Irish, BoundingBox, IntersectionDataset, UnionDataset
+from torchgeo.datasets import BoundingBox, IntersectionDataset, L7Irish, UnionDataset
+# from torchgeo.samplers import RandomGeoSampler
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
+
 class TestL7Irish:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L7Irish:
         monkeypatch.setattr(torchgeo.datasets.l7irish, "download_url", download_url)
-        md5s = {
-            "austral": "65daad5bf33ecbe35a35ddf4b220d549",
-        }
+        md5s = {"austral": "65daad5bf33ecbe35a35ddf4b220d549"}
         monkeypatch.setattr(L7Irish, "md5s", md5s)
         url = os.path.join("tests", "data", "l7irish", "{}.tar.gz")
         monkeypatch.setattr(L7Irish, "url", url)
@@ -37,7 +37,7 @@ class TestL7Irish:
         root = str(tmp_path)
         transforms = nn.Identity()
         return L7Irish(root, transforms=transforms, download=True, checksum=True)
-    
+
     # def dataset(self) -> L7Irish:
     #     root = os.path.join("tests", "data", "l7irish")
     #     transforms = nn.Identity()
@@ -49,7 +49,6 @@ class TestL7Irish:
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["image"], torch.Tensor)
         # assert isinstance(x["mask"], torch.Tensor)
-        
 
     def test_and(self, dataset: L7Irish) -> None:
         ds = dataset & dataset
@@ -74,7 +73,7 @@ class TestL7Irish:
         dataset.plot(x, suptitle="Test")
         plt.close()
 
-    def test_plot_prediction(self, dataset: L7Irish) -> None: 
+    def test_plot_prediction(self, dataset: L7Irish) -> None:
         x = dataset[dataset.bounds]
         x["prediction"] = x["mask"].clone()
         dataset.plot(x, suptitle="Prediction")

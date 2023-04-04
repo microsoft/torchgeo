@@ -1,44 +1,40 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Landsat 7 Cloud Cover Assessment Validation Data"""
+"""Landsat 7 Cloud Cover Assessment Validation Data."""
 import glob
 import os
 from typing import Any, Callable, Dict, List, Optional, cast
 
-from rasterio.crs import CRS
-
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import ListedColormap
-
+# from matplotlib.colors import ListedColormap
+from rasterio.crs import CRS
 from torch import Tensor
-from torch.utils.data import Dataset
+# from torch.utils.data import Dataset
 
-from .geo import NonGeoDataset, RasterDataset
-from .utils import BoundingBox, download_url, extract_archive, working_dir
+from .geo import RasterDataset
+from .utils import BoundingBox, download_url, extract_archive
 
 
 class L7Irish(RasterDataset):
     r"""L7 Irish dataset.
 
-    The `L7 Irish <https://landsat.usgs.gov/landsat-7-cloud-cover-assessment-validation-data>`__ dataset is based on Landsat 7
-    Enhanced Thematic Mapper Plus (ETM+) Level-1G scenes, displayed in the biomes listed below. Manually generated cloud masks 
-    are used to train and validate cloud cover assessment algorithms, which in turn are intended to compute the percentage of 
-    cloud cover in each scene.
+    The `L7 Irish <https://landsat.usgs.gov/landsat-7-cloud-cover-assessment-validation-data>`__ dataset # noqa: E501
+    is based on Landsat 7 Enhanced Thematic Mapper Plus (ETM+) Level-1G scenes.
 
     Dataset features:
 
-    * 206 scenes from Landsat-7 Enhanced Thematic Mapper Plus (ETM+) tiles
+    * 206 scenes from Landsat-7 ETM+ tiles
     * Imagery from global tiles between June 2000--December 2001
     * 9 Level-1 spectral bands with 15, 30 and 60 m per pixel resolution
-    
+
     Dataset format:
 
     * Images are composed of multiple single channel geotiffs
     * Labels are multiclass, stored in a single geotiffs file per image
     * Level-1 metadata (MTL.txt file)
-    * Landsat-7 Enhanced Thematic Mapper Plus (ETM+) bands: (B10, B20, B30, B40, B50, B61, B62, B70, B80)
+    * Landsat-7 ETM+ bands: (B10, B20, B30, B40, B50, B61, B62, B70, B80)
 
     Dataset classes (5):
 
@@ -52,10 +48,10 @@ class L7Irish(RasterDataset):
 
     * https://doi.org/10.5066/F7XD0ZWC
     * https://doi.org/10.1109/TGRS.2011.2164087
-    """    
+    """
 
     url = "https://huggingface.co/datasets/torchgeo/l7irish/resolve/main/{}.tar.gz"  # noqa: E501
-    
+
     md5s = {
         "austral": "dbb6b5628f50861b9b89f548d25a925f",
         "boreal": "cecc72de09aacde4c4f8d7f0cf0d3f6f",
@@ -67,14 +63,14 @@ class L7Irish(RasterDataset):
         "subtropical_south": "8346d73a983396c5d41b577c3a94bc26",
         "tropical": "abe19b22b5d031e6b609cc7207706c3d",
     }
-        
+
     classes = ["Fill", "Cloud Shadow", "Clear", "Thin Cloud", "Cloud"]
 
     tarfile_glob = "*.tar.gz"
     filename_glob = "L*.TIF"
 
     filename_regex = r"^L7[1-2]\d{3}[0-9]{3}_[0-9]{3}\d{8}_B\d{2}\.TIF$"
-    # filename_regex = r""" 
+    # filename_regex = r"""
     #     ^L7[12]
     #     (?P<wrs_path>\d{3})
     #     (?P<wrs_row>[0-9]{3}_[0-9]{3})
@@ -93,25 +89,24 @@ class L7Irish(RasterDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        
-        """Initialize a new Landsat 7 Cloud Cover Assessment Validation dataset instance.
+        """Initialize a new Landsat7 Cloud Cover Assessment Validation dataset instance.
 
-            Args:
-                root: root directory where dataset can be found
-                transforms: a function/transform that takes input sample and its target as
-                    entry and returns a transformed version
-                cache: if True, cache file handle to speed up repeated sampling
-                crs: :term:`coordinate reference system (CRS)` to warp to
-                (defaults to the CRS of the first file found)
-                res: resolution of the dataset in units of CRS
-                (defaults to the resolution of the first file found)
-                download: if True, download dataset and store it in the root directory
-                checksum: if True, check the MD5 of the downloaded files (may be slow)
+        Args:
+            root: root directory where dataset can be found
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            cache: if True, cache file handle to speed up repeated sampling
+            crs: :term:`coordinate reference system (CRS)` to warp to
+            (defaults to the CRS of the first file found)
+            res: resolution of the dataset in units of CRS
+            (defaults to the resolution of the first file found)
+            download: if True, download dataset and store it in the root directory
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
-            Raises:
-                RuntimeError: if ``download=False`` and data is not found, or checksums
-                    don't match
-            """
+        Raises:
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
+        """
         self.root = root
         self.download = download
         self.checksum = checksum
@@ -160,7 +155,7 @@ class L7Irish(RasterDataset):
         pathname = os.path.join(self.root, self.tarfile_glob)
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)
-    
+
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
@@ -175,17 +170,22 @@ class L7Irish(RasterDataset):
         """
         hits = self.index.intersection(tuple(query), objects=True)
         img_filepaths = cast(List[str], [hit.object for hit in hits])
-        
+
         if not img_filepaths:
             raise IndexError(
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
-        mask_filepaths = [path.replace(path.split(os.sep)[-1], path.split(os.sep)[-2]+"_mask2019.TIF") for path in img_filepaths]
+        mask_filepaths = [
+            path.replace(
+                path.split(os.sep)[-1], path.split(os.sep)[-2] + "_mask2019.TIF"
+            )
+            for path in img_filepaths
+        ]
 
         img = self._merge_files(img_filepaths, query, self.band_indexes)
         mask = self._merge_files(mask_filepaths, query, self.band_indexes)
-        
+
         mask_mapping = {0: 0, 64: 1, 128: 2, 192: 3, 255: 4}
         for k, v in mask_mapping.items():
             mask[mask == k] = v
@@ -226,7 +226,7 @@ class L7Irish(RasterDataset):
         if showing_predictions:
             predictions = sample["prediction"].numpy().astype("uint8").squeeze()
             num_panels += 1
-        
+
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
         axs[0].imshow(image)
         axs[0].axis("off")
@@ -237,7 +237,9 @@ class L7Irish(RasterDataset):
             axs[1].set_title("Mask")
 
         if showing_predictions:
-            axs[2].imshow(predictions, vmin=0, vmax=4, cmap="gray", interpolation="none")
+            axs[2].imshow(
+                predictions, vmin=0, vmax=4, cmap="gray", interpolation="none"
+            )
             axs[2].axis("off")
             if show_titles:
                 axs[2].set_title("Predictions")
