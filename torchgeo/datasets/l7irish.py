@@ -30,15 +30,15 @@ class L7Irish(RasterDataset):
     Dataset features:
 
     * 206 scenes from Landsat-7 Enhanced Thematic Mapper Plus (ETM+) tiles
-    * Imagery from global tiles between June 2000 - December 2001
-    * 9 Level-1 spectral bands with 30 and 60 m per pixel resolution
+    * Imagery from global tiles between June 2000--December 2001
+    * 9 Level-1 spectral bands with 15, 30 and 60 m per pixel resolution
     
     Dataset format:
 
     * Images are composed of multiple single channel geotiffs
     * Labels are multiclass, stored in a single geotiffs file per image
     * Level-1 metadata (MTL.txt file)
-    * Landsat-7 Enhanced Thematic Mapper Plus (ETM+) bands: (B01, B02, B03, B04, B05, B06-1, B06-2, B07, B08)
+    * Landsat-7 Enhanced Thematic Mapper Plus (ETM+) bands: (B10, B20, B30, B40, B50, B61, B62, B70, B80)
 
     Dataset classes (5):
 
@@ -54,7 +54,7 @@ class L7Irish(RasterDataset):
     * https://doi.org/10.1109/TGRS.2011.2164087
     """    
 
-    url = "https://huggingface.co/datasets/torchgeo/l7irish/resolve/main/{}.tar.gz" #noqa E501
+    url = "https://huggingface.co/datasets/torchgeo/l7irish/resolve/main/{}.tar.gz"  # noqa: E501
     
     md5s = {
         "austral": "dbb6b5628f50861b9b89f548d25a925f",
@@ -69,38 +69,29 @@ class L7Irish(RasterDataset):
     }
         
     classes = ["Fill", "Cloud Shadow", "Clear", "Thin Cloud", "Cloud"]
-    
-    cmap = {
-        0: (0, 0, 0),
-        64: (64, 64, 64),
-        128: (128, 128, 128),
-        192: (192, 192, 192),
-        255: (255, 255, 255),
-    }
 
     tarfile_glob = "*.tar.gz"
     filename_glob = "L*.TIF"
 
-    filename_regex = r""" 
-        ^L7[12]
-        (?P<wrs_path>\d{3})
-        (?P<wrs_row>\d{3})
-        _(?P<wrs_row>\d{3})
-        (?P<processing_date>\d{8})
-        _(?P<band>[B10-80])
-        \.TIF
-    """
+    filename_regex = r"^L7[1-2]\d{3}[0-9]{3}_[0-9]{3}\d{8}_B\d{2}\.TIF$"
+    # filename_regex = r""" 
+    #     ^L7[12]
+    #     (?P<wrs_path>\d{3})
+    #     (?P<wrs_row>[0-9]{3}_[0-9]{3})
+    #     (?P<processing_date>\d{8})
+    #     _(?P<band>B\d{2})
+    #     \.TIF$
+    # """
 
-
-    def __init__(  # check variable here!!!
+    def __init__(
         self,
         root: str = "data",
-        download: bool = False,
-        checksum: bool = False,
         cache: bool = True,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
+        download: bool = False,
+        checksum: bool = False,
     ) -> None:
         
         """Initialize a new Landsat 7 Cloud Cover Assessment Validation dataset instance.
@@ -110,6 +101,10 @@ class L7Irish(RasterDataset):
                 transforms: a function/transform that takes input sample and its target as
                     entry and returns a transformed version
                 cache: if True, cache file handle to speed up repeated sampling
+                crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
+                res: resolution of the dataset in units of CRS
+                (defaults to the resolution of the first file found)
                 download: if True, download dataset and store it in the root directory
                 checksum: if True, check the MD5 of the downloaded files (may be slow)
 
@@ -155,7 +150,7 @@ class L7Irish(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        for biome, md5 in self.md5s:
+        for biome, md5 in self.md5s.items():
             download_url(
                 self.url.format(biome), self.root, md5=md5 if self.checksum else None
             )
@@ -180,17 +175,21 @@ class L7Irish(RasterDataset):
         """
         hits = self.index.intersection(tuple(query), objects=True)
         img_filepaths = cast(List[str], [hit.object for hit in hits])
-        mask_filepaths = [path.replace(path.split("/")[-1], path.split("/")[-2]+"_mask2019.TIF") for path in img_filepaths]
         
         if not img_filepaths:
             raise IndexError(
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
+        mask_filepaths = [path.replace(path.split(os.sep)[-1], path.split(os.sep)[-2]+"_mask2019.TIF") for path in img_filepaths]
+
         img = self._merge_files(img_filepaths, query, self.band_indexes)
         mask = self._merge_files(mask_filepaths, query, self.band_indexes)
-        # Mask needs to be converted from 0, 64, 128, 192, 255 to 0, 1, 2, 3, 4
         
+        mask_mapping = {0: 0, 64: 1, 128: 2, 192: 3, 255: 4}
+        for k, v in mask_mapping.items():
+            mask[mask == k] = v
+
         sample = {
             "crs": self.crs,
             "bbox": query,
@@ -225,28 +224,20 @@ class L7Irish(RasterDataset):
         num_panels = 2
         showing_predictions = "prediction" in sample
         if showing_predictions:
-            predictions = sample["prediction"].numpy()
+            predictions = sample["prediction"].numpy().astype("uint8").squeeze()
             num_panels += 1
         
-        # converting 5 classes to [0,1,2,3,4] for the plot function.
-        for i in list(self.cmap.keys()):
-            self.cmap[np.ceil(i/64).astype(int)] = self.cmap.pop(i)
-        lc_colors = np.zeros((max(self.cmap.keys()) + 1, 3))
-        lc_colors[list(self.cmap.keys())] = list(self.cmap.values())
-        lc_colors = lc_colors / 255
-        lc_cmap = ListedColormap(lc_colors)
-
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
         axs[0].imshow(image)
         axs[0].axis("off")
-        axs[1].imshow(mask, vmin=0, vmax=4, cmap=lc_cmap, interpolation="none")
+        axs[1].imshow(mask, vmin=0, vmax=4, cmap="gray", interpolation="none")
         axs[1].axis("off")
         if show_titles:
             axs[0].set_title("Image")
             axs[1].set_title("Mask")
 
         if showing_predictions:
-            axs[2].imshow(predictions, vmin=0, vmax=4, cmap=lc_cmap, interpolation="none")
+            axs[2].imshow(predictions, vmin=0, vmax=4, cmap="gray", interpolation="none")
             axs[2].axis("off")
             if show_titles:
                 axs[2].set_title("Predictions")

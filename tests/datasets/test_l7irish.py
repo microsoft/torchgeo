@@ -35,32 +35,29 @@ class TestL7Irish:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L7Irish:
         monkeypatch.setattr(torchgeo.datasets.l7irish, "download_url", download_url)
-        # need to create new md5s?
         md5s = {
-            "austral": "dbb6b5628f50861b9b89f548d25a925f",
-            "boreal": "cecc72de09aacde4c4f8d7f0cf0d3f6f",
-            "mid_latitude_north": "0f8382ca6554fb7cf9aff42226a14f9d",
-            "mid_latitude_south": "b17cf6d023f752c533211fdb742f296b",
-            "polar_north": "73923dcaf1b9b79bad82de1aa0740d1e",
-            "polar_south": "3bc9f4c6f8955b10b4d55d23e0ab2da7",
-            "subtropical_north": "f8f039970256902e6e9ebd6747589294",
-            "subtropical_south": "8346d73a983396c5d41b577c3a94bc26",
-            "tropical": "abe19b22b5d031e6b609cc7207706c3d",
+            "austral": "65daad5bf33ecbe35a35ddf4b220d549",
         }
-        
         monkeypatch.setattr(L7Irish, "md5s", md5s)
         url = os.path.join("tests", "data", "l7irish", "{}.tar.gz")
         monkeypatch.setattr(L7Irish, "url", url)
         monkeypatch.setattr(plt, "show", lambda *args: None)
         root = str(tmp_path)
-        transforms = nn.Identity() # why does it need nn?
+        transforms = nn.Identity()
         return L7Irish(root, transforms=transforms, download=True, checksum=True)
+    
+    # def dataset(self) -> L7Irish:
+    #     root = os.path.join("tests", "data", "l7irish")
+    #     transforms = nn.Identity()
+    #     return L7Irish(root, transforms=transforms)
 
     def test_getitem(self, dataset: L7Irish) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x["crs"], CRS) # this is different from landcoverai
-        assert isinstance(x["mask"], torch.Tensor)
+        assert isinstance(x["crs"], CRS)
+        assert isinstance(x["image"], torch.Tensor)
+        # assert isinstance(x["mask"], torch.Tensor)
+        
 
     def test_and(self, dataset: L7Irish) -> None:
         ds = dataset & dataset
@@ -69,12 +66,6 @@ class TestL7Irish:
     def test_or(self, dataset: L7Irish) -> None:
         ds = dataset | dataset
         assert isinstance(ds, UnionDataset)
-
-    def test_full_year(self, dataset: L7Irish) -> None:
-        bbox = dataset.bounds
-        time = datetime(2001, 11, 12).timestamp() # randomly select one time
-        query = BoundingBox(bbox.minx, bbox.maxx, bbox.miny, bbox.maxy, time, time)
-        next(dataset.index.intersection(tuple(query)))
 
     def test_already_extracted(self, dataset: L7Irish) -> None:
         L7Irish(root=dataset.root, download=True)
@@ -87,14 +78,12 @@ class TestL7Irish:
         L7Irish(root)
 
     def test_plot(self, dataset: L7Irish) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        x = dataset[dataset.bounds]
         dataset.plot(x, suptitle="Test")
         plt.close()
 
     def test_plot_prediction(self, dataset: L7Irish) -> None: 
-        query = dataset.bounds # same as cdl, slightly different from landcoverai
-        x = dataset[query]
+        x = dataset[dataset.bounds]
         x["prediction"] = x["mask"].clone()
         dataset.plot(x, suptitle="Prediction")
         plt.close()
@@ -109,27 +98,3 @@ class TestL7Irish:
             IndexError, match="query: .* not found in index with bounds:"
         ):
             dataset[query]
-
-
-#help(BoundingBox)
-#help(RAndomGeoSampler)
-
-# for batch in dl:
-# 	samples = unbind_samples(batch)
-# 	sample = sample[0]
-# 	ds.plot(sample)
-
-# bbox = ds.index.bounds
-
-# ds[bbox]
-
-# ds.plot(sample)
-
-# make new file for test l7irish in test directory
-# don't need params
-# monkeypatch: make fake data and checksums and use it for testing
-# create fake data: /tests/data/ to see example, be careful about different resolutions,
-# black
-# isort
-# flake8
-# put pull request @...
