@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""L8Biome datamodule."""
+"""L8 Biome datamodule."""
 
 from typing import Any
 
