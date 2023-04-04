@@ -79,7 +79,6 @@ def create_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:
     if isinstance(hierarchy, dict):
         # Recursive case
         for key, value in hierarchy.items():
-            print(directory, key)
             path = os.path.join(directory, key)
             os.makedirs(path, exist_ok=True)
             create_directory(path, value)

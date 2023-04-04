@@ -24,7 +24,7 @@ class L8BiomeDataModule(GeoDataModule):
     def __init__(
         self,
         batch_size: int = 1,
-        patch_size: Union[int, Tuple[int, int]] = 64,
+        patch_size: Union[int, Tuple[int, int]] = 32,
         length: int = 5,
         num_workers: int = 0,
         **kwargs: Any,

@@ -16,6 +16,6 @@ experiment:
     root: "tests/data/l8biome"
     download: true
     batch_size: 1
-    patch_size: 64
-    length: 10
+    patch_size: 32
+    length: 5
     num_workers: 0
