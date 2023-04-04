@@ -35,14 +35,11 @@ bands = [
 
 filenames: FILENAME_HIERARCHY = {
     "barren": {
-        "LC80420082013220LGN00": [], 
-        "LC80530022014156LGN00": [], 
+        "LC80420082013220LGN00": [],
+        "LC80530022014156LGN00": [],
         "LC81360302014162LGN00": [],
     },
-    "forest": {
-        "LC80070662014234LGN00":[], 
-        "LC80200462014005LGN00":[]
-    },
+    "forest": {"LC80070662014234LGN00": [], "LC80200462014005LGN00": []},
 }
 
 for land_type, files in filenames.items():
@@ -51,6 +48,7 @@ for land_type, files in filenames.items():
             filenames[land_type][prefix].append(f"{prefix}_{band}")
 
         filenames[land_type][prefix].append(f"{prefix}_fixedmask.img")
+
 
 def create_file(path: str) -> None:
     dtype = "uint16"

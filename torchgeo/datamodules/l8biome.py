@@ -3,14 +3,13 @@
 
 """L8 Biome datamodule."""
 
-from typing import Any
+from typing import Any, Tuple, Union
 
 import torch
 
 from ..datasets import L8Biome, random_bbox_assignment
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from .geo import GeoDataModule
-from typing import Any, Tuple, Union
 
 
 class L8BiomeDataModule(GeoDataModule):
@@ -23,11 +22,12 @@ class L8BiomeDataModule(GeoDataModule):
     std = torch.tensor(10000)
 
     def __init__(
-        self, 
+        self,
         batch_size: int = 1,
         patch_size: Union[int, Tuple[int, int]] = 64,
         length: int = 1000,
-        num_workers: int = 0, **kwargs: Any
+        num_workers: int = 0,
+        **kwargs: Any,
     ) -> None:
         """Initialize a new L8BiomeDataModule instance.
 
@@ -37,10 +37,14 @@ class L8BiomeDataModule(GeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.L8Biome`.
         """
-        super().__init__(L8Biome, batch_size=batch_size, 
-                         patch_size=patch_size, 
-                         length=length, 
-                         num_worker=num_workers, **kwargs)
+        super().__init__(
+            L8Biome,
+            batch_size=batch_size,
+            patch_size=patch_size,
+            length=length,
+            num_workers=num_workers,
+            **kwargs,
+        )
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
