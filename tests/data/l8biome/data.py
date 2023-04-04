@@ -69,7 +69,7 @@ def create_file(path: str) -> None:
     Z = np.random.randn(SIZE, SIZE).astype(profile["dtype"])
 
     if path.endswith("fixedmask.img"):
-        Z = np.random.randint(np.iinfo(dtype).max, size=(SIZE, SIZE), dtype=dtype)
+        Z = np.random.randint(5, size=(SIZE, SIZE), dtype=dtype)
 
     with rasterio.open(path, "w", **profile) as src:
         src.write(Z, 1)
