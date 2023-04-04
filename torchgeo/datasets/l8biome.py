@@ -63,7 +63,8 @@ class L8Biome(RasterDataset):
         "wetlands": "bff0d51db84e26a2a8e776c83ab2d331",
     }
 
-    filename_glob = "LC*_B2.TIF"
+    # https://gisgeography.com/landsat-file-naming-convention/
+    filename_glob = "LC8*_B2.TIF"
     filename_regex = r"""
         ^LC8
         (?P<wrs_path>\d{3})
