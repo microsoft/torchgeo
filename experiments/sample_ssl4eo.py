@@ -1,30 +1,34 @@
+#!/usr/bin/env python3
+
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 """ Sample patch locations for downloading
 
 ### run the script:
 ## sample new locations with rtree overlap search
 python sample_ssl4eo.py \
-    --save_path ./data \
-    --radius 1320 \
-    --num_cities 10000 \
+    --save-path ./data \
+    --size 1320 \
+    --num-cities 10000 \
     --std 50 \
-    --indices_range 0 250000
+    --indices-range 0 250000
 
 ## resume from interruption
 python sample_ssl4eo.py \
-    --save_path ./data \
-    --radius 1320 \
-    --num_cities 10000 \
+    --save-path ./data \
+    --size 1320 \
+    --num-cities 10000 \
     --std 50 \
     --resume ./data/sampled_locations.csv \
-    --indices_range 0 250000
+    --indices-range 0 250000
 
 ### Notes
 # The script will sample locations with rtree overlap search.
 # The script will save the sampled locations to a csv file.
 # By default, GaussianSampler is used to sample locations with a standard deviation
  of 50 km from top 10000 populated cities.
-# By default, 25% overlap of adjacent patches is allowed.
-# Radius (meter) is half the wanted patch size.
+# Size (meter) is half the wanted patch size.
 
 """
 
@@ -101,19 +105,13 @@ if __name__ == "__main__":
         "--save-path", type=str, default="./data/", help="dir to save data"
     )
     parser.add_argument(
-        "--radius", type=float, default=1320, help="patch radius in meters"
-    )
-    parser.add_argument(
-        "--overlap-ratio",
-        type=float,
-        default=0.25,
-        help="max overlap ratio between adjacent patches",
+        "--size", type=float, default=1320, help="half patch size in meters"
     )
     parser.add_argument(
         "--num-cities", type=int, default=10000, help="number of cities to sample"
     )
     parser.add_argument(
-        "--std", type=int, default=50, help="std of gaussian distribution"
+        "--std", type=int, default=50, help="std dev of gaussian distribution"
     )
     parser.add_argument(
         "--resume", type=str, default=None, help="resume from a previous run"
@@ -146,9 +144,7 @@ if __name__ == "__main__":
     # initialize sampler
     cities = get_world_cities()
     interest_points = get_interest_points(cities, size=args.num_cities)
-    bbox_size = (
-        (1 - args.overlap_ratio) * args.radius / 1000
-    )  # allow little overlap between adjacent patches
+    bbox_size = args.size / 1000  # no overlap between adjacent patches
     bbox_size_degree = km2deg(bbox_size)
 
     # build rtree
@@ -162,8 +158,8 @@ if __name__ == "__main__":
 
     # sample locations
     start_time = time.time()
-    indices = range(args.indices_range[0], args.indices_range[1])
-
+    indices = range(*args.indices_range)
+    new_coords = {}
     for idx in tqdm(indices):
         # skip if already sampled
         if str(idx) in ext_coords.keys():
@@ -180,12 +176,14 @@ if __name__ == "__main__":
             if list(rtree_coords.intersection(bbox)):
                 continue
             rtree_coords.insert(idx, bbox)
+            new_coords[idx] = new_coord
             count += 1
 
-        # save to file
-        with open(ext_path, "a") as f:
-            writer = csv.writer(f)
-            data = [idx, new_coord[0], new_coord[1]]
+    # save to file
+    with open(ext_path, "a") as f:
+        writer = csv.writer(f)
+        for idx, new_coord in new_coords.items():
+            data = [idx, *new_coord]
             writer.writerow(data)
 
     print(
