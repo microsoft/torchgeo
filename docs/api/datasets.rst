@@ -93,6 +93,12 @@ iNaturalist
 
 .. autoclass:: INaturalist
 
+L7 Irish
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: L7Irish
+
+
 LandCover.ai Geo
 ^^^^^^^^^^^^^^^^
 

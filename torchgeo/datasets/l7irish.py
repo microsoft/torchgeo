@@ -4,21 +4,20 @@
 """Landsat 7 Cloud Cover Assessment Validation Data."""
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, cast
+import re
+from typing import Any, Callable, Dict, List, Optional, Sequence, cast
 
 import matplotlib.pyplot as plt
-import numpy as np
-# from matplotlib.colors import ListedColormap
+import torch
 from rasterio.crs import CRS
 from torch import Tensor
-# from torch.utils.data import Dataset
 
 from .geo import RasterDataset
 from .utils import BoundingBox, download_url, extract_archive
 
 
 class L7Irish(RasterDataset):
-    r"""L7 Irish dataset.
+    """L7 Irish dataset.
 
     The `L7 Irish <https://landsat.usgs.gov/landsat-7-cloud-cover-assessment-validation-data>`__ dataset # noqa: E501
     is based on Landsat 7 Enhanced Thematic Mapper Plus (ETM+) Level-1G scenes.
@@ -66,26 +65,31 @@ class L7Irish(RasterDataset):
 
     classes = ["Fill", "Cloud Shadow", "Clear", "Thin Cloud", "Cloud"]
 
-    tarfile_glob = "*.tar.gz"
-    filename_glob = "L*.TIF"
+    filename_glob = "L7*.TIF"
 
-    filename_regex = r"^L7[1-2]\d{3}[0-9]{3}_[0-9]{3}\d{8}_B\d{2}\.TIF$"
-    # filename_regex = r"""
-    #     ^L7[12]
-    #     (?P<wrs_path>\d{3})
-    #     (?P<wrs_row>[0-9]{3}_[0-9]{3})
-    #     (?P<processing_date>\d{8})
-    #     _(?P<band>B\d{2})
-    #     \.TIF$
-    # """
+    filename_regex = r"""
+        ^L7[12]
+        (?P<wrs_path>\d{3})
+        (?P<wrs_row>\d{3})
+        _(?P=wrs_row)
+        (?P<date>\d{8})
+        _(?P<band>B\d{2})
+        \.TIF$
+    """
+    date_format = "%Y%m%d"
+
+    separate_files = True
+    rgb_bands = ["B40", "B20", "B30"]
+    all_bands = ["B10", "B20", "B30", "B40", "B50", "B61", "B62", "B70", "B80"]
 
     def __init__(
         self,
         root: str = "data",
-        cache: bool = True,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        bands: Sequence[str] = all_bands,
+        cache: bool = True,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -100,6 +104,7 @@ class L7Irish(RasterDataset):
             (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
             (defaults to the resolution of the first file found)
+            bands: bands to return
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
@@ -112,7 +117,10 @@ class L7Irish(RasterDataset):
         self.checksum = checksum
 
         self._verify()
-        super().__init__(root, crs=crs, res=res, transforms=transforms, cache=cache)
+
+        super().__init__(
+            root, crs=crs, res=res, bands=bands, transforms=transforms, cache=cache
+        )
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
@@ -127,7 +135,7 @@ class L7Irish(RasterDataset):
                 return
 
         # Check if the tar files have already been downloaded
-        pathname = os.path.join(self.root, self.tarfile_glob)
+        pathname = os.path.join(self.root, "*.tar.gz")
         if glob.glob(pathname):
             self._extract()
             return
@@ -139,6 +147,7 @@ class L7Irish(RasterDataset):
                 "either specify a different `root` directory or use `download=True` "
                 "to automatically download the dataset."
             )
+
         # Download the dataset
         self._download()
         self._extract()
@@ -152,7 +161,7 @@ class L7Irish(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        pathname = os.path.join(self.root, self.tarfile_glob)
+        pathname = os.path.join(self.root, "*.tar.gz")
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)
 
@@ -176,6 +185,27 @@ class L7Irish(RasterDataset):
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
+        data_list: List[Tensor] = []
+
+        for band in self.all_bands:
+            band_filepaths = []
+            for img_filepath in img_filepaths:
+                if band in img_filepath:
+                    filepath = img_filepath
+                    filename = os.path.basename(filepath)
+                    directory = os.path.dirname(filepath)
+                    match = re.match(self.filename_regex, filename)
+                    if match:
+                        if "date" in match.groupdict():
+                            start = match.start("band")
+                            end = match.end("band")
+                            filename = filename[: start - 1] + band + filename[end:]
+                    filepath = os.path.join(directory, filename)
+                    band_filepaths.append(filepath)
+                    data_list.append(self._merge_files(band_filepaths, query))
+
+        img = torch.cat(data_list)
+
         mask_filepaths = [
             path.replace(
                 path.split(os.sep)[-1], path.split(os.sep)[-2] + "_mask2019.TIF"
@@ -183,10 +213,9 @@ class L7Irish(RasterDataset):
             for path in img_filepaths
         ]
 
-        img = self._merge_files(img_filepaths, query, self.band_indexes)
-        mask = self._merge_files(mask_filepaths, query, self.band_indexes)
-
+        mask = self._merge_files(mask_filepaths, query)
         mask_mapping = {0: 0, 64: 1, 128: 2, 192: 3, 255: 4}
+
         for k, v in mask_mapping.items():
             mask[mask == k] = v
 
@@ -218,7 +247,18 @@ class L7Irish(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = np.rollaxis(sample["image"].numpy().astype("uint8").squeeze(), 0, 3)
+        rgb_indices = []
+        for band in self.rgb_bands:
+            if band in self.bands:
+                rgb_indices.append(self.bands.index(band))
+            else:
+                raise ValueError("Dataset doesn't contain some of the RGB bands")
+
+        image = sample["image"][rgb_indices].permute(1, 2, 0)
+
+        # Stretch to the full range
+        image = (image - image.min()) / (image.max() - image.min())
+
         mask = sample["mask"].numpy().astype("uint8").squeeze()
 
         num_panels = 2
@@ -246,4 +286,5 @@ class L7Irish(RasterDataset):
 
         if suptitle is not None:
             plt.suptitle(suptitle)
+
         return fig
