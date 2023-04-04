@@ -1,20 +1,25 @@
+#!/usr/bin/env python3
+
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 """ Sample and download Sentinel-1/2 images with Google Earth Engine
 
 #### run the script:
 ### match and download pre-sampled locations
 python download_ssl4eo.py \
-    --save_path ./data \
-    --num_workers 8 \
-    --cloud_pct 20 \
-    --log_freq 100 \
-    --match_file ./data/sampled_locations.csv \
-    --indices_range 0 250000
+    --save-path ./data \
+    --num-workers 8 \
+    --cloud-pct 20 \
+    --log-freq 100 \
+    --match-file ./data/sampled_locations.csv \
+    --indices-range 0 250000
 
 ### resume from interruption
 python download_ssl4eo.py \
     -- ... \
     --resume ./data/checked_locations.csv \
-    --indices_range 0 250000
+    --indices-range 0 250000
 
 """
 
@@ -397,22 +402,22 @@ def fix_random_seeds(seed: int = 42) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--save_path", type=str, default="./data/")  # dir to save data
+    parser.add_argument("--save-path", type=str, default="./data/")  # dir to save data
     parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--cloud_pct", type=int, default=20)
-    parser.add_argument("--num_workers", type=int, default=8)
-    parser.add_argument("--log_freq", type=int, default=10)  # print frequency
+    parser.add_argument("--cloud-pct", type=int, default=20)
+    parser.add_argument("--num-workers", type=int, default=8)
+    parser.add_argument("--log-freq", type=int, default=10)  # print frequency
     parser.add_argument(
         "--resume", type=str, default=None
     )  # resume from existing coordinates
     parser.add_argument(
-        "--match_file",
+        "--match-file",
         type=str,
-        default=None,
+        required=True,
         help="match pre-sampled coordinates and indexes",
     )
     parser.add_argument(
-        "--indices_range", type=int, nargs=2, default=[0, 250000]
+        "--indices-range", type=int, nargs=2, default=[0, 250000]
     )  # range of download indices --> number of locations
     args = parser.parse_args()
 
@@ -497,18 +502,15 @@ if __name__ == "__main__":
     else:
         ext_path = os.path.join(args.save_path, "checked_locations.csv")
 
-    # if match from pre-sampled coords (e.g. SSL4EO-S12)
-    if args.match_file:
-        match_coords = {}
-        with open(args.match_file) as csv_file:
-            reader = csv.reader(csv_file)
-            for row in reader:
-                key = row[0]
-                val1 = float(row[1])
-                val2 = float(row[2])
-                match_coords[key] = (val1, val2)  # lon, lat
-    else:
-        raise NotImplementedError
+    # match from pre-sampled coords
+    match_coords = {}
+    with open(args.match_file) as csv_file:
+        reader = csv.reader(csv_file)
+        for row in reader:
+            key = row[0]
+            val1 = float(row[1])
+            val2 = float(row[2])
+            match_coords[key] = (val1, val2)  # lon, lat
 
     start_time = time.time()
     counter = Counter()
