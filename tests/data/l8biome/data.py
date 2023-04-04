@@ -33,21 +33,24 @@ bands = [
     "B11.TIF",
 ]
 
-barren_prefix = "LC80420082013220LGN00"
-forest_prefix = "LC80070662014234LGN00"
-
 filenames: FILENAME_HIERARCHY = {
-    "barren": {barren_prefix: []},
-    "forest": {forest_prefix: []},
+    "barren": {
+        "LC80420082013220LGN00": [], 
+        "LC80530022014156LGN00": [], 
+        "LC81360302014162LGN00": [],
+    },
+    "forest": {
+        "LC80070662014234LGN00":[], 
+        "LC80200462014005LGN00":[]
+    },
 }
 
-for band in bands:
-    filenames["barren"][barren_prefix].append(f"{barren_prefix}_{band}")
-    filenames["forest"][forest_prefix].append(f"{forest_prefix}_{band}")
+for land_type, files in filenames.items():
+    for prefix in files:
+        for band in bands:
+            filenames[land_type][prefix].append(f"{prefix}_{band}")
 
-filenames["barren"][barren_prefix].append(f"{barren_prefix}_fixedmask.img")
-filenames["forest"][forest_prefix].append(f"{forest_prefix}_fixedmask.img")
-
+        filenames[land_type][prefix].append(f"{prefix}_fixedmask.img")
 
 def create_file(path: str) -> None:
     dtype = "uint16"
@@ -78,6 +81,7 @@ def create_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:
     if isinstance(hierarchy, dict):
         # Recursive case
         for key, value in hierarchy.items():
+            print(directory, key)
             path = os.path.join(directory, key)
             os.makedirs(path, exist_ok=True)
             create_directory(path, value)
