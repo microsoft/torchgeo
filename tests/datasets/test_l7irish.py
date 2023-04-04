@@ -23,14 +23,6 @@ from torchgeo.datasets import L7Irish, BoundingBox, IntersectionDataset, UnionDa
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
-# ds = l7irish('data/l7irish', res=300)
-# sampler = RandomGeoSampler(ds, size=5000)
-# dl = DataLoader(ds, sampler=sampler)
-# bbox = BoundingBox(minx, maxx, miny, maxy, mint, maxt)
-# sample = ds[bbox]
-# ds.plot(sample)
-# plt.show()
-
 class TestL7Irish:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L7Irish:
