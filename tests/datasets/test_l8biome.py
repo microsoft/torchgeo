@@ -42,6 +42,7 @@ class TestL8Biome:
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["image"], torch.Tensor)
+        assert isinstance(x["mask"], torch.Tensor)
 
     def test_and(self, dataset: L8Biome) -> None:
         ds = dataset & dataset
