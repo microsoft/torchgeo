@@ -51,7 +51,7 @@ class L8Biome(RasterDataset):
     .. versionadded:: 0.5
     """  # noqa: E501
 
-    url = "https://huggingface.co/datasets/torchgeo/l8biome/blob/main/{}.tar.gz"  # noqa: E501
+    url = "https://huggingface.co/datasets/torchgeo/l8biome/resolve/main/{}.tar.gz"  # noqa: E501
 
     filenames_to_md5 = {
         "barren": "bb446fda3f6af50930849bb135e99f9c",
