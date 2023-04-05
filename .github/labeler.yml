@@ -23,6 +23,7 @@ documentation:
 - "docs/**"
 scripts:
 - "*.py"
+- "experiments/**"
 testing:
 - "tests/**"
 - ".github/workflows/**"
