@@ -65,7 +65,7 @@ class L8Biome(RasterDataset):
     }
 
     # https://gisgeography.com/landsat-file-naming-convention/
-    filename_glob = "LC8*_B2.TIF"
+    filename_glob = "LC8*_B1.TIF"
     filename_regex = r"""
         ^LC8
         (?P<wrs_path>\d{3})
