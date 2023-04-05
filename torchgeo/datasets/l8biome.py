@@ -185,40 +185,38 @@ class L8Biome(RasterDataset):
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
-        data_list: List[Tensor] = []
+        image_list: List[Tensor] = []
+        filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         for band in self.bands:
             band_filepaths = []
-            filepath = filepaths[0]
-            filename = os.path.basename(filepath)
-            directory = os.path.dirname(filepath)
-            match = re.match(self.filename_regex, filename)
-            if match:
-                if "date" in match.groupdict():
-                    start = match.start("band")
-                    end = match.end("band")
-                    filename = filename[:start] + band + filename[end:]
-            filepath = os.path.join(directory, filename)
+            for filepath in filepaths:
+                filename = os.path.basename(filepath)
+                directory = os.path.dirname(filepath)
+                match = re.match(filename_regex, filename)
+                if match:
+                    if "date" in match.groupdict():
+                        start = match.start("band")
+                        end = match.end("band")
+                        filename = filename[:start] + band + filename[end:]
+                filepath = os.path.join(directory, filename)
+                band_filepaths.append(filepath)
+            image_list.append(self._merge_files(band_filepaths, query))
+        image = torch.cat(image_list)
 
-            band_filepaths.append(filepath)
-            data_list.append(self._merge_files(band_filepaths, query))
-
-        img = torch.cat(data_list)
         mask_filepaths = []
-
-        for path in filepaths:
-            mask_file_path = path.replace("B2.TIF", "fixedmask.img")
-            mask_filepaths.append(mask_file_path)
-
+        for filepath in filepaths:
+            mask_filepath = filepath.replace("B2.TIF", "fixedmask.img")
+            mask_filepaths.append(mask_filepath)
         mask = self._merge_files(mask_filepaths, query)
-        mask_mapping = {64: 1, 128: 2, 192: 3, 255: 4}
 
+        mask_mapping = {64: 1, 128: 2, 192: 3, 255: 4}
         for k, v in mask_mapping.items():
             mask[mask == k] = v
 
         sample = {
             "crs": self.crs,
             "bbox": query,
-            "image": img.float(),
+            "image": image.float(),
             "mask": mask.long(),
         }
 
