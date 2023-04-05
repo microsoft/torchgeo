@@ -131,23 +131,23 @@ fig, (ax1, ax2) = plt.subplots(1, 2, gridspec_kw={"width_ratios": [4, 1]})
 fig.subplots_adjust(wspace=0.05)
 
 # Plot bands
-for sensor, value in non_thermal.items():
-    for res, value in value.items():
+for sensor, value1 in non_thermal.items():
+    for res, value2 in value1.items():
         ax1.broken_barh(
-            value["xranges"],
-            value["yrange"],
+            value2["xranges"],
+            value2["yrange"],
             edgecolor="k",
-            facecolors=value["facecolors"],
+            facecolors=value2["facecolors"],
             linewidth=0.5,
         )
 
-for sensor, value in thermal.items():
-    for res, value in value.items():
+for sensor, value1 in thermal.items():
+    for res, value2 in value1.items():
         ax2.broken_barh(
-            value["xranges"],
-            value["yrange"],
+            value2["xranges"],
+            value2["yrange"],
             edgecolor="k",
-            facecolors=value["facecolors"],
+            facecolors=value2["facecolors"],
             linewidth=0.5,
         )
 
