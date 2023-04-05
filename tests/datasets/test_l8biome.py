@@ -11,16 +11,31 @@ import pytest
 import torch
 import torch.nn as nn
 from rasterio.crs import CRS
+from _pytest.fixtures import SubRequest
+from _pytest.monkeypatch import MonkeyPatch
+
+import torchgeo.datasets.utils
 
 from torchgeo.datasets import BoundingBox, IntersectionDataset, L8Biome, UnionDataset
 
+def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+    shutil.copy(url, root)
 
 class TestL8Biome:
     @pytest.fixture
-    def dataset(self) -> L8Biome:
-        root = os.path.join("tests", "data", "l8biome")
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L8Biome:
+        monkeypatch.setattr(torchgeo.datasets.l8biome, "download_url", download_url)
+        filenames_to_md5 = {
+            "barren": "dadab52c2d5bcc9dace0115389eac102",
+            "forest": "cc30ce35bfc21d84861362ac5194a0e7",
+        }
+        
+        url = os.path.join("tests", "data", "l8biome", "{}.tar.gz")
+        monkeypatch.setattr(L8Biome, "url", url)
+        monkeypatch.setattr(L8Biome, "filenames_to_md5", filenames_to_md5)
+        root = str(tmp_path)
         transforms = nn.Identity()
-        return L8Biome(root, transforms=transforms)
+        return L8Biome(root, transforms=transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: L8Biome) -> None:
         x = dataset[dataset.bounds]
@@ -68,3 +83,13 @@ class TestL8Biome:
             IndexError, match="query: .* not found in index with bounds:"
         ):
             dataset[query]
+
+    def test_rgb_bands_absent_plot(self, dataset: L8Biome) -> None:
+        with pytest.raises(
+            ValueError, match="Dataset doesn't contain some of the RGB bands"
+            ):
+
+            ds = L8Biome(root=dataset.root, bands=["B1, B2", "B5"])
+            x = ds[ds.bounds]
+            ds.plot(x, suptitle="Test")
+            plt.close()
