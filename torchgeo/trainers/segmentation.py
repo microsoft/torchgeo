@@ -91,7 +91,8 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
                 the backbone
             in_channels: Number of channels in input image
             num_classes: Number of semantic classes to predict
-            class_weights: Optional rescaling weight given to each class and used with 'ce' loss     
+            class_weights: Optional rescaling weight given to each
+                class and used with 'ce' loss
             loss: Name of the loss function, currently supports
                 'ce', 'jaccard' or 'focal' loss
             ignore_index: Optional integer class index to ignore in the loss and metrics
@@ -123,11 +124,11 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
                 UserWarning,
             )
         self.ignore_index = kwargs["ignore_index"]
-    
+
         self.class_weights = kwargs.get("class_weights", None)
         if not isinstance(self.class_weights, (list, type(None))):
-            raise ValueError("class_weights must be a List or None")     
-        
+            raise ValueError("class_weights must be a List or None")
+
         self.config_task()
 
         self.train_metrics = MetricCollection(
