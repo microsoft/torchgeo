@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Loss functions self-supervised learning."""
+"""Loss functions for self-supervised learning."""
 
 import torch
 import torch.nn.functional as F
