@@ -79,7 +79,7 @@ class L8Biome(RasterDataset):
     date_format = "%Y%j"
 
     separate_files = True
-    rgb_bands = ["B4", "B2", "B3"]
+    rgb_bands = ["B4", "B3", "B2"]
     all_bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11"]
 
     def __init__(
