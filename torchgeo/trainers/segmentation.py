@@ -109,6 +109,8 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
            The *segmentation_model* parameter was renamed to *model*,
            *encoder_name* renamed to *backbone*, and
            *encoder_weights* to *weights*.
+        .. versionadded: 0.5
+            The *class_weights* parameter.
         """
         super().__init__()
 
