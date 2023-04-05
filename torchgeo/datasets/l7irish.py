@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Landsat 7 Cloud Cover Assessment Validation Data."""
+"""L7 Irish dataset."""
 import glob
 import os
 import re
@@ -19,7 +19,7 @@ from .utils import BoundingBox, download_url, extract_archive
 class L7Irish(RasterDataset):
     """L7 Irish dataset.
 
-    The `L7 Irish <https://landsat.usgs.gov/landsat-7-cloud-cover-assessment-validation-data>`__ dataset # noqa: E501
+    The `L7 Irish <https://landsat.usgs.gov/landsat-7-cloud-cover-assessment-validation-data>`__ dataset
     is based on Landsat 7 Enhanced Thematic Mapper Plus (ETM+) Level-1G scenes.
 
     Dataset features:
@@ -38,16 +38,16 @@ class L7Irish(RasterDataset):
     Dataset classes (5):
 
     0. Fill
-    64. Cloud Shadow
-    128. Clear
-    192. Thin Cloud
-    255. Cloud
+    1. Cloud Shadow
+    2. Clear
+    3. Thin Cloud
+    4. Cloud
 
     If you use this dataset in your research, please cite the following papers:
 
     * https://doi.org/10.5066/F7XD0ZWC
     * https://doi.org/10.1109/TGRS.2011.2164087
-    """
+    """# noqa: E501
 
     url = "https://huggingface.co/datasets/torchgeo/l7irish/resolve/main/{}.tar.gz"  # noqa: E501
 
@@ -65,7 +65,7 @@ class L7Irish(RasterDataset):
 
     classes = ["Fill", "Cloud Shadow", "Clear", "Thin Cloud", "Cloud"]
 
-    filename_glob = "L7*.TIF"
+    filename_glob = "L7*_B10.TIF"
 
     filename_regex = r"""
         ^L7[12]
@@ -79,7 +79,7 @@ class L7Irish(RasterDataset):
     date_format = "%Y%m%d"
 
     separate_files = True
-    rgb_bands = ["B40", "B20", "B30"]
+    rgb_bands = ["B30", "B20", "B10"]
     all_bands = ["B10", "B20", "B30", "B40", "B50", "B61", "B62", "B70", "B80"]
 
     def __init__(
@@ -87,23 +87,23 @@ class L7Irish(RasterDataset):
         root: str = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         bands: Sequence[str] = all_bands,
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new Landsat7 Cloud Cover Assessment Validation dataset instance.
+        """Initialize a new L7Irish instance.
 
         Args:
             root: root directory where dataset can be found
-            transforms: a function/transform that takes input sample and its target as
-                entry and returns a transformed version
-            cache: if True, cache file handle to speed up repeated sampling
             crs: :term:`coordinate reference system (CRS)` to warp to
-            (defaults to the CRS of the first file found)
+                (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
-            (defaults to the resolution of the first file found)
+                (defaults to the resolution of the first file found)
+            transforms: a function/transform that takes an input sample
+                and returns a transformed version
+            cache: if True, cache file handle to speed up repeated sampling
             bands: bands to return
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
@@ -131,8 +131,7 @@ class L7Irish(RasterDataset):
         # Check if the extracted files already exist
         pathname = os.path.join(self.root, "**", self.filename_glob)
         for fname in glob.iglob(pathname, recursive=True):
-            if not fname.endswith(".tar.gz"):
-                return
+            return
 
         # Check if the tar files have already been downloaded
         pathname = os.path.join(self.root, "*.tar.gz")
@@ -214,7 +213,7 @@ class L7Irish(RasterDataset):
         ]
 
         mask = self._merge_files(mask_filepaths, query)
-        mask_mapping = {0: 0, 64: 1, 128: 2, 192: 3, 255: 4}
+        mask_mapping = {64: 1, 128: 2, 192: 3, 255: 4}
 
         for k, v in mask_mapping.items():
             mask[mask == k] = v

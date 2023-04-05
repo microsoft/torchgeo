@@ -27,6 +27,7 @@ class TestL7Irish:
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["image"], torch.Tensor)
+        assert isinstance(x["mask"], torch.Tensor)
 
     def test_and(self, dataset: L7Irish) -> None:
         ds = dataset & dataset
