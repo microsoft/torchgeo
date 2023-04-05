@@ -49,7 +49,7 @@ class L7IrishDataModule(GeoDataModule):
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
-        
+
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
