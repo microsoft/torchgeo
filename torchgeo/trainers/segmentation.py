@@ -59,8 +59,12 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
 
         if self.hyperparams["loss"] == "ce":
             ignore_value = -1000 if self.ignore_index is None else self.ignore_index
-            class_weights = torch.FloatTensor(self.class_weights) if self.class_weights else None
-            self.loss = nn.CrossEntropyLoss(ignore_index=ignore_value,weights=class_weights)
+            class_weights = (
+                torch.FloatTensor(self.class_weights) if self.class_weights else None
+            )
+            self.loss = nn.CrossEntropyLoss(
+                ignore_index=ignore_value, weights=class_weights
+            )
         elif self.hyperparams["loss"] == "jaccard":
             self.loss = smp.losses.JaccardLoss(
                 mode="multiclass", classes=self.hyperparams["num_classes"]
@@ -119,7 +123,7 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
         self.ignore_index = kwargs["ignore_index"]
     
         if not isinstance(kwargs["class_weights"], (list, type(None))):
-            raise ValueError("class_weights must be a List or None")      
+            raise ValueError("class_weights must be a List or None")     
         self.class_weights = kwargs["class_weights"]
         self.config_task()
 
