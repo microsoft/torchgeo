@@ -47,7 +47,7 @@ class L7Irish(RasterDataset):
 
     * https://doi.org/10.5066/F7XD0ZWC
     * https://doi.org/10.1109/TGRS.2011.2164087
-    """# noqa: E501
+    """  # noqa: E501
 
     url = "https://huggingface.co/datasets/torchgeo/l7irish/resolve/main/{}.tar.gz"  # noqa: E501
 
@@ -177,40 +177,44 @@ class L7Irish(RasterDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        img_filepaths = cast(List[str], [hit.object for hit in hits])
+        filepaths = cast(List[str], [hit.object for hit in hits])
 
-        if not img_filepaths:
+        if not filepaths:
             raise IndexError(
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
-        data_list: List[Tensor] = []
-
+        image_list: List[Tensor] = []
+        filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         for band in self.all_bands:
             band_filepaths = []
-            for img_filepath in img_filepaths:
-                if band in img_filepath:
-                    filepath = img_filepath
-                    filename = os.path.basename(filepath)
-                    directory = os.path.dirname(filepath)
-                    match = re.match(self.filename_regex, filename)
-                    if match:
-                        if "date" in match.groupdict():
-                            start = match.start("band")
-                            end = match.end("band")
-                            filename = filename[: start - 1] + band + filename[end:]
-                    filepath = os.path.join(directory, filename)
-                    band_filepaths.append(filepath)
-                    data_list.append(self._merge_files(band_filepaths, query))
+            for filepath in filepaths:
+                filename = os.path.basename(filepath)
+                directory = os.path.dirname(filepath)
+                match = re.match(filename_regex, filename)
+                if match:
+                    if "date" in match.groupdict():
+                        start = match.start("band")
+                        end = match.end("band")
+                        filename = filename[:start] + band + filename[end:]
+                        if band in [
+                            "B62",
+                            "B70",
+                            "B80",
+                        ]:  # naming difference for these three bands
+                            filename = filename.replace(filename[2], "2", 1)
+                filepath = os.path.join(directory, filename)
+                band_filepaths.append(filepath)
+            image_list.append(self._merge_files(band_filepaths, query))
+        img = torch.cat(image_list)
 
-        img = torch.cat(data_list)
-
-        mask_filepaths = [
-            path.replace(
-                path.split(os.sep)[-1], path.split(os.sep)[-2] + "_mask2019.TIF"
+        mask_filepaths = []
+        for filepath in filepaths:
+            mask_filepath = filepath.replace(
+                os.path.basename(filepath),
+                os.path.basename(os.path.dirname(filepath)) + "_mask2019.TIF",
             )
-            for path in img_filepaths
-        ]
+            mask_filepaths.append(mask_filepath)
 
         mask = self._merge_files(mask_filepaths, query)
         mask_mapping = {64: 1, 128: 2, 192: 3, 255: 4}
@@ -276,9 +280,7 @@ class L7Irish(RasterDataset):
             axs[1].set_title("Mask")
 
         if showing_predictions:
-            axs[2].imshow(
-                predictions, vmin=0, vmax=4, cmap="gray"
-            )
+            axs[2].imshow(predictions, vmin=0, vmax=4, cmap="gray")
             axs[2].axis("off")
             if show_titles:
                 axs[2].set_title("Predictions")
