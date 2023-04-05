@@ -37,7 +37,7 @@ import csv
 import os
 import time
 import warnings
-from typing import List, Tuple
+from typing import Tuple
 
 import numpy as np
 import pandas as pd
@@ -51,34 +51,27 @@ warnings.simplefilter("ignore", UserWarning)
 """ samplers to get locations of interest points"""
 
 
-def get_world_cities(download_root: str = "world_cities") -> pd.DataFrame:
+def get_world_cities(
+    download_root: str = "world_cities", size: int = 10000
+) -> pd.DataFrame:
     url = "https://simplemaps.com/static/data/world-cities/basic/simplemaps_worldcities_basicv1.71.zip"  # noqa: E501
     filename = "worldcities.csv"
     if not os.path.exists(os.path.join(download_root, os.path.basename(url))):
         download_and_extract_archive(url, download_root)
-    cities = pd.read_csv(os.path.join(download_root, filename))
+    cols = ["city", "lat", "lng", "population"]
+    cities = pd.read_csv(os.path.join(download_root, filename), usecols=cols)
     cities.at[8436, "population"] = 50789  # fix one bug (Tecax) in the csv file
-    cities = cities[["city", "lat", "lng", "population"]]
-    return cities
-
-
-def get_interest_points(
-    cities: pd.DataFrame, size: int = 10000
-) -> List[Tuple[float, float]]:
     cities = cities.sort_values(by=["population"], ascending=False).head(size)
-    points = [(float(c["lng"]), float(c["lat"])) for _, c in cities.iterrows()]
-    return points
+    return cities
 
 
 def km2deg(kms: float, radius: float = 6371) -> float:
     return kms / (2.0 * radius * np.pi / 360.0)
 
 
-def sample_point(
-    interest_points: List[Tuple[float, float]], std: float
-) -> Tuple[float, float]:
-    rng = np.random.default_rng()
-    point = rng.choice(interest_points)
+def sample_point(cities: pd.DataFrame, std: float) -> Tuple[float, float]:
+    city = cities.sample()
+    point = (float(city["lng"]), float(city["lat"]))
     std = km2deg(std)
     lon, lat = np.random.normal(loc=point, scale=[std, std])
     return (lon, lat)
@@ -123,7 +116,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    np.random.seed(42)
 
     # if resume
     ext_coords = {}
@@ -140,8 +132,7 @@ if __name__ == "__main__":
         ext_path = os.path.join(args.save_path, "sampled_locations.csv")
 
     # initialize sampler
-    cities = get_world_cities()
-    interest_points = get_interest_points(cities, size=args.num_cities)
+    cities = get_world_cities(download_root="world_cities", size=args.num_cities)
     bbox_size = args.size / 1000  # no overlap between adjacent patches
     bbox_size_degree = km2deg(bbox_size)
 
@@ -167,9 +158,7 @@ if __name__ == "__main__":
         # sample new coord and check overlap
         count = 0
         while count < 1:
-            new_coord = sample_point(
-                interest_points, args.std
-            )  # (lon,lat) of top-10000 cities
+            new_coord = sample_point(cities, args.std)  # (lon,lat) of top-10000 cities
             bbox = create_bbox(new_coord, bbox_size_degree)
             if list(rtree_coords.intersection(bbox)):
                 continue
