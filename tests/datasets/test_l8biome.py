@@ -10,16 +10,16 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from rasterio.crs import CRS
-from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
+from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-
 from torchgeo.datasets import BoundingBox, IntersectionDataset, L8Biome, UnionDataset
+
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
+
 
 class TestL8Biome:
     @pytest.fixture
@@ -29,7 +29,7 @@ class TestL8Biome:
             "barren": "dadab52c2d5bcc9dace0115389eac102",
             "forest": "cc30ce35bfc21d84861362ac5194a0e7",
         }
-        
+
         url = os.path.join("tests", "data", "l8biome", "{}.tar.gz")
         monkeypatch.setattr(L8Biome, "url", url)
         monkeypatch.setattr(L8Biome, "filenames_to_md5", filenames_to_md5)
@@ -87,9 +87,8 @@ class TestL8Biome:
     def test_rgb_bands_absent_plot(self, dataset: L8Biome) -> None:
         with pytest.raises(
             ValueError, match="Dataset doesn't contain some of the RGB bands"
-            ):
-
-            ds = L8Biome(root=dataset.root, bands=["B1, B2", "B5"])
+        ):
+            ds = L8Biome(root=dataset.root, bands=["B1", "B2", "B5"])
             x = ds[ds.bounds]
             ds.plot(x, suptitle="Test")
             plt.close()
