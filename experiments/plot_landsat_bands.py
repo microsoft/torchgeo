@@ -3,129 +3,15 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import json
+
 import matplotlib.pyplot as plt
 
 # https://www.usgs.gov/faqs/what-are-band-designations-landsat-satellites
-non_thermal = {
-    "mss": {
-        60: {
-            "xranges": [(0.5, 0.1), (0.6, 0.1), (0.7, 0.1), (0.8, 0.3)],
-            "yrange": [60, 5],
-            "facecolors": ["tab:green", "tab:red", "tab:pink", "tab:orange"],
-            "labels": [1, 2, 3, 4],
-        }
-    },
-    "tm": {
-        30: {
-            "xranges": [
-                (0.45, 0.07),
-                (0.52, 0.08),
-                (0.63, 0.06),
-                (0.76, 0.14),
-                (1.55, 0.2),
-                (2.08, 0.27),
-            ],
-            "yrange": [44, 5],
-            "facecolors": [
-                "tab:blue",
-                "tab:green",
-                "tab:red",
-                "tab:pink",
-                "tab:orange",
-                "tab:gray",
-            ],
-            "labels": [1, 2, 3, 4, 5, 7],
-        }
-    },
-    "etm": {
-        30: {
-            "xranges": [
-                (0.45, 0.07),
-                (0.52, 0.08),
-                (0.63, 0.06),
-                (0.77, 0.13),
-                (1.55, 0.2),
-                (2.09, 0.26),
-            ],
-            "yrange": [28, 5],
-            "facecolors": [
-                "tab:blue",
-                "tab:green",
-                "tab:red",
-                "tab:pink",
-                "tab:orange",
-                "tab:gray",
-            ],
-            "labels": [1, 2, 3, 4, 5, 7],
-        },
-        15: {
-            "xranges": [(0.52, 0.38)],
-            "yrange": [22, 5],
-            "facecolors": ["tab:olive"],
-            "labels": [8],
-        },
-    },
-    "oli": {
-        30: {
-            "xranges": [
-                (0.43, 0.02),
-                (0.45, 0.06),
-                (0.53, 0.06),
-                (0.64, 0.03),
-                (0.85, 0.03),
-                (1.57, 0.08),
-                (2.11, 0.18),
-                (1.36, 0.02),
-            ],
-            "yrange": [6, 5],
-            "facecolors": [
-                "tab:cyan",
-                "tab:blue",
-                "tab:green",
-                "tab:red",
-                "tab:pink",
-                "tab:orange",
-                "tab:gray",
-                "tab:purple",
-            ],
-            "labels": [1, 2, 3, 4, 5, 6, 7, 9],
-        },
-        15: {
-            "xranges": [(0.50, 0.18)],
-            "yrange": [0, 5],
-            "facecolors": ["tab:olive"],
-            "labels": [8],
-        },
-    },
-}
-
-thermal = {
-    "tm": {
-        120: {
-            "xranges": [(10.40, 2.1)],
-            "yrange": [50, 5],
-            "facecolors": ["tab:brown"],
-            "labels": [6],
-        }
-    },
-    "etm": {
-        60: {
-            "xranges": [(10.40, 2.1)],
-            "yrange": [34, 5],
-            "facecolors": ["tab:brown"],
-            "labels": [6],
-        }
-    },
-    "tirs": {
-        100: {
-            "xranges": [(10.60, 0.59), (11.50, 1.01)],
-            "yrange": [12, 5],
-            "facecolors": ["tab:brown", "tab:brown"],
-            "labels": [10, 11],
-        }
-    },
-}
-
+with open("landsat_non_thermal.json") as f:
+    non_thermal = json.load(f)
+with open("landsat_thermal.json") as f:
+    thermal = json.load(f)
 
 fig, (ax1, ax2) = plt.subplots(1, 2, gridspec_kw={"width_ratios": [4, 1]})
 fig.subplots_adjust(wspace=0.05)
