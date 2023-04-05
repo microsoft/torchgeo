@@ -30,7 +30,7 @@ jobs:
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
-        pip install .[docs,tests] planetary_computer pystac pytest-rerunfailures tensorboard
+        pip install .[docs,tests] planetary_computer pystac pytest-rerunfailures
         pip list
     - name: Run notebook checks
       run: pytest --nbmake --durations=10 --reruns=10 docs/tutorials
