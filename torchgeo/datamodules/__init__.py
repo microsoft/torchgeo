@@ -14,6 +14,7 @@ from .fair1m import FAIR1MDataModule
 from .geo import GeoDataModule, NonGeoDataModule
 from .gid15 import GID15DataModule
 from .inria import InriaAerialImageLabelingDataModule
+from .l8biome import L8BiomeDataModule
 from .landcoverai import LandCoverAIDataModule
 from .loveda import LoveDADataModule
 from .naip import NAIPChesapeakeDataModule
@@ -34,6 +35,7 @@ from .xview import XView2DataModule
 __all__ = (
     # GeoDataset
     "ChesapeakeCVPRDataModule",
+    "L8BiomeDataModule",
     "NAIPChesapeakeDataModule",
     # NonGeoDataset
     "BigEarthNetDataModule",

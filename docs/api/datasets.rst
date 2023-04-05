@@ -93,6 +93,11 @@ iNaturalist
 
 .. autoclass:: INaturalist
 
+L8 Biome
+^^^^^^^^
+
+.. autoclass:: L8Biome
+
 LandCover.ai Geo
 ^^^^^^^^^^^^^^^^
 

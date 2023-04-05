@@ -11,6 +11,11 @@ Chesapeake Land Cover
 
 .. autoclass:: ChesapeakeCVPRDataModule
 
+L8 Biome
+^^^^^^^^
+
+.. autoclass:: L8BiomeDataModule
+
 NAIP
 ^^^^
 
