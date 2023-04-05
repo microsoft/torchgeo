@@ -10,17 +10,32 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
+from _pytest.monkeypatch import MonkeyPatch
 from rasterio.crs import CRS
 
+import torchgeo.datasets.utils
 from torchgeo.datasets import BoundingBox, IntersectionDataset, L7Irish, UnionDataset
+
+
+def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+    shutil.copy(url, root)
 
 
 class TestL7Irish:
     @pytest.fixture
-    def dataset(self) -> L7Irish:
-        root = os.path.join("tests", "data", "l7irish")
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L7Irish:
+        monkeypatch.setattr(torchgeo.datasets.l7irish, "download_url", download_url)
+        md5s = {
+            "austral": "82d44b9c8e9ac57e89e51bfddb772df7",
+            "boreal": "d3a153f94fc66096ad98ad890d762e8a",
+        }
+
+        url = os.path.join("tests", "data", "l7irish", "{}.tar.gz")
+        monkeypatch.setattr(L7Irish, "url", url)
+        monkeypatch.setattr(L7Irish, "md5s", md5s)
+        root = str(tmp_path)
         transforms = nn.Identity()
-        return L7Irish(root, transforms=transforms)
+        return L7Irish(root, transforms=transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: L7Irish) -> None:
         x = dataset[dataset.bounds]

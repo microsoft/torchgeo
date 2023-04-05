@@ -5,8 +5,8 @@
 
 import hashlib
 import os
-import random
 import shutil
+from typing import Dict, List, Union
 
 import numpy as np
 import rasterio
@@ -16,28 +16,52 @@ from rasterio.crs import CRS
 SIZE = 36
 
 np.random.seed(0)
-random.seed(0)
 
-dir = "austral"
-patch = "p226_r98"
-files = [
-    "L71226098_09820011112_B10.TIF",
-    "L71226098_09820011112_B20.TIF",
-    "L71226098_09820011112_B30.TIF",
-    "L71226098_09820011112_B40.TIF",
-    "L71226098_09820011112_B50.TIF",
-    "L71226098_09820011112_B61.TIF",
-    "L72226098_09820011112_B62.TIF",
-    "L72226098_09820011112_B70.TIF",
-    "L72226098_09820011112_B80.TIF",
-    "p226_r98_mask2019.TIF",
+FILENAME_HIERARCHY = Union[Dict[str, "FILENAME_HIERARCHY"], List[str]]
+
+bands = [
+    "B10.TIF",
+    "B20.TIF",
+    "B30.TIF",
+    "B40.TIF",
+    "B50.TIF",
+    "B61.TIF",
+    "B62.TIF",
+    "B70.TIF",
+    "B80.TIF",
 ]
+
+filenames: FILENAME_HIERARCHY = {
+    "austral": {"p226_r98": [], "p227_r98": [], "p230_r95": []},
+    "boreal": {"p2_r27": [], "p128_r25": []},
+}
+prefixes = [
+    "L71226098_09820011112",
+    "L71227098_09820011103",
+    "L71230095_09520011210",
+    "L71002027_02720010604",
+    "L71128025_02520010607",
+]
+
+for land_type, patches in filenames.items():
+    for patch in patches:
+        p, r = patch.split("_r")
+        key = p[1:] + f"{int(r):03}"
+        for prefix in prefixes:
+            if key in prefix:
+                for band in bands:
+                    if band in ["B62.TIF", "B70.TIF", "B80.TIF"]:
+                        prefix = prefix.replace(prefix[2], "2", 1)
+                    filenames[land_type][patch].append(f"{prefix}_{band}")
+
+        filenames[land_type][patch].append(f"{patch}_mask2019.TIF")
 
 
 def create_file(path: str) -> None:
+    dtype = "uint8"
     profile = {
         "driver": "GTiff",
-        "dtype": "uint8",
+        "dtype": dtype,
         "width": SIZE,
         "height": SIZE,
         "count": 1,
@@ -45,46 +69,52 @@ def create_file(path: str) -> None:
         "transform": Affine(30.0, 0.0, 462884.99999999994, 0.0, -30.0, 4071915.0),
     }
 
-    if path.endswith("B8.TIF"):
-        profile["width"] = profile["height"] = SIZE * 2  # resolution = 15m
-        profile["transform"]: Affine(
+    if path.endswith("B80.TIF"):
+        profile["transform"] = Affine(
             15.0, 0.0, 462892.49999999994, 0.0, -15.0, 4071907.5
         )
+        profile["width"] = profile["height"] = SIZE * 2
 
     if path.endswith("B61.TIF") or path.endswith("B62.TIF"):
-        profile["width"] = profile["height"] = SIZE // 2  # resolution = 60m
-        profile["transform"]: Affine(
+        profile["transform"] = Affine(
             60.0, 0.0, 462892.49999999994, 0.0, -60.0, 4071907.5
         )
+        profile["width"] = profile["height"] = SIZE // 2
 
     Z = np.random.randn(SIZE, SIZE).astype(profile["dtype"])
 
     if path.endswith("_mask2019.TIF"):
-        Z = np.random.randint(5, size=(SIZE, SIZE), dtype="uint8")
+        Z = np.random.randint(5, size=(SIZE, SIZE), dtype=dtype)
 
     with rasterio.open(path, "w", **profile) as src:
         src.write(Z, 1)
 
 
+def create_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:
+    if isinstance(hierarchy, dict):
+        # Recursive case
+        for key, value in hierarchy.items():
+            path = os.path.join(directory, key)
+            os.makedirs(path, exist_ok=True)
+            create_directory(path, value)
+    else:
+        # Base case
+        for value in hierarchy:
+            path = os.path.join(directory, value)
+            create_file(path)
+
+
 if __name__ == "__main__":
-    # Create images
-    filename = dir + ".tar.gz"
-    fp = os.path.join(os.getcwd(), "tests", "data", "l7irish", dir)
+    create_directory(".", filenames)
 
-    # Remove old data
-    if os.path.isdir(fp):
-        shutil.rmtree(fp)
+    directories = ["austral", "boreal"]
+    for directory in directories:
+        filename = str(directory)
 
-    os.makedirs(fp)
-    os.makedirs(os.path.join(fp, patch))
+        # Create tarballs
+        shutil.make_archive(filename, "gztar", ".", directory)
 
-    for file in files:
-        create_file(os.path.join(fp, patch, file))
-
-    # Compress data
-    shutil.make_archive(fp, format="gztar", root_dir=os.path.split(fp)[0], base_dir=dir)
-
-    # Compute checksums
-    with open(os.path.join(os.path.split(fp)[0], filename), "rb") as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f"{filename}: {md5}")
+        # # Compute checksums
+        with open(f"{filename}.tar.gz", "rb") as f:
+            md5 = hashlib.md5(f.read()).hexdigest()
+            print(filename, md5)
