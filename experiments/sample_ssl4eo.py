@@ -37,9 +37,10 @@ import csv
 import os
 import time
 import warnings
-from typing import Any, Dict, List, Tuple
+from typing import List, Tuple
 
 import numpy as np
+import pandas as pd
 from rtree import index
 from torchvision.datasets.utils import download_and_extract_archive
 from tqdm import tqdm
@@ -50,27 +51,22 @@ warnings.simplefilter("ignore", UserWarning)
 """ samplers to get locations of interest points"""
 
 
-def get_world_cities(download_root: str = "world_cities") -> List[Dict[str, Any]]:
+def get_world_cities(download_root: str = "world_cities") -> pd.DataFrame:
     url = "https://simplemaps.com/static/data/world-cities/basic/simplemaps_worldcities_basicv1.71.zip"  # noqa: E501
     filename = "worldcities.csv"
     if not os.path.exists(os.path.join(download_root, os.path.basename(url))):
         download_and_extract_archive(url, download_root)
-    with open(os.path.join(download_root, filename), encoding="UTF-8") as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=",", quotechar='"')
-        cities = []
-        for row in reader:
-            row["population"] = (
-                row["population"].replace(".", "") if row["population"] else "0"
-            )
-            cities.append(row)
+    cities = pd.read_csv(os.path.join(download_root, filename))
+    cities.at[8436, "population"] = 50789  # fix one bug (Tecax) in the csv file
+    cities = cities[["city", "lat", "lng", "population"]]
     return cities
 
 
 def get_interest_points(
-    cities: List[Dict[str, str]], size: int = 10000
-) -> List[List[float]]:
-    cities = sorted(cities, key=lambda c: int(c["population"]), reverse=True)[:size]
-    points = [[float(c["lng"]), float(c["lat"])] for c in cities]
+    cities: pd.DataFrame, size: int = 10000
+) -> List[Tuple[float, float]]:
+    cities = cities.sort_values(by=["population"], ascending=False).head(size)
+    points = [(float(c["lng"]), float(c["lat"])) for _, c in cities.iterrows()]
     return points
 
 
@@ -78,7 +74,9 @@ def km2deg(kms: float, radius: float = 6371) -> float:
     return kms / (2.0 * radius * np.pi / 360.0)
 
 
-def sample_point(interest_points: List[List[float]], std: float) -> Tuple[float, float]:
+def sample_point(
+    interest_points: List[Tuple[float, float]], std: float
+) -> Tuple[float, float]:
     rng = np.random.default_rng()
     point = rng.choice(interest_points)
     std = km2deg(std)
