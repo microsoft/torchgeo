@@ -201,7 +201,7 @@ class L7Irish(RasterDataset):
                             "B62",
                             "B70",
                             "B80",
-                        ]:  # naming difference for these three bands
+                        ]:
                             filename = filename.replace(filename[2], "2", 1)
                 filepath = os.path.join(directory, filename)
                 band_filepaths.append(filepath)
