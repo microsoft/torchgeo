@@ -46,6 +46,7 @@ dependencies:
     - segmentation-models-pytorch>=0.2
     - setuptools>=42
     - sphinx>=4,<6
+    - tensorboard>=2.9.1
     - timm>=0.4.12
     - torchmetrics>=0.10
     - zipfile-deflate64>=0.2
