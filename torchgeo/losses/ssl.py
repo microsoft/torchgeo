@@ -5,7 +5,7 @@
 
 import torch
 import torch.nn.functional as F
-from torch.nn.modules import Module
+from torch.nn import Module
 
 
 class NTXentLoss(Module):
