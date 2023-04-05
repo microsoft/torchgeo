@@ -63,7 +63,7 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
                 torch.FloatTensor(self.class_weights) if self.class_weights else None
             )
             self.loss = nn.CrossEntropyLoss(
-                ignore_index=ignore_value, weights=class_weights
+                ignore_index=ignore_value, weight=class_weights
             )
         elif self.hyperparams["loss"] == "jaccard":
             self.loss = smp.losses.JaccardLoss(
