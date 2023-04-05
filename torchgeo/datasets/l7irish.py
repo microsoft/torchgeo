@@ -197,11 +197,7 @@ class L7Irish(RasterDataset):
                         start = match.start("band")
                         end = match.end("band")
                         filename = filename[:start] + band + filename[end:]
-                        if band in [
-                            "B62",
-                            "B70",
-                            "B80",
-                        ]:
+                        if band in ["B62", "B70", "B80"]:
                             filename = filename.replace(filename[2], "2", 1)
                 filepath = os.path.join(directory, filename)
                 band_filepaths.append(filepath)
