@@ -17,6 +17,7 @@ class L7IrishDataModule(GeoDataModule):
 
     .. versionadded:: 0.5
     """
+
     mean = torch.tensor(0)
     std = torch.tensor(10000)
 
