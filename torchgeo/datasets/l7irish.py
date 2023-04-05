@@ -278,7 +278,7 @@ class L7Irish(RasterDataset):
 
         if showing_predictions:
             axs[2].imshow(
-                predictions, vmin=0, vmax=4, cmap="gray", interpolation="none"
+                predictions, vmin=0, vmax=4, cmap="gray"
             )
             axs[2].axis("off")
             if show_titles:
