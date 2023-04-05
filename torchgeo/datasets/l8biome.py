@@ -18,7 +18,7 @@ from .utils import BoundingBox, download_url, extract_archive
 
 
 class L8Biome(RasterDataset):
-    """L8 Biome datasets.
+    """L8 Biome dataset.
 
     The `L8 Biome <https://landsat.usgs.gov/landsat-8-cloud-cover-assessment-validation-data>`__ dataset
     is a cloud validation dataset of Pre-Collection Landsat 8
@@ -32,6 +32,7 @@ class L8Biome(RasterDataset):
 
     Dataset format:
 
+    * Images are stored as GeoTIFF files corresponding to different bands
     * Each cloud mask is in ENVI binary format.
 
     Dataset classes:
@@ -50,7 +51,7 @@ class L8Biome(RasterDataset):
     .. versionadded:: 0.5
     """  # noqa: E501
 
-    url = "https://huggingface.co/datasets/torchgeo/l8biome/blob/main/{}.tar.gz"
+    url = "https://huggingface.co/datasets/torchgeo/l8biome/blob/main/{}.tar.gz"  # noqa: E501
 
     filenames_to_md5 = {
         "barren": "bb446fda3f6af50930849bb135e99f9c",
@@ -86,8 +87,8 @@ class L8Biome(RasterDataset):
         root: str = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         bands: Sequence[str] = all_bands,
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -97,14 +98,13 @@ class L8Biome(RasterDataset):
         Args:
 
             root: root directory where dataset can be found
-            transforms: a function/transform that takes input sample and its target as
-                entry and returns a transformed version
-            cache: if True, cache file handle to speed up repeated sampling
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
+            bands: bands to return (defaults to all bands)
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
-            bands: bands to return
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 after downloading files (may be slow)
