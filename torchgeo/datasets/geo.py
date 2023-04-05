@@ -420,7 +420,7 @@ class RasterDataset(GeoDataset):
                             start = match.start("band")
                             end = match.end("band")
                             filename = filename[:start] + band + filename[end:]
-                    filepath = glob.glob(os.path.join(directory, filename))[0]
+                    filepath = os.path.join(directory, filename)
                     band_filepaths.append(filepath)
                 data_list.append(self._merge_files(band_filepaths, query))
             data = torch.cat(data_list)
