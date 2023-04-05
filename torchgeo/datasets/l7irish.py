@@ -270,7 +270,7 @@ class L7Irish(RasterDataset):
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
         axs[0].imshow(image)
         axs[0].axis("off")
-        axs[1].imshow(mask, vmin=0, vmax=4, cmap="gray", interpolation="none")
+        axs[1].imshow(mask, vmin=0, vmax=4, cmap="gray")
         axs[1].axis("off")
         if show_titles:
             axs[0].set_title("Image")
