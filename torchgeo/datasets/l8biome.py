@@ -205,7 +205,7 @@ class L8Biome(RasterDataset):
 
         mask_filepaths = []
         for filepath in filepaths:
-            mask_filepath = filepath.replace("B2.TIF", "fixedmask.img")
+            mask_filepath = filepath.replace("B1.TIF", "fixedmask.img")
             mask_filepaths.append(mask_filepath)
         mask = self._merge_files(mask_filepaths, query)
 
