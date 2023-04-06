@@ -65,8 +65,8 @@ class L7Irish(RasterDataset):
 
     classes = ["Fill", "Cloud Shadow", "Clear", "Thin Cloud", "Cloud"]
 
+    # https://landsat.usgs.gov/cloud-validation/cca_irish_2015/L7_Irish_Cloud_Validation_Masks.xml
     filename_glob = "L7*_B10.TIF"
-
     filename_regex = r"""
         ^L7[12]
         (?P<wrs_path>\d{3})
