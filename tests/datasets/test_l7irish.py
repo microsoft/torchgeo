@@ -83,7 +83,7 @@ class TestL7Irish:
             IndexError, match="query: .* not found in index with bounds:"
         ):
             dataset[query]
-    
+
     def test_rgb_bands_absent_plot(self, dataset: L7Irish) -> None:
         with pytest.raises(
             ValueError, match="Dataset doesn't contain some of the RGB bands"
