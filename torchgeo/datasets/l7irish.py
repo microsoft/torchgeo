@@ -43,7 +43,7 @@ class L7Irish(RasterDataset):
     3. Thin Cloud
     4. Cloud
 
-    If you use this dataset in your research, please cite the following papers:
+    If you use this dataset in your research, please cite the following:
 
     * https://doi.org/10.5066/F7XD0ZWC
     * https://doi.org/10.1109/TGRS.2011.2164087
