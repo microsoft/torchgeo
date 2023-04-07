@@ -1,29 +1,31 @@
-""" Sample and download Satellite tiles with Google Earth Engine
+#!/usr/bin/env python3
+
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+""" Sample and download Sentinel-1/2 images with Google Earth Engine
 
 #### run the script:
-### resample new ids with grid overlap search
+### match and download pre-sampled locations
 python download_ssl4eo.py \
-    --save_path ./data \
-    --num_workers 8 \
-    --cloud_pct 20 \
-    --log_freq 100 \
-    --indices_range 0 250000
+    --save-path ./data \
+    --num-workers 8 \
+    --cloud-pct 20 \
+    --log-freq 100 \
+    --match-file ./data/sampled_locations.csv \
+    --indices-range 0 250000
 
 ### resume from interruption
 python download_ssl4eo.py \
-    --save_path ./data \
-    --num_workers 8 \
-    --cloud_pct 20 \
-    --log_freq 100 \
+    -- ... \
     --resume ./data/checked_locations.csv \
-    --indices_range 0 250000
+    --indices-range 0 250000
 
 """
 
 import argparse
 import csv
 import json
-import math
 import os
 import time
 import warnings
@@ -35,12 +37,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import ee
 import numpy as np
 import rasterio
-import shapefile
 import urllib3
 from rasterio.transform import Affine
-from shapely.geometry import Point, shape
-from torchvision.datasets.utils import download_and_extract_archive
-from tqdm import tqdm
 
 warnings.simplefilter("ignore", UserWarning)
 
@@ -75,103 +73,6 @@ ALL_BANDS_L1C = [
 ]
 RGB_BANDS = ["B4", "B3", "B2"]
 ALL_BANDS_GRD = ["VV", "VH"]
-
-
-""" samplers to get locations of interest points"""
-
-
-class UniformSampler:
-    def sample_point(self) -> List[float]:
-        lon = np.random.uniform(-180, 180)
-        lat = np.random.uniform(-90, 90)
-        return [lon, lat]
-
-
-class GaussianSampler:
-    def __init__(
-        self,
-        interest_points: Optional[List[List[float]]] = None,
-        num_cities: int = 1000,
-        std: float = 20,
-    ) -> None:
-        if interest_points is None:
-            cities = self.get_world_cities()
-            self.interest_points = self.get_interest_points(cities, size=num_cities)
-        else:
-            self.interest_points = interest_points
-        self.std = std
-
-    def sample_point(self) -> List[float]:
-        rng = np.random.default_rng()
-        point = rng.choice(self.interest_points)
-        std = self.km2deg(self.std)
-        lon, lat = np.random.normal(loc=point, scale=[std, std])
-        return [lon, lat]
-
-    @staticmethod
-    def get_world_cities(download_root: str = "world_cities") -> List[Dict[str, Any]]:
-        url = "https://simplemaps.com/static/data/world-cities/basic/simplemaps_worldcities_basicv1.71.zip"  # noqa: E501
-        filename = "worldcities.csv"
-        if not os.path.exists(os.path.join(download_root, os.path.basename(url))):
-            download_and_extract_archive(url, download_root)
-        with open(os.path.join(download_root, filename), encoding="UTF-8") as csvfile:
-            reader = csv.DictReader(csvfile, delimiter=",", quotechar='"')
-            cities = []
-            for row in reader:
-                row["population"] = (
-                    row["population"].replace(".", "") if row["population"] else "0"
-                )
-                cities.append(row)
-        return cities
-
-    @staticmethod
-    def get_interest_points(
-        cities: List[Dict[str, str]], size: int = 10000
-    ) -> List[List[float]]:
-        cities = sorted(cities, key=lambda c: int(c["population"]), reverse=True)[:size]
-        points = [[float(c["lng"]), float(c["lat"])] for c in cities]
-        return points
-
-    @staticmethod
-    def km2deg(kms: float, radius: float = 6371) -> float:
-        return kms / (2.0 * radius * np.pi / 360.0)
-
-    @staticmethod
-    def deg2km(deg: float, radius: float = 6371) -> float:
-        return deg * (2.0 * radius * np.pi / 360.0)
-
-
-class BoundedUniformSampler:
-    def __init__(self, boundaries: shape = None) -> None:
-        if boundaries is None:
-            self.boundaries = self.get_country_boundaries()
-        else:
-            self.boundaries = boundaries
-
-    def sample_point(self) -> List[float]:
-        minx, miny, maxx, maxy = self.boundaries.bounds
-        lon = np.random.uniform(minx, maxx)
-        lat = np.random.uniform(miny, maxy)
-        p = Point(lon, lat)
-        if self.boundaries.contains(p):
-            return [p.x, p.y]
-        else:
-            return self.sample_point()
-
-    @staticmethod
-    def get_country_boundaries(
-        download_root: str = os.path.expanduser("~/.cache/naturalearth"),
-    ) -> shape:
-        url = "https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_countries.zip"  # noqa: E501
-        filename = "ne_110m_admin_0_countries.shp"
-        if not os.path.exists(os.path.join(download_root, os.path.basename(url))):
-            download_and_extract_archive(url, download_root)
-        sf = shapefile.Reader(os.path.join(download_root, filename))
-        return shape(sf.shapes().__geo_interface__)
-
-
-class OverlapError(Exception):
-    pass
 
 
 def date2str(date: datetime) -> str:
@@ -293,12 +194,9 @@ def get_patch_s1(
     collection: ee.ImageCollection,
     center_coord: List[float],
     radius: float,
-    bands: Optional[List[str]] = None,
+    bands: List[str],
     crop: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    if bands is None:
-        bands = RGB_BANDS
-
     image = collection.sort("system:time_start", False).first()  # get most recent
     region = (
         ee.Geometry.Point(center_coord).buffer(radius).bounds()
@@ -377,43 +275,23 @@ def get_patch_s2(
     )
 
 
-def get_random_patches_grid(
+def get_random_patches_match(
     idx: int,
     collections: Dict[str, Any],
     bands: Dict[str, Any],
     crops: Dict[str, Any],
-    sampler: GaussianSampler,
     dates: List[Any],
     radius: int,
     debug: bool = False,
-    grid_dict: Dict[Tuple[int, int], Any] = {},
+    match_coords: Dict[str, Any] = {},
 ) -> Tuple[
-    List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]], List[float]
+    Optional[List[Dict[str, Any]]],
+    Optional[List[Dict[str, Any]]],
+    Optional[List[Dict[str, Any]]],
+    List[float],
 ]:
-    # (lon,lat) of top-10000 cities
-    coords = sampler.sample_point()
-
-    # avoid strong overlap
-    try:
-        new_coord = (coords[0], coords[1])
-        gridIndex = (math.floor(new_coord[0] + 180), math.floor(new_coord[1] + 90))
-
-        if gridIndex not in grid_dict.keys():
-            grid_dict[gridIndex] = {new_coord}
-        else:
-            for coord in grid_dict[gridIndex]:
-                distance = np.sqrt(
-                    sampler.deg2km(abs(new_coord[0] - coord[0])) ** 2
-                    + sampler.deg2km(abs(new_coord[1] - coord[1])) ** 2
-                )
-                if distance < (1.5 * radius / 1000):
-                    raise OverlapError
-            grid_dict[gridIndex].add(new_coord)
-
-    except OverlapError:
-        patches_s1, patches_s2c, patches_s2a, center_coord = get_random_patches_grid(
-            idx, collections, bands, crops, sampler, dates, radius, debug
-        )
+    # (lon,lat) of idx patch
+    coords = match_coords[str(idx)]
 
     # random +- 15 days of random days within 1 year from the reference dates
     delta = timedelta(days=np.random.randint(365))
@@ -459,9 +337,7 @@ def get_random_patches_grid(
     except (ee.EEException, urllib3.exceptions.HTTPError) as e:
         if debug:
             print(e)
-        patches_s1, patches_s2c, patches_s2a, center_coord = get_random_patches_grid(
-            idx, collections, bands, crops, sampler, dates, radius, debug
-        )
+        return None, None, None, coords
 
     return patches_s1, patches_s2c, patches_s2a, center_coord
 
@@ -494,7 +370,6 @@ def save_patch(
     coords: List[List[float]],
     metadata: Dict[str, Any],
     path: str,
-    preview: bool = False,
 ) -> None:
     patch_id = metadata["properties"]["system:index"]
     patch_path = os.path.join(path, patch_id)
@@ -527,19 +402,22 @@ def fix_random_seeds(seed: int = 42) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--save_path", type=str, default="./data/")  # dir to save data
-    parser.add_argument("--num_cities", type=int, default=10000)
-    parser.add_argument("--std", type=int, default=50)
+    parser.add_argument("--save-path", type=str, default="./data/")  # dir to save data
     parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--cloud_pct", type=int, default=20)
-    parser.add_argument("--num_workers", type=int, default=8)
-    parser.add_argument("--log_freq", type=int, default=10)  # print frequency
-    parser.add_argument("--preview", action="store_true")
+    parser.add_argument("--cloud-pct", type=int, default=20)
+    parser.add_argument("--num-workers", type=int, default=8)
+    parser.add_argument("--log-freq", type=int, default=10)  # print frequency
     parser.add_argument(
         "--resume", type=str, default=None
     )  # resume from existing coordinates
     parser.add_argument(
-        "--indices_range", type=int, nargs=2, default=[0, 250000]
+        "--match-file",
+        type=str,
+        required=True,
+        help="match pre-sampled coordinates and indexes",
+    )
+    parser.add_argument(
+        "--indices-range", type=int, nargs=2, default=[0, 250000]
     )  # range of download indices --> number of locations
     args = parser.parse_args()
 
@@ -558,9 +436,6 @@ if __name__ == "__main__":
         "s2_l2a": collection_s2a,
         "s2_l1c": collection_s2c,
     }
-
-    # initialize sampler
-    sampler = GaussianSampler(num_cities=args.num_cities, std=args.std)
 
     reference = date.fromisoformat("2021-09-22")
     date1 = date.fromisoformat("2021-06-21")
@@ -627,39 +502,39 @@ if __name__ == "__main__":
     else:
         ext_path = os.path.join(args.save_path, "checked_locations.csv")
 
-    # build the grid from existing coordinates
-    grid_dict: Dict[Tuple[int, int], Any] = {}
-    if args.resume:
-        print("Load existing locations.")
-        for i, key in enumerate(tqdm(ext_coords.keys())):
-            c = ext_coords[key]
-            gridIndex = (math.floor(c[0] + 180), math.floor(c[1] + 90))
-            if gridIndex not in grid_dict.keys():
-                grid_dict[gridIndex] = {c}
-            else:
-                grid_dict[gridIndex].add(c)
+    # match from pre-sampled coords
+    match_coords = {}
+    with open(args.match_file) as csv_file:
+        reader = csv.reader(csv_file)
+        for row in reader:
+            key = row[0]
+            val1 = float(row[1])
+            val2 = float(row[2])
+            match_coords[key] = (val1, val2)  # lon, lat
 
     start_time = time.time()
     counter = Counter()
 
     def worker(idx: int) -> None:
         if str(idx) in ext_coords.keys():
-            if ext_flags[str(idx)] != 0:  # only skip downloaded ids
-                return
+            return
 
-        patches_s1, patches_s2c, patches_s2a, center_coord = get_random_patches_grid(
+        (patches_s1, patches_s2c, patches_s2a, center_coord) = get_random_patches_match(
             idx,
             collections,
             bands,
             crops,
-            sampler,
             dates,
             radius=radius,
             debug=args.debug,
-            grid_dict=grid_dict,
+            match_coords=match_coords,
         )
 
-        if patches_s2c is not None:
+        if (
+            patches_s1 is not None
+            and patches_s2c is not None
+            and patches_s2a is not None
+        ):
             if args.save_path is not None:
                 # s2c
                 location_path_s2c = os.path.join(args.save_path, "s2c", f"{idx:06d}")
@@ -670,7 +545,6 @@ if __name__ == "__main__":
                         coords=patch["coords"],
                         metadata=patch["metadata"],
                         path=location_path_s2c,
-                        preview=args.preview,
                     )
                 # s2a
                 location_path_s2a = os.path.join(args.save_path, "s2a", f"{idx:06d}")
@@ -681,7 +555,6 @@ if __name__ == "__main__":
                         coords=patch["coords"],
                         metadata=patch["metadata"],
                         path=location_path_s2a,
-                        preview=args.preview,
                     )
                 # s1
                 location_path_s1 = os.path.join(args.save_path, "s1", f"{idx:06d}")
@@ -692,7 +565,6 @@ if __name__ == "__main__":
                         coords=patch["coords"],
                         metadata=patch["metadata"],
                         path=location_path_s1,
-                        preview=args.preview,
                     )
 
             count = counter.update(1)
