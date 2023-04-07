@@ -48,7 +48,7 @@ class L7Irish(RasterDataset):
 
     * https://doi.org/10.5066/F7XD0ZWC
     * https://doi.org/10.1109/TGRS.2011.2164087
-    
+
     .. versionadded:: 0.5
     """  # noqa: E501
 
