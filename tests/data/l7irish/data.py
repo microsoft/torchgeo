@@ -32,21 +32,25 @@ bands = [
 ]
 
 filenames: FILENAME_HIERARCHY = {
-    "austral": {"p226_r98": [], "p227_r98": [], "p230_r95": []},
-    "boreal": {"p2_r27": [], "p128_r25": []},
+    "austral": {"p226_r98": [], "p227_r98": [], "p231_r93_2": []},
+    "boreal": {"p2_r27": [], "p143_r21_3": []},
 }
 prefixes = [
     "L71226098_09820011112",
     "L71227098_09820011103",
-    "L71230095_09520011210",
+    "L71231093_09320010507",
     "L71002027_02720010604",
-    "L71128025_02520010607",
+    "L71143021_02120010803",
 ]
 
 for land_type, patches in filenames.items():
     for patch in patches:
         p, r = patch.split("_r")
-        key = p[1:] + f"{int(r):03}"
+        if r.find("_") == -1:
+            r = r.zfill(3)
+        else:
+            r = r[: r.find("_")].zfill(3)
+        key = p[1:] + r
         for prefix in prefixes:
             if key in prefix:
                 for band in bands:
@@ -81,10 +85,11 @@ def create_file(path: str) -> None:
         )
         profile["width"] = profile["height"] = SIZE // 2
 
-    Z = np.random.randn(SIZE, SIZE).astype(profile["dtype"])
-
     if path.endswith("_mask2019.TIF"):
         Z = np.random.randint(5, size=(SIZE, SIZE), dtype=dtype)
+
+    else:
+        Z = np.random.randn(SIZE, SIZE).astype(profile["dtype"])
 
     with rasterio.open(path, "w", **profile) as src:
         src.write(Z, 1)

@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 """L7 Irish dataset."""
+
 import glob
 import os
 import re
@@ -47,6 +48,8 @@ class L7Irish(RasterDataset):
 
     * https://doi.org/10.5066/F7XD0ZWC
     * https://doi.org/10.1109/TGRS.2011.2164087
+    
+    .. versionadded:: 0.5
     """  # noqa: E501
 
     url = "https://huggingface.co/datasets/torchgeo/l7irish/resolve/main/{}.tar.gz"  # noqa: E501
@@ -101,10 +104,10 @@ class L7Irish(RasterDataset):
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
+            bands: bands to return
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
-            bands: bands to return
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
@@ -202,7 +205,7 @@ class L7Irish(RasterDataset):
                 filepath = os.path.join(directory, filename)
                 band_filepaths.append(filepath)
             image_list.append(self._merge_files(band_filepaths, query))
-        img = torch.cat(image_list)
+        image = torch.cat(image_list)
 
         mask_filepaths = []
         for filepath in filepaths:
@@ -221,7 +224,7 @@ class L7Irish(RasterDataset):
         sample = {
             "crs": self.crs,
             "bbox": query,
-            "image": img.float(),
+            "image": image.float(),
             "mask": mask.long(),
         }
 
