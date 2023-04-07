@@ -45,12 +45,10 @@ prefixes = [
 
 for land_type, patches in filenames.items():
     for patch in patches:
-        p, r = patch.split("_r")
-        if r.find("_") == -1:
-            r = r.zfill(3)
-        else:
-            r = r[: r.find("_")].zfill(3)
-        key = p[1:] + r
+        path, row = patch.split("_")[:2]
+        path = path[1:].zfill(3)
+        row = row[1:].zfill(3)
+        key = path + row
         for prefix in prefixes:
             if key in prefix:
                 for band in bands:
