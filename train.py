@@ -177,6 +177,9 @@ def main(conf: DictConfig) -> None:
             f"experiment.task={task_name} is not recognized as a valid task"
         )
 
+    if hasattr(torch, "compile"):
+        task = torch.compile(task)
+
     ######################################
     # Setup trainer
     ######################################
