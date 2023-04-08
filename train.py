@@ -9,6 +9,7 @@ import os
 from typing import Any, Dict, Tuple, Type, cast
 
 import lightning.pytorch as pl
+import torch
 from lightning.pytorch import LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
