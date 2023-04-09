@@ -110,7 +110,7 @@ class SSL4EOS12(NonGeoDataset):
             root: root directory where dataset can be found
             split: one of "s1" (Sentinel-1 dual-pol SAR), "s2c" (Sentinel-2 Level-1C
                 top-of-atmosphere reflectance), and "s2a" (Sentinel-2 Level-2a surface
-                reflectance
+                reflectance)
             seasons: number of seasonal patches to sample per location, 1--4
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
@@ -212,39 +212,29 @@ class SSL4EOS12(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        fig, axes = plt.subplots(ncols=self.seasons, figsize=(4 * self.seasons, 4))
-        if self.seasons == 1:
-            axes = [axes]
+        nrows = 2 if self.split == "s1" else 1
+        fig, axes = plt.subplots(
+            nrows=nrows,
+            ncols=self.seasons,
+            squeeze=False,
+            figsize=(4 * self.seasons, 4 * nrows),
+        )
 
         for i in range(self.seasons):
             image = sample["image"][i * len(self.bands) : (i + 1) * len(self.bands)]
 
             if self.split == "s1":
-                # Convert from decibel to power scale
-                image = torch.exp(image / 10)
-
-                # See Sentinel1.plot
-                co_polarization = image[0]
-                cross_polarization = image[1]
-                ratio = co_polarization / cross_polarization
-
-                co_polarization = torch.clamp(co_polarization / 0.3, min=0, max=1)
-                cross_polarization = torch.clamp(
-                    cross_polarization / 0.05, min=0, max=1
-                )
-                ratio = torch.clamp(ratio / 25, min=0, max=1)
-
-                image = torch.stack(
-                    (co_polarization, cross_polarization, ratio), dim=-1
-                )
+                axes[0, i].imshow(image[0])
+                axes[1, i].imshow(image[1])
             else:
                 image = image[[3, 2, 1]].permute(1, 2, 0)
                 image = torch.clamp(image / 3000, min=0, max=1)
+                axes[0, i].imshow(image)
 
-            axes[i].imshow(image)
-            axes[i].axis("off")
+            axes[0, i].axis("off")
+
             if show_titles:
-                axes[i].set_title(f"Split {self.split}; Season {i + 1}")
+                axes[0, i].set_title(f"Split {self.split}, Season {i + 1}")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
