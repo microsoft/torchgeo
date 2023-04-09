@@ -91,14 +91,8 @@ def create_file(path: str) -> None:
         "height": SIZE,
         "count": 1,
         "crs": CRS.from_epsg(4326),
-        "transform": Affine(
-            9.360247437056711e-05,
-            0.0,
-            -91.84615634290395,
-            0.0,
-            -8.929489328769368e-05,
-            18.588542158464236,
-        ),
+        "transform": Affine(9.221577104649252e-05, 0.0, -91.84569595740037,
+       0.0, -8.79720059797404e-05, 18.588102959877993)
     }
 
     if path.endswith("VH.tif") or path.endswith("VV.tif"):
@@ -106,6 +100,8 @@ def create_file(path: str) -> None:
 
     if path.endswith("B1.tif") or path.endswith("B9.tif") or path.endswith("B10.tif"):
         profile["width"] = profile["height"] = SIZE // 6
+        profile["transform"] = Affine(0.0005532946262789551, 0.0, -91.84592649682799,
+       0.0, -0.0005278320358784425, 18.588322889892943)
     elif (
         path.endswith("B5.tif")
         or path.endswith("B6.tif")
@@ -115,6 +111,8 @@ def create_file(path: str) -> None:
         or path.endswith("B12.tif")
     ):
         profile["width"] = profile["height"] = SIZE // 2
+        profile["transform"] = Affine(0.00018443154209298504, 0.0, -91.84574206528589,
+       0.0, -0.0001759440119594808, 18.588146945880982)
 
     Z = np.random.randn(SIZE, SIZE).astype(profile["dtype"])
 
