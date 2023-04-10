@@ -35,7 +35,7 @@ class NTXentLoss(Module):
         batch_size = z1.shape[0]
         device = z1.device
 
-        if isinstance(t, float):
+        if not isinstance(t, torch.Tensor):
             t = torch.tensor(t, device=device)
 
         z1 = F.normalize(z1, dim=-1)
