@@ -196,6 +196,7 @@ def main(conf: DictConfig) -> None:
         dirpath=experiment_dir,
         save_top_k=1,
         save_last=True,
+        mode=mode,
     )
     early_stopping_callback = EarlyStopping(
         monitor=monitor_metric, min_delta=0.00, patience=18, mode=mode
