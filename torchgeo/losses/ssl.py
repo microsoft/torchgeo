@@ -3,6 +3,8 @@
 
 """Loss functions for self-supervised learning."""
 
+from typing import Union
+
 import torch
 import torch.nn.functional as F
 from torch.nn import Module
@@ -18,7 +20,7 @@ class NTXentLoss(Module):
     """
 
     def forward(
-        self, z1: torch.Tensor, z2: torch.Tensor, t: torch.Tensor
+        self, z1: torch.Tensor, z2: torch.Tensor, t: Union[torch.Tensor, float]
     ) -> torch.Tensor:
         """Computes the NT-Xent loss.
 
