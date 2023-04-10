@@ -11,6 +11,7 @@ import re
 import sys
 from collections.abc import Sequence
 from typing import Any, Callable, Optional, cast
+from warnings import warn
 
 import fiona
 import fiona.transform
@@ -433,8 +434,13 @@ class RasterDataset(GeoDataset):
 
         sample = {"crs": self.crs, "bbox": query}
 
-        if self.dtype is not None:
+        if self.dtype is not None and not self.is_image:
             data = data.to(self.dtype)
+        if self.dtype is not None and self.is_image:
+            warn(
+                "Custom dtype is explicitely set, however the current RasterDataset is"
+                + " an image, so no action will be taken."
+            )
 
         if self.is_image:
             sample["image"] = data.float()
