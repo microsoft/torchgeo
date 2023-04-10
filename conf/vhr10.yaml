@@ -7,7 +7,6 @@ trainer:
   devices: 1
   min_epochs: 5
   max_epochs: 100
-  auto_lr_find: False
   benchmark: True
 
 experiment:
@@ -22,6 +21,6 @@ experiment:
     verbose: false
   datamodule:
     root: "data/vhr10"
-    batch_size: 3
-    num_workers: 12
+    batch_size: 2
+    num_workers: 56
     patch_size: 512
