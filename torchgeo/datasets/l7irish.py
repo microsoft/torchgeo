@@ -212,7 +212,8 @@ class L7Irish(RasterDataset):
         for filepath in filepaths:
             mask_filepath = filepath.replace(
                 os.path.basename(filepath),
-                os.path.basename("L7_" + os.path.dirname(filepath))
+                "L7_"
+                + os.path.basename(os.path.dirname(filepath))
                 + "_newmask2015.TIF",
             )
             mask_filepaths.append(mask_filepath)
