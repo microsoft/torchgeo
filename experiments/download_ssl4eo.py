@@ -441,7 +441,7 @@ if __name__ == "__main__":
 
         if patches is not None:
             if args.save_path is not None:
-                location_path = os.path.join(args.save_path, "imgs", f"{idx:06d}")
+                location_path = os.path.join(args.save_path, "imgs", f"{idx:07d}")
                 os.makedirs(location_path, exist_ok=True)
                 for patch in patches:
                     save_patch(
@@ -464,7 +464,7 @@ if __name__ == "__main__":
                 success = 1
             else:
                 success = 0
-            data = [idx, center_coord[0], center_coord[1], success]
+            data = [idx, *center_coord, success]
             writer.writerow(data)
 
         return
