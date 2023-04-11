@@ -74,16 +74,15 @@ jobs:
         pacman -S --noconfirm --needed unrar
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies (3.8+)
-      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
         pip list
-      if: ${{ matrix.python-version != '3.7' }}
+      if: ${{ steps.cache.outputs.cache-hit != 'true' && matrix.python-version != '3.7' }}
     - name: Install pip dependencies (3.7)
       run: |
         pip install -r requirements/required.old -r requirements/datasets.old -r requirements/tests.txt
         pip list
-      if: ${{ matrix.python-version == '3.7' }}
+      if: ${{ steps.cache.outputs.cache-hit != 'true' && matrix.python-version == '3.7' }}
     - name: Run pytest checks (Linux/macOS)
       run: pytest --cov=torchgeo --cov-report=xml --durations=10
       if: ${{ runner.os != 'Windows' }}
