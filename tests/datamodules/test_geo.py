@@ -31,7 +31,7 @@ class CustomGeoDataModule(GeoDataModule):
         super().__init__(CustomGeoDataset, 1, 1, 1, 0, download=True)
 
 
-class SamplerGeoDatModule(CustomGeoDataModule):
+class SamplerGeoDataModule(CustomGeoDataModule):
     def setup(self, stage: str) -> None:
         self.dataset = CustomGeoDataset()
         self.train_sampler = RandomGeoSampler(self.dataset, 1, 1)
@@ -40,7 +40,7 @@ class SamplerGeoDatModule(CustomGeoDataModule):
         self.predict_sampler = RandomGeoSampler(self.dataset, 1, 1)
 
 
-class BatchSamplerGeoDatModule(CustomGeoDataModule):
+class BatchSamplerGeoDataModule(CustomGeoDataModule):
     def setup(self, stage: str) -> None:
         self.dataset = CustomGeoDataset()
         self.train_batch_sampler = RandomBatchGeoSampler(self.dataset, 1, 1, 1)
@@ -79,7 +79,7 @@ class TestGeoDataModule:
         dm.setup(stage)
 
     def test_sampler(self) -> None:
-        dm = SamplerGeoDatModule()
+        dm = SamplerGeoDataModule()
         dm.setup("fit")
         dm.train_dataloader()
         dm.val_dataloader()
@@ -87,7 +87,7 @@ class TestGeoDataModule:
         dm.predict_dataloader()
 
     def test_batch_sampler(self) -> None:
-        dm = BatchSamplerGeoDatModule()
+        dm = BatchSamplerGeoDataModule()
         dm.setup("fit")
         dm.train_dataloader()
         dm.val_dataloader()
