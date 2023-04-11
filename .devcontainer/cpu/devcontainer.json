@@ -56,9 +56,10 @@
         "python.linting.pydocstyleEnabled": true,
         "python.linting.pydocstylePath": "/usr/local/py-utils/bin/pydocstyle",
         "python.testing.pytestEnabled": true,
-        "python.testing.pytestPath": "/home/vscode/.local/bin/pytest",
+        "python.testing.pytestPath": "/usr/local/py-utils/bin/pytest",
         "python.editor.formatOnSave": true,
         "python.editor.formatOnSaveMode": "file",
+        "python.editor.formatOnPaste": false,
         "python.editor.codeActionsOnSave": {
           "source.organizeImports": true
         },

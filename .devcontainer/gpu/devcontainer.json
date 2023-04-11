@@ -60,6 +60,7 @@
         "python.testing.pytestPath": "/home/vscode/.local/bin/pytest",
         "python.editor.formatOnSave": true,
         "python.editor.formatOnSaveMode": "file",
+        "python.editor.formatOnPaste": false,
         "python.editor.codeActionsOnSave": {
           "source.organizeImports": true
         },
