@@ -188,7 +188,8 @@ class TestClassificationTask:
         model_kwargs["model"] = weights.meta["model"]
         model_kwargs["in_channels"] = weights.meta["in_chans"]
         model_kwargs["weights"] = weights
-        ClassificationTask(**model_kwargs)
+        with pytest.warns(UserWarning):
+            ClassificationTask(**model_kwargs)
 
     @pytest.mark.slow
     def test_weight_str_download(
@@ -197,7 +198,8 @@ class TestClassificationTask:
         model_kwargs["model"] = weights.meta["model"]
         model_kwargs["in_channels"] = weights.meta["in_chans"]
         model_kwargs["weights"] = str(weights)
-        ClassificationTask(**model_kwargs)
+        with pytest.warns(UserWarning):
+            ClassificationTask(**model_kwargs)
 
     def test_invalid_loss(self, model_kwargs: Dict[str, Any]) -> None:
         model_kwargs["loss"] = "invalid_loss"
