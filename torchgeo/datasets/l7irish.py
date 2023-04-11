@@ -212,12 +212,12 @@ class L7Irish(RasterDataset):
         for filepath in filepaths:
             mask_filepath = filepath.replace(
                 os.path.basename(filepath),
-                os.path.basename(os.path.dirname(filepath)) + "_mask2019.TIF",
+                os.path.basename("L7_" + os.path.dirname(filepath)) + "_newmask2015.TIF",
             )
             mask_filepaths.append(mask_filepath)
 
         mask = self._merge_files(mask_filepaths, query)
-        mask_mapping = {64: 1, 128: 2, 192: 3, 255: 4}
+        mask_mapping = {128: 1, 191: 2, 255: 3}
 
         for k, v in mask_mapping.items():
             mask[mask == k] = v
