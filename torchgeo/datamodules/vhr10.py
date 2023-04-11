@@ -7,10 +7,9 @@ from typing import Any, Callable, Dict, List, Tuple, Union
 
 import kornia.augmentation as K
 import torch
-import torchvision
 from einops import rearrange
 from torch import Generator, Tensor
-from torch.nn.modules import Module
+from torch.nn import Module
 from torch.utils.data import random_split
 
 from ..datasets import VHR10
@@ -138,37 +137,6 @@ class VHR10DataModule(NonGeoDataModule):
             ),
             batch_size,
         )
-
-        self.kwargs["download"] = True
-
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
-
-        Args:
-            sample: input image dictionary
-
-        Returns:
-            preprocessed sample
-        """
-        sample["image"] = sample["image"].float()
-
-        _, h, w = sample["image"].shape
-        sample["image"] = torchvision.transforms.functional.resize(
-            sample["image"], size=self.patch_size
-        )
-        box_scale = (self.patch_size[1] / w, self.patch_size[0] / h)
-        sample["boxes"][:, 0] *= box_scale[0]
-        sample["boxes"][:, 1] *= box_scale[1]
-        sample["boxes"][:, 2] *= box_scale[0]
-        sample["boxes"][:, 3] *= box_scale[1]
-        sample["boxes"] = torch.round(sample["boxes"])
-
-        if "masks" in sample:
-            sample["masks"] = torchvision.transforms.functional.resize(
-                sample["masks"], size=self.patch_size
-            )
-
-        return sample
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
