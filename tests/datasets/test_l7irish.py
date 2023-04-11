@@ -26,8 +26,8 @@ class TestL7Irish:
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L7Irish:
         monkeypatch.setattr(torchgeo.datasets.l7irish, "download_url", download_url)
         md5s = {
-            "austral": "302fc4a45aa0dba8a9f6454b382f1ab6",
-            "boreal": "6b59c15e726eacd80a1c8cc0ba882d39",
+            "austral": "2aade4740a7a236aac17ddf01835ab6a",
+            "boreal": "de6e8574af0bdc1e03c4d77e11c2671e",
         }
 
         url = os.path.join("tests", "data", "l7irish", "{}.tar.gz")

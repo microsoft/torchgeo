@@ -20,7 +20,7 @@ from .utils import BoundingBox, download_url, extract_archive
 class L7Irish(RasterDataset):
     """L7 Irish dataset.
 
-    The `L7 Irish <https://landsat.usgs.gov/landsat-7-cloud-cover-assessment-validation-data>`__ dataset
+    The `L7 Irish <https://www.sciencebase.gov/catalog/item/573ccf18e4b0dae0d5e4b109>`__ dataset
     is based on Landsat 7 Enhanced Thematic Mapper Plus (ETM+) Level-1G scenes.
     Manually generated cloud masks are used to train and validate cloud cover assessment algorithms,
     which in turn are intended to compute the percentage of cloud cover in each scene.
@@ -29,7 +29,7 @@ class L7Irish(RasterDataset):
 
     * 206 scenes from Landsat-7 ETM+ tiles
     * Imagery from global tiles between June 2000--December 2001
-    * 9 Level-1 spectral bands with 15, 30 and 60 m per pixel resolution
+    * 9 Level-1 spectral bands with 15 and 30 mper pixel resolution
 
     Dataset format:
 
@@ -38,13 +38,12 @@ class L7Irish(RasterDataset):
     * Level-1 metadata (MTL.txt file)
     * Landsat-7 ETM+ bands: (B10, B20, B30, B40, B50, B61, B62, B70, B80)
 
-    Dataset classes (5):
+    Dataset classes (4):
 
     0. Fill
-    1. Cloud Shadow
-    2. Clear
-    3. Thin Cloud
-    4. Cloud
+    1. Clear
+    2. Thin Cloud
+    3. Cloud
 
     If you use this dataset in your research, please cite the following:
 
@@ -57,18 +56,18 @@ class L7Irish(RasterDataset):
     url = "https://huggingface.co/datasets/torchgeo/l7irish/resolve/main/{}.tar.gz"  # noqa: E501
 
     md5s = {
-        "austral": "dbb6b5628f50861b9b89f548d25a925f",
-        "boreal": "cecc72de09aacde4c4f8d7f0cf0d3f6f",
-        "mid_latitude_north": "0f8382ca6554fb7cf9aff42226a14f9d",
-        "mid_latitude_south": "b17cf6d023f752c533211fdb742f296b",
-        "polar_north": "73923dcaf1b9b79bad82de1aa0740d1e",
-        "polar_south": "3bc9f4c6f8955b10b4d55d23e0ab2da7",
-        "subtropical_north": "f8f039970256902e6e9ebd6747589294",
-        "subtropical_south": "8346d73a983396c5d41b577c3a94bc26",
-        "tropical": "abe19b22b5d031e6b609cc7207706c3d",
+        "austral": "9c2629884c1e7251e24953e1e5f880de",
+        "boreal": "0a9f50998c0fb47c0cc226faf479f883",
+        "mid_latitude_north": "0860e218403d949f4b38e4f9f70e0087",
+        "mid_latitude_south": "c66bbeaa6dbf0ba2cd26b9eea89eb3a4",
+        "polar_north": "4a648c5bcc6b5e5eac0f8c57dce1a57e",
+        "polar_south": "a12e4d7fddaa377259328190f10a1c17",
+        "subtropical_north": "ebdfaee37ffc5ba1bd4763f7f72df97f",
+        "subtropical_south": "3670c9490753efe3d36927329bb87e2f",
+        "tropical": "f60c93d8609c72ac86e858105b6272f2",
     }
 
-    classes = ["Fill", "Cloud Shadow", "Clear", "Thin Cloud", "Cloud"]
+    classes = ["Fill", "Clear", "Thin Cloud", "Cloud"]
 
     # https://landsat.usgs.gov/cloud-validation/cca_irish_2015/L7_Irish_Cloud_Validation_Masks.xml
     filename_glob = "L7*_B10.TIF"

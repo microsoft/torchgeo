@@ -56,7 +56,7 @@ for land_type, patches in filenames.items():
                         prefix = prefix.replace(prefix[2], "2", 1)
                     filenames[land_type][patch].append(f"{prefix}_{band}")
 
-        filenames[land_type][patch].append(f"{patch}_mask2019.TIF")
+        filenames[land_type][patch].append(f"L7_{patch}_newmask2015.TIF")
 
 
 def create_file(path: str) -> None:
@@ -77,13 +77,7 @@ def create_file(path: str) -> None:
         )
         profile["width"] = profile["height"] = SIZE * 2
 
-    if path.endswith("B61.TIF") or path.endswith("B62.TIF"):
-        profile["transform"] = Affine(
-            60.0, 0.0, 462892.49999999994, 0.0, -60.0, 4071907.5
-        )
-        profile["width"] = profile["height"] = SIZE // 2
-
-    if path.endswith("_mask2019.TIF"):
+    if path.endswith("_newmask2015.TIF"):
         Z = np.random.randint(5, size=(SIZE, SIZE), dtype=dtype)
 
     else:
