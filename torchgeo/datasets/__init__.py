@@ -111,6 +111,7 @@ from .utils import (
 )
 from .vaihingen import Vaihingen2D
 from .vhr10 import VHR10
+from .western_usa_live_fuel_moisture import WesternUSALiveFuelMoisture
 from .xview import XView2
 from .zuericrop import ZueriCrop
 
@@ -203,6 +204,7 @@ __all__ = (
     "USAVars",
     "Vaihingen2D",
     "VHR10",
+    "WesternUSALiveFuelMoisture",
     "XView2",
     "ZueriCrop",
     # Base classes
