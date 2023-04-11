@@ -151,7 +151,8 @@ class TestRegressionTask:
         model_kwargs["model"] = weights.meta["model"]
         model_kwargs["in_channels"] = weights.meta["in_chans"]
         model_kwargs["weights"] = weights
-        RegressionTask(**model_kwargs)
+        with pytest.warns(UserWarning):
+            RegressionTask(**model_kwargs)
 
     @pytest.mark.slow
     def test_weight_str_download(
@@ -160,7 +161,8 @@ class TestRegressionTask:
         model_kwargs["model"] = weights.meta["model"]
         model_kwargs["in_channels"] = weights.meta["in_chans"]
         model_kwargs["weights"] = str(weights)
-        RegressionTask(**model_kwargs)
+        with pytest.warns(UserWarning):
+            RegressionTask(**model_kwargs)
 
     def test_no_rgb(
         self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any], fast_dev_run: bool
