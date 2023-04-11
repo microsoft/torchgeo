@@ -5,6 +5,8 @@ from typing import Any, Dict
 
 import pytest
 import torch
+from _pytest.fixtures import SubRequest
+from lightning.pytorch import Trainer
 from torch import Tensor
 
 from torchgeo.datamodules import (
