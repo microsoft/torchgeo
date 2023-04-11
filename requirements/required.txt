@@ -3,7 +3,7 @@ setuptools==67.6.0
 
 # install
 einops==0.6.0
-fiona==1.9.2
+fiona==1.9.3
 kornia==0.6.11
 lightning==2.0.1
 matplotlib==3.7.1
