@@ -1,0 +1,25 @@
+trainer:
+  accelerator: gpu
+  devices: 1
+  min_epochs: 10
+  max_epochs: 40
+  benchmark: True
+  precision: 16
+  limit_val_batches: 0.0
+experiment:
+  task: "byol"
+  dataset: "seco"
+  module:
+    in_channels: 12
+    backbone: "resnet18"
+    weights: True
+    learning_rate: 1e-3
+    learning_rate_schedule_patience: 6
+    optimizer: "Adam"
+  datamodule:
+    root: "data/seco"
+    version: "100k"
+    seasons: 2
+    bands: ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B9", "B11", "B12"]
+    batch_size: 64
+    num_workers: 16
