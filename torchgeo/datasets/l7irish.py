@@ -63,9 +63,9 @@ class L7Irish(RasterDataset):
         "boreal": "0a9f50998c0fb47c0cc226faf479f883",
         "mid_latitude_north": "0860e218403d949f4b38e4f9f70e0087",
         "mid_latitude_south": "c66bbeaa6dbf0ba2cd26b9eea89eb3a4",
-        "polar_north": "4a648c5bcc6b5e5eac0f8c57dce1a57e",
+        "polar_north": "18a6b9b4684ae91bfdcc7b78ea1f42ee",
         "polar_south": "a12e4d7fddaa377259328190f10a1c17",
-        "subtropical_north": "18a6b9b4684ae91bfdcc7b78ea1f42ee",
+        "subtropical_north": "ebdfaee37ffc5ba1bd4763f7f72df97f",
         "subtropical_south": "3670c9490753efe3d36927329bb87e2f",
         "tropical": "f60c93d8609c72ac86e858105b6272f2",
     }
