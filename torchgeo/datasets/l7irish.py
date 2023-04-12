@@ -20,7 +20,7 @@ from .utils import BoundingBox, download_url, extract_archive
 class L7Irish(RasterDataset):
     """L7 Irish dataset.
 
-    The `L7 Irish <https://www.sciencebase.gov/catalog/item/573ccf18e4b0dae0d5e4b109>`__ dataset
+    The `L7 Irish <https://landsat.usgs.gov/landsat-7-cloud-cover-assessment-validation-data>`__ dataset
     is based on Landsat 7 Enhanced Thematic Mapper Plus (ETM+) Level-1G scenes.
     Manually generated cloud masks are used to train and validate cloud cover assessment algorithms,
     which in turn are intended to compute the percentage of cloud cover in each scene.
