@@ -17,7 +17,7 @@ from omegaconf import DictConfig, OmegaConf
 from torchgeo.datamodules import ChesapeakeCVPRDataModule, SeasonalContrastS2DataModule
 from torchgeo.trainers import BYOLTask
 
-TASK_TO_MODULES_MAPPING: Dict[str, Type[LightningModule]] = {"byol": BYOLTask}
+TRAINER_TO_MODULES_MAPPING: Dict[str, Type[LightningModule]] = {"byol": BYOLTask}
 DATASET_TO_DATAMODULES_MAPPING: Dict[str, Type[LightningDataModule]] = {
     "chesapeak_cvpr": ChesapeakeCVPRDataModule,
     "seco": SeasonalContrastS2DataModule,
@@ -53,13 +53,29 @@ def set_up_omegaconf() -> DictConfig:
         if not os.path.isfile(config_fn):
             raise FileNotFoundError(f"config_file={config_fn} is not a valid file")
 
-        user_conf = OmegaConf.load(config_fn)
-        conf = OmegaConf.merge(conf, user_conf)
+        dataset_conf = OmegaConf.load(config_fn)
+
+    # These OmegaConf structured configs enforce a schema at runtime, see:
+    # https://omegaconf.readthedocs.io/en/2.0_branch/structured_config.html#merging-with-other-configs
+    trainer_name = command_line_conf.experiment.trainer
+    trainer_config_fn = os.path.join("conf", f"{trainer_name}.yaml")
+    if trainer_name == "test":
+        trainer_conf = OmegaConf.create()
+    elif os.path.exists(trainer_config_fn):
+        trainer_conf = cast(DictConfig, OmegaConf.load(trainer_config_fn))
+    else:
+        raise ValueError(
+            f"experiment.trainer={trainer_name} is not recognized as a valid trainer"
+        )
 
     conf = OmegaConf.merge(  # Merge in any arguments passed via the command line
-        conf, command_line_conf
+        conf, trainer_conf
     )
+    conf.experiment.task = dataset_conf.experiment.task
+    conf.experiment.datamodule = dataset_conf.experiment.datamodule
+    conf.experiment.module.in_channels = dataset_conf.experiment.module.in_channels
     conf = cast(DictConfig, conf)  # convince mypy that everything is alright
+
     return conf
 
 
@@ -69,9 +85,9 @@ def main(conf: DictConfig) -> None:
     # Setup output directory
     ######################################
 
-    task_name = conf.experiment.task
-    dataset_name = conf.experiment.dataset
-    experiment_name = f"{dataset_name}_{task_name}"
+    dataset_name = conf.experiment.task
+    trainer_name = conf.experiment.trainer
+    experiment_name = f"{dataset_name}_{trainer_name}"
     if os.path.isfile(conf.program.output_dir):
         raise NotADirectoryError("`program.output_dir` must be a directory")
     os.makedirs(conf.program.output_dir, exist_ok=True)
@@ -98,26 +114,26 @@ def main(conf: DictConfig) -> None:
     # Choose task to run based on arguments or configuration
     ######################################
     # Convert the DictConfig into a dictionary so that we can pass as kwargs.
-    task_args = cast(Dict[str, Any], OmegaConf.to_object(conf.experiment.module))
+    trainer_args = cast(Dict[str, Any], OmegaConf.to_object(conf.experiment.module))
     datamodule_args = cast(
         Dict[str, Any], OmegaConf.to_object(conf.experiment.datamodule)
     )
 
     datamodule: LightningDataModule
-    task: LightningModule
-    if task_name in TASK_TO_MODULES_MAPPING:
-        task_class = TASK_TO_MODULES_MAPPING[task_name]
-        task = task_class(**task_args)
+    trainer: LightningModule
+    if trainer_name in TRAINER_TO_MODULES_MAPPING:
+        trainer_class = TRAINER_TO_MODULES_MAPPING[trainer_name]
+        module = trainer_class(**trainer_args)
     else:
         raise ValueError(
-            f"experiment.task={task_name} is not recognized as a valid task"
+            f"experiment.trainer={trainer_name} is not recognized as a valid task"
         )
     if dataset_name in DATASET_TO_DATAMODULES_MAPPING:
         datamodule_class = DATASET_TO_DATAMODULES_MAPPING[dataset_name]
         datamodule = datamodule_class(**datamodule_args)
     else:
         raise ValueError(
-            f"experiment.dataset={dataset_name} is not recognized as a valid dataset"
+            f"experiment.task={dataset_name} is not recognized as a valid task"
         )
 
     ######################################
@@ -148,7 +164,7 @@ def main(conf: DictConfig) -> None:
     ######################################
     # Run experiment
     ######################################
-    trainer.fit(model=task, datamodule=datamodule)
+    trainer.fit(model=module, datamodule=datamodule)
 
 
 if __name__ == "__main__":

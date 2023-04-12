@@ -143,10 +143,14 @@ trainer.fit(model=task, datamodule=datamodule)
 
 <img src="https://raw.githubusercontent.com/microsoft/torchgeo/main/images/inria.png" alt="Building segmentations produced by a U-Net model trained on the Inria Aerial Image Labeling dataset"/>
 
-In our GitHub repo, we provide `train.py` and `evaluate.py` scripts to train and evaluate the performance of models using these datamodules and trainers. These scripts are configurable via the command line and/or via YAML configuration files. See the [conf](https://github.com/microsoft/torchgeo/blob/main/conf) directory for example configuration files that can be customized for different training runs.
+In our GitHub repo, we provide `train.py`, `pretrain.py`, and `evaluate.py` scripts to train and evaluate the performance of models using these datamodules and trainers. These scripts are configurable via the command line and/or via YAML configuration files. See the [conf](https://github.com/microsoft/torchgeo/blob/main/conf) directory for example configuration files that can be customized for different training runs.
 
 ```console
 $ python train.py config_file=conf/landcoverai.yaml
+```
+
+```console
+$ python pretrain.py config_file=conf/seco_100k.yaml experiment.trainer=byol
 ```
 
 ## Citation
