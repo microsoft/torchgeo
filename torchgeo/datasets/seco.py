@@ -126,7 +126,7 @@ class SeasonalContrastS2(NonGeoDataset):
         root = os.path.join(
             self.root, self.metadata[self.version]["directory"], f"{index:06}"
         )
-        subdirs = [f for f in os.listdir(root) if os.path.isdir(f)]
+        subdirs = [f for f in os.listdir(root) if os.path.isdir(os.path.join(root, f))]
         subdirs = random.sample(subdirs, self.seasons)
 
         images = [self._load_patch(root, subdir) for subdir in subdirs]
