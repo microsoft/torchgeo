@@ -38,17 +38,19 @@ class L7Irish(RasterDataset):
     * Level-1 metadata (MTL.txt file)
     * Landsat-7 ETM+ bands: (B10, B20, B30, B40, B50, B61, B62, B70, B80)
 
-    Dataset classes (4):
+    Dataset classes (5):
 
     0. Fill
-    1. Clear
-    2. Thin Cloud
-    3. Cloud
+    1. Cloud Shadow
+    2. Clear
+    3. Thin Cloud
+    4. Cloud
 
     If you use this dataset in your research, please cite the following:
 
     * https://doi.org/10.5066/F7XD0ZWC
     * https://doi.org/10.1109/TGRS.2011.2164087
+    * https://www.sciencebase.gov/catalog/item/573ccf18e4b0dae0d5e4b109
 
     .. versionadded:: 0.5
     """  # noqa: E501
@@ -210,16 +212,14 @@ class L7Irish(RasterDataset):
 
         mask_filepaths = []
         for filepath in filepaths:
+            path, row = os.path.basename(os.path.dirname(filepath)).split("_")[:2]
             mask_filepath = filepath.replace(
-                os.path.basename(filepath),
-                "L7_"
-                + os.path.basename(os.path.dirname(filepath))
-                + "_newmask2015.TIF",
+                os.path.basename(filepath), f"L7_{path}_{row}_newmask2015.TIF"
             )
             mask_filepaths.append(mask_filepath)
 
         mask = self._merge_files(mask_filepaths, query)
-        mask_mapping = {128: 1, 191: 2, 255: 3}
+        mask_mapping = {64: 1, 128: 2, 191: 3, 255: 4}
 
         for k, v in mask_mapping.items():
             mask[mask == k] = v

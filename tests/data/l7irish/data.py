@@ -51,10 +51,10 @@ for land_type, patches in filenames.items():
             if key in prefix:
                 for band in bands:
                     if band in ["B62.TIF", "B70.TIF", "B80.TIF"]:
-                        prefix = prefix.replace(prefix[2], "2", 1)
+                        prefix = prefix.replace("L71", "L72")
                     filenames[land_type][patch].append(f"{prefix}_{band}")
 
-        filenames[land_type][patch].append(f"L7_{patch}_newmask2015.TIF")
+        filenames[land_type][patch].append(f"L7_{path}_{row}_newmask2015.TIF")
 
 
 def create_file(path: str) -> None:
