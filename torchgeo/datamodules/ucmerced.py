@@ -3,9 +3,11 @@
 
 """UC Merced datamodule."""
 
-from typing import Any
+from typing import Any, Dict
 
 import kornia.augmentation as K
+import torch
+import torch.nn.functional as F
 
 from ..datasets import UCMerced
 from ..transforms import AugmentationSequential
@@ -29,6 +31,14 @@ class UCMercedDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.UCMerced`.
         """
+
+        def default_transform(
+            sample: Dict[str, torch.Tensor]
+        ) -> Dict[str, torch.Tensor]:
+            sample["image"] = F.interpolate(sample["image"], size=256)
+            return sample
+
+        kwargs["transforms"] = kwargs.get("transforms", default_transform)
         super().__init__(UCMerced, batch_size, num_workers, **kwargs)
 
         self.aug = AugmentationSequential(
