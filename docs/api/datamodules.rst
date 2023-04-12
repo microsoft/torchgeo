@@ -11,6 +11,11 @@ Chesapeake Land Cover
 
 .. autoclass:: ChesapeakeCVPRDataModule
 
+L7 Irish
+^^^^^^^^
+
+.. autoclass:: L7IrishDataModule
+
 L8 Biome
 ^^^^^^^^
 
