@@ -9,6 +9,7 @@ import os
 from typing import Any, Dict, Tuple, Type, cast
 
 import lightning.pytorch as pl
+import torch
 from lightning.pytorch import LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
@@ -176,6 +177,9 @@ def main(conf: DictConfig) -> None:
         raise ValueError(
             f"experiment.task={task_name} is not recognized as a valid task"
         )
+
+    if hasattr(torch, "compile"):
+        task = torch.compile(task)
 
     ######################################
     # Setup trainer

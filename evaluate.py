@@ -146,6 +146,9 @@ def main(args: argparse.Namespace) -> None:
     model.freeze()
     model.eval()
 
+    if hasattr(torch, "compile"):
+        model = torch.compile(model)
+
     dm = DATAMODULE(
         seed=args.seed,
         root=args.root,
