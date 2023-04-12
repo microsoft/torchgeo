@@ -5,7 +5,7 @@ setuptools==67.6.0
 einops==0.6.0
 fiona==1.9.3
 kornia==0.6.11
-lightning==2.0.1
+lightning==2.0.1.post0
 matplotlib==3.7.1
 numpy==1.24.2
 pillow==9.5.0
