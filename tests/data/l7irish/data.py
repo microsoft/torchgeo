@@ -46,9 +46,7 @@ prefixes = [
 for land_type, patches in filenames.items():
     for patch in patches:
         path, row = patch.split("_")[:2]
-        path = path[1:].zfill(3)
-        row = row[1:].zfill(3)
-        key = path + row
+        key = path[1:].zfill(3) + row[1:].zfill(3)
         for prefix in prefixes:
             if key in prefix:
                 for band in bands:
