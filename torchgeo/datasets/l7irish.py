@@ -22,8 +22,9 @@ class L7Irish(RasterDataset):
 
     The `L7 Irish <https://landsat.usgs.gov/landsat-7-cloud-cover-assessment-validation-data>`__ dataset
     is based on Landsat 7 Enhanced Thematic Mapper Plus (ETM+) Level-1G scenes.
-    Manually generated cloud masks are used to train and validate cloud cover assessment algorithms,
-    which in turn are intended to compute the percentage of cloud cover in each scene.
+    Manually generated cloud masks are used to train and validate cloud cover assessment
+    algorithms, which in turn are intended to compute the percentage of cloud cover in each
+    scene.
 
     Dataset features:
 
@@ -64,12 +65,12 @@ class L7Irish(RasterDataset):
         "mid_latitude_south": "c66bbeaa6dbf0ba2cd26b9eea89eb3a4",
         "polar_north": "4a648c5bcc6b5e5eac0f8c57dce1a57e",
         "polar_south": "a12e4d7fddaa377259328190f10a1c17",
-        "subtropical_north": "ebdfaee37ffc5ba1bd4763f7f72df97f",
+        "subtropical_north": "18a6b9b4684ae91bfdcc7b78ea1f42ee",
         "subtropical_south": "3670c9490753efe3d36927329bb87e2f",
         "tropical": "f60c93d8609c72ac86e858105b6272f2",
     }
 
-    classes = ["Fill", "Clear", "Thin Cloud", "Cloud"]
+    classes = ["Fill", "Cloud Shadow", "Clear", "Thin Cloud", "Cloud"]
 
     # https://landsat.usgs.gov/cloud-validation/cca_irish_2015/L7_Irish_Cloud_Validation_Masks.xml
     filename_glob = "L7*_B10.TIF"

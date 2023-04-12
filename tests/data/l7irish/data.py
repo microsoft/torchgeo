@@ -76,7 +76,9 @@ def create_file(path: str) -> None:
         profile["width"] = profile["height"] = SIZE * 2
 
     if path.endswith("_newmask2015.TIF"):
-        Z = np.random.randint(5, size=(SIZE, SIZE), dtype=dtype)
+        Z = np.random.choice(
+            np.array([0, 64, 128, 191, 255], dtype=dtype), size=(SIZE, SIZE)
+        )
 
     else:
         Z = np.random.randn(SIZE, SIZE).astype(profile["dtype"])
