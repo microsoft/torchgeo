@@ -38,7 +38,6 @@ from torchgeo.datamodules import (
     Vaihingen2DDataModule,
 )
 from torchgeo.trainers import (
-    BYOLTask,
     ClassificationTask,
     MultiLabelClassificationTask,
     ObjectDetectionTask,
@@ -50,7 +49,6 @@ TASK_TO_MODULES_MAPPING: Dict[
     str, Tuple[Type[LightningModule], Type[LightningDataModule]]
 ] = {
     "bigearthnet": (MultiLabelClassificationTask, BigEarthNetDataModule),
-    "byol": (BYOLTask, ChesapeakeCVPRDataModule),
     "chesapeake_cvpr": (SemanticSegmentationTask, ChesapeakeCVPRDataModule),
     "cowc_counting": (RegressionTask, COWCCountingDataModule),
     "cyclone": (RegressionTask, TropicalCycloneDataModule),
