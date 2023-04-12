@@ -29,7 +29,7 @@ class L7Irish(RasterDataset):
 
     * 206 scenes from Landsat-7 ETM+ tiles
     * Imagery from global tiles between June 2000--December 2001
-    * 9 Level-1 spectral bands with 15 and 30 mper pixel resolution
+    * 9 Level-1 spectral bands with 15 and 30 m per pixel resolution
 
     Dataset format:
 
