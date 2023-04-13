@@ -7,7 +7,7 @@ from typing import Any, Dict
 
 import kornia.augmentation as K
 import torch
-import torch.nn.functional as F
+import torchvision.transforms.functional as F
 
 from ..datasets import UCMerced
 from ..transforms import AugmentationSequential
@@ -35,7 +35,7 @@ class UCMercedDataModule(NonGeoDataModule):
         def default_transform(
             sample: Dict[str, torch.Tensor]
         ) -> Dict[str, torch.Tensor]:
-            sample["image"] = F.interpolate(sample["image"], size=256)
+            sample["image"] = F.resize(sample["image"], size=(256, 256), antialias=True)
             return sample
 
         kwargs["transforms"] = kwargs.get("transforms", default_transform)
