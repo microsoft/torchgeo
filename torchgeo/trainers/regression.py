@@ -266,6 +266,7 @@ class DenseRegressionTask(RegressionTask):
                 f"Currently, only supports 'unet', 'deeplabv3+' and 'fcn'."
             )
 
+        self.loss: nn.Module
         if self.hyperparams["loss"] == "mse":
             self.loss = nn.MSELoss()
         elif self.hyperparams["loss"] == "mae":
@@ -295,7 +296,7 @@ class DenseRegressionTask(RegressionTask):
         self.log("train_loss", loss)  # logging to TensorBoard
         self.train_metrics(y_hat, y)
 
-        return loss
+        return cast(Tensor, loss)
 
     def validation_step(self, *args: Any, **kwargs: Any) -> None:
         """Compute validation loss and log example predictions.
