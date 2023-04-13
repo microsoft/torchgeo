@@ -4,4 +4,4 @@ nbmake==1.4.1
 omegaconf==2.3.0
 pytest==7.3.0
 pytest-cov==4.0.0
-tensorboard==2.12.1
+tensorboard==2.12.2
