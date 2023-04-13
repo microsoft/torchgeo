@@ -7,8 +7,10 @@ import os
 from typing import Any, cast
 
 import matplotlib.pyplot as plt
+import segmentation_models_pytorch as smp
 import timm
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from lightning.pytorch import LightningModule
 from torch import Tensor
@@ -17,7 +19,7 @@ from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import unbind_samples
-from ..models import get_weight
+from ..models import FCN, get_weight
 from . import utils
 
 
@@ -80,7 +82,11 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         self.config_task()
 
         self.train_metrics = MetricCollection(
-            {"RMSE": MeanSquaredError(squared=False), "MAE": MeanAbsoluteError()},
+            {
+                "RMSE": MeanSquaredError(squared=False),
+                "MSE": MeanSquaredError(squared=True),
+                "MAE": MeanAbsoluteError(),
+            },
             prefix="train_",
         )
         self.val_metrics = self.train_metrics.clone(prefix="val_")
@@ -219,3 +225,128 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
                 "monitor": "val_loss",
             },
         }
+
+
+class DenseRegressionTask(RegressionTask):
+    """LightningModule for dense regression of images.
+
+    Supports `Segmentation Models Pytorch
+    <https://github.com/qubvel/segmentation_models.pytorch>`_
+    as an architecture choice in combination with any of these
+    `TIMM backbones <https://smp.readthedocs.io/en/latest/encoders_timm.html>`_.
+
+    .. versionadded:: 0.5
+    """
+
+    def config_task(self) -> None:
+        """Configures the task based on kwargs parameters passed to the constructor."""
+        if self.hyperparams["model"] == "unet":
+            self.model = smp.Unet(
+                encoder_name=self.hyperparams["backbone"],
+                encoder_weights=self.hyperparams["weights"],
+                in_channels=self.hyperparams["in_channels"],
+                classes=1,
+            )
+        elif self.hyperparams["model"] == "deeplabv3+":
+            self.model = smp.DeepLabV3Plus(
+                encoder_name=self.hyperparams["backbone"],
+                encoder_weights=self.hyperparams["weights"],
+                in_channels=self.hyperparams["in_channels"],
+                classes=1,
+            )
+        elif self.hyperparams["model"] == "fcn":
+            self.model = FCN(
+                in_channels=self.hyperparams["in_channels"],
+                classes=1,
+                num_filters=self.hyperparams["num_filters"],
+            )
+        else:
+            raise ValueError(
+                f"Model type '{self.hyperparams['model']}' is not valid. "
+                f"Currently, only supports 'unet', 'deeplabv3+' and 'fcn'."
+            )
+
+        if self.hyperparams["loss"] == "mse":
+            self.loss = nn.MSELoss()
+        elif self.hyperparams["loss"] == "mae":
+            self.loss = nn.L1Loss()
+        else:
+            raise ValueError(
+                f"Loss type '{self.hyperparams['loss']}' is not valid. "
+                f"Currently, supports 'mse' or 'mae' loss."
+            )
+
+    def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
+        """Compute and return the training loss.
+
+        Args:
+            batch: the output of your DataLoader
+
+        Returns:
+            training loss
+        """
+        batch = args[0]
+        x = batch["image"]
+        y = batch["mask"]
+        y_hat = self(x)
+
+        loss = self.loss(y_hat, y)
+
+        self.log("train_loss", loss)  # logging to TensorBoard
+        self.train_metrics(y_hat, y)
+
+        return loss
+
+    def validation_step(self, *args: Any, **kwargs: Any) -> None:
+        """Compute validation loss and log example predictions.
+
+        Args:
+            batch: the output of your DataLoader
+            batch_idx: the index of this batch
+        """
+        batch = args[0]
+        batch_idx = args[1]
+        x = batch["image"]
+        y = batch["mask"]
+        y_hat = self(x)
+
+        loss = self.loss(y_hat, y)
+        self.log("val_loss", loss)
+        self.val_metrics(y_hat, y)
+
+        if (
+            batch_idx < 10
+            and hasattr(self.trainer, "datamodule")
+            and self.logger
+            and hasattr(self.logger, "experiment")
+            and hasattr(self.logger.experiment, "add_figure")
+        ):
+            try:
+                datamodule = self.trainer.datamodule
+                batch["prediction"] = y_hat
+                for key in ["image", "mask", "prediction"]:
+                    batch[key] = batch[key].cpu()
+                sample = unbind_samples(batch)[0]
+                fig = datamodule.plot(sample)
+                summary_writer = self.logger.experiment
+                summary_writer.add_figure(
+                    f"image/{batch_idx}", fig, global_step=self.global_step
+                )
+                plt.close()
+            except ValueError:
+                pass
+
+    def test_step(self, *args: Any, **kwargs: Any) -> None:
+        """Compute test loss.
+
+        Args:
+            batch: the output of your DataLoader
+        """
+        batch = args[0]
+        x = batch["image"]
+        y = batch["mask"]
+        y_hat = self(x)
+
+        loss = self.loss(y_hat, y)
+        self.log("test_loss", loss)
+        self.test_metrics(y_hat, y)
