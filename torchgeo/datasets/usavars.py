@@ -165,6 +165,9 @@ class USAVars(NonGeoDataset):
                 [self.label_dfs[lab].loc[id_][lab] for lab in self.labels]
             ),
             "image": self._load_image(os.path.join(self.root, "uar", tif_file)),
+            "centroid_loc": Tensor(
+                self.label_dfs[self.labels[0]].loc[id_][["lon", "lat"]]
+            ),
         }
 
         if self.transforms is not None:
