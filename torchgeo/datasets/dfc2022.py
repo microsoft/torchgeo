@@ -5,8 +5,8 @@
 
 import glob
 import os
-from typing import Callable, Optional
 from collections.abc import Sequence
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np

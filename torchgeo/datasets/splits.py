@@ -3,11 +3,11 @@
 
 """Dataset splitting utilities."""
 
+from collections.abc import Sequence
 from copy import deepcopy
 from itertools import accumulate
 from math import floor, isclose
 from typing import Optional, Union, cast
-from collections.abc import Sequence
 
 from rtree.index import Index, Property
 from torch import Generator, default_generator, randint, randperm

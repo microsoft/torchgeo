@@ -9,8 +9,8 @@ import glob
 import os
 import re
 import sys
-from typing import Any, Callable, Optional, cast
 from collections.abc import Sequence
+from typing import Any, Callable, Optional, cast
 
 import fiona
 import fiona.transform

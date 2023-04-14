@@ -5,8 +5,8 @@
 
 import json
 import os
-from typing import Any, Callable, Optional
 from collections.abc import Sequence
+from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np

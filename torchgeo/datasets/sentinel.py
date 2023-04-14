@@ -3,8 +3,8 @@
 
 """Sentinel datasets."""
 
-from typing import Any, Callable, Optional
 from collections.abc import Sequence
+from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 import torch

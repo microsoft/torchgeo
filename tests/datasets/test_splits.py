@@ -1,9 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+from collections.abc import Sequence
 from math import floor, isclose
 from typing import Any, Union
-from collections.abc import Sequence
 
 import pytest
 from rasterio.crs import CRS

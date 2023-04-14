@@ -4,8 +4,8 @@
 """Landsat datasets."""
 
 import abc
-from typing import Any, Callable, Optional
 from collections.abc import Sequence
+from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 from rasterio.crs import CRS

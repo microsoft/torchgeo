@@ -2,8 +2,8 @@
 # Licensed under the MIT License.
 
 import math
-from itertools import product
 from collections.abc import Iterator
+from itertools import product
 
 import pytest
 from _pytest.fixtures import SubRequest
