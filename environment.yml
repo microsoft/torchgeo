@@ -11,7 +11,7 @@ dependencies:
   - pip
   - pycocotools>=2.0.1
   - pyproj>=2.4.1
-  - python>=3.8
+  - python>=3.9
   - pytorch>=1.12
   - pyvista>=0.25.2
   - rarfile>=4
