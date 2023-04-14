@@ -4,7 +4,7 @@ Dataset,Type,Source,Size (px),Resolution (m)
 `Canadian Building Footprints`_,Geometries,Bing Imagery,-,-
 `Chesapeake Land Cover`_,"Imagery, Masks",NAIP,-,1
 `Global Mangrove Distribution`_,Masks,"Remote Sensing, In Situ Measurements",-,3
-`Cropland Data Layer`_,Masks,Aerial,-,30
+`Cropland Data Layer`_,Masks,Landsat,-,30
 `EDDMapS`_,Points,Citizen Scientists,-,-
 `EnviroAtlas`_,"Imagery, Masks","NAIP, NLCD, OpenStreetMap",-,1
 `Esri2020`_,Masks,Sentinel-2,-,10
