@@ -164,7 +164,7 @@ class NLCD(RasterDataset):
         Raises:
             FileNotFoundError: if no files are found in ``root``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-            RuntimeError: if ``year`` is invalid
+            AssertionError: if ``year`` is invalid
         """
         assert (
             year in self.valid_years
