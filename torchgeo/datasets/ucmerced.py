@@ -3,10 +3,11 @@
 
 """UC Merced dataset."""
 import os
-from typing import Callable, Dict, Optional, cast
+from typing import Callable, Dict, Optional, Tuple, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
+import torchvision.transforms.functional as F
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
@@ -142,6 +143,21 @@ class UCMerced(NonGeoClassificationDataset):
             transforms=transforms,
             is_valid_file=is_in_split,
         )
+
+    def _load_image(self, index: int) -> Tuple[Tensor, Tensor]:
+        """Load a single image and it's class label.
+
+        Args:
+            index: index to return
+        Returns:
+            the image
+            the image class label
+
+        .. versionadded:: 0.4.2
+        """
+        img, label = NonGeoClassificationDataset._load_image(self, index)
+        img = F.resize(img, size=(256, 256), antialias=True)
+        return img, label
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
