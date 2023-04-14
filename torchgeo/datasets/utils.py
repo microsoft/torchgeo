@@ -3,6 +3,8 @@
 
 """Common dataset utilities."""
 
+from __future__ import annotations
+
 import bz2
 import collections
 import contextlib
@@ -387,7 +389,7 @@ class BoundingBox:
 
     def split(
         self, proportion: float, horizontal: bool = True
-    ) -> tuple["torchgeo.datasets.BoundingBox", "torchgeo.datasets.BoundingBox"]:
+    ) -> tuple["BoundingBox", "BoundingBox"]:
         """Split BoundingBox in two.
 
         Args:
