@@ -389,7 +389,7 @@ class BoundingBox:
 
     def split(
         self, proportion: float, horizontal: bool = True
-    ) -> tuple["BoundingBox", "BoundingBox"]:
+    ) -> tuple[BoundingBox, BoundingBox]:
         """Split BoundingBox in two.
 
         Args:
