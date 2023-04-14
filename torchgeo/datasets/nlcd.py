@@ -46,7 +46,7 @@ class NLCD(RasterDataset):
     #. Emergent Herbaceous Wetlands
 
     Detailed descriptions of the classes can be found
-    `here <https://www.mrlc.gov/data/legends/national-land-cover-database-class-legend-and-description>`_.
+    `on this website <https://www.mrlc.gov/data/legends/national-land-cover-database-class-legend-and-description>`_.
 
     Dataset format:
 
