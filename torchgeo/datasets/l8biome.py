@@ -6,7 +6,8 @@
 import glob
 import os
 import re
-from typing import Any, Callable, Optional, Sequence, cast
+from typing import Any, Callable, Optional, cast
+from collections.abc import Sequence
 
 import matplotlib.pyplot as plt
 import torch

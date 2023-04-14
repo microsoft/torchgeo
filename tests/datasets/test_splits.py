@@ -2,7 +2,8 @@
 # Licensed under the MIT License.
 
 from math import floor, isclose
-from typing import Any, Sequence, Union
+from typing import Any, Union
+from collections.abc import Sequence
 
 import pytest
 from rasterio.crs import CRS

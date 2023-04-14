@@ -5,7 +5,8 @@
 
 import os
 import sys
-from typing import Any, Callable, Optional, Sequence, cast
+from typing import Any, Callable, Optional, cast
+from collections.abc import Sequence
 
 import fiona
 import matplotlib.pyplot as plt

@@ -5,7 +5,8 @@
 
 import glob
 import os
-from typing import Callable, Optional, Sequence, Union
+from typing import Callable, Optional, Union
+from collections.abc import Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np

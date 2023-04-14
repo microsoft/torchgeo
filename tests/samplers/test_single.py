@@ -3,7 +3,7 @@
 
 import math
 from itertools import product
-from typing import Iterator
+from collections.abc import Iterator
 
 import pytest
 from _pytest.fixtures import SubRequest

@@ -4,7 +4,8 @@
 """EuroSAT dataset."""
 
 import os
-from typing import Callable, Optional, Sequence, cast
+from typing import Callable, Optional, cast
+from collections.abc import Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np

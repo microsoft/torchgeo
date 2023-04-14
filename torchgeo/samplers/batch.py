@@ -4,7 +4,8 @@
 """TorchGeo batch samplers."""
 
 import abc
-from typing import Iterator, Optional, Union
+from typing import Optional, Union
+from collections.abc import Iterator
 
 import torch
 from rtree.index import Index, Property

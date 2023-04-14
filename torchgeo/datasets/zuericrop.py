@@ -4,7 +4,8 @@
 """ZueriCrop dataset."""
 
 import os
-from typing import Callable, Optional, Sequence
+from typing import Callable, Optional
+from collections.abc import Sequence
 
 import matplotlib.pyplot as plt
 import torch
