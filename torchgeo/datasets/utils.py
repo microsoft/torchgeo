@@ -17,7 +17,7 @@ import tarfile
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Optional, Union, cast, overload
+from typing import Any, cast, overload
 
 import numpy as np
 import rasterio
