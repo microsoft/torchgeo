@@ -4,14 +4,15 @@
 """NLCD dataset."""
 
 import os
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import download_url, extract_archive
+from .utils import BoundingBox, download_url, extract_archive
 
 
 class NLCD(RasterDataset):
@@ -56,11 +57,15 @@ class NLCD(RasterDataset):
 
     Dataset format:
 
-    * single channel geotiff file with integer class labels
+    * single channel .img file with integer class labels
 
-    If you use this dataset in your research, please cite:
+    If you use this dataset in your research, please use the corresponding citation:
 
-    *
+    * (2001): https://doi.org/10.5066/P9MZGHLF
+    * (2006): https://doi.org/10.5066/P9HBR9V3
+    * (2011): https://doi.org/10.5066/P97S2IID
+    * (2016): https://doi.org/10.5066/P96HHBIE
+    * (2019): https://doi.org/10.5066/P9KZCM54
 
     .. versionadded:: 0.5
     """  # noqa: E501
@@ -89,24 +94,44 @@ class NLCD(RasterDataset):
         2019: "82851c3f8105763b01c83b4a9e6f3961",
     }
 
+    ordinal_label_map = {
+        0: 0,
+        11: 1,
+        12: 2,
+        21: 3,
+        22: 4,
+        23: 5,
+        24: 6,
+        31: 7,
+        41: 8,
+        42: 9,
+        43: 10,
+        52: 11,
+        71: 12,
+        81: 13,
+        82: 14,
+        90: 15,
+        95: 16,
+    }
+
     cmap = {
         0: (0, 0, 0, 255),
-        11: (70, 107, 159, 255),
-        12: (209, 222, 248, 255),
-        21: (222, 197, 197, 255),
-        22: (217, 146, 130, 255),
-        23: (235, 0, 0, 255),
-        24: (171, 0, 0, 255),
-        31: (179, 172, 159, 255),
-        41: (104, 171, 95, 255),
-        42: (28, 95, 44, 255),
-        43: (181, 197, 143, 255),
-        52: (204, 184, 121, 255),
-        71: (223, 223, 194, 255),
-        81: (220, 217, 57, 255),
-        82: (171, 108, 40, 255),
-        90: (184, 217, 235, 255),
-        95: (108, 159, 184, 255),
+        1: (70, 107, 159, 255),
+        2: (209, 222, 248, 255),
+        3: (222, 197, 197, 255),
+        4: (217, 146, 130, 255),
+        5: (235, 0, 0, 255),
+        6: (171, 0, 0, 255),
+        7: (179, 172, 159, 255),
+        8: (104, 171, 95, 255),
+        9: (28, 95, 44, 255),
+        10: (181, 197, 143, 255),
+        11: (204, 184, 121, 255),
+        12: (223, 223, 194, 255),
+        13: (220, 217, 57, 255),
+        14: (171, 108, 40, 255),
+        15: (184, 217, 235, 255),
+        16: (108, 159, 184, 255),
     }
 
     valid_years = [2001, 2006, 2011, 2016, 2019]
@@ -152,6 +177,46 @@ class NLCD(RasterDataset):
         self._verify()
 
         super().__init__(root, crs, res, transforms=transforms, cache=cache)
+
+    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+        """Retrieve image/mask and metadata indexed by query.
+
+        Args:
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+
+        Returns:
+            sample of image/mask and metadata at that index
+
+        Raises:
+            IndexError: if query is not found in the index
+        """
+        hits = self.index.intersection(tuple(query), objects=True)
+        filepaths = cast(List[str], [hit.object for hit in hits])
+
+        if not filepaths:
+            raise IndexError(
+                f"query: {query} not found in index with bounds: {self.bounds}"
+            )
+
+        data = self._merge_files(filepaths, query, self.band_indexes)
+
+        # replace mask values with ordinal values
+        data = data.long()
+        mapping_tensor = torch.tensor(list(self.ordinal_label_map.keys()))
+        flattened_tensor = data.flatten()
+        indices = torch.where(mapping_tensor[:, None] == flattened_tensor[None, :])
+        flattened_tensor[indices[1]] = torch.tensor(
+            list(self.ordinal_label_map.values())
+        )[indices[0]]
+        mask = flattened_tensor.reshape(data.shape)
+
+        # create sample dict
+        sample = {"crs": self.crs, "bbox": query, "mask": mask}
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
