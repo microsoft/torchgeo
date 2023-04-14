@@ -387,7 +387,7 @@ class BoundingBox:
 
     def split(
         self, proportion: float, horizontal: bool = True
-    ) -> tuple["BoundingBox", "BoundingBox"]:
+    ) -> tuple["torchgeo.datasets.BoundingBox", "torchgeo.datasets.BoundingBox"]:
         """Split BoundingBox in two.
 
         Args:
