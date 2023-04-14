@@ -124,6 +124,11 @@ NAIP
 
 .. autoclass:: NAIP
 
+NLCD
+^^^^
+
+.. autoclass:: NLCD
+
 Open Buildings
 ^^^^^^^^^^^^^^
 

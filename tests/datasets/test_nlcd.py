@@ -25,20 +25,25 @@ class TestNLCD:
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> NLCD:
         monkeypatch.setattr(torchgeo.datasets.nlcd, "download_url", download_url)
 
-        md5s = {2019: "8dff19f58a6253d782c97f7981e26357"}
+        md5s = {
+            2011: "99546a3b89a0dddbe4e28e661c79984e",
+            2019: "a4008746f15720b8908ddd357a75fded",
+        }
         monkeypatch.setattr(NLCD, "md5s", md5s)
 
-        urls = {
-            2019: os.path.join(
-                "tests", "data", "nlcd", "nlcd_2019_land_cover_l48_20210604.zip"
-            )
-        }
-        monkeypatch.setattr(NLCD, "urls", urls)
+        url = os.path.join(
+            "tests", "data", "nlcd", "nlcd_{}_land_cover_l48_20210604.zip"
+        )
+        monkeypatch.setattr(NLCD, "url", url)
         monkeypatch.setattr(plt, "show", lambda *args: None)
         root = str(tmp_path)
         transforms = nn.Identity()
         return NLCD(
-            root, transforms=transforms, download=True, checksum=True, year=2019
+            root,
+            transforms=transforms,
+            download=True,
+            checksum=True,
+            years=[2011, 2019],
         )
 
     def test_getitem(self, dataset: NLCD) -> None:
@@ -56,7 +61,7 @@ class TestNLCD:
         assert isinstance(ds, UnionDataset)
 
     def test_already_extracted(self, dataset: NLCD) -> None:
-        NLCD(root=dataset.root, download=True, year=2019)
+        NLCD(root=dataset.root, download=True, years=[2019])
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join(
@@ -64,14 +69,14 @@ class TestNLCD:
         )
         root = str(tmp_path)
         shutil.copy(pathname, root)
-        NLCD(root, year=2019)
+        NLCD(root, years=[2019])
 
     def test_invalid_year(self, tmp_path: Path) -> None:
         with pytest.raises(
             AssertionError,
             match="NLCD data product only exists for the following years:",
         ):
-            NLCD(str(tmp_path), year=1996)
+            NLCD(str(tmp_path), years=[1996])
 
     def test_plot(self, dataset: NLCD) -> None:
         query = dataset.bounds
