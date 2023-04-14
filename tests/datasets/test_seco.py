@@ -42,7 +42,7 @@ class TestSeasonalContrastS2:
         monkeypatch.setitem(
             SeasonalContrastS2.metadata["100k"],
             "md5",
-            "4d3e6e4afed7e581b7de1bfa2f7c29da",
+            "6f527567f066562af2c78093114599f9",
         )
         monkeypatch.setitem(
             SeasonalContrastS2.metadata["1m"],
