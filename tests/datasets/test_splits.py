@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 from math import floor, isclose
-from typing import Any, Dict, List, Sequence, Tuple, Union
+from typing import Any, Sequence, Union
 
 import pytest
 from rasterio.crs import CRS
@@ -38,7 +38,7 @@ def no_overlap(ds1: GeoDataset, ds2: GeoDataset) -> bool:
 class CustomGeoDataset(GeoDataset):
     def __init__(
         self,
-        items: List[Tuple[BoundingBox, str]] = [(BoundingBox(0, 1, 0, 1, 0, 40), "")],
+        items: list[tuple[BoundingBox, str]] = [(BoundingBox(0, 1, 0, 1, 0, 40), "")],
         crs: CRS = CRS.from_epsg(3005),
         res: float = 1,
     ) -> None:
@@ -48,7 +48,7 @@ class CustomGeoDataset(GeoDataset):
         self._crs = crs
         self.res = res
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         hits = self.index.intersection(tuple(query), objects=True)
         hit = next(iter(hits))
         return {"content": hit.object}
@@ -254,7 +254,7 @@ def test_roi_split() -> None:
     ],
 )
 def test_time_series_split(
-    lengths: Sequence[Union[Tuple[int, int], int, float]],
+    lengths: Sequence[Union[tuple[int, int], int, float]],
     expected_lengths: Sequence[int],
 ) -> None:
     ds = CustomGeoDataset(

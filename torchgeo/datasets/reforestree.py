@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Optional
 
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
@@ -62,7 +62,7 @@ class ReforesTree(NonGeoDataset):
     def __init__(
         self,
         root: str = "data",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -97,9 +97,9 @@ class ReforesTree(NonGeoDataset):
 
         self.annot_df = pd.read_csv(os.path.join(root, "mapping", "final_dataset.csv"))
 
-        self.class2idx: Dict[str, int] = {c: i for i, c in enumerate(self.classes)}
+        self.class2idx: dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -129,7 +129,7 @@ class ReforesTree(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str) -> List[str]:
+    def _load_files(self, root: str) -> list[str]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -158,7 +158,7 @@ class ReforesTree(NonGeoDataset):
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, filepath: str) -> Tuple[Tensor, ...]:
+    def _load_target(self, filepath: str) -> tuple[Tensor, ...]:
         """Load boxes and labels for a single image.
 
         Args:
@@ -220,7 +220,7 @@ class ReforesTree(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

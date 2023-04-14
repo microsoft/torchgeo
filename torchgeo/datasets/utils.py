@@ -13,19 +13,7 @@ import sys
 import tarfile
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-    cast,
-    overload,
-)
+from typing import Any, Iterable, Iterator, Optional, Sequence, Union, cast, overload
 
 import numpy as np
 import rasterio
@@ -110,7 +98,7 @@ def extract_archive(src: str, dst: Optional[str] = None) -> None:
     if dst is None:
         dst = os.path.dirname(src)
 
-    suffix_and_extractor: List[Tuple[Union[str, Tuple[str, ...]], Any]] = [
+    suffix_and_extractor: list[tuple[Union[str, tuple[str, ...]], Any]] = [
         (".rar", _rarfile.RarFile),
         (
             (".tar", ".tar.gz", ".tar.bz2", ".tar.xz", ".tgz", ".tbz2", ".tbz", ".txz"),
@@ -125,7 +113,7 @@ def extract_archive(src: str, dst: Optional[str] = None) -> None:
                 f.extractall(dst)
             return
 
-    suffix_and_decompressor: List[Tuple[str, Any]] = [
+    suffix_and_decompressor: list[tuple[str, Any]] = [
         (".bz2", bz2.open),
         (".gz", gzip.open),
         (".xz", lzma.open),
@@ -261,10 +249,10 @@ class BoundingBox:
         pass
 
     @overload
-    def __getitem__(self, key: slice) -> List[float]:  # noqa: D105
+    def __getitem__(self, key: slice) -> list[float]:  # noqa: D105
         pass
 
-    def __getitem__(self, key: Union[int, slice]) -> Union[float, List[float]]:
+    def __getitem__(self, key: Union[int, slice]) -> Union[float, list[float]]:
         """Index the (minx, maxx, miny, maxy, mint, maxt) tuple.
 
         Args:
@@ -398,7 +386,7 @@ class BoundingBox:
 
     def split(
         self, proportion: float, horizontal: bool = True
-    ) -> Tuple["BoundingBox", "BoundingBox"]:
+    ) -> tuple["BoundingBox", "BoundingBox"]:
         """Split BoundingBox in two.
 
         Args:
@@ -435,7 +423,7 @@ class BoundingBox:
         return bbox1, bbox2
 
 
-def disambiguate_timestamp(date_str: str, format: str) -> Tuple[float, float]:
+def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
     """Disambiguate partial timestamps.
 
     TorchGeo stores the timestamp of each file in a spatiotemporal R-tree. If the full
@@ -510,7 +498,7 @@ def working_dir(dirname: str, create: bool = False) -> Iterator[None]:
         os.chdir(cwd)
 
 
-def _list_dict_to_dict_list(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, List[Any]]:
+def _list_dict_to_dict_list(samples: Iterable[dict[Any, Any]]) -> dict[Any, list[Any]]:
     """Convert a list of dictionaries to a dictionary of lists.
 
     Args:
@@ -528,7 +516,7 @@ def _list_dict_to_dict_list(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, List
     return collated
 
 
-def _dict_list_to_list_dict(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
+def _dict_list_to_list_dict(sample: dict[Any, Sequence[Any]]) -> list[dict[Any, Any]]:
     """Convert a dictionary of lists to a list of dictionaries.
 
     Args:
@@ -539,7 +527,7 @@ def _dict_list_to_list_dict(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, 
 
     .. versionadded:: 0.2
     """
-    uncollated: List[Dict[Any, Any]] = [
+    uncollated: list[dict[Any, Any]] = [
         {} for _ in range(max(map(len, sample.values())))
     ]
     for key, values in sample.items():
@@ -548,7 +536,7 @@ def _dict_list_to_list_dict(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, 
     return uncollated
 
 
-def stack_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
+def stack_samples(samples: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
     """Stack a list of samples along a new axis.
 
     Useful for forming a mini-batch of samples to pass to
@@ -562,14 +550,14 @@ def stack_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
 
     .. versionadded:: 0.2
     """
-    collated: Dict[Any, Any] = _list_dict_to_dict_list(samples)
+    collated: dict[Any, Any] = _list_dict_to_dict_list(samples)
     for key, value in collated.items():
         if isinstance(value[0], Tensor):
             collated[key] = torch.stack(value)
     return collated
 
 
-def concat_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
+def concat_samples(samples: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
     """Concatenate a list of samples along an existing axis.
 
     Useful for joining samples in a :class:`torchgeo.datasets.IntersectionDataset`.
@@ -582,7 +570,7 @@ def concat_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
 
     .. versionadded:: 0.2
     """
-    collated: Dict[Any, Any] = _list_dict_to_dict_list(samples)
+    collated: dict[Any, Any] = _list_dict_to_dict_list(samples)
     for key, value in collated.items():
         if isinstance(value[0], Tensor):
             collated[key] = torch.cat(value)
@@ -591,7 +579,7 @@ def concat_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
     return collated
 
 
-def merge_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
+def merge_samples(samples: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
     """Merge a list of samples.
 
     Useful for joining samples in a :class:`torchgeo.datasets.UnionDataset`.
@@ -604,7 +592,7 @@ def merge_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
 
     .. versionadded:: 0.2
     """
-    collated: Dict[Any, Any] = {}
+    collated: dict[Any, Any] = {}
     for sample in samples:
         for key, value in sample.items():
             if key in collated and isinstance(value, Tensor):
@@ -616,7 +604,7 @@ def merge_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
     return collated
 
 
-def unbind_samples(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
+def unbind_samples(sample: dict[Any, Sequence[Any]]) -> list[dict[Any, Any]]:
     """Reverse of :func:`stack_samples`.
 
     Useful for turning a mini-batch of samples into a list of samples. These individual
@@ -665,7 +653,7 @@ def draw_semantic_segmentation_masks(
     image: Tensor,
     mask: Tensor,
     alpha: float = 0.5,
-    colors: Optional[Sequence[Union[str, Tuple[int, int, int]]]] = None,
+    colors: Optional[Sequence[Union[str, tuple[int, int, int]]]] = None,
 ) -> "np.typing.NDArray[np.uint8]":
     """Overlay a semantic segmentation mask onto an image.
 
@@ -690,7 +678,7 @@ def draw_semantic_segmentation_masks(
 
 
 def rgb_to_mask(
-    rgb: "np.typing.NDArray[np.uint8]", colors: List[Tuple[int, int, int]]
+    rgb: "np.typing.NDArray[np.uint8]", colors: list[tuple[int, int, int]]
 ) -> "np.typing.NDArray[np.uint8]":
     """Converts an RGB colormap mask to a integer mask.
 

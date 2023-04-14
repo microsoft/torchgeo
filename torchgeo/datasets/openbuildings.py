@@ -7,7 +7,7 @@ import glob
 import json
 import os
 import sys
-from typing import Any, Callable, Dict, List, Optional, cast
+from typing import Any, Callable, Optional, cast
 
 import fiona
 import fiona.transform
@@ -206,7 +206,7 @@ class OpenBuildings(VectorDataset):
         root: str = "data",
         crs: Optional[CRS] = None,
         res: float = 0.0001,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -292,7 +292,7 @@ class OpenBuildings(VectorDataset):
         self._crs = crs
         self._source_crs = source_crs
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -306,7 +306,7 @@ class OpenBuildings(VectorDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(List[str], [hit.object for hit in hits])
+        filepaths = cast(list[str], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
@@ -337,8 +337,8 @@ class OpenBuildings(VectorDataset):
         return sample
 
     def _filter_geometries(
-        self, query: BoundingBox, filepaths: List[str]
-    ) -> List[Dict[str, Any]]:
+        self, query: BoundingBox, filepaths: list[str]
+    ) -> list[dict[str, Any]]:
         """Filters a df read from the polygon csv file based on query and conf thresh.
 
         Args:
@@ -372,7 +372,7 @@ class OpenBuildings(VectorDataset):
 
         return shapes
 
-    def _wkt_fiona_geom_transform(self, x: str) -> Dict[str, Any]:
+    def _wkt_fiona_geom_transform(self, x: str) -> dict[str, Any]:
         """Function to transform a geometry string into new crs.
 
         Args:
@@ -392,7 +392,7 @@ class OpenBuildings(VectorDataset):
             geom = fiona.model.Geometry(**x)
         else:
             geom = x
-        transformed: Dict[str, Any] = fiona.transform.transform_geom(
+        transformed: dict[str, Any] = fiona.transform.transform_geom(
             self._source_crs.to_dict(), self._crs.to_dict(), geom
         )
         return transformed
@@ -431,7 +431,7 @@ class OpenBuildings(VectorDataset):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

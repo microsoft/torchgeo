@@ -11,7 +11,7 @@ import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import numpy as np
 import pytest
@@ -221,7 +221,7 @@ class TestBoundingBox:
     )
     def test_contains(
         self,
-        test_input: Tuple[float, float, float, float, float, float],
+        test_input: tuple[float, float, float, float, float, float],
         expected: bool,
     ) -> None:
         bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
@@ -256,8 +256,8 @@ class TestBoundingBox:
     )
     def test_or(
         self,
-        test_input: Tuple[float, float, float, float, float, float],
-        expected: Tuple[float, float, float, float, float, float],
+        test_input: tuple[float, float, float, float, float, float],
+        expected: tuple[float, float, float, float, float, float],
     ) -> None:
         bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
         bbox2 = BoundingBox(*test_input)
@@ -290,8 +290,8 @@ class TestBoundingBox:
     )
     def test_and_intersection(
         self,
-        test_input: Tuple[float, float, float, float, float, float],
-        expected: Tuple[float, float, float, float, float, float],
+        test_input: tuple[float, float, float, float, float, float],
+        expected: tuple[float, float, float, float, float, float],
     ) -> None:
         bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
         bbox2 = BoundingBox(*test_input)
@@ -309,7 +309,7 @@ class TestBoundingBox:
         ],
     )
     def test_and_no_intersection(
-        self, test_input: Tuple[float, float, float, float, float, float]
+        self, test_input: tuple[float, float, float, float, float, float]
     ) -> None:
         bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
         bbox2 = BoundingBox(*test_input)
@@ -334,7 +334,7 @@ class TestBoundingBox:
         ],
     )
     def test_area(
-        self, test_input: Tuple[float, float, float, float, float, float], expected: int
+        self, test_input: tuple[float, float, float, float, float, float], expected: int
     ) -> None:
         bbox = BoundingBox(*test_input)
         assert bbox.area == expected
@@ -354,7 +354,7 @@ class TestBoundingBox:
         ],
     )
     def test_volume(
-        self, test_input: Tuple[float, float, float, float, float, float], expected: int
+        self, test_input: tuple[float, float, float, float, float, float], expected: int
     ) -> None:
         bbox = BoundingBox(*test_input)
         assert bbox.volume == expected
@@ -387,7 +387,7 @@ class TestBoundingBox:
     )
     def test_intersects(
         self,
-        test_input: Tuple[float, float, float, float, float, float],
+        test_input: tuple[float, float, float, float, float, float],
         expected: bool,
     ) -> None:
         bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
@@ -405,9 +405,9 @@ class TestBoundingBox:
         self,
         proportion: float,
         horizontal: bool,
-        expected: Tuple[
-            Tuple[float, float, float, float, float, float],
-            Tuple[float, float, float, float, float, float],
+        expected: tuple[
+            tuple[float, float, float, float, float, float],
+            tuple[float, float, float, float, float, float],
         ],
     ) -> None:
         bbox = BoundingBox(0, 1, 0, 1, 0, 1)
@@ -512,13 +512,13 @@ def test_disambiguate_timestamp(
 
 class TestCollateFunctionsMatchingKeys:
     @pytest.fixture(scope="class")
-    def samples(self) -> List[Dict[str, Any]]:
+    def samples(self) -> list[dict[str, Any]]:
         return [
             {"image": torch.tensor([1, 2, 0]), "crs": CRS.from_epsg(2000)},
             {"image": torch.tensor([0, 0, 3]), "crs": CRS.from_epsg(2001)},
         ]
 
-    def test_stack_unbind_samples(self, samples: List[Dict[str, Any]]) -> None:
+    def test_stack_unbind_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = stack_samples(samples)
         assert sample["image"].size() == torch.Size([2, 3])
         assert torch.allclose(sample["image"], torch.tensor([[1, 2, 0], [0, 0, 3]]))
@@ -529,13 +529,13 @@ class TestCollateFunctionsMatchingKeys:
             assert torch.allclose(samples[i]["image"], new_samples[i]["image"])
             assert samples[i]["crs"] == new_samples[i]["crs"]
 
-    def test_concat_samples(self, samples: List[Dict[str, Any]]) -> None:
+    def test_concat_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = concat_samples(samples)
         assert sample["image"].size() == torch.Size([6])
         assert torch.allclose(sample["image"], torch.tensor([1, 2, 0, 0, 0, 3]))
         assert sample["crs"] == CRS.from_epsg(2000)
 
-    def test_merge_samples(self, samples: List[Dict[str, Any]]) -> None:
+    def test_merge_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = merge_samples(samples)
         assert sample["image"].size() == torch.Size([3])
         assert torch.allclose(sample["image"], torch.tensor([1, 2, 3]))
@@ -544,13 +544,13 @@ class TestCollateFunctionsMatchingKeys:
 
 class TestCollateFunctionsDifferingKeys:
     @pytest.fixture(scope="class")
-    def samples(self) -> List[Dict[str, Any]]:
+    def samples(self) -> list[dict[str, Any]]:
         return [
             {"image": torch.tensor([1, 2, 0]), "crs1": CRS.from_epsg(2000)},
             {"mask": torch.tensor([0, 0, 3]), "crs2": CRS.from_epsg(2001)},
         ]
 
-    def test_stack_unbind_samples(self, samples: List[Dict[str, Any]]) -> None:
+    def test_stack_unbind_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = stack_samples(samples)
         assert sample["image"].size() == torch.Size([1, 3])
         assert sample["mask"].size() == torch.Size([1, 3])
@@ -565,7 +565,7 @@ class TestCollateFunctionsDifferingKeys:
         assert torch.allclose(samples[1]["mask"], new_samples[0]["mask"])
         assert samples[1]["crs2"] == new_samples[0]["crs2"]
 
-    def test_concat_samples(self, samples: List[Dict[str, Any]]) -> None:
+    def test_concat_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = concat_samples(samples)
         assert sample["image"].size() == torch.Size([3])
         assert sample["mask"].size() == torch.Size([3])
@@ -574,7 +574,7 @@ class TestCollateFunctionsDifferingKeys:
         assert sample["crs1"] == CRS.from_epsg(2000)
         assert sample["crs2"] == CRS.from_epsg(2001)
 
-    def test_merge_samples(self, samples: List[Dict[str, Any]]) -> None:
+    def test_merge_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = merge_samples(samples)
         assert sample["image"].size() == torch.Size([3])
         assert sample["mask"].size() == torch.Size([3])

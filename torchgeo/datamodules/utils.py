@@ -3,7 +3,7 @@
 
 """Common datamodule utilities."""
 
-from typing import Any, List, Optional, Union
+from typing import Any, Optional, Union
 
 from torch import Generator
 from torch.utils.data import Subset, TensorDataset, random_split
@@ -20,7 +20,7 @@ def dataset_split(
     dataset: Union[TensorDataset, NonGeoDataset],
     val_pct: float,
     test_pct: Optional[float] = None,
-) -> List[Subset[Any]]:
+) -> list[Subset[Any]]:
     """Split a torch Dataset into train/val/test sets.
 
     If ``test_pct`` is not set then only train and validation splits are returned.

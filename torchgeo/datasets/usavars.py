@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Callable, Dict, List, Optional, Sequence
+from typing import Callable, Optional, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -98,7 +98,7 @@ class USAVars(NonGeoDataset):
         root: str = "data",
         split: str = "train",
         labels: Sequence[str] = ALL_LABELS,
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -148,7 +148,7 @@ class USAVars(NonGeoDataset):
             for lab in self.labels
         }
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -180,7 +180,7 @@ class USAVars(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self) -> List[str]:
+    def _load_files(self) -> list[str]:
         """Loads file names."""
         with open(os.path.join(self.root, f"{self.split}_split.txt")) as f:
             files = f.read().splitlines()
@@ -252,7 +252,7 @@ class USAVars(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_labels: bool = True,
         suptitle: Optional[str] = None,
     ) -> Figure:

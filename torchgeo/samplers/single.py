@@ -4,7 +4,7 @@
 """TorchGeo samplers."""
 
 import abc
-from typing import Callable, Iterable, Iterator, Optional, Tuple, Union
+from typing import Callable, Iterable, Iterator, Optional, Union
 
 import torch
 from rtree.index import Index, Property
@@ -68,7 +68,7 @@ class RandomGeoSampler(GeoSampler):
     def __init__(
         self,
         dataset: GeoDataset,
-        size: Union[Tuple[float, float], float],
+        size: Union[tuple[float, float], float],
         length: Optional[int],
         roi: Optional[BoundingBox] = None,
         units: Units = Units.PIXELS,
@@ -176,8 +176,8 @@ class GridGeoSampler(GeoSampler):
     def __init__(
         self,
         dataset: GeoDataset,
-        size: Union[Tuple[float, float], float],
-        stride: Union[Tuple[float, float], float],
+        size: Union[tuple[float, float], float],
+        stride: Union[tuple[float, float], float],
         roi: Optional[BoundingBox] = None,
         units: Units = Units.PIXELS,
     ) -> None:

@@ -3,7 +3,7 @@
 
 import math
 from itertools import product
-from typing import Dict, Iterator
+from typing import Iterator
 
 import pytest
 from _pytest.fixtures import SubRequest
@@ -39,7 +39,7 @@ class CustomGeoDataset(GeoDataset):
         self._crs = crs
         self.res = res
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, BoundingBox]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
         return {"index": query}
 
 
