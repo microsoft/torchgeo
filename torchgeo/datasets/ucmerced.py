@@ -155,7 +155,7 @@ class UCMerced(NonGeoClassificationDataset):
 
         .. versionadded:: 0.4.2
         """
-        img, label = NonGeoClassificationDataset._load_image(self, index)
+        img, label = super()._load_image(index)
         img = F.resize(img, size=(256, 256), antialias=True)
         return img, label
 
