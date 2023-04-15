@@ -28,6 +28,7 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands
 `SEN12MS`_,S,"Sentinel-1/2, MODIS","180,662",33,256x256,10,"SAR, MSI"
 `So2Sat`_,C,Sentinel-1/2,"400,673",17,32x32,10,"SAR, MSI"
 `SpaceNet`_,I,WorldView-2/3 Planet Lab Dove,"1,889--28,728",2,102--900,0.5--4,MSI
+`SSL4EO`_,T,Sentinel-1/2,1M,-,264x264,10,"SAR, MSI"
 `Tropical Cyclone`_,R,GOES 8--16,"108,110",-,256x256,4K--8K,MSI
 `UC Merced`_,C,USGS National Map,"21,000",21,256x256,0.3,RGB
 `USAVars`_,R,NAIP Aerial,100K,-,-,4,"RGB, NIR"
