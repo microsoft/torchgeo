@@ -309,6 +309,11 @@ SpaceNet
 .. autoclass:: SpaceNet6
 .. autoclass:: SpaceNet7
 
+SSL4EO
+^^^^^^
+
+.. autoclass:: SSL4EOS12
+
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
 
