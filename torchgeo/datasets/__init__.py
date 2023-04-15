@@ -74,7 +74,7 @@ from .loveda import LoveDA
 from .millionaid import MillionAID
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
-from .nlcd import NLCD2016TreeCanopy
+from .nlcd_tree_canopy_cover import NLCDTreeCanopyCover
 from .openbuildings import OpenBuildings
 from .oscd import OSCD
 from .patternnet import PatternNet
@@ -185,7 +185,7 @@ __all__ = (
     "LoveDA",
     "MillionAID",
     "NASAMarineDebris",
-    "NLCD2016TreeCanopy",
+    "NLCDTreeCanopyCover",
     "OSCD",
     "PatternNet",
     "Potsdam2D",
