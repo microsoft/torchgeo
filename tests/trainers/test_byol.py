@@ -17,8 +17,12 @@ from omegaconf import OmegaConf
 from torchvision.models import resnet18
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import ChesapeakeCVPRDataModule, SeasonalContrastS2DataModule
-from torchgeo.datasets import SeasonalContrastS2
+from torchgeo.datamodules import (
+    ChesapeakeCVPRDataModule,
+    SeasonalContrastS2DataModule,
+    SSL4EOS12DataModule,
+)
+from torchgeo.datasets import SSL4EOS12, SeasonalContrastS2
 from torchgeo.models import get_model_weights, list_models
 from torchgeo.trainers import BYOLTask
 from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
@@ -52,9 +56,11 @@ class TestBYOLTask:
     @pytest.mark.parametrize(
         "name,classname",
         [
-            ("chesapeake_cvpr_prior", ChesapeakeCVPRDataModule),
-            ("seco_1", SeasonalContrastS2DataModule),
-            ("seco_2", SeasonalContrastS2DataModule),
+            ("chesapeake_cvpr_prior_byol", ChesapeakeCVPRDataModule),
+            ("seco_byol_1", SeasonalContrastS2DataModule),
+            ("seco_byol_2", SeasonalContrastS2DataModule),
+            ("ssl4eo_s12_byol_1", SSL4EOS12DataModule),
+            ("ssl4eo_s12_byol_2", SSL4EOS12DataModule),
         ],
     )
     def test_trainer(
@@ -70,6 +76,9 @@ class TestBYOLTask:
 
         if name.startswith("seco"):
             monkeypatch.setattr(SeasonalContrastS2, "__len__", lambda self: 2)
+
+        if name.startswith("ssl4eo_s12"):
+            monkeypatch.setattr(SSL4EOS12, "__len__", lambda self: 2)
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]
