@@ -1,0 +1,17 @@
+experiment:
+  task: "seco"
+  module:
+    model: "resnet18"
+    weights: null
+    in_channels: 12
+    projection_hidden_size: 8
+    projection_output_size: 8
+    temperature: 0.5
+    distributed: False
+    learning_rate: 1E-3
+    learning_rate_schedule_patience: 5
+  datamodule:
+    root: "tests/data/seco"
+    seasons: 2
+    batch_size: 2
+    num_workers: 0
