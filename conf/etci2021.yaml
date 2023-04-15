@@ -1,5 +1,6 @@
 experiment:
-  task: "etci2021"
+  task: semantic_segmentation
+  dataset: etci2021
   module:
     loss: "ce"
     model: "unet"

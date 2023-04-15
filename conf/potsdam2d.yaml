@@ -1,5 +1,6 @@
 experiment:
-  task: "potsdam2d"
+  task: semantic_segmentation
+  dataset: potsdam2d
   module:
     loss: "ce"
     model: "unet"

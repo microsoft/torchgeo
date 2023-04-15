@@ -7,8 +7,8 @@ trainer:
   max_epochs: 200
   benchmark: True
 experiment:
-  name: "spacenet-example"
-  task: "sen12ms"
+  task: semantic_segmentation
+  dataset: "sen12ms"
   module:
     loss: "ce"
     model: "unet"

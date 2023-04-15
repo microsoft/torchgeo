@@ -4,7 +4,8 @@ program:
 trainer:
   min_epochs: 15
 experiment:
-  task: "sen12ms"
+  task: semantic_segmentation
+  dataset: sen12ms
   module:
     loss: "ce"
     model: "unet"

@@ -5,7 +5,8 @@ trainer:
   max_epochs: 40
   benchmark: True
 experiment:
-  task: "bigearthnet"
+  task: "multilabel_classification"
+  dataset: "bigearthnet"
   module:
     loss: "bce"
     model: "resnet18"

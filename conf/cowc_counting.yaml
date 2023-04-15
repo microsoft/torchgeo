@@ -3,8 +3,8 @@ trainer:
   devices: 1
   min_epochs: 15
 experiment:
-  task: cowc_counting
-  name: cowc_counting_test
+  task: regression
+  dataset: cowc_counting
   module:
     model: resnet18
     weights: null

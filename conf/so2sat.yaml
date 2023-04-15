@@ -5,7 +5,8 @@ trainer:
   max_epochs: 40
   benchmark: True
 experiment:
-  task: "so2sat"
+  task: classification
+  dataset: so2sat
   module:
     loss: "ce"
     model: "resnet18"

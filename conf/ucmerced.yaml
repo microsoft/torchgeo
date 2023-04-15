@@ -1,5 +1,12 @@
+trainer:
+  accelerator: gpu
+  devices: 1
+  min_epochs: 10
+  max_epochs: 40
+  benchmark: True
 experiment:
-  task: "ucmerced"
+  task: classification
+  dataset: ucmerced
   module:
     loss: "ce"
     model: "resnet18"

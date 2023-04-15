@@ -5,8 +5,8 @@ trainer:
   max_epochs: 100
   benchmark: True
 experiment:
-  task: "chesapeake_cvpr"
-  name: "chesapeake_cvpr_example"
+  task: semantic_segmentation
+  dataset: chesapeake_cvpr
   module:
     loss: "ce"
     model: "unet"

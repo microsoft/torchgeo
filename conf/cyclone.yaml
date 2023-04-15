@@ -3,8 +3,8 @@ trainer:
   devices: 1
   min_epochs: 15
 experiment:
-  task: "cyclone"
-  name: "cyclone_test"
+  task: regression
+  dataset: cyclone
   module:
     model: "resnet18"
     weights: null

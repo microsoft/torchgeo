@@ -1,5 +1,6 @@
 experiment:
-  task: "eurosat"
+  task: classification
+  dataset: eurosat
   module:
     loss: "ce"
     model: "resnet18"

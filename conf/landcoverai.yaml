@@ -5,7 +5,8 @@ trainer:
   max_epochs: 100
   benchmark: True
 experiment:
-  task: "landcoverai"
+  task: semantic_segmentation
+  dataset: landcoverai
   module:
     loss: "ce"
     model: "unet"

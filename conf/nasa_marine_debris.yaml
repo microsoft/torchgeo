@@ -10,8 +10,8 @@ trainer:
   benchmark: True
 
 experiment:
-  task: "nasa_marine_debris"
-  name: "nasa_marine_debris_test"
+  task: object_detection
+  dataset: nasa_marine_debris
   module:
     model: "faster-rcnn"
     backbone: "resnet50"

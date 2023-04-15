@@ -4,10 +4,22 @@ trainer:
   min_epochs: 10
   max_epochs: 40
   benchmark: True
+  limit_val_batches: 0.0
 experiment:
-  task: "seco"
+  task: simclr
+  dataset: seco
   module:
+    model: "resnet18"
+    weights: True
     in_channels: 12
+    projection_hidden_size: 256
+    projection_output_size: 512
+    temperature: 0.5
+    distributed: False
+    learning_rate: 1e-3
+    learning_rate_schedule_patience: 6
+    optimizer: "Adam"
+    augmentations: null
   datamodule:
     root: "data/seco"
     version: "100k"

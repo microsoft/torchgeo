@@ -1,5 +1,6 @@
 experiment:
-  task: "gid15"
+  task: semantic_segmentation
+  dataset: gid15
   module:
     loss: "ce"
     model: "unet"

@@ -1,5 +1,12 @@
+trainer:
+  accelerator: gpu
+  devices: 1
+  min_epochs: 10
+  max_epochs: 40
+  benchmark: True
 experiment:
-  task: "vaihingen2d"
+  task: semantic_segmentation
+  dataset: vaihingen2d
   module:
     loss: "ce"
     model: "unet"

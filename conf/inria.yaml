@@ -10,8 +10,8 @@ trainer:
   log_every_n_steps: 2
 
 experiment:
-  task: "inria"
-  name: "inria_test"
+  task: semantic_segmentation
+  dataset: inria
   module:
     loss: "ce"
     model: "unet"

@@ -1,5 +1,6 @@
 experiment:
-  task: "deepglobelandcover"
+  task: semantic_segmentation
+  dataset: deepglobelandcover
   module:
     loss: "ce"
     model: "unet"

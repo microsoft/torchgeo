@@ -4,7 +4,8 @@ program:
 trainer:
   min_epochs: 15
 experiment:
-  task: "naipchesapeake"
+  task: semantic_segmentation
+  dataset: naipchesapeake
   module:
     loss: "ce"
     model: "deeplabv3+"
