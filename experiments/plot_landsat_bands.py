@@ -28,7 +28,6 @@ fig.subplots_adjust(wspace=0.05)
 
 for sensor_name, group1 in df.groupby("Sensor name"):
     for resolution, group2 in group1.groupby("Resolution (m)"):
-
         # Plot one row of data
         y_position = bar_to_height_map[(sensor_name, resolution)]
 
