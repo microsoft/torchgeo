@@ -4,7 +4,7 @@
 """SimCLR trainers for self-supervised learning (SSL)."""
 
 import os
-from typing import Any, cast
+from typing import Optional, Union
 
 import kornia.augmentation as K
 import timm
@@ -16,6 +16,7 @@ from lightning import LightningModule
 from torch import Tensor
 from torch.optim import AdamW, Optimizer
 from torch.optim.lr_scheduler import CosineAnnealingLR
+from torchvision.models._api import WeightsEnum
 
 from ..models import get_weight
 from . import utils
@@ -86,7 +87,22 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
     .. versionadded:: 0.5
     """
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        model: str = "resnet50",
+        weights: Optional[Union[WeightsEnum, str, bool]] = None,
+        in_channels: int = 3,
+        version: int = 2,
+        layers: int = 3,
+        hidden_dim: int = 128,
+        output_dim: int = 128,
+        lr: float = 4.8,
+        weight_decay: float = 1e-4,
+        max_epochs: int = 100,
+        temperature: float = 0.07,
+        distributed: bool = False,
+        augmentations: nn.Module = AUG,
+    ) -> None:
         """Initialize a new SimCLRTask instance.
 
         Args:
@@ -94,14 +110,17 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             weights: Either a weight enum, the string representation of a weight enum,
                 True for ImageNet weights, False or None for random weights,
                 or the path to a saved model state dict.
-            in_channels: Number of input channels to model
-            projection_hidden_size: Number of hidden units in projection head
-            projection_output_size: Output size of projection head
-            temperature: NTXent loss function temperature
-            distributed: Set True if using distributed training
-            learning_rate: Learning rate for optimizer
-            learning_rate_schedule_patience: Patience for learning rate scheduler
-            augmentations: Augmentations to use for training
+            in_channels: Number of input channels to model.
+            version: Version of SimCLR, 1--2.
+            layers: Number of layers in projection head (2 for v1 or 3+ for v2).
+            hidden_dim: Number of hidden dimensions in projection head.
+            output_dim: Number of output dimensions in projection head.
+            lr: Learning rate (0.3 x batch_size / 256 is recommended).
+            weight_decay: Weight decay coefficient (1e-6 for v1 or 1e-4 for v2).
+            max_epochs: Maximum number of epochs to train for.
+            temperature: Temperature used in InfoNCE loss.
+            distributed: Use distributed training.
+            augmentations: Data augmentation.
         """
         super().__init__()
 
@@ -111,7 +130,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         weights = self.hparams["weights"]
         self.backbone = timm.create_model(
             self.hparams["model"],
-            num_classes=projection_hidden_size,
+            num_classes=self.hparams["hidden_dim"],
             in_chans=self.hparams["in_channels"],
             pretrained=weights is True,
         )
@@ -129,16 +148,20 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         # Create projection head
         self.projection_head = SimCLRProjectionHead(
             self.backbone.num_features,
-            self.hparams["projection_hidden_size"],
-            self.hparams["projection_output_size"],
+            self.hparams["hidden_dim"],
+            self.hparams["output_dim"],
             self.hparams["layers"],
         )
 
         # Define loss function
-        self.loss = NTXentLoss(
+        self.criterion = NTXentLoss(
             temperature=self.hparams["temperature"],
             gather_distributed=self.hparams["distributed"],
         )
+
+        # TODO
+        # v1+: add global batch norm
+        # v2: add selective kernels, channel-wise attention mechanism, memory bank
 
     def forward(self, batch: Tensor) -> Tensor:
         """Forward pass of the model.
@@ -153,7 +176,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         z = self.projection_head(h)
         return z
 
-    def training_step(self, batch: Dict[str, Tensor], batch_idx: int) -> Tensor:
+    def training_step(self, batch: dict[str, Tensor], batch_idx: int) -> Tensor:
         """Compute the training loss and additional metrics.
 
         Args:
@@ -181,24 +204,25 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
 
         z1 = self(x1)
         z2 = self(x2)
-        loss = self.loss(z1, z2)
+
+        loss = self.criterion(z1, z2)
 
         self.log("train_loss", loss, on_step=True, on_epoch=False)
 
         return loss
 
-    def validation_step(self, batch: Dict[str, Tensor], batch_idx: int) -> None:
+    def validation_step(self, batch: dict[str, Tensor], batch_idx: int) -> None:
         """No-op, does nothing."""
 
-    def test_step(self, batch: Dict[str, Tensor], batch_idx: int) -> None:
+    def test_step(self, batch: dict[str, Tensor], batch_idx: int) -> None:
         """No-op, does nothing."""
         # TODO
         # v2: add distillation step
 
-    def predict_step(self, batch: Dict[str, Tensor], batch_idx: int) -> None:
+    def predict_step(self, batch: dict[str, Tensor], batch_idx: int) -> None:
         """No-op, does nothing."""
 
-    def configure_optimizers(self) -> Tuple[List[Optimizer], List[LRScheduler]]:
+    def configure_optimizers(self) -> tuple[list[Optimizer], list[LRScheduler]]:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
