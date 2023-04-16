@@ -43,7 +43,6 @@ from torchgeo.trainers import (
     ObjectDetectionTask,
     RegressionTask,
     SemanticSegmentationTask,
-    SimCLRTask,
 )
 
 DATASET_TO_DATAMODULES_MAPPING: Dict[str, Type[LightningDataModule]] = {
@@ -75,7 +74,6 @@ TASK_TO_MODULES_MAPPING: Dict[str, Type[LightningModule]] = {
     "object_detection": ObjectDetectionTask,
     "regression": RegressionTask,
     "semantic_segmentation": SemanticSegmentationTask,
-    "simclr": SimCLRTask,
 }
 
 
@@ -184,7 +182,7 @@ def main(conf: DictConfig) -> None:
     if isinstance(task, ObjectDetectionTask):
         monitor_metric = "val_map"
         mode = "max"
-    elif isinstance(task, BYOLTask) or isinstance(task, "SimCLRTask"):
+    elif isinstance(task, BYOLTask):
         monitor_metric = "train_loss"
         mode = "min"
     else:
