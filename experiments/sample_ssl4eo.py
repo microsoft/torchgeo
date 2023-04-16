@@ -37,7 +37,6 @@ import csv
 import os
 import time
 import warnings
-from typing import Tuple
 
 import numpy as np
 import pandas as pd
@@ -69,7 +68,7 @@ def km2deg(kms: float, radius: float = 6371) -> float:
     return kms / (2.0 * radius * np.pi / 360.0)
 
 
-def sample_point(cities: pd.DataFrame, std: float) -> Tuple[float, float]:
+def sample_point(cities: pd.DataFrame, std: float) -> tuple[float, float]:
     city = cities.sample()
     point = (float(city["lng"]), float(city["lat"]))
     std = km2deg(std)
@@ -78,8 +77,8 @@ def sample_point(cities: pd.DataFrame, std: float) -> Tuple[float, float]:
 
 
 def create_bbox(
-    coords: Tuple[float, float], bbox_size_degree: float
-) -> Tuple[float, float, float, float]:
+    coords: tuple[float, float], bbox_size_degree: float
+) -> tuple[float, float, float, float]:
     lon, lat = coords
     bbox = (
         lon - bbox_size_degree,

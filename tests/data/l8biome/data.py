@@ -6,7 +6,7 @@
 import hashlib
 import os
 import shutil
-from typing import Dict, List, Union
+from typing import Union
 
 import numpy as np
 import rasterio
@@ -17,7 +17,7 @@ SIZE = 36
 
 np.random.seed(0)
 
-FILENAME_HIERARCHY = Union[Dict[str, "FILENAME_HIERARCHY"], List[str]]
+FILENAME_HIERARCHY = Union[dict[str, "FILENAME_HIERARCHY"], list[str]]
 
 bands = [
     "B1.TIF",

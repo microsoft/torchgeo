@@ -6,7 +6,7 @@
 import json
 import os
 from functools import lru_cache
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -174,8 +174,8 @@ class BeninSmallHolderCashews(NonGeoDataset):
         root: str = "data",
         chip_size: int = 256,
         stride: int = 128,
-        bands: Tuple[str, ...] = all_bands,
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        bands: tuple[str, ...] = all_bands,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
@@ -228,7 +228,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
             ]:
                 self.chips_metadata.append((y, x))
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -267,7 +267,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
         """
         return len(self.chips_metadata)
 
-    def _validate_bands(self, bands: Tuple[str, ...]) -> None:
+    def _validate_bands(self, bands: tuple[str, ...]) -> None:
         """Validate list of bands.
 
         Args:
@@ -284,8 +284,8 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
     @lru_cache(maxsize=128)
     def _load_all_imagery(
-        self, bands: Tuple[str, ...] = all_bands
-    ) -> Tuple[Tensor, rasterio.Affine, CRS]:
+        self, bands: tuple[str, ...] = all_bands
+    ) -> tuple[Tensor, rasterio.Affine, CRS]:
         """Load all the imagery (across time) for the dataset.
 
         Optionally allows for subsetting of the bands that are loaded.
@@ -318,8 +318,8 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
     @lru_cache(maxsize=128)
     def _load_single_scene(
-        self, date: str, bands: Tuple[str, ...]
-    ) -> Tuple[Tensor, rasterio.Affine, CRS]:
+        self, date: str, bands: tuple[str, ...]
+    ) -> tuple[Tensor, rasterio.Affine, CRS]:
         """Load the imagery for a single date.
 
         Optionally allows for subsetting of the bands that are loaded.
@@ -427,7 +427,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         time_step: int = 0,
         suptitle: Optional[str] = None,

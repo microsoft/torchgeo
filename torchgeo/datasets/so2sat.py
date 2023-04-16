@@ -4,7 +4,8 @@
 """So2Sat dataset."""
 
 import os
-from typing import Callable, Dict, Optional, Sequence, cast
+from collections.abc import Sequence
+from typing import Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -142,7 +143,7 @@ class So2Sat(NonGeoDataset):
         root: str = "data",
         split: str = "train",
         bands: Sequence[str] = BAND_SETS["all"],
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new So2Sat dataset instance.
@@ -208,7 +209,7 @@ class So2Sat(NonGeoDataset):
         with h5py.File(self.fn, "r") as f:
             self.size: int = f["label"].shape[0]
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -279,7 +280,7 @@ class So2Sat(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

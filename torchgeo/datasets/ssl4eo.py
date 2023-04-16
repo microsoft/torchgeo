@@ -5,7 +5,7 @@
 
 import os
 import random
-from typing import Callable, Dict, Optional, cast
+from typing import Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -101,7 +101,7 @@ class SSL4EOS12(NonGeoDataset):
         root: str = "data",
         split: str = "s2c",
         seasons: int = 1,
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SSL4EOS12 instance.
@@ -133,7 +133,7 @@ class SSL4EOS12(NonGeoDataset):
 
         self._verify()
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -198,7 +198,7 @@ class SSL4EOS12(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
