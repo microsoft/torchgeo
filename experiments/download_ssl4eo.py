@@ -58,7 +58,7 @@ import warnings
 from collections import OrderedDict
 from datetime import date, datetime, timedelta
 from multiprocessing.dummy import Lock, Pool
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import ee
 import numpy as np
