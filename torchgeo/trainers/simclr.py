@@ -29,7 +29,7 @@ except ImportError:
 
 # https://github.com/google-research/simclr/blob/master/data_util.py
 SIZE = 224
-KS = SIZE // 10
+KS = SIZE // 10 // 2 * 2 + 1
 AUG = K.AugmentationSequential(
     K.RandomResizedCrop(size=(SIZE, SIZE), ratio=(0.75, 1.33)),
     K.RandomHorizontalFlip(),
