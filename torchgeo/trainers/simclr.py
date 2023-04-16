@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""SimCLR Trainer."""
+"""SimCLR trainers for self-supervised learning (SSL)."""
 
 import os
 from typing import Any, cast
@@ -14,43 +14,73 @@ from lightly.loss import NTXentLoss
 from lightly.models.modules import SimCLRProjectionHead
 from lightning import LightningModule
 from torch import Tensor
-from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torchvision.models._api import WeightsEnum
+from torch.optim import AdamW, Optimizer
+from torch.optim.lr_scheduler import CosineAnnealingLR
 
 from ..models import get_weight
 from . import utils
 
+try:
+    from torch.optim.lr_scheduler import LRScheduler
+except ImportError:
+    from torch.optim.lr_scheduler import _LRScheduler as LRScheduler
 
-def default_augmentations(image_size: tuple[int, int] = (256, 256)):
-    """Initialize a module for applying SimCLR augmentations.
-    Args:
-        image_size: Tuple of integers defining the image size
-    Returns: augmentations
-    """
-    return nn.Sequential(
-        K.Resize(size=image_size, align_corners=False),
-        # Not suitable for multispectral adapt
-        # K.ColorJitter(0.8, 0.8, 0.8, 0.8, 0.2),
-        # K.RandomGrayscale(p=0.2),
-        K.RandomHorizontalFlip(),
-        K.RandomGaussianBlur((3, 3), (1.5, 1.5), p=0.1),
-        K.RandomResizedCrop(size=image_size),
-    )
+
+# https://github.com/google-research/simclr/blob/master/data_util.py
+SIZE = 224
+KS = SIZE // 10
+AUG = K.AugmentationSequential(
+    K.RandomResizedCrop(size=(SIZE, SIZE), ratio=(0.75, 1.33)),
+    K.RandomHorizontalFlip(),
+    K.RandomVerticalFlip(),  # added
+    # Not appropriate for multispectral imagery, seasonal contrast used instead
+    # K.ColorJitter(brightness=0.8, contrast=0.8, saturation=0.8, hue=0.2, p=0.8)
+    # K.RandomGrayscale(p=0.2),
+    K.RandomGaussianBlur(kernel_size=(KS, KS), sigma=(0.1, 2)),
+    data_keys=["input"],
+)
 
 
 class SimCLRTask(LightningModule):  # type: ignore[misc]
-    """LightningModule for SimCLR pretraining.
-    Supports any available `Timm model
-    <https://huggingface.co/docs/timm/index>`_
-    as an architecture choice. To see a list of available
-    models, you can do:
-    .. code-block:: python
-        import timm
-        print(timm.list_models())
+    """SimCLR: a simple framework for contrastive learning of visual representations.
+
+    Reference implementation:
+
+    * https://github.com/google-research/simclr
+
+    If you use this trainer in your research, please cite the following papers:
+
+    * v1: https://arxiv.org/abs/2002.05709
+    * v2: https://arxiv.org/abs/2006.10029
+
+    .. versionadded:: 0.5
     """
 
-    def config_model(self) -> None:
-        """Configures the model based on kwargs parameters passed to the constructor."""
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the LightningModule with a model.
+        Args:
+            model: Name of the encoder model use
+            weights: Either a weight enum, the string representation of a weight enum,
+                True for ImageNet weights, False or None for random weights,
+                or the path to a saved model state dict.
+            in_channels: Number of input channels to model
+            projection_hidden_size: Number of hidden units in projection head
+            projection_output_size: Output size of projection head
+            temperature: NTXent loss function temperature
+            distributed: Set True if using distributed training
+            learning_rate: Learning rate for optimizer
+            learning_rate_schedule_patience: Patience for learning rate scheduler
+            augmentations: Augmentations to use for training
+        .. versionchanged:: 0.5
+        """
+        super().__init__()
+
+        # Creates `self.hparams` from kwargs
+        self.save_hyperparameters(ignore=["augmentations"])
+        self.hyperparams = cast(dict[str, Any], self.hparams)
+        self.augmentations = kwargs.get("augmentations", AUG)
+        self.config_model()
+
         # Create backbone
         weights = self.hyperparams["weights"]
         self.backbone = timm.create_model(
@@ -83,50 +113,29 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             gather_distributed=self.hyperparams["distributed"],
         )
 
-    def __init__(self, **kwargs: Any) -> None:
-        """Initialize the LightningModule with a model.
-        Args:
-            model: Name of the encoder model use
-            weights: Either a weight enum, the string representation of a weight enum,
-                True for ImageNet weights, False or None for random weights,
-                or the path to a saved model state dict.
-            in_channels: Number of input channels to model
-            projection_hidden_size: Number of hidden units in projection head
-            projection_output_size: Output size of projection head
-            temperature: NTXent loss function temperature
-            distributed: Set True if using distributed training
-            learning_rate: Learning rate for optimizer
-            learning_rate_schedule_patience: Patience for learning rate scheduler
-            augmentations: Augmentations to use for training
-        .. versionchanged:: 0.5
-        """
-        super().__init__()
-
-        # Creates `self.hparams` from kwargs
-        self.save_hyperparameters(ignore=["augmentations"])
-        self.hyperparams = cast(dict[str, Any], self.hparams)
-        self.augmentations = kwargs.get("augmentations", default_augmentations())
-        self.config_model()
-
-    def forward(self, x):
+    def forward(self, batch: Tensor) -> Tensor:
         """Forward pass of the model.
+
         Args:
-            x: tensor of data to run through the model
+            batch: Mini-batch of images.
+
         Returns:
-            output from the model
+            Output from the model.
         """
-        h = self.backbone(x)
+        h = self.backbone(batch)
         z = self.projection_head(h)
         return z
 
-    def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
-        """Compute and return the training loss.
+    def training_step(self, batch: Dict[str, Tensor], batch_idx: int) -> Tensor:
+        """Compute the training loss and additional metrics.
+
         Args:
-            batch: the output of your DataLoader
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+
         Returns:
-            training loss
+            The loss tensor.
         """
-        batch = args[0]
         x = batch["image"]
 
         in_channels = self.hyperparams["in_channels"]
@@ -147,27 +156,34 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         z2 = self(x2)
         loss = self.loss(z1, z2)
 
-        # by default, the train step logs every `log_every_n_steps` steps where
-        # `log_every_n_steps` is a parameter to the `Trainer` object
         self.log("train_loss", loss, on_step=True, on_epoch=False)
 
-        return cast(Tensor, loss)
+        return loss
 
-    def configure_optimizers(self) -> dict[str, Any]:
+    def validation_step(self, batch: Dict[str, Tensor], batch_idx: int) -> None:
+        """No-op, does nothing."""
+
+    def test_step(self, batch: Dict[str, Tensor], batch_idx: int) -> None:
+        """No-op, does nothing."""
+        # TODO
+        # v2: add distillation step
+
+    def predict_step(self, batch: Dict[str, Tensor], batch_idx: int) -> None:
+        """No-op, does nothing."""
+
+    def configure_optimizers(self) -> Tuple[List[Optimizer], List[LRScheduler]]:
         """Initialize the optimizer and learning rate scheduler.
+
         Returns:
-            learning rate dictionary
+            Optimizer and learning rate scheduler.
         """
-        optimizer = torch.optim.Adam(
-            self.model.parameters(), lr=self.hyperparams["learning_rate"]
+        # Original paper uses LARS optimizer, but this is not defined in PyTorch
+        optimizer = AdamW(
+            self.parameters(),
+            lr=self.hparams["lr"],
+            weight_decay=self.hparams["weight_decay"],
         )
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": ReduceLROnPlateau(
-                    optimizer,
-                    patience=self.hyperparams["learning_rate_schedule_patience"],
-                ),
-                "monitor": "train_loss",
-            },
-        }
+        lr_scheduler = CosineAnnealingLR(
+            optimizer, T_max=self.hparams["max_epochs"], eta_min=self.hparams["lr"] / 50
+        )
+        return [optimizer], [lr_scheduler]
