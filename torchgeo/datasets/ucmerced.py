@@ -3,7 +3,7 @@
 
 """UC Merced dataset."""
 import os
-from typing import Callable, Optional, Tuple, cast
+from typing import Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -144,7 +144,7 @@ class UCMerced(NonGeoClassificationDataset):
             is_valid_file=is_in_split,
         )
 
-    def _load_image(self, index: int) -> Tuple[Tensor, Tensor]:
+    def _load_image(self, index: int) -> tuple[Tensor, Tensor]:
         """Load a single image and it's class label.
 
         Args:
