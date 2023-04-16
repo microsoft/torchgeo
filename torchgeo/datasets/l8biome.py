@@ -6,7 +6,8 @@
 import glob
 import os
 import re
-from typing import Any, Callable, Dict, List, Optional, Sequence, cast
+from collections.abc import Sequence
+from typing import Any, Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -88,7 +89,7 @@ class L8Biome(RasterDataset):
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Sequence[str] = all_bands,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -165,7 +166,7 @@ class L8Biome(RasterDataset):
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -178,14 +179,14 @@ class L8Biome(RasterDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(List[str], [hit.object for hit in hits])
+        filepaths = cast(list[str], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
-        image_list: List[Tensor] = []
+        image_list: list[Tensor] = []
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         for band in self.bands:
             band_filepaths = []
@@ -227,7 +228,7 @@ class L8Biome(RasterDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

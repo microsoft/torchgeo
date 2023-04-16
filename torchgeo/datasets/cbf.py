@@ -4,7 +4,7 @@
 """Canadian Building Footprints dataset."""
 
 import os
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 from rasterio.crs import CRS
@@ -62,7 +62,7 @@ class CanadianBuildingFootprints(VectorDataset):
         root: str = "data",
         crs: Optional[CRS] = None,
         res: float = 0.00001,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -124,7 +124,7 @@ class CanadianBuildingFootprints(VectorDataset):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

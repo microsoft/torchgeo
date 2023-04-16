@@ -3,7 +3,7 @@
 
 """OSCD datamodule."""
 
-from typing import Any, Tuple, Union
+from typing import Any, Union
 
 import kornia.augmentation as K
 import torch
@@ -65,7 +65,7 @@ class OSCDDataModule(NonGeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: Union[Tuple[int, int], int] = 64,
+        patch_size: Union[tuple[int, int], int] = 64,
         val_split_pct: float = 0.2,
         num_workers: int = 0,
         **kwargs: Any,

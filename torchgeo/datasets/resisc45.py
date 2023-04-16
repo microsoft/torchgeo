@@ -4,7 +4,7 @@
 """RESISC45 dataset."""
 
 import os
-from typing import Callable, Dict, Optional, cast
+from typing import Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -159,7 +159,7 @@ class RESISC45(NonGeoClassificationDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -243,7 +243,7 @@ class RESISC45(NonGeoClassificationDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

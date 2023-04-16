@@ -11,6 +11,11 @@ Chesapeake Land Cover
 
 .. autoclass:: ChesapeakeCVPRDataModule
 
+L7 Irish
+^^^^^^^^
+
+.. autoclass:: L7IrishDataModule
+
 L8 Biome
 ^^^^^^^^
 
@@ -114,6 +119,11 @@ SpaceNet
 ^^^^^^^^
 
 .. autoclass:: SpaceNet1DataModule
+
+SSL4EO
+^^^^^^
+
+.. autoclass:: SSL4EOS12DataModule
 
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^

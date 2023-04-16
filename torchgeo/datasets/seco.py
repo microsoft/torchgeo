@@ -5,7 +5,7 @@
 
 import os
 import random
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -71,8 +71,8 @@ class SeasonalContrastS2(NonGeoDataset):
         root: str = "data",
         version: str = "100k",
         seasons: int = 1,
-        bands: List[str] = rgb_bands,
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        bands: list[str] = rgb_bands,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -111,7 +111,7 @@ class SeasonalContrastS2(NonGeoDataset):
 
         self._verify()
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -126,7 +126,7 @@ class SeasonalContrastS2(NonGeoDataset):
         root = os.path.join(
             self.root, self.metadata[self.version]["directory"], f"{index:06}"
         )
-        subdirs = os.listdir(root)
+        subdirs = [f for f in os.listdir(root) if os.path.isdir(os.path.join(root, f))]
         subdirs = random.sample(subdirs, self.seasons)
 
         images = [self._load_patch(root, subdir) for subdir in subdirs]
@@ -229,7 +229,7 @@ class SeasonalContrastS2(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

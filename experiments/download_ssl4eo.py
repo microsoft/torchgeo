@@ -73,7 +73,7 @@ def date2str(date: datetime) -> str:
     return date.strftime("%Y-%m-%d")
 
 
-def get_period(date: datetime, days: int = 5) -> Tuple[str, str, str, str]:
+def get_period(date: datetime, days: int = 5) -> tuple[str, str, str, str]:
     date1 = date - timedelta(days=days / 2)
     date2 = date + timedelta(days=days / 2)
     date3 = date1 - timedelta(days=365)
@@ -109,8 +109,8 @@ def get_collection(
 
 def filter_collection(
     collection: ee.ImageCollection,
-    coords: List[float],
-    period: Tuple[str, str, str, str],
+    coords: list[float],
+    period: tuple[str, str, str, str],
 ) -> ee.ImageCollection:
     filtered = collection
     if period is not None:
@@ -132,7 +132,7 @@ def filter_collection(
 
 
 def center_crop(
-    img: np.ndarray[Any, np.dtype[Any]], out_size: Tuple[int, int]
+    img: np.ndarray[Any, np.dtype[Any]], out_size: tuple[int, int]
 ) -> np.ndarray[Any, np.dtype[Any]]:
     image_height, image_width = img.shape[:2]
     crop_height, crop_width = out_size
@@ -142,8 +142,8 @@ def center_crop(
 
 
 def adjust_coords(
-    coords: List[List[float]], old_size: Tuple[int, int], new_size: Tuple[int, int]
-) -> List[List[float]]:
+    coords: list[list[float]], old_size: tuple[int, int], new_size: tuple[int, int]
+) -> list[list[float]]:
     xres = (coords[1][0] - coords[0][0]) / old_size[1]
     yres = (coords[0][1] - coords[1][1]) / old_size[0]
     xoff = int((old_size[1] - new_size[1] + 1) * 0.5)
@@ -163,12 +163,12 @@ def get_properties(image: ee.Image) -> Any:
 
 def get_patch(
     collection: ee.ImageCollection,
-    center_coord: List[float],
+    center_coord: list[float],
     radius: float,
-    bands: List[str],
-    crop: Optional[Dict[str, Any]] = None,
+    bands: list[str],
+    crop: Optional[dict[str, Any]] = None,
     dtype: str = "float32",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     image = collection.sort("system:time_start", False).first()  # get most recent
     region = (
         ee.Geometry.Point(center_coord).buffer(radius).bounds()
@@ -206,14 +206,14 @@ def get_patch(
 def get_random_patches_match(
     idx: int,
     collection: ee.ImageCollection,
-    bands: List[str],
-    crops: Dict[str, Any],
+    bands: list[str],
+    crops: dict[str, Any],
     dtype: str,
-    dates: List[Any],
+    dates: list[Any],
     radius: float,
     debug: bool = False,
-    match_coords: Dict[str, Any] = {},
-) -> Tuple[Optional[List[Dict[str, Any]]], List[float]]:
+    match_coords: dict[str, Any] = {},
+) -> tuple[Optional[list[dict[str, Any]]], list[float]]:
     # (lon,lat) of idx patch
     coords = match_coords[str(idx)]
 
@@ -238,7 +238,7 @@ def get_random_patches_match(
 
 
 def save_geotiff(
-    img: np.ndarray[Any, np.dtype[Any]], coords: List[List[float]], filename: str
+    img: np.ndarray[Any, np.dtype[Any]], coords: list[list[float]], filename: str
 ) -> None:
     height, width, channels = img.shape
     xres = (coords[1][0] - coords[0][0]) / width
@@ -261,9 +261,9 @@ def save_geotiff(
 
 
 def save_patch(
-    raster: Dict[str, Any],
-    coords: List[List[float]],
-    metadata: Dict[str, Any],
+    raster: dict[str, Any],
+    coords: list[list[float]],
+    metadata: dict[str, Any],
     path: str,
 ) -> None:
     patch_id = metadata["properties"]["system:index"]
