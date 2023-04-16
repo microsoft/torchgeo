@@ -4,7 +4,7 @@
 """SimCLR trainers for self-supervised learning (SSL)."""
 
 import os
-from typing import Optional, Union
+from typing import Optional, Union, cast
 
 import kornia.augmentation as K
 import timm
@@ -44,7 +44,7 @@ AUG = K.AugmentationSequential(
 
 # Lightly implementation doesn't support SimCLR v2
 # TODO: upstream our implementation
-class SimCLRProjectionHead(ProjectionHead):
+class SimCLRProjectionHead(ProjectionHead):  # type: ignore[misc]
     """SimCLR projection head."""
 
     def __init__(
@@ -174,7 +174,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         """
         h = self.backbone(batch)
         z = self.projection_head(h)
-        return z
+        return cast(Tensor, z)
 
     def training_step(self, batch: dict[str, Tensor], batch_idx: int) -> Tensor:
         """Compute the training loss and additional metrics.
@@ -209,7 +209,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
 
         self.log("train_loss", loss, on_step=True, on_epoch=False)
 
-        return loss
+        return cast(Tensor, loss)
 
     def validation_step(self, batch: dict[str, Tensor], batch_idx: int) -> None:
         """No-op, does nothing."""
