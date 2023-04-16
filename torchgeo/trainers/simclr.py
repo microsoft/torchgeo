@@ -11,7 +11,7 @@ import timm
 import torch
 import torch.nn as nn
 from lightly.loss import NTXentLoss
-from lightly.models.modules import SimCLRProjectionHead
+from lightly.models.modules.heads import ProjectionHead
 from lightning import LightningModule
 from torch import Tensor
 from torch.optim import AdamW, Optimizer
@@ -41,6 +41,36 @@ AUG = K.AugmentationSequential(
 )
 
 
+# Lightly implementation doesn't support SimCLR v2
+# TODO: upstream our implementation
+class SimCLRProjectionHead(ProjectionHead):
+    """SimCLR projection head."""
+
+    def __init__(
+        self,
+        input_dim: int = 2048,
+        hidden_dim: int = 2048,
+        output_dim: int = 128,
+        num_layers: int = 3,
+    ) -> None:
+        """Initialize a new SimCLRProjectionHead instance.
+
+        Args:
+            input_dim: Number of input dimensions.
+            hidden_dim: Number of hidden dimensions.
+            output_dim: Number of output dimensions.
+            num_layers: Number of hidden layers.
+        """
+        super()(
+            [
+                (input_dim, hidden_dim, nn.BatchNorm1d(hidden_dim), nn.ReLU()),
+                (hidden_dim, hidden_dim, nn.BatchNorm1d(hidden_dim), nn.ReLU())
+                * (num_layers - 2),
+                (hidden_dim, output_dim, nn.BatchNorm1d(output_dim), None),
+            ]
+        )
+
+
 class SimCLRTask(LightningModule):  # type: ignore[misc]
     """SimCLR: a simple framework for contrastive learning of visual representations.
 
@@ -57,9 +87,10 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
     """
 
     def __init__(self, **kwargs: Any) -> None:
-        """Initialize the LightningModule with a model.
+        """Initialize a new SimCLRTask instance.
+
         Args:
-            model: Name of the encoder model use
+            model: Name of the timm model to use.
             weights: Either a weight enum, the string representation of a weight enum,
                 True for ImageNet weights, False or None for random weights,
                 or the path to a saved model state dict.
@@ -71,22 +102,17 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
             augmentations: Augmentations to use for training
-        .. versionchanged:: 0.5
         """
         super().__init__()
 
-        # Creates `self.hparams` from kwargs
-        self.save_hyperparameters(ignore=["augmentations"])
-        self.hyperparams = cast(dict[str, Any], self.hparams)
-        self.augmentations = kwargs.get("augmentations", AUG)
-        self.config_model()
+        self.save_hyperparameters()
 
         # Create backbone
-        weights = self.hyperparams["weights"]
+        weights = self.hparams["weights"]
         self.backbone = timm.create_model(
-            self.hyperparams["model"],
-            num_classes=0,
-            in_chans=self.hyperparams["in_channels"],
+            self.hparams["model"],
+            num_classes=projection_hidden_size,
+            in_chans=self.hparams["in_channels"],
             pretrained=weights is True,
         )
 
@@ -103,14 +129,15 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         # Create projection head
         self.projection_head = SimCLRProjectionHead(
             self.backbone.num_features,
-            self.hyperparams["projection_hidden_size"],
-            self.hyperparams["projection_output_size"],
+            self.hparams["projection_hidden_size"],
+            self.hparams["projection_output_size"],
+            self.hparams["layers"],
         )
 
         # Define loss function
         self.loss = NTXentLoss(
-            temperature=self.hyperparams["temperature"],
-            gather_distributed=self.hyperparams["distributed"],
+            temperature=self.hparams["temperature"],
+            gather_distributed=self.hparams["distributed"],
         )
 
     def forward(self, batch: Tensor) -> Tensor:
@@ -138,7 +165,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         """
         x = batch["image"]
 
-        in_channels = self.hyperparams["in_channels"]
+        in_channels = self.hparams["in_channels"]
         assert x.size(1) == in_channels or x.size(1) == 2 * in_channels
 
         if x.size(1) == in_channels:
