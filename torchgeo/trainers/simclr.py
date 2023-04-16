@@ -4,7 +4,7 @@
 """SimCLR Trainer."""
 
 import os
-from typing import Any, Dict, Tuple, cast
+from typing import Any, cast
 
 import kornia.augmentation as K
 import timm
@@ -21,7 +21,7 @@ from ..models import get_weight
 from . import utils
 
 
-def default_augmentations(image_size: Tuple[int, int] = (256, 256)):
+def default_augmentations(image_size: tuple[int, int] = (256, 256)):
     """Initialize a module for applying SimCLR augmentations.
     Args:
         image_size: Tuple of integers defining the image size
@@ -104,7 +104,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
 
         # Creates `self.hparams` from kwargs
         self.save_hyperparameters(ignore=["augmentations"])
-        self.hyperparams = cast(Dict[str, Any], self.hparams)
+        self.hyperparams = cast(dict[str, Any], self.hparams)
         self.augmentations = kwargs.get("augmentations", default_augmentations())
         self.config_model()
 
@@ -153,7 +153,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
 
         return cast(Tensor, loss)
 
-    def configure_optimizers(self) -> Dict[str, Any]:
+    def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
         Returns:
             learning rate dictionary

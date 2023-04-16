@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Type, cast
+from typing import Any, cast
 
 import pytest
 import timm
@@ -36,12 +36,12 @@ class TestSimCLRTask:
         self,
         monkeypatch: MonkeyPatch,
         name: str,
-        classname: Type[LightningDataModule],
+        classname: type[LightningDataModule],
         fast_dev_run: bool,
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
+        conf_dict = cast(dict[str, dict[str, Any]], conf_dict)
 
         if name.startswith("seco"):
             monkeypatch.setattr(SeasonalContrastS2, "__len__", lambda self: 2)
