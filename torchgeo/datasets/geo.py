@@ -736,6 +736,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
 
         Args:
             index: index to return
+
         Returns:
             data and label at that index
         """
@@ -760,9 +761,9 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
 
         Args:
             index: index to return
+
         Returns:
-            the image
-            the image class label
+            the image and class label
         """
         img, label = ImageFolder.__getitem__(self, index)
         array: "np.typing.NDArray[np.int_]" = np.array(img)
