@@ -115,6 +115,7 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+    os.makedirs(args.save_path, exist_ok=True)
 
     # if resume
     ext_coords = {}
@@ -131,7 +132,8 @@ if __name__ == "__main__":
         ext_path = os.path.join(args.save_path, "sampled_locations.csv")
 
     # initialize sampler
-    cities = get_world_cities(download_root="world_cities", size=args.num_cities)
+    root = os.path.join(args.save_path, "world_cities")
+    cities = get_world_cities(download_root=root, size=args.num_cities)
     bbox_size = args.size / 1000  # no overlap between adjacent patches
     bbox_size_degree = km2deg(bbox_size)
 
