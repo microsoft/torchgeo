@@ -209,7 +209,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
 
         loss = self.criterion(z1, z2)
 
-        self.log("train_loss", loss, on_step=True, on_epoch=False)
+        self.log("train_loss", loss)
 
         return cast(Tensor, loss)
 
