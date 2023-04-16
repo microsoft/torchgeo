@@ -120,7 +120,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             lr: Learning rate (0.3 x batch_size / 256 is recommended).
             weight_decay: Weight decay coefficient (1e-6 for v1 or 1e-4 for v2).
             max_epochs: Maximum number of epochs to train for.
-            temperature: Temperature used in InfoNCE loss.
+            temperature: Temperature used in NT-Xent loss.
             memory_bank_size: Size of memory bank (0 for v1 or 64K for v2).
             gather_distributed: Gather negatives from all GPUs during distributed
                 training (ignored if memory_bank_size > 0).
@@ -128,7 +128,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         """
         super().__init__()
 
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore=["augmentations"])
 
         # Create backbone
         self.backbone = timm.create_model(

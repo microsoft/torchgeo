@@ -1,8 +1,8 @@
 experiment:
-  task: "seco"
+  task: "ssl4eo_s12"
   module:
     model: "resnet18"
-    in_channels: 12
+    in_channels: 13
     version: 2
     layers: 3
     hidden_dim: 8
@@ -11,7 +11,7 @@ experiment:
     max_epochs: 1
     memory_bank_size: 10
   datamodule:
-    root: "tests/data/seco"
+    root: "tests/data/ssl4eo/s12"
     seasons: 2
     batch_size: 2
     num_workers: 0
