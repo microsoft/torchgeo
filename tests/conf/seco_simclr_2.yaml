@@ -2,7 +2,7 @@ experiment:
   task: "seco"
   module:
     model: "resnet18"
-    in_channels: 12
+    in_channels: 3
     version: 2
     layers: 4
     hidden_dim: 8
