@@ -757,7 +757,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         return len(self.imgs)
 
     def _load_image(self, index: int) -> tuple[Tensor, Tensor]:
-        """Load a single image and it's class label.
+        """Load a single image and its class label.
 
         Args:
             index: index to return
