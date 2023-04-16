@@ -103,8 +103,7 @@ def get_collection(
     collection = ee.ImageCollection(collection_name)
     collection = collection.filter(
         ee.Filter.And(
-            ee.Filter.gte(meta_cloud_name, 0),
-            ee.Filter.lte(meta_cloud_name, cloud_pct)
+            ee.Filter.gte(meta_cloud_name, 0), ee.Filter.lte(meta_cloud_name, cloud_pct)
         )
     )
     # Uncomment the following line if you want to apply cloud masking.
