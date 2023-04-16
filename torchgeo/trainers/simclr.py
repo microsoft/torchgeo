@@ -42,8 +42,7 @@ AUG = K.AugmentationSequential(
 )
 
 
-# Lightly implementation doesn't support SimCLR v2
-# TODO: upstream our implementation
+# Remove once https://github.com/lightly-ai/lightly/pull/1150 is merged and released
 class SimCLRProjectionHead(ProjectionHead):  # type: ignore[misc]
     """SimCLR projection head."""
 
