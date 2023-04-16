@@ -99,7 +99,8 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         weight_decay: float = 1e-4,
         max_epochs: int = 100,
         temperature: float = 0.07,
-        distributed: bool = False,
+        memory_bank_size: int = 64000,
+        gather_distributed: bool = False,
         augmentations: nn.Module = AUG,
     ) -> None:
         """Initialize a new SimCLRTask instance.
@@ -120,7 +121,9 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             weight_decay: Weight decay coefficient (1e-6 for v1 or 1e-4 for v2).
             max_epochs: Maximum number of epochs to train for.
             temperature: Temperature used in InfoNCE loss.
-            distributed: Use distributed training.
+            memory_bank_size: Size of memory bank (0 for v1 or 64K for v2).
+            gather_distributed: Gather negatives from all GPUs during distributed
+                training (ignored if memory_bank_size > 0).
             augmentations: Data augmentation.
         """
         super().__init__()
@@ -161,12 +164,13 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         # Define loss function
         self.criterion = NTXentLoss(
             temperature=self.hparams["temperature"],
-            gather_distributed=self.hparams["distributed"],
+            memory_bank_size=self.hparams["memory_bank_size"],
+            gather_distributed=self.hparams["gather_distributed"],
         )
 
         # TODO
         # v1+: add global batch norm
-        # v2: add selective kernels, channel-wise attention mechanism, memory bank
+        # v2: add selective kernels, channel-wise attention mechanism
 
     def forward(self, batch: Tensor) -> Tensor:
         """Forward pass of the model.
