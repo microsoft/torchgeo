@@ -8,7 +8,6 @@ import itertools
 import os
 import subprocess
 import time
-from typing import List
 
 EPOCH_SIZE = 4096
 
@@ -34,7 +33,7 @@ if __name__ == "__main__":
     ):
         print(f"\n{i}/{total_num_experiments} -- {time.time() - tic}")
         tic = time.time()
-        command: List[str] = [
+        command: list[str] = [
             "python",
             "benchmark.py",
             "--landsat-root",

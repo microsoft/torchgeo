@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 from rasterio.crs import CRS
@@ -172,7 +172,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         res: Optional[float] = None,
         measurement: str = "agb",
         country: str = all_countries[0],
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         checksum: bool = False,
     ) -> None:
@@ -253,7 +253,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

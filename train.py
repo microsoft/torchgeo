@@ -6,7 +6,7 @@
 """torchgeo model training script."""
 
 import os
-from typing import Any, Dict, Tuple, Type, cast
+from typing import Any, cast
 
 import lightning.pytorch as pl
 from lightning.pytorch import LightningDataModule, LightningModule, Trainer
@@ -45,8 +45,8 @@ from torchgeo.trainers import (
     SemanticSegmentationTask,
 )
 
-TASK_TO_MODULES_MAPPING: Dict[
-    str, Tuple[Type[LightningModule], Type[LightningDataModule]]
+TASK_TO_MODULES_MAPPING: dict[
+    str, tuple[type[LightningModule], type[LightningDataModule]]
 ] = {
     "bigearthnet": (MultiLabelClassificationTask, BigEarthNetDataModule),
     "byol": (BYOLTask, ChesapeakeCVPRDataModule),
@@ -161,9 +161,9 @@ def main(conf: DictConfig) -> None:
     # Choose task to run based on arguments or configuration
     ######################################
     # Convert the DictConfig into a dictionary so that we can pass as kwargs.
-    task_args = cast(Dict[str, Any], OmegaConf.to_object(conf.experiment.module))
+    task_args = cast(dict[str, Any], OmegaConf.to_object(conf.experiment.module))
     datamodule_args = cast(
-        Dict[str, Any], OmegaConf.to_object(conf.experiment.datamodule)
+        dict[str, Any], OmegaConf.to_object(conf.experiment.datamodule)
     )
 
     datamodule: LightningDataModule
@@ -202,7 +202,7 @@ def main(conf: DictConfig) -> None:
         monitor=monitor_metric, min_delta=0.00, patience=18, mode=mode
     )
 
-    trainer_args = cast(Dict[str, Any], OmegaConf.to_object(conf.trainer))
+    trainer_args = cast(dict[str, Any], OmegaConf.to_object(conf.trainer))
 
     trainer_args["callbacks"] = [checkpoint_callback, early_stopping_callback]
     trainer_args["logger"] = [tb_logger, csv_logger]

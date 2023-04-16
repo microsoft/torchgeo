@@ -5,7 +5,7 @@
 
 import os
 import sys
-from typing import Any, Dict
+from typing import Any
 
 import numpy as np
 from rasterio.crs import CRS
@@ -91,7 +91,7 @@ class EDDMapS(GeoDataset):
             self.index.insert(i, coords)
             i += 1
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve metadata indexed by query.
 
         Args:

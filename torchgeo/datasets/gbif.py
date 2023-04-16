@@ -7,7 +7,7 @@ import glob
 import os
 import sys
 from datetime import datetime, timedelta
-from typing import Any, Dict, Tuple
+from typing import Any
 
 import numpy as np
 from rasterio.crs import CRS
@@ -18,7 +18,7 @@ from .utils import BoundingBox
 
 def _disambiguate_timestamps(
     year: float, month: float, day: float
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """Disambiguate partial timestamps.
 
     Based on :func:`torchgeo.datasets.utils.disambiguate_timestamps`.
@@ -128,7 +128,7 @@ class GBIF(GeoDataset):
             self.index.insert(i, coords)
             i += 1
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve metadata indexed by query.
 
         Args:

@@ -5,7 +5,6 @@ import os
 import shutil
 from itertools import product
 from pathlib import Path
-from typing import Type
 
 import matplotlib.pyplot as plt
 import pytest
@@ -28,7 +27,7 @@ class TestEuroSAT:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> EuroSAT:
-        base_class: Type[EuroSAT] = request.param[0]
+        base_class: type[EuroSAT] = request.param[0]
         split: str = request.param[1]
         monkeypatch.setattr(torchgeo.datasets.eurosat, "download_url", download_url)
         md5 = "aa051207b0547daba0ac6af57808d68e"

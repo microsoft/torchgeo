@@ -5,7 +5,7 @@
 
 import warnings
 from collections import OrderedDict
-from typing import Optional, Tuple, Union, cast
+from typing import Optional, Union, cast
 
 import torch
 import torch.nn as nn
@@ -13,7 +13,7 @@ from torch import Tensor
 from torch.nn.modules import Conv2d, Module
 
 
-def extract_backbone(path: str) -> Tuple[str, "OrderedDict[str, Tensor]"]:
+def extract_backbone(path: str) -> tuple[str, "OrderedDict[str, Tensor]"]:
     """Extracts a backbone from a lightning checkpoint file.
 
     Args:
@@ -54,7 +54,7 @@ def extract_backbone(path: str) -> Tuple[str, "OrderedDict[str, Tensor]"]:
     return name, state_dict
 
 
-def _get_input_layer_name_and_module(model: Module) -> Tuple[str, Module]:
+def _get_input_layer_name_and_module(model: Module) -> tuple[str, Module]:
     """Retrieve the input layer name and module from a timm model.
 
     Args:
@@ -120,8 +120,8 @@ def reinit_initial_conv_layer(
     layer: Conv2d,
     new_in_channels: int,
     keep_rgb_weights: bool,
-    new_stride: Optional[Union[int, Tuple[int, int]]] = None,
-    new_padding: Optional[Union[str, Union[int, Tuple[int, int]]]] = None,
+    new_stride: Optional[Union[int, tuple[int, int]]] = None,
+    new_padding: Optional[Union[str, Union[int, tuple[int, int]]]] = None,
 ) -> Conv2d:
     """Clones a Conv2d layer while optionally retaining some of the original weights.
 

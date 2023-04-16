@@ -3,7 +3,7 @@
 
 """TorchGeo transforms."""
 
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import kornia.augmentation as K
 import torch
@@ -25,7 +25,7 @@ class AugmentationSequential(Module):
     def __init__(
         self,
         *args: Union[K.base._AugmentationBase, K.ImageSequential],
-        data_keys: List[str],
+        data_keys: list[str],
     ) -> None:
         """Initialize a new augmentation sequential instance.
 
@@ -36,7 +36,7 @@ class AugmentationSequential(Module):
         super().__init__()
         self.data_keys = data_keys
 
-        keys: List[Union[str, int, DataKey]] = []
+        keys: list[Union[str, int, DataKey]] = []
         for key in data_keys:
             if key == "image":
                 keys.append("input")
@@ -47,7 +47,7 @@ class AugmentationSequential(Module):
 
         self.augs = K.AugmentationSequential(*args, data_keys=keys)
 
-    def forward(self, batch: Dict[str, Tensor]) -> Dict[str, Tensor]:
+    def forward(self, batch: dict[str, Tensor]) -> dict[str, Tensor]:
         """Perform augmentations and update data dict.
 
         Args:
@@ -67,11 +67,11 @@ class AugmentationSequential(Module):
             batch["mask"] = rearrange(batch["mask"], "b h w -> b () h w")
 
         inputs = [batch[k] for k in self.data_keys]
-        outputs_list: Union[Tensor, List[Tensor]] = self.augs(*inputs)
+        outputs_list: Union[Tensor, list[Tensor]] = self.augs(*inputs)
         outputs_list = (
             outputs_list if isinstance(outputs_list, list) else [outputs_list]
         )
-        outputs: Dict[str, Tensor] = {
+        outputs: dict[str, Tensor] = {
             k: v for k, v in zip(self.data_keys, outputs_list)
         }
         batch.update(outputs)
@@ -90,7 +90,7 @@ class AugmentationSequential(Module):
 class _RandomNCrop(K.GeometricAugmentationBase2D):
     """Take N random crops of a tensor."""
 
-    def __init__(self, size: Tuple[int, int], num: int) -> None:
+    def __init__(self, size: tuple[int, int], num: int) -> None:
         """Initialize a new _RandomNCrop instance.
 
         Args:
@@ -102,7 +102,7 @@ class _RandomNCrop(K.GeometricAugmentationBase2D):
         self.flags = {"size": size, "num": num}
 
     def compute_transformation(
-        self, input: Tensor, params: Dict[str, Tensor], flags: Dict[str, Any]
+        self, input: Tensor, params: dict[str, Tensor], flags: dict[str, Any]
     ) -> Tensor:
         """Compute the transformation.
 
@@ -120,8 +120,8 @@ class _RandomNCrop(K.GeometricAugmentationBase2D):
     def apply_transform(
         self,
         input: Tensor,
-        params: Dict[str, Tensor],
-        flags: Dict[str, Any],
+        params: dict[str, Tensor],
+        flags: dict[str, Any],
         transform: Optional[Tensor] = None,
     ) -> Tensor:
         """Apply the transform.
@@ -144,7 +144,7 @@ class _RandomNCrop(K.GeometricAugmentationBase2D):
 class _NCropGenerator(K.random_generator.CropGenerator):
     """Generate N random crops."""
 
-    def __init__(self, size: Union[Tuple[int, int], Tensor], num: int) -> None:
+    def __init__(self, size: Union[tuple[int, int], Tensor], num: int) -> None:
         """Initialize a new _NCropGenerator instance.
 
         Args:
@@ -155,8 +155,8 @@ class _NCropGenerator(K.random_generator.CropGenerator):
         self.num = num
 
     def forward(
-        self, batch_shape: Tuple[int, ...], same_on_batch: bool = False
-    ) -> Dict[str, Tensor]:
+        self, batch_shape: tuple[int, ...], same_on_batch: bool = False
+    ) -> dict[str, Tensor]:
         """Generate the crops.
 
         Args:

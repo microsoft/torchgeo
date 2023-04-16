@@ -6,7 +6,8 @@
 import abc
 import os
 import sys
-from typing import Any, Callable, Dict, List, Optional, Sequence, cast
+from collections.abc import Sequence
+from typing import Any, Callable, Optional, cast
 
 import fiona
 import matplotlib.pyplot as plt
@@ -90,7 +91,7 @@ class Chesapeake(RasterDataset, abc.ABC):
         root: str = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -169,7 +170,7 @@ class Chesapeake(RasterDataset, abc.ABC):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
@@ -533,7 +534,7 @@ class ChesapeakeCVPR(GeoDataset):
         root: str = "data",
         splits: Sequence[str] = ["de-train"],
         layers: Sequence[str] = ["naip-new", "lc"],
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -612,7 +613,7 @@ class ChesapeakeCVPR(GeoDataset):
                         },
                     )
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -625,7 +626,7 @@ class ChesapeakeCVPR(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(List[Dict[str, str]], [hit.object for hit in hits])
+        filepaths = cast(list[dict[str, str]], [hit.object for hit in hits])
 
         sample = {"image": [], "mask": [], "crs": self.crs, "bbox": query}
 
@@ -739,7 +740,7 @@ class ChesapeakeCVPR(GeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

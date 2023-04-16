@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from typing import Any, Dict
+from typing import Any
 
 import matplotlib.pyplot as plt
 import pytest
@@ -26,7 +26,7 @@ class CustomGeoDataset(GeoDataset):
         self.index.insert(0, (0, 1, 2, 3, 4, 5))
         self.res = 1
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         image = torch.arange(3 * 2 * 2).view(3, 2, 2)
         return {"image": image, "crs": CRS.from_epsg(4326), "bbox": query}
 
@@ -61,7 +61,7 @@ class CustomNonGeoDataset(NonGeoDataset):
     def __init__(self, split: str = "train", download: bool = False) -> None:
         pass
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         return {"image": torch.arange(3 * 2 * 2).view(3, 2, 2)}
 
     def __len__(self) -> int:

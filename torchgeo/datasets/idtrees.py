@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, Tuple, cast, overload
+from typing import Any, Callable, Optional, cast, overload
 
 import fiona
 import matplotlib.pyplot as plt
@@ -146,7 +146,7 @@ class IDTReeS(NonGeoDataset):
         root: str = "data",
         split: str = "train",
         task: str = "task1",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -193,7 +193,7 @@ class IDTReeS(NonGeoDataset):
 
         self.images, self.geometries, self.labels = self._load(root)
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -281,7 +281,7 @@ class IDTReeS(NonGeoDataset):
             the bounding boxes
         """
         base_path = os.path.basename(path)
-        geometries = cast(Dict[int, Dict[str, Any]], self.geometries)
+        geometries = cast(dict[int, dict[str, Any]], self.geometries)
 
         # Find object ids and geometries
         # The train set geometry->image mapping is contained
@@ -336,7 +336,7 @@ class IDTReeS(NonGeoDataset):
 
     def _load(
         self, root: str
-    ) -> Tuple[List[str], Optional[Dict[int, Dict[str, Any]]], Any]:
+    ) -> tuple[list[str], Optional[dict[int, dict[str, Any]]], Any]:
         """Load files, geometries, and labels.
 
         Args:
@@ -386,7 +386,7 @@ class IDTReeS(NonGeoDataset):
         df.reset_index()
         return df
 
-    def _load_geometries(self, directory: str) -> Dict[int, Dict[str, Any]]:
+    def _load_geometries(self, directory: str) -> dict[int, dict[str, Any]]:
         """Load the shape files containing the geometries.
 
         Args:
@@ -398,7 +398,7 @@ class IDTReeS(NonGeoDataset):
         filepaths = glob.glob(os.path.join(directory, "ITC", "*.shp"))
 
         i = 0
-        features: Dict[int, Dict[str, Any]] = {}
+        features: dict[int, dict[str, Any]] = {}
         for path in filepaths:
             with fiona.open(path) as src:
                 for feature in src:
@@ -413,23 +413,23 @@ class IDTReeS(NonGeoDataset):
 
     @overload
     def _filter_boxes(
-        self, image_size: Tuple[int, int], min_size: int, boxes: Tensor, labels: Tensor
-    ) -> Tuple[Tensor, Tensor]:
+        self, image_size: tuple[int, int], min_size: int, boxes: Tensor, labels: Tensor
+    ) -> tuple[Tensor, Tensor]:
         ...
 
     @overload
     def _filter_boxes(
-        self, image_size: Tuple[int, int], min_size: int, boxes: Tensor, labels: None
-    ) -> Tuple[Tensor, None]:
+        self, image_size: tuple[int, int], min_size: int, boxes: Tensor, labels: None
+    ) -> tuple[Tensor, None]:
         ...
 
     def _filter_boxes(
         self,
-        image_size: Tuple[int, int],
+        image_size: tuple[int, int],
         min_size: int,
         boxes: Tensor,
         labels: Optional[Tensor],
-    ) -> Tuple[Tensor, Optional[Tensor]]:
+    ) -> tuple[Tensor, Optional[Tensor]]:
         """Clip boxes to image size and filter boxes with sides less than ``min_size``.
 
         Args:
@@ -492,10 +492,10 @@ class IDTReeS(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-        hsi_indices: Tuple[int, int, int] = (0, 1, 2),
+        hsi_indices: tuple[int, int, int] = (0, 1, 2),
     ) -> plt.Figure:
         """Plot a sample from the dataset.
 
