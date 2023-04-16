@@ -3,7 +3,7 @@
 
 """UC Merced dataset."""
 import os
-from typing import Callable, Dict, Optional, Tuple, cast
+from typing import Callable, Optional, Tuple, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
