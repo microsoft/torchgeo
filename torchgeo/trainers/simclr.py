@@ -50,7 +50,7 @@ class SimCLRProjectionHead(ProjectionHead):  # type: ignore[misc]
         self,
         input_dim: int = 2048,
         hidden_dim: int = 2048,
-        output_dim: int = 128,
+        output_dim: int = 2048,
         num_layers: int = 3,
     ) -> None:
         """Initialize a new SimCLRProjectionHead instance.
@@ -93,8 +93,8 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         in_channels: int = 3,
         version: int = 2,
         layers: int = 3,
-        hidden_dim: int = 128,
-        output_dim: int = 128,
+        hidden_dim: Optional[int] = None,
+        output_dim: Optional[int] = None,
         lr: float = 4.8,
         weight_decay: float = 1e-4,
         max_epochs: int = 100,
@@ -112,8 +112,10 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             in_channels: Number of input channels to model.
             version: Version of SimCLR, 1--2.
             layers: Number of layers in projection head (2 for v1 or 3+ for v2).
-            hidden_dim: Number of hidden dimensions in projection head.
-            output_dim: Number of output dimensions in projection head.
+            hidden_dim: Number of hidden dimensions in projection head
+                (defaults to output dimension of model).
+            output_dim: Number of output dimensions in projection head
+                (defaults to output dimension of model).
             lr: Learning rate (0.3 x batch_size / 256 is recommended).
             weight_decay: Weight decay coefficient (1e-6 for v1 or 1e-4 for v2).
             max_epochs: Maximum number of epochs to train for.
@@ -126,10 +128,8 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         self.save_hyperparameters()
 
         # Create backbone
-        weights = self.hparams["weights"]
         self.backbone = timm.create_model(
             self.hparams["model"],
-            num_classes=self.hparams["hidden_dim"],
             in_chans=self.hparams["in_channels"],
             pretrained=weights is True,
         )
@@ -145,8 +145,14 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             self.backbone = utils.load_state_dict(self.backbone, state_dict)
 
         # Create projection head
+        input_dim = self.backbone.num_features
+        if self.hparams["hidden_dim"] is None:
+            self.hparams["hidden_dim"] = input_dim
+        if self.hparams["output_dim"] is None:
+            self.hparams["output_dim"] = input_dim
+
         self.projection_head = SimCLRProjectionHead(
-            self.backbone.num_features,
+            input_dim,
             self.hparams["hidden_dim"],
             self.hparams["output_dim"],
             self.hparams["layers"],
