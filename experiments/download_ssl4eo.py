@@ -101,7 +101,12 @@ def get_collection(
     collection_name: str, meta_cloud_name: str, cloud_pct: float
 ) -> ee.ImageCollection:
     collection = ee.ImageCollection(collection_name)
-    collection = collection.filter(ee.Filter.lt(meta_cloud_name, cloud_pct))
+    collection = collection.filter(
+        ee.Filter.and(
+            ee.Filter.gte(meta_cloud_name, 0),
+            ee.Filter.lte(meta_cloud_name, cloud_pct)
+        )
+    )
     # Uncomment the following line if you want to apply cloud masking.
     # collection = collection.map(maskS2clouds, args)
     return collection
