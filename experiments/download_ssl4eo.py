@@ -102,7 +102,7 @@ def get_collection(
 ) -> ee.ImageCollection:
     collection = ee.ImageCollection(collection_name)
     collection = collection.filter(
-        ee.Filter.and(
+        ee.Filter.And(
             ee.Filter.gte(meta_cloud_name, 0),
             ee.Filter.lte(meta_cloud_name, cloud_pct)
         )
