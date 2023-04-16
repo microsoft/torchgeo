@@ -30,8 +30,7 @@ class TestSimCLRTask:
     @pytest.mark.parametrize(
         "name,classname",
         [
-            ("chesapeake_cvpr_prior_simclr_1", ChesapeakeCVPRDataModule),
-            ("chesapeake_cvpr_prior_simclr_2", ChesapeakeCVPRDataModule),
+            ("chesapeake_cvpr_prior_simclr", ChesapeakeCVPRDataModule),
             ("seco_simclr_1", SeasonalContrastS2DataModule),
             ("seco_simclr_2", SeasonalContrastS2DataModule),
             ("ssl4eo_s12_simclr_1", SSL4EOS12DataModule),

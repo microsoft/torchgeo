@@ -61,7 +61,8 @@ class SimCLRProjectionHead(ProjectionHead):  # type: ignore[misc]
             output_dim: Number of output dimensions.
             num_layers: Number of hidden layers.
         """
-        layers = [(input_dim, hidden_dim, nn.BatchNorm1d(hidden_dim), nn.ReLU())]
+        layers: list[tuple[int, int, Optional[nn.Module], Optional[nn.Module]]] = []
+        layers.append((input_dim, hidden_dim, nn.BatchNorm1d(hidden_dim), nn.ReLU()))
         if num_layers > 2:
             layers.extend(
                 [(hidden_dim, hidden_dim, nn.BatchNorm1d(hidden_dim), nn.ReLU())]
@@ -133,9 +134,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
 
         # Create backbone
         self.backbone = timm.create_model(
-            self.hparams["model"],
-            in_chans=self.hparams["in_channels"],
-            pretrained=weights is True,
+            model, in_chans=in_channels, pretrained=weights is True
         )
 
         # Load weights
@@ -150,24 +149,17 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
 
         # Create projection head
         input_dim = list(self.backbone.named_children())[-1][1].out_features
-        if self.hparams["hidden_dim"] is None:
-            self.hparams["hidden_dim"] = input_dim
-        if self.hparams["output_dim"] is None:
-            self.hparams["output_dim"] = input_dim
+        if hidden_dim is None:
+            hidden_dim = input_dim
+        if output_dim is None:
+            output_dim = input_dim
 
         self.projection_head = SimCLRProjectionHead(
-            input_dim,
-            self.hparams["hidden_dim"],
-            self.hparams["output_dim"],
-            self.hparams["layers"],
+            input_dim, hidden_dim, output_dim, layers
         )
 
         # Define loss function
-        self.criterion = NTXentLoss(
-            temperature=self.hparams["temperature"],
-            memory_bank_size=self.hparams["memory_bank_size"],
-            gather_distributed=self.hparams["gather_distributed"],
-        )
+        self.criterion = NTXentLoss(temperature, memory_bank_size, gather_distributed)
 
         # TODO
         # v1+: add global batch norm
