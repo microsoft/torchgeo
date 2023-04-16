@@ -9,7 +9,8 @@ import glob
 import os
 import re
 import sys
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
+from collections.abc import Sequence
+from typing import Any, Callable, Optional, cast
 
 import fiona
 import fiona.transform
@@ -32,7 +33,7 @@ from torchvision.datasets.folder import default_loader as pil_loader
 from .utils import BoundingBox, concat_samples, disambiguate_timestamp, merge_samples
 
 
-class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
+class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     """Abstract base class for datasets containing geospatial information.
 
     Geospatial information includes things like:
@@ -90,7 +91,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     __add__ = None  # type: ignore[assignment]
 
     def __init__(
-        self, transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None
+        self, transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -104,7 +105,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         self.index = Index(interleaved=False, properties=Property(dimension=3))
 
     @abc.abstractmethod
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -174,7 +175,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
     def __getstate__(
         self,
-    ) -> Tuple[Dict[str, Any], List[Tuple[Any, Any, Optional[Any]]]]:
+    ) -> tuple[dict[str, Any], list[tuple[Any, Any, Optional[Any]]]]:
         """Define how instances are pickled.
 
         Returns:
@@ -186,9 +187,9 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
     def __setstate__(
         self,
-        state: Tuple[
-            Dict[Any, Any],
-            List[Tuple[int, Tuple[float, float, float, float, float, float], str]],
+        state: tuple[
+            dict[Any, Any],
+            list[tuple[int, tuple[float, float, float, float, float, float], str]],
         ],
     ) -> None:
         """Define how to unpickle an instance.
@@ -287,13 +288,13 @@ class RasterDataset(GeoDataset):
     separate_files = False
 
     #: Names of all available bands in the dataset
-    all_bands: List[str] = []
+    all_bands: list[str] = []
 
     #: Names of RGB bands in the dataset, used for plotting
-    rgb_bands: List[str] = []
+    rgb_bands: list[str] = []
 
     #: Color map for the dataset, used for plotting
-    cmap: Dict[int, Tuple[int, int, int, int]] = {}
+    cmap: dict[int, tuple[int, int, int, int]] = {}
 
     def __init__(
         self,
@@ -301,7 +302,7 @@ class RasterDataset(GeoDataset):
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -386,7 +387,7 @@ class RasterDataset(GeoDataset):
         self._crs = cast(CRS, crs)
         self.res = cast(float, res)
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -399,7 +400,7 @@ class RasterDataset(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(List[str], [hit.object for hit in hits])
+        filepaths = cast(list[str], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
@@ -407,7 +408,7 @@ class RasterDataset(GeoDataset):
             )
 
         if self.separate_files:
-            data_list: List[Tensor] = []
+            data_list: list[Tensor] = []
             filename_regex = re.compile(self.filename_regex, re.VERBOSE)
             for band in self.bands:
                 band_filepaths = []
@@ -532,7 +533,7 @@ class VectorDataset(GeoDataset):
         root: str = "data",
         crs: Optional[CRS] = None,
         res: float = 0.0001,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         label_name: Optional[str] = None,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -588,7 +589,7 @@ class VectorDataset(GeoDataset):
 
         self._crs = crs
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -652,14 +653,14 @@ class VectorDataset(GeoDataset):
         return sample
 
 
-class NonGeoDataset(Dataset[Dict[str, Any]], abc.ABC):
+class NonGeoDataset(Dataset[dict[str, Any]], abc.ABC):
     """Abstract base class for datasets lacking geospatial information.
 
     This base class is designed for datasets with pre-defined image chips.
     """
 
     @abc.abstractmethod
-    def __getitem__(self, index: int) -> Dict[str, Any]:
+    def __getitem__(self, index: int) -> dict[str, Any]:
         """Return an index within the dataset.
 
         Args:
@@ -702,7 +703,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
     def __init__(
         self,
         root: str = "data",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         loader: Optional[Callable[[str], Any]] = pil_loader,
         is_valid_file: Optional[Callable[[str], bool]] = None,
     ) -> None:
@@ -730,7 +731,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         # Must be set after calling super().__init__()
         self.transforms = transforms
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -754,7 +755,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         """
         return len(self.imgs)
 
-    def _load_image(self, index: int) -> Tuple[Tensor, Tensor]:
+    def _load_image(self, index: int) -> tuple[Tensor, Tensor]:
         """Load a single image and it's class label.
 
         Args:
@@ -797,9 +798,9 @@ class IntersectionDataset(GeoDataset):
         dataset1: GeoDataset,
         dataset2: GeoDataset,
         collate_fn: Callable[
-            [Sequence[Dict[str, Any]]], Dict[str, Any]
+            [Sequence[dict[str, Any]]], dict[str, Any]
         ] = concat_samples,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -859,7 +860,7 @@ class IntersectionDataset(GeoDataset):
         if i == 0:
             raise RuntimeError("Datasets have no spatiotemporal intersection")
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image and metadata indexed by query.
 
         Args:
@@ -924,9 +925,9 @@ class UnionDataset(GeoDataset):
         dataset1: GeoDataset,
         dataset2: GeoDataset,
         collate_fn: Callable[
-            [Sequence[Dict[str, Any]]], Dict[str, Any]
+            [Sequence[dict[str, Any]]], dict[str, Any]
         ] = merge_samples,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -980,7 +981,7 @@ class UnionDataset(GeoDataset):
                 self.index.insert(i, hit.bounds)
                 i += 1
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image and metadata indexed by query.
 
         Args:

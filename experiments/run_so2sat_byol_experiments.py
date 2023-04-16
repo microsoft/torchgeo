@@ -7,7 +7,6 @@ import itertools
 import os
 import subprocess
 from multiprocessing import Process, Queue
-from typing import List
 
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
 GPUS = [0, 1, 2, 3, 3]
@@ -18,7 +17,7 @@ DATA_DIR = ""  # path to the So2Sat data directory
 model_options = ["resnet50"]
 lr_options = [1e-4]
 loss_options = ["ce"]
-weight_options: List[str] = []  # set paths to checkpoint files
+weight_options: list[str] = []  # set paths to checkpoint files
 bands_options = ["s2"]
 
 

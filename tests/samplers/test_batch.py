@@ -2,8 +2,8 @@
 # Licensed under the MIT License.
 
 import math
+from collections.abc import Iterator
 from itertools import product
-from typing import Dict, Iterator, List
 
 import pytest
 from _pytest.fixtures import SubRequest
@@ -18,7 +18,7 @@ class CustomBatchGeoSampler(BatchGeoSampler):
     def __init__(self) -> None:
         pass
 
-    def __iter__(self) -> Iterator[List[BoundingBox]]:
+    def __iter__(self) -> Iterator[list[BoundingBox]]:
         for i in range(len(self)):
             yield [BoundingBox(j, j, j, j, j, j) for j in range(len(self))]
 
@@ -32,7 +32,7 @@ class CustomGeoDataset(GeoDataset):
         self._crs = crs
         self.res = res
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, BoundingBox]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
         return {"index": query}
 
 

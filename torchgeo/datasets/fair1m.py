@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, Tuple, cast
+from typing import Any, Callable, Optional, cast
 from xml.etree.ElementTree import Element, parse
 
 import matplotlib.patches as patches
@@ -19,7 +19,7 @@ from .geo import NonGeoDataset
 from .utils import check_integrity, extract_archive
 
 
-def parse_pascal_voc(path: str) -> Dict[str, Any]:
+def parse_pascal_voc(path: str) -> dict[str, Any]:
     """Read a PASCAL VOC annotation file.
 
     Args:
@@ -164,7 +164,7 @@ class FAIR1M(NonGeoDataset):
     def __init__(
         self,
         root: str = "data",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new FAIR1M dataset instance.
@@ -183,7 +183,7 @@ class FAIR1M(NonGeoDataset):
             glob.glob(os.path.join(self.root, self.labels_root, "*.xml"))
         )
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -229,8 +229,8 @@ class FAIR1M(NonGeoDataset):
             return tensor
 
     def _load_target(
-        self, points: List[List[Tuple[float, float]]], labels: List[str]
-    ) -> Tuple[Tensor, Tensor]:
+        self, points: list[list[tuple[float, float]]], labels: list[str]
+    ) -> tuple[Tensor, Tensor]:
         """Load the target mask for a single image.
 
         Args:
@@ -280,7 +280,7 @@ class FAIR1M(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

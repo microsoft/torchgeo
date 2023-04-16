@@ -7,7 +7,7 @@ import glob
 import hashlib
 import os
 from functools import lru_cache
-from typing import Any, Callable, Dict, List, Optional, cast
+from typing import Any, Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,7 +22,7 @@ from .geo import NonGeoDataset, RasterDataset
 from .utils import BoundingBox, download_url, extract_archive, working_dir
 
 
-class LandCoverAIBase(Dataset[Dict[str, Any]], abc.ABC):
+class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
     r"""Abstract base class for LandCover.ai Geo and NonGeo datasets.
 
     The `LandCover.ai <https://landcover.ai.linuxpolska.com/>`__ (Land Cover from
@@ -125,7 +125,7 @@ class LandCoverAIBase(Dataset[Dict[str, Any]], abc.ABC):
         self._extract()
 
     @abc.abstractmethod
-    def __getitem__(self, query: Any) -> Dict[str, Any]:
+    def __getitem__(self, query: Any) -> dict[str, Any]:
         """Retrieve image, mask and metadata indexed by index.
 
         Args:
@@ -152,7 +152,7 @@ class LandCoverAIBase(Dataset[Dict[str, Any]], abc.ABC):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
@@ -213,7 +213,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         root: str = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -247,7 +247,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         masks = glob.glob(mask_query)
         return len(images) > 0 and len(images) == len(masks)
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -260,7 +260,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        img_filepaths = cast(List[str], [hit.object for hit in hits])
+        img_filepaths = cast(list[str], [hit.object for hit in hits])
         mask_filepaths = [path.replace("images", "masks") for path in img_filepaths]
 
         if not img_filepaths:
@@ -302,7 +302,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -330,7 +330,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         with open(os.path.join(self.root, split + ".txt")) as f:
             self.ids = f.readlines()
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
