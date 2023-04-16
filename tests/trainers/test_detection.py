@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Type, cast
+from typing import Any, cast
 
 import pytest
 import torch
@@ -65,13 +65,13 @@ class TestObjectDetectionTask:
         self,
         monkeypatch: MonkeyPatch,
         name: str,
-        classname: Type[LightningDataModule],
+        classname: type[LightningDataModule],
         model_name: str,
         fast_dev_run: bool,
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", f"{name}.yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+        conf_dict = cast(dict[Any, dict[Any, Any]], conf_dict)
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]
@@ -109,27 +109,27 @@ class TestObjectDetectionTask:
             pass
 
     @pytest.fixture
-    def model_kwargs(self) -> Dict[Any, Any]:
+    def model_kwargs(self) -> dict[Any, Any]:
         return {"model": "faster-rcnn", "backbone": "resnet18", "num_classes": 2}
 
-    def test_invalid_model(self, model_kwargs: Dict[Any, Any]) -> None:
+    def test_invalid_model(self, model_kwargs: dict[Any, Any]) -> None:
         model_kwargs["model"] = "invalid_model"
         match = "Model type 'invalid_model' is not valid."
         with pytest.raises(ValueError, match=match):
             ObjectDetectionTask(**model_kwargs)
 
-    def test_invalid_backbone(self, model_kwargs: Dict[Any, Any]) -> None:
+    def test_invalid_backbone(self, model_kwargs: dict[Any, Any]) -> None:
         model_kwargs["backbone"] = "invalid_backbone"
         match = "Backbone type 'invalid_backbone' is not valid."
         with pytest.raises(ValueError, match=match):
             ObjectDetectionTask(**model_kwargs)
 
-    def test_non_pretrained_backbone(self, model_kwargs: Dict[Any, Any]) -> None:
+    def test_non_pretrained_backbone(self, model_kwargs: dict[Any, Any]) -> None:
         model_kwargs["pretrained"] = False
         ObjectDetectionTask(**model_kwargs)
 
     def test_no_rgb(
-        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any], fast_dev_run: bool
+        self, monkeypatch: MonkeyPatch, model_kwargs: dict[Any, Any], fast_dev_run: bool
     ) -> None:
         monkeypatch.setattr(NASAMarineDebrisDataModule, "plot", plot)
         datamodule = NASAMarineDebrisDataModule(
@@ -144,7 +144,7 @@ class TestObjectDetectionTask:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_predict(self, model_kwargs: Dict[Any, Any], fast_dev_run: bool) -> None:
+    def test_predict(self, model_kwargs: dict[Any, Any], fast_dev_run: bool) -> None:
         datamodule = PredictObjectDetectionDataModule(
             root="tests/data/nasa_marine_debris", batch_size=1, num_workers=0
         )

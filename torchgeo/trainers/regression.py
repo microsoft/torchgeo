@@ -4,7 +4,7 @@
 """Regression tasks."""
 
 import os
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import timm
@@ -76,7 +76,7 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
 
         # Creates `self.hparams` from kwargs
         self.save_hyperparameters()
-        self.hyperparams = cast(Dict[str, Any], self.hparams)
+        self.hyperparams = cast(dict[str, Any], self.hparams)
         self.config_task()
 
         self.train_metrics = MetricCollection(
@@ -200,7 +200,7 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         y_hat: Tensor = self(x)
         return y_hat
 
-    def configure_optimizers(self) -> Dict[str, Any]:
+    def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:

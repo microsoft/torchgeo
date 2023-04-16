@@ -58,14 +58,14 @@ For example, if you add a new dataset in ``torchgeo/datasets/foo.py``, you'll ne
 
    $ pytest --cov=torchgeo/datasets --cov-report=term-missing tests/datasets/test_foo.py
    ========================= test session starts =========================
-   platform darwin -- Python 3.8.11, pytest-6.2.4, py-1.9.0, pluggy-0.13.0
+   platform darwin -- Python 3.10.11, pytest-6.2.4, py-1.9.0, pluggy-0.13.0
    rootdir: ~/torchgeo, configfile: pyproject.toml
    plugins: mock-1.11.1, anyio-3.2.1, cov-2.8.1, nbmake-0.5
    collected 7 items
 
    tests/datasets/test_foo.py .......                              [100%]
 
-   ---------- coverage: platform darwin, python 3.8.11-final-0 -----------
+   ---------- coverage: platform darwin, python 3.10.11-final-0 -----------
    Name                                      Stmts   Miss  Cover   Missing
    -----------------------------------------------------------------------
    torchgeo/datasets/__init__.py                26      0   100%
@@ -103,7 +103,7 @@ All of these tools should be used from the root of the project to ensure that ou
 
    $ black .
    $ isort .
-   $ pyupgrade --py38-plus $(find . -name "*.py")
+   $ pyupgrade --py39-plus $(find . -name "*.py")
 
 
 Flake8, pydocstyle, and mypy won't format your code for you, but they will warn you about potential issues with your code or docstrings:

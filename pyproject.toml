@@ -6,7 +6,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.black]
-target-version = ["py38", "py39", "py310"]
+target-version = ["py39", "py310"]
 color = true
 skip_magic_trailing_comma = true
 
@@ -25,7 +25,7 @@ skip_gitignore = true
 color_output = true
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
 ignore_missing_imports = true
 show_error_codes = true
 exclude = "(build|data|dist|docs/src|images|logo|logs|output)/"

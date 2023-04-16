@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 import timm
@@ -15,8 +15,8 @@ from torchvision.models._api import WeightsEnum
 from torchgeo.models import ResNet18_Weights, ResNet50_Weights, resnet18, resnet50
 
 
-def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
-    state_dict: Dict[str, Any] = torch.load(url)
+def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
+    state_dict: dict[str, Any] = torch.load(url)
     return state_dict
 
 

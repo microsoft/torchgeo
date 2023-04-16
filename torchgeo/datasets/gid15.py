@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -88,7 +88,7 @@ class GID15(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -125,7 +125,7 @@ class GID15(NonGeoDataset):
 
         self.files = self._load_files(self.root, self.split)
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -156,7 +156,7 @@ class GID15(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str, split: str) -> List[Dict[str, str]]:
+    def _load_files(self, root: str, split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -242,7 +242,7 @@ class GID15(NonGeoDataset):
         )
 
     def plot(
-        self, sample: Dict[str, Tensor], suptitle: Optional[str] = None
+        self, sample: dict[str, Tensor], suptitle: Optional[str] = None
     ) -> plt.Figure:
         """Plot a sample from the dataset.
 

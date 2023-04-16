@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Optional
 from xml.etree import ElementTree
 
 import matplotlib.patches as patches
@@ -19,7 +19,7 @@ from .geo import NonGeoDataset
 from .utils import check_integrity, download_and_extract_archive, extract_archive
 
 
-def parse_pascal_voc(path: str) -> Dict[str, Any]:
+def parse_pascal_voc(path: str) -> dict[str, Any]:
     """Read a PASCAL VOC annotation file.
 
     Args:
@@ -104,7 +104,7 @@ class ForestDamage(NonGeoDataset):
     def __init__(
         self,
         root: str = "data",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -130,9 +130,9 @@ class ForestDamage(NonGeoDataset):
 
         self.files = self._load_files(self.root)
 
-        self.class_to_idx: Dict[str, int] = {c: i for i, c in enumerate(self.classes)}
+        self.class_to_idx: dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -162,7 +162,7 @@ class ForestDamage(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str) -> List[Dict[str, str]]:
+    def _load_files(self, root: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -202,8 +202,8 @@ class ForestDamage(NonGeoDataset):
             return tensor
 
     def _load_target(
-        self, bboxes: List[List[int]], labels_list: List[str]
-    ) -> Tuple[Tensor, Tensor]:
+        self, bboxes: list[list[int]], labels_list: list[str]
+    ) -> tuple[Tensor, Tensor]:
         """Load the target mask for a single image.
 
         Args:
@@ -260,7 +260,7 @@ class ForestDamage(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

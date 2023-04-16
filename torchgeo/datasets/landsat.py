@@ -4,7 +4,8 @@
 """Landsat datasets."""
 
 import abc
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from collections.abc import Sequence
+from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 from rasterio.crs import CRS
@@ -51,7 +52,7 @@ class Landsat(RasterDataset, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def default_bands(self) -> List[str]:
+    def default_bands(self) -> list[str]:
         """Bands to load by default."""
 
     def __init__(
@@ -60,7 +61,7 @@ class Landsat(RasterDataset, abc.ABC):
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -86,7 +87,7 @@ class Landsat(RasterDataset, abc.ABC):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

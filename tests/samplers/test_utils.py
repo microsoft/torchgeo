@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import math
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
 import pytest
 
@@ -10,7 +10,7 @@ from torchgeo.datasets import BoundingBox
 from torchgeo.samplers import tile_to_chips
 from torchgeo.samplers.utils import _to_tuple
 
-MAYBE_TUPLE = Union[float, Tuple[float, float]]
+MAYBE_TUPLE = Union[float, tuple[float, float]]
 
 
 @pytest.mark.parametrize(
