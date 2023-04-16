@@ -108,11 +108,11 @@ class TestSimCLRTask:
         return weights
 
     def test_weight_file(self, checkpoint: str) -> None:
-        model_kwargs = {"model": "resnet18", "weights": checkpoint}
+        model_kwargs: dict[str, Any] = {"model": "resnet18", "weights": checkpoint}
         SimCLRTask(**model_kwargs)
 
     def test_weight_enum(self, mocked_weights: WeightsEnum) -> None:
-        model_kwargs = {
+        model_kwargs: dict[str, Any] = {
             "model": mocked_weights.meta["model"],
             "weights": mocked_weights,
             "in_channels": mocked_weights.meta["in_chans"],
@@ -120,7 +120,7 @@ class TestSimCLRTask:
         SimCLRTask(**model_kwargs)
 
     def test_weight_str(self, mocked_weights: WeightsEnum) -> None:
-        model_kwargs = {
+        model_kwargs: dict[str, Any] = {
             "model": mocked_weights.meta["model"],
             "weights": str(mocked_weights),
             "in_channels": mocked_weights.meta["in_chans"],
@@ -129,7 +129,7 @@ class TestSimCLRTask:
 
     @pytest.mark.slow
     def test_weight_enum_download(self, weights: WeightsEnum) -> None:
-        model_kwargs = {
+        model_kwargs: dict[str, Any] = {
             "model": weights.meta["model"],
             "weights": weights,
             "in_channels": weights.meta["in_chans"],
@@ -138,7 +138,7 @@ class TestSimCLRTask:
 
     @pytest.mark.slow
     def test_weight_str_download(self, weights: WeightsEnum) -> None:
-        model_kwargs = {
+        model_kwargs: dict[str, Any] = {
             "model": weights.meta["model"],
             "weights": str(weights),
             "in_channels": weights.meta["in_chans"],
