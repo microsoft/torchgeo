@@ -27,8 +27,9 @@ class NLCD(RasterDataset):
     Consortium (`MRLC <https://www.mrlc.gov/>`_) which released the first product
     in 2001 with new updates every five years since then.
 
-    The dataset contains the following 15 classes:
+    The dataset contains the following 17 classes:
 
+    0. Background
     #. Open Water
     #. Perennial Ice/Snow
     #. Developed, Open Space
@@ -179,7 +180,7 @@ class NLCD(RasterDataset):
             IndexError: if query is not found in the index
         """
         sample = super().__getitem__(query)
-
+        print(sample["mask"].min())
         mask = sample["mask"]
         for k, v in self.ordinal_label_map.items():
             mask[mask == k] = v
