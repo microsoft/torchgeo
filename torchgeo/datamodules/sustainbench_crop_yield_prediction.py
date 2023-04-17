@@ -22,6 +22,8 @@ class SustainbenchCropYieldDataModule(NonGeoDataModule):
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.SustainBenchCropYieldPrediction`.
+
+        .. versionadded:: 0.5
         """
         super().__init__(
             SustainBenchCropYieldPrediction, batch_size, num_workers, **kwargs
