@@ -98,7 +98,6 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         output_dim: Optional[int] = None,
         lr: float = 4.8,
         weight_decay: float = 1e-4,
-        max_epochs: int = 100,
         temperature: float = 0.07,
         memory_bank_size: int = 64000,
         gather_distributed: bool = False,
@@ -120,7 +119,6 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
                 (defaults to output dimension of model).
             lr: Learning rate (0.3 x batch_size / 256 is recommended).
             weight_decay: Weight decay coefficient (1e-6 for v1 or 1e-4 for v2).
-            max_epochs: Maximum number of epochs to train for.
             temperature: Temperature used in NT-Xent loss.
             memory_bank_size: Size of memory bank (0 for v1 or 64K for v2).
             gather_distributed: Gather negatives from all GPUs during distributed
@@ -237,6 +235,6 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             weight_decay=self.hparams["weight_decay"],
         )
         lr_scheduler = CosineAnnealingLR(
-            optimizer, T_max=self.hparams["max_epochs"], eta_min=self.hparams["lr"] / 50
+            optimizer, T_max=self.trainer.max_epochs, eta_min=self.hparams["lr"] / 50
         )
         return [optimizer], [lr_scheduler]
