@@ -8,6 +8,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import ListedColormap
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
@@ -271,30 +272,27 @@ class NLCD(RasterDataset):
         mask = sample["mask"].squeeze().numpy()
         ncols = 1
 
-        cmap: "np.typing.NDArray[np.int_]" = np.array(
-            [self.cmap[i] for i in range(len(self.cmap))]
+        plt_cmap = ListedColormap(
+            np.stack([np.array(val) / 255 for val in self.cmap.values()], axis=0)
         )
-
-        mask = cmap[mask]
 
         showing_predictions = "prediction" in sample
         if showing_predictions:
             pred = sample["prediction"].squeeze().numpy()
-            pred = cmap[pred]
             ncols = 2
 
         fig, axs = plt.subplots(
             nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
         )
 
-        axs[0, 0].imshow(mask)
+        axs[0, 0].imshow(mask, cmap=plt_cmap)
         axs[0, 0].axis("off")
 
         if show_titles:
             axs[0, 0].set_title("Mask")
 
         if showing_predictions:
-            axs[0, 1].imshow(pred)
+            axs[0, 1].imshow(pred, cmap=plt_cmap)
             axs[0, 1].axis("off")
             if show_titles:
                 axs[0, 1].set_title("Prediction")
