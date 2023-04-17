@@ -95,8 +95,6 @@ class TestUSAVars:
         assert len(dataset.labels) == len(x["labels"])
         assert len(x["centroid_lat"]) == 1
         assert len(x["centroid_lon"]) == 1
-        
-
 
     def test_len(self, dataset: USAVars) -> None:
         if dataset.split == "train":
