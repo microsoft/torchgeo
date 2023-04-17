@@ -216,7 +216,6 @@ def main(conf: DictConfig) -> None:
     trainer.test(ckpt_path="best", datamodule=datamodule)
 
 
-
 if __name__ == "__main__":
     # Taken from https://github.com/pangeo-data/cog-best-practices
     _rasterio_best_practices = {
