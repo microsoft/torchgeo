@@ -180,7 +180,7 @@ class NLCD(RasterDataset):
             IndexError: if query is not found in the index
         """
         sample = super().__getitem__(query)
-        print(sample["mask"].min())
+
         mask = sample["mask"]
         for k, v in self.ordinal_label_map.items():
             mask[mask == k] = v
