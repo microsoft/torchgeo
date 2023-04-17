@@ -1,23 +1,18 @@
-program:
-  experiment_name: sen12ms_test
-  overwrite: True
-trainer:
-  min_epochs: 15
-experiment:
-  task: semantic_segmentation
-  dataset: sen12ms
-  module:
-    loss: "ce"
-    model: "unet"
-    backbone: "resnet18"
-    weights: null
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 2
-    in_channels: 15
-    num_classes: 11
-    ignore_index: null
-  datamodule:
-    root: "data/sen12ms"
-    band_set: "all"
-    batch_size: 32
-    num_workers: 4
+module:
+  _target_: SemanticSegmentationTask
+  loss: "ce"
+  model: "unet"
+  backbone: "resnet18"
+  weights: null
+  learning_rate: 1e-3
+  learning_rate_schedule_patience: 2
+  in_channels: 15
+  num_classes: 11
+  ignore_index: null
+
+datamodule:
+  _target_: SEN12MSDataModule
+  root: "data/sen12ms"
+  band_set: "all"
+  batch_size: 32
+  num_workers: 4

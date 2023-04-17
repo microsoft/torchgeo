@@ -1,22 +1,16 @@
-trainer:
-  accelerator: gpu
-  devices: 1
-  min_epochs: 10
-  max_epochs: 40
-  benchmark: True
-experiment:
-  task: classification
-  dataset: so2sat
-  module:
-    loss: "ce"
-    model: "resnet18"
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 6
-    weights: null
-    in_channels: 18
-    num_classes: 17
-  datamodule:
-    root: "data/so2sat"
-    batch_size: 128
-    num_workers: 4
-    band_set: "all"
+module:
+  _target_: ClassificationTask
+  loss: "ce"
+  model: "resnet18"
+  learning_rate: 1e-3
+  learning_rate_schedule_patience: 6
+  weights: null
+  in_channels: 18
+  num_classes: 17
+
+datamodule:
+  _target_: So2SatDataModule
+  root: "data/so2sat"
+  batch_size: 128
+  num_workers: 4
+  band_set: "all"

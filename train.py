@@ -6,9 +6,10 @@
 """torchgeo model training script."""
 
 import os
-from typing import Any, cast
+from typing import cast
 
 import lightning.pytorch as pl
+from hydra.utils import instantiate
 from lightning.pytorch import LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
@@ -29,13 +30,14 @@ from torchgeo.datamodules import (
     NASAMarineDebrisDataModule,
     Potsdam2DDataModule,
     RESISC45DataModule,
+    SeasonalContrastS2DataModule,
     SEN12MSDataModule,
     So2SatDataModule,
     SpaceNet1DataModule,
     TropicalCycloneDataModule,
     UCMercedDataModule,
     Vaihingen2DDataModule,
-)
+)  # noqa: F401
 from torchgeo.trainers import (
     BYOLTask,
     ClassificationTask,
@@ -43,38 +45,7 @@ from torchgeo.trainers import (
     ObjectDetectionTask,
     RegressionTask,
     SemanticSegmentationTask,
-)
-
-DATASET_TO_DATAMODULES_MAPPING: dict[str, type[LightningDataModule]] = {
-    "bigearthnet": BigEarthNetDataModule,
-    "chesapeake_cvpr": ChesapeakeCVPRDataModule,
-    "cowc_counting": COWCCountingDataModule,
-    "cyclone": TropicalCycloneDataModule,
-    "deepglobelandcover": DeepGlobeLandCoverDataModule,
-    "etci2021": ETCI2021DataModule,
-    "eurosat": EuroSATDataModule,
-    "gid15": GID15DataModule,
-    "inria": InriaAerialImageLabelingDataModule,
-    "landcoverai": LandCoverAIDataModule,
-    "loveda": LoveDADataModule,
-    "naipchesapeake": NAIPChesapeakeDataModule,
-    "nasa_marine_debris": NASAMarineDebrisDataModule,
-    "potsdam2d": Potsdam2DDataModule,
-    "resisc45": RESISC45DataModule,
-    "sen12ms": SEN12MSDataModule,
-    "so2sat": So2SatDataModule,
-    "spacenet1": SpaceNet1DataModule,
-    "ucmerced": UCMercedDataModule,
-    "vaihingen2d": Vaihingen2DDataModule,
-}
-TASK_TO_MODULES_MAPPING: dict[str, type[LightningModule]] = {
-    "byol": BYOLTask,
-    "classification": ClassificationTask,
-    "multilabel_classification": MultiLabelClassificationTask,
-    "object_detection": ObjectDetectionTask,
-    "regression": RegressionTask,
-    "semantic_segmentation": SemanticSegmentationTask,
-}
+)  # noqa: F401
 
 
 def set_up_omegaconf() -> DictConfig:
@@ -118,13 +89,8 @@ def set_up_omegaconf() -> DictConfig:
 
 def main(conf: DictConfig) -> None:
     """Main training loop."""
-    ######################################
-    # Setup output directory
-    ######################################
 
-    dataset_name = conf.experiment.dataset
-    task_name = conf.experiment.task
-    experiment_name = f"{dataset_name}_{task_name}"
+    experiment_name = f"{conf.datamodule._target_}_{conf.module._target}"
     if os.path.isfile(conf.program.output_dir):
         raise NotADirectoryError("`program.output_dir` must be a directory")
     os.makedirs(conf.program.output_dir, exist_ok=True)
@@ -144,39 +110,14 @@ def main(conf: DictConfig) -> None:
                 + "empty. We don't want to overwrite any existing results, exiting..."
             )
 
-    with open(os.path.join(experiment_dir, "experiment_config.yaml"), "w") as f:
+    with open(os.path.join(experiment_dir, "config.yaml"), "w") as f:
         OmegaConf.save(config=conf, f=f)
 
-    ######################################
-    # Choose task to run based on arguments or configuration
-    ######################################
-    # Convert the DictConfig into a dictionary so that we can pass as kwargs.
-    task_args = cast(dict[str, Any], OmegaConf.to_object(conf.experiment.module))
-    datamodule_args = cast(
-        dict[str, Any], OmegaConf.to_object(conf.experiment.datamodule)
-    )
+    # Define module and datamodule
+    datamodule: LightningDataModule = instantiate(conf.datamodule)
+    task: LightningModule = instantiate(conf.module)
 
-    datamodule: LightningDataModule
-    task: LightningModule
-    if task_name in TASK_TO_MODULES_MAPPING:
-        task_class = TASK_TO_MODULES_MAPPING[task_name]
-        task = task_class(**task_args)
-    else:
-        raise ValueError(
-            f"experiment.task={task_name} is not recognized as a valid task"
-        )
-
-    if dataset_name in DATASET_TO_DATAMODULES_MAPPING:
-        datamodule_class = DATASET_TO_DATAMODULES_MAPPING[dataset_name]
-        datamodule = datamodule_class(**datamodule_args)
-    else:
-        raise ValueError(
-            f"experiment.dataset={dataset_name} is not recognized as a valid dataset"
-        )
-
-    ######################################
-    # Setup trainer
-    ######################################
+    # Define callbacks
     tb_logger = TensorBoardLogger(conf.program.log_dir, name=experiment_name)
     csv_logger = CSVLogger(conf.program.log_dir, name=experiment_name)
 
@@ -202,18 +143,18 @@ def main(conf: DictConfig) -> None:
         monitor=monitor_metric, min_delta=0.00, patience=18, mode=mode
     )
 
-    trainer_args = cast(dict[str, Any], OmegaConf.to_object(conf.trainer))
+    # Define trainer
+    trainer: Trainer = instantiate(
+        conf.trainer,
+        callbacks=[checkpoint_callback, early_stopping_callback],
+        logger=[tb_logger, csv_logger],
+        default_root_dir=experiment_dir,
+    )
 
-    trainer_args["callbacks"] = [checkpoint_callback, early_stopping_callback]
-    trainer_args["logger"] = [tb_logger, csv_logger]
-    trainer_args["default_root_dir"] = experiment_dir
-    trainer = Trainer(**trainer_args)
-
-    ######################################
-    # Run experiment
-    ######################################
+    # Train
     trainer.fit(model=task, datamodule=datamodule)
 
+    # Test
     if hasattr(task, "test_step") and hasattr(datamodule, "test_dataloader"):
         trainer.test(ckpt_path="best", datamodule=datamodule)
 
