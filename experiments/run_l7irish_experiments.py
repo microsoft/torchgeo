@@ -57,7 +57,7 @@ if __name__ == "__main__":
                 + f" program.output_dir={output_dir}"
                 + f" program.log_dir={log_dir}"
                 + f" program.data_dir={DATA_DIR}"
-                + " trainer.gpus=[GPU]"
+                # + " trainer.gpus=[GPU]"
             )
             command = command.strip()
 
