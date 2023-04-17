@@ -152,9 +152,10 @@ class NLCD(RasterDataset):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
             AssertionError: if ``year`` is invalid
         """
-        assert set(years).issubset(
-            self.md5s.keys()
-        ), f"NLCD data product only exists for the following years: {self.md5s.keys()}."
+        assert set(years).issubset(self.md5s.keys()), (
+            "NLCD data product only exists for the following years: "
+            f"{list(self.md5s.keys())}."
+        )
         self.years = years
         self.root = root
         self.download = download
@@ -165,13 +166,13 @@ class NLCD(RasterDataset):
         super().__init__(root, crs, res, transforms=transforms, cache=cache)
 
     def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
+        """Retrieve mask and metadata indexed by query.
 
         Args:
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
-            sample of image/mask and metadata at that index
+            sample of mask and metadata at that index
 
         Raises:
             IndexError: if query is not found in the index
@@ -270,9 +271,9 @@ class NLCD(RasterDataset):
         mask = sample["mask"].squeeze().numpy()
         ncols = 1
 
-        cmap: "np.typing.NDArray[np.int_]" = np.zeros((max(self.cmap) + 1, 4), np.int_)
-        for idx, cmap_val in self.cmap.items():
-            cmap[idx, :] = cmap_val
+        cmap: "np.typing.NDArray[np.int_]" = np.array(
+            [self.cmap[i] for i in range(len(self.cmap))]
+        )
 
         mask = cmap[mask]
 
@@ -282,21 +283,21 @@ class NLCD(RasterDataset):
             pred = cmap[pred]
             ncols = 2
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
+        fig, axs = plt.subplots(
+            nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
+        )
+
+        axs[0, 0].imshow(mask)
+        axs[0, 0].axis("off")
+
+        if show_titles:
+            axs[0, 0].set_title("Mask")
 
         if showing_predictions:
-            axs[0].imshow(mask)
-            axs[0].axis("off")
-            axs[1].imshow(pred)
-            axs[1].axis("off")
+            axs[0, 1].imshow(pred)
+            axs[0, 1].axis("off")
             if show_titles:
-                axs[0].set_title("Mask")
-                axs[1].set_title("Prediction")
-        else:
-            axs.imshow(mask)
-            axs.axis("off")
-            if show_titles:
-                axs.set_title("Mask")
+                axs[0, 1].set_title("Prediction")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
