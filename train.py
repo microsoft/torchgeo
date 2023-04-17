@@ -6,7 +6,7 @@
 """torchgeo model training script."""
 
 import os
-from typing import Any, Dict, Tuple, Type, cast
+from typing import Any, cast
 
 import lightning.pytorch as pl
 from lightning.pytorch import LightningDataModule, LightningModule, Trainer
@@ -46,8 +46,8 @@ from torchgeo.trainers import (
     SemanticSegmentationTask,
 )
 
-TASK_TO_MODULES_MAPPING: Dict[
-    str, Tuple[Type[LightningModule], Type[LightningDataModule]]
+TASK_TO_MODULES_MAPPING: dict[
+    str, tuple[type[LightningModule], type[LightningDataModule]]
 ] = {
     "bigearthnet": (MultiLabelClassificationTask, BigEarthNetDataModule),
     "byol": (BYOLTask, ChesapeakeCVPRDataModule),
@@ -102,7 +102,7 @@ def set_up_omegaconf() -> DictConfig:
         config_fn = command_line_conf.config_file
         if not os.path.isfile(config_fn):
             raise FileNotFoundError(f"config_file={config_fn} is not a valid file")
-
+        
         user_conf = OmegaConf.load(config_fn)
         conf = OmegaConf.merge(conf, user_conf)
 
@@ -122,10 +122,8 @@ def set_up_omegaconf() -> DictConfig:
         raise ValueError(
             f"experiment.task={task_name} is not recognized as a valid task"
         )
-
     conf = OmegaConf.merge(task_conf, conf)
     conf = cast(DictConfig, conf)  # convince mypy that everything is alright
-
     return conf
 
 
@@ -140,10 +138,10 @@ def main(conf: DictConfig) -> None:
     if os.path.isfile(conf.program.output_dir):
         raise NotADirectoryError("`program.output_dir` must be a directory")
     os.makedirs(conf.program.output_dir, exist_ok=True)
-
+    
     experiment_dir = os.path.join(conf.program.output_dir, experiment_name)
     os.makedirs(experiment_dir, exist_ok=True)
-
+    
     if len(os.listdir(experiment_dir)) > 0:
         if conf.program.overwrite:
             print(
@@ -155,19 +153,19 @@ def main(conf: DictConfig) -> None:
                 f"The experiment directory, {experiment_dir}, already exists and isn't "
                 + "empty. We don't want to overwrite any existing results, exiting..."
             )
-
+    
     with open(os.path.join(experiment_dir, "experiment_config.yaml"), "w") as f:
         OmegaConf.save(config=conf, f=f)
-
+    
     ######################################
     # Choose task to run based on arguments or configuration
     ######################################
     # Convert the DictConfig into a dictionary so that we can pass as kwargs.
-    task_args = cast(Dict[str, Any], OmegaConf.to_object(conf.experiment.module))
+    task_args = cast(dict[str, Any], OmegaConf.to_object(conf.experiment.module))
     datamodule_args = cast(
-        Dict[str, Any], OmegaConf.to_object(conf.experiment.datamodule)
+        dict[str, Any], OmegaConf.to_object(conf.experiment.datamodule)
     )
-
+    
     datamodule: LightningDataModule
     task: LightningModule
     if task_name in TASK_TO_MODULES_MAPPING:
@@ -184,14 +182,14 @@ def main(conf: DictConfig) -> None:
     ######################################
     tb_logger = TensorBoardLogger(conf.program.log_dir, name=experiment_name)
     csv_logger = CSVLogger(conf.program.log_dir, name=experiment_name)
-
+    
     if isinstance(task, ObjectDetectionTask):
         monitor_metric = "val_map"
         mode = "max"
     else:
         monitor_metric = "val_loss"
         mode = "min"
-
+    
     checkpoint_callback = ModelCheckpoint(
         monitor=monitor_metric,
         filename="checkpoint-epoch{epoch:02d}-val_loss{val_loss:.2f}",
@@ -204,7 +202,7 @@ def main(conf: DictConfig) -> None:
         monitor=monitor_metric, min_delta=0.00, patience=18, mode=mode
     )
 
-    trainer_args = cast(Dict[str, Any], OmegaConf.to_object(conf.trainer))
+    trainer_args = cast(dict[str, Any], OmegaConf.to_object(conf.trainer))
 
     trainer_args["callbacks"] = [checkpoint_callback, early_stopping_callback]
     trainer_args["logger"] = [tb_logger, csv_logger]
@@ -218,6 +216,7 @@ def main(conf: DictConfig) -> None:
     trainer.test(ckpt_path="best", datamodule=datamodule)
 
 
+
 if __name__ == "__main__":
     # Taken from https://github.com/pangeo-data/cog-best-practices
     _rasterio_best_practices = {
@@ -228,12 +227,12 @@ if __name__ == "__main__":
         "VSI_CURL_CACHE_SIZE": "200000000",
     }
     os.environ.update(_rasterio_best_practices)
-
+    
     conf = set_up_omegaconf()
-
+    
     # Set random seed for reproducibility
     # https://pytorch-lightning.readthedocs.io/en/latest/api/pytorch_lightning.utilities.seed.html#pytorch_lightning.utilities.seed.seed_everything
     pl.seed_everything(conf.program.seed)
-
+    
     # Main training procedure
     main(conf)
