@@ -4,7 +4,7 @@
 """NWPU VHR-10 dataset."""
 
 import os
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,7 +18,7 @@ from .utils import check_integrity, download_and_extract_archive, download_url
 
 
 def convert_coco_poly_to_mask(
-    segmentations: List[int], height: int, width: int
+    segmentations: list[int], height: int, width: int
 ) -> Tensor:
     """Convert coco polygons to mask tensor.
 
@@ -53,7 +53,7 @@ class ConvertCocoAnnotations:
     https://github.com/pytorch/vision/blob/v0.14.0/references/detection/coco_utils.py
     """
 
-    def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def __call__(self, sample: dict[str, Any]) -> dict[str, Any]:
         """Converts MS COCO fields (boxes, masks & labels) from list of ints to tensors.
 
         Args:
@@ -182,7 +182,7 @@ class VHR10(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "positive",
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -236,7 +236,7 @@ class VHR10(NonGeoDataset):
             self.coco_convert = ConvertCocoAnnotations()
             self.ids = list(sorted(self.coco.imgs.keys()))
 
-    def __getitem__(self, index: int) -> Dict[str, Any]:
+    def __getitem__(self, index: int) -> dict[str, Any]:
         """Return an index within the dataset.
 
         Args:
@@ -247,7 +247,7 @@ class VHR10(NonGeoDataset):
         """
         id_ = index % len(self) + 1
 
-        sample: Dict[str, Any] = {
+        sample: dict[str, Any] = {
             "image": self._load_image(id_),
             "label": self._load_target(id_),
         }
@@ -298,7 +298,7 @@ class VHR10(NonGeoDataset):
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, id_: int) -> Dict[str, Any]:
+    def _load_target(self, id_: int) -> dict[str, Any]:
         """Load the annotations for a single image.
 
         Args:
@@ -365,7 +365,7 @@ class VHR10(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
         show_feats: Optional[str] = "both",

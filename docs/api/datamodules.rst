@@ -120,6 +120,11 @@ SpaceNet
 
 .. autoclass:: SpaceNet1DataModule
 
+SSL4EO
+^^^^^^
+
+.. autoclass:: SSL4EOS12DataModule
+
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
 

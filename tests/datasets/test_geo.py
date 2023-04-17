@@ -4,7 +4,6 @@
 import os
 import pickle
 from pathlib import Path
-from typing import Dict, List
 
 import pytest
 import torch
@@ -39,7 +38,7 @@ class CustomGeoDataset(GeoDataset):
         self._crs = crs
         self.res = res
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, BoundingBox]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
         hits = self.index.intersection(tuple(query), objects=True)
         hit = next(iter(hits))
         bounds = BoundingBox(*hit.bounds)
@@ -51,12 +50,12 @@ class CustomVectorDataset(VectorDataset):
 
 
 class CustomSentinelDataset(Sentinel2):
-    all_bands: List[str] = []
+    all_bands: list[str] = []
     separate_files = False
 
 
 class CustomNonGeoDataset(NonGeoDataset):
-    def __getitem__(self, index: int) -> Dict[str, int]:
+    def __getitem__(self, index: int) -> dict[str, int]:
         return {"index": index}
 
     def __len__(self) -> int:

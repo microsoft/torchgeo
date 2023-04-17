@@ -6,7 +6,7 @@
 import abc
 import csv
 import os
-from typing import Callable, Dict, List, Optional, cast
+from typing import Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -47,12 +47,12 @@ class COWC(NonGeoDataset, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def filenames(self) -> List[str]:
+    def filenames(self) -> list[str]:
         """List of files to download."""
 
     @property
     @abc.abstractmethod
-    def md5s(self) -> List[str]:
+    def md5s(self) -> list[str]:
         """List of MD5 checksums of files to download."""
 
     @property
@@ -64,7 +64,7 @@ class COWC(NonGeoDataset, abc.ABC):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -111,7 +111,7 @@ class COWC(NonGeoDataset, abc.ABC):
                 self.images.append(row[0])
                 self.targets.append(row[1])
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -193,7 +193,7 @@ class COWC(NonGeoDataset, abc.ABC):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
