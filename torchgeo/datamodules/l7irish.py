@@ -25,7 +25,7 @@ class L7IrishDataModule(GeoDataModule):
         self,
         batch_size: int = 1,
         patch_size: Union[int, tuple[int, int]] = 32,
-        length: int = 5,
+        length: int = None,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
