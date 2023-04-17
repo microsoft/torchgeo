@@ -15,7 +15,7 @@ from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from omegaconf import DictConfig, OmegaConf
 
-from torchgeo.datamodules import (
+from torchgeo.datamodules import (  # noqa: F401
     BigEarthNetDataModule,
     ChesapeakeCVPRDataModule,
     COWCCountingDataModule,
@@ -37,15 +37,15 @@ from torchgeo.datamodules import (
     TropicalCycloneDataModule,
     UCMercedDataModule,
     Vaihingen2DDataModule,
-)  # noqa: F401
-from torchgeo.trainers import (
+)
+from torchgeo.trainers import (  # noqa: F401
     BYOLTask,
     ClassificationTask,
     MultiLabelClassificationTask,
     ObjectDetectionTask,
     RegressionTask,
     SemanticSegmentationTask,
-)  # noqa: F401
+)
 
 
 def set_up_omegaconf() -> DictConfig:
