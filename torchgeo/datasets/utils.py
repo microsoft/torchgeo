@@ -3,6 +3,9 @@
 
 """Common dataset utilities."""
 
+# https://github.com/sphinx-doc/sphinx/issues/11327
+from __future__ import annotations
+
 import bz2
 import collections
 import contextlib
@@ -11,21 +14,10 @@ import lzma
 import os
 import sys
 import tarfile
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-    cast,
-    overload,
-)
+from typing import Any, cast, overload
 
 import numpy as np
 import rasterio
@@ -97,7 +89,7 @@ class _zipfile:
             pass
 
 
-def extract_archive(src: str, dst: Optional[str] = None) -> None:
+def extract_archive(src: str, dst: str | None = None) -> None:
     """Extract an archive.
 
     Args:
@@ -110,7 +102,7 @@ def extract_archive(src: str, dst: Optional[str] = None) -> None:
     if dst is None:
         dst = os.path.dirname(src)
 
-    suffix_and_extractor: List[Tuple[Union[str, Tuple[str, ...]], Any]] = [
+    suffix_and_extractor: list[tuple[str | tuple[str, ...], Any]] = [
         (".rar", _rarfile.RarFile),
         (
             (".tar", ".tar.gz", ".tar.bz2", ".tar.xz", ".tgz", ".tbz2", ".tbz", ".txz"),
@@ -125,7 +117,7 @@ def extract_archive(src: str, dst: Optional[str] = None) -> None:
                 f.extractall(dst)
             return
 
-    suffix_and_decompressor: List[Tuple[str, Any]] = [
+    suffix_and_decompressor: list[tuple[str, Any]] = [
         (".bz2", bz2.open),
         (".gz", gzip.open),
         (".xz", lzma.open),
@@ -144,9 +136,9 @@ def extract_archive(src: str, dst: Optional[str] = None) -> None:
 def download_and_extract_archive(
     url: str,
     download_root: str,
-    extract_root: Optional[str] = None,
-    filename: Optional[str] = None,
-    md5: Optional[str] = None,
+    extract_root: str | None = None,
+    filename: str | None = None,
+    md5: str | None = None,
 ) -> None:
     """Download and extract an archive.
 
@@ -171,7 +163,7 @@ def download_and_extract_archive(
 
 
 def download_radiant_mlhub_dataset(
-    dataset_id: str, download_root: str, api_key: Optional[str] = None
+    dataset_id: str, download_root: str, api_key: str | None = None
 ) -> None:
     """Download a dataset from Radiant Earth.
 
@@ -194,7 +186,7 @@ def download_radiant_mlhub_dataset(
 
 
 def download_radiant_mlhub_collection(
-    collection_id: str, download_root: str, api_key: Optional[str] = None
+    collection_id: str, download_root: str, api_key: str | None = None
 ) -> None:
     """Download a collection from Radiant Earth.
 
@@ -261,10 +253,10 @@ class BoundingBox:
         pass
 
     @overload
-    def __getitem__(self, key: slice) -> List[float]:  # noqa: D105
+    def __getitem__(self, key: slice) -> list[float]:  # noqa: D105
         pass
 
-    def __getitem__(self, key: Union[int, slice]) -> Union[float, List[float]]:
+    def __getitem__(self, key: int | slice) -> float | list[float]:
         """Index the (minx, maxx, miny, maxy, mint, maxt) tuple.
 
         Args:
@@ -286,7 +278,7 @@ class BoundingBox:
         """
         yield from [self.minx, self.maxx, self.miny, self.maxy, self.mint, self.maxt]
 
-    def __contains__(self, other: "BoundingBox") -> bool:
+    def __contains__(self, other: BoundingBox) -> bool:
         """Whether or not other is within the bounds of this bounding box.
 
         Args:
@@ -306,7 +298,7 @@ class BoundingBox:
             and (self.mint <= other.maxt <= self.maxt)
         )
 
-    def __or__(self, other: "BoundingBox") -> "BoundingBox":
+    def __or__(self, other: BoundingBox) -> BoundingBox:
         """The union operator.
 
         Args:
@@ -326,7 +318,7 @@ class BoundingBox:
             max(self.maxt, other.maxt),
         )
 
-    def __and__(self, other: "BoundingBox") -> "BoundingBox":
+    def __and__(self, other: BoundingBox) -> BoundingBox:
         """The intersection operator.
 
         Args:
@@ -378,7 +370,7 @@ class BoundingBox:
         """
         return self.area * (self.maxt - self.mint)
 
-    def intersects(self, other: "BoundingBox") -> bool:
+    def intersects(self, other: BoundingBox) -> bool:
         """Whether or not two bounding boxes intersect.
 
         Args:
@@ -398,7 +390,7 @@ class BoundingBox:
 
     def split(
         self, proportion: float, horizontal: bool = True
-    ) -> Tuple["BoundingBox", "BoundingBox"]:
+    ) -> tuple[BoundingBox, BoundingBox]:
         """Split BoundingBox in two.
 
         Args:
@@ -435,7 +427,7 @@ class BoundingBox:
         return bbox1, bbox2
 
 
-def disambiguate_timestamp(date_str: str, format: str) -> Tuple[float, float]:
+def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
     """Disambiguate partial timestamps.
 
     TorchGeo stores the timestamp of each file in a spatiotemporal R-tree. If the full
@@ -510,7 +502,7 @@ def working_dir(dirname: str, create: bool = False) -> Iterator[None]:
         os.chdir(cwd)
 
 
-def _list_dict_to_dict_list(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, List[Any]]:
+def _list_dict_to_dict_list(samples: Iterable[dict[Any, Any]]) -> dict[Any, list[Any]]:
     """Convert a list of dictionaries to a dictionary of lists.
 
     Args:
@@ -528,7 +520,7 @@ def _list_dict_to_dict_list(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, List
     return collated
 
 
-def _dict_list_to_list_dict(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
+def _dict_list_to_list_dict(sample: dict[Any, Sequence[Any]]) -> list[dict[Any, Any]]:
     """Convert a dictionary of lists to a list of dictionaries.
 
     Args:
@@ -539,7 +531,7 @@ def _dict_list_to_list_dict(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, 
 
     .. versionadded:: 0.2
     """
-    uncollated: List[Dict[Any, Any]] = [
+    uncollated: list[dict[Any, Any]] = [
         {} for _ in range(max(map(len, sample.values())))
     ]
     for key, values in sample.items():
@@ -548,7 +540,7 @@ def _dict_list_to_list_dict(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, 
     return uncollated
 
 
-def stack_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
+def stack_samples(samples: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
     """Stack a list of samples along a new axis.
 
     Useful for forming a mini-batch of samples to pass to
@@ -562,14 +554,14 @@ def stack_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
 
     .. versionadded:: 0.2
     """
-    collated: Dict[Any, Any] = _list_dict_to_dict_list(samples)
+    collated: dict[Any, Any] = _list_dict_to_dict_list(samples)
     for key, value in collated.items():
         if isinstance(value[0], Tensor):
             collated[key] = torch.stack(value)
     return collated
 
 
-def concat_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
+def concat_samples(samples: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
     """Concatenate a list of samples along an existing axis.
 
     Useful for joining samples in a :class:`torchgeo.datasets.IntersectionDataset`.
@@ -582,7 +574,7 @@ def concat_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
 
     .. versionadded:: 0.2
     """
-    collated: Dict[Any, Any] = _list_dict_to_dict_list(samples)
+    collated: dict[Any, Any] = _list_dict_to_dict_list(samples)
     for key, value in collated.items():
         if isinstance(value[0], Tensor):
             collated[key] = torch.cat(value)
@@ -591,7 +583,7 @@ def concat_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
     return collated
 
 
-def merge_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
+def merge_samples(samples: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
     """Merge a list of samples.
 
     Useful for joining samples in a :class:`torchgeo.datasets.UnionDataset`.
@@ -604,7 +596,7 @@ def merge_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
 
     .. versionadded:: 0.2
     """
-    collated: Dict[Any, Any] = {}
+    collated: dict[Any, Any] = {}
     for sample in samples:
         for key, value in sample.items():
             if key in collated and isinstance(value, Tensor):
@@ -616,7 +608,7 @@ def merge_samples(samples: Iterable[Dict[Any, Any]]) -> Dict[Any, Any]:
     return collated
 
 
-def unbind_samples(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
+def unbind_samples(sample: dict[Any, Sequence[Any]]) -> list[dict[Any, Any]]:
     """Reverse of :func:`stack_samples`.
 
     Useful for turning a mini-batch of samples into a list of samples. These individual
@@ -636,7 +628,7 @@ def unbind_samples(sample: Dict[Any, Sequence[Any]]) -> List[Dict[Any, Any]]:
     return _dict_list_to_list_dict(sample)
 
 
-def rasterio_loader(path: str) -> "np.typing.NDArray[np.int_]":
+def rasterio_loader(path: str) -> np.typing.NDArray[np.int_]:
     """Load an image file using rasterio.
 
     Args:
@@ -646,7 +638,7 @@ def rasterio_loader(path: str) -> "np.typing.NDArray[np.int_]":
         the image
     """
     with rasterio.open(path) as f:
-        array: "np.typing.NDArray[np.int_]" = f.read().astype(np.int32)
+        array: np.typing.NDArray[np.int_] = f.read().astype(np.int32)
         # NonGeoClassificationDataset expects images returned with channels last (HWC)
         array = array.transpose(1, 2, 0)
     return array
@@ -665,8 +657,8 @@ def draw_semantic_segmentation_masks(
     image: Tensor,
     mask: Tensor,
     alpha: float = 0.5,
-    colors: Optional[Sequence[Union[str, Tuple[int, int, int]]]] = None,
-) -> "np.typing.NDArray[np.uint8]":
+    colors: Sequence[str | tuple[int, int, int]] | None = None,
+) -> np.typing.NDArray[np.uint8]:
     """Overlay a semantic segmentation mask onto an image.
 
     Args:
@@ -690,8 +682,8 @@ def draw_semantic_segmentation_masks(
 
 
 def rgb_to_mask(
-    rgb: "np.typing.NDArray[np.uint8]", colors: List[Tuple[int, int, int]]
-) -> "np.typing.NDArray[np.uint8]":
+    rgb: np.typing.NDArray[np.uint8], colors: list[tuple[int, int, int]]
+) -> np.typing.NDArray[np.uint8]:
     """Converts an RGB colormap mask to a integer mask.
 
     Args:
@@ -705,7 +697,7 @@ def rgb_to_mask(
     # we can map is 255
 
     h, w = rgb.shape[:2]
-    mask: "np.typing.NDArray[np.uint8]" = np.zeros(shape=(h, w), dtype=np.uint8)
+    mask: np.typing.NDArray[np.uint8] = np.zeros(shape=(h, w), dtype=np.uint8)
     for i, c in enumerate(colors):
         cmask = rgb == c
         # Only update mask if class is present in mask
@@ -715,11 +707,11 @@ def rgb_to_mask(
 
 
 def percentile_normalization(
-    img: "np.typing.NDArray[np.int_]",
+    img: np.typing.NDArray[np.int_],
     lower: float = 2,
     upper: float = 98,
-    axis: Optional[Union[int, Sequence[int]]] = None,
-) -> "np.typing.NDArray[np.int_]":
+    axis: int | Sequence[int] | None = None,
+) -> np.typing.NDArray[np.int_]:
     """Applies percentile normalization to an input image.
 
     Specifically, this will rescale the values in the input such that values <= the
@@ -741,7 +733,7 @@ def percentile_normalization(
     assert lower < upper
     lower_percentile = np.percentile(img, lower, axis=axis)
     upper_percentile = np.percentile(img, upper, axis=axis)
-    img_normalized: "np.typing.NDArray[np.int_]" = np.clip(
+    img_normalized: np.typing.NDArray[np.int_] = np.clip(
         (img - lower_percentile) / (upper_percentile - lower_percentile + 1e-5), 0, 1
     )
     return img_normalized

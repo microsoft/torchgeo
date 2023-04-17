@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, cast
+from typing import Any, Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -121,7 +121,7 @@ class GlobBiomass(RasterDataset):
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         measurement: str = "agb",
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         checksum: bool = False,
     ) -> None:
@@ -162,7 +162,7 @@ class GlobBiomass(RasterDataset):
 
         super().__init__(root, crs, res, transforms=transforms, cache=cache)
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -176,7 +176,7 @@ class GlobBiomass(RasterDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(List[str], [hit.object for hit in hits])
+        filepaths = cast(list[str], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
@@ -227,7 +227,7 @@ class GlobBiomass(RasterDataset):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

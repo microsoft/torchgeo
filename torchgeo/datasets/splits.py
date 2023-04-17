@@ -3,10 +3,11 @@
 
 """Dataset splitting utilities."""
 
+from collections.abc import Sequence
 from copy import deepcopy
 from itertools import accumulate
 from math import floor, isclose
-from typing import List, Optional, Sequence, Tuple, Union, cast
+from typing import Optional, Union, cast
 
 from rtree.index import Index, Property
 from torch import Generator, default_generator, randint, randperm
@@ -50,7 +51,7 @@ def random_bbox_assignment(
     dataset: GeoDataset,
     lengths: Sequence[float],
     generator: Optional[Generator] = default_generator,
-) -> List[GeoDataset]:
+) -> list[GeoDataset]:
     """Split a GeoDataset randomly assigning its index's BoundingBoxes.
 
     This function will go through each BoundingBox in the GeoDataset's index and
@@ -104,7 +105,7 @@ def random_bbox_splitting(
     dataset: GeoDataset,
     fractions: Sequence[float],
     generator: Optional[Generator] = default_generator,
-) -> List[GeoDataset]:
+) -> list[GeoDataset]:
     """Split a GeoDataset randomly splitting its index's BoundingBoxes.
 
     This function will go through each BoundingBox in the GeoDataset's index,
@@ -172,7 +173,7 @@ def random_grid_cell_assignment(
     fractions: Sequence[float],
     grid_size: int = 6,
     generator: Optional[Generator] = default_generator,
-) -> List[GeoDataset]:
+) -> list[GeoDataset]:
     """Overlays a grid over a GeoDataset and randomly assigns cells to new GeoDatasets.
 
     This function will go through each BoundingBox in the GeoDataset's index, overlay
@@ -250,7 +251,7 @@ def random_grid_cell_assignment(
     return new_datasets
 
 
-def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> List[GeoDataset]:
+def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> list[GeoDataset]:
     """Split a GeoDataset intersecting it with a ROI for each desired new GeoDataset.
 
     Args:
@@ -288,8 +289,8 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> List[GeoDatas
 
 
 def time_series_split(
-    dataset: GeoDataset, lengths: Sequence[Union[float, Tuple[float, float]]]
-) -> List[GeoDataset]:
+    dataset: GeoDataset, lengths: Sequence[Union[float, tuple[float, float]]]
+) -> list[GeoDataset]:
     """Split a GeoDataset on its time dimension to create non-overlapping GeoDatasets.
 
     Args:
@@ -325,7 +326,7 @@ def time_series_split(
             for offset, length in zip(accumulate(lengths), lengths)
         ]
 
-    lengths = cast(Sequence[Tuple[float, float]], lengths)
+    lengths = cast(Sequence[tuple[float, float]], lengths)
 
     new_indexes = [
         Index(interleaved=False, properties=Property(dimension=3)) for _ in lengths

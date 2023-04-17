@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Type, cast
+from typing import Any, cast
 
 import pytest
 import segmentation_models_pytorch as smp
@@ -19,6 +19,8 @@ from torchgeo.datamodules import (
     ETCI2021DataModule,
     GID15DataModule,
     InriaAerialImageLabelingDataModule,
+    L7IrishDataModule,
+    L8BiomeDataModule,
     LandCoverAIDataModule,
     LoveDADataModule,
     MisconfigurationException,
@@ -63,6 +65,8 @@ class TestSemanticSegmentationTask:
             ("etci2021", ETCI2021DataModule),
             ("gid15", GID15DataModule),
             ("inria", InriaAerialImageLabelingDataModule),
+            ("l7irish", L7IrishDataModule),
+            ("l8biome", L8BiomeDataModule),
             ("landcoverai", LandCoverAIDataModule),
             ("loveda", LoveDADataModule),
             ("naipchesapeake", NAIPChesapeakeDataModule),
@@ -79,7 +83,7 @@ class TestSemanticSegmentationTask:
         self,
         monkeypatch: MonkeyPatch,
         name: str,
-        classname: Type[LightningDataModule],
+        classname: type[LightningDataModule],
         fast_dev_run: bool,
     ) -> None:
         if name == "naipchesapeake":
@@ -91,7 +95,7 @@ class TestSemanticSegmentationTask:
 
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+        conf_dict = cast(dict[Any, dict[Any, Any]], conf_dict)
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]
@@ -121,7 +125,7 @@ class TestSemanticSegmentationTask:
             pass
 
     @pytest.fixture
-    def model_kwargs(self) -> Dict[Any, Any]:
+    def model_kwargs(self) -> dict[Any, Any]:
         return {
             "model": "unet",
             "backbone": "resnet18",
@@ -132,25 +136,25 @@ class TestSemanticSegmentationTask:
             "ignore_index": 0,
         }
 
-    def test_invalid_model(self, model_kwargs: Dict[Any, Any]) -> None:
+    def test_invalid_model(self, model_kwargs: dict[Any, Any]) -> None:
         model_kwargs["model"] = "invalid_model"
         match = "Model type 'invalid_model' is not valid."
         with pytest.raises(ValueError, match=match):
             SemanticSegmentationTask(**model_kwargs)
 
-    def test_invalid_loss(self, model_kwargs: Dict[Any, Any]) -> None:
+    def test_invalid_loss(self, model_kwargs: dict[Any, Any]) -> None:
         model_kwargs["loss"] = "invalid_loss"
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
             SemanticSegmentationTask(**model_kwargs)
 
-    def test_invalid_ignoreindex(self, model_kwargs: Dict[Any, Any]) -> None:
+    def test_invalid_ignoreindex(self, model_kwargs: dict[Any, Any]) -> None:
         model_kwargs["ignore_index"] = "0"
         match = "ignore_index must be an int or None"
         with pytest.raises(ValueError, match=match):
             SemanticSegmentationTask(**model_kwargs)
 
-    def test_ignoreindex_with_jaccard(self, model_kwargs: Dict[Any, Any]) -> None:
+    def test_ignoreindex_with_jaccard(self, model_kwargs: dict[Any, Any]) -> None:
         model_kwargs["loss"] = "jaccard"
         model_kwargs["ignore_index"] = 0
         match = "ignore_index has no effect on training when loss='jaccard'"
@@ -158,7 +162,7 @@ class TestSemanticSegmentationTask:
             SemanticSegmentationTask(**model_kwargs)
 
     def test_no_rgb(
-        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any], fast_dev_run: bool
+        self, monkeypatch: MonkeyPatch, model_kwargs: dict[Any, Any], fast_dev_run: bool
     ) -> None:
         model_kwargs["in_channels"] = 15
         monkeypatch.setattr(SEN12MSDataModule, "plot", plot)

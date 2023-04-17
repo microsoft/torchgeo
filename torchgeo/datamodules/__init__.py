@@ -14,6 +14,8 @@ from .fair1m import FAIR1MDataModule
 from .geo import GeoDataModule, NonGeoDataModule
 from .gid15 import GID15DataModule
 from .inria import InriaAerialImageLabelingDataModule
+from .l7irish import L7IrishDataModule
+from .l8biome import L8BiomeDataModule
 from .landcoverai import LandCoverAIDataModule
 from .loveda import LoveDADataModule
 from .naip import NAIPChesapeakeDataModule
@@ -25,6 +27,7 @@ from .seco import SeasonalContrastS2DataModule
 from .sen12ms import SEN12MSDataModule
 from .so2sat import So2SatDataModule
 from .spacenet import SpaceNet1DataModule
+from .ssl4eo import SSL4EOS12DataModule
 from .ucmerced import UCMercedDataModule
 from .usavars import USAVarsDataModule
 from .utils import MisconfigurationException
@@ -34,6 +37,8 @@ from .xview import XView2DataModule
 __all__ = (
     # GeoDataset
     "ChesapeakeCVPRDataModule",
+    "L7IrishDataModule",
+    "L8BiomeDataModule",
     "NAIPChesapeakeDataModule",
     # NonGeoDataset
     "BigEarthNetDataModule",
@@ -55,6 +60,7 @@ __all__ = (
     "SEN12MSDataModule",
     "So2SatDataModule",
     "SpaceNet1DataModule",
+    "SSL4EOS12DataModule",
     "TropicalCycloneDataModule",
     "UCMercedDataModule",
     "USAVarsDataModule",

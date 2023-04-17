@@ -3,7 +3,7 @@
 
 """SEN12MS datamodule."""
 
-from typing import Any, Dict
+from typing import Any
 
 import torch
 from sklearn.model_selection import GroupShuffleSplit
@@ -99,8 +99,8 @@ class SEN12MSDataModule(NonGeoDataModule):
             self.test_dataset = SEN12MS(split="test", **self.kwargs)
 
     def on_after_batch_transfer(
-        self, batch: Dict[str, Tensor], dataloader_idx: int
-    ) -> Dict[str, Tensor]:
+        self, batch: dict[str, Tensor], dataloader_idx: int
+    ) -> dict[str, Tensor]:
         """Apply batch augmentations to the batch after it is transferred to the device.
 
         Args:

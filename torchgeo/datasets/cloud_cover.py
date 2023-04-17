@@ -5,7 +5,8 @@
 
 import json
 import os
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from collections.abc import Sequence
+from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -103,7 +104,7 @@ class CloudCoverDetection(NonGeoDataset):
         root: str = "data",
         split: str = "train",
         bands: Sequence[str] = band_names,
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
@@ -150,7 +151,7 @@ class CloudCoverDetection(NonGeoDataset):
         """
         return len(self.chip_paths)
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Returns a sample from dataset.
 
         Args:
@@ -161,7 +162,7 @@ class CloudCoverDetection(NonGeoDataset):
         """
         image = self._load_image(index)
         label = self._load_target(index)
-        sample: Dict[str, Tensor] = {"image": image, "mask": label}
+        sample: dict[str, Tensor] = {"image": image, "mask": label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -219,7 +220,7 @@ class CloudCoverDetection(NonGeoDataset):
             json_data = json.load(read_contents)
         return json_data
 
-    def _load_items(self, item_json: str) -> Dict[str, List[str]]:
+    def _load_items(self, item_json: str) -> dict[str, list[str]]:
         """Loads the label item and corresponding source items.
 
         Args:
@@ -262,7 +263,7 @@ class CloudCoverDetection(NonGeoDataset):
         item_meta["source"] = source_item_paths
         return item_meta
 
-    def _load_collections(self) -> List[Dict[str, Any]]:
+    def _load_collections(self) -> list[dict[str, Any]]:
         """Loads the paths to source and label assets for each collection.
 
         Returns:
@@ -272,7 +273,7 @@ class CloudCoverDetection(NonGeoDataset):
             RuntimeError if collection.json is not found in the uncompressed dataset
         """
         indexed_chips = []
-        label_collection: List[str] = []
+        label_collection: list[str] = []
         for c in self.collection_names[self.split]:
             if "label" in c:
                 label_collection.append(c)
@@ -351,7 +352,7 @@ class CloudCoverDetection(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

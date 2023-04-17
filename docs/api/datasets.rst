@@ -93,6 +93,16 @@ iNaturalist
 
 .. autoclass:: INaturalist
 
+L7 Irish
+^^^^^^^^
+
+.. autoclass:: L7Irish
+
+L8 Biome
+^^^^^^^^
+
+.. autoclass:: L8Biome
+
 LandCover.ai Geo
 ^^^^^^^^^^^^^^^^
 
@@ -298,6 +308,11 @@ SpaceNet
 .. autoclass:: SpaceNet5
 .. autoclass:: SpaceNet6
 .. autoclass:: SpaceNet7
+
+SSL4EO
+^^^^^^
+
+.. autoclass:: SSL4EOS12
 
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^

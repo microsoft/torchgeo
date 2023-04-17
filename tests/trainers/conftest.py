@@ -4,7 +4,6 @@
 import os
 from collections import OrderedDict
 from pathlib import Path
-from typing import Dict
 
 import pytest
 import torch
@@ -29,13 +28,13 @@ def model() -> Module:
 
 
 @pytest.fixture(scope="package")
-def state_dict(model: Module) -> Dict[str, Tensor]:
+def state_dict(model: Module) -> dict[str, Tensor]:
     return model.state_dict()
 
 
 @pytest.fixture(params=["model", "backbone"])
 def checkpoint(
-    state_dict: Dict[str, Tensor], request: SubRequest, tmp_path: Path
+    state_dict: dict[str, Tensor], request: SubRequest, tmp_path: Path
 ) -> str:
     if request.param == "model":
         state_dict = OrderedDict({"model." + k: v for k, v in state_dict.items()})

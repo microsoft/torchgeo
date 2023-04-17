@@ -53,6 +53,8 @@ from .globbiomass import GlobBiomass
 from .idtrees import IDTReeS
 from .inaturalist import INaturalist
 from .inria import InriaAerialImageLabeling
+from .l7irish import L7Irish
+from .l8biome import L8Biome
 from .landcoverai import LandCoverAI, LandCoverAIBase, LandCoverAIGeo
 from .landsat import (
     Landsat,
@@ -100,6 +102,7 @@ from .splits import (
     roi_split,
     time_series_split,
 )
+from .ssl4eo import SSL4EOS12
 from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
@@ -138,6 +141,8 @@ __all__ = (
     "GBIF",
     "GlobBiomass",
     "INaturalist",
+    "L7Irish",
+    "L8Biome",
     "LandCoverAIBase",
     "LandCoverAIGeo",
     "Landsat",
@@ -198,6 +203,7 @@ __all__ = (
     "SpaceNet5",
     "SpaceNet6",
     "SpaceNet7",
+    "SSL4EOS12",
     "TropicalCyclone",
     "UCMerced",
     "USAVars",
