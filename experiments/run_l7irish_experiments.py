@@ -11,7 +11,7 @@ from multiprocessing import Process, Queue
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
 GPUS = [0]
 DRY_RUN = False  # if False then print out the commands to be run, if True then run
-DATA_DIR = "/projects/dali/data/l7irish"  # path to the L8Biome data directory
+DATA_DIR = "/projects/dali/data/l7irish"  # path to the L7Irish data directory
 
 # Hyperparameter options
 model_options = ["unet"]
