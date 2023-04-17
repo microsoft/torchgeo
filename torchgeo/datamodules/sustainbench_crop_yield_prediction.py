@@ -10,7 +10,10 @@ from .geo import NonGeoDataModule
 
 
 class SustainbenchCropYieldDataModule(NonGeoDataModule):
-    """LightningDataModule for Sustainbench Crop Yield Prediction dataset."""
+    """LightningDataModule for Sustainbench Crop Yield Prediction dataset.
+
+    .. versionadded:: 0.5
+    """
 
     def __init__(
         self, batch_size: int = 32, num_workers: int = 0, **kwargs: Any
@@ -22,8 +25,6 @@ class SustainbenchCropYieldDataModule(NonGeoDataModule):
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.SustainBenchCropYieldPrediction`.
-
-        .. versionadded:: 0.5
         """
         super().__init__(
             SustainBenchCropYieldPrediction, batch_size, num_workers, **kwargs
