@@ -29,9 +29,7 @@ from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
 
 
 class ClassificationTestModel(Module):
-    def __init__(
-        self, in_chans: int = 3, num_classes: int = 1000, **kwargs: Any
-    ) -> None:
+    def __init__(self, in_chans: int = 3, num_classes: int = 10, **kwargs: Any) -> None:
         super().__init__()
         self.conv1 = nn.Conv2d(in_channels=in_chans, out_channels=1, kernel_size=1)
         self.pool = nn.AdaptiveAvgPool2d((1, 1))

@@ -20,9 +20,7 @@ from torchgeo.trainers import SemanticSegmentationTask
 
 
 class SegmentationTestModel(Module):
-    def __init__(
-        self, in_channels: int = 3, classes: int = 1000, **kwargs: Any
-    ) -> None:
+    def __init__(self, in_channels: int = 3, classes: int = 3, **kwargs: Any) -> None:
         super().__init__()
         self.conv1 = nn.Conv2d(
             in_channels=in_channels, out_channels=classes, kernel_size=1, padding=0
