@@ -89,7 +89,6 @@ def set_up_omegaconf() -> DictConfig:
 
 def main(conf: DictConfig) -> None:
     """Main training loop."""
-
     experiment_name = f"{conf.datamodule._target_}_{conf.module._target}"
     if os.path.isfile(conf.program.output_dir):
         raise NotADirectoryError("`program.output_dir` must be a directory")
