@@ -1,5 +1,5 @@
 module:
-  _target_: SemanticSegmentationTask
+  _target_: torchgeo.trainers.SemanticSegmentationTask
   loss: "ce"
   model: "unet"
   backbone: "resnet18"
@@ -13,7 +13,7 @@ module:
   ignore_index: null
 
 datamodule:
-  _target_: GID15DataModule
+  _target_: torchgeo.datamodules.GID15DataModule
   root: "data/gid15"
   batch_size: 1
   patch_size: 64

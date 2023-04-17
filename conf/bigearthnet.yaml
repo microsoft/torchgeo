@@ -1,5 +1,5 @@
 module:
-  _target_: MultiLabelClassificationTask
+  _target_: torchgeo.trainers.MultiLabelClassificationTask
   loss: "bce"
   model: "resnet18"
   learning_rate: 1e-3
@@ -9,7 +9,7 @@ module:
   num_classes: 19
 
 datamodule:
-  _target_: BigEarthNetDataModule
+  _target_: torchgeo.datamodules.BigEarthNetDataModule
   root: "data/bigearthnet"
   bands: "all"
   num_classes: ${experiment.module.num_classes}

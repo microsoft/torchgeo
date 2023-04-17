@@ -1,5 +1,5 @@
 module:
-  _target_: ClassificationTask
+  _target_: torchgeo.trainers.ClassificationTask
   loss: "ce"
   model: "resnet18"
   weights: null
@@ -9,7 +9,7 @@ module:
   num_classes: 21
 
 datamodule:
-  _target_: UCMercedDataModule
+  _target_: torchgeo.datamodules.UCMercedDataModule
   root: "data/ucmerced"
   batch_size: 128
   num_workers: 4

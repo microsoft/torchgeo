@@ -9,27 +9,12 @@ import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 from _pytest.monkeypatch import MonkeyPatch
-from lightning.pytorch import LightningDataModule, Trainer
+from hydra.utils import instantiate
+from lightning.pytorch import Trainer
 from omegaconf import OmegaConf
 from torch.nn.modules import Module
 
-from torchgeo.datamodules import (
-    ChesapeakeCVPRDataModule,
-    DeepGlobeLandCoverDataModule,
-    ETCI2021DataModule,
-    GID15DataModule,
-    InriaAerialImageLabelingDataModule,
-    L7IrishDataModule,
-    L8BiomeDataModule,
-    LandCoverAIDataModule,
-    LoveDADataModule,
-    MisconfigurationException,
-    NAIPChesapeakeDataModule,
-    Potsdam2DDataModule,
-    SEN12MSDataModule,
-    SpaceNet1DataModule,
-    Vaihingen2DDataModule,
-)
+from torchgeo.datamodules import MisconfigurationException, SEN12MSDataModule
 from torchgeo.datasets import LandCoverAI
 from torchgeo.trainers import SemanticSegmentationTask
 
@@ -57,34 +42,30 @@ def plot(*args: Any, **kwargs: Any) -> None:
 
 class TestSemanticSegmentationTask:
     @pytest.mark.parametrize(
-        "name,classname",
+        "name",
         [
-            ("chesapeake_cvpr_5", ChesapeakeCVPRDataModule),
-            ("chesapeake_cvpr_7", ChesapeakeCVPRDataModule),
-            ("deepglobelandcover", DeepGlobeLandCoverDataModule),
-            ("etci2021", ETCI2021DataModule),
-            ("gid15", GID15DataModule),
-            ("inria", InriaAerialImageLabelingDataModule),
-            ("l7irish", L7IrishDataModule),
-            ("l8biome", L8BiomeDataModule),
-            ("landcoverai", LandCoverAIDataModule),
-            ("loveda", LoveDADataModule),
-            ("naipchesapeake", NAIPChesapeakeDataModule),
-            ("potsdam2d", Potsdam2DDataModule),
-            ("sen12ms_all", SEN12MSDataModule),
-            ("sen12ms_s1", SEN12MSDataModule),
-            ("sen12ms_s2_all", SEN12MSDataModule),
-            ("sen12ms_s2_reduced", SEN12MSDataModule),
-            ("spacenet1", SpaceNet1DataModule),
-            ("vaihingen2d", Vaihingen2DDataModule),
+            "chesapeake_cvpr_5",
+            "chesapeake_cvpr_7",
+            "deepglobelandcover",
+            "etci2021",
+            "gid15",
+            "inria",
+            "l7irish",
+            "l8biome",
+            "landcoverai",
+            "loveda",
+            "naipchesapeake",
+            "potsdam2d",
+            "sen12ms_all",
+            "sen12ms_s1",
+            "sen12ms_s2_all",
+            "sen12ms_s2_reduced",
+            "spacenet1",
+            "vaihingen2d",
         ],
     )
     def test_trainer(
-        self,
-        monkeypatch: MonkeyPatch,
-        name: str,
-        classname: type[LightningDataModule],
-        fast_dev_run: bool,
+        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         if name == "naipchesapeake":
             pytest.importorskip("zipfile_deflate64")
@@ -94,18 +75,14 @@ class TestSemanticSegmentationTask:
             monkeypatch.setattr(LandCoverAI, "sha256", sha256)
 
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(dict[Any, dict[Any, Any]], conf_dict)
 
         # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = classname(**datamodule_kwargs)
+        datamodule = instantiate(conf.datamodule)
 
         # Instantiate model
         monkeypatch.setattr(smp, "Unet", create_model)
         monkeypatch.setattr(smp, "DeepLabV3Plus", create_model)
-        model_kwargs = conf_dict["module"]
-        model = SemanticSegmentationTask(**model_kwargs)
+        model = instantiate(conf.module)
 
         # Instantiate trainer
         trainer = Trainer(

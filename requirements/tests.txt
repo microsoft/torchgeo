@@ -1,4 +1,5 @@
 # tests
+hydra-core>=1.1.0
 mypy==1.2.0
 nbmake==1.4.1
 omegaconf==2.3.0

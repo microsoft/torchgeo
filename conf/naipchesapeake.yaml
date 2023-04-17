@@ -1,5 +1,5 @@
 module:
-  _target_: SemanticSegmentationTask
+  _target_: torchgeo.trainers.SemanticSegmentationTask
   loss: "ce"
   model: "deeplabv3+"
   backbone: "resnet34"
@@ -12,7 +12,7 @@ module:
   ignore_index: null
 
 datamodule:
-  _target_: NAIPChesapeakeDataModule
+  _target_: torchgeo.datamodules.NAIPChesapeakeDataModule
   naip_root: "data/naip"
   chesapeake_root: "data/chesapeake/BAYWIDE"
   batch_size: 32

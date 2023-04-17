@@ -1,5 +1,5 @@
 module:
-  _target_: SemanticSegmentationTask
+  _target_: torchgeo.trainers.SemanticSegmentationTask
   loss: "ce"
   model: "unet"
   backbone: "resnet18"
@@ -12,7 +12,7 @@ module:
   ignore_index: null
 
 datamodule:
-  _target_: LandCoverAIDataModule
+  _target_: torchgeo.datamodules.LandCoverAIDataModule
   root: "data/landcoverai"
   batch_size: 32
   num_workers: 4

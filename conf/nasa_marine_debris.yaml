@@ -1,5 +1,5 @@
 module:
-  _target_: ObjectDetectionTask
+  _target_: torchgeo.trainers.ObjectDetectionTask
   model: "faster-rcnn"
   backbone: "resnet50"
   num_classes: 2
@@ -8,7 +8,7 @@ module:
   verbose: false
 
 datamodule:
-  _target_: NASAMarineDebrisDataModule
+  _target_: torchgeo.datamodules.NASAMarineDebrisDataModule
   root: "data/nasamr/nasa_marine_debris"
   batch_size: 4
   num_workers: 6

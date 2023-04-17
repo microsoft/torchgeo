@@ -15,37 +15,8 @@ from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from omegaconf import DictConfig, OmegaConf
 
-from torchgeo.datamodules import (  # noqa: F401
-    BigEarthNetDataModule,
-    ChesapeakeCVPRDataModule,
-    COWCCountingDataModule,
-    DeepGlobeLandCoverDataModule,
-    ETCI2021DataModule,
-    EuroSATDataModule,
-    GID15DataModule,
-    InriaAerialImageLabelingDataModule,
-    LandCoverAIDataModule,
-    LoveDADataModule,
-    NAIPChesapeakeDataModule,
-    NASAMarineDebrisDataModule,
-    Potsdam2DDataModule,
-    RESISC45DataModule,
-    SeasonalContrastS2DataModule,
-    SEN12MSDataModule,
-    So2SatDataModule,
-    SpaceNet1DataModule,
-    TropicalCycloneDataModule,
-    UCMercedDataModule,
-    Vaihingen2DDataModule,
-)
-from torchgeo.trainers import (  # noqa: F401
-    BYOLTask,
-    ClassificationTask,
-    MultiLabelClassificationTask,
-    ObjectDetectionTask,
-    RegressionTask,
-    SemanticSegmentationTask,
-)
+from torchgeo import datamodules, trainers  # noqa: F401
+from torchgeo.trainers import BYOLTask, ObjectDetectionTask
 
 
 def set_up_omegaconf() -> DictConfig:
@@ -67,7 +38,6 @@ def set_up_omegaconf() -> DictConfig:
 
     Raises:
         FileNotFoundError: when ``config_file`` does not exist
-        ValueError: when ``task.name`` is not a valid task
     """
     conf = OmegaConf.load("conf/defaults.yaml")
     command_line_conf = OmegaConf.from_cli()

@@ -1,5 +1,5 @@
 module:
-  _target_: BYOLTask
+  _target_: torchgeo.trainers.BYOLTask
   in_channels: 12
   backbone: "resnet18"
   weights: True
@@ -8,7 +8,7 @@ module:
   optimizer: "Adam"
 
 datamodule:
-  _target_: SeasonalContrastS2DataModule
+  _target_: torchgeo.datamodules.SeasonalContrastS2DataModule
   root: "data/seco"
   version: "100k"
   seasons: 2

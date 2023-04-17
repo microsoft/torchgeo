@@ -1,5 +1,5 @@
 module:
-  _target_: SemanticSegmentationTask
+  _target_: torchgeo.trainers.SemanticSegmentationTask
   loss: "ce"
   model: "unet"
   backbone: "resnet18"
@@ -12,7 +12,7 @@ module:
   ignore_index: null
 
 datamodule:
-  _target_: ChesapeakeCVPRDataModule
+  _target_: torchgeo.datamodules.ChesapeakeCVPRDataModule
   root: "data/chesapeake/cvpr"
   train_splits:
     - "de-train"
@@ -23,5 +23,5 @@ datamodule:
   batch_size: 200
   patch_size: 256
   num_workers: 4
-  class_set: ${experiment.module.num_classes}
+  class_set: ${module.num_classes}
   use_prior_labels: False

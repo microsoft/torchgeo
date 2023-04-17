@@ -1,5 +1,5 @@
 module:
-  _target_: ClassificationTask
+  _target_: torchgeo.trainers.ClassificationTask
   loss: "ce"
   model: "resnet18"
   learning_rate: 1e-3
@@ -9,7 +9,7 @@ module:
   num_classes: 10
 
 datamodule:
-  _target_: EuroSATDataModule
+  _target_: torchgeo.datamodules.EuroSATDataModule
   root: "data/eurosat"
   batch_size: 128
   num_workers: 4
