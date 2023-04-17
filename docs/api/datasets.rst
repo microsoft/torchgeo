@@ -314,6 +314,11 @@ SSL4EO
 
 .. autoclass:: SSL4EOS12
 
+SustainbenchCropYieldPrediction
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SustainbenchCropYieldPrediction
+
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
 

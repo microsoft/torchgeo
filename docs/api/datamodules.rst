@@ -125,6 +125,11 @@ SSL4EO
 
 .. autoclass:: SSL4EOS12DataModule
 
+SustainbenchCropYieldDataModule
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SustainbenchCropYieldDataModule
+
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
 
