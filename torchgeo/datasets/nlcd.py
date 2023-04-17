@@ -8,7 +8,6 @@ from typing import Any, Callable, Dict, List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
@@ -20,7 +19,8 @@ class NLCD(RasterDataset):
 
     The `NLCD dataset
     <https://www.usgs.gov/centers/eros/science/national-land-cover-database>`_
-    is a land cover product that covers the United States and Puerto Rico. It is
+    is a land cover product that covers the United States and Puerto Rico. The current
+    implementation supports maps for the continental United States only. The product is
     a joint effort between the United States Geological Survey
     (`USGS <https://www.usgs.gov/>`_) and the Multi-Resolution Land Characteristics
     Consortium (`MRLC <https://www.mrlc.gov/>`_) which released the first product
@@ -29,7 +29,7 @@ class NLCD(RasterDataset):
     The dataset contains the following 15 classes:
 
     #. Open Water
-    #. Pereniial Ice/Snow
+    #. Perennial Ice/Snow
     #. Developed, Open Space
     #. Developed, Low Intensity
     #. Developed, Medium Intensity
@@ -38,7 +38,7 @@ class NLCD(RasterDataset):
     #. Deciduous Forest
     #. Evergreen Forest
     #. Mixed Forest
-    #. Shruf/Scrub
+    #. Shrub/Scrub
     #. Grassland/Herbaceous
     #. Pasture/Hay
     #. Cultivated Crops
@@ -46,7 +46,7 @@ class NLCD(RasterDataset):
     #. Emergent Herbaceous Wetlands
 
     Detailed descriptions of the classes can be found
-    `on this website <https://www.mrlc.gov/data/legends/national-land-cover-database-class-legend-and-description>`_.
+    `here <https://www.mrlc.gov/data/legends/national-land-cover-database-class-legend-and-description>`__.
 
     Dataset format:
 
@@ -178,16 +178,10 @@ class NLCD(RasterDataset):
         """
         sample = super().__getitem__(query)
 
-        # replace mask values with ordinal values
-        mapping_tensor = torch.tensor(list(self.ordinal_label_map.keys()))
-        flattened_tensor = sample["mask"].flatten()
-        indices = torch.where(mapping_tensor[:, None] == flattened_tensor[None, :])
-        flattened_tensor[indices[1]] = torch.tensor(
-            list(self.ordinal_label_map.values())
-        )[indices[0]]
-        mask = flattened_tensor.reshape(sample["mask"].shape)
+        mask = sample["mask"]
+        for k, v in self.ordinal_label_map.items():
+            mask[mask == k] = v
 
-        # create sample dict
         sample["mask"] = mask
 
         return sample
