@@ -4,7 +4,7 @@
 """PatternNet dataset."""
 
 import os
-from typing import Callable, Dict, Optional, cast
+from typing import Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 from torch import Tensor
@@ -83,7 +83,7 @@ class PatternNet(NonGeoClassificationDataset):
     def __init__(
         self,
         root: str = "data",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -147,7 +147,7 @@ class PatternNet(NonGeoClassificationDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

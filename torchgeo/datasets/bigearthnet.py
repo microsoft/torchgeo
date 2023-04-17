@@ -6,7 +6,7 @@
 import glob
 import json
 import os
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -269,7 +269,7 @@ class BigEarthNet(NonGeoDataset):
         split: str = "train",
         bands: str = "all",
         num_classes: int = 19,
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -299,7 +299,7 @@ class BigEarthNet(NonGeoDataset):
         self._verify()
         self.folders = self._load_folders()
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -310,7 +310,7 @@ class BigEarthNet(NonGeoDataset):
         """
         image = self._load_image(index)
         label = self._load_target(index)
-        sample: Dict[str, Tensor] = {"image": image, "label": label}
+        sample: dict[str, Tensor] = {"image": image, "label": label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -325,7 +325,7 @@ class BigEarthNet(NonGeoDataset):
         """
         return len(self.folders)
 
-    def _load_folders(self) -> List[Dict[str, str]]:
+    def _load_folders(self) -> list[dict[str, str]]:
         """Load folder paths.
 
         Returns:
@@ -348,7 +348,7 @@ class BigEarthNet(NonGeoDataset):
         ]
         return folders
 
-    def _load_paths(self, index: int) -> List[str]:
+    def _load_paths(self, index: int) -> list[str]:
         """Load paths to band files.
 
         Args:
@@ -513,7 +513,7 @@ class BigEarthNet(NonGeoDataset):
 
     def _onehot_labels_to_names(
         self, label_mask: "np.typing.NDArray[np.bool_]"
-    ) -> List[str]:
+    ) -> list[str]:
         """Gets a list of class names given a label mask.
 
         Args:
@@ -530,7 +530,7 @@ class BigEarthNet(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

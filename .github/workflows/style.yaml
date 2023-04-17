@@ -123,7 +123,7 @@ jobs:
         pip install -r requirements/style.txt
         pip list
     - name: Run pyupgrade checks
-      run: pyupgrade --py38-plus $(find . -path ./docs/src -prune -o -name "*.py" -print)
+      run: pyupgrade --py39-plus $(find . -path ./docs/src -prune -o -name "*.py" -print)
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true

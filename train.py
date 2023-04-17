@@ -6,7 +6,7 @@
 """torchgeo model training script."""
 
 import os
-from typing import Any, Dict, Type, cast
+from typing import Any, cast
 
 import lightning.pytorch as pl
 from lightning.pytorch import LightningDataModule, LightningModule, Trainer
@@ -45,7 +45,7 @@ from torchgeo.trainers import (
     SemanticSegmentationTask,
 )
 
-DATASET_TO_DATAMODULES_MAPPING: Dict[str, Type[LightningDataModule]] = {
+DATASET_TO_DATAMODULES_MAPPING: dict[str, type[LightningDataModule]] = {
     "bigearthnet": BigEarthNetDataModule,
     "chesapeake_cvpr": ChesapeakeCVPRDataModule,
     "cowc_counting": COWCCountingDataModule,
@@ -67,7 +67,7 @@ DATASET_TO_DATAMODULES_MAPPING: Dict[str, Type[LightningDataModule]] = {
     "ucmerced": UCMercedDataModule,
     "vaihingen2d": Vaihingen2DDataModule,
 }
-TASK_TO_MODULES_MAPPING: Dict[str, Type[LightningModule]] = {
+TASK_TO_MODULES_MAPPING: dict[str, type[LightningModule]] = {
     "byol": BYOLTask,
     "classification": ClassificationTask,
     "multilabel_classification": MultiLabelClassificationTask,
@@ -151,9 +151,9 @@ def main(conf: DictConfig) -> None:
     # Choose task to run based on arguments or configuration
     ######################################
     # Convert the DictConfig into a dictionary so that we can pass as kwargs.
-    task_args = cast(Dict[str, Any], OmegaConf.to_object(conf.experiment.module))
+    task_args = cast(dict[str, Any], OmegaConf.to_object(conf.experiment.module))
     datamodule_args = cast(
-        Dict[str, Any], OmegaConf.to_object(conf.experiment.datamodule)
+        dict[str, Any], OmegaConf.to_object(conf.experiment.datamodule)
     )
 
     datamodule: LightningDataModule
@@ -165,6 +165,7 @@ def main(conf: DictConfig) -> None:
         raise ValueError(
             f"experiment.task={task_name} is not recognized as a valid task"
         )
+
     if dataset_name in DATASET_TO_DATAMODULES_MAPPING:
         datamodule_class = DATASET_TO_DATAMODULES_MAPPING[dataset_name]
         datamodule = datamodule_class(**datamodule_args)
@@ -201,7 +202,7 @@ def main(conf: DictConfig) -> None:
         monitor=monitor_metric, min_delta=0.00, patience=18, mode=mode
     )
 
-    trainer_args = cast(Dict[str, Any], OmegaConf.to_object(conf.trainer))
+    trainer_args = cast(dict[str, Any], OmegaConf.to_object(conf.trainer))
 
     trainer_args["callbacks"] = [checkpoint_callback, early_stopping_callback]
     trainer_args["logger"] = [tb_logger, csv_logger]

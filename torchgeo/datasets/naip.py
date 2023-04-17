@@ -3,7 +3,7 @@
 
 """National Agriculture Imagery Program (NAIP) dataset."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import matplotlib.pyplot as plt
 
@@ -49,7 +49,7 @@ class NAIP(RasterDataset):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

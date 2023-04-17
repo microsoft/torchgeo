@@ -8,7 +8,7 @@
 import argparse
 import csv
 import os
-from typing import Any, Dict, Union, cast
+from typing import Any, Union, cast
 
 import lightning.pytorch as pl
 import torch
@@ -146,9 +146,6 @@ def main(args: argparse.Namespace) -> None:
     model.freeze()
     model.eval()
 
-    if hasattr(torch, "compile"):
-        model = torch.compile(model)
-
     dm = DATAMODULE(
         seed=args.seed,
         root=args.root,
@@ -158,7 +155,7 @@ def main(args: argparse.Namespace) -> None:
     dm.setup("validate")
 
     # Record model hyperparameters
-    hparams = cast(Dict[str, Union[str, float]], model.hparams)
+    hparams = cast(dict[str, Union[str, float]], model.hparams)
     if issubclass(TASK, ClassificationTask):
         val_row = {
             "split": "val",
