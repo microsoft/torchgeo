@@ -6,7 +6,7 @@
 import os
 import shutil
 from collections import OrderedDict
-from typing import List, cast
+from typing import cast
 
 import fiona
 import numpy as np
@@ -63,7 +63,7 @@ sn4_emptylbldirname = "sn4_SN4_buildings_train_AOI_6_Atlanta_732701_3720639-labe
 datasets = [SpaceNet1, SpaceNet2, SpaceNet3, SpaceNet4, SpaceNet5, SpaceNet6, SpaceNet7]
 
 
-def create_test_image(img_dir: str, imgs: List[str]) -> List[List[float]]:
+def create_test_image(img_dir: str, imgs: list[str]) -> list[list[float]]:
     """Create test image
 
     Args:
@@ -99,7 +99,7 @@ def create_test_image(img_dir: str, imgs: List[str]) -> List[List[float]]:
 def create_test_label(
     lbldir: str,
     lblname: str,
-    coords: List[List[float]],
+    coords: list[list[float]],
     det_type: str,
     empty: bool = False,
     diff_crs: bool = False,

@@ -4,7 +4,7 @@
 """NASA Marine Debris dataset."""
 
 import os
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -60,7 +60,7 @@ class NASAMarineDebris(NonGeoDataset):
     def __init__(
         self,
         root: str = "data",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
@@ -86,7 +86,7 @@ class NASAMarineDebris(NonGeoDataset):
         self._verify()
         self.files = self._load_files()
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -147,7 +147,7 @@ class NASAMarineDebris(NonGeoDataset):
         tensor = torch.from_numpy(array)
         return tensor
 
-    def _load_files(self) -> List[Dict[str, str]]:
+    def _load_files(self) -> list[dict[str, str]]:
         """Load a image and label files.
 
         Returns:
@@ -221,7 +221,7 @@ class NASAMarineDebris(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

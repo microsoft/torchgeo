@@ -4,7 +4,7 @@
 """Detection tasks."""
 
 from functools import partial
-from typing import Any, Dict, List, cast
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -166,7 +166,7 @@ class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
         super().__init__()
         # Creates `self.hparams` from kwargs
         self.save_hyperparameters()
-        self.hyperparams = cast(Dict[str, Any], self.hparams)
+        self.hyperparams = cast(dict[str, Any], self.hparams)
 
         self.config_task()
 
@@ -284,7 +284,7 @@ class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
         self.log_dict(renamed_metrics)
         self.test_metrics.reset()
 
-    def predict_step(self, *args: Any, **kwargs: Any) -> List[Dict[str, Tensor]]:
+    def predict_step(self, *args: Any, **kwargs: Any) -> list[dict[str, Tensor]]:
         """Compute and return the predictions.
 
         Args:
@@ -295,10 +295,10 @@ class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
         """
         batch = args[0]
         x = batch["image"]
-        y_hat: List[Dict[str, Tensor]] = self(x)
+        y_hat: list[dict[str, Tensor]] = self(x)
         return y_hat
 
-    def configure_optimizers(self) -> Dict[str, Any]:
+    def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:

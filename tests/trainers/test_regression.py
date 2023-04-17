@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, Dict, Type, cast
+from typing import Any, cast
 
 import pytest
 import timm
@@ -37,8 +37,8 @@ class PredictRegressionDataModule(TropicalCycloneDataModule):
         self.predict_dataset = TropicalCyclone(split="test", **self.kwargs)
 
 
-def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
-    state_dict: Dict[str, Any] = torch.load(url)
+def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
+    state_dict: dict[str, Any] = torch.load(url)
     return state_dict
 
 
@@ -55,11 +55,11 @@ class TestRegressionTask:
         ],
     )
     def test_trainer(
-        self, name: str, classname: Type[LightningDataModule], fast_dev_run: bool
+        self, name: str, classname: type[LightningDataModule], fast_dev_run: bool
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
+        conf_dict = cast(dict[str, dict[str, Any]], conf_dict)
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]
@@ -89,7 +89,7 @@ class TestRegressionTask:
             pass
 
     @pytest.fixture
-    def model_kwargs(self) -> Dict[str, Any]:
+    def model_kwargs(self) -> dict[str, Any]:
         return {
             "model": "resnet18",
             "weights": None,
@@ -121,13 +121,13 @@ class TestRegressionTask:
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
         return weights
 
-    def test_weight_file(self, model_kwargs: Dict[str, Any], checkpoint: str) -> None:
+    def test_weight_file(self, model_kwargs: dict[str, Any], checkpoint: str) -> None:
         model_kwargs["weights"] = checkpoint
         with pytest.warns(UserWarning):
             RegressionTask(**model_kwargs)
 
     def test_weight_enum(
-        self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
+        self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
     ) -> None:
         model_kwargs["model"] = mocked_weights.meta["model"]
         model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
@@ -136,7 +136,7 @@ class TestRegressionTask:
             RegressionTask(**model_kwargs)
 
     def test_weight_str(
-        self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
+        self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
     ) -> None:
         model_kwargs["model"] = mocked_weights.meta["model"]
         model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
@@ -146,7 +146,7 @@ class TestRegressionTask:
 
     @pytest.mark.slow
     def test_weight_enum_download(
-        self, model_kwargs: Dict[str, Any], weights: WeightsEnum
+        self, model_kwargs: dict[str, Any], weights: WeightsEnum
     ) -> None:
         model_kwargs["model"] = weights.meta["model"]
         model_kwargs["in_channels"] = weights.meta["in_chans"]
@@ -155,7 +155,7 @@ class TestRegressionTask:
 
     @pytest.mark.slow
     def test_weight_str_download(
-        self, model_kwargs: Dict[str, Any], weights: WeightsEnum
+        self, model_kwargs: dict[str, Any], weights: WeightsEnum
     ) -> None:
         model_kwargs["model"] = weights.meta["model"]
         model_kwargs["in_channels"] = weights.meta["in_chans"]
@@ -163,7 +163,7 @@ class TestRegressionTask:
         RegressionTask(**model_kwargs)
 
     def test_no_rgb(
-        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any], fast_dev_run: bool
+        self, monkeypatch: MonkeyPatch, model_kwargs: dict[Any, Any], fast_dev_run: bool
     ) -> None:
         monkeypatch.setattr(TropicalCycloneDataModule, "plot", plot)
         datamodule = TropicalCycloneDataModule(
@@ -178,7 +178,7 @@ class TestRegressionTask:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_predict(self, model_kwargs: Dict[Any, Any], fast_dev_run: bool) -> None:
+    def test_predict(self, model_kwargs: dict[Any, Any], fast_dev_run: bool) -> None:
         datamodule = PredictRegressionDataModule(
             root="tests/data/cyclone", batch_size=1, num_workers=0
         )

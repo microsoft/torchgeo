@@ -4,7 +4,7 @@
 """BYOL tasks."""
 
 import os
-from typing import Any, Dict, Optional, Tuple, cast
+from typing import Any, Optional, cast
 
 import timm
 import torch
@@ -47,7 +47,7 @@ class SimCLRAugmentation(nn.Module):
     https://arxiv.org/pdf/2002.05709.pdf for more details.
     """
 
-    def __init__(self, image_size: Tuple[int, int] = (256, 256)) -> None:
+    def __init__(self, image_size: tuple[int, int] = (256, 256)) -> None:
         """Initialize a module for applying SimCLR augmentations.
 
         Args:
@@ -217,7 +217,7 @@ class BYOL(nn.Module):
     def __init__(
         self,
         model: nn.Module,
-        image_size: Tuple[int, int] = (256, 256),
+        image_size: tuple[int, int] = (256, 256),
         hidden_layer: int = -2,
         in_channels: int = 4,
         projection_size: int = 256,
@@ -338,7 +338,7 @@ class BYOLTask(LightningModule):  # type: ignore[misc]
 
         # Creates `self.hparams` from kwargs
         self.save_hyperparameters()
-        self.hyperparams = cast(Dict[str, Any], self.hparams)
+        self.hyperparams = cast(dict[str, Any], self.hparams)
 
         self.config_task()
 
@@ -353,7 +353,7 @@ class BYOLTask(LightningModule):  # type: ignore[misc]
         """
         return self.model(*args, **kwargs)
 
-    def configure_optimizers(self) -> Dict[str, Any]:
+    def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
