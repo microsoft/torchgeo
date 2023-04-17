@@ -177,7 +177,7 @@ class SustainBenchCropYieldPrediction(NonGeoDataset):
             file_path = os.path.join(
                 self.root, self.dir, country, f"{self.split}_hists.npz"
             )
-            npz_file = np.load(os.path.join(file_path))
+            npz_file = np.load(file_path)
             num_data_points = npz_file["data"].shape[0]
             for idx in range(num_data_points):
                 collection.append((file_path, idx))
@@ -228,9 +228,8 @@ class SustainBenchCropYieldPrediction(NonGeoDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        file_path = os.path.join(self.root, self.dir)
-        zip_path = file_path + ".zip"
-        extract_archive(zip_path, file_path)
+        zipfile_path = os.path.join(self.root, self.dir) + ".zip"
+        extract_archive(zipfile_path, self.root)
 
     def plot(
         self,
@@ -251,7 +250,7 @@ class SustainBenchCropYieldPrediction(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         """
-        image, label = sample["image"], sample["label"]
+        image, label = sample["image"], sample["label"].item()
 
         showing_predictions = "prediction" in sample
         if showing_predictions:
