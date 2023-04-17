@@ -8,7 +8,6 @@ experiment:
     hidden_dim: 8
     output_dim: 8
     weight_decay: 1e-4
-    max_epochs: 1
     memory_bank_size: 10
   datamodule:
     root: "tests/data/ssl4eo/s12"
