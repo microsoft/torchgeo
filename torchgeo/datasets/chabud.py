@@ -161,6 +161,7 @@ class ChaBuD(NonGeoDataset):
                 if v.attrs["fold"] in self.folds[self.split] and "pre_fire" in v:
                     uuids.append(k)
 
+        uuids = sorted(uuids)
         return uuids
 
     def _load_image(self, index: int) -> Tensor:
