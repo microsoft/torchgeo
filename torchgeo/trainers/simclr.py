@@ -132,7 +132,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
 
         # Create backbone
         self.backbone = timm.create_model(
-            model, in_chans=in_channels, pretrained=weights is True
+            model, in_chans=in_channels, num_classes=0, pretrained=weights is True
         )
 
         # Load weights
