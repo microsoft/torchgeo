@@ -146,7 +146,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             self.backbone = utils.load_state_dict(self.backbone, state_dict)
 
         # Create projection head
-        input_dim = list(self.backbone.named_children())[-1][1].out_features
+        input_dim = self.backbone.num_features
         if hidden_dim is None:
             hidden_dim = input_dim
         if output_dim is None:

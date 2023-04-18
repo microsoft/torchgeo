@@ -30,6 +30,7 @@ from .test_classification import ClassificationTestModel
 class RegressionTestModel(ClassificationTestModel):
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(in_chans=3, num_classes=1)
+        self.num_features = 1
 
 
 class PredictRegressionDataModule(TropicalCycloneDataModule):
