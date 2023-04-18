@@ -24,6 +24,15 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
     variables. For more details see the
     `dataset page <https://mlhub.earth/data/su_sar_moisture_content_main>`_.
 
+    Dataset Format:
+
+    * .geojson file for each datapoint
+
+    Dataset Features:
+
+    * 138 remote sensing derived variables, some with a time dependency
+    * 2615 datapoints with regression target of predicting fuel moisture
+
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1016/j.rse.2020.111797
