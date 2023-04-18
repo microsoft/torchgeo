@@ -18,6 +18,7 @@ from torchvision.models._api import WeightsEnum
 from torchgeo.datamodules import (
     COWCCountingDataModule,
     MisconfigurationException,
+    SustainbenchCropYieldDataModule,
     TropicalCycloneDataModule,
 )
 from torchgeo.datasets import TropicalCyclone
@@ -28,8 +29,8 @@ from .test_classification import ClassificationTestModel
 
 
 class RegressionTestModel(ClassificationTestModel):
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(in_chans=3, num_classes=1)
+    def __init__(self, in_chans: int = 3, num_classes: int = 1, **kwargs: Any) -> None:
+        super().__init__(in_chans=in_chans, num_classes=num_classes)
 
 
 class PredictRegressionDataModule(TropicalCycloneDataModule):
@@ -52,6 +53,7 @@ class TestRegressionTask:
         [
             ("cowc_counting", COWCCountingDataModule),
             ("cyclone", TropicalCycloneDataModule),
+            ("sustainbench_crop_yield_prediction", SustainbenchCropYieldDataModule),
         ],
     )
     def test_trainer(
@@ -69,7 +71,10 @@ class TestRegressionTask:
         model_kwargs = conf_dict["module"]
         model = RegressionTask(**model_kwargs)
 
-        model.model = RegressionTestModel()
+        model.model = RegressionTestModel(
+            in_chans=model_kwargs["in_channels"],
+            num_classes=model_kwargs["num_outputs"],
+        )
 
         # Instantiate trainer
         trainer = Trainer(
@@ -78,6 +83,7 @@ class TestRegressionTask:
             log_every_n_steps=1,
             max_epochs=1,
         )
+
         trainer.fit(model=model, datamodule=datamodule)
         try:
             trainer.test(model=model, datamodule=datamodule)
