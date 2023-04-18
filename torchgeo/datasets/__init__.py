@@ -10,6 +10,7 @@ from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
+from .chabud import ChaBuD
 from .chesapeake import (
     Chesapeake,
     Chesapeake7,
@@ -164,6 +165,7 @@ __all__ = (
     "ADVANCE",
     "BeninSmallHolderCashews",
     "BigEarthNet",
+    "ChaBuD",
     "CloudCoverDetection",
     "COWC",
     "COWCCounting",
