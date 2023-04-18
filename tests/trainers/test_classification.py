@@ -21,6 +21,7 @@ from torchgeo.datamodules import (
     BigEarthNetDataModule,
     EuroSAT100DataModule,
     EuroSATDataModule,
+    FireRiskDataModule,
     MisconfigurationException,
     RESISC45DataModule,
     So2SatDataModule,
@@ -77,6 +78,7 @@ class TestClassificationTask:
         [
             ("eurosat", EuroSATDataModule),
             ("eurosat", EuroSAT100DataModule),
+            ("fire_risk", FireRiskDataModule),
             ("resisc45", RESISC45DataModule),
             ("so2sat_all", So2SatDataModule),
             ("so2sat_s1", So2SatDataModule),
