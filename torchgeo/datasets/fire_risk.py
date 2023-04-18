@@ -7,7 +7,6 @@ import os
 from typing import Callable, Optional, cast
 
 import matplotlib.pyplot as plt
-import pytest
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
