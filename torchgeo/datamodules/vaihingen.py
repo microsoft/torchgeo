@@ -42,7 +42,7 @@ class Vaihingen2DDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.Vaihingen2D`.
         """
-        super().__init__(Vaihingen2D, 1, num_workers, **kwargs)
+        super().__init__(Vaihingen2D, batch_size, num_workers, **kwargs)
 
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct

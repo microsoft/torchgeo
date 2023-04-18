@@ -42,7 +42,7 @@ class GID15DataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.GID15`.
         """
-        super().__init__(GID15, 1, num_workers, **kwargs)
+        super().__init__(GID15, batch_size, num_workers, **kwargs)
 
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct

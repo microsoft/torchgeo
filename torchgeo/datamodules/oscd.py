@@ -81,7 +81,7 @@ class OSCDDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.OSCD`.
         """
-        super().__init__(OSCD, 1, num_workers, **kwargs)
+        super().__init__(OSCD, batch_size, num_workers, **kwargs)
 
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
