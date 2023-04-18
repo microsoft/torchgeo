@@ -37,7 +37,7 @@ class DataModule(LightningDataModule):  # type: ignore[misc]
 
         During distributed training, this method is called only within a single process
         to avoid corrupted data. This method should not set state since it is not called
-        on every device, use :meth:`setup` instead.
+        on every device, use ``setup`` instead.
         """
         if self.kwargs.get("download", False):
             self.dataset_class(**self.kwargs)
