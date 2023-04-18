@@ -43,6 +43,8 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
        * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
          imagery and labels from the Radiant Earth MLHub
+
+    .. versionadded:: 0.5
     """
 
     collection_id = "su_sar_moisture_content"
@@ -202,7 +204,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         api_key: Optional[str] = None,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new Tropical Cyclone Wind Estimation Competition Dataset.
+        """Initialize a new Western USA Live Fuel Moisture Dataset.
 
         Args:
             root: root directory where dataset can be found
@@ -284,7 +286,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         return sample
 
-    def _load_data(self):
+    def _load_data(self) -> "pd.DataFrame":
         """Load data from individual files into pandas dataframe.
 
         Returns:
