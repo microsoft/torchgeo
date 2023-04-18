@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 """Western USA Live Fuel Moisture Dataset."""
 
 import glob
@@ -33,6 +36,8 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
     """
 
     collection_id = "su_sar_moisture_content"
+
+    md5 = "a6c0721f06a3a0110b7d1243b18614f0"
 
     label_name = "percent(t)"
 
@@ -208,15 +213,10 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         self.root = root
         self.transforms = transforms
         self.checksum = checksum
+        self.download = download
+        self.api_key = api_key
 
-        if download:
-            self._download(api_key)
-
-        if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+        self._verify()
 
         try:
             import pandas as pd  # noqa: F401
@@ -294,19 +294,39 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         df = df[self.input_variables + [self.label_name]]
         return df
 
-    def _check_integrity(self) -> bool:
-        """Check integrity of dataset.
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
 
-        Returns:
-            True if dataset files are found and/or MD5s match, else False
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        # for split, resources in self.md5s.items():
-        #     for resource_type, md5 in resources.items():
-        #         filename = "_".join([self.collection_id, split, resource_type])
-        #         filename = os.path.join(self.root, filename + ".tar.gz")
-        #         if not check_integrity(filename, md5 if self.checksum else None):
-        #             return False
-        return True
+        # Check if the extracted files already exist
+        pathname = os.path.join(self.root, self.collection_id)
+        if os.path.exists(pathname):
+            return
+
+        # Check if the zip files have already been downloaded
+        pathname = os.path.join(self.root, self.collection_id) + ".tar.gz"
+        if os.path.exists(pathname):
+            self._extract()
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
+
+        # Download the dataset
+        self._download()
+        self._extract()
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        pathname = os.path.join(self.root, self.collection_id) + ".tar.gz"
+        extract_archive(pathname, self.root)
 
     def _download(self, api_key: Optional[str] = None) -> None:
         """Download the dataset and extract it.
@@ -317,10 +337,6 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         Raises:
             RuntimeError: if download doesn't work correctly or checksums don't match
         """
-        if self._check_integrity():
-            print("Files already downloaded and verified")
-            return
-
         download_radiant_mlhub_collection(self.collection_id, self.root, api_key)
         filename = os.path.join(self.root, self.collection_id) + ".tar.gz"
         extract_archive(filename, self.root)
