@@ -286,7 +286,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         return sample
 
-    def _load_data(self) -> "pd.DataFrame":
+    def _load_data(self) -> "pd.DataFrame":  # type: ignore[name-defined] # noqa: F821
         """Load data from individual files into pandas dataframe.
 
         Returns:
