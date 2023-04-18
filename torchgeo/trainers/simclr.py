@@ -4,6 +4,7 @@
 """SimCLR trainer for self-supervised learning (SSL)."""
 
 import os
+import warnings
 from typing import Optional, Union, cast
 
 import kornia.augmentation as K
@@ -124,10 +125,27 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             gather_distributed: Gather negatives from all GPUs during distributed
                 training (ignored if memory_bank_size > 0).
             augmentations: Data augmentation.
+
+        Raises:
+            AssertionError: If an invalid version of SimCLR is requested.
+
+        Warns:
+            UserWarning: If hyperparameters do not match SimCLR version requested.
         """
         super().__init__()
 
+        # Validate hyperparameters
         assert version in range(1, 3)
+        if version == 1:
+            if layers > 2:
+                warnings.warn("SimCLR v1 only uses 2 layers in its projection head")
+            if memory_bank_size > 0:
+                warnings.warn("SimCLR v1 does not use a memory bank")
+        elif version == 2:
+            if layers == 2:
+                warnings.warn("SimCLR v2 uses 3+ layers in its projection head")
+            if memory_bank_size == 0:
+                warnings.warn("SimCLR v2 uses a memory bank")
 
         self.save_hyperparameters(ignore=["augmentations"])
         self.augmentations = augmentations
