@@ -250,9 +250,7 @@ class NLCD(RasterDataset):
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace("*", str(year))
             pathname = os.path.join(self.root, zipfile_name)
-            extract_archive(
-                pathname, os.path.join(self.root, zipfile_name.split(".")[0])
-            )
+            extract_archive(pathname, self.root)
 
     def plot(
         self,
