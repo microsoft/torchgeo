@@ -46,6 +46,17 @@ class TestSustainbenchCropYieldPrediction:
             root, split, countries, transforms, download=True, checksum=True
         )
 
+    def test_already_extracted(self, dataset: SustainBenchCropYieldPrediction) -> None:
+        SustainBenchCropYieldPrediction(root=dataset.root, download=True)
+
+    def test_already_downloaded(self, tmp_path: Path) -> None:
+        pathname = os.path.join(
+            "tests", "data", "sustainbench_crop_yield_prediction", "soybeans.zip"
+        )
+        root = str(tmp_path)
+        shutil.copy(pathname, root)
+        SustainBenchCropYieldPrediction(root)
+
     @pytest.mark.parametrize("index", [0, 1, 2])
     def test_getitem(
         self, dataset: SustainBenchCropYieldPrediction, index: int
@@ -60,9 +71,6 @@ class TestSustainbenchCropYieldPrediction:
 
     def test_len(self, dataset: SustainBenchCropYieldPrediction) -> None:
         assert len(dataset) == len(dataset.countries) * 3
-
-    def test_already_downloaded(self, dataset: SustainBenchCropYieldPrediction) -> None:
-        SustainBenchCropYieldPrediction(root=dataset.root, download=True)
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):

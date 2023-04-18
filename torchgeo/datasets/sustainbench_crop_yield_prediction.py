@@ -199,6 +199,7 @@ class SustainBenchCropYieldPrediction(NonGeoDataset):
         pathname = os.path.join(self.root, self.dir) + ".zip"
         if os.path.exists(pathname):
             self._extract()
+            return
 
         # Check if the user requested to download the dataset
         if not self.download:
