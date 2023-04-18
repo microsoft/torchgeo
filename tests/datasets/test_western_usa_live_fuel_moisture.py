@@ -56,8 +56,16 @@ class TestWesternUSALiveFuelMoisture:
     def test_len(self, dataset: WesternUSALiveFuelMoisture) -> None:
         assert len(dataset) == 3
 
-    def test_already_downloaded(self, dataset: WesternUSALiveFuelMoisture) -> None:
-        WesternUSALiveFuelMoisture(root=dataset.root, download=True, api_key="")
+    def test_already_downloaded(self, tmp_path: Path) -> None:
+        pathname = os.path.join(
+            "tests",
+            "data",
+            "western_usa_live_fuel_moisture",
+            "su_sar_moisture_content.tar.gz",
+        )
+        root = str(tmp_path)
+        shutil.copy(pathname, root)
+        WesternUSALiveFuelMoisture(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found in"):
