@@ -6,7 +6,7 @@
 import glob
 import json
 import os
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 import torch
 from torch import Tensor
@@ -186,8 +186,8 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
     def __init__(
         self,
         root: str = "data",
-        input_features: List[str] = all_variable_names,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        input_features: list[str] = all_variable_names,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
@@ -207,7 +207,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
             AssertionError: if ``split`` argument is invalid
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
             RuntimeError: if ``input_features`` contains invalid variable names
-            ImportError: if pandas are are not installed
+            ImportError: if pandas is not installed
         """
         super().__init__()
 
@@ -235,7 +235,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         self.dataframe = self._load_data()
 
-    def _retrieve_collection(self) -> List[str]:
+    def _retrieve_collection(self) -> list[str]:
         """Retrieve dataset collection that maps samples to paths.
 
         Returns:
@@ -253,18 +253,18 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         """
         return len(self.dataframe)
 
-    def __getitem__(self, index: int) -> Dict[str, Any]:
+    def __getitem__(self, index: int) -> dict[str, Any]:
         """Return an index within the dataset.
 
         Args:
             index: index to return
 
         Returns:
-            data at that index
+            input features and target at that index
         """
         data = self.dataframe.iloc[index, :]
 
-        sample: Dict[str, Tensor] = {
+        sample: dict[str, Tensor] = {
             "input": torch.tensor(data.drop([self.label_name]), dtype=torch.float32),
             "label": torch.tensor(data[self.label_name], dtype=torch.float32),
         }
