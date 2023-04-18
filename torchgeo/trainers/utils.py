@@ -90,7 +90,10 @@ def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Mo
     expected_in_channels = state_dict[input_module_key + ".weight"].shape[1]
 
     output_module_key, output_module = list(model.named_children())[-1]
-    num_classes = model.num_features
+    if isinstance(output_module, nn.Identity):
+        num_classes = model.num_features
+    else:
+        num_classes = output_module.out_features
     expected_num_classes = None
     if output_module_key + ".weight" in state_dict:
         expected_num_classes = state_dict[output_module_key + ".weight"].shape[0]
