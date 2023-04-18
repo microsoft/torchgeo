@@ -263,8 +263,8 @@ class ChaBuD(NonGeoDataset):
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
         mask = sample["mask"].numpy()
-        image_pre = sample["image"][len(self.bands) :][rgb_indices].numpy()
-        image_post = sample["image"][: len(self.bands)][rgb_indices].numpy()
+        image_pre = sample["image"][: len(self.bands)][rgb_indices].numpy()
+        image_post = sample["image"][len(self.bands) :][rgb_indices].numpy()
         image_pre = percentile_normalization(image_pre)
         image_post = percentile_normalization(image_post)
 
