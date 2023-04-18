@@ -4,6 +4,7 @@ trainer:
   min_epochs: 20
   max_epochs: 100
   benchmark: True
+  enable_progress_bar: False
 experiment:
   task: "l7irish"
   module:
@@ -21,4 +22,5 @@ experiment:
   datamodule:
     root: "/projects/dali/data/l7irish"
     batch_size: 32
+    patch_size: 512
     num_workers: 4
