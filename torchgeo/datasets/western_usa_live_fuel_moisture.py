@@ -20,7 +20,8 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
     This tabular style dataset contains fuel moisture
     (mass of water in vegetation) and remotely sensed variables
-    in the western United States. For more details see the
+    in the western United States. It contains 2615 datapoints and 138
+    variables. For more details see the
     `dataset page <https://mlhub.earth/data/su_sar_moisture_content_main>`_.
 
     If you use this dataset in your research, please cite the following paper:
@@ -234,6 +235,10 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         self.collection = self._retrieve_collection()
 
         self.dataframe = self._load_data()
+        import pdb
+
+        pdb.set_trace()
+        print(0)
 
     def _retrieve_collection(self) -> list[str]:
         """Retrieve dataset collection that maps samples to paths.

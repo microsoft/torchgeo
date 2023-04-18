@@ -33,5 +33,6 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands
 `USAVars`_,R,NAIP Aerial,100K,-,-,4,"RGB, NIR"
 `Vaihingen`_,S,Aerial,33,6,"1,281--3,816",0.09,RGB
 `VHR-10`_,I,"Google Earth, Vaihingen",800,10,"358--1,728",0.08--2,RGB
+`WesternUSALiveFuelMoisture`_,R,"Landsat8, Sentinel-1",2615,-,-,-
 `xView2`_,CD,Maxar,"3,732",4,"1,024x1,024",0.8,RGB
 `ZueriCrop`_,"I, T",Sentinel-2,116K,48,24x24,10,MSI

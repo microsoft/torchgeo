@@ -329,6 +329,11 @@ VHR-10
 
 .. autoclass:: VHR10
 
+WesternUSALiveFuelMoisture
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: WesternUSALiveFuelMoisture
+
 xView2
 ^^^^^^
 
