@@ -22,5 +22,5 @@ experiment:
   datamodule:
     root: "/projects/dali/data/l7irish"
     batch_size: 32
-    patch_size: 512
+    patch_size: 256
     num_workers: 4
