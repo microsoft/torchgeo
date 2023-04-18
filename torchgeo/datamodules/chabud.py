@@ -22,6 +22,7 @@ class ChaBuDDataModule(NonGeoDataModule):
     .. versionadded:: 0.5
     """
 
+    # min/max values computed on train set using 2/98 percentiles
     min = torch.tensor(
         [0.0, 1.0, 73.0, 39.0, 46.0, 25.0, 26.0, 21.0, 17.0, 1.0, 20.0, 21.0]
     )
