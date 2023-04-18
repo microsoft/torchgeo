@@ -244,10 +244,6 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         self.collection = self._retrieve_collection()
 
         self.dataframe = self._load_data()
-        import pdb
-
-        pdb.set_trace()
-        print(0)
 
     def _retrieve_collection(self) -> list[str]:
         """Retrieve dataset collection that maps samples to paths.
