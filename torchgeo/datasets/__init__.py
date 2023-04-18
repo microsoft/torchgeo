@@ -75,6 +75,7 @@ from .loveda import LoveDA
 from .millionaid import MillionAID
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
+from .nlcd import NLCD
 from .openbuildings import OpenBuildings
 from .oscd import OSCD
 from .patternnet import PatternNet
@@ -157,6 +158,7 @@ __all__ = (
     "Landsat8",
     "Landsat9",
     "NAIP",
+    "NLCD",
     "OpenBuildings",
     "Sentinel",
     "Sentinel1",
