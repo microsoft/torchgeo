@@ -186,7 +186,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
     def __init__(
         self,
         root: str = "data",
-        input_variables: List[str] = all_variable_names,
+        input_features: List[str] = all_variable_names,
         transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
@@ -196,6 +196,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
+            input_features: which input features to include
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -205,7 +206,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         Raises:
             AssertionError: if ``split`` argument is invalid
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-            RuntimeError: if ``input_variables`` contains invalid variable names
+            RuntimeError: if ``input_features`` contains invalid variable names
             ImportError: if pandas are are not installed
         """
         super().__init__()
@@ -226,9 +227,9 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
             )
 
         assert all(
-            input in self.all_variable_names for input in input_variables
+            input in self.all_variable_names for input in input_features
         ), "Invalid input variable name."
-        self.input_variables = input_variables
+        self.input_features = input_features
 
         self.collection = self._retrieve_collection()
 
@@ -291,7 +292,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
                 data_rows.append(data_dict)
 
         df: pd.DataFrame = pd.DataFrame(data_rows)
-        df = df[self.input_variables + [self.label_name]]
+        df = df[self.input_features + [self.label_name]]
         return df
 
     def _verify(self) -> None:

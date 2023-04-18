@@ -63,6 +63,10 @@ class TestWesternUSALiveFuelMoisture:
         with pytest.raises(RuntimeError, match="Dataset not found in"):
             WesternUSALiveFuelMoisture(str(tmp_path))
 
+    def test_invalid_features(self, dataset: WesternUSALiveFuelMoisture) -> None:
+        with pytest.raises(AssertionError, match="Invalid input variable name."):
+            WesternUSALiveFuelMoisture(dataset.root, input_features=["foo"])
+
     @pytest.fixture(params=["pandas"])
     def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:
         import_orig = builtins.__import__
