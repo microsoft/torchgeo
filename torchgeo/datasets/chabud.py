@@ -182,7 +182,7 @@ class ChaBuD(NonGeoDataset):
         # index specified bands and concatenate
         pre_array = np.take(pre_array, indices=self.band_indices, axis=-1)
         post_array = np.take(post_array, indices=self.band_indices, axis=-1)
-        array = np.concatenate([pre_array, post_array], axis=-1).astype(np.int32)
+        array = np.concatenate([pre_array, post_array], axis=-1).astype(np.float32)
 
         tensor = torch.from_numpy(array)
         # Convert from HxWxC to CxHxW
