@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""SimCLR trainers for self-supervised learning (SSL)."""
+"""SimCLR trainer for self-supervised learning (SSL)."""
 
 import os
 from typing import Optional, Union, cast
@@ -14,7 +14,7 @@ from lightly.loss import NTXentLoss
 from lightly.models.modules.heads import ProjectionHead
 from lightning import LightningModule
 from torch import Tensor
-from torch.optim import AdamW, Optimizer
+from torch.optim import Adam, Optimizer
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchvision.models._api import WeightsEnum
 
@@ -127,6 +127,8 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         """
         super().__init__()
 
+        assert version in range(1, 3)
+
         self.save_hyperparameters(ignore=["augmentations"])
         self.augmentations = augmentations
 
@@ -229,7 +231,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             Optimizer and learning rate scheduler.
         """
         # Original paper uses LARS optimizer, but this is not defined in PyTorch
-        optimizer = AdamW(
+        optimizer = Adam(
             self.parameters(),
             lr=self.hparams["lr"],
             weight_decay=self.hparams["weight_decay"],
