@@ -24,7 +24,7 @@ class SKIPPDDataModule(NonGeoDataModule):
         val_split_pct: float = 0.2,
         **kwargs: Any,
     ) -> None:
-        """Initialize a new DataModule instance.
+        """Initialize a new SKIPPDDataModule instance.
 
         Args:
             batch_size: Size of each mini-batch.

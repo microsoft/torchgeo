@@ -73,9 +73,9 @@ class SKIPPD(NonGeoDataset):
             checksum: if True, check the MD5 after downloading files (may be slow)
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
             AssertionError: if ``countries`` contains invalid countries
+            ImportError: if h5py is not installed
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         assert (
             split in self.valid_splits
