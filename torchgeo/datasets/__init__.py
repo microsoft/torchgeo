@@ -84,6 +84,7 @@ from .resisc45 import RESISC45
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel1, Sentinel2
+from .skippd import SKIPPD
 from .so2sat import So2Sat
 from .spacenet import (
     SpaceNet,
@@ -195,6 +196,7 @@ __all__ = (
     "ReforesTree",
     "SeasonalContrastS2",
     "SEN12MS",
+    "SKIPPD",
     "So2Sat",
     "SpaceNet",
     "SpaceNet1",

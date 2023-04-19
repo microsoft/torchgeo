@@ -297,6 +297,11 @@ SEN12MS
 
 .. autoclass:: SEN12MS
 
+SKIPP'D
+^^^^^^^
+
+.. autoclass:: SKIPPD
+
 So2Sat
 ^^^^^^
 
