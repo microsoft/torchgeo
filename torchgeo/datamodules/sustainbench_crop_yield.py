@@ -18,7 +18,7 @@ class SustainBenchCropYieldDataModule(NonGeoDataModule):
     def __init__(
         self, batch_size: int = 32, num_workers: int = 0, **kwargs: Any
     ) -> None:
-        """Initialize a new DataModule instance.
+        """Initialize a new SustainBenchCropYieldDataModule instance.
 
         Args:
             batch_size: Size of each mini-batch.
@@ -35,14 +35,8 @@ class SustainBenchCropYieldDataModule(NonGeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in ["fit"]:
-            self.train_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split="train", **self.kwargs
-            )
+            self.train_dataset = SustainBenchCropYield(split="train", **self.kwargs)
         if stage in ["fit", "validate"]:
-            self.val_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split="dev", **self.kwargs
-            )
+            self.val_dataset = SustainBenchCropYield(split="dev", **self.kwargs)
         if stage in ["test"]:
-            self.test_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split="test", **self.kwargs
-            )
+            self.test_dataset = SustainBenchCropYield(split="test", **self.kwargs)

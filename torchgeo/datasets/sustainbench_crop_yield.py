@@ -75,8 +75,8 @@ class SustainBenchCropYield(NonGeoDataset):
             checksum: if True, check the MD5 after downloading files (may be slow)
 
         Raises:
-            AssertionError: if ``countries`` contains invalid countries
-            FileNotFoundError: if no files are found in ``root``
+            AssertionError: if ``countries`` contains invalid countries or if ``split``
+                is invalid
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         assert set(countries).issubset(
