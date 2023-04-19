@@ -3,6 +3,8 @@ experiment:
   module:
     model: "resnet18"
     in_channels: 4
+    version: 1
+    layers: 2
     memory_bank_size: 0
   datamodule:
     root: "tests/data/chesapeake/cvpr"
