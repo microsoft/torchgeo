@@ -297,8 +297,8 @@ SEN12MS
 
 .. autoclass:: SEN12MS
 
-SKIPPD
-^^^^^^
+SKIPP'D
+^^^^^^^
 
 .. autoclass:: SKIPPD
 

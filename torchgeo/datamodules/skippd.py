@@ -5,33 +5,37 @@
 
 from typing import Any
 
-import numpy as np
-from sklearn.model_selection import train_test_split
-from torch.utils.data import Subset
-
 from ..datasets import SKIPPD
 from .geo import NonGeoDataModule
+from .utils import dataset_split
 
 
 class SKIPPDDataModule(NonGeoDataModule):
-    """LightningDataModule implementation for the SKIPP'd dataset.
+    """LightningDataModule implementation for the SKIPP'D dataset.
 
     Implements 80/20 train/val splits on train_val set.
     See :func:`setup` for more details.
     """
 
     def __init__(
-        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+        self,
+        batch_size: int = 64,
+        num_workers: int = 0,
+        val_split_pct: float = 0.2,
+        **kwargs: Any,
     ) -> None:
-        """Initialize a new SkippdDataModule instance.
+        """Initialize a new DataModule instance.
 
         Args:
             batch_size: Size of each mini-batch.
+            val_split_pct: Percentage of the dataset to use as a validation set.
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.SKIPPD`.
         """
         super().__init__(SKIPPD, batch_size, num_workers, **kwargs)
+
+        self.val_split_pct = val_split_pct
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
@@ -41,12 +45,8 @@ class SKIPPDDataModule(NonGeoDataModule):
         """
         if stage in ["fit", "validate"]:
             self.dataset = SKIPPD(split="trainval", **self.kwargs)
-
-            train_indices, val_indices = train_test_split(
-                np.arange(len(self.dataset)), test_size=0.2, train_size=0.8
+            self.train_dataset, self.val_dataset = dataset_split(
+                self.dataset, val_pct=self.val_split_pct
             )
-
-            self.train_dataset = Subset(self.dataset, train_indices)
-            self.val_dataset = Subset(self.dataset, val_indices)
         if stage in ["test"]:
             self.test_dataset = SKIPPD(split="test", **self.kwargs)

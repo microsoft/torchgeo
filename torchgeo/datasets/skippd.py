@@ -19,7 +19,7 @@ class SKIPPD(NonGeoDataset):
     """SKy Images and Photovoltaic Power Dataset (SKIPP'D).
 
     The `SKIPP'D dataset <https://purl.stanford.edu/dj417rh1007>`_
-    containes ground-based fish-eye photos of the sky for solar
+    contains ground-based fish-eye photos of the sky for solar
     forecasting tasks.
 
     Dataset Format:
@@ -32,8 +32,8 @@ class SKIPPD(NonGeoDataset):
     * fish-eye RGB images (64x64px)
     * power output measurements from 30-kW rooftop PV array
     * 1-min interval across 3 years (2017-2019)
-    * 349,372 images under the split key `trainval`
-    * 14,003 images under the split key `test`
+    * 349,372 images under the split key *trainval*
+    * 14,003 images under the split key *test*
 
     If you use this dataset in your research, please cite:
 
