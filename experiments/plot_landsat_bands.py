@@ -49,9 +49,13 @@ for sensor_name, group1 in df.groupby("Sensor name"):
                     linewidth=0.5,
                     alpha=0.8,
                 )
+                if wavelength_width < 0.05:
+                    y = y_position + 6.5
+                else:
+                    y = y_position + 2.25
                 ax1.text(
                     wavelength_start + (wavelength_width / 2),
-                    y_position + 2.25,
+                    y,
                     str(band_number),
                     horizontalalignment="center",
                     verticalalignment="center",
