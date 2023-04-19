@@ -109,7 +109,9 @@ class TestSimCLRTask:
 
     def test_weight_file(self, checkpoint: str) -> None:
         model_kwargs: dict[str, Any] = {"model": "resnet18", "weights": checkpoint}
-        SimCLRTask(**model_kwargs)
+        match = "num classes .* != num classes in pretrained model"
+        with pytest.warns(UserWarning, match=match):
+            SimCLRTask(**model_kwargs)
 
     def test_weight_enum(self, mocked_weights: WeightsEnum) -> None:
         model_kwargs: dict[str, Any] = {
@@ -117,7 +119,9 @@ class TestSimCLRTask:
             "weights": mocked_weights,
             "in_channels": mocked_weights.meta["in_chans"],
         }
-        SimCLRTask(**model_kwargs)
+        match = "num classes .* != num classes in pretrained model"
+        with pytest.warns(UserWarning, match=match):
+            SimCLRTask(**model_kwargs)
 
     def test_weight_str(self, mocked_weights: WeightsEnum) -> None:
         model_kwargs: dict[str, Any] = {
@@ -125,7 +129,9 @@ class TestSimCLRTask:
             "weights": str(mocked_weights),
             "in_channels": mocked_weights.meta["in_chans"],
         }
-        SimCLRTask(**model_kwargs)
+        match = "num classes .* != num classes in pretrained model"
+        with pytest.warns(UserWarning, match=match):
+            SimCLRTask(**model_kwargs)
 
     @pytest.mark.slow
     def test_weight_enum_download(self, weights: WeightsEnum) -> None:
@@ -134,7 +140,9 @@ class TestSimCLRTask:
             "weights": weights,
             "in_channels": weights.meta["in_chans"],
         }
-        SimCLRTask(**model_kwargs)
+        match = "num classes .* != num classes in pretrained model"
+        with pytest.warns(UserWarning, match=match):
+            SimCLRTask(**model_kwargs)
 
     @pytest.mark.slow
     def test_weight_str_download(self, weights: WeightsEnum) -> None:
@@ -143,4 +151,6 @@ class TestSimCLRTask:
             "weights": str(weights),
             "in_channels": weights.meta["in_chans"],
         }
-        SimCLRTask(**model_kwargs)
+        match = "num classes .* != num classes in pretrained model"
+        with pytest.warns(UserWarning, match=match):
+            SimCLRTask(**model_kwargs)
