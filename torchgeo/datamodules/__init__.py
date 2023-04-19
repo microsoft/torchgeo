@@ -25,6 +25,7 @@ from .potsdam import Potsdam2DDataModule
 from .resisc45 import RESISC45DataModule
 from .seco import SeasonalContrastS2DataModule
 from .sen12ms import SEN12MSDataModule
+from .skippd import SKIPPDDataModule
 from .so2sat import So2SatDataModule
 from .spacenet import SpaceNet1DataModule
 from .ssl4eo import SSL4EOS12DataModule
@@ -58,6 +59,7 @@ __all__ = (
     "RESISC45DataModule",
     "SeasonalContrastS2DataModule",
     "SEN12MSDataModule",
+    "SKIPPDDataModule",
     "So2SatDataModule",
     "SpaceNet1DataModule",
     "SSL4EOS12DataModule",
