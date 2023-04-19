@@ -102,7 +102,7 @@ from .splits import (
     time_series_split,
 )
 from .ssl4eo import SSL4EOS12
-from .sustainbench_crop_yield_prediction import SustainBenchCropYieldPrediction
+from .sustainbench_crop_yield_prediction import SustainBenchCropYield
 from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
@@ -203,7 +203,7 @@ __all__ = (
     "SpaceNet6",
     "SpaceNet7",
     "SSL4EOS12",
-    "SustainBenchCropYieldPrediction",
+    "SustainBenchCropYield",
     "TropicalCyclone",
     "UCMerced",
     "USAVars",

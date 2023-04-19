@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Sustainbench Crop Yield Prediciton task."""
+"""SustainBench Crop Yield dataset."""
 
 import os
 from typing import Any, Callable, Optional
@@ -15,13 +15,13 @@ from .geo import NonGeoDataset
 from .utils import download_url, extract_archive
 
 
-class SustainBenchCropYieldPrediction(NonGeoDataset):
-    """Sustainbench Crop Yield Prediction Dataset.
+class SustainBenchCropYield(NonGeoDataset):
+    """SustainBench Crop Yield Dataset.
 
     This dataset contains MODIS band histograms and soybean yield
     estimates for selected counties in the USA, Argentinia and Brazil.
     The dataset is part of the
-    `Sustainbench <https://sustainlab-group.github.io/sustainbench/docs/datasets/sdg2/crop_yield.html>`_
+    `SustainBench <https://sustainlab-group.github.io/sustainbench/docs/datasets/sdg2/crop_yield.html>`_
     datasets for tackling the UN Sustainable Development Goals (SDGs).
 
     Dataset Format:
@@ -75,9 +75,9 @@ class SustainBenchCropYieldPrediction(NonGeoDataset):
             checksum: if True, check the MD5 after downloading files (may be slow)
 
         Raises:
+            AssertionError: if ``countries`` contains invalid countries
             FileNotFoundError: if no files are found in ``root``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-            AssertionError: if ``countries`` contains invalid countries
         """
         assert set(countries).issubset(
             self.valid_countries
