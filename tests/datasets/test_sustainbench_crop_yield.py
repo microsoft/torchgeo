@@ -26,16 +26,12 @@ class TestSustainBenchCropYield:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SustainBenchCropYield:
         monkeypatch.setattr(
-            torchgeo.datasets.sustainbench_crop_yield_prediction,
-            "download_url",
-            download_url,
+            torchgeo.datasets.sustainbench_crop_yield, "download_url", download_url
         )
 
         md5 = "7a5591794e14dd73d2b747cd2244acbc"
         monkeypatch.setattr(SustainBenchCropYield, "md5", md5)
-        url = os.path.join(
-            "tests", "data", "sustainbench_crop_yield_prediction", "soybeans.zip"
-        )
+        url = os.path.join("tests", "data", "sustainbench_crop_yield", "soybeans.zip")
         monkeypatch.setattr(SustainBenchCropYield, "url", url)
         monkeypatch.setattr(plt, "show", lambda *args: None)
         root = str(tmp_path)
@@ -51,7 +47,7 @@ class TestSustainBenchCropYield:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join(
-            "tests", "data", "sustainbench_crop_yield_prediction", "soybeans.zip"
+            "tests", "data", "sustainbench_crop_yield", "soybeans.zip"
         )
         root = str(tmp_path)
         shutil.copy(pathname, root)

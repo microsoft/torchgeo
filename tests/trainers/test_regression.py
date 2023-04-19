@@ -53,7 +53,7 @@ class TestRegressionTask:
         [
             ("cowc_counting", COWCCountingDataModule),
             ("cyclone", TropicalCycloneDataModule),
-            ("sustainbench_crop_yield_prediction", SustainBenchCropYieldDataModule),
+            ("sustainbench_crop_yield", SustainBenchCropYieldDataModule),
         ],
     )
     def test_trainer(

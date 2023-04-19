@@ -1,5 +1,5 @@
 experiment:
-  task: "sustainbench_crop_yield_prediction"
+  task: "sustainbench_crop_yield"
   module:
     model: "resnet18"
     weights: null
@@ -8,7 +8,7 @@ experiment:
     learning_rate: 1e-3
     learning_rate_schedule_patience: 2
   datamodule:
-    root: "tests/data/sustainbench_crop_yield_prediction"
+    root: "tests/data/sustainbench_crop_yield"
     download: true
     batch_size: 1
     num_workers: 0

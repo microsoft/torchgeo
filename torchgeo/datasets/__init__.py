@@ -102,7 +102,7 @@ from .splits import (
     time_series_split,
 )
 from .ssl4eo import SSL4EOS12
-from .sustainbench_crop_yield_prediction import SustainBenchCropYield
+from .sustainbench_crop_yield import SustainBenchCropYield
 from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
