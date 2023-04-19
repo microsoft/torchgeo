@@ -74,6 +74,7 @@ from .loveda import LoveDA
 from .millionaid import MillionAID
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
+from .nlcd import NLCD
 from .openbuildings import OpenBuildings
 from .oscd import OSCD
 from .patternnet import PatternNet
@@ -83,6 +84,7 @@ from .resisc45 import RESISC45
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel1, Sentinel2
+from .skippd import SKIPPD
 from .so2sat import So2Sat
 from .spacenet import (
     SpaceNet,
@@ -113,6 +115,7 @@ from .utils import (
 )
 from .vaihingen import Vaihingen2D
 from .vhr10 import VHR10
+from .western_usa_live_fuel_moisture import WesternUSALiveFuelMoisture
 from .xview import XView2
 from .zuericrop import ZueriCrop
 
@@ -156,6 +159,7 @@ __all__ = (
     "Landsat8",
     "Landsat9",
     "NAIP",
+    "NLCD",
     "OpenBuildings",
     "Sentinel",
     "Sentinel1",
@@ -192,6 +196,7 @@ __all__ = (
     "ReforesTree",
     "SeasonalContrastS2",
     "SEN12MS",
+    "SKIPPD",
     "So2Sat",
     "SpaceNet",
     "SpaceNet1",
@@ -207,6 +212,7 @@ __all__ = (
     "USAVars",
     "Vaihingen2D",
     "VHR10",
+    "WesternUSALiveFuelMoisture",
     "XView2",
     "ZueriCrop",
     # Base classes
