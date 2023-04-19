@@ -20,16 +20,16 @@ class SKIPPDDataModule(NonGeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        val_split_pct: float = 0.2,
         num_workers: int = 0,
+        val_split_pct: float = 0.2,
         **kwargs: Any,
     ) -> None:
         """Initialize a new SKIPPDDataModule instance.
 
         Args:
             batch_size: Size of each mini-batch.
-            val_split_pct: Percentage of the dataset to use as a validation set.
             num_workers: Number of workers for parallel data loading.
+            val_split_pct: Percentage of the dataset to use as a validation set.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.SKIPPD`.
         """
