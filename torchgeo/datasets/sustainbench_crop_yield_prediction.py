@@ -31,10 +31,10 @@ class SustainBenchCropYieldPrediction(NonGeoDataset):
     Dataset Features:
 
     * input histogram of 7 surface reflectance and 2 surface temperature
-        bands from MODIS pixel values in 32 ranges across 32 timesteps
-        resulting in 32x32x9 input images
+      bands from MODIS pixel values in 32 ranges across 32 timesteps
+      resulting in 32x32x9 input images
     * regression target value of soybean yield in metric tonnes per
-        harvested hectare
+      harvested hectare
 
     If you use this dataset in your research, please cite:
 
