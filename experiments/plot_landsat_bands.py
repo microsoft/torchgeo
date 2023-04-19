@@ -47,8 +47,15 @@ for sensor_name, group1 in df.groupby("Sensor name"):
                     edgecolor="k",
                     facecolors=color,
                     linewidth=0.5,
+                    alpha=0.8,
                 )
-                ax1.text(wavelength_start, y_position + 1.5, str(band_number))
+                ax1.text(
+                    wavelength_start + (wavelength_width / 2),
+                    y_position + 2.25,
+                    str(band_number),
+                    horizontalalignment="center",
+                    verticalalignment="center",
+                )
             else:
                 ax2.broken_barh(
                     [[wavelength_start, wavelength_width]],
@@ -56,8 +63,15 @@ for sensor_name, group1 in df.groupby("Sensor name"):
                     edgecolor="k",
                     facecolors=color,
                     linewidth=0.5,
+                    alpha=0.8,
                 )
-                ax2.text(wavelength_start, y_position + 1.5, str(band_number))
+                ax2.text(
+                    wavelength_start + (wavelength_width / 2),
+                    y_position + 2.25,
+                    str(band_number),
+                    horizontalalignment="center",
+                    verticalalignment="center",
+                )
 
 # Labels
 fig.supxlabel("Wavelength (μm)")
