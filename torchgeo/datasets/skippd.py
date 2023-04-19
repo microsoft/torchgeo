@@ -65,8 +65,7 @@ class SKIPPD(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            split: one of "train", "dev", or "test"
-            countries: which countries to include in the dataset
+            split: one of "trainval", or "test"
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             download: if True, download dataset and store it in the root directory

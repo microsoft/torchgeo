@@ -20,8 +20,8 @@ class SKIPPDDataModule(NonGeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        num_workers: int = 0,
         val_split_pct: float = 0.2,
+        num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
         """Initialize a new SKIPPDDataModule instance.
