@@ -38,8 +38,8 @@ class ClassificationTestModel(Module):
         super().__init__()
         self.conv1 = nn.Conv2d(in_channels=in_chans, out_channels=1, kernel_size=1)
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(1, num_classes)
-        self.num_features = num_classes
+        self.fc = nn.Linear(1, num_classes) if num_classes else nn.Identity()
+        self.num_features = 1
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.conv1(x)
