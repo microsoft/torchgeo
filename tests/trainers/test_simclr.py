@@ -84,13 +84,13 @@ class TestSimCLRTask:
         trainer.fit(model=model, datamodule=datamodule)
 
     def test_version_warnings(self):
-        with pytest.warnings(UserWarning, match="SimCLR v1 only uses 2 layers"):
+        with pytest.warns(UserWarning, match="SimCLR v1 only uses 2 layers"):
             SimCLRTask(version=1, layers=3)
-        with pytest.warnings(UserWarning, match="SimCLR v1 does not use a memory bank"):
+        with pytest.warns(UserWarning, match="SimCLR v1 does not use a memory bank"):
             SimCLRTask(version=1, memory_bank=10)
-        with pytest.warnings(UserWarning, match="SimCLR v2 uses 3+ layers"):
+        with pytest.warns(UserWarning, match="SimCLR v2 uses 3+ layers"):
             SimCLRTask(version=2, layers=2)
-        with pytest.warnings(UserWarning, match="SimCLR v2 uses a memory bank"):
+        with pytest.warns(UserWarning, match="SimCLR v2 uses a memory bank"):
             SimCLRTask(version=2, memory_bank=0)
 
     @pytest.fixture(
