@@ -33,6 +33,10 @@ class SKIPPD(NonGeoDataset):
     * power output measurements from 30-kW rooftop PV array
     * 1-min interval across 3 years (2017-2019)
 
+    If you use this dataset in your research, please cite:
+
+    * https://doi.org/10.48550/arXiv.2207.00913
+
     .. versionadded:: 0.5
     """
 
