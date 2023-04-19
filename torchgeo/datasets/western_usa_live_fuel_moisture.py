@@ -216,10 +216,9 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            AssertionError: if ``split`` argument is invalid
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-            RuntimeError: if ``input_features`` contains invalid variable names
+            AssertionError: if ``input_features`` contains invalid variable names
             ImportError: if pandas is not installed
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         super().__init__()
 
