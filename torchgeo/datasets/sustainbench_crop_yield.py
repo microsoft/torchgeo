@@ -19,7 +19,7 @@ class SustainBenchCropYield(NonGeoDataset):
     """SustainBench Crop Yield Dataset.
 
     This dataset contains MODIS band histograms and soybean yield
-    estimates for selected counties in the USA, Argentinia and Brazil.
+    estimates for selected counties in the USA, Argentina and Brazil.
     The dataset is part of the
     `SustainBench <https://sustainlab-group.github.io/sustainbench/docs/datasets/sdg2/crop_yield.html>`_
     datasets for tackling the UN Sustainable Development Goals (SDGs).
