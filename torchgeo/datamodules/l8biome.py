@@ -3,7 +3,7 @@
 
 """L8 Biome datamodule."""
 
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 import torch
 
@@ -25,7 +25,7 @@ class L8BiomeDataModule(GeoDataModule):
         self,
         batch_size: int = 1,
         patch_size: Union[int, tuple[int, int]] = 32,
-        length: int = 5,
+        length: Optional[int] = None,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
