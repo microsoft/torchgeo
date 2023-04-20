@@ -64,26 +64,16 @@ jobs:
     - name: Install brew dependencies (macOS)
       run: brew install rar
       if: ${{ runner.os == 'macOS' }}
-    - name: Install pacman dependencies (Windows)
-      shell: cmd
-      run: |
-        set "PATH=%PATH%;c:\msys64\usr\bin"
-        pacman -S --noconfirm --needed unrar
+    - name: Install choco dependencies (Windows)
+      run: choco install unrar
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
         pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
         pip list
-    - name: Run pytest checks (Linux/macOS)
+    - name: Run pytest checks
       run: pytest --cov=torchgeo --cov-report=xml --durations=10
-      if: ${{ runner.os != 'Windows' }}
-    - name: Run pytest checks (Windows)
-      shell: cmd
-      run: |
-        set "PATH=%PATH%;c:\msys64\usr\bin"
-        pytest --cov=torchgeo --cov-report=xml --durations=10
-      if: ${{ runner.os == 'Windows' }}
     - name: Report coverage
       uses: codecov/codecov-action@v3.1.2
       with:
