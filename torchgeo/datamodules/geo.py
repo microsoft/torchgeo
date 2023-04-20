@@ -37,7 +37,7 @@ class GeoDataModule(LightningDataModule):  # type: ignore[misc]
         dataset_class: type[GeoDataset],
         batch_size: int = 1,
         patch_size: Union[int, tuple[int, int]] = 64,
-        length: int = 1000,
+        length: Optional[int] = None,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
