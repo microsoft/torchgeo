@@ -12,11 +12,9 @@ updates:
       # scikit-image does not support latest scipy
       # https://github.com/scikit-image/scikit-image/pull/6773
       - dependency-name: "scipy"
-      # # setuptools releases new versions almost daily
-      # - dependency-name: "setuptools"
-      #   update-types: ["version-update:semver-patch"]
-      # Remove once https://github.com/lightly-ai/lightly/pull/1149 is merged and released
+      # setuptools releases new versions almost daily
       - dependency-name: "setuptools"
+        update-types: ["version-update:semver-patch"]
       # Sphinx 6 is incompatible with pytorch-sphinx-theme
       # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
       - dependency-name: "sphinx"
