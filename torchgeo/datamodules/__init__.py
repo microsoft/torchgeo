@@ -29,6 +29,7 @@ from .skippd import SKIPPDDataModule
 from .so2sat import So2SatDataModule
 from .spacenet import SpaceNet1DataModule
 from .ssl4eo import SSL4EOS12DataModule
+from .sustainbench_crop_yield import SustainBenchCropYieldDataModule
 from .ucmerced import UCMercedDataModule
 from .usavars import USAVarsDataModule
 from .utils import MisconfigurationException
@@ -63,6 +64,7 @@ __all__ = (
     "So2SatDataModule",
     "SpaceNet1DataModule",
     "SSL4EOS12DataModule",
+    "SustainBenchCropYieldDataModule",
     "TropicalCycloneDataModule",
     "UCMercedDataModule",
     "USAVarsDataModule",

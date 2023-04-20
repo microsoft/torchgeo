@@ -324,6 +324,11 @@ SSL4EO
 
 .. autoclass:: SSL4EOS12
 
+SustainBench Crop Yield
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SustainBenchCropYield
+
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
 
