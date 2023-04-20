@@ -298,8 +298,8 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
             with open(path) as f:
                 content = json.load(f)
                 data_dict = content["properties"]
-                data_dict["lat"] = content["geometry"]["coordinates"][0]
-                data_dict["lon"] = content["geometry"]["coordinates"][1]
+                data_dict["lon"] = content["geometry"]["coordinates"][0]
+                data_dict["lat"] = content["geometry"]["coordinates"][1]
                 data_rows.append(data_dict)
 
         df: pd.DataFrame = pd.DataFrame(data_rows)
