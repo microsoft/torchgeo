@@ -64,10 +64,9 @@ class SimCLRProjectionHead(ProjectionHead):  # type: ignore[misc]
         """
         layers: list[tuple[int, int, Optional[nn.Module], Optional[nn.Module]]] = []
         layers.append((input_dim, hidden_dim, nn.BatchNorm1d(hidden_dim), nn.ReLU()))
-        if num_layers > 2:
-            layers.extend(
-                [(hidden_dim, hidden_dim, nn.BatchNorm1d(hidden_dim), nn.ReLU())]
-                * (num_layers - 2)
+        for _ in range(2, num_layers):
+            layers.append(
+                (hidden_dim, hidden_dim, nn.BatchNorm1d(hidden_dim), nn.ReLU())
             )
         layers.append((hidden_dim, output_dim, nn.BatchNorm1d(output_dim), None))
         super().__init__(layers)
