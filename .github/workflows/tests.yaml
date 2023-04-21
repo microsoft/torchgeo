@@ -90,20 +90,12 @@ jobs:
       uses: actions/setup-python@v4.5.0
       with:
         python-version: '3.9'
-    - name: Cache dependencies
-      uses: actions/cache@v3.3.1
-      id: cache
-      with:
-        path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/min-reqs.old') }}-${{ hashFiles('requirements/mins-cons.old') }}
     - name: Install apt dependencies (Linux)
       run: |
         sudo apt-get update
         sudo apt-get install unrar
     - name: Install pip dependencies
-      if: steps.cache.outputs.cache-hit != 'true'
       run: |
-        pip install wheel
         pip install -r requirements/min-reqs.old -c requirements/min-cons.old
         pip list
     - name: Run pytest checks
