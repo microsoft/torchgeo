@@ -7,6 +7,7 @@ experiment:
     in_channels: 3
     learning_rate: 1e-3
     learning_rate_schedule_patience: 2
+    loss: "mse"
   datamodule:
     root: "tests/data/cowc_counting"
     download: true
