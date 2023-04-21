@@ -71,7 +71,7 @@ class TestClassificationTask:
         "name",
         [
             "eurosat",
-            "eurosat",
+            "eurosat100",
             "resisc45",
             "so2sat_all",
             "so2sat_s1",
