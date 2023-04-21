@@ -25,7 +25,7 @@ class AugmentationSequential(Module):
     def __init__(
         self,
         *args: Union[K.base._AugmentationBase, K.ImageSequential],
-        data_keys: list[str],
+        data_keys: Union[list[str], list[int], list[DataKey]],
     ) -> None:
         """Initialize a new augmentation sequential instance.
 
@@ -36,7 +36,7 @@ class AugmentationSequential(Module):
         super().__init__()
         self.data_keys = data_keys
 
-        keys: list[Union[str, int, DataKey]] = []
+        keys: Union[list[str], list[int], list[DataKey]] = []
         for key in data_keys:
             if key == "image":
                 keys.append("input")
