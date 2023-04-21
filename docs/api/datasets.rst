@@ -302,6 +302,11 @@ SEN12MS
 
 .. autoclass:: SEN12MS
 
+SKIPP'D
+^^^^^^^
+
+.. autoclass:: SKIPPD
+
 So2Sat
 ^^^^^^
 
@@ -323,6 +328,11 @@ SSL4EO
 ^^^^^^
 
 .. autoclass:: SSL4EOS12
+
+SustainBench Crop Yield
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SustainBenchCropYield
 
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
@@ -348,6 +358,11 @@ VHR-10
 ^^^^^^
 
 .. autoclass:: VHR10
+
+Western USA Live Fuel Moisture
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: WesternUSALiveFuelMoisture
 
 xView2
 ^^^^^^
