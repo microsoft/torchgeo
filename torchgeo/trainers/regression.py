@@ -11,7 +11,6 @@ import segmentation_models_pytorch as smp
 import timm
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from lightning.pytorch import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -37,8 +36,10 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         print(timm.list_models())
     """
 
-    def config_task(self) -> None:
-        """Configures the task based on kwargs parameters."""
+    target_key: str = "label"
+
+    def config_model(self) -> None:
+        """Configures the model based on kwargs parameters."""
         # Create model
         weights = self.hyperparams["weights"]
         self.model = timm.create_model(
@@ -57,6 +58,21 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
             self.model = utils.load_state_dict(self.model, state_dict)
+
+    def config_task(self) -> None:
+        """Configures the task based on kwargs parameters."""
+        self.config_model()
+
+        self.loss: nn.Module
+        if self.hyperparams["loss"] == "mse":
+            self.loss = nn.MSELoss()
+        elif self.hyperparams["loss"] == "mae":
+            self.loss = nn.L1Loss()
+        else:
+            raise ValueError(
+                f"Loss type '{self.hyperparams['loss']}' is not valid. "
+                f"Currently, supports 'mse' or 'mae' loss."
+            )
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize a new LightningModule for training simple regression models.
@@ -114,10 +130,10 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         """
         batch = args[0]
         x = batch["image"]
-        y = batch["label"].view(-1, 1)
+        y = batch[self.target_key]
         y_hat = self(x)
 
-        loss = F.mse_loss(y_hat, y)
+        loss = self.loss(y_hat, y)
 
         self.log("train_loss", loss)  # logging to TensorBoard
         self.train_metrics(y_hat, y)
@@ -139,10 +155,10 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         batch = args[0]
         batch_idx = args[1]
         x = batch["image"]
-        y = batch["label"].view(-1, 1)
+        y = batch[self.target_key]
         y_hat = self(x)
 
-        loss = F.mse_loss(y_hat, y)
+        loss = self.loss(y_hat, y)
         self.log("val_loss", loss)
         self.val_metrics(y_hat, y)
 
@@ -156,7 +172,7 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
             try:
                 datamodule = self.trainer.datamodule
                 batch["prediction"] = y_hat
-                for key in ["image", "label", "prediction"]:
+                for key in ["image", self.target_key, "prediction"]:
                     batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
@@ -181,10 +197,10 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         """
         batch = args[0]
         x = batch["image"]
-        y = batch["label"].view(-1, 1)
+        y = batch[self.target_key]
         y_hat = self(x)
 
-        loss = F.mse_loss(y_hat, y)
+        loss = self.loss(y_hat, y)
         self.log("test_loss", loss)
         self.test_metrics(y_hat, y)
 
@@ -227,7 +243,7 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         }
 
 
-class DenseRegressionTask(RegressionTask):
+class PixelwiseRegressionTask(RegressionTask):
     """LightningModule for dense regression of images.
 
     Supports `Segmentation Models Pytorch
@@ -238,8 +254,10 @@ class DenseRegressionTask(RegressionTask):
     .. versionadded:: 0.5
     """
 
-    def config_task(self) -> None:
-        """Configures the task based on kwargs parameters passed to the constructor."""
+    target_key: str = "mask"
+
+    def config_model(self) -> None:
+        """Configures the model based on kwargs parameters."""
         if self.hyperparams["model"] == "unet":
             self.model = smp.Unet(
                 encoder_name=self.hyperparams["backbone"],
@@ -265,89 +283,3 @@ class DenseRegressionTask(RegressionTask):
                 f"Model type '{self.hyperparams['model']}' is not valid. "
                 f"Currently, only supports 'unet', 'deeplabv3+' and 'fcn'."
             )
-
-        self.loss: nn.Module
-        if self.hyperparams["loss"] == "mse":
-            self.loss = nn.MSELoss()
-        elif self.hyperparams["loss"] == "mae":
-            self.loss = nn.L1Loss()
-        else:
-            raise ValueError(
-                f"Loss type '{self.hyperparams['loss']}' is not valid. "
-                f"Currently, supports 'mse' or 'mae' loss."
-            )
-
-    def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
-        """Compute and return the training loss.
-
-        Args:
-            batch: the output of your DataLoader
-
-        Returns:
-            training loss
-        """
-        batch = args[0]
-        x = batch["image"]
-        y = batch["mask"]
-        y_hat = self(x)
-
-        loss = self.loss(y_hat, y)
-
-        self.log("train_loss", loss)  # logging to TensorBoard
-        self.train_metrics(y_hat, y)
-
-        return cast(Tensor, loss)
-
-    def validation_step(self, *args: Any, **kwargs: Any) -> None:
-        """Compute validation loss and log example predictions.
-
-        Args:
-            batch: the output of your DataLoader
-            batch_idx: the index of this batch
-        """
-        batch = args[0]
-        batch_idx = args[1]
-        x = batch["image"]
-        y = batch["mask"]
-        y_hat = self(x)
-
-        loss = self.loss(y_hat, y)
-        self.log("val_loss", loss)
-        self.val_metrics(y_hat, y)
-
-        if (
-            batch_idx < 10
-            and hasattr(self.trainer, "datamodule")
-            and self.logger
-            and hasattr(self.logger, "experiment")
-            and hasattr(self.logger.experiment, "add_figure")
-        ):
-            try:
-                datamodule = self.trainer.datamodule
-                batch["prediction"] = y_hat
-                for key in ["image", "mask", "prediction"]:
-                    batch[key] = batch[key].cpu()
-                sample = unbind_samples(batch)[0]
-                fig = datamodule.plot(sample)
-                summary_writer = self.logger.experiment
-                summary_writer.add_figure(
-                    f"image/{batch_idx}", fig, global_step=self.global_step
-                )
-                plt.close()
-            except ValueError:
-                pass
-
-    def test_step(self, *args: Any, **kwargs: Any) -> None:
-        """Compute test loss.
-
-        Args:
-            batch: the output of your DataLoader
-        """
-        batch = args[0]
-        x = batch["image"]
-        y = batch["mask"]
-        y_hat = self(x)
-
-        loss = self.loss(y_hat, y)
-        self.log("test_loss", loss)
-        self.test_metrics(y_hat, y)
