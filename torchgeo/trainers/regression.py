@@ -244,7 +244,7 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
 
 
 class PixelwiseRegressionTask(RegressionTask):
-    """LightningModule for dense regression of images.
+    """LightningModule for pixelwise regression of images.
 
     Supports `Segmentation Models Pytorch
     <https://github.com/qubvel/segmentation_models.pytorch>`_
