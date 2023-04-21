@@ -177,18 +177,27 @@ def get_patch(
     region = (
         ee.Geometry.Point(center_coord).buffer(radius).bounds()
     )  # sample region bound
-    patch = image.select(*bands).sampleRectangle(region, defaultValue=0)
-
-    features = patch.getInfo()  # the actual download
+    reproj_bands = 'B8'
+    reproj_resolution = 30
+    other_bands = [b for b in bands if b != reproj_bands]
+    patch_reproj = image.select(reproj_bands).reproject(crs=image.select(reproj_bands).projection().crs(), scale=reproj_resolution).sampleRectangle(region, defaultValue=0)
+    patch_other = image.select(*other_bands).sampleRectangle(region, defaultValue=0)
+    #patch = image.select(*bands).sampleRectangle(region, defaultValue=0)
+    #features = patch.getInfo()  # the actual download
+    features_reproj = patch_reproj.getInfo()
+    features_other = patch_other.getInfo()
 
     raster = OrderedDict()
     for band in bands:
-        img = np.atleast_3d(features["properties"][band])
+        if band == reproj_bands:
+            img = np.atleast_3d(features_reproj["properties"][band])
+        else:
+            img = np.atleast_3d(features_other["properties"][band])
         if crop is not None:
             img = center_crop(img, out_size=crop[band])
         raster[band] = img.astype(dtype)
 
-    coords0 = np.array(features["geometry"]["coordinates"][0])
+    coords0 = np.array(features_other["geometry"]["coordinates"][0])
     coords = [
         [coords0[:, 0].min(), coords0[:, 1].max()],
         [coords0[:, 0].max(), coords0[:, 1].min()],
@@ -196,8 +205,8 @@ def get_patch(
     if crop is not None:
         band = bands[0]
         old_size = (
-            len(features["properties"][band]),
-            len(features["properties"][band][0]),
+            len(features_other["properties"][band]),
+            len(features_other["properties"][band][0]),
         )
         new_size = raster[band].shape[:2]
         coords = adjust_coords(coords, old_size, new_size)
@@ -274,8 +283,10 @@ def save_patch(
     patch_path = os.path.join(path, patch_id)
     os.makedirs(patch_path, exist_ok=True)
 
-    for band, img in raster.items():
-        save_geotiff(img, coords, os.path.join(patch_path, f"{band}.tif"))
+    img_all = np.concatenate([img for img in raster.values()], axis=2)
+    save_geotiff(img_all, coords, os.path.join(patch_path, "all_bands.tif"))
+    #for band, img in raster.items():
+    #    save_geotiff(img, coords, os.path.join(patch_path, f"{band}.tif"))
 
     with open(os.path.join(patch_path, "metadata.json"), "w") as f:
         json.dump(metadata, f)
