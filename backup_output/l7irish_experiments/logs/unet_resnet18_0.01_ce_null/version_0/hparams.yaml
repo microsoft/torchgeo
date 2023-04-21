@@ -1,0 +1,12 @@
+loss: ce
+model: unet
+backbone: resnet18
+weights: null
+learning_rate: 0.01
+learning_rate_schedule_patience: 6
+verbose: false
+in_channels: 9
+num_classes: 5
+num_filters: 256
+ignore_index: null
+segmentation_model: unet

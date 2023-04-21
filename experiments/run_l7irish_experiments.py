@@ -9,16 +9,16 @@ import subprocess
 from multiprocessing import Process, Queue
 
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
-GPUS = [0]
+GPUS = [0, 1]
 DRY_RUN = False  # if False then print out the commands to be run, if True then run
 DATA_DIR = "/projects/dali/data/l7irish"  # path to the L7Irish data directory
 
 # Hyperparameter options
 model_options = ["unet"]
-backbone_options = ["resnet18", "resnet50"]
-lr_options = [1e-2, 1e-3, 1e-4]
-loss_options = ["ce", "jaccard"]
-weight_init_options = ["null", "imagenet"]
+lr_options = [1e-2]
+loss_options = ["ce"]
+backbone_options = ["resnet18"]
+weight_init_options = ["null"]
 
 
 def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
