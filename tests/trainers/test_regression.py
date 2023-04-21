@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, Dict, Type, cast
+from typing import Any, cast
 
 import pytest
 import timm
@@ -18,6 +18,8 @@ from torchvision.models._api import WeightsEnum
 from torchgeo.datamodules import (
     COWCCountingDataModule,
     MisconfigurationException,
+    SKIPPDDataModule,
+    SustainBenchCropYieldDataModule,
     TropicalCycloneDataModule,
 )
 from torchgeo.datasets import TropicalCyclone
@@ -28,8 +30,8 @@ from .test_classification import ClassificationTestModel
 
 
 class RegressionTestModel(ClassificationTestModel):
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(in_chans=3, num_classes=1)
+    def __init__(self, in_chans: int = 3, num_classes: int = 1, **kwargs: Any) -> None:
+        super().__init__(in_chans=in_chans, num_classes=num_classes)
 
 
 class PredictRegressionDataModule(TropicalCycloneDataModule):
@@ -37,8 +39,8 @@ class PredictRegressionDataModule(TropicalCycloneDataModule):
         self.predict_dataset = TropicalCyclone(split="test", **self.kwargs)
 
 
-def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
-    state_dict: Dict[str, Any] = torch.load(url)
+def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
+    state_dict: dict[str, Any] = torch.load(url)
     return state_dict
 
 
@@ -52,14 +54,16 @@ class TestRegressionTask:
         [
             ("cowc_counting", COWCCountingDataModule),
             ("cyclone", TropicalCycloneDataModule),
+            ("sustainbench_crop_yield", SustainBenchCropYieldDataModule),
+            ("skippd", SKIPPDDataModule),
         ],
     )
     def test_trainer(
-        self, name: str, classname: Type[LightningDataModule], fast_dev_run: bool
+        self, name: str, classname: type[LightningDataModule], fast_dev_run: bool
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
+        conf_dict = cast(dict[str, dict[str, Any]], conf_dict)
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]
@@ -69,7 +73,10 @@ class TestRegressionTask:
         model_kwargs = conf_dict["module"]
         model = RegressionTask(**model_kwargs)
 
-        model.model = RegressionTestModel()
+        model.model = RegressionTestModel(
+            in_chans=model_kwargs["in_channels"],
+            num_classes=model_kwargs["num_outputs"],
+        )
 
         # Instantiate trainer
         trainer = Trainer(
@@ -78,6 +85,7 @@ class TestRegressionTask:
             log_every_n_steps=1,
             max_epochs=1,
         )
+
         trainer.fit(model=model, datamodule=datamodule)
         try:
             trainer.test(model=model, datamodule=datamodule)
@@ -89,7 +97,7 @@ class TestRegressionTask:
             pass
 
     @pytest.fixture
-    def model_kwargs(self) -> Dict[str, Any]:
+    def model_kwargs(self) -> dict[str, Any]:
         return {
             "model": "resnet18",
             "weights": None,
@@ -121,13 +129,13 @@ class TestRegressionTask:
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
         return weights
 
-    def test_weight_file(self, model_kwargs: Dict[str, Any], checkpoint: str) -> None:
+    def test_weight_file(self, model_kwargs: dict[str, Any], checkpoint: str) -> None:
         model_kwargs["weights"] = checkpoint
         with pytest.warns(UserWarning):
             RegressionTask(**model_kwargs)
 
     def test_weight_enum(
-        self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
+        self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
     ) -> None:
         model_kwargs["model"] = mocked_weights.meta["model"]
         model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
@@ -136,7 +144,7 @@ class TestRegressionTask:
             RegressionTask(**model_kwargs)
 
     def test_weight_str(
-        self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
+        self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
     ) -> None:
         model_kwargs["model"] = mocked_weights.meta["model"]
         model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
@@ -146,7 +154,7 @@ class TestRegressionTask:
 
     @pytest.mark.slow
     def test_weight_enum_download(
-        self, model_kwargs: Dict[str, Any], weights: WeightsEnum
+        self, model_kwargs: dict[str, Any], weights: WeightsEnum
     ) -> None:
         model_kwargs["model"] = weights.meta["model"]
         model_kwargs["in_channels"] = weights.meta["in_chans"]
@@ -155,7 +163,7 @@ class TestRegressionTask:
 
     @pytest.mark.slow
     def test_weight_str_download(
-        self, model_kwargs: Dict[str, Any], weights: WeightsEnum
+        self, model_kwargs: dict[str, Any], weights: WeightsEnum
     ) -> None:
         model_kwargs["model"] = weights.meta["model"]
         model_kwargs["in_channels"] = weights.meta["in_chans"]
@@ -163,7 +171,7 @@ class TestRegressionTask:
         RegressionTask(**model_kwargs)
 
     def test_no_rgb(
-        self, monkeypatch: MonkeyPatch, model_kwargs: Dict[Any, Any], fast_dev_run: bool
+        self, monkeypatch: MonkeyPatch, model_kwargs: dict[Any, Any], fast_dev_run: bool
     ) -> None:
         monkeypatch.setattr(TropicalCycloneDataModule, "plot", plot)
         datamodule = TropicalCycloneDataModule(
@@ -178,7 +186,7 @@ class TestRegressionTask:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_predict(self, model_kwargs: Dict[Any, Any], fast_dev_run: bool) -> None:
+    def test_predict(self, model_kwargs: dict[Any, Any], fast_dev_run: bool) -> None:
         datamodule = PredictRegressionDataModule(
             root="tests/data/cyclone", batch_size=1, num_workers=0
         )

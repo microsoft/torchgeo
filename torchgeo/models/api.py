@@ -10,7 +10,7 @@ See the following references for design details:
 * https://github.com/pytorch/vision/blob/main/torchvision/models/_api.py
 """  # noqa: E501
 
-from typing import Any, Callable, List, Union
+from typing import Any, Callable, Union
 
 import torch.nn as nn
 from torchvision.models._api import WeightsEnum
@@ -79,7 +79,7 @@ def get_weight(name: str) -> WeightsEnum:
     return eval(name)
 
 
-def list_models() -> List[str]:
+def list_models() -> list[str]:
     """List the registered models.
 
     .. versionadded:: 0.4

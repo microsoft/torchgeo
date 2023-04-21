@@ -6,7 +6,7 @@
 import csv
 import os
 from functools import lru_cache
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -117,8 +117,8 @@ class CV4AKenyaCropType(NonGeoDataset):
         root: str = "data",
         chip_size: int = 256,
         stride: int = 128,
-        bands: Tuple[str, ...] = band_names,
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        bands: tuple[str, ...] = band_names,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
@@ -172,7 +172,7 @@ class CV4AKenyaCropType(NonGeoDataset):
                 ]:
                     self.chips_metadata.append((tile_index, y, x))
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -214,7 +214,7 @@ class CV4AKenyaCropType(NonGeoDataset):
         return len(self.chips_metadata)
 
     @lru_cache(maxsize=128)
-    def _load_label_tile(self, tile_name: str) -> Tuple[Tensor, Tensor]:
+    def _load_label_tile(self, tile_name: str) -> tuple[Tensor, Tensor]:
         """Load a single _tile_ of labels and field_ids.
 
         Args:
@@ -245,7 +245,7 @@ class CV4AKenyaCropType(NonGeoDataset):
 
         return (labels, field_ids)
 
-    def _validate_bands(self, bands: Tuple[str, ...]) -> None:
+    def _validate_bands(self, bands: tuple[str, ...]) -> None:
         """Validate list of bands.
 
         Args:
@@ -262,7 +262,7 @@ class CV4AKenyaCropType(NonGeoDataset):
 
     @lru_cache(maxsize=128)
     def _load_all_image_tiles(
-        self, tile_name: str, bands: Tuple[str, ...] = band_names
+        self, tile_name: str, bands: tuple[str, ...] = band_names
     ) -> Tensor:
         """Load all the imagery (across time) for a single _tile_.
 
@@ -299,7 +299,7 @@ class CV4AKenyaCropType(NonGeoDataset):
 
     @lru_cache(maxsize=128)
     def _load_single_image_tile(
-        self, tile_name: str, date: str, bands: Tuple[str, ...]
+        self, tile_name: str, date: str, bands: tuple[str, ...]
     ) -> Tensor:
         """Load the imagery for a single tile for a single date.
 
@@ -356,7 +356,7 @@ class CV4AKenyaCropType(NonGeoDataset):
 
         return images and targets
 
-    def get_splits(self) -> Tuple[List[int], List[int]]:
+    def get_splits(self) -> tuple[list[int], list[int]]:
         """Get the field_ids for the train/test splits from the dataset directory.
 
         Returns:
@@ -407,7 +407,7 @@ class CV4AKenyaCropType(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         time_step: int = 0,
         suptitle: Optional[str] = None,

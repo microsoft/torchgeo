@@ -3,7 +3,7 @@
 
 """L7 Irish datamodule."""
 
-from typing import Any, Tuple, Union
+from typing import Any, Optional, Union
 
 import torch
 
@@ -24,8 +24,8 @@ class L7IrishDataModule(GeoDataModule):
     def __init__(
         self,
         batch_size: int = 1,
-        patch_size: Union[int, Tuple[int, int]] = 32,
-        length: int = 5,
+        patch_size: Union[int, tuple[int, int]] = 32,
+        length: Optional[int] = None,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:

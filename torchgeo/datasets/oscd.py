@@ -5,7 +5,8 @@
 
 import glob
 import os
-from typing import Callable, Dict, List, Optional, Sequence, Union
+from collections.abc import Sequence
+from typing import Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -82,7 +83,7 @@ class OSCD(NonGeoDataset):
         root: str = "data",
         split: str = "train",
         bands: str = "all",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -115,7 +116,7 @@ class OSCD(NonGeoDataset):
 
         self.files = self._load_files()
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -145,7 +146,7 @@ class OSCD(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self) -> List[Dict[str, Union[str, Sequence[str]]]]:
+    def _load_files(self) -> list[dict[str, Union[str, Sequence[str]]]]:
         regions = []
         labels_root = os.path.join(
             self.root,
@@ -160,7 +161,7 @@ class OSCD(NonGeoDataset):
             region = folder.split(os.sep)[-2]
             mask = os.path.join(labels_root, region, "cm", "cm.png")
 
-            def get_image_paths(ind: int) -> List[str]:
+            def get_image_paths(ind: int) -> list[str]:
                 return sorted(
                     glob.glob(
                         os.path.join(images_root, region, f"imgs_{ind}_rect", "*.tif")
@@ -198,7 +199,7 @@ class OSCD(NonGeoDataset):
         Returns:
             the image
         """
-        images: List["np.typing.NDArray[np.int_]"] = []
+        images: list["np.typing.NDArray[np.int_]"] = []
         for path in paths:
             with Image.open(path) as img:
                 images.append(np.array(img))
@@ -271,7 +272,7 @@ class OSCD(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
         alpha: float = 0.5,

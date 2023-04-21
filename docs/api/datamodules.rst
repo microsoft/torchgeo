@@ -120,6 +120,16 @@ SpaceNet
 
 .. autoclass:: SpaceNet1DataModule
 
+SSL4EO
+^^^^^^
+
+.. autoclass:: SSL4EOS12DataModule
+
+SustainBench Crop Yield
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SustainBenchCropYieldDataModule
+
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
 

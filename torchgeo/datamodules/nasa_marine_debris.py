@@ -3,7 +3,7 @@
 
 """NASA Marine Debris datamodule."""
 
-from typing import Any, Dict, List
+from typing import Any
 
 import torch
 from torch import Tensor
@@ -13,7 +13,7 @@ from .geo import NonGeoDataModule
 from .utils import dataset_split
 
 
-def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
+def collate_fn(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
     """Custom object detection collate fn to handle variable boxes.
 
     Args:
@@ -22,7 +22,7 @@ def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
     Returns:
         batch dict output
     """
-    output: Dict[str, Any] = {}
+    output: dict[str, Any] = {}
     output["image"] = torch.stack([sample["image"] for sample in batch])
     output["boxes"] = [sample["boxes"] for sample in batch]
     output["labels"] = [torch.tensor([1] * len(sample["boxes"])) for sample in batch]

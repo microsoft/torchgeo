@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, Dict, Type, cast
+from typing import Any, cast
 
 import pytest
 import timm
@@ -17,8 +17,12 @@ from omegaconf import OmegaConf
 from torchvision.models import resnet18
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import ChesapeakeCVPRDataModule, SeasonalContrastS2DataModule
-from torchgeo.datasets import SeasonalContrastS2
+from torchgeo.datamodules import (
+    ChesapeakeCVPRDataModule,
+    SeasonalContrastS2DataModule,
+    SSL4EOS12DataModule,
+)
+from torchgeo.datasets import SSL4EOS12, SeasonalContrastS2
 from torchgeo.models import get_model_weights, list_models
 from torchgeo.trainers import BYOLTask
 from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
@@ -26,8 +30,8 @@ from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
 from .test_segmentation import SegmentationTestModel
 
 
-def load(url: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
-    state_dict: Dict[str, Any] = torch.load(url)
+def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
+    state_dict: dict[str, Any] = torch.load(url)
     return state_dict
 
 
@@ -52,24 +56,29 @@ class TestBYOLTask:
     @pytest.mark.parametrize(
         "name,classname",
         [
-            ("chesapeake_cvpr_prior", ChesapeakeCVPRDataModule),
-            ("seco_1", SeasonalContrastS2DataModule),
-            ("seco_2", SeasonalContrastS2DataModule),
+            ("chesapeake_cvpr_prior_byol", ChesapeakeCVPRDataModule),
+            ("seco_byol_1", SeasonalContrastS2DataModule),
+            ("seco_byol_2", SeasonalContrastS2DataModule),
+            ("ssl4eo_s12_byol_1", SSL4EOS12DataModule),
+            ("ssl4eo_s12_byol_2", SSL4EOS12DataModule),
         ],
     )
     def test_trainer(
         self,
         monkeypatch: MonkeyPatch,
         name: str,
-        classname: Type[LightningDataModule],
+        classname: type[LightningDataModule],
         fast_dev_run: bool,
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
         conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[str, Dict[str, Any]], conf_dict)
+        conf_dict = cast(dict[str, dict[str, Any]], conf_dict)
 
         if name.startswith("seco"):
             monkeypatch.setattr(SeasonalContrastS2, "__len__", lambda self: 2)
+
+        if name.startswith("ssl4eo_s12"):
+            monkeypatch.setattr(SSL4EOS12, "__len__", lambda self: 2)
 
         # Instantiate datamodule
         datamodule_kwargs = conf_dict["datamodule"]
@@ -91,7 +100,7 @@ class TestBYOLTask:
         trainer.fit(model=model, datamodule=datamodule)
 
     @pytest.fixture
-    def model_kwargs(self) -> Dict[str, Any]:
+    def model_kwargs(self) -> dict[str, Any]:
         return {
             "backbone": "resnet18",
             "in_channels": 13,
@@ -124,13 +133,13 @@ class TestBYOLTask:
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
         return weights
 
-    def test_weight_file(self, model_kwargs: Dict[str, Any], checkpoint: str) -> None:
+    def test_weight_file(self, model_kwargs: dict[str, Any], checkpoint: str) -> None:
         model_kwargs["weights"] = checkpoint
         with pytest.warns(UserWarning):
             BYOLTask(**model_kwargs)
 
     def test_weight_enum(
-        self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
+        self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
     ) -> None:
         model_kwargs["backbone"] = mocked_weights.meta["model"]
         model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
@@ -138,7 +147,7 @@ class TestBYOLTask:
         BYOLTask(**model_kwargs)
 
     def test_weight_str(
-        self, model_kwargs: Dict[str, Any], mocked_weights: WeightsEnum
+        self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
     ) -> None:
         model_kwargs["backbone"] = mocked_weights.meta["model"]
         model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
@@ -147,7 +156,7 @@ class TestBYOLTask:
 
     @pytest.mark.slow
     def test_weight_enum_download(
-        self, model_kwargs: Dict[str, Any], weights: WeightsEnum
+        self, model_kwargs: dict[str, Any], weights: WeightsEnum
     ) -> None:
         model_kwargs["backbone"] = weights.meta["model"]
         model_kwargs["in_channels"] = weights.meta["in_chans"]
@@ -156,7 +165,7 @@ class TestBYOLTask:
 
     @pytest.mark.slow
     def test_weight_str_download(
-        self, model_kwargs: Dict[str, Any], weights: WeightsEnum
+        self, model_kwargs: dict[str, Any], weights: WeightsEnum
     ) -> None:
         model_kwargs["backbone"] = weights.meta["model"]
         model_kwargs["in_channels"] = weights.meta["in_chans"]
