@@ -131,16 +131,14 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         batch = args[0]
         x = batch["image"]
         y = batch[self.target_key]
-
-        if y.ndim == 1:
-            y = y.unsqueeze(dim=1)
-
         y_hat = self(x)
 
-        loss = self.loss(y_hat, y)
+        if y_hat.ndim != y.ndim:
+            y = y.unsqueeze(dim=1)
 
+        loss = self.loss(y_hat, y.to(torch.float))
         self.log("train_loss", loss)  # logging to TensorBoard
-        self.train_metrics(y_hat, y)
+        self.train_metrics(y_hat, y.to(torch.float))
 
         return loss
 
@@ -160,15 +158,14 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         batch_idx = args[1]
         x = batch["image"]
         y = batch[self.target_key]
-
-        if y.ndim == 1:
-            y = y.unsqueeze(dim=1)
-
         y_hat = self(x)
 
-        loss = self.loss(y_hat, y)
+        if y_hat.ndim != y.ndim:
+            y = y.unsqueeze(dim=1)
+
+        loss = self.loss(y_hat, y.to(torch.float))
         self.log("val_loss", loss)
-        self.val_metrics(y_hat, y)
+        self.val_metrics(y_hat, y.to(torch.float))
 
         if (
             batch_idx < 10
@@ -179,6 +176,9 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         ):
             try:
                 datamodule = self.trainer.datamodule
+                if self.target_key == "mask":
+                    y = y.squeeze(dim=1)
+                    y_hat = y_hat.squeeze(dim=1)
                 batch["prediction"] = y_hat
                 for key in ["image", self.target_key, "prediction"]:
                     batch[key] = batch[key].cpu()
@@ -206,15 +206,14 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         batch = args[0]
         x = batch["image"]
         y = batch[self.target_key]
-
-        if y.ndim == 1:
-            y = y.unsqueeze(dim=1)
-
         y_hat = self(x)
 
-        loss = self.loss(y_hat, y)
+        if y_hat.ndim != y.ndim:
+            y = y.unsqueeze(dim=1)
+
+        loss = self.loss(y_hat, y.to(torch.float))
         self.log("test_loss", loss)
-        self.test_metrics(y_hat, y)
+        self.test_metrics(y_hat, y.to(torch.float))
 
     def on_test_epoch_end(self) -> None:
         """Logs epoch level test metrics."""

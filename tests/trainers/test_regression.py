@@ -6,17 +6,21 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
+import segmentation_models_pytorch as smp
 import timm
 import torch
+import torch.nn as nn
 import torchvision
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from lightning.pytorch import LightningDataModule, Trainer
 from omegaconf import OmegaConf
+from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import (
     COWCCountingDataModule,
+    InriaAerialImageLabelingDataModule,
     MisconfigurationException,
     SKIPPDDataModule,
     SustainBenchCropYieldDataModule,
@@ -24,9 +28,20 @@ from torchgeo.datamodules import (
 )
 from torchgeo.datasets import TropicalCyclone
 from torchgeo.models import get_model_weights, list_models
-from torchgeo.trainers import RegressionTask
+from torchgeo.trainers import PixelwiseRegressionTask, RegressionTask
 
 from .test_classification import ClassificationTestModel
+
+
+class PixelwiseRegressionTestModel(Module):
+    def __init__(self, in_channels: int = 3, classes: int = 1, **kwargs: Any) -> None:
+        super().__init__()
+        self.conv1 = nn.Conv2d(
+            in_channels=in_channels, out_channels=classes, kernel_size=1, padding=0
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return cast(torch.Tensor, self.conv1(x))
 
 
 class RegressionTestModel(ClassificationTestModel):
@@ -46,6 +61,10 @@ def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
 
 def plot(*args: Any, **kwargs: Any) -> None:
     raise ValueError
+
+
+def create_model(**kwargs: Any) -> Module:
+    return PixelwiseRegressionTestModel(**kwargs)
 
 
 class TestRegressionTask:
@@ -205,3 +224,67 @@ class TestRegressionTask:
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
             RegressionTask(**model_kwargs)
+
+
+class TestPixelwiseRegressionTask:
+    @pytest.mark.parametrize(
+        "name,classname,batch_size,loss",
+        [
+            ("inria", InriaAerialImageLabelingDataModule, 1, "mse"),
+            ("inria", InriaAerialImageLabelingDataModule, 2, "mae"),
+        ],
+    )
+    def test_trainer(
+        self,
+        monkeypatch: MonkeyPatch,
+        name: str,
+        classname: type[LightningDataModule],
+        batch_size: int,
+        loss: str,
+        fast_dev_run: bool,
+    ) -> None:
+        conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
+        conf_dict = OmegaConf.to_object(conf.experiment)
+        conf_dict = cast(dict[str, dict[str, Any]], conf_dict)
+
+        # Instantiate datamodule
+        datamodule_kwargs = conf_dict["datamodule"]
+        datamodule_kwargs["batch_size"] = batch_size
+        datamodule = classname(**datamodule_kwargs)
+
+        # Instantiate model
+        monkeypatch.setattr(smp, "Unet", create_model)
+        monkeypatch.setattr(smp, "DeepLabV3Plus", create_model)
+        model_kwargs = conf_dict["module"]
+        model_kwargs["loss"] = loss
+        model = PixelwiseRegressionTask(**model_kwargs)
+
+        model.model = PixelwiseRegressionTestModel(in_chans=model_kwargs["in_channels"])
+
+        # Instantiate trainer
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+
+        trainer.fit(model=model, datamodule=datamodule)
+        try:
+            trainer.test(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
+        try:
+            trainer.predict(model=model, datamodule=datamodule)
+        except MisconfigurationException:
+            pass
+
+    @pytest.fixture
+    def model_kwargs(self) -> dict[str, Any]:
+        return {
+            "model": "resnet18",
+            "weights": None,
+            "num_outputs": 1,
+            "in_channels": 3,
+            "loss": "mse",
+        }
