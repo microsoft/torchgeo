@@ -25,8 +25,8 @@ from .test_classification import ClassificationTestModel
 
 
 class RegressionTestModel(ClassificationTestModel):
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(in_chans=3, num_classes=1)
+    def __init__(self, in_chans: int = 3, num_classes: int = 1, **kwargs: Any) -> None:
+        super().__init__(in_chans=in_chans, num_classes=num_classes)
 
 
 class PredictRegressionDataModule(TropicalCycloneDataModule):
@@ -44,7 +44,7 @@ def plot(*args: Any, **kwargs: Any) -> None:
 
 
 class TestRegressionTask:
-    @pytest.mark.parametrize("name", ["cowc_counting", "cyclone"])
+    @pytest.mark.parametrize("name", ["cowc_counting", "cyclone", "sustainbench_crop_yield", "skippd"])
     def test_trainer(self, name: str, fast_dev_run: bool) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
 
@@ -54,7 +54,10 @@ class TestRegressionTask:
         # Instantiate model
         model = instantiate(conf.module)
 
-        model.model = RegressionTestModel()
+        model.model = RegressionTestModel(
+            in_chans=model_kwargs["in_channels"],
+            num_classes=model_kwargs["num_outputs"],
+        )
 
         # Instantiate trainer
         trainer = Trainer(
@@ -63,6 +66,7 @@ class TestRegressionTask:
             log_every_n_steps=1,
             max_epochs=1,
         )
+
         trainer.fit(model=model, datamodule=datamodule)
         try:
             trainer.test(model=model, datamodule=datamodule)

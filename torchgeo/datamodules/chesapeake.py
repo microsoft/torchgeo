@@ -3,7 +3,7 @@
 
 """Chesapeake Bay High-Resolution Land Cover Project datamodule."""
 
-from typing import Any
+from typing import Any, Optional
 
 import kornia.augmentation as K
 import torch.nn as nn
@@ -63,7 +63,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         test_splits: list[str],
         batch_size: int = 64,
         patch_size: int = 256,
-        length: int = 1000,
+        length: Optional[int] = None,
         num_workers: int = 0,
         class_set: int = 7,
         use_prior_labels: bool = False,
