@@ -103,6 +103,7 @@ class TestRegressionTask:
             "weights": None,
             "num_outputs": 1,
             "in_channels": 3,
+            "loss": "mse",
         }
 
     @pytest.fixture(
@@ -198,3 +199,9 @@ class TestRegressionTask:
             max_epochs=1,
         )
         trainer.predict(model=model, datamodule=datamodule)
+
+    def test_invalid_loss(self, model_kwargs: dict[str, Any]) -> None:
+        model_kwargs["loss"] = "invalid_loss"
+        match = "Loss type 'invalid_loss' is not valid."
+        with pytest.raises(ValueError, match=match):
+            RegressionTask(**model_kwargs)
