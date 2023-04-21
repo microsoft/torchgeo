@@ -286,6 +286,12 @@ class TestPixelwiseRegressionTask:
         except MisconfigurationException:
             pass
 
+    def test_invalid_model(self, model_kwargs: dict[str, Any]) -> None:
+        model_kwargs["model"] = "invalid_model"
+        match = "Model type 'invalid_model' is not valid."
+        with pytest.raises(ValueError, match=match):
+            PixelwiseRegressionTask(**model_kwargs)
+
     @pytest.fixture
     def model_kwargs(self) -> dict[str, Any]:
         return {
