@@ -25,3 +25,10 @@ datamodule:
   num_workers: 4
   class_set: ${module.num_classes}
   use_prior_labels: False
+
+trainer:
+  _target_: lightning.Trainer
+  accelerator: gpu
+  devices: 1
+  min_epochs: 15
+  max_epochs: 40

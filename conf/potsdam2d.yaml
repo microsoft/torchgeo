@@ -19,3 +19,10 @@ datamodule:
   patch_size: 64
   val_split_pct: 0.5
   num_workers: 0
+
+trainer:
+  _target_: lightning.Trainer
+  accelerator: gpu
+  devices: 1
+  min_epochs: 15
+  max_epochs: 40

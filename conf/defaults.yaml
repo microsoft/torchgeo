@@ -1,12 +1,5 @@
 config_file: null  # This lets the user pass a config filename to load other arguments from
 
-trainer:
-  _target_: pytorch_lightning.Trainer
-  accelerator: gpu
-  devices: 1
-  min_epochs: 15
-  max_epochs: 40
-
 program:  # These are the arguments that define how the train.py script works
   seed: 0
   output_dir: output

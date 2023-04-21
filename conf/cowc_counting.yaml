@@ -12,3 +12,10 @@ datamodule:
   root: "data/cowc_counting"
   batch_size: 64
   num_workers: 4
+
+trainer:
+  _target_: lightning.Trainer
+  accelerator: gpu
+  devices: 1
+  min_epochs: 15
+  max_epochs: 40

@@ -15,3 +15,10 @@ datamodule:
   root: "data/etci2021"
   batch_size: 32
   num_workers: 4
+
+trainer:
+  _target_: lightning.Trainer
+  accelerator: gpu
+  devices: 1
+  min_epochs: 15
+  max_epochs: 40

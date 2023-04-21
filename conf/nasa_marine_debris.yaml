@@ -13,3 +13,10 @@ datamodule:
   batch_size: 4
   num_workers: 6
   val_split_pct: 0.2
+
+trainer:
+  _target_: lightning.Trainer
+  accelerator: gpu
+  devices: 1
+  min_epochs: 15
+  max_epochs: 40

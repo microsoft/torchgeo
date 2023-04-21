@@ -15,3 +15,10 @@ datamodule:
   num_classes: ${experiment.module.num_classes}
   batch_size: 128
   num_workers: 4
+
+trainer:
+  _target_: lightning.Trainer
+  accelerator: gpu
+  devices: 1
+  min_epochs: 15
+  max_epochs: 40
