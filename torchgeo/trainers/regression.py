@@ -131,6 +131,10 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         batch = args[0]
         x = batch["image"]
         y = batch[self.target_key]
+
+        if y.ndim == 1:
+            y = y.unsqueeze(dim=1)
+
         y_hat = self(x)
 
         loss = self.loss(y_hat, y)
@@ -156,6 +160,10 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         batch_idx = args[1]
         x = batch["image"]
         y = batch[self.target_key]
+
+        if y.ndim == 1:
+            y = y.unsqueeze(dim=1)
+
         y_hat = self(x)
 
         loss = self.loss(y_hat, y)
@@ -198,6 +206,10 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         batch = args[0]
         x = batch["image"]
         y = batch[self.target_key]
+
+        if y.ndim == 1:
+            y = y.unsqueeze(dim=1)
+
         y_hat = self(x)
 
         loss = self.loss(y_hat, y)
