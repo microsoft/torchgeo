@@ -44,7 +44,9 @@ def plot(*args: Any, **kwargs: Any) -> None:
 
 
 class TestRegressionTask:
-    @pytest.mark.parametrize("name", ["cowc_counting", "cyclone", "sustainbench_crop_yield", "skippd"])
+    @pytest.mark.parametrize(
+        "name", ["cowc_counting", "cyclone", "sustainbench_crop_yield", "skippd"]
+    )
     def test_trainer(self, name: str, fast_dev_run: bool) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
 
@@ -55,8 +57,7 @@ class TestRegressionTask:
         model = instantiate(conf.module)
 
         model.model = RegressionTestModel(
-            in_chans=model_kwargs["in_channels"],
-            num_classes=model_kwargs["num_outputs"],
+            in_chans=conf.module.in_channels, num_classes=conf.module.num_outputs
         )
 
         # Instantiate trainer
