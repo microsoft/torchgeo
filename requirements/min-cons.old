@@ -5,4 +5,4 @@ pooch<1.5
 # https://github.com/jquast/wcwidth/issues/36
 wcwidth!=0.2.1
 
-setuptools<67.7.1
+setuptools<67.7
