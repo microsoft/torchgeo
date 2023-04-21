@@ -136,7 +136,7 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         if y_hat.ndim != y.ndim:
             y = y.unsqueeze(dim=1)
 
-        loss = self.loss(y_hat, y.to(torch.float))
+        loss: Tensor = self.loss(y_hat, y.to(torch.float))
         self.log("train_loss", loss)  # logging to TensorBoard
         self.train_metrics(y_hat, y.to(torch.float))
 
