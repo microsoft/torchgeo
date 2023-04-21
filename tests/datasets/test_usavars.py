@@ -90,9 +90,11 @@ class TestUSAVars:
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert x["image"].ndim == 3
-        assert len(x.keys()) == 2  # image, labels
+        assert len(x.keys()) == 4  # image, labels, centroid_lat, centroid_lon
         assert x["image"].shape[0] == 4  # R, G, B, Inf
         assert len(dataset.labels) == len(x["labels"])
+        assert len(x["centroid_lat"]) == 1
+        assert len(x["centroid_lon"]) == 1
 
     def test_len(self, dataset: USAVars) -> None:
         if dataset.split == "train":

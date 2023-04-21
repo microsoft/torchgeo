@@ -7,6 +7,7 @@ from typing import Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
+import torchvision.transforms.functional as F
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
@@ -142,6 +143,19 @@ class UCMerced(NonGeoClassificationDataset):
             transforms=transforms,
             is_valid_file=is_in_split,
         )
+
+    def _load_image(self, index: int) -> tuple[Tensor, Tensor]:
+        """Load a single image and its class label.
+
+        Args:
+            index: index to return
+
+        Returns:
+            the image and class label
+        """
+        img, label = super()._load_image(index)
+        img = F.resize(img, size=(256, 256), antialias=True)
+        return img, label
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.

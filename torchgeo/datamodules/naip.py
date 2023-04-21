@@ -3,7 +3,7 @@
 
 """National Agriculture Imagery Program (NAIP) datamodule."""
 
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
@@ -24,7 +24,7 @@ class NAIPChesapeakeDataModule(GeoDataModule):
         self,
         batch_size: int = 64,
         patch_size: Union[int, tuple[int, int]] = 256,
-        length: int = 1000,
+        length: Optional[int] = None,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:

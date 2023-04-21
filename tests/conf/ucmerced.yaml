@@ -11,5 +11,5 @@ experiment:
   datamodule:
     root: "tests/data/ucmerced"
     download: true
-    batch_size: 1
+    batch_size: 2
     num_workers: 0

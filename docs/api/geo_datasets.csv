@@ -17,5 +17,6 @@ Dataset,Type,Source,Size (px),Resolution (m)
 `LandCover.ai Geo`_,"Imagery, Masks",Aerial,"4,200--9,500",0.25--0.5
 `Landsat`_,Imagery,Landsat,"8,900x8,900",30
 `NAIP`_,Imagery,Aerial,"6,100x7,600",1
+`NLCD`_,Masks,Landsat,-,30
 `Open Buildings`_,Geometries,"Maxar, CNES/Airbus",-,-
 `Sentinel`_,Imagery,Sentinel,"10,000x10,000",10
