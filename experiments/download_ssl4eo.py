@@ -177,13 +177,19 @@ def get_patch(
     region = (
         ee.Geometry.Point(center_coord).buffer(radius).bounds()
     )  # sample region bound
-    reproj_bands = 'B8'
+    reproj_bands = "B8"
     reproj_resolution = 30
     other_bands = [b for b in bands if b != reproj_bands]
-    patch_reproj = image.select(reproj_bands).reproject(crs=image.select(reproj_bands).projection().crs(), scale=reproj_resolution).sampleRectangle(region, defaultValue=0)
+    patch_reproj = (
+        image.select(reproj_bands)
+        .reproject(
+            crs=image.select(reproj_bands).projection().crs(), scale=reproj_resolution
+        )
+        .sampleRectangle(region, defaultValue=0)
+    )
     patch_other = image.select(*other_bands).sampleRectangle(region, defaultValue=0)
-    #patch = image.select(*bands).sampleRectangle(region, defaultValue=0)
-    #features = patch.getInfo()  # the actual download
+    # patch = image.select(*bands).sampleRectangle(region, defaultValue=0)
+    # features = patch.getInfo()  # the actual download
     features_reproj = patch_reproj.getInfo()
     features_other = patch_other.getInfo()
 
@@ -285,7 +291,7 @@ def save_patch(
 
     img_all = np.concatenate([img for img in raster.values()], axis=2)
     save_geotiff(img_all, coords, os.path.join(patch_path, "all_bands.tif"))
-    #for band, img in raster.items():
+    # for band, img in raster.items():
     #    save_geotiff(img, coords, os.path.join(patch_path, f"{band}.tif"))
 
     with open(os.path.join(patch_path, "metadata.json"), "w") as f:
