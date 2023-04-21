@@ -228,10 +228,11 @@ class TestRegressionTask:
 
 class TestPixelwiseRegressionTask:
     @pytest.mark.parametrize(
-        "name,classname,batch_size,loss",
+        "name,classname,batch_size,loss,model_type",
         [
-            ("inria", InriaAerialImageLabelingDataModule, 1, "mse"),
-            ("inria", InriaAerialImageLabelingDataModule, 2, "mae"),
+            ("inria", InriaAerialImageLabelingDataModule, 1, "mse", "unet"),
+            ("inria", InriaAerialImageLabelingDataModule, 2, "mae", "deeplabv3+"),
+            ("inria", InriaAerialImageLabelingDataModule, 1, "mse", "fcn"),
         ],
     )
     def test_trainer(
@@ -241,6 +242,7 @@ class TestPixelwiseRegressionTask:
         classname: type[LightningDataModule],
         batch_size: int,
         loss: str,
+        model_type: str,
         fast_dev_run: bool,
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
@@ -257,6 +259,11 @@ class TestPixelwiseRegressionTask:
         monkeypatch.setattr(smp, "DeepLabV3Plus", create_model)
         model_kwargs = conf_dict["module"]
         model_kwargs["loss"] = loss
+        model_kwargs["model"] = model_type
+
+        if model_type == "fcn":
+            model_kwargs["num_filters"] = 2
+
         model = PixelwiseRegressionTask(**model_kwargs)
 
         model.model = PixelwiseRegressionTestModel(in_chans=model_kwargs["in_channels"])
