@@ -34,7 +34,9 @@ class FireRiskDataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.FireRisk`.
         """
         super().__init__(FireRisk, batch_size, num_workers, **kwargs)
-        self.aug = K.Normalize(mean=self.mean, std=self.std)
+        self.aug = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=["image"]
+        )
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.RandomRotation(p=0.5, degrees=90),
@@ -45,3 +47,27 @@ class FireRiskDataModule(NonGeoDataModule):
             K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
             data_keys=["image"],
         )
+
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
+
+        Called at the beginning of fit, validate, test, or predict. During distributed
+        training, this method is called from every process across all the nodes. Setting
+        state here is recommended.
+
+        Args:
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
+        """
+        if stage in ["fit"]:
+            self.train_dataset = self.dataset_class(  # type: ignore[call-arg]
+                split="train", **self.kwargs
+            )
+        if stage in ["fit", "validate"]:
+            self.val_dataset = self.dataset_class(  # type: ignore[call-arg]
+                split="val", **self.kwargs
+            )
+        if stage in ["test"]:
+            # FireRisk has no test set
+            self.test_dataset = self.dataset_class(  # type: ignore[call-arg]
+                split="val", **self.kwargs
+            )
