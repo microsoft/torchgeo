@@ -56,10 +56,7 @@ class TestFireRisk:
         FireRisk(root=str(tmp_path), download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = f"Dataset not found in `root={str(tmp_path)}` and `download=False`, "
-        "either specify a different `root` directory or use `download=True` "
-        "to automatically download the dataset."
-        with pytest.raises(RuntimeError, match=err):
+        with pytest.raises(RuntimeError, match="Dataset not found in"):
             FireRisk(str(tmp_path))
 
     def test_plot(self, dataset: FireRisk) -> None:
