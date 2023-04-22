@@ -11,7 +11,7 @@ import torch
 import torchvision
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
-from hydra.compose import OmegaConf
+from hydra.compose import OmegaConf  # type: ignore[attr-defined]
 from hydra.utils import instantiate
 from lightning.pytorch import Trainer
 from torchvision.models._api import WeightsEnum

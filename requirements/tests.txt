@@ -1,5 +1,5 @@
 # tests
-hydra-core>=1.1.0
+hydra-core>=1.1.1
 mypy==1.2.0
 nbmake==1.4.1
 pytest==7.3.1

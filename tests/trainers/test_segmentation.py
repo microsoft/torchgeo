@@ -9,7 +9,7 @@ import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 from _pytest.monkeypatch import MonkeyPatch
-from hydra.compose import OmegaConf
+from hydra.compose import OmegaConf  # type: ignore[attr-defined]
 from hydra.utils import instantiate
 from lightning.pytorch import Trainer
 from torch.nn.modules import Module
