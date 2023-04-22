@@ -3,64 +3,80 @@
 
 """Regression tasks."""
 
-from typing import Any, Dict, cast
+import os
+from typing import Any, cast
 
-import pytorch_lightning as pl
+import matplotlib.pyplot as plt
+import timm
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-import torchvision
-from packaging.version import parse
+from lightning.pytorch import LightningModule
 from torch import Tensor
-from torch.nn.modules import Conv2d, Linear
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
+from torchvision.models._api import WeightsEnum
 
-from ..datasets.utils import unbind_samples
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Conv2d.__module__ = "nn.Conv2d"
-Linear.__module__ = "nn.Linear"
+from ..datasets import unbind_samples
+from ..models import get_weight
+from . import utils
 
 
-class RegressionTask(pl.LightningModule):
-    """LightningModule for training models on regression datasets."""
+class RegressionTask(LightningModule):  # type: ignore[misc]
+    """LightningModule for training models on regression datasets.
+
+    Supports any available `Timm model
+    <https://huggingface.co/docs/timm/index>`_
+    as an architecture choice. To see a list of available
+    models, you can do:
+
+    .. code-block:: python
+
+        import timm
+        print(timm.list_models())
+    """
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters."""
-        model = self.hyperparams["model"]
-        pretrained = self.hyperparams["pretrained"]
+        # Create model
+        weights = self.hyperparams["weights"]
+        self.model = timm.create_model(
+            self.hyperparams["model"],
+            num_classes=self.hyperparams["num_outputs"],
+            in_chans=self.hyperparams["in_channels"],
+            pretrained=weights is True,
+        )
 
-        if parse(torchvision.__version__) >= parse("0.13"):
-            if pretrained:
-                kwargs = {
-                    "weights": getattr(
-                        torchvision.models, f"ResNet{model[6:]}_Weights"
-                    ).DEFAULT
-                }
+        # Load weights
+        if weights and weights is not True:
+            if isinstance(weights, WeightsEnum):
+                state_dict = weights.get_state_dict(progress=True)
+            elif os.path.exists(weights):
+                _, state_dict = utils.extract_backbone(weights)
             else:
-                kwargs = {"weights": None}
-        else:
-            kwargs = {"pretrained": pretrained}
-
-        self.model = getattr(torchvision.models, model)(**kwargs)
-        in_features = self.model.fc.in_features
-        self.model.fc = nn.Linear(in_features, out_features=1)
+                state_dict = get_weight(weights).get_state_dict(progress=True)
+            self.model = utils.load_state_dict(self.model, state_dict)
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize a new LightningModule for training simple regression models.
 
         Keyword Args:
-            model: Name of the model to use
-            learning_rate: Initial learning rate to use in the optimizer
-            learning_rate_schedule_patience: Patience parameter for the LR scheduler
+            model: Name of the timm model to use
+            weights: Either a weight enum, the string representation of a weight enum,
+                True for ImageNet weights, False or None for random weights,
+                or the path to a saved model state dict.
+            num_outputs: Number of prediction outputs
+            in_channels: Number of input channels to model
+            learning_rate: Learning rate for optimizer
+            learning_rate_schedule_patience: Patience for learning rate scheduler
+
+        .. versionchanged:: 0.4
+            Change regression model support from torchvision.models to timm
         """
         super().__init__()
 
         # Creates `self.hparams` from kwargs
-        self.save_hyperparameters()  # type: ignore[operator]
-        self.hyperparams = cast(Dict[str, Any], self.hparams)
+        self.save_hyperparameters()
+        self.hyperparams = cast(dict[str, Any], self.hparams)
         self.config_task()
 
         self.train_metrics = MetricCollection(
@@ -93,7 +109,7 @@ class RegressionTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         y = batch["label"].view(-1, 1)
-        y_hat = self.forward(x)
+        y_hat = self(x)
 
         loss = F.mse_loss(y_hat, y)
 
@@ -102,12 +118,8 @@ class RegressionTask(pl.LightningModule):
 
         return loss
 
-    def training_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch-level training metrics.
-
-        Args:
-            outputs: list of items returned by training_step
-        """
+    def on_train_epoch_end(self) -> None:
+        """Logs epoch-level training metrics."""
         self.log_dict(self.train_metrics.compute())
         self.train_metrics.reset()
 
@@ -122,33 +134,36 @@ class RegressionTask(pl.LightningModule):
         batch_idx = args[1]
         x = batch["image"]
         y = batch["label"].view(-1, 1)
-        y_hat = self.forward(x)
+        y_hat = self(x)
 
         loss = F.mse_loss(y_hat, y)
         self.log("val_loss", loss)
         self.val_metrics(y_hat, y)
 
-        if batch_idx < 10:
+        if (
+            batch_idx < 10
+            and hasattr(self.trainer, "datamodule")
+            and self.logger
+            and hasattr(self.logger, "experiment")
+            and hasattr(self.logger.experiment, "add_figure")
+        ):
             try:
-                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                datamodule = self.trainer.datamodule
                 batch["prediction"] = y_hat
                 for key in ["image", "label", "prediction"]:
                     batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
-                summary_writer = self.logger.experiment  # type: ignore[union-attr]
+                summary_writer = self.logger.experiment
                 summary_writer.add_figure(
                     f"image/{batch_idx}", fig, global_step=self.global_step
                 )
-            except AttributeError:
+                plt.close()
+            except ValueError:
                 pass
 
-    def validation_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level validation metrics.
-
-        Args:
-            outputs: list of items returned by validation_step
-        """
+    def on_validation_epoch_end(self) -> None:
+        """Logs epoch level validation metrics."""
         self.log_dict(self.val_metrics.compute())
         self.val_metrics.reset()
 
@@ -161,27 +176,35 @@ class RegressionTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         y = batch["label"].view(-1, 1)
-        y_hat = self.forward(x)
+        y_hat = self(x)
 
         loss = F.mse_loss(y_hat, y)
         self.log("test_loss", loss)
         self.test_metrics(y_hat, y)
 
-    def test_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level test metrics.
-
-        Args:
-            outputs: list of items returned by test_step
-        """
+    def on_test_epoch_end(self) -> None:
+        """Logs epoch level test metrics."""
         self.log_dict(self.test_metrics.compute())
         self.test_metrics.reset()
 
-    def configure_optimizers(self) -> Dict[str, Any]:
+    def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
+        """Compute and return the predictions.
+
+        Args:
+            batch: the output of your DataLoader
+        Returns:
+            predicted values
+        """
+        batch = args[0]
+        x = batch["image"]
+        y_hat: Tensor = self(x)
+        return y_hat
+
+    def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+            learning rate dictionary
         """
         optimizer = torch.optim.AdamW(
             self.model.parameters(), lr=self.hyperparams["learning_rate"]

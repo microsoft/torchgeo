@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -81,7 +81,7 @@ class ETCI2021(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -118,7 +118,7 @@ class ETCI2021(NonGeoDataset):
 
         self.files = self._load_files(self.root, self.split)
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -154,7 +154,7 @@ class ETCI2021(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str, split: str) -> List[Dict[str, str]]:
+    def _load_files(self, root: str, split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -171,15 +171,17 @@ class ETCI2021(NonGeoDataset):
         folders = [os.path.join(folder, "tiles") for folder in folders]
         for folder in folders:
             vvs = sorted(glob.glob(os.path.join(folder, "vv", "*.png")))
-            vhs = sorted(glob.glob(os.path.join(folder, "vh", "*.png")))
-            water_masks = sorted(
-                glob.glob(os.path.join(folder, "water_body_label", "*.png"))
-            )
+            vhs = [vv.replace("vv", "vh") for vv in vvs]
+            water_masks = [
+                vv.replace("_vv.png", ".png").replace("vv", "water_body_label")
+                for vv in vvs
+            ]
 
             if split != "test":
-                flood_masks = sorted(
-                    glob.glob(os.path.join(folder, "flood_label", "*.png"))
-                )
+                flood_masks = [
+                    vv.replace("_vv.png", ".png").replace("vv", "flood_label")
+                    for vv in vvs
+                ]
 
                 for vv, vh, flood_mask, water_mask in zip(
                     vvs, vhs, flood_masks, water_masks
@@ -205,7 +207,7 @@ class ETCI2021(NonGeoDataset):
         filename = os.path.join(path)
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
-            tensor = torch.from_numpy(array)
+            tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -258,7 +260,7 @@ class ETCI2021(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

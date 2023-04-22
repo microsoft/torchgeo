@@ -6,6 +6,7 @@
 from .batch import BatchGeoSampler, RandomBatchGeoSampler
 from .constants import Units
 from .single import GeoSampler, GridGeoSampler, PreChippedGeoSampler, RandomGeoSampler
+from .utils import get_random_bounding_box, tile_to_chips
 
 __all__ = (
     # Samplers
@@ -17,10 +18,9 @@ __all__ = (
     # Base classes
     "GeoSampler",
     "BatchGeoSampler",
+    # Utilities
+    "get_random_bounding_box",
+    "tile_to_chips",
     # Constants
     "Units",
 )
-
-# https://stackoverflow.com/questions/40018681
-for module in __all__:
-    globals()[module].__module__ = "torchgeo.samplers"

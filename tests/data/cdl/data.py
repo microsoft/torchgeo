@@ -54,7 +54,6 @@ raster_extensions = [".tif", ".tif.ovr"]
 
 
 if __name__ == "__main__":
-
     for dir in directories:
         filename = dir + ".zip"
 

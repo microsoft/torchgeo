@@ -11,6 +11,16 @@ Chesapeake Land Cover
 
 .. autoclass:: ChesapeakeCVPRDataModule
 
+L7 Irish
+^^^^^^^^
+
+.. autoclass:: L7IrishDataModule
+
+L8 Biome
+^^^^^^^^
+
+.. autoclass:: L8BiomeDataModule
+
 NAIP
 ^^^^
 
@@ -43,11 +53,17 @@ EuroSAT
 ^^^^^^^
 
 .. autoclass:: EuroSATDataModule
+.. autoclass:: EuroSAT100DataModule
 
 FAIR1M
 ^^^^^^
 
 .. autoclass:: FAIR1MDataModule
+
+GID-15
+^^^^^^
+
+.. autoclass:: GID15DataModule
 
 Inria Aerial Image Labeling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -84,6 +100,11 @@ RESISC45
 
 .. autoclass:: RESISC45DataModule
 
+Seasonal Contrast
+^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SeasonalContrastS2DataModule
+
 SEN12MS
 ^^^^^^^
 
@@ -94,10 +115,25 @@ So2Sat
 
 .. autoclass:: So2SatDataModule
 
+SpaceNet
+^^^^^^^^
+
+.. autoclass:: SpaceNet1DataModule
+
+SSL4EO
+^^^^^^
+
+.. autoclass:: SSL4EOS12DataModule
+
+SustainBench Crop Yield
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SustainBenchCropYieldDataModule
+
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
 
-.. autoclass:: CycloneDataModule
+.. autoclass:: TropicalCycloneDataModule
 
 UC Merced
 ^^^^^^^^^
@@ -123,3 +159,21 @@ xView2
 ^^^^^^
 
 .. autoclass:: XView2DataModule
+
+Base Classes
+------------
+
+GeoDataModule
+^^^^^^^^^^^^^
+
+.. autoclass:: GeoDataModule
+
+NonGeoDataModule
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: NonGeoDataModule
+
+Utilities
+---------
+
+.. autoclass:: MisconfigurationException

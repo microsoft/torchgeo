@@ -7,10 +7,9 @@ experiment:
   task: "naipchesapeake"
   module:
     loss: "ce"
-    segmentation_model: "deeplabv3+"
-    encoder_name: "resnet34"
-    encoder_weights: "imagenet"
-    encoder_output_stride: 16
+    model: "deeplabv3+"
+    backbone: "resnet34"
+    weights: "imagenet"
     learning_rate: 1e-3
     learning_rate_schedule_patience: 2
     in_channels: 4
@@ -18,8 +17,8 @@ experiment:
     num_filters: 64
     ignore_index: null
   datamodule:
-    naip_root_dir: "data/naip"
-    chesapeake_root_dir: "data/chesapeake/BAYWIDE"
+    naip_root: "data/naip"
+    chesapeake_root: "data/chesapeake/BAYWIDE"
     batch_size: 32
     num_workers: 4
     patch_size: 32

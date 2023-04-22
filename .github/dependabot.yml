@@ -1,15 +1,24 @@
 version: 2
 updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "pip"
     directory: "/requirements"
     schedule:
       interval: "daily"
     ignore:
-      # radiant-mlhub 0.5+ changed download behavior:
-      # https://github.com/radiantearth/radiant-mlhub/pull/104
-      - dependency-name: "radiant-mlhub"
+      # scikit-image does not support latest scipy
+      # https://github.com/scikit-image/scikit-image/pull/6773
+      - dependency-name: "scipy"
       # setuptools releases new versions almost daily
       - dependency-name: "setuptools"
         update-types: ["version-update:semver-patch"]
-      # segmentation-models-pytorch requires older timm, can't update
+      # Sphinx 6 is incompatible with pytorch-sphinx-theme
+      # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
+      - dependency-name: "sphinx"
+      # segmentation-models-pytorch pins timm, must update in unison
       - dependency-name: "timm"
+      # torchvision pins torch, must update in unison
+      - dependency-name: "torch"

@@ -2,8 +2,8 @@
 # Licensed under the MIT License.
 
 import math
+from collections.abc import Iterator
 from itertools import product
-from typing import Dict, Iterator
 
 import pytest
 from _pytest.fixtures import SubRequest
@@ -17,6 +17,7 @@ from torchgeo.samplers import (
     PreChippedGeoSampler,
     RandomGeoSampler,
     Units,
+    tile_to_chips,
 )
 
 
@@ -38,7 +39,7 @@ class CustomGeoDataset(GeoDataset):
         self._crs = crs
         self.res = res
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, BoundingBox]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
         return {"index": query}
 
 
@@ -182,8 +183,7 @@ class TestGridGeoSampler:
             )
 
     def test_len(self, sampler: GridGeoSampler) -> None:
-        rows = math.ceil((100 - sampler.size[0]) / sampler.stride[0]) + 1
-        cols = math.ceil((100 - sampler.size[1]) / sampler.stride[1]) + 1
+        rows, cols = tile_to_chips(sampler.roi, sampler.size, sampler.stride)
         length = rows * cols * 2  # two items in dataset
         assert len(sampler) == length
 

@@ -7,7 +7,6 @@ import itertools
 import os
 import subprocess
 from multiprocessing import Process, Queue
-from typing import List
 
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
 GPUS = [0, 1, 2, 3, 3]
@@ -18,7 +17,7 @@ DATA_DIR = ""  # path to the So2Sat data directory
 model_options = ["resnet50"]
 lr_options = [1e-4]
 loss_options = ["ce"]
-weight_options: List[str] = []  # set paths to checkpoint files
+weight_options: list[str] = []  # set paths to checkpoint files
 bands_options = ["s2"]
 
 
@@ -36,10 +35,9 @@ def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
 if __name__ == "__main__":
     work: "Queue[str]" = Queue()
 
-    for (model, lr, loss, weights, bands) in itertools.product(
+    for model, lr, loss, weights, bands in itertools.product(
         model_options, lr_options, loss_options, weight_options, bands_options
     ):
-
         experiment_name = f"{model}_{lr}_{loss}_byol_{bands}-{weights.split('/')[-2]}"
 
         output_dir = os.path.join("output", "so2sat_experiments")
@@ -47,12 +45,11 @@ if __name__ == "__main__":
         config_file = os.path.join("conf", "so2sat.yaml")
 
         if not os.path.exists(os.path.join(output_dir, experiment_name)):
-
             command = (
                 "python train.py"
                 + f" config_file={config_file}"
                 + f" experiment.name={experiment_name}"
-                + f" experiment.module.classification_model={model}"
+                + f" experiment.module.model={model}"
                 + f" experiment.module.learning_rate={lr}"
                 + f" experiment.module.loss={loss}"
                 + f" experiment.module.weights={weights}"

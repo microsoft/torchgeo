@@ -1,11 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Aster Global Digital Evaluation Model dataset."""
+"""Aster Global Digital Elevation Model dataset."""
 
 import glob
 import os
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 from rasterio.crs import CRS
@@ -14,9 +14,9 @@ from .geo import RasterDataset
 
 
 class AsterGDEM(RasterDataset):
-    """Aster Global Digital Evaluation Model Dataset.
+    """Aster Global Digital Elevation Model Dataset.
 
-    The `Aster Global Digital Evaluation Model
+    The `Aster Global Digital Elevation Model
     <https://lpdaac.usgs.gov/products/astgtmv003/>`_
     dataset is a Digital Elevation Model (DEM) on a global scale.
     The dataset can be downloaded from the
@@ -49,7 +49,7 @@ class AsterGDEM(RasterDataset):
         root: str = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -94,7 +94,7 @@ class AsterGDEM(RasterDataset):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

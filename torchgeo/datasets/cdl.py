@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -44,6 +44,7 @@ class CDL(RasterDataset):
 
     url = "https://www.nass.usda.gov/Research_and_Science/Cropland/Release/datasets/{}_30m_cdls.zip"  # noqa: E501
     md5s = [
+        (2022, "754cf50670cdfee511937554785de3e6"),
         (2021, "27606eab08fe975aa138baad3e5dfcd8"),
         (2020, "483ee48c503aa81b684225179b402d42"),
         (2019, "a5168a2fc93acbeaa93e24eee3d8c696"),
@@ -324,7 +325,7 @@ class CDL(RasterDataset):
         root: str = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -400,7 +401,7 @@ class CDL(RasterDataset):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

@@ -1,9 +1,9 @@
 program:
   overwrite: True
 
-  
 trainer:
-  gpus: 1
+  accelerator: gpu
+  devices: 1
   min_epochs: 5
   max_epochs: 100
   benchmark: True
@@ -14,17 +14,16 @@ experiment:
   name: "inria_test"
   module:
     loss: "ce"
-    segmentation_model: "unet"
-    encoder_name: "resnet18"
-    encoder_weights: "imagenet"
+    model: "unet"
+    backbone: "resnet18"
+    weights: "imagenet"
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
     in_channels: 3
     num_classes: 2
     ignore_index: null
   datamodule:
-      root_dir: "data/inria"
-      batch_size: 2
-      num_workers: 32
-      patch_size: 512
-      num_patches_per_tile: 4
+    root: "data/inria"
+    batch_size: 1
+    patch_size: 512
+    num_workers: 32

@@ -6,7 +6,8 @@
 import abc
 import os
 import sys
-from typing import Any, Callable, Dict, Optional, Sequence
+from collections.abc import Sequence
+from typing import Any, Callable, Optional, cast
 
 import fiona
 import matplotlib.pyplot as plt
@@ -19,6 +20,7 @@ import shapely.ops
 import torch
 from matplotlib.colors import ListedColormap
 from rasterio.crs import CRS
+from torch import Tensor
 
 from .geo import GeoDataset, RasterDataset
 from .utils import BoundingBox, download_url, extract_archive
@@ -35,15 +37,6 @@ class Chesapeake(RasterDataset, abc.ABC):
     Center (CIC) in partnership with the University of Vermont and WorldView Solutions,
     Inc. It consists of one-meter resolution land cover information for the Chesapeake
     Bay watershed (~100,000 square miles of land).
-
-    For more information, see:
-
-    * `User Guide
-      <https://chesapeakeconservancy.org/wp-content/uploads/2017/01/LandCover101Guide.pdf>`_
-    * `Class Descriptions
-      <https://chesapeakeconservancy.org/wp-content/uploads/2020/03/LC_Class_Descriptions.pdf>`_
-    * `Accuracy Assessment
-      <https://chesapeakeconservancy.org/wp-content/uploads/2017/01/Chesapeake_Conservancy_Accuracy_Assessment_Methodology.pdf>`_
     """
 
     is_image = False
@@ -98,7 +91,7 @@ class Chesapeake(RasterDataset, abc.ABC):
         root: str = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -177,7 +170,7 @@ class Chesapeake(RasterDataset, abc.ABC):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
@@ -414,7 +407,7 @@ class ChesapeakeCVPR(GeoDataset):
     additional layer of data to this dataset containing a prior over the Chesapeake Bay
     land cover classes generated from the NLCD land cover labels. For more information
     about this layer see `the dataset documentation
-    <https://zenodo.org/record/5652512#.YcuAIZLMIQ8>`_.
+    <https://zenodo.org/record/5866525>`_.
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -437,6 +430,46 @@ class ChesapeakeCVPR(GeoDataset):
 
     crs = CRS.from_epsg(3857)
     res = 1
+
+    lc_cmap = {
+        0: (0, 0, 0, 0),
+        1: (0, 197, 255, 255),
+        2: (38, 115, 0, 255),
+        3: (163, 255, 115, 255),
+        4: (255, 170, 0, 255),
+        5: (156, 156, 156, 255),
+        6: (0, 0, 0, 255),
+        15: (0, 0, 0, 0),
+    }
+
+    nlcd_cmap = {
+        0: (0, 0, 0, 0),
+        11: (70, 107, 159, 255),
+        12: (209, 222, 248, 255),
+        21: (222, 197, 197, 255),
+        22: (217, 146, 130, 255),
+        23: (235, 0, 0, 255),
+        24: (171, 0, 0, 255),
+        31: (179, 172, 159, 255),
+        41: (104, 171, 95, 255),
+        42: (28, 95, 44, 255),
+        43: (181, 197, 143, 255),
+        52: (204, 184, 121, 255),
+        71: (223, 223, 194, 255),
+        81: (220, 217, 57, 255),
+        82: (171, 108, 40, 255),
+        90: (184, 217, 235, 255),
+        95: (108, 159, 184, 255),
+    }
+
+    prior_color_matrix = np.array(
+        [
+            [0.0, 0.77254902, 1.0, 1.0],
+            [0.14901961, 0.45098039, 0.0, 1.0],
+            [0.63921569, 1.0, 0.45098039, 1.0],
+            [0.61176471, 0.61176471, 0.61176471, 1.0],
+        ]
+    )
 
     valid_layers = [
         "naip-new",
@@ -501,7 +534,7 @@ class ChesapeakeCVPR(GeoDataset):
         root: str = "data",
         splits: Sequence[str] = ["de-train"],
         layers: Sequence[str] = ["naip-new", "lc"],
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -540,6 +573,16 @@ class ChesapeakeCVPR(GeoDataset):
 
         super().__init__(transforms)
 
+        lc_colors = np.zeros((max(self.lc_cmap.keys()) + 1, 4))
+        lc_colors[list(self.lc_cmap.keys())] = list(self.lc_cmap.values())
+        lc_colors = lc_colors[:, :3] / 255
+        self._lc_cmap = ListedColormap(lc_colors)
+
+        nlcd_colors = np.zeros((max(self.nlcd_cmap.keys()) + 1, 4))
+        nlcd_colors[list(self.nlcd_cmap.keys())] = list(self.nlcd_cmap.values())
+        nlcd_colors = nlcd_colors[:, :3] / 255
+        self._nlcd_cmap = ListedColormap(nlcd_colors)
+
         # Add all tiles into the index in epsg:3857 based on the included geojson
         mint: float = 0
         maxt: float = sys.maxsize
@@ -570,7 +613,7 @@ class ChesapeakeCVPR(GeoDataset):
                         },
                     )
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -583,7 +626,7 @@ class ChesapeakeCVPR(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object for hit in hits]
+        filepaths = cast(list[dict[str, str]], [hit.object for hit in hits])
 
         sample = {"image": [], "mask": [], "crs": self.crs, "bbox": query}
 
@@ -599,7 +642,6 @@ class ChesapeakeCVPR(GeoDataset):
             query_box = shapely.geometry.box(minx, miny, maxx, maxy)
 
             for layer in self.layers:
-
                 fn = filenames[layer]
 
                 with rasterio.open(os.path.join(self.root, fn)) as f:
@@ -637,8 +679,8 @@ class ChesapeakeCVPR(GeoDataset):
         sample["image"] = np.concatenate(sample["image"], axis=0)
         sample["mask"] = np.concatenate(sample["mask"], axis=0)
 
-        sample["image"] = torch.from_numpy(sample["image"])
-        sample["mask"] = torch.from_numpy(sample["mask"])
+        sample["image"] = torch.from_numpy(sample["image"]).float()
+        sample["mask"] = torch.from_numpy(sample["mask"]).long()
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -651,10 +693,11 @@ class ChesapeakeCVPR(GeoDataset):
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        # Check if the extracted files already exist
+
         def exists(filename: str) -> bool:
             return os.path.exists(os.path.join(self.root, filename))
 
+        # Check if the extracted files already exist
         if all(map(exists, self.files)):
             return
 
@@ -694,3 +737,92 @@ class ChesapeakeCVPR(GeoDataset):
         """Extract the dataset."""
         for subdataset in self.subdatasets:
             extract_archive(os.path.join(self.root, self.filenames[subdataset]))
+
+    def plot(
+        self,
+        sample: dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.4
+        """
+        image = np.rollaxis(sample["image"].numpy(), 0, 3)
+        mask = sample["mask"].numpy()
+        if mask.ndim == 3:
+            mask = np.rollaxis(mask, 0, 3)
+        else:
+            mask = np.expand_dims(mask, 2)
+
+        num_panels = len(self.layers)
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            predictions = sample["prediction"].numpy()
+            num_panels += 1
+
+        fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
+
+        i = 0
+        for layer in self.layers:
+            if layer == "naip-new" or layer == "naip-old":
+                img = image[:, :, :3] / 255
+                image = image[:, :, 4:]
+                axs[i].axis("off")
+                axs[i].imshow(img)
+            elif layer == "landsat-leaf-on" or layer == "landsat-leaf-off":
+                img = image[:, :, [3, 2, 1]] / 3000
+                image = image[:, :, 9:]
+                axs[i].axis("off")
+                axs[i].imshow(img)
+            elif layer == "nlcd":
+                img = mask[:, :, 0]
+                mask = mask[:, :, 1:]
+                axs[i].imshow(
+                    img, vmin=0, vmax=95, cmap=self._nlcd_cmap, interpolation="none"
+                )
+                axs[i].axis("off")
+            elif layer == "lc":
+                img = mask[:, :, 0]
+                mask = mask[:, :, 1:]
+                axs[i].imshow(
+                    img, vmin=0, vmax=15, cmap=self._lc_cmap, interpolation="none"
+                )
+                axs[i].axis("off")
+            elif layer == "buildings":
+                img = mask[:, :, 0]
+                mask = mask[:, :, 1:]
+                axs[i].imshow(img, vmin=0, vmax=1, cmap="gray", interpolation="none")
+                axs[i].axis("off")
+            elif layer == "prior_from_cooccurrences_101_31_no_osm_no_buildings":
+                img = (mask[:, :, :4] @ self.prior_color_matrix) / 255
+                mask = mask[:, :, 4:]
+                axs[i].imshow(img)
+                axs[i].axis("off")
+
+            if show_titles:
+                if layer == "prior_from_cooccurrences_101_31_no_osm_no_buildings":
+                    axs[i].set_title("prior")
+                else:
+                    axs[i].set_title(layer)
+            i += 1
+
+        if showing_predictions:
+            axs[i].imshow(
+                predictions, vmin=0, vmax=15, cmap=self._lc_cmap, interpolation="none"
+            )
+            axs[i].axis("off")
+            if show_titles:
+                axs[i].set_title("Predictions")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig

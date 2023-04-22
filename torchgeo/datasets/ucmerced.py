@@ -3,10 +3,11 @@
 
 """UC Merced dataset."""
 import os
-from typing import Callable, Dict, Optional, cast
+from typing import Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
+import torchvision.transforms.functional as F
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
@@ -14,9 +15,9 @@ from .utils import check_integrity, download_url, extract_archive
 
 
 class UCMerced(NonGeoClassificationDataset):
-    """UC Merced dataset.
+    """UC Merced Land Use dataset.
 
-    The `UC Merced <http://weegee.vision.ucmerced.edu/datasets/landuse.html>`__
+    The `UC Merced Land Use <http://weegee.vision.ucmerced.edu/datasets/landuse.html>`_
     dataset is a land use classification dataset of 2.1k 256x256 1ft resolution RGB
     images of urban locations around the U.S. extracted from the USGS National Map Urban
     Area Imagery collection with 21 land use classes (100 images per class).
@@ -61,7 +62,7 @@ class UCMerced(NonGeoClassificationDataset):
     * https://dl.acm.org/doi/10.1145/1869790.1869829
     """
 
-    url = "http://weegee.vision.ucmerced.edu/datasets/UCMerced_LandUse.zip"  # 318 MB
+    url = "https://huggingface.co/datasets/torchgeo/ucmerced/resolve/main/UCMerced_LandUse.zip"  # noqa: E501
     filename = "UCMerced_LandUse.zip"
     md5 = "5b7ec56793786b6dc8a908e8854ac0e4"
 
@@ -106,7 +107,7 @@ class UCMerced(NonGeoClassificationDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -142,6 +143,19 @@ class UCMerced(NonGeoClassificationDataset):
             transforms=transforms,
             is_valid_file=is_in_split,
         )
+
+    def _load_image(self, index: int) -> tuple[Tensor, Tensor]:
+        """Load a single image and its class label.
+
+        Args:
+            index: index to return
+
+        Returns:
+            the image and class label
+        """
+        img, label = super()._load_image(index)
+        img = F.resize(img, size=(256, 256), antialias=True)
+        return img, label
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
@@ -205,7 +219,7 @@ class UCMerced(NonGeoClassificationDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

@@ -30,7 +30,7 @@ For [conda](https://docs.conda.io/) and [spack](https://spack.io/) installation 
 
 ## Documentation
 
-You can find the documentation for TorchGeo on [ReadTheDocs](https://torchgeo.readthedocs.io). This includes API documentation, contributing instructions, and several [tutorials](https://torchgeo.readthedocs.io/en/stable/tutorials/getting_started.html). For more details, check out our [paper](https://arxiv.org/abs/2111.08872) and [blog](https://pytorch.org/blog/geospatial-deep-learning-with-torchgeo/).
+You can find the documentation for TorchGeo on [ReadTheDocs](https://torchgeo.readthedocs.io). This includes API documentation, contributing instructions, and several [tutorials](https://torchgeo.readthedocs.io/en/stable/tutorials/getting_started.html). For more details, check out our [paper](https://dl.acm.org/doi/10.1145/3557915.3560953) and [blog](https://pytorch.org/blog/geospatial-deep-learning-with-torchgeo/).
 
 ## Example Usage
 
@@ -39,8 +39,9 @@ The following sections give basic examples of what you can do with TorchGeo.
 First we'll import various classes and functions used in the following sections:
 
 ```python
-from pytorch_lightning import Trainer
+from lightning.pytorch import Trainer
 from torch.utils.data import DataLoader
+
 from torchgeo.datamodules import InriaAerialImageLabelingDataModule
 from torchgeo.datasets import CDL, Landsat7, Landsat8, VHR10, stack_samples
 from torchgeo.samplers import RandomGeoSampler
@@ -56,8 +57,8 @@ Many remote sensing applications involve working with [*geospatial datasets*](ht
 In this example, we show how easy it is to work with geospatial data and to sample small image patches from a combination of [Landsat](https://www.usgs.gov/landsat-missions) and [Cropland Data Layer (CDL)](https://data.nal.usda.gov/dataset/cropscape-cropland-data-layer) data using TorchGeo. First, we assume that the user has Landsat 7 and 8 imagery downloaded. Since Landsat 8 has more spectral bands than Landsat 7, we'll only use the bands that both satellites have in common. We'll create a single dataset including all images from both Landsat 7 and 8 data by taking the union between these two datasets.
 
 ```python
-landsat7 = Landsat7(root="...")
-landsat8 = Landsat8(root="...", bands=Landsat8.all_bands[1:-2])
+landsat7 = Landsat7(root="...", bands=["B1", ..., "B7"])
+landsat8 = Landsat8(root="...", bands=["B2", ..., "B8"])
 landsat = landsat7 | landsat8
 ```
 
@@ -114,18 +115,28 @@ for batch in dataloader:
     # train a model, or make predictions using a pre-trained model
 ```
 
-<img src="https://raw.githubusercontent.com/microsoft/torchgeo/main/images/vhr10.png" alt="Example predictions from a Mask R-CNN model trained on the NWPU VHR-10 dataset"/>
+<img src="https://raw.githubusercontent.com/microsoft/torchgeo/main/images/vhr10.png" alt="Example predictions from a Mask R-CNN model trained on the VHR-10 dataset"/>
 
 All TorchGeo datasets are compatible with PyTorch data loaders, making them easy to integrate into existing training workflows. The only difference between a benchmark dataset in TorchGeo and a similar dataset in torchvision is that each dataset returns a dictionary with keys for each PyTorch `Tensor`.
 
-### Reproducibility with PyTorch Lightning
+### Reproducibility with Lightning
 
-In order to facilitate direct comparisons between results published in the literature and further reduce the boilerplate code needed to run experiments with datasets in TorchGeo, we have created PyTorch Lightning [*datamodules*](https://torchgeo.readthedocs.io/en/stable/api/datamodules.html) with well-defined train-val-test splits and [*trainers*](https://torchgeo.readthedocs.io/en/stable/api/trainers.html) for various tasks like classification, regression, and semantic segmentation. These datamodules show how to incorporate augmentations from the kornia library, include preprocessing transforms (with pre-calculated channel statistics), and let users easily experiment with hyperparameters related to the data itself (as opposed to the modeling process). Training a semantic segmentation model on the [Inria Aerial Image Labeling](https://project.inria.fr/aerialimagelabeling/) dataset is as easy as a few imports and four lines of code.
+In order to facilitate direct comparisons between results published in the literature and further reduce the boilerplate code needed to run experiments with datasets in TorchGeo, we have created Lightning [*datamodules*](https://torchgeo.readthedocs.io/en/stable/api/datamodules.html) with well-defined train-val-test splits and [*trainers*](https://torchgeo.readthedocs.io/en/stable/api/trainers.html) for various tasks like classification, regression, and semantic segmentation. These datamodules show how to incorporate augmentations from the kornia library, include preprocessing transforms (with pre-calculated channel statistics), and let users easily experiment with hyperparameters related to the data itself (as opposed to the modeling process). Training a semantic segmentation model on the [Inria Aerial Image Labeling](https://project.inria.fr/aerialimagelabeling/) dataset is as easy as a few imports and four lines of code.
 
 ```python
-datamodule = InriaAerialImageLabelingDataModule(root_dir="...", batch_size=64, num_workers=6)
-task = SemanticSegmentationTask(segmentation_model="unet", encoder_weights="imagenet", learning_rate=0.1)
-trainer = Trainer(gpus=1, default_root_dir="...")
+datamodule = InriaAerialImageLabelingDataModule(root="...", batch_size=64, num_workers=6)
+task = SemanticSegmentationTask(
+    model="unet",
+    backbone="resnet50",
+    weights="imagenet",
+    in_channels=3,
+    num_classes=2,
+    loss="ce",
+    ignore_index=None,
+    learning_rate=0.1,
+    learning_rate_schedule_patience=6,
+)
+trainer = Trainer(default_root_dir="...")
 
 trainer.fit(model=task, datamodule=datamodule)
 ```
@@ -140,15 +151,20 @@ $ python train.py config_file=conf/landcoverai.yaml
 
 ## Citation
 
-If you use this software in your work, please cite our [paper](https://arxiv.org/abs/2111.08872):
+If you use this software in your work, please cite our [paper](https://dl.acm.org/doi/10.1145/3557915.3560953):
 ```
-@article{Stewart_TorchGeo_deep_learning_2021,
+@inproceedings{Stewart_TorchGeo_Deep_Learning_2022,
+    address = {Seattle, Washington},
     author = {Stewart, Adam J. and Robinson, Caleb and Corley, Isaac A. and Ortiz, Anthony and Lavista Ferres, Juan M. and Banerjee, Arindam},
-    journal = {arXiv preprint arXiv:2111.08872},
+    booktitle = {Proceedings of the 30th International Conference on Advances in Geographic Information Systems},
+    doi = {10.1145/3557915.3560953},
     month = {11},
+    pages = {1--12},
+    publisher = {Association for Computing Machinery},
+    series = {SIGSPATIAL '22},
     title = {{TorchGeo}: Deep Learning With Geospatial Data},
-    url = {https://github.com/microsoft/torchgeo},
-    year = {2021}
+    url = {https://dl.acm.org/doi/10.1145/3557915.3560953},
+    year = {2022}
 }
 ```
 

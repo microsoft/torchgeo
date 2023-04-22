@@ -4,7 +4,6 @@
 import os
 import pickle
 from pathlib import Path
-from typing import Dict, List
 
 import pytest
 import torch
@@ -24,8 +23,6 @@ from torchgeo.datasets import (
     Sentinel2,
     UnionDataset,
     VectorDataset,
-    VisionClassificationDataset,
-    VisionDataset,
 )
 
 
@@ -41,7 +38,7 @@ class CustomGeoDataset(GeoDataset):
         self._crs = crs
         self.res = res
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, BoundingBox]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
         hits = self.index.intersection(tuple(query), objects=True)
         hit = next(iter(hits))
         bounds = BoundingBox(*hit.bounds)
@@ -53,19 +50,12 @@ class CustomVectorDataset(VectorDataset):
 
 
 class CustomSentinelDataset(Sentinel2):
-    all_bands: List[str] = []
+    all_bands: list[str] = []
+    separate_files = False
 
 
 class CustomNonGeoDataset(NonGeoDataset):
-    def __getitem__(self, index: int) -> Dict[str, int]:
-        return {"index": index}
-
-    def __len__(self) -> int:
-        return 2
-
-
-class CustomVisionDataset(VisionDataset):
-    def __getitem__(self, index: int) -> Dict[str, int]:
+    def __getitem__(self, index: int) -> dict[str, int]:
         return {"index": index}
 
     def __len__(self) -> int:
@@ -211,7 +201,7 @@ class TestRasterDataset:
         x = custom_dtype_ds[custom_dtype_ds.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
-        assert x["image"].dtype == torch.int64
+        assert x["image"].dtype == torch.float32
 
     def test_invalid_query(self, sentinel: Sentinel2) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
@@ -224,7 +214,7 @@ class TestRasterDataset:
         with pytest.raises(FileNotFoundError, match="No RasterDataset data was found"):
             RasterDataset(str(tmp_path))
 
-    def test_no_allbands(self) -> None:
+    def test_no_all_bands(self) -> None:
         root = os.path.join("tests", "data", "sentinel2")
         bands = ["B04", "B03", "B02"]
         transforms = nn.Identity()
@@ -245,11 +235,33 @@ class TestVectorDataset:
         transforms = nn.Identity()
         return CustomVectorDataset(root, res=0.1, transforms=transforms)
 
+    @pytest.fixture(scope="class")
+    def multilabel(self) -> CustomVectorDataset:
+        root = os.path.join("tests", "data", "vector")
+        transforms = nn.Identity()
+        return CustomVectorDataset(
+            root, res=0.1, transforms=transforms, label_name="label_id"
+        )
+
     def test_getitem(self, dataset: CustomVectorDataset) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
+        assert torch.equal(
+            x["mask"].unique(),  # type: ignore[no-untyped-call]
+            torch.tensor([0, 1], dtype=torch.uint8),
+        )
+
+    def test_getitem_multilabel(self, multilabel: CustomVectorDataset) -> None:
+        x = multilabel[multilabel.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x["crs"], CRS)
+        assert isinstance(x["mask"], torch.Tensor)
+        assert torch.equal(
+            x["mask"].unique(),  # type: ignore[no-untyped-call]
+            torch.tensor([0, 1, 2, 3], dtype=torch.uint8),
+        )
 
     def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
         query = BoundingBox(1.1, 1.9, 1.1, 1.9, 0, 0)
@@ -312,13 +324,6 @@ class TestNonGeoDataset:
             NonGeoDataset()  # type: ignore[abstract]
 
 
-class TestVisionDataset:
-    def test_deprecation(self) -> None:
-        match = "VisionDataset is deprecated, use NonGeoDataset instead."
-        with pytest.warns(DeprecationWarning, match=match):
-            CustomVisionDataset()
-
-
 class TestNonGeoClassificationDataset:
     @pytest.fixture(scope="class")
     def dataset(self, root: str) -> NonGeoClassificationDataset:
@@ -369,21 +374,13 @@ class TestNonGeoClassificationDataset:
         assert "size: 2" in str(dataset)
 
 
-class TestVisionClassificationDataset:
-    def test_deprecation(self) -> None:
-        root = os.path.join("tests", "data", "nongeoclassification")
-        match = "VisionClassificationDataset is deprecated, "
-        match += "use NonGeoClassificationDataset instead."
-        with pytest.warns(DeprecationWarning, match=match):
-            VisionClassificationDataset(root)
-
-
 class TestIntersectionDataset:
     @pytest.fixture(scope="class")
     def dataset(self) -> IntersectionDataset:
         ds1 = CustomGeoDataset()
         ds2 = CustomGeoDataset()
-        return ds1 & ds2
+        transforms = nn.Identity()
+        return IntersectionDataset(ds1, ds2, transforms=transforms)
 
     def test_getitem(self, dataset: IntersectionDataset) -> None:
         query = BoundingBox(0, 1, 2, 3, 4, 5)
@@ -407,10 +404,20 @@ class TestIntersectionDataset:
             IntersectionDataset(ds1, ds2)  # type: ignore[arg-type]
 
     def test_different_crs(self) -> None:
-        ds1 = CustomGeoDataset(crs=CRS.from_epsg(3005))
-        ds2 = CustomGeoDataset(crs=CRS.from_epsg(32616))
+        ds1 = CustomGeoDataset(BoundingBox(0, 1, 0, 1, 0, 1), crs=CRS.from_epsg(3005))
+        ds2 = CustomGeoDataset(
+            BoundingBox(
+                -3547229.913123814,
+                6360089.518213182,
+                -3547229.913123814,
+                6360089.518213182,
+                -3547229.913123814,
+                6360089.518213182,
+            ),
+            crs=CRS.from_epsg(32616),
+        )
         ds = IntersectionDataset(ds1, ds2)
-        assert len(ds) == 0
+        assert len(ds) == 1
 
     def test_different_res(self) -> None:
         ds1 = CustomGeoDataset(res=1)
@@ -421,8 +428,9 @@ class TestIntersectionDataset:
     def test_no_overlap(self) -> None:
         ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
         ds2 = CustomGeoDataset(BoundingBox(6, 7, 8, 9, 10, 11))
-        ds = IntersectionDataset(ds1, ds2)
-        assert len(ds) == 0
+        msg = "Datasets have no spatiotemporal intersection"
+        with pytest.raises(RuntimeError, match=msg):
+            IntersectionDataset(ds1, ds2)
 
     def test_invalid_query(self, dataset: IntersectionDataset) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
@@ -437,7 +445,8 @@ class TestUnionDataset:
     def dataset(self) -> UnionDataset:
         ds1 = CustomGeoDataset(bounds=BoundingBox(0, 1, 0, 1, 0, 1))
         ds2 = CustomGeoDataset(bounds=BoundingBox(2, 3, 2, 3, 2, 3))
-        return ds1 | ds2
+        transforms = nn.Identity()
+        return UnionDataset(ds1, ds2, transforms=transforms)
 
     def test_getitem(self, dataset: UnionDataset) -> None:
         query = BoundingBox(0, 1, 0, 1, 0, 1)

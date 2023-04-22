@@ -5,7 +5,6 @@ import builtins
 import glob
 import os
 import shutil
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -52,7 +51,7 @@ class TestIDTReeS:
         transforms = nn.Identity()
         return IDTReeS(root, split, task, transforms, download=True, checksum=True)
 
-    @pytest.fixture(params=["pandas", "laspy", "open3d"])
+    @pytest.fixture(params=["pandas", "laspy", "pyvista"])
     def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:
         import_orig = builtins.__import__
         package = str(request.param)
@@ -117,7 +116,7 @@ class TestIDTReeS:
                 match=f"{package} is not installed and is required to use this dataset",
             ):
                 IDTReeS(dataset.root, dataset.split, dataset.task)
-        elif package in ["open3d"]:
+        elif package in ["pyvista"]:
             with pytest.raises(
                 ImportError,
                 match=f"{package} is not installed and is required to plot point cloud",
@@ -140,15 +139,9 @@ class TestIDTReeS:
             dataset.plot(x, show_titles=False)
             plt.close()
 
-    @pytest.mark.skipif(
-        sys.platform in ["darwin", "win32"],
-        reason="segmentation fault on macOS and windows",
-    )
     def test_plot_las(self, dataset: IDTReeS) -> None:
-        pytest.importorskip("open3d", minversion="0.11.2")
-        vis = dataset.plot_las(index=0, colormap="BrBG")
-        vis.close()
-        vis = dataset.plot_las(index=0, colormap=None)
-        vis.close()
-        vis = dataset.plot_las(index=1, colormap=None)
-        vis.close()
+        pyvista = pytest.importorskip("pyvista", minversion="0.35.1")
+
+        # Test point cloud without colors
+        point_cloud = dataset.plot_las(index=0)
+        pyvista.plot(point_cloud, scalars=point_cloud.points, cpos="yz", cmap="viridis")

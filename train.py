@@ -6,55 +6,69 @@
 """torchgeo model training script."""
 
 import os
-from typing import Any, Dict, Tuple, Type, cast
+from typing import Any, cast
 
-import pytorch_lightning as pl
+import lightning.pytorch as pl
+from lightning.pytorch import LightningDataModule, LightningModule, Trainer
+from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
+from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from omegaconf import DictConfig, OmegaConf
-from pytorch_lightning import loggers as pl_loggers
-from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 
 from torchgeo.datamodules import (
     BigEarthNetDataModule,
     ChesapeakeCVPRDataModule,
     COWCCountingDataModule,
-    CycloneDataModule,
+    DeepGlobeLandCoverDataModule,
     ETCI2021DataModule,
     EuroSATDataModule,
+    GID15DataModule,
     InriaAerialImageLabelingDataModule,
     LandCoverAIDataModule,
+    LoveDADataModule,
     NAIPChesapeakeDataModule,
-    OSCDDataModule,
+    NASAMarineDebrisDataModule,
+    Potsdam2DDataModule,
     RESISC45DataModule,
     SEN12MSDataModule,
     So2SatDataModule,
+    SpaceNet1DataModule,
+    TropicalCycloneDataModule,
     UCMercedDataModule,
+    Vaihingen2DDataModule,
 )
 from torchgeo.trainers import (
     BYOLTask,
     ClassificationTask,
     MultiLabelClassificationTask,
+    ObjectDetectionTask,
     RegressionTask,
     SemanticSegmentationTask,
 )
 
-TASK_TO_MODULES_MAPPING: Dict[
-    str, Tuple[Type[pl.LightningModule], Type[pl.LightningDataModule]]
+TASK_TO_MODULES_MAPPING: dict[
+    str, tuple[type[LightningModule], type[LightningDataModule]]
 ] = {
     "bigearthnet": (MultiLabelClassificationTask, BigEarthNetDataModule),
     "byol": (BYOLTask, ChesapeakeCVPRDataModule),
     "chesapeake_cvpr": (SemanticSegmentationTask, ChesapeakeCVPRDataModule),
     "cowc_counting": (RegressionTask, COWCCountingDataModule),
-    "cyclone": (RegressionTask, CycloneDataModule),
+    "cyclone": (RegressionTask, TropicalCycloneDataModule),
+    "deepglobelandcover": (SemanticSegmentationTask, DeepGlobeLandCoverDataModule),
     "eurosat": (ClassificationTask, EuroSATDataModule),
     "etci2021": (SemanticSegmentationTask, ETCI2021DataModule),
+    "gid15": (SemanticSegmentationTask, GID15DataModule),
     "inria": (SemanticSegmentationTask, InriaAerialImageLabelingDataModule),
     "landcoverai": (SemanticSegmentationTask, LandCoverAIDataModule),
+    "loveda": (SemanticSegmentationTask, LoveDADataModule),
     "naipchesapeake": (SemanticSegmentationTask, NAIPChesapeakeDataModule),
-    "oscd": (SemanticSegmentationTask, OSCDDataModule),
+    "nasa_marine_debris": (ObjectDetectionTask, NASAMarineDebrisDataModule),
+    "potsdam2d": (SemanticSegmentationTask, Potsdam2DDataModule),
     "resisc45": (ClassificationTask, RESISC45DataModule),
     "sen12ms": (SemanticSegmentationTask, SEN12MSDataModule),
     "so2sat": (ClassificationTask, So2SatDataModule),
+    "spacenet1": (SemanticSegmentationTask, SpaceNet1DataModule),
     "ucmerced": (ClassificationTask, UCMercedDataModule),
+    "vaihingen2d": (SemanticSegmentationTask, Vaihingen2DDataModule),
 }
 
 
@@ -147,13 +161,13 @@ def main(conf: DictConfig) -> None:
     # Choose task to run based on arguments or configuration
     ######################################
     # Convert the DictConfig into a dictionary so that we can pass as kwargs.
-    task_args = cast(Dict[str, Any], OmegaConf.to_object(conf.experiment.module))
+    task_args = cast(dict[str, Any], OmegaConf.to_object(conf.experiment.module))
     datamodule_args = cast(
-        Dict[str, Any], OmegaConf.to_object(conf.experiment.datamodule)
+        dict[str, Any], OmegaConf.to_object(conf.experiment.datamodule)
     )
 
-    datamodule: pl.LightningDataModule
-    task: pl.LightningModule
+    datamodule: LightningDataModule
+    task: LightningModule
     if task_name in TASK_TO_MODULES_MAPPING:
         task_class, datamodule_class = TASK_TO_MODULES_MAPPING[task_name]
         task = task_class(**task_args)
@@ -166,30 +180,40 @@ def main(conf: DictConfig) -> None:
     ######################################
     # Setup trainer
     ######################################
-    tb_logger = pl_loggers.TensorBoardLogger(conf.program.log_dir, name=experiment_name)
+    tb_logger = TensorBoardLogger(conf.program.log_dir, name=experiment_name)
+    csv_logger = CSVLogger(conf.program.log_dir, name=experiment_name)
+
+    if isinstance(task, ObjectDetectionTask):
+        monitor_metric = "val_map"
+        mode = "max"
+    else:
+        monitor_metric = "val_loss"
+        mode = "min"
 
     checkpoint_callback = ModelCheckpoint(
-        monitor="val_loss", dirpath=experiment_dir, save_top_k=1, save_last=True
+        monitor=monitor_metric,
+        filename="checkpoint-epoch{epoch:02d}-val_loss{val_loss:.2f}",
+        dirpath=experiment_dir,
+        save_top_k=1,
+        save_last=True,
+        mode=mode,
     )
     early_stopping_callback = EarlyStopping(
-        monitor="val_loss", min_delta=0.00, patience=18
+        monitor=monitor_metric, min_delta=0.00, patience=18, mode=mode
     )
 
-    trainer_args = cast(Dict[str, Any], OmegaConf.to_object(conf.trainer))
+    trainer_args = cast(dict[str, Any], OmegaConf.to_object(conf.trainer))
 
     trainer_args["callbacks"] = [checkpoint_callback, early_stopping_callback]
-    trainer_args["logger"] = tb_logger
+    trainer_args["logger"] = [tb_logger, csv_logger]
     trainer_args["default_root_dir"] = experiment_dir
-    trainer = pl.Trainer(**trainer_args)
-
-    if trainer_args.get("auto_lr_find"):
-        trainer.tune(model=task, datamodule=datamodule)
+    trainer = Trainer(**trainer_args)
 
     ######################################
     # Run experiment
     ######################################
     trainer.fit(model=task, datamodule=datamodule)
-    trainer.test(model=task, datamodule=datamodule)
+    trainer.test(ckpt_path="best", datamodule=datamodule)
 
 
 if __name__ == "__main__":

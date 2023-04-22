@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -53,9 +53,9 @@ class InriaAerialImageLabeling(NonGeoDataset):
 
     def __init__(
         self,
-        root: str,
+        root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new InriaAerialImageLabeling Dataset instance.
@@ -80,7 +80,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
         self._verify()
         self.files = self._load_files(root)
 
-    def _load_files(self, root: str) -> List[Dict[str, str]]:
+    def _load_files(self, root: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -116,7 +116,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
         """
         with rio.open(path) as img:
             array = img.read().astype(np.int32)
-            tensor = torch.from_numpy(array)
+            tensor = torch.from_numpy(array).float()
             return tensor
 
     def _load_target(self, path: str) -> Tensor:
@@ -131,7 +131,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
         with rio.open(path) as img:
             array = img.read().astype(np.int32)
             array = np.clip(array, 0, 1)
-            mask = torch.from_numpy(array[0])
+            mask = torch.from_numpy(array[0]).long()
             return mask
 
     def __len__(self) -> int:
@@ -142,7 +142,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
         """
         return len(self.files)
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -183,7 +183,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> Figure:

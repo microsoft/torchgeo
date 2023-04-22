@@ -4,7 +4,7 @@
 """Potsdam dataset."""
 
 import os
-from typing import Callable, Dict, Optional
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,7 +26,7 @@ from .utils import (
 class Potsdam2D(NonGeoDataset):
     """Potsdam 2D Semantic Segmentation dataset.
 
-    The `Potsdam <https://www2.isprs.org/commissions/comm2/wg4/benchmark/2d-sem-label-potsdam/>`__
+    The `Potsdam <https://www.isprs.org/education/benchmarks/UrbanSemLab/2d-sem-label-potsdam.aspx>`__
     dataset is a dataset for urban semantic segmentation used in the 2D Semantic Labeling
     Contest - Potsdam. This dataset uses the "4_Ortho_RGBIR.zip" and "5_Labels_all.zip"
     files to create the train/test sets used in the challenge. The dataset can be
@@ -122,7 +122,7 @@ class Potsdam2D(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new Potsdam dataset instance.
@@ -149,7 +149,7 @@ class Potsdam2D(NonGeoDataset):
             if os.path.exists(image) and os.path.exists(mask):
                 self.files.append(dict(image=image, mask=mask))
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -187,7 +187,7 @@ class Potsdam2D(NonGeoDataset):
         path = self.files[index]["image"]
         with rasterio.open(path) as f:
             array = f.read()
-            tensor = torch.from_numpy(array)
+            tensor = torch.from_numpy(array).float()
             return tensor
 
     def _load_target(self, index: int) -> Tensor:
@@ -241,7 +241,7 @@ class Potsdam2D(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
         alpha: float = 0.5,

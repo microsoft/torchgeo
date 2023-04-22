@@ -5,7 +5,7 @@
 
 import os
 import shutil
-from typing import Any, Dict
+from typing import Any
 
 import fiona
 import fiona.transform
@@ -29,7 +29,7 @@ suffix_to_key_map = {
     "prior_from_cooccurrences_101_31_no_osm_no_buildings": "prior_no_osm_no_buildings",
 }
 
-layer_data_profiles: Dict[str, Dict[Any, Any]] = {
+layer_data_profiles: dict[str, dict[Any, Any]] = {
     "a_naip": {
         "profile": {
             "driver": "GTiff",
@@ -198,7 +198,7 @@ tile_list = [
 ]
 
 
-def write_data(path: str, profile: Dict[Any, Any], data_type: Any, vals: Any) -> None:
+def write_data(path: str, profile: dict[Any, Any], data_type: Any, vals: Any) -> None:
     assert all(key in profile for key in ("count", "height", "width", "dtype"))
     with rasterio.open(path, "w", **profile) as dst:
         size = (profile["count"], profile["height"], profile["width"])
@@ -229,7 +229,6 @@ def generate_test_data(root: str) -> str:
 
     for prefix in tile_list:
         for suffix, data_profile in layer_data_profiles.items():
-
             img_path = os.path.join(folder_path, f"{prefix}_{suffix}.tif")
             img_dir = os.path.dirname(img_path)
             if not os.path.exists(img_dir):
@@ -273,7 +272,6 @@ def generate_test_data(root: str) -> str:
         schema=schema,
     ) as dst:
         for prefix in tile_list:
-
             img_path = os.path.join(folder_path, f"{prefix}_a_naip.tif")
             with rasterio.open(img_path) as f:
                 geom = shapely.geometry.mapping(shapely.geometry.box(*f.bounds))

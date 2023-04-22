@@ -5,7 +5,8 @@
 
 import glob
 import os
-from typing import Callable, Dict, List, Optional, Sequence
+from collections.abc import Sequence
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,14 +27,16 @@ class USAVars(NonGeoDataset):
     imagery <https://doi.org/10.1038/s41467-021-24638-z>`_". Specifically, this dataset
     includes 1 sq km. crops of NAIP imagery resampled to 4m/px cenetered on ~100k points
     that are sampled randomly from the contiguous states in the USA. Each point contains
-    three continous valued labels (taken from the dataset released in the paper): tree
+    three continuous valued labels (taken from the dataset released in the paper): tree
     cover percentage, elevation, and population density.
 
     Dataset format:
+
     * images are 4-channel GeoTIFFs
     * labels are singular float values
 
     Dataset labels:
+
     * tree cover
     * elevation
     * population density
@@ -89,14 +92,14 @@ class USAVars(NonGeoDataset):
         },
     }
 
-    ALL_LABELS = list(label_urls.keys())
+    ALL_LABELS = ["treecover", "elevation", "population"]
 
     def __init__(
         self,
         root: str = "data",
         split: str = "train",
         labels: Sequence[str] = ALL_LABELS,
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -146,7 +149,7 @@ class USAVars(NonGeoDataset):
             for lab in self.labels
         }
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -163,6 +166,8 @@ class USAVars(NonGeoDataset):
                 [self.label_dfs[lab].loc[id_][lab] for lab in self.labels]
             ),
             "image": self._load_image(os.path.join(self.root, "uar", tif_file)),
+            "centroid_lat": Tensor([self.label_dfs[self.labels[0]].loc[id_]["lat"]]),
+            "centroid_lon": Tensor([self.label_dfs[self.labels[0]].loc[id_]["lon"]]),
         }
 
         if self.transforms is not None:
@@ -178,7 +183,7 @@ class USAVars(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self) -> List[str]:
+    def _load_files(self) -> list[str]:
         """Loads file names."""
         with open(os.path.join(self.root, f"{self.split}_split.txt")) as f:
             files = f.read().splitlines()
@@ -250,7 +255,7 @@ class USAVars(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_labels: bool = True,
         suptitle: Optional[str] = None,
     ) -> Figure:

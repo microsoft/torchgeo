@@ -2,9 +2,9 @@ experiment:
   task: "landcoverai"
   module:
     loss: "ce"
-    segmentation_model: "unet"
-    encoder_name: "resnet18"
-    encoder_weights: null
+    model: "unet"
+    backbone: "resnet18"
+    weights: null
     learning_rate: 1e-3
     learning_rate_schedule_patience: 6
     verbose: false
@@ -13,6 +13,7 @@ experiment:
     num_filters: 1
     ignore_index: null
   datamodule:
-    root_dir: "tests/data/landcoverai"
+    root: "tests/data/landcoverai"
+    download: true
     batch_size: 1
     num_workers: 0

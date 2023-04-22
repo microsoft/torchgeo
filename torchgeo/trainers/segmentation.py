@@ -4,45 +4,48 @@
 """Segmentation tasks."""
 
 import warnings
-from typing import Any, Dict, cast
+from typing import Any, cast
 
-import pytorch_lightning as pl
+import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
+from lightning.pytorch import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torch.utils.data import DataLoader
-from torchmetrics import Accuracy, JaccardIndex, MetricCollection
+from torchmetrics import MetricCollection
+from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
 
 from ..datasets.utils import unbind_samples
 from ..models import FCN
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
 
+class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
+    """LightningModule for semantic segmentation of images.
 
-class SemanticSegmentationTask(pl.LightningModule):
-    """LightningModule for semantic segmentation of images."""
+    Supports `Segmentation Models Pytorch
+    <https://github.com/qubvel/segmentation_models.pytorch>`_
+    as an architecture choice in combination with any of these
+    `TIMM backbones <https://smp.readthedocs.io/en/latest/encoders_timm.html>`_.
+    """
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
-        if self.hyperparams["segmentation_model"] == "unet":
+        if self.hyperparams["model"] == "unet":
             self.model = smp.Unet(
-                encoder_name=self.hyperparams["encoder_name"],
-                encoder_weights=self.hyperparams["encoder_weights"],
+                encoder_name=self.hyperparams["backbone"],
+                encoder_weights=self.hyperparams["weights"],
                 in_channels=self.hyperparams["in_channels"],
                 classes=self.hyperparams["num_classes"],
             )
-        elif self.hyperparams["segmentation_model"] == "deeplabv3+":
+        elif self.hyperparams["model"] == "deeplabv3+":
             self.model = smp.DeepLabV3Plus(
-                encoder_name=self.hyperparams["encoder_name"],
-                encoder_weights=self.hyperparams["encoder_weights"],
+                encoder_name=self.hyperparams["backbone"],
+                encoder_weights=self.hyperparams["weights"],
                 in_channels=self.hyperparams["in_channels"],
                 classes=self.hyperparams["num_classes"],
             )
-        elif self.hyperparams["segmentation_model"] == "fcn":
+        elif self.hyperparams["model"] == "fcn":
             self.model = FCN(
                 in_channels=self.hyperparams["in_channels"],
                 classes=self.hyperparams["num_classes"],
@@ -50,7 +53,8 @@ class SemanticSegmentationTask(pl.LightningModule):
             )
         else:
             raise ValueError(
-                f"Model type '{self.hyperparams['segmentation_model']}' is not valid."
+                f"Model type '{self.hyperparams['model']}' is not valid. "
+                f"Currently, only supports 'unet', 'deeplabv3+' and 'fcn'."
             )
 
         if self.hyperparams["loss"] == "ce":
@@ -65,32 +69,43 @@ class SemanticSegmentationTask(pl.LightningModule):
                 "multiclass", ignore_index=self.ignore_index, normalized=True
             )
         else:
-            raise ValueError(f"Loss type '{self.hyperparams['loss']}' is not valid.")
+            raise ValueError(
+                f"Loss type '{self.hyperparams['loss']}' is not valid. "
+                f"Currently, supports 'ce', 'jaccard' or 'focal' loss."
+            )
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
-            segmentation_model: Name of the segmentation model type to use
-            encoder_name: Name of the encoder model backbone to use
-            encoder_weights: None or "imagenet" to use imagenet pretrained weights in
-                the encoder model
+            model: Name of the segmentation model type to use
+            backbone: Name of the timm backbone to use
+            weights: None or "imagenet" to use imagenet pretrained weights in
+                the backbone
             in_channels: Number of channels in input image
             num_classes: Number of semantic classes to predict
-            loss: Name of the loss function
+            loss: Name of the loss function, currently supports
+                'ce', 'jaccard' or 'focal' loss
             ignore_index: Optional integer class index to ignore in the loss and metrics
+            learning_rate: Learning rate for optimizer
+            learning_rate_schedule_patience: Patience for learning rate scheduler
 
         Raises:
             ValueError: if kwargs arguments are invalid
 
         .. versionchanged:: 0.3
            The *ignore_zeros* parameter was renamed to *ignore_index*.
+
+        .. versionchanged:: 0.4
+           The *segmentation_model* parameter was renamed to *model*,
+           *encoder_name* renamed to *backbone*, and
+           *encoder_weights* to *weights*.
         """
         super().__init__()
 
         # Creates `self.hparams` from kwargs
-        self.save_hyperparameters()  # type: ignore[operator]
-        self.hyperparams = cast(Dict[str, Any], self.hparams)
+        self.save_hyperparameters()
+        self.hyperparams = cast(dict[str, Any], self.hparams)
 
         if not isinstance(kwargs["ignore_index"], (int, type(None))):
             raise ValueError("ignore_index must be an int or None")
@@ -104,12 +119,12 @@ class SemanticSegmentationTask(pl.LightningModule):
 
         self.train_metrics = MetricCollection(
             [
-                Accuracy(
+                MulticlassAccuracy(
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
                     mdmc_average="global",
                 ),
-                JaccardIndex(
+                MulticlassJaccardIndex(
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
                 ),
@@ -142,7 +157,7 @@ class SemanticSegmentationTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         y = batch["mask"]
-        y_hat = self.forward(x)
+        y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
 
         loss = self.loss(y_hat, y)
@@ -154,12 +169,8 @@ class SemanticSegmentationTask(pl.LightningModule):
 
         return cast(Tensor, loss)
 
-    def training_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level training metrics.
-
-        Args:
-            outputs: list of items returned by training_step
-        """
+    def on_train_epoch_end(self) -> None:
+        """Logs epoch level training metrics."""
         self.log_dict(self.train_metrics.compute())
         self.train_metrics.reset()
 
@@ -174,7 +185,7 @@ class SemanticSegmentationTask(pl.LightningModule):
         batch_idx = args[1]
         x = batch["image"]
         y = batch["mask"]
-        y_hat = self.forward(x)
+        y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
 
         loss = self.loss(y_hat, y)
@@ -182,27 +193,30 @@ class SemanticSegmentationTask(pl.LightningModule):
         self.log("val_loss", loss, on_step=False, on_epoch=True)
         self.val_metrics(y_hat_hard, y)
 
-        if batch_idx < 10:
+        if (
+            batch_idx < 10
+            and hasattr(self.trainer, "datamodule")
+            and self.logger
+            and hasattr(self.logger, "experiment")
+            and hasattr(self.logger.experiment, "add_figure")
+        ):
             try:
-                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                datamodule = self.trainer.datamodule
                 batch["prediction"] = y_hat_hard
                 for key in ["image", "mask", "prediction"]:
                     batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
-                summary_writer = self.logger.experiment  # type: ignore[union-attr]
+                summary_writer = self.logger.experiment
                 summary_writer.add_figure(
                     f"image/{batch_idx}", fig, global_step=self.global_step
                 )
-            except AttributeError:
+                plt.close()
+            except ValueError:
                 pass
 
-    def validation_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level validation metrics.
-
-        Args:
-            outputs: list of items returned by validation_step
-        """
+    def on_validation_epoch_end(self) -> None:
+        """Logs epoch level validation metrics."""
         self.log_dict(self.val_metrics.compute())
         self.val_metrics.reset()
 
@@ -215,7 +229,7 @@ class SemanticSegmentationTask(pl.LightningModule):
         batch = args[0]
         x = batch["image"]
         y = batch["mask"]
-        y_hat = self.forward(x)
+        y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
 
         loss = self.loss(y_hat, y)
@@ -224,21 +238,35 @@ class SemanticSegmentationTask(pl.LightningModule):
         self.log("test_loss", loss, on_step=False, on_epoch=True)
         self.test_metrics(y_hat_hard, y)
 
-    def test_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level test metrics.
-
-        Args:
-            outputs: list of items returned by test_step
-        """
+    def on_test_epoch_end(self) -> None:
+        """Logs epoch level test metrics."""
         self.log_dict(self.test_metrics.compute())
         self.test_metrics.reset()
 
-    def configure_optimizers(self) -> Dict[str, Any]:
+    def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
+        """Compute and return the predictions.
+
+        By default, this will loop over images in a dataloader and aggregate
+        predictions into a list. This may not be desirable if you have many images
+        or large images which could cause out of memory errors. In this case
+        it's recommended to override this with a custom predict_step.
+
+        Args:
+            batch: the output of your DataLoader
+
+        Returns:
+            predicted softmax probabilities
+        """
+        batch = args[0]
+        x = batch["image"]
+        y_hat: Tensor = self(x).softmax(dim=1)
+        return y_hat
+
+    def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+            learning rate dictionary
         """
         optimizer = torch.optim.Adam(
             self.model.parameters(), lr=self.hyperparams["learning_rate"]

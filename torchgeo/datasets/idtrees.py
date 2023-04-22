@@ -5,10 +5,9 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, Tuple, cast, overload
+from typing import Any, Callable, Optional, cast, overload
 
 import fiona
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
@@ -147,7 +146,7 @@ class IDTReeS(NonGeoDataset):
         root: str = "data",
         split: str = "train",
         task: str = "task1",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -194,7 +193,7 @@ class IDTReeS(NonGeoDataset):
 
         self.images, self.geometries, self.labels = self._load(root)
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -282,7 +281,7 @@ class IDTReeS(NonGeoDataset):
             the bounding boxes
         """
         base_path = os.path.basename(path)
-        geometries = cast(Dict[int, Dict[str, Any]], self.geometries)
+        geometries = cast(dict[int, dict[str, Any]], self.geometries)
 
         # Find object ids and geometries
         # The train set geometry->image mapping is contained
@@ -337,7 +336,7 @@ class IDTReeS(NonGeoDataset):
 
     def _load(
         self, root: str
-    ) -> Tuple[List[str], Optional[Dict[int, Dict[str, Any]]], Any]:
+    ) -> tuple[list[str], Optional[dict[int, dict[str, Any]]], Any]:
         """Load files, geometries, and labels.
 
         Args:
@@ -387,7 +386,7 @@ class IDTReeS(NonGeoDataset):
         df.reset_index()
         return df
 
-    def _load_geometries(self, directory: str) -> Dict[int, Dict[str, Any]]:
+    def _load_geometries(self, directory: str) -> dict[int, dict[str, Any]]:
         """Load the shape files containing the geometries.
 
         Args:
@@ -399,7 +398,7 @@ class IDTReeS(NonGeoDataset):
         filepaths = glob.glob(os.path.join(directory, "ITC", "*.shp"))
 
         i = 0
-        features: Dict[int, Dict[str, Any]] = {}
+        features: dict[int, dict[str, Any]] = {}
         for path in filepaths:
             with fiona.open(path) as src:
                 for feature in src:
@@ -414,23 +413,23 @@ class IDTReeS(NonGeoDataset):
 
     @overload
     def _filter_boxes(
-        self, image_size: Tuple[int, int], min_size: int, boxes: Tensor, labels: Tensor
-    ) -> Tuple[Tensor, Tensor]:
+        self, image_size: tuple[int, int], min_size: int, boxes: Tensor, labels: Tensor
+    ) -> tuple[Tensor, Tensor]:
         ...
 
     @overload
     def _filter_boxes(
-        self, image_size: Tuple[int, int], min_size: int, boxes: Tensor, labels: None
-    ) -> Tuple[Tensor, None]:
+        self, image_size: tuple[int, int], min_size: int, boxes: Tensor, labels: None
+    ) -> tuple[Tensor, None]:
         ...
 
     def _filter_boxes(
         self,
-        image_size: Tuple[int, int],
+        image_size: tuple[int, int],
         min_size: int,
         boxes: Tensor,
         labels: Optional[Tensor],
-    ) -> Tuple[Tensor, Optional[Tensor]]:
+    ) -> tuple[Tensor, Optional[Tensor]]:
         """Clip boxes to image size and filter boxes with sides less than ``min_size``.
 
         Args:
@@ -493,10 +492,10 @@ class IDTReeS(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-        hsi_indices: Tuple[int, int, int] = (0, 1, 2),
+        hsi_indices: tuple[int, int, int] = (0, 1, 2),
     ) -> plt.Figure:
         """Plot a sample from the dataset.
 
@@ -567,25 +566,28 @@ class IDTReeS(NonGeoDataset):
 
         return fig
 
-    def plot_las(self, index: int, colormap: Optional[str] = None) -> Any:
+    def plot_las(
+        self, index: int
+    ) -> "pyvista.Plotter":  # type: ignore[name-defined] # noqa: F821
         """Plot a sample point cloud at the index.
 
         Args:
             index: index to plot
-            colormap: a valid matplotlib colormap
 
         Returns:
-            a open3d.visualizer.Visualizer object. Use
-                Visualizer.run() to display
+            pyvista.PolyData object. Run pyvista.plot(point_cloud, ...) to display
 
         Raises:
-            ImportError: if open3d is not installed
+            ImportError: if pyvista is not installed
+
+        .. versionchanged:: 0.4
+           Ported from Open3D to PyVista, *colormap* parameter removed.
         """
         try:
-            import open3d  # noqa: F401
+            import pyvista  # noqa: F401
         except ImportError:
             raise ImportError(
-                "open3d is not installed and is required to plot point clouds"
+                "pyvista is not installed and is required to plot point clouds"
             )
         import laspy
 
@@ -595,27 +597,12 @@ class IDTReeS(NonGeoDataset):
         points: "np.typing.NDArray[np.int_]" = np.stack(
             [las.x, las.y, las.z], axis=0
         ).transpose((1, 0))
+        point_cloud = pyvista.PolyData(points)  # type: ignore[attr-defined]
 
-        if colormap:
-            if hasattr(mpl, "colormaps"):
-                cm = mpl.colormaps[colormap]
-            else:
-                cm = plt.cm.get_cmap(colormap)
-            norm = plt.Normalize()
-            colors = cm(norm(points[:, 2]))[:, :3]
-        else:
-            # Some point cloud files have no color->points mapping
-            if hasattr(las, "red"):
-                colors = np.stack([las.red, las.green, las.blue], axis=0)
-                colors = colors.transpose((1, 0)) / 65535
-            # Default to no colormap if no colors exist in las file
-            else:
-                colors = np.zeros_like(points)
+        # Some point cloud files have no color->points mapping
+        if hasattr(las, "red"):
+            colors = np.stack([las.red, las.green, las.blue], axis=0)
+            colors = colors.transpose((1, 0)) / np.iinfo(np.uint16).max
+            point_cloud["colors"] = colors
 
-        pcd = open3d.geometry.PointCloud()
-        pcd.points = open3d.utility.Vector3dVector(points)
-        pcd.colors = open3d.utility.Vector3dVector(colors)
-        vis = open3d.visualization.Visualizer()
-        vis.create_window()
-        vis.add_geometry(pcd)
-        return vis
+        return point_cloud

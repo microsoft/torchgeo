@@ -3,17 +3,19 @@
 
 """Potsdam datamodule."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Union
 
-import pytorch_lightning as pl
-from torch.utils.data import DataLoader, Dataset
-from torchvision.transforms import Compose
+import kornia.augmentation as K
 
 from ..datasets import Potsdam2D
+from ..samplers.utils import _to_tuple
+from ..transforms import AugmentationSequential
+from ..transforms.transforms import _RandomNCrop
+from .geo import NonGeoDataModule
 from .utils import dataset_split
 
 
-class Potsdam2DDataModule(pl.LightningDataModule):
+class Potsdam2DDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the Potsdam2D dataset.
 
     Uses the train/test splits from the dataset.
@@ -23,99 +25,44 @@ class Potsdam2DDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        root_dir: str,
         batch_size: int = 64,
-        num_workers: int = 0,
+        patch_size: Union[tuple[int, int], int] = 64,
         val_split_pct: float = 0.2,
+        num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
-        """Initialize a LightningDataModule for Potsdam2D based DataLoaders.
+        """Initialize a new Potsdam2DDataModule instance.
 
         Args:
-            root_dir: The ``root`` argument to pass to the Potsdam2D Dataset classes
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
-            val_split_pct: What percentage of the dataset to use as a validation set
+            batch_size: Size of each mini-batch.
+            patch_size: Size of each patch, either ``size`` or ``(height, width)``.
+                Should be a multiple of 32 for most segmentation architectures.
+            val_split_pct: Percentage of the dataset to use as a validation set.
+            num_workers: Number of workers for parallel data loading.
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.Potsdam2D`.
         """
-        super().__init__()
-        self.root_dir = root_dir
-        self.batch_size = batch_size
-        self.num_workers = num_workers
+        super().__init__(Potsdam2D, 1, num_workers, **kwargs)
+
+        self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
+        self.aug = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            _RandomNCrop(self.patch_size, batch_size),
+            data_keys=["image", "mask"],
+        )
+
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
 
         Args:
-            sample: input image dictionary
-
-        Returns:
-            preprocessed sample
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        sample["image"] = sample["image"].float()
-        sample["image"] /= 255.0
-        return sample
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
-
-        This method is called once per GPU per run.
-
-        Args:
-            stage: stage to set up
-        """
-        transforms = Compose([self.preprocess])
-
-        dataset = Potsdam2D(self.root_dir, "train", transforms=transforms)
-
-        self.train_dataset: Dataset[Any]
-        self.val_dataset: Dataset[Any]
-
-        if self.val_split_pct > 0.0:
-            self.train_dataset, self.val_dataset, _ = dataset_split(
-                dataset, val_pct=self.val_split_pct, test_pct=0.0
+        if stage in ["fit", "validate"]:
+            self.dataset = Potsdam2D(split="train", **self.kwargs)
+            self.train_dataset, self.val_dataset = dataset_split(
+                self.dataset, self.val_split_pct
             )
-        else:
-            self.train_dataset = dataset
-            self.val_dataset = dataset
-
-        self.test_dataset = Potsdam2D(self.root_dir, "test", transforms=transforms)
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training.
-
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
+        if stage in ["test"]:
+            self.test_dataset = Potsdam2D(split="test", **self.kwargs)

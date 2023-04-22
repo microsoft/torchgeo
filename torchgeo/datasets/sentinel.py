@@ -3,7 +3,8 @@
 
 """Sentinel datasets."""
 
-from typing import Any, Callable, Dict, Optional, Sequence
+from collections.abc import Sequence
+from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 import torch
@@ -23,6 +24,225 @@ class Sentinel(RasterDataset):
 
     * https://asf.alaska.edu/data-sets/sar-data-sets/sentinel-1/sentinel-1-how-to-cite/
     """
+
+
+class Sentinel1(Sentinel):
+    r"""Sentinel-1 dataset.
+
+    The `Sentinel-1 mission
+    <https://sentinel.esa.int/web/sentinel/missions/sentinel-1>`_ comprises a
+    constellation of two polar-orbiting satellites, operating day and night
+    performing C-band synthetic aperture radar imaging, enabling them to
+    acquire imagery regardless of the weather.
+
+    Data can be downloaded from:
+
+    * `Copernicus Open Access Hub
+      <https://scihub.copernicus.eu/>`_
+    * `Alaska Satellite Facility (ASF) Distributed Active Archive Center (DAAC)
+      <https://asf.alaska.edu/>`_
+    * `Microsoft's Planetary Computer
+      <https://planetarycomputer.microsoft.com/dataset/sentinel-1-rtc>`_
+
+    Product Types:
+
+    * `Level-0
+      <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/product-types-processing-levels/level-0>`_:
+      Raw (RAW)
+    * `Level-1
+      <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/product-types-processing-levels/level-1>`_:
+      Single Look Complex (SLC)
+    * `Level-1
+      <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/product-types-processing-levels/level-1>`_:
+      Ground Range Detected (GRD)
+    * `Level-2
+      <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/product-types-processing-levels/level-2>`_:
+      Ocean (OCN)
+
+    Polarizations:
+
+    * HH: horizontal transmit, horizontal receive
+    * HV: horizontal transmit, vertical receive
+    * VV: vertical transmit, vertical receive
+    * VH: vertical transmit, horizontal receive
+
+    Acquisition Modes:
+
+    * `Stripmap (SM)
+      <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/acquisition-modes/stripmap>`_
+    * `Interferometric Wide (IW) swath
+      <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/acquisition-modes/interferometric-wide-swath>`_
+    * `Extra Wide (EW) swatch
+      <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/acquisition-modes/extra-wide-swath>`_
+    * `Wave (WV)
+      <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/acquisition-modes/wave>`_
+
+    .. note::
+       At the moment, this dataset only supports the GRD product type. Data must be
+       radiometrically terrain corrected (RTC). This can be done manually using a DEM,
+       or you can download an On Demand RTC product from ASF DAAC.
+
+    .. note::
+       Mixing :math:`\gamma_0` and :math:`\sigma_0` backscatter coefficient data is not
+       recommended. Similarly, power, decibel, and amplitude scale data should not be
+       mixed, and TorchGeo does not attempt to convert all data to a common scale.
+
+    .. versionadded:: 0.4
+    """
+
+    # SAFE format
+    # https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/naming-conventions
+    # https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/document-library/-/asset_publisher/1dO7RF5fJMbd/content/sentinel-1-product-specification
+
+    # ASF DAAC GRD RTC uses a different naming scheme (README.md.txt in download):
+    #
+    # S1x_yy_aaaaaaaaTbbbbbb_ppo_RTCzz_u_defklm_ssss
+    #
+    # x:          Sentinel-1 Mission (A or B)
+    # yy:         Beam Mode
+    # aaaaaaaa:   Start Date of Acquisition (YYYYMMDD)
+    # bbbbbb:     Start Time of Acquisition (HHMMSS)
+    # pp:         Polarization: Dual-pol (D) vs. Single-pol (S),
+    #                 primary polarization (H vs. V)
+    # o:          Orbit Type: Precise (P), Restituted (R), or Original Predicted (O)
+    # zz:         Terrain Correction Pixel Spacing
+    # u:          Software Package Used: GAMMA (G)
+    # d:          Gamma-0 (g) or Sigma-0 (s) Output
+    # e:          Power (p) or Decibel (d) or Amplitude (a) Output
+    # f:          Unmasked (u) or Water Masked (w)
+    # k:          Not Filtered (n) or Filtered (f)
+    # l:          Entire Area (e) or Clipped Area (c)
+    # m:          Dead Reckoning (d) or DEM Matching (m)
+    # ssss:       Product ID
+    filename_glob = "S1*{}.*"
+    filename_regex = r"""
+        ^S1(?P<mission>[AB])
+        _(?P<mode>SM|IW|EW|WV)
+        _(?P<date>\d{8}T\d{6})
+        _(?P<polarization>[DS][HV])
+        (?P<orbit>[PRO])
+        _RTC(?P<spacing>\d{2})
+        _(?P<package>G)
+        _(?P<backscatter>[gs])
+        (?P<scale>[pda])
+        (?P<mask>[uw])
+        (?P<filter>[nf])
+        (?P<area>[ec])
+        (?P<matching>[dm])
+        _(?P<product>[0-9A-Z]{4})
+        _(?P<band>[VH]{2})
+        \.
+    """
+    date_format = "%Y%m%dT%H%M%S"
+    all_bands = ["HH", "HV", "VV", "VH"]
+    separate_files = True
+
+    def __init__(
+        self,
+        root: str = "data",
+        crs: Optional[CRS] = None,
+        res: float = 10,
+        bands: Sequence[str] = ["VV", "VH"],
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        cache: bool = True,
+    ) -> None:
+        """Initialize a new Dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
+            res: resolution of the dataset in units of CRS
+                (defaults to the resolution of the first file found)
+            bands: bands to return (defaults to ["VV", "VH"])
+            transforms: a function/transform that takes an input sample
+                and returns a transformed version
+            cache: if True, cache file handle to speed up repeated sampling
+
+        Raises:
+            AssertionError: if ``bands`` is invalid
+            FileNotFoundError: if no files are found in ``root``
+        """
+        assert len(bands) > 0, "'bands' cannot be an empty list"
+        assert len(bands) == len(set(bands)), "'bands' contains duplicate bands"
+
+        for band in bands:
+            assert band in self.all_bands, f"invalid band '{band}'"
+
+        # Sentinel-1 uses dual polarization, it can only transmit either
+        # horizontal or vertical at a single time
+        msg = """
+'bands' cannot contain both horizontal and vertical transmit at the same time.
+To create a dataset containing both, use:
+
+    horizontal = Sentinel1(root, bands=["HH", "HV"])
+    vertical = Sentinel1(root, bands=["VV", "VH"])
+    dataset = horizontal | vertical
+"""
+        assert len({band[0] for band in bands}) == 1, msg
+
+        self.filename_glob = self.filename_glob.format(bands[0])
+
+        super().__init__(root, crs, res, bands, transforms, cache)
+
+    def plot(
+        self,
+        sample: dict[str, Any],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`RasterDataset.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        bands = self.bands
+
+        if len(bands) == 1:
+            # Only horizontal or vertical receive, plot as grayscale
+
+            image = sample["image"][0]
+            image = torch.clamp(image, min=0, max=1)
+
+            title = f"({bands[0]})"
+        else:
+            # Both horizontal and vertical receive, plot as RGB
+
+            # Deal with reverse order
+            if bands in [["HV", "HH"], ["VH", "VV"]]:
+                bands = bands[::-1]
+                sample["image"] = torch.flip(sample["image"], dims=[0])
+
+            co_polarization = sample["image"][0]  # transmit == receive
+            cross_polarization = sample["image"][1]  # transmit != receive
+            ratio = co_polarization / cross_polarization
+
+            # https://gis.stackexchange.com/a/400780/123758
+            co_polarization = torch.clamp(co_polarization / 0.3, min=0, max=1)
+            cross_polarization = torch.clamp(cross_polarization / 0.05, min=0, max=1)
+            ratio = torch.clamp(ratio / 25, min=0, max=1)
+
+            image = torch.stack((co_polarization, cross_polarization, ratio), dim=-1)
+
+            title = "({0}, {1}, {0}/{1})".format(*bands)
+
+        fig, ax = plt.subplots(1, 1, figsize=(4, 4))
+
+        ax.imshow(image)
+        ax.axis("off")
+
+        if show_titles:
+            ax.set_title(title)
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
 
 
 class Sentinel2(Sentinel):
@@ -66,7 +286,7 @@ class Sentinel2(Sentinel):
         "B11",
         "B12",
     ]
-    RGB_BANDS = ["B04", "B03", "B02"]
+    rgb_bands = ["B04", "B03", "B02"]
 
     separate_files = True
 
@@ -76,7 +296,7 @@ class Sentinel2(Sentinel):
         crs: Optional[CRS] = None,
         res: float = 10,
         bands: Optional[Sequence[str]] = None,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -103,7 +323,7 @@ class Sentinel2(Sentinel):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
@@ -125,14 +345,16 @@ class Sentinel2(Sentinel):
            show subplot titles and/or use a custom suptitle.
         """
         rgb_indices = []
-        for band in self.RGB_BANDS:
+        for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
         image = sample["image"][rgb_indices].permute(1, 2, 0)
-        image = torch.clamp(image / 2000, min=0, max=1)
+        # DN = 10000 * REFLECTANCE
+        # https://docs.sentinel-hub.com/api/latest/data/sentinel-2-l2a/
+        image = torch.clamp(image / 10000, min=0, max=1)
 
         fig, ax = plt.subplots(1, 1, figsize=(4, 4))
 

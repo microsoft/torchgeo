@@ -29,7 +29,6 @@ pd = pytest.importorskip("pandas", minversion="0.23.2")
 class TestOpenBuildings:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> OpenBuildings:
-
         root = str(tmp_path)
         shutil.copy(
             os.path.join("tests", "data", "openbuildings", "tiles.geojson"), root

@@ -4,7 +4,8 @@
 """So2Sat dataset."""
 
 import os
-from typing import Callable, Dict, Optional, Sequence, cast
+from collections.abc import Sequence
+from typing import Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -105,22 +106,31 @@ class So2Sat(NonGeoDataset):
         "Water",
     ]
 
-    all_s1_band_names = ("S1B1", "S1B2", "S1B3", "S1B4", "S1B5", "S1B6", "S1B7", "S1B8")
+    all_s1_band_names = (
+        "S1_B1",
+        "S1_B2",
+        "S1_B3",
+        "S1_B4",
+        "S1_B5",
+        "S1_B6",
+        "S1_B7",
+        "S1_B8",
+    )
     all_s2_band_names = (
-        "B02",
-        "B03",
-        "B04",
-        "B05",
-        "B06",
-        "B07",
-        "B08",
-        "B08A",
-        "B11 SWIR",
-        "B12 SWIR",
+        "S2_B02",
+        "S2_B03",
+        "S2_B04",
+        "S2_B05",
+        "S2_B06",
+        "S2_B07",
+        "S2_B08",
+        "S2_B8A",
+        "S2_B11",
+        "S2_B12",
     )
     all_band_names = all_s1_band_names + all_s2_band_names
 
-    RGB_BANDS = ["B04", "B03", "B02"]
+    rgb_bands = ["S2_B04", "S2_B03", "S2_B02"]
 
     BAND_SETS = {
         "all": all_band_names,
@@ -133,7 +143,7 @@ class So2Sat(NonGeoDataset):
         root: str = "data",
         split: str = "train",
         bands: Sequence[str] = BAND_SETS["all"],
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new So2Sat dataset instance.
@@ -199,7 +209,7 @@ class So2Sat(NonGeoDataset):
         with h5py.File(self.fn, "r") as f:
             self.size: int = f["label"].shape[0]
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -225,7 +235,7 @@ class So2Sat(NonGeoDataset):
             s1 = torch.from_numpy(s1)
             s2 = torch.from_numpy(s2)
 
-        sample = {"image": torch.cat([s1, s2]), "label": label}
+        sample = {"image": torch.cat([s1, s2]).float(), "label": label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -270,7 +280,7 @@ class So2Sat(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
@@ -290,7 +300,7 @@ class So2Sat(NonGeoDataset):
         .. versionadded:: 0.2
         """
         rgb_indices = []
-        for band in self.RGB_BANDS:
+        for band in self.rgb_bands:
             if band in self.s2_band_names:
                 idx = self.s2_band_names.index(band) + len(self.s1_band_names)
                 rgb_indices.append(idx)

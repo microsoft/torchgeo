@@ -16,15 +16,15 @@ from torch.utils.data import ConcatDataset
 from torchgeo.datasets import BeninSmallHolderCashews
 
 
-class Dataset:
+class Collection:
     def download(self, output_dir: str, **kwargs: str) -> None:
         glob_path = os.path.join("tests", "data", "ts_cashew_benin", "*.tar.gz")
         for tarball in glob.iglob(glob_path):
             shutil.copy(tarball, output_dir)
 
 
-def fetch(dataset_id: str, **kwargs: str) -> Dataset:
-    return Dataset()
+def fetch(dataset_id: str, **kwargs: str) -> Collection:
+    return Collection()
 
 
 class TestBeninSmallHolderCashews:
@@ -33,7 +33,7 @@ class TestBeninSmallHolderCashews:
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> BeninSmallHolderCashews:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
-        monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch)
+        monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch)
         source_md5 = "255efff0f03bc6322470949a09bc76db"
         labels_md5 = "ed2195d93ca6822d48eb02bc3e81c127"
         monkeypatch.setitem(BeninSmallHolderCashews.image_meta, "md5", source_md5)
@@ -41,7 +41,7 @@ class TestBeninSmallHolderCashews:
         monkeypatch.setattr(BeninSmallHolderCashews, "dates", ("2019_11_05",))
         root = str(tmp_path)
         transforms = nn.Identity()
-        bands = BeninSmallHolderCashews.ALL_BANDS
+        bands = BeninSmallHolderCashews.all_bands
 
         return BeninSmallHolderCashews(
             root,

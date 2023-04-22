@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -50,7 +50,7 @@ class LoveDA(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * <https://arxiv.org/abs/2110.08733>
+    * https://arxiv.org/abs/2110.08733
 
     .. versionadded:: 0.2
     """
@@ -91,8 +91,8 @@ class LoveDA(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        scene: List[str] = ["urban", "rural"],
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        scene: list[str] = ["urban", "rural"],
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -113,7 +113,6 @@ class LoveDA(NonGeoDataset):
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
-        print(split)
         assert split in self.splits
         assert set(scene).intersection(
             set(self.scenes)
@@ -146,7 +145,7 @@ class LoveDA(NonGeoDataset):
 
         self.files = self._load_files(self.scene_paths, self.split)
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -178,7 +177,7 @@ class LoveDA(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, scene_paths: List[str], split: str) -> List[Dict[str, str]]:
+    def _load_files(self, scene_paths: list[str], split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -215,7 +214,7 @@ class LoveDA(NonGeoDataset):
         filename = os.path.join(path)
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
-            tensor = torch.from_numpy(array)
+            tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -266,7 +265,7 @@ class LoveDA(NonGeoDataset):
         )
 
     def plot(
-        self, sample: Dict[str, Tensor], suptitle: Optional[str] = None
+        self, sample: dict[str, Tensor], suptitle: Optional[str] = None
     ) -> plt.Figure:
         """Plot a sample from the dataset.
 

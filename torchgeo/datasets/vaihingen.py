@@ -4,7 +4,7 @@
 """Vaihingen dataset."""
 
 import os
-from typing import Callable, Dict, Optional
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,12 +25,13 @@ from .utils import (
 class Vaihingen2D(NonGeoDataset):
     """Vaihingen 2D Semantic Segmentation dataset.
 
-    The `Vaihingen <https://www2.isprs.org/commissions/comm2/wg4/benchmark/2d-sem-label-vaihingen/>`__
+    The `Vaihingen <https://www.isprs.org/education/benchmarks/UrbanSemLab/semantic-labeling.aspx>`__
     dataset is a dataset for urban semantic segmentation used in the 2D Semantic Labeling
     Contest - Vaihingen. This dataset uses the "ISPRS_semantic_labeling_Vaihingen.zip"
     and "ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip" files to create the
-    train/test sets used in the challenge. The dataset can be requested at the challenge
-    homepage. Note, the server contains additional data for 3D Semantic Labeling which
+    train/test sets used in the challenge. The dataset can be downloaded from
+    `here <https://www.isprs.org/education/benchmarks/UrbanSemLab/default.aspx>`__.
+    Note, the server contains additional data for 3D Semantic Labeling which
     are currently not supported.
 
     Dataset format:
@@ -120,7 +121,7 @@ class Vaihingen2D(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new Vaihingen2D dataset instance.
@@ -147,7 +148,7 @@ class Vaihingen2D(NonGeoDataset):
             if os.path.exists(image) and os.path.exists(mask):
                 self.files.append(dict(image=image, mask=mask))
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -187,7 +188,7 @@ class Vaihingen2D(NonGeoDataset):
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
-            tensor = tensor.permute((2, 0, 1))
+            tensor = tensor.permute((2, 0, 1)).float()
         return tensor
 
     def _load_target(self, index: int) -> Tensor:
@@ -241,7 +242,7 @@ class Vaihingen2D(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
         alpha: float = 0.5,

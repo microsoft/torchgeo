@@ -1,0 +1,14 @@
+experiment:
+  task: "skippd"
+  module:
+    model: "resnet18"
+    weights: null
+    num_outputs: 1
+    in_channels: 3
+    learning_rate: 1e-3
+    learning_rate_schedule_patience: 2
+  datamodule:
+    root: "tests/data/skippd"
+    download: true
+    batch_size: 1
+    num_workers: 0

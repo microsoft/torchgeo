@@ -1,12 +1,12 @@
 [build-system]
 requires = [
     # setuptools 42+ required for metadata.license_files support in setup.cfg
-    "setuptools>=42,<66",
+    "setuptools>=42,<68",
 ]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
-target-version = ["py37", "py38", "py39"]
+target-version = ["py39", "py310"]
 color = true
 skip_magic_trailing_comma = true
 
@@ -25,6 +25,7 @@ skip_gitignore = true
 color_output = true
 
 [tool.mypy]
+python_version = "3.9"
 ignore_missing_imports = true
 show_error_codes = true
 exclude = "(build|data|dist|docs/src|images|logo|logs|output)/"
@@ -62,6 +63,7 @@ filterwarnings = [
     "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:pretrainedmodels.datasets.utils",
     # https://github.com/pytorch/vision/pull/5898
     "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:torchvision.transforms.functional_pil",
+    "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:torchvision.transforms._functional_pil",
     # https://github.com/rwightman/pytorch-image-models/pull/1256
     "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:timm.data",
     # https://github.com/pytorch/pytorch/issues/72906
@@ -72,9 +74,9 @@ filterwarnings = [
     # https://github.com/Lightning-AI/lightning/pull/13261
     "ignore:torch.distributed._sharded_tensor will be deprecated:DeprecationWarning:torch.distributed._sharded_tensor",
     # https://github.com/Lightning-AI/lightning/issues/13989
-    "ignore:SelectableGroups dict interface is deprecated. Use select.:DeprecationWarning:pytorch_lightning.trainer.connectors.callback_connector",
+    "ignore:SelectableGroups dict interface is deprecated. Use select.:DeprecationWarning:lightning.pytorch.trainer.connectors.callback_connector",
     # https://github.com/Lightning-AI/lightning/issues/14594
-    "ignore:To copy construct from a tensor, it is recommended to use:UserWarning:pytorch_lightning.core.module",
+    "ignore:To copy construct from a tensor, it is recommended to use:UserWarning:lightning.pytorch.core.module",
     # https://github.com/rasterio/rasterio/issues/1742
     # https://github.com/rasterio/rasterio/pull/1753
     "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:rasterio.crs",
@@ -85,15 +87,31 @@ filterwarnings = [
     "ignore:Call to deprecated create function:DeprecationWarning:tensorboard.compat.proto",
     # https://github.com/treebeardtech/nbmake/issues/68
     'ignore:The \(fspath. py.path.local\) argument to NotebookFile is deprecated:pytest.PytestDeprecationWarning:nbmake.pytest_plugin',
+    # https://github.com/kornia/kornia/issues/777
+    "ignore:Default upsampling behavior when mode=bilinear is changed to align_corners=False since 0.4.0:UserWarning:torch.nn.functional",
+    # https://github.com/scikit-image/scikit-image/issues/6663
+    # https://github.com/scikit-image/scikit-image/pull/6637
+    "ignore:`np.bool8` is a deprecated alias for `np.bool_`.:DeprecationWarning:skimage.util.dtype",
+    # https://github.com/lanpa/tensorboardX/pull/677
+    "ignore:ANTIALIAS is deprecated and will be removed in Pillow 10:DeprecationWarning:tensorboardX.summary",
+    # https://github.com/Lightning-AI/lightning/issues/16756
+    "ignore:Deprecated call to `pkg_resources.declare_namespace:DeprecationWarning",
 
     # Expected warnings
-    # pytorch-lightning warns us about using num_workers=0, but it's faster on macOS
+    # Lightning warns us about using num_workers=0, but it's faster on macOS
     "ignore:The dataloader, .*, does not have many workers which may be a bottleneck:UserWarning",
-    # pytorch-lightning warns us about using the CPU when a GPU is available
+    # Lightning warns us about using the CPU when GPU/MPS is available
     "ignore:GPU available but not used.:UserWarning",
+    "ignore:MPS available but not used.:UserWarning",
+    # Lightning warns us if TensorBoard is not installed
+    "ignore:Starting from v1.9.0, `tensorboardX` has been removed as a dependency of the `lightning.pytorch` package:UserWarning",
+    # https://github.com/kornia/kornia/pull/1611
+    "ignore:`ColorJitter` is now following Torchvision implementation.:DeprecationWarning:kornia.augmentation._2d.intensity.color_jitter",
+    # https://github.com/kornia/kornia/pull/1663
+    "ignore:`RandomGaussianBlur` has changed its behavior and now randomly sample sigma for both axes.:DeprecationWarning:kornia.augmentation._2d.intensity.gaussian_blur",
 
     # Unexpected warnings, worth investigating
-    # pytorch-lightning is having trouble inferring the batch size for ChesapeakeCVPRDataModule and CycloneDataModule for some reason
+    # Lightning is having trouble inferring the batch size for ChesapeakeCVPRDataModule and CycloneDataModule for some reason
     "ignore:Trying to infer the `batch_size` from an ambiguous collection:UserWarning",
 ]
 markers = [
