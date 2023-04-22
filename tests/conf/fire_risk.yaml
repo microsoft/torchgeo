@@ -10,6 +10,6 @@ experiment:
     num_classes: 5
   datamodule:
     root: "tests/data/fire_risk"
-    download: true
+    download: false
     batch_size: 1
     num_workers: 0
