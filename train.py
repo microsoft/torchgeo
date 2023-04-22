@@ -15,7 +15,7 @@ from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from omegaconf import DictConfig, OmegaConf
 
-from torchgeo import datamodules, trainers  # noqa: F401
+from torchgeo.datamodules import MisconfigurationException
 from torchgeo.trainers import BYOLTask, ObjectDetectionTask
 
 
@@ -126,8 +126,10 @@ def main(conf: DictConfig) -> None:
     trainer.fit(model=task, datamodule=datamodule)
 
     # Test
-    if hasattr(task, "test_step") and hasattr(datamodule, "test_dataloader"):
+    try:
         trainer.test(ckpt_path="best", datamodule=datamodule)
+    except MisconfigurationException:
+        pass
 
 
 if __name__ == "__main__":
