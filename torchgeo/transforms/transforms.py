@@ -8,7 +8,6 @@ from typing import Any, Optional, Union
 import kornia.augmentation as K
 import torch
 from einops import rearrange
-from kornia.constants import DataKey
 from kornia.geometry import crop_by_indices
 from torch import Tensor
 from torch.nn.modules import Module
@@ -36,7 +35,7 @@ class AugmentationSequential(Module):
         super().__init__()
         self.data_keys = data_keys
 
-        keys: list[Union[str, int, DataKey]] = []
+        keys: list[str] = []
         for key in data_keys:
             if key == "image":
                 keys.append("input")
