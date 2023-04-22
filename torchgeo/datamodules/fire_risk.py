@@ -51,6 +51,3 @@ class FireRiskDataModule(NonGeoDataModule):
             self.train_dataset = FireRisk(split="train", **self.kwargs)
         if stage in ["fit", "validate"]:
             self.val_dataset = FireRisk(split="val", **self.kwargs)
-        if stage in ["test"]:
-            # FireRisk has no test set
-            self.test_dataset = None
