@@ -17,7 +17,7 @@ datamodule:
   num_workers: 4
 
 trainer:
-  _target_: lightning.Trainer
+  _target_: lightning.pytorch.Trainer
   accelerator: gpu
   devices: 1
   min_epochs: 15
