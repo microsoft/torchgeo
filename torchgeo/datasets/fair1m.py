@@ -111,7 +111,7 @@ class FAIR1M(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/2103.05569
+    * https://doi.org/10.1016/j.isprsjprs.2021.12.004
 
     .. versionadded:: 0.2
     """
@@ -156,15 +156,64 @@ class FAIR1M(NonGeoDataset):
         "Bridge": {"id": 36, "category": "Road"},
     }
 
+    splits = {
+        "train": {
+            "filename_glob": os.path.join("train", "**", "images", "*.tif"),
+            "paths": [
+                "train/part1/images.zip",
+                "train/part1/labelXml.zip",
+                "train/part2/images.zip",
+                "train/part2/labelXmls.zip",
+            ],
+            "urls": [
+                "https://drive.google.com/file/d/1LWT_ybL-s88Lzg9A9wHpj0h2rJHrqrVf",
+                "https://drive.google.com/file/d/1CnOuS8oX6T9JMqQnfFsbmf7U38G6Vc8u",
+                "https://drive.google.com/file/d/1cx4MRfpmh68SnGAYetNlDy68w0NgKucJ",
+                "https://drive.google.com/file/d/1RFVjadTHA_bsB7BJwSZoQbiyM7KIDEUI",
+            ],
+            "md5s": [
+                "a460fe6b1b5b276bf856ce9ac72d6568",
+                "80f833ff355f91445c92a0c0c1fa7414",
+                "ad237e61dba304fcef23cd14aa6c4280",
+                "5c5948e68cd0f991a0d73f10956a3b05",
+            ],
+        },
+        "val": {
+            "filename_glob": os.path.join("validation", "images", "*.tif"),
+            "paths": ["validation/images.zip", "validation/labelXmls.zip"],
+            "urls": [
+                "https://drive.google.com/file/d/1lSSHOD02B6_sUmr2b-R1iqhgWRQRw-S9",
+                "https://drive.google.com/file/d/1sTTna1C5n3Senpfo-73PdiNilnja1AV4",
+            ],
+            "md5s": [
+                "dce782be65405aa381821b5f4d9eac94",
+                "700b516a21edc9eae66ca315b72a09a1",
+            ],
+        },
+        "test": {
+            "filename_glob": os.path.join("test", "images", "*.tif"),
+            "paths": ["test/images0.zip", "test/images1.zip", "test/images2.zip"],
+            "urls": [
+                "https://drive.google.com/file/d/1HtOOVfK9qetDBjE7MM0dK_u5u7n4gdw3",
+                "https://drive.google.com/file/d/1iXKCPmmJtRYcyuWCQC35bk97NmyAsasq",
+                "https://drive.google.com/file/d/1oUc25FVf8Zcp4pzJ31A1j1sOLNHu63P0",
+            ],
+            "md5s": [
+                "fb8ccb274f3075d50ac9f7803fbafd3d",
+                "dc9bbbdee000e97f02276aa61b03e585",
+                "700b516a21edc9eae66ca315b72a09a1",
+            ],
+        },
+    }
     image_root: str = "images"
-    labels_root: str = "labelXml"
-    filenames = ["images.zip", "labelXmls.zip"]
-    md5s = ["a460fe6b1b5b276bf856ce9ac72d6568", "80f833ff355f91445c92a0c0c1fa7414"]
+    label_root: str = "labelXml"
 
     def __init__(
         self,
         root: str = "data",
+        split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        download: bool = False,
         checksum: bool = False,
     ) -> None:
         """Initialize a new FAIR1M dataset instance.
@@ -174,13 +223,21 @@ class FAIR1M(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            AssertionError: if ``split`` argument is invalid
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
         """
+        assert split in self.splits
         self.root = root
+        self.split = split
         self.transforms = transforms
+        self.download = download
         self.checksum = checksum
         self._verify()
         self.files = sorted(
-            glob.glob(os.path.join(self.root, self.labels_root, "*.xml"))
+            glob.glob(os.path.join(self.root, self.splits[split["filename_glob"]]))
         )
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
@@ -193,10 +250,16 @@ class FAIR1M(NonGeoDataset):
             data and label at that index
         """
         path = self.files[index]
-        parsed = parse_pascal_voc(path)
-        image = self._load_image(parsed["filename"])
-        boxes, labels = self._load_target(parsed["points"], parsed["labels"])
-        sample = {"image": image, "boxes": boxes, "label": labels}
+
+        image = self.load_image(path)
+        sample = {"image": image}
+
+        if self.split != "test":
+            label_path = path.replace(self.image_root, self.labels_root)
+            label_path = os.path.splitext(label_path)[0] + ".xml"
+            voc = parse_pascal_voc(label_path)
+            boxes, labels = self._load_target(voc["points"], voc["labels"])
+            sample = {"image": image, "boxes": boxes, "label": labels}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -220,7 +283,6 @@ class FAIR1M(NonGeoDataset):
         Returns:
             the image
         """
-        path = os.path.join(self.root, self.image_root, path)
         with Image.open(path) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
             tensor = torch.from_numpy(array)
