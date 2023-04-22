@@ -27,7 +27,7 @@ class TestFireRisk:
     ) -> FireRisk:
         monkeypatch.setattr(torchgeo.datasets.fire_risk, "download_url", download_url)
         url = os.path.join("tests", "data", "fire_risk", "FireRisk.zip")
-        md5 = "5895dea3757ba88707d52f5521c444d3"
+        md5 = "db22106d61b10d855234b4a74db921ac"
         monkeypatch.setattr(FireRisk, "md5", md5)
         monkeypatch.setattr(FireRisk, "url", url)
         root = str(tmp_path)
@@ -56,7 +56,7 @@ class TestFireRisk:
         FireRisk(root=str(tmp_path), download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = "Dataset not found in `root` directory and `download=False`, "
+        err = f"Dataset not found in `root={str(tmp_path)}` and `download=False`, "
         "either specify a different `root` directory or use `download=True` "
         "to automatically download the dataset."
         with pytest.raises(RuntimeError, match=err):

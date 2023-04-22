@@ -6,7 +6,6 @@
 from typing import Any
 
 import kornia.augmentation as K
-import torch
 
 from ..datasets import FireRisk
 from ..transforms import AugmentationSequential
@@ -14,13 +13,10 @@ from .geo import NonGeoDataModule
 
 
 class FireRiskDataModule(NonGeoDataModule):
-    """LightningDataModule implementation for the RESISC45 dataset.
+    """LightningDataModule implementation for the FireRisk dataset.
 
     .. versionadded:: 0.5
     """
-
-    mean = torch.tensor([0, 0, 0])
-    std = torch.tensor([255.0, 255.0, 255.0])
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
@@ -34,9 +30,6 @@ class FireRiskDataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.FireRisk`.
         """
         super().__init__(FireRisk, batch_size, num_workers, **kwargs)
-        self.aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=["image"]
-        )
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.RandomRotation(p=0.5, degrees=90),
@@ -51,23 +44,13 @@ class FireRiskDataModule(NonGeoDataModule):
     def setup(self, stage: str) -> None:
         """Set up datasets.
 
-        Called at the beginning of fit, validate, test, or predict. During distributed
-        training, this method is called from every process across all the nodes. Setting
-        state here is recommended.
-
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in ["fit"]:
-            self.train_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split="train", **self.kwargs
-            )
+            self.train_dataset = FireRisk(split="train", **self.kwargs)
         if stage in ["fit", "validate"]:
-            self.val_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split="val", **self.kwargs
-            )
+            self.val_dataset = FireRisk(split="val", **self.kwargs)
         if stage in ["test"]:
             # FireRisk has no test set
-            self.test_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split="val", **self.kwargs
-            )
+            self.test_dataset = None

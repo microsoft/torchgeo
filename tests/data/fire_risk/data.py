@@ -67,8 +67,8 @@ PATHS = [
 
 
 def create_file(path: str) -> None:
-    Z = np.random.rand(SIZE, SIZE, 3) * 255
-    img = Image.fromarray(Z.astype("uint8")).convert("RGB")
+    Z = np.random.randint(255, size=(SIZE, SIZE, 3), dtype=np.uint8)
+    img = Image.fromarray(Z).convert("RGB")
     img.save(path)
 
 

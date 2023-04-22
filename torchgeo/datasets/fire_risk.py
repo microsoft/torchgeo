@@ -80,6 +80,10 @@ class FireRisk(NonGeoClassificationDataset):
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            AssertionError: if ``split`` argument is invalid
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         assert split in self.splits
         self.root = root
@@ -112,7 +116,7 @@ class FireRisk(NonGeoClassificationDataset):
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
+                f"Dataset not found in `root={self.root}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
                 "to automatically download the dataset."
             )
