@@ -34,6 +34,11 @@ BigEarthNet
 
 .. autoclass:: BigEarthNetDataModule
 
+ChaBuD
+^^^^^^
+
+.. autoclass:: ChaBuDDataModule
+
 COWC
 ^^^^
 
