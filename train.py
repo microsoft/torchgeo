@@ -16,7 +16,7 @@ from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from omegaconf import DictConfig, OmegaConf
 
 from torchgeo.datamodules import MisconfigurationException
-from torchgeo.trainers import BYOLTask, ObjectDetectionTask
+from torchgeo.trainers import BYOLTask, ObjectDetectionTask, SimCLRTask
 
 
 def set_up_omegaconf() -> DictConfig:
@@ -95,7 +95,7 @@ def main(conf: DictConfig) -> None:
     if isinstance(task, ObjectDetectionTask):
         monitor_metric = "val_map"
         mode = "max"
-    elif isinstance(task, BYOLTask):
+    elif any([isinstance(task, BYOLTask), isinstance(task, SimCLRTask)]):
         monitor_metric = "train_loss"
         mode = "min"
     else:
