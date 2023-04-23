@@ -89,7 +89,7 @@ def get_period(date: datetime, days: int = 5) -> tuple[str, str, str, str]:
 """get collection and remove clouds from ee"""
 
 
-def maskS2clouds(args: Any, image: ee.Image) -> ee.Image:
+def mask_clouds(args: Any, image: ee.Image) -> ee.Image:
     qa = image.select(args.qa_band)
     cloudBitMask = 1 << args.qa_cloud_bit
     # Both flags should be set to zero, indicating clear conditions.
@@ -107,7 +107,7 @@ def get_collection(
         )
     )
     # Uncomment the following line if you want to apply cloud masking.
-    # collection = collection.map(maskS2clouds, args)
+    # collection = collection.map(mask_clouds, args)
     return collection
 
 
