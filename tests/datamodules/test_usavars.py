@@ -14,7 +14,7 @@ from torchgeo.datasets import unbind_samples
 class TestUSAVarsDataModule:
     @pytest.fixture
     def datamodule(self, request: SubRequest) -> USAVarsDataModule:
-        pytest.importorskip("pandas", minversion="0.23.2")
+        pytest.importorskip("pandas", minversion="1.1.3")
         root = os.path.join("tests", "data", "usavars")
         batch_size = 1
         num_workers = 0
