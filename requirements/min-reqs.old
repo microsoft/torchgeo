@@ -49,7 +49,7 @@ pyupgrade==2.8.0
 hydra-core==0.11.3
 mypy==0.900
 nbmake==1.3.3
-omegaconf==2.1.0
+omegaconf==1.4.0
 pytest==6.1.2
 pytest-cov==2.4.0
 tensorboard==2.9.1
