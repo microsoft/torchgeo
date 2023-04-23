@@ -174,6 +174,12 @@ BigEarthNet
 
 .. autoclass:: BigEarthNet
 
+
+ChaBuD
+^^^^^^
+
+.. autoclass:: ChaBuD
+
 Cloud Cover Detection
 ^^^^^^^^^^^^^^^^^^^^^
 
