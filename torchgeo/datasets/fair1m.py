@@ -415,12 +415,14 @@ class FAIR1M(NonGeoDataset):
 
         axs[0].imshow(image)
         axs[0].axis("off")
-        polygons = [
-            patches.Polygon(points, color="r", fill=False)
-            for points in sample["boxes"].numpy()
-        ]
-        for polygon in polygons:
-            axs[0].add_patch(polygon)
+
+        if "boxes" in sample:
+            polygons = [
+                patches.Polygon(points, color="r", fill=False)
+                for points in sample["boxes"].numpy()
+            ]
+            for polygon in polygons:
+                axs[0].add_patch(polygon)
 
         if show_titles:
             axs[0].set_title("Ground Truth")
