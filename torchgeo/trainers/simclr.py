@@ -107,9 +107,9 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
 
         Args:
             model: Name of the timm model to use.
-            weights: Initial model weights. Either a weight enum, the string representation of a weight enum,
-                True for ImageNet weights, False or None for random weights,
-                or the path to a saved model state dict.
+            weights: Initial model weights. Either a weight enum, the string
+                representation of a weight enum, True for ImageNet weights, False
+                or None for random weights, or the path to a saved model state dict.
             in_channels: Number of input channels to model.
             version: Version of SimCLR, 1--2.
             layers: Number of layers in projection head (2 for v1 or 3+ for v2).
