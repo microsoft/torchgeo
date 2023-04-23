@@ -436,7 +436,10 @@ class RasterDataset(GeoDataset):
 
         if self.dtype is not None:
             if self.is_image:
-                warn("Custom dtype is explicitly set, but dtype is only valid for mask RasterDatasets.")
+                warn(
+                    "Custom dtype is explicitly set, but dtype is only valid for mask"
+                    + " RasterDatasets."
+                )
             else:
                 data = data.to(self.dtype)
 
