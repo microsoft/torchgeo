@@ -38,6 +38,7 @@ from .etci2021 import ETCI2021
 from .eudem import EUDEM
 from .eurosat import EuroSAT, EuroSAT100
 from .fair1m import FAIR1M
+from .fire_risk import FireRisk
 from .forestdamage import ForestDamage
 from .gbif import GBIF
 from .geo import (
@@ -183,6 +184,7 @@ __all__ = (
     "EuroSAT",
     "EuroSAT100",
     "FAIR1M",
+    "FireRisk",
     "ForestDamage",
     "GID15",
     "IDTReeS",

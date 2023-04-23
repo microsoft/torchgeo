@@ -60,6 +60,11 @@ FAIR1M
 
 .. autoclass:: FAIR1MDataModule
 
+FireRisk
+^^^^^^^^
+
+.. autoclass:: FireRiskDataModule
+
 GID-15
 ^^^^^^
 
