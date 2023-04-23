@@ -30,7 +30,6 @@ def test_dataset_split() -> None:
 
 
 def test_group_shuffle_split() -> None:
-
     alphabet = np.array(list("abcdefghijklmnopqrstuvwxyz"))
     groups = np.random.randint(0, 26, size=(1000))
     groups = alphabet[groups]

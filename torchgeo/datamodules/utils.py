@@ -61,7 +61,7 @@ def group_shuffle_split(
     train_size: Optional[float] = None,
     test_size: Optional[float] = None,
     random_state: Optional[int] = None,
-) -> Tuple[Any, Any]:
+) -> tuple[Any, Any]:
     """Method for performing a single group-wise shuffle split of data.
 
     Loosely based off of `sklearn.model_selection.GroupShuffleSplit`.
