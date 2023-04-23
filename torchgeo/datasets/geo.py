@@ -11,7 +11,6 @@ import re
 import sys
 from collections.abc import Sequence
 from typing import Any, Callable, Optional, cast
-from warnings import warn
 
 import fiona
 import fiona.transform
@@ -298,7 +297,12 @@ class RasterDataset(GeoDataset):
     cmap: dict[int, tuple[int, int, int, int]] = {}
 
     #: dtype to force onto the dataset (overrides the dtype of the file via a cast)
-    dtype: Optional[torch.dtype] = None
+    @property
+    def dtype(self) -> torch.dtype:
+        if self.is_image:
+            return torch.float32
+        else:
+            return torch.long
 
     def __init__(
         self,
@@ -434,17 +438,9 @@ class RasterDataset(GeoDataset):
 
         sample = {"crs": self.crs, "bbox": query}
 
-        if self.dtype is not None:
-            if self.is_image:
-                warn(
-                    "Custom dtype is explicitly set, but dtype is only valid for mask"
-                    + " RasterDatasets."
-                )
-            else:
-                data = data.to(self.dtype)
-
+        data = data.to(self.dtype)
         if self.is_image:
-            sample["image"] = data.float()
+            sample["image"] = data
         else:
             sample["mask"] = data
 

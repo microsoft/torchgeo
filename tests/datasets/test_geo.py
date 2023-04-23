@@ -227,11 +227,6 @@ class TestRasterDataset:
         with pytest.raises(AssertionError, match=msg):
             CustomSentinelDataset(root, bands=bands, transforms=transforms, cache=cache)
 
-    def test_dtype_warning(self, custom_dtype_ds: RasterDataset) -> None:
-        custom_dtype_ds.dtype = torch.int32
-        with pytest.warns(UserWarning, match="Custom dtype is explicitly set*"):
-            custom_dtype_ds[custom_dtype_ds.bounds]
-
 
 class TestVectorDataset:
     @pytest.fixture(scope="class")
