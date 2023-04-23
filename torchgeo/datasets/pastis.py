@@ -6,22 +6,17 @@
 import abc
 import glob
 import os
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Optional, Union
 
 import numpy as np
 import torch
 from torch import Tensor
-from torch.utils.data import DataLoader
 
-from ..datasets.utils import check_integrity, extract_archive
-from .geo import VisionDataset
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
+from .geo import NonGeoDataset
+from .utils import check_integrity, download_url, extract_archive
 
 
-class PASTIS(VisionDataset, abc.ABC):
+class PASTIS(NonGeoDataset, abc.ABC):
     """PASTIS dataset.
 
     The `PASTIS <https://github.com/VSainteuf/pastis-benchmark>`_
@@ -66,9 +61,9 @@ class PASTIS(VisionDataset, abc.ABC):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/2112.07558
+    * https://doi.org/10.1016/j.isprsjprs.2022.03.012
 
-    .. versionadded:: 0.2
+    .. versionadded:: 0.5
     """
 
     classes = [
@@ -131,7 +126,8 @@ class PASTIS(VisionDataset, abc.ABC):
         self,
         root: str = "data",
         bands: str = "all",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        download: bool = False,
         checksum: bool = False,
     ) -> None:
         """Initialize a new PASTIS dataset instance.
@@ -141,17 +137,19 @@ class PASTIS(VisionDataset, abc.ABC):
             bands: load Sentinel-1, Sentinel-2, or both. One of {s1a, s1d, s2, all}
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
+            download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
         assert bands in ["s1a", "s1d", "s2", "all"]
         self.root = root
         self.bands = bands
         self.transforms = transforms
+        self.download = download
         self.checksum = checksum
         self._verify()
         self.files = self._load_files()
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -190,7 +188,7 @@ class PASTIS(VisionDataset, abc.ABC):
         tensor = torch.from_numpy(array)
         return tensor
 
-    def _load_target(self, index: int) -> Union[Tensor, Tuple[Tensor, Tensor, Tensor]]:
+    def _load_target(self, index: int) -> Union[Tensor, tuple[Tensor, Tensor, Tensor]]:
         """Load the target mask for a single image.
 
         Args:
@@ -201,7 +199,7 @@ class PASTIS(VisionDataset, abc.ABC):
         """
         raise NotImplementedError
 
-    def _load_files(self) -> List[Dict[str, str]]:
+    def _load_files(self) -> list[dict[str, str]]:
         """List the image and target files.
 
         Returns:
@@ -227,13 +225,14 @@ class PASTIS(VisionDataset, abc.ABC):
         """Verify the integrity of the dataset.
 
         Raises:
-            RuntimeError: if checksum fails or the dataset is not found
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        # Check if the files already exist
-        if os.path.exists(os.path.join(self.root, self.directory)):
+        # Check if the directory already exists
+        path = os.path.join(self.root, self.directory)
+        if os.path.exists(path):
             return
 
-        # Check if .zip files already exists (if so extract)
+        # Check if zip file already exists (if so then extract)
         filepath = os.path.join(self.root, self.filename)
         if os.path.exists(filepath):
             if self.checksum and not check_integrity(filepath, self.md5):
@@ -241,16 +240,35 @@ class PASTIS(VisionDataset, abc.ABC):
             extract_archive(filepath)
             return
 
-        raise RuntimeError(
-            "Dataset not found in `root` directory, "
-            "specify a different `root` directory."
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
+
+        # Download and extract the dataset
+        self._download()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        download_url(
+            self.url,
+            self.root,
+            filename=self.filename,
+            md5=self.md5 if self.checksum else None,
         )
+        extract_archive(os.path.join(self.root, self.filename), self.root)
 
 
 class PASTISSemanticSegmentation(PASTIS):
-    """PASTIS dataset for the semantic segmentation task."""
+    """PASTIS dataset for the semantic segmentation task.
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    .. versionadded:: 0.5
+    """
+
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -283,9 +301,12 @@ class PASTISSemanticSegmentation(PASTIS):
 
 
 class PASTISInstanceSegmentation(PASTIS):
-    """PASTIS dataset for the instance segmentation task."""
+    """PASTIS dataset for the instance segmentation task.
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    .. versionadded:: 0.5
+    """
+
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -303,7 +324,7 @@ class PASTISInstanceSegmentation(PASTIS):
 
         return sample
 
-    def _load_target(self, index: int) -> Tuple[Tensor, Tensor, Tensor]:
+    def _load_target(self, index: int) -> tuple[Tensor, Tensor, Tensor]:
         """Load the target mask for a single image.
 
         Args:

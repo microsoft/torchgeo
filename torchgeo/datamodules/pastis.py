@@ -4,19 +4,17 @@
 """PASTIS datamodule."""
 
 import abc
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional, Type
 
-import pytorch_lightning as pl
 import torch
 from torch import Tensor
-from torch.utils.data import DataLoader
-from torchvision.transforms import Compose
 
-from ..datasets import PASTISInstanceSegmentation, PASTISSemanticSegmentation
+from ..datasets import PASTIS, PASTISInstanceSegmentation, PASTISSemanticSegmentation
+from .geo import NonGeoDataModule
 from .utils import dataset_split
 
 
-def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
+def collate_fn(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
     """Custom object detection collate fn to handle variable number of boxes.
 
     Args:
@@ -24,13 +22,15 @@ def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
     Returns:
         batch dict output
     """
-    output: Dict[str, Any] = {}
+    output: dict[str, Any] = {}
     output["image"] = torch.stack([sample["image"] for sample in batch])
+    output["masks"] = [sample["masks"] for sample in batch]
     output["boxes"] = [sample["boxes"] for sample in batch]
+    output["label"] = [sample["label"] for sample in batch]
     return output
 
 
-class PASTISDataModule(pl.LightningDataModule, abc.ABC):
+class PASTISDataModule(NonGeoDataModule, abc.ABC):
     """LightningDataModule implementation for the PASTIS dataset."""
 
     # (S1A, S1D, S2)
@@ -77,7 +77,7 @@ class PASTISDataModule(pl.LightningDataModule, abc.ABC):
 
     def __init__(
         self,
-        root_dir: str,
+        dataset_class: Type[PASTIS],
         batch_size: int = 64,
         num_workers: int = 0,
         val_split_pct: float = 0.2,
@@ -87,29 +87,16 @@ class PASTISDataModule(pl.LightningDataModule, abc.ABC):
         """Initialize a LightningDataModule for PASTIS based DataLoaders.
 
         Args:
-            root_dir: The ``root`` argument to pass to the PASTIS Dataset classes
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
             val_split_pct: What percentage of the dataset to use as a validation set
             test_split_pct: What percentage of the dataset to use as a test set
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.PASTIS`.
         """
-        super().__init__()  # type: ignore[no-untyped-call]
-        self.root_dir = root_dir
-        self.batch_size = batch_size
-        self.num_workers = num_workers
+        super().__init__(dataset_class, batch_size, num_workers, **kwargs)
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
-
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
-
-        Args:
-            sample: input image dictionary
-
-        Returns:
-            preprocessed sample
-        """
-        raise NotImplementedError
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Initialize the main ``Dataset`` objects.
@@ -120,107 +107,30 @@ class PASTISDataModule(pl.LightningDataModule, abc.ABC):
             stage: stage to set up
         """
         raise NotImplementedError
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training.
-
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-            collate_fn=collate_fn,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-            collate_fn=collate_fn,
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-            collate_fn=collate_fn,
-        )
 
 
 class PASTISSemanticSegmentationDataModule(PASTISDataModule):
     """LightningDataModule implementation for the PASTISSemanticSegmentation dataset."""
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
-
-        Args:
-            sample: input image dictionary
-
-        Returns:
-            preprocessed sample
-        """
-        sample["image"] = sample["image"].float()
-        return sample
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(PASTISSemanticSegmentation, **kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
-
-        This method is called once per GPU per run.
-
-        Args:
-            stage: stage to set up
-        """
-        transforms = Compose([self.preprocess])
-
-        dataset = PASTISSemanticSegmentation(self.root_dir, transforms=transforms)
+        self.dataset = PASTISSemanticSegmentation(**self.kwargs)
         self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-            dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
+            self.dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
         )
 
 
 class PASTISInstanceSegmentationDataModule(PASTISDataModule):
     """LightningDataModule implementation for the PASTISInstanceSegmentation dataset."""
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
-
-        Args:
-            sample: input image dictionary
-
-        Returns:
-            preprocessed sample
-        """
-        sample["image"] = sample["image"].float()
-        return sample
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(PASTISInstanceSegmentation, **kwargs)
+        self.collate_fn = collate_fn
 
     def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
-
-        This method is called once per GPU per run.
-
-        Args:
-            stage: stage to set up
-        """
-        transforms = Compose([self.preprocess])
-
-        dataset = PASTISInstanceSegmentation(self.root_dir, transforms=transforms)
+        self.dataset = PASTISInstanceSegmentation(**self.kwargs)
         self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-            dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
+            self.dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
         )
