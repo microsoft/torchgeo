@@ -434,13 +434,11 @@ class RasterDataset(GeoDataset):
 
         sample = {"crs": self.crs, "bbox": query}
 
-        if self.dtype is not None and not self.is_image:
-            data = data.to(self.dtype)
-        if self.dtype is not None and self.is_image:
-            warn(
-                "Custom dtype is explicitely set, however the current RasterDataset is"
-                + " an image, so no action will be taken."
-            )
+        if self.dtype is not None:
+            if self.is_image:
+                warn("Custom dtype is explicitly set, but dtype is only valid for mask RasterDatasets.")
+            else:
+                data = data.to(self.dtype)
 
         if self.is_image:
             sample["image"] = data.float()
