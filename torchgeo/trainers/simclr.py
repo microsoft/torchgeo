@@ -182,16 +182,16 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         # v1+: add global batch norm
         # v2: add selective kernels, channel-wise attention mechanism
 
-    def forward(self, batch: Tensor) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model.
 
         Args:
-            batch: Mini-batch of images.
+            x: Mini-batch of images.
 
         Returns:
             Output from the model.
         """
-        h = self.backbone(batch)
+        h = self.backbone(x)
         z = self.projection_head(h)
         return cast(Tensor, z)
 
