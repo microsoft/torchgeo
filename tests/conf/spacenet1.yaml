@@ -1,21 +1,22 @@
-experiment:
-  task: "spacenet1"
-  module:
-    loss: "ce"
-    model: "unet"
-    backbone: "resnet18"
-    weights: null
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 6
-    verbose: false
-    in_channels: 3
-    num_classes: 3
-    num_filters: 1
-    ignore_index: null
-  datamodule:
-    root: "tests/data/spacenet"
-    download: true
-    batch_size: 1
-    num_workers: 0
-    val_split_pct: 0.33
-    test_split_pct: 0.33
+module:
+  _target_: torchgeo.trainers.SemanticSegmentationTask
+  loss: "ce"
+  model: "unet"
+  backbone: "resnet18"
+  weights: null
+  learning_rate: 1e-3
+  learning_rate_schedule_patience: 6
+  verbose: false
+  in_channels: 3
+  num_classes: 3
+  num_filters: 1
+  ignore_index: null
+
+datamodule:
+  _target_: torchgeo.datamodules.SpaceNet1DataModule
+  root: "tests/data/spacenet"
+  download: true
+  batch_size: 1
+  num_workers: 0
+  val_split_pct: 0.33
+  test_split_pct: 0.33

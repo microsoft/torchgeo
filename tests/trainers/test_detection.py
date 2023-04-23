@@ -2,14 +2,15 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, cast
+from typing import Any
 
 import pytest
 import torch
 import torch.nn as nn
 import torchvision.models.detection
 from _pytest.monkeypatch import MonkeyPatch
-from lightning.pytorch import LightningDataModule, Trainer
+from hydra.utils import instantiate
+from lightning.pytorch import Trainer
 from omegaconf import OmegaConf
 from torch.nn.modules import Module
 
@@ -57,25 +58,15 @@ def plot(*args: Any, **kwargs: Any) -> None:
 
 
 class TestObjectDetectionTask:
-    @pytest.mark.parametrize(
-        "name,classname", [("nasa_marine_debris", NASAMarineDebrisDataModule)]
-    )
+    @pytest.mark.parametrize("name", ["nasa_marine_debris"])
     @pytest.mark.parametrize("model_name", ["faster-rcnn", "fcos", "retinanet"])
     def test_trainer(
-        self,
-        monkeypatch: MonkeyPatch,
-        name: str,
-        classname: type[LightningDataModule],
-        model_name: str,
-        fast_dev_run: bool,
+        self, monkeypatch: MonkeyPatch, name: str, model_name: str, fast_dev_run: bool
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", f"{name}.yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(dict[Any, dict[Any, Any]], conf_dict)
 
         # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = classname(**datamodule_kwargs)
+        datamodule = instantiate(conf.datamodule)
 
         # Instantiate model
         monkeypatch.setattr(
@@ -87,9 +78,8 @@ class TestObjectDetectionTask:
         monkeypatch.setattr(
             torchvision.models.detection, "RetinaNet", ObjectDetectionTestModel
         )
-        model_kwargs = conf_dict["module"]
-        model_kwargs["model"] = model_name
-        model = ObjectDetectionTask(**model_kwargs)
+        conf.module.model = model_name
+        model = instantiate(conf.module)
 
         # Instantiate trainer
         trainer = Trainer(
