@@ -12,7 +12,7 @@ datamodule:
   _target_: torchgeo.datamodules.BigEarthNetDataModule
   root: "data/bigearthnet"
   bands: "all"
-  num_classes: ${experiment.module.num_classes}
+  num_classes: ${module.num_classes}
   batch_size: 128
   num_workers: 4
 

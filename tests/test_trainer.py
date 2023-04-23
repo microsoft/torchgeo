@@ -1,7 +1,7 @@
 import os
 
-from hydra.compose import OmegaConf  # type: ignore[attr-defined]
 from hydra.utils import instantiate
+from omegaconf import OmegaConf
 
 
 def test_recursive_config() -> None:
