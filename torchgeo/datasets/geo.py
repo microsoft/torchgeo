@@ -298,7 +298,7 @@ class RasterDataset(GeoDataset):
 
     @property
     def dtype(self) -> torch.dtype:
-        """dtype of the dataset (overrides the dtype of the data file via a cast).
+        """dtype of the dataset (overrides the dtype of the data file via a cast).  # noqa: D403, E501
 
         Returns:
             the dtype of the dataset
