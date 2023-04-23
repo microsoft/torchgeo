@@ -21,7 +21,7 @@ pytest.importorskip("h5py", minversion="2.6")
 
 
 def download_url(url: str, root: str, filename: str, *args: str, **kwargs: str) -> None:
-    output = shutil.copy(url, root)
+    output = shutil.copy(url, os.path.join(root, filename))
     print(output)
 
 
@@ -33,7 +33,7 @@ class TestChaBuD:
         monkeypatch.setattr(torchgeo.datasets.chabud, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "chabud")
         url = os.path.join(data_dir, "train_eval.hdf5")
-        md5 = "16b7c7bf2909e437b2822fbfc3ede3c1"
+        md5 = "1bec048beeb87a865c53f40ab418aa75"
         monkeypatch.setattr(ChaBuD, "url", url)
         monkeypatch.setattr(ChaBuD, "md5", md5)
         bands, split = request.param

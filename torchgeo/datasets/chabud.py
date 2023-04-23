@@ -108,7 +108,6 @@ class ChaBuD(NonGeoDataset):
         self.download = download
         self.checksum = checksum
         self.filepath = os.path.join(root, self.filename)
-        self.uuids = self._load_uuids()
         self.band_indices = [self.all_bands.index(b) for b in bands]
 
         self._verify()
@@ -119,6 +118,8 @@ class ChaBuD(NonGeoDataset):
             raise ImportError(
                 "h5py is not installed and is required to use this dataset"
             )
+
+        self.uuids = self._load_uuids()
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.

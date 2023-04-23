@@ -14,6 +14,7 @@ from omegaconf import OmegaConf
 from torch.nn.modules import Module
 
 from torchgeo.datamodules import (
+    ChaBuDDataModule,
     ChesapeakeCVPRDataModule,
     DeepGlobeLandCoverDataModule,
     ETCI2021DataModule,
@@ -59,6 +60,7 @@ class TestSemanticSegmentationTask:
     @pytest.mark.parametrize(
         "name,classname",
         [
+            ("chabud", ChaBuDDataModule),
             ("chesapeake_cvpr_5", ChesapeakeCVPRDataModule),
             ("chesapeake_cvpr_7", ChesapeakeCVPRDataModule),
             ("deepglobelandcover", DeepGlobeLandCoverDataModule),
