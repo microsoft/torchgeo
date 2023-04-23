@@ -280,3 +280,62 @@ class RESISC45(NonGeoClassificationDataset):
         if suptitle is not None:
             plt.suptitle(suptitle)
         return fig
+
+
+class RESISC45Clustered(RESISC45):
+
+    def __init__(
+        self,
+        root: str = "data",
+        split: str = "train",
+        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        download: bool = False,
+        checksum: bool = False,
+    ):
+        super().__init__(root, split, transforms, download, checksum)
+
+        labels = np.load(os.path.join(root, f"y_{split}.npy"))
+        self.cluster_labels = labels
+
+    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+        sample = super().__getitem__(index)
+        sample["label"] = self.cluster_labels[index]
+        return sample
+
+    def plot(
+        self,
+        sample: Dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`NonGeoClassificationDataset.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        image = np.rollaxis(sample["image"].numpy(), 0, 3)
+        label = cast(int, sample["label"].item())
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction = cast(int, sample["prediction"].item())
+
+        fig, ax = plt.subplots(figsize=(4, 4))
+        ax.imshow(image)
+        ax.axis("off")
+        if show_titles:
+            title = f"Label: {label}"
+            if showing_predictions:
+                title += f"\nPrediction: {prediction}"
+            ax.set_title(title)
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig

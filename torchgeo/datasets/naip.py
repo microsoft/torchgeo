@@ -6,6 +6,7 @@
 from typing import Any, Dict, Optional
 
 import matplotlib.pyplot as plt
+import torch
 
 from .geo import RasterDataset
 
@@ -42,6 +43,7 @@ class NAIP(RasterDataset):
         (?:_(?P<processing_date>\d+))?
         \..*$
     """
+    dtype = torch.float
 
     # Plotting
     all_bands = ["R", "G", "B", "NIR"]
