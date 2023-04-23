@@ -296,9 +296,13 @@ class RasterDataset(GeoDataset):
     #: Color map for the dataset, used for plotting
     cmap: dict[int, tuple[int, int, int, int]] = {}
 
-    #: dtype to force onto the dataset (overrides the dtype of the file via a cast)
     @property
     def dtype(self) -> torch.dtype:
+        """dtype of the dataset (overrides the dtype of the data file via a cast).
+
+        Returns:
+            the dtype of the dataset
+        """
         if self.is_image:
             return torch.float32
         else:
