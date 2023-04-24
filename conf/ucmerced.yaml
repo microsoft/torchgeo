@@ -1,14 +1,22 @@
-experiment:
-  task: "ucmerced"
-  module:
-    loss: "ce"
-    model: "resnet18"
-    weights: null
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 6
-    in_channels: 3
-    num_classes: 21
-  datamodule:
-    root: "data/ucmerced"
-    batch_size: 128
-    num_workers: 4
+module:
+  _target_: torchgeo.trainers.ClassificationTask
+  loss: "ce"
+  model: "resnet18"
+  weights: null
+  learning_rate: 1e-3
+  learning_rate_schedule_patience: 6
+  in_channels: 3
+  num_classes: 21
+
+datamodule:
+  _target_: torchgeo.datamodules.UCMercedDataModule
+  root: "data/ucmerced"
+  batch_size: 128
+  num_workers: 4
+
+trainer:
+  _target_: lightning.pytorch.Trainer
+  accelerator: gpu
+  devices: 1
+  min_epochs: 15
+  max_epochs: 40
