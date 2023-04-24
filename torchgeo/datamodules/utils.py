@@ -4,7 +4,7 @@
 """Common datamodule utilities."""
 
 import math
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, Iterable
 
 import numpy as np
 from torch import Generator
@@ -57,11 +57,11 @@ def dataset_split(
 
 
 def group_shuffle_split(
-    groups: Any,
+    groups: Iterable[Any],
     train_size: Optional[float] = None,
     test_size: Optional[float] = None,
     random_state: Optional[int] = None,
-) -> tuple[Any, Any]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Method for performing a single group-wise shuffle split of data.
 
     Loosely based off of `sklearn.model_selection.GroupShuffleSplit`.
