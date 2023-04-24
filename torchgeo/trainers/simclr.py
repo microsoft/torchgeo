@@ -17,7 +17,7 @@ from lightly.models.modules.heads import ProjectionHead
 from lightning import LightningModule
 from torch import Tensor
 from torch.optim import Adam, Optimizer
-from torch.optim.lr_scheduler import CosineAnnealingLR
+from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torchvision.models._api import WeightsEnum
 
 from ..models import get_weight
@@ -118,7 +118,8 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
                 (defaults to output dimension of model).
             output_dim: Number of output dimensions in projection head
                 (defaults to output dimension of model).
-            lr: Learning rate (0.3 x batch_size / 256 is recommended).
+            lr: Learning rate
+                (0.3 x batch_size / 256 for v1 or 0.3 x sqrt(batch size) for v2).
             weight_decay: Weight decay coefficient (1e-6 for v1 or 1e-4 for v2).
             temperature: Temperature used in NT-Xent loss.
             memory_bank_size: Size of memory bank (0 for v1 or 64K for v2).
@@ -266,5 +267,20 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             lr=self.hparams["lr"],
             weight_decay=self.hparams["weight_decay"],
         )
-        lr_scheduler = CosineAnnealingLR(optimizer, T_max=self.trainer.max_epochs)
+        if self.version == 1:
+            warmup_epochs = 10
+        else:
+            warmup_epochs = int(self.trainer.max_epochs * 0.05)
+        lr_scheduler = SequentialLR(
+            optimizer,
+            schedulers=[
+                LinearLR(
+                    optimizer, start_factor=1, end_factor=3, total_iters=warmup_epochs
+                ),
+                CosineAnnealingLR(
+                    optimizer, T_max=self.trainer.max_epochs, last_epoch=-warmup_epochs
+                ),
+            ],
+            milestones=[warmup_epochs],
+        )
         return [optimizer], [lr_scheduler]
