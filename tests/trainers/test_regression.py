@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 import segmentation_models_pytorch as smp
@@ -209,45 +209,41 @@ class TestRegressionTask:
 
 class TestPixelwiseRegressionTask:
     @pytest.mark.parametrize(
-        "name,classname,batch_size,loss,model_type",
+        "name,batch_size,loss,model_type",
         [
-            ("inria", InriaAerialImageLabelingDataModule, 1, "mse", "unet"),
-            ("inria", InriaAerialImageLabelingDataModule, 2, "mae", "deeplabv3+"),
-            ("inria", InriaAerialImageLabelingDataModule, 1, "mse", "fcn"),
+            ("inria", 1, "mse", "unet"),
+            ("inria", 2, "mae", "deeplabv3+"),
+            ("inria", 1, "mse", "fcn"),
         ],
     )
     def test_trainer(
         self,
         monkeypatch: MonkeyPatch,
         name: str,
-        classname: type[LightningDataModule],
         batch_size: int,
         loss: str,
         model_type: str,
         fast_dev_run: bool,
+        model_kwargs: dict[str, Any],
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(dict[str, dict[str, Any]], conf_dict)
 
         # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule_kwargs["batch_size"] = batch_size
-        datamodule = classname(**datamodule_kwargs)
+        conf.datamodule.batch_size = batch_size
+        datamodule = instantiate(conf.datamodule)
 
         # Instantiate model
         monkeypatch.setattr(smp, "Unet", create_model)
         monkeypatch.setattr(smp, "DeepLabV3Plus", create_model)
-        model_kwargs = conf_dict["module"]
-        model_kwargs["loss"] = loss
         model_kwargs["model"] = model_type
 
         if model_type == "fcn":
             model_kwargs["num_filters"] = 2
 
         model = PixelwiseRegressionTask(**model_kwargs)
-
-        model.model = PixelwiseRegressionTestModel(in_chans=model_kwargs["in_channels"])
+        model.model = PixelwiseRegressionTestModel(
+            in_channels=model_kwargs["in_channels"]
+        )
 
         # Instantiate trainer
         trainer = Trainer(
@@ -276,9 +272,12 @@ class TestPixelwiseRegressionTask:
     @pytest.fixture
     def model_kwargs(self) -> dict[str, Any]:
         return {
-            "model": "resnet18",
+            "model": "unet",
+            "backbone": "resnet18",
             "weights": None,
             "num_outputs": 1,
             "in_channels": 3,
             "loss": "mse",
+            "learning_rate": 1e-3,
+            "learning_rate_schedule_patience": 6,
         }
