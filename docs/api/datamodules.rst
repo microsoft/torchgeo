@@ -60,6 +60,11 @@ FAIR1M
 
 .. autoclass:: FAIR1MDataModule
 
+FireRisk
+^^^^^^^^
+
+.. autoclass:: FireRiskDataModule
+
 GID-15
 ^^^^^^
 
@@ -124,6 +129,11 @@ SSL4EO
 ^^^^^^
 
 .. autoclass:: SSL4EOS12DataModule
+
+SustainBench Crop Yield
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SustainBenchCropYieldDataModule
 
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^

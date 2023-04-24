@@ -10,6 +10,7 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands
 `ETCI2021 Flood Detection`_,S,Sentinel-1,"66,810",2,256x256,5--20,SAR
 `EuroSAT`_,C,Sentinel-2,"27,000",10,64x64,10,MSI
 `FAIR1M`_,OD,Gaofen/Google Earth,"15,000",37,"1,024x1,024",0.3--0.8,RGB
+`FireRisk`_,C,NAIP Aerial,"91,872",7,"320x320",1,RGB
 `Forest Damage`_,OD,Drone imagery,"1,543",4,"1,500x1,500",,RGB
 `GID-15`_,S,Gaofen-2,150,15,"6,800x7,200",3,RGB
 `IDTReeS`_,"OD,C",Aerial,591,33,200x200,0.1--1,RGB
@@ -26,13 +27,16 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands
 `RESISC45`_,C,Google Earth,"31,500",45,256x256,0.2--30,RGB
 `Seasonal Contrast`_,T,Sentinel-2,100K--1M,-,264x264,10,MSI
 `SEN12MS`_,S,"Sentinel-1/2, MODIS","180,662",33,256x256,10,"SAR, MSI"
+`SKIPP'D`_,R,"Fish-eye","363,375",-,64x64,-,RGB
 `So2Sat`_,C,Sentinel-1/2,"400,673",17,32x32,10,"SAR, MSI"
 `SpaceNet`_,I,WorldView-2/3 Planet Lab Dove,"1,889--28,728",2,102--900,0.5--4,MSI
 `SSL4EO`_,T,Sentinel-1/2,1M,-,264x264,10,"SAR, MSI"
+`SustainBench Crop Yield`_,R,MODIS,11k,-,32x32,-,MSI
 `Tropical Cyclone`_,R,GOES 8--16,"108,110",-,256x256,4K--8K,MSI
 `UC Merced`_,C,USGS National Map,"21,000",21,256x256,0.3,RGB
 `USAVars`_,R,NAIP Aerial,100K,-,-,4,"RGB, NIR"
 `Vaihingen`_,S,Aerial,33,6,"1,281--3,816",0.09,RGB
 `VHR-10`_,I,"Google Earth, Vaihingen",800,10,"358--1,728",0.08--2,RGB
+`Western USA Live Fuel Moisture`_,R,"Landsat8, Sentinel-1",2615,-,-,-,-
 `xView2`_,CD,Maxar,"3,732",4,"1,024x1,024",0.8,RGB
 `ZueriCrop`_,"I, T",Sentinel-2,116K,48,24x24,10,MSI

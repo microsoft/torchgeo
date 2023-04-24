@@ -1,20 +1,22 @@
+module:
+  _target_: torchgeo.trainers.ClassificationTask
+  loss: "ce"
+  model: "resnet18"
+  learning_rate: 1e-3
+  learning_rate_schedule_patience: 6
+  weights: null
+  in_channels: 3
+  num_classes: 45
+
+datamodule:
+  _target_: torchgeo.datamodules.RESISC45DataModule
+  root: "data/resisc45"
+  batch_size: 128
+  num_workers: 4
+
 trainer:
+  _target_: lightning.pytorch.Trainer
   accelerator: gpu
   devices: 1
-  min_epochs: 10
+  min_epochs: 15
   max_epochs: 40
-  benchmark: True
-experiment:
-  task: "resisc45"
-  module:
-    loss: "ce"
-    model: "resnet18"
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 6
-    weights: null
-    in_channels: 3
-    num_classes: 45
-  datamodule:
-    root: "data/resisc45"
-    batch_size: 128
-    num_workers: 4
