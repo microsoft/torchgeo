@@ -23,7 +23,7 @@ from torchgeo.datasets import (
     UnionDataset,
 )
 
-pd = pytest.importorskip("pandas", minversion="0.23.2")
+pd = pytest.importorskip("pandas", minversion="1.1.3")
 
 
 class TestOpenBuildings:

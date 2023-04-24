@@ -32,7 +32,7 @@ class TestBeninSmallHolderCashews:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> BeninSmallHolderCashews:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch)
         source_md5 = "255efff0f03bc6322470949a09bc76db"
         labels_md5 = "ed2195d93ca6822d48eb02bc3e81c127"
