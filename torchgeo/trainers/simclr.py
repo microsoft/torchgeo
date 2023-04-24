@@ -11,6 +11,7 @@ import kornia.augmentation as K
 import timm
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from lightly.loss import NTXentLoss
 from lightly.models.modules.heads import ProjectionHead
 from lightning import LightningModule
@@ -178,22 +179,25 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         # Define loss function
         self.criterion = NTXentLoss(temperature, memory_bank_size, gather_distributed)
 
+        # Initialize moving average of output
+        self.avg_output_std = 0.0
+
         # TODO
         # v1+: add global batch norm
         # v2: add selective kernels, channel-wise attention mechanism
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
         """Forward pass of the model.
 
         Args:
             x: Mini-batch of images.
 
         Returns:
-            Output from the model.
+            Output from the backbone and projection head.
         """
-        h = self.backbone(x)
+        h = self.backbone(x)  # shape of batch_size x num_features
         z = self.projection_head(h)
-        return cast(Tensor, z)
+        return cast(Tensor, z), cast(Tensor, h)
 
     def training_step(self, batch: dict[str, Tensor], batch_idx: int) -> Tensor:
         """Compute the training loss and additional metrics.
@@ -221,11 +225,20 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             x1 = self.augmentations(x1)
             x2 = self.augmentations(x2)
 
-        z1 = self(x1)
-        z2 = self(x2)
+        z1, h1 = self(x1)
+        z2, h2 = self(x2)
 
         loss = self.criterion(z1, z2)
 
+        # calculate the mean normalized standard deviation over features dimensions
+        # if this is << 1 / sqrt(h1.shape[1]), then the model is not learning anything
+        output = h1.detach()
+        output = F.normalize(output, dim=1)
+        output_std = torch.std(output, dim=0)
+        output_std = torch.mean(output_std, dim=0)
+        self.avg_output_std = 0.9 * self.avg_output_std + (1 - 0.9) * output_std.item()
+
+        self.log("train_ssl_std", self.avg_output_std)
         self.log("train_loss", loss)
 
         return cast(Tensor, loss)
