@@ -113,9 +113,9 @@ def group_shuffle_split(
         )
 
     generator = np.random.default_rng(seed=random_state)
-    train_group_vals = set(generator.choice(
-        list(group_vals), size=n_train_groups, replace=False
-    ))
+    train_group_vals = set(
+        generator.choice(list(group_vals), size=n_train_groups, replace=False)
+    )
 
     train_idxs = []
     test_idxs = []
