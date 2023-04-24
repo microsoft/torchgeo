@@ -217,6 +217,11 @@ FAIR1M
 
 .. autoclass:: FAIR1M
 
+FireRisk
+^^^^^^^^
+
+.. autoclass:: FireRisk
+
 Forest Damage
 ^^^^^^^^^^^^^
 

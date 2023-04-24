@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import pytest
 import segmentation_models_pytorch as smp
@@ -13,19 +13,13 @@ import torch.nn as nn
 import torchvision
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
-from lightning.pytorch import LightningDataModule, Trainer
+from hydra.utils import instantiate
+from lightning.pytorch import Trainer
 from omegaconf import OmegaConf
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import (
-    COWCCountingDataModule,
-    InriaAerialImageLabelingDataModule,
-    MisconfigurationException,
-    SKIPPDDataModule,
-    SustainBenchCropYieldDataModule,
-    TropicalCycloneDataModule,
-)
+from torchgeo.datamodules import MisconfigurationException, TropicalCycloneDataModule
 from torchgeo.datasets import TropicalCyclone
 from torchgeo.models import get_model_weights, list_models
 from torchgeo.trainers import PixelwiseRegressionTask, RegressionTask
@@ -69,32 +63,19 @@ def create_model(**kwargs: Any) -> Module:
 
 class TestRegressionTask:
     @pytest.mark.parametrize(
-        "name,classname",
-        [
-            ("cowc_counting", COWCCountingDataModule),
-            ("cyclone", TropicalCycloneDataModule),
-            ("sustainbench_crop_yield", SustainBenchCropYieldDataModule),
-            ("skippd", SKIPPDDataModule),
-        ],
+        "name", ["cowc_counting", "cyclone", "sustainbench_crop_yield", "skippd"]
     )
-    def test_trainer(
-        self, name: str, classname: type[LightningDataModule], fast_dev_run: bool
-    ) -> None:
+    def test_trainer(self, name: str, fast_dev_run: bool) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(dict[str, dict[str, Any]], conf_dict)
 
         # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = classname(**datamodule_kwargs)
+        datamodule = instantiate(conf.datamodule)
 
         # Instantiate model
-        model_kwargs = conf_dict["module"]
-        model = RegressionTask(**model_kwargs)
+        model = instantiate(conf.module)
 
         model.model = RegressionTestModel(
-            in_chans=model_kwargs["in_channels"],
-            num_classes=model_kwargs["num_outputs"],
+            in_chans=conf.module.in_channels, num_classes=conf.module.num_outputs
         )
 
         # Instantiate trainer

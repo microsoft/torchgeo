@@ -1,27 +1,28 @@
-experiment:
-  task: "chesapeake_cvpr"
-  module:
-    loss: "ce"
-    model: "unet"
-    backbone: "resnet18"
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 6
-    in_channels: 4
-    num_classes: 7
-    num_filters: 1
-    ignore_index: null
-    weights: null
-  datamodule:
-    root: "tests/data/chesapeake/cvpr"
-    download: true
-    train_splits:
-    - "de-test"
-    val_splits:
-    - "de-test"
-    test_splits:
-    - "de-test"
-    batch_size: 2
-    patch_size: 64
-    num_workers: 0
-    class_set: ${experiment.module.num_classes}
-    use_prior_labels: False
+module:
+  _target_: torchgeo.trainers.SemanticSegmentationTask
+  loss: "ce"
+  model: "unet"
+  backbone: "resnet18"
+  learning_rate: 1e-3
+  learning_rate_schedule_patience: 6
+  in_channels: 4
+  num_classes: 7
+  num_filters: 1
+  ignore_index: null
+  weights: null
+
+datamodule:
+  _target_: torchgeo.datamodules.ChesapeakeCVPRDataModule
+  root: "tests/data/chesapeake/cvpr"
+  download: true
+  train_splits:
+  - "de-test"
+  val_splits:
+  - "de-test"
+  test_splits:
+  - "de-test"
+  batch_size: 2
+  patch_size: 64
+  num_workers: 0
+  class_set: ${module.num_classes}
+  use_prior_labels: False
