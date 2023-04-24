@@ -15,10 +15,10 @@ DATA_DIR = "/projects/dali/data/l7irish"  # path to the L7Irish data directory
 
 # Hyperparameter options
 model_options = ["unet"]
-backbone_options = ["resnet18", "resnet50"]
-lr_options = [1e-2, 1e-3, 1e-4]
-loss_options = ["ce", "jaccard"]
-weight_init_options = ["null", "imagenet"]
+lr_options = [1e-2]
+loss_options = ["ce"]
+backbone_options = ["resnet18"]
+weight_init_options = ["null"]
 
 
 def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
