@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import pytest
 import timm
@@ -12,20 +12,16 @@ import torch.nn as nn
 import torchvision
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
-from lightning.pytorch import LightningDataModule, Trainer
+from hydra.utils import instantiate
+from lightning.pytorch import Trainer
 from omegaconf import OmegaConf
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import (
     BigEarthNetDataModule,
-    EuroSAT100DataModule,
     EuroSATDataModule,
-    FireRiskDataModule,
     MisconfigurationException,
-    RESISC45DataModule,
-    So2SatDataModule,
-    UCMercedDataModule,
 )
 from torchgeo.datasets import BigEarthNet, EuroSAT
 from torchgeo.models import get_model_weights, list_models
@@ -33,9 +29,7 @@ from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
 
 
 class ClassificationTestModel(Module):
-    def __init__(
-        self, in_chans: int = 3, num_classes: int = 1000, **kwargs: Any
-    ) -> None:
+    def __init__(self, in_chans: int = 3, num_classes: int = 10, **kwargs: Any) -> None:
         super().__init__()
         self.conv1 = nn.Conv2d(in_channels=in_chans, out_channels=1, kernel_size=1)
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
@@ -74,40 +68,32 @@ def plot(*args: Any, **kwargs: Any) -> None:
 
 class TestClassificationTask:
     @pytest.mark.parametrize(
-        "name,classname",
+        "name",
         [
-            ("eurosat", EuroSATDataModule),
-            ("eurosat", EuroSAT100DataModule),
-            ("fire_risk", FireRiskDataModule),
-            ("resisc45", RESISC45DataModule),
-            ("so2sat_all", So2SatDataModule),
-            ("so2sat_s1", So2SatDataModule),
-            ("so2sat_s2", So2SatDataModule),
-            ("ucmerced", UCMercedDataModule),
+            "eurosat",
+            "eurosat100",
+            "fire_risk",
+            "resisc45",
+            "so2sat_all",
+            "so2sat_s1",
+            "so2sat_s2",
+            "ucmerced",
         ],
     )
     def test_trainer(
-        self,
-        monkeypatch: MonkeyPatch,
-        name: str,
-        classname: type[LightningDataModule],
-        fast_dev_run: bool,
+        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         if name.startswith("so2sat"):
             pytest.importorskip("h5py", minversion="2.6")
 
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(dict[str, dict[str, Any]], conf_dict)
 
         # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = classname(**datamodule_kwargs)
+        datamodule = instantiate(conf.datamodule)
 
         # Instantiate model
         monkeypatch.setattr(timm, "create_model", create_model)
-        model_kwargs = conf_dict["module"]
-        model = ClassificationTask(**model_kwargs)
+        model = instantiate(conf.module)
 
         # Instantiate trainer
         trainer = Trainer(
@@ -239,32 +225,19 @@ class TestClassificationTask:
 
 class TestMultiLabelClassificationTask:
     @pytest.mark.parametrize(
-        "name,classname",
-        [
-            ("bigearthnet_all", BigEarthNetDataModule),
-            ("bigearthnet_s1", BigEarthNetDataModule),
-            ("bigearthnet_s2", BigEarthNetDataModule),
-        ],
+        "name", ["bigearthnet_all", "bigearthnet_s1", "bigearthnet_s2"]
     )
     def test_trainer(
-        self,
-        monkeypatch: MonkeyPatch,
-        name: str,
-        classname: type[LightningDataModule],
-        fast_dev_run: bool,
+        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(dict[str, dict[str, Any]], conf_dict)
 
         # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = classname(**datamodule_kwargs)
+        datamodule = instantiate(conf.datamodule)
 
         # Instantiate model
         monkeypatch.setattr(timm, "create_model", create_model)
-        model_kwargs = conf_dict["module"]
-        model = MultiLabelClassificationTask(**model_kwargs)
+        model = instantiate(conf.module)
 
         # Instantiate trainer
         trainer = Trainer(
