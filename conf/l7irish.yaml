@@ -4,15 +4,15 @@ trainer:
   min_epochs: 20
   max_epochs: 100
   benchmark: True
-  enable_progress_bar: False
+  enable_progress_bar: True
 experiment:
   task: "l7irish"
   module:
     loss: "ce"
     model: "unet"
     backbone: "resnet18"
-    weights: "imagenet"
-    learning_rate: 1e-3
+    weights: "null"
+    learning_rate: 1e-2
     learning_rate_schedule_patience: 6
     verbose: false
     in_channels: 9
@@ -21,6 +21,6 @@ experiment:
     ignore_index: null
   datamodule:
     root: "/projects/dali/data/l7irish"
-    batch_size: 32
-    patch_size: 256
-    num_workers: 4
+    batch_size: 64
+    patch_size: 512
+    num_workers: 1
