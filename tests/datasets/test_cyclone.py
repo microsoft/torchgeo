@@ -32,7 +32,7 @@ class TestTropicalCyclone:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> TropicalCyclone:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch)
         md5s = {
             "train": {
