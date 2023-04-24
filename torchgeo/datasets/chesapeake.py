@@ -40,7 +40,6 @@ class Chesapeake(RasterDataset, abc.ABC):
     """
 
     is_image = False
-    dtype = torch.long
 
     # subclasses use the 13 class cmap by default
     cmap = {

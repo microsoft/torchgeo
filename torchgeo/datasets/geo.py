@@ -302,6 +302,8 @@ class RasterDataset(GeoDataset):
 
         Returns:
             the dtype of the dataset
+
+        .. versionadded:: 5.0
         """
         if self.is_image:
             return torch.float32
