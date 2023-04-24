@@ -24,7 +24,7 @@ from torchgeo.datasets import (
 )
 
 TEST_DATA_DIR = "tests/data/spacenet"
-radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
 
 
 class Collection:
