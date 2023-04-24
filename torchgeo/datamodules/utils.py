@@ -62,7 +62,7 @@ def group_shuffle_split(
     train_size: Optional[float] = None,
     test_size: Optional[float] = None,
     random_state: Optional[int] = None,
-) -> tuple["np.typing.NDArray[np.int_]", "np.typing.NDArray[np.int_]"]:
+) -> tuple[list[int], list[int]]:
     """Method for performing a single group-wise shuffle split of data.
 
     Loosely based off of `sklearn.model_selection.GroupShuffleSplit`.
@@ -126,4 +126,4 @@ def group_shuffle_split(
         else:
             test_idxs.append(i)
 
-    return np.array(train_idxs), np.array(test_idxs)
+    return train_idxs, test_idxs
