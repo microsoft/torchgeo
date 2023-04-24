@@ -24,7 +24,7 @@ def download_url(url: str, root: str, *args: str) -> None:
 class TestReforesTree:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ReforesTree:
-        pytest.importorskip("pandas", minversion="0.23.2")
+        pytest.importorskip("pandas", minversion="1.1.3")
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         data_dir = os.path.join("tests", "data", "reforestree")
 
@@ -79,7 +79,7 @@ class TestReforesTree:
         assert len(dataset) == 2
 
     def test_not_extracted(self, tmp_path: Path) -> None:
-        pytest.importorskip("pandas", minversion="0.23.2")
+        pytest.importorskip("pandas", minversion="1.1.3")
         url = os.path.join("tests", "data", "reforestree", "reforesTree.zip")
         shutil.copy(url, tmp_path)
         ReforesTree(root=str(tmp_path))

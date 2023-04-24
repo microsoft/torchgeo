@@ -1,33 +1,34 @@
+module:
+  _target_: torchgeo.trainers.SemanticSegmentationTask
+  loss: "ce"
+  model: "unet"
+  backbone: "resnet18"
+  weights: null
+  learning_rate: 1e-3
+  learning_rate_schedule_patience: 6
+  in_channels: 4
+  num_classes: 7
+  num_filters: 256
+  ignore_index: null
+
+datamodule:
+  _target_: torchgeo.datamodules.ChesapeakeCVPRDataModule
+  root: "data/chesapeake/cvpr"
+  train_splits:
+    - "de-train"
+  val_splits:
+    - "de-val"
+  test_splits:
+    - "de-test"
+  batch_size: 200
+  patch_size: 256
+  num_workers: 4
+  class_set: ${module.num_classes}
+  use_prior_labels: False
+
 trainer:
+  _target_: lightning.pytorch.Trainer
   accelerator: gpu
   devices: 1
-  min_epochs: 20
-  max_epochs: 100
-  benchmark: True
-experiment:
-  task: "chesapeake_cvpr"
-  name: "chesapeake_cvpr_example"
-  module:
-    loss: "ce"
-    model: "unet"
-    backbone: "resnet18"
-    weights: null
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 6
-    in_channels: 4
-    num_classes: 7
-    num_filters: 256
-    ignore_index: null
-  datamodule:
-    root: "data/chesapeake/cvpr"
-    train_splits:
-      - "de-train"
-    val_splits:
-      - "de-val"
-    test_splits:
-      - "de-test"
-    batch_size: 200
-    patch_size: 256
-    num_workers: 4
-    class_set: ${experiment.module.num_classes}
-    use_prior_labels: False
+  min_epochs: 15
+  max_epochs: 40

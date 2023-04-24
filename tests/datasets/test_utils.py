@@ -95,7 +95,7 @@ def test_mock_missing_module(mock_missing_module: None) -> None:
 )
 def test_extract_archive(src: str, tmp_path: Path) -> None:
     if src.endswith(".rar"):
-        pytest.importorskip("rarfile", minversion="3")
+        pytest.importorskip("rarfile", minversion="4")
     if src.startswith("chesapeake"):
         pytest.importorskip("zipfile_deflate64")
     extract_archive(os.path.join("tests", "data", src), str(tmp_path))
@@ -134,7 +134,7 @@ def test_download_and_extract_archive(tmp_path: Path, monkeypatch: MonkeyPatch) 
 def test_download_radiant_mlhub_dataset(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ) -> None:
-    radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+    radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
     monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch_dataset)
     download_radiant_mlhub_dataset("", str(tmp_path))
 
@@ -142,7 +142,7 @@ def test_download_radiant_mlhub_dataset(
 def test_download_radiant_mlhub_collection(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ) -> None:
-    radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+    radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
     monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
     download_radiant_mlhub_collection("", str(tmp_path))
 
