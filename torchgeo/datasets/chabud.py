@@ -20,7 +20,7 @@ class ChaBuD(NonGeoDataset):
 
     The `ChaBuD <https://huggingface.co/spaces/competitions/ChaBuD-ECML-PKDD2023>`__
     dataset is a dataset for Change detection for Burned area Delineation and is used
-    as for the ChaBuD ECML-PKDD 2023 Discovery Challenge.
+    for the ChaBuD ECML-PKDD 2023 Discovery Challenge.
 
     Dataset features:
 
@@ -92,8 +92,7 @@ class ChaBuD(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            AssertionError: if ``split`` argument is invalid
-            AssertionError: if ``bands`` argument is invalid
+            AssertionError: if ``split`` or ``bands`` argument are invalid
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
@@ -198,7 +197,7 @@ class ChaBuD(NonGeoDataset):
             index: index to return
 
         Returns:
-            the target mask and label for each mask
+            the target mask
         """
         import h5py
 

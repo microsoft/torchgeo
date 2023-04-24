@@ -5,12 +5,10 @@
 
 from typing import Any
 
-import kornia.augmentation as K
 import torch
 from einops import repeat
 
 from ..datasets import ChaBuD
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
@@ -58,16 +56,15 @@ class ChaBuDDataModule(NonGeoDataModule):
 
         self.bands = kwargs.get("bands", ChaBuD.rgb_bands)
         band_indices = [ChaBuD.all_bands.index(b) for b in self.bands]
-        _min = self.min[band_indices]
-        _max = self.max[band_indices]
+        mins = self.min[band_indices]
+        maxs = self.max[band_indices]
 
         # Change detection, 2 images from different times
-        _min = repeat(_min, "c -> (t c)", t=2)
-        _max = repeat(_max, "c -> (t c)", t=2)
+        mins = repeat(mins, "c -> (t c)", t=2)
+        maxs = repeat(maxs, "c -> (t c)", t=2)
 
-        self.aug = AugmentationSequential(
-            K.Normalize(mean=_min, std=_max - _min), data_keys=["image", "mask"]
-        )
+        self.min = mins
+        self.max = maxs - mins
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
@@ -78,6 +75,3 @@ class ChaBuDDataModule(NonGeoDataModule):
         if stage in ["fit", "validate"]:
             self.train_dataset = ChaBuD(split="train", **self.kwargs)
             self.val_dataset = ChaBuD(split="val", **self.kwargs)
-        if stage in ["test"]:
-            # No test set currently released
-            self.test_dataset = ChaBuD(split="val", **self.kwargs)

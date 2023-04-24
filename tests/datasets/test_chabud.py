@@ -17,12 +17,11 @@ from _pytest.monkeypatch import MonkeyPatch
 import torchgeo.datasets.utils
 from torchgeo.datasets import ChaBuD
 
-pytest.importorskip("h5py", minversion="2.6")
+pytest.importorskip("h5py", minversion="3")
 
 
 def download_url(url: str, root: str, filename: str, *args: str, **kwargs: str) -> None:
-    output = shutil.copy(url, os.path.join(root, filename))
-    print(output)
+    shutil.copy(url, os.path.join(root, filename))
 
 
 class TestChaBuD:
