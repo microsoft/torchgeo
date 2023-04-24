@@ -58,7 +58,7 @@ def dataset_split(
 
 
 def group_shuffle_split(
-    groups: Iterable[object],
+    groups: Iterable[Any],
     train_size: Optional[float] = None,
     test_size: Optional[float] = None,
     random_state: Optional[int] = None,
