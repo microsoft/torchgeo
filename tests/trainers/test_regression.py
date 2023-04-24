@@ -18,6 +18,7 @@ from torchvision.models._api import WeightsEnum
 from torchgeo.datamodules import (
     COWCCountingDataModule,
     MisconfigurationException,
+    SKIPPDDataModule,
     TropicalCycloneDataModule,
 )
 from torchgeo.datasets import TropicalCyclone
@@ -52,6 +53,7 @@ class TestRegressionTask:
         [
             ("cowc_counting", COWCCountingDataModule),
             ("cyclone", TropicalCycloneDataModule),
+            ("skippd", SKIPPDDataModule),
         ],
     )
     def test_trainer(
