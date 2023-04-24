@@ -103,7 +103,7 @@ def group_shuffle_split(
 
     group_vals = set(groups)
     n_groups = len(group_vals)
-    n_test_groups = math.ceil(n_groups * test_size)
+    n_test_groups = round(n_groups * test_size)
     n_train_groups = n_groups - n_test_groups
 
     if n_train_groups == 0 or n_test_groups == 0:
@@ -113,9 +113,9 @@ def group_shuffle_split(
         )
 
     generator = np.random.default_rng(seed=random_state)
-    train_group_vals = generator.choice(
+    train_group_vals = set(generator.choice(
         list(group_vals), size=n_train_groups, replace=False
-    )
+    ))
 
     train_idxs = []
     test_idxs = []
