@@ -21,13 +21,15 @@ pytest.importorskip("h5py", minversion="3")
 class TestSo2Sat:
     @pytest.fixture(params=["train", "validation", "test"])
     def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> So2Sat:
-        md5s = {
-            "train": "82e0f2d51766b89cb905dbaf8275eb5b",
-            "validation": "bf292ae4737c1698b1a3c6f5e742e0e1",
-            "test": "9a3bbe181b038d4e51f122c4be3c569e",
+        md5s_by_version = {
+            "2": {
+                "train": "82e0f2d51766b89cb905dbaf8275eb5b",
+                "validation": "bf292ae4737c1698b1a3c6f5e742e0e1",
+                "test": "9a3bbe181b038d4e51f122c4be3c569e",
+            }
         }
 
-        monkeypatch.setattr(So2Sat, "md5s", md5s)
+        monkeypatch.setattr(So2Sat, "md5s_by_version", md5s_by_version)
         root = os.path.join("tests", "data", "so2sat")
         split = request.param
         transforms = nn.Identity()

@@ -82,6 +82,7 @@ class So2Sat(NonGeoDataset):
 
        or manually downloaded from https://mediatum.ub.tum.de/1613658
     """  # noqa: E501
+
     versions = ["2", "3_random", "3_block", "3_culture_10"]
     filenames_by_version = {
         "2": {
@@ -89,18 +90,12 @@ class So2Sat(NonGeoDataset):
             "validation": "validation.h5",
             "test": "testing.h5",
         },
-        "3_random": {
-            "train": "random/training.h5",
-            "test": "random/testing.h5",
-        },
-        "3_block": {
-            "train": "block/training.h5",
-            "test": "block/testing.h5",
-        },
+        "3_random": {"train": "random/training.h5", "test": "random/testing.h5"},
+        "3_block": {"train": "block/training.h5", "test": "block/testing.h5"},
         "3_culture_10": {
             "train": "culture_10/training.h5",
             "test": "culture_10/testing.h5",
-        }
+        },
     }
     md5s_by_version = {
         "2": {
@@ -108,18 +103,12 @@ class So2Sat(NonGeoDataset):
             "validation": "71cfa6795de3e22207229d06d6f8775d",
             "test": "e81426102b488623a723beab52b31a8a",
         },
-        "3_random": {
-            "train": "",
-            "test": "",
-        },
-        "3_block": {
-            "train": "",
-            "test": "",
-        },
+        "3_random": {"train": "", "test": ""},
+        "3_block": {"train": "", "test": ""},
         "3_culture_10": {
             "train": "702bc6a9368ebff4542d791e53469244",
             "test": "58335ce34ca3a18424e19da84f2832fc",
-        }
+        },
     }
 
     classes = [
