@@ -87,7 +87,7 @@ def group_shuffle_split(
     if train_size is None and test_size is None:
         raise ValueError("You must specify `train_size`, `test_size`, or both.")
     if (train_size is not None and test_size is not None) and (
-        train_size + test_size != 1.0
+        not math.isclose(train_size + test_size, 1)
     ):
         raise ValueError("`train_size` and `test_size` must sum to 1.")
 
