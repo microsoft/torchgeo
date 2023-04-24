@@ -65,7 +65,7 @@ def group_shuffle_split(
 ) -> tuple[list[int], list[int]]:
     """Method for performing a single group-wise shuffle split of data.
 
-    Loosely based off of `sklearn.model_selection.GroupShuffleSplit`.
+    Loosely based off of :class:`sklearn.model_selection.GroupShuffleSplit`.
 
     Args:
         groups: a sequence of group values used to split. Should be in the same order as
