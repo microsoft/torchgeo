@@ -36,7 +36,7 @@ class TestWesternUSALiveFuelMoisture:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> WesternUSALiveFuelMoisture:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch)
         md5 = "ecbc9269dd27c4efe7aa887960054351"
         monkeypatch.setattr(WesternUSALiveFuelMoisture, "md5", md5)
