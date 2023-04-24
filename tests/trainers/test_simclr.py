@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import pytest
 import timm
@@ -11,16 +11,12 @@ import torch
 import torchvision
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
-from lightning.pytorch import LightningDataModule, Trainer
+from hydra.utils import instantiate
+from lightning.pytorch import Trainer
 from omegaconf import OmegaConf
 from torch.nn import Module
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import (
-    ChesapeakeCVPRDataModule,
-    SeasonalContrastS2DataModule,
-    SSL4EOS12DataModule,
-)
 from torchgeo.datasets import SSL4EOS12, SeasonalContrastS2
 from torchgeo.models import get_model_weights, list_models
 from torchgeo.trainers import SimCLRTask
@@ -39,25 +35,19 @@ def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
 
 class TestSimCLRTask:
     @pytest.mark.parametrize(
-        "name,classname",
+        "name",
         [
-            ("chesapeake_cvpr_prior_simclr", ChesapeakeCVPRDataModule),
-            ("seco_simclr_1", SeasonalContrastS2DataModule),
-            ("seco_simclr_2", SeasonalContrastS2DataModule),
-            ("ssl4eo_s12_simclr_1", SSL4EOS12DataModule),
-            ("ssl4eo_s12_simclr_2", SSL4EOS12DataModule),
+            "chesapeake_cvpr_prior_simclr",
+            "seco_simclr_1",
+            "seco_simclr_2",
+            "ssl4eo_s12_simclr_1",
+            "ssl4eo_s12_simclr_2",
         ],
     )
     def test_trainer(
-        self,
-        monkeypatch: MonkeyPatch,
-        name: str,
-        classname: type[LightningDataModule],
-        fast_dev_run: bool,
+        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(dict[str, dict[str, Any]], conf_dict)
 
         if name.startswith("seco"):
             monkeypatch.setattr(SeasonalContrastS2, "__len__", lambda self: 2)
@@ -66,13 +56,11 @@ class TestSimCLRTask:
             monkeypatch.setattr(SSL4EOS12, "__len__", lambda self: 2)
 
         # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = classname(**datamodule_kwargs)
+        datamodule = instantiate(conf.datamodule)
 
         # Instantiate model
         monkeypatch.setattr(timm, "create_model", create_model)
-        model_kwargs = conf_dict["module"]
-        model = SimCLRTask(**model_kwargs)
+        model = instantiate(conf.module)
 
         # Instantiate trainer
         trainer = Trainer(
