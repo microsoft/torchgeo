@@ -236,6 +236,7 @@ class TestPixelwiseRegressionTask:
         monkeypatch.setattr(smp, "Unet", create_model)
         monkeypatch.setattr(smp, "DeepLabV3Plus", create_model)
         model_kwargs["model"] = model_type
+        model_kwargs["loss"] = loss
 
         if model_type == "fcn":
             model_kwargs["num_filters"] = 2
