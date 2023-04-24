@@ -103,7 +103,10 @@ class So2Sat(NonGeoDataset):
             "validation": "71cfa6795de3e22207229d06d6f8775d",
             "test": "e81426102b488623a723beab52b31a8a",
         },
-        "3_random": {"train": "", "test": ""},
+        "3_random": {
+            "train": "94e2e2e667b406c2adf61e113b42204e",
+            "test": "1e15c425585ce816342d1cd779d453d8",
+        },
         "3_block": {"train": "", "test": ""},
         "3_culture_10": {
             "train": "702bc6a9368ebff4542d791e53469244",
@@ -161,6 +164,7 @@ class So2Sat(NonGeoDataset):
         "all": all_band_names,
         "s1": all_s1_band_names,
         "s2": all_s2_band_names,
+        "rgb": rgb_bands,
     }
 
     def __init__(
