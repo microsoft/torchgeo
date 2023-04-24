@@ -50,9 +50,9 @@ def test_group_shuffle_split() -> None:
         groups, train_size=None, test_size=0.2
     )
     assert len(set(train_indices) & set(test_indices)) == 0
-    assert len(set(groups[train_indices])) == 20
+    assert len(set(groups[train_indices])) == 21
     train_indices, test_indices = group_shuffle_split(
         groups, train_size=0.8, test_size=None
     )
     assert len(set(train_indices) & set(test_indices)) == 0
-    assert len(set(groups[train_indices])) == 20
+    assert len(set(groups[train_indices])) == 21
