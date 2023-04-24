@@ -31,7 +31,7 @@ def fetch(dataset_id: str, **kwargs: str) -> Collection:
 class TestCloudCoverDetection:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CloudCoverDetection:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch)
 
         test_image_meta = {
