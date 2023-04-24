@@ -266,7 +266,5 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             lr=self.hparams["lr"],
             weight_decay=self.hparams["weight_decay"],
         )
-        lr_scheduler = CosineAnnealingLR(
-            optimizer, T_max=self.trainer.max_epochs, eta_min=self.hparams["lr"] / 50
-        )
+        lr_scheduler = CosineAnnealingLR(optimizer, T_max=self.trainer.max_epochs)
         return [optimizer], [lr_scheduler]
