@@ -4,8 +4,8 @@
 """Common datamodule utilities."""
 
 import math
-from typing import Any, Optional, Union
 from collections.abc import Iterable
+from typing import Any, Optional, Union
 
 import numpy as np
 from torch import Generator
