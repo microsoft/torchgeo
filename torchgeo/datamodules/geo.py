@@ -23,7 +23,7 @@ from ..transforms import AugmentationSequential
 from .utils import MisconfigurationException
 
 
-class DataModule(LightningDataModule):  # type: ignore[misc]
+class BaseDataModule(LightningDataModule):  # type: ignore[misc]
     """Base class for all TorchGeo data modules.
 
     .. versionadded:: 0.5
@@ -87,7 +87,7 @@ class DataModule(LightningDataModule):  # type: ignore[misc]
                 return dataset.plot(*args, **kwargs)
 
 
-class GeoDataModule(DataModule):
+class GeoDataModule(BaseDataModule):
     """Base class for data modules containing geospatial information.
 
     .. versionadded:: 0.4
@@ -336,7 +336,7 @@ class GeoDataModule(DataModule):
         return batch
 
 
-class NonGeoDataModule(DataModule):
+class NonGeoDataModule(BaseDataModule):
     """Base class for data modules lacking geospatial information.
 
     .. versionadded:: 0.4
