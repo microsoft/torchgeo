@@ -223,7 +223,7 @@ class TestClassificationTask:
         )
         trainer.predict(model=model, datamodule=datamodule)
 
-    def test_freeze_backbone(self, model_kwargs: dict[Any, Any]):
+    def test_freeze_backbone(self, model_kwargs: dict[Any, Any]) -> None:
         model_kwargs["freeze_backbone"] = True
         model = ClassificationTask(**model_kwargs)
         assert not all([param.requires_grad for param in model.model.parameters()])

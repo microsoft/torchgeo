@@ -206,6 +206,14 @@ class TestRegressionTask:
         with pytest.raises(ValueError, match=match):
             RegressionTask(**model_kwargs)
 
+    def test_freeze_backbone(self, model_kwargs: dict[Any, Any]) -> None:
+        model_kwargs["freeze_backbone"] = True
+        model = RegressionTask(**model_kwargs)
+        assert not all([param.requires_grad for param in model.model.parameters()])
+        assert all(
+            [param.requires_grad for param in model.model.get_classifier().parameters()]
+        )
+
 
 class TestPixelwiseRegressionTask:
     @pytest.mark.parametrize(
