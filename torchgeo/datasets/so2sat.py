@@ -29,6 +29,20 @@ class So2Sat(NonGeoDataset):
     This implementation covers the *2nd* and *3rd* versions of the dataset as described
     in the author's github repository https://github.com/zhu-xlab/So2Sat-LCZ42.
 
+    The different versions are as follows:
+
+    * Version 2: This version contains imagery from 52 cities and is split into
+        train/val/test as follows:
+            * Training: 42 cities around the world
+            * Validation: western half of 10 other cities covering 10 cultural zones
+            * Testing: eastern half of the 10 other cities
+    * Version 3: A version of the dataset with 3 different train/test splits, as
+        follows:
+            * Random split: every city 80% training / 20% testing (randomly sampled)
+            * Block split: every city is split in a geospatial 80%/20%-manner
+            * Cultural 10: 10 cities from different cultural zones are held back for
+                testing purposes
+
     Dataset classes:
 
     0. Compact high rise
