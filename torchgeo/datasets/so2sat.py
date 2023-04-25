@@ -27,7 +27,7 @@ class So2Sat(NonGeoDataset):
     with a variety of different splits.
 
     This implementation covers the *2nd* and *3rd* versions of the dataset as described
-    in the author's github repository https://github.com/zhu-xlab/So2Sat-LCZ42.
+    in the author's github repository: https://github.com/zhu-xlab/So2Sat-LCZ42.
 
     The different versions are as follows:
 
