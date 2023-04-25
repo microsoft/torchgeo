@@ -231,8 +231,8 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
 
         loss = self.criterion(z1, z2)
 
-        # calculate the mean normalized standard deviation over features dimensions
-        # if this is << 1 / sqrt(h1.shape[1]), then the model is not learning anything
+        # Calculate the mean normalized standard deviation over features dimensions.
+        # If this is << 1 / sqrt(h1.shape[1]), then the model is not learning anything.
         output = h1.detach()
         output = F.normalize(output, dim=1)
         output_std = torch.std(output, dim=0)
