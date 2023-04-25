@@ -206,8 +206,14 @@ class TestRegressionTask:
         with pytest.raises(ValueError, match=match):
             RegressionTask(**model_kwargs)
 
-    def test_freeze_backbone(self, model_kwargs: dict[Any, Any]) -> None:
+    @pytest.mark.parametrize(
+        "model_name", ["resnet18", "efficientnetv2_s", "vit_base_patch16_384"]
+    )
+    def test_freeze_backbone(
+        self, model_name: str, model_kwargs: dict[Any, Any]
+    ) -> None:
         model_kwargs["freeze_backbone"] = True
+        model_kwargs["model"] = model_name
         model = RegressionTask(**model_kwargs)
         assert not all([param.requires_grad for param in model.model.parameters()])
         assert all(
@@ -290,3 +296,47 @@ class TestPixelwiseRegressionTask:
             "learning_rate": 1e-3,
             "learning_rate_schedule_patience": 6,
         }
+
+    @pytest.mark.parametrize(
+        "backbone", ["resnet18", "mobilenet_v2", "efficientnet-b0"]
+    )
+    @pytest.mark.parametrize("model_name", ["unet", "deeplabv3+"])
+    def test_freeze_backbone(
+        self, backbone: str, model_name: str, model_kwargs: dict[Any, Any]
+    ) -> None:
+        model_kwargs["freeze_backbone"] = True
+        model_kwargs["model"] = model_name
+        model_kwargs["backbone"] = backbone
+        model = PixelwiseRegressionTask(**model_kwargs)
+        assert all(
+            [param.requires_grad is False for param in model.model.encoder.parameters()]
+        )
+        assert all([param.requires_grad for param in model.model.decoder.parameters()])
+        assert all(
+            [
+                param.requires_grad
+                for param in model.model.segmentation_head.parameters()
+            ]
+        )
+
+    @pytest.mark.parametrize(
+        "backbone", ["resnet18", "mobilenet_v2", "efficientnet-b0"]
+    )
+    @pytest.mark.parametrize("model_name", ["unet", "deeplabv3+"])
+    def test_freeze_decoder(
+        self, backbone: str, model_name: str, model_kwargs: dict[Any, Any]
+    ) -> None:
+        model_kwargs["freeze_decoder"] = True
+        model_kwargs["model"] = model_name
+        model_kwargs["backbone"] = backbone
+        model = PixelwiseRegressionTask(**model_kwargs)
+        assert all(
+            [param.requires_grad is False for param in model.model.decoder.parameters()]
+        )
+        assert all([param.requires_grad for param in model.model.encoder.parameters()])
+        assert all(
+            [
+                param.requires_grad
+                for param in model.model.segmentation_head.parameters()
+            ]
+        )

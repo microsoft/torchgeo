@@ -305,3 +305,17 @@ class PixelwiseRegressionTask(RegressionTask):
                 f"Model type '{self.hyperparams['model']}' is not valid. "
                 f"Currently, only supports 'unet', 'deeplabv3+' and 'fcn'."
             )
+
+        # Freeze backbone
+        if self.hyperparams.get("freeze_backbone", False) and self.hyperparams[
+            "model"
+        ] in ["unet", "deeplabv3+"]:
+            for param in self.model.encoder.parameters():
+                param.requires_grad = False
+
+        # Freeze decoder
+        if self.hyperparams.get("freeze_decoder", False) and self.hyperparams[
+            "model"
+        ] in ["unet", "deeplabv3+"]:
+            for param in self.model.decoder.parameters():
+                param.requires_grad = False

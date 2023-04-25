@@ -223,8 +223,14 @@ class TestClassificationTask:
         )
         trainer.predict(model=model, datamodule=datamodule)
 
-    def test_freeze_backbone(self, model_kwargs: dict[Any, Any]) -> None:
+    @pytest.mark.parametrize(
+        "model_name", ["resnet18", "efficientnetv2_s", "vit_base_patch16_384"]
+    )
+    def test_freeze_backbone(
+        self, model_name: str, model_kwargs: dict[Any, Any]
+    ) -> None:
         model_kwargs["freeze_backbone"] = True
+        model_kwargs["model"] = model_name
         model = ClassificationTask(**model_kwargs)
         assert not all([param.requires_grad for param in model.model.parameters()])
         assert all(
