@@ -219,7 +219,7 @@ class C2Seg(NonGeoDataset):
             return tensor
 
     def _load_target(self, path: str) -> Tensor:
-        """Loads the target mask.
+        """Loads a single target mask.
 
         Args:
             path: path to the mask
