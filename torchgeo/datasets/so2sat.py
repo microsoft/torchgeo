@@ -24,7 +24,7 @@ class So2Sat(NonGeoDataset):
     acquired by the Sentinel-1 and Sentinel-2 remote sensing satellites, and a
     corresponding local climate zones (LCZ) label. The dataset is distributed over
     42 cities across different continents and cultural regions of the world, and comes
-    with in a variety of different splits.
+    with a variety of different splits.
 
     This implementation covers the *2nd* and *3rd* versions of the dataset as described
     in the author's github repository https://github.com/zhu-xlab/So2Sat-LCZ42.
