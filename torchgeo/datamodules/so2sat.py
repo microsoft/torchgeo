@@ -174,7 +174,6 @@ class So2SatDataModule(NonGeoDataModule):
 
         Args:
             batch_size: Size of each mini-batch.
-            version: One of "2" or "3_random", "3_block", or "3_culture_10".
             num_workers: Number of workers for parallel data loading.
             band_set: One of 'all', 's1', 's2', or 'rgb'.
             validation_pct: Percentage of training data to use for validation in with
@@ -183,12 +182,9 @@ class So2SatDataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.So2Sat`.
 
         .. versionadded:: 0.5
-           The *version* parameter, *validation_pct* parameter, and the 'rgb' argument
-           to *band_set*.
+           The *validation_pct* parameter, and the 'rgb' argument to *band_set*.
         """
         kwargs["bands"] = So2Sat.BAND_SETS[band_set]
-        kwargs["version"] = version
-        self.version = version
         self.validation_pct = validation_pct
 
         if band_set == "s1":
@@ -213,7 +209,7 @@ class So2SatDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if self.version == "2":
+        if self.kwargs["version"] == "2":
             if stage in ["fit"]:
                 self.train_dataset = So2Sat(split="train", **self.kwargs)
             if stage in ["fit", "validate"]:
