@@ -69,7 +69,7 @@ class So2Sat(NonGeoDataset):
 
     .. note::
 
-       The version "2" dataset can be automatically downloaded using the following bash
+       The version 2 dataset can be automatically downloaded using the following bash
        script:
 
        .. code-block:: bash
