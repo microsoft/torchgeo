@@ -209,7 +209,7 @@ class So2SatDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if self.kwargs["version"] == "2":
+        if self.kwargs.get("version", "2") == "2":
             if stage in ["fit"]:
                 self.train_dataset = So2Sat(split="train", **self.kwargs)
             if stage in ["fit", "validate"]:

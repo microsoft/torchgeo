@@ -13,5 +13,4 @@ datamodule:
   root: "tests/data/so2sat"
   batch_size: 1
   num_workers: 0
-  version: "2"
   band_set: "s2"
