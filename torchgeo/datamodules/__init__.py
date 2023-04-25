@@ -4,6 +4,7 @@
 """TorchGeo datamodules."""
 
 from .bigearthnet import BigEarthNetDataModule
+from .c2seg import C2SegDataModule
 from .chesapeake import ChesapeakeCVPRDataModule
 from .cowc import COWCCountingDataModule
 from .cyclone import TropicalCycloneDataModule
@@ -35,7 +36,6 @@ from .ucmerced import UCMercedDataModule
 from .usavars import USAVarsDataModule
 from .utils import MisconfigurationException
 from .vaihingen import Vaihingen2DDataModule
-from .whispers23 import WHISPERS23DataModule
 from .xview import XView2DataModule
 
 __all__ = (
@@ -46,6 +46,7 @@ __all__ = (
     "NAIPChesapeakeDataModule",
     # NonGeoDataset
     "BigEarthNetDataModule",
+    "C2SegDataModule",
     "COWCCountingDataModule",
     "DeepGlobeLandCoverDataModule",
     "ETCI2021DataModule",
@@ -72,7 +73,6 @@ __all__ = (
     "UCMercedDataModule",
     "USAVarsDataModule",
     "Vaihingen2DDataModule",
-    "WHISPERS23DataModule",
     "XView2DataModule",
     # Base classes
     "BaseDataModule",

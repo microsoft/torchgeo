@@ -8,6 +8,7 @@ from .agb_live_woody_density import AbovegroundLiveWoodyBiomassDensity
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
+from .c2seg import C2Seg
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
 from .chesapeake import (
@@ -120,12 +121,12 @@ from .vhr10 import VHR10
 from .western_usa_live_fuel_moisture import WesternUSALiveFuelMoisture
 from .xview import XView2
 from .zuericrop import ZueriCrop
-from .whispers23 import WHISPERS23
 
 __all__ = (
     # GeoDataset
     "AbovegroundLiveWoodyBiomassDensity",
     "AsterGDEM",
+    "C2Seg",
     "CanadianBuildingFootprints",
     "CDL",
     "Chesapeake",
@@ -218,7 +219,6 @@ __all__ = (
     "Vaihingen2D",
     "VHR10",
     "WesternUSALiveFuelMoisture",
-    "WHISPERS23",
     "XView2",
     "ZueriCrop",
     # Base classes

@@ -1,27 +1,31 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""WHISPERS23 dataset."""
+"""C2Seg dataset."""
 
 import glob
 import os
 from typing import Callable, Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
+from matplotlib.colors import ListedColormap
 from torch import Tensor
 
 from .geo import NonGeoDataset
 from .utils import check_integrity, extract_archive
 
 
-class WHISPERS23(NonGeoDataset):
-    """WHISPERS23 dataset.
+class C2Seg(NonGeoDataset):
+    """Cross-City Multimodal Semantic Segmentation Challenge (C2Seg) dataset.
 
-    The `WHISPERS23 <https://www.ieee-whispers.com/cross-city-challenge/>`__
-    dataset or the Cross-City Multimodal Semantic Segmentation Challenge
-    dataset is a dataset for land cover land use (LULC) semantic segmentation.
+    The `C2Seg <https://www.ieee-whispers.com/cross-city-challenge/>`_
+    dataset for land cover land use (LULC) semantic segmentation is hosted as
+    the 2023 IEEE WHISPERS conference challenge. The dataset can be downloaded
+    from google drive the following `link
+    <https://drive.google.com/drive/folders/1b5AYbOMQaE4Vz8XnZcH0N6v_Z-9LrrRX?usp=sharing`_.
 
     Dataset features:
     * Sentinel-2 or Gaofen-6 MSI imagery (4 bands)
@@ -52,6 +56,24 @@ class WHISPERS23(NonGeoDataset):
 
     .. versionadded:: 0.5
     """
+
+    cmap = {
+        0: (0, 0, 0, 255),
+        1: (70, 107, 159, 255),
+        2: (209, 222, 248, 255),
+        3: (222, 197, 197, 255),
+        4: (217, 146, 130, 255),
+        5: (235, 0, 0, 255),
+        6: (171, 0, 0, 255),
+        7: (179, 172, 159, 255),
+        8: (104, 171, 95, 255),
+        9: (28, 95, 44, 255),
+        10: (181, 197, 143, 255),
+        11: (204, 184, 121, 255),
+        12: (223, 223, 194, 255),
+        13: (220, 217, 57, 255),
+        14: (171, 108, 40, 255),
+    }
 
     all_bands = ["msi", "sar", "hsi"]
 
@@ -94,7 +116,7 @@ class WHISPERS23(NonGeoDataset):
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new WHISPERS23 dataset instance.
+        """Initialize a new C2Seg dataset instance.
 
         Args:
             root: root directory where dataset can be found
@@ -246,3 +268,91 @@ class WHISPERS23(NonGeoDataset):
             zipfiles = glob.glob(os.path.join(directory, "*.zip"))
             for zipfile in zipfiles:
                 extract_archive(zipfile, directory)
+
+    def plot(
+        self,
+        sample: dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+        hsi_indices: tuple[int, int, int] = (0, 1, 2),
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+            hsi_indices: tuple of indices to create HSI false color image
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        assert len(hsi_indices) == 3
+
+        def normalize(x: Tensor) -> Tensor:
+            return (x - x.min()) / (x.max() - x.min())
+
+        plt_cmap = ListedColormap(
+            np.stack([np.array(val) / 255 for val in self.cmap.values()], axis=0)
+        )
+
+        ncols = len(self.band_set)
+        showing_msi = "msi" in self.band_set
+        showing_sar = "sar" in self.band_set
+        showing_hsi = "hsi" in self.band_set
+        showing_mask = "mask" in sample
+        showing_predictions = "prediction" in sample
+
+        if showing_mask:
+            mask = sample["mask"].squeeze().numpy()
+            ncols += 1
+        if showing_predictions:
+            preds = sample["prediction"].squeeze().numpy()
+            ncols += 1
+
+        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
+
+        i = 0
+        if showing_msi:
+            rgb = normalize(sample["image"][:3]).permute((1, 2, 0)).numpy()
+            rgb = normalize(rgb)
+            axs[i].imshow(rgb)
+            axs[i].axis("off")
+            if show_titles:
+                axs[i].set_title("RGB Image")
+            i += 1
+        if showing_sar:
+            sar = normalize(sample["image"][4:6])
+            sar = torch.cat([sar, (sar[0] / sar[1]).unsqueeze(dim=0)])
+            sar = sar.permute((1, 2, 0)).numpy()
+            axs[i].imshow(sar)
+            axs[i].axis("off")
+            if show_titles:
+                axs[i].set_title("SAR False Color Image")
+            i += 1
+        if showing_hsi:
+            hsi = normalize(sample["image"][6:][hsi_indices, ...])
+            hsi = hsi.permute((1, 2, 0)).numpy()
+            axs[i].imshow(hsi)
+            axs[i].axis("off")
+            if show_titles:
+                axs[i].set_title("Hyperspectral False Color Image")
+            i += 1
+
+        if showing_mask:
+            axs[i].imshow(mask, cmap=plt_cmap)
+            axs[i].axis("off")
+            if show_titles:
+                axs[i].set_title("Ground Truth")
+            i += 1
+        if showing_predictions:
+            axs[i].imshow(preds, cmap=plt_cmap)
+            axs[i].axis("off")
+            if show_titles:
+                axs[i].set_title("Predictions")
+            i += 1
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
