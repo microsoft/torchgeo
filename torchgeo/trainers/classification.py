@@ -44,11 +44,7 @@ class ClassificationTask(LightningModule):  # type: ignore[misc]
     """
 
     def config_model(self) -> None:
-        """Configures the model based on kwargs parameters passed to the constructor.
-
-        .. versionchanged:: 0.5
-           Added *freeze_backbone* parameter.
-        """
+        """Configures the model based on kwargs parameters passed to the constructor."""
         # Create model
         weights = self.hyperparams["weights"]
         self.model = timm.create_model(
@@ -105,6 +101,7 @@ class ClassificationTask(LightningModule):  # type: ignore[misc]
 
         .. versionchanged:: 0.4
            The *classification_model* parameter was renamed to *model*.
+
         .. versionchanged:: 0.5
            Added *freeze_backbone* parameter.
         """
