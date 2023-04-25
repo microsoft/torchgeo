@@ -209,6 +209,7 @@ class So2SatDataModule(NonGeoDataModule):
         num_workers: int = 0,
         version: str = "2",
         band_set: str = "all",
+        validation_pct: float = 0.2,
         **kwargs: Any,
     ) -> None:
         """Initialize a new So2SatDataModule instance.
@@ -218,15 +219,19 @@ class So2SatDataModule(NonGeoDataModule):
             version: One of "2" or "3_random", "3_block", or "3_culture_10".
             num_workers: Number of workers for parallel data loading.
             band_set: One of 'all', 's1', 's2', or 'rgb'.
+            validation_pct: Percentage of training data to use for validation in with
+                the version 3 datasets.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.So2Sat`.
 
         .. versionadded:: 0.5
-           The *version* parameter and the 'rgb' argument to *band_set*.
+           The *version* parameter, *validation_pct* parameter, and the 'rgb' argument
+           to *band_set*.
         """
         kwargs["bands"] = So2Sat.BAND_SETS[band_set]
         kwargs["version"] = version
         self.version = version
+        self.validation_pct = validation_pct
 
         if band_set == "s1":
             self.mean = self.means_per_version[version][:8]
@@ -260,6 +265,8 @@ class So2SatDataModule(NonGeoDataModule):
         else:
             if stage in ["fit", "validate"]:
                 dataset = So2Sat(split="train", **self.kwargs)
-                self.train_dataset, self.val_dataset = random_split(dataset, [0.8, 0.2])
+                self.train_dataset, self.val_dataset = random_split(
+                    dataset, [1 - self.validation_pct, self.validation_pct]
+                )
             if stage in ["test"]:
                 self.test_dataset = So2Sat(split="test", **self.kwargs)
