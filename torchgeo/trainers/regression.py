@@ -39,11 +39,7 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
     target_key: str = "label"
 
     def config_model(self) -> None:
-        """Configures the model based on kwargs parameters.
-
-        .. versionchanged:: 0.5
-           Added *freeze_backbone* parameter.
-        """
+        """Configures the model based on kwargs parameters."""
         # Create model
         weights = self.hyperparams["weights"]
         self.model = timm.create_model(
@@ -101,6 +97,7 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
 
         .. versionchanged:: 0.4
             Change regression model support from torchvision.models to timm
+
         .. versionchanged:: 0.5
            Added *freeze_backbone* parameter.
         """
