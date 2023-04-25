@@ -16,8 +16,8 @@ from .geo import NonGeoDataModule
 class So2SatDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the So2Sat dataset.
 
-    If using the version "2" dataset, we use the train/val/test splits from the dataset.
-    If using the version "3" datasets, we use a random 80/20 train/val split from the
+    If using the version 2 dataset, we use the train/val/test splits from the dataset.
+    If using the version 3 datasets, we use a random 80/20 train/val split from the
     "train" set and use the "test" set as the test set.
     """
 
@@ -166,7 +166,7 @@ class So2SatDataModule(NonGeoDataModule):
         batch_size: int = 64,
         num_workers: int = 0,
         band_set: str = "all",
-        validation_pct: float = 0.2,
+        val_split_pct: float = 0.2,
         **kwargs: Any,
     ) -> None:
         """Initialize a new So2SatDataModule instance.
@@ -175,17 +175,17 @@ class So2SatDataModule(NonGeoDataModule):
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
             band_set: One of 'all', 's1', 's2', or 'rgb'.
-            validation_pct: Percentage of training data to use for validation in with
+            val_split_pct: Percentage of training data to use for validation in with
                 the version 3 datasets.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.So2Sat`.
 
         .. versionadded:: 0.5
-           The *validation_pct* parameter, and the 'rgb' argument to *band_set*.
+           The *val_split_pct* parameter, and the 'rgb' argument to *band_set*.
         """
         version = kwargs.get("version", "2")
         kwargs["bands"] = So2Sat.BAND_SETS[band_set]
-        self.validation_pct = validation_pct
+        self.val_split_pct = val_split_pct
 
         if band_set == "s1":
             self.mean = self.means_per_version[version][:8]
@@ -219,7 +219,7 @@ class So2SatDataModule(NonGeoDataModule):
         else:
             if stage in ["fit", "validate"]:
                 dataset = So2Sat(split="train", **self.kwargs)
-                val_length = round(len(dataset) * self.validation_pct)
+                val_length = round(len(dataset) * self.val_split_pct)
                 train_length = len(dataset) - val_length
                 self.train_dataset, self.val_dataset = random_split(
                     dataset,
