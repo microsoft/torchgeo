@@ -165,7 +165,6 @@ class So2SatDataModule(NonGeoDataModule):
         self,
         batch_size: int = 64,
         num_workers: int = 0,
-        version: str = "2",
         band_set: str = "all",
         validation_pct: float = 0.2,
         **kwargs: Any,
@@ -184,6 +183,7 @@ class So2SatDataModule(NonGeoDataModule):
         .. versionadded:: 0.5
            The *validation_pct* parameter, and the 'rgb' argument to *band_set*.
         """
+        version = kwargs.get("version", "2")
         kwargs["bands"] = So2Sat.BAND_SETS[band_set]
         self.validation_pct = validation_pct
 
