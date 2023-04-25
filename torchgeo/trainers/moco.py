@@ -91,7 +91,7 @@ AUG2_V3 = K.AugmentationSequential(
 
 
 # Remove once https://github.com/lightly-ai/lightly/pull/1163 is merged and released
-class MoCoProjectionHead(ProjectionHead):
+class MoCoProjectionHead(ProjectionHead):  # type: ignore[misc]
     """MoCo projection head."""
 
     def __init__(
@@ -372,13 +372,13 @@ class MoCoTask(LightningModule):  # type: ignore[misc]
             Optimizer and learning rate scheduler.
         """
         if self.hparams["version"] == 3:
-            optimizer = AdamW(
+            optimizer: Optimizer = AdamW(
                 params=self.parameters(),
                 lr=self.hparams["lr"],
                 weight_decay=self.hparams["weight_decay"],
             )
             warmup_epochs = 40
-            lr_scheduler = SequentialLR(
+            lr_scheduler: LRScheduler = SequentialLR(
                 optimizer,
                 schedulers=[
                     LinearLR(
