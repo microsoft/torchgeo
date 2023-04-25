@@ -59,7 +59,6 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
 
         if self.hyperparams["loss"] == "ce":
             ignore_value = -1000 if self.ignore_index is None else self.ignore_index
-            self.loss = nn.CrossEntropyLoss(ignore_index=ignore_value)
 
             class_weights = (
                 torch.FloatTensor(self.class_weights) if self.class_weights else None
