@@ -82,7 +82,7 @@ class So2Sat(NonGeoDataset):
        or manually downloaded from https://dataserv.ub.tum.de/index.php/s/m1483140
        This download will likely take several hours.
 
-       The version "3*" datasets can be downloaded using the following bash script:
+       The version 3 datasets can be downloaded using the following bash script:
 
        .. code-block:: bash
 
