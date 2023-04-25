@@ -15,4 +15,4 @@ datamodule:
   num_workers: 0
   version: "3_random"
   band_set: "rgb"
-  validation_pct: 0.5
+  val_split_pct: 0.5
