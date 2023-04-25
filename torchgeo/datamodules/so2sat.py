@@ -6,7 +6,7 @@
 from typing import Any
 
 import torch
-from torch import Tensor
+from torch import Generator, Tensor
 from torch.utils.data import random_split
 
 from ..datasets import So2Sat
@@ -265,8 +265,12 @@ class So2SatDataModule(NonGeoDataModule):
         else:
             if stage in ["fit", "validate"]:
                 dataset = So2Sat(split="train", **self.kwargs)
+                val_length = round(len(dataset) * self.validation_pct)
+                train_length = len(dataset) - val_length
                 self.train_dataset, self.val_dataset = random_split(
-                    dataset, [1 - self.validation_pct, self.validation_pct]
+                    dataset,
+                    [train_length, val_length],
+                    generator=Generator().manual_seed(0),
                 )
             if stage in ["test"]:
                 self.test_dataset = So2Sat(split="test", **self.kwargs)
