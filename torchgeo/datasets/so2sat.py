@@ -109,7 +109,7 @@ class So2Sat(NonGeoDataset):
         },
         "3_block": {
             "train": "a91d6150e8b059dac86105853f377a11",
-            "test": "6414af1ec33ace417e879f9c88066d47"
+            "test": "6414af1ec33ace417e879f9c88066d47",
         },
         "3_culture_10": {
             "train": "702bc6a9368ebff4542d791e53469244",
