@@ -267,7 +267,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             lr=self.hparams["lr"],
             weight_decay=self.hparams["weight_decay"],
         )
-        if self.version == 1:
+        if self.hparams["version"] == 1:
             warmup_epochs = 10
         else:
             warmup_epochs = int(self.trainer.max_epochs * 0.05)
