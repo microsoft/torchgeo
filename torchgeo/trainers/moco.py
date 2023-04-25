@@ -5,7 +5,8 @@
 
 import os
 import warnings
-from typing import Optional, Sequence, Union, cast
+from typing import Optional, Union, cast
+from collections.abc import Sequence
 
 import kornia.augmentation as K
 import timm
