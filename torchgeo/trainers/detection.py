@@ -95,6 +95,11 @@ class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
             roi_pooler = MultiScaleRoIAlign(
                 featmap_names=["0", "1", "2", "3"], output_size=7, sampling_ratio=2
             )
+
+            if self.hyperparams.get("freeze_backbone", False):
+                for param in backbone.parameters():
+                    param.requires_grad = False
+
             self.model = torchvision.models.detection.FasterRCNN(
                 backbone,
                 num_classes,
@@ -112,6 +117,10 @@ class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
                 sizes=((8,), (16,), (32,), (64,), (128,), (256,)),
                 aspect_ratios=((1.0,), (1.0,), (1.0,), (1.0,), (1.0,), (1.0,)),
             )
+
+            if self.hyperparams.get("freeze_backbone", False):
+                for param in backbone.parameters():
+                    param.requires_grad = False
 
             self.model = torchvision.models.detection.FCOS(
                 backbone, num_classes, anchor_generator=anchor_generator
@@ -140,6 +149,10 @@ class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
                 norm_layer=partial(torch.nn.GroupNorm, 32),
             )
 
+            if self.hyperparams.get("freeze_backbone", False):
+                for param in backbone.parameters():
+                    param.requires_grad = False
+
             self.model = torchvision.models.detection.RetinaNet(
                 backbone, num_classes, anchor_generator=anchor_generator, head=head
             )
@@ -156,12 +169,16 @@ class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
             num_classes: Number of semantic classes to predict
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
+            freeze_backbone: Fine-tune the detection head by freezing the backbone
 
         Raises:
             ValueError: if kwargs arguments are invalid
 
         .. versionchanged:: 0.4
            The *detection_model* parameter was renamed to *model*.
+
+        .. versionchanged:: 0.5
+           Added *freeze_backbone* parameter.
         """
         super().__init__()
         # Creates `self.hparams` from kwargs
