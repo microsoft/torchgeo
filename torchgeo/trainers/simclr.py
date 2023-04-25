@@ -113,16 +113,16 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
                 or None for random weights, or the path to a saved model state dict.
             in_channels: Number of input channels to model.
             version: Version of SimCLR, 1--2.
-            layers: Number of layers in projection head (2 for v1 or 3+ for v2).
+            layers: Number of layers in projection head (2 for v1, 3+ for v2).
             hidden_dim: Number of hidden dimensions in projection head
                 (defaults to output dimension of model).
             output_dim: Number of output dimensions in projection head
                 (defaults to output dimension of model).
             lr: Learning rate
-                (0.3 x batch_size / 256 for v1 or 0.3 x sqrt(batch size) for v2).
-            weight_decay: Weight decay coefficient (1e-6 for v1 or 1e-4 for v2).
+                (0.3 x batch_size / 256 for v1, 0.3 x sqrt(batch size) for v2).
+            weight_decay: Weight decay coefficient (1e-6 for v1, 1e-4 for v2).
             temperature: Temperature used in NT-Xent loss.
-            memory_bank_size: Size of memory bank (0 for v1 or 64K for v2).
+            memory_bank_size: Size of memory bank (0 for v1, 64K for v2).
             gather_distributed: Gather negatives from all GPUs during distributed
                 training (ignored if memory_bank_size > 0).
             augmentations: Data augmentation.
@@ -274,12 +274,8 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         lr_scheduler = SequentialLR(
             optimizer,
             schedulers=[
-                LinearLR(
-                    optimizer, start_factor=1, end_factor=3, total_iters=warmup_epochs
-                ),
-                CosineAnnealingLR(
-                    optimizer, T_max=self.trainer.max_epochs, last_epoch=-warmup_epochs
-                ),
+                LinearLR(optimizer, total_iters=warmup_epochs),
+                CosineAnnealingLR(optimizer, T_max=self.trainer.max_epochs),
             ],
             milestones=[warmup_epochs],
         )
