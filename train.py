@@ -95,7 +95,7 @@ def main(conf: DictConfig) -> None:
     if isinstance(task, ObjectDetectionTask):
         monitor_metric = "val_map"
         mode = "max"
-    elif any([isinstance(task, BYOLTask), isinstance(task, SimCLRTask)]):
+    elif isinstance(task, (BYOLTask, SimCLRTask)):
         monitor_metric = "train_loss"
         mode = "min"
     else:
