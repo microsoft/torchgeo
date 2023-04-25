@@ -1,10 +1,14 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import re
+
+import numpy as np
+import pytest
 import torch
 from torch.utils.data import TensorDataset
 
-from torchgeo.datamodules.utils import dataset_split
+from torchgeo.datamodules.utils import dataset_split, group_shuffle_split
 
 
 def test_dataset_split() -> None:
@@ -23,3 +27,32 @@ def test_dataset_split() -> None:
     assert len(train_ds) == round(num_samples / 3)
     assert len(val_ds) == round(num_samples / 3)
     assert len(test_ds) == round(num_samples / 3)
+
+
+def test_group_shuffle_split() -> None:
+    alphabet = np.array(list("abcdefghijklmnopqrstuvwxyz"))
+    groups = np.random.randint(0, 26, size=(1000))
+    groups = alphabet[groups]
+
+    with pytest.raises(ValueError, match="You must specify `train_size` *"):
+        group_shuffle_split(groups, train_size=None, test_size=None)
+    with pytest.raises(ValueError, match="`train_size` and `test_size` must sum to 1."):
+        group_shuffle_split(groups, train_size=0.2, test_size=1.0)
+    with pytest.raises(
+        ValueError,
+        match=re.escape("`train_size` and `test_size` must be in the range (0,1)."),
+    ):
+        group_shuffle_split(groups, train_size=-0.2, test_size=1.2)
+    with pytest.raises(ValueError, match="26 groups were found, however the current *"):
+        group_shuffle_split(groups, train_size=None, test_size=0.999)
+
+    train_indices, test_indices = group_shuffle_split(
+        groups, train_size=None, test_size=0.2
+    )
+    assert len(set(train_indices) & set(test_indices)) == 0
+    assert len(set(groups[train_indices])) == 21
+    train_indices, test_indices = group_shuffle_split(
+        groups, train_size=0.8, test_size=None
+    )
+    assert len(set(train_indices) & set(test_indices)) == 0
+    assert len(set(groups[train_indices])) == 21
