@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from lightly.loss import NTXentLoss
-from lightly.models.modules.heads import ProjectionHead
+from lightly.models.modules import SimCLRProjectionHead
 from lightning import LightningModule
 from torch import Tensor
 from torch.optim import Adam, Optimizer
@@ -42,35 +42,6 @@ AUG = K.AugmentationSequential(
     K.RandomGaussianBlur(kernel_size=(KS, KS), sigma=(0.1, 2)),
     data_keys=["input"],
 )
-
-
-# Remove once https://github.com/lightly-ai/lightly/pull/1150 is merged and released
-class SimCLRProjectionHead(ProjectionHead):  # type: ignore[misc]
-    """SimCLR projection head."""
-
-    def __init__(
-        self,
-        input_dim: int = 2048,
-        hidden_dim: int = 2048,
-        output_dim: int = 2048,
-        num_layers: int = 3,
-    ) -> None:
-        """Initialize a new SimCLRProjectionHead instance.
-
-        Args:
-            input_dim: Number of input dimensions.
-            hidden_dim: Number of hidden dimensions.
-            output_dim: Number of output dimensions.
-            num_layers: Number of hidden layers.
-        """
-        layers: list[tuple[int, int, Optional[nn.Module], Optional[nn.Module]]] = []
-        layers.append((input_dim, hidden_dim, nn.BatchNorm1d(hidden_dim), nn.ReLU()))
-        for _ in range(2, num_layers):
-            layers.append(
-                (hidden_dim, hidden_dim, nn.BatchNorm1d(hidden_dim), nn.ReLU())
-            )
-        layers.append((hidden_dim, output_dim, nn.BatchNorm1d(output_dim), None))
-        super().__init__(layers)
 
 
 class SimCLRTask(LightningModule):  # type: ignore[misc]
