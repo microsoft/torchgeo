@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import pytest
 
 from torchgeo.datamodules import FAIR1MDataModule
-from torchgeo.datasets import unbind_samples
 
 
 class TestFAIR1MDataModule:
@@ -16,13 +15,7 @@ class TestFAIR1MDataModule:
         root = os.path.join("tests", "data", "fair1m")
         batch_size = 2
         num_workers = 0
-        dm = FAIR1MDataModule(
-            root=root,
-            batch_size=batch_size,
-            num_workers=num_workers,
-            val_split_pct=0.33,
-            test_split_pct=0.33,
-        )
+        dm = FAIR1MDataModule(root=root, batch_size=batch_size, num_workers=num_workers)
         return dm
 
     def test_train_dataloader(self, datamodule: FAIR1MDataModule) -> None:
@@ -33,13 +26,17 @@ class TestFAIR1MDataModule:
         datamodule.setup("validate")
         next(iter(datamodule.val_dataloader()))
 
-    def test_test_dataloader(self, datamodule: FAIR1MDataModule) -> None:
-        datamodule.setup("test")
-        next(iter(datamodule.test_dataloader()))
+    def test_predict_dataloader(self, datamodule: FAIR1MDataModule) -> None:
+        datamodule.setup("predict")
+        next(iter(datamodule.predict_dataloader()))
 
     def test_plot(self, datamodule: FAIR1MDataModule) -> None:
         datamodule.setup("validate")
         batch = next(iter(datamodule.val_dataloader()))
-        sample = unbind_samples(batch)[0]
+        sample = {
+            "image": batch["image"][0],
+            "boxes": batch["boxes"][0],
+            "label": batch["label"][0],
+        }
         datamodule.plot(sample)
         plt.close()
