@@ -93,13 +93,16 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
             in_channels: Number of input channels to model
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
-            freeze_backbone: Fine-tune the cls head by freezing the backbone
+            freeze_backbone: Freeze the backbone network to linear probe
+                the regression head
+            freeze_decoder: Freeze the decoder network to linear probe
+                the regression head
 
         .. versionchanged:: 0.4
             Change regression model support from torchvision.models to timm
 
         .. versionchanged:: 0.5
-           Added *freeze_backbone* parameter.
+           The *freeze_backbone* and *freeze_decoder* parameters.
         """
         super().__init__()
 

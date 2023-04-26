@@ -169,7 +169,7 @@ class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
             num_classes: Number of semantic classes to predict
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
-            freeze_backbone: Fine-tune the detection head by freezing the backbone
+            freeze_backbone: Freeze the backbone network to fine-tune the detection head
 
         Raises:
             ValueError: if kwargs arguments are invalid
@@ -178,7 +178,7 @@ class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
            The *detection_model* parameter was renamed to *model*.
 
         .. versionchanged:: 0.5
-           Added *freeze_backbone* parameter.
+           The *freeze_backbone* parameter.
         """
         super().__init__()
         # Creates `self.hparams` from kwargs
