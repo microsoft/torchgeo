@@ -20,6 +20,8 @@ def collate_fn(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
 
     Returns:
         batch dict output
+
+    .. versionadded:: 0.5
     """
     output: dict[str, Any] = {}
     output["image"] = torch.stack([sample["image"] for sample in batch])
@@ -48,6 +50,9 @@ class FAIR1MDataModule(NonGeoDataModule):
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.FAIR1M`.
+
+        .. versionchanged:: 0.5
+           Removed *val_split_pct* and *test_split_pct* parameters.
         """
         super().__init__(FAIR1M, batch_size, num_workers, **kwargs)
         self.collate_fn = collate_fn

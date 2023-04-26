@@ -245,6 +245,9 @@ class FAIR1M(NonGeoDataset):
             AssertionError: if ``split`` argument is invalid
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
+
+        .. versionchanged:: 0.5
+           Added *split* and *download* parameters.
         """
         assert split in self.directories
         self.root = root
