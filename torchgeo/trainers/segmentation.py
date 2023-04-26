@@ -101,7 +101,7 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
         Keyword Args:
             model: Name of the segmentation model type to use
             backbone: Name of the timm backbone to use
-            weights: None or "imagenet" to use imagenet pretrained weights in
+            weights: None or True to use imagenet pretrained weights in
                 the backbone
             in_channels: Number of channels in input image
             num_classes: Number of semantic classes to predict
