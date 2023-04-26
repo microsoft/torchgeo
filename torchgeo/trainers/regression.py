@@ -59,6 +59,13 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
                 state_dict = get_weight(weights).get_state_dict(progress=True)
             self.model = utils.load_state_dict(self.model, state_dict)
 
+        # Freeze backbone and unfreeze classifier head
+        if self.hyperparams.get("freeze_backbone", False):
+            for param in self.model.parameters():
+                param.requires_grad = False
+            for param in self.model.get_classifier().parameters():
+                param.requires_grad = True
+
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters."""
         self.config_model()
@@ -86,9 +93,13 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
             in_channels: Number of input channels to model
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
+            freeze_backbone: Fine-tune the cls head by freezing the backbone
 
         .. versionchanged:: 0.4
             Change regression model support from torchvision.models to timm
+
+        .. versionchanged:: 0.5
+           Added *freeze_backbone* parameter.
         """
         super().__init__()
 
@@ -294,3 +305,17 @@ class PixelwiseRegressionTask(RegressionTask):
                 f"Model type '{self.hyperparams['model']}' is not valid. "
                 f"Currently, only supports 'unet', 'deeplabv3+' and 'fcn'."
             )
+
+        # Freeze backbone
+        if self.hyperparams.get("freeze_backbone", False) and self.hyperparams[
+            "model"
+        ] in ["unet", "deeplabv3+"]:
+            for param in self.model.encoder.parameters():
+                param.requires_grad = False
+
+        # Freeze decoder
+        if self.hyperparams.get("freeze_decoder", False) and self.hyperparams[
+            "model"
+        ] in ["unet", "deeplabv3+"]:
+            for param in self.model.decoder.parameters():
+                param.requires_grad = False

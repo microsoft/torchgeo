@@ -80,6 +80,20 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
                 f"Currently, supports 'ce', 'jaccard' or 'focal' loss."
             )
 
+        # Freeze backbone
+        if self.hyperparams.get("freeze_backbone", False) and self.hyperparams[
+            "model"
+        ] in ["unet", "deeplabv3+"]:
+            for param in self.model.encoder.parameters():
+                param.requires_grad = False
+
+        # Freeze decoder
+        if self.hyperparams.get("freeze_decoder", False) and self.hyperparams[
+            "model"
+        ] in ["unet", "deeplabv3+"]:
+            for param in self.model.decoder.parameters():
+                param.requires_grad = False
+
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
 
@@ -110,7 +124,9 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
            *encoder_weights* to *weights*.
 
         .. versionadded: 0.5
-            The *class_weights* parameter.
+            The *class_weights*, *freeze_backbone*,
+            and *freeze_decoder* parameters.
+
         """
         super().__init__()
 
