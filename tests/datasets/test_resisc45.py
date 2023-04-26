@@ -25,7 +25,7 @@ class TestRESISC45:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> RESISC45:
-        pytest.importorskip("rarfile", minversion="3")
+        pytest.importorskip("rarfile", minversion="4")
 
         monkeypatch.setattr(torchgeo.datasets.resisc45, "download_url", download_url)
         md5 = "5895dea3757ba88707d52f5521c444d3"

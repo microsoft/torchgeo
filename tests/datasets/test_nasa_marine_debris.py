@@ -41,7 +41,7 @@ def fetch_corrupted(collection_id: str, **kwargs: str) -> Collection_corrupted:
 class TestNASAMarineDebris:
     @pytest.fixture()
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> NASAMarineDebris:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch)
         md5s = ["6f4f0d2313323950e45bf3fc0c09b5de", "540cf1cf4fd2c13b609d0355abe955d7"]
         monkeypatch.setattr(NASAMarineDebris, "md5s", md5s)
@@ -85,7 +85,7 @@ class TestNASAMarineDebris:
         self, tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
         with pytest.raises(RuntimeError, match="Dataset checksum mismatch."):
-            radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+            radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
             monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_corrupted)
             NASAMarineDebris(root=str(tmp_path), download=True, checksum=True)
 

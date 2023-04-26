@@ -13,7 +13,7 @@ dependencies:
   - pyproj>=3
   - python>=3.9
   - pytorch>=1.12
-  - pyvista>=0.25.2
+  - pyvista>=0.29
   - rarfile>=4
   - rasterio>=1.2
   - shapely>=1.7.1
@@ -21,6 +21,7 @@ dependencies:
   - pip:
     - black[jupyter]>=21.8
     - flake8>=3.8
+    - hydra-core>=1
     - ipywidgets>=7
     - isort[colors]>=5.8
     - kornia>=0.6.5
@@ -29,7 +30,7 @@ dependencies:
     - mypy>=0.900
     - nbmake>=1.3.3
     - nbsphinx>=0.8.5
-    - omegaconf>=2.1
+    - omegaconf>=2.0.1
     - opencv-python>=4.4.0.46
     - pandas>=1.1.3
     - pillow>=8
@@ -41,7 +42,6 @@ dependencies:
     - radiant-mlhub>=0.3
     - rtree>=1
     - scikit-image>=0.18
-    - scikit-learn>=0.24
     - scipy>=1.6.2
     - segmentation-models-pytorch>=0.2
     - setuptools>=42

@@ -1,14 +1,22 @@
-experiment:
-  task: "eurosat"
-  module:
-    loss: "ce"
-    model: "resnet18"
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 6
-    weights: null
-    in_channels: 13
-    num_classes: 10
-  datamodule:
-    root: "data/eurosat"
-    batch_size: 128
-    num_workers: 4
+module:
+  _target_: torchgeo.trainers.ClassificationTask
+  loss: "ce"
+  model: "resnet18"
+  learning_rate: 1e-3
+  learning_rate_schedule_patience: 6
+  weights: null
+  in_channels: 13
+  num_classes: 10
+
+datamodule:
+  _target_: torchgeo.datamodules.EuroSATDataModule
+  root: "data/eurosat"
+  batch_size: 128
+  num_workers: 4
+
+trainer:
+  _target_: lightning.pytorch.Trainer
+  accelerator: gpu
+  devices: 1
+  min_epochs: 15
+  max_epochs: 40

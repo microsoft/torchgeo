@@ -6,7 +6,7 @@
 from .byol import BYOLTask
 from .classification import ClassificationTask, MultiLabelClassificationTask
 from .detection import ObjectDetectionTask
-from .regression import RegressionTask
+from .regression import PixelwiseRegressionTask, RegressionTask
 from .segmentation import SemanticSegmentationTask
 
 __all__ = (
@@ -14,6 +14,7 @@ __all__ = (
     "ClassificationTask",
     "MultiLabelClassificationTask",
     "ObjectDetectionTask",
+    "PixelwiseRegressionTask",
     "RegressionTask",
     "SemanticSegmentationTask",
 )

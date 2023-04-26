@@ -5,7 +5,7 @@ module:
   learning_rate: 1e-3
   learning_rate_schedule_patience: 6
   weights: null
-  in_channels: 18
+  in_channels: 3
   num_classes: 17
 
 datamodule:
@@ -13,5 +13,6 @@ datamodule:
   root: "tests/data/so2sat"
   batch_size: 1
   num_workers: 0
-  version: "2"
-  band_set: "all"
+  version: "3_random"
+  band_set: "rgb"
+  val_split_pct: 0.5

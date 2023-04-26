@@ -15,19 +15,21 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from torchgeo.datasets import So2Sat
 
-pytest.importorskip("h5py", minversion="2.6")
+pytest.importorskip("h5py", minversion="3")
 
 
 class TestSo2Sat:
     @pytest.fixture(params=["train", "validation", "test"])
     def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> So2Sat:
-        md5s = {
-            "train": "82e0f2d51766b89cb905dbaf8275eb5b",
-            "validation": "bf292ae4737c1698b1a3c6f5e742e0e1",
-            "test": "9a3bbe181b038d4e51f122c4be3c569e",
+        md5s_by_version = {
+            "2": {
+                "train": "56e6fa0edb25b065124a3113372f76e5",
+                "validation": "940c95a737bd2fcdcc46c9a52b31424d",
+                "test": "e97a6746aadc731a1854097f32ab1755",
+            }
         }
 
-        monkeypatch.setattr(So2Sat, "md5s", md5s)
+        monkeypatch.setattr(So2Sat, "md5s_by_version", md5s_by_version)
         root = os.path.join("tests", "data", "so2sat")
         split = request.param
         transforms = nn.Identity()
@@ -51,13 +53,13 @@ class TestSo2Sat:
         assert isinstance(x["label"], torch.Tensor)
 
     def test_len(self, dataset: So2Sat) -> None:
-        assert len(dataset) == 1
+        assert len(dataset) == 2
 
     def test_out_of_bounds(self, dataset: So2Sat) -> None:
         # h5py at version 2.10.0 raises a ValueError instead of an IndexError so we
         # check for both here
         with pytest.raises((IndexError, ValueError)):
-            dataset[1]
+            dataset[2]
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):

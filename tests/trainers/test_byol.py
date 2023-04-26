@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import pytest
 import timm
@@ -12,16 +12,12 @@ import torch.nn as nn
 import torchvision
 from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
-from lightning.pytorch import LightningDataModule, Trainer
+from hydra.utils import instantiate
+from lightning.pytorch import Trainer
 from omegaconf import OmegaConf
 from torchvision.models import resnet18
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import (
-    ChesapeakeCVPRDataModule,
-    SeasonalContrastS2DataModule,
-    SSL4EOS12DataModule,
-)
 from torchgeo.datasets import SSL4EOS12, SeasonalContrastS2
 from torchgeo.models import get_model_weights, list_models
 from torchgeo.trainers import BYOLTask
@@ -54,25 +50,19 @@ class TestBYOL:
 
 class TestBYOLTask:
     @pytest.mark.parametrize(
-        "name,classname",
+        "name",
         [
-            ("chesapeake_cvpr_prior_byol", ChesapeakeCVPRDataModule),
-            ("seco_byol_1", SeasonalContrastS2DataModule),
-            ("seco_byol_2", SeasonalContrastS2DataModule),
-            ("ssl4eo_s12_byol_1", SSL4EOS12DataModule),
-            ("ssl4eo_s12_byol_2", SSL4EOS12DataModule),
+            "chesapeake_cvpr_prior_byol",
+            "seco_byol_1",
+            "seco_byol_2",
+            "ssl4eo_s12_byol_1",
+            "ssl4eo_s12_byol_2",
         ],
     )
     def test_trainer(
-        self,
-        monkeypatch: MonkeyPatch,
-        name: str,
-        classname: type[LightningDataModule],
-        fast_dev_run: bool,
+        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(dict[str, dict[str, Any]], conf_dict)
 
         if name.startswith("seco"):
             monkeypatch.setattr(SeasonalContrastS2, "__len__", lambda self: 2)
@@ -81,14 +71,11 @@ class TestBYOLTask:
             monkeypatch.setattr(SSL4EOS12, "__len__", lambda self: 2)
 
         # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = classname(**datamodule_kwargs)
+        datamodule = instantiate(conf.datamodule)
 
         # Instantiate model
-        model_kwargs = conf_dict["module"]
-        model = BYOLTask(**model_kwargs)
-
-        model.backbone = SegmentationTestModel(**model_kwargs)
+        model = instantiate(conf.module)
+        model.backbone = SegmentationTestModel(**conf.module)
 
         # Instantiate trainer
         trainer = Trainer(
