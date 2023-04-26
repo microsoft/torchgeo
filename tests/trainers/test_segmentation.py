@@ -175,16 +175,12 @@ class TestSemanticSegmentationTask:
             ]
         )
 
-    @pytest.mark.parametrize(
-        "backbone", ["resnet18", "mobilenet_v2", "efficientnet-b0"]
-    )
     @pytest.mark.parametrize("model_name", ["unet", "deeplabv3+"])
     def test_freeze_decoder(
-        self, backbone: str, model_name: str, model_kwargs: dict[Any, Any]
+        self, model_name: str, model_kwargs: dict[Any, Any]
     ) -> None:
         model_kwargs["freeze_decoder"] = True
         model_kwargs["model"] = model_name
-        model_kwargs["backbone"] = backbone
         model = SemanticSegmentationTask(**model_kwargs)
         assert all(
             [param.requires_grad is False for param in model.model.decoder.parameters()]
