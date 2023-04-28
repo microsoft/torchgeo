@@ -23,4 +23,8 @@ experiment:
     root: "/projects/dali/data/l7irish"
     batch_size: 64
     patch_size: 512
+<<<<<<< HEAD
     num_workers: 1
+=======
+    num_workers: 1
+>>>>>>> 7fd28499ac1019ca7f63fd3b4739a9c2fae5db88
