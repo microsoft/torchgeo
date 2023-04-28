@@ -101,7 +101,7 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         .. versionchanged:: 0.4
             Change regression model support from torchvision.models to timm
 
-        .. versionchanged:: 0.5
+        .. versionadded:: 0.5
            The *freeze_backbone* and *freeze_decoder* parameters.
         """
         super().__init__()
