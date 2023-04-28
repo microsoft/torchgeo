@@ -63,7 +63,6 @@ from typing import Any, Optional
 import ee
 import numpy as np
 import rasterio
-import urllib3
 from rasterio.transform import Affine
 
 warnings.simplefilter("ignore", UserWarning)
