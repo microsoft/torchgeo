@@ -103,7 +103,7 @@ class ClassificationTask(LightningModule):  # type: ignore[misc]
         .. versionchanged:: 0.4
            The *classification_model* parameter was renamed to *model*.
 
-        .. versionchanged:: 0.5
+        .. versionadded:: 0.5
            The *freeze_backbone* parameter.
         """
         super().__init__()
