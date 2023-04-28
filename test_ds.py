@@ -7,16 +7,30 @@ from torchgeo.datamodules.geo import GeoDataModule
 
 from torch.utils.data import DataLoader, Dataset, default_collate
 
-ds = L7Irish(
-    root = "/Users/yc/projects/dali/data/l7irish",
+ds1 = L7Irish(
+    root = "/projects/dali/data/l7irish",
     crs = "EPSG:3857"
 )
-
-sampler = RandomBatchGeoSampler(ds, size=256, batch_size=32, length=32*150)
-dl = DataLoader(ds, batch_sampler=sampler, num_workers=10, collate_fn=stack_samples)
+ds2 = L7Irish(
+    root = "/projects/dali/data/l7irish_cog",
+    crs = "EPSG:3857"
+)
+ds3 = L7Irish(
+    root = "/projects/dali/data/l7irish_trans",
+    crs = "EPSG:3857"
+)
+ds4 = L7Irish(
+    root = "/projects/dali/data/l7irish_trans2",
+    crs = "EPSG:3857"
+)
+dss = [ds1, ds2, ds3, ds4]
 
 if __name__ ==  '__main__':
-    start_time = time.time()
-    for batch in tqdm(dl):
-        pass
-    print("Total time: ", time.time()-start_time)
+    for ds in dss:
+        start_time = time.time()
+        for i in range(5):
+            sampler = RandomBatchGeoSampler(ds, size=512, batch_size=32, length=32*150)
+            dl = DataLoader(ds, batch_sampler=sampler, num_workers=10, collate_fn=stack_samples)
+            for batch in tqdm(dl):
+                pass
+        print("Average time: ", (time.time()-start_time)/5)
