@@ -251,7 +251,7 @@ def get_random_patches_match(
             for c in filtered_collections
         ]
 
-    except (ee.EEException, urllib3.exceptions.HTTPError) as e:
+    except Exception as e:
         if debug:
             print(e)
         return None, coords
