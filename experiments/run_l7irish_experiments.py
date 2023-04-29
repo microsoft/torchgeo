@@ -10,7 +10,11 @@ from multiprocessing import Process, Queue
 
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
 <<<<<<< HEAD
+<<<<<<< HEAD
 GPUS = [0, 1]
+=======
+GPUS = [0]
+>>>>>>> 7fd28499ac1019ca7f63fd3b4739a9c2fae5db88
 =======
 GPUS = [0]
 >>>>>>> 7fd28499ac1019ca7f63fd3b4739a9c2fae5db88
