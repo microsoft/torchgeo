@@ -9,7 +9,11 @@ import subprocess
 from multiprocessing import Process, Queue
 
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
+<<<<<<< HEAD
 GPUS = [0, 1]
+=======
+GPUS = [0]
+>>>>>>> 7fd28499ac1019ca7f63fd3b4739a9c2fae5db88
 DRY_RUN = False  # if False then print out the commands to be run, if True then run
 DATA_DIR = "/projects/dali/data/l7irish"  # path to the L7Irish data directory
 
