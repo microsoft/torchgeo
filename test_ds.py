@@ -24,13 +24,7 @@ ds4 = L7Irish(
     crs = "EPSG:3857"
 )
 dss = [ds1, ds2, ds3, ds4]
-<<<<<<< HEAD
-<<<<<<< HEAD
 avg_time = []
-=======
->>>>>>> 7fd28499ac1019ca7f63fd3b4739a9c2fae5db88
-=======
->>>>>>> 7fd28499ac1019ca7f63fd3b4739a9c2fae5db88
 
 if __name__ ==  '__main__':
     for ds in dss:
@@ -40,14 +34,6 @@ if __name__ ==  '__main__':
             dl = DataLoader(ds, batch_sampler=sampler, num_workers=10, collate_fn=stack_samples)
             for batch in tqdm(dl):
                 pass
-<<<<<<< HEAD
-<<<<<<< HEAD
         avg_time.append((time.time()-start_time)/5)
 
     print("Average time [original, cog, trans, trans2]: ", avg_time)
-=======
-        print("Average time: ", (time.time()-start_time)/5)
->>>>>>> 7fd28499ac1019ca7f63fd3b4739a9c2fae5db88
-=======
-        print("Average time: ", (time.time()-start_time)/5)
->>>>>>> 7fd28499ac1019ca7f63fd3b4739a9c2fae5db88

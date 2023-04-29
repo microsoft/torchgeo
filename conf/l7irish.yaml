@@ -1,14 +1,6 @@
 trainer:
   accelerator: gpu
-<<<<<<< HEAD
-<<<<<<< HEAD
-  devices: 2
-=======
   devices: 1
->>>>>>> 7fd28499ac1019ca7f63fd3b4739a9c2fae5db88
-=======
-  devices: 1
->>>>>>> 7fd28499ac1019ca7f63fd3b4739a9c2fae5db88
   min_epochs: 20
   max_epochs: 100
   benchmark: True
@@ -31,16 +23,4 @@ experiment:
     root: "/projects/dali/data/l7irish"
     batch_size: 64
     patch_size: 512
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    num_workers: 1
-=======
-    num_workers: 1
->>>>>>> 7fd28499ac1019ca7f63fd3b4739a9c2fae5db88
-=======
-    num_workers: 1
->>>>>>> 7fd28499ac1019ca7f63fd3b4739a9c2fae5db88
-=======
-    num_workers: 1
->>>>>>> 7fd28499ac1019ca7f63fd3b4739a9c2fae5db88
+    num_workers: 10
