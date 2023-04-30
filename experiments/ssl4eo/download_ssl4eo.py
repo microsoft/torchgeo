@@ -185,7 +185,7 @@ def get_patch(
         patch = image.select(*bands_group)
         if orig_res != new_res:
             patch = patch.reproject(patch.projection().crs(), scale=new_res)
-        patch = patch.sampleRectangle(region, defaultValue=0)
+        patch = patch.sampleRectangle(region, defaultValue=-9999)
         features = patch.getInfo()
         for i, band in zip(indices, bands_group):
             x = features["properties"][band]
