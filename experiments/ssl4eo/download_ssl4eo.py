@@ -181,16 +181,16 @@ def get_patch(
     # Reproject (if necessary) and download all bands
     raster = {}
     for (orig_res, new_res), value in band_groups.items():
-        indices, bands = zip(*value)
-        patch = image.select(*bands)
+        indices, bands_group = zip(*value)
+        patch = image.select(*bands_group)
         if orig_res != new_res:
             patch = patch.reproject(patch.projection().crs(), scale=new_res)
         patch = patch.sampleRectangle(region, defaultValue=0)
         features = patch.getInfo()
-        for i, band in zip(indices, bands):
+        for i, band in zip(indices, bands_group):
             x = features["properties"][band]
             x = np.atleast_3d(x)
-            x = center_crop(x, out_size=2 * radius // new_res)
+            x = center_crop(x, out_size=int(2 * radius // new_res))
             raster[i] = x.astype(dtype)
 
     # Compute coordinates after cropping
@@ -266,7 +266,7 @@ def save_geotiff(
 
 
 def save_patch(
-    raster: dict[str, Any],
+    raster: dict[int, Any],
     coords: list[list[float]],
     metadata: dict[str, Any],
     bands: list[str],
