@@ -1,4 +1,6 @@
-#!/usr/bin/env bash -euo pipefail
+#!/usr/bin/env bash
+
+set -euo pipefail
 
 # User-specific parameters
 SAVE_PATH=data/ssl4eo-l5-raw
