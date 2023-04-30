@@ -18,7 +18,6 @@ python download_ssl4eo.py \
     --dates 2021-12-21 2021-09-22 2021-06-21 2021-03-20 \
     --radius 1320 \
     --bands B1 B2 B3 B4 B5 B6 B7 B8 B8A B9 B10 B11 B12 \
-    --crops 44 264 264 264 132 132 132 264 132 44 44 132 132 \
     --dtype uint16 \
     --num-workers 8 \
     --log-freq 100 \
@@ -40,7 +39,6 @@ python download_ssl4eo.py \
     --dates 2021-12-21 2021-09-22 2021-06-21 2021-03-20 \
     --radius 1980 \
     --bands B1 B2 B3 B4 B5 B6 B7 B8 B9 B10 B11 \
-    --crops 132 132 132 132 132 132 132 264 264 132 132 \
     --dtype float32 \
     --num-workers 8 \
     --log-freq 100 \
@@ -55,10 +53,10 @@ import json
 import os
 import time
 import warnings
-from collections import OrderedDict
+from collections import defaultdict
 from datetime import date, datetime, timedelta
 from multiprocessing.dummy import Lock, Pool
-from typing import Any, Optional
+from typing import Any
 
 import ee
 import numpy as np
@@ -135,10 +133,10 @@ def filter_collection(
 
 
 def center_crop(
-    img: np.ndarray[Any, np.dtype[Any]], out_size: tuple[int, int]
+    img: np.ndarray[Any, np.dtype[Any]], out_size: int
 ) -> np.ndarray[Any, np.dtype[Any]]:
     image_height, image_width = img.shape[:2]
-    crop_height, crop_width = out_size
+    crop_height = crop_width = out_size
     pad_height = max(crop_height - image_height, 0)
     pad_width = max(crop_width - image_width, 0)
     img = np.pad(img, (pad_height, pad_width), mode="edge")
@@ -163,78 +161,63 @@ def adjust_coords(
     ]
 
 
-def get_properties(image: ee.Image) -> Any:
-    return image.getInfo()
-
-
 def get_patch(
     collection: ee.ImageCollection,
     center_coord: list[float],
     radius: float,
     bands: list[str],
-    crop: Optional[dict[str, Any]] = None,
+    original_resolutions: list[int],
+    new_resolutions: list[int],
     dtype: str = "float32",
 ) -> dict[str, Any]:
-    image = collection.sort("system:time_start", False).first()  # get most recent
-    region = (
-        ee.Geometry.Point(center_coord).buffer(radius).bounds()
-    )  # sample region bound
-    reproj_bands = "B8"
-    reproj_resolution = 30
-    other_bands = [b for b in bands if b != reproj_bands]
-    patch_reproj = (
-        image.select(reproj_bands)
-        .reproject(
-            crs=image.select(reproj_bands).projection().crs(), scale=reproj_resolution
-        )
-        .sampleRectangle(region, defaultValue=0)
-    )
-    patch_other = image.select(*other_bands).sampleRectangle(region, defaultValue=0)
-    # patch = image.select(*bands).sampleRectangle(region, defaultValue=0)
-    # features = patch.getInfo()  # the actual download
-    features_reproj = patch_reproj.getInfo()
-    features_other = patch_other.getInfo()
+    image = collection.sort("CLOUD_COVER").first()
+    region = ee.Geometry.Point(center_coord).buffer(radius).bounds()
 
-    raster = OrderedDict()
-    for band in bands:
-        if band == reproj_bands:
-            img = np.atleast_3d(features_reproj["properties"][band])
-        else:
-            img = np.atleast_3d(features_other["properties"][band])
-        if crop is not None:
-            img = center_crop(img, out_size=crop[band])
-        raster[band] = img.astype(dtype)
+    # Group by original and new resolution
+    band_groups = defaultdict(list)
+    for i in range(len(bands)):
+        band_groups[(original_resolutions[i], new_resolutions[i])].append((i, bands[i]))
 
-    coords0 = np.array(features_other["geometry"]["coordinates"][0])
+    # Reproject (if necessary) and download all bands
+    raster = {}
+    for (orig_res, new_res), value in band_groups.items():
+        indices, bands = zip(*value)
+        patch = image.select(*bands)
+        if orig_res != new_res:
+            patch = patch.reproject(patch.projection().crs(), scale=new_res)
+        patch = patch.sampleRectangle(region, defaultValue=0)
+        features = patch.getInfo()
+        for i, band in zip(indices, bands):
+            x = features["properties"][band]
+            x = np.atleast_3d(x)
+            x = center_crop(x, out_size=2 * radius // new_res)
+            raster[i] = x.astype(dtype)
+
+    # Compute coordinates after cropping
+    coords0 = np.array(features["geometry"]["coordinates"][0])
     coords = [
         [coords0[:, 0].min(), coords0[:, 1].max()],
         [coords0[:, 0].max(), coords0[:, 1].min()],
     ]
-    if crop is not None:
-        band = bands[0]
-        old_size = (
-            len(features_other["properties"][band]),
-            len(features_other["properties"][band][0]),
-        )
-        new_size = raster[band].shape[:2]
-        coords = adjust_coords(coords, old_size, new_size)
+    old_size = (len(features["properties"][band]), len(features["properties"][band][0]))
+    new_size = raster[0].shape[:2]
+    coords = adjust_coords(coords, old_size, new_size)
 
-    return OrderedDict(
-        {"raster": raster, "coords": coords, "metadata": get_properties(image)}
-    )
+    return {"raster": raster, "coords": coords, "metadata": image.getInfo()}
 
 
 def get_random_patches_match(
     idx: int,
     collection: ee.ImageCollection,
     bands: list[str],
-    crops: dict[str, Any],
+    original_resolutions: list[int],
+    new_resolutions: list[int],
     dtype: str,
     dates: list[Any],
     radius: float,
     debug: bool = False,
     match_coords: dict[str, Any] = {},
-) -> tuple[Optional[list[dict[str, Any]]], list[float]]:
+) -> tuple[list[dict[str, Any]], list[float]]:
     # (lon,lat) of idx patch
     coords = match_coords[str(idx)]
 
@@ -246,14 +229,15 @@ def get_random_patches_match(
             filter_collection(collection, coords, p) for p in periods
         ]
         patches = [
-            get_patch(c, coords, radius, bands=bands, crop=crops, dtype=dtype)
+            get_patch(
+                c, coords, radius, bands, original_resolutions, new_resolutions, dtype
+            )
             for c in filtered_collections
         ]
-
     except Exception as e:
         if debug:
             print(e)
-        return None, coords
+        return [], coords
 
     return patches, coords
 
@@ -285,16 +269,21 @@ def save_patch(
     raster: dict[str, Any],
     coords: list[list[float]],
     metadata: dict[str, Any],
+    bands: list[str],
+    new_resolutions: list[int],
     path: str,
 ) -> None:
     patch_id = metadata["properties"]["system:index"]
     patch_path = os.path.join(path, patch_id)
     os.makedirs(patch_path, exist_ok=True)
 
-    img_all = np.concatenate([img for img in raster.values()], axis=2)
-    save_geotiff(img_all, coords, os.path.join(patch_path, "all_bands.tif"))
-    # for band, img in raster.items():
-    #    save_geotiff(img, coords, os.path.join(patch_path, f"{band}.tif"))
+    if len(set(new_resolutions)) == 1:
+        img_all = np.concatenate([raster[i] for i in range(len(raster))], axis=2)
+        save_geotiff(img_all, coords, os.path.join(patch_path, "all_bands.tif"))
+    else:
+        for i, band in enumerate(bands):
+            img = raster[i]
+            save_geotiff(img, coords, os.path.join(patch_path, f"{band}.tif"))
 
     with open(os.path.join(patch_path, "metadata.json"), "w") as f:
         json.dump(metadata, f)
@@ -320,12 +309,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--collection", type=str, default="COPERNICUS/S2", help="GEE collection name"
     )
+    parser.add_argument("--qa-band", type=str, default="QA60", help="qa band name")
     parser.add_argument(
-        "--qa-band", type=str, default="QA60", help="qa band name (optional)"
-    )  # optional
-    parser.add_argument(
-        "--qa-cloud-bit", type=int, default=10, help="qa band cloud bit (optional)"
-    )  # optional
+        "--qa-cloud-bit", type=int, default=10, help="qa band cloud bit"
+    )
     parser.add_argument(
         "--meta-cloud-name",
         type=str,
@@ -340,7 +327,8 @@ if __name__ == "__main__":
         "--dates",
         type=str,
         nargs="+",
-        default=["2021-12-21", "2021-09-22", "2021-06-21", "2021-03-20"],
+        # https://www.weather.gov/media/ind/seasons.pdf
+        default=["2021-12-21", "2021-09-23", "2021-06-21", "2021-03-20"],
         help="reference dates",
     )
     parser.add_argument(
@@ -367,12 +355,25 @@ if __name__ == "__main__":
         ],
         help="bands to download",
     )
+    # Reprojection options
+    #
+    # If the original resolutions differ between bands, you can reproject them to
+    # new resolutions. Crop dimensions are the size of each patch you want to crop
+    # to after reprojection. All of these options should either be a single value
+    # or the same length as the bands flag.
     parser.add_argument(
-        "--crops",
+        "--original-resolutions",
         type=int,
         nargs="+",
-        default=[44, 264, 264, 264, 132, 132, 132, 264, 132, 44, 44, 132, 132],
-        help="crop size for each band",
+        default=[60, 10, 10, 10, 20, 20, 20, 10, 20, 60, 60, 20, 20],
+        help="original band resolutions in meters",
+    )
+    parser.add_argument(
+        "--new-resolutions",
+        type=int,
+        nargs="+",
+        default=[10],
+        help="new band resolutions in meters",
     )
     parser.add_argument("--dtype", type=str, default="float32", help="data type")
     # download settings
@@ -413,10 +414,19 @@ if __name__ == "__main__":
         dates.append(date.fromisoformat(d))
 
     bands = args.bands
-    crops = {}
-    for i, band in enumerate(bands):
-        crops[band] = (args.crops[i], args.crops[i])
+    original_resolutions = args.original_resolutions
+    new_resolutions = args.new_resolutions
     dtype = args.dtype
+
+    # Validate inputs
+    num_bands = len(bands)
+    if len(original_resolutions) == 1:
+        original_resolutions *= num_bands
+    if len(new_resolutions) == 1:
+        new_resolutions *= num_bands
+
+    for values in [original_resolutions, new_resolutions]:
+        assert len(values) == num_bands
 
     # if resume
     ext_coords = {}
@@ -455,7 +465,8 @@ if __name__ == "__main__":
             idx,
             collection,
             bands,
-            crops,
+            original_resolutions,
+            new_resolutions,
             dtype,
             dates,
             radius=args.radius,
@@ -463,23 +474,25 @@ if __name__ == "__main__":
             match_coords=match_coords,
         )
 
-        if patches is not None:
-            if args.save_path is not None:
-                location_path = os.path.join(args.save_path, "imgs", f"{idx:07d}")
-                os.makedirs(location_path, exist_ok=True)
-                for patch in patches:
-                    save_patch(
-                        raster=patch["raster"],
-                        coords=patch["coords"],
-                        metadata=patch["metadata"],
-                        path=location_path,
-                    )
+        if patches:
+            location_path = os.path.join(args.save_path, "imgs", f"{idx:07d}")
+            os.makedirs(location_path, exist_ok=True)
+            for patch in patches:
+                save_patch(
+                    patch["raster"],
+                    patch["coords"],
+                    patch["metadata"],
+                    bands,
+                    new_resolutions,
+                    location_path,
+                )
 
             count = counter.update(1)
             if count % args.log_freq == 0:
                 print(f"Downloaded {count} images in {time.time() - start_time:.3f}s.")
         else:
-            print("no suitable image for location %d." % (idx))
+            if args.debug:
+                print("no suitable image for location %d." % (idx))
 
         # add to existing checked locations
         with open(ext_path, "a") as f:
@@ -494,12 +507,7 @@ if __name__ == "__main__":
         return
 
     # set indices
-    if args.indices_range is not None:
-        indices = list(range(args.indices_range[0], args.indices_range[1]))
-    else:
-        indices = []
-        for key in match_coords.keys():
-            indices.append(int(key))
+    indices = list(range(args.indices_range[0], args.indices_range[1]))
 
     if args.num_workers == 0:
         for i in indices:
