@@ -18,6 +18,7 @@ YEAR=2002  # SLC-on
 BANDS=(B1 B2 B3 B4 B5 B6_VCID_1 B6_VCID_2 B7 B8)
 ORIGINAL_RESOLUTIONS=(30 30 30 30 30 60 60 30 15)
 NEW_RESOLUTIONS=30
+DEFAULT_VALUE=-9999
 
 # Generic parameters
 SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
@@ -39,6 +40,7 @@ time python3 "$SCRIPT_DIR/download_ssl4eo.py" \
     --original-resolutions ${ORIGINAL_RESOLUTIONS[@]} \
     --new-resolutions $NEW_RESOLUTIONS \
     --dtype $DTYPE \
+    --default-value $DEFAULT_VALUE \
     --num-workers $NUM_WORKERS \
     --log-freq $LOG_FREQ \
     --match-file "$MATCH_FILE" \

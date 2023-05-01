@@ -18,6 +18,7 @@ YEAR=1991  # MSS data acquisitions over the United States ceased in 1992
 BANDS=(B1 B2 B3 B4)
 ORIGINAL_RESOLUTIONS=(60 60 60 30)
 NEW_RESOLUTIONS=60
+DEFAULT_VALUE=0
 
 # Generic parameters
 SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
@@ -39,6 +40,7 @@ time python3 "$SCRIPT_DIR/download_ssl4eo.py" \
     --original-resolutions ${ORIGINAL_RESOLUTIONS[@]} \
     --new-resolutions $NEW_RESOLUTIONS \
     --dtype $DTYPE \
+    --default-value $DEFAULT_VALUE \
     --num-workers $NUM_WORKERS \
     --log-freq $LOG_FREQ \
     --match-file "$MATCH_FILE" \
