@@ -4,14 +4,14 @@
 # Licensed under the MIT License.
 
 import argparse
-import numpy as np
 import os
-import ee
 
+import ee
+import numpy as np
 from geeS2downloader import GEES2Downloader
 
+
 def download_data(args):
-    
     # initialize seed
     os.makedirs(args.save_path, exist_ok=True)
 
@@ -29,18 +29,14 @@ def download_data(args):
         .filterBounds(conus)
         .filterDate(args.start_date, args.end_date)
         .filterMetadata("CLOUD COVER", "less_than", str(args.cloud_pct))
-        
     )
-    random_collection = collection.randomColumn().sort('random').limit(num_samples)
+    random_collection = collection.randomColumn().sort("random").limit(num_samples)
     listOfImages = random_collection.toList(random_collection.size())
 
     # Download the images
     for i in range(num_samples):
         image = ee.Image(listOfImages.get(i))
-        # url = image.getDownloadURL(
-        #     {"name": "landsat_random_image_" + str(i), "scale": 30, "crs": "EPSG:4326"}
-        # )
-    
+
         collected_bands = []
         band_names = image.bandNames()
         for band in band_names:
@@ -48,7 +44,7 @@ def download_data(args):
             collected_bands.append(downloader.array)
 
         array = np.stack(collected_bands, axis=-1)
-        
+
         # save to geotiff with meta info
 
 

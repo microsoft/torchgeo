@@ -63,7 +63,6 @@ from typing import Any, Optional
 import ee
 import numpy as np
 import rasterio
-import urllib3
 from rasterio.transform import Affine
 
 warnings.simplefilter("ignore", UserWarning)
@@ -140,6 +139,9 @@ def center_crop(
 ) -> np.ndarray[Any, np.dtype[Any]]:
     image_height, image_width = img.shape[:2]
     crop_height, crop_width = out_size
+    pad_height = max(crop_height - image_height, 0)
+    pad_width = max(crop_width - image_width, 0)
+    img = np.pad(img, (pad_height, pad_width), mode="edge")
     crop_top = (image_height - crop_height + 1) // 2
     crop_left = (image_width - crop_width + 1) // 2
     return img[crop_top : crop_top + crop_height, crop_left : crop_left + crop_width]
@@ -248,7 +250,7 @@ def get_random_patches_match(
             for c in filtered_collections
         ]
 
-    except (ee.EEException, urllib3.exceptions.HTTPError) as e:
+    except Exception as e:
         if debug:
             print(e)
         return None, coords
