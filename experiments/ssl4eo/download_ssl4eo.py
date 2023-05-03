@@ -139,7 +139,7 @@ def center_crop(
     crop_height = crop_width = out_size
     pad_height = max(crop_height - image_height, 0)
     pad_width = max(crop_width - image_width, 0)
-    img = np.pad(img, (pad_height, pad_width), mode="edge")
+    img = np.pad(img, ((pad_height, 0), (pad_width, 0), (0, 0)), mode="edge")
     crop_top = (image_height - crop_height + 1) // 2
     crop_left = (image_width - crop_width + 1) // 2
     return img[crop_top : crop_top + crop_height, crop_left : crop_left + crop_width]
