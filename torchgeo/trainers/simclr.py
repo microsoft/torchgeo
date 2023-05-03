@@ -138,7 +138,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
 
         self.save_hyperparameters(ignore=["augmentations"])
 
-        self.grayscale_weights = grayscale_weights or torch.ones(in_channels)
+        grayscale_weights = grayscale_weights or torch.ones(in_channels)
         self.augmentations = augmentations or simclr_augmentations(
             size, grayscale_weights
         )
