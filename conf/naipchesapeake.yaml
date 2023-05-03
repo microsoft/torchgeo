@@ -3,7 +3,7 @@ module:
   loss: "ce"
   model: "deeplabv3+"
   backbone: "resnet34"
-  weights: "imagenet"
+  weights: true
   learning_rate: 1e-3
   learning_rate_schedule_patience: 2
   in_channels: 4
