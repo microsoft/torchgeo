@@ -3,10 +3,9 @@
 set -euo pipefail
 
 # User-specific parameters
-ROOT_DIR=data
-SAVE_PATH="$ROOT_DIR/ssl4eo-l-30"
+SAVE_PATH=data/ssl4eo-l-30
 START_INDEX=0
-END_INDEX=100
+END_INDEX=10
 
 # Generic parameters
 SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
