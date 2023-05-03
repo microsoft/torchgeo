@@ -20,6 +20,8 @@ from torch.optim import Adam, Optimizer
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torchvision.models._api import WeightsEnum
 
+import torchgeo.transforms as T
+
 from ..models import get_weight
 from . import utils
 
@@ -29,19 +31,28 @@ except ImportError:
     from torch.optim.lr_scheduler import _LRScheduler as LRScheduler
 
 
-# https://github.com/google-research/simclr/blob/master/data_util.py
-SIZE = 224
-KS = SIZE // 10 // 2 * 2 + 1
-AUG = K.AugmentationSequential(
-    K.RandomResizedCrop(size=(SIZE, SIZE), ratio=(0.75, 1.33)),
-    K.RandomHorizontalFlip(),
-    K.RandomVerticalFlip(),  # added
-    # Not appropriate for multispectral imagery, seasonal contrast used instead
-    # K.ColorJitter(brightness=0.8, contrast=0.8, saturation=0.8, hue=0.2, p=0.8)
-    # K.RandomGrayscale(p=0.2),
-    K.RandomGaussianBlur(kernel_size=(KS, KS), sigma=(0.1, 2)),
-    data_keys=["input"],
-)
+def simclr_augmentations(size: int, weights: Tensor) -> nn.Module:
+    """SimCLR augmentations.
+
+    Args:
+        size: Size of patch to crop.
+        weights: Weight vector for grayscale computation.
+
+    Returns:
+        Data augmentation pipeline.
+    """
+    # https://github.com/google-research/simclr/blob/master/data_util.py
+    ks = size // 10 // 2 * 2 + 1
+    AUG = K.AugmentationSequential(
+        K.RandomResizedCrop(size=(size, size), ratio=(0.75, 1.33)),
+        K.RandomHorizontalFlip(),
+        K.RandomVerticalFlip(),  # added
+        # Not appropriate for multispectral imagery, seasonal contrast used instead
+        # K.ColorJitter(brightness=0.8, contrast=0.8, saturation=0.8, hue=0.2, p=0.8)
+        T.RandomGrayscale(weights=weights, p=0.2),
+        K.RandomGaussianBlur(kernel_size=(ks, ks), sigma=(0.1, 2)),
+        data_keys=["input"],
+    )
 
 
 class SimCLRTask(LightningModule):  # type: ignore[misc]
@@ -73,7 +84,9 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         temperature: float = 0.07,
         memory_bank_size: int = 64000,
         gather_distributed: bool = False,
-        augmentations: nn.Module = AUG,
+        size: int = 224,
+        weights: Optional[Tensor] = None,
+        augmentations: Optional[nn.Module] = None,
     ) -> None:
         """Initialize a new SimCLRTask instance.
 
@@ -96,7 +109,11 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             memory_bank_size: Size of memory bank (0 for v1, 64K for v2).
             gather_distributed: Gather negatives from all GPUs during distributed
                 training (ignored if memory_bank_size > 0).
-            augmentations: Data augmentation.
+            size: Size of patch to crop.
+            weights: Weight vector for grayscale computation, see
+                :class:`~torchgeo.transforms.RandomGrayscale`. Only used when
+                ``augmentations=None``.
+            augmentations: Data augmentation. Defaults to SimCLR augmentation.
 
         Raises:
             AssertionError: If an invalid version of SimCLR is requested.
@@ -120,7 +137,9 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
                 warnings.warn("SimCLR v2 uses a memory bank")
 
         self.save_hyperparameters(ignore=["augmentations"])
-        self.augmentations = augmentations
+
+        self.weights = weights or torch.ones(in_channels) / in_channels
+        self.augmentations = augmentations or simclr_augmentations(size, weights)
 
         # Create backbone
         self.backbone = timm.create_model(
