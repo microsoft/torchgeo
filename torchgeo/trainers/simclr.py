@@ -43,7 +43,7 @@ def simclr_augmentations(size: int, weights: Tensor) -> nn.Module:
     """
     # https://github.com/google-research/simclr/blob/master/data_util.py
     ks = size // 10 // 2 * 2 + 1
-    AUG = K.AugmentationSequential(
+    return K.AugmentationSequential(
         K.RandomResizedCrop(size=(size, size), ratio=(0.75, 1.33)),
         K.RandomHorizontalFlip(),
         K.RandomVerticalFlip(),  # added
@@ -85,7 +85,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         memory_bank_size: int = 64000,
         gather_distributed: bool = False,
         size: int = 224,
-        weights: Optional[Tensor] = None,
+        grayscale_weights: Optional[Tensor] = None,
         augmentations: Optional[nn.Module] = None,
     ) -> None:
         """Initialize a new SimCLRTask instance.
@@ -110,7 +110,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             gather_distributed: Gather negatives from all GPUs during distributed
                 training (ignored if memory_bank_size > 0).
             size: Size of patch to crop.
-            weights: Weight vector for grayscale computation, see
+            grayscale_weights: Weight vector for grayscale computation, see
                 :class:`~torchgeo.transforms.RandomGrayscale`. Only used when
                 ``augmentations=None``.
             augmentations: Data augmentation. Defaults to SimCLR augmentation.
@@ -138,8 +138,12 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
 
         self.save_hyperparameters(ignore=["augmentations"])
 
-        self.weights = weights or torch.ones(in_channels) / in_channels
-        self.augmentations = augmentations or simclr_augmentations(size, weights)
+        self.grayscale_weights = (
+            grayscale_weights or torch.ones(in_channels) / in_channels
+        )
+        self.augmentations = augmentations or simclr_augmentations(
+            size, grayscale_weights
+        )
 
         # Create backbone
         self.backbone = timm.create_model(
