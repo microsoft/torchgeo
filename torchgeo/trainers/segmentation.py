@@ -97,9 +97,7 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
                     )
                 else:
                     state_dict = get_weight(weights).get_state_dict(progress=True)
-                    self.model.encoder = utils.load_state_dict(
-                        self.model.encoder, state_dict
-                    )
+                    self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
         if self.hyperparams.get("freeze_backbone", False) and self.hyperparams[
@@ -121,8 +119,9 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
         Keyword Args:
             model: Name of the segmentation model type to use
             backbone: Name of the timm backbone to use
-            weights: None or True to use imagenet pretrained weights in
-                the backbone
+            weights: Either a weight enum, the string representation of a weight enum,
+                True for ImageNet weights, False or None for random weights,
+                or the path to a saved model state dict.
             in_channels: Number of channels in input image
             num_classes: Number of semantic classes to predict
             loss: Name of the loss function, currently supports

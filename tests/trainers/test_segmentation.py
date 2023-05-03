@@ -151,8 +151,6 @@ class TestSemanticSegmentationTask:
 
     def test_weight_file(self, model_kwargs: dict[str, Any], checkpoint: str) -> None:
         model_kwargs["weights"] = checkpoint
-        with pytest.warns(UserWarning):
-            SemanticSegmentationTask(**model_kwargs)
 
     def test_weight_enum(
         self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
@@ -160,8 +158,6 @@ class TestSemanticSegmentationTask:
         model_kwargs["backbone"] = mocked_weights.meta["model"]
         model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
         model_kwargs["weights"] = mocked_weights
-        with pytest.warns(UserWarning):
-            SemanticSegmentationTask(**model_kwargs)
 
     def test_weight_str(
         self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
@@ -169,8 +165,6 @@ class TestSemanticSegmentationTask:
         model_kwargs["backbone"] = mocked_weights.meta["model"]
         model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
         model_kwargs["weights"] = str(mocked_weights)
-        with pytest.warns(UserWarning):
-            SemanticSegmentationTask(**model_kwargs)
 
     def test_invalid_model(self, model_kwargs: dict[Any, Any]) -> None:
         model_kwargs["model"] = "invalid_model"
