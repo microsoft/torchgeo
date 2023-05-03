@@ -280,17 +280,19 @@ class PixelwiseRegressionTask(RegressionTask):
 
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters."""
+        weights = self.hyperparams["weights"]
+
         if self.hyperparams["model"] == "unet":
             self.model = smp.Unet(
                 encoder_name=self.hyperparams["backbone"],
-                encoder_weights=self.hyperparams["weights"],
+                encoder_weights="imagenet" if weights is True else None,
                 in_channels=self.hyperparams["in_channels"],
                 classes=1,
             )
         elif self.hyperparams["model"] == "deeplabv3+":
             self.model = smp.DeepLabV3Plus(
                 encoder_name=self.hyperparams["backbone"],
-                encoder_weights=self.hyperparams["weights"],
+                encoder_weights="imagenet" if weights is True else None,
                 in_channels=self.hyperparams["in_channels"],
                 classes=1,
             )
@@ -305,6 +307,16 @@ class PixelwiseRegressionTask(RegressionTask):
                 f"Model type '{self.hyperparams['model']}' is not valid. "
                 f"Currently, only supports 'unet', 'deeplabv3+' and 'fcn'."
             )
+
+        if self.hyperparams["model"] != "fcn":
+            if weights and weights is not True:
+                if isinstance(weights, WeightsEnum):
+                    state_dict = weights.get_state_dict(progress=True)
+                elif os.path.exists(weights):
+                    _, state_dict = utils.extract_backbone(weights)
+                else:
+                    state_dict = get_weight(weights).get_state_dict(progress=True)
+                self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
         if self.hyperparams.get("freeze_backbone", False) and self.hyperparams[
