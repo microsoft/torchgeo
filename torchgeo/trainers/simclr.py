@@ -32,7 +32,7 @@ except ImportError:
 
 
 def simclr_augmentations(size: int, weights: Tensor) -> nn.Module:
-    """SimCLR augmentations.
+    """Data augmentation used by SimCLR.
 
     Args:
         size: Size of patch to crop.
