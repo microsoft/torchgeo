@@ -7,9 +7,10 @@ import os
 from typing import Any, cast
 
 import matplotlib.pyplot as plt
+import segmentation_models_pytorch as smp
 import timm
 import torch
-import torch.nn.functional as F
+import torch.nn as nn
 from lightning.pytorch import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -17,7 +18,7 @@ from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import unbind_samples
-from ..models import get_weight
+from ..models import FCN, get_weight
 from . import utils
 
 
@@ -35,8 +36,10 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         print(timm.list_models())
     """
 
-    def config_task(self) -> None:
-        """Configures the task based on kwargs parameters."""
+    target_key: str = "label"
+
+    def config_model(self) -> None:
+        """Configures the model based on kwargs parameters."""
         # Create model
         weights = self.hyperparams["weights"]
         self.model = timm.create_model(
@@ -56,6 +59,28 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
                 state_dict = get_weight(weights).get_state_dict(progress=True)
             self.model = utils.load_state_dict(self.model, state_dict)
 
+        # Freeze backbone and unfreeze classifier head
+        if self.hyperparams.get("freeze_backbone", False):
+            for param in self.model.parameters():
+                param.requires_grad = False
+            for param in self.model.get_classifier().parameters():
+                param.requires_grad = True
+
+    def config_task(self) -> None:
+        """Configures the task based on kwargs parameters."""
+        self.config_model()
+
+        self.loss: nn.Module
+        if self.hyperparams["loss"] == "mse":
+            self.loss = nn.MSELoss()
+        elif self.hyperparams["loss"] == "mae":
+            self.loss = nn.L1Loss()
+        else:
+            raise ValueError(
+                f"Loss type '{self.hyperparams['loss']}' is not valid. "
+                f"Currently, supports 'mse' or 'mae' loss."
+            )
+
     def __init__(self, **kwargs: Any) -> None:
         """Initialize a new LightningModule for training simple regression models.
 
@@ -68,9 +93,13 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
             in_channels: Number of input channels to model
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
+            freeze_backbone: Fine-tune the cls head by freezing the backbone
 
         .. versionchanged:: 0.4
             Change regression model support from torchvision.models to timm
+
+        .. versionchanged:: 0.5
+           Added *freeze_backbone* parameter.
         """
         super().__init__()
 
@@ -80,7 +109,11 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         self.config_task()
 
         self.train_metrics = MetricCollection(
-            {"RMSE": MeanSquaredError(squared=False), "MAE": MeanAbsoluteError()},
+            {
+                "RMSE": MeanSquaredError(squared=False),
+                "MSE": MeanSquaredError(squared=True),
+                "MAE": MeanAbsoluteError(),
+            },
             prefix="train_",
         )
         self.val_metrics = self.train_metrics.clone(prefix="val_")
@@ -108,13 +141,15 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         """
         batch = args[0]
         x = batch["image"]
-        y = batch["label"].view(-1, 1)
+        y = batch[self.target_key]
         y_hat = self(x)
 
-        loss = F.mse_loss(y_hat, y)
+        if y_hat.ndim != y.ndim:
+            y = y.unsqueeze(dim=1)
 
+        loss: Tensor = self.loss(y_hat, y.to(torch.float))
         self.log("train_loss", loss)  # logging to TensorBoard
-        self.train_metrics(y_hat, y)
+        self.train_metrics(y_hat, y.to(torch.float))
 
         return loss
 
@@ -133,12 +168,15 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         batch = args[0]
         batch_idx = args[1]
         x = batch["image"]
-        y = batch["label"].view(-1, 1)
+        y = batch[self.target_key]
         y_hat = self(x)
 
-        loss = F.mse_loss(y_hat, y)
+        if y_hat.ndim != y.ndim:
+            y = y.unsqueeze(dim=1)
+
+        loss = self.loss(y_hat, y.to(torch.float))
         self.log("val_loss", loss)
-        self.val_metrics(y_hat, y)
+        self.val_metrics(y_hat, y.to(torch.float))
 
         if (
             batch_idx < 10
@@ -149,8 +187,11 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         ):
             try:
                 datamodule = self.trainer.datamodule
+                if self.target_key == "mask":
+                    y = y.squeeze(dim=1)
+                    y_hat = y_hat.squeeze(dim=1)
                 batch["prediction"] = y_hat
-                for key in ["image", "label", "prediction"]:
+                for key in ["image", self.target_key, "prediction"]:
                     batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
@@ -175,12 +216,15 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
         """
         batch = args[0]
         x = batch["image"]
-        y = batch["label"].view(-1, 1)
+        y = batch[self.target_key]
         y_hat = self(x)
 
-        loss = F.mse_loss(y_hat, y)
+        if y_hat.ndim != y.ndim:
+            y = y.unsqueeze(dim=1)
+
+        loss = self.loss(y_hat, y.to(torch.float))
         self.log("test_loss", loss)
-        self.test_metrics(y_hat, y)
+        self.test_metrics(y_hat, y.to(torch.float))
 
     def on_test_epoch_end(self) -> None:
         """Logs epoch level test metrics."""
@@ -219,3 +263,59 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
                 "monitor": "val_loss",
             },
         }
+
+
+class PixelwiseRegressionTask(RegressionTask):
+    """LightningModule for pixelwise regression of images.
+
+    Supports `Segmentation Models Pytorch
+    <https://github.com/qubvel/segmentation_models.pytorch>`_
+    as an architecture choice in combination with any of these
+    `TIMM backbones <https://smp.readthedocs.io/en/latest/encoders_timm.html>`_.
+
+    .. versionadded:: 0.5
+    """
+
+    target_key: str = "mask"
+
+    def config_model(self) -> None:
+        """Configures the model based on kwargs parameters."""
+        if self.hyperparams["model"] == "unet":
+            self.model = smp.Unet(
+                encoder_name=self.hyperparams["backbone"],
+                encoder_weights=self.hyperparams["weights"],
+                in_channels=self.hyperparams["in_channels"],
+                classes=1,
+            )
+        elif self.hyperparams["model"] == "deeplabv3+":
+            self.model = smp.DeepLabV3Plus(
+                encoder_name=self.hyperparams["backbone"],
+                encoder_weights=self.hyperparams["weights"],
+                in_channels=self.hyperparams["in_channels"],
+                classes=1,
+            )
+        elif self.hyperparams["model"] == "fcn":
+            self.model = FCN(
+                in_channels=self.hyperparams["in_channels"],
+                classes=1,
+                num_filters=self.hyperparams["num_filters"],
+            )
+        else:
+            raise ValueError(
+                f"Model type '{self.hyperparams['model']}' is not valid. "
+                f"Currently, only supports 'unet', 'deeplabv3+' and 'fcn'."
+            )
+
+        # Freeze backbone
+        if self.hyperparams.get("freeze_backbone", False) and self.hyperparams[
+            "model"
+        ] in ["unet", "deeplabv3+"]:
+            for param in self.model.encoder.parameters():
+                param.requires_grad = False
+
+        # Freeze decoder
+        if self.hyperparams.get("freeze_decoder", False) and self.hyperparams[
+            "model"
+        ] in ["unet", "deeplabv3+"]:
+            for param in self.model.decoder.parameters():
+                param.requires_grad = False

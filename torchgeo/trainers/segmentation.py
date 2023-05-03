@@ -59,7 +59,13 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
 
         if self.hyperparams["loss"] == "ce":
             ignore_value = -1000 if self.ignore_index is None else self.ignore_index
-            self.loss = nn.CrossEntropyLoss(ignore_index=ignore_value)
+
+            class_weights = (
+                torch.FloatTensor(self.class_weights) if self.class_weights else None
+            )
+            self.loss = nn.CrossEntropyLoss(
+                ignore_index=ignore_value, weight=class_weights
+            )
         elif self.hyperparams["loss"] == "jaccard":
             self.loss = smp.losses.JaccardLoss(
                 mode="multiclass", classes=self.hyperparams["num_classes"]
@@ -74,6 +80,20 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
                 f"Currently, supports 'ce', 'jaccard' or 'focal' loss."
             )
 
+        # Freeze backbone
+        if self.hyperparams.get("freeze_backbone", False) and self.hyperparams[
+            "model"
+        ] in ["unet", "deeplabv3+"]:
+            for param in self.model.encoder.parameters():
+                param.requires_grad = False
+
+        # Freeze decoder
+        if self.hyperparams.get("freeze_decoder", False) and self.hyperparams[
+            "model"
+        ] in ["unet", "deeplabv3+"]:
+            for param in self.model.decoder.parameters():
+                param.requires_grad = False
+
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
 
@@ -86,6 +106,8 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
             num_classes: Number of semantic classes to predict
             loss: Name of the loss function, currently supports
                 'ce', 'jaccard' or 'focal' loss
+            class_weights: Optional rescaling weight given to each
+                class and used with 'ce' loss
             ignore_index: Optional integer class index to ignore in the loss and metrics
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
@@ -100,6 +122,11 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
            The *segmentation_model* parameter was renamed to *model*,
            *encoder_name* renamed to *backbone*, and
            *encoder_weights* to *weights*.
+
+        .. versionadded: 0.5
+            The *class_weights*, *freeze_backbone*,
+            and *freeze_decoder* parameters.
+
         """
         super().__init__()
 
@@ -115,6 +142,8 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
                 UserWarning,
             )
         self.ignore_index = kwargs["ignore_index"]
+        self.class_weights = kwargs.get("class_weights", None)
+
         self.config_task()
 
         self.train_metrics = MetricCollection(

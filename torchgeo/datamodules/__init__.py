@@ -12,7 +12,7 @@ from .etci2021 import ETCI2021DataModule
 from .eurosat import EuroSAT100DataModule, EuroSATDataModule
 from .fair1m import FAIR1MDataModule
 from .fire_risk import FireRiskDataModule
-from .geo import GeoDataModule, NonGeoDataModule
+from .geo import BaseDataModule, GeoDataModule, NonGeoDataModule
 from .gid15 import GID15DataModule
 from .inria import InriaAerialImageLabelingDataModule
 from .l7irish import L7IrishDataModule
@@ -73,6 +73,7 @@ __all__ = (
     "Vaihingen2DDataModule",
     "XView2DataModule",
     # Base classes
+    "BaseDataModule",
     "GeoDataModule",
     "NonGeoDataModule",
     # Utilities

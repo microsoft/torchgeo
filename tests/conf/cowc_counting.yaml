@@ -6,6 +6,7 @@ module:
   in_channels: 3
   learning_rate: 1e-3
   learning_rate_schedule_patience: 2
+  loss: "mse"
 
 datamodule:
   _target_: torchgeo.datamodules.COWCCountingDataModule

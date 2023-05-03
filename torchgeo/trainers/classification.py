@@ -64,6 +64,13 @@ class ClassificationTask(LightningModule):  # type: ignore[misc]
                 state_dict = get_weight(weights).get_state_dict(progress=True)
             self.model = utils.load_state_dict(self.model, state_dict)
 
+        # Freeze backbone and unfreeze classifier head
+        if self.hyperparams.get("freeze_backbone", False):
+            for param in self.model.parameters():
+                param.requires_grad = False
+            for param in self.model.get_classifier().parameters():
+                param.requires_grad = True
+
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
         self.config_model()
@@ -90,9 +97,13 @@ class ClassificationTask(LightningModule):  # type: ignore[misc]
             in_channels: Number of input channels to model
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
+            freeze_backbone: Fine-tune the cls head by freezing the backbone
 
         .. versionchanged:: 0.4
            The *classification_model* parameter was renamed to *model*.
+
+        .. versionchanged:: 0.5
+           Added *freeze_backbone* parameter.
         """
         super().__init__()
 
