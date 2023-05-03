@@ -473,6 +473,7 @@ if __name__ == "__main__":
         if str(idx) in ext_coords.keys():
             return
 
+        worker_start = time.time()
         patches, center_coord = get_random_patches_match(
             idx,
             collection,
@@ -516,6 +517,13 @@ if __name__ == "__main__":
                 success = 0
             data = [idx, *center_coord, success]
             writer.writerow(data)
+
+        # Throttle throughput to avoid exceeding GEE quota:
+        # https://developers.google.com/earth-engine/guides/usage
+        worker_end = time.time()
+        elapsed = worker_end - worker_start
+        num_workers = max(1, args.num_workers)
+        time.sleep(max(0, num_workers / 100 - elapsed))
 
         return
 
