@@ -17,7 +17,7 @@ class RandomGrayscale(IntensityAugmentationBase2D):
 
     * Average of all bands: :math:`\frac{1}{C}` where :math:`C` is the number of
       spectral channels.
-    * RGB-only bands: :math:`\[0.299, 0.587, 0.114\]` for the RGB channels, 0 for
+    * RGB-only bands: :math:`[0.299, 0.587, 0.114]` for the RGB channels, 0 for
       all other channels.
     * PCA: the first principal component across the spectral axis computed via PCA,
       minimizes redundant information.
