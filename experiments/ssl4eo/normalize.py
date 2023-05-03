@@ -7,7 +7,6 @@ import os
 import numpy as np
 import rasterio as rio
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("directory", help="directory to recursively search for files")
