@@ -121,7 +121,8 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
             backbone: Name of the timm backbone to use
             weights: Either a weight enum, the string representation of a weight enum,
                 True for ImageNet weights, False or None for random weights,
-                or the path to a saved model state dict.
+                or the path to a saved model state dict. FCN model does not support
+                pretrained weights. Pretrained ViT weight enums are not supported yet.
             in_channels: Number of channels in input image
             num_classes: Number of semantic classes to predict
             loss: Name of the loss function, currently supports
@@ -146,6 +147,9 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
         .. versionadded: 0.5
             The *class_weights*, *freeze_backbone*,
             and *freeze_decoder* parameters.
+
+        .. versionchanged:: 0.5
+           The *weights* parameter supports WeightEnums and checkpoint paths.
 
         """
         super().__init__()
