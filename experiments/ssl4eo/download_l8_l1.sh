@@ -6,7 +6,7 @@ set -euo pipefail
 ROOT_DIR=data
 SAVE_PATH="$ROOT_DIR/ssl4eo-l8-l1"
 MATCH_FILE="$ROOT_DIR/ssl4eo-l-30/sampled_locations.csv"
-NUM_WORKERS=28
+NUM_WORKERS=40
 START_INDEX=0
 END_INDEX=10
 
