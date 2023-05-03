@@ -112,7 +112,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             size: Size of patch to crop.
             grayscale_weights: Weight vector for grayscale computation, see
                 :class:`~torchgeo.transforms.RandomGrayscale`. Only used when
-                ``augmentations=None``.
+                ``augmentations=None``. Defaults to average of all bands.
             augmentations: Data augmentation. Defaults to SimCLR augmentation.
 
         Raises:
@@ -138,9 +138,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
 
         self.save_hyperparameters(ignore=["augmentations"])
 
-        self.grayscale_weights = (
-            grayscale_weights or torch.ones(in_channels) / in_channels
-        )
+        self.grayscale_weights = grayscale_weights or torch.ones(in_channels)
         self.augmentations = augmentations or simclr_augmentations(
             size, grayscale_weights
         )
