@@ -3,11 +3,13 @@
 set -euo pipefail
 
 # User-specific parameters
-SAVE_PATH=data/ssl4eo-l7-l2
+ROOT_DIR=data
+SAVE_PATH="$ROOT_DIR/ssl4eo-l7-l2"
+MATCH_FILE="$ROOT_DIR/ssl4eo-l-30/sampled_locations.csv"
 NUM_WORKERS=28
-MATCH_FILE=data/ssl4eo-l-30/sampled_locations.csv
+NUM_PROCESSES=10
 START_INDEX=0
-END_INDEX=10
+END_INDEX=100
 
 # Satellite-specific parameters
 COLLECTION=LANDSAT/LE07/C02/T1_L2
@@ -27,21 +29,30 @@ SIZE=264
 DTYPE=float32
 LOG_FREQ=1000
 
-time python3 "$SCRIPT_DIR/download_ssl4eo.py" \
-    --save-path "$SAVE_PATH" \
-    --collection $COLLECTION \
-    --qa-band $QA_BAND \
-    --qa-cloud-bit $QA_CLOUD_BIT \
-    --meta-cloud-name $META_CLOUD_NAME \
-    --cloud-pct $CLOUD_PCT \
-    --dates $YEAR-03-20 $YEAR-06-21 $YEAR-09-23 $YEAR-12-21 \
-    --radius $(($NEW_RESOLUTIONS * $SIZE / 2)) \
-    --bands ${BANDS[@]} \
-    --original-resolutions $ORIGINAL_RESOLUTIONS \
-    --new-resolutions $NEW_RESOLUTIONS \
-    --dtype $DTYPE \
-    --default-value $DEFAULT_VALUE \
-    --num-workers $NUM_WORKERS \
-    --log-freq $LOG_FREQ \
-    --match-file "$MATCH_FILE" \
-    --indices-range $START_INDEX $END_INDEX
+INCREMENT=$(( ($END_INDEX - $START_INDEX) / $NUM_PROCESSES ))
+for i in $(seq 1 $NUM_PROCESSES)
+do
+    END=$(( $START_INDEX + ($i * $INCREMENT) ))
+    START=$(( $END - $INCREMENT ))
+
+    time python3 "$SCRIPT_DIR/download_ssl4eo.py" \
+        --save-path "$SAVE_PATH" \
+        --collection $COLLECTION \
+        --qa-band $QA_BAND \
+        --qa-cloud-bit $QA_CLOUD_BIT \
+        --meta-cloud-name $META_CLOUD_NAME \
+        --cloud-pct $CLOUD_PCT \
+        --dates $YEAR-03-20 $YEAR-06-21 $YEAR-09-23 $YEAR-12-21 \
+        --radius $(($NEW_RESOLUTIONS * $SIZE / 2)) \
+        --bands ${BANDS[@]} \
+        --original-resolutions $ORIGINAL_RESOLUTIONS \
+        --new-resolutions $NEW_RESOLUTIONS \
+        --dtype $DTYPE \
+        --default-value $DEFAULT_VALUE \
+        --num-workers $NUM_WORKERS \
+        --log-freq $LOG_FREQ \
+        --match-file "$MATCH_FILE" \
+        --indices-range $START $END &
+done
+
+wait
