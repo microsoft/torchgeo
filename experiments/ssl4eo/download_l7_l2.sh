@@ -3,9 +3,10 @@
 set -euo pipefail
 
 # User-specific parameters
-SAVE_PATH=data/ssl4eo-l7-l2
+ROOT_DIR=data
+SAVE_PATH="$ROOT_DIR/ssl4eo-l7-l2"
+MATCH_FILE="$ROOT_DIR/ssl4eo-l-30/sampled_locations.csv"
 NUM_WORKERS=28
-MATCH_FILE=data/ssl4eo-l-30/sampled_locations.csv
 START_INDEX=0
 END_INDEX=10
 
@@ -44,4 +45,5 @@ time python3 "$SCRIPT_DIR/download_ssl4eo.py" \
     --num-workers $NUM_WORKERS \
     --log-freq $LOG_FREQ \
     --match-file "$MATCH_FILE" \
-    --indices-range $START_INDEX $END_INDEX
+    --indices-range $START_INDEX $END_INDEX \
+    --debug
