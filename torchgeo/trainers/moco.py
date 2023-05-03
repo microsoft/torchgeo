@@ -13,7 +13,7 @@ import timm
 import torch
 import torch.nn as nn
 from lightly.loss import NTXentLoss
-from lightly.models.modules.heads import ProjectionHead
+from lightly.models.modules import MoCoProjectionHead
 from lightly.models.utils import deactivate_requires_grad, update_momentum
 from lightly.utils.scheduler import cosine_schedule
 from lightning import LightningModule
@@ -88,56 +88,6 @@ AUG2_V3 = K.AugmentationSequential(
     K.RandomVerticalFlip(),  # added
     data_keys=["input"],
 )
-
-
-# Remove once https://github.com/lightly-ai/lightly/pull/1163 is merged and released
-class MoCoProjectionHead(ProjectionHead):  # type: ignore[misc]
-    """MoCo projection head."""
-
-    def __init__(
-        self,
-        input_dim: int = 2048,
-        hidden_dim: int = 4096,
-        output_dim: int = 256,
-        num_layers: int = 2,
-        batch_norm: bool = True,
-    ):
-        """Initialize a new MoCoProjectionHead instance.
-
-        Args:
-            input_dim: Number of input dimensions.
-            hidden_dim: Number of hidden dimensions.
-            output_dim: Number of output dimensions.
-            num_layers: Number of hidden layers.
-            batch_norm: Whether or not to use batch norms.
-        """
-        layers: list[tuple[int, int, Optional[nn.Module], Optional[nn.Module]]] = []
-        layers.append(
-            (
-                input_dim,
-                hidden_dim,
-                nn.BatchNorm1d(hidden_dim) if batch_norm else None,
-                nn.ReLU(),
-            )
-        )
-        for _ in range(2, num_layers):
-            layers.append(
-                (
-                    hidden_dim,
-                    hidden_dim,
-                    nn.BatchNorm1d(hidden_dim) if batch_norm else None,
-                    nn.ReLU(),
-                )
-            )
-        layers.append(
-            (
-                hidden_dim,
-                output_dim,
-                nn.BatchNorm1d(output_dim) if batch_norm else None,
-                None,
-            )
-        )
-        super().__init__(layers)
 
 
 class MoCoTask(LightningModule):  # type: ignore[misc]
