@@ -169,6 +169,24 @@ class TestSemanticSegmentationTask:
         model_kwargs["weights"] = str(mocked_weights)
         SemanticSegmentationTask(**model_kwargs)
 
+    @pytest.mark.slow
+    def test_weight_enum_download(
+        self, model_kwargs: dict[str, Any], weights: WeightsEnum
+    ) -> None:
+        model_kwargs["backbone"] = weights.meta["model"]
+        model_kwargs["in_channels"] = weights.meta["in_chans"]
+        model_kwargs["weights"] = weights
+        SemanticSegmentationTask(**model_kwargs)
+
+    @pytest.mark.slow
+    def test_weight_str_download(
+        self, model_kwargs: dict[str, Any], weights: WeightsEnum
+    ) -> None:
+        model_kwargs["backbone"] = weights.meta["model"]
+        model_kwargs["in_channels"] = weights.meta["in_chans"]
+        model_kwargs["weights"] = str(weights)
+        SemanticSegmentationTask(**model_kwargs)
+
     def test_invalid_model(self, model_kwargs: dict[Any, Any]) -> None:
         model_kwargs["model"] = "invalid_model"
         match = "Model type 'invalid_model' is not valid."

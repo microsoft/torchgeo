@@ -145,7 +145,7 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
             and *freeze_decoder* parameters.
 
         .. versionchanged:: 0.5
-           The *weights* parameter supports WeightEnums and checkpoint paths.
+           The *weights* parameter now supports WeightEnums and checkpoint paths.
 
         """
         super().__init__()
