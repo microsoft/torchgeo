@@ -56,7 +56,7 @@ def moco_augmentations(
     ks = size // 10 // 2 * 2 + 1
     if version == 1:
         # Same as InstDict: https://arxiv.org/abs/1805.01978
-        aug1, aug2 = K.AugmentationSequential(
+        aug1 = aug2 = K.AugmentationSequential(
             K.RandomResizedCrop(size=(size, size), scale=(0.2, 1)),
             T.RandomGrayscale(weights=weights, p=0.2),
             # Not appropriate for multispectral imagery, seasonal contrast used instead
@@ -67,7 +67,7 @@ def moco_augmentations(
         )
     elif version == 2:
         # Similar to SimCLR: https://arxiv.org/abs/2002.05709
-        aug1, aug2 = K.AugmentationSequential(
+        aug1 = aug2 = K.AugmentationSequential(
             K.RandomResizedCrop(size=(size, size), scale=(0.2, 1)),
             # Not appropriate for multispectral imagery, seasonal contrast used instead
             # K.ColorJitter(
