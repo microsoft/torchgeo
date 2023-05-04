@@ -297,6 +297,71 @@ class TestPixelwiseRegressionTask:
             "learning_rate_schedule_patience": 6,
         }
 
+    @pytest.fixture(
+        params=[
+            weights
+            for model in list_models()
+            for weights in get_model_weights(model)
+            if "resnet" in weights.meta["model"]
+        ]
+    )
+    def weights(self, request: SubRequest) -> WeightsEnum:
+        return request.param
+
+    @pytest.fixture
+    def mocked_weights(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
+    ) -> WeightsEnum:
+        path = tmp_path / f"{weights}.pth"
+        model = timm.create_model(
+            weights.meta["model"], in_chans=weights.meta["in_chans"]
+        )
+        torch.save(model.state_dict(), path)
+        try:
+            monkeypatch.setattr(weights.value, "url", str(path))
+        except AttributeError:
+            monkeypatch.setattr(weights, "url", str(path))
+        monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
+        return weights
+
+    def test_weight_file(self, model_kwargs: dict[str, Any], checkpoint: str) -> None:
+        model_kwargs["weights"] = checkpoint
+        PixelwiseRegressionTask(**model_kwargs)
+
+    def test_weight_enum(
+        self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
+    ) -> None:
+        model_kwargs["backbone"] = mocked_weights.meta["model"]
+        model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
+        model_kwargs["weights"] = mocked_weights
+        PixelwiseRegressionTask(**model_kwargs)
+
+    def test_weight_str(
+        self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
+    ) -> None:
+        model_kwargs["backbone"] = mocked_weights.meta["model"]
+        model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
+        model_kwargs["weights"] = str(mocked_weights)
+        PixelwiseRegressionTask(**model_kwargs)
+
+    @pytest.mark.slow
+    def test_weight_enum_download(
+        self, model_kwargs: dict[str, Any], weights: WeightsEnum
+    ) -> None:
+        model_kwargs["backbone"] = weights.meta["model"]
+        model_kwargs["in_channels"] = weights.meta["in_chans"]
+        model_kwargs["weights"] = weights
+        PixelwiseRegressionTask(**model_kwargs)
+
+    @pytest.mark.slow
+    def test_weight_str_download(
+        self, model_kwargs: dict[str, Any], weights: WeightsEnum
+    ) -> None:
+        model_kwargs["backbone"] = weights.meta["model"]
+        model_kwargs["in_channels"] = weights.meta["in_chans"]
+        model_kwargs["weights"] = str(weights)
+        PixelwiseRegressionTask(**model_kwargs)
+
     @pytest.mark.parametrize(
         "backbone", ["resnet18", "mobilenet_v2", "efficientnet-b0"]
     )
