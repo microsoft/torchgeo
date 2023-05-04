@@ -18,7 +18,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    def calculate(path: str) -> tuple[float, float, float]:
+    def calculate(path: str) -> tuple[int, float, float]:
         """Compute the count, sum, and sum of squares of an image.
 
         Args:
@@ -43,9 +43,9 @@ if __name__ == "__main__":
         with Pool(args.num_workers) as p:
             out = p.imap_unordered(calculate, paths, 10)
             s0s, s1s, s2s = zip(*out)
-        s0 = sum(s0s)
-        s1 = sum(s1s)
-        s2 = sum(s2s)
+        s0: int = sum(s0s)
+        s1: float = sum(s1s)
+        s2: float = sum(s2s)
     else:
         s0 = s1 = s2 = 0
         for path in paths:
