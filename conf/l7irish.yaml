@@ -21,6 +21,8 @@ experiment:
     ignore_index: null
   datamodule:
     root: "/projects/dali/data/l7irish"
-    batch_size: 64
-    patch_size: 512
-    num_workers: 10
+    batch_size: 32
+    patch_size: 128
+    num_workers: 0
+    length: 3200
+
