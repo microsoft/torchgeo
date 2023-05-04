@@ -3,6 +3,7 @@
 
 """TorchGeo transforms."""
 
+from .color import RandomGrayscale
 from .indices import (
     AppendBNDVI,
     AppendGBNDVI,
@@ -37,4 +38,5 @@ __all__ = (
     "AppendSWI",
     "AppendTriBandNormalizedDifferenceIndex",
     "AugmentationSequential",
+    "RandomGrayscale",
 )
