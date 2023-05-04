@@ -1,26 +1,24 @@
-program:
-  seed: 0
-  overwrite: True
+module:
+  _target_: torchgeo.trainers.ObjectDetectionTask
+  model: "faster-rcnn"
+  backbone: "resnet50"
+  num_classes: 11
+  learning_rate: 1.6e-5
+  learning_rate_schedule_patience: 6
+  verbose: false
+
+datamodule:
+  _target_: torchgeo.datamodules.VHR10DataModule
+  root: "data/vhr10"
+  batch_size: 4
+  num_workers: 56
+  patch_size: 512
+  val_split_pct: 0.2
 
 trainer:
+  _target_: lightning.pytorch.Trainer
   accelerator: gpu
   devices: 1
-  min_epochs: 5
-  max_epochs: 100
-  benchmark: True
+  min_epochs: 15
+  max_epochs: 40
 
-experiment:
-  task: "vhr10"
-  name: "vhr10_test"
-  module:
-    model: "faster-rcnn"
-    backbone: "resnet50"
-    num_classes: 11
-    learning_rate: 1.6e-5
-    learning_rate_schedule_patience: 6
-    verbose: false
-  datamodule:
-    root: "data/vhr10"
-    batch_size: 2
-    num_workers: 56
-    patch_size: 512

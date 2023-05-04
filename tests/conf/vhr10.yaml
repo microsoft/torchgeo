@@ -1,14 +1,16 @@
-experiment:
-  task: "vhr10"
-  module:
-    model: "faster-rcnn"
-    backbone: "resnet18"
-    num_classes: 11
-    learning_rate: 1e-4
-    learning_rate_schedule_patience: 6
-    verbose: false
-  datamodule:
-    root: "tests/data/vhr10"
-    batch_size: 1
-    num_workers: 0
-    patch_size: 4
+module:
+  _target_: torchgeo.trainers.ObjectDetectionTask
+  model: "faster-rcnn"
+  backbone: "resnet18"
+  num_classes: 2
+  learning_rate: 1.2e-4
+  learning_rate_schedule_patience: 6
+  verbose: false
+
+datamodule:
+  _target_: torchgeo.datamodules.VHR10DataModule
+  root: "tests/data/vhr10"
+  download: true
+  batch_size: 1
+  num_workers: 0
+  patch_size: 4
