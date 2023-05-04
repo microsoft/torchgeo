@@ -18,7 +18,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    def calculate(path: str) -> tuple[int, float, float]:
+    def calculate(path: str) -> tuple[float, float, float]:
         """Compute the count, sum, and sum of squares of an image.
 
         Args:
