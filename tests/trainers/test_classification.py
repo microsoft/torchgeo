@@ -77,6 +77,7 @@ class TestClassificationTask:
             "so2sat_all",
             "so2sat_s1",
             "so2sat_s2",
+            "so2sat_rgb",
             "ucmerced",
         ],
     )
@@ -221,6 +222,20 @@ class TestClassificationTask:
             max_epochs=1,
         )
         trainer.predict(model=model, datamodule=datamodule)
+
+    @pytest.mark.parametrize(
+        "model_name", ["resnet18", "efficientnetv2_s", "vit_base_patch16_384"]
+    )
+    def test_freeze_backbone(
+        self, model_name: str, model_kwargs: dict[Any, Any]
+    ) -> None:
+        model_kwargs["freeze_backbone"] = True
+        model_kwargs["model"] = model_name
+        model = ClassificationTask(**model_kwargs)
+        assert not all([param.requires_grad for param in model.model.parameters()])
+        assert all(
+            [param.requires_grad for param in model.model.get_classifier().parameters()]
+        )
 
 
 class TestMultiLabelClassificationTask:
