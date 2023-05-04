@@ -3,6 +3,7 @@
 
 """Segmentation tasks."""
 
+import os
 import warnings
 from typing import Any, cast
 
@@ -15,9 +16,11 @@ from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MetricCollection
 from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
+from torchvision.models._api import WeightsEnum
 
 from ..datasets.utils import unbind_samples
-from ..models import FCN
+from ..models import FCN, get_weight
+from . import utils
 
 
 class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
@@ -31,17 +34,19 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
+        weights = self.hyperparams["weights"]
+
         if self.hyperparams["model"] == "unet":
             self.model = smp.Unet(
                 encoder_name=self.hyperparams["backbone"],
-                encoder_weights=self.hyperparams["weights"],
+                encoder_weights="imagenet" if weights is True else None,
                 in_channels=self.hyperparams["in_channels"],
                 classes=self.hyperparams["num_classes"],
             )
         elif self.hyperparams["model"] == "deeplabv3+":
             self.model = smp.DeepLabV3Plus(
                 encoder_name=self.hyperparams["backbone"],
-                encoder_weights=self.hyperparams["weights"],
+                encoder_weights="imagenet" if weights is True else None,
                 in_channels=self.hyperparams["in_channels"],
                 classes=self.hyperparams["num_classes"],
             )
@@ -80,14 +85,40 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
                 f"Currently, supports 'ce', 'jaccard' or 'focal' loss."
             )
 
+        if self.hyperparams["model"] != "fcn":
+            if weights and weights is not True:
+                if isinstance(weights, WeightsEnum):
+                    state_dict = weights.get_state_dict(progress=True)
+                elif os.path.exists(weights):
+                    _, state_dict = utils.extract_backbone(weights)
+                else:
+                    state_dict = get_weight(weights).get_state_dict(progress=True)
+                self.model.encoder.load_state_dict(state_dict)
+
+        # Freeze backbone
+        if self.hyperparams.get("freeze_backbone", False) and self.hyperparams[
+            "model"
+        ] in ["unet", "deeplabv3+"]:
+            for param in self.model.encoder.parameters():
+                param.requires_grad = False
+
+        # Freeze decoder
+        if self.hyperparams.get("freeze_decoder", False) and self.hyperparams[
+            "model"
+        ] in ["unet", "deeplabv3+"]:
+            for param in self.model.decoder.parameters():
+                param.requires_grad = False
+
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the LightningModule with a model and loss function.
 
         Keyword Args:
             model: Name of the segmentation model type to use
             backbone: Name of the timm backbone to use
-            weights: None or "imagenet" to use imagenet pretrained weights in
-                the backbone
+            weights: Either a weight enum, the string representation of a weight enum,
+                True for ImageNet weights, False or None for random weights,
+                or the path to a saved model state dict. FCN model does not support
+                pretrained weights. Pretrained ViT weight enums are not supported yet.
             in_channels: Number of channels in input image
             num_classes: Number of semantic classes to predict
             loss: Name of the loss function, currently supports
@@ -110,7 +141,12 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
            *encoder_weights* to *weights*.
 
         .. versionadded: 0.5
-            The *class_weights* parameter.
+            The *class_weights*, *freeze_backbone*,
+            and *freeze_decoder* parameters.
+
+        .. versionchanged:: 0.5
+           The *weights* parameter now supports WeightEnums and checkpoint paths.
+
         """
         super().__init__()
 

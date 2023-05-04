@@ -163,6 +163,11 @@ xView2
 Base Classes
 ------------
 
+BaseDataModule
+^^^^^^^^^^^^^^
+
+.. autoclass:: BaseDataModule
+
 GeoDataModule
 ^^^^^^^^^^^^^
 

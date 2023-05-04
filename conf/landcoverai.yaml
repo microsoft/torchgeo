@@ -3,7 +3,7 @@ module:
   loss: "ce"
   model: "unet"
   backbone: "resnet18"
-  weights: "imagenet"
+  weights: true
   learning_rate: 1e-3
   learning_rate_schedule_patience: 6
   in_channels: 3
