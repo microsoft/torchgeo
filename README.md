@@ -128,7 +128,7 @@ datamodule = InriaAerialImageLabelingDataModule(root="...", batch_size=64, num_w
 task = SemanticSegmentationTask(
     model="unet",
     backbone="resnet50",
-    weights="imagenet",
+    weights=True,
     in_channels=3,
     num_classes=2,
     loss="ce",
