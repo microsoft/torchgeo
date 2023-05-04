@@ -22,9 +22,6 @@ from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 from ..datasets.utils import RGBBandsMissingError, unbind_samples
 from .base import BaseTask
 
-plt.switch_backend("agg")
-
-
 BACKBONE_LAT_DIM_MAP = {
     "resnet18": 512,
     "resnet34": 512,
