@@ -94,7 +94,7 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
             freeze_backbone: Freeze the backbone network to linear probe
-                the regression head
+                the regression head. Does not support FCN models.
             freeze_decoder: Freeze the decoder network to linear probe
                 the regression head. Does not support FCN models.
                 Only applicable to PixelwiseRegressionTask.
