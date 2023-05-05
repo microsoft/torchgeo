@@ -15,7 +15,7 @@ from torchvision.datasets.utils import download_and_extract_archive
 
 def get_uniform_points_within_conus(
     download_root: str, num_samples: int
-) -> list[tuple[float]]:
+) -> list[tuple[float, ...]]:
     random.seed(0)
     nation_url = (
         "https://www2.census.gov/geo/tiger/GENZ2022/shp/cb_2022_us_nation_5m.zip"
@@ -48,7 +48,7 @@ def get_uniform_points_within_conus(
     with fiona.open(os.path.join(download_root, nation_filename), "r") as shapefile:
         conus = shape(shapefile[0]["geometry"])
         x_min, y_min, x_max, y_max = conus.bounds
-        points: list[tuple[float]] = []
+        points: list[tuple[float, ...]] = []
         while len(points) < num_samples:
             x = random.uniform(x_min, x_max)
             y = random.uniform(y_min, y_max)
@@ -56,12 +56,12 @@ def get_uniform_points_within_conus(
             if conus.contains(point) and not any(
                 [polygon.contains(point) for polygon in excluded]
             ):
-                points.append((point.x, point.y))
+                points.append((x, y))
 
     return points
 
 
-def save_csv(points: list[tuple[float]], ext_path: str) -> None:
+def save_csv(points: list[tuple[float, ...]], ext_path: str) -> None:
     with open(ext_path, "w") as f:
         writer = csv.writer(f)
         for idx, (lng, lat) in enumerate(points):
