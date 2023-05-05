@@ -13,8 +13,9 @@ if __name__ == "__main__":
     parser.add_argument("directory", help="directory to recursively search for files")
     parser.add_argument("--ext", default="tif", help="file extension")
     parser.add_argument("--nan", type=float, default=0, help="fill value")
+    parser.add_argument("--num-workers", type=int, default=10, help="number of threads")
     parser.add_argument(
-        "--num-workers", type=int, default=10, help="number of parallel threads"
+        "--chunksize", type=int, default=1000, help="size of process pool"
     )
     args = parser.parse_args()
 
@@ -41,7 +42,7 @@ if __name__ == "__main__":
 
     if args.num_workers > 0:
         with Pool(args.num_workers) as p:
-            out = p.imap_unordered(calculate, paths, 10)
+            out = p.imap_unordered(calculate, paths, args.chunksize)
             s0s, s1s, s2s = zip(*out)
         s0: int = sum(s0s)
         s1: float = sum(s1s)
