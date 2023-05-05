@@ -6,12 +6,13 @@ import os
 from multiprocessing.dummy import Pool
 
 import numpy as np
+import numpy.ma as ma
 import rasterio as rio
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("directory", help="directory to recursively search for files")
-    parser.add_argument("--ext", default="tif", help="file extension")
+    parser.add_argument("--suffix", default=".tif", help="file suffix")
     parser.add_argument("--nan", type=float, default=0, help="fill value")
     parser.add_argument("--num-workers", type=int, default=10, help="number of threads")
     parser.add_argument(
@@ -30,14 +31,14 @@ if __name__ == "__main__":
         """
         with rio.open(path) as f:
             x = f.read()
-            x[x == args.nan] = np.NAN
-            s0 = np.count_nonzero(~np.isnan(x), axis=(1, 2))
-            s1 = np.nansum(x, axis=(1, 2))
-            s2 = np.nansum(x**2, axis=(1, 2))
+            y = ma.masked_equal(x, args.nan)
+            s0 = np.count_nonzero(y, axis=(1, 2))
+            s1 = np.sum(y, axis=(1, 2))
+            s2 = np.sum(y**2, axis=(1, 2))
         return s0, s1, s2
 
     paths = glob.iglob(
-        os.path.join(args.directory, "**", f"*.{args.ext}"), recursive=True
+        os.path.join(args.directory, "**", f"*{args.suffix}"), recursive=True
     )
 
     if args.num_workers > 0:
