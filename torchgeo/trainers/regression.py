@@ -96,7 +96,8 @@ class RegressionTask(LightningModule):  # type: ignore[misc]
             freeze_backbone: Freeze the backbone network to linear probe
                 the regression head
             freeze_decoder: Freeze the decoder network to linear probe
-                the regression head
+                the regression head. Does not support FCN models.
+                Only applicable to PixelwiseRegressionTask.
 
         .. versionchanged:: 0.4
             Change regression model support from torchvision.models to timm
