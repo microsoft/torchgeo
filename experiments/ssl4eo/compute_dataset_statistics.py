@@ -31,7 +31,7 @@ if __name__ == "__main__":
         """
         with rio.open(path) as f:
             x = f.read()
-            y = ma.masked_equal(x, args.nan)
+            y = ma.masked_equal(x, args.nan)  # type: ignore[no-untyped-call]
             s0 = np.count_nonzero(y, axis=(1, 2))
             s1 = np.sum(y, axis=(1, 2))
             s2 = np.sum(y**2, axis=(1, 2))
