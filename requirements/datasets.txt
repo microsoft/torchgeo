@@ -4,7 +4,7 @@ laspy==2.4.1
 opencv-python==4.7.0.72
 pandas==2.0.1
 pycocotools==2.0.6
-pyvista==0.38.6
+pyvista==0.39.0
 radiant-mlhub==0.4.1
 rarfile==4.0
 scikit-image==0.20.0
