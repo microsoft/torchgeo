@@ -169,9 +169,9 @@ def get_patch(
     original_resolutions: list[int],
     new_resolutions: list[int],
     dtype: str = "float32",
-    default_value: float = 0,
+    meta_cloud_name: str = "CLOUD_COVER",
 ) -> dict[str, Any]:
-    image = collection.sort("CLOUD_COVER").first()
+    image = collection.sort(meta_cloud_name).first()
     region = ee.Geometry.Point(center_coord).buffer(radius).bounds()
 
     # Group by original and new resolution
@@ -186,7 +186,7 @@ def get_patch(
         patch = image.select(*bands_group)
         if orig_res != new_res:
             patch = patch.reproject(patch.projection().crs(), scale=new_res)
-        patch = patch.sampleRectangle(region, defaultValue=default_value)
+        patch = patch.sampleRectangle(region)
         features = patch.getInfo()
         for i, band in zip(indices, bands_group):
             x = features["properties"][band]
@@ -214,7 +214,7 @@ def get_random_patches_match(
     original_resolutions: list[int],
     new_resolutions: list[int],
     dtype: str,
-    default_value: float,
+    meta_cloud_name: str,
     dates: list[Any],
     radius: float,
     debug: bool = False,
@@ -239,7 +239,7 @@ def get_random_patches_match(
                 original_resolutions,
                 new_resolutions,
                 dtype,
-                default_value,
+                meta_cloud_name,
             )
             for c in filtered_collections
         ]
@@ -385,9 +385,6 @@ if __name__ == "__main__":
         help="new band resolutions in meters",
     )
     parser.add_argument("--dtype", type=str, default="float32", help="data type")
-    parser.add_argument(
-        "--default-value", type=float, default=0, help="default fill value"
-    )
     # download settings
     parser.add_argument("--num-workers", type=int, default=8, help="number of workers")
     parser.add_argument("--log-freq", type=int, default=10, help="print frequency")
@@ -481,7 +478,7 @@ if __name__ == "__main__":
             original_resolutions,
             new_resolutions,
             dtype,
-            args.default_value,
+            args.meta_cloud_name,
             dates,
             radius=args.radius,
             debug=args.debug,
