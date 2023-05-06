@@ -97,13 +97,14 @@ class ClassificationTask(LightningModule):  # type: ignore[misc]
             in_channels: Number of input channels to model
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
-            freeze_backbone: Fine-tune the cls head by freezing the backbone
+            freeze_backbone: Freeze the backbone network to linear probe
+                the classifier head
 
         .. versionchanged:: 0.4
            The *classification_model* parameter was renamed to *model*.
 
-        .. versionchanged:: 0.5
-           Added *freeze_backbone* parameter.
+        .. versionadded:: 0.5
+           The *freeze_backbone* parameter.
         """
         super().__init__()
 
@@ -302,9 +303,14 @@ class MultiLabelClassificationTask(ClassificationTask):
             in_channels: Number of input channels to model
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
+            freeze_backbone: Freeze the backbone network to linear probe
+                the classifier head
 
         .. versionchanged:: 0.4
            The *classification_model* parameter was renamed to *model*.
+
+        .. versionadded:: 0.5
+           The *freeze_backbone* parameter.
         """
         super().__init__(**kwargs)
 

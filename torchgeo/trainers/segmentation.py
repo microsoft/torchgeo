@@ -128,6 +128,10 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
             ignore_index: Optional integer class index to ignore in the loss and metrics
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
+            freeze_backbone: Freeze the backbone network to fine-tune the
+                decoder and segmentation head
+            freeze_decoder: Freeze the decoder network to linear probe
+                the segmentation head
 
         Raises:
             ValueError: if kwargs arguments are invalid
