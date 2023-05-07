@@ -3,6 +3,7 @@
 import argparse
 import glob
 import os
+import sys
 from multiprocessing.dummy import Pool
 
 import numpy as np
@@ -18,24 +19,45 @@ if __name__ == "__main__":
     parser.add_argument(
         "--chunksize", type=int, default=1000, help="size of process pool"
     )
+    parser.add_argument(
+        "--min-max",
+        action="store_true",
+        help="whether to calculate min/max or mean/std",
+    )
     args = parser.parse_args()
 
-    def calculate(path: str) -> tuple[int, float, float]:
+    minimum = sys.maxsize
+    maximum = -sys.maxsize
+    s0 = 0
+    s1 = 0.0
+    s2 = 0.0
+
+    def min_max(path: str) -> None:
+        """Compute the minimum and maximum values in a dataset.
+
+        Args:
+            path: Path to an image file.
+        """
+        with rio.open(path) as f:
+            for band in f.indexes:
+                stats = f.statistics(band)
+                global minimum, maximum
+                minimum = stats.min if stats.min < minimum else minimum
+                maximum = stats.max if stats.max > maximum else maximum
+
+    def mean_std(path: str) -> None:
         """Compute the count, sum, and sum of squares of an image.
 
         Args:
             path: Path to an image file.
-
-        Returns:
-            Count, sum, and sum of squares.
         """
         with rio.open(path) as f:
             x = f.read()
             y = ma.masked_equal(x, args.nan)  # type: ignore[no-untyped-call]
-            s0 = np.count_nonzero(y, axis=(1, 2))
-            s1 = np.sum(y, axis=(1, 2))
-            s2 = np.sum(y**2, axis=(1, 2))
-        return s0, s1, s2
+            global s0, s1, s2
+            s0 += np.count_nonzero(y, axis=(1, 2))
+            s1 += np.sum(y, axis=(1, 2))
+            s2 += np.sum(y**2, axis=(1, 2))
 
     paths = glob.iglob(
         os.path.join(args.directory, "**", f"*{args.suffix}"), recursive=True
@@ -43,25 +65,24 @@ if __name__ == "__main__":
 
     if args.num_workers > 0:
         with Pool(args.num_workers) as p:
-            out = p.imap_unordered(calculate, paths, args.chunksize)
-            s0s, s1s, s2s = zip(*out)
-        s0: int = sum(s0s)
-        s1: float = sum(s1s)
-        s2: float = sum(s2s)
+            if args.min_max:
+                p.map(min_max, paths, args.chunksize)
+            else:
+                p.map(mean_std, paths, args.chunksize)
     else:
-        s0 = s1 = s2 = 0
         for path in paths:
-            s = calculate(path)
-            s0 += s[0]
-            s1 += s[1]
-            s2 += s[2]
+            if args.min_max:
+                min_max(path)
+            else:
+                mean_std(path)
 
-    # https://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods
-    m = s1 / s0
-    s = np.sqrt((s0 * s2 - s1**2) / (s0 * (s0 - 1)))
+    if args.min_max:
+        print("min:", minimum)
+        print("max:", maximum)
+    else:
+        # https://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods
+        m = s1 / s0
+        s = np.sqrt((s0 * s2 - s1**2) / (s0 * (s0 - 1)))
 
-    print("mean:")
-    print(repr(m))
-
-    print("std dev:")
-    print(repr(s))
+        print("mean:", m)
+        print("std dev:", s)
