@@ -6,10 +6,11 @@
 import argparse
 import glob
 import os
-from multiprocessing.dummy import Pool
 
 import numpy as np
 import rasterio as rio
+from tqdm import tqdm
+from tqdm.contrib.concurrent import thread_map
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -42,11 +43,10 @@ if __name__ == "__main__":
     )
 
     if args.num_workers > 0:
-        with Pool(args.num_workers) as p:
-            out = np.array(p.map(compute, paths, args.chunksize))
+        out = np.array(thread_map(compute, paths, max_workers=args.num_workers))
     else:
         out_list = []
-        for path in paths:
+        for path in tqdm(paths):
             out_list.append(compute(path))
         out = np.array(out_list)
 
