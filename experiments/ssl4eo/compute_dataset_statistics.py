@@ -31,7 +31,7 @@ if __name__ == "__main__":
             Min, max, mean, and std dev of the image.
         """
         with rio.open(path) as f:
-            out = np.zeros((len(f.indexes), 4), dtype=np.float32)
+            out = np.zeros((f.count, 4), dtype=np.float32)
             for band in f.indexes:
                 stats = f.statistics(band)
                 out[band - 1] = (stats.min, stats.max, stats.mean, stats.std)
