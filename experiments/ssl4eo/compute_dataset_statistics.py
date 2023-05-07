@@ -17,9 +17,6 @@ if __name__ == "__main__":
     parser.add_argument("directory", help="directory to recursively search for files")
     parser.add_argument("--suffix", default=".tif", help="file suffix")
     parser.add_argument("--num-workers", type=int, default=10, help="number of threads")
-    parser.add_argument(
-        "--chunksize", type=int, default=1000, help="size of process pool"
-    )
     args = parser.parse_args()
 
     def compute(path: str) -> "np.typing.NDArray[np.float32]":
