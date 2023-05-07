@@ -21,7 +21,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    def compute(path: str) -> "np.typing.NDArray[np.float_]":
+    def compute(path: str) -> "np.typing.NDArray[np.float32]":
         """Compute the minimum and maximum values in a dataset.
 
         Args:
@@ -31,7 +31,7 @@ if __name__ == "__main__":
             Min, max, mean, and std dev of the image.
         """
         with rio.open(path) as f:
-            out = np.zeros((len(f.indexes), 4))
+            out = np.zeros((len(f.indexes), 4), dtype=np.float32)
             for band in f.indexes:
                 stats = f.statistics(band)
                 out[band - 1] = (stats.min, stats.max, stats.mean, stats.std)
@@ -61,7 +61,8 @@ if __name__ == "__main__":
 
     # https://stats.stackexchange.com/a/442050/188076
     sigma = np.sqrt(
-        np.sum(sigma_d**2 * (N_d - 1) + N_d * (mu - mu_d) ** 2, axis=0) / (N - 1)
+        np.sum(sigma_d**2 * (N_d - 1) + N_d * (mu - mu_d) ** 2, axis=0) / (N - 1),
+        dtype=np.float32,
     )
 
     print("min:", minimum)
