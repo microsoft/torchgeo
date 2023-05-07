@@ -3,11 +3,9 @@
 import argparse
 import glob
 import os
-import sys
 from multiprocessing.dummy import Pool
 
 import numpy as np
-import numpy.ma as ma
 import rasterio as rio
 
 if __name__ == "__main__":
@@ -19,70 +17,52 @@ if __name__ == "__main__":
     parser.add_argument(
         "--chunksize", type=int, default=1000, help="size of process pool"
     )
-    parser.add_argument(
-        "--min-max",
-        action="store_true",
-        help="whether to calculate min/max or mean/std",
-    )
     args = parser.parse_args()
 
-    minimum = sys.maxsize
-    maximum = -sys.maxsize
-    s0 = 0
-    s1 = 0.0
-    s2 = 0.0
-
-    def min_max(path: str) -> None:
+    def compute(path: str) -> "np.typing.NDArray[np.float_]":
         """Compute the minimum and maximum values in a dataset.
 
         Args:
             path: Path to an image file.
+
+        Returns:
+            Min, max, mean, and std dev of the image.
         """
         with rio.open(path) as f:
+            out = np.zeros((len(f.indexes), 4))
             for band in f.indexes:
                 stats = f.statistics(band)
-                global minimum, maximum
-                minimum = stats.min if stats.min < minimum else minimum
-                maximum = stats.max if stats.max > maximum else maximum
+                out[band - 1] = (stats.min, stats.max, stats.mean, stats.std)
+        return out
 
-    def mean_std(path: str) -> None:
-        """Compute the count, sum, and sum of squares of an image.
-
-        Args:
-            path: Path to an image file.
-        """
-        with rio.open(path) as f:
-            x = f.read()
-            y = ma.masked_equal(x, args.nan)  # type: ignore[no-untyped-call]
-            global s0, s1, s2
-            s0 += np.count_nonzero(y, axis=(1, 2))
-            s1 += np.sum(y, axis=(1, 2))
-            s2 += np.sum(y**2, axis=(1, 2))
-
-    paths = glob.iglob(
+    paths = glob.glob(
         os.path.join(args.directory, "**", f"*{args.suffix}"), recursive=True
     )
 
     if args.num_workers > 0:
         with Pool(args.num_workers) as p:
-            if args.min_max:
-                p.map(min_max, paths, args.chunksize)
-            else:
-                p.map(mean_std, paths, args.chunksize)
+            out = np.array(p.map(compute, paths, args.chunksize))
     else:
+        out_list = []
         for path in paths:
-            if args.min_max:
-                min_max(path)
-            else:
-                mean_std(path)
+            out_list.append(compute(path))
+        out = np.array(out_list)
 
-    if args.min_max:
-        print("min:", minimum)
-        print("max:", maximum)
-    else:
-        # https://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods
-        m = s1 / s0
-        s = np.sqrt((s0 * s2 - s1**2) / (s0 * (s0 - 1)))
+    minimum = np.amin(out[:, :, 0])
+    maximum = np.amax(out[:, :, 1])
 
-        print("mean:", m)
-        print("std dev:", s)
+    mu_d = out[:, :, 2]
+    mu = np.mean(mu_d, axis=0)
+    sigma_d = out[:, :, 3]
+    N_d = 264**2
+    N = len(mu_d) * N_d
+
+    # https://stats.stackexchange.com/a/442050/188076
+    sigma = np.sqrt(
+        np.sum(sigma_d**2 * (N_d - 1) + N_d * (mu - mu_d) ** 2, axis=0) / (N - 1)
+    )
+
+    print("min:", minimum)
+    print("max:", maximum)
+    print("mean:", mu)
+    print("std:", sigma)
