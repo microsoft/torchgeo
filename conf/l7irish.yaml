@@ -19,7 +19,7 @@ experiment:
     in_channels: 9
     num_classes: 5
     num_filters: 256
-    ignore_index: null
+    ignore_index: "null"
   datamodule:
     root: "/projects/dali/data/l7irish"
     batch_size: 32

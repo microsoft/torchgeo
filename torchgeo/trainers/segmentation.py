@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 """Segmentation tasks."""
+import time
 
 import warnings
 from typing import Any, cast
@@ -154,6 +155,8 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
         Returns:
             training loss
         """
+        start_time = time.time()
+
         batch = args[0]
         x = batch["image"]
         y = batch["mask"]
@@ -167,6 +170,7 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
         self.log("train_loss", loss, on_step=True, on_epoch=False)
         self.train_metrics(y_hat_hard, y)
 
+        print("the total time at the end of training step: ", time.time()-start_time)
         return cast(Tensor, loss)
 
     def on_train_epoch_end(self) -> None:
