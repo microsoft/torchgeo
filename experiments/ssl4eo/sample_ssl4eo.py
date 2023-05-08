@@ -152,6 +152,7 @@ if __name__ == "__main__":
             new_coords[i] = new_coord
             data = [i, *new_coord]
             writer.writerow(data)
+            f.flush()
 
     elapsed = time.time() - start_time
     print(f"Sampled locations saved to {path} in {elapsed:.2f} seconds.")
