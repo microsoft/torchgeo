@@ -455,7 +455,7 @@ if __name__ == "__main__":
     with open(args.match_file) as csv_file:
         reader = csv.reader(csv_file)
         for row in reader:
-            key = row[0]
+            key = int(row[0])
             val1 = float(row[1])
             val2 = float(row[2])
             match_coords[key] = (val1, val2)  # lon, lat
