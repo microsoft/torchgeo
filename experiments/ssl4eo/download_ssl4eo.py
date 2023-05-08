@@ -52,7 +52,6 @@ import csv
 import json
 import os
 import time
-import warnings
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 from multiprocessing.dummy import Lock, Pool
@@ -62,8 +61,6 @@ import ee
 import numpy as np
 import rasterio
 from rasterio.transform import Affine
-
-warnings.simplefilter("ignore", UserWarning)
 
 
 def date2str(date: datetime) -> str:
@@ -445,7 +442,7 @@ if __name__ == "__main__":
         with open(ext_path) as csv_file:
             reader = csv.reader(csv_file)
             for row in reader:
-                key = row[0]
+                key = int(row[0])
                 val1 = float(row[1])
                 val2 = float(row[2])
                 ext_coords[key] = (val1, val2)  # lon, lat
@@ -467,7 +464,7 @@ if __name__ == "__main__":
     counter = Counter()
 
     def worker(idx: int) -> None:
-        if str(idx) in ext_coords.keys():
+        if idx in ext_coords.keys():
             return
 
         worker_start = time.time()

@@ -20,7 +20,7 @@ python sample_ssl4eo.py \
     --size 1320 \
     --num-cities 10000 \
     --std 50 \
-    --resume ./data/sampled_locations.csv \
+    --resume \
     --indices-range 0 250000
 
 ### Notes
@@ -36,18 +36,12 @@ import argparse
 import csv
 import os
 import time
-import warnings
 
 import numpy as np
 import pandas as pd
 from rtree import index
 from torchvision.datasets.utils import download_and_extract_archive
 from tqdm import tqdm
-
-warnings.simplefilter("ignore", UserWarning)
-
-
-""" samplers to get locations of interest points"""
 
 
 def get_world_cities(
@@ -104,76 +98,60 @@ if __name__ == "__main__":
         "--std", type=int, default=50, help="std dev of gaussian distribution"
     )
     parser.add_argument(
-        "--resume", type=str, default=None, help="resume from a previous run"
+        "--resume", action="store_true", help="resume from a previous run"
     )
     parser.add_argument(
         "--indices-range",
         type=int,
         nargs=2,
         default=[0, 250000],
-        help="indices to download",
+        help="indices to sample",
     )
 
     args = parser.parse_args()
     os.makedirs(args.save_path, exist_ok=True)
-
-    # if resume
-    ext_coords = {}
-    if args.resume:
-        ext_path = args.resume
-        with open(ext_path) as csv_file:
-            reader = csv.reader(csv_file)
-            for row in reader:
-                key = row[0]
-                val1 = float(row[1])
-                val2 = float(row[2])
-                ext_coords[key] = (val1, val2)  # lon, lat
-    else:
-        ext_path = os.path.join(args.save_path, "sampled_locations.csv")
-
-    # initialize sampler
+    path = os.path.join(args.save_path, "sampled_locations.csv")
     root = os.path.join(args.save_path, "world_cities")
     cities = get_world_cities(download_root=root, size=args.num_cities)
     bbox_size = args.size / 1000  # no overlap between adjacent patches
     bbox_size_degree = km2deg(bbox_size)
 
-    # build rtree
+    # Populate R-tree if resuming
     rtree_coords = index.Index()
     if args.resume:
-        print("Load existing locations.")
-        for i, key in enumerate(tqdm(ext_coords.keys())):
-            c = ext_coords[key]
-            bbox = create_bbox(c, bbox_size_degree)
-            rtree_coords.insert(i, bbox)
+        print("Loading existing locations...")
+        with open(path) as csv_file:
+            reader = csv.reader(csv_file)
+            for i, row in enumerate(reader):
+                key = int(row[0])
+                val1 = float(row[1])
+                val2 = float(row[2])
+                bbox = create_bbox((val1, val2), bbox_size_degree)
+                rtree_coords.insert(i, bbox)
+        assert key < args.indices_range[0]
+    else:
+        if os.path.exists(path):
+            os.remove(path)
 
-    # sample locations
+    # Sample locations and save to file
+    print("Sampling new locations...")
     start_time = time.time()
-    indices = range(*args.indices_range)
     new_coords = {}
-    for idx in tqdm(indices):
-        # skip if already sampled
-        if str(idx) in ext_coords.keys():
-            if args.resume:
-                continue
-
-        # sample new coord and check overlap
-        count = 0
-        while count < 1:
-            new_coord = sample_point(cities, args.std)  # (lon,lat) of top-10000 cities
-            bbox = create_bbox(new_coord, bbox_size_degree)
-            if list(rtree_coords.intersection(bbox)):
-                continue
-            rtree_coords.insert(idx, bbox)
-            new_coords[idx] = new_coord
-            count += 1
-
-    # save to file
-    with open(ext_path, "a") as f:
+    with open(path, "a") as f:
         writer = csv.writer(f)
-        for idx, new_coord in new_coords.items():
-            data = [idx, *new_coord]
+        for i in tqdm(range(*args.indices_range)):
+            # Sample new coord and check overlap
+            while True:
+                # (lon,lat) of top-10000 cities
+                new_coord = sample_point(cities, args.std)
+                bbox = create_bbox(new_coord, bbox_size_degree)
+                if not list(rtree_coords.intersection(bbox)):
+                    break
+
+            rtree_coords.insert(i, bbox)
+            new_coords[i] = new_coord
+            data = [i, *new_coord]
             writer.writerow(data)
 
-    print(
-        f"Sampled locations saved to {ext_path} in {time.time()-start_time:.2f} seconds."  # noqa: E501
-    )
+    elapsed = time.time() - start_time
+    print(f"Sampled locations saved to {path} in {elapsed:.2f} seconds.")
