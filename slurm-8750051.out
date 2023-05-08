@@ -1,0 +1,36 @@
+start loading ds2...
+  0%|          | 0/25487 [00:00<?, ?it/s]  0%|          | 1/25487 [00:05<35:25:57,  5.00s/it]  0%|          | 5/25487 [00:05<6:35:07,  1.07it/s]   0%|          | 7/25487 [00:08<7:02:21,  1.01it/s]  0%|          | 13/25487 [00:08<2:46:05,  2.56it/s]  0%|          | 16/25487 [00:08<2:12:33,  3.20it/s]  0%|          | 21/25487 [00:08<1:20:30,  5.27it/s]  0%|          | 27/25487 [00:13<3:01:32,  2.34it/s]  0%|          | 33/25487 [00:13<1:56:31,  3.64it/s]  0%|          | 39/25487 [00:13<1:18:35,  5.40it/s]  0%|          | 45/25487 [00:13<55:11,  7.68it/s]    0%|          | 50/25487 [00:16<1:56:35,  3.64it/s]  0%|          | 56/25487 [00:16<1:21:06,  5.23it/s]  0%|          | 61/25487 [00:17<1:00:50,  6.97it/s]  0%|          | 66/25487 [00:17<45:51,  9.24it/s]    0%|          | 71/25487 [00:20<1:59:33,  3.54it/s]  0%|          | 77/25487 [00:20<1:22:39,  5.12it/s]  0%|          | 83/25487 [00:20<58:41,  7.21it/s]    0%|          | 88/25487 [00:26<3:02:57,  2.31it/s]  0%|          | 94/25487 [00:26<2:06:43,  3.34it/s]  0%|          | 100/25487 [00:27<1:29:12,  4.74it/s]  0%|          | 106/25487 [00:27<1:03:55,  6.62it/s]  0%|          | 111/25487 [00:32<2:43:28,  2.59it/s]  0%|          | 117/25487 [00:32<1:54:09,  3.70it/s]  0%|          | 123/25487 [00:32<1:21:01,  5.22it/s]  0%|          | 126/25487 [00:38<2:10:36,  3.24it/s]
+Traceback (most recent call last):
+  File "/projects/dali/spack/var/spack/environments/dali/.spack-env/view/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1133, in _try_get_data
+    data = self._data_queue.get(timeout=timeout)
+  File "/projects/dali/spack/var/spack/environments/dali/.spack-env/._view/kp2ebjkvr4j27ydkgoxxfzvqtznzyz2l/lib/python3.10/multiprocessing/queues.py", line 113, in get
+    if not self._poll(timeout):
+  File "/projects/dali/spack/var/spack/environments/dali/.spack-env/._view/kp2ebjkvr4j27ydkgoxxfzvqtznzyz2l/lib/python3.10/multiprocessing/connection.py", line 262, in poll
+    return self._poll(timeout)
+  File "/projects/dali/spack/var/spack/environments/dali/.spack-env/._view/kp2ebjkvr4j27ydkgoxxfzvqtznzyz2l/lib/python3.10/multiprocessing/connection.py", line 429, in _poll
+    r = wait([self], timeout)
+  File "/projects/dali/spack/var/spack/environments/dali/.spack-env/._view/kp2ebjkvr4j27ydkgoxxfzvqtznzyz2l/lib/python3.10/multiprocessing/connection.py", line 936, in wait
+    ready = selector.select(timeout)
+  File "/projects/dali/spack/var/spack/environments/dali/.spack-env/._view/kp2ebjkvr4j27ydkgoxxfzvqtznzyz2l/lib/python3.10/selectors.py", line 416, in select
+    fd_event_list = self._selector.poll(timeout)
+  File "/projects/dali/spack/var/spack/environments/dali/.spack-env/view/lib/python3.10/site-packages/torch/utils/data/_utils/signal_handling.py", line 66, in handler
+    _error_if_any_worker_fails()
+RuntimeError: DataLoader worker (pid 72641) is killed by signal: Killed. 
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/yichia3/torchgeo_trainer/torchgeo/test_ds.py", line 37, in <module>
+    for batch in tqdm(dl):
+  File "/projects/dali/spack/var/spack/environments/dali/.spack-env/view/lib/python3.10/site-packages/tqdm/std.py", line 1178, in __iter__
+    for obj in iterable:
+  File "/projects/dali/spack/var/spack/environments/dali/.spack-env/view/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 634, in __next__
+    data = self._next_data()
+  File "/projects/dali/spack/var/spack/environments/dali/.spack-env/view/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1329, in _next_data
+    idx, data = self._get_data()
+  File "/projects/dali/spack/var/spack/environments/dali/.spack-env/view/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1295, in _get_data
+    success, data = self._try_get_data()
+  File "/projects/dali/spack/var/spack/environments/dali/.spack-env/view/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1146, in _try_get_data
+    raise RuntimeError('DataLoader worker (pid(s) {}) exited unexpectedly'.format(pids_str)) from e
+RuntimeError: DataLoader worker (pid(s) 72641) exited unexpectedly
+slurmstepd: error: Detected 1 oom-kill event(s) in StepId=8750051.batch. Some of your processes may have been killed by the cgroup out-of-memory handler.

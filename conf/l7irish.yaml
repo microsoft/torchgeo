@@ -7,6 +7,7 @@ trainer:
   enable_progress_bar: True
 experiment:
   task: "l7irish"
+  ipc: "host"
   module:
     loss: "ce"
     model: "unet"
@@ -23,6 +24,4 @@ experiment:
     root: "/projects/dali/data/l7irish"
     batch_size: 32
     patch_size: 128
-    num_workers: 0
-    length: 3200
-
+    num_workers: 10
