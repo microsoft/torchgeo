@@ -47,8 +47,8 @@ if __name__ == "__main__":
             out_list.append(compute(path))
         out = np.array(out_list)
 
-    minimum = np.amin(out[:, :, 0])
-    maximum = np.amax(out[:, :, 1])
+    minimum = np.amin(out[:, :, 0], axis=0)
+    maximum = np.amax(out[:, :, 1], axis=0)
 
     mu_d = out[:, :, 2]
     mu = np.mean(mu_d, axis=0)
