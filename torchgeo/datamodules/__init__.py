@@ -23,7 +23,7 @@ from .naip import NAIPChesapeakeDataModule
 from .nasa_marine_debris import NASAMarineDebrisDataModule
 from .oscd import OSCDDataModule
 from .potsdam import Potsdam2DDataModule
-from .resisc45 import RESISC45DataModule
+from .resisc45 import RESISC45DataModule, RESISC45ClusteredDataModule
 from .seco import SeasonalContrastS2DataModule
 from .sen12ms import SEN12MSDataModule
 from .skippd import SKIPPDDataModule
@@ -60,6 +60,7 @@ __all__ = (
     "OSCDDataModule",
     "Potsdam2DDataModule",
     "RESISC45DataModule",
+    "RESISC45ClusteredDataModule",
     "SeasonalContrastS2DataModule",
     "SEN12MSDataModule",
     "SKIPPDDataModule",
