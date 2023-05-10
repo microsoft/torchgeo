@@ -49,8 +49,7 @@ def get_world_cities(
 ) -> pd.DataFrame:
     url = "https://simplemaps.com/static/data/world-cities/basic/simplemaps_worldcities_basicv1.71.zip"  # noqa: E501
     filename = "worldcities.csv"
-    if not os.path.exists(os.path.join(download_root, os.path.basename(url))):
-        download_and_extract_archive(url, download_root)
+    download_and_extract_archive(url, download_root)
     cols = ["city", "lat", "lng", "population"]
     cities = pd.read_csv(os.path.join(download_root, filename), usecols=cols)
     cities.at[8436, "population"] = 50789  # fix one bug (Tecax) in the csv file
@@ -136,7 +135,6 @@ if __name__ == "__main__":
     # Sample locations and save to file
     print("Sampling new locations...")
     start_time = time.time()
-    new_coords = {}
     with open(path, "a") as f:
         writer = csv.writer(f)
         for i in tqdm(range(*args.indices_range)):
@@ -149,7 +147,6 @@ if __name__ == "__main__":
                     break
 
             rtree_coords.insert(i, bbox)
-            new_coords[i] = new_coord
             data = [i, *new_coord]
             writer.writerow(data)
             f.flush()
