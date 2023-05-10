@@ -62,7 +62,7 @@ if __name__ == "__main__":
         dtype=np.float32,
     )
 
-    np.set_printoptions(linewidth=np.inf)
+    np.set_printoptions(linewidth=2**8)
     print("min:", repr(minimum))
     print("max:", repr(maximum))
     print("mean:", repr(mu))
