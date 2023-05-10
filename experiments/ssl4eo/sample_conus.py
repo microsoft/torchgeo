@@ -12,13 +12,12 @@ import fiona
 from rtree import index
 from sample_ssl4eo import create_bbox, km2deg
 from shapely.geometry import MultiPolygon, Point, shape
+from shapely.ops import unary_union
 from torchvision.datasets.utils import download_and_extract_archive
 from tqdm import tqdm
 
 
-def retrieve_rois_polygons(
-    download_root: str,
-) -> tuple[MultiPolygon, list[MultiPolygon]]:
+def retrieve_rois_polygons(download_root: str) -> MultiPolygon:
     nation_url = (
         "https://www2.census.gov/geo/tiger/GENZ2022/shp/cb_2022_us_nation_5m.zip"
     )
@@ -46,8 +45,11 @@ def retrieve_rois_polygons(
                 excluded.append(shape(feature["geometry"]))
 
     with fiona.open(os.path.join(download_root, nation_filename), "r") as shapefile:
-        conus = shape(shapefile[0]["geometry"])
-    return conus, excluded
+        usa = shape(shapefile[0]["geometry"])  # still usa
+
+    excluded_polygons = unary_union(excluded)
+    conus = usa.difference(excluded_polygons)
+    return conus
 
 
 if __name__ == "__main__":
@@ -96,7 +98,7 @@ if __name__ == "__main__":
             os.remove(csv_path)
 
     # Retrieve Area of interest and states to ignore
-    conus, excluded = retrieve_rois_polygons(root)
+    conus = retrieve_rois_polygons(root)
     x_min, y_min, x_max, y_max = conus.bounds
 
     with open(csv_path, "a") as f:
@@ -107,9 +109,7 @@ if __name__ == "__main__":
                 x = random.uniform(x_min, x_max)
                 y = random.uniform(y_min, y_max)
                 point = Point(x, y)
-                if conus.contains(point) and not any(
-                    [polygon.contains(point) for polygon in excluded]
-                ):
+                if conus.contains(point):
                     bbox = create_bbox((x, y), bbox_size_degree)
                     if list(rtree_coords.intersection(bbox)):
                         continue
