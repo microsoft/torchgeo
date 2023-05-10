@@ -14,9 +14,9 @@ def delete_scene(directories: list[str], scene_id: str) -> None:
     """
     print(f"Removing {scene_id}")
     for directory in directories:
-       scene = os.path.join(directory, scene_id)
-       if os.path.exists(scene):
-           shutil.rmtree(scene)
+        scene = os.path.join(directory, scene_id)
+        if os.path.exists(scene):
+            shutil.rmtree(scene)
 
 
 if __name__ == "__main__":
