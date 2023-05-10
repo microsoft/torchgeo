@@ -12,11 +12,7 @@ from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 from torch.nn.modules import Module
 
-from torchgeo.datamodules import (
-    MisconfigurationException,
-    NASAMarineDebrisDataModule,
-    VHR10DataModule,
-)
+from torchgeo.datamodules import MisconfigurationException, NASAMarineDebrisDataModule
 from torchgeo.datasets import NASAMarineDebris, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.trainers import ObjectDetectionTask
