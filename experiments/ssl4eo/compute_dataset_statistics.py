@@ -40,7 +40,9 @@ if __name__ == "__main__":
     )
 
     if args.num_workers > 0:
-        out_list, size_list = list(zip(*thread_map(compute, paths, max_workers=args.num_workers)))
+        out_list, size_list = list(
+            zip(*thread_map(compute, paths, max_workers=args.num_workers))
+        )
         out = np.array(out_list)
         sizes = np.array(size_list)
     else:
