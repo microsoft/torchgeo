@@ -39,7 +39,7 @@ _seco_transforms = AugmentationSequential(
     K.Normalize(mean=_min, std=_max - _min),
     K.Normalize(mean=torch.tensor(0), std=1 / torch.tensor(255)),
     Lambda(lambda x: torch.clamp(x, min=0.0, max=255.0)),
-    Lambda(lambda x: x.to(torch.uint8))
+    Lambda(lambda x: x.to(torch.uint8)),
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
     K.Normalize(mean=_mean, std=_std),
     data_keys=["image"],
