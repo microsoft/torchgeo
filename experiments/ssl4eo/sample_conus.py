@@ -18,12 +18,14 @@ from tqdm import tqdm
 
 
 def retrieve_rois_polygons(download_root: str) -> MultiPolygon:
-    nation_url = (
-        "https://www2.census.gov/geo/tiger/GENZ2022/shp/cb_2022_us_nation_5m.zip"
-    )
-    nation_filename = "cb_2022_us_nation_5m.shp"
-    download_and_extract_archive(nation_url, download_root)
+    """Retrieve CONUS MultiPolygon.
 
+    Args:
+        download_root: directory where to store usa shape file
+
+    Returns:
+        MultiPolygon of CONUS
+    """
     state_url = "https://www2.census.gov/geo/tiger/GENZ2018/shp/cb_2018_us_state_5m.zip"
     state_filename = "cb_2018_us_state_5m.shp"
     download_and_extract_archive(state_url, download_root)
@@ -37,18 +39,16 @@ def retrieve_rois_polygons(download_root: str) -> MultiPolygon:
         "American Samoa",
         "Guam",
     ]
+    conus = []
     with fiona.open(os.path.join(download_root, state_filename), "r") as shapefile:
-        excluded = []
         for feature in shapefile:
             name = feature["properties"]["NAME"]
             if name in excluded_states:
-                excluded.append(shape(feature["geometry"]))
+                continue
+            else:
+                conus.append(shape(feature["geometry"]))
 
-    with fiona.open(os.path.join(download_root, nation_filename), "r") as shapefile:
-        usa = shape(shapefile[0]["geometry"])  # still usa
-
-    excluded_polygons = unary_union(excluded)
-    conus = usa.difference(excluded_polygons)
+    conus = unary_union(conus)
     return conus
 
 
