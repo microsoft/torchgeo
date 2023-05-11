@@ -32,7 +32,7 @@ def retrieve_rois_polygons(download_root: str) -> MultiPolygon:
 
     excluded_states = [
         "United States Virgin Islands",
-        "Commonwealth of the Northern Mariana Island",
+        "Commonwealth of the Northern Mariana Islands",
         "Puerto Rico",
         "Alaska",
         "Hawaii",
