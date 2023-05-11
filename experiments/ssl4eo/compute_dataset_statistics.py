@@ -16,7 +16,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("directory", help="directory to recursively search for files")
     parser.add_argument("--suffix", default=".tif", help="file suffix")
-    parser.add_argument("--size", type=int, default=264, help="patch size in pixels")
     parser.add_argument("--num-workers", type=int, default=10, help="number of threads")
     args = parser.parse_args()
 
@@ -34,19 +33,27 @@ if __name__ == "__main__":
             for band in f.indexes:
                 stats = f.statistics(band)
                 out[band - 1] = (stats.min, stats.max, stats.mean, stats.std)
-        return out
+        return out, f.width * f.height
 
     paths = glob.glob(
         os.path.join(args.directory, "**", f"*{args.suffix}"), recursive=True
     )
 
     if args.num_workers > 0:
-        out = np.array(thread_map(compute, paths, max_workers=args.num_workers))
+        out_list, size_list = list(zip(*thread_map(compute, paths, max_workers=args.num_workers)))
+        out = np.array(out_list)
+        sizes = np.array(size_list)
     else:
         out_list = []
+        size_list = []
         for path in tqdm(paths):
-            out_list.append(compute(path))
+            out, size = compute(path)
+            out_list.append(out)
+            size_list.append(size)
         out = np.array(out_list)
+        sizes = np.array(size_list)
+
+    assert len(np.unique(sizes)) == 1
 
     minimum = np.amin(out[:, :, 0], axis=0)
     maximum = np.amax(out[:, :, 1], axis=0)
@@ -54,7 +61,7 @@ if __name__ == "__main__":
     mu_d = out[:, :, 2]
     mu = np.mean(mu_d, axis=0)
     sigma_d = out[:, :, 3]
-    N_d = args.size**2
+    N_d = sizes[0]
     N = len(mu_d) * N_d
 
     # https://stats.stackexchange.com/a/442050/188076
