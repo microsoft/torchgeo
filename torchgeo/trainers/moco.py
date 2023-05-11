@@ -314,13 +314,13 @@ class MoCoTask(LightningModule):  # type: ignore[misc]
 
         m = self.hparams["moco_momentum"]
         if self.hparams["version"] == 1:
-            q, h = self.forward(x1)
+            q, h1 = self.forward(x1)
             with torch.no_grad():
                 update_momentum(self.backbone, self.backbone_momentum, m)
                 k = self.forward_momentum(x2)
             loss = self.criterion(q, k)
         elif self.hparams["version"] == 2:
-            q, h = self.forward(x1)
+            q, h1 = self.forward(x1)
             with torch.no_grad():
                 update_momentum(self.backbone, self.backbone_momentum, m)
                 update_momentum(self.projection_head, self.projection_head_momentum, m)
