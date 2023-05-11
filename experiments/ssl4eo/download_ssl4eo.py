@@ -52,7 +52,6 @@ import csv
 import json
 import os
 import time
-import warnings
 from collections import defaultdict
 from datetime import date, timedelta
 from multiprocessing.dummy import Lock, Pool
@@ -62,8 +61,6 @@ import ee
 import numpy as np
 import rasterio
 from rasterio.transform import Affine
-
-warnings.simplefilter("ignore", UserWarning)
 
 
 def date2str(date: date) -> str:
