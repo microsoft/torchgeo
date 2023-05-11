@@ -16,11 +16,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("directory", help="directory to recursively search for files")
     parser.add_argument("--suffix", default=".tif", help="file suffix")
+    parser.add_argument("--size", type=int, default=264, help="patch size in pixels")
     parser.add_argument("--num-workers", type=int, default=10, help="number of threads")
     args = parser.parse_args()
 
     def compute(path: str) -> "np.typing.NDArray[np.float32]":
-        """Compute the minimum and maximum values in a dataset.
+        """Compute the min, max, mean, and std dev of a single image.
 
         Args:
             path: Path to an image file.
@@ -53,7 +54,7 @@ if __name__ == "__main__":
     mu_d = out[:, :, 2]
     mu = np.mean(mu_d, axis=0)
     sigma_d = out[:, :, 3]
-    N_d = 264**2
+    N_d = args.size**2
     N = len(mu_d) * N_d
 
     # https://stats.stackexchange.com/a/442050/188076
