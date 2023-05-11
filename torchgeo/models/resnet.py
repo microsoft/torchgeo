@@ -170,6 +170,19 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+    FMOW_RGB_GASSL = Weights(
+        url="https://huggingface.co/torchgeo/resnet50_fmow_rgb_gassl/resolve/main/resnet50_fmow_rgb_gassl-44b4461b.pth",  # noqa: E501
+        transforms=_seco_transforms,
+        meta={
+            "dataset": "fMoW Dataset",
+            "in_chans": 3,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2011.09980",
+            "repo": "https://github.com/sustainlab-group/geography-aware-ssl",
+            "ssl_method": "gassl",
+        },
+    )
+
 
 def resnet18(
     weights: Optional[ResNet18_Weights] = None, *args: Any, **kwargs: Any
