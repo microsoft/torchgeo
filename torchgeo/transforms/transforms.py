@@ -8,6 +8,7 @@ from typing import Any, Optional, Union
 import kornia.augmentation as K
 import torch
 from einops import rearrange
+from kornia.contrib import Lambda
 from kornia.geometry import crop_by_indices
 from torch import Tensor
 from torch.nn.modules import Module
@@ -23,7 +24,7 @@ class AugmentationSequential(Module):
 
     def __init__(
         self,
-        *args: Union[K.base._AugmentationBase, K.ImageSequential],
+        *args: Union[K.base._AugmentationBase, K.ImageSequential, Lambda],
         data_keys: list[str],
     ) -> None:
         """Initialize a new augmentation sequential instance.
