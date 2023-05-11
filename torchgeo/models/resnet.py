@@ -8,6 +8,7 @@ from typing import Any, Optional
 import kornia.augmentation as K
 import timm
 import torch
+from kornia.contrib import Lambda
 from timm.models import ResNet
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -37,6 +38,8 @@ _seco_transforms = AugmentationSequential(
     K.CenterCrop(224),
     K.Normalize(mean=_min, std=_max - _min),
     K.Normalize(mean=torch.tensor(0), std=1 / torch.tensor(255)),
+    Lambda(lambda x: torch.clamp(x, min=0.0, max=255.0)),
+    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
     K.Normalize(mean=_mean, std=_std),
     data_keys=["image"],
 )
