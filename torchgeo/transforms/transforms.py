@@ -45,7 +45,9 @@ class AugmentationSequential(Module):
             else:
                 keys.append(key)
 
-        self.augs = K.AugmentationSequential(*args, data_keys=keys)
+        self.augs = K.AugmentationSequential(
+            *args, data_keys=keys  # type: ignore[arg-type]
+        )
 
     def forward(self, batch: dict[str, Tensor]) -> dict[str, Tensor]:
         """Perform augmentations and update data dict.
