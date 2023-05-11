@@ -31,7 +31,7 @@ if __name__ == "__main__":
     args.min = np.array(args.min)[:, np.newaxis, np.newaxis]
     args.max = np.array(args.max)[:, np.newaxis, np.newaxis]
 
-    def compress(src_path: str) -> "np.typing.NDArray[np.float_]":
+    def compress(src_path: str) -> None:
         """Rescale, convert to uint8, and compress an image.
 
         Args:
