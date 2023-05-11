@@ -12,6 +12,7 @@ import kornia.augmentation as K
 import timm
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from lightly.loss import NTXentLoss
 from lightly.models.modules import MoCoProjectionHead
 from lightly.models.utils import deactivate_requires_grad, update_momentum
@@ -251,21 +252,25 @@ class MoCoTask(LightningModule):  # type: ignore[misc]
         # Define loss function
         self.criterion = NTXentLoss(temperature, memory_bank_size, gather_distributed)
 
-    def forward(self, x: Tensor) -> Tensor:
+        # Initialize moving average of output
+        self.avg_output_std = 0.0
+
+    def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
         """Forward pass of the model.
 
         Args:
             x: Mini-batch of images.
 
         Returns:
-            Output from the model.
+            Output from the model and backbone
         """
-        q = self.backbone(x)
+        h = self.backbone(x)
+        q = h
         if self.hparams["version"] > 1:
             q = self.projection_head(q)
         if self.hparams["version"] == 3:
             q = self.prediction_head(q)
-        return cast(Tensor, q)
+        return cast(Tensor, q), cast(Tensor, h)
 
     def forward_momentum(self, x: Tensor) -> Tensor:
         """Forward pass of the momentum model.
@@ -309,13 +314,13 @@ class MoCoTask(LightningModule):  # type: ignore[misc]
 
         m = self.hparams["moco_momentum"]
         if self.hparams["version"] == 1:
-            q = self.forward(x1)
+            q, h = self.forward(x1)
             with torch.no_grad():
                 update_momentum(self.backbone, self.backbone_momentum, m)
                 k = self.forward_momentum(x2)
             loss = self.criterion(q, k)
         elif self.hparams["version"] == 2:
-            q = self.forward(x1)
+            q, h = self.forward(x1)
             with torch.no_grad():
                 update_momentum(self.backbone, self.backbone_momentum, m)
                 update_momentum(self.projection_head, self.projection_head_momentum, m)
@@ -323,8 +328,8 @@ class MoCoTask(LightningModule):  # type: ignore[misc]
             loss = self.criterion(q, k)
         if self.hparams["version"] == 3:
             m = cosine_schedule(self.current_epoch, self.trainer.max_epochs, m, 1)
-            q1 = self.forward(x1)
-            q2 = self.forward(x2)
+            q1, h1 = self.forward(x1)
+            q2, h2 = self.forward(x2)
             with torch.no_grad():
                 update_momentum(self.backbone, self.backbone_momentum, m)
                 update_momentum(self.projection_head, self.projection_head_momentum, m)
@@ -332,6 +337,15 @@ class MoCoTask(LightningModule):  # type: ignore[misc]
                 k2 = self.forward_momentum(x2)
             loss = self.criterion(q1, k2) + self.criterion(q2, k1)
 
+        # Calculate the mean normalized standard deviation over features dimensions.
+        # If this is << 1 / sqrt(h1.shape[1]), then the model is not learning anything.
+        output = h1.detach()
+        output = F.normalize(output, dim=1)
+        output_std = torch.std(output, dim=0)
+        output_std = torch.mean(output_std, dim=0)
+        self.avg_output_std = 0.9 * self.avg_output_std + (1 - 0.9) * output_std.item()
+
+        self.log("train_ssl_std", self.avg_output_std)
         self.log("train_loss", loss)
 
         return cast(Tensor, loss)
