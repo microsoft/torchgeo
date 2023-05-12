@@ -1,0 +1,16 @@
+module:
+  _target_: torchgeo.trainers.MoCoTask
+  model: "resnet18"
+  in_channels: 13
+  version: 1
+  weight_decay: 1e-4
+  temperature: 0.07
+  memory_bank_size: 10
+  moco_momentum: 0.999
+
+datamodule:
+  _target_: torchgeo.datamodules.SSL4EOS12DataModule
+  root: "tests/data/ssl4eo/s12"
+  seasons: 1
+  batch_size: 2
+  num_workers: 0

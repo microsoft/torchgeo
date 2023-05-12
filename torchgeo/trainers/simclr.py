@@ -186,7 +186,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             x: Mini-batch of images.
 
         Returns:
-            Output from the backbone and projection head.
+            Output from the model and backbone.
         """
         h = self.backbone(x)  # shape of batch_size x num_features
         z = self.projection_head(h)
