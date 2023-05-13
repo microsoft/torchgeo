@@ -487,6 +487,7 @@ class RasterDataset(GeoDataset):
                 indexes=band_indexes,
                 out_shape=out_shape,
                 window=from_bounds(*bounds, src.transform),
+                boundless=True,
             )
         else:
             dest, _ = rasterio.merge.merge(
