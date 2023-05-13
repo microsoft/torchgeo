@@ -33,11 +33,11 @@ class SSL4EOL(NonGeoDataset):
 
     Landsat version of SSL4EO.
 
-    The dataset consists of a parallel corpus (same locations for all splits, same times
+    The dataset consists of a parallel corpus (same locations for all splits, same dates
     for SR/TOA) for the following sensors:
 
-    .. list-table:: SSL4EO-L
-       :widths: 15 10 10 10 10
+    .. list-table::
+       :widths: 10 10 10 10 10
        :header-rows: 1
 
        * - Satellites
@@ -107,11 +107,9 @@ class SSL4EOL(NonGeoDataset):
             seasons: number of seasonal patches to sample per location, 1--4
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if dataset is missing or checksum fails
         """
         assert split in self.metadata
         assert seasons in range(1, 5)
