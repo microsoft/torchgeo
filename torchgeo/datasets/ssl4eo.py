@@ -80,7 +80,10 @@ class SSL4EOL(NonGeoDataset):
     .. versionadded:: 0.5
     """  # noqa: E501
 
-    _Metadata = TypedDict("_Metadata", {"num_bands": int, "rgb_bands": list[int]})
+    class _Metadata(TypedDict):
+        num_bands: int
+        rgb_bands: list[int]
+
     metadata: dict[str, _Metadata] = {
         "tm_toa": {"num_bands": 7, "rgb_bands": [2, 1, 0]},
         "tm_sr": {"num_bands": 6, "rgb_bands": [2, 1, 0]},
@@ -96,11 +99,11 @@ class SSL4EOL(NonGeoDataset):
         seasons: int = 1,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
     ) -> None:
-        f"""Initialize a new SSL4EOL instance.
+        """Initialize a new SSL4EOL instance.
 
         Args:
             root: root directory where dataset can be found
-            split: one of {list(self.metadata.keys())}
+            split: one of ['tm_toa', 'tm_sr', 'etm_toa', 'oli_tirs_toa', 'oli_sr']
             seasons: number of seasonal patches to sample per location, 1--4
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
@@ -225,9 +228,11 @@ class SSL4EOS12(NonGeoDataset):
 
     size = 264
 
-    _Metadata = TypedDict(
-        "_Metadata", {"filename": str, "md5": str, "bands": list[str]}
-    )
+    class _Metadata(TypedDict):
+        filename: str
+        md5: str
+        bands: list[str]
+
     metadata: dict[str, _Metadata] = {
         "s1": {
             "filename": "s1.tar.gz",
