@@ -55,6 +55,8 @@ class TestBYOLTask:
             "chesapeake_cvpr_prior_byol",
             "seco_byol_1",
             "seco_byol_2",
+            "ssl4eo_l_byol_1",
+            "ssl4eo_l_byol_2",
             "ssl4eo_s12_byol_1",
             "ssl4eo_s12_byol_2",
         ],

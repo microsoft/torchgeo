@@ -40,6 +40,8 @@ class TestMoCoTask:
             "chesapeake_cvpr_prior_moco",
             "seco_moco_1",
             "seco_moco_2",
+            "ssl4eo_l_moco_1",
+            "ssl4eo_l_moco_2",
             "ssl4eo_s12_moco_1",
             "ssl4eo_s12_moco_2",
         ],
