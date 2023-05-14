@@ -45,12 +45,12 @@ class SSL4EOL(NonGeoDataset):
          - Level
          - # Bands
          - Link
-       * - Landsat 1--5
+       * - Landsat 4--5
          - TM
          - TOA
          - 7
          - `GEE <https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LT05_C02_T1_TOA>`__
-       * - Landsat 1--7
+       * - Landsat 4--7
          - TM
          - SR
          - 6
