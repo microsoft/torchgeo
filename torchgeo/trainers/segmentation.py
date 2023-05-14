@@ -176,10 +176,12 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
                     mdmc_average="global",
+                    average="micro",
                 ),
                 MulticlassJaccardIndex(
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
+                    average="micro",
                 ),
             ],
             prefix="train_",
