@@ -55,7 +55,7 @@ import time
 from collections import defaultdict
 from datetime import date, timedelta
 from multiprocessing.dummy import Lock, Pool
-from typing import Any
+from typing import Any, Optional
 
 import ee
 import numpy as np
