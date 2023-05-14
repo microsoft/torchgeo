@@ -40,6 +40,8 @@ class TestSimCLRTask:
             "chesapeake_cvpr_prior_simclr",
             "seco_simclr_1",
             "seco_simclr_2",
+            "ssl4eo_l_simclr_1",
+            "ssl4eo_l_simclr_2",
             "ssl4eo_s12_simclr_1",
             "ssl4eo_s12_simclr_2",
         ],

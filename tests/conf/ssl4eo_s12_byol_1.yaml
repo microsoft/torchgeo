@@ -1,6 +1,6 @@
 module:
   _target_: torchgeo.trainers.BYOLTask
-  in_channels: 13
+  in_channels: 2
   backbone: "resnet18"
   learning_rate: 1e-3
   learning_rate_schedule_patience: 6
@@ -9,6 +9,7 @@ module:
 datamodule:
   _target_: torchgeo.datamodules.SSL4EOS12DataModule
   root: "tests/data/ssl4eo/s12"
+  split: "s1"
   seasons: 1
   batch_size: 2
   num_workers: 0

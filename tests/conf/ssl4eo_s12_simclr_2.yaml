@@ -1,7 +1,7 @@
 module:
   _target_: torchgeo.trainers.SimCLRTask
   model: "resnet18"
-  in_channels: 13
+  in_channels: 12
   version: 2
   layers: 3
   hidden_dim: 8
@@ -12,6 +12,7 @@ module:
 datamodule:
   _target_: torchgeo.datamodules.SSL4EOS12DataModule
   root: "tests/data/ssl4eo/s12"
+  split: "s2a"
   seasons: 2
   batch_size: 2
   num_workers: 0

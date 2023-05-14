@@ -1,7 +1,7 @@
 module:
   _target_: torchgeo.trainers.MoCoTask
   model: "resnet18"
-  in_channels: 13
+  in_channels: 2
   version: 2
   layers: 2
   hidden_dim: 10
@@ -14,6 +14,7 @@ module:
 datamodule:
   _target_: torchgeo.datamodules.SSL4EOS12DataModule
   root: "tests/data/ssl4eo/s12"
+  split: "s1"
   seasons: 2
   batch_size: 2
   num_workers: 0

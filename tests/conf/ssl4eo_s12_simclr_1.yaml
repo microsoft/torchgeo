@@ -12,6 +12,7 @@ module:
 datamodule:
   _target_: torchgeo.datamodules.SSL4EOS12DataModule
   root: "tests/data/ssl4eo/s12"
+  split: "s2c"
   seasons: 1
   batch_size: 2
   num_workers: 0
