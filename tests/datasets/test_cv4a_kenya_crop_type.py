@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import CV4AKenyaCropType

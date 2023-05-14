@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from torchgeo.datasets import BoundingBox, EDDMapS, IntersectionDataset, UnionDataset
 
