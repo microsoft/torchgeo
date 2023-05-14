@@ -11,10 +11,10 @@ import torch
 import torch.nn as nn
 import torchvision
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
 from hydra.utils import instantiate
 from lightning.pytorch import Trainer
 from omegaconf import OmegaConf
+from pytest import MonkeyPatch
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
