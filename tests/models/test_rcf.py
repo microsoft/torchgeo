@@ -1,10 +1,13 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import os
+
 import pytest
 import torch
 
-from torchgeo.models import RCF
+from torchgeo.datasets import EuroSAT
+from torchgeo.models import MOSAIKS, RCF
 
 
 class TestRCF:
@@ -40,3 +43,11 @@ class TestRCF:
         weights1 = RCF(seed=1).weights
         weights2 = RCF(seed=1).weights
         assert torch.allclose(weights1, weights2)
+
+
+class TestMOSAIKS:
+    def test_init(self) -> None:
+        root = os.path.join("tests", "data", "eurosat")
+        ds = EuroSAT(root=root, bands=EuroSAT.rgb_bands, split="train")
+        model = MOSAIKS(ds, in_channels=3, features=4, kernel_size=3)
+        model(torch.randn(2, 3, 8, 8))
