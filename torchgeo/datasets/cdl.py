@@ -324,7 +324,7 @@ class CDL(RasterDataset):
         root: str = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        years: list[int] = [2019],
+        years: list[int] = [2022],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
@@ -350,7 +350,7 @@ class CDL(RasterDataset):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
 
         ..versionchanged:: 0.5
-            Added ``years`` parameter
+            Added *years* parameter
         """
         assert set(years).issubset(self.md5s.keys()), (
             "CDL data product only exists for the following years: "
@@ -375,7 +375,9 @@ class CDL(RasterDataset):
         exists = []
         for year in self.years:
             filename_year = self.filename_glob.replace("*", str(year))
-            pathname = os.path.join(self.root, filename_year)
+            pathname = os.path.join(
+                self.root, filename_year.strip(".tif"), filename_year
+            )
             if os.path.exists(pathname):
                 exists.append(True)
             else:
