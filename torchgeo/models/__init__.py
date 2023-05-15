@@ -8,7 +8,7 @@ from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
 from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
-from .rcf import RCF, MOSAIKS
+from .rcf import MOSAIKS, RCF
 from .resnet import ResNet18_Weights, ResNet50_Weights, resnet18, resnet50
 from .vit import ViTSmall16_Weights, vit_small_patch16_224
 
