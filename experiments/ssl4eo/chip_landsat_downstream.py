@@ -67,21 +67,21 @@ if __name__ == "__main__":
     if mask_src.crs != img_crs:
         mask_src = WarpedVRT(mask_src, crs=img_crs)
 
-    for img_path in paths[0:100]:
+    for img_path in paths:
         img_src = rasterio.open(img_path)
 
         # retrieve mask
         mask = retrieve_mask_chip(img_src, mask_src)
 
-        # match directory structure
-        mask_num_dir = os.path.join(
-            mask_root_dir, os.path.dirname(img_path).split("/")[-2]
-        )
-        os.makedirs(mask_num_dir, exist_ok=True)
+        # directory structure mask <scene_id>/<year>/*.tif
         mask_id_dir = os.path.join(
-            mask_num_dir, os.path.dirname(img_path).split("/")[-1]
+            mask_root_dir, os.path.dirname(img_path).split("/")[-1]
         )
         os.makedirs(mask_id_dir, exist_ok=True)
+        mask_year_dir = os.path.join(
+            mask_id_dir, os.path.basename(mask_id_dir).split("_")[-1][:4]
+        )
+        os.makedirs(mask_year_dir, exist_ok=True)
 
         # write mask tif
         profile = img_src.profile
