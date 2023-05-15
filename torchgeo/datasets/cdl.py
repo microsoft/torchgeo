@@ -376,7 +376,7 @@ class CDL(RasterDataset):
         for year in self.years:
             filename_year = self.filename_glob.replace("*", str(year))
             pathname = os.path.join(
-                self.root, filename_year.strip(".tif"), filename_year
+                self.root, filename_year.removesuffix(".tif"), filename_year
             )
             if os.path.exists(pathname):
                 exists.append(True)
