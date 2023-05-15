@@ -15,6 +15,7 @@ from .geo import GeoDataModule, NonGeoDataModule
 from .gid15 import GID15DataModule
 from .inria import InriaAerialImageLabelingDataModule
 from .l7irish import L7IrishDataModule
+from .l7irish_fake import L7IrishFakeDataModule
 from .l8biome import L8BiomeDataModule
 from .landcoverai import LandCoverAIDataModule
 from .loveda import LoveDADataModule
@@ -39,6 +40,7 @@ __all__ = (
     # GeoDataset
     "ChesapeakeCVPRDataModule",
     "L7IrishDataModule",
+    "L7IrishFakeDataModule",
     "L8BiomeDataModule",
     "NAIPChesapeakeDataModule",
     # NonGeoDataset

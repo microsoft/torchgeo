@@ -142,17 +142,17 @@ def main(conf: DictConfig) -> None:
     experiment_dir = os.path.join(conf.program.output_dir, experiment_name)
     os.makedirs(experiment_dir, exist_ok=True)
 
-    if len(os.listdir(experiment_dir)) > 0:
-        if conf.program.overwrite:
-            print(
-                f"WARNING! The experiment directory, {experiment_dir}, already exists, "
-                + "we might overwrite data in it!"
-            )
-        else:
-            raise FileExistsError(
-                f"The experiment directory, {experiment_dir}, already exists and isn't "
-                + "empty. We don't want to overwrite any existing results, exiting..."
-            )
+#    if len(os.listdir(experiment_dir)) > 0:
+#        if conf.program.overwrite:
+#            print(
+#                f"WARNING! The experiment directory, {experiment_dir}, already exists, "
+#                + "we might overwrite data in it!"
+#            )
+#        else:
+#            raise FileExistsError(
+#                f"The experiment directory, {experiment_dir}, already exists and isn't "
+#                + "empty. We don't want to overwrite any existing results, exiting..."
+#            )
 
     with open(os.path.join(experiment_dir, "experiment_config.yaml"), "w") as f:
         OmegaConf.save(config=conf, f=f)

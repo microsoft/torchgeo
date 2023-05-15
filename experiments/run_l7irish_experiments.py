@@ -11,14 +11,14 @@ from multiprocessing import Process, Queue
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
 GPUS = [0]
 DRY_RUN = False  # if False then print out the commands to be run, if True then run
-DATA_DIR = "/projects/dali/data/l7irish"  # path to the L7Irish data directory
+DATA_DIR = "/scratch.local/yichia3/l7irish_cog_3857"  # path to the L7Irish data directory
 
 # Hyperparameter options
 model_options = ["unet"]
-lr_options = [1e-2]
+lr_options = [1e-3]
 loss_options = ["ce"]
 backbone_options = ["resnet18"]
-weight_init_options = ["null"]
+weight_init_options = ["imagenet"]
 
 
 def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
@@ -57,7 +57,6 @@ if __name__ == "__main__":
                 + f" program.output_dir={output_dir}"
                 + f" program.log_dir={log_dir}"
                 + f" program.data_dir={DATA_DIR}"
-                # + " trainer.gpus=[GPU]"
             )
             command = command.strip()
 

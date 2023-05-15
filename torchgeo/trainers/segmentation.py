@@ -155,7 +155,8 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
         Returns:
             training loss
         """
-        start_time = time.time()
+
+        print("begin", time.time())
 
         batch = args[0]
         x = batch["image"]
@@ -170,7 +171,7 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
         self.log("train_loss", loss, on_step=True, on_epoch=False)
         self.train_metrics(y_hat_hard, y)
 
-        print("the total time at the end of training step: ", time.time()-start_time)
+        print("end", time.time())
         return cast(Tensor, loss)
 
     def on_train_epoch_end(self) -> None:
