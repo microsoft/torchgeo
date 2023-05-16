@@ -4,7 +4,6 @@ trainer:
   min_epochs: 20
   max_epochs: 100
   benchmark: True
-  enable_progress_bar: True
 experiment:
   task: "l7irish"
   ipc: "host"
@@ -22,6 +21,6 @@ experiment:
     ignore_index: null
   datamodule:
     root: "/scratch.local/yichia3/l7irish_cog_3857"
-    batch_size: 32
-    patch_size: 512
+    batch_size: 64
+    patch_size: 256
     num_workers: 20
