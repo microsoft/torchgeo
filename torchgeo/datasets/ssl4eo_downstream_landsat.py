@@ -33,6 +33,7 @@ class SSL4EODownstream(NonGeoDataset):
     * Resampled to 30 m resolution (7920 x 7920 m)
     * Single multispectral GeoTIFF file
 
+    .. versionadded:: 0.5
     """
 
     valid_input_sensors = ["l7-l1", "l7-l2", "l8-l1", "l8-l2"]
@@ -134,7 +135,7 @@ class SSL4EODownstream(NonGeoDataset):
         """Extract the dataset."""
         pass
 
-    def retrieve_sample_collection(self) -> tuple[str]:
+    def retrieve_sample_collection(self) -> list[tuple[str]]:
         """Retrieve paths to samples in data directory."""
         data_dir = self.data_root.replace("*", self.input_sensor)
         img_paths = sorted(
@@ -143,13 +144,14 @@ class SSL4EODownstream(NonGeoDataset):
                 recursive=True,
             )
         )
-        sample_collection = [
-            (
-                img_path,
-                img_path.replace("imgs", "masks").replace("all_bands.tif", "mask.tif"),
+        sample_collection: list[tuple[str]] = []
+        for img_path in img_paths:
+            date_id = img_path.split("/")[-2]
+            year = date_id.split("_")[:4]
+            mask_path = img_path.replace(date_id, year).replace(
+                "all_bands.tif", "mask.tif"
             )
-            for img_path in img_paths
-        ]
+            sample_collection.append((img_path, mask_path))
         return sample_collection
 
     def _load_image(self, path: str) -> Tensor:
