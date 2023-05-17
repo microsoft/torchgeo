@@ -29,13 +29,13 @@ def retrieve_mask_chip(img_src: DatasetReader, mask_src: DatasetReader) -> np.nd
     out_width = round((query.right - query.left) / img_src.res[0])
     out_height = round((query.top - query.bottom) / img_src.res[1])
     out_shape = (1, out_height, out_width)
-    mask = mask_src.read(
+    mask_chip = mask_src.read(
         out_shape=out_shape,
         window=from_bounds(
-            query.left, query.bottom, query.right, query.top, img_src.transform
+            query.left, query.bottom, query.right, query.top, mask_src.transform
         ),
     )
-    return mask
+    return mask_chip
 
 
 if __name__ == "__main__":
@@ -88,6 +88,6 @@ if __name__ == "__main__":
         profile["count"] = 1
 
         with rasterio.open(
-            os.path.join(mask_id_dir, "mask.tif"), "w", **profile
+            os.path.join(mask_year_dir, "mask.tif"), "w", **profile
         ) as dst:
             dst.write(mask)
