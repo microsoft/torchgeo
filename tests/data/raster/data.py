@@ -31,7 +31,7 @@ def write_raster(
     size = SIZE // res
     profile = {
         "driver": "GTiff",
-        "dtype": "uint8",
+        "dtype": dtype,
         "count": 1,
         "crs": f"epsg:{epsg}",
         "transform": from_bounds(0, 0, SIZE, SIZE, size, size),
