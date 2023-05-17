@@ -178,11 +178,6 @@ class TestRasterDataset:
         cache = request.param[1]
         return Sentinel2(root, bands=bands, transforms=transforms, cache=cache)
 
-    @pytest.fixture()
-    def custom_dtype_ds(self) -> RasterDataset:
-        root = os.path.join("tests", "data", "raster")
-        return RasterDataset(root)
-
     def test_getitem_single_file(self, naip: NAIP) -> None:
         x = naip[naip.bounds]
         assert isinstance(x, dict)
@@ -197,8 +192,11 @@ class TestRasterDataset:
         assert isinstance(x["image"], torch.Tensor)
         assert len(sentinel.bands) == x["image"].shape[0]
 
-    def test_getitem_uint_dtype(self, custom_dtype_ds: RasterDataset) -> None:
-        x = custom_dtype_ds[custom_dtype_ds.bounds]
+    @pytest.mark.parametrize("dtype", ["uint16", "uint32"])
+    def test_getitem_uint_dtype(self, dtype: str) -> None:
+        root = os.path.join("tests", "data", "raster", dtype)
+        ds = RasterDataset(root)
+        x = ds[ds.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert x["image"].dtype == torch.float32

@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from typing import Optional
 
 import numpy as np
 import rasterio as rio
@@ -13,12 +14,19 @@ EPSG = [4087, 4326, 32631]
 SIZE = 16
 
 
-def write_raster(res: int, epsg: int) -> None:
+def write_raster(
+    res: int = RES[0],
+    epsg: int = EPSG[0],
+    dtype: str = "uint8",
+    path: Optional[str] = None,
+) -> None:
     """Write a raster file.
 
     Args:
         res: Resolution.
         epsg: EPSG of file.
+        dtype: Data type.
+        path: File path.
     """
     size = SIZE // res
     profile = {
@@ -32,9 +40,13 @@ def write_raster(res: int, epsg: int) -> None:
         "nodata": 0,
     }
 
-    name = f"res_{res}_epsg_{epsg}"
-    os.makedirs(name, exist_ok=True)
-    path = os.path.join(name, f"{name}.tif")
+    if path is None:
+        name = f"res_{res}_epsg_{epsg}"
+        path = os.path.join(name, f"{name}.tif")
+
+    directory = os.path.dirname(path)
+    os.makedirs(directory, exist_ok=True)
+
     with rio.open(path, "w", **profile) as f:
         x = np.ones((1, size, size))
         f.write(x)
@@ -80,3 +92,7 @@ if __name__ == "__main__":
 
         for dst_epsg in EPSG[1:]:
             reproject_raster(res, src_epsg, dst_epsg)
+
+    for dtype in ["uint16", "uint32"]:
+        path = os.path.join(dtype, f"{dtype}.tif")
+        write_raster(dtype=dtype, path=path)
