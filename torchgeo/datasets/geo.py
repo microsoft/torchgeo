@@ -922,6 +922,7 @@ class IntersectionDataset(GeoDataset):
             new_crs: New :term:`coordinate reference system (CRS)`.
         """
         self._crs = new_crs
+        self.datasets[0].crs = new_crs
         self.datasets[1].crs = new_crs
 
     @property
@@ -941,6 +942,7 @@ class IntersectionDataset(GeoDataset):
             new_res: New resolution.
         """
         self._res = new_res
+        self.datasets[0].res = new_res
         self.datasets[1].res = new_res
 
 
@@ -1070,6 +1072,7 @@ class UnionDataset(GeoDataset):
             new_crs: New :term:`coordinate reference system (CRS)`.
         """
         self._crs = new_crs
+        self.datasets[0].crs = new_crs
         self.datasets[1].crs = new_crs
 
     @property
@@ -1089,4 +1092,5 @@ class UnionDataset(GeoDataset):
             new_res: New resolution.
         """
         self._res = new_res
+        self.datasets[0].res = new_res
         self.datasets[1].res = new_res
