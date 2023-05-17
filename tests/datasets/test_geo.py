@@ -10,7 +10,6 @@ import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from rasterio.crs import CRS
-from rasterio.warp import transform_bounds
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import (

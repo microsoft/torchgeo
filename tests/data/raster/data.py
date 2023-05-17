@@ -53,14 +53,13 @@ def reproject_raster(res: int, src_epsg: int, dst_epsg: int) -> None:
     src_path = os.path.join(src_name, f"{src_name}.tif")
     with rio.open(src_path) as src:
         dst_crs = f"epsg:{dst_epsg}"
-        transform, width, height = calculate_default_transform(src.crs, dst_crs, src.width, src.height, *src.bounds)
+        transform, width, height = calculate_default_transform(
+            src.crs, dst_crs, src.width, src.height, *src.bounds
+        )
         profile = src.profile.copy()
-        profile.update({
-            'crs': dst_crs,
-            'transform': transform,
-            'width': width,
-            'height': height,
-        })
+        profile.update(
+            {"crs": dst_crs, "transform": transform, "width": width, "height": height}
+        )
         dst_name = f"res_{res}_epsg_{dst_epsg}"
         os.makedirs(dst_name, exist_ok=True)
         dst_path = os.path.join(dst_name, f"{dst_name}.tif")
@@ -73,7 +72,6 @@ def reproject_raster(res: int, src_epsg: int, dst_epsg: int) -> None:
                 dst_transform=dst.transform,
                 dst_crs=dst.crs,
             )
-
 
 
 if __name__ == "__main__":
