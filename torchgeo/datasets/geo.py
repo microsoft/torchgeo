@@ -477,22 +477,9 @@ class RasterDataset(GeoDataset):
             vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
-        if len(vrt_fhs) == 1:
-            src = vrt_fhs[0]
-            out_width = round((query.maxx - query.minx) / self.res)
-            out_height = round((query.maxy - query.miny) / self.res)
-            count = len(band_indexes) if band_indexes else src.count
-            out_shape = (count, out_height, out_width)
-            dest = src.read(
-                indexes=band_indexes,
-                out_shape=out_shape,
-                window=from_bounds(*bounds, src.transform),
-                boundless=True,
-            )
-        else:
-            dest, _ = rasterio.merge.merge(
-                vrt_fhs, bounds, self.res, indexes=band_indexes
-            )
+        dest, _ = rasterio.merge.merge(
+            vrt_fhs, bounds, self.res, indexes=band_indexes
+        )
 
         # fix numpy dtypes which are not supported by pytorch tensors
         if dest.dtype == np.uint16:
