@@ -16,7 +16,8 @@ from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from omegaconf import DictConfig, OmegaConf
 
 from torchgeo.datamodules import MisconfigurationException, L7IrishDataModule
-from torchgeo.trainers import BYOLTask, MoCoTask, ObjectDetectionTask, SimCLRTask, SemanticSegmentationTask
+from torchgeo.trainers import SemanticSegmentationTask
+# from torchgeo.trainers import BYOLTask, MoCoTask, ObjectDetectionTask, SimCLRTask, SemanticSegmentationTask
 
 
 def set_up_omegaconf() -> DictConfig:
@@ -92,15 +93,15 @@ def main(conf: DictConfig) -> None:
     tb_logger = TensorBoardLogger(conf.program.log_dir, name=experiment_name)
     csv_logger = CSVLogger(conf.program.log_dir, name=experiment_name)
 
-    if isinstance(task, ObjectDetectionTask):
-        monitor_metric = "val_map"
-        mode = "max"
-    elif isinstance(task, (BYOLTask, MoCoTask, SimCLRTask)):
-        monitor_metric = "train_loss"
-        mode = "min"
-    else:
-        monitor_metric = "val_loss"
-        mode = "min"
+    # if isinstance(task, ObjectDetectionTask):
+    #     monitor_metric = "val_map"
+    #     mode = "max"
+    # elif isinstance(task, (BYOLTask, MoCoTask, SimCLRTask)):
+    #     monitor_metric = "train_loss"
+    #     mode = "min"
+    # else:
+    monitor_metric = "val_loss"
+    mode = "min"
 
     checkpoint_callback = ModelCheckpoint(
         monitor=monitor_metric,

@@ -6,10 +6,10 @@
 from .byol import BYOLTask
 from .classification import ClassificationTask, MultiLabelClassificationTask
 from .detection import ObjectDetectionTask
-from .moco import MoCoTask
+# from .moco import MoCoTask
 from .regression import PixelwiseRegressionTask, RegressionTask
 from .segmentation import SemanticSegmentationTask
-from .simclr import SimCLRTask
+# from .simclr import SimCLRTask
 
 __all__ = (
     "BYOLTask",

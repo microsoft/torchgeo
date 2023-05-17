@@ -9,16 +9,18 @@ import subprocess
 from multiprocessing import Process, Queue
 
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
-GPUS = [0, 0, 0]
+GPUS = [0]
 DRY_RUN = False  # if False then print out the commands to be run, if True then run
 DATA_DIR = "/scratch.local/yichia3/l7irish_cog_3857"  # path to the L7Irish data directory
 
 # Hyperparameter options
+# model_options = ["resnet18", "resnet50"]
 model_options = ["unet"]
-lr_options = [1e-2, 1e-3, 1e-4]
+backbone_options = ["resnet50"]
+lr_options = [1e-2]
 loss_options = ["ce"]
-backbone_options = ["resnet18"]
-weight_init_options = ["null"]
+weight_options = ["null"]
+# weight_options = ["imagenet_only", "random", "imagenet_and_random", "random_rgb"]
 
 
 def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
@@ -35,10 +37,10 @@ def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
 if __name__ == "__main__":
     work: "Queue[str]" = Queue()
 
-    for model, backbone, lr, loss, weight_init in itertools.product(
-        model_options, backbone_options, lr_options, loss_options, weight_init_options
+    for model, backbone, lr, loss, weights in itertools.product(
+        model_options, backbone_options, lr_options, loss_options, weight_options
     ):
-        experiment_name = f"{model}_{backbone}_{lr}_{loss}_{weight_init}"
+        experiment_name = f"{model}_{backbone}_{lr}_{loss}_{weights.replace('_','-')}"
 
         output_dir = os.path.join("output", "l7irish_experiments")
         log_dir = os.path.join(output_dir, "logs")
@@ -52,11 +54,13 @@ if __name__ == "__main__":
                 + f" experiment.module.segmentation_model={model}"
                 + f" experiment.module.learning_rate={lr}"
                 + f" experiment.module.loss={loss}"
+                + f" experiment.module.weights={weights}"
                 + f" experiment.module.backbone={backbone}"
-                + f" experiment.module.weights={weight_init}"
+                + f" experiment.datamodule.weights={weights}"
                 + f" program.output_dir={output_dir}"
                 + f" program.log_dir={log_dir}"
                 + f" program.data_dir={DATA_DIR}"
+                + " trainer.gpus=[GPU]"
             )
             command = command.strip()
 
