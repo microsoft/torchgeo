@@ -4,39 +4,82 @@
 import os
 
 import numpy as np
-import rasterio
-import rasterio.transform
-from torchvision.datasets.utils import calculate_md5
+import rasterio as rio
+from rasterio.transform import from_bounds
+from rasterio.warp import calculate_default_transform, reproject
 
 
-def generate_test_data(fn: str) -> str:
-    """Creates test data with uint32 datatype.
+RES = [2, 4, 8]
+EPSG = [3005, 4326, 32616]
+SIZE = 16
+
+
+def write_raster(res: int, epsg: int) -> None:
+    """Write a raster file.
 
     Args:
-        fn (str): Filename to write
-
-    Returns:
-        str: md5 hash of created archive
+        res: Resolution.
+        epsg: EPSG of file.
     """
+    size = SIZE // res
     profile = {
         "driver": "GTiff",
-        "dtype": "uint32",
+        "dtype": "uint8",
         "count": 1,
-        "crs": "epsg:4326",
-        "transform": rasterio.transform.from_bounds(0, 0, 1, 1, 1, 1),
-        "height": 4,
-        "width": 4,
-        "compress": "lzw",
-        "predictor": 2,
+        "crs": f"epsg:{epsg}",
+        "transform": from_bounds(0, 0, SIZE, SIZE, size, size),
+        "height": size,
+        "width": size,
+        "nodata": 0,
     }
 
-    with rasterio.open(fn, "w", **profile) as f:
-        f.write(np.random.randint(0, 256, size=(1, 4, 4)))
+    name = f"res_{res}_epsg_{epsg}"
+    os.makedirs(name, exist_ok=True)
+    path = os.path.join(name, f"{name}.tif")
+    with rio.open(path, "w", **profile) as f:
+        x = np.ones((1, size, size))
+        f.write(x)
 
-    md5: str = calculate_md5(fn)
-    return md5
+
+def reproject_raster(res: int, src_epsg: int, dst_epsg: int) -> None:
+    """Reproject a raster file.
+
+    Args:
+        res: Resolution.
+        src_epsg: EPSG of source file.
+        dst_epsg: EPSG of destination file.
+    """
+    src_name = f"res_{res}_epsg_{src_epsg}"
+    src_path = os.path.join(src_name, f"{src_name}.tif")
+    with rio.open(src_path) as src:
+        dst_crs = f"epsg:{dst_epsg}"
+        transform, width, height = calculate_default_transform(src.crs, dst_crs, src.width, src.height, *src.bounds)
+        profile = src.profile.copy()
+        profile.update({
+            'crs': dst_crs,
+            'transform': transform,
+            'width': width,
+            'height': height,
+        })
+        dst_name = f"res_{res}_epsg_{dst_epsg}"
+        os.makedirs(dst_name, exist_ok=True)
+        dst_path = os.path.join(dst_name, f"{dst_name}.tif")
+        with rio.open(dst_path, "w", **profile) as dst:
+            reproject(
+                source=rio.band(src, 1),
+                destination=rio.band(dst, 1),
+                src_transform=src.transform,
+                src_crs=src.crs,
+                dst_transform=dst.transform,
+                dst_crs=dst.crs,
+            )
+
 
 
 if __name__ == "__main__":
-    md5_hash = generate_test_data(os.path.join(os.getcwd(), "test0.tif"))
-    print(md5_hash)
+    for res in RES:
+        src_epsg = EPSG[0]
+        write_raster(res, src_epsg)
+
+        for dst_epsg in EPSG[1:]:
+            reproject_raster(res, src_epsg, dst_epsg)
