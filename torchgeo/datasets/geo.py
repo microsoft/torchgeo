@@ -72,8 +72,8 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
        dataset = landsat7 | landsat8
     """
 
-    _crs = None
-    _res = None
+    _crs = CRS.from_epsg(4326)
+    _res = 0.0
 
     # NOTE: according to the Python docs:
     #
