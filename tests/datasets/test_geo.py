@@ -410,6 +410,7 @@ class TestIntersectionDataset:
         ds = IntersectionDataset(ds1, ds2)
         sample = ds[ds.bounds]
         assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds.res == 2
         assert len(ds1) == len(ds2) == len(ds) == 1
         assert isinstance(sample["image"], torch.Tensor)
 
@@ -420,6 +421,7 @@ class TestIntersectionDataset:
         ds = (ds1 & ds2) & ds3
         sample = ds[ds.bounds]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds3.res == ds.res == 2
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
         assert isinstance(sample["image"], torch.Tensor)
 
@@ -430,6 +432,7 @@ class TestIntersectionDataset:
         ds = ds1 & (ds2 & ds3)
         sample = ds[ds.bounds]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds3.res == ds.res == 2
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
         assert isinstance(sample["image"], torch.Tensor)
 
@@ -438,6 +441,7 @@ class TestIntersectionDataset:
         ds2 = RasterDataset(os.path.join("tests", "data", "raster", "res_4_epsg_4087"))
         ds = IntersectionDataset(ds1, ds2)
         sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds.res == 2
         assert len(ds1) == len(ds2) == len(ds) == 1
         assert isinstance(sample["image"], torch.Tensor)
@@ -448,6 +452,7 @@ class TestIntersectionDataset:
         ds3 = RasterDataset(os.path.join("tests", "data", "raster", "res_8_epsg_4087"))
         ds = (ds1 & ds2) & ds3
         sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds3.res == ds.res == 2
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
         assert isinstance(sample["image"], torch.Tensor)
@@ -458,6 +463,7 @@ class TestIntersectionDataset:
         ds3 = RasterDataset(os.path.join("tests", "data", "raster", "res_8_epsg_4087"))
         ds = ds1 & (ds2 & ds3)
         sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds3.res == ds.res == 2
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
         assert isinstance(sample["image"], torch.Tensor)
@@ -505,6 +511,7 @@ class TestUnionDataset:
         ds = UnionDataset(ds1, ds2)
         sample = ds[ds.bounds]
         assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds.res == 2
         assert len(ds1) == len(ds2) == 1
         assert len(ds) == 2
         assert isinstance(sample["image"], torch.Tensor)
@@ -516,6 +523,7 @@ class TestUnionDataset:
         ds = (ds1 | ds2) | ds3
         sample = ds[ds.bounds]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds3.res == ds.res == 2
         assert len(ds1) == len(ds2) == len(ds3) == 1
         assert len(ds) == 3
         assert isinstance(sample["image"], torch.Tensor)
@@ -527,6 +535,7 @@ class TestUnionDataset:
         ds = ds1 | (ds2 | ds3)
         sample = ds[ds.bounds]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds3.res == ds.res == 2
         assert len(ds1) == len(ds2) == len(ds3) == 1
         assert len(ds) == 3
         assert isinstance(sample["image"], torch.Tensor)
@@ -536,6 +545,7 @@ class TestUnionDataset:
         ds2 = RasterDataset(os.path.join("tests", "data", "raster", "res_4_epsg_4087"))
         ds = UnionDataset(ds1, ds2)
         sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds.res == 2
         assert len(ds1) == len(ds2) == 1
         assert len(ds) == 2
@@ -547,6 +557,7 @@ class TestUnionDataset:
         ds3 = RasterDataset(os.path.join("tests", "data", "raster", "res_8_epsg_4087"))
         ds = (ds1 | ds2) | ds3
         sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds3.res == ds.res == 2
         assert len(ds1) == len(ds2) == len(ds3) == 1
         assert len(ds) == 3
@@ -558,6 +569,7 @@ class TestUnionDataset:
         ds3 = RasterDataset(os.path.join("tests", "data", "raster", "res_8_epsg_4087"))
         ds = ds1 | (ds2 | ds3)
         sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds3.res == ds.res == 2
         assert len(ds1) == len(ds2) == len(ds3) == 1
         assert len(ds) == 3
