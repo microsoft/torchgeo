@@ -10,7 +10,7 @@ from rasterio.warp import calculate_default_transform, reproject
 
 
 RES = [2, 4, 8]
-EPSG = [3005, 4326, 32616]
+EPSG = [4087, 4326, 32631]
 SIZE = 16
 
 
