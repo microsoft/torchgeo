@@ -47,7 +47,7 @@ if __name__ == "__main__":
             x = (x - args.min) / (args.max - args.min)
 
             # 0-1 -> 0-255
-            x = np.clip(x * 2**8, 0, 2**8).astype(np.uint8)
+            x = np.clip(x * 255, 0, 255).astype(np.uint8)
 
             profile = src.profile
             profile["dtype"] = "uint8"
