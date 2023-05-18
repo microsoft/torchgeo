@@ -97,4 +97,4 @@ if __name__ == "__main__":
         path = os.path.join(dtype, f"{dtype}.tif")
         write_raster(dtype=dtype, path=path)
         with open(os.path.join(dtype, "corrupted.tif"), "w") as f:
-            f.write("not a tif file")
+            f.write("not a tif file\n")
