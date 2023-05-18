@@ -9,7 +9,7 @@ import subprocess
 from multiprocessing import Process, Queue
 
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
-GPUS = [0, 0]
+GPUS = [0]
 DRY_RUN = False  # if False then print out the commands to be run, if True then run
 DATA_DIR = "/scratch.local/yichia3/l7irish_cog_3857"  # path to the L7Irish data directory
 
@@ -17,7 +17,7 @@ DATA_DIR = "/scratch.local/yichia3/l7irish_cog_3857"  # path to the L7Irish data
 # model_options = ["resnet18", "resnet50"]
 model_options = ["unet"]
 backbone_options = ["resnet50"]
-lr_options = [1e-3, 1e-4]
+lr_options = [1e-4]
 loss_options = ["ce"]
 weight_options = ["imagenet"]
 # weight_options = ["imagenet_only", "random", "imagenet_and_random", "random_rgb"]
