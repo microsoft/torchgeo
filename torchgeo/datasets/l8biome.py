@@ -86,7 +86,7 @@ class L8Biome(RasterDataset):
     def __init__(
         self,
         root: str = "data",
-        crs: Optional[CRS] = None,
+        crs: Optional[CRS] = CRS.from_epsg(3857),
         res: Optional[float] = None,
         bands: Sequence[str] = all_bands,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -206,7 +206,7 @@ class L8Biome(RasterDataset):
 
         mask_filepaths = []
         for filepath in filepaths:
-            mask_filepath = filepath.replace("B1.TIF", "fixedmask.img")
+            mask_filepath = filepath.replace("B1.TIF", "fixedmask.tif")
             mask_filepaths.append(mask_filepath)
         mask = self._merge_files(mask_filepaths, query)
 

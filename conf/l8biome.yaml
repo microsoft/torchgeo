@@ -1,0 +1,25 @@
+module:
+  _target_: torchgeo.trainers.SemanticSegmentationTask
+  model: "unet"
+  loss: "ce"
+  backbone: "resnet18"
+  weights: null
+  learning_rate: 1e-3
+  in_channels: 9
+  num_classes: 5
+  ignore_index: 0
+  learning_rate_schedule_patience: 6
+
+datamodule:
+  _target_: torchgeo.datamodules.L8BiomeDataModule
+  root: "/projects/dali/data/l8biome"
+  batch_size: 64
+  patch_size: 256
+  num_workers: 20
+
+trainer:
+  _target_: lightning.pytorch.Trainer
+  accelerator: gpu
+  devices: 1
+  min_epochs: 20
+  max_epochs: 100
