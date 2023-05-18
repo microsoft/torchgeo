@@ -15,7 +15,7 @@ from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from omegaconf import DictConfig, OmegaConf
 
-from torchgeo.datamodules import MisconfigurationException, L7IrishDataModule
+from torchgeo.datamodules import MisconfigurationException
 from torchgeo.trainers import SemanticSegmentationTask
 # from torchgeo.trainers import BYOLTask, MoCoTask, ObjectDetectionTask, SimCLRTask, SemanticSegmentationTask
 
