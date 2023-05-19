@@ -15,13 +15,15 @@ from rasterio.windows import from_bounds
 from tqdm import tqdm
 
 
-def retrieve_mask_chip(img_src: DatasetReader, mask_src: DatasetReader) -> np.ndarray:
+def retrieve_mask_chip(
+    img_src: DatasetReader, mask_src: DatasetReader
+) -> np.typing.NDArray[np.float_]:
     """Retrieve the mask for a given landsat image.
 
     Args:
         img_src: input image for which to find a corresponding chip
-        mask_src: CRS aligned mask from which to retrieve a chip corresponding to
-            img_src
+        mask_src: CRS aligned mask from which to retrieve a chip
+            corresponding to img_src
 
     Returns:
         mask array
@@ -30,7 +32,7 @@ def retrieve_mask_chip(img_src: DatasetReader, mask_src: DatasetReader) -> np.nd
     out_width = round((query.right - query.left) / img_src.res[0])
     out_height = round((query.top - query.bottom) / img_src.res[1])
     out_shape = (1, out_height, out_width)
-    mask_chip = mask_src.read(
+    mask_chip: "np.typing.NDArray[np.float_]" = mask_src.read(
         out_shape=out_shape,
         window=from_bounds(
             query.left, query.bottom, query.right, query.top, mask_src.transform
