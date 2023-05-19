@@ -18,10 +18,10 @@ class RESISC45DataModule(NonGeoDataModule):
 
     Uses the train/val/test splits from the dataset.
     """
-    
+
     # Computed on the train set
     mean = torch.tensor([93.89391792, 97.11226906, 87.56775284])
-    std = torch.tensor([51.84919672, 47.2365918 , 47.06308786])
+    std = torch.tensor([51.84919672, 47.2365918, 47.06308786])
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
