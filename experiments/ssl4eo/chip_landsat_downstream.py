@@ -12,6 +12,7 @@ import rasterio
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
 from rasterio.windows import from_bounds
+from tqdm import tqdm
 
 
 def retrieve_mask_chip(img_src: DatasetReader, mask_src: DatasetReader) -> np.ndarray:
@@ -42,52 +43,44 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # Can be same directory for in-place compression
     parser.add_argument(
-        "--landsat_dir", help="directory to recursively search for files"
+        "--landsat-dir", help="directory to recursively search for files"
     )
-    parser.add_argument("--mask_path", help="path to downstream task mask to chip")
+    parser.add_argument("--mask-path", help="path to downstream task mask to chip")
+    parser.add_argument(
+        "--save-dir", help="directory where to save masks, defaults to 'landsat-dir'"
+    )
     parser.add_argument("--suffix", default=".tif", help="file suffix")
-    # masks will be added as separate band to the *landsat_dir*
-
     args = parser.parse_args()
 
-    mask_root_dir = os.path.join(args.landsat_dir, "masks")
-    os.makedirs(mask_root_dir, exist_ok=True)
+    os.makedirs(args.save_dir, exist_ok=True)
 
-    # find all files in landsat dir
-    paths = sorted(
-        glob.glob(
-            os.path.join(args.landsat_dir, "imgs", "*", "*", f"*{args.suffix}"),
-            recursive=True,
-        )
+    paths = glob.iglob(
+        os.path.join(args.landsat_dir, "**", f"all_bands{args.suffix}"), recursive=True
     )
 
-    mask_src = rasterio.open(args.mask_path)
-    img_crs = rasterio.open(paths[0]).crs
+    for img_path in tqdm(paths):
+        with rasterio.open(img_path) as img_src, rasterio.open(
+            args.mask_path
+        ) as mask_src:
+            if mask_src.crs != img_src.crs:
+                mask_src = WarpedVRT(mask_src, crs=img_src.crs)
 
-    if mask_src.crs != img_crs:
-        mask_src = WarpedVRT(mask_src, crs=img_crs)
+            # retrieve mask
+            mask = retrieve_mask_chip(img_src, mask_src)
 
-    for img_path in paths:
-        img_src = rasterio.open(img_path)
+            # directory structure mask <7-digit id>/<scene_id>/<cdl>_<year>.tif*.tif
+            digit_id = os.path.dirname(img_path).split("/")[-2]
+            scene_id = os.path.dirname(img_path).split("/")[-1]
+            year = scene_id.split("_")[-1][:4]
+            mask_dir = os.path.join(args.save_dir, digit_id, scene_id, year)
+            os.makedirs(mask_dir, exist_ok=True)
 
-        # retrieve mask
-        mask = retrieve_mask_chip(img_src, mask_src)
+            # write mask tif
+            profile = img_src.profile
+            profile["count"] = 1
 
-        # directory structure mask <scene_id>/<year>/*.tif
-        mask_id_dir = os.path.join(
-            mask_root_dir, os.path.dirname(img_path).split("/")[-1]
-        )
-        os.makedirs(mask_id_dir, exist_ok=True)
-        mask_year_dir = os.path.join(
-            mask_id_dir, os.path.basename(mask_id_dir).split("_")[-1][:4]
-        )
-        os.makedirs(mask_year_dir, exist_ok=True)
-
-        # write mask tif
-        profile = img_src.profile
-        profile["count"] = 1
-
-        with rasterio.open(
-            os.path.join(mask_year_dir, "mask.tif"), "w", **profile
-        ) as dst:
-            dst.write(mask)
+            with rasterio.open(
+                os.path.join(mask_dir, "mask.tif"), "w", **profile
+            ) as dst:
+                dst.write(mask)
+                dst.write_colormap(1, mask_src.colormap(1))
