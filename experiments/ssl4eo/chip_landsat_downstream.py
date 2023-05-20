@@ -43,7 +43,6 @@ def retrieve_mask_chip(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    # Can be same directory for in-place compression
     parser.add_argument(
         "--landsat-dir", help="directory to recursively search for files", required=True
     )
