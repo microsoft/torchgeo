@@ -86,7 +86,7 @@ class L7IrishTileDataModule(LightningDataModule):
 
         mask_mapping = {64: 1, 128: 2, 191: 3, 255: 4}
         if "mask" in sample:
-            mask = sample["mask"]
+            mask = sample["mask"].squeeze()
             for k, v in mask_mapping.items():
                 mask[mask == k] = v
             sample["mask"] = mask
@@ -106,12 +106,13 @@ class L7IrishTileDataModule(LightningDataModule):
                 mask_fns.append(os.path.join(root,area,path_row,f"L7_{path}_{row}_newmask2015.TIF"))
         return image_fns, mask_fns
 
-    def __init__(self, root, batch_size=1, patch_size=32, batches_per_epoch=None, num_workers=0, seed=0):
+    def __init__(self, root, batch_size=1, patch_size=32, train_batches_per_epoch=None, val_batches_per_epoch=None, num_workers=0, seed=0):
         super().__init__()
         self.image_fns, self.mask_fns = self._get_all_the_fns(root)
         self.batch_size = batch_size
         self.patch_size = patch_size
-        self.batches_per_epoch = batches_per_epoch
+        self.train_batches_per_epoch = train_batches_per_epoch
+        self.val_batches_per_epoch = val_batches_per_epoch
         self.num_workers = num_workers
 
         generator = torch.Generator().manual_seed(seed)
@@ -137,11 +138,11 @@ class L7IrishTileDataModule(LightningDataModule):
     #     return super().on_after_batch_transfer(batch, dataloader_idx)
 
     def train_dataloader(self):
-        sampler = RandomTileGeoSampler(self.train_dataset, self.patch_size, self.batch_size * self.batches_per_epoch)
+        sampler = RandomTileGeoSampler(self.train_dataset, self.patch_size, self.batch_size * self.train_batches_per_epoch)
         return DataLoader(self.train_dataset, batch_size=self.batch_size, sampler=sampler, num_workers=self.num_workers)
 
     def val_dataloader(self):
-        sampler = RandomTileGeoSampler(self.val_dataset, self.patch_size, self.batch_size * self.batches_per_epoch)
+        sampler = RandomTileGeoSampler(self.val_dataset, self.patch_size, self.batch_size * self.val_batches_per_epoch)
         return DataLoader(self.val_dataset, batch_size=self.batch_size, sampler=sampler, num_workers=self.num_workers)
 
     def test_dataloader(self):

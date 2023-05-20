@@ -59,9 +59,12 @@ def set_up_omegaconf() -> DictConfig:
 
 def main(conf: DictConfig) -> None:
     """Main training loop."""
-    experiment_name = (
-        f"{conf.datamodule._target_.lower()}_{conf.module._target_.lower()}"
-    )
+    if conf.program.experiment_name is not None:
+        experiment_name = conf.program.experiment_name
+    else:
+        experiment_name = (
+            f"{conf.datamodule._target_.lower()}_{conf.module._target_.lower()}"
+        )
     if os.path.isfile(conf.program.output_dir):
         raise NotADirectoryError("`program.output_dir` must be a directory")
     os.makedirs(conf.program.output_dir, exist_ok=True)

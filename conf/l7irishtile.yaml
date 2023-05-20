@@ -1,0 +1,36 @@
+module:
+  _target_: torchgeo.trainers.SemanticSegmentationTask
+  loss: "ce"
+  model: "unet"
+  backbone: "resnet18"
+  weights: true
+  learning_rate: 1e-3
+  learning_rate_schedule_patience: 6
+  in_channels: 9
+  num_classes: 5
+  num_filters: 256
+  ignore_index: 0
+
+datamodule:
+  _target_: torchgeo.datamodules.L7IrishTileDataModule
+  root: "/home/calebrobinson/ssdprivate/torchgeo_dataset_integration_tests/data/L7Irish/"
+  batch_size: 32
+  patch_size: 256
+  train_batches_per_epoch: 500
+  val_batches_per_epoch: 100
+  num_workers: 6
+
+trainer:
+  _target_: lightning.pytorch.Trainer
+  accelerator: gpu
+  devices:
+    - 2
+  min_epochs: 15
+  max_epochs: 40
+
+program:
+  seed: 0
+  output_dir: output
+  log_dir: logs/l7irish/
+  overwrite: True
+  experiment_name: run1
