@@ -30,7 +30,7 @@ class RandomGrayscale(IntensityAugmentationBase2D):
 
     def __init__(
         self,
-        weights: Tensor,
+        weights: Optional[Tensor],
         p: float = 0.1,
         same_on_batch: bool = False,
         keepdim: bool = False,
@@ -48,7 +48,8 @@ class RandomGrayscale(IntensityAugmentationBase2D):
         super().__init__(p=p, same_on_batch=same_on_batch, keepdim=keepdim)
 
         # Rescale to sum to 1
-        weights /= weights.sum()
+        if weights is not None:
+            weights /= weights.sum()
 
         self.flags = {"weights": weights}
 
@@ -70,8 +71,13 @@ class RandomGrayscale(IntensityAugmentationBase2D):
         Returns:
             The augmented input.
         """
-        weights = flags["weights"][..., :, None, None]
-        out = input * weights
-        out = out.sum(dim=-3)
-        out = out.unsqueeze(-3).expand(input.shape)
+        if flags["weights"] is None:
+            b, c, h, w = input.shape
+            out = input.mean(dim=1, keepdim=True)
+            out = out.tile((1, c, 1, 1))
+        else:
+            weights = flags["weights"][..., :, None, None].to(input.device)
+            out = input * weights
+            out = out.sum(dim=-3)
+            out = out.unsqueeze(-3).expand(input.shape)
         return out

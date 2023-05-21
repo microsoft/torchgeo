@@ -1,0 +1,38 @@
+module:
+  _target_: torchgeo.trainers.MoCoTask
+  model: resnet50
+  weights: True
+  in_channels: 9
+  version: 2
+  layers: 2
+  hidden_dim: 2048
+  output_dim: 128
+  lr: 0.03
+  weight_decay: 1e-4
+  momentum: 0.9
+  schedule: [120, 160]
+  temperature: 0.07
+  memory_bank_size: 65536
+  moco_momentum: 0.999
+  gather_distributed: True
+  size: 224
+  grayscale_weights: null
+
+datamodule:
+  _target_: torchgeo.datamodules.SSL4EOLDataModule
+  root: /workspace/storage/data/ssl4eo/imgs
+  split: etm_toa
+  seasons: 1
+  batch_size: 256
+  num_workers: 128
+
+trainer:
+  _target_: lightning.pytorch.Trainer
+  accelerator: gpu
+  devices: 2
+  limit_val_batches: 0.0
+  max_epochs: 200
+  log_every_n_steps: 5
+
+program:
+  overwrite: True
