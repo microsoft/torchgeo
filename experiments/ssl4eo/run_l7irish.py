@@ -58,7 +58,6 @@ if __name__ == "__main__":
         command = (
             "python train.py"
             + f" config_file={config_file}"
-            + f" experiment.name={experiment_name}"
             + f" module.model={model}"
             + f" module.backbone={backbone}"
             + f" module.learning_rate={lr}"
@@ -66,6 +65,7 @@ if __name__ == "__main__":
             + f" module.weight_decay={wd}"
             + f" module.weights={weights}"
             + f" program.seed={seed}"
+            + f" program.experiment_name={experiment_name}"
             + " trainer.devices=[GPU]"
         )
         command = command.strip()
