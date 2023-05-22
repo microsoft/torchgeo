@@ -30,7 +30,7 @@ class RandomGrayscale(IntensityAugmentationBase2D):
 
     def __init__(
         self,
-        weights: Optional[Tensor],
+        weights: Tensor,
         p: float = 0.1,
         same_on_batch: bool = False,
         keepdim: bool = False,
