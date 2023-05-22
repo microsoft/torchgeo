@@ -40,7 +40,7 @@ except ImportError:
 
 
 def moco_augmentations(
-    version: int, size: int, weights: Optional[Tensor] = None
+    version: int, size: int, weights: Tensor,
 ) -> tuple[nn.Module, nn.Module]:
     """Data augmentations used by MoCo.
 

@@ -24,7 +24,7 @@ datamodule:
   split: etm_toa
   seasons: 1
   batch_size: 256
-  num_workers: 128
+  num_workers: 64
 
 trainer:
   _target_: lightning.pytorch.Trainer
