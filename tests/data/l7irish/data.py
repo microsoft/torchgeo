@@ -47,7 +47,7 @@ def create_file(path: str) -> None:
         "transform": Affine(30.0, 0.0, 462884.99999999994, 0.0, -30.0, 4071915.0),
     }
 
-    if path.endswith("_newmask2015.tif"):
+    if path.endswith("_newmask2015.TIF"):
         Z = np.random.choice(
             np.array([0, 64, 128, 192, 255], dtype=dtype), size=(SIZE, SIZE)
         )
@@ -83,7 +83,7 @@ if __name__ == "__main__":
         filename = str(directory)
 
         # Create tarballs
-        shutil.make_archive(filename, "gztar", ".", directory)
+        shutil.make_archive(filename, "gztar", ".", os.path.join("l7irish", directory))
 
         # # Compute checksums
         with open(f"{filename}.tar.gz", "rb") as f:
