@@ -26,8 +26,8 @@ class TestL8Biome:
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L8Biome:
         monkeypatch.setattr(torchgeo.datasets.l8biome, "download_url", download_url)
         md5s = {
-            "barren": "18d84bf50cb3899bfeeb9f1ee9622a0e",
-            "forest": "7c982c0c98a593d74cf71ef25cf40ad8",
+            "barren": "29c9910adbc89677389f210226fb163d",
+            "forest": "b7dbb82fb2c22cbb03389d8828d73713",
         }
 
         url = os.path.join("tests", "data", "l8biome", "{}.tar.gz")

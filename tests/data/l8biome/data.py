@@ -100,7 +100,7 @@ if __name__ == "__main__":
         filename = str(directory)
 
         # Create tarballs
-        shutil.make_archive(filename, "gztar", ".", directory)
+        shutil.make_archive(filename, "gztar", ".", os.path.join("l8biome", directory))
 
         # # Compute checksums
         with open(f"{filename}.tar.gz", "rb") as f:
