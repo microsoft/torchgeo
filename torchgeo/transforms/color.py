@@ -70,7 +70,7 @@ class RandomGrayscale(IntensityAugmentationBase2D):
         Returns:
             The augmented input.
         """
-        weights = flags["weights"][..., :, None, None]
+        weights = flags["weights"][..., :, None, None].to(input.device)
         out = input * weights
         out = out.sum(dim=-3)
         out = out.unsqueeze(-3).expand(input.shape)
