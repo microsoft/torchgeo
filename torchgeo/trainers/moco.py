@@ -62,6 +62,8 @@ def moco_augmentations(
             T.RandomGrayscale(weights=weights, p=0.2),
             # Not appropriate for multispectral imagery, seasonal contrast used instead
             # K.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.4, p=1)
+            K.RandomBrightness(brightness=(0.8, 1.0), p=0.8),
+            K.RandomContrast(contrast=(0.8, 1.0), p=0.8),
             K.RandomHorizontalFlip(),
             K.RandomVerticalFlip(),  # added
             data_keys=["input"],
@@ -74,6 +76,8 @@ def moco_augmentations(
             # K.ColorJitter(
             #     brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1, p=0.8
             # )
+            K.RandomBrightness(brightness=(0.8, 1.0), p=0.8),
+            K.RandomContrast(contrast=(0.8, 1.0), p=0.8),
             T.RandomGrayscale(weights=weights, p=0.2),
             K.RandomGaussianBlur(kernel_size=(ks, ks), sigma=(0.1, 2), p=0.5),
             K.RandomHorizontalFlip(),
@@ -88,6 +92,8 @@ def moco_augmentations(
             # K.ColorJitter(
             #     brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8
             # )
+            K.RandomBrightness(brightness=(0.8, 1.0), p=0.8),
+            K.RandomContrast(contrast=(0.8, 1.0), p=0.8),
             T.RandomGrayscale(weights=weights, p=0.2),
             K.RandomGaussianBlur(kernel_size=(ks, ks), sigma=(0.1, 2), p=1),
             K.RandomHorizontalFlip(),
@@ -100,6 +106,8 @@ def moco_augmentations(
             # K.ColorJitter(
             #     brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8
             # )
+            K.RandomBrightness(brightness=(0.8, 1.0), p=0.8),
+            K.RandomContrast(contrast=(0.8, 1.0), p=0.8),
             T.RandomGrayscale(weights=weights, p=0.2),
             K.RandomGaussianBlur(kernel_size=(ks, ks), sigma=(0.1, 2), p=0.1),
             K.RandomSolarize(p=0.2),
