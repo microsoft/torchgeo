@@ -26,8 +26,8 @@ class TestL7Irish:
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L7Irish:
         monkeypatch.setattr(torchgeo.datasets.l7irish, "download_url", download_url)
         md5s = {
-            "austral": "c06147330141517f7eee55ea931c4787",
-            "boreal": "4b598e55f0d6d33da3672190ebf96268",
+            "austral": "a2625e55991e561cc58aad0f007718dd",
+            "boreal": "047ac8466fdc29768889ed52b7fa2325",
         }
 
         url = os.path.join("tests", "data", "l7irish", "{}.tar.gz")
@@ -88,7 +88,7 @@ class TestL7Irish:
         with pytest.raises(
             ValueError, match="Dataset doesn't contain some of the RGB bands"
         ):
-            ds = L7Irish(root=dataset.root, bands=["B1", "B2", "B5"])
+            ds = L7Irish(root=dataset.root, bands=["B10", "B20", "B50"])
             x = ds[ds.bounds]
             ds.plot(x, suptitle="Test")
             plt.close()
