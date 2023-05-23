@@ -5,13 +5,11 @@
 
 from typing import Any
 
-import torch
-
-from ..datasets import SSL4EODownstream
+from ..datasets import SSL4EOLBenchmark
 from .geo import NonGeoDataModule
 
 
-class SSL4EOLDownstreamDataModule(NonGeoDataModule):
+class SSL4EOLBenchmarkDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the SSL4EO-L dataset.
 
     .. versionadded:: 0.5
@@ -28,7 +26,7 @@ class SSL4EOLDownstreamDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.SSL4EOL`.
         """
-        super().__init__(SSL4EODownstream, batch_size, num_workers, **kwargs)
+        super().__init__(SSL4EOLBenchmark, batch_size, num_workers, **kwargs)
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
@@ -36,4 +34,4 @@ class SSL4EOLDownstreamDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        self.dataset = SSL4EODownstream(**self.kwargs)
+        self.dataset = SSL4EOLBenchmark(**self.kwargs)

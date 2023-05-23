@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Self-Supervised Learning for Earth Observation Downstream Evaluation."""
+"""Self-Supervised Learning for Earth Observation Landsat Benchmark Evaluation."""
 
 import glob
 import os
@@ -16,8 +16,8 @@ from torch import Tensor
 from .geo import NonGeoDataset
 
 
-class SSL4EODownstream(NonGeoDataset):
-    """SSL4EO Downstream Evaluation Dataset.
+class SSL4EOLBenchmark(NonGeoDataset):
+    """SSL4EO Landsat Benchmark Evaluation Dataset.
 
     Dataset is intended to be used for evaluation of SSL techniques.
 
@@ -55,7 +55,7 @@ class SSL4EODownstream(NonGeoDataset):
         "oli_sr": 2019,
     }
 
-    RGB_INDICES = {
+    rgb_indices = {
         "tm_toa": [2, 1, 0],
         "etm_toa": [2, 1, 0],
         "etm_sr": [2, 1, 0],
@@ -66,24 +66,23 @@ class SSL4EODownstream(NonGeoDataset):
     def __init__(
         self,
         root: str = "data",
-        input_sensor: str = "etm_toa",
+        input_sensor: str = "oli_sr",
         mask_product: str = "cdl",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
     ) -> None:
-        """Initialize a new SSL4EODownstream instance.
+        """Initialize a new SSL4EO Landsat Benchmark instance.
 
         Args:
             root: root directory where dataset can be found
             input_sensor: one of ['etm_toa', 'etm_sr', 'oli_tirs_toa, 'oli_sr']
             mask_product: mask target matched to input_sensor
+            split: dataset split, one of ['train', 'val', 'test']
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
 
         Raises:
-            AssertionError: if ``input_sensor`` argument is invalid
-            AssertionError: if ``mask_product`` argument is invalid
-            AssertionError: if ``split`` argument is invalid
+            AssertionError: if any arguments are invalid
         """
         assert (
             input_sensor in self.valid_input_sensors
@@ -191,12 +190,8 @@ class SSL4EODownstream(NonGeoDataset):
             a matplotlib Figure with the rendered sample
         """
         ncols = 2
-        image = (
-            sample["image"][self.RGB_INDICES[self.input_sensor]]
-            .permute(1, 2, 0)
-            .numpy()
-            / 255
-        )
+        image = sample["image"][self.rgb_indices[self.input_sensor]].permute(1, 2, 0)
+        image = image.numpy() / 255
         mask = sample["mask"].squeeze(0)
 
         showing_predictions = "prediction" in sample

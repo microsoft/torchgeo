@@ -13,13 +13,6 @@ import rasterio
 from rasterio import Affine
 from rasterio.crs import CRS
 
-IMG_DIR = "ssl4eo-l5-l1-conus"
-MASK_DIR = "l5-*-2011"
-MASKS = ["cdl", "nlcd"]
-
-SUBDIRS = [("0000000", "LT05_045030_20110723"), ("0000001", "LT05_040032_20110805")]
-
-NUM_BANDS = 7
 SIZE = 36
 
 np.random.seed(0)

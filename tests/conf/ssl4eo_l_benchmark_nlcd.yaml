@@ -12,9 +12,9 @@ module:
   ignore_index: 0
 
 datamodule:
-  _target_: torchgeo.datamodules.SSL4EOLDownstreamDataModule
-  root: "tests/data/ssl4eo_downstream_landsat"
+  _target_: torchgeo.datamodules.SSL4EOLBenchmarkDataModule
+  root: "tests/data/ssl4eo_benchmark_landsat"
   input_sensor: "tm_toa"
-  mask_product: "cdl"
+  mask_product: "nlcd"
   batch_size: 2
   num_workers: 0
