@@ -6,7 +6,6 @@
 import hashlib
 import os
 import shutil
-from typing import Union
 
 import numpy as np
 import rasterio
@@ -22,23 +21,64 @@ SUBDIRS = [("0000000", "LT05_045030_20110723"), ("0000001", "LT05_040032_2011080
 NUM_BANDS = 7
 SIZE = 32
 
+
 def create_image(path: str) -> None:
-    profile = {'driver': 'GTiff', 'dtype': 'uint8', 'nodata': None, 'width': 264, 'height': 264, 'count': 7, 'crs': CRS.from_epsg(4326), 'transform': Affine(0.00037672803497508636, 0.0, -109.07063613660262,
-       0.0, -0.0002554026278261721, 47.49838726154881), 'blockysize': 1, 'tiled': False, 'compress': 'lzw', 'interleave': 'pixel'}
-    
+    profile = {
+        "driver": "GTiff",
+        "dtype": "uint8",
+        "nodata": None,
+        "width": 264,
+        "height": 264,
+        "count": 7,
+        "crs": CRS.from_epsg(4326),
+        "transform": Affine(
+            0.00037672803497508636,
+            0.0,
+            -109.07063613660262,
+            0.0,
+            -0.0002554026278261721,
+            47.49838726154881,
+        ),
+        "blockysize": 1,
+        "tiled": False,
+        "compress": "lzw",
+        "interleave": "pixel",
+    }
+
     Z = np.random.randint(low=0, high=255, size=(NUM_BANDS, SIZE, SIZE))
 
     with rasterio.open(path, "w", **profile) as src:
         src.write(Z)
 
+
 def create_mask(path: str) -> None:
-    profile = {'driver': 'GTiff', 'dtype': 'uint8', 'nodata': None, 'width': 264, 'height': 264, 'count': 1, 'crs': CRS.from_epsg(4326), 'transform': Affine(0.00037672803497508636, 0.0, -109.07063613660262,
-       0.0, -0.0002554026278261721, 47.49838726154881), 'blockysize': 1, 'tiled': False, 'compress': 'lzw', 'interleave': 'band'}
+    profile = {
+        "driver": "GTiff",
+        "dtype": "uint8",
+        "nodata": None,
+        "width": 264,
+        "height": 264,
+        "count": 1,
+        "crs": CRS.from_epsg(4326),
+        "transform": Affine(
+            0.00037672803497508636,
+            0.0,
+            -109.07063613660262,
+            0.0,
+            -0.0002554026278261721,
+            47.49838726154881,
+        ),
+        "blockysize": 1,
+        "tiled": False,
+        "compress": "lzw",
+        "interleave": "band",
+    }
 
     Z = np.random.randint(low=0, high=10, size=(1, SIZE, SIZE))
 
     with rasterio.open(path, "w", **profile) as src:
         src.write(Z)
+
 
 if __name__ == "__main__":
     # create images

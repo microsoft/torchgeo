@@ -5,7 +5,6 @@
 
 import glob
 import os
-import random
 from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
@@ -54,7 +53,7 @@ class SSL4EODownstream(NonGeoDataset):
         "l7-l1": 2019,
         "l7-l2": 2019,
         "l8-l1": 2019,
-        "l8-l2": 2019
+        "l8-l2": 2019,
     }
 
     def __init__(
@@ -71,7 +70,7 @@ class SSL4EODownstream(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            input_sensor: input sensor source, one of ['l7-l1', 'l7-l2', 'l8-l1, 'l8-l2']
+            input_sensor: sensor source, one of ['l7-l1', 'l7-l2', 'l8-l1, 'l8-l2']
             mask_product: mask target matched to input_sensor
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
@@ -154,11 +153,14 @@ class SSL4EODownstream(NonGeoDataset):
         """Retrieve paths to samples in data directory."""
         img_data_dir = self.image_root.replace("*", self.input_sensor)
         mask_dir = self.mask_dir_dict[self.input_sensor].replace("*", self.mask_product)
-        img_paths = glob.glob(os.path.join(self.root, img_data_dir, "**",  "all_bands.tif"),recursive=True,)
+        img_paths = glob.glob(
+            os.path.join(self.root, img_data_dir, "**", "all_bands.tif"), recursive=True
+        )
         sample_collection: list[tuple[str]] = []
         for img_path in img_paths:
             mask_path = img_path.replace(img_data_dir, mask_dir).replace(
-                "all_bands.tif", f"{self.mask_product}_{self.year_dict[self.input_sensor]}.tif"
+                "all_bands.tif",
+                f"{self.mask_product}_{self.year_dict[self.input_sensor]}.tif",
             )
             sample_collection.append((img_path, mask_path))
         return sample_collection
@@ -187,6 +189,7 @@ class SSL4EODownstream(NonGeoDataset):
         """
         with rasterio.open(path) as src:
             import pdb
+
             pdb.set_trace()
             image = src.read()
         return torch.from_numpy(image).long()
