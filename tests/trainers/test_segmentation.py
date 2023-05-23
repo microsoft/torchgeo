@@ -70,6 +70,8 @@ class TestSemanticSegmentationTask:
             "sen12ms_s2_all",
             "sen12ms_s2_reduced",
             "spacenet1",
+            "ssl4eo_l_downstream_cdl",
+            "ssl4eo_l_downstream_nlcd",
             "vaihingen2d",
         ],
     )
