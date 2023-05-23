@@ -45,7 +45,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
         meta={
             "dataset": "Satlas",
             "in_chans": 3,
-            "model": "swin_b",
+            "model": "swin_v2_b",
             "publication": "https://arxiv.org/abs/2211.15660",
             "repo": "https://github.com/allenai/satlas",
         },
@@ -57,7 +57,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
         meta={
             "dataset": "Satlas",
             "in_chans": 3,
-            "model": "swin_b",
+            "model": "swin_v2_b",
             "publication": "https://arxiv.org/abs/2211.15660",
             "repo": "https://github.com/allenai/satlas",
         },
