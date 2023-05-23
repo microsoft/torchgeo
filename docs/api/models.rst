@@ -45,6 +45,18 @@ ResNet
    :align: center
    :file: resnet_pretrained_weights.csv
 
+Swin Transformer
+^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: swin_v2_b
+.. autoclass:: Swin_V2_B_Weights
+
+.. csv-table::
+   :widths: 45 10 10 10 15 10 10 10
+   :header-rows: 1
+   :align: center
+   :file: swin_pretrained_weights.csv
+
 Vision Transformer
 ^^^^^^^^^^^^^^^^^^
 
