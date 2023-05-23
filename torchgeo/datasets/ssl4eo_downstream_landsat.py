@@ -14,7 +14,6 @@ import torch
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, extract_archive
 
 
 class SSL4EODownstream(NonGeoDataset):
@@ -44,8 +43,8 @@ class SSL4EODownstream(NonGeoDataset):
         "tm_toa": "ssl4eo_l_tm_*",
         "etm_toa": "ssl4eo_l_etm_*",
         "etm_sr": "ssl4eo_l_etm_*",
-        "oli_tirs_toa": "ssl4eo_l_oil_*",
-        "oli_sr": "ssl4eo_l_oil_*",
+        "oli_tirs_toa": "ssl4eo_l_oli_*",
+        "oli_sr": "ssl4eo_l_oli_*",
     }
 
     year_dict = {
@@ -61,7 +60,7 @@ class SSL4EODownstream(NonGeoDataset):
         "etm_toa": [2, 1, 0],
         "etm_sr": [2, 1, 0],
         "oli_tirs_toa": [3, 2, 1],
-        "oli_sr": [3, 2, 1]
+        "oli_sr": [3, 2, 1],
     }
 
     def __init__(
@@ -71,19 +70,15 @@ class SSL4EODownstream(NonGeoDataset):
         mask_product: str = "cdl",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
-        download: bool = False,
-        checksum: bool = False,
     ) -> None:
         """Initialize a new SSL4EODownstream instance.
 
         Args:
             root: root directory where dataset can be found
-            input_sensor: sensor source, one of ['etm_toa', 'etm_sr', 'oli_tirs_toa, 'oli_sr']
+            input_sensor: one of ['etm_toa', 'etm_sr', 'oli_tirs_toa, 'oli_sr']
             mask_product: mask target matched to input_sensor
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
-            download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 after downloading files (may be slow)
 
         Raises:
             AssertionError: if ``input_sensor`` argument is invalid
@@ -105,10 +100,6 @@ class SSL4EODownstream(NonGeoDataset):
 
         self.root = root
         self.transforms = transforms
-        self.download = download
-        self.checksum = checksum
-
-        self._verify()
 
         self.sample_collection = self.retrieve_sample_collection()
 
@@ -140,22 +131,6 @@ class SSL4EODownstream(NonGeoDataset):
             length of the dataset
         """
         return len(self.sample_collection)
-
-    def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if dataset is missing or checksum fails
-        """
-        pass
-
-    def _download(self) -> None:
-        """Download the dataset."""
-        pass
-
-    def _extract(self) -> None:
-        """Extract the dataset."""
-        pass
 
     def retrieve_sample_collection(self) -> list[tuple[str]]:
         """Retrieve paths to samples in data directory."""
@@ -216,7 +191,12 @@ class SSL4EODownstream(NonGeoDataset):
             a matplotlib Figure with the rendered sample
         """
         ncols = 2
-        image = sample["image"][self.RGB_INDICES[self.input_sensor]].permute(1, 2, 0).numpy() / 255
+        image = (
+            sample["image"][self.RGB_INDICES[self.input_sensor]]
+            .permute(1, 2, 0)
+            .numpy()
+            / 255
+        )
         mask = sample["mask"].squeeze(0)
 
         showing_predictions = "prediction" in sample
@@ -224,7 +204,7 @@ class SSL4EODownstream(NonGeoDataset):
             prediction_mask = sample["prediction"].squeeze(0).numpy()
             ncols = 3
 
-        fig, ax = plt.subplots(ncols=ncols, figsize=(4*ncols, 4))
+        fig, ax = plt.subplots(ncols=ncols, figsize=(4 * ncols, 4))
         ax[0].imshow(image)
         ax[0].axis("off")
         ax[1].imshow(mask)
@@ -242,5 +222,3 @@ class SSL4EODownstream(NonGeoDataset):
             plt.suptitle(suptitle)
 
         return fig
-
-

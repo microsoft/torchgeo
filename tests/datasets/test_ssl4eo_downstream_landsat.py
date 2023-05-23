@@ -14,7 +14,6 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import SSL4EODownstream
 
 
@@ -23,37 +22,25 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestSSL4EODownstream:
-    @pytest.fixture(params=product(["tm_toa", "etm_toa", "etm_sr", "oli_tirs_toa", "oli_sr"], ["cdl", "nlcd"]))
+    @pytest.fixture(
+        params=product(
+            ["tm_toa", "etm_toa", "etm_sr", "oli_tirs_toa", "oli_sr"], ["cdl", "nlcd"]
+        )
+    )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SSL4EODownstream:
         root = str(tmp_path)
         input_sensor, mask_product = request.param
 
-        img_dir = os.path.join(
-            "tests",
-            "data",
-            "ssl4eo_downstream_landsat",
-            f"ssl4eo_l_{input_sensor}_benchmark",
-        )
-        mask_dir = os.path.join(
-            "tests",
-            "data",
-            "ssl4eo_downstream_landsat",
-            f"ssl4eo_l_{input_sensor.split('_')[0]}_{mask_product}",
-        )
-
-        shutil.copy(img_dir, root)
-        shutil.copy(mask_dir, root)
+        img_dir = os.path.join("tests", "data", "ssl4eo_downstream_landsat")
+        shutil.copytree(img_dir, root, dirs_exist_ok=True)
 
         transforms = nn.Identity()
         return SSL4EODownstream(
             root=root,
             input_sensor=input_sensor,
             mask_product=mask_product,
-            split=split,
-            download=True,
-            checksum=True,
             transforms=transforms,
         )
 
@@ -78,3 +65,13 @@ class TestSSL4EODownstream:
     def test_add(self, dataset: SSL4EODownstream) -> None:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
+
+    def test_plot(self, dataset: SSL4EODownstream) -> None:
+        sample = dataset[0]
+        dataset.plot(sample, suptitle="Test")
+        plt.close()
+        dataset.plot(sample, show_titles=False)
+        plt.close()
+        sample["prediction"] = sample["mask"].clone()
+        dataset.plot(sample)
+        plt.close()

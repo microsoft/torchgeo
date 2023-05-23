@@ -28,49 +28,30 @@ FILENAME_HIERARCHY = Union[dict[str, "FILENAME_HIERARCHY"], list[str]]
 
 filenames: FILENAME_HIERARCHY = {
     "tm_toa": {
-        "0000002": {
-            "LE07_172034_20010526": ["all_bands.tif"],
-        },
-        "0000005": {
-            "LE07_223084_20010413": ["all_bands.tif"],
-        },
+        "0000002": {"LE07_172034_20010526": ["all_bands.tif"]},
+        "0000005": {"LE07_223084_20010413": ["all_bands.tif"]},
     },
     "etm_sr": {
-        "0000002": {
-            "LE07_172034_20010526": ["all_bands.tif"],
-        },
-        "0000005": {
-            "LE07_223084_20010413": ["all_bands.tif"],
-        },
+        "0000002": {"LE07_172034_20010526": ["all_bands.tif"]},
+        "0000005": {"LE07_223084_20010413": ["all_bands.tif"]},
     },
     "etm_toa": {
-        "0000002": {
-            "LE07_172034_20010526": ["all_bands.tif"],
-        },
-        "0000005": {
-            "LE07_223084_20010413": ["all_bands.tif"],
-        },
+        "0000002": {"LE07_172034_20010526": ["all_bands.tif"]},
+        "0000005": {"LE07_223084_20010413": ["all_bands.tif"]},
     },
     "oli_tirs_toa": {
-        "0000002": {
-            "LC08_172034_20210306": ["all_bands.tif"],
-        },
-        "0000005": {
-            "LC08_223084_20210412": ["all_bands.tif"],
-        },
+        "0000002": {"LC08_172034_20210306": ["all_bands.tif"]},
+        "0000005": {"LC08_223084_20210412": ["all_bands.tif"]},
     },
     "oli_sr": {
-        "0000002": {
-            "LC08_172034_20210306": ["all_bands.tif"],
-        },
-        "0000005": {
-            "LC08_223084_20210412": ["all_bands.tif"],
-        },
+        "0000002": {"LC08_172034_20210306": ["all_bands.tif"]},
+        "0000005": {"LC08_223084_20210412": ["all_bands.tif"]},
     },
 }
 
 num_bands = {"tm_toa": 7, "etm_sr": 6, "etm_toa": 9, "oli_tirs_toa": 11, "oli_sr": 7}
 years = {"tm": 2011, "etm": 2019, "oli": 2019}
+
 
 def create_image(path: str) -> None:
     profile = {
@@ -130,6 +111,7 @@ def create_mask(path: str) -> None:
     with rasterio.open(path, "w", **profile) as src:
         src.write(Z)
 
+
 def create_img_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:
     if isinstance(hierarchy, dict):
         # Recursive case
@@ -145,7 +127,10 @@ def create_img_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:
             path = os.path.join(directory, value)
             create_image(path)
 
-def create_mask_directory(directory: str, hierarchy: FILENAME_HIERARCHY, mask_product: str) -> None:
+
+def create_mask_directory(
+    directory: str, hierarchy: FILENAME_HIERARCHY, mask_product: str
+) -> None:
     if isinstance(hierarchy, dict):
         # Recursive case
         for key, value in hierarchy.items():
@@ -159,7 +144,8 @@ def create_mask_directory(directory: str, hierarchy: FILENAME_HIERARCHY, mask_pr
         for value in hierarchy:
             path = os.path.join(directory, value)
             year = years[path.split(os.sep)[1].split("_")[2]]
-            create_mask(path.replace("all_bands", f"{mask_product}_{year}.tif"))
+            create_mask(path.replace("all_bands", f"{mask_product}_{year}"))
+
 
 def create_tarballs(directories) -> None:
     for directory in directories:
@@ -180,15 +166,22 @@ if __name__ == "__main__":
     create_tarballs(directories)
 
     # mask directory cdl
-    mask_keep = ["tm_toa", "etm_sr", "oil_sr"]
-    mask_filenames = {f"ssl4eo_l_{key.split('_')[0]}_cdl": val for key, val in filenames.items() if key in mask_keep}
+    mask_keep = ["tm_toa", "etm_sr", "oli_sr"]
+    mask_filenames = {
+        f"ssl4eo_l_{key.split('_')[0]}_cdl": val
+        for key, val in filenames.items()
+        if key in mask_keep
+    }
     create_mask_directory(".", mask_filenames, "cdl")
     directories = mask_filenames.keys()
     create_tarballs(directories)
 
     # mask directory nlcd
-    mask_filenames = {f"ssl4eo_l_{key.split('_')[0]}_nlcd": val for key, val in filenames.items() if key in mask_keep}
+    mask_filenames = {
+        f"ssl4eo_l_{key.split('_')[0]}_nlcd": val
+        for key, val in filenames.items()
+        if key in mask_keep
+    }
     create_mask_directory(".", mask_filenames, "nlcd")
     directories = mask_filenames.keys()
     create_tarballs(directories)
-    
