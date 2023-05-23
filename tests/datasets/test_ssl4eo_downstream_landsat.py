@@ -23,20 +23,32 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestSSL4EODownstream:
-    @pytest.fixture(
-        params=product(
-            ["l7-l1", "l7-l2", "l8-l1", "l8-l2"],
-            ["cdl", "nlcd"],
-            ["train", "val", "test"],
-        )
-    )
+    @pytest.fixture(params=product([("l5-l1", 2011)], ["cdl", "nlcd"]))
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SSL4EODownstream:
-        input_sensor, mask_product, split = request.param
-        monkeypatch.setattr(torchgeo.datasets.eurosat, "download_url", download_url)
-
         root = str(tmp_path)
+        sensor_year, mask_product = request.param
+        input_sensor, year = sensor_year
+
+        img_dir = os.path.join(
+            "tests",
+            "data",
+            "ssl4eo_downstream_landsat",
+            input_sensor,
+            f"ssl4eo-{input_sensor}-conus",
+        )
+        mask_dir = os.path.join(
+            "tests",
+            "data",
+            "ssl4eo_downstream_landsat",
+            input_sensor,
+            f"{input_sensor.split('-')[0]}-{mask_product}-{year}",
+        )
+
+        shutil.copy(img_dir, root)
+        shutil.copy(mask_dir, root)
+
         transforms = nn.Identity()
         return SSL4EODownstream(
             root=root,

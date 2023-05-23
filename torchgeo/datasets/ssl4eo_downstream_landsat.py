@@ -36,11 +36,26 @@ class SSL4EODownstream(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    valid_input_sensors = ["l7-l1", "l7-l2", "l8-l1", "l8-l2"]
-    valid_mask_products = ["cdl", "ncdl"]
+    valid_input_sensors = ["l5-l1", "l7-l1", "l7-l2", "l8-l1", "l8-l2"]
+    valid_mask_products = ["cdl", "nlcd"]
     valid_splits = ["train", "val", "test"]
 
-    data_root = "ssl4eo-*-conus"
+    image_root = "ssl4eo-*-conus"
+    mask_dir_dict = {
+        "l5-l1": "l5-*-2011",
+        "l7-l1": "l7-*-2019",
+        "l7-l2": "l7-*-2019",
+        "l8-l1": "l8-*-2019",
+        "l8-l2": "l8-*-2019",
+    }
+
+    year_dict = {
+        "l5-l1": 2011,
+        "l7-l1": 2019,
+        "l7-l2": 2019,
+        "l8-l1": 2019,
+        "l8-l2": 2019
+    }
 
     def __init__(
         self,
@@ -137,19 +152,13 @@ class SSL4EODownstream(NonGeoDataset):
 
     def retrieve_sample_collection(self) -> list[tuple[str]]:
         """Retrieve paths to samples in data directory."""
-        data_dir = self.data_root.replace("*", self.input_sensor)
-        img_paths = sorted(
-            glob.glob(
-                os.path.join(self.root, data_dir, "imgs", "**", "**", "all_bands.tif"),
-                recursive=True,
-            )
-        )
+        img_data_dir = self.image_root.replace("*", self.input_sensor)
+        mask_dir = self.mask_dir_dict[self.input_sensor].replace("*", self.mask_product)
+        img_paths = glob.glob(os.path.join(self.root, img_data_dir, "**",  "all_bands.tif"),recursive=True,)
         sample_collection: list[tuple[str]] = []
         for img_path in img_paths:
-            date_id = img_path.split("/")[-2]
-            year = date_id.split("_")[:4]
-            mask_path = img_path.replace(date_id, year).replace(
-                "all_bands.tif", "mask.tif"
+            mask_path = img_path.replace(img_data_dir, mask_dir).replace(
+                "all_bands.tif", f"{self.mask_product}_{self.year_dict[self.input_sensor]}.tif"
             )
             sample_collection.append((img_path, mask_path))
         return sample_collection
@@ -177,5 +186,7 @@ class SSL4EODownstream(NonGeoDataset):
             mask
         """
         with rasterio.open(path) as src:
+            import pdb
+            pdb.set_trace()
             image = src.read()
         return torch.from_numpy(image).long()
