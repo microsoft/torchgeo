@@ -56,6 +56,14 @@ class SSL4EODownstream(NonGeoDataset):
         "l8-l2": 2019,
     }
 
+    RGB_INDICES = {
+        "l5-l1": [2, 1, 0],
+        "l7-l1": [2, 1, 0],
+        "l7-l2": [2, 1, 0],
+        "l8-l1": [3, 2, 1],
+        "l8-l2": [3, 2, 1]
+    }
+
     def __init__(
         self,
         root: str = "data",
@@ -188,8 +196,51 @@ class SSL4EODownstream(NonGeoDataset):
             mask
         """
         with rasterio.open(path) as src:
-            import pdb
-
-            pdb.set_trace()
             image = src.read()
         return torch.from_numpy(image).long()
+
+    def plot(
+        self,
+        sample: dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        ncols = 2
+        image = sample["image"][self.RGB_INDICES[self.input_sensor]].permute(1, 2, 0).numpy() / 255
+        mask = sample["mask"].squeeze(0)
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction_mask = sample["prediction"].squeeze(0).numpy()
+            ncols = 3
+
+        fig, ax = plt.subplots(ncols=ncols, figsize=(4*ncols, 4))
+        ax[0].imshow(image)
+        ax[0].axis("off")
+        ax[1].imshow(mask)
+        ax[1].axis("off")
+        if show_titles:
+            ax[0].set_title("Image")
+            ax[1].set_title("Mask")
+
+        if showing_predictions:
+            ax[2].imshow(prediction_mask)
+            if show_titles:
+                ax[2].set_title("Prediction")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
+
+
