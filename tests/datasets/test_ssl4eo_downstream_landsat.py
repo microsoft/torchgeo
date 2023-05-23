@@ -23,27 +23,24 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestSSL4EODownstream:
-    @pytest.fixture(params=product([("l5-l1", 2011)], ["cdl", "nlcd"]))
+    @pytest.fixture(params=product(["tm_toa", "etm_toa", "etm_sr", "oli_tirs_toa", "oli_sr"], ["cdl", "nlcd"]))
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SSL4EODownstream:
         root = str(tmp_path)
-        sensor_year, mask_product = request.param
-        input_sensor, year = sensor_year
+        input_sensor, mask_product = request.param
 
         img_dir = os.path.join(
             "tests",
             "data",
             "ssl4eo_downstream_landsat",
-            input_sensor,
-            f"ssl4eo-{input_sensor}-conus",
+            f"ssl4eo_l_{input_sensor}_benchmark",
         )
         mask_dir = os.path.join(
             "tests",
             "data",
             "ssl4eo_downstream_landsat",
-            input_sensor,
-            f"{input_sensor.split('-')[0]}-{mask_product}-{year}",
+            f"ssl4eo_l_{input_sensor.split('_')[0]}_{mask_product}",
         )
 
         shutil.copy(img_dir, root)

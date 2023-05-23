@@ -35,39 +35,39 @@ class SSL4EODownstream(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    valid_input_sensors = ["l5-l1", "l7-l1", "l7-l2", "l8-l1", "l8-l2"]
+    valid_input_sensors = ["tm_toa", "etm_toa", "etm_sr", "oli_tirs_toa", "oli_sr"]
     valid_mask_products = ["cdl", "nlcd"]
     valid_splits = ["train", "val", "test"]
 
-    image_root = "ssl4eo-*-conus"
+    image_root = "ssl4eo_l_*_benchmark"
     mask_dir_dict = {
-        "l5-l1": "l5-*-2011",
-        "l7-l1": "l7-*-2019",
-        "l7-l2": "l7-*-2019",
-        "l8-l1": "l8-*-2019",
-        "l8-l2": "l8-*-2019",
+        "tm_toa": "ssl4eo_l_tm_*",
+        "etm_toa": "ssl4eo_l_etm_*",
+        "etm_sr": "ssl4eo_l_etm_*",
+        "oli_tirs_toa": "ssl4eo_l_oil_*",
+        "oli_sr": "ssl4eo_l_oil_*",
     }
 
     year_dict = {
-        "l5-l1": 2011,
-        "l7-l1": 2019,
-        "l7-l2": 2019,
-        "l8-l1": 2019,
-        "l8-l2": 2019,
+        "tm_toa": 2011,
+        "etm_toa": 2019,
+        "etm_sr": 2019,
+        "oli_tirs_toa": 2019,
+        "oli_sr": 2019,
     }
 
     RGB_INDICES = {
-        "l5-l1": [2, 1, 0],
-        "l7-l1": [2, 1, 0],
-        "l7-l2": [2, 1, 0],
-        "l8-l1": [3, 2, 1],
-        "l8-l2": [3, 2, 1]
+        "tm_toa": [2, 1, 0],
+        "etm_toa": [2, 1, 0],
+        "etm_sr": [2, 1, 0],
+        "oli_tirs_toa": [3, 2, 1],
+        "oli_sr": [3, 2, 1]
     }
 
     def __init__(
         self,
         root: str = "data",
-        input_sensor: str = "l7-l1",
+        input_sensor: str = "etm_toa",
         mask_product: str = "cdl",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -78,7 +78,7 @@ class SSL4EODownstream(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            input_sensor: sensor source, one of ['l7-l1', 'l7-l2', 'l8-l1, 'l8-l2']
+            input_sensor: sensor source, one of ['etm_toa', 'etm_sr', 'oli_tirs_toa, 'oli_sr']
             mask_product: mask target matched to input_sensor
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
