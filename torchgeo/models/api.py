@@ -33,7 +33,7 @@ _model_weights = {
     "resnet18": ResNet18_Weights,
     "resnet50": ResNet50_Weights,
     "vit_small_patch16_224": ViTSmall16_Weights,
-    "swin_b": Swin_V2_B_Weights,
+    "swin_v2_b": Swin_V2_B_Weights,
 }
 
 
