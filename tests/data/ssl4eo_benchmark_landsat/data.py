@@ -127,8 +127,6 @@ def create_mask_directory(
     if isinstance(hierarchy, dict):
         # Recursive case
         for key, value in hierarchy.items():
-            # if any([x in key for x in filenames.keys()]):
-            #     key = key.split("_")[0] # only keep toa, etm, oil
             path = os.path.join(directory, key)
             os.makedirs(path, exist_ok=True)
             create_mask_directory(path, value, mask_product)
