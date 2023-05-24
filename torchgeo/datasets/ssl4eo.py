@@ -140,7 +140,7 @@ class SSL4EOL(NonGeoDataset):
             filename = os.path.join(directory, "all_bands.tif")
             with rasterio.open(filename) as f:
                 image = f.read()
-                images.append(torch.from_numpy(image.astype(np.float32)))
+                images.append(torch.from_numpy(image.astype(np.uint8)))
 
         sample = {"image": torch.cat(images)}
 

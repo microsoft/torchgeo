@@ -19,6 +19,10 @@ from torchgeo.datamodules import MisconfigurationException
 from torchgeo.trainers import BYOLTask, MoCoTask, ObjectDetectionTask, SimCLRTask
 
 
+import torch
+torch.set_float32_matmul_precision("medium")
+
+
 def set_up_omegaconf() -> DictConfig:
     """Loads program arguments from either YAML config files or command line arguments.
 

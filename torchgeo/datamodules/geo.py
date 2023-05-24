@@ -54,6 +54,7 @@ class BaseDataModule(LightningDataModule):  # type: ignore[misc]
         Returns:
             A batch of data.
         """
+        batch["image"] = batch["image"].to(torch.float)
         if self.trainer:
             if self.trainer.training:
                 aug = self.train_aug or self.aug
