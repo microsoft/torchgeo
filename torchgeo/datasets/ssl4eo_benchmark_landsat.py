@@ -14,6 +14,7 @@ import torch
 from torch import Tensor
 
 from .geo import NonGeoDataset
+from .utils import download_url, extract_archive
 
 
 class SSL4EOLBenchmark(NonGeoDataset):
@@ -37,17 +38,41 @@ class SSL4EOLBenchmark(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
+    url = "https://huggingface.co/datasets/torchgeo/{}/resolve/main/{}.tar.gz"
+
     valid_input_sensors = ["tm_toa", "etm_toa", "etm_sr", "oli_tirs_toa", "oli_sr"]
     valid_mask_products = ["cdl", "nlcd"]
     valid_splits = ["train", "val", "test"]
 
-    image_root = "ssl4eo_l_*_benchmark"
+    image_root = "ssl4eo_l_{}_benchmark"
+    img_md5s = {
+        "tm_toa": "8e3c5bcd56d3780a442f1332013b8d15",
+        "etm_toa": "1b051c7fe4d61c581b341370c9e76f1f",
+        "etm_sr": "a33d5e3b9c309980ef15d453235843ed",
+        "oli_tirs_toa": "6e9d7cf0392e1de2cbdb39962ba591aa",
+        "oli_sr": "0700cd15cc2366fe68c2f8c02fa09a15",
+    }
+
     mask_dir_dict = {
-        "tm_toa": "ssl4eo_l_tm_*",
-        "etm_toa": "ssl4eo_l_etm_*",
-        "etm_sr": "ssl4eo_l_etm_*",
-        "oli_tirs_toa": "ssl4eo_l_oli_*",
-        "oli_sr": "ssl4eo_l_oli_*",
+        "tm_toa": "ssl4eo_l_tm_{}",
+        "etm_toa": "ssl4eo_l_etm_{}",
+        "etm_sr": "ssl4eo_l_etm_{}",
+        "oli_tirs_toa": "ssl4eo_l_oli_{}",
+        "oli_sr": "ssl4eo_l_oli_{}",
+    }
+    mask_md5s = {
+        "tm": {
+            "cdl": "3d676770ffb56c7e222a7192a652a846",
+            "nlcd": "261149d7614fcfdcb3be368eefa825c7",
+        },
+        "etm": {
+            "cdl": "dd2560b18b89dfe7f0e867fcf7217bd0",
+            "nlcd": "916f4a433df6c8abca15b45b60d005d3",
+        },
+        "oli": {
+            "cdl": "1cb057de6eafeca975deb35cb9fb036f",
+            "nlcd": "9de0d6d4d0b94313b80450f650813922",
+        },
     }
 
     year_dict = {
@@ -75,6 +100,8 @@ class SSL4EOLBenchmark(NonGeoDataset):
         mask_product: str = "cdl",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        download: bool = False,
+        checksum: bool = False,
     ) -> None:
         """Initialize a new SSL4EO Landsat Benchmark instance.
 
@@ -85,6 +112,8 @@ class SSL4EOLBenchmark(NonGeoDataset):
             split: dataset split, one of ['train', 'val', 'test']
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
+            download: if True, download dataset and store it in the root directory
+            checksum: if True, check the MD5 after downloading files (may be slow)
 
         Raises:
             AssertionError: if any arguments are invalid
@@ -104,9 +133,18 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
         self.root = root
         self.transforms = transforms
+        self.download = download
+        self.checksum = checksum
+        self.img_dir_name = self.image_root.format(self.input_sensor)
+        self.mask_dir_name = self.mask_dir_dict[self.input_sensor].format(
+            self.mask_product
+        )
+
+        self._verify()
 
         self.sample_collection = self.retrieve_sample_collection()
 
+        # train, val, test split
         np.random.seed(0)
         sizes = (np.array(self.split_percentages) * len(self.sample_collection)).astype(
             int
@@ -120,6 +158,79 @@ class SSL4EOLBenchmark(NonGeoDataset):
         ]
 
         self.sample_collection = [self.sample_collection[idx] for idx in split_indices]
+
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
+        # Check if the extracted files already exist
+        img_pathname = os.path.join(self.root, self.img_dir_name, "**", "all_bands.tif")
+        exists = []
+        for fname in glob.iglob(img_pathname, recursive=True):
+            exists.append(True)
+            break
+        mask_pathname = os.path.join(
+            self.root,
+            self.mask_dir_name,
+            "**",
+            f"{self.mask_product}_{self.year_dict[self.input_sensor]}.tif",
+        )
+        for fname in glob.iglob(mask_pathname, recursive=True):
+            exists.append(True)
+            break
+        if exists and all(exists):
+            return
+
+        # Check if the tar.gz files have already been downloaded
+        exists = []
+        img_pathname = os.path.join(self.root, f"{self.img_dir_name}.tar.gz")
+        if os.path.exists(img_pathname):
+            exists.append(True)
+        mask_pathname = os.path.join(self.root, f"{self.mask_dir_name}.tar.gz")
+        if os.path.exists(mask_pathname):
+            exists.append(True)
+        if exists and all(exists):
+            self._extract()
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
+
+        # Download the dataset
+        self._download()
+        self._extract()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        # download imagery
+        download_url(
+            self.url.format(self.img_dir_name, self.img_dir_name),
+            self.root,
+            md5=self.img_md5s[self.input_sensor] if self.checksum else None,
+        )
+        # download mask
+        download_url(
+            self.url.format(self.mask_dir_name, self.mask_dir_name),
+            self.root,
+            md5=self.mask_md5s[self.input_sensor.split("_")[0]][self.mask_product]
+            if self.checksum
+            else None,
+        )
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        img_pathname = os.path.join(self.root, f"{self.img_dir_name}.tar.gz")
+        extract_archive(img_pathname)
+
+        mask_pathname = os.path.join(self.root, f"{self.mask_dir_name}.tar.gz")
+        extract_archive(mask_pathname)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -152,14 +263,13 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
     def retrieve_sample_collection(self) -> list[tuple[str]]:
         """Retrieve paths to samples in data directory."""
-        img_data_dir = self.image_root.replace("*", self.input_sensor)
-        mask_dir = self.mask_dir_dict[self.input_sensor].replace("*", self.mask_product)
         img_paths = glob.glob(
-            os.path.join(self.root, img_data_dir, "**", "all_bands.tif"), recursive=True
+            os.path.join(self.root, self.img_dir_name, "**", "all_bands.tif"),
+            recursive=True,
         )
         sample_collection: list[tuple[str]] = []
         for img_path in img_paths:
-            mask_path = img_path.replace(img_data_dir, mask_dir).replace(
+            mask_path = img_path.replace(self.img_dir_name, self.mask_dir_name).replace(
                 "all_bands.tif",
                 f"{self.mask_product}_{self.year_dict[self.input_sensor]}.tif",
             )
