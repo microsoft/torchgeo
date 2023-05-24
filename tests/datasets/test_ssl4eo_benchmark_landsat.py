@@ -33,7 +33,7 @@ class TestSSL4EOLBenchmark:
         root = str(tmp_path)
         input_sensor, mask_product = request.param
 
-        img_dir = os.path.join("tests", "data", "ssl4eo_downstream_landsat")
+        img_dir = os.path.join("tests", "data", "ssl4eo_benchmark_landsat")
         shutil.copytree(img_dir, root, dirs_exist_ok=True)
 
         transforms = nn.Identity()
