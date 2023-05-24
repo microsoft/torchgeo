@@ -35,7 +35,7 @@ class TestSSL4EOLBenchmark:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SSL4EOLBenchmark:
         monkeypatch.setattr(
-            torchgeo.datasets.ssl4eo_benchmark_landsat, "download_url", download_url
+            torchgeo.datasets.ssl4eo_benchmark, "download_url", download_url
         )
         root = str(tmp_path)
 
@@ -95,11 +95,11 @@ class TestSSL4EOLBenchmark:
 
     def test_invalid_input_sensor(self) -> None:
         with pytest.raises(AssertionError):
-            SSL4EOLBenchmark(split="foo")
+            SSL4EOLBenchmark(input_sensor="foo")
 
     def test_invalid_mask_product(self) -> None:
         with pytest.raises(AssertionError):
-            SSL4EOLBenchmark(split="foo")
+            SSL4EOLBenchmark(mask_product="foo")
 
     def test_add(self, dataset: SSL4EOLBenchmark) -> None:
         ds = dataset + dataset

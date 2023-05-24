@@ -105,7 +105,7 @@ from .splits import (
     time_series_split,
 )
 from .ssl4eo import SSL4EO, SSL4EOL, SSL4EOS12
-from .ssl4eo_benchmark_landsat import SSL4EOLBenchmark
+from .ssl4eo_benchmark import SSL4EOLBenchmark
 from .sustainbench_crop_yield import SustainBenchCropYield
 from .ucmerced import UCMerced
 from .usavars import USAVars

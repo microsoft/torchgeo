@@ -13,11 +13,10 @@ import rasterio
 import torch
 from torch import Tensor
 
+from .cdl import CDL
 from .geo import NonGeoDataset
 from .nlcd import NLCD
 from .utils import download_url, extract_archive
-
-# from .cdl import CDL
 
 
 class SSL4EOLBenchmark(NonGeoDataset):
@@ -31,6 +30,8 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
     * input landsat image and single channel mask
     * 25,000 total samples split into train, val, test (70%, 15%, 15%)
+    * NLCD dataset version has 17 classes
+    * CDL dataset version has 134 classes
 
     Each patch has the following properties:
 
@@ -96,10 +97,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
     split_percentages = [0.7, 0.15, 0.15]
 
-    ordinal_label_map = {
-        "nlcd": NLCD.ordinal_label_map,
-        # "cdl": CDL.ordinal_label_map
-    }
+    ordinal_label_map = {"nlcd": NLCD.ordinal_label_map, "cdl": CDL.ordinal_label_map}
 
     def __init__(
         self,
@@ -269,13 +267,13 @@ class SSL4EOLBenchmark(NonGeoDataset):
         """
         return len(self.sample_collection)
 
-    def retrieve_sample_collection(self) -> list[tuple[str]]:
+    def retrieve_sample_collection(self) -> list[tuple[str, str]]:
         """Retrieve paths to samples in data directory."""
         img_paths = glob.glob(
             os.path.join(self.root, self.img_dir_name, "**", "all_bands.tif"),
             recursive=True,
         )
-        sample_collection: list[tuple[str]] = []
+        sample_collection: list[tuple[str, str]] = []
         for img_path in img_paths:
             mask_path = img_path.replace(self.img_dir_name, self.mask_dir_name).replace(
                 "all_bands.tif",
