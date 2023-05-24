@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
+from matplotlib.colors import ListedColormap
 from torch import Tensor
 
 from .cdl import CDL
@@ -98,6 +99,8 @@ class SSL4EOLBenchmark(NonGeoDataset):
     split_percentages = [0.7, 0.15, 0.15]
 
     ordinal_label_map = {"nlcd": NLCD.ordinal_label_map, "cdl": CDL.ordinal_label_map}
+
+    cmaps = {"nlcd": NLCD.cmap, "cdl": CDL.cmap}
 
     def __init__(
         self,
@@ -331,6 +334,14 @@ class SSL4EOLBenchmark(NonGeoDataset):
         ncols = 2
         image = sample["image"][self.rgb_indices[self.input_sensor]].permute(1, 2, 0)
         image = image.numpy() / 255
+
+        plt_cmap = ListedColormap(
+            np.stack(
+                [np.array(val) / 255 for val in self.cmaps[self.mask_product].values()],
+                axis=0,
+            )
+        )
+
         mask = sample["mask"].squeeze(0)
 
         showing_predictions = "prediction" in sample
@@ -341,14 +352,14 @@ class SSL4EOLBenchmark(NonGeoDataset):
         fig, ax = plt.subplots(ncols=ncols, figsize=(4 * ncols, 4))
         ax[0].imshow(image)
         ax[0].axis("off")
-        ax[1].imshow(mask)
+        ax[1].imshow(mask, cmap=plt_cmap)
         ax[1].axis("off")
         if show_titles:
             ax[0].set_title("Image")
             ax[1].set_title("Mask")
 
         if showing_predictions:
-            ax[2].imshow(prediction_mask)
+            ax[2].imshow(prediction_mask, cmap=plt_cmap)
             if show_titles:
                 ax[2].set_title("Prediction")
 
