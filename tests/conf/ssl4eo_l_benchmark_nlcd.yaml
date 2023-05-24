@@ -18,4 +18,3 @@ datamodule:
   mask_product: "nlcd"
   batch_size: 2
   num_workers: 0
-  
