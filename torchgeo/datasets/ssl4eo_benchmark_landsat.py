@@ -19,11 +19,14 @@ from .geo import NonGeoDataset
 class SSL4EOLBenchmark(NonGeoDataset):
     """SSL4EO Landsat Benchmark Evaluation Dataset.
 
-    Dataset is intended to be used for evaluation of SSL techniques.
+    Dataset is intended to be used for evaluation of SSL techniques. Each
+    benchmark dataset consists of 25,000 images with corresponding land
+    cover classification masks.
 
     Dataset format:
 
     * input landsat image and single channel mask
+    * 25,000 total samples split into train, val, test (70%, 15%, 15%)
 
     Each patch has the following properties:
 
@@ -63,6 +66,8 @@ class SSL4EOLBenchmark(NonGeoDataset):
         "oli_sr": [3, 2, 1],
     }
 
+    split_percentages = [0.7, 0.15, 0.15]
+
     def __init__(
         self,
         root: str = "data",
@@ -76,7 +81,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         Args:
             root: root directory where dataset can be found
             input_sensor: one of ['etm_toa', 'etm_sr', 'oli_tirs_toa, 'oli_sr']
-            mask_product: mask target matched to input_sensor
+            mask_product: mask target one of ['cdl', 'nlcd']
             split: dataset split, one of ['train', 'val', 'test']
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
@@ -101,6 +106,20 @@ class SSL4EOLBenchmark(NonGeoDataset):
         self.transforms = transforms
 
         self.sample_collection = self.retrieve_sample_collection()
+
+        np.random.seed(0)
+        sizes = (np.array(self.split_percentages) * len(self.sample_collection)).astype(
+            int
+        )
+        cutoffs = np.cumsum(sizes)[:-1]
+        sample_indices = np.arange(len(self.sample_collection))
+        np.random.shuffle(sample_indices)
+        groups = np.split(sample_indices, cutoffs)
+        split_indices = {"train": groups[0], "val": groups[1], "test": groups[2]}[
+            self.split
+        ]
+
+        self.sample_collection = [self.sample_collection[idx] for idx in split_indices]
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.

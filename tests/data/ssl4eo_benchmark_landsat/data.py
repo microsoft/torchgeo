@@ -21,24 +21,29 @@ FILENAME_HIERARCHY = Union[dict[str, "FILENAME_HIERARCHY"], list[str]]
 
 filenames: FILENAME_HIERARCHY = {
     "tm_toa": {
-        "0000002": {"LE07_172034_20010526": ["all_bands.tif"]},
-        "0000005": {"LE07_223084_20010413": ["all_bands.tif"]},
+        "0000002": {"LT05_172034_20010526": ["all_bands.tif"]},
+        "0000005": {"LT05_223084_20010413": ["all_bands.tif"]},
+        "0000007": {"LT05_172034_20020902": ["all_bands.tif"]},
     },
     "etm_sr": {
         "0000002": {"LE07_172034_20010526": ["all_bands.tif"]},
         "0000005": {"LE07_223084_20010413": ["all_bands.tif"]},
+        "0000007": {"LE07_172034_20020902": ["all_bands.tif"]},
     },
     "etm_toa": {
         "0000002": {"LE07_172034_20010526": ["all_bands.tif"]},
         "0000005": {"LE07_223084_20010413": ["all_bands.tif"]},
+        "0000007": {"LE07_172034_20020902": ["all_bands.tif"]},
     },
     "oli_tirs_toa": {
         "0000002": {"LC08_172034_20210306": ["all_bands.tif"]},
         "0000005": {"LC08_223084_20210412": ["all_bands.tif"]},
+        "0000007": {"LC08_172034_20020902": ["all_bands.tif"]},
     },
     "oli_sr": {
         "0000002": {"LC08_172034_20210306": ["all_bands.tif"]},
         "0000005": {"LC08_223084_20210412": ["all_bands.tif"]},
+        "0000007": {"LC08_172034_20020902": ["all_bands.tif"]},
     },
 }
 

@@ -24,14 +24,19 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestSSL4EOLBenchmark:
     @pytest.fixture(
         params=product(
-            ["tm_toa", "etm_toa", "etm_sr", "oli_tirs_toa", "oli_sr"], ["cdl", "nlcd"]
+            ["tm_toa", "etm_toa", "etm_sr", "oli_tirs_toa", "oli_sr"],
+            ["cdl", "nlcd"],
+            ["train", "val", "test"],
         )
     )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SSL4EOLBenchmark:
         root = str(tmp_path)
-        input_sensor, mask_product = request.param
+        input_sensor, mask_product, split = request.param
+        monkeypatch.setattr(
+            SSL4EOLBenchmark, "split_percentages", [1 / 3, 1 / 3, 1 / 3]
+        )
 
         img_dir = os.path.join("tests", "data", "ssl4eo_benchmark_landsat")
         shutil.copytree(img_dir, root, dirs_exist_ok=True)
@@ -41,6 +46,7 @@ class TestSSL4EOLBenchmark:
             root=root,
             input_sensor=input_sensor,
             mask_product=mask_product,
+            split=split,
             transforms=transforms,
         )
 
