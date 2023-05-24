@@ -185,20 +185,17 @@ class SSL4EOLBenchmark(NonGeoDataset):
             f"{self.mask_product}_{self.year_dict[self.input_sensor]}.tif",
         )
         exists.append(bool(glob.glob(mask_pathname, recursive=True)))
+
         if all(exists):
             return
         # Check if the tar.gz files have already been downloaded
         exists = []
         img_pathname = os.path.join(self.root, f"{self.img_dir_name}.tar.gz")
-        if os.path.exists(img_pathname):
-            exists.append(True)
-        else:
-            exists.append(False)
+        exists.append(os.path.exists(img_pathname))
+
         mask_pathname = os.path.join(self.root, f"{self.mask_dir_name}.tar.gz")
-        if os.path.exists(mask_pathname):
-            exists.append(True)
-        else:
-            exists.append(False)
+        exists.append(os.path.exists(mask_pathname))
+
         if all(exists):
             self._extract()
             return
@@ -271,12 +268,11 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
     def retrieve_sample_collection(self) -> list[tuple[str, str]]:
         """Retrieve paths to samples in data directory."""
-        img_paths = sorted(
-            glob.glob(
-                os.path.join(self.root, self.img_dir_name, "**", "all_bands.tif"),
-                recursive=True,
-            )
+        img_paths = glob.glob(
+            os.path.join(self.root, self.img_dir_name, "**", "all_bands.tif"),
+            recursive=True,
         )
+        img_paths = sorted(img_paths)
         sample_collection: list[tuple[str, str]] = []
         for img_path in img_paths:
             mask_path = img_path.replace(self.img_dir_name, self.mask_dir_name).replace(
