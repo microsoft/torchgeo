@@ -49,6 +49,8 @@ def simclr_augmentations(size: int, weights: Tensor) -> nn.Module:
         K.RandomVerticalFlip(),  # added
         # Not appropriate for multispectral imagery, seasonal contrast used instead
         # K.ColorJitter(brightness=0.8, contrast=0.8, saturation=0.8, hue=0.2, p=0.8)
+        K.RandomBrightness(brightness=(0.2, 1.8), p=0.8),
+        K.RandomContrast(contrast=(0.2, 1.8), p=0.8),
         T.RandomGrayscale(weights=weights, p=0.2),
         K.RandomGaussianBlur(kernel_size=(ks, ks), sigma=(0.1, 2)),
         data_keys=["input"],
