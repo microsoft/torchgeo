@@ -104,7 +104,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
                 (defaults to output dimension of model).
             output_dim: Number of output dimensions in projection head
                 (defaults to output dimension of model).
-            lr: Learning rate (0.3 x batch_size / 256 recommended).
+            lr: Learning rate (0.3 x batch_size / 256 is recommended).
             weight_decay: Weight decay coefficient (1e-6 for v1, 1e-4 for v2).
             temperature: Temperature used in NT-Xent loss.
             memory_bank_size: Size of memory bank (0 for v1, 64K for v2).

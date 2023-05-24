@@ -173,7 +173,7 @@ class MoCoTask(LightningModule):  # type: ignore[misc]
             output_dim: Number of output dimensions in projection head
                 (not used in v1, 128 for v2, 256 for v3).
             lr: Learning rate
-                (0.03 x batch_size / 256 for v1/2, 0.0375 x batch_size / 256 for v3).
+                (0.03 x batch_size / 256 for v1/2, 0.6 x batch_size / 256 for v3).
             weight_decay: Weight decay coefficient (1e-4 for v1/2, 1e-6 for v3).
             momentum: Momentum of SGD solver (v1/2 only).
             schedule: Epochs at which to drop lr by 10x (v1/2 only).
