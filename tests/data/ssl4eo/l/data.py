@@ -22,19 +22,19 @@ FILENAME_HIERARCHY = Union[dict[str, "FILENAME_HIERARCHY"], list[str]]
 filenames: FILENAME_HIERARCHY = {
     "tm_toa": {
         "0000002": {
-            "LE07_172034_20010526": ["all_bands.tif"],
-            "LE07_172034_20020310": ["all_bands.tif"],
-            "LE07_172034_20020902": ["all_bands.tif"],
-            "LE07_172034_20021121": ["all_bands.tif"],
+            "LT05_172034_20010526": ["all_bands.tif"],
+            "LT05_172034_20020310": ["all_bands.tif"],
+            "LT05_172034_20020902": ["all_bands.tif"],
+            "LT05_172034_20021121": ["all_bands.tif"],
         },
         "0000005": {
-            "LE07_223084_20010413": ["all_bands.tif"],
-            "LE07_223084_20011225": ["all_bands.tif"],
-            "LE07_223084_20020619": ["all_bands.tif"],
-            "LE07_223084_20020923": ["all_bands.tif"],
+            "LT05_223084_20010413": ["all_bands.tif"],
+            "LT05_223084_20011225": ["all_bands.tif"],
+            "LT05_223084_20020619": ["all_bands.tif"],
+            "LT5_223084_20020923": ["all_bands.tif"],
         },
     },
-    "tm_sr": {
+    "etm_sr": {
         "0000002": {
             "LE07_172034_20010526": ["all_bands.tif"],
             "LE07_172034_20020310": ["all_bands.tif"],
@@ -92,7 +92,7 @@ filenames: FILENAME_HIERARCHY = {
     },
 }
 
-num_bands = {"tm_toa": 7, "tm_sr": 6, "etm_toa": 9, "oli_tirs_toa": 11, "oli_sr": 7}
+num_bands = {"tm_toa": 7, "etm_sr": 6, "etm_toa": 9, "oli_tirs_toa": 11, "oli_sr": 7}
 
 
 def create_file(path: str) -> None:
