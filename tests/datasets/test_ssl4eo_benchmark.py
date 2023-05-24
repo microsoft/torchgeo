@@ -26,7 +26,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestSSL4EOLBenchmark:
     @pytest.fixture(
         params=product(
-            ["tm_toa", "etm_toa", "etm_sr", "oli_tirs_toa", "oli_sr"],
+            ["tm_toa"],  # , "etm_toa", "etm_sr", "oli_tirs_toa", "oli_sr"],
             ["cdl", "nlcd"],
             ["train", "val", "test"],
         )

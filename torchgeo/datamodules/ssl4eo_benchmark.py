@@ -13,7 +13,7 @@ from .geo import NonGeoDataModule
 
 
 class SSL4EOLBenchmarkDataModule(NonGeoDataModule):
-    """LightningDataModule implementation for the SSL4EO-L dataset.
+    """LightningDataModule implementation for the SSL4EO-L Benchmark dataset.
 
     .. versionadded:: 0.5
     """
@@ -21,7 +21,7 @@ class SSL4EOLBenchmarkDataModule(NonGeoDataModule):
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
-        """Initialize a new SSL4EOLDownstreamDataModule instance.
+        """Initialize a new SSL4EOLBenchmarkDataModule instance.
 
         Args:
             batch_size: Size of each mini-batch.

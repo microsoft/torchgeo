@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Self-Supervised Learning for Earth Observation Landsat Benchmark Evaluation."""
+"""Self-Supervised Learning for Earth Observation Benchmark Datasets."""
 
 import glob
 import os
@@ -29,7 +29,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
     Dataset format:
 
-    * input landsat image and single channel mask
+    * Input landsat image and single channel mask
     * 25,000 total samples split into train, val, test (70%, 15%, 15%)
     * NLCD dataset version has 17 classes
     * CDL dataset version has 134 classes
@@ -177,30 +177,29 @@ class SSL4EOLBenchmark(NonGeoDataset):
         # Check if the extracted files already exist
         img_pathname = os.path.join(self.root, self.img_dir_name, "**", "all_bands.tif")
         exists = []
-        for fname in glob.iglob(img_pathname, recursive=True):
-            exists.append(True)
-            break
+        exists.append(bool(glob.glob(img_pathname, recursive=True)))
         mask_pathname = os.path.join(
             self.root,
             self.mask_dir_name,
             "**",
             f"{self.mask_product}_{self.year_dict[self.input_sensor]}.tif",
         )
-        for fname in glob.iglob(mask_pathname, recursive=True):
-            exists.append(True)
-            break
-        if exists and all(exists):
+        exists.append(bool(glob.glob(mask_pathname, recursive=True)))
+        if all(exists):
             return
-
         # Check if the tar.gz files have already been downloaded
         exists = []
         img_pathname = os.path.join(self.root, f"{self.img_dir_name}.tar.gz")
         if os.path.exists(img_pathname):
             exists.append(True)
+        else:
+            exists.append(False)
         mask_pathname = os.path.join(self.root, f"{self.mask_dir_name}.tar.gz")
         if os.path.exists(mask_pathname):
             exists.append(True)
-        if exists and all(exists):
+        else:
+            exists.append(False)
+        if all(exists):
             self._extract()
             return
 
@@ -272,9 +271,11 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
     def retrieve_sample_collection(self) -> list[tuple[str, str]]:
         """Retrieve paths to samples in data directory."""
-        img_paths = glob.glob(
-            os.path.join(self.root, self.img_dir_name, "**", "all_bands.tif"),
-            recursive=True,
+        img_paths = sorted(
+            glob.glob(
+                os.path.join(self.root, self.img_dir_name, "**", "all_bands.tif"),
+                recursive=True,
+            )
         )
         sample_collection: list[tuple[str, str]] = []
         for img_path in img_paths:
