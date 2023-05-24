@@ -30,7 +30,7 @@ from .skippd import SKIPPDDataModule
 from .so2sat import So2SatDataModule
 from .spacenet import SpaceNet1DataModule
 from .ssl4eo import SSL4EOLDataModule, SSL4EOS12DataModule
-from .ssl4eo_benchmark_landsat import SSL4EOLBenchmarkDataModule
+from .ssl4eo_benchmark import SSL4EOLBenchmarkDataModule
 from .sustainbench_crop_yield import SustainBenchCropYieldDataModule
 from .ucmerced import UCMercedDataModule
 from .usavars import USAVarsDataModule
