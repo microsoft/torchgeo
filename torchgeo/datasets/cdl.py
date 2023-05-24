@@ -3,6 +3,7 @@
 
 """CDL dataset."""
 
+import glob
 import os
 from typing import Any, Callable, Optional
 
@@ -375,15 +376,12 @@ class CDL(RasterDataset):
         exists = []
         for year in self.years:
             filename_year = self.filename_glob.replace("*", str(year))
-            pathname = os.path.join(
-                self.root, filename_year.removesuffix(".tif"), filename_year
-            )
-            if os.path.exists(pathname):
-                exists.append(True)
-            else:
-                exists.append(False)
+            pathname = os.path.join(self.root, "**", filename_year)
+            for fname in glob.iglob(pathname, recursive=True):
+                if not fname.endswith(".zip"):
+                    exists.append(True)
 
-        if all(exists):
+        if len(exists) == len(self.years):
             return
 
         # Check if the zip files have already been downloaded
