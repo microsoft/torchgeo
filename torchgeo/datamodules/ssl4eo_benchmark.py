@@ -18,6 +18,8 @@ class SSL4EOLBenchmarkDataModule(NonGeoDataModule):
     .. versionadded:: 0.5
     """
 
+    crop_size = 224
+
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
@@ -33,16 +35,16 @@ class SSL4EOLBenchmarkDataModule(NonGeoDataModule):
 
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            K.CenterCrop(224),
+            K.CenterCrop(self.crop_size),
             data_keys=["image", "mask"],
         )
         self.val_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            K.CenterCrop(224),
+            K.CenterCrop(self.crop_size),
             data_keys=["image", "mask"],
         )
         self.test_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            K.CenterCrop(224),
+            K.CenterCrop(self.crop_size),
             data_keys=["image", "mask"],
         )

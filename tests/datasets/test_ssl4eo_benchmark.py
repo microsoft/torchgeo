@@ -26,7 +26,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestSSL4EOLBenchmark:
     @pytest.fixture(
         params=product(
-            ["tm_toa"],  # , "etm_toa", "etm_sr", "oli_tirs_toa", "oli_sr"],
+            ["tm_toa", "etm_toa", "etm_sr", "oli_tirs_toa", "oli_sr"],
             ["cdl", "nlcd"],
             ["train", "val", "test"],
         )
@@ -48,26 +48,26 @@ class TestSSL4EOLBenchmark:
         )
 
         img_md5s = {
-            "tm_toa": "27f0562206baec86c5fdd1d7f069ef91",
-            "etm_toa": "0350f83c8462a64ffd192d8ebe070842",
-            "etm_sr": "277e1657b89e141fa3085fd01053162d",
-            "oli_tirs_toa": "53350e7ee0616df47859d28a29e170da",
-            "oli_sr": "8235bcce500657b9e0cfcb3af6bb1480",
+            "tm_toa": "ecfdd3dcbc812c5e7cf272a5cddb33e9",
+            "etm_sr": "3e598245948eb7d072d5b83c95f22422",
+            "etm_toa": "e24ff11f6aedb3930380b53cb6f780b6",
+            "oli_tirs_toa": "490baa1eedd5032277e2a07f45dd8c2b",
+            "oli_sr": "884f6e28a23a1b7d464eff39abd7667d",
         }
         monkeypatch.setattr(SSL4EOLBenchmark, "img_md5s", img_md5s)
 
         mask_md5s = {
             "tm": {
-                "cdl": "762104b3fc41afe1ef63f5ea80940d4b",
-                "nlcd": "57391b79a33ccd482471b377ae2de7f1",
+                "cdl": "43f30648e0f7c8dba78fa729b6db9ffe",
+                "nlcd": "4272958acb32cc3b83f593684bc3e63c",
             },
             "etm": {
-                "cdl": "8285e0d051081a9379cd150c7669971e",
-                "nlcd": "916f4a433df6c8abca15b45b60d005d3",
+                "cdl": "b215b7e3b65b18a6d52ce9a35c90a16f",
+                "nlcd": "f823fc69965d7f6215f52bea2141df41",
             },
             "oli": {
-                "cdl": "729a7b75b8749c8a7f26e5ece164e73f",
-                "nlcd": "e237adcee8b43d4eca86a6d169ae2761",
+                "cdl": "aaa956d7aa985e8de2c565858c9ac4e8",
+                "nlcd": "cc49207df010a4f358fb16a46772e9ae",
             },
         }
         monkeypatch.setattr(SSL4EOLBenchmark, "mask_md5s", mask_md5s)
