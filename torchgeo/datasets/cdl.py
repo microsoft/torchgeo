@@ -28,8 +28,9 @@ class CDL(RasterDataset):
     annually using moderate resolution satellite imagery and extensive agricultural
     ground truth.
 
-    The dataset contains 133 classes, for a description of the classes see the
-    xls file at the top of `this page <https://www.nass.usda.gov/Research_and_Science/Cropland/sarsfaqs2.php>`_.
+    The dataset contains 134 classes, for a description of the classes see the
+    xls file at the top of
+    `this page <https://www.nass.usda.gov/Research_and_Science/Cropland/sarsfaqs2.php>`_.
 
     If you use this dataset in your research, please cite it using the following format:
 
