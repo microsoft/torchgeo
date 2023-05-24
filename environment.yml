@@ -24,7 +24,7 @@ dependencies:
     - hydra-core>=1
     - ipywidgets>=7
     - isort[colors]>=5.8
-    - kornia>=0.6.5
+    - kornia>=0.6.9
     - laspy>=2
     - lightly>=1.4.4
     - lightning>=1.8

@@ -41,6 +41,17 @@ _seco_transforms = AugmentationSequential(
     data_keys=["image"],
 )
 
+# Normalization only available for RGB dataset, defined here:
+# https://github.com/sustainlab-group/geography-aware-ssl/blob/main/moco_fmow/main_moco_geo%2Btp.py#L287  # noqa: E501
+_mean = torch.tensor([0.485, 0.456, 0.406])
+_std = torch.tensor([0.229, 0.224, 0.225])
+_gassl_transforms = AugmentationSequential(
+    K.Resize(224),
+    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
+    K.Normalize(mean=_mean, std=_std),
+    data_keys=["image"],
+)
+
 # https://github.com/pytorch/vision/pull/6883
 # https://github.com/pytorch/vision/pull/7107
 # Can be removed once torchvision>=0.15 is required
@@ -104,6 +115,19 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
 
     .. versionadded:: 0.4
     """
+
+    FMOW_RGB_GASSL = Weights(
+        url="https://huggingface.co/torchgeo/resnet50_fmow_rgb_gassl/resolve/main/resnet50_fmow_rgb_gassl-da43d987.pth",  # noqa: E501
+        transforms=_gassl_transforms,
+        meta={
+            "dataset": "fMoW Dataset",
+            "in_chans": 3,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2011.09980",
+            "repo": "https://github.com/sustainlab-group/geography-aware-ssl",
+            "ssl_method": "gassl",
+        },
+    )
 
     SENTINEL1_ALL_MOCO = Weights(
         url="https://huggingface.co/torchgeo/resnet50_sentinel1_all_moco/resolve/main/resnet50_sentinel1_all_moco-906e4356.pth",  # noqa: E501
