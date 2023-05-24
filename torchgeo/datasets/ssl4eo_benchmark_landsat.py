@@ -14,7 +14,10 @@ import torch
 from torch import Tensor
 
 from .geo import NonGeoDataset
+from .nlcd import NLCD
 from .utils import download_url, extract_archive
+
+# from .cdl import CDL
 
 
 class SSL4EOLBenchmark(NonGeoDataset):
@@ -92,6 +95,11 @@ class SSL4EOLBenchmark(NonGeoDataset):
     }
 
     split_percentages = [0.7, 0.15, 0.15]
+
+    ordinal_label_map = {
+        "nlcd": NLCD.ordinal_label_map,
+        # "cdl": CDL.ordinal_label_map
+    }
 
     def __init__(
         self,
@@ -299,8 +307,12 @@ class SSL4EOLBenchmark(NonGeoDataset):
             mask
         """
         with rasterio.open(path) as src:
-            image = src.read()
-        return torch.from_numpy(image).long()
+            mask = src.read()
+
+        for k, v in self.ordinal_label_map[self.mask_product].items():
+            mask[mask == k] = v
+
+        return torch.from_numpy(mask).long()
 
     def plot(
         self,
