@@ -53,7 +53,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
     img_md5s = {
         "tm_toa": "8e3c5bcd56d3780a442f1332013b8d15",
         "etm_toa": "1b051c7fe4d61c581b341370c9e76f1f",
-        "etm_sr": "a33d5e3b9c309980ef15d453235843ed",
+        "etm_sr": "34a24fa89a801654f8d01e054662c8cd",
         "oli_tirs_toa": "6e9d7cf0392e1de2cbdb39962ba591aa",
         "oli_sr": "0700cd15cc2366fe68c2f8c02fa09a15",
     }
