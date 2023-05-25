@@ -27,17 +27,23 @@ class TestCDL:
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CDL:
         monkeypatch.setattr(torchgeo.datasets.cdl, "download_url", download_url)
 
-        md5s = [
-            (2021, "e929beb9c8e59fa1d7b7f82e64edaae1"),
-            (2020, "e95c2d40ce0c261ed6ee0bd00b49e4b6"),
-        ]
+        md5s = {
+            2021: "e929beb9c8e59fa1d7b7f82e64edaae1",
+            2020: "e95c2d40ce0c261ed6ee0bd00b49e4b6",
+        }
         monkeypatch.setattr(CDL, "md5s", md5s)
         url = os.path.join("tests", "data", "cdl", "{}_30m_cdls.zip")
         monkeypatch.setattr(CDL, "url", url)
         monkeypatch.setattr(plt, "show", lambda *args: None)
         root = str(tmp_path)
         transforms = nn.Identity()
-        return CDL(root, transforms=transforms, download=True, checksum=True)
+        return CDL(
+            root,
+            transforms=transforms,
+            download=True,
+            checksum=True,
+            years=[2020, 2021],
+        )
 
     def test_getitem(self, dataset: CDL) -> None:
         x = dataset[dataset.bounds]
@@ -60,14 +66,21 @@ class TestCDL:
         next(dataset.index.intersection(tuple(query)))
 
     def test_already_extracted(self, dataset: CDL) -> None:
-        CDL(root=dataset.root, download=True)
+        CDL(root=dataset.root, years=[2020, 2021])
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join("tests", "data", "cdl", "*_30m_cdls.zip")
         root = str(tmp_path)
         for zipfile in glob.iglob(pathname):
             shutil.copy(zipfile, root)
-        CDL(root)
+        CDL(root, years=[2020, 2021])
+
+    def test_invalid_year(self, tmp_path: Path) -> None:
+        with pytest.raises(
+            AssertionError,
+            match="CDL data product only exists for the following years:",
+        ):
+            CDL(str(tmp_path), years=[1996])
 
     def test_plot(self, dataset: CDL) -> None:
         query = dataset.bounds
