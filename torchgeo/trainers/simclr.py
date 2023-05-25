@@ -49,6 +49,8 @@ def simclr_augmentations(size: int, weights: Tensor) -> nn.Module:
         K.RandomVerticalFlip(),  # added
         # Not appropriate for multispectral imagery, seasonal contrast used instead
         # K.ColorJitter(brightness=0.8, contrast=0.8, saturation=0.8, hue=0.2, p=0.8)
+        K.RandomBrightness(brightness=(0.2, 1.8), p=0.8),
+        K.RandomContrast(contrast=(0.2, 1.8), p=0.8),
         T.RandomGrayscale(weights=weights, p=0.2),
         K.RandomGaussianBlur(kernel_size=(ks, ks), sigma=(0.1, 2)),
         data_keys=["input"],
@@ -102,8 +104,7 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
                 (defaults to output dimension of model).
             output_dim: Number of output dimensions in projection head
                 (defaults to output dimension of model).
-            lr: Learning rate
-                (0.3 x batch_size / 256 for v1, 0.3 x sqrt(batch size) for v2).
+            lr: Learning rate (0.3 x batch_size / 256 is recommended).
             weight_decay: Weight decay coefficient (1e-6 for v1, 1e-4 for v2).
             temperature: Temperature used in NT-Xent loss.
             memory_bank_size: Size of memory bank (0 for v1, 64K for v2).

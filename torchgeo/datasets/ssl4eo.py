@@ -86,7 +86,7 @@ class SSL4EOL(NonGeoDataset):
 
     metadata: dict[str, _Metadata] = {
         "tm_toa": {"num_bands": 7, "rgb_bands": [2, 1, 0]},
-        "tm_sr": {"num_bands": 6, "rgb_bands": [2, 1, 0]},
+        "etm_sr": {"num_bands": 6, "rgb_bands": [2, 1, 0]},
         "etm_toa": {"num_bands": 9, "rgb_bands": [2, 1, 0]},
         "oli_tirs_toa": {"num_bands": 11, "rgb_bands": [3, 2, 1]},
         "oli_sr": {"num_bands": 7, "rgb_bands": [3, 2, 1]},
@@ -103,7 +103,7 @@ class SSL4EOL(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            split: one of ['tm_toa', 'tm_sr', 'etm_toa', 'oli_tirs_toa', 'oli_sr']
+            split: one of ['tm_toa', 'etm_sr', 'etm_toa', 'oli_tirs_toa', 'oli_sr']
             seasons: number of seasonal patches to sample per location, 1--4
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version

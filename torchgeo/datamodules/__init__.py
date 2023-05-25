@@ -30,6 +30,7 @@ from .skippd import SKIPPDDataModule
 from .so2sat import So2SatDataModule
 from .spacenet import SpaceNet1DataModule
 from .ssl4eo import SSL4EOLDataModule, SSL4EOS12DataModule
+from .ssl4eo_benchmark import SSL4EOLBenchmarkDataModule
 from .sustainbench_crop_yield import SustainBenchCropYieldDataModule
 from .ucmerced import UCMercedDataModule
 from .usavars import USAVarsDataModule
@@ -65,6 +66,7 @@ __all__ = (
     "SKIPPDDataModule",
     "So2SatDataModule",
     "SpaceNet1DataModule",
+    "SSL4EOLBenchmarkDataModule",
     "SSL4EOLDataModule",
     "SSL4EOS12DataModule",
     "SustainBenchCropYieldDataModule",

@@ -62,6 +62,8 @@ def moco_augmentations(
             T.RandomGrayscale(weights=weights, p=0.2),
             # Not appropriate for multispectral imagery, seasonal contrast used instead
             # K.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.4, p=1)
+            K.RandomBrightness(brightness=(0.6, 1.4), p=1.0),
+            K.RandomContrast(contrast=(0.6, 1.4), p=1.0),
             K.RandomHorizontalFlip(),
             K.RandomVerticalFlip(),  # added
             data_keys=["input"],
@@ -74,6 +76,8 @@ def moco_augmentations(
             # K.ColorJitter(
             #     brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1, p=0.8
             # )
+            K.RandomBrightness(brightness=(0.6, 1.4), p=0.8),
+            K.RandomContrast(contrast=(0.6, 1.4), p=0.8),
             T.RandomGrayscale(weights=weights, p=0.2),
             K.RandomGaussianBlur(kernel_size=(ks, ks), sigma=(0.1, 2), p=0.5),
             K.RandomHorizontalFlip(),
@@ -88,6 +92,8 @@ def moco_augmentations(
             # K.ColorJitter(
             #     brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8
             # )
+            K.RandomBrightness(brightness=(0.6, 1.4), p=0.8),
+            K.RandomContrast(contrast=(0.6, 1.4), p=0.8),
             T.RandomGrayscale(weights=weights, p=0.2),
             K.RandomGaussianBlur(kernel_size=(ks, ks), sigma=(0.1, 2), p=1),
             K.RandomHorizontalFlip(),
@@ -100,6 +106,8 @@ def moco_augmentations(
             # K.ColorJitter(
             #     brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8
             # )
+            K.RandomBrightness(brightness=(0.6, 1.4), p=0.8),
+            K.RandomContrast(contrast=(0.6, 1.4), p=0.8),
             T.RandomGrayscale(weights=weights, p=0.2),
             K.RandomGaussianBlur(kernel_size=(ks, ks), sigma=(0.1, 2), p=0.1),
             K.RandomSolarize(p=0.2),
@@ -164,7 +172,8 @@ class MoCoTask(LightningModule):  # type: ignore[misc]
                 (not used in v1, 2048 for v2, 4096 for v3).
             output_dim: Number of output dimensions in projection head
                 (not used in v1, 128 for v2, 256 for v3).
-            lr: Learning rate (0.6 x batch_size / 256 is recommended).
+            lr: Learning rate
+                (0.03 x batch_size / 256 for v1/2, 0.6 x batch_size / 256 for v3).
             weight_decay: Weight decay coefficient (1e-4 for v1/2, 1e-6 for v3).
             momentum: Momentum of SGD solver (v1/2 only).
             schedule: Epochs at which to drop lr by 10x (v1/2 only).

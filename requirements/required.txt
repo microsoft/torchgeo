@@ -1,17 +1,17 @@
 # setup
-setuptools==67.7.0
+setuptools==67.8.0
 
 # install
 einops==0.6.1
-fiona==1.9.3
+fiona==1.9.4.post1
 kornia==0.6.12
-lightly==1.4.5
+lightly==1.4.6
 lightning==2.0.2
 matplotlib==3.7.1
 numpy==1.24.3
 pillow==9.5.0
 pyproj==3.5.0
-rasterio==1.3.6
+rasterio==1.3.7
 rtree==1.0.1
 segmentation-models-pytorch==0.3.2
 shapely==2.0.1
