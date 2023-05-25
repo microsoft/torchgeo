@@ -350,8 +350,8 @@ class CDL(RasterDataset):
             FileNotFoundError: if no files are found in ``root``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
 
-        ..versionchanged:: 0.5
-            Added *years* parameter
+        .. versionadded:: 0.5
+           The *years* parameter.
         """
         assert set(years).issubset(self.md5s.keys()), (
             "CDL data product only exists for the following years: "
