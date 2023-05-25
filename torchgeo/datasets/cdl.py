@@ -483,7 +483,7 @@ class CDL(RasterDataset):
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 after downloading files (may be slow)
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
