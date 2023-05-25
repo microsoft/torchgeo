@@ -615,4 +615,4 @@ class CDL(RasterDataset):
         if suptitle is not None:
             plt.suptitle(suptitle)
 
-        return
+        return fig
