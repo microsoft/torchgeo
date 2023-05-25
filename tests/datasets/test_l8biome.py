@@ -25,14 +25,14 @@ class TestL8Biome:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L8Biome:
         monkeypatch.setattr(torchgeo.datasets.l8biome, "download_url", download_url)
-        filenames_to_md5 = {
-            "barren": "dadab52c2d5bcc9dace0115389eac102",
-            "forest": "cc30ce35bfc21d84861362ac5194a0e7",
+        md5s = {
+            "barren": "29c9910adbc89677389f210226fb163d",
+            "forest": "b7dbb82fb2c22cbb03389d8828d73713",
         }
 
         url = os.path.join("tests", "data", "l8biome", "{}.tar.gz")
         monkeypatch.setattr(L8Biome, "url", url)
-        monkeypatch.setattr(L8Biome, "filenames_to_md5", filenames_to_md5)
+        monkeypatch.setattr(L8Biome, "md5s", md5s)
         root = str(tmp_path)
         transforms = nn.Identity()
         return L8Biome(root, transforms=transforms, download=True, checksum=True)
@@ -72,8 +72,7 @@ class TestL8Biome:
             L8Biome(str(tmp_path))
 
     def test_plot_prediction(self, dataset: L8Biome) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        x = dataset[dataset.bounds]
         x["prediction"] = x["mask"].clone()
         dataset.plot(x, suptitle="Prediction")
         plt.close()

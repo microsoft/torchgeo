@@ -5,12 +5,10 @@
 
 import glob
 import os
-import re
 from collections.abc import Sequence
 from typing import Any, Callable, Optional, cast
 
 import matplotlib.pyplot as plt
-import torch
 from rasterio.crs import CRS
 from torch import Tensor
 
@@ -21,26 +19,27 @@ from .utils import BoundingBox, download_url, extract_archive
 class L7Irish(RasterDataset):
     """L7 Irish dataset.
 
-    The `L7 Irish <https://landsat.usgs.gov/landsat-7-cloud-cover-assessment-validation-data>`__ dataset
-    is based on Landsat 7 Enhanced Thematic Mapper Plus (ETM+) Level-1G scenes.
+    The `L7 Irish <https://landsat.usgs.gov/landsat-7-cloud-cover-assessment-validation-data>`__
+    dataset is based on Landsat 7 Enhanced Thematic Mapper Plus (ETM+) Level-1G scenes.
     Manually generated cloud masks are used to train and validate cloud cover assessment
-    algorithms, which in turn are intended to compute the percentage of cloud cover in each
-    scene.
+    algorithms, which in turn are intended to compute the percentage of cloud cover in
+    each scene.
 
     Dataset features:
 
-    * 206 scenes from Landsat-7 ETM+ tiles
+    * Images divided between 9 unique biomes
+    * 206 scenes from Landsat 7 ETM+ sensor
     * Imagery from global tiles between June 2000--December 2001
-    * 9 Level-1 spectral bands with 15 and 30 m per pixel resolution
+    * 9 Level-1 spectral bands with 30 m per pixel resolution
 
     Dataset format:
 
-    * Images are composed of multiple single channel geotiffs
-    * Labels are multiclass, stored in a single geotiffs file per image
+    * Images are composed of single multiband geotiffs
+    * Labels are multiclass, stored in single geotiffs
     * Level-1 metadata (MTL.txt file)
-    * Landsat-7 ETM+ bands: (B10, B20, B30, B40, B50, B61, B62, B70, B80)
+    * Landsat 7 ETM+ bands: (B10, B20, B30, B40, B50, B61, B62, B70, B80)
 
-    Dataset classes (5):
+    Dataset classes:
 
     0. Fill
     1. Cloud Shadow
@@ -60,33 +59,32 @@ class L7Irish(RasterDataset):
     url = "https://huggingface.co/datasets/torchgeo/l7irish/resolve/main/{}.tar.gz"  # noqa: E501
 
     md5s = {
-        "austral": "9c2629884c1e7251e24953e1e5f880de",
-        "boreal": "0a9f50998c0fb47c0cc226faf479f883",
-        "mid_latitude_north": "0860e218403d949f4b38e4f9f70e0087",
-        "mid_latitude_south": "c66bbeaa6dbf0ba2cd26b9eea89eb3a4",
-        "polar_north": "18a6b9b4684ae91bfdcc7b78ea1f42ee",
-        "polar_south": "a12e4d7fddaa377259328190f10a1c17",
-        "subtropical_north": "ebdfaee37ffc5ba1bd4763f7f72df97f",
-        "subtropical_south": "3670c9490753efe3d36927329bb87e2f",
-        "tropical": "f60c93d8609c72ac86e858105b6272f2",
+        "austral": "0a34770b992a62abeb88819feb192436",
+        "boreal": "b7cfdd689a3c2fd2a8d572e1c10ed082",
+        "mid_latitude_north": "c40abe5ad2487f8ab021cfb954982faa",
+        "mid_latitude_south": "37abab7f6ebe3d6cf6a3332144145427",
+        "polar_north": "49d9e616bd715057db9acb1c4d234d45",
+        "polar_south": "c1503db1cf46d5c37b579190f989e7ec",
+        "subtropical_north": "a6010de4c50167260de35beead9d6a65",
+        "subtropical_south": "c37d439df2f05bd7cfe87cf6ff61a690",
+        "tropical": "d7931419c70f3520a17361d96f1a4810",
     }
 
     classes = ["Fill", "Cloud Shadow", "Clear", "Thin Cloud", "Cloud"]
 
     # https://landsat.usgs.gov/cloud-validation/cca_irish_2015/L7_Irish_Cloud_Validation_Masks.xml
-    filename_glob = "L7*_B10.TIF"
+    filename_glob = "L71*.TIF"
     filename_regex = r"""
-        ^L7[12]
+        ^L71
         (?P<wrs_path>\d{3})
         (?P<wrs_row>\d{3})
         _(?P=wrs_row)
         (?P<date>\d{8})
-        _(?P<band>B\d{2})
         \.TIF$
     """
     date_format = "%Y%m%d"
 
-    separate_files = True
+    separate_files = False
     rgb_bands = ["B30", "B20", "B10"]
     all_bands = ["B10", "B20", "B30", "B40", "B50", "B61", "B62", "B70", "B80"]
 
@@ -141,7 +139,7 @@ class L7Irish(RasterDataset):
         for fname in glob.iglob(pathname, recursive=True):
             return
 
-        # Check if the tar files have already been downloaded
+        # Check if the tar.gz files have already been downloaded
         pathname = os.path.join(self.root, "*.tar.gz")
         if glob.glob(pathname):
             self._extract()
@@ -192,25 +190,7 @@ class L7Irish(RasterDataset):
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
-        image_list: list[Tensor] = []
-        filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-        for band in self.all_bands:
-            band_filepaths = []
-            for filepath in filepaths:
-                filename = os.path.basename(filepath)
-                directory = os.path.dirname(filepath)
-                match = re.match(filename_regex, filename)
-                if match:
-                    if "date" in match.groupdict():
-                        start = match.start("band")
-                        end = match.end("band")
-                        filename = filename[:start] + band + filename[end:]
-                        if band in ["B62", "B70", "B80"]:
-                            filename = filename.replace("L71", "L72")
-                filepath = os.path.join(directory, filename)
-                band_filepaths.append(filepath)
-            image_list.append(self._merge_files(band_filepaths, query))
-        image = torch.cat(image_list)
+        image = self._merge_files(filepaths, query, self.band_indexes)
 
         mask_filepaths = []
         for filepath in filepaths:
@@ -221,7 +201,7 @@ class L7Irish(RasterDataset):
             mask_filepaths.append(mask_filepath)
 
         mask = self._merge_files(mask_filepaths, query)
-        mask_mapping = {64: 1, 128: 2, 191: 3, 255: 4}
+        mask_mapping = {64: 1, 128: 2, 192: 3, 255: 4}
 
         for k, v in mask_mapping.items():
             mask[mask == k] = v

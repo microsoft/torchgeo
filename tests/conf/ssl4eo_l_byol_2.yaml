@@ -8,8 +8,8 @@ module:
 
 datamodule:
   _target_: torchgeo.datamodules.SSL4EOLDataModule
-  root: "tests/data/ssl4eo/l/tm_sr"
-  split: "tm_sr"
+  root: "tests/data/ssl4eo/l/etm_sr"
+  split: "etm_sr"
   seasons: 2
   batch_size: 2
   num_workers: 0
