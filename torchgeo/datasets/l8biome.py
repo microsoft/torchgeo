@@ -20,8 +20,9 @@ class L8Biome(RasterDataset):
     """L8 Biome dataset.
 
     The `L8 Biome <https://landsat.usgs.gov/landsat-8-cloud-cover-assessment-validation-data>`__
-    dataset is a cloud validation dataset of Pre-Collection Landsat 8 Operational Land
-    Imager (OLI) Thermal Infrared Sensor (TIRS) terrain-corrected (Level-1T) scenes.
+    dataset is a validation dataset for cloud cover assessment algorithms, consisting
+    of Pre-Collection Landsat 8 Operational Land Imager (OLI) Thermal Infrared Sensor
+    (TIRS) terrain-corrected (Level-1T) scenes.
 
     Dataset features:
 
