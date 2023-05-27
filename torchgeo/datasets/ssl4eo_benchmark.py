@@ -341,7 +341,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
             ncols = 3
 
         kwargs = {
-            "cmap": ListedColormap(np.array(self.cmap) / 255),
+            "cmap": ListedColormap(np.array(list(self.cmap.values())) / 255),
             "vmin": 0,
             "vmax": len(self.cmap) - 1,
             "interpolation": "none",
