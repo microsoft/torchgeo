@@ -103,25 +103,25 @@ class NLCD(RasterDataset):
         95: 16,
     }
 
-    cmap = {
-        0: (0, 0, 0, 255),
-        1: (70, 107, 159, 255),
-        2: (209, 222, 248, 255),
-        3: (222, 197, 197, 255),
-        4: (217, 146, 130, 255),
-        5: (235, 0, 0, 255),
-        6: (171, 0, 0, 255),
-        7: (179, 172, 159, 255),
-        8: (104, 171, 95, 255),
-        9: (28, 95, 44, 255),
-        10: (181, 197, 143, 255),
-        11: (204, 184, 121, 255),
-        12: (223, 223, 194, 255),
-        13: (220, 217, 57, 255),
-        14: (171, 108, 40, 255),
-        15: (184, 217, 235, 255),
-        16: (108, 159, 184, 255),
-    }
+    cmap = [
+        (0, 0, 0, 255),
+        (70, 107, 159, 255),
+        (209, 222, 248, 255),
+        (222, 197, 197, 255),
+        (217, 146, 130, 255),
+        (235, 0, 0, 255),
+        (171, 0, 0, 255),
+        (179, 172, 159, 255),
+        (104, 171, 95, 255),
+        (28, 95, 44, 255),
+        (181, 197, 143, 255),
+        (204, 184, 121, 255),
+        (223, 223, 194, 255),
+        (220, 217, 57, 255),
+        (171, 108, 40, 255),
+        (184, 217, 235, 255),
+        (108, 159, 184, 255),
+    ]
 
     def __init__(
         self,
@@ -271,27 +271,30 @@ class NLCD(RasterDataset):
         mask = sample["mask"].squeeze().numpy()
         ncols = 1
 
-        plt_cmap = ListedColormap(
-            np.stack([np.array(val) / 255 for val in self.cmap.values()], axis=0)
-        )
-
         showing_predictions = "prediction" in sample
         if showing_predictions:
             pred = sample["prediction"].squeeze().numpy()
             ncols = 2
 
+        kwargs = {
+            "cmap": ListedColormap(np.array(self.cmap) / 255),
+            "vmin": 0,
+            "vmax": len(self.cmap),
+            "interpolation": "none",
+        }
+
         fig, axs = plt.subplots(
             nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
         )
 
-        axs[0, 0].imshow(mask, cmap=plt_cmap)
+        axs[0, 0].imshow(mask, **kwargs)
         axs[0, 0].axis("off")
 
         if show_titles:
             axs[0, 0].set_title("Mask")
 
         if showing_predictions:
-            axs[0, 1].imshow(pred, cmap=plt_cmap)
+            axs[0, 1].imshow(pred, **kwargs)
             axs[0, 1].axis("off")
             if show_titles:
                 axs[0, 1].set_title("Prediction")
