@@ -500,7 +500,7 @@ class CDL(RasterDataset):
         kwargs = {
             "cmap": ListedColormap(np.array(self.cmap) / 255),
             "vmin": 0,
-            "vmax": len(self.cmap),
+            "vmax": len(self.cmap) - 1,
             "interpolation": "none",
         }
 
