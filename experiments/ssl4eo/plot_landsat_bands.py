@@ -110,11 +110,9 @@ for (satellite, sensor), group1 in df.groupby(["Satellite", "Sensor"], sort=Fals
     sensor_ylocs.append(sensor_yloc)
 
 # Labels
-ax.set_xlabel("Wavelength (μm)", labelpad=22)
-ax.set_yticklabels([])
-ax.set_xticklabels([])
-ax.set_xticks([])
-ax.set_yticks([])
+ax.set_xlabel("Wavelength (μm)")
+ax.set_xticks([0], labels=[0], alpha=0)
+ax.set_yticks([0], labels=[0], alpha=0)
 ax.spines.bottom.set_visible(False)
 ax.spines.top.set_visible(False)
 
