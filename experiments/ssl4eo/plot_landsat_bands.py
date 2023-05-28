@@ -3,67 +3,95 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+"""Plot Landsat band wavelengths and resolutions."""
+
+import argparse
+
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
-# https://www.usgs.gov/faqs/what-are-band-designations-landsat-satellites
-df = pd.read_csv("band_data.csv")
+# Match NeurIPS template
+plt.rcParams.update(
+    {"font.family": "Times New Roman", "font.size": 10, "axes.labelsize": 10}
+)
 
-bar_height = 5
-# This dictionary maps a sensor and resolution to a y location on the plot
-bar_to_height_map = {
-    ("tm", 120): 50,
-    ("etm", 60): 34,
-    ("tirs", 100): 12,
-    ("mss", 60): 60,
-    ("tm", 30): 44,
-    ("etm", 30): 28,
-    ("etm", 15): 22,
-    ("oli", 30): 6,
-    ("oli", 15): 0,
-}
+parser = argparse.ArgumentParser(__doc__)
+parser.add_argument("skip", nargs="*", help="sensors to skip", metavar="SENSOR")
+parser.add_argument("--bar-start", default=5, type=float, help="height of first bar")
+parser.add_argument("--bar-height", default=4, type=float, help="height of each bar")
+parser.add_argument("--bar-sep", default=5, type=float, help="separation between bars")
+parser.add_argument(
+    "--sensor-sep", default=7, type=float, help="separation between sensors"
+)
+args = parser.parse_args()
 
-fig, (ax1, ax2) = plt.subplots(1, 2, gridspec_kw={"width_ratios": [4, 1]})
+# https://www.usgs.gov/landsat-missions/landsat-satellite-missions
+df = pd.read_csv("band_data.csv", skip_blank_lines=True)
+df = df.iloc[::-1]
+
+fig = plt.figure()
+ax = fig.add_subplot()
+ax1, ax2 = fig.subplots(nrows=1, ncols=2, gridspec_kw={"width_ratios": [4, 1]})
 fig.subplots_adjust(wspace=0.05)
 
-for sensor_name, group1 in df.groupby("Sensor name"):
-    for resolution, group2 in group1.groupby("Resolution (m)"):
-        # Plot one row of data
-        y_position = bar_to_height_map[(sensor_name, resolution)]
+sensor_names: list[str] = []
+sensor_ylocs: list[float] = []
+res_names: list[int] = []
+res_ylocs: list[float] = []
+bar_min = args.bar_start
 
+# For each satellite/sensor
+for (satellite, sensor), group1 in df.groupby(["Satellite", "Sensor"], sort=False):
+    if sensor in args.skip:
+        continue
+
+    sensor_names.append(f"{satellite}\n({sensor})")
+    sensor_yloc = 0.0
+    res_count = 0
+
+    # For each resolution
+    for res, group2 in group1.groupby("Resolution (m)"):
+        res_names.append(res)
+        res_ylocs.append(bar_min)
+
+        if len(group2) > res_count:
+            sensor_yloc = bar_min
+            res_count = len(group2)
+
+        # For each band
         for i in range(group2.shape[0]):
             row = group2.iloc[i]
-            wavelength_start = row["Wavelength start (μm)"]
-            wavelength_width = row["Wavelength width"]
+            wavelength_start = row["Wavelength Start (μm)"]
+            wavelength_width = row["Wavelength Width"]
             color = row["Color"]
-            band_number = row["Band number"]
+            band = row["Band"]
 
             # We've split the plot into two parts as the thermal bands are > 10μm
             # while the other bands are < 3μm
+            y = bar_min + args.bar_height / 2
             if wavelength_start < 10:
                 ax1.broken_barh(
                     [[wavelength_start, wavelength_width]],
-                    [y_position, bar_height],
+                    [bar_min, args.bar_height],
                     edgecolor="k",
                     facecolors=color,
                     linewidth=0.5,
                     alpha=0.8,
                 )
                 if wavelength_width < 0.05:
-                    y = y_position + 6.5
-                else:
-                    y = y_position + 2.25
+                    y += args.bar_height
                 ax1.text(
                     wavelength_start + (wavelength_width / 2),
                     y,
-                    str(band_number),
+                    str(band),
                     horizontalalignment="center",
-                    verticalalignment="center",
+                    verticalalignment="center_baseline",
                 )
             else:
                 ax2.broken_barh(
                     [[wavelength_start, wavelength_width]],
-                    [y_position, bar_height],
+                    [bar_min, args.bar_height],
                     edgecolor="k",
                     facecolors=color,
                     linewidth=0.5,
@@ -71,35 +99,38 @@ for sensor_name, group1 in df.groupby("Sensor name"):
                 )
                 ax2.text(
                     wavelength_start + (wavelength_width / 2),
-                    y_position + 2.25,
-                    str(band_number),
+                    y,
+                    str(band),
                     horizontalalignment="center",
                     verticalalignment="center",
                 )
+        bar_min += args.bar_sep
+    bar_min += args.sensor_sep
+
+    sensor_ylocs.append(sensor_yloc)
 
 # Labels
-fig.supxlabel("Wavelength (μm)")
+ax.set_xlabel("Wavelength (μm)", labelpad=22)
+ax.set_yticklabels([])
+ax.set_xticklabels([])
+ax.set_xticks([])
+ax.set_yticks([])
+ax.spines.bottom.set_visible(False)
+ax.spines.top.set_visible(False)
 
 ax1.set_ylabel("Satellite (Sensor)")
-ax1.set_yticks([62.5, 46.5, 30.5, 8.5])
-ax1.set_yticklabels(
-    [
-        "Landsat 1–5\n(MSS)",
-        "Landsat 4–5\n(TM)",
-        "Landsat 7\n(ETM+)",
-        "Landsat 8–9\n(OLI+TIRS)",
-    ]
-)
-ax1.set_ylim(-5, 70)
+ax1.set_yticks(np.array(sensor_ylocs) + args.bar_height / 2)
+ax1.set_yticklabels(sensor_names)
+ax1.set_ylim(0, max(res_ylocs) + args.bar_height / 2 + args.bar_start)
 ax1.spines.right.set_visible(False)
 ax1.spines.top.set_visible(False)
 
 ax2.yaxis.set_label_position("right")
 ax2.yaxis.tick_right()
 ax2.set_ylabel("Resolution (m)")
-ax2.set_yticks([62.5, 52.5, 46.5, 36.5, 30.5, 24.5, 14.5, 8.5, 2.5])
-ax2.set_yticklabels([60, 120, 30, 60, 30, 15, 100, 30, 15])
-ax2.set_ylim(-5, 70)
+ax2.set_yticks(np.array(res_ylocs) + args.bar_height / 2)
+ax2.set_yticklabels(res_names)
+ax2.set_ylim(0, max(res_ylocs) + args.bar_height / 2 + args.bar_start)
 ax2.spines.left.set_visible(False)
 ax2.spines.top.set_visible(False)
 
