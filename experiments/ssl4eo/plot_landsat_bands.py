@@ -16,7 +16,9 @@ plt.rcParams.update(
     {"font.family": "Times New Roman", "font.size": 10, "axes.labelsize": 10}
 )
 
-parser = argparse.ArgumentParser(__doc__)
+parser = argparse.ArgumentParser(
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=__doc__
+)
 parser.add_argument("skip", nargs="*", help="sensors to skip", metavar="SENSOR")
 parser.add_argument("--bar-start", default=5, type=float, help="height of first bar")
 parser.add_argument("--bar-height", default=4, type=float, help="height of each bar")
