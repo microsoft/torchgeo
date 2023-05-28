@@ -24,6 +24,9 @@ parser.add_argument("--bar-start", default=5, type=float, help="height of first 
 parser.add_argument("--bar-height", default=4, type=float, help="height of each bar")
 parser.add_argument("--bar-sep", default=5, type=float, help="separation between bars")
 parser.add_argument(
+    "--bar-jump", default=4, type=float, help="additional height for narrow bars"
+)
+parser.add_argument(
     "--sensor-sep", default=7, type=float, help="separation between sensors"
 )
 args = parser.parse_args()
@@ -72,6 +75,8 @@ for (satellite, sensor), group1 in df.groupby(["Satellite", "Sensor"], sort=Fals
             # We've split the plot into two parts as the thermal bands are > 10μm
             # while the other bands are < 3μm
             y = bar_min + args.bar_height / 2
+            if wavelength_width < 0.05:
+                y += args.bar_height
             if wavelength_start < 10:
                 ax1.broken_barh(
                     [[wavelength_start, wavelength_width]],
@@ -81,8 +86,6 @@ for (satellite, sensor), group1 in df.groupby(["Satellite", "Sensor"], sort=Fals
                     linewidth=0.5,
                     alpha=0.8,
                 )
-                if wavelength_width < 0.05:
-                    y += args.bar_height
                 ax1.text(
                     wavelength_start + (wavelength_width / 2),
                     y,
