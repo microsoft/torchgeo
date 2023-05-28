@@ -336,13 +336,13 @@ class DFC2022(NonGeoDataset):
         axs[1].imshow(dem)
         axs[1].axis("off")
         if showing_mask:
-            axs[2].imshow(mask, cmap=cmap, interpolation=None)
+            axs[2].imshow(mask, cmap=cmap, interpolation="none")
             axs[2].axis("off")
             if showing_prediction:
-                axs[3].imshow(pred, cmap=cmap, interpolation=None)
+                axs[3].imshow(pred, cmap=cmap, interpolation="none")
                 axs[3].axis("off")
         elif showing_prediction:
-            axs[2].imshow(pred, cmap=cmap, interpolation=None)
+            axs[2].imshow(pred, cmap=cmap, interpolation="none")
             axs[2].axis("off")
 
         if show_titles:
