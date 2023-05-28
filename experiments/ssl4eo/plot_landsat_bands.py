@@ -76,7 +76,8 @@ for (satellite, sensor), group1 in df.groupby(["Satellite", "Sensor"], sort=Fals
             # while the other bands are < 3μm
             y = bar_min + args.bar_height / 2
             if wavelength_width < 0.05:
-                y += args.bar_height
+                y += args.bar_jump
+
             if wavelength_start < 10:
                 ax1.broken_barh(
                     [[wavelength_start, wavelength_width]],
