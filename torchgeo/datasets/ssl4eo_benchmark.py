@@ -148,6 +148,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         self.mask_dir_name = self.mask_dir_dict[self.input_sensor].format(
             self.mask_product
         )
+        self.cmap = self.cmaps[self.mask_product]
 
         self._verify()
 
@@ -332,13 +333,6 @@ class SSL4EOLBenchmark(NonGeoDataset):
         image = sample["image"][self.rgb_indices[self.input_sensor]].permute(1, 2, 0)
         image = image.numpy() / 255
 
-        plt_cmap = ListedColormap(
-            np.stack(
-                [np.array(val) / 255 for val in self.cmaps[self.mask_product].values()],
-                axis=0,
-            )
-        )
-
         mask = sample["mask"].squeeze(0)
 
         showing_predictions = "prediction" in sample
@@ -346,17 +340,24 @@ class SSL4EOLBenchmark(NonGeoDataset):
             prediction_mask = sample["prediction"].squeeze(0).numpy()
             ncols = 3
 
+        kwargs = {
+            "cmap": ListedColormap(np.array(list(self.cmap.values())) / 255),
+            "vmin": 0,
+            "vmax": len(self.cmap) - 1,
+            "interpolation": "none",
+        }
+
         fig, ax = plt.subplots(ncols=ncols, figsize=(4 * ncols, 4))
         ax[0].imshow(image)
         ax[0].axis("off")
-        ax[1].imshow(mask, cmap=plt_cmap)
+        ax[1].imshow(mask, **kwargs)
         ax[1].axis("off")
         if show_titles:
             ax[0].set_title("Image")
             ax[1].set_title("Mask")
 
         if showing_predictions:
-            ax[2].imshow(prediction_mask, cmap=plt_cmap)
+            ax[2].imshow(prediction_mask, **kwargs)
             if show_titles:
                 ax[2].set_title("Prediction")
 
