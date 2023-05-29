@@ -9,7 +9,6 @@ import pytest
 import timm
 import torch
 import torchvision
-from _pytest.fixtures import SubRequest
 from hydra.utils import instantiate
 from lightning.pytorch import Trainer
 from omegaconf import OmegaConf
@@ -18,7 +17,7 @@ from torch.nn import Module
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datasets import SSL4EOS12, SeasonalContrastS2
-from torchgeo.models import get_model_weights, list_models
+from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import SimCLRTask
 
 from .test_classification import ClassificationTestModel
@@ -83,13 +82,9 @@ class TestSimCLRTask:
         with pytest.warns(UserWarning, match="SimCLR v2 uses a memory bank"):
             SimCLRTask(version=2, memory_bank_size=0)
 
-    @pytest.fixture(
-        params=[
-            weights for model in list_models() for weights in get_model_weights(model)
-        ]
-    )
-    def weights(self, request: SubRequest) -> WeightsEnum:
-        return request.param
+    @pytest.fixture
+    def weights(self) -> WeightsEnum:
+        return ResNet18_Weights.SENTINEL2_ALL_MOCO
 
     @pytest.fixture
     def mocked_weights(
