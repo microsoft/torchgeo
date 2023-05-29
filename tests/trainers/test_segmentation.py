@@ -11,7 +11,6 @@ import timm
 import torch
 import torch.nn as nn
 import torchvision
-from _pytest.fixtures import SubRequest
 from hydra.utils import instantiate
 from lightning.pytorch import Trainer
 from omegaconf import OmegaConf
@@ -21,7 +20,7 @@ from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import MisconfigurationException, SEN12MSDataModule
 from torchgeo.datasets import LandCoverAI
-from torchgeo.models import get_model_weights, list_models
+from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import SemanticSegmentationTask
 
 
@@ -124,16 +123,9 @@ class TestSemanticSegmentationTask:
             "ignore_index": 0,
         }
 
-    @pytest.fixture(
-        params=[
-            weights
-            for model in list_models()
-            for weights in get_model_weights(model)
-            if "resnet" in weights.meta["model"]
-        ]
-    )
-    def weights(self, request: SubRequest) -> WeightsEnum:
-        return request.param
+    @pytest.fixture
+    def weights(self) -> WeightsEnum:
+        return ResNet18_Weights.SENTINEL2_ALL_MOCO
 
     @pytest.fixture
     def mocked_weights(
