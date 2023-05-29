@@ -20,14 +20,14 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=__doc__
 )
 parser.add_argument("skip", nargs="*", help="sensors to skip", metavar="SENSOR")
-parser.add_argument("--bar-start", default=5, type=float, help="height of first bar")
-parser.add_argument("--bar-height", default=4, type=float, help="height of each bar")
-parser.add_argument("--bar-sep", default=5, type=float, help="separation between bars")
+parser.add_argument("--bar-start", default=1, type=float, help="height of first bar")
+parser.add_argument("--bar-height", default=3, type=float, help="height of each bar")
+parser.add_argument("--bar-sep", default=3.5, type=float, help="separation between bars")
 parser.add_argument(
     "--bar-jump", default=4, type=float, help="additional height for narrow bars"
 )
 parser.add_argument(
-    "--sensor-sep", default=7, type=float, help="separation between sensors"
+    "--sensor-sep", default=1, type=float, help="separation between sensors"
 )
 args = parser.parse_args()
 
