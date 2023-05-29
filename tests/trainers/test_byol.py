@@ -97,7 +97,7 @@ class TestBYOLTask:
             "weights": None,
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def weights(self) -> WeightsEnum:
         return ResNet18_Weights.SENTINEL2_ALL_MOCO
 
