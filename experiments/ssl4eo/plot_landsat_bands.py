@@ -90,7 +90,7 @@ for (satellite, sensor), group1 in df.groupby(["Satellite", "Sensor"], sort=Fals
                 ax1.text(
                     wavelength_start + (wavelength_width / 2),
                     y,
-                    str(band),
+                    band,
                     horizontalalignment="center",
                     verticalalignment="center_baseline",
                 )
@@ -106,9 +106,9 @@ for (satellite, sensor), group1 in df.groupby(["Satellite", "Sensor"], sort=Fals
                 ax2.text(
                     wavelength_start + (wavelength_width / 2),
                     y,
-                    str(band),
+                    band,
                     horizontalalignment="center",
-                    verticalalignment="center",
+                    verticalalignment="center_baseline",
                 )
         bar_min += args.bar_sep
     bar_min += args.sensor_sep
