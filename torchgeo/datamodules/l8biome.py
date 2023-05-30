@@ -5,10 +5,12 @@
 
 from typing import Any, Optional, Union
 
+import kornia.augmentation as K
 import torch
 
 from ..datasets import L8Biome, random_bbox_assignment
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
+from ..transforms import AugmentationSequential
 from .geo import GeoDataModule
 
 
@@ -46,6 +48,13 @@ class L8BiomeDataModule(GeoDataModule):
             length=length,
             num_workers=num_workers,
             **kwargs,
+        )
+
+        self.train_aug = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            K.RandomVerticalFlip(p=0.2),
+            K.RandomHorizontalFlip(p=0.2),
+            data_keys=["image"],
         )
 
     def setup(self, stage: str) -> None:
