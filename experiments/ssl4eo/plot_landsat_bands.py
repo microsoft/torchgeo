@@ -13,20 +13,28 @@ import pandas as pd
 
 # Match NeurIPS template
 plt.rcParams.update(
-    {"font.family": "Times New Roman", "font.size": 10, "axes.labelsize": 10}
+    {
+        "font.family": "Times New Roman",
+        "font.size": 10,
+        "axes.labelsize": 10,
+        "text.usetex": True,
+    }
 )
 
 parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=__doc__
 )
 parser.add_argument("skip", nargs="*", help="sensors to skip", metavar="SENSOR")
+parser.add_argument(
+    "--fig-height", default=5.5, type=float, help="height of figure in inches"
+)
 parser.add_argument("--bar-start", default=1, type=float, help="height of first bar")
 parser.add_argument("--bar-height", default=3, type=float, help="height of each bar")
 parser.add_argument(
     "--bar-sep", default=3.5, type=float, help="separation between bars"
 )
 parser.add_argument(
-    "--bar-jump", default=4, type=float, help="additional height for narrow bars"
+    "--bar-jump", default=2.6, type=float, help="additional height for narrow bars"
 )
 parser.add_argument(
     "--sensor-sep", default=1, type=float, help="separation between sensors"
@@ -37,10 +45,8 @@ args = parser.parse_args()
 df = pd.read_csv("band_data.csv", skip_blank_lines=True)
 df = df.iloc[::-1]
 
-fig = plt.figure()
-ax = fig.add_subplot()
+fig, ax = plt.subplots(figsize=(5.5, args.fig_height))
 ax1, ax2 = fig.subplots(nrows=1, ncols=2, gridspec_kw={"width_ratios": [4, 1]})
-fig.subplots_adjust(wspace=0.05)
 
 sensor_names: list[str] = []
 sensor_ylocs: list[float] = []
@@ -118,7 +124,7 @@ for (satellite, sensor), group1 in df.groupby(["Satellite", "Sensor"], sort=Fals
     sensor_ylocs.append(sensor_yloc)
 
 # Labels
-ax.set_xlabel("Wavelength (μm)")
+ax.set_xlabel(r"Wavelength (\textmu m)")
 ax.set_xticks([0], labels=[0], alpha=0)
 ax.set_yticks([0], labels=[0], alpha=0)
 ax.spines.bottom.set_visible(False)
