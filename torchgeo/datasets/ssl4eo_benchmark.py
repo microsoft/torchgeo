@@ -311,7 +311,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         for k, v in self.ordinal_label_map[self.mask_product].items():
             mask[mask == k] = v
 
-        return torch.from_numpy(mask).long()
+        return torch.from_numpy(mask).long().squeeze(0)
 
     def plot(
         self,
