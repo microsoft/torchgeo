@@ -46,7 +46,7 @@ df = pd.read_csv("band_data.csv", skip_blank_lines=True)
 df = df.iloc[::-1]
 
 fig, ax = plt.subplots(figsize=(5.5, args.fig_height))
-ax1, ax2 = fig.subplots(nrows=1, ncols=2, gridspec_kw={"width_ratios": [4, 1]})
+ax1, ax2 = fig.subplots(nrows=1, ncols=2, gridspec_kw={"width_ratios": [3, 1]})
 
 sensor_names: list[str] = []
 sensor_ylocs: list[float] = []
@@ -135,12 +135,13 @@ ax1.set_ylim(0, max(res_ylocs) + args.bar_height + args.bar_start)
 ax1.spines[["left", "top", "right"]].set_visible(False)
 ax1.tick_params(axis="both", which="both", left=False)
 
+ax2.set_xlim(10.1, 12.8)
+ax2.set_ylim(0, max(res_ylocs) + args.bar_height + args.bar_start)
 ax2.yaxis.set_label_position("right")
 ax2.yaxis.tick_right()
 ax2.set_ylabel("Resolution (m)")
 ax2.set_yticks(np.array(res_ylocs) + args.bar_height / 2)
 ax2.set_yticklabels(res_names)
-ax2.set_ylim(0, max(res_ylocs) + args.bar_height + args.bar_start)
 ax2.spines[["left", "top"]].set_visible(False)
 
 # Draw axis break symbol
@@ -158,4 +159,5 @@ ax1.plot(1, 0, transform=ax1.transAxes, **kwargs)
 ax2.plot(0, 0, transform=ax2.transAxes, **kwargs)
 
 plt.tight_layout()
+plt.subplots_adjust(wspace=0.1)
 plt.show()
