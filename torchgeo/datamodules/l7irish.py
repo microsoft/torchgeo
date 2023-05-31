@@ -52,9 +52,9 @@ class L7IrishDataModule(GeoDataModule):
 
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            K.RandomVerticalFlip(p=0.2),
-            K.RandomHorizontalFlip(p=0.2),
-            data_keys=["image"],
+            K.RandomVerticalFlip(p=0.5),
+            K.RandomHorizontalFlip(p=0.5),
+            data_keys=["image", "mask"],
         )
 
     def setup(self, stage: str) -> None:
