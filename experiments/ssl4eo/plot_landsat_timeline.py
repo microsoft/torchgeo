@@ -10,7 +10,12 @@ import matplotlib.pyplot as plt
 
 # Match NeurIPS template
 plt.rcParams.update(
-    {"font.family": "Times New Roman", "font.size": 10, "axes.labelsize": 10}
+    {
+        "font.family": "Times New Roman",
+        "font.size": 10,
+        "axes.labelsize": 10,
+        "text.usetex": True,
+    }
 )
 
 parser = argparse.ArgumentParser(
@@ -18,9 +23,7 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument("--bar-start", default=1, type=float, help="height of first bar")
 parser.add_argument("--bar-height", default=3, type=float, help="height of each bar")
-parser.add_argument(
-    "--bar-sep", default=3, type=float, help="separation between bars"
-)
+parser.add_argument("--bar-sep", default=3, type=float, help="separation between bars")
 args = parser.parse_args()
 
 working: dict[int, list[tuple[date, date]]] = {
@@ -114,7 +117,7 @@ for satellite in range(9, 0, -1):
     if start == end:
         s = start
     else:
-        s = f"{start}–{end}"
+        s = f"{start}--{end}"
 
     kwargs = {
         "y": ymin + args.bar_height / 2,
