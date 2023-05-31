@@ -15,6 +15,7 @@ plt.rcParams.update(
         "font.size": 10,
         "axes.labelsize": 10,
         "text.usetex": True,
+        "hatch.linewidth": 0.5,
     }
 )
 
@@ -83,13 +84,14 @@ for satellite in range(9, 0, -1):
         "alpha": 0.8,
         "color": next(cmap),
         "edgecolor": (0, 0, 0, 0.8),
+        "linewidth": 0.5,
     }
 
     xranges = [(start, end - start) for start, end in working[satellite]]
     ax.broken_barh(xranges, hatch=None, **kwargs)
 
     xranges = [(start, end - start) for start, end in failing[satellite]]
-    ax.broken_barh(xranges, hatch="///", **kwargs)
+    ax.broken_barh(xranges, hatch="////", **kwargs)
 
     # Label
     xmin = global_xmax
