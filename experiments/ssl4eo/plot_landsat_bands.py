@@ -26,7 +26,7 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument("skip", nargs="*", help="sensors to skip", metavar="SENSOR")
 parser.add_argument(
-    "--fig-height", default=5.5, type=float, help="height of figure in inches"
+    "--fig-height", default=5, type=float, help="height of figure in inches"
 )
 parser.add_argument("--bar-start", default=1, type=float, help="height of first bar")
 parser.add_argument("--bar-height", default=3, type=float, help="height of each bar")
@@ -37,7 +37,7 @@ parser.add_argument(
     "--bar-jump", default=2.6, type=float, help="additional height for narrow bars"
 )
 parser.add_argument(
-    "--sensor-sep", default=1, type=float, help="separation between sensors"
+    "--sensor-sep", default=2, type=float, help="separation between sensors"
 )
 args = parser.parse_args()
 
@@ -125,17 +125,15 @@ for (satellite, sensor), group1 in df.groupby(["Satellite", "Sensor"], sort=Fals
 
 # Labels
 ax.set_xlabel(r"Wavelength (\textmu m)")
-ax.set_xticks([0], labels=[0], alpha=0)
+ax.set_xticks([0.5], labels=[0.5], alpha=0)
 ax.set_yticks([0], labels=[0], alpha=0)
-ax.spines.bottom.set_visible(False)
-ax.spines.top.set_visible(False)
+ax.spines[["bottom", "left", "top", "right"]].set_visible(False)
 
-ax1.set_ylabel("Satellite (Sensor)")
 ax1.set_yticks(np.array(sensor_ylocs) + args.bar_height / 2)
 ax1.set_yticklabels(sensor_names)
 ax1.set_ylim(0, max(res_ylocs) + args.bar_height + args.bar_start)
-ax1.spines.right.set_visible(False)
-ax1.spines.top.set_visible(False)
+ax1.spines[["left", "top", "right"]].set_visible(False)
+ax1.tick_params(axis="both", which="both", left=False)
 
 ax2.yaxis.set_label_position("right")
 ax2.yaxis.tick_right()
@@ -143,8 +141,7 @@ ax2.set_ylabel("Resolution (m)")
 ax2.set_yticks(np.array(res_ylocs) + args.bar_height / 2)
 ax2.set_yticklabels(res_names)
 ax2.set_ylim(0, max(res_ylocs) + args.bar_height + args.bar_start)
-ax2.spines.left.set_visible(False)
-ax2.spines.top.set_visible(False)
+ax2.spines[["left", "top"]].set_visible(False)
 
 # Draw axis break symbol
 d = 2
