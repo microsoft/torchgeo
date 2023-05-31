@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument("--bar-start", default=1, type=float, help="height of first bar")
 parser.add_argument("--bar-height", default=3, type=float, help="height of each bar")
-parser.add_argument("--bar-sep", default=3, type=float, help="separation between bars")
+parser.add_argument("--bar-sep", default=2, type=float, help="separation between bars")
 args = parser.parse_args()
 
 working: dict[int, list[tuple[date, date]]] = {
@@ -72,7 +72,7 @@ failing: dict[int, list[tuple[date, date]]] = {
 global_xmin = date(1972, 7, 23) - timedelta(weeks=52 * 4)
 global_xmax = date.today()
 
-fig, ax = plt.subplots(figsize=(5.5, 4))
+fig, ax = plt.subplots(figsize=(5.5, 3))
 
 cmap = iter(plt.cm.tab10(range(9, 0, -1)))
 ymin = args.bar_start
@@ -134,10 +134,11 @@ for satellite in range(9, 0, -1):
 
 ax.xaxis_date()
 ax.set_xlim(global_xmin, global_xmax)
-ax.set_xlabel("Date")
 ax.set_ylabel("Landsat Mission")
 ax.set_yticks(yticks)
 ax.set_yticklabels(range(9, 0, -1))
+ax.tick_params(axis="both", which="both", top=False, right=False)
+ax.spines[["top", "right"]].set_visible(False)
 
 plt.tight_layout()
 plt.show()
