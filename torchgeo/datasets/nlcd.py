@@ -271,27 +271,30 @@ class NLCD(RasterDataset):
         mask = sample["mask"].squeeze().numpy()
         ncols = 1
 
-        plt_cmap = ListedColormap(
-            np.stack([np.array(val) / 255 for val in self.cmap.values()], axis=0)
-        )
-
         showing_predictions = "prediction" in sample
         if showing_predictions:
             pred = sample["prediction"].squeeze().numpy()
             ncols = 2
 
+        kwargs = {
+            "cmap": ListedColormap(np.array(list(self.cmap.values())) / 255),
+            "vmin": 0,
+            "vmax": len(self.cmap) - 1,
+            "interpolation": "none",
+        }
+
         fig, axs = plt.subplots(
             nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
         )
 
-        axs[0, 0].imshow(mask, cmap=plt_cmap)
+        axs[0, 0].imshow(mask, **kwargs)
         axs[0, 0].axis("off")
 
         if show_titles:
             axs[0, 0].set_title("Mask")
 
         if showing_predictions:
-            axs[0, 1].imshow(pred, cmap=plt_cmap)
+            axs[0, 1].imshow(pred, **kwargs)
             axs[0, 1].axis("off")
             if show_titles:
                 axs[0, 1].set_title("Prediction")
