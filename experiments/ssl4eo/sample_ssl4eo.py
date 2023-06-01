@@ -53,7 +53,7 @@ def get_world_cities(
     cols = ["city", "lat", "lng", "population"]
     cities = pd.read_csv(os.path.join(download_root, filename), usecols=cols)
     cities.at[8436, "population"] = 50789  # fix one bug (Tecax) in the csv file
-    cities = cities.sort_values(by=["population"], ascending=False).head(size)
+    cities = cities.nlargest("population", size)
     return cities
 
 
