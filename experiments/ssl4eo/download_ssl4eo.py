@@ -246,7 +246,7 @@ def get_random_patches_match(
     except Exception as e:
         if debug:
             print(e)
-        return [], coords
+        return None, coords
 
     return patches, coords
 
