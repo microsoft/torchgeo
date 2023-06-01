@@ -246,7 +246,7 @@ def get_random_patches_match(
     except Exception as e:
         if debug:
             print(e)
-        return None, coords
+        return [], coords
 
     return patches, coords
 
@@ -515,7 +515,7 @@ if __name__ == "__main__":
         # add to existing checked locations
         with open(ext_path, "a") as f:
             writer = csv.writer(f)
-            if patches is not None:
+            if patches is not []:
                 success = 1
             else:
                 success = 0
