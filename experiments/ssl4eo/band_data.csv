@@ -1,31 +1,50 @@
-Satellite name,Sensor name,Band number,Wavelength start (μm),Wavelength width,Color,Resolution (m)
-Landsat 4-5,tm,6,10.4,2.1,#8c564b,120
-Landsat 7,etm,6,10.4,2.1,#8c564b,60
-Landsat 8-9,tirs,10,10.6,0.59,#8c564b,100
-Landsat 8-9,tirs,11,11.5,1.01,#8c564b,100
-Landsat 1-5,mss,1,0.5,0.1,#2ca02c,60
-Landsat 1-5,mss,2,0.6,0.1,#d62728,60
-Landsat 1-5,mss,3,0.7,0.1,#e377c2,60
-Landsat 1-5,mss,4,0.8,0.3,#ff7f0e,60
-Landsat 4-5,tm,1,0.45,0.07,#1f77b4,30
-Landsat 4-5,tm,2,0.52,0.08,#2ca02c,30
-Landsat 4-5,tm,3,0.63,0.06,#d62728,30
-Landsat 4-5,tm,4,0.76,0.14,#e377c2,30
-Landsat 4-5,tm,5,1.55,0.2,#ff7f0e,30
-Landsat 4-5,tm,7,2.08,0.27,#7f7f7f,30
-Landsat 7,etm,1,0.45,0.07,#1f77b4,30
-Landsat 7,etm,2,0.52,0.08,#2ca02c,30
-Landsat 7,etm,3,0.63,0.06,#d62728,30
-Landsat 7,etm,4,0.77,0.13,#e377c2,30
-Landsat 7,etm,5,1.55,0.2,#ff7f0e,30
-Landsat 7,etm,7,2.09,0.26,#7f7f7f,30
-Landsat 7,etm,8,0.52,0.38,#bcbd22,15
-Landsat 8-9,oli,1,0.43,0.02,#17becf,30
-Landsat 8-9,oli,2,0.45,0.06,#1f77b4,30
-Landsat 8-9,oli,3,0.53,0.06,#2ca02c,30
-Landsat 8-9,oli,4,0.64,0.03,#d62728,30
-Landsat 8-9,oli,5,0.85,0.03,#e377c2,30
-Landsat 8-9,oli,6,1.57,0.08,#ff7f0e,30
-Landsat 8-9,oli,7,2.11,0.18,#7f7f7f,30
-Landsat 8-9,oli,9,1.36,0.02,#9467bd,30
-Landsat 8-9,oli,8,0.5,0.18,#bcbd22,15
+Satellite,Sensor,Band,Wavelength Start (μm),Wavelength Width,Color,Resolution (m)
+
+Landsat 1--2,RBV,1,0.475,0.1,#1f77b4,80
+Landsat 1--2,RBV,2,0.58,0.1,#2ca02c,80
+Landsat 1--2,RBV,3,0.69,0.14,#d62728,80
+
+Landsat 3,RBV,1,0.505,0.245,#bcbd22,40
+
+Landsat 1--5,MSS,1,0.5,0.1,#2ca02c,80
+Landsat 1--5,MSS,2,0.6,0.1,#d62728,80
+Landsat 1--5,MSS,3,0.7,0.1,#e377c2,80
+Landsat 1--5,MSS,4,0.8,0.3,#ff7f0e,80
+
+Landsat 4--5,TM,1,0.45,0.07,#1f77b4,30
+Landsat 4--5,TM,2,0.52,0.08,#2ca02c,30
+Landsat 4--5,TM,3,0.63,0.06,#d62728,30
+Landsat 4--5,TM,4,0.76,0.14,#e377c2,30
+Landsat 4--5,TM,5,1.55,0.2,#ff7f0e,30
+Landsat 4--5,TM,6,10.4,2.1,#8c564b,120
+Landsat 4--5,TM,7,2.08,0.27,#7f7f7f,30
+
+Landsat 6,ETM,1,0.45,0.07,#1f77b4,30
+Landsat 6,ETM,2,0.52,0.08,#2ca02c,30
+Landsat 6,ETM,3,0.63,0.06,#d62728,30
+Landsat 6,ETM,4,0.76,0.14,#e377c2,30
+Landsat 6,ETM,5,1.55,0.2,#ff7f0e,30
+Landsat 6,ETM,6,10.4,2.1,#8c564b,120
+Landsat 6,ETM,7,2.08,0.27,#7f7f7f,30
+Landsat 6,ETM,8,0.52,0.38,#bcbd22,15
+
+Landsat 7,ETM+,1,0.45,0.07,#1f77b4,30
+Landsat 7,ETM+,2,0.52,0.08,#2ca02c,30
+Landsat 7,ETM+,3,0.63,0.06,#d62728,30
+Landsat 7,ETM+,4,0.77,0.13,#e377c2,30
+Landsat 7,ETM+,5,1.55,0.2,#ff7f0e,30
+Landsat 7,ETM+,6,10.4,2.1,#8c564b,60
+Landsat 7,ETM+,7,2.08,0.27,#7f7f7f,30
+Landsat 7,ETM+,8,0.52,0.38,#bcbd22,15
+
+Landsat 8--9,OLI/TIRS,1,0.43,0.02,#17becf,30
+Landsat 8--9,OLI/TIRS,2,0.45,0.06,#1f77b4,30
+Landsat 8--9,OLI/TIRS,3,0.53,0.06,#2ca02c,30
+Landsat 8--9,OLI/TIRS,4,0.64,0.03,#d62728,30
+Landsat 8--9,OLI/TIRS,5,0.85,0.03,#e377c2,30
+Landsat 8--9,OLI/TIRS,6,1.57,0.08,#ff7f0e,30
+Landsat 8--9,OLI/TIRS,7,2.11,0.18,#7f7f7f,30
+Landsat 8--9,OLI/TIRS,8,0.5,0.18,#bcbd22,15
+Landsat 8--9,OLI/TIRS,9,1.36,0.02,#9467bd,30
+Landsat 8--9,OLI/TIRS,10,10.6,0.59,#8c564b,100
+Landsat 8--9,OLI/TIRS,11,11.5,1.01,#8c564b,100
