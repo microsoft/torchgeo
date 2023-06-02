@@ -515,7 +515,7 @@ if __name__ == "__main__":
         # add to existing checked locations
         with open(ext_path, "a") as f:
             writer = csv.writer(f)
-            if patches is not None:
+            if patches:
                 success = 1
             else:
                 success = 0
