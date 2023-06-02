@@ -9,7 +9,7 @@ import subprocess
 from multiprocessing import Process, Queue
 
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
-GPUS = [1, 2, 3, 4]
+DEVICE = [1, 2, 3, 4]
 DRY_RUN = False  # if False then print out the commands to be run, if True then run
 conf_file_name = "etm_sr_cdl.yaml"
 
@@ -23,7 +23,7 @@ weight_options = [True, False]
 
 
 def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
-    """Process for each ID in GPUS."""
+    """Process for each ID in DEVICE."""
     while not work.empty():
         experiment = work.get()
         experiment = experiment.replace("GPU", str(gpu_idx))
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         work.put(command)
 
     processes = []
-    for gpu_idx in GPUS:
+    for gpu_idx in DEVICE:
         p = Process(target=do_work, args=(work, gpu_idx))
         processes.append(p)
         p.start()
