@@ -52,6 +52,7 @@ class L7IrishDataModule(GeoDataModule):
 
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
+            K.RandomResizedCrop((224, 224), scale=(0.2, 0.6)),
             K.RandomVerticalFlip(p=0.5),
             K.RandomHorizontalFlip(p=0.5),
             data_keys=["image", "mask"],
