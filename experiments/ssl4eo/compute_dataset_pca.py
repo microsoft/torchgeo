@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import argparse
 import glob
 import os
@@ -12,7 +15,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("directory", help="directory to recursively search for files")
     parser.add_argument("--ext", default="tif", help="file extension")
-    parser.add_argument("--nan", default=0, type=float, help="fill value")
     parser.add_argument("--scale", default=255, type=float, help="scale factor")
     args = parser.parse_args()
 
