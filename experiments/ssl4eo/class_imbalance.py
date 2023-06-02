@@ -37,7 +37,7 @@ if __name__ == "__main__":
         """
         global args
 
-        counts = np.zeros(args.num_classes, dtype=np.float32)
+        counts = np.zeros(args.num_classes)
         with rio.open(path, "r") as src:
             x = src.read()
             unique, unique_counts = np.unique(x, return_counts=True)
