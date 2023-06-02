@@ -20,27 +20,30 @@ if __name__ == "__main__":
     parser.add_argument(
         "--num-classes", type=int, default=256, help="number of classes"
     )
+    parser.add_argument(
+        "--ignore-index", type=int, default=0, help="fill value to ignore"
+    )
     parser.add_argument("--num-workers", type=int, default=10, help="number of threads")
     args = parser.parse_args()
 
-    def class_ratios(path: str) -> "np.typing.NDArray[np.float32]":
-        """Calculate the ratios of each class.
+    def class_counts(path: str) -> "np.typing.NDArray[np.float32]":
+        """Calculate the number of values in each class.
 
         Args:
             path: Path to an image file.
 
         Returns:
-            Class-wise ratios.
+            Counts of each class.
         """
         global args
 
-        out = np.zeros(args.num_classes, dtype=np.float32)
+        counts = np.zeros(args.num_classes, dtype=np.float32)
         with rio.open(path, "r") as src:
             x = src.read()
             unique, unique_counts = np.unique(x, return_counts=True)
-            out[unique] = unique_counts / x.size
+            counts[unique] = unique_counts
 
-        return out
+        return counts
 
     paths = []
     for root in args.roots:
@@ -49,24 +52,27 @@ if __name__ == "__main__":
         )
 
     if args.num_workers > 0:
-        ratios = thread_map(class_ratios, paths, max_workers=args.num_workers)
+        counts = thread_map(class_counts, paths, max_workers=args.num_workers)
     else:
-        ratios = []
+        counts = []
         for path in tqdm(paths):
-            ratios.append(class_ratios(path))
+            counts.append(class_counts(path))
 
-    ratio = np.mean(ratios, axis=0)
+    counts = np.sum(counts, axis=0)
+
+    if 0 <= args.ignore_index < args.num_classes:
+        counts[args.ignore_index] = 0
 
     if args.sort:
-        indices = np.argsort(ratio)
+        indices = np.argsort(counts)
         indices = indices[::-1]
-        ratio = ratio[indices]
+        counts = counts[indices]
     else:
         indices = np.arange(args.num_classes)
 
-    keep = ratio > 0
+    keep = counts > 0
     indices = indices[keep]
-    ratio = ratio[keep]
+    counts = counts[keep]
 
     print(indices)
-    print(ratio)
+    print(counts / np.sum(counts))
