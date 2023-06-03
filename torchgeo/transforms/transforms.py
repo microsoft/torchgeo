@@ -25,7 +25,7 @@ class AugmentationSequential(Module):
         self,
         *args: Union[K.base._AugmentationBase, K.ImageSequential],
         data_keys: list[str],
-        **kwargs: dict[str, dict[str, Any]],
+        **kwargs: Any,
     ) -> None:
         """Initialize a new augmentation sequential instance.
 
