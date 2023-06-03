@@ -41,7 +41,9 @@ class SSL4EOLBenchmarkDataModule(NonGeoDataModule):
 
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            K.RandomResizedCrop(_to_tuple(self.patch_size), scale=(0.6, 1.0)),
+            K.RandomResizedCrop(
+                _to_tuple(self.patch_size), scale=(0.6, 1.0), cropping_mode="resample"
+            ),
             K.RandomVerticalFlip(p=0.5),
             K.RandomHorizontalFlip(p=0.5),
             data_keys=["image", "mask"],

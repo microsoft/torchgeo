@@ -21,13 +21,10 @@ class L7IrishDataModule(GeoDataModule):
     .. versionadded:: 0.5
     """
 
-    mean = torch.tensor(0)
-    std = torch.tensor(10000)
-
     def __init__(
         self,
         batch_size: int = 1,
-        patch_size: Union[int, tuple[int, int]] = 32,
+        patch_size: Union[int, tuple[int, int]] = 224,
         length: Optional[int] = None,
         num_workers: int = 0,
         **kwargs: Any,
@@ -53,7 +50,9 @@ class L7IrishDataModule(GeoDataModule):
 
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            K.RandomResizedCrop(_to_tuple(self.patch_size), scale=(0.6, 1.0)),
+            K.RandomResizedCrop(
+                _to_tuple(self.patch_size), scale=(0.6, 1.0), cropping_mode="resample"
+            ),
             K.RandomVerticalFlip(p=0.5),
             K.RandomHorizontalFlip(p=0.5),
             data_keys=["image", "mask"],
