@@ -18,7 +18,16 @@ if __name__ == "__main__":
     parser.add_argument("--suffix", default=".tif", help="file suffix")
     parser.add_argument("--sort", action="store_true", help="sort by class frequency")
     parser.add_argument(
-        "--num-classes", type=int, default=256, help="number of classes"
+        "--weights", action="store_true", help="print weights instead of ratios"
+    )
+    parser.add_argument(
+        "--total-classes", type=int, default=256, help="total number of classes"
+    )
+    parser.add_argument(
+        "--keep-classes",
+        type=float,
+        default=1,
+        help="keep classes with percentage higher than this",
     )
     parser.add_argument(
         "--ignore-index", type=int, default=0, help="fill value to ignore"
@@ -37,7 +46,7 @@ if __name__ == "__main__":
         """
         global args
 
-        counts = np.zeros(args.num_classes)
+        counts = np.zeros(args.total_classes)
         with rio.open(path, "r") as src:
             x = src.read()
             unique, unique_counts = np.unique(x, return_counts=True)
@@ -60,7 +69,7 @@ if __name__ == "__main__":
 
     counts = np.sum(counts, axis=0)
 
-    if 0 <= args.ignore_index < args.num_classes:
+    if 0 <= args.ignore_index < args.total_classes:
         counts[args.ignore_index] = 0
 
     if args.sort:
@@ -68,11 +77,14 @@ if __name__ == "__main__":
         indices = indices[::-1]
         counts = counts[indices]
     else:
-        indices = np.arange(args.num_classes)
+        indices = np.arange(args.total_classes)
 
-    keep = counts > 0
+    keep = counts > args.keep_classes
     indices = indices[keep]
     counts = counts[keep]
+
+    if args.weights:
+        counts = 1 / counts
 
     print(indices)
     print(counts / np.sum(counts))
