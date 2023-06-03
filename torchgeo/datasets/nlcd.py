@@ -3,11 +3,11 @@
 
 """NLCD dataset."""
 
+import glob
 import os
 from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
-import numpy as np
 import torch
 from rasterio.crs import CRS
 
@@ -188,9 +188,8 @@ class NLCD(RasterDataset):
         exists = []
         for year in self.years:
             filename_year = self.filename_glob.replace("*", str(year))
-            dirname_year = filename_year.split(".")[0]
-            pathname = os.path.join(self.root, dirname_year, filename_year)
-            if os.path.exists(pathname):
+            pathname = os.path.join(self.root, "**", filename_year)
+            if glob.glob(pathname, recursive=True):
                 exists.append(True)
             else:
                 exists.append(False)
@@ -201,10 +200,9 @@ class NLCD(RasterDataset):
         # Check if the zip files have already been downloaded
         exists = []
         for year in self.years:
-            pathname = os.path.join(
-                self.root, self.zipfile_glob.replace("*", str(year))
-            )
-            if os.path.exists(pathname):
+            zipfile_year = self.zipfile_glob.replace("*", str(year))
+            pathname = os.path.join(self.root, "**", zipfile_year)
+            if glob.glob(pathname, recursive=True):
                 exists.append(True)
                 self._extract()
             else:
@@ -238,8 +236,8 @@ class NLCD(RasterDataset):
         """Extract the dataset."""
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace("*", str(year))
-            pathname = os.path.join(self.root, zipfile_name)
-            extract_archive(pathname, self.root)
+            pathname = os.path.join(self.root, "**", zipfile_name)
+            extract_archive(glob.glob(pathname, recursive=True)[0], self.root)
 
     def plot(
         self,
