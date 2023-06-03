@@ -156,14 +156,10 @@ class NLCD(RasterDataset):
 
         super().__init__(root, crs, res, transforms=transforms, cache=cache)
 
-        # Map chosen classes to ordinal numbers
+        # Map chosen classes to ordinal numbers, all others mapped to background class
         for v, k in enumerate(self.classes):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = self.cmap[k]
-
-        # Map all other classes to the background class (0)
-        for k in self.cmap.keys() - set(self.classes):
-            self.ordinal_map[k] = 0
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve mask and metadata indexed by query.
