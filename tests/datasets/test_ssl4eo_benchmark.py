@@ -16,7 +16,7 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import SSL4EOLBenchmark
+from torchgeo.datasets import CDL, NLCD, RasterDataset, SSL4EOLBenchmark
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -89,6 +89,15 @@ class TestSSL4EOLBenchmark:
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
 
+    @pytest.mark.parametrize("product,base_class", [("nlcd", NLCD), ("cdl", CDL)])
+    def test_classes(self, product, base_class: RasterDataset) -> None:
+        root = os.path.join("tests", "data", "ssl4eo_benchmark_landsat")
+        classes = list(base_class.cmap.keys())[:5]
+        ds = SSL4EOLBenchmark(root, product=product, classes=classes)
+        sample = ds[0]
+        mask = sample["mask"]
+        assert mask.max() < len(classes)
+
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
             SSL4EOLBenchmark(split="foo")
@@ -100,6 +109,13 @@ class TestSSL4EOLBenchmark:
     def test_invalid_product(self) -> None:
         with pytest.raises(AssertionError):
             SSL4EOLBenchmark(product="foo")
+
+    def test_invalid_classes(self) -> None:
+        with pytest.raises(AssertionError):
+            SSL4EOLBenchmark(classes=[-1])
+
+        with pytest.raises(AssertionError):
+            SSL4EOLBenchmark(classes=[11])
 
     def test_add(self, dataset: SSL4EOLBenchmark) -> None:
         ds = dataset + dataset

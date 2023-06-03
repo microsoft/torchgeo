@@ -246,6 +246,7 @@ class CDL(RasterDataset):
         assert (
             set(classes) <= self.cmap.keys()
         ), f"Only the following classes are valid: {list(self.cmap.keys())}."
+        assert 0 in classes, "Classes must include the background class: 0"
 
         self.root = root
         self.years = years
