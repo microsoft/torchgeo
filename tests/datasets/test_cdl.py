@@ -51,6 +51,14 @@ class TestCDL:
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
 
+    def test_classes(self) -> None:
+        root = os.path.join("tests", "data", "cdl")
+        classes = list(CDL.cmap.keys())[:5]
+        ds = CDL(root, years=[2021], classes=classes)
+        sample = ds[ds.bounds]
+        mask = sample["mask"]
+        assert mask.max() < len(classes)
+
     def test_and(self, dataset: CDL) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)
@@ -81,6 +89,13 @@ class TestCDL:
             match="CDL data product only exists for the following years:",
         ):
             CDL(str(tmp_path), years=[1996])
+
+    def test_invalid_classes(self) -> None:
+        with pytest.raises(AssertionError):
+            CDL(classes=[-1])
+
+        with pytest.raises(AssertionError):
+            CDL(classes=[11])
 
     def test_plot(self, dataset: CDL) -> None:
         query = dataset.bounds
