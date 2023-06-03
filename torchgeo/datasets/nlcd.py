@@ -8,6 +8,7 @@ from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
@@ -149,8 +150,8 @@ class NLCD(RasterDataset):
         self.classes = classes
         self.download = download
         self.checksum = checksum
-        self.ordinal_map = np.zeros(max(self.cmap.keys()), dtype=self.dtype)
-        self.ordinal_cmap = np.zeros((len(self.classes), 4), dtype=np.uint8)
+        self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
+        self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
 
         self._verify()
 
@@ -159,7 +160,7 @@ class NLCD(RasterDataset):
         # Map chosen classes to ordinal numbers, all others mapped to background class
         for v, k in enumerate(self.classes):
             self.ordinal_map[k] = v
-            self.ordinal_cmap[v] = self.cmap[k]
+            self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve mask and metadata indexed by query.

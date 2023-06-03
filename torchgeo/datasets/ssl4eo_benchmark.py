@@ -98,8 +98,6 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
     split_percentages = [0.7, 0.15, 0.15]
 
-    ordinal_label_map = {"nlcd": NLCD.ordinal_label_map, "cdl": CDL.ordinal_label_map}
-
     cmaps = {"nlcd": NLCD.cmap, "cdl": CDL.cmap}
 
     def __init__(
