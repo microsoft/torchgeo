@@ -42,7 +42,7 @@ class TestSSL4EOLBenchmark:
         url = os.path.join("tests", "data", "ssl4eo_benchmark_landsat", "{}.tar.gz")
         monkeypatch.setattr(SSL4EOLBenchmark, "url", url)
 
-        input_sensor, mask_product, split = request.param
+        sensor, product, split = request.param
         monkeypatch.setattr(
             SSL4EOLBenchmark, "split_percentages", [1 / 3, 1 / 3, 1 / 3]
         )
@@ -75,8 +75,8 @@ class TestSSL4EOLBenchmark:
         transforms = nn.Identity()
         return SSL4EOLBenchmark(
             root=root,
-            input_sensor=input_sensor,
-            mask_product=mask_product,
+            sensor=sensor,
+            product=product,
             split=split,
             transforms=transforms,
             download=True,
@@ -93,13 +93,13 @@ class TestSSL4EOLBenchmark:
         with pytest.raises(AssertionError):
             SSL4EOLBenchmark(split="foo")
 
-    def test_invalid_input_sensor(self) -> None:
+    def test_invalid_sensor(self) -> None:
         with pytest.raises(AssertionError):
-            SSL4EOLBenchmark(input_sensor="foo")
+            SSL4EOLBenchmark(sensor="foo")
 
-    def test_invalid_mask_product(self) -> None:
+    def test_invalid_product(self) -> None:
         with pytest.raises(AssertionError):
-            SSL4EOLBenchmark(mask_product="foo")
+            SSL4EOLBenchmark(product="foo")
 
     def test_add(self, dataset: SSL4EOLBenchmark) -> None:
         ds = dataset + dataset
@@ -108,8 +108,8 @@ class TestSSL4EOLBenchmark:
     def test_already_extracted(self, dataset: SSL4EOLBenchmark) -> None:
         SSL4EOLBenchmark(
             root=dataset.root,
-            input_sensor=dataset.input_sensor,
-            mask_product=dataset.mask_product,
+            sensor=dataset.sensor,
+            product=dataset.product,
             download=True,
         )
 
