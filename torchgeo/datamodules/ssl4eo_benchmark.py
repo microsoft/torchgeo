@@ -6,6 +6,7 @@
 from typing import Any, Union
 
 import kornia.augmentation as K
+from kornia.constants import DataKey, Resample
 
 from ..datasets import SSL4EOLBenchmark
 from ..samplers.utils import _to_tuple
@@ -41,12 +42,13 @@ class SSL4EOLBenchmarkDataModule(NonGeoDataModule):
 
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            K.RandomResizedCrop(
-                _to_tuple(self.patch_size), scale=(0.6, 1.0), cropping_mode="resample"
-            ),
+            K.RandomResizedCrop(_to_tuple(self.patch_size), scale=(0.6, 1.0)),
             K.RandomVerticalFlip(p=0.5),
             K.RandomHorizontalFlip(p=0.5),
             data_keys=["image", "mask"],
+            extra_args={
+                DataKey.MASK: {"resample": Resample.NEAREST, "align_corners": None}
+            },
         )
         self.val_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
