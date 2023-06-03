@@ -84,7 +84,7 @@ class NLCD(RasterDataset):
     }
 
     cmap = {
-        0: (0, 0, 0, 255),
+        0: (0, 0, 0, 0),
         11: (70, 107, 159, 255),
         12: (209, 222, 248, 255),
         21: (222, 197, 197, 255),
@@ -133,9 +133,9 @@ class NLCD(RasterDataset):
             checksum: if True, check the MD5 after downloading files (may be slow)
 
         Raises:
+            AssertionError: if ``years`` or ``classes`` are invalid
             FileNotFoundError: if no files are found in ``root``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-            AssertionError: if ``years`` or ``classes`` are invalid
         """
         assert set(years) <= self.md5s.keys(), (
             "NLCD data product only exists for the following years: "
@@ -255,12 +255,12 @@ class NLCD(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample["mask"].squeeze().numpy()
+        mask = sample["mask"].squeeze()
         ncols = 1
 
         showing_predictions = "prediction" in sample
         if showing_predictions:
-            pred = sample["prediction"].squeeze().numpy()
+            pred = sample["prediction"].squeeze()
             ncols = 2
 
         fig, axs = plt.subplots(
