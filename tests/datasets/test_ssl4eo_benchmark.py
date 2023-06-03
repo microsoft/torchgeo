@@ -90,7 +90,7 @@ class TestSSL4EOLBenchmark:
         assert isinstance(x["mask"], torch.Tensor)
 
     @pytest.mark.parametrize("product,base_class", [("nlcd", NLCD), ("cdl", CDL)])
-    def test_classes(self, product, base_class: RasterDataset) -> None:
+    def test_classes(self, product: str, base_class: RasterDataset) -> None:
         root = os.path.join("tests", "data", "ssl4eo_benchmark_landsat")
         classes = list(base_class.cmap.keys())[:5]
         ds = SSL4EOLBenchmark(root, product=product, classes=classes)
