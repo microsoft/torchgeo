@@ -191,6 +191,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         """
         # Check if the extracted files already exist
         img_pathname = os.path.join(self.root, self.img_dir_name, "**", "all_bands.tif")
+        print(img_pathname)
         exists = []
         exists.append(bool(glob.glob(img_pathname, recursive=True)))
         mask_pathname = os.path.join(
@@ -199,6 +200,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
             "**",
             f"{self.product}_{self.year_dict[self.sensor]}.tif",
         )
+        print(mask_pathname)
         exists.append(bool(glob.glob(mask_pathname, recursive=True)))
 
         if all(exists):

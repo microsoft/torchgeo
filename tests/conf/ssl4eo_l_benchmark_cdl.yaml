@@ -14,7 +14,7 @@ module:
 datamodule:
   _target_: torchgeo.datamodules.SSL4EOLBenchmarkDataModule
   root: "tests/data/ssl4eo_benchmark_landsat"
-  input_sensor: "tm_toa"
-  mask_product: "cdl"
+  sensor: "tm_toa"
+  product: "cdl"
   batch_size: 2
   num_workers: 0
