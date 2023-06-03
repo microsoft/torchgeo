@@ -8,7 +8,6 @@ from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import ListedColormap
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
@@ -83,44 +82,24 @@ class NLCD(RasterDataset):
         2019: "82851c3f8105763b01c83b4a9e6f3961",
     }
 
-    ordinal_label_map = {
-        0: 0,
-        11: 1,
-        12: 2,
-        21: 3,
-        22: 4,
-        23: 5,
-        24: 6,
-        31: 7,
-        41: 8,
-        42: 9,
-        43: 10,
-        52: 11,
-        71: 12,
-        81: 13,
-        82: 14,
-        90: 15,
-        95: 16,
-    }
-
     cmap = {
         0: (0, 0, 0, 255),
-        1: (70, 107, 159, 255),
-        2: (209, 222, 248, 255),
-        3: (222, 197, 197, 255),
-        4: (217, 146, 130, 255),
-        5: (235, 0, 0, 255),
-        6: (171, 0, 0, 255),
-        7: (179, 172, 159, 255),
-        8: (104, 171, 95, 255),
-        9: (28, 95, 44, 255),
-        10: (181, 197, 143, 255),
-        11: (204, 184, 121, 255),
-        12: (223, 223, 194, 255),
-        13: (220, 217, 57, 255),
-        14: (171, 108, 40, 255),
-        15: (184, 217, 235, 255),
-        16: (108, 159, 184, 255),
+        11: (70, 107, 159, 255),
+        12: (209, 222, 248, 255),
+        21: (222, 197, 197, 255),
+        22: (217, 146, 130, 255),
+        23: (235, 0, 0, 255),
+        24: (171, 0, 0, 255),
+        31: (179, 172, 159, 255),
+        41: (104, 171, 95, 255),
+        42: (28, 95, 44, 255),
+        43: (181, 197, 143, 255),
+        52: (204, 184, 121, 255),
+        71: (223, 223, 194, 255),
+        81: (220, 217, 57, 255),
+        82: (171, 108, 40, 255),
+        90: (184, 217, 235, 255),
+        95: (108, 159, 184, 255),
     }
 
     def __init__(
@@ -129,6 +108,7 @@ class NLCD(RasterDataset):
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         years: list[int] = [2019],
+        classes: list[int] = list(cmap.keys()),
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
@@ -143,6 +123,8 @@ class NLCD(RasterDataset):
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
             years: list of years for which to use nlcd layer
+            classes: list of classes to include, the rest will be mapped to 0
+                (defaults to all classes)
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
@@ -152,20 +134,36 @@ class NLCD(RasterDataset):
         Raises:
             FileNotFoundError: if no files are found in ``root``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-            AssertionError: if ``year`` is invalid
+            AssertionError: if ``years`` or ``classes`` are invalid
         """
-        assert set(years).issubset(self.md5s.keys()), (
+        assert set(years) <= self.md5s.keys(), (
             "NLCD data product only exists for the following years: "
             f"{list(self.md5s.keys())}."
         )
-        self.years = years
+        assert (
+            set(classes) <= self.cmap.keys()
+        ), f"Only the following classes are valid: {list(self.cmap.keys())}."
+
         self.root = root
+        self.years = years
+        self.classes = classes
         self.download = download
         self.checksum = checksum
+        self.ordinal_map = np.zeros(max(self.cmap.keys()), dtype=self.dtype)
+        self.ordinal_cmap = np.zeros((len(self.classes), 4), dtype=np.uint8)
 
         self._verify()
 
         super().__init__(root, crs, res, transforms=transforms, cache=cache)
+
+        # Map chosen classes to ordinal numbers
+        for v, k in enumerate(self.classes):
+            self.ordinal_map[k] = v
+            self.ordinal_cmap[v] = self.cmap[k]
+
+        # Map all other classes to the background class (0)
+        for k in self.cmap.keys() - set(self.classes):
+            self.ordinal_map[k] = 0
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve mask and metadata indexed by query.
@@ -180,13 +178,7 @@ class NLCD(RasterDataset):
             IndexError: if query is not found in the index
         """
         sample = super().__getitem__(query)
-
-        mask = sample["mask"]
-        for k, v in self.ordinal_label_map.items():
-            mask[mask == k] = v
-
-        sample["mask"] = mask
-
+        sample["mask"] = self.ordinal_map[sample["mask"]]
         return sample
 
     def _verify(self) -> None:
@@ -276,25 +268,18 @@ class NLCD(RasterDataset):
             pred = sample["prediction"].squeeze().numpy()
             ncols = 2
 
-        kwargs = {
-            "cmap": ListedColormap(np.array(list(self.cmap.values())) / 255),
-            "vmin": 0,
-            "vmax": len(self.cmap) - 1,
-            "interpolation": "none",
-        }
-
         fig, axs = plt.subplots(
             nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
         )
 
-        axs[0, 0].imshow(mask, **kwargs)
+        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation="none")
         axs[0, 0].axis("off")
 
         if show_titles:
             axs[0, 0].set_title("Mask")
 
         if showing_predictions:
-            axs[0, 1].imshow(pred, **kwargs)
+            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation="none")
             axs[0, 1].axis("off")
             if show_titles:
                 axs[0, 1].set_title("Prediction")
