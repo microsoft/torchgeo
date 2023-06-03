@@ -323,8 +323,10 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
         Returns:
             learning rate dictionary
         """
-        optimizer = torch.optim.Adam(
-            self.model.parameters(), lr=self.hyperparams["learning_rate"]
+        optimizer = torch.optim.AdamW(
+            self.model.parameters(),
+            lr=self.hyperparams["learning_rate"],
+            weight_decay=self.hyperparams["weight_decay"],
         )
         return {
             "optimizer": optimizer,

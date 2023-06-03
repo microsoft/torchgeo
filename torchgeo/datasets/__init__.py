@@ -107,6 +107,7 @@ from .splits import (
 from .ssl4eo import SSL4EO, SSL4EOL, SSL4EOS12
 from .ssl4eo_benchmark import SSL4EOLBenchmark
 from .sustainbench_crop_yield import SustainBenchCropYield
+from .tile import TileDataset
 from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
@@ -243,4 +244,6 @@ __all__ = (
     "random_grid_cell_assignment",
     "roi_split",
     "time_series_split",
+    # TileDataset
+    "TileDataset",
 )
