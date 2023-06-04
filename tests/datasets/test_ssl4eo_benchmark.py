@@ -16,7 +16,7 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import SSL4EOLBenchmark
+from torchgeo.datasets import CDL, NLCD, RasterDataset, SSL4EOLBenchmark
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -42,7 +42,7 @@ class TestSSL4EOLBenchmark:
         url = os.path.join("tests", "data", "ssl4eo_benchmark_landsat", "{}.tar.gz")
         monkeypatch.setattr(SSL4EOLBenchmark, "url", url)
 
-        input_sensor, mask_product, split = request.param
+        sensor, product, split = request.param
         monkeypatch.setattr(
             SSL4EOLBenchmark, "split_percentages", [1 / 3, 1 / 3, 1 / 3]
         )
@@ -75,8 +75,8 @@ class TestSSL4EOLBenchmark:
         transforms = nn.Identity()
         return SSL4EOLBenchmark(
             root=root,
-            input_sensor=input_sensor,
-            mask_product=mask_product,
+            sensor=sensor,
+            product=product,
             split=split,
             transforms=transforms,
             download=True,
@@ -89,17 +89,33 @@ class TestSSL4EOLBenchmark:
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
 
+    @pytest.mark.parametrize("product,base_class", [("nlcd", NLCD), ("cdl", CDL)])
+    def test_classes(self, product: str, base_class: RasterDataset) -> None:
+        root = os.path.join("tests", "data", "ssl4eo_benchmark_landsat")
+        classes = list(base_class.cmap.keys())[:5]
+        ds = SSL4EOLBenchmark(root, product=product, classes=classes)
+        sample = ds[0]
+        mask = sample["mask"]
+        assert mask.max() < len(classes)
+
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
             SSL4EOLBenchmark(split="foo")
 
-    def test_invalid_input_sensor(self) -> None:
+    def test_invalid_sensor(self) -> None:
         with pytest.raises(AssertionError):
-            SSL4EOLBenchmark(input_sensor="foo")
+            SSL4EOLBenchmark(sensor="foo")
 
-    def test_invalid_mask_product(self) -> None:
+    def test_invalid_product(self) -> None:
         with pytest.raises(AssertionError):
-            SSL4EOLBenchmark(mask_product="foo")
+            SSL4EOLBenchmark(product="foo")
+
+    def test_invalid_classes(self) -> None:
+        with pytest.raises(AssertionError):
+            SSL4EOLBenchmark(classes=[-1])
+
+        with pytest.raises(AssertionError):
+            SSL4EOLBenchmark(classes=[11])
 
     def test_add(self, dataset: SSL4EOLBenchmark) -> None:
         ds = dataset + dataset
@@ -108,8 +124,8 @@ class TestSSL4EOLBenchmark:
     def test_already_extracted(self, dataset: SSL4EOLBenchmark) -> None:
         SSL4EOLBenchmark(
             root=dataset.root,
-            input_sensor=dataset.input_sensor,
-            mask_product=dataset.mask_product,
+            sensor=dataset.sensor,
+            product=dataset.product,
             download=True,
         )
 
