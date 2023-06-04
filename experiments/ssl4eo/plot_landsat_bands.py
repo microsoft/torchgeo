@@ -125,8 +125,9 @@ for (satellite, sensor), group1 in df.groupby(["Satellite", "Sensor"], sort=Fals
 
 # Labels
 ax.set_xlabel(r"Wavelength (\textmu m)")
-ax.set_xticks([0.5], labels=[0.5], alpha=0)
-ax.set_yticks([0], labels=[0], alpha=0)
+ax.set_xticks([0], labels=[0])
+ax.set_yticks([0], labels=[0])
+ax.tick_params(colors="w")
 ax.spines[["bottom", "left", "top", "right"]].set_visible(False)
 
 ax1.set_yticks(np.array(sensor_ylocs) + args.bar_height / 2)
@@ -145,19 +146,19 @@ ax2.set_yticklabels(res_names)
 ax2.spines[["left", "top"]].set_visible(False)
 
 # Draw axis break symbol
-d = 2
+d = 1.5
 kwargs = dict(
     marker=[(-1, -d), (1, d)],
     markersize=12,
     linestyle="none",
     color="k",
     mec="k",
-    mew=1,
+    mew=0.75,
     clip_on=False,
 )
 ax1.plot(1, 0, transform=ax1.transAxes, **kwargs)
 ax2.plot(0, 0, transform=ax2.transAxes, **kwargs)
 
 plt.tight_layout()
-plt.subplots_adjust(wspace=0.1)
+plt.subplots_adjust(wspace=0.05)
 plt.show()
