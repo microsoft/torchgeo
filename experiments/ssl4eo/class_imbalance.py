@@ -79,12 +79,14 @@ if __name__ == "__main__":
     else:
         indices = np.arange(args.total_classes)
 
-    keep = counts > args.keep_classes
+    counts /= np.sum(counts)
+    keep = counts > args.keep_classes / 100
     indices = indices[keep]
     counts = counts[keep]
 
     if args.weights:
         counts = 1 / counts
+        counts /= np.sum(counts)
 
     print(indices)
-    print(counts / np.sum(counts))
+    print(counts)
