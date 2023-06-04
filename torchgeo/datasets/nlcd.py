@@ -65,11 +65,11 @@ class NLCD(RasterDataset):
     .. versionadded:: 0.5
     """  # noqa: E501
 
-    filename_glob = "nlcd_*_land_cover_l48_20210604.img"
+    filename_glob = "nlcd_*_land_cover_l48_*.img"
     filename_regex = (
         r"nlcd_(?P<date>\d{4})_land_cover_l48_(?P<publication_date>\d{8})\.img"
     )
-    zipfile_glob = "nlcd_*_land_cover_l48_20210604.zip"
+    zipfile_glob = "nlcd_*_land_cover_l48_*.zip"
     date_format = "%Y"
     is_image = False
 
