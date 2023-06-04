@@ -1,0 +1,26 @@
+module:
+  _target_: torchgeo.trainers.SemanticSegmentationTask
+  model: "unet"
+  backbone: "resnet18"
+  weights: null
+  in_channels: 7
+  num_classes: 13
+  loss: "ce"
+  class_weights: [0, 0.06580504, 0.12853303, 0.20803019, 0.03772181, 0.03033833, 0.10384083, 0.01620425, 0.02508288, 0.05459147, 0.02185647, 0.07901643, 0.22897927]
+  ignore_index: 0
+  learning_rate: 1e-3
+  learning_rate_schedule_patience: 6
+
+datamodule:
+  _target_: torchgeo.datamodules.SSL4EOLBenchmarkDataModule
+  root: "data/ssl4eo_benchmark"
+  sensor: "tm_toa"
+  product: "nlcd"
+  classes: [0, 11, 21, 22, 41, 42, 43, 52, 71, 81, 82, 90, 95]
+  batch_size: 64
+  num_workers: 16
+
+trainer:
+  _target_: lightning.pytorch.Trainer
+  min_epochs: 20
+  max_epochs: 100
