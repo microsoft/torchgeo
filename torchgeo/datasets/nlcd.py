@@ -236,7 +236,7 @@ class NLCD(RasterDataset):
     def _extract(self) -> None:
         """Extract the dataset."""
         for year in self.years:
-            zipfile_name = self.zipfile_glob.replace("*", str(year))
+            zipfile_name = self.zipfile_glob.replace("*", str(year), 1)
             pathname = os.path.join(self.root, "**", zipfile_name)
             extract_archive(glob.glob(pathname, recursive=True)[0], self.root)
 
