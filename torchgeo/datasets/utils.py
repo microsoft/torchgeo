@@ -17,7 +17,7 @@ import tarfile
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, cast, List, overload
+from typing import Any, cast, overload
 
 import fiona
 import numpy as np
@@ -742,7 +742,7 @@ def percentile_normalization(
     return img_normalized
 
 
-def listdir_vsi_recursive(root: str) -> List[str]:
+def listdir_vsi_recursive(root: str) -> list[str]:
     """Walk directory and return list of all files in subdirectories.
 
     Also supports listing filenames within a GDAL Virtual File System like
