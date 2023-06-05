@@ -29,8 +29,13 @@ from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
 
-from .utils import BoundingBox, concat_samples, disambiguate_timestamp, merge_samples
-
+from .utils import (
+    BoundingBox,
+    concat_samples,
+    disambiguate_timestamp,
+    merge_samples,
+    listdir_vsi_recursive
+)
 
 class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     """Abstract base class for datasets containing geospatial information.
@@ -335,6 +340,7 @@ class RasterDataset(GeoDataset):
         bands: Optional[Sequence[str]] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
+        vsi: bool = False
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -349,6 +355,7 @@ class RasterDataset(GeoDataset):
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
+            vsi: if True, will support GDAL Virtual File Systems
 
         Raises:
             FileNotFoundError: if no files are found in ``root``

@@ -21,6 +21,7 @@ from typing import Any, cast, overload
 
 import numpy as np
 import rasterio
+from fiona.errors import FionaValueError
 import torch
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_url
@@ -43,6 +44,7 @@ __all__ = (
     "draw_semantic_segmentation_masks",
     "rgb_to_mask",
     "percentile_normalization",
+    "listdir_vsi_recursive"
 )
 
 
@@ -737,3 +739,16 @@ def percentile_normalization(
         (img - lower_percentile) / (upper_percentile - lower_percentile + 1e-5), 0, 1
     )
     return img_normalized
+
+
+def listdir_vsi_recursive(root):
+    dirs = [root]
+    files = []
+    while dirs:
+        dir = dirs.pop()
+        try:
+            subdirs = fiona.listdir(dir)
+            dirs.extend([os.path.join(dir,subdir) for subdir in subdirs])
+        except FionaValueError:
+            files.append(dir)
+    return files
