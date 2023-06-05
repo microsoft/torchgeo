@@ -4,9 +4,8 @@ module:
   backbone: "resnet18"
   weights: null
   in_channels: 7
-  num_classes: 17
+  num_classes: 18
   loss: "ce"
-  class_weights: [0, 0.02998364, 0.03868365, 0.07884247, 0.11655159, 0.10411567, 0.08276836, 0.04239249, 0.09606748, 0.13189518, 0.01140147, 0.01095707, 0.09087003, 0.00635215, 0.00702828, 0.03600399, 0.11608647]
   ignore_index: 0
   learning_rate: 1e-3
   learning_rate_schedule_patience: 6
@@ -16,7 +15,7 @@ datamodule:
   root: "data/ssl4eo_benchmark"
   sensor: "tm_toa"
   product: "cdl"
-  classes: [0, 1, 5, 24, 37, 61, 111, 121, 122, 131, 141, 142, 143, 152, 176, 190, 195]
+  classes: [0, 1, 5, 24, 36, 37, 61, 111, 121, 122, 131, 141, 142, 143, 152, 176, 190, 195]
   batch_size: 64
   num_workers: 16
 

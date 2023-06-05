@@ -6,7 +6,6 @@ module:
   in_channels: 11
   num_classes: 5
   loss: "ce"
-  class_weights: [0, 0.84585444, 0.02586814, 0.08889015, 0.03938727]
   ignore_index: 0
   learning_rate: 1e-3
   learning_rate_schedule_patience: 6
