@@ -188,7 +188,7 @@ class NLCD(RasterDataset):
         # Check if the extracted files already exist
         exists = []
         for year in self.years:
-            filename_year = self.filename_glob.replace("*", str(year))
+            filename_year = self.filename_glob.replace("*", str(year), 1)
             pathname = os.path.join(self.root, "**", filename_year)
             if glob.glob(pathname, recursive=True):
                 exists.append(True)
@@ -201,7 +201,7 @@ class NLCD(RasterDataset):
         # Check if the zip files have already been downloaded
         exists = []
         for year in self.years:
-            zipfile_year = self.zipfile_glob.replace("*", str(year))
+            zipfile_year = self.zipfile_glob.replace("*", str(year), 1)
             pathname = os.path.join(self.root, "**", zipfile_year)
             if glob.glob(pathname, recursive=True):
                 exists.append(True)
