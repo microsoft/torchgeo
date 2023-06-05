@@ -19,10 +19,11 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, cast, overload
 
+import fiona
 import numpy as np
 import rasterio
-from fiona.errors import FionaValueError
 import torch
+from fiona.errors import FionaValueError
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
@@ -44,7 +45,7 @@ __all__ = (
     "draw_semantic_segmentation_masks",
     "rgb_to_mask",
     "percentile_normalization",
-    "listdir_vsi_recursive"
+    "listdir_vsi_recursive",
 )
 
 
@@ -748,7 +749,7 @@ def listdir_vsi_recursive(root):
         dir = dirs.pop()
         try:
             subdirs = fiona.listdir(dir)
-            dirs.extend([os.path.join(dir,subdir) for subdir in subdirs])
+            dirs.extend([os.path.join(dir, subdir) for subdir in subdirs])
         except FionaValueError:
             files.append(dir)
     return files

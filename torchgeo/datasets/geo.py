@@ -33,9 +33,10 @@ from .utils import (
     BoundingBox,
     concat_samples,
     disambiguate_timestamp,
+    listdir_vsi_recursive,
     merge_samples,
-    listdir_vsi_recursive
 )
+
 
 class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     """Abstract base class for datasets containing geospatial information.
@@ -340,7 +341,7 @@ class RasterDataset(GeoDataset):
         bands: Optional[Sequence[str]] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
-        vsi: bool = False
+        vsi: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
