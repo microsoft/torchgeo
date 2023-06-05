@@ -742,7 +742,18 @@ def percentile_normalization(
     return img_normalized
 
 
-def listdir_vsi_recursive(root):
+def listdir_vsi_recursive(root: str) -> List[str]:
+    """Walk directory and return list of all files in subdirectories.
+
+    Also supports listing filenames within a GDAL Virtual File System like
+    cloud buckets. https://gdal.org/user/virtual_file_systems.html
+
+    Args:
+        root: root directory or blob in bucket
+
+    Returns
+        List of absolute filepaths withing the root
+    """
     dirs = [root]
     files = []
     while dirs:
