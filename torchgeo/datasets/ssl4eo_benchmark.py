@@ -70,8 +70,8 @@ class SSL4EOLBenchmark(NonGeoDataset):
             "nlcd": "261149d7614fcfdcb3be368eefa825c7",
         },
         "etm": {
-            "cdl": "dd2560b18b89dfe7f0e867fcf7217bd0",
-            "nlcd": "916f4a433df6c8abca15b45b60d005d3",
+            "cdl": "008098c968544049eaf7b307e14241de",
+            "nlcd": "9c031049d665202ba42ac1d89b687999",
         },
         "oli": {
             "cdl": "1cb057de6eafeca975deb35cb9fb036f",
