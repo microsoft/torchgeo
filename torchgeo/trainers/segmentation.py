@@ -38,7 +38,7 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
 
         if self.hyperparams["backbone"].startswith("tu-vit"):
             encoder_depth = 4
-            decoder_channels = (256, 128, 64, 32, 32)
+            decoder_channels = (256, 128, 64, 32)
         else:
             encoder_depth = 5
             decoder_channels = (256, 128, 64, 32, 16)
