@@ -17,7 +17,7 @@ from tqdm import tqdm
 
 def retrieve_mask_chip(
     img_src: DatasetReader, mask_src: DatasetReader
-) -> "np.typing.NDArray[np.float_]":
+) -> "np.typing.NDArray[np.uint8]":
     """Retrieve the mask for a given landsat image.
 
     Args:
@@ -28,16 +28,16 @@ def retrieve_mask_chip(
     Returns:
         mask array
     """
-    query = img_src.bounds
-    out_width = round((query.right - query.left) / img_src.res[0])
-    out_height = round((query.top - query.bottom) / img_src.res[1])
-    out_shape = (1, out_height, out_width)
-    mask_chip: "np.typing.NDArray[np.float_]" = mask_src.read(
-        out_shape=out_shape,
-        window=from_bounds(
-            query.left, query.bottom, query.right, query.top, mask_src.transform
-        ),
+    out_shape = (1, *img_src.shape)
+    mask_chip: "np.typing.NDArray[np.uint8]" = mask_src.read(
+        out_shape=out_shape, window=from_bounds(*img_src.bounds, mask_src.transform)
     )
+
+    # Copy nodata pixels from image to mask (Landsat 7 ETM+ SLC-off only)
+    if "LE07" in img_src.files[0]:
+        img_chip = img_src.read(1)
+        mask_chip[0][img_chip == 0] = 0
+
     return mask_chip
 
 
@@ -75,8 +75,7 @@ if __name__ == "__main__":
             mask = retrieve_mask_chip(img_src, mask_src)
 
             # directory structure mask <7-digit id>/<scene_id>/<cdl>_<year>.tif
-            digit_id = img_path.split(os.sep)[-3]
-            scene_id = img_path.split(os.sep)[-2]
+            digit_id, scene_id = img_path.split(os.sep)[-3:-1]
             year = scene_id.split("_")[-1][:4]
             mask_dir = os.path.join(args.save_dir, digit_id, scene_id)
             os.makedirs(mask_dir, exist_ok=True)
