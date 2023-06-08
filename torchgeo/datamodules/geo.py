@@ -23,7 +23,7 @@ from ..transforms import AugmentationSequential
 from .utils import MisconfigurationException
 
 
-class BaseDataModule(LightningDataModule):  # type: ignore[misc]
+class BaseDataModule(LightningDataModule):
     """Base class for all TorchGeo data modules.
 
     .. versionadded:: 0.5
@@ -31,6 +31,51 @@ class BaseDataModule(LightningDataModule):  # type: ignore[misc]
 
     mean = torch.tensor(0)
     std = torch.tensor(255)
+
+    def __init__(
+        self,
+        dataset_class: type[GeoDataset],
+        batch_size: int = 1,
+        num_workers: int = 0,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a new BaseDataModule instance.
+
+        Args:
+            dataset_class: Class used to instantiate a new dataset.
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
+            **kwargs: Additional keyword arguments passed to ``dataset_class``
+        """
+        super().__init__()
+
+        self.dataset_class = dataset_class
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+        self.kwargs = kwargs
+
+        # Datasets
+        self.dataset: Optional[Dataset[dict[str, Tensor]]] = None
+        self.train_dataset: Optional[Dataset[dict[str, Tensor]]] = None
+        self.val_dataset: Optional[Dataset[dict[str, Tensor]]] = None
+        self.test_dataset: Optional[Dataset[dict[str, Tensor]]] = None
+        self.predict_dataset: Optional[Dataset[dict[str, Tensor]]] = None
+
+        # Data loaders
+        self.train_batch_size: Optional[int] = None
+        self.val_batch_size: Optional[int] = None
+        self.test_batch_size: Optional[int] = None
+        self.predict_batch_size: Optional[int] = None
+
+        # Data augmentation
+        Transform = Callable[[dict[str, Tensor]], dict[str, Tensor]]
+        self.aug: Transform = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=["image"]
+        )
+        self.train_aug: Optional[Transform] = None
+        self.val_aug: Optional[Transform] = None
+        self.test_aug: Optional[Transform] = None
+        self.predict_aug: Optional[Transform] = None
 
     def prepare_data(self) -> None:
         """Download and prepare data.
@@ -112,21 +157,13 @@ class GeoDataModule(BaseDataModule):
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to ``dataset_class``
         """
-        super().__init__()
+        super().__init__(dataset_class, batch_size, num_workers, kwargs)
 
-        self.dataset_class = dataset_class
-        self.batch_size = batch_size
         self.patch_size = patch_size
         self.length = length
-        self.num_workers = num_workers
-        self.kwargs = kwargs
 
-        # Datasets
-        self.dataset: Optional[Dataset[dict[str, Tensor]]] = None
-        self.train_dataset: Optional[Dataset[dict[str, Tensor]]] = None
-        self.val_dataset: Optional[Dataset[dict[str, Tensor]]] = None
-        self.test_dataset: Optional[Dataset[dict[str, Tensor]]] = None
-        self.predict_dataset: Optional[Dataset[dict[str, Tensor]]] = None
+        # Collation
+        self.collate_fn = stack_samples
 
         # Samplers
         self.sampler: Optional[GeoSampler] = None
@@ -141,25 +178,6 @@ class GeoDataModule(BaseDataModule):
         self.val_batch_sampler: Optional[BatchGeoSampler] = None
         self.test_batch_sampler: Optional[BatchGeoSampler] = None
         self.predict_batch_sampler: Optional[BatchGeoSampler] = None
-
-        # Data loaders
-        self.train_batch_size: Optional[int] = None
-        self.val_batch_size: Optional[int] = None
-        self.test_batch_size: Optional[int] = None
-        self.predict_batch_size: Optional[int] = None
-
-        # Collation
-        self.collate_fn = stack_samples
-
-        # Data augmentation
-        Transform = Callable[[dict[str, Tensor]], dict[str, Tensor]]
-        self.aug: Transform = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=["image"]
-        )
-        self.train_aug: Optional[Transform] = None
-        self.val_aug: Optional[Transform] = None
-        self.test_aug: Optional[Transform] = None
-        self.predict_aug: Optional[Transform] = None
 
     def setup(self, stage: str) -> None:
         """Set up datasets and samplers.
@@ -357,38 +375,10 @@ class NonGeoDataModule(BaseDataModule):
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to ``dataset_class``
         """
-        super().__init__()
-
-        self.dataset_class = dataset_class
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.kwargs = kwargs
-
-        # Datasets
-        self.dataset: Optional[Dataset[dict[str, Tensor]]] = None
-        self.train_dataset: Optional[Dataset[dict[str, Tensor]]] = None
-        self.val_dataset: Optional[Dataset[dict[str, Tensor]]] = None
-        self.test_dataset: Optional[Dataset[dict[str, Tensor]]] = None
-        self.predict_dataset: Optional[Dataset[dict[str, Tensor]]] = None
-
-        # Data loaders
-        self.train_batch_size: Optional[int] = None
-        self.val_batch_size: Optional[int] = None
-        self.test_batch_size: Optional[int] = None
-        self.predict_batch_size: Optional[int] = None
+        super().__init__(dataset_class, batch_size, num_workers, kwargs)
 
         # Collation
         self.collate_fn = default_collate
-
-        # Data augmentation
-        Transform = Callable[[dict[str, Tensor]], dict[str, Tensor]]
-        self.aug: Transform = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=["image"]
-        )
-        self.train_aug: Optional[Transform] = None
-        self.val_aug: Optional[Transform] = None
-        self.test_aug: Optional[Transform] = None
-        self.predict_aug: Optional[Transform] = None
 
     def setup(self, stage: str) -> None:
         """Set up datasets.

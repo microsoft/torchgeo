@@ -57,7 +57,7 @@ def simclr_augmentations(size: int, weights: Tensor) -> nn.Module:
     )
 
 
-class SimCLRTask(LightningModule):  # type: ignore[misc]
+class SimCLRTask(LightningModule):
     """SimCLR: a simple framework for contrastive learning of visual representations.
 
     Reference implementation:

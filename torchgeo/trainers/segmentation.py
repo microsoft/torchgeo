@@ -23,7 +23,7 @@ from ..models import FCN, get_weight
 from . import utils
 
 
-class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
+class SemanticSegmentationTask(LightningModule):
     """LightningModule for semantic segmentation of images.
 
     Supports `Segmentation Models Pytorch

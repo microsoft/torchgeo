@@ -118,7 +118,7 @@ def moco_augmentations(
     return aug1, aug2
 
 
-class MoCoTask(LightningModule):  # type: ignore[misc]
+class MoCoTask(LightningModule):
     """MoCo: Momentum Contrast.
 
     Reference implementations:

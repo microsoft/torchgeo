@@ -46,7 +46,7 @@ BACKBONE_WEIGHT_MAP = {
 }
 
 
-class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
+class ObjectDetectionTask(LightningModule):
     """LightningModule for object detection of images.
 
     Currently, supports Faster R-CNN, FCOS, and RetinaNet models from
