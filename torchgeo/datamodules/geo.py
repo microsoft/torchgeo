@@ -3,7 +3,7 @@
 
 """Base classes for all :mod:`torchgeo` data modules."""
 
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Optional, Union, cast
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
@@ -190,22 +190,31 @@ class GeoDataModule(BaseDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in ["fit"]:
-            self.train_dataset: GeoDataset = self.dataset_class(  # type: ignore[call-arg]
-                split="train", **self.kwargs
+            self.train_dataset = cast(
+                GeoDataset,
+                self.dataset_class(  # type: ignore[call-arg]
+                    split="train", **self.kwargs
+                ),
             )
             self.train_batch_sampler = RandomBatchGeoSampler(
                 self.train_dataset, self.patch_size, self.batch_size, self.length
             )
         if stage in ["fit", "validate"]:
-            self.val_dataset: GeoDataset = self.dataset_class(  # type: ignore[call-arg]
-                split="val", **self.kwargs
+            self.val_dataset = cast(
+                GeoDataset,
+                self.dataset_class(  # type: ignore[call-arg]
+                    split="val", **self.kwargs
+                ),
             )
             self.val_sampler = GridGeoSampler(
                 self.val_dataset, self.patch_size, self.patch_size
             )
         if stage in ["test"]:
-            self.test_dataset: GeoDataset = self.dataset_class(  # type: ignore[call-arg]
-                split="test", **self.kwargs
+            self.test_dataset = cast(
+                GeoDataset,
+                self.dataset_class(  # type: ignore[call-arg]
+                    split="test", **self.kwargs
+                ),
             )
             self.test_sampler = GridGeoSampler(
                 self.test_dataset, self.patch_size, self.patch_size
