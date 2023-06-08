@@ -165,13 +165,6 @@ class GeoDataModule(BaseDataModule):
         # Collation
         self.collate_fn = stack_samples
 
-        # Datasets
-        self.dataset: Optional[GeoDataset] = None
-        self.train_dataset: Optional[GeoDataset] = None
-        self.val_dataset: Optional[GeoDataset] = None
-        self.test_dataset: Optional[GeoDataset] = None
-        self.predict_dataset: Optional[GeoDataset] = None
-
         # Samplers
         self.sampler: Optional[GeoSampler] = None
         self.train_sampler: Optional[GeoSampler] = None
@@ -197,21 +190,21 @@ class GeoDataModule(BaseDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in ["fit"]:
-            self.train_dataset = self.dataset_class(  # type: ignore[call-arg]
+            self.train_dataset: GeoDataset = self.dataset_class(  # type: ignore[call-arg]
                 split="train", **self.kwargs
             )
             self.train_batch_sampler = RandomBatchGeoSampler(
                 self.train_dataset, self.patch_size, self.batch_size, self.length
             )
         if stage in ["fit", "validate"]:
-            self.val_dataset = self.dataset_class(  # type: ignore[call-arg]
+            self.val_dataset: GeoDataset = self.dataset_class(  # type: ignore[call-arg]
                 split="val", **self.kwargs
             )
             self.val_sampler = GridGeoSampler(
                 self.val_dataset, self.patch_size, self.patch_size
             )
         if stage in ["test"]:
-            self.test_dataset = self.dataset_class(  # type: ignore[call-arg]
+            self.test_dataset: GeoDataset = self.dataset_class(  # type: ignore[call-arg]
                 split="test", **self.kwargs
             )
             self.test_sampler = GridGeoSampler(
@@ -386,13 +379,6 @@ class NonGeoDataModule(BaseDataModule):
 
         # Collation
         self.collate_fn = default_collate
-
-        # Datasets
-        self.dataset: Optional[NonGeoDataset] = None
-        self.train_dataset: Optional[NonGeoDataset] = None
-        self.val_dataset: Optional[NonGeoDataset] = None
-        self.test_dataset: Optional[NonGeoDataset] = None
-        self.predict_dataset: Optional[NonGeoDataset] = None
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
