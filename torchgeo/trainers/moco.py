@@ -365,7 +365,9 @@ class MoCoTask(LightningModule):
     def test_step(self, batch: dict[str, Tensor], batch_idx: int) -> None:
         """No-op, does nothing."""
 
-    def predict_step(self, batch: dict[str, Tensor], batch_idx: int) -> None:
+    def predict_step(
+        self, batch: dict[str, Tensor], batch_idx: int, dataloader_idx: int
+    ) -> None:
         """No-op, does nothing."""
 
     def configure_optimizers(self) -> tuple[list[Optimizer], list[LRScheduler]]:
@@ -381,6 +383,9 @@ class MoCoTask(LightningModule):
                 weight_decay=self.hparams["weight_decay"],
             )
             warmup_epochs = 40
+            max_epochs = 200
+            if self.trainer:
+                max_epochs = self.trainer.max_epochs
             lr_scheduler: LRScheduler = SequentialLR(
                 optimizer,
                 schedulers=[
@@ -389,7 +394,7 @@ class MoCoTask(LightningModule):
                         start_factor=1 / warmup_epochs,
                         total_iters=warmup_epochs,
                     ),
-                    CosineAnnealingLR(optimizer, T_max=self.trainer.max_epochs),
+                    CosineAnnealingLR(optimizer, T_max=max_epochs),
                 ],
                 milestones=[warmup_epochs],
             )

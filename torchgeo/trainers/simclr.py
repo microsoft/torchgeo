@@ -245,7 +245,9 @@ class SimCLRTask(LightningModule):
         # TODO
         # v2: add distillation step
 
-    def predict_step(self, batch: dict[str, Tensor], batch_idx: int) -> None:
+    def predict_step(
+        self, batch: dict[str, Tensor], batch_idx: int, dataloader_idx: int
+    ) -> None:
         """No-op, does nothing."""
 
     def configure_optimizers(self) -> tuple[list[Optimizer], list[LRScheduler]]:
@@ -260,15 +262,18 @@ class SimCLRTask(LightningModule):
             lr=self.hparams["lr"],
             weight_decay=self.hparams["weight_decay"],
         )
+        max_epochs = 200
+        if self.trainer:
+            max_epochs = self.trainer.max_epochs
         if self.hparams["version"] == 1:
             warmup_epochs = 10
         else:
-            warmup_epochs = int(self.trainer.max_epochs * 0.05)
+            warmup_epochs = int(max_epochs * 0.05)
         lr_scheduler = SequentialLR(
             optimizer,
             schedulers=[
                 LinearLR(optimizer, total_iters=warmup_epochs),
-                CosineAnnealingLR(optimizer, T_max=self.trainer.max_epochs),
+                CosineAnnealingLR(optimizer, T_max=max_epochs),
             ],
             milestones=[warmup_epochs],
         )

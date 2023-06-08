@@ -97,28 +97,32 @@ class TestGeoDataModule:
 
     def test_train(self, datamodule: CustomGeoDataModule) -> None:
         datamodule.setup("fit")
-        datamodule.trainer.training = True
+        if datamodule.trainer:
+            datamodule.trainer.training = True
         batch = next(iter(datamodule.train_dataloader()))
         batch = datamodule.transfer_batch_to_device(batch, torch.device("cpu"), 1)
         batch = datamodule.on_after_batch_transfer(batch, 0)
 
     def test_val(self, datamodule: CustomGeoDataModule) -> None:
         datamodule.setup("validate")
-        datamodule.trainer.validating = True
+        if datamodule.trainer:
+            datamodule.trainer.validating = True
         batch = next(iter(datamodule.val_dataloader()))
         batch = datamodule.transfer_batch_to_device(batch, torch.device("cpu"), 1)
         batch = datamodule.on_after_batch_transfer(batch, 0)
 
     def test_test(self, datamodule: CustomGeoDataModule) -> None:
         datamodule.setup("test")
-        datamodule.trainer.testing = True
+        if datamodule.trainer:
+            datamodule.trainer.testing = True
         batch = next(iter(datamodule.test_dataloader()))
         batch = datamodule.transfer_batch_to_device(batch, torch.device("cpu"), 1)
         batch = datamodule.on_after_batch_transfer(batch, 0)
 
     def test_predict(self, datamodule: CustomGeoDataModule) -> None:
         datamodule.setup("predict")
-        datamodule.trainer.predicting = True
+        if datamodule.trainer:
+            datamodule.trainer.predicting = True
         batch = next(iter(datamodule.predict_dataloader()))
         batch = datamodule.transfer_batch_to_device(batch, torch.device("cpu"), 1)
         batch = datamodule.on_after_batch_transfer(batch, 0)
@@ -156,25 +160,29 @@ class TestNonGeoDataModule:
 
     def test_train(self, datamodule: CustomNonGeoDataModule) -> None:
         datamodule.setup("fit")
-        datamodule.trainer.training = True
+        if datamodule.trainer:
+            datamodule.trainer.training = True
         batch = next(iter(datamodule.train_dataloader()))
         batch = datamodule.on_after_batch_transfer(batch, 0)
 
     def test_val(self, datamodule: CustomNonGeoDataModule) -> None:
         datamodule.setup("validate")
-        datamodule.trainer.validating = True
+        if datamodule.trainer:
+            datamodule.trainer.validating = True
         batch = next(iter(datamodule.val_dataloader()))
         batch = datamodule.on_after_batch_transfer(batch, 0)
 
     def test_test(self, datamodule: CustomNonGeoDataModule) -> None:
         datamodule.setup("test")
-        datamodule.trainer.testing = True
+        if datamodule.trainer:
+            datamodule.trainer.testing = True
         batch = next(iter(datamodule.test_dataloader()))
         batch = datamodule.on_after_batch_transfer(batch, 0)
 
     def test_predict(self, datamodule: CustomNonGeoDataModule) -> None:
         datamodule.setup("predict")
-        datamodule.trainer.predicting = True
+        if datamodule.trainer:
+            datamodule.trainer.predicting = True
         batch = next(iter(datamodule.predict_dataloader()))
         batch = datamodule.on_after_batch_transfer(batch, 0)
 

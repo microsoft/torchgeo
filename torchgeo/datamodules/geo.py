@@ -34,7 +34,7 @@ class BaseDataModule(LightningDataModule):
 
     def __init__(
         self,
-        dataset_class: type[GeoDataset],
+        dataset_class: type[Dataset[dict[str, Tensor]]],
         batch_size: int = 1,
         num_workers: int = 0,
         **kwargs: Any,
@@ -157,7 +157,7 @@ class GeoDataModule(BaseDataModule):
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to ``dataset_class``
         """
-        super().__init__(dataset_class, batch_size, num_workers, kwargs)
+        super().__init__(dataset_class, batch_size, num_workers, **kwargs)
 
         self.patch_size = patch_size
         self.length = length
@@ -375,7 +375,7 @@ class NonGeoDataModule(BaseDataModule):
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to ``dataset_class``
         """
-        super().__init__(dataset_class, batch_size, num_workers, kwargs)
+        super().__init__(dataset_class, batch_size, num_workers, **kwargs)
 
         # Collation
         self.collate_fn = default_collate
