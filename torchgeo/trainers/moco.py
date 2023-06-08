@@ -6,7 +6,7 @@
 import os
 import warnings
 from collections.abc import Sequence
-from typing import Optional, Union, cast
+from typing import Any, Optional, Union, cast
 
 import kornia.augmentation as K
 import timm
@@ -295,12 +295,15 @@ class MoCoTask(LightningModule):
             k = self.projection_head_momentum(k)
         return cast(Tensor, k)
 
-    def training_step(self, batch: dict[str, Tensor], batch_idx: int) -> Tensor:
+    def training_step(
+        self, batch: dict[str, Tensor], batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
         """Compute the training loss and additional metrics.
 
         Args:
             batch: The output of your DataLoader.
             batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
 
         Returns:
             The loss tensor.
@@ -359,15 +362,17 @@ class MoCoTask(LightningModule):
 
         return cast(Tensor, loss)
 
-    def validation_step(self, batch: dict[str, Tensor], batch_idx: int) -> None:
-        """No-op, does nothing."""
-
-    def test_step(self, batch: dict[str, Tensor], batch_idx: int) -> None:
-        """No-op, does nothing."""
-
-    def predict_step(
-        self, batch: dict[str, Tensor], batch_idx: int, dataloader_idx: int
+    def validation_step(
+        self, batch: dict[str, Tensor], batch_idx: int, dataloader_idx: int = 0
     ) -> None:
+        """No-op, does nothing."""
+
+    def test_step(
+        self, batch: dict[str, Tensor], batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
+        """No-op, does nothing."""
+
+    def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
 
     def configure_optimizers(self) -> tuple[list[Optimizer], list[LRScheduler]]:
@@ -384,7 +389,7 @@ class MoCoTask(LightningModule):
             )
             warmup_epochs = 40
             max_epochs = 200
-            if self.trainer:
+            if self.trainer and self.trainer.max_epochs:
                 max_epochs = self.trainer.max_epochs
             lr_scheduler: LRScheduler = SequentialLR(
                 optimizer,

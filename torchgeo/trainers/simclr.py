@@ -5,7 +5,7 @@
 
 import os
 import warnings
-from typing import Optional, Union, cast
+from typing import Any, Optional, Union, cast
 
 import kornia.augmentation as K
 import timm
@@ -193,12 +193,15 @@ class SimCLRTask(LightningModule):
         z = self.projection_head(h)
         return cast(Tensor, z), cast(Tensor, h)
 
-    def training_step(self, batch: dict[str, Tensor], batch_idx: int) -> Tensor:
+    def training_step(
+        self, batch: dict[str, Tensor], batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
         """Compute the training loss and additional metrics.
 
         Args:
             batch: The output of your DataLoader.
             batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
 
         Returns:
             The loss tensor.
@@ -237,17 +240,19 @@ class SimCLRTask(LightningModule):
 
         return cast(Tensor, loss)
 
-    def validation_step(self, batch: dict[str, Tensor], batch_idx: int) -> None:
+    def validation_step(
+        self, batch: dict[str, Tensor], batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
         """No-op, does nothing."""
 
-    def test_step(self, batch: dict[str, Tensor], batch_idx: int) -> None:
+    def test_step(
+        self, batch: dict[str, Tensor], batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
         """No-op, does nothing."""
         # TODO
         # v2: add distillation step
 
-    def predict_step(
-        self, batch: dict[str, Tensor], batch_idx: int, dataloader_idx: int
-    ) -> None:
+    def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
 
     def configure_optimizers(self) -> tuple[list[Optimizer], list[LRScheduler]]:
@@ -263,7 +268,7 @@ class SimCLRTask(LightningModule):
             weight_decay=self.hparams["weight_decay"],
         )
         max_epochs = 200
-        if self.trainer:
+        if self.trainer and self.trainer.max_epochs:
             max_epochs = self.trainer.max_epochs
         if self.hparams["version"] == 1:
             warmup_epochs = 10

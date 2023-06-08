@@ -159,6 +159,7 @@ class GeoDataModule(BaseDataModule):
         """
         super().__init__(dataset_class, batch_size, num_workers, **kwargs)
 
+        self.dataset_class = dataset_class
         self.patch_size = patch_size
         self.length = length
 
@@ -376,6 +377,8 @@ class NonGeoDataModule(BaseDataModule):
             **kwargs: Additional keyword arguments passed to ``dataset_class``
         """
         super().__init__(dataset_class, batch_size, num_workers, **kwargs)
+
+        self.dataset_class = dataset_class
 
         # Collation
         self.collate_fn = default_collate
