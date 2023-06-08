@@ -159,12 +159,18 @@ class GeoDataModule(BaseDataModule):
         """
         super().__init__(dataset_class, batch_size, num_workers, **kwargs)
 
-        self.dataset_class = dataset_class
         self.patch_size = patch_size
         self.length = length
 
         # Collation
         self.collate_fn = stack_samples
+
+        # Datasets
+        self.dataset: Optional[GeoDataset] = None
+        self.train_dataset: Optional[GeoDataset] = None
+        self.val_dataset: Optional[GeoDataset] = None
+        self.test_dataset: Optional[GeoDataset] = None
+        self.predict_dataset: Optional[GeoDataset] = None
 
         # Samplers
         self.sampler: Optional[GeoSampler] = None
@@ -378,10 +384,15 @@ class NonGeoDataModule(BaseDataModule):
         """
         super().__init__(dataset_class, batch_size, num_workers, **kwargs)
 
-        self.dataset_class = dataset_class
-
         # Collation
         self.collate_fn = default_collate
+
+        # Datasets
+        self.dataset: Optional[NonGeoDataset] = None
+        self.train_dataset: Optional[NonGeoDataset] = None
+        self.val_dataset: Optional[NonGeoDataset] = None
+        self.test_dataset: Optional[NonGeoDataset] = None
+        self.predict_dataset: Optional[NonGeoDataset] = None
 
     def setup(self, stage: str) -> None:
         """Set up datasets.

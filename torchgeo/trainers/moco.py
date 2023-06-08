@@ -296,7 +296,7 @@ class MoCoTask(LightningModule):
         return cast(Tensor, k)
 
     def training_step(
-        self, batch: dict[str, Tensor], batch_idx: int, dataloader_idx: int = 0
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the training loss and additional metrics.
 
@@ -363,13 +363,11 @@ class MoCoTask(LightningModule):
         return cast(Tensor, loss)
 
     def validation_step(
-        self, batch: dict[str, Tensor], batch_idx: int, dataloader_idx: int = 0
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """No-op, does nothing."""
 
-    def test_step(
-        self, batch: dict[str, Tensor], batch_idx: int, dataloader_idx: int = 0
-    ) -> None:
+    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
 
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:

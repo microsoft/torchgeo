@@ -194,7 +194,7 @@ class SimCLRTask(LightningModule):
         return cast(Tensor, z), cast(Tensor, h)
 
     def training_step(
-        self, batch: dict[str, Tensor], batch_idx: int, dataloader_idx: int = 0
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the training loss and additional metrics.
 
@@ -241,13 +241,11 @@ class SimCLRTask(LightningModule):
         return cast(Tensor, loss)
 
     def validation_step(
-        self, batch: dict[str, Tensor], batch_idx: int, dataloader_idx: int = 0
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """No-op, does nothing."""
 
-    def test_step(
-        self, batch: dict[str, Tensor], batch_idx: int, dataloader_idx: int = 0
-    ) -> None:
+    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
         # TODO
         # v2: add distillation step
