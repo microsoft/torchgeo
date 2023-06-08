@@ -5,7 +5,7 @@
 
 import os
 import warnings
-from typing import Optional, Union, cast
+from typing import Any, Optional, Union, cast
 
 import kornia.augmentation as K
 import timm
@@ -57,7 +57,7 @@ def simclr_augmentations(size: int, weights: Tensor) -> nn.Module:
     )
 
 
-class SimCLRTask(LightningModule):  # type: ignore[misc]
+class SimCLRTask(LightningModule):
     """SimCLR: a simple framework for contrastive learning of visual representations.
 
     Reference implementation:
@@ -193,12 +193,15 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
         z = self.projection_head(h)
         return cast(Tensor, z), cast(Tensor, h)
 
-    def training_step(self, batch: dict[str, Tensor], batch_idx: int) -> Tensor:
+    def training_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
         """Compute the training loss and additional metrics.
 
         Args:
             batch: The output of your DataLoader.
             batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
 
         Returns:
             The loss tensor.
@@ -237,15 +240,17 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
 
         return cast(Tensor, loss)
 
-    def validation_step(self, batch: dict[str, Tensor], batch_idx: int) -> None:
+    def validation_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
         """No-op, does nothing."""
 
-    def test_step(self, batch: dict[str, Tensor], batch_idx: int) -> None:
+    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
         # TODO
         # v2: add distillation step
 
-    def predict_step(self, batch: dict[str, Tensor], batch_idx: int) -> None:
+    def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
 
     def configure_optimizers(self) -> tuple[list[Optimizer], list[LRScheduler]]:
@@ -260,15 +265,18 @@ class SimCLRTask(LightningModule):  # type: ignore[misc]
             lr=self.hparams["lr"],
             weight_decay=self.hparams["weight_decay"],
         )
+        max_epochs = 200
+        if self.trainer and self.trainer.max_epochs:
+            max_epochs = self.trainer.max_epochs
         if self.hparams["version"] == 1:
             warmup_epochs = 10
         else:
-            warmup_epochs = int(self.trainer.max_epochs * 0.05)
+            warmup_epochs = int(max_epochs * 0.05)
         lr_scheduler = SequentialLR(
             optimizer,
             schedulers=[
                 LinearLR(optimizer, total_iters=warmup_epochs),
-                CosineAnnealingLR(optimizer, T_max=self.trainer.max_epochs),
+                CosineAnnealingLR(optimizer, T_max=max_epochs),
             ],
             milestones=[warmup_epochs],
         )

@@ -22,7 +22,7 @@ from ..models import FCN, get_weight
 from . import utils
 
 
-class RegressionTask(LightningModule):  # type: ignore[misc]
+class RegressionTask(LightningModule):
     """LightningModule for training models on regression datasets.
 
     Supports any available `Timm model

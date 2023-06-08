@@ -30,7 +30,8 @@ class TestOSCDDataModule:
 
     def test_train_dataloader(self, datamodule: OSCDDataModule) -> None:
         datamodule.setup("fit")
-        datamodule.trainer.training = True
+        if datamodule.trainer:
+            datamodule.trainer.training = True
         batch = next(iter(datamodule.train_dataloader()))
         batch = datamodule.on_after_batch_transfer(batch, 0)
         assert batch["image"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
@@ -42,7 +43,8 @@ class TestOSCDDataModule:
 
     def test_val_dataloader(self, datamodule: OSCDDataModule) -> None:
         datamodule.setup("validate")
-        datamodule.trainer.validating = True
+        if datamodule.trainer:
+            datamodule.trainer.validating = True
         batch = next(iter(datamodule.val_dataloader()))
         batch = datamodule.on_after_batch_transfer(batch, 0)
         if datamodule.val_split_pct > 0.0:
@@ -55,7 +57,8 @@ class TestOSCDDataModule:
 
     def test_test_dataloader(self, datamodule: OSCDDataModule) -> None:
         datamodule.setup("test")
-        datamodule.trainer.testing = True
+        if datamodule.trainer:
+            datamodule.trainer.testing = True
         batch = next(iter(datamodule.test_dataloader()))
         batch = datamodule.on_after_batch_transfer(batch, 0)
         assert batch["image"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
