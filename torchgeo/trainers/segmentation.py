@@ -104,7 +104,7 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
                     _, state_dict = utils.extract_backbone(weights)
                 else:
                     state_dict = get_weight(weights).get_state_dict(progress=True)
-                self.model.encoder.load_state_dict(state_dict)
+                self.model.encoder.load_state_dict(state_dict, strict=False)
 
         # Freeze backbone
         if self.hyperparams.get("freeze_backbone", False) and self.hyperparams[
