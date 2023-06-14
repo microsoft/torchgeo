@@ -25,7 +25,7 @@ NEW_RESOLUTIONS=30
 DEFAULT_VALUE=0
 
 # Generic parameters
-SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+SCRIPT_DIR=$(cd $(dirname $(dirname "${BASH_SOURCE[0]}")) && pwd)
 CLOUD_PCT=20
 SIZE=264
 DTYPE=float32

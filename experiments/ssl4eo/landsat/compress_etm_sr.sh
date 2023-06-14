@@ -21,7 +21,7 @@ MIN=$R_MIN
 MAX=$R_MAX
 
 # Generic parameters
-SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+SCRIPT_DIR=$(cd $(dirname $(dirname "${BASH_SOURCE[0]}")) && pwd)
 
 time python3 "$SCRIPT_DIR/compress_dataset.py" \
     "$SRC_DIR" \

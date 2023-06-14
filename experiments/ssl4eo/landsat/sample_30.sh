@@ -11,7 +11,7 @@ START_INDEX=0
 END_INDEX=10
 
 # Generic parameters
-SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+SCRIPT_DIR=$(cd $(dirname $(dirname "${BASH_SOURCE[0]}")) && pwd)
 RES=30
 SIZE=264
 NUM_CITIES=10000

@@ -11,7 +11,7 @@ START_INDEX=0
 END_INDEX=1000
 
 # Generic parameters
-SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+SCRIPT_DIR=$(cd $(dirname $(dirname "${BASH_SOURCE[0]}")) && pwd)
 SIZE=264
 RES=30
 
