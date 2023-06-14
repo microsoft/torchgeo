@@ -7,13 +7,13 @@ set -euo pipefail
 
 # User-specific parameters
 ROOT_DIR=data
-SRC_DIR="$ROOT_DIR/ssl4eo-l8-l2"
-DST_DIR="$ROOT_DIR/ssl4eo-l8-l2-v2"
+SRC_DIR="$ROOT_DIR/ssl4eo_l_etm_sr"
+DST_DIR="$ROOT_DIR/ssl4eo_l_etm_sr_v2"
 NUM_WORKERS=40
 
 # Satellite-specific parameters
 # https://www.usgs.gov/faqs/how-do-i-use-scale-factor-landsat-level-2-science-products
-# https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_L2
+# https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LE07_C02_T1_L2
 R_MIN=$(echo "(0   + 0.2) / 0.0000275" | bc -l)
 R_MAX=$(echo "(0.3 + 0.2) / 0.0000275" | bc -l)
 

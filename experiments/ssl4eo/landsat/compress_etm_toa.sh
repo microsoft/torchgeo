@@ -7,8 +7,8 @@ set -euo pipefail
 
 # User-specific parameters
 ROOT_DIR=data
-SRC_DIR="$ROOT_DIR/ssl4eo-l7-l1"
-DST_DIR="$ROOT_DIR/ssl4eo-l7-l1-v2"
+SRC_DIR="$ROOT_DIR/ssl4eo_l_etm_toa"
+DST_DIR="$ROOT_DIR/ssl4eo_l_etm_toa_v2"
 NUM_WORKERS=40
 
 # Satellite-specific parameters

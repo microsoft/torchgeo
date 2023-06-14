@@ -6,7 +6,7 @@
 set -euo pipefail
 
 # User-specific parameters
-SAVE_PATH=data/ssl4eo-l-conus
+SAVE_PATH=data/ssl4eo_l_conus
 START_INDEX=0
 END_INDEX=1000
 
