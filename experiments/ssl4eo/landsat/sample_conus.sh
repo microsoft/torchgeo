@@ -6,12 +6,12 @@
 set -euo pipefail
 
 # User-specific parameters
-SAVE_PATH=data/ssl4eo-l-conus
+SAVE_PATH=data/ssl4eo_l_conus
 START_INDEX=0
-END_INDEX=1000
+END_INDEX=10
 
 # Generic parameters
-SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+SCRIPT_DIR=$(cd $(dirname $(dirname "${BASH_SOURCE[0]}")) && pwd)
 SIZE=264
 RES=30
 

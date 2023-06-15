@@ -6,12 +6,12 @@
 set -euo pipefail
 
 # User-specific parameters
-SAVE_PATH=data/ssl4eo-l-60
+SAVE_PATH=data/ssl4eo_l_60
 START_INDEX=0
 END_INDEX=10
 
 # Generic parameters
-SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+SCRIPT_DIR=$(cd $(dirname $(dirname "${BASH_SOURCE[0]}")) && pwd)
 RES=60
 SIZE=264
 NUM_CITIES=10000

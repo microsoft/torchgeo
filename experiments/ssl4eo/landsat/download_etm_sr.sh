@@ -7,24 +7,25 @@ set -euo pipefail
 
 # User-specific parameters
 ROOT_DIR=data
-SAVE_PATH="$ROOT_DIR/ssl4eo-l5-l1"
-MATCH_FILE="$ROOT_DIR/ssl4eo-l-30/sampled_locations.csv"
+SAVE_PATH="$ROOT_DIR/ssl4eo_l_etm_sr"
+MATCH_FILE="$ROOT_DIR/ssl4eo_l_30/sampled_locations.csv"
 NUM_WORKERS=40
 START_INDEX=0
 END_INDEX=10
 
 # Satellite-specific parameters
-COLLECTION=LANDSAT/LT05/C02/T1_TOA
+COLLECTION=LANDSAT/LE07/C02/T1_L2
 QA_BAND=QA_PIXEL
 QA_CLOUD_BIT=3
 META_CLOUD_NAME=CLOUD_COVER
-YEAR=2010  # TM sensor failed in Nov 2011
-BANDS=(B1 B2 B3 B4 B5 B6 B7)
-ORIGINAL_RESOLUTIONS=(30 30 30 30 30 30 30)
+YEAR=2002  # SLC-on
+BANDS=(SR_B1 SR_B2 SR_B3 SR_B4 SR_B5 SR_B7)
+ORIGINAL_RESOLUTIONS=30
 NEW_RESOLUTIONS=30
+DEFAULT_VALUE=0
 
 # Generic parameters
-SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+SCRIPT_DIR=$(cd $(dirname $(dirname "${BASH_SOURCE[0]}")) && pwd)
 CLOUD_PCT=20
 SIZE=264
 DTYPE=float32
@@ -40,9 +41,10 @@ time python3 "$SCRIPT_DIR/download_ssl4eo.py" \
     --dates $YEAR-03-20 $YEAR-06-21 $YEAR-09-23 $YEAR-12-21 \
     --radius $(($NEW_RESOLUTIONS * $SIZE / 2)) \
     --bands ${BANDS[@]} \
-    --original-resolutions ${ORIGINAL_RESOLUTIONS[@]} \
+    --original-resolutions $ORIGINAL_RESOLUTIONS \
     --new-resolutions $NEW_RESOLUTIONS \
     --dtype $DTYPE \
+    --default-value $DEFAULT_VALUE \
     --num-workers $NUM_WORKERS \
     --log-freq $LOG_FREQ \
     --match-file "$MATCH_FILE" \
