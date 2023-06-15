@@ -65,11 +65,11 @@ class NLCD(RasterDataset):
     .. versionadded:: 0.5
     """  # noqa: E501
 
-    filename_glob = "nlcd_*_land_cover_l48_20210604.img"
+    filename_glob = "nlcd_*_land_cover_l48_*.img"
     filename_regex = (
         r"nlcd_(?P<date>\d{4})_land_cover_l48_(?P<publication_date>\d{8})\.img"
     )
-    zipfile_glob = "nlcd_*_land_cover_l48_20210604.zip"
+    zipfile_glob = "nlcd_*_land_cover_l48_*.zip"
     date_format = "%Y"
     is_image = False
 
@@ -188,7 +188,7 @@ class NLCD(RasterDataset):
         # Check if the extracted files already exist
         exists = []
         for year in self.years:
-            filename_year = self.filename_glob.replace("*", str(year))
+            filename_year = self.filename_glob.replace("*", str(year), 1)
             pathname = os.path.join(self.root, "**", filename_year)
             if glob.glob(pathname, recursive=True):
                 exists.append(True)
@@ -201,7 +201,7 @@ class NLCD(RasterDataset):
         # Check if the zip files have already been downloaded
         exists = []
         for year in self.years:
-            zipfile_year = self.zipfile_glob.replace("*", str(year))
+            zipfile_year = self.zipfile_glob.replace("*", str(year), 1)
             pathname = os.path.join(self.root, "**", zipfile_year)
             if glob.glob(pathname, recursive=True):
                 exists.append(True)
@@ -236,7 +236,7 @@ class NLCD(RasterDataset):
     def _extract(self) -> None:
         """Extract the dataset."""
         for year in self.years:
-            zipfile_name = self.zipfile_glob.replace("*", str(year))
+            zipfile_name = self.zipfile_glob.replace("*", str(year), 1)
             pathname = os.path.join(self.root, "**", zipfile_name)
             extract_archive(glob.glob(pathname, recursive=True)[0], self.root)
 
