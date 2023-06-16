@@ -115,5 +115,5 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.ref }}
   cancel-in-progress: true
