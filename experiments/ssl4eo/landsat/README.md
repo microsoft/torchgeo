@@ -52,6 +52,12 @@ For each TOA and SR product, we want to create a parallel corpus. This can be do
 $ bash delete_mismatch.sh
 ```
 
+To chop this down to 250K locations, you can then run:
+
+```console
+$ bash delete_excess.sh
+```
+
 You may want to modify `ROOT_DIR`.
 
 ## Compression
