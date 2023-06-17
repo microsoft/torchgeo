@@ -10,7 +10,7 @@ module:
 
 datamodule:
   _target_: torchgeo.datamodules.SSL4EOLDataModule
-  root: "tests/data/ssl4eo/l/etm_toa"
+  root: "tests/data/ssl4eo/l"
   split: "etm_toa"
   seasons: 1
   batch_size: 2
