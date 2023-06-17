@@ -266,11 +266,13 @@ class SSL4EOL(NonGeoDataset):
     def _extract(self) -> None:
         """Extract the dataset."""
         # Concatenate all tarballs together
+        chunk_size = 2 ** 15  # same as torchvision
         path = self.subdir + ".tar.gz"
         with open(path, "wb") as f:
             for suffix in self.checksums[self.split]:
                 with open(path + suffix, "rb") as g:
-                    f.write(g.read())
+                    while chunk := g.read(chunk_size):
+                        f.write(chunk)
 
         # Extract the concatenated tarball
         extract_archive(path)

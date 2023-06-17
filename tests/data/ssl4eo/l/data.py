@@ -155,13 +155,11 @@ if __name__ == "__main__":
         path = f"{directory}.tar.gz"
         paths = []
         with open(path, "rb") as f:
-            chunk = f.read(CHUNK_SIZE)
             suffix = "a"
-            while chunk:
+            while chunk := f.read(CHUNK_SIZE):
                 split = f"{path}a{suffix}"
                 with open(split, "wb") as g:
                     g.write(chunk)
-                chunk = f.read(CHUNK_SIZE)
                 suffix = chr(ord(suffix) + 1)
                 paths.append(split)
 
