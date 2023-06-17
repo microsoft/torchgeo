@@ -256,7 +256,6 @@ class SSL4EOL(NonGeoDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-
         for suffix, md5 in self.checksums[self.split].items():
             download_url(
                 self.url.format(self.split, suffix),
@@ -266,7 +265,6 @@ class SSL4EOL(NonGeoDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-
         # Concatenate all tarballs together
         path = self.subdir + ".tar.gz"
         with open(path, "wb") as f:
