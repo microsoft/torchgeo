@@ -78,6 +78,13 @@ class SSL4EOL(NonGeoDataset):
     * Resampled to 30 m resolution (7920 x 7920 m)
     * Single multispectral GeoTIFF file
 
+    .. note::
+
+       Each split is 300--400 GB and requires 3x that to concatenate and extract
+       tarballs. Tarballs can be safely deleted after extraction to save space.
+       The dataset takes about 1.5 hrs to download and checksum and another 3 hrs
+       to extract.
+
     .. versionadded:: 0.5
     """  # noqa: E501
 
@@ -228,7 +235,7 @@ class SSL4EOL(NonGeoDataset):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         # Check if the extracted files already exist
-        path = os.path.join(self.subdir, "*", "*", "all_bands.tif")
+        path = os.path.join(self.subdir, "00000*", "*", "all_bands.tif")
         if glob.glob(path):
             return
 
