@@ -55,7 +55,7 @@ class L8Biome(RasterDataset):
     .. versionadded:: 0.5
     """  # noqa: E501
 
-    url = "https://huggingface.co/datasets/torchgeo/ssl4eo-l-benchmark/resolve/main/{}.tar.gz"  # noqa: E501
+    url = "https://huggingface.co/datasets/torchgeo/l8biome/resolve/main/{}.tar.gz"  # noqa: E501
 
     md5s = {
         "barren": "0eb691822d03dabd4f5ea8aadd0b41c3",
