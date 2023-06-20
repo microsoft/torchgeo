@@ -85,6 +85,10 @@ class SSL4EOL(NonGeoDataset):
        The dataset takes about 1.5 hrs to download and checksum and another 3 hrs
        to extract.
 
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2306.09424
+
     .. versionadded:: 0.5
     """  # noqa: E501
 

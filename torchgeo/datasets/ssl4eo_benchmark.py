@@ -39,6 +39,10 @@ class SSL4EOLBenchmark(NonGeoDataset):
     * Resampled to 30 m resolution (7920 x 7920 m)
     * Single multispectral GeoTIFF file
 
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2306.09424
+
     .. versionadded:: 0.5
     """
 
