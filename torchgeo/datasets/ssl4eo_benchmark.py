@@ -42,7 +42,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    url = "https://huggingface.co/datasets/torchgeo/{}/resolve/main/{}.tar.gz"
+    url = "https://huggingface.co/datasets/torchgeo/ssl4eo-l-benchmark/resolve/main/{}.tar.gz"  # noqa: E501
 
     valid_sensors = ["tm_toa", "etm_toa", "etm_sr", "oli_tirs_toa", "oli_sr"]
     valid_products = ["cdl", "nlcd"]
@@ -232,13 +232,13 @@ class SSL4EOLBenchmark(NonGeoDataset):
         """Download the dataset."""
         # download imagery
         download_url(
-            self.url.format(self.img_dir_name, self.img_dir_name),
+            self.url.format(self.img_dir_name),
             self.root,
             md5=self.img_md5s[self.sensor] if self.checksum else None,
         )
         # download mask
         download_url(
-            self.url.format(self.mask_dir_name, self.mask_dir_name),
+            self.url.format(self.mask_dir_name),
             self.root,
             md5=self.mask_md5s[self.sensor.split("_")[0]][self.product]
             if self.checksum
