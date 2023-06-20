@@ -19,9 +19,10 @@ from torchgeo.models import (
     resnet18,
     resnet50,
     vit_small_patch16_224,
+    swin_v2_b,
 )
 
-builders = [resnet18, resnet50, vit_small_patch16_224]
+builders = [resnet18, resnet50, vit_small_patch16_224, swin_v2_b]
 enums = [ResNet18_Weights, ResNet50_Weights, ViTSmall16_Weights]
 
 
