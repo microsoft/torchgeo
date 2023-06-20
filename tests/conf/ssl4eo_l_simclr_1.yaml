@@ -11,7 +11,7 @@ module:
 
 datamodule:
   _target_: torchgeo.datamodules.SSL4EOLDataModule
-  root: "tests/data/ssl4eo/l/oli_sr"
+  root: "tests/data/ssl4eo/l"
   split: "oli_sr"
   seasons: 1
   batch_size: 2
