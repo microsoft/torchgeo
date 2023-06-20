@@ -56,7 +56,7 @@ class L7Irish(RasterDataset):
     .. versionadded:: 0.5
     """  # noqa: E501
 
-    url = "https://huggingface.co/datasets/torchgeo/l7irish/resolve/main/{}.tar.gz"  # noqa: E501
+    url = "https://huggingface.co/datasets/torchgeo/ssl4eo-l-benchmark/resolve/main/{}.tar.gz"  # noqa: E501
 
     md5s = {
         "austral": "0a34770b992a62abeb88819feb192436",
