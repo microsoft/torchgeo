@@ -1,5 +1,5 @@
 # datasets
-h5py==3.8.0
+h5py==3.9.0
 laspy==2.4.1
 opencv-python==4.7.0.72
 pandas==2.0.2
