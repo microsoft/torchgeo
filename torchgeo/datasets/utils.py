@@ -9,6 +9,8 @@ from __future__ import annotations
 import bz2
 import collections
 import contextlib
+import fnmatch
+import glob
 import gzip
 import lzma
 import os
@@ -45,7 +47,7 @@ __all__ = (
     "draw_semantic_segmentation_masks",
     "rgb_to_mask",
     "percentile_normalization",
-    "listdir_vsi_recursive",
+    "list_directory_recursive",
 )
 
 
@@ -742,18 +744,17 @@ def percentile_normalization(
     return img_normalized
 
 
-def listdir_vsi_recursive(root: str) -> list[str]:
-    """Walk directory and return list of all files in subdirectories.
+def _path_is_vsi(path: str) -> bool:
+    from rasterio._path import SCHEMES
 
-    Also supports listing filenames within a GDAL Virtual File System like
-    cloud buckets. https://gdal.org/user/virtual_file_systems.html
+    prefix = path.split("://")[0]
+    schemes = prefix.split("+")
+    is_apache_vfs_scheme = set(schemes).issubset(set(SCHEMES))
+    is_gdal_vsi = path.startswith("/vsi")
+    return is_gdal_vsi or is_apache_vfs_scheme
 
-    Args:
-        root: root directory or blob in bucket
 
-    Returns
-        List of absolute filepaths withing the root
-    """
+def _listdir_vsi_recursive(root: str) -> list[str]:
     dirs = [root]
     files = []
     while dirs:
@@ -764,3 +765,22 @@ def listdir_vsi_recursive(root: str) -> list[str]:
         except FionaValueError:
             files.append(dir)
     return files
+
+
+def list_directory_recursive(root: str, filename_glob: str) -> list[str]:
+    """Lists files in directory recursively.
+
+    Also supports gdal virtual file systems (vsi).
+
+    Args:
+        root: directory to list. For vsi these can start with
+            e.g. /vsiaz or az:// for azure blob storage
+        filename_glob: filename pattern to filter filenames
+    """
+    if _path_is_vsi(root):
+        filepaths = _listdir_vsi_recursive(root)
+        filepaths = fnmatch.filter(filepaths, filename_glob)
+    else:
+        pathname = os.path.join(root, "**", filename_glob)
+        filepaths = list(glob.iglob(pathname, recursive=True))
+    return filepaths

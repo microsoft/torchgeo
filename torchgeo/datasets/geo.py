@@ -33,7 +33,7 @@ from .utils import (
     BoundingBox,
     concat_samples,
     disambiguate_timestamp,
-    listdir_vsi_recursive,
+    list_directory_recursive,
     merge_samples,
 )
 
@@ -341,7 +341,6 @@ class RasterDataset(GeoDataset):
         bands: Optional[Sequence[str]] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
-        vsi: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -356,7 +355,6 @@ class RasterDataset(GeoDataset):
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
-            vsi: if True, will support GDAL Virtual File Systems
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
@@ -379,8 +377,9 @@ class RasterDataset(GeoDataset):
                 else:
                     filespaths.append(dir_or_file)
             else:
-                # TODO: Handle remote and virtual files
-                continue
+                filespaths.extend(
+                    list_directory_recursive(dir_or_file, self.filename_glob)
+                )
 
         # Populate the dataset index
         i = 0
