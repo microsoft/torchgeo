@@ -267,7 +267,7 @@ class GeoDataModule(BaseDataModule):
         if isinstance(sampler, BatchGeoSampler):
             kwargs = {"batch_size": 1, "batch_sampler": sampler}
         else:
-            batch_size = getattr(self, f"{split}_batch_size", self.batch_size)
+            batch_size = self._valid_attribute(f"{split}_batch_size", "batch_size")
             kwargs = {"batch_size": batch_size, "sampler": sampler}
 
         return DataLoader(
@@ -408,7 +408,7 @@ class NonGeoDataModule(BaseDataModule):
                 dataset or sampler, or if the dataset or sampler has length 0.
         """
         dataset = self._valid_attribute(f"{split}_dataset", "dataset")
-        batch_size = getattr(self, f"{split}_batch_size", self.batch_size)
+        batch_size = self._valid_attribute(f"{split}_batch_size", "batch_size")
         return DataLoader(
             dataset,
             batch_size=batch_size,
