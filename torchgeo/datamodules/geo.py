@@ -263,15 +263,21 @@ class GeoDataModule(BaseDataModule):
         sampler = self._valid_attribute(
             f"{split}_batch_sampler", f"{split}_sampler", "batch_sampler", "sampler"
         )
+        batch_size = self._valid_attribute(f"{split}_batch_size", "batch_size")
 
         if isinstance(sampler, BatchGeoSampler):
-            kwargs = {"batch_size": 1, "batch_sampler": sampler}
+            batch_sampler = sampler
+            sampler = None
         else:
-            batch_size = self._valid_attribute(f"{split}_batch_size", "batch_size")
-            kwargs = {"batch_size": batch_size, "sampler": sampler}
+            batch_sampler = None
 
         return DataLoader(
-            dataset, num_workers=self.num_workers, collate_fn=self.collate_fn, **kwargs
+            dataset=dataset,
+            batch_size=batch_size,
+            sampler=sampler,
+            batch_sampler=batch_sampler,
+            num_workers=self.num_workers,
+            collate_fn=self.collate_fn,
         )
 
     def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:
@@ -410,7 +416,7 @@ class NonGeoDataModule(BaseDataModule):
         dataset = self._valid_attribute(f"{split}_dataset", "dataset")
         batch_size = self._valid_attribute(f"{split}_batch_size", "batch_size")
         return DataLoader(
-            dataset,
+            dataset=dataset,
             batch_size=batch_size,
             shuffle=split == "train",
             num_workers=self.num_workers,
