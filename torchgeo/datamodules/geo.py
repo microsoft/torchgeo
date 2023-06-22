@@ -87,50 +87,6 @@ class BaseDataModule(LightningDataModule):
         if self.kwargs.get("download", False):
             self.dataset_class(**self.kwargs)
 
-    def on_after_batch_transfer(
-        self, batch: dict[str, Tensor], dataloader_idx: int
-    ) -> dict[str, Tensor]:
-        """Apply batch augmentations to the batch after it is transferred to the device.
-
-        Args:
-            batch: A batch of data that needs to be altered or augmented.
-            dataloader_idx: The index of the dataloader to which the batch belongs.
-
-        Returns:
-            A batch of data.
-        """
-        if self.trainer:
-            if self.trainer.training:
-                aug = self.train_aug or self.aug
-            elif self.trainer.validating or self.trainer.sanity_checking:
-                aug = self.val_aug or self.aug
-            elif self.trainer.testing:
-                aug = self.test_aug or self.aug
-            elif self.trainer.predicting:
-                aug = self.predict_aug or self.aug
-
-            batch = aug(batch)
-
-        return batch
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run the plot method of the validation dataset if one exists.
-
-        Should only be called during 'fit' or 'validate' stages as ``val_dataset``
-        may not exist during other stages.
-
-        Args:
-            *args: Arguments passed to plot method.
-            **kwargs: Keyword arguments passed to plot method.
-
-        Returns:
-            A matplotlib Figure with the image, ground truth, and predictions.
-        """
-        dataset = self.dataset or self.val_dataset
-        if dataset is not None:
-            if hasattr(dataset, "plot"):
-                return dataset.plot(*args, **kwargs)
-
     def _valid_attribute(self, *args: str) -> Any:
         """Find a valid attribute with length > 0.
 
@@ -154,8 +110,53 @@ class BaseDataModule(LightningDataModule):
 
             return obj
 
-        msg = f"{self.__class__.__name__} must define one of {args}"
+        msg = f"{self.__class__.__name__}.setup must define one of {args}"
         raise MisconfigurationException(msg)
+
+    def on_after_batch_transfer(
+        self, batch: dict[str, Tensor], dataloader_idx: int
+    ) -> dict[str, Tensor]:
+        """Apply batch augmentations to the batch after it is transferred to the device.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented.
+            dataloader_idx: The index of the dataloader to which the batch belongs.
+
+        Returns:
+            A batch of data.
+        """
+        if self.trainer:
+            if self.trainer.training:
+                split = "train"
+            elif self.trainer.validating or self.trainer.sanity_checking:
+                split = "val"
+            elif self.trainer.testing:
+                split = "test"
+            elif self.trainer.predicting:
+                split = "predict"
+
+            aug = self._valid_attribute(f"{split}_aug", "aug")
+            batch = aug(batch)
+
+        return batch
+
+    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+        """Run the plot method of the validation dataset if one exists.
+
+        Should only be called during 'fit' or 'validate' stages as ``val_dataset``
+        may not exist during other stages.
+
+        Args:
+            *args: Arguments passed to plot method.
+            **kwargs: Keyword arguments passed to plot method.
+
+        Returns:
+            A matplotlib Figure with the image, ground truth, and predictions.
+        """
+        dataset = self.dataset or self.val_dataset
+        if dataset is not None:
+            if hasattr(dataset, "plot"):
+                return dataset.plot(*args, **kwargs)
 
 
 class GeoDataModule(BaseDataModule):
