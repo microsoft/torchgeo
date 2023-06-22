@@ -106,11 +106,12 @@ class BaseDataModule(LightningDataModule):
                 continue
 
             if not obj:
-                raise MisconfigurationException(f"'{arg}' has length 0")
+                msg = f"{self.__class__.__name__}.{arg} has length 0."
+                raise MisconfigurationException(msg)
 
             return obj
 
-        msg = f"{self.__class__.__name__}.setup must define one of {args}"
+        msg = f"{self.__class__.__name__}.setup must define one of {args}."
         raise MisconfigurationException(msg)
 
     def on_after_batch_transfer(
