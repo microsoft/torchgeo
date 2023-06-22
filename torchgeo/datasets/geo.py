@@ -359,8 +359,8 @@ class RasterDataset(GeoDataset):
         self.bands = bands or self.all_bands
         self.cache = cache
 
-        if not isinstance(root, str):
-            root = [cast(str, root)]
+        if isinstance(root, str):
+            root = [root]
 
         filespaths = []
         for dir_or_file in root:
