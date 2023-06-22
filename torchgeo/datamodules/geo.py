@@ -267,6 +267,7 @@ class GeoDataModule(BaseDataModule):
         batch_size = self._valid_attribute(f"{split}_batch_size", "batch_size")
 
         if isinstance(sampler, BatchGeoSampler):
+            batch_size = 1
             batch_sampler = sampler
             sampler = None
         else:
