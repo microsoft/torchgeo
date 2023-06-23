@@ -362,14 +362,17 @@ class RasterDataset(GeoDataset):
         if isinstance(root, str):
             root = [root]
 
-        filespaths = []
+        filespaths: list[str] = []
         for dir_or_file in root:
-            _, ext = os.path.splitext(dir_or_file)
-            if ext:
-                filespaths.append(dir_or_file)
+            if os.path.exists(dir_or_file):
+                if os.path.isdir(dir_or_file):
+                    pathname = os.path.join(dir_or_file, "**", self.filename_glob)
+                    filespaths.extend(glob.iglob(pathname, recursive=True))
+                else:
+                    filespaths.append(dir_or_file)
             else:
-                pathname = os.path.join(dir_or_file, "**", self.filename_glob)
-                filespaths.extend(glob.iglob(pathname, recursive=True))
+                # TODO: Handle remote and virtual files
+                continue
 
         # Populate the dataset index
         i = 0
