@@ -370,12 +370,8 @@ class RasterDataset(GeoDataset):
 
         filespaths: list[str] = []
         for dir_or_file in root:
-            if os.path.exists(dir_or_file):
-                if os.path.isdir(dir_or_file):
-                    pathname = os.path.join(dir_or_file, "**", self.filename_glob)
-                    filespaths.extend(glob.iglob(pathname, recursive=True))
-                else:
-                    filespaths.append(dir_or_file)
+            if os.path.exists(dir_or_file) and os.path.isfile(dir_or_file):
+                filespaths.append(dir_or_file)
             else:
                 filespaths.extend(
                     list_directory_recursive(dir_or_file, self.filename_glob)

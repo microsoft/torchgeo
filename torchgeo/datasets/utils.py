@@ -765,6 +765,8 @@ def _listdir_vsi_recursive(root: str) -> list[str]:
         except FionaValueError as e:
             if "is not a directory" in str(e):
                 files.append(dir)
+            else:
+                raise e
     return files
 
 
@@ -778,7 +780,7 @@ def list_directory_recursive(root: str, filename_glob: str) -> list[str]:
             e.g. /vsiaz or az:// for azure blob storage
         filename_glob: filename pattern to filter filenames
     """
-    if _path_is_vsi(root):
+    if not _path_is_vsi(root):
         filepaths = _listdir_vsi_recursive(root)
         filepaths = fnmatch.filter(filepaths, filename_glob)
     else:
