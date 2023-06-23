@@ -46,7 +46,7 @@ class TestCMSGlobalMangroveCanopy:
 
     def test_no_dataset(self) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found in."):
-            CMSGlobalMangroveCanopy(root="/test")
+            CMSGlobalMangroveCanopy(paths="/test")
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join(
@@ -65,7 +65,9 @@ class TestCMSGlobalMangroveCanopy:
         ) as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
-            CMSGlobalMangroveCanopy(root=str(tmp_path), country="Angola", checksum=True)
+            CMSGlobalMangroveCanopy(
+                paths=str(tmp_path), country="Angola", checksum=True
+            )
 
     def test_invalid_country(self) -> None:
         with pytest.raises(AssertionError):

@@ -52,7 +52,7 @@ class TestLandsat8:
 
     def test_plot_wrong_bands(self, dataset: Landsat8) -> None:
         bands = ("SR_B1",)
-        ds = Landsat8(root=dataset.root, bands=bands)
+        ds = Landsat8(paths=dataset.paths, bands=bands)
         x = dataset[dataset.bounds]
         with pytest.raises(
             ValueError, match="Dataset doesn't contain some of the RGB bands"

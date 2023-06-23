@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -168,7 +168,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, list[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         measurement: str = "agb",
@@ -180,7 +180,8 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: root directory or list of absolute filepaths where
+                dataset can be found
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -197,7 +198,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
             RuntimeError: if dataset is missing or checksum fails
             AssertionError: if country or measurement arg are not str or invalid
         """
-        self.root = root
+        self.paths = paths
         self.checksum = checksum
 
         assert isinstance(country, str), "Country argument must be a str."
@@ -220,7 +221,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
 
         self._verify()
 
-        super().__init__(root, crs, res, transforms=transforms, cache=cache)
+        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
@@ -229,12 +230,12 @@ class CMSGlobalMangroveCanopy(RasterDataset):
             RuntimeError: if dataset is missing or checksum fails
         """
         # Check if the extracted files already exist
-        pathname = os.path.join(self.root, "**", self.filename_glob)
+        pathname = os.path.join(self.paths, "**", self.filename_glob)
         if glob.glob(pathname):
             return
 
         # Check if the zip file has already been downloaded
-        pathname = os.path.join(self.root, self.zipfile)
+        pathname = os.path.join(self.paths, self.zipfile)
         if os.path.exists(pathname):
             if self.checksum and not check_integrity(pathname, self.md5):
                 raise RuntimeError("Dataset found, but corrupted.")
@@ -242,14 +243,14 @@ class CMSGlobalMangroveCanopy(RasterDataset):
             return
 
         raise RuntimeError(
-            f"Dataset not found in `root={self.root}` "
+            f"Dataset not found in `root={self.paths}` "
             "either specify a different `root` directory or make sure you "
             "have manually downloaded the dataset as instructed in the documentation."
         )
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        pathname = os.path.join(self.root, self.zipfile)
+        pathname = os.path.join(self.paths, self.zipfile)
         extract_archive(pathname)
 
     def plot(

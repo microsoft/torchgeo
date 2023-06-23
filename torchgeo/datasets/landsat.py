@@ -5,7 +5,7 @@
 
 import abc
 from collections.abc import Sequence
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -58,7 +58,7 @@ class Landsat(RasterDataset, abc.ABC):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, list[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
@@ -68,7 +68,8 @@ class Landsat(RasterDataset, abc.ABC):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: root directory or list of absolute filepaths where
+                dataset can be found
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -84,7 +85,7 @@ class Landsat(RasterDataset, abc.ABC):
         bands = bands or self.default_bands
         self.filename_glob = self.filename_glob.format(bands[0])
 
-        super().__init__(root, crs, res, bands, transforms, cache)
+        super().__init__(paths, crs, res, bands, transforms, cache)
 
     def plot(
         self,

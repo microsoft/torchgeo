@@ -40,7 +40,7 @@ class TestLandCoverAIGeo:
         assert isinstance(x["mask"], torch.Tensor)
 
     def test_already_extracted(self, dataset: LandCoverAIGeo) -> None:
-        LandCoverAIGeo(root=dataset.root, download=True)
+        LandCoverAIGeo(paths=dataset.root, download=True)
 
     def test_already_downloaded(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
         url = os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip")

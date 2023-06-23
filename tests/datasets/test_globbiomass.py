@@ -47,7 +47,7 @@ class TestGlobBiomass:
         assert isinstance(x["mask"], torch.Tensor)
 
     def test_already_extracted(self, dataset: GlobBiomass) -> None:
-        GlobBiomass(root=dataset.root)
+        GlobBiomass(paths=dataset.paths)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):
@@ -57,7 +57,7 @@ class TestGlobBiomass:
         with open(os.path.join(tmp_path, "N00E020_agb.zip"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
-            GlobBiomass(root=str(tmp_path), checksum=True)
+            GlobBiomass(paths=str(tmp_path), checksum=True)
 
     def test_and(self, dataset: GlobBiomass) -> None:
         ds = dataset & dataset

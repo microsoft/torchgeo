@@ -7,7 +7,7 @@ import glob
 import hashlib
 import os
 from functools import lru_cache
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, Optional, Union, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -211,7 +211,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, list[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -222,7 +222,8 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         """Initialize a new LandCover.ai NonGeo dataset instance.
 
         Args:
-           root: root directory where dataset can be found
+           paths: root directory or list of absolute filepaths where
+                dataset can be found
            crs: :term:`coordinate reference system (CRS)` to warp to
                (defaults to the CRS of the first file found)
            res: resolution of the dataset in units of CRS
@@ -237,8 +238,10 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
            RuntimeError: if ``download=False`` and data is not found, or checksums
                don't match
         """
-        LandCoverAIBase.__init__(self, root, download, checksum)
-        RasterDataset.__init__(self, root, crs, res, transforms=transforms, cache=cache)
+        LandCoverAIBase.__init__(self, paths, download, checksum)
+        RasterDataset.__init__(
+            self, paths, crs, res, transforms=transforms, cache=cache
+        )
 
     def _verify_data(self) -> bool:
         """Verify if the images and masks are present."""

@@ -6,7 +6,7 @@
 import glob
 import json
 import os
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -59,7 +59,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, list[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -69,7 +69,8 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: root directory or list of absolute filepaths where
+                dataset can be found
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -82,12 +83,12 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
         Raises:
             FileNotFoundError: if no files are found in ``root``
         """
-        self.root = root
+        self.paths = paths
         self.download = download
 
         self._verify()
 
-        super().__init__(root, crs, res, transforms=transforms, cache=cache)
+        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
@@ -96,14 +97,14 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
             RuntimeError: if dataset is missing
         """
         # Check if the extracted files already exist
-        pathname = os.path.join(self.root, self.filename_glob)
+        pathname = os.path.join(self.paths, self.filename_glob)
         if glob.glob(pathname):
             return
 
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
+                f"Dataset not found in `root={self.paths}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
                 "to automatically download the dataset."
             )
@@ -113,15 +114,15 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        download_url(self.url, self.root, self.base_filename)
+        download_url(self.url, self.paths, self.base_filename)
 
-        with open(os.path.join(self.root, self.base_filename)) as f:
+        with open(os.path.join(self.paths, self.base_filename)) as f:
             content = json.load(f)
 
         for item in content["features"]:
             download_url(
                 item["properties"]["download"],
-                self.root,
+                self.paths,
                 item["properties"]["tile_id"] + ".tif",
             )
 

@@ -33,21 +33,21 @@ class TestEUDEM:
         assert isinstance(x["mask"], torch.Tensor)
 
     def test_extracted_already(self, dataset: EUDEM) -> None:
-        zipfile = os.path.join(dataset.root, "eu_dem_v11_E30N10.zip")
-        shutil.unpack_archive(zipfile, dataset.root, "zip")
-        EUDEM(dataset.root)
+        zipfile = os.path.join(dataset.paths, "eu_dem_v11_E30N10.zip")
+        shutil.unpack_archive(zipfile, dataset.paths, "zip")
+        EUDEM(dataset.paths)
 
     def test_no_dataset(self, tmp_path: Path) -> None:
         shutil.rmtree(tmp_path)
         os.makedirs(tmp_path)
         with pytest.raises(RuntimeError, match="Dataset not found in"):
-            EUDEM(root=str(tmp_path))
+            EUDEM(paths=str(tmp_path))
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, "eu_dem_v11_E30N10.zip"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
-            EUDEM(root=str(tmp_path), checksum=True)
+            EUDEM(paths=str(tmp_path), checksum=True)
 
     def test_and(self, dataset: EUDEM) -> None:
         ds = dataset & dataset

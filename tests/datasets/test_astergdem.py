@@ -27,7 +27,7 @@ class TestAsterGDEM:
         shutil.rmtree(tmp_path)
         os.makedirs(tmp_path)
         with pytest.raises(RuntimeError, match="Dataset not found in"):
-            AsterGDEM(root=str(tmp_path))
+            AsterGDEM(paths=str(tmp_path))
 
     def test_getitem(self, dataset: AsterGDEM) -> None:
         x = dataset[dataset.bounds]

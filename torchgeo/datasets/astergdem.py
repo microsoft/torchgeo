@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -47,7 +47,7 @@ class AsterGDEM(RasterDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, list[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -56,7 +56,8 @@ class AsterGDEM(RasterDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found, here the collection of
+            paths: root directory or list of absolute filepaths where
+                dataset can be found, here the collection of
                 individual zip files for each tile should be found
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
@@ -70,11 +71,11 @@ class AsterGDEM(RasterDataset):
             FileNotFoundError: if no files are found in ``root``
             RuntimeError: if dataset is missing
         """
-        self.root = root
+        self.paths = paths
 
         self._verify()
 
-        super().__init__(root, crs, res, transforms=transforms, cache=cache)
+        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
@@ -83,12 +84,12 @@ class AsterGDEM(RasterDataset):
             RuntimeError: if dataset is missing
         """
         # Check if the extracted files already exists
-        pathname = os.path.join(self.root, self.filename_glob)
+        pathname = os.path.join(self.paths, self.filename_glob)
         if glob.glob(pathname):
             return
 
         raise RuntimeError(
-            f"Dataset not found in `root={self.root}` "
+            f"Dataset not found in `root={self.paths}` "
             "either specify a different `root` directory or make sure you "
             "have manually downloaded dataset tiles as suggested in the documentation."
         )

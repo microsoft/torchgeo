@@ -58,7 +58,7 @@ class TestL7Irish:
         plt.close()
 
     def test_already_extracted(self, dataset: L7Irish) -> None:
-        L7Irish(root=dataset.root, download=True)
+        L7Irish(paths=dataset.paths, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join("tests", "data", "l7irish", "*.tar.gz")
@@ -88,7 +88,7 @@ class TestL7Irish:
         with pytest.raises(
             ValueError, match="Dataset doesn't contain some of the RGB bands"
         ):
-            ds = L7Irish(root=dataset.root, bands=["B10", "B20", "B50"])
+            ds = L7Irish(paths=dataset.paths, bands=["B10", "B20", "B50"])
             x = ds[ds.bounds]
             ds.plot(x, suptitle="Test")
             plt.close()

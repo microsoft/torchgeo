@@ -133,7 +133,7 @@ class TestSentinel2:
 
     def test_plot_wrong_bands(self, dataset: Sentinel2) -> None:
         bands = ["B02"]
-        ds = Sentinel2(root=dataset.root, res=dataset.res, bands=bands)
+        ds = Sentinel2(paths=dataset.paths, res=dataset.res, bands=bands)
         x = dataset[dataset.bounds]
         with pytest.raises(
             ValueError, match="Dataset doesn't contain some of the RGB bands"

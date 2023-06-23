@@ -58,7 +58,7 @@ class TestL8Biome:
         plt.close()
 
     def test_already_extracted(self, dataset: L8Biome) -> None:
-        L8Biome(root=dataset.root, download=True)
+        L8Biome(paths=dataset.paths, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join("tests", "data", "l8biome", "*.tar.gz")
@@ -88,7 +88,7 @@ class TestL8Biome:
         with pytest.raises(
             ValueError, match="Dataset doesn't contain some of the RGB bands"
         ):
-            ds = L8Biome(root=dataset.root, bands=["B1", "B2", "B5"])
+            ds = L8Biome(paths=dataset.paths, bands=["B1", "B2", "B5"])
             x = ds[ds.bounds]
             ds.plot(x, suptitle="Test")
             plt.close()

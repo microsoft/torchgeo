@@ -329,7 +329,7 @@ class RasterDataset(GeoDataset):
 
     def __init__(
         self,
-        root: Union[str, list[str]] = "data",
+        paths: Union[str, list[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
@@ -339,7 +339,7 @@ class RasterDataset(GeoDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory or list of absolute filepaths where
+            paths: root directory or list of absolute filepaths where
                 dataset can be found
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
@@ -355,15 +355,15 @@ class RasterDataset(GeoDataset):
         """
         super().__init__(transforms)
 
-        self.root = root
+        self.paths = paths
         self.bands = bands or self.all_bands
         self.cache = cache
 
-        if isinstance(root, str):
-            root = [root]
+        if isinstance(paths, str):
+            paths = [paths]
 
         filespaths: list[str] = []
-        for dir_or_file in root:
+        for dir_or_file in paths:
             if os.path.exists(dir_or_file):
                 if os.path.isdir(dir_or_file):
                     pathname = os.path.join(dir_or_file, "**", self.filename_glob)
@@ -411,7 +411,9 @@ class RasterDataset(GeoDataset):
                     i += 1
 
         if i == 0:
-            msg = f"No {self.__class__.__name__} data was found in `root='{self.root}'`"
+            msg = (
+                f"No {self.__class__.__name__} data was found in `root='{self.paths}'`"
+            )
             if self.bands:
                 msg += f" with `bands={self.bands}`"
             raise FileNotFoundError(msg)

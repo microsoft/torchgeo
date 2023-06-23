@@ -69,7 +69,7 @@ class TestNLCD:
         assert isinstance(ds, UnionDataset)
 
     def test_already_extracted(self, dataset: NLCD) -> None:
-        NLCD(root=dataset.root, download=True, years=[2019])
+        NLCD(paths=dataset.paths, download=True, years=[2019])
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join(
