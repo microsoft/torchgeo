@@ -762,8 +762,9 @@ def _listdir_vsi_recursive(root: str) -> list[str]:
         try:
             subdirs = fiona.listdir(dir)
             dirs.extend([os.path.join(dir, subdir) for subdir in subdirs])
-        except FionaValueError:
-            files.append(dir)
+        except FionaValueError as e:
+            if "is not a directory" in str(e):
+                files.append(dir)
     return files
 
 
