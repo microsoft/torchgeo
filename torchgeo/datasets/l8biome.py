@@ -3,8 +3,6 @@
 
 """L8 Biome dataset."""
 
-import glob
-import os
 from collections.abc import Sequence
 from typing import Any, Callable, Optional, Union, cast
 
@@ -136,13 +134,11 @@ class L8Biome(RasterDataset):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         # Check if the extracted files already exist
-        pathname = os.path.join(self.paths, "**", self.filename_glob)
-        for fname in glob.iglob(pathname, recursive=True):
+        if self.list_files():
             return
 
         # Check if the tar.gz files have already been downloaded
-        pathname = os.path.join(self.paths, "*.tar.gz")
-        if glob.glob(pathname):
+        if self.list_files(filename_glob="*.tar.gz"):
             self._extract()
             return
 
@@ -167,8 +163,7 @@ class L8Biome(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        pathname = os.path.join(self.paths, "*.tar.gz")
-        for tarfile in glob.iglob(pathname):
+        for tarfile in self.list_files(filename_glob="*.tar.gz"):
             extract_archive(tarfile)
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:

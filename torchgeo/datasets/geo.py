@@ -359,25 +359,10 @@ class RasterDataset(GeoDataset):
         self.bands = bands or self.all_bands
         self.cache = cache
 
-        if isinstance(paths, str):
-            paths = [paths]
-
-        filespaths: list[str] = []
-        for dir_or_file in paths:
-            if os.path.exists(dir_or_file):
-                if os.path.isdir(dir_or_file):
-                    pathname = os.path.join(dir_or_file, "**", self.filename_glob)
-                    filespaths.extend(glob.iglob(pathname, recursive=True))
-                else:
-                    filespaths.append(dir_or_file)
-            else:
-                # TODO: Handle remote and virtual files
-                continue
-
         # Populate the dataset index
         i = 0
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-        for filepath in filespaths:
+        for filepath in self.list_files():
             match = re.match(filename_regex, os.path.basename(filepath))
             if match is not None:
                 try:
@@ -434,6 +419,30 @@ class RasterDataset(GeoDataset):
 
         self._crs = cast(CRS, crs)
         self._res = cast(float, res)
+
+    def list_files(self, filename_glob: Optional[str] = None) -> list[str]:
+        """Get list of files matching filename_glob.
+
+        Args:
+            filename_glob: Defaults to self.filename_glob
+        """
+        # paths can be single string representing root directory
+        # enforce list
+        paths = list(self.paths)
+        filename_glob = filename_glob or self.filename_glob
+
+        filepaths: list[str] = []
+        for dir_or_file in paths:
+            if os.path.exists(dir_or_file):
+                if os.path.isdir(dir_or_file):
+                    pathname = os.path.join(dir_or_file, "**", filename_glob)
+                    filepaths.extend(glob.iglob(pathname, recursive=True))
+                else:
+                    filepaths.append(dir_or_file)
+            else:
+                # TODO: Handle remote and virtual files
+                continue
+        return filepaths
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.

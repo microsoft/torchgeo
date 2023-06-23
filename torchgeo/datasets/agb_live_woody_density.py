@@ -3,7 +3,6 @@
 
 """Aboveground Live Woody Biomass Density dataset."""
 
-import glob
 import json
 import os
 from typing import Any, Callable, Optional, Union
@@ -97,8 +96,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
             RuntimeError: if dataset is missing
         """
         # Check if the extracted files already exist
-        pathname = os.path.join(self.paths, self.filename_glob)
-        if glob.glob(pathname):
+        if self.list_files():
             return
 
         # Check if the user requested to download the dataset
@@ -116,13 +114,17 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
         """Download the dataset."""
         download_url(self.url, self.paths, self.base_filename)
 
-        with open(os.path.join(self.paths, self.base_filename)) as f:
+        base_file = self.list_files(filename_glob=self.base_filename)[0]
+        with open(base_file) as f:
             content = json.load(f)
 
+        # TODO: This changes the behaviour from
+        #  unpacking in root to same dir as archive
+        outdir = os.path.abspath(os.path.join(base_file, os.pardir))
         for item in content["features"]:
             download_url(
                 item["properties"]["download"],
-                self.paths,
+                outdir,
                 item["properties"]["tile_id"] + ".tif",
             )
 

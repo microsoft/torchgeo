@@ -3,8 +3,6 @@
 
 """Esri 2020 Land Cover Dataset."""
 
-import glob
-import os
 from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
@@ -109,13 +107,11 @@ class Esri2020(RasterDataset):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         # Check if the extracted file already exists
-        pathname = os.path.join(self.paths, "**", self.filename_glob)
-        if glob.glob(pathname):
+        if self.list_files():
             return
 
         # Check if the zip files have already been downloaded
-        pathname = os.path.join(self.paths, self.zipfile)
-        if glob.glob(pathname):
+        if self.list_files(filename_glob=self.zipfile):
             self._extract()
             return
 
@@ -137,7 +133,8 @@ class Esri2020(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        extract_archive(os.path.join(self.paths, self.zipfile))
+        for zipfile in self.list_files(filename_glob=self.zipfile):
+            extract_archive(zipfile)
 
     def plot(
         self,

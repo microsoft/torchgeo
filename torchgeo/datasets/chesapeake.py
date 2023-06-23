@@ -142,11 +142,11 @@ class Chesapeake(RasterDataset, abc.ABC):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         # Check if the extracted file already exists
-        if os.path.exists(os.path.join(self.paths, self.filename)):
+        if self.list_files():
             return
 
         # Check if the zip file has already been downloaded
-        if os.path.exists(os.path.join(self.paths, self.zipfile)):
+        if self.list_files(filename_glob=self.zipfile):
             self._extract()
             return
 
@@ -168,7 +168,8 @@ class Chesapeake(RasterDataset, abc.ABC):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        extract_archive(os.path.join(self.paths, self.zipfile))
+        for zipfile in self.list_files(filename_glob=self.zipfile):
+            extract_archive(zipfile)
 
     def plot(
         self,

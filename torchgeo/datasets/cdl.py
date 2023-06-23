@@ -3,7 +3,6 @@
 
 """CDL dataset."""
 
-import glob
 import os
 from typing import Any, Callable, Optional, Union
 
@@ -293,8 +292,7 @@ class CDL(RasterDataset):
         exists = []
         for year in self.years:
             filename_year = self.filename_glob.replace("*", str(year))
-            pathname = os.path.join(self.paths, "**", filename_year)
-            for fname in glob.iglob(pathname, recursive=True):
+            for fname in self.list_files(filename_glob=filename_year):
                 if not fname.endswith(".zip"):
                     exists.append(True)
 
@@ -304,10 +302,8 @@ class CDL(RasterDataset):
         # Check if the zip files have already been downloaded
         exists = []
         for year in self.years:
-            pathname = os.path.join(
-                self.paths, self.zipfile_glob.replace("*", str(year))
-            )
-            if os.path.exists(pathname):
+            zipfile_year = self.zipfile_glob.replace("*", str(year))
+            if self.list_files(filename_glob=zipfile_year):
                 exists.append(True)
                 self._extract()
             else:
@@ -341,8 +337,11 @@ class CDL(RasterDataset):
         """Extract the dataset."""
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace("*", str(year))
-            pathname = os.path.join(self.paths, zipfile_name)
-            extract_archive(pathname, self.paths)
+            zipfile_path = self.list_files(filename_glob=zipfile_name)[0]
+            # TODO: This changes the behaviour from
+            #  unpacking in root to same dir as archive
+            outdir = os.path.abspath(os.path.join(zipfile_path, os.pardir))
+            extract_archive(zipfile_path, outdir)
 
     def plot(
         self,

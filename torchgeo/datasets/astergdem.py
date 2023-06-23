@@ -3,8 +3,6 @@
 
 """Aster Global Digital Elevation Model dataset."""
 
-import glob
-import os
 from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
@@ -84,8 +82,7 @@ class AsterGDEM(RasterDataset):
             RuntimeError: if dataset is missing
         """
         # Check if the extracted files already exists
-        pathname = os.path.join(self.paths, self.filename_glob)
-        if glob.glob(pathname):
+        if self.list_files():
             return
 
         raise RuntimeError(

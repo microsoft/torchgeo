@@ -3,7 +3,6 @@
 
 """European Digital Elevation Model (EU-DEM) dataset."""
 
-import glob
 import os
 from typing import Any, Callable, Optional, Union
 
@@ -121,18 +120,18 @@ class EUDEM(RasterDataset):
             RuntimeError: if dataset is missing or checksum fails
         """
         # Check if the extracted file already exists
-        pathname = os.path.join(self.paths, self.filename_glob)
-        if glob.glob(pathname):
+        if self.list_files():
             return
 
         # Check if the zip files have already been downloaded
-        pathname = os.path.join(self.paths, self.zipfile_glob)
-        if glob.glob(pathname):
-            for zipfile in glob.iglob(pathname):
-                filename = os.path.basename(zipfile)
-                if self.checksum and not check_integrity(zipfile, self.md5s[filename]):
-                    raise RuntimeError("Dataset found, but corrupted.")
-                extract_archive(zipfile)
+        extracted = False
+        for zipfile in self.list_files(filename_glob=self.zipfile_glob):
+            filename = os.path.basename(zipfile)
+            if self.checksum and not check_integrity(zipfile, self.md5s[filename]):
+                raise RuntimeError("Dataset found, but corrupted.")
+            extract_archive(zipfile)
+            extracted = True
+        if extracted:
             return
 
         raise RuntimeError(

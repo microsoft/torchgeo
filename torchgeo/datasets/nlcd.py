@@ -3,7 +3,6 @@
 
 """NLCD dataset."""
 
-import glob
 import os
 from typing import Any, Callable, Optional, Union
 
@@ -191,8 +190,7 @@ class NLCD(RasterDataset):
         exists = []
         for year in self.years:
             filename_year = self.filename_glob.replace("*", str(year), 1)
-            pathname = os.path.join(self.paths, "**", filename_year)
-            if glob.glob(pathname, recursive=True):
+            if self.list_files(filename_glob=filename_year):
                 exists.append(True)
             else:
                 exists.append(False)
@@ -204,8 +202,7 @@ class NLCD(RasterDataset):
         exists = []
         for year in self.years:
             zipfile_year = self.zipfile_glob.replace("*", str(year), 1)
-            pathname = os.path.join(self.paths, "**", zipfile_year)
-            if glob.glob(pathname, recursive=True):
+            if self.list_files(filename_glob=zipfile_year):
                 exists.append(True)
                 self._extract()
             else:
@@ -239,8 +236,11 @@ class NLCD(RasterDataset):
         """Extract the dataset."""
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace("*", str(year), 1)
-            pathname = os.path.join(self.paths, "**", zipfile_name)
-            extract_archive(glob.glob(pathname, recursive=True)[0], self.paths)
+            zipfile_path = self.list_files(filename_glob=zipfile_name)[0]
+            # TODO: This changes the behaviour from
+            #  unpacking in root to same dir as archive
+            outdir = os.path.abspath(os.path.join(zipfile_path, os.pardir))
+            extract_archive(zipfile_path, outdir)
 
     def plot(
         self,
