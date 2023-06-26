@@ -18,9 +18,9 @@ authors = [
 maintainers = [
     {name = "Adam J. Stewart", email = "ajstewart426@gmail.com"},
     {name = "Caleb Robinson", email = "Caleb.Robinson@microsoft.com"},
-    {name = "Isaac Corley"},
-    {name = "Nils Lehmann"},
-    {name = "Ashwin Nair"},
+    {name = "Isaac Corley", email = "isaac.corley@my.utsa.edu"},
+    {name = "Nils Lehmann", email = "n.lehmann@tum.de"},
+    {name = "Ashwin Nair", email = "ashnair0007@gmail.com"},
 ]
 keywords = ["pytorch", "deep learning", "machine learning", "remote sensing", "satellite imagery", "earth observation", "geospatial"]
 classifiers = [
