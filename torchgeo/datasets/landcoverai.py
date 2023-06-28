@@ -238,7 +238,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
            RuntimeError: if ``download=False`` and data is not found, or checksums
                don't match
         """
-        LandCoverAIBase.__init__(self, paths, download, checksum)
+        LandCoverAIBase.__init__(self, cast(str, paths), download, checksum)
         RasterDataset.__init__(
             self, paths, crs, res, transforms=transforms, cache=cache
         )
