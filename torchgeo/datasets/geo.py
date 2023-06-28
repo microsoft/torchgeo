@@ -435,18 +435,20 @@ class RasterDataset(GeoDataset):
 
         filename_glob = filename_glob or self.filename_glob
 
-        filepaths: list[str] = []
+        # using set to remove any duplicates if directories are overlapping
+        filepaths: set[str] = set()
         for dir_or_file in paths:
             if os.path.exists(dir_or_file):
                 if os.path.isdir(dir_or_file):
                     pathname = os.path.join(dir_or_file, "**", filename_glob)
-                    filepaths.extend(glob.iglob(pathname, recursive=True))
+                    filepaths |= set(glob.iglob(pathname, recursive=True))
                 else:
-                    filepaths.append(dir_or_file)
+                    filepaths.add(dir_or_file)
             else:
                 # TODO: Handle remote and virtual files
                 continue
-        return filepaths
+
+        return list(set(filepaths))
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.

@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
+import glob
 import os
 import pickle
 from pathlib import Path
@@ -177,6 +177,26 @@ class TestRasterDataset:
         transforms = nn.Identity()
         cache = request.param[1]
         return Sentinel2(root, bands=bands, transforms=transforms, cache=cache)
+
+    def test_init_with_list_of_files(self) -> None:
+        root = os.path.join("tests", "data", "sentinel2")
+
+        paths = []
+        # Add full path to a specific file
+        pathname = os.path.join(root, "**", "*B04.*")
+        specific_file = next(glob.iglob(pathname, recursive=True))
+        paths.append(specific_file)
+
+        # Also add multiple directories to search
+        paths.extend(
+            [os.path.join(root, p) for p in os.listdir(root) if p.endswith("SAFE")]
+        )
+
+        transforms = nn.Identity()
+        s2 = Sentinel2(
+            paths, bands=["B04", "B03", "B02"], transforms=transforms, cache=False
+        )
+        assert s2.list_files(), "No files were found"
 
     def test_getitem_single_file(self, naip: NAIP) -> None:
         x = naip[naip.bounds]
