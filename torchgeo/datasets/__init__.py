@@ -108,7 +108,7 @@ from .ssl4eo import SSL4EO, SSL4EOL, SSL4EOS12
 from .ssl4eo_benchmark import SSL4EOLBenchmark
 from .sustainbench_crop_yield import SustainBenchCropYield
 from .ucmerced import UCMerced
-from .usavars import USAVars
+from .usavars import USAVars, USAVarsFeatureExtracted
 from .utils import (
     BoundingBox,
     concat_samples,
@@ -218,6 +218,7 @@ __all__ = (
     "TropicalCyclone",
     "UCMerced",
     "USAVars",
+    "USAVarsFeatureExtracted",
     "Vaihingen2D",
     "VHR10",
     "WesternUSALiveFuelMoisture",

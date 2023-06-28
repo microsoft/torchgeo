@@ -33,7 +33,7 @@ from .ssl4eo import SSL4EOLDataModule, SSL4EOS12DataModule
 from .ssl4eo_benchmark import SSL4EOLBenchmarkDataModule
 from .sustainbench_crop_yield import SustainBenchCropYieldDataModule
 from .ucmerced import UCMercedDataModule
-from .usavars import USAVarsDataModule
+from .usavars import USAVarsDataModule, USAVarsFeatureExtractedDataModule
 from .utils import MisconfigurationException
 from .vaihingen import Vaihingen2DDataModule
 from .xview import XView2DataModule
@@ -73,6 +73,7 @@ __all__ = (
     "TropicalCycloneDataModule",
     "UCMercedDataModule",
     "USAVarsDataModule",
+    "USAVarsFeatureExtractedDataModule",
     "Vaihingen2DDataModule",
     "XView2DataModule",
     # Base classes

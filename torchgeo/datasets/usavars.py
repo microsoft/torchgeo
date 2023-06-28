@@ -287,3 +287,121 @@ class USAVars(NonGeoDataset):
             plt.suptitle(suptitle)
 
         return fig
+
+
+class USAVarsFeatureExtracted(NonGeoDataset):
+    """USA Vars Feature Extracted Tabular Dataset."""
+
+    data_url = "{}"
+    csv_file_name = "{}_usa_vars.csv"
+    all_labels = ["treecover", "elevation", "population"]
+    feature_extractors = ["rcf", "resnet18"]
+    valid_splits = ["train", "val", "test"]
+    feature_columns = [str(i) for i in range(512)]
+
+    def __init__(
+        self,
+        root: str = "data",
+        split: str = "train",
+        labels: Sequence[str] = all_labels,
+        feature_extractor: str = "rcf",
+        download: bool = False,
+    ) -> None:
+        """Initialize a new USAVars Feature Extracted dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            split: train/val/test split to load
+            feature_extractor: specify feature extractor that generated features
+                from :class:`~torchgeo.datasets.USAVars`
+            labels: list of labels to include
+            download: if True, download dataset and store it in the root directory
+
+        Raises:
+            AssertionError: if invalid labels are provided
+            ImportError: if pandas is not installed
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
+        """
+        self.root = root
+
+        assert split in self.valid_splits
+        self.split = split
+
+        assert feature_extractor in self.feature_extractors
+        self.feature_extractor = feature_extractor
+
+        for lab in labels:
+            assert lab in self.all_labels
+
+        self.labels = labels
+        self.download = download
+
+        self._verify()
+
+        try:
+            import pandas as pd  # noqa: F401
+        except ImportError:
+            raise ImportError(
+                "pandas is not installed and is required to use this dataset"
+            )
+
+        self.feature_df = pd.read_csv(
+            os.path.join(self.root, self.csv_file_name.format(self.feature_extractor))
+        )
+        self.feature_df = self.feature_df[self.feature_df["split"] == split]
+
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
+        """Return an index within the dataset.
+
+        Args:
+            index: index to return
+
+        Returns:
+            data and label at that index
+        """
+        data_row = self.feature_df.iloc[index]
+        sample = {
+            "features": torch.from_numpy(
+                data_row[self.feature_columns].values.astype(float)
+            ),
+            "labels": torch.from_numpy(data_row[self.labels].values.astype(float)),
+            "centroid_lat": torch.Tensor([data_row["centroid_lat"]]),
+            "centroid_lon": torch.Tensor([data_row["centroid_lon"]]),
+        }
+        return sample
+
+    def __len__(self) -> int:
+        """Return the number of data points in the dataset.
+
+        Returns:
+            length of the dataset
+        """
+        return len(self.feature_df)
+
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
+        # Check if the extracted files already exist
+        csv_pathname = os.path.join(
+            self.root, self.csv_file_name.format(self.feature_extractor)
+        )
+        if os.path.exists(csv_pathname):
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
+
+        self._download()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        download_url(self.data_url.format(self.feature_extractor), self.root)

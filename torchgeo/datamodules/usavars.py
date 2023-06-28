@@ -5,7 +5,7 @@
 
 from typing import Any
 
-from ..datasets import USAVars
+from ..datasets import USAVars, USAVarsFeatureExtracted
 from .geo import NonGeoDataModule
 
 
@@ -29,3 +29,25 @@ class USAVarsDataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.USAVars`.
         """
         super().__init__(USAVars, batch_size, num_workers, **kwargs)
+
+
+class USAVarsFeatureExtractedDataModule(NonGeoDataModule):
+    """LightningDataModule implementation for the USAVars dataset.
+
+    Uses random train/val/test splits.
+
+    .. versionadded:: 0.5
+    """
+
+    def __init__(
+        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+    ) -> None:
+        """Initialize a new USAVarsFeatureExtractedDataModule instance.
+
+        Args:
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.USAVarsFeatureExtracted`.
+        """
+        super().__init__(USAVarsFeatureExtracted, batch_size, num_workers, **kwargs)
