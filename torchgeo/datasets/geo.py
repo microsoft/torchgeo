@@ -9,7 +9,7 @@ import glob
 import os
 import re
 import sys
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from typing import Any, Callable, Optional, Union, cast
 
 import fiona
@@ -426,9 +426,13 @@ class RasterDataset(GeoDataset):
         Args:
             filename_glob: Defaults to self.filename_glob
         """
-        # paths can be single string representing root directory
-        # enforce list
-        paths = list(self.paths)
+        # self.paths can be single string (or pathlike) representing root directory.
+        # Make iterable
+        if isinstance(self.paths, str) or not isinstance(self.paths, Iterable):
+            paths = [self.paths]
+        else:
+            paths = cast(list[str], self.paths)
+
         filename_glob = filename_glob or self.filename_glob
 
         filepaths: list[str] = []
