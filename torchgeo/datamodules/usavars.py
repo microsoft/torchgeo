@@ -32,7 +32,7 @@ class USAVarsDataModule(NonGeoDataModule):
 
 
 class USAVarsFeatureExtractedDataModule(NonGeoDataModule):
-    """LightningDataModule implementation for the USAVars dataset.
+    """LightningDataModule implementation for the USAVarsFeaturesExtracted dataset.
 
     Uses random train/val/test splits.
 

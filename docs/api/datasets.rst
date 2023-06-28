@@ -351,6 +351,11 @@ USAVars
 
 .. autoclass:: USAVars
 
+USAVarsFeatureExtracted
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: USAVarsFeatureExtracted
+
 Vaihingen
 ^^^^^^^^^
 

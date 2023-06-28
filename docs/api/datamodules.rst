@@ -151,6 +151,11 @@ USAVars
 
 .. autoclass:: USAVarsDataModule
 
+USAVarsFeatureExtractedDataModule
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: USAVarsFeatureExtractedDataModule
+
 Vaihingen
 ^^^^^^^^^
 

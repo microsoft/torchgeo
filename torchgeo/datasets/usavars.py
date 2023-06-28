@@ -290,7 +290,32 @@ class USAVars(NonGeoDataset):
 
 
 class USAVarsFeatureExtracted(NonGeoDataset):
-    """USA Vars Feature Extracted Tabular Dataset."""
+    """USA Vars Feature Extracted Tabular Dataset.
+
+    The USAVarsFeatureExtracted dataset is reproduction of the feature extracted
+    dataset version used in the paper "`A
+    generalizable and accessible approach to machine learning with global satellite
+    imagery <https://doi.org/10.1038/s41467-021-24638-z>`_". Two versions of features
+    exist, one based on :class:`~torchgeo.models.RCF` and one on a timm Imagenet
+    pretrained resnet18.
+
+    Dataset format:
+
+    * features of shape 512
+    * labels are singular float values
+
+    Dataset labels:
+
+    * tree cover
+    * elevation
+    * population density
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://doi.org/10.1038/s41467-021-24638-z
+
+    .. versionadded:: 0.5
+    """
 
     data_url = "{}"
     csv_file_name = "{}_usa_vars.csv"
@@ -313,7 +338,7 @@ class USAVarsFeatureExtracted(NonGeoDataset):
             root: root directory where dataset can be found
             split: train/val/test split to load
             feature_extractor: specify feature extractor that generated features
-                from :class:`~torchgeo.datasets.USAVars`
+                from :class:`~torchgeo.datasets.USAVars` one of ["rcf", "resnet18"]
             labels: list of labels to include
             download: if True, download dataset and store it in the root directory
 
