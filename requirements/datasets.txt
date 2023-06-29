@@ -2,7 +2,7 @@
 h5py==3.9.0
 laspy==2.4.1
 opencv-python==4.7.0.72
-pandas==2.0.2
+pandas==2.0.3
 pycocotools==2.0.6
 pyvista==0.39.1
 radiant-mlhub==0.4.1
