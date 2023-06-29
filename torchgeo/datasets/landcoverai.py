@@ -71,7 +71,10 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
     }
 
     def __init__(
-        self, root: str = "data", download: bool = False, checksum: bool = False
+        self,
+        root: Union[str, list[str]] = "data",
+        download: bool = False,
+        checksum: bool = False,
     ) -> None:
         """Initialize a new LandCover.ai dataset instance.
 
@@ -87,6 +90,10 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
+        if isinstance(root, list):
+            # TODO: Workaround until list are fully implemented
+            root = root[0]
+
         self.root = root
         self.download = download
         self.checksum = checksum
@@ -238,7 +245,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
            RuntimeError: if ``download=False`` and data is not found, or checksums
                don't match
         """
-        LandCoverAIBase.__init__(self, cast(str, paths), download, checksum)
+        LandCoverAIBase.__init__(self, paths, download, checksum)
         RasterDataset.__init__(
             self, paths, crs, res, transforms=transforms, cache=cache
         )
