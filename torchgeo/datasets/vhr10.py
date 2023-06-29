@@ -45,10 +45,7 @@ def convert_coco_poly_to_mask(
         mask = torch.as_tensor(mask, dtype=torch.uint8)
         mask = mask.any(dim=2)
         masks.append(mask)
-    if masks:
-        masks_tensor = torch.stack(masks, dim=0)
-    else:
-        masks_tensor = torch.zeros((0, height, width), dtype=torch.uint8)
+    masks_tensor = torch.stack(masks, dim=0)
     return masks_tensor
 
 

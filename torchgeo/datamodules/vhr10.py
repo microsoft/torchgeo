@@ -17,8 +17,6 @@ from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
-# kornia DataKeys must accept MASKS
-
 
 class _AugPipe(Module):
     """Pipeline for applying augmentations sequentially on select data keys."""
