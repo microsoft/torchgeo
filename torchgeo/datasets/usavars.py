@@ -317,7 +317,7 @@ class USAVarsFeatureExtracted(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    data_url = "https://huggingface.co/datasets/torchgeo/eurosat/resolve/main/{}"
+    data_url = "https://huggingface.co/datasets/torchgeo/USAVars/resolve/main/{}"
     csv_file_name = "{}_usa_vars.csv"
     all_labels = ["treecover", "elevation", "population"]
     feature_extractors = ["rcf", "resnet18"]
