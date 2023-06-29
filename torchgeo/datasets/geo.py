@@ -464,10 +464,14 @@ class RasterDataset(GeoDataset):
             set of paths pointing to files
 
         Raises:
-            NotImplementedError: if this method is not overridden by children
+            RuntimeError: if the path is not found locally,
+                or this method is not overridden by child
         """
-        raise NotImplementedError(
-            "Path was not found locally. If this is a remote file or archive "
+        raise RuntimeError(
+            f"Dataset not found in `{path}` "
+            "either specify a different `root` directory or make sure you "
+            "have manually downloaded the dataset as instructed in the documentation."
+            "If this is a remote file or archive "
             "please override this method and return the filepath(s) as a set."
         )
 
