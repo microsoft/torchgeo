@@ -445,10 +445,31 @@ class RasterDataset(GeoDataset):
                 else:
                     filepaths.add(dir_or_file)
             else:
-                # TODO: Handle remote and virtual files
-                continue
+                filepaths |= self.handle_nonlocal_path(dir_or_file)
 
         return list(set(filepaths))
+
+    def handle_nonlocal_path(self, path: str) -> set[str]:
+        """Override this method if your path can not be interpreded by os module.
+
+        See docs for Advanced Datasets
+            https://rasterio.readthedocs.io/en/stable/topics/datasets.html
+        `fiona.listdir` can be used to list files in such directories:
+            https://fiona.readthedocs.io/en/stable/fiona.html#fiona.io.MemoryFile.listdir
+
+        Args:
+            path: directory, cloud storage blob or archive to be listed
+
+        Returns:
+            set of paths pointing to files
+
+        Raises:
+            NotImplementedError: if this method is not overridden by children
+        """
+        raise NotImplementedError(
+            "Path was not found locally. If this is a remote file or archive "
+            "please override this method and return the filepath(s) as a set."
+        )
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
