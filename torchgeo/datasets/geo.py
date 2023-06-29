@@ -439,18 +439,18 @@ class RasterDataset(GeoDataset):
         filepaths: set[str] = set()
         for dir_or_file in paths:
             if os.path.exists(dir_or_file):
-                if os.path.isdir(dir_or_file):
+                if os.path.isfile(dir_or_file):
+                    filepaths.add(dir_or_file)
+                else:
                     pathname = os.path.join(dir_or_file, "**", filename_glob)
                     filepaths |= set(glob.iglob(pathname, recursive=True))
-                else:
-                    filepaths.add(dir_or_file)
             else:
                 filepaths |= self.handle_nonlocal_path(dir_or_file)
 
-        return list(set(filepaths))
+        return list(filepaths)
 
     def handle_nonlocal_path(self, path: str) -> set[str]:
-        """Override this method if your path can not be interpreded by os module.
+        """Override this method if your path can not be interpreted by os module.
 
         See docs for Advanced Datasets
             https://rasterio.readthedocs.io/en/stable/topics/datasets.html
