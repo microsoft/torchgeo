@@ -48,6 +48,8 @@ class AugmentationSequential(Module):
                 keys.append("input")
             elif key == "boxes":
                 keys.append("bbox")
+            elif key == "masks":
+                keys.append("mask")
             else:
                 keys.append(key)
 
