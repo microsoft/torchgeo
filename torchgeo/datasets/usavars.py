@@ -387,7 +387,7 @@ class USAVarsFeatureExtracted(NonGeoDataset):
         """
         data_row = self.feature_df.iloc[index]
         sample = {
-            "features": torch.from_numpy(
+            "image": torch.from_numpy(
                 data_row[self.feature_columns].values.astype(float)
             ),
             "labels": torch.from_numpy(data_row[self.labels].values.astype(float)),
