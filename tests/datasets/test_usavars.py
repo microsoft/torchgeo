@@ -201,9 +201,9 @@ class TestUSAVarsFeatureExtracted:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["features"], torch.Tensor)
-        assert x["features"].ndim == 1
+        assert x["image"].ndim == 1
         assert len(x.keys()) == 4  # features, labels, centroid_lat, centroid_lon
-        assert x["features"].shape[0] == 512  # 512 features
+        assert x["image"].shape[0] == 512  # 512 features
         assert len(dataset.labels) == len(x["labels"])
         assert len(x["centroid_lat"]) == 1
         assert len(x["centroid_lon"]) == 1
