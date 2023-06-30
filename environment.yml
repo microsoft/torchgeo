@@ -45,7 +45,7 @@ dependencies:
     - scikit-image>=0.18
     - scipy>=1.6.2
     - segmentation-models-pytorch>=0.2
-    - setuptools>=42
+    - setuptools>=61
     - sphinx>=4,<6
     - tensorboard>=2.9.1
     - timm>=0.4.12
