@@ -200,7 +200,7 @@ class TestUSAVarsFeatureExtracted:
     def test_getitem(self, dataset: USAVars) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x["features"], torch.Tensor)
+        assert isinstance(x["image"], torch.Tensor)
         assert x["image"].ndim == 1
         assert len(x.keys()) == 4  # features, labels, centroid_lat, centroid_lon
         assert x["image"].shape[0] == 512  # 512 features
