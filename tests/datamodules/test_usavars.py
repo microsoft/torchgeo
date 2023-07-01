@@ -71,7 +71,7 @@ class TestUSAVarsFeatureExtractedDataModule:
         datamodule.setup("fit")
         assert len(datamodule.train_dataloader()) == 3
         batch = next(iter(datamodule.train_dataloader()))
-        assert batch["features"].shape[0] == datamodule.batch_size
+        assert batch["image"].shape[0] == datamodule.batch_size
 
     def test_val_dataloader(
         self, datamodule: USAVarsFeatureExtractedDataModule
@@ -79,7 +79,7 @@ class TestUSAVarsFeatureExtractedDataModule:
         datamodule.setup("validate")
         assert len(datamodule.val_dataloader()) == 3
         batch = next(iter(datamodule.val_dataloader()))
-        assert batch["features"].shape[0] == datamodule.batch_size
+        assert batch["image"].shape[0] == datamodule.batch_size
 
     def test_test_dataloader(
         self, datamodule: USAVarsFeatureExtractedDataModule
@@ -87,4 +87,4 @@ class TestUSAVarsFeatureExtractedDataModule:
         datamodule.setup("test")
         assert len(datamodule.test_dataloader()) == 3
         batch = next(iter(datamodule.test_dataloader()))
-        assert batch["features"].shape[0] == datamodule.batch_size
+        assert batch["image"].shape[0] == datamodule.batch_size
