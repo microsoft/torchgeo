@@ -32,7 +32,7 @@ class TestAgriFieldNet:
         assert isinstance(x["mask"], torch.Tensor)
 
     def test_len(self, dataset: AgriFieldNet) -> None:
-        assert len(dataset) == 1165
+        assert len(dataset) == 3
 
     def test_extract(self, tmp_path: Path) -> None:
         root = os.path.join("tests", "data", "agrifieldnet")
