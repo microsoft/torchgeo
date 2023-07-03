@@ -3,6 +3,7 @@
 
 """TorchGeo datamodules."""
 
+from .agrifieldnet import AgriFieldNetDataModule
 from .bigearthnet import BigEarthNetDataModule
 from .chesapeake import ChesapeakeCVPRDataModule
 from .cowc import COWCCountingDataModule
@@ -45,6 +46,7 @@ __all__ = (
     "L8BiomeDataModule",
     "NAIPChesapeakeDataModule",
     # NonGeoDataset
+    "AgriFieldNetDataModule",
     "BigEarthNetDataModule",
     "COWCCountingDataModule",
     "DeepGlobeLandCoverDataModule",

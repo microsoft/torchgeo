@@ -5,6 +5,7 @@
 
 from .advance import ADVANCE
 from .agb_live_woody_density import AbovegroundLiveWoodyBiomassDensity
+from .agrifieldnet import AgriFieldNet
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
@@ -169,6 +170,7 @@ __all__ = (
     "Sentinel2",
     # NonGeoDataset
     "ADVANCE",
+    "AgriFieldNet",
     "BeninSmallHolderCashews",
     "BigEarthNet",
     "CloudCoverDetection",
