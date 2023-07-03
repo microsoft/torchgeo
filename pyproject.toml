@@ -52,7 +52,7 @@ dependencies = [
     # numpy 1.19.3+ required by Python 3.9 wheels
     "numpy>=1.19.3,<2",
     # pillow 8+ required for Python 3.9 wheels
-    "pillow>=8,<10",
+    "pillow>=8,<11",
     # pyproj 3+ required for Python 3.9 wheels
     "pyproj>=3,<4",
     # rasterio 1.2+ required for Python 3.9 wheels
