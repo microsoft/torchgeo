@@ -3,7 +3,6 @@
 
 """AgriFieldNet India Challenge dataset."""
 
-import getpass
 import glob
 import os
 from typing import Callable, Optional
@@ -13,11 +12,10 @@ import numpy as np
 import rasterio
 import torch
 from matplotlib.figure import Figure
-from radiant_mlhub import Dataset
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, extract_archive
+from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
 
 
 class AgriFieldNet(NonGeoDataset):
@@ -75,6 +73,11 @@ class AgriFieldNet(NonGeoDataset):
     filename = "ref_agrifieldnet_competition_v1.tar.gz"
     md5 = "85055da1e7eb69fa4b3d925ee1450a74"
     splits = ["train", "test"]
+    collections = [
+        "ref_agrifieldnet_competition_v1_source",
+        "ref_agrifieldnet_competition_v1_labels_train",
+        "ref_agrifieldnet_competition_v1_labels_test",
+    ]
 
     # missing class corresponding values
     classes = [
@@ -117,6 +120,8 @@ class AgriFieldNet(NonGeoDataset):
         root: str = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        download: bool = False,
+        api_key: Optional[str] = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new AgriFieldNet dataset instance.
@@ -126,15 +131,21 @@ class AgriFieldNet(NonGeoDataset):
             split: one of "train" or "test"
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
+            download: if True, download dataset and store it in the root directory
+            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
         assert split in self.splits
         self.root = root
         self.split = split
         self.transforms = transforms
+        self.download = download
         self.checksum = checksum
 
         self._verify()
+
+        if download:
+            self._download(api_key)
 
         # if split == "train":
         #     split_folder = f"{self.data_root}_labels_train"
@@ -194,24 +205,12 @@ class AgriFieldNet(NonGeoDataset):
             "Dataset not found in `root`, either specify a different"
             + " `root` directory or manually download the dataset to this directory."
         )
-        # Download the dataset
-        self._download()
-        self._extract()
 
-    def _download(self) -> None:
-        """Download the dataset."""
-        os.environ["MLHUB_API_KEY"] = getpass.getpass(prompt="MLHub API Key: ")
-        dataset = Dataset.fetch(self.data_root)
+    def _download(self, api_key: Optional[str] = None) -> None:
+        """Download the dataset and extract it."""
+        for collection in self.collections:
+            download_radiant_mlhub_collection(collection, self.root, api_key)
 
-        my_filter = dict(
-            ref_agrifieldnet_competition_v1_labels_train=self.assets,
-            ref_agrifieldnet_competition_v1_labels_test=[self.assets[0]],
-            ref_agrifieldnet_competition_v1_source=self.all_bands,
-        )
-        dataset.download(collection_filter=my_filter)
-
-    def _extract(self) -> None:
-        """Extract the dataset."""
         pathname = os.path.join(self.root, "*.tar.gz")
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)
