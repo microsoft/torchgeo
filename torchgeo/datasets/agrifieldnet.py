@@ -70,31 +70,20 @@ class AgriFieldNet(NonGeoDataset):
 
     """
 
-    filename = "ref_agrifieldnet_competition_v1.tar.gz"
-    md5 = "85055da1e7eb69fa4b3d925ee1450a74"
-    splits = ["train", "test"]
+    # filename = "ref_agrifieldnet_competition_v1.tar.gz"
+    # md5 = "85055da1e7eb69fa4b3d925ee1450a74"
+    # splits = ["train", "test"]
+
     collections = [
         "ref_agrifieldnet_competition_v1_source",
         "ref_agrifieldnet_competition_v1_labels_train",
         "ref_agrifieldnet_competition_v1_labels_test",
     ]
 
-    # missing class corresponding values
-    classes = [
-        "Wheat",
-        "Mustard",
-        "Lentil",
-        "No Crop/Fallow",
-        "Green pea",
-        "Sugarcane",
-        "Garlic",
-        "Maize",
-        "Gram",
-        "Coriander",
-        "Potato",
-        "Bersem",
-        "Rice",
-    ]
+    image_meta = {
+        "filename": "ref_agrifieldnet_competition_v1.tar.gz",
+        "md5": "85055da1e7eb69fa4b3d925ee1450a74",
+    }
 
     rgb_bands = ["B04", "B03", "B02"]
     all_bands = [
@@ -118,7 +107,6 @@ class AgriFieldNet(NonGeoDataset):
     def __init__(
         self,
         root: str = "data",
-        split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
@@ -128,16 +116,15 @@ class AgriFieldNet(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            split: one of "train" or "test"
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
-        assert split in self.splits
+        # assert split in self.splits
         self.root = root
-        self.split = split
+        # self.split = split
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
@@ -147,37 +134,28 @@ class AgriFieldNet(NonGeoDataset):
         if download:
             self._download(api_key)
 
+        train_folder_ids, test_folder_ids = self.get_splits()
         # if split == "train":
         #     split_folder = f"{self.data_root}_labels_train"
         # else:
         #     split_folder = f"{self.data_root}_labels_test"
 
-        source_collection = f"{self.data_root}_source"
-        train_label = f"{self.data_root}_labels_train"
-
-        train_folder_ids = []
-        for dir in os.walk(
-            os.path.join(".", root, self.data_root, train_label), topdown=True
-        ):
-            train_folder_ids.append(dir[0][-5:])
-
-        train_folder_ids = train_folder_ids[1:]
-
-        self.train_field_fns = [
-            os.path.join(
-                root, self.data_root, train_label, f"{train_label}_{i}", "field_ids.tif"
-            )
-            for i in train_folder_ids
-        ]
         self.image_fns = [
             os.path.join(
-                root, self.data_root, source_collection, f"{source_collection}_{i}"
+                root,
+                "ref_agrifieldnet_competition_v1",
+                "ref_agrifieldnet_competition_v1_source",
+                f"ref_agrifieldnet_competition_v1_source_{i}"
             )
             for i in train_folder_ids
         ]
 
         self.mask_fns = [
-            os.path.join(root, self.data_root, train_label, f"{train_label}_{i}")
+            os.path.join(
+                root,
+                "ref_agrifieldnet_competition_v1",
+                "ref_agrifieldnet_competition_v1_labels_train",
+                f"ref_agrifieldnet_competition_v1_labels_train_{i}")
             for i in train_folder_ids
         ]
 
@@ -192,10 +170,10 @@ class AgriFieldNet(NonGeoDataset):
             return
 
         # Check if .zip file already exists (if so extract)
-        filepath = os.path.join(self.root, self.filename)
+        filepath = os.path.join(self.root, self.image_meta["filename"])
 
         if os.path.isfile(filepath):
-            if self.checksum and not check_integrity(filepath, self.md5):
+            if self.checksum and not check_integrity(filepath, self.image_meta["md5"]):
                 raise RuntimeError("Dataset found, but corrupted.")
             extract_archive(filepath)
             return
@@ -206,14 +184,71 @@ class AgriFieldNet(NonGeoDataset):
             + " `root` directory or manually download the dataset to this directory."
         )
 
+    def get_splits(self) -> tuple[list[int], list[int]]:
+        """Get the field_ids for the train/test splits from the dataset directory.
+
+        Returns:
+            list of training field_ids and list of testing field_ids
+        """
+        source_collection = f"{self.data_root}_source"
+        train_label = f"{self.data_root}_labels_train"
+        test_label = f"{self.data_root}_labels_test"
+
+        train_field_ids = []
+        for dir in os.walk(
+            os.path.join(".", self.root, self.data_root, train_label), topdown=True
+        ):
+            train_field_ids.append(dir[0][-5:])
+        train_field_ids = train_field_ids[1:]
+
+        test_field_ids = []
+        for dir in os.walk(
+            os.path.join(".", self.root, self.data_root, test_label), topdown=True
+        ):
+            test_field_ids.append(dir[0][-5:])
+        test_field_ids = test_field_ids[1:]
+
+        # self.train_field_fns = [
+        #     os.path.join(
+        #         self.root, self.data_root, train_label, f"{train_label}_{i}", "field_ids.tif"
+        #     )
+        #     for i in train_field_ids
+        # ]
+
+        return train_field_ids, test_field_ids
+
+
     def _download(self, api_key: Optional[str] = None) -> None:
         """Download the dataset and extract it."""
+        if self._check_integrity():
+            print("Files already downloaded and verified")
+            return
+
         for collection in self.collections:
             download_radiant_mlhub_collection(collection, self.root, api_key)
 
         pathname = os.path.join(self.root, "*.tar.gz")
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)
+
+    def _check_integrity(self) -> bool:
+        """Check integrity of dataset.
+
+        Returns:
+            True if dataset files are found and/or MD5s match, else False
+        """
+        images: bool = check_integrity(
+            os.path.join(self.root, self.image_meta["filename"]),
+            self.image_meta["md5"] if self.checksum else None,
+        )
+
+        # targets: bool = check_integrity(
+        #     os.path.join(self.root, self.target_meta["filename"]),
+        #     self.target_meta["md5"] if self.checksum else None,
+        # )
+
+        # return images and targets
+        return images
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.
@@ -307,25 +342,26 @@ class AgriFieldNet(NonGeoDataset):
 
         num_panels = 2
 
-        showing_predictions = "prediction" in sample
-        if showing_predictions:
+        if "prediction" in sample:
             predictions = sample["prediction"].numpy().astype("uint8").squeeze()
             num_panels += 1
 
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 10, 10))
+
         axs[0].imshow(image)
         axs[0].axis("off")
         axs[1].imshow(mask)
         axs[1].axis("off")
-        if show_titles:
-            axs[0].set_title("Image")
-            axs[1].set_title("Mask")
 
-        if showing_predictions:
+        if "prediction" in sample:
             axs[2].imshow(predictions)
             axs[2].axis("off")
             if show_titles:
                 axs[2].set_title("Predictions")
+
+        if show_titles:
+            axs[0].set_title("Image")
+            axs[1].set_title("Mask")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
