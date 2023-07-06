@@ -175,7 +175,7 @@ class SemanticSegmentationTask(LightningModule):
                 MulticlassAccuracy(
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
-                    mdmc_average="global",
+                    multidim_average="global",
                     average="micro",
                 ),
                 MulticlassJaccardIndex(
