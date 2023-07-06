@@ -12,6 +12,7 @@ import torchvision.models.detection
 from lightning.pytorch import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models import resnet as R
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
@@ -187,7 +188,7 @@ class ObjectDetectionTask(LightningModule):
 
         self.config_task()
 
-        metrics = MeanAveragePrecision()
+        metrics = MetricCollection([MeanAveragePrecision()])
         self.val_metrics = metrics.clone(prefix="val_")
         self.test_metrics = metrics.clone(prefix="test_")
 
