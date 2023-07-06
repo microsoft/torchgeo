@@ -273,10 +273,12 @@ class ObjectDetectionTask(LightningModule):
     def on_validation_epoch_end(self) -> None:
         """Logs epoch level validation metrics."""
         metrics = self.val_metrics.compute()
-        print(metrics)
         renamed_metrics = {f"val_{i}": metrics[i] for i in metrics.keys()}
-        print(renamed_metrics)
-        self.log_dict(metrics)
+
+        # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
+        renamed_metrics.pop("classes", None)
+
+        self.log_dict(renamed_metrics)
         self.val_metrics.reset()
 
     def test_step(self, *args: Any, **kwargs: Any) -> None:
@@ -300,6 +302,10 @@ class ObjectDetectionTask(LightningModule):
         """Logs epoch level test metrics."""
         metrics = self.test_metrics.compute()
         renamed_metrics = {f"test_{i}": metrics[i] for i in metrics.keys()}
+
+        # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
+        renamed_metrics.pop("classes", None)
+
         self.log_dict(renamed_metrics)
         self.test_metrics.reset()
 
