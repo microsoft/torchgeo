@@ -273,8 +273,10 @@ class ObjectDetectionTask(LightningModule):
     def on_validation_epoch_end(self) -> None:
         """Logs epoch level validation metrics."""
         metrics = self.val_metrics.compute()
+        print(metrics)
         renamed_metrics = {f"val_{i}": metrics[i] for i in metrics.keys()}
-        self.log_dict(renamed_metrics)
+        print(renamed_metrics)
+        self.log_dict(metrics)
         self.val_metrics.reset()
 
     def test_step(self, *args: Any, **kwargs: Any) -> None:
