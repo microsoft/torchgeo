@@ -277,7 +277,7 @@ class ObjectDetectionTask(LightningModule):
         metrics = self.val_metrics.compute()
 
         # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
-        metrics.pop("classes", None)
+        metrics.pop("val_classes", None)
 
         self.log_dict(metrics)
         self.val_metrics.reset()
@@ -304,7 +304,7 @@ class ObjectDetectionTask(LightningModule):
         metrics = self.test_metrics.compute()
 
         # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
-        metrics.pop("classes", None)
+        metrics.pop("test_classes", None)
 
         self.log_dict(metrics)
         self.test_metrics.reset()
