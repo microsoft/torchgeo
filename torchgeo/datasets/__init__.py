@@ -82,6 +82,7 @@ from .patternnet import PatternNet
 from .potsdam import Potsdam2D
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
+from .seasonet import SeasoNet
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel1, Sentinel2
@@ -199,6 +200,7 @@ __all__ = (
     "RESISC45",
     "ReforesTree",
     "SeasonalContrastS2",
+    "SeasoNet",
     "SEN12MS",
     "SKIPPD",
     "So2Sat",
