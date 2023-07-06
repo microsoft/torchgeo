@@ -187,8 +187,9 @@ class ObjectDetectionTask(LightningModule):
 
         self.config_task()
 
-        self.val_metrics = MeanAveragePrecision()
-        self.test_metrics = MeanAveragePrecision()
+        metrics = MeanAveragePrecision()
+        self.val_metrics = metrics.clone(prefix="val_")
+        self.test_metrics = metrics.clone(prefix="test_")
 
     def forward(self, *args: Any, **kwargs: Any) -> Any:
         """Forward pass of the model.
@@ -273,12 +274,11 @@ class ObjectDetectionTask(LightningModule):
     def on_validation_epoch_end(self) -> None:
         """Logs epoch level validation metrics."""
         metrics = self.val_metrics.compute()
-        renamed_metrics = {f"val_{i}": metrics[i] for i in metrics.keys()}
 
         # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
-        renamed_metrics.pop("classes", None)
+        metrics.pop("classes", None)
 
-        self.log_dict(renamed_metrics)
+        self.log_dict(metrics)
         self.val_metrics.reset()
 
     def test_step(self, *args: Any, **kwargs: Any) -> None:
@@ -301,12 +301,11 @@ class ObjectDetectionTask(LightningModule):
     def on_test_epoch_end(self) -> None:
         """Logs epoch level test metrics."""
         metrics = self.test_metrics.compute()
-        renamed_metrics = {f"test_{i}": metrics[i] for i in metrics.keys()}
 
         # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
-        renamed_metrics.pop("classes", None)
+        metrics.pop("classes", None)
 
-        self.log_dict(renamed_metrics)
+        self.log_dict(metrics)
         self.test_metrics.reset()
 
     def predict_step(self, *args: Any, **kwargs: Any) -> list[dict[str, Tensor]]:
