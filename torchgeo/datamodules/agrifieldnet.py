@@ -15,6 +15,8 @@ class AgriFieldNetDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the AgriFieldNet dataset.
 
     Uses the train/test splits from the dataset.
+
+    .. versionadded:: 0.5
     """
 
     def __init__(

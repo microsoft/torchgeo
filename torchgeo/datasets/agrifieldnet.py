@@ -65,13 +65,11 @@ class AgriFieldNet(NonGeoDataset):
     36 - Rice
 
     If you use this dataset in your research, please cite the following dataset:
-        Radiant Earth Foundation & IDinsight (2022) AgriFieldNet Competition Dataset,
-        Version 1.0, Radiant MLHub. https://doi.org/10.34911/rdnt.wu92p1
+        * https://doi.org/10.34911/rdnt.wu92p1
 
+    .. versionadded:: 0.5
     """
 
-    # filename = "ref_agrifieldnet_competition_v1.tar.gz"
-    # md5 = "85055da1e7eb69fa4b3d925ee1450a74"
     # splits = ["train", "test"]
 
     collections = [
@@ -86,7 +84,7 @@ class AgriFieldNet(NonGeoDataset):
     }
 
     rgb_bands = ["B04", "B03", "B02"]
-    all_bands = [
+    all_bands = (
         "B01",
         "B02",
         "B03",
@@ -99,7 +97,7 @@ class AgriFieldNet(NonGeoDataset):
         "B09",
         "B11",
         "B12",
-    ]
+    )
 
     data_root = "ref_agrifieldnet_competition_v1"
     assets = ["field_ids", "raster_labels"]
@@ -107,6 +105,7 @@ class AgriFieldNet(NonGeoDataset):
     def __init__(
         self,
         root: str = "data",
+        bands: tuple[str, ...] = all_bands,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
@@ -116,73 +115,99 @@ class AgriFieldNet(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
+            bands: the subset of bands to load
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
-        # assert split in self.splits
+        self._validate_bands(bands)
+
         self.root = root
-        # self.split = split
+        self.bands = bands
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
 
-        self._verify()
-
         if download:
             self._download(api_key)
 
-        train_folder_ids, test_folder_ids = self.get_splits()
-        # if split == "train":
-        #     split_folder = f"{self.data_root}_labels_train"
-        # else:
-        #     split_folder = f"{self.data_root}_labels_test"
+        if not self._check_integrity():
+            raise RuntimeError(
+                "Dataset not found or corrupted. "
+                + "You can use download=True to download it"
+            )
 
-        self.image_fns = [
+        self.source_tiles: list[str]
+        self.train_tiles: list[str]
+        self.test_tiles: list[str]
+
+        self.source_tiles, self.train_tiles, self.test_tiles = self.get_tiles()
+
+        self.source_image_fns = [
             os.path.join(
                 root,
                 "ref_agrifieldnet_competition_v1",
                 "ref_agrifieldnet_competition_v1_source",
-                f"ref_agrifieldnet_competition_v1_source_{i}"
+                "ref_agrifieldnet_competition_v1_source_" + tile,
             )
-            for i in train_folder_ids
+            for tile in self.source_tiles
         ]
 
-        self.mask_fns = [
+        self.train_label_fns = [
             os.path.join(
                 root,
                 "ref_agrifieldnet_competition_v1",
                 "ref_agrifieldnet_competition_v1_labels_train",
-                f"ref_agrifieldnet_competition_v1_labels_train_{i}")
-            for i in train_folder_ids
+                "ref_agrifieldnet_competition_v1_labels_train_" + tile,
+            )
+            for tile in self.train_tiles
         ]
 
-    def _verify(self) -> None:
-        """Verify the integrity of the dataset.
+        self.test_image_fns = [
+            os.path.join(
+                root,
+                "ref_agrifieldnet_competition_v1",
+                "ref_agrifieldnet_competition_v1_labels_test",
+                "ref_agrifieldnet_competition_v1_labels_test_" + tile,
+            )
+            for tile in self.test_tiles
+        ]
 
-        Raises:
-            RuntimeError: if checksum fails or the dataset is not downloaded
+    def get_tiles(self) -> tuple[list[str], list[str], list[str]]:
+        """Get the tile names from the dataset directory.
+
+        Returns:
+            list of source, training, and testing tile names
         """
-        # Check if the files already exist
-        if os.path.exists(os.path.join(self.root, self.data_root)):
-            return
+        source_collection = "ref_agrifieldnet_competition_v1_source"
+        train_label = "ref_agrifieldnet_competition_v1_labels_train"
+        test_label = "ref_agrifieldnet_competition_v1_labels_test"
 
-        # Check if .zip file already exists (if so extract)
-        filepath = os.path.join(self.root, self.image_meta["filename"])
+        source_tiles = []
+        for dir in os.walk(
+            os.path.join(".", self.root, self.data_root, source_collection),
+            topdown=True,
+        ):
+            source_tiles.append(dir[0][-5:])
+        source_tiles = source_tiles[1:]
 
-        if os.path.isfile(filepath):
-            if self.checksum and not check_integrity(filepath, self.image_meta["md5"]):
-                raise RuntimeError("Dataset found, but corrupted.")
-            extract_archive(filepath)
-            return
+        train_tiles = []
+        for dir in os.walk(
+            os.path.join(".", self.root, self.data_root, train_label), topdown=True
+        ):
+            train_tiles.append(dir[0][-5:])
+        train_tiles = train_tiles[1:]
 
-        # Check if the user requested to download the dataset
-        raise RuntimeError(
-            "Dataset not found in `root`, either specify a different"
-            + " `root` directory or manually download the dataset to this directory."
-        )
+        test_tiles = []
+        for dir in os.walk(
+            os.path.join(".", self.root, self.data_root, test_label), topdown=True
+        ):
+            test_tiles.append(dir[0][-5:])
+        test_tiles = test_tiles[1:]
+
+        return (source_tiles, train_tiles, test_tiles)
 
     def get_splits(self) -> tuple[list[int], list[int]]:
         """Get the field_ids for the train/test splits from the dataset directory.
@@ -190,36 +215,42 @@ class AgriFieldNet(NonGeoDataset):
         Returns:
             list of training field_ids and list of testing field_ids
         """
-        source_collection = f"{self.data_root}_source"
-        train_label = f"{self.data_root}_labels_train"
-        test_label = f"{self.data_root}_labels_test"
-
         train_field_ids = []
-        for dir in os.walk(
-            os.path.join(".", self.root, self.data_root, train_label), topdown=True
-        ):
-            train_field_ids.append(dir[0][-5:])
-        train_field_ids = train_field_ids[1:]
-
         test_field_ids = []
-        for dir in os.walk(
-            os.path.join(".", self.root, self.data_root, test_label), topdown=True
-        ):
-            test_field_ids.append(dir[0][-5:])
-        test_field_ids = test_field_ids[1:]
 
-        # self.train_field_fns = [
-        #     os.path.join(
-        #         self.root, self.data_root, train_label, f"{train_label}_{i}", "field_ids.tif"
-        #     )
-        #     for i in train_field_ids
-        # ]
+        for tile_name in self.train_tiles:
+            directory = os.path.join(
+                self.root,
+                "ref_agrifieldnet_competition_v1",
+                "ref_agrifieldnet_competition_v1_labels_train",
+                "ref_agrifieldnet_competition_v1_labels_train_" + tile_name,
+            )
+
+            array = rasterio.open(os.path.join(directory, "field_ids.tif")).read(1)
+            train_field_ids.extend(np.unique(array))
+
+        for tile_name in self.test_tiles:
+            directory = os.path.join(
+                self.root,
+                "ref_agrifieldnet_competition_v1",
+                "ref_agrifieldnet_competition_v1_labels_test",
+                "ref_agrifieldnet_competition_v1_labels_test_" + tile_name,
+            )
+
+            array = rasterio.open(os.path.join(directory, "field_ids.tif")).read(1)
+            test_field_ids.extend(np.unique(array))
 
         return train_field_ids, test_field_ids
 
-
     def _download(self, api_key: Optional[str] = None) -> None:
-        """Download the dataset and extract it."""
+        """Download the dataset and extract it.
+
+        Args:
+            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
+
+        Raises:
+            RuntimeError: if download doesn't work correctly or checksums don't match
+        """
         if self._check_integrity():
             print("Files already downloaded and verified")
             return
@@ -256,7 +287,22 @@ class AgriFieldNet(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        return len(self.image_fns)
+        return len(self.source_image_fns)
+
+    def _validate_bands(self, bands: tuple[str, ...]) -> None:
+        """Validate list of bands.
+
+        Args:
+            bands: user-provided tuple of bands to load
+
+        Raises:
+            AssertionError: if ``bands`` is not a tuple
+            ValueError: if an invalid band name is provided
+        """
+        assert isinstance(bands, tuple), "The list of bands must be a tuple"
+        for band in bands:
+            if band not in self.all_bands:
+                raise ValueError(f"'{band}' is an invalid band name.")
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -267,16 +313,20 @@ class AgriFieldNet(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        image = self._load_image(index)
-        mask = self._load_target(index)
-        sample = {"image": image, "mask": mask}
+        tile_name = self.source_tiles[index]
+        image = self._load_image_tile(tile_name)
+        labels, field_ids = self._load_label_tile(tile_name)
+
+        sample = {"image": image, "mask": labels, "field_ids": field_ids}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
 
         return sample
 
-    def _load_image(self, index: int) -> Tensor:
+    def _load_image_tile(
+        self, tile_name: str, bands: tuple[str, ...] = all_bands
+    ) -> Tensor:
         """Load a single image.
 
         Args:
@@ -285,7 +335,14 @@ class AgriFieldNet(NonGeoDataset):
         Returns:
             the image
         """
-        path = self.image_fns[index]
+        assert tile_name in self.source_tiles
+
+        path = os.path.join(
+            self.root,
+            "ref_agrifieldnet_competition_v1",
+            "ref_agrifieldnet_competition_v1_source",
+            "ref_agrifieldnet_competition_v1_source_" + tile_name,
+        )
 
         bands_src = [
             rasterio.open(os.path.join(path, f"{band}.tif")).read(1)
@@ -293,22 +350,37 @@ class AgriFieldNet(NonGeoDataset):
         ]
         img_tile = np.stack(bands_src)
         tensor = torch.from_numpy(img_tile)
+
         return tensor
 
-    def _load_target(self, index: int) -> Tensor:
-        """Load the target mask for a single image.
+    def _load_label_tile(self, tile_name: str) -> tuple[Tensor, Tensor]:
+        """Load a single _tile_ of labels and field_ids.
 
         Args:
-            index: index to return
+            tile_name: name of tile to load
 
         Returns:
-            the target mask
-        """
-        path = self.mask_fns[index]
+            tuple of labels and field ids
 
-        mask_src = rasterio.open(os.path.join(path, "raster_labels.tif")).read(1)
-        tensor = torch.from_numpy(mask_src.astype(np.uint8))
-        return tensor
+        Raises:
+            AssertionError: if ``tile_name`` is invalid
+        """
+        assert tile_name in self.train_tiles
+
+        directory = os.path.join(
+            self.root,
+            "ref_agrifieldnet_competition_v1",
+            "ref_agrifieldnet_competition_v1_labels_train",
+            "ref_agrifieldnet_competition_v1_labels_train_" + tile_name,
+        )
+
+        array = rasterio.open(os.path.join(directory, "raster_labels.tif")).read(1)
+        labels = torch.from_numpy(array.astype(np.uint8))
+
+        array = rasterio.open(os.path.join(directory, "field_ids.tif")).read(1)
+        field_ids = torch.from_numpy(array.astype(np.uint8))
+
+        return (labels, field_ids)
 
     def plot(
         self,
@@ -328,8 +400,8 @@ class AgriFieldNet(NonGeoDataset):
         """
         rgb_indices = []
         for band in self.rgb_bands:
-            if band in self.all_bands:
-                rgb_indices.append(self.all_bands.index(band))
+            if band in self.bands:
+                rgb_indices.append(self.bands.index(band))
             else:
                 raise ValueError("Dataset does not contain some of the RGB bands")
 
@@ -338,12 +410,12 @@ class AgriFieldNet(NonGeoDataset):
         # Stretch to the full range
         image = (image - image.min()) / (image.max() - image.min())
 
-        mask = sample["mask"].numpy().astype("uint8").squeeze()
+        mask = sample["mask"]
 
         num_panels = 2
 
         if "prediction" in sample:
-            predictions = sample["prediction"].numpy().astype("uint8").squeeze()
+            predictions = sample["prediction"]
             num_panels += 1
 
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 10, 10))
