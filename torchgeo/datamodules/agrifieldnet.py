@@ -22,7 +22,6 @@ class AgriFieldNetDataModule(NonGeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: Union[tuple[int, int], int] = 256,
         val_split_pct: float = 0.1,
         test_split_pct: float = 0.1,
         num_workers: int = 0,
@@ -32,17 +31,13 @@ class AgriFieldNetDataModule(NonGeoDataModule):
 
         Args:
             batch_size: Size of each mini-batch.
-            patch_size: Size of each patch, either ``size`` or ``(height, width)``.
-                Should be a multiple of 32 for most segmentation architectures.
             val_split_pct: Percentage of the dataset to use as a validation set.
             test_split_pct: Percentage of the dataset to use as a test set.
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.AgriFieldNetDataModule`.
         """
-        super().__init__(AgriFieldNet, batch_size, num_workers, **kwargs)
-
-        self.patch_size = _to_tuple(patch_size)
+        super().__init__(AgriFieldNet, **kwargs)
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
 
@@ -55,9 +50,9 @@ class AgriFieldNetDataModule(NonGeoDataModule):
         if stage in ["fit", "validate", "test"]:
             self.dataset = AgriFieldNet(split="train", **self.kwargs)
             self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-                self.dataset, self.val_split_pct, self.test_split_pct
+                dataset = self.dataset,
+                val_pct = self.val_split_pct,
+                test_pct = self.test_split_pct,
             )
         if stage in ["predict"]:
             self.predict_dataset = AgriFieldNet(split="test", **self.kwargs)
-        # if stage in ["test"]:
-        #     self.test_dataset = AgriFieldNet(split="test", **self.kwargs)
