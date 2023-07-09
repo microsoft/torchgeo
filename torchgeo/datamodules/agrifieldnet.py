@@ -3,10 +3,9 @@
 
 """AgriFieldNet datamodule."""
 
-from typing import Any, Union
+from typing import Any
 
 from ..datasets import AgriFieldNet
-from ..samplers.utils import _to_tuple
 from .geo import NonGeoDataModule
 from .utils import dataset_split
 
@@ -50,9 +49,9 @@ class AgriFieldNetDataModule(NonGeoDataModule):
         if stage in ["fit", "validate", "test"]:
             self.dataset = AgriFieldNet(split="train", **self.kwargs)
             self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-                dataset = self.dataset,
-                val_pct = self.val_split_pct,
-                test_pct = self.test_split_pct,
+                dataset=self.dataset,
+                val_pct=self.val_split_pct,
+                test_pct=self.test_split_pct,
             )
         if stage in ["predict"]:
             self.predict_dataset = AgriFieldNet(split="test", **self.kwargs)
