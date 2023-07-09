@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 import torch
 import torch.nn as nn
+from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
@@ -29,16 +30,24 @@ def fetch(dataset_id: str, **kwargs: str) -> Collection:
 
 
 class TestAgriFieldNet:
-    @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> AgriFieldNet:
+    @pytest.fixture(params=["train", "test"])
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+    ) -> AgriFieldNet:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch)
         md5 = "42fea66d90af2d854939b60e4d7fa69f"
         monkeypatch.setitem(AgriFieldNet.image_meta, "md5", md5)
         root = str(tmp_path)
+        split = request.param
         transforms = nn.Identity()
         return AgriFieldNet(
-            root, transforms=transforms, download=True, api_key="", checksum=True
+            root,
+            split=split,
+            transforms=transforms,
+            download=True,
+            api_key="",
+            checksum=True,
         )
 
     def test_getitem(self, dataset: AgriFieldNet) -> None:
@@ -69,6 +78,10 @@ class TestAgriFieldNet:
 
         with pytest.raises(AssertionError):
             dataset._load_image_tile("foo", ("B01", "B02"))
+
+    def test_invalid_split(self) -> None:
+        with pytest.raises(AssertionError):
+            AgriFieldNet(split="foo")
 
     def test_get_splits(self, dataset: AgriFieldNet) -> None:
         train_field_ids, test_field_ids = dataset.get_splits()

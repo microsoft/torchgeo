@@ -70,7 +70,7 @@ class AgriFieldNet(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    # splits = ["train", "test"]
+    splits = ["train", "test"]
 
     collections = [
         "ref_agrifieldnet_competition_v1_source",
@@ -100,12 +100,12 @@ class AgriFieldNet(NonGeoDataset):
     )
 
     data_root = "ref_agrifieldnet_competition_v1"
-    assets = ["field_ids", "raster_labels"]
 
     def __init__(
         self,
         root: str = "data",
         bands: tuple[str, ...] = all_bands,
+        split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
@@ -116,16 +116,19 @@ class AgriFieldNet(NonGeoDataset):
         Args:
             root: root directory where dataset can be found
             bands: the subset of bands to load
+            split: split selection which must be in ["train", "test"]
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
+        assert split in self.splits
         self._validate_bands(bands)
 
         self.root = root
         self.bands = bands
+        self.split = split
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
@@ -165,15 +168,40 @@ class AgriFieldNet(NonGeoDataset):
             for tile in self.train_tiles
         ]
 
-        self.test_image_fns = [
-            os.path.join(
-                root,
-                "ref_agrifieldnet_competition_v1",
-                "ref_agrifieldnet_competition_v1_labels_test",
-                "ref_agrifieldnet_competition_v1_labels_test_" + tile,
-            )
-            for tile in self.test_tiles
-        ]
+        # self.test_image_fns = [
+        #     os.path.join(
+        #         root,
+        #         "ref_agrifieldnet_competition_v1",
+        #         "ref_agrifieldnet_competition_v1_labels_test",
+        #         "ref_agrifieldnet_competition_v1_labels_test_" + tile,
+        #     )
+        #     for tile in self.test_tiles
+        # ]
+
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
+        """Return an index within the dataset.
+
+        Args:
+            index: index to return
+
+        Returns:
+            data and label at that index
+        """
+        # if self.split == "train":
+        #     tile_name = self.train_tiles[index]
+        # else:
+        #     tile_name = self.test_tiles[index]
+
+        tile_name = self.train_tiles[index]
+        image = self._load_image_tile(tile_name)
+        labels, field_ids = self._load_label_tile(tile_name)
+
+        sample = {"image": image, "mask": labels, "field_ids": field_ids}
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
 
     def get_tiles(self) -> tuple[list[str], list[str], list[str]]:
         """Get the tile names from the dataset directory.
@@ -303,26 +331,6 @@ class AgriFieldNet(NonGeoDataset):
         for band in bands:
             if band not in self.all_bands:
                 raise ValueError(f"'{band}' is an invalid band name.")
-
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
-        """Return an index within the dataset.
-
-        Args:
-            index: index to return
-
-        Returns:
-            data and label at that index
-        """
-        tile_name = self.source_tiles[index]
-        image = self._load_image_tile(tile_name)
-        labels, field_ids = self._load_label_tile(tile_name)
-
-        sample = {"image": image, "mask": labels, "field_ids": field_ids}
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
 
     def _load_image_tile(
         self, tile_name: str, bands: tuple[str, ...] = all_bands
