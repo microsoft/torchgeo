@@ -8,6 +8,7 @@ from typing import Any
 from ..datasets import AgriFieldNet
 from .geo import NonGeoDataModule
 from .utils import dataset_split
+from ..samplers.utils import _to_tuple
 
 
 class AgriFieldNetDataModule(NonGeoDataModule):
@@ -21,22 +22,24 @@ class AgriFieldNetDataModule(NonGeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
+        patch_size: int = 256,
+        num_workers: int = 0,
         val_split_pct: float = 0.1,
         test_split_pct: float = 0.1,
-        num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
         """Initialize a new AgriFieldNetDataModule instance.
 
         Args:
             batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
             val_split_pct: Percentage of the dataset to use as a validation set.
             test_split_pct: Percentage of the dataset to use as a test set.
-            num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.AgriFieldNetDataModule`.
         """
-        super().__init__(AgriFieldNet, **kwargs)
+        super().__init__(AgriFieldNet, batch_size, num_workers, **kwargs)
+        self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
 

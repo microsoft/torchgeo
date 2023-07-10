@@ -16,6 +16,8 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import AgriFieldNet
+from torchgeo.datamodules import AgriFieldNetDataModule
+from torchgeo.trainers import SemanticSegmentationTask
 
 
 class Collection:
@@ -100,6 +102,11 @@ class TestAgriFieldNet:
 
         with pytest.raises(ValueError, match="is an invalid band name."):
             AgriFieldNet(bands=("foo", "bar"))
+
+    # def test_trainer(self) -> None:
+    #     model = SemanticSegmentationTask("unet")
+    #     trainer =
+    #     trainer.fit(model, datamodule=AgriFieldNetDataModule())
 
     def test_plot(self, dataset: AgriFieldNet) -> None:
         dataset.plot(dataset[0], suptitle="Test")

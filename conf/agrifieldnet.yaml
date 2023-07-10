@@ -1,0 +1,31 @@
+module:
+  _target_: torchgeo.trainers.SemanticSegmentationTask
+  model: "unet"
+  backbone: "resnet18"
+  weights: null
+  in_channels: 12
+  num_classes: 13
+  loss: "ce"
+  ignore_index: 0
+  learning_rate: 1e-3
+  learning_rate_schedule_patience: 6
+  weight_decay: 0
+
+datamodule:
+  _target_: torchgeo.datamodules.AgriFieldNetDataModule
+  root: "data"
+  batch_size: 64
+  patch_size: 256
+  num_workers: 10
+
+trainer:
+  _target_: lightning.pytorch.Trainer
+  min_epochs: 1
+  max_epochs: 2
+
+program:
+  seed: 2
+  output_dir: "output/agrifieldnet"
+  log_dir: "logs/agrifieldnet"
+  overwrite: True
+  experiment_name: agrifieldnet

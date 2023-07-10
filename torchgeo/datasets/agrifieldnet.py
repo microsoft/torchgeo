@@ -185,14 +185,14 @@ class AgriFieldNet(NonGeoDataset):
             index: index to return
 
         Returns:
-            data and label at that index
+            data, label, and field ids at that index
         """
         # if self.split == "train":
         #     tile_name = self.train_tiles[index]
         # else:
         #     tile_name = self.test_tiles[index]
-
         tile_name = self.train_tiles[index]
+        print(tile_name)
         image = self._load_image_tile(tile_name)
         labels, field_ids = self._load_label_tile(tile_name)
 
@@ -315,7 +315,8 @@ class AgriFieldNet(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        return len(self.source_image_fns)
+        # return len(self.source_image_fns)
+        return len(self.train_label_fns)
 
     def _validate_bands(self, bands: tuple[str, ...]) -> None:
         """Validate list of bands.
