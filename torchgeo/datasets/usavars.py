@@ -48,7 +48,7 @@ class USAVars(NonGeoDataset):
     .. versionadded:: 0.3
     """
 
-    data_url = "https://huggingface.co/datasets/torchgeo/USAVars/resolve/main/{}"
+    data_url = "https://huggingface.co/datasets/torchgeo/usavars/resolve/main/{}"
     dirname = "uar"
 
     md5 = "677e89fd20e5dd0fe4d29b61827c2456"
