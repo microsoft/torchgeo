@@ -13,6 +13,7 @@ import rasterio
 import torch
 from matplotlib.figure import Figure
 from torch import Tensor
+import tqdm
 
 from .geo import NonGeoDataset
 from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
@@ -70,7 +71,7 @@ class AgriFieldNet(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    splits = ["train", "test"]
+    splits = ["train", "predict"]
 
     collections = [
         "ref_agrifieldnet_competition_v1_source",
@@ -78,9 +79,17 @@ class AgriFieldNet(NonGeoDataset):
         "ref_agrifieldnet_competition_v1_labels_test",
     ]
 
+    source_meta = {
+        "filename": "ref_agrifieldnet_competition_v1_source.tar.gz",
+        "md5": "62ec758cc5c4d58f73c47be07f3d9d73",
+    }
     image_meta = {
-        "filename": "ref_agrifieldnet_competition_v1.tar.gz",
-        "md5": "85055da1e7eb69fa4b3d925ee1450a74",
+        "filename": "ref_agrifieldnet_competition_v1_labels_train.tar.gz",
+        "md5": "d5c8d7fa8e1e28ecec211c3b3633fb17",
+    }
+    target_meta = {
+        "filename": "ref_agrifieldnet_competition_v1_labels_test.tar.gz",
+        "md5": "8aa638cdbd7cd38da37c3e9fd77c3d4c",
     }
 
     rgb_bands = ["B04", "B03", "B02"]
@@ -99,7 +108,15 @@ class AgriFieldNet(NonGeoDataset):
         "B12",
     )
 
-    data_root = "ref_agrifieldnet_competition_v1"
+    label_mapper = {
+        1: 0, 2: 1,
+        3: 2, 4: 3,
+        5: 4, 6: 5,
+        8: 6, 9: 7,
+        13: 8, 14: 9,
+        15: 10, 16: 11,
+        36: 12, 0: -999
+    }
 
     def __init__(
         self,
@@ -116,7 +133,7 @@ class AgriFieldNet(NonGeoDataset):
         Args:
             root: root directory where dataset can be found
             bands: the subset of bands to load
-            split: split selection which must be in ["train", "test"]
+            split: split selection which must be in ["train", "predict"]
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -151,7 +168,6 @@ class AgriFieldNet(NonGeoDataset):
         self.source_image_fns = [
             os.path.join(
                 root,
-                "ref_agrifieldnet_competition_v1",
                 "ref_agrifieldnet_competition_v1_source",
                 "ref_agrifieldnet_competition_v1_source_" + tile,
             )
@@ -161,13 +177,11 @@ class AgriFieldNet(NonGeoDataset):
         self.train_label_fns = [
             os.path.join(
                 root,
-                "ref_agrifieldnet_competition_v1",
                 "ref_agrifieldnet_competition_v1_labels_train",
                 "ref_agrifieldnet_competition_v1_labels_train_" + tile,
             )
             for tile in self.train_tiles
         ]
-
         # self.test_image_fns = [
         #     os.path.join(
         #         root,
@@ -192,7 +206,6 @@ class AgriFieldNet(NonGeoDataset):
         # else:
         #     tile_name = self.test_tiles[index]
         tile_name = self.train_tiles[index]
-        print(tile_name)
         image = self._load_image_tile(tile_name)
         labels, field_ids = self._load_label_tile(tile_name)
 
@@ -215,7 +228,7 @@ class AgriFieldNet(NonGeoDataset):
 
         source_tiles = []
         for dir in os.walk(
-            os.path.join(".", self.root, self.data_root, source_collection),
+            os.path.join(self.root, source_collection),
             topdown=True,
         ):
             source_tiles.append(dir[0][-5:])
@@ -223,17 +236,19 @@ class AgriFieldNet(NonGeoDataset):
 
         train_tiles = []
         for dir in os.walk(
-            os.path.join(".", self.root, self.data_root, train_label), topdown=True
+            os.path.join(self.root, train_label), topdown=True
         ):
             train_tiles.append(dir[0][-5:])
         train_tiles = train_tiles[1:]
+        train_tiles.remove("ommon")
 
         test_tiles = []
         for dir in os.walk(
-            os.path.join(".", self.root, self.data_root, test_label), topdown=True
+            os.path.join(self.root, test_label), topdown=True
         ):
             test_tiles.append(dir[0][-5:])
         test_tiles = test_tiles[1:]
+        test_tiles.remove("ommon")
 
         return (source_tiles, train_tiles, test_tiles)
 
@@ -249,7 +264,6 @@ class AgriFieldNet(NonGeoDataset):
         for tile_name in self.train_tiles:
             directory = os.path.join(
                 self.root,
-                "ref_agrifieldnet_competition_v1",
                 "ref_agrifieldnet_competition_v1_labels_train",
                 "ref_agrifieldnet_competition_v1_labels_train_" + tile_name,
             )
@@ -260,7 +274,6 @@ class AgriFieldNet(NonGeoDataset):
         for tile_name in self.test_tiles:
             directory = os.path.join(
                 self.root,
-                "ref_agrifieldnet_competition_v1",
                 "ref_agrifieldnet_competition_v1_labels_test",
                 "ref_agrifieldnet_competition_v1_labels_test_" + tile_name,
             )
@@ -296,18 +309,22 @@ class AgriFieldNet(NonGeoDataset):
         Returns:
             True if dataset files are found and/or MD5s match, else False
         """
+        sources: bool = check_integrity(
+            os.path.join(self.root, self.source_meta["filename"]),
+            self.source_meta["md5"] if self.checksum else None,
+        )
+
         images: bool = check_integrity(
             os.path.join(self.root, self.image_meta["filename"]),
             self.image_meta["md5"] if self.checksum else None,
         )
 
-        # targets: bool = check_integrity(
-        #     os.path.join(self.root, self.target_meta["filename"]),
-        #     self.target_meta["md5"] if self.checksum else None,
-        # )
+        targets: bool = check_integrity(
+            os.path.join(self.root, self.target_meta["filename"]),
+            self.target_meta["md5"] if self.checksum else None,
+        )
 
-        # return images and targets
-        return images
+        return sources, images, targets
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.
@@ -348,7 +365,6 @@ class AgriFieldNet(NonGeoDataset):
 
         path = os.path.join(
             self.root,
-            "ref_agrifieldnet_competition_v1",
             "ref_agrifieldnet_competition_v1_source",
             "ref_agrifieldnet_competition_v1_source_" + tile_name,
         )
@@ -358,7 +374,7 @@ class AgriFieldNet(NonGeoDataset):
             for band in self.all_bands
         ]
         img_tile = np.stack(bands_src)
-        tensor = torch.from_numpy(img_tile)
+        tensor = torch.from_numpy(img_tile.astype(np.float32))
 
         return tensor
 
@@ -378,18 +394,30 @@ class AgriFieldNet(NonGeoDataset):
 
         directory = os.path.join(
             self.root,
-            "ref_agrifieldnet_competition_v1",
             "ref_agrifieldnet_competition_v1_labels_train",
             "ref_agrifieldnet_competition_v1_labels_train_" + tile_name,
         )
 
         array = rasterio.open(os.path.join(directory, "raster_labels.tif")).read(1)
-        labels = torch.from_numpy(array.astype(np.uint8))
+        array = np.vectorize(lambda x: self.label_mapper[x])(array)
+        labels = torch.tensor(array, dtype=torch.long)
 
         array = rasterio.open(os.path.join(directory, "field_ids.tif")).read(1)
-        field_ids = torch.from_numpy(array.astype(np.uint8))
+        field_ids = torch.tensor(array.astype(np.int32), dtype=torch.long)
 
         return (labels, field_ids)
+
+    def compute_prediction(self): -> tuple[list[int], list[float]]:
+        crop_labels = [
+            'Wheat', 'Mustard', 'Lentil', 'No Crop',
+            'Green pea', 'Sugarcane', 'Garlic', 'Maize',
+            'Gram', 'Coriander', 'Potato', 'Bersem', 'Rice'
+        ]
+
+        train_fields, test_fields = self.get_splits()
+        predictions = []
+
+        return test_fields, predictions
 
     def plot(
         self,

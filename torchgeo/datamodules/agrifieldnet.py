@@ -32,6 +32,8 @@ class AgriFieldNetDataModule(NonGeoDataModule):
 
         Args:
             batch_size: Size of each mini-batch.
+            patch_size: Size of each patch, either ``size`` or ``(height, width)``.
+                Should be a multiple of 32 for most segmentation architectures.
             num_workers: Number of workers for parallel data loading.
             val_split_pct: Percentage of the dataset to use as a validation set.
             test_split_pct: Percentage of the dataset to use as a test set.
@@ -57,4 +59,4 @@ class AgriFieldNetDataModule(NonGeoDataModule):
                 test_pct=self.test_split_pct,
             )
         if stage in ["predict"]:
-            self.predict_dataset = AgriFieldNet(split="test", **self.kwargs)
+            self.predict_dataset = AgriFieldNet(split="predict", **self.kwargs)
