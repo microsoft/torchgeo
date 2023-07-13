@@ -9,11 +9,12 @@ from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import rasterio
 import torch
+import tqdm
 from matplotlib.figure import Figure
 from torch import Tensor
-import tqdm
 
 from .geo import NonGeoDataset
 from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
@@ -109,13 +110,20 @@ class AgriFieldNet(NonGeoDataset):
     )
 
     label_mapper = {
-        1: 0, 2: 1,
-        3: 2, 4: 3,
-        5: 4, 6: 5,
-        8: 6, 9: 7,
-        13: 8, 14: 9,
-        15: 10, 16: 11,
-        36: 12, 0: -999
+        1: 0,
+        2: 1,
+        3: 2,
+        4: 3,
+        5: 4,
+        6: 5,
+        8: 6,
+        9: 7,
+        13: 8,
+        14: 9,
+        15: 10,
+        16: 11,
+        36: 12,
+        0: -999,
     }
 
     def __init__(
@@ -227,25 +235,18 @@ class AgriFieldNet(NonGeoDataset):
         test_label = "ref_agrifieldnet_competition_v1_labels_test"
 
         source_tiles = []
-        for dir in os.walk(
-            os.path.join(self.root, source_collection),
-            topdown=True,
-        ):
+        for dir in os.walk(os.path.join(self.root, source_collection), topdown=True):
             source_tiles.append(dir[0][-5:])
         source_tiles = source_tiles[1:]
 
         train_tiles = []
-        for dir in os.walk(
-            os.path.join(self.root, train_label), topdown=True
-        ):
+        for dir in os.walk(os.path.join(self.root, train_label), topdown=True):
             train_tiles.append(dir[0][-5:])
         train_tiles = train_tiles[1:]
         train_tiles.remove("ommon")
 
         test_tiles = []
-        for dir in os.walk(
-            os.path.join(self.root, test_label), topdown=True
-        ):
+        for dir in os.walk(os.path.join(self.root, test_label), topdown=True):
             test_tiles.append(dir[0][-5:])
         test_tiles = test_tiles[1:]
         test_tiles.remove("ommon")
@@ -407,17 +408,42 @@ class AgriFieldNet(NonGeoDataset):
 
         return (labels, field_ids)
 
-    def compute_prediction(self): -> tuple[list[int], list[float]]:
+    def compute_prediction(self) -> tuple[list[int], list[float]]:
+        """Compute predictions for the test set."""
+        train_fields, test_fields = self.get_splits()
+        test_predictions = []
+
+        return test_fields, test_predictions
+
+    def create_submission(self, predictions: list[float]) -> None:
+        """Create a submission file for the competition.
+
+        Args:
+            predictions: list of predictions for the test set
+        """
+        test_fields, test_predictions = self.compute_prediction()
+
         crop_labels = [
-            'Wheat', 'Mustard', 'Lentil', 'No Crop',
-            'Green pea', 'Sugarcane', 'Garlic', 'Maize',
-            'Gram', 'Coriander', 'Potato', 'Bersem', 'Rice'
+            "Wheat",
+            "Mustard",
+            "Lentil",
+            "No Crop",
+            "Green pea",
+            "Sugarcane",
+            "Garlic",
+            "Maize",
+            "Gram",
+            "Coriander",
+            "Potato",
+            "Bersem",
+            "Rice",
         ]
 
-        train_fields, test_fields = self.get_splits()
-        predictions = []
+        results = pd.DataFrame(test_fields, columns=["field_id"])
+        results[crop_labels] = test_predictions
+        results = results.groupby("field_id").mean().reset_index()
 
-        return test_fields, predictions
+        results.to_csv(os.path.join(self.root, "pixelwise-unet.csv"), index=False)
 
     def plot(
         self,
@@ -466,7 +492,7 @@ class AgriFieldNet(NonGeoDataset):
             axs[2].imshow(predictions)
             axs[2].axis("off")
             if show_titles:
-                axs[2].set_title("Predictions")
+                axs[2].set_title("Prediction")
 
         if show_titles:
             axs[0].set_title("Image")

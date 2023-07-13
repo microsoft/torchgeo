@@ -10,6 +10,7 @@ module:
   learning_rate: 1e-3
   learning_rate_schedule_patience: 6
   weight_decay: 0
+  freeze_backbone: True
 
 datamodule:
   _target_: torchgeo.datamodules.AgriFieldNetDataModule
