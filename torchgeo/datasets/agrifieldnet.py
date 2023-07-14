@@ -325,7 +325,7 @@ class AgriFieldNet(NonGeoDataset):
             self.target_meta["md5"] if self.checksum else None,
         )
 
-        return sources, images, targets
+        return sources and images and targets
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.
@@ -333,8 +333,10 @@ class AgriFieldNet(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        # return len(self.source_image_fns)
-        return len(self.train_label_fns)
+        if self.split == "train":
+            return len(self.train_label_fns)
+        if self.split == "predict":
+            return len(self.test_label_fns)
 
     def _validate_bands(self, bands: tuple[str, ...]) -> None:
         """Validate list of bands.
