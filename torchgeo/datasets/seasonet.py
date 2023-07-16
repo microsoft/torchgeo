@@ -147,41 +147,41 @@ class SeasoNet(NonGeoDataset):
     all_bands = ("10m_RGB", "10m_IR", "20m", "60m")
     band_nums = {"10m_RGB": 3, "10m_IR": 1, "20m": 6, "60m": 2}
     splits = ["train", "val", "test"]
-    colormap = [
-        (230, 000, 77, 255),
-        (255, 000, 000, 255),
-        (204, 77, 242, 255),
-        (204, 000, 000, 255),
-        (230, 204, 204, 255),
-        (230, 204, 230, 255),
-        (166, 000, 204, 255),
-        (166, 77, 000, 255),
-        (255, 77, 255, 255),
-        (255, 166, 255, 255),
-        (255, 230, 255, 255),
-        (255, 255, 168, 255),
-        (230, 128, 000, 255),
-        (242, 166, 77, 255),
-        (230, 230, 77, 255),
-        (128, 255, 000, 255),
-        (000, 166, 000, 255),
-        (77, 255, 000, 255),
-        (204, 242, 77, 255),
-        (166, 255, 128, 255),
-        (166, 242, 000, 255),
-        (230, 230, 230, 255),
-        (204, 204, 204, 255),
-        (204, 255, 204, 255),
-        (166, 166, 255, 255),
-        (77, 77, 255, 255),
-        (204, 204, 255, 255),
-        (166, 166, 230, 255),
-        (000, 204, 242, 255),
-        (128, 242, 230, 255),
-        (000, 255, 166, 255),
-        (166, 255, 230, 255),
-        (230, 242, 255, 255),
-    ]
+    cmap = {
+        0: (230, 000, 77, 255),
+        1: (255, 000, 000, 255),
+        2: (204, 77, 242, 255),
+        3: (204, 000, 000, 255),
+        4: (230, 204, 204, 255),
+        5: (230, 204, 230, 255),
+        6: (166, 000, 204, 255),
+        7: (166, 77, 000, 255),
+        8: (255, 77, 255, 255),
+        9: (255, 166, 255, 255),
+        10: (255, 230, 255, 255),
+        11: (255, 255, 168, 255),
+        12: (230, 128, 000, 255),
+        13: (242, 166, 77, 255),
+        14: (230, 230, 77, 255),
+        15: (128, 255, 000, 255),
+        16: (000, 166, 000, 255),
+        17: (77, 255, 000, 255),
+        18: (204, 242, 77, 255),
+        19: (166, 255, 128, 255),
+        20: (166, 242, 000, 255),
+        21: (230, 230, 230, 255),
+        22: (204, 204, 204, 255),
+        23: (204, 255, 204, 255),
+        24: (166, 166, 255, 255),
+        25: (77, 77, 255, 255),
+        26: (204, 204, 255, 255),
+        27: (166, 166, 230, 255),
+        28: (000, 204, 242, 255),
+        29: (128, 242, 230, 255),
+        30: (000, 255, 166, 255),
+        31: (166, 255, 230, 255),
+        32: (230, 242, 255, 255),
+    }
     image_size = (120, 120)
 
     def __init__(
@@ -436,6 +436,8 @@ class SeasoNet(NonGeoDataset):
             prediction = sample["prediction"]
             ncols += 1
 
+        plt_cmap = ListedColormap(np.array(list(self.cmap.values())) / 255)
+
         start = 0
         for b in self.bands:
             if b == "10m_RGB":
@@ -453,13 +455,15 @@ class SeasoNet(NonGeoDataset):
             if show_titles:
                 axs[ax].set_title(f"Image {ax+1}")
 
-        axs[ax + 1].imshow(mask, vmin=0, vmax=32, cmap=self.cmap)
+        axs[ax + 1].imshow(mask, vmin=0, vmax=32, cmap=plt_cmap, interpolation="none")
         axs[ax + 1].axis("off")
         if show_titles:
             axs[ax + 1].set_title("Mask")
 
         if show_predictions:
-            axs[ax + 2].imshow(prediction, vmin=0, vmax=32, cmap=self.cmap)
+            axs[ax + 2].imshow(
+                prediction, vmin=0, vmax=32, cmap=plt_cmap, interpolation="none"
+            )
             axs[ax + 2].axis("off")
             if show_titles:
                 axs[ax + 2].set_title("Prediction")
@@ -470,7 +474,7 @@ class SeasoNet(NonGeoDataset):
             if show_predictions:
                 lgd = np.union1d(lgd, np.unique(prediction))
             patches = [
-                mpatches.Patch(color=self.cmap(i), label=self.classes[i]) for i in lgd
+                mpatches.Patch(color=plt_cmap(i), label=self.classes[i]) for i in lgd
             ]
             plt.legend(
                 handles=patches, bbox_to_anchor=(1.05, 1), borderaxespad=0, loc=2
