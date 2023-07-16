@@ -60,3 +60,4 @@ class AgriFieldNetDataModule(NonGeoDataModule):
             )
         if stage in ["predict"]:
             self.predict_dataset = AgriFieldNet(split="predict", **self.kwargs)
+            print(self.predict_dataset)

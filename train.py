@@ -56,6 +56,11 @@ def set_up_omegaconf() -> DictConfig:
     conf = cast(DictConfig, conf)  # convince mypy that everything is alright
     return conf
 
+# def compute_prediction() -> tuple(int, int):
+#     return
+
+# def create_submission() -> None:
+#     return
 
 def main(conf: DictConfig) -> None:
     """Main training loop."""
@@ -131,6 +136,20 @@ def main(conf: DictConfig) -> None:
     # Test
     try:
         trainer.test(ckpt_path="best", datamodule=datamodule)
+        # Predict
+        predict_outputs, predict_field_ids = trainer.predict(ckpt_path="best", datamodule=datamodule, return_predictions=True)
+
+        print("prediction outputs length: ", len(predict_outputs))
+        print("prediction field_ids length: ", len(predict_field_ids))
+
+        print("prediction outputs[0] shape: ", predict_outputs[0].shape)
+        print("prediction field_ids[0] shape: ", predict_field_ids[0].shape)
+
+        print(predict_field_ids)
+        # print(predict_outputs[0].argmax(dim=1).shape)
+        # print(predict_outputs[0].argmax(dim=1))
+        # compute_prediction()
+        # create_submission()
     except MisconfigurationException:
         pass
 

@@ -15,14 +15,14 @@ module:
 datamodule:
   _target_: torchgeo.datamodules.AgriFieldNetDataModule
   root: "/projects/dali/data/agrifieldnet"
-  batch_size: 64
+  batch_size: 1
   patch_size: 256
   num_workers: 10
 
 trainer:
   _target_: lightning.pytorch.Trainer
-  min_epochs: 50
-  max_epochs: 100
+  min_epochs: 1
+  max_epochs: 2
 
 program:
   seed: 2

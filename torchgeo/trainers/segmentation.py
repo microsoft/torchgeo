@@ -318,17 +318,7 @@ class SemanticSegmentationTask(LightningModule):
         batch = args[0]
         x = batch["image"]
         y_hat: Tensor = self(x).softmax(dim=1)
-        return y_hat
-
-    def on_predict_batch_end(self, *args: Any, **kwargs: Any) -> None:
-        """Export predictions.
-
-        Args:
-            outputs: The outputs of predict_step(x)
-        """
-        outputs = args[0]
-        print("Predict shape: ", outputs.shape)
-        print("Predict outputs: ", outputs)
+        return y_hat, batch["field_ids"]
 
     def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.

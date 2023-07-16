@@ -190,15 +190,14 @@ class AgriFieldNet(NonGeoDataset):
             )
             for tile in self.train_tiles
         ]
-        # self.test_image_fns = [
-        #     os.path.join(
-        #         root,
-        #         "ref_agrifieldnet_competition_v1",
-        #         "ref_agrifieldnet_competition_v1_labels_test",
-        #         "ref_agrifieldnet_competition_v1_labels_test_" + tile,
-        #     )
-        #     for tile in self.test_tiles
-        # ]
+        self.test_image_fns = [
+            os.path.join(
+                root,
+                "ref_agrifieldnet_competition_v1_labels_test",
+                "ref_agrifieldnet_competition_v1_labels_test_" + tile,
+            )
+            for tile in self.test_tiles
+        ]
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -209,10 +208,6 @@ class AgriFieldNet(NonGeoDataset):
         Returns:
             data, label, and field ids at that index
         """
-        # if self.split == "train":
-        #     tile_name = self.train_tiles[index]
-        # else:
-        #     tile_name = self.test_tiles[index]
         tile_name = self.train_tiles[index]
         image = self._load_image_tile(tile_name)
         labels, field_ids = self._load_label_tile(tile_name)
@@ -336,7 +331,7 @@ class AgriFieldNet(NonGeoDataset):
         if self.split == "train":
             return len(self.train_label_fns)
         if self.split == "predict":
-            return len(self.test_label_fns)
+            return len(self.test_image_fns)
 
     def _validate_bands(self, bands: tuple[str, ...]) -> None:
         """Validate list of bands.
@@ -411,7 +406,11 @@ class AgriFieldNet(NonGeoDataset):
         return (labels, field_ids)
 
     def compute_prediction(self) -> tuple[list[int], list[float]]:
-        """Compute predictions for the test set."""
+        """Compute predictions for the test set.
+
+        Should return highest average values within the same field (same field_ids)
+
+        """
         train_fields, test_fields = self.get_splits()
         test_predictions = []
 
