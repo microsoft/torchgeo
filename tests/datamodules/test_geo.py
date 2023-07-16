@@ -21,9 +21,12 @@ from torchgeo.samplers import RandomBatchGeoSampler, RandomGeoSampler
 
 
 class CustomGeoDataset(GeoDataset):
-    def __init__(self, split: str = "train", download: bool = False) -> None:
+    def __init__(
+        self, split: str = "train", length: int = 1, download: bool = False
+    ) -> None:
         super().__init__()
-        self.index.insert(0, (0, 1, 2, 3, 4, 5))
+        for i in range(length):
+            self.index.insert(i, (0, 1, 2, 3, 4, 5))
         self.res = 1
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
@@ -58,14 +61,16 @@ class BatchSamplerGeoDataModule(CustomGeoDataModule):
 
 
 class CustomNonGeoDataset(NonGeoDataset):
-    def __init__(self, split: str = "train", download: bool = False) -> None:
-        pass
+    def __init__(
+        self, split: str = "train", length: int = 1, download: bool = False
+    ) -> None:
+        self.length = length
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         return {"image": torch.arange(3 * 2 * 2).view(3, 2, 2)}
 
     def __len__(self) -> int:
-        return 1
+        return self.length
 
     def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
         return plt.figure()
@@ -134,7 +139,8 @@ class TestGeoDataModule:
 
     def test_no_datasets(self) -> None:
         dm = CustomGeoDataModule()
-        msg = "CustomGeoDataModule.setup does not define a '{}_dataset'"
+        msg = r"CustomGeoDataModule\.setup must define one of "
+        msg += r"\('{0}_dataset', 'dataset'\)\."
         with pytest.raises(MisconfigurationException, match=msg.format("train")):
             dm.train_dataloader()
         with pytest.raises(MisconfigurationException, match=msg.format("val")):
@@ -142,6 +148,48 @@ class TestGeoDataModule:
         with pytest.raises(MisconfigurationException, match=msg.format("test")):
             dm.test_dataloader()
         with pytest.raises(MisconfigurationException, match=msg.format("predict")):
+            dm.predict_dataloader()
+
+    def test_no_samplers(self) -> None:
+        dm = CustomGeoDataModule()
+        dm.dataset = CustomGeoDataset()
+        msg = r"CustomGeoDataModule\.setup must define one of "
+        msg += r"\('{0}_batch_sampler', '{0}_sampler', 'batch_sampler', 'sampler'\)\."
+        with pytest.raises(MisconfigurationException, match=msg.format("train")):
+            dm.train_dataloader()
+        with pytest.raises(MisconfigurationException, match=msg.format("val")):
+            dm.val_dataloader()
+        with pytest.raises(MisconfigurationException, match=msg.format("test")):
+            dm.test_dataloader()
+        with pytest.raises(MisconfigurationException, match=msg.format("predict")):
+            dm.predict_dataloader()
+
+    def test_zero_length_dataset(self) -> None:
+        dm = CustomGeoDataModule()
+        dm.dataset = CustomGeoDataset(length=0)
+        msg = r"CustomGeoDataModule\.dataset has length 0."
+        with pytest.raises(MisconfigurationException, match=msg):
+            dm.train_dataloader()
+        with pytest.raises(MisconfigurationException, match=msg):
+            dm.val_dataloader()
+        with pytest.raises(MisconfigurationException, match=msg):
+            dm.test_dataloader()
+        with pytest.raises(MisconfigurationException, match=msg):
+            dm.predict_dataloader()
+
+    def test_zero_length_sampler(self) -> None:
+        dm = CustomGeoDataModule()
+        dm.dataset = CustomGeoDataset()
+        dm.sampler = RandomGeoSampler(dm.dataset, 1, 1)
+        dm.sampler.length = 0
+        msg = r"CustomGeoDataModule\.sampler has length 0."
+        with pytest.raises(MisconfigurationException, match=msg):
+            dm.train_dataloader()
+        with pytest.raises(MisconfigurationException, match=msg):
+            dm.val_dataloader()
+        with pytest.raises(MisconfigurationException, match=msg):
+            dm.test_dataloader()
+        with pytest.raises(MisconfigurationException, match=msg):
             dm.predict_dataloader()
 
 
@@ -193,7 +241,8 @@ class TestNonGeoDataModule:
 
     def test_no_datasets(self) -> None:
         dm = CustomNonGeoDataModule()
-        msg = "CustomNonGeoDataModule.setup does not define a '{}_dataset'"
+        msg = r"CustomNonGeoDataModule\.setup must define one of "
+        msg += r"\('{0}_dataset', 'dataset'\)\."
         with pytest.raises(MisconfigurationException, match=msg.format("train")):
             dm.train_dataloader()
         with pytest.raises(MisconfigurationException, match=msg.format("val")):
@@ -201,4 +250,17 @@ class TestNonGeoDataModule:
         with pytest.raises(MisconfigurationException, match=msg.format("test")):
             dm.test_dataloader()
         with pytest.raises(MisconfigurationException, match=msg.format("predict")):
+            dm.predict_dataloader()
+
+    def test_zero_length_dataset(self) -> None:
+        dm = CustomNonGeoDataModule()
+        dm.dataset = CustomNonGeoDataset(length=0)
+        msg = r"CustomNonGeoDataModule\.dataset has length 0."
+        with pytest.raises(MisconfigurationException, match=msg):
+            dm.train_dataloader()
+        with pytest.raises(MisconfigurationException, match=msg):
+            dm.val_dataloader()
+        with pytest.raises(MisconfigurationException, match=msg):
+            dm.test_dataloader()
+        with pytest.raises(MisconfigurationException, match=msg):
             dm.predict_dataloader()
