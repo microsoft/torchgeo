@@ -217,12 +217,9 @@ class SeasoNet(NonGeoDataset):
             ImportError: if pandas is not installed
         """
         assert split in self.splits
-        for season in seasons:
-            assert season in self.all_seasons
-        for band in bands:
-            assert band in self.all_bands
-        for grid in grids:
-            assert grid in [1, 2]
+        assert set(seasons) <= self.all_seasons
+        assert set(bands) <= set(self.all_bands)
+        assert set(grids) <= {1, 2}
         assert concat_seasons in range(1, len(seasons) + 1)
 
         self.root = root
