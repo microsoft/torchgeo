@@ -10,9 +10,7 @@ from typing import Callable, Collection, Iterable, Optional
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import rasterio
-import requests
 import torch
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
@@ -81,6 +79,13 @@ class SeasoNet(NonGeoDataset):  # TODO: Docs
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1109/IGARSS46834.2022.9884079
+
+    .. note::
+       This dataset requires the following additional library to be installed:
+
+       * `pandas <https://pypi.org/project/pandas/>`_ to load CSV files
+
+    .. versionadded:: 0.5
     """
 
     url = "https://zenodo.org/api/records/5850306"
@@ -206,6 +211,9 @@ class SeasoNet(NonGeoDataset):  # TODO: Docs
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            ImportError: if pandas is not installed
         """
         assert split in self.splits
         for season in seasons:
@@ -222,7 +230,13 @@ class SeasoNet(NonGeoDataset):  # TODO: Docs
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
-        self.cmap = ListedColormap(np.array(self.colormap) / 255)
+
+        try:
+            import pandas as pd  # noqa: F401
+        except ImportError:
+            raise ImportError(
+                "pandas is not installed and is required to use this dataset"
+            )
 
         self._verify()
 
@@ -328,6 +342,7 @@ class SeasoNet(NonGeoDataset):  # TODO: Docs
 
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            ImportError: if ``download=True`` but requests is not installed
         """
         # Check if all files already exist
         if all(
@@ -362,6 +377,12 @@ class SeasoNet(NonGeoDataset):  # TODO: Docs
             )
 
         # Download missing files
+        try:
+            import requests  # noqa: F401
+        except ImportError:
+            raise ImportError(
+                "requests is not installed and is required to download this dataset"
+            )
         record_info = requests.get(self.url).json()["files"]
         extractable = []
         for file_info in record_info:
