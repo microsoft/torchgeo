@@ -22,7 +22,7 @@ from .geo import NonGeoDataset
 from .utils import download_url, extract_archive, percentile_normalization
 
 
-class SeasoNet(NonGeoDataset):  # TODO: Docs
+class SeasoNet(NonGeoDataset):
     """SeasoNet Semantic Segmentation dataset.
 
     The `SeasoNet <https://doi.org/10.5281/zenodo.5850306>`__ dataset consists of
@@ -207,7 +207,7 @@ class SeasoNet(NonGeoDataset):  # TODO: Docs
             concat_seasons: number of seasonal images to return per sample.
                 if 1, each seasonal image is returned as its own sample,
                 otherwise seasonal images are randomly picked from the seasons
-                specified in `seasons` and returned as stacked tensors
+                specified in ``seasons`` and returned as stacked tensors
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -248,20 +248,27 @@ class SeasoNet(NonGeoDataset):  # TODO: Docs
         csv = pd.read_csv(os.path.join(self.root, "meta.csv"), index_col="Index")
 
         if split is not None:
+            # Filter entries by split
             split_csv = pd.read_csv(
                 os.path.join(self.root, f"splits/{split}.csv"), header=None
             )[0]
             csv = csv.iloc[split_csv]
 
+        # Filter entries by grids and seasons
         csv = csv[csv["Grid"].isin(grids)]
         csv = csv[csv["Season"].isin(seasons)]
+
+        # Replace relative data paths with absolute paths
         csv["Path"] = csv["Path"].apply(
             lambda p: [os.path.join(self.root, p, os.path.basename(p))]
         )
 
         if self.concat_seasons > 1:
+            # Group entries by location
             self.files = csv.groupby(["Latitude", "Longitude"])
             self.files = self.files["Path"].agg(sum)
+
+            # Remove entries with less than concat_seasons available seasons
             self.files = self.files[
                 self.files.apply(lambda d: len(d) >= self.concat_seasons)
             ]
@@ -275,8 +282,8 @@ class SeasoNet(NonGeoDataset):  # TODO: Docs
             index: index to return
 
         Returns:
-            sample at that index containing the image with shape SCxHxW,
-            where ``S = self.concat_seasons``, and the mask
+            sample at that index containing the image with shape SCxHxW
+            and the mask with shape HxW, where ``S = self.concat_seasons``
         """
         image = self._load_image(index)
         mask = self._load_target(index)
