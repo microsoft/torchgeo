@@ -52,6 +52,14 @@ _gassl_transforms = AugmentationSequential(
     data_keys=["image"],
 )
 
+# https://github.com/microsoft/torchgeo/blob/8b53304d42c269f9001cb4e861a126dc4b462606/torchgeo/datamodules/ssl4eo_benchmark.py#L43 # noqa: E501
+_ssl4eo_l_transforms = AugmentationSequential(
+    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
+    K.RandomResizedCrop((224, 224)),
+    scale=(0.6, 1.0),
+    data_keys=["image"],
+)
+
 # https://github.com/pytorch/vision/pull/6883
 # https://github.com/pytorch/vision/pull/7107
 # Can be removed once torchvision>=0.15 is required
@@ -103,6 +111,58 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             "publication": "https://arxiv.org/abs/2103.16607",
             "repo": "https://github.com/ServiceNow/seasonal-contrast",
             "ssl_method": "seco",
+        },
+    )
+
+    LANDSAT_OLI_SR_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/resnet18_landsat_oli_sr_moco/resolve/main/resnet18_landsat_oli_sr_moco-0b7b8a21.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 7,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_ETM_TOA_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/resnet18_landsat_etm_toa_moco/resolve/main/resnet18_landsat_etm_toa_moco-bb88689c.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 9,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_TM_TOA_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/resnet18_landsat_tm_toa_moco/resolve/main/resnet18_landsat_tm_toa_moco-1c691b4f.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 7,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_OLI_TIRS_TOA_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/resnet18_landsat_oli_tirs_toa_moco/resolve/main/resnet18_landsat_oli_tirs_toa_moco-a3002f51.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 11,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "moco",
         },
     )
 
