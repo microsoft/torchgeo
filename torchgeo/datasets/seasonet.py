@@ -89,24 +89,49 @@ class SeasoNet(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    url = "https://zenodo.org/api/records/5850306"
-    file_names = [
-        "spring.zip",
-        "summer.zip",
-        "fall.zip",
-        "winter.zip",
-        "snow.zip",
-        "splits.zip",
-        "meta.csv",
-    ]
-    extracted_names = [
-        "spring",
-        "summer",
-        "fall",
-        "winter",
-        "snow",
-        "splits",
-        "meta.csv",
+    metadata = [
+        {
+            "name": "spring",
+            "ext": ".zip",
+            "url": "https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/spring.zip",  # noqa: E501
+            "md5": "de4cdba7b6196aff624073991b187561",
+        },
+        {
+            "name": "summer",
+            "ext": ".zip",
+            "url": "https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/summer.zip",  # noqa: E501
+            "md5": "6a54d4e134d27ae4eb03f180ee100550",
+        },
+        {
+            "name": "fall",
+            "ext": ".zip",
+            "url": "https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/fall.zip",  # noqa: E501
+            "md5": "5f94920fe41a63c6bfbab7295f7d6b95",
+        },
+        {
+            "name": "winter",
+            "ext": ".zip",
+            "url": "https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/winter.zip",  # noqa: E501
+            "md5": "dc5e3e09e52ab5c72421b1e3186c9a48",
+        },
+        {
+            "name": "snow",
+            "ext": ".zip",
+            "url": "https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/snow.zip",  # noqa: E501
+            "md5": "e1b300994143f99ebb03f51d6ab1cbe6",
+        },
+        {
+            "name": "splits",
+            "ext": ".zip",
+            "url": "https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/splits.zip",  # noqa: E501
+            "md5": "e4ec4a18bc4efc828f0944a7cf4d5fed",
+        },
+        {
+            "name": "meta.csv",
+            "ext": "",
+            "url": "https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/meta.csv",  # noqa: E501
+            "md5": "43ea07974936a6bf47d989c32e16afe7",
+        },
     ]
     classes = [
         "Continuous urban fabric",
@@ -229,18 +254,18 @@ class SeasoNet(NonGeoDataset):
         self.download = download
         self.checksum = checksum
 
+        self._verify()
+
+        self.channels = 0
+        for b in bands:
+            self.channels += self.band_nums[b]
+
         try:
             import pandas as pd  # noqa: F401
         except ImportError:
             raise ImportError(
                 "pandas is not installed and is required to use this dataset"
             )
-
-        self._verify()
-
-        self.channels = 0
-        for b in bands:
-            self.channels += self.band_nums[b]
 
         csv = pd.read_csv(os.path.join(self.root, "meta.csv"), index_col="Index")
 
@@ -351,56 +376,40 @@ class SeasoNet(NonGeoDataset):
         """
         # Check if all files already exist
         if all(
-            os.path.exists(os.path.join(self.root, name))
-            for name in self.extracted_names
+            os.path.exists(os.path.join(self.root, file_info["name"]))
+            for file_info in self.metadata
         ):
             return
 
-        # Check for downloaded files and extract existing zips
+        # Check for downloaded files
         missing = []
-        for file_name in self.file_names:
-            file_path = os.path.join(self.root, file_name)
+        extractable = []
+        for file_info in self.metadata:
+            file_path = os.path.join(self.root, file_info["name"] + file_info["ext"])
             if not os.path.exists(file_path):
-                missing.append(file_name)
-            elif file_name[-3:] == "zip":
-                extract_archive(file_path)
-
-        if not missing:
-            return
+                missing.append(file_info)
+            elif file_info["ext"] == ".zip":
+                extractable.append(file_path)
 
         # Check if the user requested to download the dataset
-        if not self.download:
-            missing_str = (
-                f"{', '.join(missing[:-1])} and {missing[-1]}"
-                if len(missing) > 1
-                else missing[0]
-            )
+        if missing and not self.download:
             raise RuntimeError(
-                f"{missing_str} not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True`"
+                f"{', '.join([m['name'] for m in missing])} not found in"
+                " `root={self.root}` and `download=False`, either specify a"
+                " different `root` directory or use `download=True`"
                 " to automatically download the dataset."
             )
 
         # Download missing files
-        try:
-            import requests  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "requests is not installed and is required to download this dataset"
+        for file_info in missing:
+            download_url(
+                file_info["url"],
+                self.root,
+                filename=file_info["name"] + file_info["ext"],
+                md5=file_info["md5"] if self.checksum else None,
             )
-        record_info = requests.get(self.url).json()["files"]
-        extractable = []
-        for file_info in record_info:
-            file_path = os.path.join(self.root, file_info["key"])
-            if not os.path.exists(file_path):
-                download_url(
-                    file_info["links"]["self"],
-                    self.root,
-                    filename=file_info["key"],
-                    md5=file_info["checksum"].split(":")[1] if self.checksum else None,
-                )
-                if file_info["type"] == "zip":
-                    extractable.append(file_path)
+            if file_info["ext"] == ".zip":
+                extractable.append(os.path.join(self.root, file_info["name"] + ".zip"))
 
         # Extract downloaded files
         for file_path in extractable:

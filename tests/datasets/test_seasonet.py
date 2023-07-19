@@ -6,11 +6,10 @@ import glob
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 import matplotlib.pyplot as plt
 import pytest
-import requests
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
@@ -21,72 +20,6 @@ import torchgeo.datasets.utils
 from torchgeo.datasets import SeasoNet
 
 pytest.importorskip("pandas", minversion="1.1.3")
-pytest.importorskip("requests", minversion="2.28.0")
-
-
-class MockResponse:
-    @staticmethod
-    def json() -> dict[str, list[dict[str, Union[str, dict[str, str]]]]]:
-        return {
-            "files": [
-                {
-                    "checksum": "md5:dc0dda18de019a9f50a794b8b4060a3b",
-                    "key": "fall.zip",
-                    "links": {
-                        "self": os.path.join("tests", "data", "seasonet", "fall.zip")
-                    },
-                    "type": "zip",
-                },
-                {
-                    "checksum": "md5:48ff6e9e01fdd92379e5712e4f336ea8",
-                    "key": "meta.csv",
-                    "links": {
-                        "self": os.path.join("tests", "data", "seasonet", "meta.csv")
-                    },
-                    "type": "csv",
-                },
-                {
-                    "checksum": "md5:67651cc9095207e07ea4db1a71f0ebc2",
-                    "key": "snow.zip",
-                    "links": {
-                        "self": os.path.join("tests", "data", "seasonet", "snow.zip")
-                    },
-                    "type": "zip",
-                },
-                {
-                    "checksum": "md5:576324ba1c32a7e9ba858f1c2577cf2a",
-                    "key": "splits.zip",
-                    "links": {
-                        "self": os.path.join("tests", "data", "seasonet", "splits.zip")
-                    },
-                    "type": "zip",
-                },
-                {
-                    "checksum": "md5:836a0896eba0e3005208f3fd180e429d",
-                    "key": "spring.zip",
-                    "links": {
-                        "self": os.path.join("tests", "data", "seasonet", "spring.zip")
-                    },
-                    "type": "zip",
-                },
-                {
-                    "checksum": "md5:405656c8c19d822620bbb9f92e687337",
-                    "key": "summer.zip",
-                    "links": {
-                        "self": os.path.join("tests", "data", "seasonet", "summer.zip")
-                    },
-                    "type": "zip",
-                },
-                {
-                    "checksum": "md5:a70abca62e78eb1591555809dc81d91d",
-                    "key": "winter.zip",
-                    "links": {
-                        "self": os.path.join("tests", "data", "seasonet", "winter.zip")
-                    },
-                    "type": "zip",
-                },
-            ]
-        }
 
 
 def download_url(url: str, root: str, md5: str, *args: str, **kwargs: str) -> None:
@@ -94,10 +27,6 @@ def download_url(url: str, root: str, md5: str, *args: str, **kwargs: str) -> No
     torchgeo.datasets.utils.check_integrity(
         os.path.join(root, os.path.basename(url)), md5
     )
-
-
-def get(*args: str, **kwargs: str) -> MockResponse:
-    return MockResponse()
 
 
 class TestSeasoNet:
@@ -114,7 +43,48 @@ class TestSeasoNet:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SeasoNet:
         monkeypatch.setattr(torchgeo.datasets.seasonet, "download_url", download_url)
-        monkeypatch.setattr(requests, "get", get)
+        monkeypatch.setitem(SeasoNet.metadata[0], "md5", "836a0896eba0e3005208f3fd180e429d")
+        monkeypatch.setitem(SeasoNet.metadata[1], "md5", "405656c8c19d822620bbb9f92e687337")
+        monkeypatch.setitem(SeasoNet.metadata[2], "md5", "dc0dda18de019a9f50a794b8b4060a3b")
+        monkeypatch.setitem(SeasoNet.metadata[3], "md5", "a70abca62e78eb1591555809dc81d91d")
+        monkeypatch.setitem(SeasoNet.metadata[4], "md5", "67651cc9095207e07ea4db1a71f0ebc2")
+        monkeypatch.setitem(SeasoNet.metadata[5], "md5", "576324ba1c32a7e9ba858f1c2577cf2a")
+        monkeypatch.setitem(SeasoNet.metadata[6], "md5", "48ff6e9e01fdd92379e5712e4f336ea8")
+        monkeypatch.setitem(
+            SeasoNet.metadata[0],
+            "url",
+            os.path.join("tests", "data", "seasonet", "spring.zip"),
+        )
+        monkeypatch.setitem(
+            SeasoNet.metadata[1],
+            "url",
+            os.path.join("tests", "data", "seasonet", "summer.zip"),
+        )
+        monkeypatch.setitem(
+            SeasoNet.metadata[2],
+            "url",
+            os.path.join("tests", "data", "seasonet", "fall.zip"),
+        )
+        monkeypatch.setitem(
+            SeasoNet.metadata[3],
+            "url",
+            os.path.join("tests", "data", "seasonet", "winter.zip"),
+        )
+        monkeypatch.setitem(
+            SeasoNet.metadata[4],
+            "url",
+            os.path.join("tests", "data", "seasonet", "snow.zip"),
+        )
+        monkeypatch.setitem(
+            SeasoNet.metadata[5],
+            "url",
+            os.path.join("tests", "data", "seasonet", "splits.zip"),
+        )
+        monkeypatch.setitem(
+            SeasoNet.metadata[6],
+            "url",
+            os.path.join("tests", "data", "seasonet", "meta.csv"),
+        )
         root = str(tmp_path)
         split, seasons, bands, grids, concat_seasons = request.param
         transforms = nn.Identity()
@@ -157,7 +127,7 @@ class TestSeasoNet:
             assert len(ds) == num_grids * 2
 
     def test_already_extracted(self, dataset: SeasoNet) -> None:
-        SeasoNet(root=dataset.root, download=True)
+        SeasoNet(root=dataset.root)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         paths = os.path.join("tests", "data", "seasonet", "*.*")
@@ -168,28 +138,26 @@ class TestSeasoNet:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="not found in"):
-            SeasoNet(str(tmp_path))
+            SeasoNet(str(tmp_path), download=False)
 
-    @pytest.fixture(params=["pandas", "requests"])
-    def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:
+    @pytest.fixture
+    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
         import_orig = builtins.__import__
-        package = str(request.param)
 
         def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name == package:
+            if name == "pandas":
                 raise ImportError()
             return import_orig(name, *args, **kwargs)
 
         monkeypatch.setattr(builtins, "__import__", mocked_import)
-        return package
 
     def test_mock_missing_module(
-        self, mock_missing_module: None, tmp_path: Path
+        self, dataset: SeasoNet, mock_missing_module: None
     ) -> None:
         with pytest.raises(
-            ImportError, match=f"{mock_missing_module} is not installed and is required"
+            ImportError, match="pandas is not installed and is required"
         ):
-            SeasoNet(str(tmp_path), download=True)
+            SeasoNet(dataset.root)
 
     def test_out_of_bounds(self, dataset: SeasoNet) -> None:
         with pytest.raises(IndexError):
