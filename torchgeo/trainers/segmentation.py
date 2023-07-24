@@ -8,6 +8,7 @@ import warnings
 from typing import Any, cast
 
 import matplotlib.pyplot as plt
+import numpy as np
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
@@ -301,7 +302,27 @@ class SemanticSegmentationTask(LightningModule):
         self.log_dict(self.test_metrics.compute())
         self.test_metrics.reset()
 
-    def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
+    def compute_prediction(self, predict_outputs: Tensor) -> dict[int, np.ndarray]:
+        predict_table = {}
+        field_ids = predict_outputs["field_ids"]
+        pred = predict_outputs["image"]
+        batch_size = pred.shape[0]
+
+        for i in range(batch_size):
+            ids = field_ids[i][field_ids[i] != 0]
+            ids = torch.unique(ids)
+            ids = ids.detach().to("cpu").numpy()
+            for id in ids:
+                x, y = torch.where(field_ids[i] == id)
+                pred_points = torch.zeros(pred[i].shape[0], device=torch.device("cuda"))
+                for j in range(len(x)):
+                    pred_points += pred[i][:, x[j], y[j]]
+                pred_avg = pred_points / len(x)
+                predict_table[id] = pred_avg.detach().to("cpu").numpy()
+
+        return predict_table
+
+    def predict_step(self, *args: Any, **kwargs: Any) -> dict[Tensor, Tensor]:
         """Compute and return the predictions.
 
         By default, this will loop over images in a dataloader and aggregate
@@ -315,10 +336,14 @@ class SemanticSegmentationTask(LightningModule):
         Returns:
             predicted softmax probabilities
         """
+        y_hat = {}
         batch = args[0]
         x = batch["image"]
-        y_hat: Tensor = self(x).softmax(dim=1)
-        return y_hat, batch["field_ids"]
+        y_hat["image"]: Tensor = self(x).softmax(dim=1)
+        y_hat["field_ids"] = batch["field_ids"]
+        predict_table = self.compute_prediction(y_hat)
+
+        return predict_table
 
     def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.

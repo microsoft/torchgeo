@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #SBATCH --time=3-00:00:00
-#SBATCH --job-name=ag-18-random
+#SBATCH --job-name=ag-50
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
 #SBATCH --gres=gpu:A100:1

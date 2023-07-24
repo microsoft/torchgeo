@@ -15,12 +15,12 @@ conf_file_name = "agrifieldnet.yaml"
 
 # Hyperparameter options
 model_options = ["unet"]
-backbone_options = ["resnet18"]
+backbone_options = ["resnet50"]
 lr_options = [0.001, 0.0003, 0.0001, 0.00003]
 loss_options = ["ce"]
-weight_options = [False]
+weight_options = [False, True]
 seed_options = [2]
-weight_decay_options = [0]
+weight_decay_options = [0, 1e-3]
 
 
 def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
@@ -49,7 +49,16 @@ if __name__ == "__main__":
         if model == "fcn" and not weights:
             continue
 
-        experiment_name = f"{conf_file_name.split('.')[0]}_{model}_{backbone}_{lr}_{loss}_{weights}_{weight_decay}_{seed}"
+        experiment_name = (
+            f"{conf_file_name.split('.')[0]}_"
+            f"{model}_"
+            f"{backbone}_"
+            f"{lr}_"
+            f"{loss}_"
+            f"{weights}"
+            f"{weight_decay}"
+            f"{seed}"
+        )
 
         config_file = os.path.join("conf", conf_file_name)
 

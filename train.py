@@ -9,6 +9,8 @@ import os
 from typing import cast
 
 import lightning.pytorch as pl
+import numpy as np
+import pandas as pd
 from hydra.utils import instantiate
 from lightning.pytorch import LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
@@ -56,11 +58,32 @@ def set_up_omegaconf() -> DictConfig:
     conf = cast(DictConfig, conf)  # convince mypy that everything is alright
     return conf
 
-# def compute_prediction() -> tuple(int, int):
-#     return
 
-# def create_submission() -> None:
-#     return
+def create_submission(predict_table: list[dict[int, np.ndarray]]) -> None:
+    columns = [
+        "Wheat",
+        "Mustard",
+        "Lentil",
+        "No Crop",
+        "Green pea",
+        "Sugarcane",
+        "Garlic",
+        "Maize",
+        "Gram",
+        "Coriander",
+        "Potato",
+        "Bersem",
+        "Rice",
+    ]
+
+    # convert list of dicts to one dict
+    predict_table_merge = {}
+    for p in predict_table:
+        predict_table_merge.update(p)
+    df = pd.DataFrame.from_dict(predict_table_merge, orient="index", columns=columns)
+    df.index.name = "Field ID"
+    return df
+
 
 def main(conf: DictConfig) -> None:
     """Main training loop."""
@@ -137,19 +160,14 @@ def main(conf: DictConfig) -> None:
     try:
         trainer.test(ckpt_path="best", datamodule=datamodule)
         # Predict
-        predict_outputs, predict_field_ids = trainer.predict(ckpt_path="best", datamodule=datamodule, return_predictions=True)
-
-        print("prediction outputs length: ", len(predict_outputs))
-        print("prediction field_ids length: ", len(predict_field_ids))
-
-        print("prediction outputs[0] shape: ", predict_outputs[0].shape)
-        print("prediction field_ids[0] shape: ", predict_field_ids[0].shape)
-
-        print(predict_field_ids)
-        # print(predict_outputs[0].argmax(dim=1).shape)
-        # print(predict_outputs[0].argmax(dim=1))
-        # compute_prediction()
-        # create_submission()
+        predict_table = trainer.predict(
+            ckpt_path="best", datamodule=datamodule, return_predictions=True
+        )
+        print("creating submission...")
+        df = create_submission(predict_table)
+        os.makedirs("submission", exist_ok=True)
+        df.to_csv(os.path.join("submission", experiment_name + "_submission.csv"))
+        print("Done")
     except MisconfigurationException:
         pass
 

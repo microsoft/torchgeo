@@ -4,6 +4,7 @@
 """AgriFieldNet India Challenge dataset."""
 
 import glob
+import json
 import os
 from typing import Callable, Optional
 
@@ -12,7 +13,6 @@ import numpy as np
 import pandas as pd
 import rasterio
 import torch
-import tqdm
 from matplotlib.figure import Figure
 from torch import Tensor
 
@@ -167,20 +167,10 @@ class AgriFieldNet(NonGeoDataset):
                 + "You can use download=True to download it"
             )
 
-        self.source_tiles: list[str]
         self.train_tiles: list[str]
         self.test_tiles: list[str]
 
-        self.source_tiles, self.train_tiles, self.test_tiles = self.get_tiles()
-
-        self.source_image_fns = [
-            os.path.join(
-                root,
-                "ref_agrifieldnet_competition_v1_source",
-                "ref_agrifieldnet_competition_v1_source_" + tile,
-            )
-            for tile in self.source_tiles
-        ]
+        self.train_tiles, self.test_tiles = self.get_tiles()
 
         self.train_label_fns = [
             os.path.join(
@@ -199,6 +189,14 @@ class AgriFieldNet(NonGeoDataset):
             for tile in self.test_tiles
         ]
 
+        print("================== current split: ", self.split)
+
+        if self.split == "predict":
+            print("getting splits...")
+            self.test_field_ids = self.get_splits()
+
+        # self.train_field_ids, self.test_field_ids = self.get_splits()
+
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
@@ -208,64 +206,69 @@ class AgriFieldNet(NonGeoDataset):
         Returns:
             data, label, and field ids at that index
         """
-        tile_name = self.train_tiles[index]
-        image = self._load_image_tile(tile_name)
-        labels, field_ids = self._load_label_tile(tile_name)
+        if self.split == "train":
+            tile_name = self.train_tiles[index]
+            image = self._load_image_tile(tile_name)
+            labels, field_ids = self._load_label_tile(tile_name)
+            sample = {"image": image, "mask": labels, "field_ids": field_ids}
 
-        sample = {"image": image, "mask": labels, "field_ids": field_ids}
+        if self.split == "predict":
+            tile_name = self.test_tiles[index]
+            image = self._load_image_tile(tile_name)
+            field_ids = self._load_label_tile(tile_name)
+            sample = {"image": image, "field_ids": field_ids}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
 
         return sample
 
-    def get_tiles(self) -> tuple[list[str], list[str], list[str]]:
+    def get_tiles(self) -> tuple[list[str], list[str]]:
         """Get the tile names from the dataset directory.
 
         Returns:
             list of source, training, and testing tile names
         """
-        source_collection = "ref_agrifieldnet_competition_v1_source"
         train_label = "ref_agrifieldnet_competition_v1_labels_train"
         test_label = "ref_agrifieldnet_competition_v1_labels_test"
 
-        source_tiles = []
-        for dir in os.walk(os.path.join(self.root, source_collection), topdown=True):
-            source_tiles.append(dir[0][-5:])
-        source_tiles = source_tiles[1:]
+        with open(os.path.join(self.root, train_label, "collection.json")) as f:
+            train_json = json.load(f)
+        train_tiles = [
+            i["href"].split("_")[-1].split(".")[0][:-5]
+            for i in train_json["links"][2:-1]
+        ]
 
-        train_tiles = []
-        for dir in os.walk(os.path.join(self.root, train_label), topdown=True):
-            train_tiles.append(dir[0][-5:])
-        train_tiles = train_tiles[1:]
-        train_tiles.remove("ommon")
+        with open(os.path.join(self.root, test_label, "collection.json")) as f:
+            test_json = json.load(f)
+        test_tiles = [
+            i["href"].split("_")[-1].split(".")[0][:-5]
+            for i in test_json["links"][2:-1]
+        ]
 
-        test_tiles = []
-        for dir in os.walk(os.path.join(self.root, test_label), topdown=True):
-            test_tiles.append(dir[0][-5:])
-        test_tiles = test_tiles[1:]
-        test_tiles.remove("ommon")
+        return (train_tiles, test_tiles)
 
-        return (source_tiles, train_tiles, test_tiles)
-
-    def get_splits(self) -> tuple[list[int], list[int]]:
+    def get_splits(self) -> list[int]:  # tuple[list[int], list[int]]:
         """Get the field_ids for the train/test splits from the dataset directory.
 
         Returns:
             list of training field_ids and list of testing field_ids
         """
-        train_field_ids = []
-        test_field_ids = []
+        # train_field_ids = np.empty((0, 1))
+        test_field_ids = np.empty((0, 1))
 
-        for tile_name in self.train_tiles:
-            directory = os.path.join(
-                self.root,
-                "ref_agrifieldnet_competition_v1_labels_train",
-                "ref_agrifieldnet_competition_v1_labels_train_" + tile_name,
-            )
+        # for tile_name in self.train_tiles:
+        #    directory = os.path.join(
+        #        self.root,
+        #        "ref_agrifieldnet_competition_v1_labels_train",
+        #        "ref_agrifieldnet_competition_v1_labels_train_" + tile_name,
+        #    )
 
-            array = rasterio.open(os.path.join(directory, "field_ids.tif")).read(1)
-            train_field_ids.extend(np.unique(array))
+        #    field_array = rasterio.open(os.path.join(
+        #        directory,
+        #        "field_ids.tif")).read(1)
+        #    train_field_ids = np.append(train_field_ids, field_array.flatten())
+        # train_field_ids = np.unique(train_field_ids[train_field_ids != 0])
 
         for tile_name in self.test_tiles:
             directory = os.path.join(
@@ -273,11 +276,14 @@ class AgriFieldNet(NonGeoDataset):
                 "ref_agrifieldnet_competition_v1_labels_test",
                 "ref_agrifieldnet_competition_v1_labels_test_" + tile_name,
             )
+            field_array = rasterio.open(os.path.join(directory, "field_ids.tif")).read(
+                1
+            )
+            test_field_ids = np.append(test_field_ids, field_array.flatten())
+        test_field_ids = np.unique(test_field_ids[test_field_ids != 0])
 
-            array = rasterio.open(os.path.join(directory, "field_ids.tif")).read(1)
-            test_field_ids.extend(np.unique(array))
-
-        return train_field_ids, test_field_ids
+        # return train_field_ids, test_field_ids
+        return test_field_ids
 
     def _download(self, api_key: Optional[str] = None) -> None:
         """Download the dataset and extract it.
@@ -359,7 +365,7 @@ class AgriFieldNet(NonGeoDataset):
         Returns:
             the image
         """
-        assert tile_name in self.source_tiles
+        # assert tile_name in self.source_tiles
 
         path = os.path.join(
             self.root,
@@ -388,33 +394,33 @@ class AgriFieldNet(NonGeoDataset):
         Raises:
             AssertionError: if ``tile_name`` is invalid
         """
-        assert tile_name in self.train_tiles
+        if self.split == "train":
+            assert tile_name in self.train_tiles
+            directory = os.path.join(
+                self.root,
+                "ref_agrifieldnet_competition_v1_labels_train",
+                "ref_agrifieldnet_competition_v1_labels_train_" + tile_name,
+            )
+            array = rasterio.open(os.path.join(directory, "raster_labels.tif")).read(1)
+            array = np.vectorize(lambda x: self.label_mapper[x])(array)
+            labels = torch.tensor(array, dtype=torch.long)
 
-        directory = os.path.join(
-            self.root,
-            "ref_agrifieldnet_competition_v1_labels_train",
-            "ref_agrifieldnet_competition_v1_labels_train_" + tile_name,
-        )
+            array = rasterio.open(os.path.join(directory, "field_ids.tif")).read(1)
+            field_ids = torch.tensor(array.astype(np.int32), dtype=torch.long)
 
-        array = rasterio.open(os.path.join(directory, "raster_labels.tif")).read(1)
-        array = np.vectorize(lambda x: self.label_mapper[x])(array)
-        labels = torch.tensor(array, dtype=torch.long)
+            return (labels, field_ids)
 
-        array = rasterio.open(os.path.join(directory, "field_ids.tif")).read(1)
-        field_ids = torch.tensor(array.astype(np.int32), dtype=torch.long)
+        if self.split == "predict":
+            assert tile_name in self.test_tiles
+            directory = os.path.join(
+                self.root,
+                "ref_agrifieldnet_competition_v1_labels_test",
+                "ref_agrifieldnet_competition_v1_labels_test_" + tile_name,
+            )
+            array = rasterio.open(os.path.join(directory, "field_ids.tif")).read(1)
+            field_ids = torch.tensor(array.astype(np.int32), dtype=torch.long)
 
-        return (labels, field_ids)
-
-    def compute_prediction(self) -> tuple[list[int], list[float]]:
-        """Compute predictions for the test set.
-
-        Should return highest average values within the same field (same field_ids)
-
-        """
-        train_fields, test_fields = self.get_splits()
-        test_predictions = []
-
-        return test_fields, test_predictions
+            return field_ids
 
     def create_submission(self, predictions: list[float]) -> None:
         """Create a submission file for the competition.
