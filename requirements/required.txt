@@ -6,7 +6,7 @@ einops==0.6.1
 fiona==1.9.4.post1
 kornia==0.6.12
 lightly==1.4.13
-lightning==2.0.5
+lightning==2.0.6
 matplotlib==3.7.2
 numpy==1.25.1
 pillow==10.0.0
