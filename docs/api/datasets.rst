@@ -272,6 +272,11 @@ OSCD
 
 .. autoclass:: OSCD
 
+PASTIS
+^^^^^^^^^^
+
+.. autoclass:: PASTIS
+
 PatternNet
 ^^^^^^^^^^
 
