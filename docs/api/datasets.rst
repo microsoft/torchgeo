@@ -272,6 +272,12 @@ OSCD
 
 .. autoclass:: OSCD
 
+PASTIS
+^^^^^^
+
+.. autoclass:: PASTISSemanticSegmentation
+.. autoclass:: PASTISInstanceSegmentation
+
 PatternNet
 ^^^^^^^^^^
 
