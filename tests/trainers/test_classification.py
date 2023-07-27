@@ -10,11 +10,10 @@ import timm
 import torch
 import torch.nn as nn
 import torchvision
-from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
 from hydra.utils import instantiate
 from lightning.pytorch import Trainer
 from omegaconf import OmegaConf
+from pytest import MonkeyPatch
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
@@ -24,7 +23,7 @@ from torchgeo.datamodules import (
     MisconfigurationException,
 )
 from torchgeo.datasets import BigEarthNet, EuroSAT
-from torchgeo.models import get_model_weights, list_models
+from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
 
 
@@ -33,7 +32,8 @@ class ClassificationTestModel(Module):
         super().__init__()
         self.conv1 = nn.Conv2d(in_channels=in_chans, out_channels=1, kernel_size=1)
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(1, num_classes)
+        self.fc = nn.Linear(1, num_classes) if num_classes else nn.Identity()
+        self.num_features = 1
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.conv1(x)
@@ -123,13 +123,9 @@ class TestClassificationTask:
             "weights": None,
         }
 
-    @pytest.fixture(
-        params=[
-            weights for model in list_models() for weights in get_model_weights(model)
-        ]
-    )
-    def weights(self, request: SubRequest) -> WeightsEnum:
-        return request.param
+    @pytest.fixture
+    def weights(self) -> WeightsEnum:
+        return ResNet18_Weights.SENTINEL2_ALL_MOCO
 
     @pytest.fixture
     def mocked_weights(

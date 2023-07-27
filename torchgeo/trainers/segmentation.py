@@ -23,7 +23,7 @@ from ..models import FCN, get_weight
 from . import utils
 
 
-class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
+class SemanticSegmentationTask(LightningModule):
     """LightningModule for semantic segmentation of images.
 
     Supports `Segmentation Models Pytorch
@@ -65,9 +65,12 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
         if self.hyperparams["loss"] == "ce":
             ignore_value = -1000 if self.ignore_index is None else self.ignore_index
 
-            class_weights = (
-                torch.FloatTensor(self.class_weights) if self.class_weights else None
-            )
+            class_weights = None
+            if isinstance(self.class_weights, torch.Tensor):
+                class_weights = self.class_weights.to(dtype=torch.float32)
+            elif hasattr(self.class_weights, "__array__") or self.class_weights:
+                class_weights = torch.tensor(self.class_weights, dtype=torch.float32)
+
             self.loss = nn.CrossEntropyLoss(
                 ignore_index=ignore_value, weight=class_weights
             )
@@ -128,6 +131,10 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
             ignore_index: Optional integer class index to ignore in the loss and metrics
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
+            freeze_backbone: Freeze the backbone network to fine-tune the
+                decoder and segmentation head
+            freeze_decoder: Freeze the decoder network to linear probe
+                the segmentation head
 
         Raises:
             ValueError: if kwargs arguments are invalid
@@ -171,11 +178,13 @@ class SemanticSegmentationTask(LightningModule):  # type: ignore[misc]
                 MulticlassAccuracy(
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
-                    mdmc_average="global",
+                    multidim_average="global",
+                    average="micro",
                 ),
                 MulticlassJaccardIndex(
                     num_classes=self.hyperparams["num_classes"],
                     ignore_index=self.ignore_index,
+                    average="micro",
                 ),
             ],
             prefix="train_",

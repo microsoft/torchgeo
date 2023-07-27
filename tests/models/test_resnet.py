@@ -9,7 +9,7 @@ import timm
 import torch
 import torchvision
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import ResNet18_Weights, ResNet50_Weights, resnet18, resnet50

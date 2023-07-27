@@ -333,6 +333,8 @@ SpaceNet
 SSL4EO
 ^^^^^^
 
+.. autoclass:: SSL4EO
+.. autoclass:: SSL4EOL
 .. autoclass:: SSL4EOS12
 
 SustainBench Crop Yield

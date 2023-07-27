@@ -14,11 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.5.2
+      uses: actions/checkout@v3.5.3
     - name: Set up python
-      uses: actions/setup-python@v4.6.0
+      uses: actions/setup-python@v4.7.0
       with:
-        python-version: '3.10'
+        python-version: '3.11'
     - name: Cache dependencies
       uses: actions/cache@v3.3.1
       id: cache
@@ -37,11 +37,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.5.2
+      uses: actions/checkout@v3.5.3
     - name: Set up python
-      uses: actions/setup-python@v4.6.0
+      uses: actions/setup-python@v4.7.0
       with:
-        python-version: '3.10'
+        python-version: '3.11'
     - name: Cache dependencies
       uses: actions/cache@v3.3.1
       id: cache
@@ -60,11 +60,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.5.2
+      uses: actions/checkout@v3.5.3
     - name: Set up python
-      uses: actions/setup-python@v4.6.0
+      uses: actions/setup-python@v4.7.0
       with:
-        python-version: '3.10'
+        python-version: '3.11'
     - name: Cache dependencies
       uses: actions/cache@v3.3.1
       id: cache
@@ -83,11 +83,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.5.2
+      uses: actions/checkout@v3.5.3
     - name: Set up python
-      uses: actions/setup-python@v4.6.0
+      uses: actions/setup-python@v4.7.0
       with:
-        python-version: '3.10'
+        python-version: '3.11'
     - name: Cache dependencies
       uses: actions/cache@v3.3.1
       id: cache
@@ -106,11 +106,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.5.2
+      uses: actions/checkout@v3.5.3
     - name: Set up python
-      uses: actions/setup-python@v4.6.0
+      uses: actions/setup-python@v4.7.0
       with:
-        python-version: '3.10'
+        python-version: '3.11'
     - name: Cache dependencies
       uses: actions/cache@v3.3.1
       id: cache
@@ -125,5 +125,5 @@ jobs:
     - name: Run pyupgrade checks
       run: pyupgrade --py39-plus $(find . -path ./docs/src -prune -o -name "*.py" -print)
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: true
