@@ -4,13 +4,15 @@
 """PASTIS dataset."""
 
 import abc
-import glob
 import os
-from typing import Callable, Optional, Union
+from typing import Callable, Optional, Union, Sequence
 
 import numpy as np
 import torch
 from torch import Tensor
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+import fiona
 
 from .geo import NonGeoDataset
 from .utils import check_integrity, download_url, extract_archive
@@ -88,7 +90,7 @@ class PASTIS(NonGeoDataset, abc.ABC):
         "sorghum",
         "void_label",  # for parcels mostly outside their patch
     ]
-    colormap = [
+    cmap = ListedColormap([
         (0.0, 0.0, 0.0),
         (0.6823529411764706, 0.7803921568627451, 0.9098039215686274),
         (1.0, 0.4980392156862745, 0.054901960784313725),
@@ -109,7 +111,7 @@ class PASTIS(NonGeoDataset, abc.ABC):
         (0.8588235294117647, 0.8588235294117647, 0.5529411764705883),
         (0.09019607843137255, 0.7450980392156863, 0.8117647058823529),
         (0.6196078431372549, 0.8549019607843137, 0.8980392156862745),
-    ]
+    ])
     directory = "PASTIS-R"
     filename = "PASTIS-R.zip"
     url = "https://zenodo.org/record/5735646/files/PASTIS-R.zip?download=1"
@@ -125,6 +127,7 @@ class PASTIS(NonGeoDataset, abc.ABC):
     def __init__(
         self,
         root: str = "data",
+        folds: Sequence[int] = (0, 1, 2, 3, 4),
         bands: str = "all",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
@@ -134,14 +137,19 @@ class PASTIS(NonGeoDataset, abc.ABC):
 
         Args:
             root: root directory where dataset can be found
+            folds: a sequence of integers from 0 to 4 specifying which of the five
+                dataset folds to include
             bands: load Sentinel-1, Sentinel-2, or both. One of {s1a, s1d, s2, all}
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
+        for fold in folds:
+            assert 0 <= fold < 5
         assert bands in ["s1a", "s1d", "s2", "all"]
         self.root = root
+        self.folds = folds
         self.bands = bands
         self.transforms = transforms
         self.download = download
@@ -166,7 +174,7 @@ class PASTIS(NonGeoDataset, abc.ABC):
         Returns:
             length of the dataset
         """
-        return len(self.files)
+        return len(self.idxs)
 
     def _load_image(self, index: int) -> Tensor:
         """Load a single time-series.
@@ -205,10 +213,16 @@ class PASTIS(NonGeoDataset, abc.ABC):
         Returns:
             list of dicts containing image and semantic/instance target file paths
         """
-        ids = glob.glob(self.prefix["semantic"] + "*.npy")
-        ids = [os.path.splitext(os.path.basename(i))[0].split("_")[-1] for i in ids]
+        self.idxs = []
+        metadata_fn = os.path.join(self.root, self.directory, "metadata.geojson")
+        with fiona.open(metadata_fn) as f:
+            for row in f:
+                fold = int(row["properties"]["Fold"])
+                if fold in self.folds:
+                    self.idxs.append(row["properties"]["ID_PATCH"])
+
         files = []
-        for i in ids:
+        for i in self.idxs:
             suffix = f"{i}.npy"
             files.append(
                 dict(
@@ -261,6 +275,54 @@ class PASTIS(NonGeoDataset, abc.ABC):
         )
         extract_archive(os.path.join(self.root, self.filename), self.root)
 
+    def plot(
+        self,
+        sample: dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+        Args:
+            sample: a sample returned by :meth:`NonGeoClassificationDataset.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        # Keep the RGB bands and convert to T x H x W x C format
+        images = sample["image"][:, [2, 1, 0], :, :].numpy().transpose(0, 2, 3, 1)
+        mask = sample["mask"].numpy()
+
+        num_panels = 3
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            predictions = sample["prediction"].numpy()
+            num_panels += 1
+
+        fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 4))
+        axs[0].imshow(images[0] / 5000)
+        axs[1].imshow(images[1] / 5000)
+        axs[2].imshow(mask, vmin=0, vmax=19, cmap=self.cmap, interpolation="none")
+        axs[0].axis("off")
+        axs[1].axis("off")
+        axs[2].axis("off")
+        if showing_predictions:
+            axs[3].imshow(
+                predictions, vmin=0, vmax=19, cmap=self.cmap, interpolation="none"
+            )
+            axs[3].axis("off")
+
+        if show_titles:
+            axs[0].set_title("Image 0")
+            axs[1].set_title("Image 1")
+            axs[2].set_title("Mask")
+            if showing_predictions:
+                axs[3].set_title("Prediction")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig
+
 
 class PASTISSemanticSegmentation(PASTIS):
     """PASTIS dataset for the semantic segmentation task.
@@ -295,8 +357,10 @@ class PASTISSemanticSegmentation(PASTIS):
         Returns:
             the target mask
         """
-        array = np.load(self.files[index]["semantic"])
-        tensor = torch.from_numpy(array)
+        # See https://github.com/VSainteuf/pastis-benchmark/blob/main/code/dataloader.py#L201 # noqa: E501
+        # even though the mask file is 3 bands, we just select the first band
+        array = np.load(self.files[index]["semantic"])[0]
+        tensor = torch.from_numpy(array).long()
         return tensor
 
 
