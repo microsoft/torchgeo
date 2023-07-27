@@ -9,7 +9,11 @@ from typing import Any, Optional, Type
 import torch
 from torch import Tensor
 
-from ..datasets import PASTIS, PASTISInstanceSegmentation, PASTISSemanticSegmentation
+from ..datasets.pastis import (
+    PASTIS,
+    PASTISInstanceSegmentation,
+    PASTISSemanticSegmentation,
+)
 from .geo import NonGeoDataModule
 from .utils import dataset_split
 
