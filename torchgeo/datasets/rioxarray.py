@@ -7,6 +7,7 @@ import glob
 import os
 import re
 import sys
+from datetime import datetime
 from typing import Any, Callable, Optional, cast
 
 import numpy as np
@@ -68,7 +69,7 @@ class RioXarrayDataset(GeoDataset):
             match = re.match(filename_regex, os.path.basename(filepath))
             print(filepath)
             if match is not None:
-                with xr.open_dataset(filepath, decode_times=False) as ds:
+                with xr.open_dataset(filepath, decode_times=True) as ds:
                     if crs is None:
                         crs = ds.rio.crs
                     if res is None:
@@ -77,8 +78,9 @@ class RioXarrayDataset(GeoDataset):
                     (minx, miny, maxx, maxy) = ds.rio.bounds()
 
                 if hasattr(ds, "time"):
-                    mint = int(ds.time.min().data)
-                    maxt = int(ds.time.max().data)
+                    indices = ds.indexes["time"].to_datetimeindex()
+                    mint = indices.min().to_pydatetime().timestamp()
+                    maxt = indices.max().to_pydatetime().timestamp()
                 else:
                     mint = 0
                     maxt = sys.maxsize
@@ -118,11 +120,21 @@ class RioXarrayDataset(GeoDataset):
 
         data_arrays: list["np.typing.NDArray[np.float32]"] = []
         for item in items:
-            with xr.open_dataset(item) as ds:
+            with xr.open_dataset(item, decode_cf=True) as ds:
                 if not ds.rio.crs:
                     ds.rio.write_crs(self._crs, inplace=True)
+
+                # clip box ignores time dimension
                 clipped = ds.rio.clip_box(
                     minx=query.minx, miny=query.miny, maxx=query.maxx, maxy=query.maxy
+                )
+                # select time dimension
+                clipped["time"] = clipped.indexes["time"].to_datetimeindex()
+                clipped = clipped.sel(
+                    time=slice(
+                        datetime.fromtimestamp(query.mint),
+                        datetime.fromtimestamp(query.maxt),
+                    )
                 )
                 for variable in self.data_variables:
                     if hasattr(clipped, variable):
