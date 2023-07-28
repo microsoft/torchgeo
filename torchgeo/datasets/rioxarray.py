@@ -20,18 +20,17 @@ from .utils import BoundingBox
 
 
 class RioXarrayDataset(GeoDataset):
-    """Wrapper for geographical datasets stored as an xarray.DataArray.
+    """Wrapper for geographical datasets stored as Xarray Datasets.
 
     Relies on rioxarray.
     """
 
-    filename_glob = "*os_new.nc"
+    filename_glob = "*"
     filename_regex = ".*"
 
     def __init__(
         self,
         root: str,
-        # xr_dataarray: xr.DataArray,
         data_variables: list[str],
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
@@ -91,7 +90,10 @@ class RioXarrayDataset(GeoDataset):
             msg = f"No {self.__class__.__name__} data was found in `root='{self.root}'`"
             raise FileNotFoundError(msg)
 
-        self._crs = cast(CRS, crs)
+        if not crs:
+            self._crs = "EPSG:4326"
+        else:
+            self._crs = cast(CRS, crs)
         self.res = cast(float, res)
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
@@ -114,10 +116,11 @@ class RioXarrayDataset(GeoDataset):
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
-        data_arrays: list[np.ndarray] = []
+        data_arrays: list["np.typing.NDArray[np.float32]"] = []
         for item in items:
             with xr.open_dataset(item) as ds:
-                ds.rio.write_crs("EPSG:4326", inplace=True)
+                if not ds.rio.crs:
+                    ds.rio.write_crs(self._crs, inplace=True)
                 clipped = ds.rio.clip_box(
                     minx=query.minx, miny=query.miny, maxx=query.maxx, maxy=query.maxy
                 )
