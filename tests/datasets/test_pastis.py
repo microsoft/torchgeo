@@ -27,9 +27,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 class TestPASTIS:
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path,
-    ) -> PASTIS:
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> PASTIS:
         monkeypatch.setattr(torchgeo.datasets.pastis, "download_url", download_url)
 
         md5 = "9b11ae132623a0d13f7f0775d2003703"
@@ -50,11 +48,13 @@ class TestPASTIS:
 
 
 class TestPASTISSemanticSegmentation:
-    @pytest.fixture(params=[
-        {"folds": (0, 1), "bands": "s2"},
-        {"folds": (0, 1), "bands": "s1a"},
-        {"folds": (0, 1), "bands": "s1d"},
-    ])
+    @pytest.fixture(
+        params=[
+            {"folds": (0, 1), "bands": "s2"},
+            {"folds": (0, 1), "bands": "s1a"},
+            {"folds": (0, 1), "bands": "s1d"},
+        ]
+    )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> PASTISSemanticSegmentation:
@@ -68,7 +68,9 @@ class TestPASTISSemanticSegmentation:
         folds = request.param["folds"]
         bands = request.param["bands"]
         transforms = nn.Identity()
-        return PASTISSemanticSegmentation(root, folds, bands, transforms, download=True, checksum=True)
+        return PASTISSemanticSegmentation(
+            root, folds, bands, transforms, download=True, checksum=True
+        )
 
     def test_getitem(self, dataset: PASTISSemanticSegmentation) -> None:
         x = dataset[0]
@@ -98,9 +100,7 @@ class TestPASTISSemanticSegmentation:
             PASTISSemanticSegmentation(str(tmp_path))
 
     def test_corrupted(self, tmp_path: Path) -> None:
-        with open(
-            os.path.join(tmp_path, "PASTIS-R.zip"), "w"
-        ) as f:
+        with open(os.path.join(tmp_path, "PASTIS-R.zip"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
             PASTISSemanticSegmentation(root=str(tmp_path), checksum=True)
@@ -121,11 +121,13 @@ class TestPASTISSemanticSegmentation:
 
 
 class TestPASTISInstanceSegmentation:
-    @pytest.fixture(params=[
-        {"folds": (0, 1), "bands": "s2"},
-        {"folds": (0, 1), "bands": "s1a"},
-        {"folds": (0, 1), "bands": "s1d"},
-    ])
+    @pytest.fixture(
+        params=[
+            {"folds": (0, 1), "bands": "s2"},
+            {"folds": (0, 1), "bands": "s1a"},
+            {"folds": (0, 1), "bands": "s1d"},
+        ]
+    )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> PASTISInstanceSegmentation:
@@ -139,7 +141,9 @@ class TestPASTISInstanceSegmentation:
         folds = request.param["folds"]
         bands = request.param["bands"]
         transforms = nn.Identity()
-        return PASTISInstanceSegmentation(root, folds, bands, transforms, download=True, checksum=True)
+        return PASTISInstanceSegmentation(
+            root, folds, bands, transforms, download=True, checksum=True
+        )
 
     def test_getitem(self, dataset: PASTISSemanticSegmentation) -> None:
         x = dataset[0]
@@ -148,35 +152,3 @@ class TestPASTISInstanceSegmentation:
         assert isinstance(x["mask"], torch.Tensor)
         assert isinstance(x["boxes"], torch.Tensor)
         assert isinstance(x["label"], torch.Tensor)
-
-    # def test_already_downloaded(self, tmp_path: Path) -> None:
-    #     url = os.path.join("tests", "data", "pastis", "PASTIS-R.zip")
-    #     root = str(tmp_path)
-    #     shutil.copy(url, root)
-    #     PASTISSemanticSegmentation(root)
-
-    # def test_not_downloaded(self, tmp_path: Path) -> None:
-    #     with pytest.raises(RuntimeError, match="Dataset not found"):
-    #         PASTISSemanticSegmentation(str(tmp_path))
-
-    # def test_corrupted(self, tmp_path: Path) -> None:
-    #     with open(
-    #         os.path.join(tmp_path, "PASTIS-R.zip"), "w"
-    #     ) as f:
-    #         f.write("bad")
-    #     with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
-    #         PASTISSemanticSegmentation(root=str(tmp_path), checksum=True)
-
-    # def test_invalid_fold(self) -> None:
-    #     with pytest.raises(AssertionError):
-    #         PASTISSemanticSegmentation(folds=(6,))
-
-    # def test_plot(self, dataset: PASTISSemanticSegmentation) -> None:
-    #     x = dataset[0].copy()
-    #     dataset.plot(x, suptitle="Test")
-    #     plt.close()
-    #     dataset.plot(x, show_titles=False)
-    #     plt.close()
-    #     x["prediction"] = x["mask"].clone()
-    #     dataset.plot(x)
-    #     plt.close()
