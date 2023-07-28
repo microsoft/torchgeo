@@ -132,7 +132,7 @@ class PASTIS(NonGeoDataset, abc.ABC):
         self,
         root: str = "data",
         folds: Sequence[int] = (0, 1, 2, 3, 4),
-        bands: str = "all",
+        bands: str = "s2",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -143,7 +143,7 @@ class PASTIS(NonGeoDataset, abc.ABC):
             root: root directory where dataset can be found
             folds: a sequence of integers from 0 to 4 specifying which of the five
                 dataset folds to include
-            bands: load Sentinel-1, Sentinel-2, or both. One of {s1a, s1d, s2, all}
+            bands: load Sentinel-1 or Sentinel-2. One of {s1a, s1d, s2}
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -151,7 +151,7 @@ class PASTIS(NonGeoDataset, abc.ABC):
         """
         for fold in folds:
             assert 0 <= fold < 5
-        assert bands in ["s1a", "s1d", "s2", "all"]
+        assert bands in ["s1a", "s1d", "s2"]
         self.root = root
         self.folds = folds
         self.bands = bands
@@ -189,13 +189,8 @@ class PASTIS(NonGeoDataset, abc.ABC):
         Returns:
             the time-series
         """
-        if self.bands == "all":
-            paths = [self.files[index][sensor] for sensor in ["s1a", "s1d", "s2"]]
-            arrays = [np.load(path) for path in paths]
-            array = np.stack(arrays, axis=0)
-        else:
-            path = self.files[index][self.bands]
-            array = np.load(path)
+        path = self.files[index][self.bands]
+        array = np.load(path)
 
         tensor = torch.from_numpy(array)
         return tensor
@@ -412,15 +407,11 @@ class PASTISInstanceSegmentation(PASTIS):
         Returns:
             the target mask, box, and label for each mask
         """
-        mask_array = np.load(self.files[index]["semantic"])
+        mask_array = np.load(self.files[index]["semantic"])[0]
         instance_array = np.load(self.files[index]["instance"])
 
         mask_tensor = torch.from_numpy(mask_array)
         instance_tensor = torch.from_numpy(instance_array)
-
-        # Convert from HxWxC to CxHxW
-        mask_tensor = mask_tensor.permute((2, 0, 1))
-        instance_tensor = instance_tensor.permute((2, 0, 1))
 
         # Convert instance mask of N instances to N binary instance masks
         instance_ids = torch.unique(instance_tensor)
@@ -432,7 +423,7 @@ class PASTISInstanceSegmentation(PASTIS):
         # Parse labels for each instance
         labels_list = []
         for mask in masks:
-            label = mask_tensor[mask[None, :, :]]
+            label = mask_tensor[mask]
             label = torch.unique(label)[0]
             labels_list.append(label)
 

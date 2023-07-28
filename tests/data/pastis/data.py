@@ -19,11 +19,11 @@ np.random.seed(0)
 FILENAME_HIERARCHY = Union[dict[str, "FILENAME_HIERARCHY"], list[str]]
 
 filenames: FILENAME_HIERARCHY = {
-    "DATA_S2": ["S2_"],
-    "DATA_S1A": ["S1A_"],
-    "DATA_S1D": ["S1D_"],
-    "ANNOTATIONS": ["TARGET_"],
-    "INSTANCE_ANNOTATIONS": ["INSTANCES_"],
+    "DATA_S2": ["S2"],
+    "DATA_S1A": ["S1A"],
+    "DATA_S1D": ["S1D"],
+    "ANNOTATIONS": ["TARGET"],
+    "INSTANCE_ANNOTATIONS": ["INSTANCES"],
 }
 
 
