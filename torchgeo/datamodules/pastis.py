@@ -4,7 +4,7 @@
 """PASTIS datamodule."""
 
 import abc
-from typing import Any, Optional, Type
+from typing import Any, Optional
 
 import torch
 from torch import Tensor
