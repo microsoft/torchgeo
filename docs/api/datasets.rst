@@ -275,6 +275,7 @@ OSCD
 PASTIS
 ^^^^^^
 
+.. autoclass:: PASTIS
 .. autoclass:: PASTISSemanticSegmentation
 .. autoclass:: PASTISInstanceSegmentation
 
