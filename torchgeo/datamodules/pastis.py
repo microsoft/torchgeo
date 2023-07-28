@@ -81,7 +81,7 @@ class PASTISDataModule(NonGeoDataModule, abc.ABC):
 
     def __init__(
         self,
-        dataset_class: Type[PASTIS],
+        dataset_class: type[PASTIS],
         batch_size: int = 64,
         num_workers: int = 0,
         val_split_pct: float = 0.2,

@@ -5,7 +5,8 @@
 
 import abc
 import os
-from typing import Callable, Optional, Sequence, Union
+from typing import Callable, Optional, Union
+from collections.abc import Sequence
 
 import fiona
 import matplotlib.pyplot as plt
@@ -28,11 +29,11 @@ class PASTIS(NonGeoDataset, abc.ABC):
 
     * support for the original PASTIS and PASTIS-R versions of the dataset
     * 2,433 time-series with 10 m per pixel resolution (128x128 px)
-    * 18 crop categories
+    * 18 crop categories, 1 background category, 1 void category
     * semantic and instance annotations
     * 3 Sentinel-1 Ascending bands
     * 3 Sentinel-1 Descending bands
-    * 10 Sentinel-2 multispectral bands
+    * 10 Sentinel-2 L2A multispectral bands
 
     Dataset format:
 
@@ -61,8 +62,9 @@ class PASTIS(NonGeoDataset, abc.ABC):
     18. Sorghum
     19. Void Label
 
-    If you use this dataset in your research, please cite the following paper:
+    If you use this dataset in your research, please cite the following papers:
 
+    * https://doi.org/10.1109/ICCV48922.2021.00483
     * https://doi.org/10.1016/j.isprsjprs.2022.03.012
 
     .. versionadded:: 0.5
