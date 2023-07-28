@@ -10,6 +10,7 @@ import sys
 from datetime import datetime
 from typing import Any, Callable, Optional, cast
 
+import netCDF4  # noqa: F401
 import numpy as np
 import torch
 import xarray as xr
@@ -63,11 +64,10 @@ class RioXarrayDataset(GeoDataset):
 
         # Populate the dataset index
         i = 0
-        pathname = os.path.join(root, "**", self.filename_glob)
+        pathname = os.path.join(root, self.filename_glob)
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         for filepath in glob.iglob(pathname, recursive=True):
             match = re.match(filename_regex, os.path.basename(filepath))
-            print(filepath)
             if match is not None:
                 with xr.open_dataset(filepath, decode_times=True) as ds:
                     if crs is None:
@@ -78,7 +78,11 @@ class RioXarrayDataset(GeoDataset):
                     (minx, miny, maxx, maxy) = ds.rio.bounds()
 
                 if hasattr(ds, "time"):
-                    indices = ds.indexes["time"].to_datetimeindex()
+                    try:
+                        indices = ds.indexes["time"].to_datetimeindex()
+                    except AttributeError:
+                        indices = ds.indexes["time"]
+
                     mint = indices.min().to_pydatetime().timestamp()
                     maxt = indices.max().to_pydatetime().timestamp()
                 else:
@@ -129,7 +133,10 @@ class RioXarrayDataset(GeoDataset):
                     minx=query.minx, miny=query.miny, maxx=query.maxx, maxy=query.maxy
                 )
                 # select time dimension
-                clipped["time"] = clipped.indexes["time"].to_datetimeindex()
+                try:
+                    clipped["time"] = clipped.indexes["time"].to_datetimeindex()
+                except AttributeError:
+                    clipped["time"] = clipped.indexes["time"]
                 clipped = clipped.sel(
                     time=slice(
                         datetime.fromtimestamp(query.mint),
