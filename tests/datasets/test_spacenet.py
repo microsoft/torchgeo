@@ -11,7 +11,7 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
     SpaceNet1,
@@ -24,7 +24,7 @@ from torchgeo.datasets import (
 )
 
 TEST_DATA_DIR = "tests/data/spacenet"
-radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
 
 
 class Collection:

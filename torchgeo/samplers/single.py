@@ -6,8 +6,9 @@
 import abc
 import itertools
 import random
+from collections.abc import Iterable, Iterator
 from datetime import datetime, timedelta
-from typing import Callable, Iterable, Iterator, List, Optional, Tuple, Union
+from typing import Callable, Optional, Union
 
 import numpy as np
 import torch
@@ -74,7 +75,7 @@ class RandomGeoSampler(GeoSampler):
     def __init__(
         self,
         dataset: GeoDataset,
-        size: Union[Tuple[float, float], float],
+        size: Union[tuple[float, float], float],
         length: Optional[int],
         roi: Optional[BoundingBox] = None,
         units: Units = Units.PIXELS,
@@ -183,12 +184,12 @@ class SequentialGeoSampler(GeoSampler):
     def __init__(
         self,
         dataset: GeoDataset,
-        size: Union[Tuple[float, float], float],
+        size: Union[tuple[float, float], float],
         length: Optional[int],
         encoder_length: int,
         prediction_length: int,
         time_unit: str,
-        time_range: Optional[Tuple[datetime, datetime]] = None,
+        time_range: Optional[tuple[datetime, datetime]] = None,
         roi: Optional[BoundingBox] = None,
         size_units: Units = Units.PIXELS,
         max_samples_per_geolocation: int = None,
@@ -286,7 +287,7 @@ class SequentialGeoSampler(GeoSampler):
 
         # generate time rois and for each hit extend hits
         # with possible time sequences
-        self.hits: List[List[Union[int, float]]] = []
+        self.hits: list[list[Union[int, float]]] = []
         subsequence_time_ranges = self._compute_subsequences()
         random.shuffle(subsequence_time_ranges)
         if max_samples_per_geolocation is not None:
@@ -307,7 +308,7 @@ class SequentialGeoSampler(GeoSampler):
         #     self.areas += 1
         self.random_seq_idx = np.random.permutation(len(self.hits))[:100]
 
-    def __iter__(self) -> Iterator[Tuple[BoundingBox, BoundingBox]]:
+    def __iter__(self) -> Iterator[tuple[BoundingBox, BoundingBox]]:
         """Return the index of a dataset.
 
         Returns:
@@ -338,7 +339,7 @@ class SequentialGeoSampler(GeoSampler):
         """
         return self.length
 
-    def _compute_subsequences(self) -> List[List[datetime]]:
+    def _compute_subsequences(self) -> list[list[datetime]]:
         """Compute the possible subsequences within the time-horizon.
 
         Returns:
@@ -357,7 +358,7 @@ class SequentialGeoSampler(GeoSampler):
             )
         ]
         # list of list with all timestamps in a sequence
-        subsequences: List[List[datetime]] = list(
+        subsequences: list[list[datetime]] = list(
             map(
                 list,
                 zip(
@@ -375,8 +376,8 @@ class SequentialGeoSampler(GeoSampler):
 
     def _retrieve_sequential_query(
         self, query: BoundingBox
-    ) -> Tuple[BoundingBox, BoundingBox]:
-        """Retrieve a sequential query based on *encoder_length* and *prediction_length*.
+    ) -> tuple[BoundingBox, BoundingBox]:
+        """Get a sequential query based on *encoder_length* and *prediction_length*.
 
         Args:
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates
@@ -427,16 +428,13 @@ class GridGeoSampler(GeoSampler):
     The overlap between each chip (``chip_size - stride``) should be approximately equal
     to the `receptive field <https://distill.pub/2019/computing-receptive-fields/>`_ of
     the CNN.
-
-    Note that the stride of the final set of chips in each row/column may be adjusted so
-    that the entire :term:`tile` is sampled without exceeding the bounds of the dataset.
     """
 
     def __init__(
         self,
         dataset: GeoDataset,
-        size: Union[Tuple[float, float], float],
-        stride: Union[Tuple[float, float], float],
+        size: Union[tuple[float, float], float],
+        stride: Union[tuple[float, float], float],
         roi: Optional[BoundingBox] = None,
         units: Units = Units.PIXELS,
     ) -> None:
@@ -500,17 +498,11 @@ class GridGeoSampler(GeoSampler):
             for i in range(rows):
                 miny = bounds.miny + i * self.stride[0]
                 maxy = miny + self.size[0]
-                if maxy > bounds.maxy:
-                    maxy = bounds.maxy
-                    miny = bounds.maxy - self.size[0]
 
                 # For each column...
                 for j in range(cols):
                     minx = bounds.minx + j * self.stride[1]
                     maxx = minx + self.size[1]
-                    if maxx > bounds.maxx:
-                        maxx = bounds.maxx
-                        minx = bounds.maxx - self.size[1]
 
                     yield BoundingBox(minx, maxx, miny, maxy, mint, maxt)
 

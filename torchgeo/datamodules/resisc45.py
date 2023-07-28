@@ -19,8 +19,9 @@ class RESISC45DataModule(NonGeoDataModule):
     Uses the train/val/test splits from the dataset.
     """
 
-    mean = torch.tensor([127.86820969, 127.88083247, 127.84341029])
-    std = torch.tensor([51.8668062, 47.2380768, 47.0613924])
+    # Computed on the train set
+    mean = torch.tensor([93.89391792, 97.11226906, 87.56775284])
+    std = torch.tensor([51.84919672, 47.2365918, 47.06308786])
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
@@ -42,13 +43,6 @@ class RESISC45DataModule(NonGeoDataModule):
             K.RandomVerticalFlip(p=0.5),
             K.RandomSharpness(p=0.5),
             K.RandomErasing(p=0.1),
-            K.ColorJitter(
-                p=0.5,
-                brightness=0.1,
-                contrast=0.1,
-                saturation=0.1,
-                hue=0.1,
-                silence_instantiation_warning=True,
-            ),
+            K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
             data_keys=["image"],
         )

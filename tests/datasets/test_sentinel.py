@@ -3,7 +3,6 @@
 
 import os
 from pathlib import Path
-from typing import List
 
 import matplotlib.pyplot as plt
 import pytest
@@ -73,19 +72,19 @@ class TestSentinel1:
             Sentinel1(bands=[])
 
     @pytest.mark.parametrize("bands", [["HH", "HH"], ["HH", "HV", "HH"]])
-    def test_duplicate_bands(self, bands: List[str]) -> None:
+    def test_duplicate_bands(self, bands: list[str]) -> None:
         with pytest.raises(AssertionError, match="'bands' contains duplicate bands"):
             Sentinel1(bands=bands)
 
     @pytest.mark.parametrize("bands", [["HH_HV"], ["HH", "HV", "HH_HV"]])
-    def test_invalid_bands(self, bands: List[str]) -> None:
+    def test_invalid_bands(self, bands: list[str]) -> None:
         with pytest.raises(AssertionError, match="invalid band 'HH_HV'"):
             Sentinel1(bands=bands)
 
     @pytest.mark.parametrize(
         "bands", [["HH", "VV"], ["HH", "VH"], ["VV", "HV"], ["HH", "HV", "VV", "VH"]]
     )
-    def test_dual_transmit(self, bands: List[str]) -> None:
+    def test_dual_transmit(self, bands: list[str]) -> None:
         with pytest.raises(AssertionError, match="'bands' cannot contain both "):
             Sentinel1(bands=bands)
 

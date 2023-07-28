@@ -4,7 +4,8 @@
 """EuroSAT dataset."""
 
 import os
-from typing import Callable, Dict, Optional, Sequence, cast
+from collections.abc import Sequence
+from typing import Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -51,7 +52,7 @@ class EuroSAT(NonGeoClassificationDataset):
     * https://ieeexplore.ieee.org/document/8519248
     """
 
-    url = "https://madm.dfki.de/files/sentinel/EuroSATallBands.zip"  # 2.0 GB download
+    url = "https://huggingface.co/datasets/torchgeo/eurosat/resolve/main/EuroSATallBands.zip"  # noqa: E501
     filename = "EuroSATallBands.zip"
     md5 = "5ac12b3b2557aa56e1826e981e8e200e"
 
@@ -109,7 +110,7 @@ class EuroSAT(NonGeoClassificationDataset):
         root: str = "data",
         split: str = "train",
         bands: Sequence[str] = BAND_SETS["all"],
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -160,7 +161,7 @@ class EuroSAT(NonGeoClassificationDataset):
             is_valid_file=is_in_split,
         )
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -257,7 +258,7 @@ class EuroSAT(NonGeoClassificationDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
@@ -307,3 +308,30 @@ class EuroSAT(NonGeoClassificationDataset):
         if suptitle is not None:
             plt.suptitle(suptitle)
         return fig
+
+
+class EuroSAT100(EuroSAT):
+    """Subset of EuroSAT containing only 100 images.
+
+    Intended for tutorials and demonstrations, not for benchmarking.
+
+    Maintains the same file structure, classes, and train-val-test split. Each class has
+    10 images (6 train, 2 val, 2 test), for a total of 100 images.
+
+    .. versionadded:: 0.5
+    """
+
+    url = "https://huggingface.co/datasets/torchgeo/eurosat/resolve/main/EuroSAT100.zip"
+    filename = "EuroSAT100.zip"
+    md5 = "c21c649ba747e86eda813407ef17d596"
+
+    split_urls = {
+        "train": "https://huggingface.co/datasets/torchgeo/eurosat/raw/main/eurosat-train.txt",  # noqa: E501
+        "val": "https://huggingface.co/datasets/torchgeo/eurosat/raw/main/eurosat-val.txt",  # noqa: E501
+        "test": "https://huggingface.co/datasets/torchgeo/eurosat/raw/main/eurosat-test.txt",  # noqa: E501
+    }
+    split_md5s = {
+        "train": "033d0c23e3a75e3fa79618b0e35fe1c7",
+        "val": "3e3f8b3c344182b8d126c4cc88f3f215",
+        "test": "f908f151b950f270ad18e61153579794",
+    }

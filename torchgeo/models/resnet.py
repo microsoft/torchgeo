@@ -7,7 +7,7 @@ from typing import Any, Optional
 
 import kornia.augmentation as K
 import timm
-import torch.nn as nn
+import torch
 from timm.models import ResNet
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -15,8 +15,41 @@ from ..transforms import AugmentationSequential
 
 __all__ = ["ResNet50_Weights", "ResNet18_Weights"]
 
+
+# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167  # noqa: E501
+# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97  # noqa: E501
+# Normalization either by 10K or channel-wise with band statistics
 _zhu_xlab_transforms = AugmentationSequential(
-    K.Resize(256), K.CenterCrop(224), data_keys=["image"]
+    K.Resize(256),
+    K.CenterCrop(224),
+    K.Normalize(mean=torch.tensor(0), std=torch.tensor(10000)),
+    data_keys=["image"],
+)
+
+# Normalization only available for RGB dataset, defined here:
+# https://github.com/ServiceNow/seasonal-contrast/blob/8285173ec205b64bc3e53b880344dd6c3f79fa7a/datasets/seco_dataset.py  # noqa: E501
+_min = torch.tensor([3, 2, 0])
+_max = torch.tensor([88, 103, 129])
+_mean = torch.tensor([0.485, 0.456, 0.406])
+_std = torch.tensor([0.229, 0.224, 0.225])
+_seco_transforms = AugmentationSequential(
+    K.Resize(256),
+    K.CenterCrop(224),
+    K.Normalize(mean=_min, std=_max - _min),
+    K.Normalize(mean=torch.tensor(0), std=1 / torch.tensor(255)),
+    K.Normalize(mean=_mean, std=_std),
+    data_keys=["image"],
+)
+
+# Normalization only available for RGB dataset, defined here:
+# https://github.com/sustainlab-group/geography-aware-ssl/blob/main/moco_fmow/main_moco_geo%2Btp.py#L287  # noqa: E501
+_mean = torch.tensor([0.485, 0.456, 0.406])
+_std = torch.tensor([0.229, 0.224, 0.225])
+_gassl_transforms = AugmentationSequential(
+    K.Resize(224),
+    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
+    K.Normalize(mean=_mean, std=_std),
+    data_keys=["image"],
 )
 
 # https://github.com/pytorch/vision/pull/6883
@@ -35,10 +68,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     SENTINEL2_ALL_MOCO = Weights(
-        url=(
-            "https://huggingface.co/torchgeo/resnet18_sentinel2_all_moco/"
-            "resolve/main/resnet18_sentinel2_all_moco.pth"
-        ),
+        url="https://huggingface.co/torchgeo/resnet18_sentinel2_all_moco/resolve/main/resnet18_sentinel2_all_moco-59bfdff9.pth",  # noqa: E501
         transforms=_zhu_xlab_transforms,
         meta={
             "dataset": "SSL4EO-S12",
@@ -51,10 +81,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_RGB_MOCO = Weights(
-        url=(
-            "https://huggingface.co/torchgeo/resnet18_sentinel2_rgb_moco/"
-            "resolve/main/resnet18_sentinel2_rgb_moco.pth"
-        ),
+        url="https://huggingface.co/torchgeo/resnet18_sentinel2_rgb_moco/resolve/main/resnet18_sentinel2_rgb_moco-e3a335e3.pth",  # noqa: E501
         transforms=_zhu_xlab_transforms,
         meta={
             "dataset": "SSL4EO-S12",
@@ -67,11 +94,8 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_RGB_SECO = Weights(
-        url=(
-            "https://huggingface.co/torchgeo/resnet18_sentinel2_rgb_seco/"
-            "resolve/main/resnet18_sentinel2_rgb_seco.ckpt"
-        ),
-        transforms=nn.Identity(),
+        url="https://huggingface.co/torchgeo/resnet18_sentinel2_rgb_seco/resolve/main/resnet18_sentinel2_rgb_seco-9976a9cb.pth",  # noqa: E501
+        transforms=_seco_transforms,
         meta={
             "dataset": "SeCo Dataset",
             "in_chans": 3,
@@ -92,11 +116,21 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     .. versionadded:: 0.4
     """
 
+    FMOW_RGB_GASSL = Weights(
+        url="https://huggingface.co/torchgeo/resnet50_fmow_rgb_gassl/resolve/main/resnet50_fmow_rgb_gassl-da43d987.pth",  # noqa: E501
+        transforms=_gassl_transforms,
+        meta={
+            "dataset": "fMoW Dataset",
+            "in_chans": 3,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2011.09980",
+            "repo": "https://github.com/sustainlab-group/geography-aware-ssl",
+            "ssl_method": "gassl",
+        },
+    )
+
     SENTINEL1_ALL_MOCO = Weights(
-        url=(
-            "https://huggingface.co/torchgeo/resnet50_sentinel1_all_moco/"
-            "resolve/main/resnet50_sentinel1_all_moco.pth"
-        ),
+        url="https://huggingface.co/torchgeo/resnet50_sentinel1_all_moco/resolve/main/resnet50_sentinel1_all_moco-906e4356.pth",  # noqa: E501
         transforms=_zhu_xlab_transforms,
         meta={
             "dataset": "SSL4EO-S12",
@@ -108,11 +142,21 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+    SENTINEL2_ALL_DINO = Weights(
+        url="https://huggingface.co/torchgeo/resnet50_sentinel2_all_dino/resolve/main/resnet50_sentinel2_all_dino-d6c330e9.pth",  # noqa: E501
+        transforms=_zhu_xlab_transforms,
+        meta={
+            "dataset": "SSL4EO-S12",
+            "in_chans": 13,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2211.07044",
+            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "ssl_method": "dino",
+        },
+    )
+
     SENTINEL2_ALL_MOCO = Weights(
-        url=(
-            "https://huggingface.co/torchgeo/resnet50_sentinel2_all_moco/"
-            "resolve/main/resnet50_sentinel2_all_moco.pth"
-        ),
+        url="https://huggingface.co/torchgeo/resnet50_sentinel2_all_moco/resolve/main/resnet50_sentinel2_all_moco-df8b932e.pth",  # noqa: E501
         transforms=_zhu_xlab_transforms,
         meta={
             "dataset": "SSL4EO-S12",
@@ -125,10 +169,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_RGB_MOCO = Weights(
-        url=(
-            "https://huggingface.co/torchgeo/resnet50_sentinel2_rgb_moco/"
-            "resolve/main/resnet50_sentinel2_rgb_moco.pth"
-        ),
+        url="https://huggingface.co/torchgeo/resnet50_sentinel2_rgb_moco/resolve/main/resnet50_sentinel2_rgb_moco-2b57ba8b.pth",  # noqa: E501
         transforms=_zhu_xlab_transforms,
         meta={
             "dataset": "SSL4EO-S12",
@@ -140,28 +181,9 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
-    SENTINEL2_ALL_DINO = Weights(
-        url=(
-            "https://huggingface.co/torchgeo/resnet50_sentinel2_all_dino/"
-            "resolve/main/resnet50_sentinel2_all_dino.pth"
-        ),
-        transforms=_zhu_xlab_transforms,
-        meta={
-            "dataset": "SSL4EO-S12",
-            "in_chans": 13,
-            "model": "resnet50",
-            "publication": "https://arxiv.org/abs/2211.07044",
-            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
-            "ssl_method": "dino",
-        },
-    )
-
     SENTINEL2_RGB_SECO = Weights(
-        url=(
-            "https://huggingface.co/torchgeo/resnet50_sentinel2_rgb_seco/"
-            "resolve/main/resnet50_sentinel2_rgb_seco.ckpt"
-        ),
-        transforms=nn.Identity(),
+        url="https://huggingface.co/torchgeo/resnet50_sentinel2_rgb_seco/resolve/main/resnet50_sentinel2_rgb_seco-584035db.pth",  # noqa: E501
+        transforms=_seco_transforms,
         meta={
             "dataset": "SeCo Dataset",
             "in_chans": 3,

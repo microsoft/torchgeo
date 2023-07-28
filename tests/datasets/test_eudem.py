@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import EUDEM, BoundingBox, IntersectionDataset, UnionDataset
@@ -18,7 +18,6 @@ from torchgeo.datasets import EUDEM, BoundingBox, IntersectionDataset, UnionData
 class TestEUDEM:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> EUDEM:
-
         md5s = {"eu_dem_v11_E30N10.zip": "ef148466c02197a08be169eaad186591"}
         monkeypatch.setattr(EUDEM, "md5s", md5s)
         zipfile = os.path.join("tests", "data", "eudem", "eu_dem_v11_E30N10.zip")

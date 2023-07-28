@@ -10,20 +10,9 @@ import glob
 import os
 import re
 import sys
-import warnings
 from collections import defaultdict
-from typing import (
-    Any,
-    Callable,
-    DefaultDict,
-    Dict,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-    cast,
-)
+from collections.abc import Sequence
+from typing import Any, Callable, DefaultDict, Optional, Union, cast
 
 import fiona
 import fiona.transform
@@ -48,7 +37,7 @@ from torchvision.datasets.folder import default_loader as pil_loader
 from .utils import BoundingBox, concat_samples, disambiguate_timestamp, merge_samples
 
 
-class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
+class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     """Abstract base class for datasets containing geospatial information.
 
     Geospatial information includes things like:
@@ -88,9 +77,8 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
        dataset = landsat7 | landsat8
     """
 
-    #: Resolution of the dataset in units of CRS.
-    res: float
-    _crs: CRS
+    _crs = CRS.from_epsg(4326)
+    _res = 0.0
 
     # NOTE: according to the Python docs:
     #
@@ -106,7 +94,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     __add__ = None  # type: ignore[assignment]
 
     def __init__(
-        self, transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None
+        self, transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -120,7 +108,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         self.index = Index(interleaved=False, properties=Property(dimension=3))
 
     @abc.abstractmethod
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -190,7 +178,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
     def __getstate__(
         self,
-    ) -> Tuple[Dict[str, Any], List[Tuple[Any, Any, Optional[Any]]]]:
+    ) -> tuple[dict[str, Any], list[tuple[Any, Any, Optional[Any]]]]:
         """Define how instances are pickled.
 
         Returns:
@@ -202,9 +190,9 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
     def __setstate__(
         self,
-        state: Tuple[
-            Dict[Any, Any],
-            List[Tuple[int, Tuple[float, float, float, float, float, float], str]],
+        state: tuple[
+            dict[Any, Any],
+            list[tuple[int, tuple[float, float, float, float, float, float], str]],
         ],
     ) -> None:
         """Define how to unpickle an instance.
@@ -228,12 +216,10 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
     @property
     def crs(self) -> CRS:
-        """:term:`coordinate reference system (CRS)` for the dataset.
+        """:term:`coordinate reference system (CRS)` of the dataset.
 
         Returns:
-            the :term:`coordinate reference system (CRS)`
-
-        .. versionadded:: 0.2
+            The :term:`coordinate reference system (CRS)`.
         """
         return self._crs
 
@@ -244,17 +230,16 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         If ``new_crs == self.crs``, does nothing, otherwise updates the R-tree index.
 
         Args:
-            new_crs: new :term:`coordinate reference system (CRS)`
-
-        .. versionadded:: 0.2
+            new_crs: New :term:`coordinate reference system (CRS)`.
         """
-        if new_crs == self._crs:
+        if new_crs == self.crs:
             return
 
+        print(f"Converting {self.__class__.__name__} CRS from {self.crs} to {new_crs}")
         new_index = Index(interleaved=False, properties=Property(dimension=3))
 
         project = pyproj.Transformer.from_crs(
-            pyproj.CRS(str(self._crs)), pyproj.CRS(str(new_crs)), always_xy=True
+            pyproj.CRS(str(self.crs)), pyproj.CRS(str(new_crs)), always_xy=True
         ).transform
         for hit in self.index.intersection(self.index.bounds, objects=True):
             old_minx, old_maxx, old_miny, old_maxy, mint, maxt = hit.bounds
@@ -266,6 +251,28 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
         self._crs = new_crs
         self.index = new_index
+
+    @property
+    def res(self) -> float:
+        """Resolution of the dataset in units of CRS.
+
+        Returns:
+            The resolution of the dataset.
+        """
+        return self._res
+
+    @res.setter
+    def res(self, new_res: float) -> None:
+        """Change the resolution of a GeoDataset.
+
+        Args:
+            new_res: New resolution.
+        """
+        if new_res == self.res:
+            return
+
+        print(f"Converting {self.__class__.__name__} res from {self.res} to {new_res}")
+        self._res = new_res
 
 
 class RasterDataset(GeoDataset):
@@ -303,13 +310,27 @@ class RasterDataset(GeoDataset):
     separate_files = False
 
     #: Names of all available bands in the dataset
-    all_bands: List[str] = []
+    all_bands: list[str] = []
 
     #: Names of RGB bands in the dataset, used for plotting
-    rgb_bands: List[str] = []
+    rgb_bands: list[str] = []
 
     #: Color map for the dataset, used for plotting
-    cmap: Dict[int, Tuple[int, int, int, int]] = {}
+    cmap: dict[int, tuple[int, int, int, int]] = {}
+
+    @property
+    def dtype(self) -> torch.dtype:
+        """The dtype of the dataset (overrides the dtype of the data file via a cast).
+
+        Returns:
+            the dtype of the dataset
+
+        .. versionadded:: 5.0
+        """
+        if self.is_image:
+            return torch.float32
+        else:
+            return torch.long
 
     def __init__(
         self,
@@ -317,7 +338,7 @@ class RasterDataset(GeoDataset):
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         as_time_series: bool = False,
     ) -> None:
@@ -345,6 +366,7 @@ class RasterDataset(GeoDataset):
         super().__init__(transforms)
 
         self.root = root
+        self.bands = bands or self.all_bands
         self.cache = cache
         self.as_time_series = as_time_series
 
@@ -386,31 +408,31 @@ class RasterDataset(GeoDataset):
                     i += 1
 
         if i == 0:
-            raise FileNotFoundError(
-                f"No {self.__class__.__name__} data was found in '{root}'"
-            )
+            msg = f"No {self.__class__.__name__} data was found in `root='{self.root}'`"
+            if self.bands:
+                msg += f" with `bands={self.bands}`"
+            raise FileNotFoundError(msg)
 
-        if bands and self.all_bands:
-            band_indexes = [self.all_bands.index(i) + 1 for i in bands]
-            self.bands = bands
-            assert len(band_indexes) == len(self.bands)
-        elif bands:
-            msg = (
-                f"{self.__class__.__name__} is missing an `all_bands` attribute,"
-                " so `bands` cannot be specified."
-            )
-            raise AssertionError(msg)
-        else:
-            band_indexes = None
-            self.bands = self.all_bands
+        if not self.separate_files:
+            self.band_indexes = None
+            if self.bands:
+                if self.all_bands:
+                    self.band_indexes = [
+                        self.all_bands.index(i) + 1 for i in self.bands
+                    ]
+                else:
+                    msg = (
+                        f"{self.__class__.__name__} is missing an `all_bands` "
+                        "attribute, so `bands` cannot be specified."
+                    )
+                    raise AssertionError(msg)
 
-        self.band_indexes = band_indexes
         self._crs = cast(CRS, crs)
-        self.res = cast(float, res)
+        self._res = cast(float, res)
 
     def __getitem__(
         self, query: BoundingBox
-    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+    ) -> Union[dict[str, Any], list[dict[str, Any]]]:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -424,7 +446,7 @@ class RasterDataset(GeoDataset):
             IndexError: if queries is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(List[str], [hit.object for hit in hits])
+        filepaths = cast(list[str], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
@@ -432,7 +454,7 @@ class RasterDataset(GeoDataset):
             )
 
         if self.separate_files:
-            data_list: List[Tensor] = []
+            data_list: list[Tensor] = []
             filename_regex = re.compile(self.filename_regex, re.VERBOSE)
             for band in self.bands:
                 band_filepaths = []
@@ -441,11 +463,11 @@ class RasterDataset(GeoDataset):
                     directory = os.path.dirname(filepath)
                     match = re.match(filename_regex, filename)
                     if match:
-                        if "date" in match.groupdict():
+                        if "band" in match.groupdict():
                             start = match.start("band")
                             end = match.end("band")
                             filename = filename[:start] + band + filename[end:]
-                    filepath = glob.glob(os.path.join(directory, filename))[0]
+                    filepath = os.path.join(directory, filename)
                     band_filepaths.append(filepath)
                 data_list.append(self._merge_files(band_filepaths, query))
             if self.as_time_series:  # for timeseries seq_len x ch x height x width
@@ -467,9 +489,9 @@ class RasterDataset(GeoDataset):
 
     def _dataset_reader_to_array(
         self,
-        vrts: List[rasterio.io.DatasetReader],
+        vrts: list[rasterio.io.DatasetReader],
         query: BoundingBox,
-        bounds: Tuple[float],
+        bounds: tuple[float],
         band_indexes: Optional[Sequence[int]] = None,
     ) -> np.ndarray:
         """Read dataset readers into numpy arrays.
@@ -519,14 +541,14 @@ class RasterDataset(GeoDataset):
             # and use rasterio merge to extract one common area
             filename_regex = re.compile(self.filename_regex, re.VERBOSE)
             date_tile_dict: DefaultDict[
-                str, List[rasterio.io.DatasetReader]
+                str, list[rasterio.io.DatasetReader]
             ] = defaultdict(list)
             for vrt in vrt_fhs:
                 match = re.match(filename_regex, os.path.basename(vrt.name))
                 if match:
                     date_tile_dict[match.group("date")].append(vrt)
 
-            date_array_dict: Dict[str, np.ndarray] = {}
+            date_array_dict: dict[str, np.ndarray] = {}
 
             for date, vrts in date_tile_dict.items():
                 date_array_dict[date] = self._dataset_reader_to_array(
@@ -589,7 +611,7 @@ class RasterDataset(GeoDataset):
         src: rasterio.io.DatasetReader,
         band_indexes: Optional[Sequence[int]],
         query: BoundingBox,
-        bounds: Tuple[float, float, float, float],
+        bounds: tuple[float, float, float, float],
     ) -> np.ndarray:
         """Read a single datasetreader from a query into array."""
         out_width = round((query.maxx - query.minx) / self.res)
@@ -619,7 +641,7 @@ class VectorDataset(GeoDataset):
         root: str = "data",
         crs: Optional[CRS] = None,
         res: float = 0.0001,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         label_name: Optional[str] = None,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -643,7 +665,6 @@ class VectorDataset(GeoDataset):
         super().__init__(transforms)
 
         self.root = root
-        self.res = res
         self.label_name = label_name
 
         # Populate the dataset index
@@ -670,13 +691,13 @@ class VectorDataset(GeoDataset):
                 i += 1
 
         if i == 0:
-            raise FileNotFoundError(
-                f"No {self.__class__.__name__} data was found in '{root}'"
-            )
+            msg = f"No {self.__class__.__name__} data was found in `root='{root}'`"
+            raise FileNotFoundError(msg)
 
         self._crs = crs
+        self._res = res
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -740,14 +761,14 @@ class VectorDataset(GeoDataset):
         return sample
 
 
-class NonGeoDataset(Dataset[Dict[str, Any]], abc.ABC):
+class NonGeoDataset(Dataset[dict[str, Any]], abc.ABC):
     """Abstract base class for datasets lacking geospatial information.
 
     This base class is designed for datasets with pre-defined image chips.
     """
 
     @abc.abstractmethod
-    def __getitem__(self, index: int) -> Dict[str, Any]:
+    def __getitem__(self, index: int) -> dict[str, Any]:
         """Return an index within the dataset.
 
         Args:
@@ -780,20 +801,6 @@ class NonGeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     size: {len(self)}"""
 
 
-class VisionDataset(NonGeoDataset):
-    """Abstract base class for datasets lacking geospatial information.
-
-    .. deprecated:: 0.3
-       Use :class:`NonGeoDataset` instead.
-    """
-
-    def __new__(cls, *args: Any, **kwargs: Any) -> "VisionDataset":
-        """Create a new instance of VisionDataset."""
-        msg = "VisionDataset is deprecated, use NonGeoDataset instead."
-        warnings.warn(msg, DeprecationWarning)
-        return super().__new__(cls, *args, **kwargs)
-
-
 class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[misc]
     """Abstract base class for classification datasets lacking geospatial information.
 
@@ -804,7 +811,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
     def __init__(
         self,
         root: str = "data",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         loader: Optional[Callable[[str], Any]] = pil_loader,
         is_valid_file: Optional[Callable[[str], bool]] = None,
     ) -> None:
@@ -832,11 +839,12 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         # Must be set after calling super().__init__()
         self.transforms = transforms
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
             index: index to return
+
         Returns:
             data and label at that index
         """
@@ -856,14 +864,14 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         """
         return len(self.imgs)
 
-    def _load_image(self, index: int) -> Tuple[Tensor, Tensor]:
-        """Load a single image and it's class label.
+    def _load_image(self, index: int) -> tuple[Tensor, Tensor]:
+        """Load a single image and its class label.
 
         Args:
             index: index to return
+
         Returns:
-            the image
-            the image class label
+            the image and class label
         """
         img, label = ImageFolder.__getitem__(self, index)
         array: "np.typing.NDArray[np.int_]" = np.array(img)
@@ -872,21 +880,6 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         tensor = tensor.permute((2, 0, 1))
         label = torch.tensor(label)
         return tensor, label
-
-
-class VisionClassificationDataset(NonGeoClassificationDataset):
-    """Abstract base class for classification datasets lacking geospatial information.
-
-    .. deprecated:: 0.3
-       Use :class:`NonGeoClassificationDataset` instead.
-    """
-
-    def __new__(cls, *args: Any, **kwargs: Any) -> "VisionClassificationDataset":
-        """Create a new instance of VisionClassificationDataset."""
-        msg = "VisionClassificationDataset is deprecated, "
-        msg += "use NonGeoClassificationDataset instead."
-        warnings.warn(msg, DeprecationWarning)
-        return cast(VisionClassificationDataset, super().__new__(cls))
 
 
 class IntersectionDataset(GeoDataset):
@@ -913,9 +906,9 @@ class IntersectionDataset(GeoDataset):
         dataset1: GeoDataset,
         dataset2: GeoDataset,
         collate_fn: Callable[
-            [Sequence[Dict[str, Any]]], Dict[str, Any]
+            [Sequence[dict[str, Any]]], dict[str, Any]
         ] = concat_samples,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -927,6 +920,7 @@ class IntersectionDataset(GeoDataset):
                 entry and returns a transformed version
 
         Raises:
+            RuntimeError: if datasets have no spatiotemporal intersection
             ValueError: if either dataset is not a :class:`GeoDataset`
 
         .. versionadded:: 0.4
@@ -940,22 +934,8 @@ class IntersectionDataset(GeoDataset):
             if not isinstance(ds, GeoDataset):
                 raise ValueError("IntersectionDataset only supports GeoDatasets")
 
-        self._crs = dataset1.crs
+        self.crs = dataset1.crs
         self.res = dataset1.res
-
-        # Force dataset2 to have the same CRS/res as dataset1
-        if dataset1.crs != dataset2.crs:
-            print(
-                f"Converting {dataset2.__class__.__name__} CRS from "
-                f"{dataset2.crs} to {dataset1.crs}"
-            )
-            dataset2.crs = dataset1.crs
-        if dataset1.res != dataset2.res:
-            print(
-                f"Converting {dataset2.__class__.__name__} resolution from "
-                f"{dataset2.res} to {dataset1.res}"
-            )
-            dataset2.res = dataset1.res
 
         # Merge dataset indices into a single index
         self._merge_dataset_indices()
@@ -971,7 +951,10 @@ class IntersectionDataset(GeoDataset):
                 self.index.insert(i, tuple(box1 & box2))
                 i += 1
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+        if i == 0:
+            raise RuntimeError("Datasets have no spatiotemporal intersection")
+
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image and metadata indexed by query.
 
         Args:
@@ -1009,6 +992,46 @@ class IntersectionDataset(GeoDataset):
     bbox: {self.bounds}
     size: {len(self)}"""
 
+    @property
+    def crs(self) -> CRS:
+        """:term:`coordinate reference system (CRS)` of both datasets.
+
+        Returns:
+            The :term:`coordinate reference system (CRS)`.
+        """
+        return self._crs
+
+    @crs.setter
+    def crs(self, new_crs: CRS) -> None:
+        """Change the :term:`coordinate reference system (CRS)` of both datasets.
+
+        Args:
+            new_crs: New :term:`coordinate reference system (CRS)`.
+        """
+        self._crs = new_crs
+        self.datasets[0].crs = new_crs
+        self.datasets[1].crs = new_crs
+
+    @property
+    def res(self) -> float:
+        """Resolution of both datasets in units of CRS.
+
+        Returns:
+            Resolution of both datasets.
+        """
+        return self._res
+
+    @res.setter
+    def res(self, new_res: float) -> None:
+        """Change the resolution of both datasets.
+
+        Args:
+            new_res: New resolution.
+        """
+        self._res = new_res
+        self.datasets[0].res = new_res
+        self.datasets[1].res = new_res
+
 
 class ForecastDataset(IntersectionDataset):
     """Dataset used for Forecasting tasks.
@@ -1031,9 +1054,9 @@ class ForecastDataset(IntersectionDataset):
         input_dataset: GeoDataset,
         target_dataset: GeoDataset,
         collate_fn: Callable[
-            [Sequence[Dict[str, Any]]], Dict[str, Any]
+            [Sequence[dict[str, Any]]], dict[str, Any]
         ] = concat_samples,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -1051,7 +1074,7 @@ class ForecastDataset(IntersectionDataset):
         self.input_dataset = input_dataset
         self.target_dataset = target_dataset
 
-    def __getitem__(self, query: Tuple[BoundingBox, BoundingBox]) -> Dict[str, Any]:
+    def __getitem__(self, query: tuple[BoundingBox, BoundingBox]) -> dict[str, Any]:
         """Retrieve image and metadata indexed by query.
 
         Args:
@@ -1171,9 +1194,9 @@ class UnionDataset(GeoDataset):
         dataset1: GeoDataset,
         dataset2: GeoDataset,
         collate_fn: Callable[
-            [Sequence[Dict[str, Any]]], Dict[str, Any]
+            [Sequence[dict[str, Any]]], dict[str, Any]
         ] = merge_samples,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -1198,22 +1221,8 @@ class UnionDataset(GeoDataset):
             if not isinstance(ds, GeoDataset):
                 raise ValueError("UnionDataset only supports GeoDatasets")
 
-        self._crs = dataset1.crs
+        self.crs = dataset1.crs
         self.res = dataset1.res
-
-        # Force dataset2 to have the same CRS/res as dataset1
-        if dataset1.crs != dataset2.crs:
-            print(
-                f"Converting {dataset2.__class__.__name__} CRS from "
-                f"{dataset2.crs} to {dataset1.crs}"
-            )
-            dataset2.crs = dataset1.crs
-        if dataset1.res != dataset2.res:
-            print(
-                f"Converting {dataset2.__class__.__name__} resolution from "
-                f"{dataset2.res} to {dataset1.res}"
-            )
-            dataset2.res = dataset1.res
 
         # Merge dataset indices into a single index
         self._merge_dataset_indices()
@@ -1227,7 +1236,7 @@ class UnionDataset(GeoDataset):
                 self.index.insert(i, hit.bounds)
                 i += 1
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image and metadata indexed by query.
 
         Args:
@@ -1268,3 +1277,43 @@ class UnionDataset(GeoDataset):
     type: UnionDataset
     bbox: {self.bounds}
     size: {len(self)}"""
+
+    @property
+    def crs(self) -> CRS:
+        """:term:`coordinate reference system (CRS)` of both datasets.
+
+        Returns:
+            The :term:`coordinate reference system (CRS)`.
+        """
+        return self._crs
+
+    @crs.setter
+    def crs(self, new_crs: CRS) -> None:
+        """Change the :term:`coordinate reference system (CRS)` of both datasets.
+
+        Args:
+            new_crs: New :term:`coordinate reference system (CRS)`.
+        """
+        self._crs = new_crs
+        self.datasets[0].crs = new_crs
+        self.datasets[1].crs = new_crs
+
+    @property
+    def res(self) -> float:
+        """Resolution of both datasets in units of CRS.
+
+        Returns:
+            The resolution of both datasets.
+        """
+        return self._res
+
+    @res.setter
+    def res(self, new_res: float) -> None:
+        """Change the resolution of both datasets.
+
+        Args:
+            new_res: New resolution.
+        """
+        self._res = new_res
+        self.datasets[0].res = new_res
+        self.datasets[1].res = new_res

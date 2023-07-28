@@ -5,11 +5,11 @@
 
 from typing import Any
 
-from sklearn.model_selection import GroupShuffleSplit
 from torch.utils.data import Subset
 
 from ..datasets import TropicalCyclone
 from .geo import NonGeoDataModule
+from .utils import group_shuffle_split
 
 
 class TropicalCycloneDataModule(NonGeoDataModule):
@@ -50,10 +50,8 @@ class TropicalCycloneDataModule(NonGeoDataModule):
                 storm_id = item["href"].split("/")[0].split("_")[-2]
                 storm_ids.append(storm_id)
 
-            train_indices, val_indices = next(
-                GroupShuffleSplit(test_size=0.2, n_splits=2, random_state=0).split(
-                    storm_ids, groups=storm_ids
-                )
+            train_indices, val_indices = group_shuffle_split(
+                storm_ids, test_size=0.2, random_state=0
             )
 
             self.train_dataset = Subset(self.dataset, train_indices)

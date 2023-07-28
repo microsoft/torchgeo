@@ -4,7 +4,7 @@
 """DeepGlobe Land Cover Classification Challenge dataset."""
 
 import os
-from typing import Callable, Dict, Optional
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -91,7 +91,7 @@ class DeepGlobeLandCover(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new DeepGlobeLandCover dataset instance.
@@ -132,7 +132,7 @@ class DeepGlobeLandCover(NonGeoDataset):
                 self.image_fns.append(image_path)
                 self.mask_fns.append(mask_path)
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -221,7 +221,7 @@ class DeepGlobeLandCover(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
         alpha: float = 0.5,

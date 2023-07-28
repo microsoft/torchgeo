@@ -4,16 +4,17 @@
 """Detection tasks."""
 
 from functools import partial
-from typing import Any, Dict, List, cast
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 import torch
+import torchvision.models.detection
+from lightning.pytorch import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models import resnet as R
-from torchvision.models.detection import FCOS, FasterRCNN, RetinaNet
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from torchvision.models.detection.retinanet import RetinaNetHead
 from torchvision.models.detection.rpn import AnchorGenerator
@@ -46,7 +47,7 @@ BACKBONE_WEIGHT_MAP = {
 }
 
 
-class ObjectDetectionTask(pl.LightningModule):
+class ObjectDetectionTask(LightningModule):
     """LightningModule for object detection of images.
 
     Currently, supports Faster R-CNN, FCOS, and RetinaNet models from
@@ -95,7 +96,12 @@ class ObjectDetectionTask(pl.LightningModule):
             roi_pooler = MultiScaleRoIAlign(
                 featmap_names=["0", "1", "2", "3"], output_size=7, sampling_ratio=2
             )
-            self.model = FasterRCNN(
+
+            if self.hyperparams.get("freeze_backbone", False):
+                for param in backbone.parameters():
+                    param.requires_grad = False
+
+            self.model = torchvision.models.detection.FasterRCNN(
                 backbone,
                 num_classes,
                 rpn_anchor_generator=anchor_generator,
@@ -113,8 +119,13 @@ class ObjectDetectionTask(pl.LightningModule):
                 aspect_ratios=((1.0,), (1.0,), (1.0,), (1.0,), (1.0,), (1.0,)),
             )
 
-            self.model = FCOS(backbone, num_classes, anchor_generator=anchor_generator)
+            if self.hyperparams.get("freeze_backbone", False):
+                for param in backbone.parameters():
+                    param.requires_grad = False
 
+            self.model = torchvision.models.detection.FCOS(
+                backbone, num_classes, anchor_generator=anchor_generator
+            )
         elif self.hyperparams["model"] == "retinanet":
             kwargs["extra_blocks"] = feature_pyramid_network.LastLevelP6P7(
                 latent_dim, 256
@@ -139,7 +150,11 @@ class ObjectDetectionTask(pl.LightningModule):
                 norm_layer=partial(torch.nn.GroupNorm, 32),
             )
 
-            self.model = RetinaNet(
+            if self.hyperparams.get("freeze_backbone", False):
+                for param in backbone.parameters():
+                    param.requires_grad = False
+
+            self.model = torchvision.models.detection.RetinaNet(
                 backbone, num_classes, anchor_generator=anchor_generator, head=head
             )
         else:
@@ -155,22 +170,27 @@ class ObjectDetectionTask(pl.LightningModule):
             num_classes: Number of semantic classes to predict
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
+            freeze_backbone: Freeze the backbone network to fine-tune the detection head
 
         Raises:
             ValueError: if kwargs arguments are invalid
 
         .. versionchanged:: 0.4
            The *detection_model* parameter was renamed to *model*.
+
+        .. versionadded:: 0.5
+           The *freeze_backbone* parameter.
         """
         super().__init__()
         # Creates `self.hparams` from kwargs
-        self.save_hyperparameters()  # type: ignore[operator]
-        self.hyperparams = cast(Dict[str, Any], self.hparams)
+        self.save_hyperparameters()
+        self.hyperparams = cast(dict[str, Any], self.hparams)
 
         self.config_task()
 
-        self.val_metrics = MeanAveragePrecision()
-        self.test_metrics = MeanAveragePrecision()
+        metrics = MetricCollection([MeanAveragePrecision()])
+        self.val_metrics = metrics.clone(prefix="val_")
+        self.test_metrics = metrics.clone(prefix="test_")
 
     def forward(self, *args: Any, **kwargs: Any) -> Any:
         """Forward pass of the model.
@@ -230,6 +250,7 @@ class ObjectDetectionTask(pl.LightningModule):
             and hasattr(self.trainer, "datamodule")
             and self.logger
             and hasattr(self.logger, "experiment")
+            and hasattr(self.logger.experiment, "add_figure")
         ):
             try:
                 datamodule = self.trainer.datamodule
@@ -251,15 +272,14 @@ class ObjectDetectionTask(pl.LightningModule):
             except ValueError:
                 pass
 
-    def validation_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level validation metrics.
-
-        Args:
-            outputs: list of items returned by validation_step
-        """
+    def on_validation_epoch_end(self) -> None:
+        """Logs epoch level validation metrics."""
         metrics = self.val_metrics.compute()
-        renamed_metrics = {f"val_{i}": metrics[i] for i in metrics.keys()}
-        self.log_dict(renamed_metrics)
+
+        # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
+        metrics.pop("val_classes", None)
+
+        self.log_dict(metrics)
         self.val_metrics.reset()
 
     def test_step(self, *args: Any, **kwargs: Any) -> None:
@@ -279,18 +299,17 @@ class ObjectDetectionTask(pl.LightningModule):
 
         self.test_metrics.update(y_hat, y)
 
-    def test_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level test metrics.
-
-        Args:
-            outputs: list of items returned by test_step
-        """
+    def on_test_epoch_end(self) -> None:
+        """Logs epoch level test metrics."""
         metrics = self.test_metrics.compute()
-        renamed_metrics = {f"test_{i}": metrics[i] for i in metrics.keys()}
-        self.log_dict(renamed_metrics)
+
+        # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
+        metrics.pop("test_classes", None)
+
+        self.log_dict(metrics)
         self.test_metrics.reset()
 
-    def predict_step(self, *args: Any, **kwargs: Any) -> List[Dict[str, Tensor]]:
+    def predict_step(self, *args: Any, **kwargs: Any) -> list[dict[str, Tensor]]:
         """Compute and return the predictions.
 
         Args:
@@ -301,15 +320,14 @@ class ObjectDetectionTask(pl.LightningModule):
         """
         batch = args[0]
         x = batch["image"]
-        y_hat: List[Dict[str, Tensor]] = self(x)
+        y_hat: list[dict[str, Tensor]] = self(x)
         return y_hat
 
-    def configure_optimizers(self) -> Dict[str, Any]:
+    def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+            learning rate dictionary
         """
         optimizer = torch.optim.Adam(
             self.model.parameters(), lr=self.hyperparams["learning_rate"]

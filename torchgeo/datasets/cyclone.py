@@ -6,7 +6,7 @@
 import json
 import os
 from functools import lru_cache
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +15,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_dataset, extract_archive
+from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
 
 
 class TropicalCyclone(NonGeoDataset):
@@ -39,12 +39,18 @@ class TropicalCyclone(NonGeoDataset):
        * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
          imagery and labels from the Radiant Earth MLHub
 
-    .. versionchanged:: 0.4.0
-        Class name changed from TropicalCycloneWindEstimation to TropicalCyclone
-        to be consistent with TropicalCycloneDataModule.
+    .. versionchanged:: 0.4
+       Class name changed from TropicalCycloneWindEstimation to TropicalCyclone
+       to be consistent with TropicalCycloneDataModule.
     """
 
     collection_id = "nasa_tropical_storm_competition"
+    collection_ids = [
+        "nasa_tropical_storm_competition_train_source",
+        "nasa_tropical_storm_competition_test_source",
+        "nasa_tropical_storm_competition_train_labels",
+        "nasa_tropical_storm_competition_test_labels",
+    ]
     md5s = {
         "train": {
             "source": "97e913667a398704ea8d28196d91dad6",
@@ -61,7 +67,7 @@ class TropicalCyclone(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
@@ -102,7 +108,7 @@ class TropicalCyclone(NonGeoDataset):
         with open(filename) as f:
             self.collection = json.load(f)["links"]
 
-    def __getitem__(self, index: int) -> Dict[str, Any]:
+    def __getitem__(self, index: int) -> dict[str, Any]:
         """Return an index within the dataset.
 
         Args:
@@ -118,7 +124,7 @@ class TropicalCyclone(NonGeoDataset):
             source_id.replace("source", "{0}"),
         )
 
-        sample: Dict[str, Any] = {"image": self._load_image(directory)}
+        sample: dict[str, Any] = {"image": self._load_image(directory)}
         sample.update(self._load_features(directory))
 
         if self.transforms is not None:
@@ -134,7 +140,7 @@ class TropicalCyclone(NonGeoDataset):
         """
         return len(self.collection)
 
-    @lru_cache()
+    @lru_cache
     def _load_image(self, directory: str) -> Tensor:
         """Load a single image.
 
@@ -157,7 +163,7 @@ class TropicalCyclone(NonGeoDataset):
             tensor = torch.from_numpy(array).permute((2, 0, 1)).float()
             return tensor
 
-    def _load_features(self, directory: str) -> Dict[str, Any]:
+    def _load_features(self, directory: str) -> dict[str, Any]:
         """Load features for a single image.
 
         Args:
@@ -168,7 +174,7 @@ class TropicalCyclone(NonGeoDataset):
         """
         filename = os.path.join(directory.format("source"), "features.json")
         with open(filename) as f:
-            features: Dict[str, Any] = json.load(f)
+            features: dict[str, Any] = json.load(f)
 
         filename = os.path.join(directory.format("labels"), "labels.json")
         with open(filename) as f:
@@ -207,7 +213,8 @@ class TropicalCyclone(NonGeoDataset):
             print("Files already downloaded and verified")
             return
 
-        download_radiant_mlhub_dataset(self.collection_id, self.root, api_key)
+        for collection_id in self.collection_ids:
+            download_radiant_mlhub_collection(collection_id, self.root, api_key)
 
         for split, resources in self.md5s.items():
             for resource_type in resources:
@@ -217,7 +224,7 @@ class TropicalCyclone(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
