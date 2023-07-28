@@ -31,6 +31,7 @@ radiant-mlhub==0.3.0
 rarfile==4.0
 scikit-image==0.18.0
 scipy==1.6.2
+xarray==2023.7.0
 zipfile-deflate64==0.2.0
 
 # docs
