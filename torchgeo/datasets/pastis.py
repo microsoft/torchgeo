@@ -286,10 +286,12 @@ class PASTIS(NonGeoDataset, abc.ABC):
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
         """Plot a sample from the dataset.
+
         Args:
             sample: a sample returned by :meth:`NonGeoClassificationDataset.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
+
         Returns:
             a matplotlib Figure with the rendered sample
         """
