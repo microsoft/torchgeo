@@ -133,16 +133,17 @@ class RioXarrayDataset(GeoDataset):
                     minx=query.minx, miny=query.miny, maxx=query.maxx, maxy=query.maxy
                 )
                 # select time dimension
-                try:
-                    clipped["time"] = clipped.indexes["time"].to_datetimeindex()
-                except AttributeError:
-                    clipped["time"] = clipped.indexes["time"]
-                clipped = clipped.sel(
-                    time=slice(
-                        datetime.fromtimestamp(query.mint),
-                        datetime.fromtimestamp(query.maxt),
+                if hasattr(ds, "time"):
+                    try:
+                        clipped["time"] = clipped.indexes["time"].to_datetimeindex()
+                    except AttributeError:
+                        clipped["time"] = clipped.indexes["time"]
+                    clipped = clipped.sel(
+                        time=slice(
+                            datetime.fromtimestamp(query.mint),
+                            datetime.fromtimestamp(query.maxt),
+                        )
                     )
-                )
                 for variable in self.data_variables:
                     if hasattr(clipped, variable):
                         data_arrays.append(clipped[variable].data.squeeze())

@@ -21,6 +21,8 @@ DIR = "data"
 
 CF_TIME = [True, False, True]
 
+NUM_TIME_STEPS = 3
+
 
 def create_rioxr_dataset(
     lat_min: float,
@@ -36,9 +38,9 @@ def create_rioxr_dataset(
     lons = np.linspace(lon_min, lon_max, SIZE)
 
     if cf_time:
-        times = [cftime.datetime(2000, 1, i + 1) for i in range(3)]
+        times = [cftime.datetime(2000, 1, i + 1) for i in range(NUM_TIME_STEPS)]
     else:
-        times = pd.date_range(start="2000-01-01", periods=3, freq="D")
+        times = pd.date_range(start="2000-01-01", periods=NUM_TIME_STEPS, freq="D")
 
     # data with shape (time, x, y)
     data = np.random.rand(len(times), len(lats), len(lons))
