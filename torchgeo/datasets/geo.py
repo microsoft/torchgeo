@@ -1023,7 +1023,7 @@ class ForecastDataset(IntersectionDataset):
 
     This dataset should be used with :class:'SequentialGeoSampler' sampler.
 
-    .. versionadded:: 0.4
+    .. versionadded:: 0.5.0
     """
 
     def __init__(

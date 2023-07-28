@@ -168,7 +168,7 @@ class SequentialGeoSampler(GeoSampler):
     like to sample sequential inputs of specified length or time duration
     and predict targets beyond such a time frame.
 
-    .. versionadded:: 0.4.0
+    .. versionadded:: 0.5.0
     """
 
     allowed_time_units = ["hours", "days", "weeks", "months", "years"]
@@ -188,7 +188,7 @@ class SequentialGeoSampler(GeoSampler):
         encoder_length: int,
         prediction_length: int,
         time_unit: str,
-        time_range: Optional[Tuple[str, str]] = None,
+        time_range: Optional[Tuple[datetime, datetime]] = None,
         roi: Optional[BoundingBox] = None,
         size_units: Units = Units.PIXELS,
         max_samples_per_geolocation: int = None,
@@ -233,9 +233,7 @@ class SequentialGeoSampler(GeoSampler):
         # by default take roi of dataset but in case time range
         # is specified overwrite default roi
         if time_range is not None:
-            date_format = dataset.input_dataset.date_format
-            end_date = datetime.strptime(time_range[1], date_format)
-            start_date = datetime.strptime(time_range[0], date_format)
+            start_date, end_date = time_range
             assert end_date > start_date, "End time needs to be later than start time."
             roi = BoundingBox(
                 minx=roi.minx,
