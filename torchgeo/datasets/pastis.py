@@ -22,7 +22,7 @@ from .utils import check_integrity, download_url, extract_archive
 class PASTIS(NonGeoDataset, abc.ABC):
     """PASTIS dataset.
 
-    The `PASTIS <https://github.com/VSainteuf/pastis-benchmark>`_
+    The `PASTIS <https://github.com/VSainteuf/pastis-benchmark>`__
     dataset is a dataset for time-series panoptic segmentation of agricultural parcels
 
     Dataset features:
@@ -230,11 +230,20 @@ class PASTIS(NonGeoDataset, abc.ABC):
             suffix = f"{i}.npy"
             files.append(
                 dict(
-                    s2=os.path.join(self.root, self.prefix["s2"]) + suffix,
-                    s1a=os.path.join(self.root, self.prefix["s1a"]) + suffix,
-                    s1d=os.path.join(self.root, self.prefix["s1d"]) + suffix,
-                    semantic=os.path.join(self.root, self.prefix["semantic"]) + suffix,
-                    instance=os.path.join(self.root, self.prefix["instance"]) + suffix,
+                    s2=os.path.join(self.root, self.directory, self.prefix["s2"])
+                    + suffix,
+                    s1a=os.path.join(self.root, self.directory, self.prefix["s1a"])
+                    + suffix,
+                    s1d=os.path.join(self.root, self.directory, self.prefix["s1d"])
+                    + suffix,
+                    semantic=os.path.join(
+                        self.root, self.directory, self.prefix["semantic"]
+                    )
+                    + suffix,
+                    instance=os.path.join(
+                        self.root, self.directory, self.prefix["instance"]
+                    )
+                    + suffix,
                 )
             )
         return files
