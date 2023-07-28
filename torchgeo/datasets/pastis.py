@@ -5,8 +5,8 @@
 
 import abc
 import os
-from typing import Callable, Optional, Union
 from collections.abc import Sequence
+from typing import Callable, Optional, Union
 
 import fiona
 import matplotlib.pyplot as plt
