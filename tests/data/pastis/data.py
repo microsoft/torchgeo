@@ -12,7 +12,7 @@ import fiona
 import numpy as np
 
 SIZE = 32
-NUM_SAMPLES = 2
+NUM_SAMPLES = 5
 MAX_NUM_TIME_STEPS = 10
 np.random.seed(0)
 

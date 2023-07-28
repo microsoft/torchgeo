@@ -60,7 +60,7 @@ class TestPASTISSemanticSegmentation:
     ) -> PASTISSemanticSegmentation:
         monkeypatch.setattr(torchgeo.datasets.pastis, "download_url", download_url)
 
-        md5 = "9b11ae132623a0d13f7f0775d2003703"
+        md5 = "2084aaa69ec55da5ddb0be69e1e941fe"
         monkeypatch.setattr(PASTIS, "md5", md5)
         url = os.path.join("tests", "data", "pastis", "PASTIS-R.zip")
         monkeypatch.setattr(PASTIS, "url", url)
