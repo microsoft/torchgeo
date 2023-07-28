@@ -91,6 +91,8 @@ class PASTISDataModule(NonGeoDataModule, abc.ABC):
         """Initialize a LightningDataModule for PASTIS based DataLoaders.
 
         Args:
+            dataset_class: Either `PASTISSemanticSegmentation` or
+                `PASTISInstanceSegmentation`
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
             val_split_pct: What percentage of the dataset to use as a validation set
@@ -117,9 +119,17 @@ class PASTISSemanticSegmentationDataModule(PASTISDataModule):
     """LightningDataModule implementation for the PASTISSemanticSegmentation dataset."""
 
     def __init__(self, **kwargs: Any) -> None:
+        """Initializes a LightningDataModule for PASTISSemanticSegmentation."""
         super().__init__(PASTISSemanticSegmentation, **kwargs)
 
     def setup(self, stage: Optional[str] = None) -> None:
+        """Initialize the main ``Dataset`` objects.
+
+        This method is called once per GPU per run.
+
+        Args:
+            stage: stage to set up
+        """
         self.dataset = PASTISSemanticSegmentation(**self.kwargs)
         self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
             self.dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
@@ -130,10 +140,18 @@ class PASTISInstanceSegmentationDataModule(PASTISDataModule):
     """LightningDataModule implementation for the PASTISInstanceSegmentation dataset."""
 
     def __init__(self, **kwargs: Any) -> None:
+        """Initializes a LightningDataModule for PASTISInstanceSegmentation."""
         super().__init__(PASTISInstanceSegmentation, **kwargs)
         self.collate_fn = collate_fn
 
     def setup(self, stage: Optional[str] = None) -> None:
+        """Initialize the main ``Dataset`` objects.
+
+        This method is called once per GPU per run.
+
+        Args:
+            stage: stage to set up
+        """
         self.dataset = PASTISInstanceSegmentation(**self.kwargs)
         self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
             self.dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
