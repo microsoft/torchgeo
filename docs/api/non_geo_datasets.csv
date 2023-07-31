@@ -21,7 +21,7 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands
 `Million-AID`_,C,Google Earth,1M,51--73,,0.5--153,RGB
 `NASA Marine Debris`_,OD,PlanetScope,707,1,256x256,3,RGB
 `OSCD`_,CD,Sentinel-2,24,2,"40--1,180",60,MSI
-`PASTIS`_,I,Sentinel 2,"2,433",19,128x128xT,10,MSI
+`PASTIS`_,I,Sentinel-1/2,"2,433",19,128x128xT,10,MSI
 `PatternNet`_,C,Google Earth,"30,400",38,256x256,0.06--5,RGB
 `Potsdam`_,S,Aerial,38,6,"6,000x6,000",0.05,MSI
 `ReforesTree`_,"OD, R",Aerial,100,6,"4,000x4,000",0.02,RGB
