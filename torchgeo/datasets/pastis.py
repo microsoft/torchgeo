@@ -23,7 +23,7 @@ class PASTIS(NonGeoDataset, abc.ABC):
     """PASTIS dataset.
 
     The `PASTIS <https://github.com/VSainteuf/pastis-benchmark>`__
-    dataset is a dataset for time-series panoptic segmentation of agricultural parcels
+    dataset is a dataset for time-series panoptic segmentation of agricultural parcels.
 
     Dataset features:
 
