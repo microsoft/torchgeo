@@ -149,8 +149,7 @@ class PASTIS(NonGeoDataset, abc.ABC):
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
-        for fold in folds:
-            assert 0 <= fold < 5
+        assert set(folds) <= set(range(6))
         assert bands in ["s1a", "s1d", "s2"]
         self.root = root
         self.folds = folds
