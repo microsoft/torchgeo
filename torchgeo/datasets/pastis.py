@@ -3,10 +3,9 @@
 
 """PASTIS dataset."""
 
-import abc
 import os
 from collections.abc import Sequence
-from typing import Callable, Optional, Union
+from typing import Callable, Optional
 
 import fiona
 import matplotlib.pyplot as plt
@@ -19,7 +18,7 @@ from .geo import NonGeoDataset
 from .utils import check_integrity, download_url, extract_archive
 
 
-class PASTIS(NonGeoDataset, abc.ABC):
+class PASTIS(NonGeoDataset):
     """PASTIS dataset.
 
     The `PASTIS <https://github.com/VSainteuf/pastis-benchmark>`__
@@ -131,6 +130,7 @@ class PASTIS(NonGeoDataset, abc.ABC):
         root: str = "data",
         folds: Sequence[int] = (0, 1, 2, 3, 4),
         bands: str = "s2",
+        mode: str = "semantic",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -143,6 +143,7 @@ class PASTIS(NonGeoDataset, abc.ABC):
                 dataset folds to include
             bands: load Sentinel-1 ascending path data (s1a), Sentinel-2 descending path
                 data (s1d), or Sentinel-2 data (s2)
+            mode: load semantic (semantic) or instance (instance) annotations
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -150,9 +151,11 @@ class PASTIS(NonGeoDataset, abc.ABC):
         """
         assert set(folds) <= set(range(6))
         assert bands in ["s1a", "s1d", "s2"]
+        assert mode in ["semantic", "instance"]
         self.root = root
         self.folds = folds
         self.bands = bands
+        self.mode = mode
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
@@ -179,7 +182,18 @@ class PASTIS(NonGeoDataset, abc.ABC):
         Returns:
             data and label at that index
         """
-        raise NotImplementedError
+        image = self._load_image(index)
+        if self.mode == "semantic":
+            mask = self._load_semantic_targets(index)
+            sample = {"image": image, "mask": mask}
+        elif self.mode == "instance":
+            mask, boxes, labels = self._load_instance_targets(index)
+            sample = {"image": image, "mask": mask, "boxes": boxes, "label": labels}
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.
@@ -204,16 +218,65 @@ class PASTIS(NonGeoDataset, abc.ABC):
         tensor = torch.from_numpy(array)
         return tensor
 
-    def _load_target(self, index: int) -> Union[Tensor, tuple[Tensor, Tensor, Tensor]]:
+    def _load_semantic_targets(self, index: int) -> Tensor:
         """Load the target mask for a single image.
 
         Args:
             index: index to return
 
         Returns:
-            the target mask, box, and label for each mask
+            the target mask
         """
-        raise NotImplementedError
+        # See https://github.com/VSainteuf/pastis-benchmark/blob/main/code/dataloader.py#L201 # noqa: E501
+        # even though the mask file is 3 bands, we just select the first band
+        array = np.load(self.files[index]["semantic"])[0].astype(np.uint8)
+        tensor = torch.from_numpy(array).long()
+        return tensor
+
+    def _load_instance_targets(self, index: int) -> tuple[Tensor, Tensor, Tensor]:
+        """Load the instance segmentation targets for a single sample.
+
+        Args:
+            index: index to return
+
+        Returns:
+            the instance segmentation mask, box, and label for each instance
+        """
+        mask_array = np.load(self.files[index]["semantic"])[0].astype(np.uint8)
+        instance_array = np.load(self.files[index]["instance"])
+
+        mask_tensor = torch.from_numpy(mask_array)
+        instance_tensor = torch.from_numpy(instance_array)
+
+        # Convert instance mask of N instances to N binary instance masks
+        instance_ids = torch.unique(instance_tensor)
+        # Exclude a mask for unknown/background
+        instance_ids = instance_ids[instance_ids != 0]
+        instance_ids = instance_ids[:, None, None]
+        masks: Tensor = instance_tensor == instance_ids
+
+        # Parse labels for each instance
+        labels_list = []
+        for mask in masks:
+            label = mask_tensor[mask]
+            label = torch.unique(label)[0]
+            labels_list.append(label)
+
+        # Get bounding boxes for each instance
+        boxes_list = []
+        for mask in masks:
+            pos = torch.where(mask)
+            xmin = torch.min(pos[1])
+            xmax = torch.max(pos[1])
+            ymin = torch.min(pos[0])
+            ymax = torch.max(pos[0])
+            boxes_list.append([xmin, ymin, xmax, ymax])
+
+        masks = masks.to(torch.uint8)
+        boxes = torch.tensor(boxes_list).to(torch.float)
+        labels = torch.tensor(labels_list).to(torch.long)
+
+        return masks, boxes, labels
 
     def _load_files(self) -> list[dict[str, str]]:
         """List the image and target files.
@@ -341,113 +404,3 @@ class PASTIS(NonGeoDataset, abc.ABC):
         if suptitle is not None:
             plt.suptitle(suptitle)
         return fig
-
-
-class PASTISSemanticSegmentation(PASTIS):
-    """PASTIS dataset for the semantic segmentation task.
-
-    .. versionadded:: 0.5
-    """
-
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
-        """Return an index within the dataset.
-
-        Args:
-            index: index to return
-
-        Returns:
-            data and label at that index
-        """
-        image = self._load_image(index)
-        mask = self._load_target(index)
-        sample = {"image": image, "mask": mask}
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
-
-    def _load_target(self, index: int) -> Tensor:
-        """Load the target mask for a single image.
-
-        Args:
-            index: index to return
-
-        Returns:
-            the target mask
-        """
-        # See https://github.com/VSainteuf/pastis-benchmark/blob/main/code/dataloader.py#L201 # noqa: E501
-        # even though the mask file is 3 bands, we just select the first band
-        array = np.load(self.files[index]["semantic"])[0]
-        tensor = torch.from_numpy(array).long()
-        return tensor
-
-
-class PASTISInstanceSegmentation(PASTIS):
-    """PASTIS dataset for the instance segmentation task.
-
-    .. versionadded:: 0.5
-    """
-
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
-        """Return an index within the dataset.
-
-        Args:
-            index: index to return
-
-        Returns:
-            data and label at that index
-        """
-        image = self._load_image(index)
-        mask, boxes, labels = self._load_target(index)
-        sample = {"image": image, "mask": mask, "boxes": boxes, "label": labels}
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
-
-    def _load_target(self, index: int) -> tuple[Tensor, Tensor, Tensor]:
-        """Load the target mask for a single image.
-
-        Args:
-            index: index to return
-
-        Returns:
-            the target mask, box, and label for each mask
-        """
-        mask_array = np.load(self.files[index]["semantic"])[0]
-        instance_array = np.load(self.files[index]["instance"])
-
-        mask_tensor = torch.from_numpy(mask_array)
-        instance_tensor = torch.from_numpy(instance_array)
-
-        # Convert instance mask of N instances to N binary instance masks
-        instance_ids = torch.unique(instance_tensor)
-        # Exclude a mask for unknown/background
-        instance_ids = instance_ids[instance_ids != 0]
-        instance_ids = instance_ids[:, None, None]
-        masks: Tensor = instance_tensor == instance_ids
-
-        # Parse labels for each instance
-        labels_list = []
-        for mask in masks:
-            label = mask_tensor[mask]
-            label = torch.unique(label)[0]
-            labels_list.append(label)
-
-        # Get bounding boxes for each instance
-        boxes_list = []
-        for mask in masks:
-            pos = torch.where(mask)
-            xmin = torch.min(pos[1])
-            xmax = torch.max(pos[1])
-            ymin = torch.min(pos[0])
-            ymax = torch.max(pos[0])
-            boxes_list.append([xmin, ymin, xmax, ymax])
-
-        masks = masks.to(torch.uint8)
-        boxes = torch.tensor(boxes_list).to(torch.float)
-        labels = torch.tensor(labels_list).to(torch.long)
-
-        return masks, boxes, labels

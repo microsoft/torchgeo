@@ -276,8 +276,6 @@ PASTIS
 ^^^^^^
 
 .. autoclass:: PASTIS
-.. autoclass:: PASTISSemanticSegmentation
-.. autoclass:: PASTISInstanceSegmentation
 
 PatternNet
 ^^^^^^^^^^
