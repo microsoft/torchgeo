@@ -374,12 +374,16 @@ class PASTIS(NonGeoDataset):
         # Keep the RGB bands and convert to T x H x W x C format
         images = sample["image"][:, [2, 1, 0], :, :].numpy().transpose(0, 2, 3, 1)
         mask = sample["mask"].numpy()
+        if self.mode == "instance":
+            mask = mask.argmax(axis=0)
 
         num_panels = 3
         showing_predictions = "prediction" in sample
         if showing_predictions:
             predictions = sample["prediction"].numpy()
             num_panels += 1
+            if self.mode == "instance":
+                predictions = predictions.argmax(axis=0)
 
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 4))
         axs[0].imshow(images[0] / 5000)
