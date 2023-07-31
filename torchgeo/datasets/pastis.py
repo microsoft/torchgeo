@@ -141,7 +141,8 @@ class PASTIS(NonGeoDataset, abc.ABC):
             root: root directory where dataset can be found
             folds: a sequence of integers from 0 to 4 specifying which of the five
                 dataset folds to include
-            bands: load Sentinel-1 or Sentinel-2. One of {s1a, s1d, s2}
+            bands: load Sentinel-1 ascending path data (s1a), Sentinel-2 descending path
+                data (s1d), or Sentinel-2 data (s2)
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
