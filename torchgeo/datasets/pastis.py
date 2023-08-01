@@ -141,7 +141,7 @@ class PASTIS(NonGeoDataset):
             root: root directory where dataset can be found
             folds: a sequence of integers from 0 to 4 specifying which of the five
                 dataset folds to include
-            bands: load Sentinel-1 ascending path data (s1a), Sentinel-2 descending path
+            bands: load Sentinel-1 ascending path data (s1a), Sentinel-1 descending path
                 data (s1d), or Sentinel-2 data (s2)
             mode: load semantic (semantic) or instance (instance) annotations
             transforms: a function/transform that takes input sample and its target as
