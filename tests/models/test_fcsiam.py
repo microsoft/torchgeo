@@ -47,8 +47,8 @@ class TestFCSiamDiff:
         assert y.shape == (b, classes, h, w)
 
     @torch.no_grad()
-    @pytest.mark.parametrize("b", BATCH_SIZE, CLASSES)
-    @pytest.mark.parametrize("b", CLASSES)
+    @pytest.mark.parametrize("b", BATCH_SIZE)
+    @pytest.mark.parametrize("classes", CLASSES)
     def test_classes(self, b: int, classes: int) -> None:
         t, c, h, w = 2, 3, 64, 64
         model = FCSiamDiff(in_channels=3, classes=classes, encoder_weights=None)
