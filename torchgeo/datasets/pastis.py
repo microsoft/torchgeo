@@ -294,24 +294,15 @@ class PASTIS(NonGeoDataset):
 
         files = []
         for i in self.idxs:
-            suffix = f"{i}.npy"
+            path = os.path.join(self.root, self.directory, "{}") + str(i) + ".npy"
             files.append(
-                dict(
-                    s2=os.path.join(self.root, self.directory, self.prefix["s2"])
-                    + suffix,
-                    s1a=os.path.join(self.root, self.directory, self.prefix["s1a"])
-                    + suffix,
-                    s1d=os.path.join(self.root, self.directory, self.prefix["s1d"])
-                    + suffix,
-                    semantic=os.path.join(
-                        self.root, self.directory, self.prefix["semantic"]
-                    )
-                    + suffix,
-                    instance=os.path.join(
-                        self.root, self.directory, self.prefix["instance"]
-                    )
-                    + suffix,
-                )
+                {
+                    "s2": path.format(self.prefix["s2"]),
+                    "s1a": path.format(self.prefix["s1a"]),
+                    "s1d": path.format(self.prefix["s1d"]),
+                    "semantic": path.format(self.prefix["semantic"]),
+                    "instance": path.format(self.prefix["instance"]),
+                }
             )
         return files
 
