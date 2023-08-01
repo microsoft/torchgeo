@@ -111,7 +111,7 @@ class PASTIS(NonGeoDataset):
         16: (188, 189, 34, 255),
         17: (219, 219, 141, 255),
         18: (23, 190, 207, 255),
-        19: (158, 218, 229, 255),
+        19: (255, 255, 255, 255),
     }
     directory = "PASTIS-R"
     filename = "PASTIS-R.zip"
@@ -242,7 +242,7 @@ class PASTIS(NonGeoDataset):
         Returns:
             the instance segmentation mask, box, and label for each instance
         """
-        mask_array = np.load(self.files[index]["semantic"])[0].astype(np.uint8)
+        mask_array = np.load(self.files[index]["semantic"])[0]
         instance_array = np.load(self.files[index]["instance"])
 
         mask_tensor = torch.from_numpy(mask_array)
@@ -365,8 +365,10 @@ class PASTIS(NonGeoDataset):
         # Keep the RGB bands and convert to T x H x W x C format
         images = sample["image"][:, [2, 1, 0], :, :].numpy().transpose(0, 2, 3, 1)
         mask = sample["mask"].numpy()
+
         if self.mode == "instance":
-            mask = mask.argmax(axis=0)
+            label = sample["label"]
+            mask = label[mask.argmax(axis=0)].numpy()
 
         num_panels = 3
         showing_predictions = "prediction" in sample
@@ -375,6 +377,8 @@ class PASTIS(NonGeoDataset):
             num_panels += 1
             if self.mode == "instance":
                 predictions = predictions.argmax(axis=0)
+                label = sample["prediction_labels"]
+                predictions = label[predictions].numpy()
 
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 4))
         axs[0].imshow(images[0] / 5000)

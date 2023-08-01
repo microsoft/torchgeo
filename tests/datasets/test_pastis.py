@@ -104,5 +104,7 @@ class TestPASTIS:
         dataset.plot(x, show_titles=False)
         plt.close()
         x["prediction"] = x["mask"].clone()
+        if dataset.mode == "instance":
+            x["prediction_labels"] = x["label"].clone()
         dataset.plot(x)
         plt.close()
