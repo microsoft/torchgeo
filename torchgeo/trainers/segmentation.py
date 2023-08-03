@@ -37,12 +37,21 @@ class SemanticSegmentationTask(LightningModule):
         """Configures the task based on kwargs parameters passed to the constructor."""
         weights = self.hyperparams["weights"]
 
+        if self.hyperparams["backbone"].startswith("tu-vit"):
+            encoder_depth = 4
+            decoder_channels: tuple[int, ...] = (256, 128, 64, 32)
+        else:
+            encoder_depth = 5
+            decoder_channels = (256, 128, 64, 32, 16)
+
         if self.hyperparams["model"] == "unet":
             self.model = smp.Unet(
                 encoder_name=self.hyperparams["backbone"],
                 encoder_weights="imagenet" if weights is True else None,
                 in_channels=self.hyperparams["in_channels"],
                 classes=self.hyperparams["num_classes"],
+                encoder_depth=encoder_depth,
+                decoder_channels=decoder_channels,
             )
         elif self.hyperparams["model"] == "deeplabv3+":
             self.model = smp.DeepLabV3Plus(
@@ -50,6 +59,8 @@ class SemanticSegmentationTask(LightningModule):
                 encoder_weights="imagenet" if weights is True else None,
                 in_channels=self.hyperparams["in_channels"],
                 classes=self.hyperparams["num_classes"],
+                encoder_depth=encoder_depth,
+                decoder_channels=decoder_channels,
             )
         elif self.hyperparams["model"] == "fcn":
             self.model = FCN(
@@ -97,7 +108,8 @@ class SemanticSegmentationTask(LightningModule):
                     _, state_dict = utils.extract_backbone(weights)
                 else:
                     state_dict = get_weight(weights).get_state_dict(progress=True)
-                self.model.encoder.load_state_dict(state_dict)
+                state_dict["conv1.weight"] = state_dict["conv1.weight"][:,:12,:,:]
+                self.model.encoder.load_state_dict(state_dict, strict=False)
 
         # Freeze backbone
         if self.hyperparams.get("freeze_backbone", False) and self.hyperparams[

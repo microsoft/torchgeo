@@ -14,7 +14,7 @@ module:
 
 datamodule:
   _target_: torchgeo.datamodules.AgriFieldNetDataModule
-  root: "data"
+  root: "/projects/dali/data/agrifieldnet"
   batch_size: 32
   patch_size: 256
   num_workers: 10
@@ -26,7 +26,7 @@ trainer:
 
 program:
   seed: 2
-  output_dir: "output"
-  log_dir: "logs"
+  output_dir: "/home/yichia3/scratch/agrifieldnet/output"
+  log_dir: "/home/yichia3/scratch/agrifieldnet/logs"
   overwrite: True
   experiment_name: agrifieldnet
