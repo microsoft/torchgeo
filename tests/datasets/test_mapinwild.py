@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -12,59 +12,59 @@ from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import MapInWild
-
-
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestMapInWild:
     @pytest.fixture(params=["train", "validation", "test"])
     def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> MapInWild:
-        monkeypatch.setattr(torchgeo.datasets.mapinwild, "download_url", download_url)
         md5s = {
-            "ESA_WC.zip": "376acca86ede6f5d5fd8ae99f7fa3266",
-            "VIIRS.zip": "51003f6be6ec39af2193464731a60703",
-            "mask.zip": "b17d85d1d7ee8b0c276d56be1f431f1c",
-            "s1_part1.zip": "3ec2f3df597ee81c1e9a4dab0de3813e",
-            "s1_part2.zip": "fd944ec7a4a992df0f4425278d01e350",
-            "s2_temporal_subset_part1.zip": "f3db9a453097ce45d4e4bd9b0655409e",
-            "s2_temporal_subset_part2.zip": "eb9c056e9f7b5862ce9cc254dd047c01",
-            "s2_autumn_part1.zip": "316434f6e0e241f8c4fb2bdaf2fe4d72",
-            "s2_autumn_part2.zip": "71dc31990692c2226f96caf5b19e9da3",
-            "s2_spring_part1.zip": "a6f2da00db8906df41e6850a22e30e83",
-            "s2_spring_part2.zip": "c21632f390c7607873b8595c80372bf8",
-            "s2_summer_part1.zip": "74fdef594372efa6f3cec0f4bd77731b",
-            "s2_summer_part2.zip": "3515f168ea30adff4e65b62bf2f5026b",
-            "s2_winter_part1.zip": "4403f6246bbc604349654d16a46db30d",
-            "s2_winter_part2.zip": "9f9c88b3755c7ec43840d5d4a81adfa2",
+            "ESA_WC.zip": "b9adc4633edb872f8b5cd0f9eb7d2b14",
+            "VIIRS.zip": "3e710e159785513a6572e6d01f944d39",
+            "mask.zip": "5d2b0800e92cda7f9a083f2081d75381",
+            "s1_part1.zip": "8796a047261bc1f986ce2f9843b5a292",
+            "s1_part2.zip": "d69f357ad5bc2b5fdae31581183e3789",
+            "s2_temporal_subset_part1.zip": "9b2c24a65bcd5505126395858577ea3d",
+            "s2_temporal_subset_part2.zip": "10ed0134ad62ecf6d978687eea2f31fb",
+            "s2_autumn_part1.zip": "0e97b20efea4ee4edb9ba06484a895f0",
+            "s2_autumn_part2.zip": "e999924025a08253f3847d634fe55d45",
+            "s2_spring_part1.zip": "3c3613dcd372f1900b5894236283c89b",
+            "s2_spring_part2.zip": "458e50ea3fb6c7865406eb635220ba55",
+            "s2_summer_part1.zip": "628448d26388d2daebc5eefd3284431d",
+            "s2_summer_part2.zip": "fd38bd42bddad741901f43c2cfbe7261",
+            "s2_winter_part1.zip": "e3877d58dd63196f48d400eaede8bb09",
+            "s2_winter_part2.zip": "158143afcb7771fe3bb5259fa60137bb",
         }
         monkeypatch.setattr(MapInWild, "md5s", md5s)
         root = os.path.join("tests", "data", "mapinwild")
         transforms = nn.Identity()
-        return MapInWild(root, download=False, transforms=transforms, checksum=True)
+        modality = ["mask", "esa_wc", "viirs"]
+        return MapInWild(
+            root, modality=modality, transforms=transforms, download=True, checksum=True
+        )  # noqa: E501
 
     def test_getitem(self, dataset: MapInWild) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
-        assert x["image"].shape[0] == 15
+        assert x["image"].ndim == 3
 
     def test_len(self, dataset: MapInWild) -> None:
-        assert len(dataset) == 8
+        assert len(dataset) == 1
 
     def test_add(self, dataset: MapInWild) -> None:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
-        assert len(ds) == 16
+        assert len(ds) == 2
 
-    def test_check_integrity_light(self) -> None:
-        root = os.path.join("tests", "data", "mapinwild")
-        ds = MapInWild(root, checksum=False)
-        assert isinstance(ds, MapInWild)
+    def test_invalid_split(self) -> None:
+        with pytest.raises(AssertionError):
+            MapInWild(split="foo")
+
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(RuntimeError, match="Dataset not found"):
+            MapInWild(root=str(tmp_path), download=False)
 
     def test_plot(self, dataset: MapInWild) -> None:
         dataset.plot(dataset[0], suptitle="Test")

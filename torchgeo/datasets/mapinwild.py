@@ -15,8 +15,13 @@ import rasterio
 import torch
 from torch import Tensor
 
-from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, percentile_normalization
+from torchgeo.datasets.geo import NonGeoDataset
+from torchgeo.datasets.utils import (
+    check_integrity,
+    download_url,
+    extract_archive,
+    percentile_normalization,
+)
 
 
 class MapInWild(NonGeoDataset):
@@ -64,8 +69,6 @@ class MapInWild(NonGeoDataset):
         "s2": ("B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12"),
     }
 
-    s2_band_names = ("B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12")
-
     modality_urls = {
         "esa_wc": {
             "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/esa_wc/ESA_WC.zip"  # noqa: E501
@@ -104,6 +107,24 @@ class MapInWild(NonGeoDataset):
 
     split_url = "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/split_IDs/split_IDs.csv"  # noqa: E501
 
+    filenames = [
+        "ESA_WC.zip",
+        "VIIRS.zip",
+        "mask.zip",
+        "s1_part1.zip",
+        "s1_part2.zip",
+        "s2_autumn_part1.zip",
+        "s2_autumn_part2.zip",
+        "s2_spring_part1.zip",
+        "s2_spring_part2.zip",
+        "s2_summer_part1.zip",
+        "s2_summer_part2.zip",
+        "s2_temporal_subset_part1.zip",
+        "s2_temporal_subset_part2.zip",
+        "s2_winter_part1.zip",
+        "s2_winter_part2.zip",
+    ]
+
     md5s = {
         "ESA_WC.zip": "72b2ee578fe10f0df85bdb7f19311c92",
         "VIIRS.zip": "4eff014bae127fe536f8a5f17d89ecb4",
@@ -121,8 +142,6 @@ class MapInWild(NonGeoDataset):
         "s2_winter_part1.zip": "ca958f7cd98e37cb59d6f3877573ee6d",
         "s2_winter_part2.zip": "e7aacb0806d6d619b6abc408e6b09fdc",
     }
-
-    main_directory = os.path.join(os.getcwd(), "data")
 
     mask_palette = {1: (0, 153, 0), 0: (255, 255, 255)}
 
@@ -143,18 +162,7 @@ class MapInWild(NonGeoDataset):
     def __init__(
         self,
         root: str = "data",
-        modality: list[str] = [
-            "ESA_WC",
-            "VIIRS",
-            "mask",
-            "s1",
-            "s2_temporal_subset",
-            "s2_autumn",
-            "s2_spring",
-            "s2_summer",
-            "s2_winter",
-        ],
-        s2_bands: Sequence[str] = BAND_SETS["s2"],
+        modality: list[str] = ["mask", "esa_wc", "viirs"],
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
@@ -176,35 +184,35 @@ class MapInWild(NonGeoDataset):
             AssertionError: if ``split`` argument is invalid
         """
         assert split in ["train", "validation", "test"]
-        self._validate_bands(s2_bands)
 
         self.band_indices = torch.tensor(
-            [self.s2_band_names.index(b) for b in s2_bands]
+            [self.BAND_SETS["s2"].index(b) for b in self.BAND_SETS["s2"]]
         ).long()
 
         self.checksum = checksum
         self.root = root
         self.transforms = transforms
         self.modality = modality
-
         self.download = download
         self._verify_split()
-
         split_dataframe = pd.read_csv(os.path.join(self.root, "split_IDs.csv"))
         self.ids = split_dataframe[split].dropna().values.tolist()
         self.ids = [int(i) for i in self.ids]
 
-        # Check if the requested list of modalities exist in the directory
-        if not set(self.modality).issubset(set(os.listdir(self.main_directory))):
+        if not set(modality).issubset(set(os.listdir(root))):
             for modal in modality:
                 for modality_link in self.modality_urls[modal]:
                     self._verify(
                         modality_link, self.md5s[os.path.split(modality_link)[1]]
                     )
+                    if checksum:
+                        if not self._check_integrity(
+                            modality_link, self.md5s[os.path.split(modality_link)[1]]
+                        ):
+                            raise RuntimeError("Dataset not found or corrupted.")
 
-            for modal in modality:
-                if len(self.modality_urls[modal]) == 2:
-                    self.merge_parts(self.main_directory, modal)
+                    if len(self.modality_urls[modal]) == 2:
+                        self.merge_parts(root, modal)
 
         self.modality.remove("mask")
 
@@ -272,10 +280,17 @@ class MapInWild(NonGeoDataset):
 
         image = torch.cat(self.list_modals, dim=0)
 
-        sample: dict[str, Tensor] = {"image": image, "mask": mask}
-
         if self.transforms is not None:
-            sample = self.transforms(sample)
+            im = np.einsum("ijk->jki", image.numpy())
+            msk = np.einsum("ijk->jki", mask.numpy())
+            sample_: dict[str, Tensor] = {"image": im, "mask": msk}
+
+            transformed = self.transforms(sample_)
+
+            image = torch.Tensor(np.einsum("ijk->kij", transformed["image"]))
+            mask = torch.Tensor(np.einsum("ijk->kij", transformed["mask"]))
+
+        sample: dict[str, Tensor] = {"image": image, "mask": mask}
 
         return sample
 
@@ -306,27 +321,8 @@ class MapInWild(NonGeoDataset):
             tensor = torch.from_numpy(array)
             return tensor
 
-    def _validate_bands(self, bands: Sequence[str]) -> None:
-        """Validate list of bands.
-
-        Args:
-            bands: user-provided sequence of bands to load
-
-        Raises:
-            AssertionError: if ``bands`` is not a sequence
-            ValueError: if an invalid band name is provided
-        """
-        assert isinstance(bands, tuple), "'bands' must be a sequence"
-        for band in bands:
-            if band not in self.s2_band_names:
-                raise ValueError(f"'{band}' is an invalid band name.")
-
     def _verify(self, url: str, md5: str) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the zip file has already been downloaded
         pathname = os.path.join(self.root, os.path.split(url)[1].split(".")[0])
         if os.path.exists(pathname):
@@ -352,7 +348,7 @@ class MapInWild(NonGeoDataset):
             self.split_url,
             self.root,
             filename=os.path.split(self.split_url)[1],
-            md5=None,  # md5 if self.checksum else None,
+            md5=None,
         )
 
     def _download(self, url: str, md5: str) -> None:
@@ -369,13 +365,23 @@ class MapInWild(NonGeoDataset):
         filepath = os.path.join(self.root, os.path.split(url)[1])
         extract_archive(filepath)
 
+    def _check_integrity(self, filename: str, md5: str) -> bool:
+        """Check integrity of dataset.
+
+        Returns:
+            True if dataset files are found and/or MD5s match, else False
+        """
+        filepath = os.path.join(self.root, os.path.split(filename)[1])
+        if not check_integrity(filepath, md5 if self.checksum else None):
+            return False
+        return True
+
     def merge_parts(self, source_path: str, modality: str) -> None:
         """Merge the modalities that are downloaded and extracted in parts."""
         fname_p1 = modality + "_part1"
         fname_p2 = modality + "_part2"
         source_folder = os.path.join(source_path, fname_p1)
         destination_folder = os.path.join(source_path, fname_p2)
-
         for file_name in os.listdir(source_folder):
             source = os.path.join(source_folder, file_name)
             destination = os.path.join(destination_folder, file_name)
@@ -399,6 +405,27 @@ class MapInWild(NonGeoDataset):
             arr_3d[m] = i
         return arr_3d
 
+    def get_bands(
+        self, image: Any, all_bands: Sequence[str], select_bands: Sequence[str]
+    ) -> Any:  # noqa: E501
+        """Filters the bands for a given set of bands.
+
+        Args:
+            image: the image whose bands to be filtered
+            all_bands: all Sentinel-2 bands
+            select_bands: bands to filter
+
+        Returns:
+            the raster image with filtered bands
+        """
+        bands = [
+            all_bands.index(select_bands)
+            if isinstance(select_bands, str)
+            else select_bands
+            for select_bands in select_bands
+        ]
+        return image[bands]
+
     def plot(
         self,
         sample: dict[str, Tensor],
@@ -415,26 +442,34 @@ class MapInWild(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        if sample["image"].dim() == 2:
-            sample["image"] = sample["image"].unsqueeze(0)
+        image = np.einsum("ijk->jki", sample["image"])
+        mask = sample["mask"].squeeze()
+        color_mask = self.convert_to_color(mask, palette=self.mask_palette)
 
-        image = np.rollaxis(sample["image"].numpy(), 0, 3)
-        mask = sample["mask"].numpy().squeeze()
-
-        # Is ESA Worldcover?
         if np.all(np.isin(image, np.arange(0, 110, 10))):
             image = self.convert_to_color(image.squeeze(), palette=self.wc_palette)
+        elif image.shape[-1] == 2:
+            image = image[:, :, 0]
+            image = percentile_normalization(image)
+        elif image.shape[-1] > 3:
+            rgb_s2 = self.get_bands(
+                image=np.einsum("ijk->kij", image),
+                all_bands=self.BAND_SETS["s2"],
+                select_bands=["B4", "B3", "B2"],
+            )  # noqa: E501
+            image = percentile_normalization(np.einsum("ijk->jki", rgb_s2))
         else:
             image = percentile_normalization(image)
-
-        color_mask = self.convert_to_color(mask, palette=self.mask_palette)
 
         num_panels = 2
         showing_predictions = "prediction" in sample
 
         if showing_predictions:
-            predictions = sample["prediction"].numpy()
+            predictions = sample["prediction"].numpy().squeeze()
             num_panels += 1
+            color_predictions = self.convert_to_color(
+                predictions, palette=self.mask_palette
+            )  # noqa: E501
 
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
         axs[0].imshow(image)
@@ -446,7 +481,7 @@ class MapInWild(NonGeoDataset):
             axs[1].set_title("Mask")
 
         if showing_predictions:
-            axs[2].imshow(predictions, vmin=0, vmax=1, interpolation="none")
+            axs[2].imshow(color_predictions, vmin=0, vmax=1, interpolation="none")
             axs[2].axis("off")
             if show_titles:
                 axs[2].set_title("Predictions")

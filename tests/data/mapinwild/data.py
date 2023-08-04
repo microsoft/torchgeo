@@ -30,51 +30,86 @@ count = {
     "ESA_WC": 1,
     "VIIRS": 1,
     "mask": 1,
-    "s1": 2,
-    "s1": 2,
-    "s2_temporal_subset": 10,
-    "s2_autumn": 10,
-    "s2_spring": 10,
-    "s2_summer": 10,
-    "s2_winter": 10,
+    "s1_part1": 2,
+    "s1_part2": 2,
+    "s2_temporal_subset_part1": 10,
+    "s2_temporal_subset_part2": 10,
+    "s2_autumn_part1": 10,
+    "s2_autumn_part2": 10,
+    "s2_spring_part1": 10,
+    "s2_spring_part2": 10,
+    "s2_summer_part1": 10,
+    "s2_summer_part2": 10,
+    "s2_winter_part1": 10,
+    "s2_winter_part2": 10,
 }
 dtype = {
     "ESA_WC": np.uint8,
     "VIIRS": np.float32,
     "mask": np.byte,
-    "s1": np.float64,
-    "s2_temporal_subset": np.uint16,
-    "s2_autumn": np.uint16,
-    "s2_spring": np.uint16,
-    "s2_summer": np.uint16,
-    "s2_winter": np.uint16,
+    "s1_part1": np.float64,
+    "s1_part2": np.float64,
+    "s2_temporal_subset_part1": np.uint16,
+    "s2_temporal_subset_part2": np.uint16,
+    "s2_autumn_part1": np.uint16,
+    "s2_autumn_part2": np.uint16,
+    "s2_spring_part1": np.uint16,
+    "s2_spring_part2": np.uint16,
+    "s2_summer_part1": np.uint16,
+    "s2_summer_part2": np.uint16,
+    "s2_winter_part1": np.uint16,
+    "s2_winter_part2": np.uint16,
 }
 stop = {
     "ESA_WC": np.iinfo(np.uint8).max,
     "VIIRS": np.finfo(np.float32).max,
     "mask": np.iinfo(np.byte).max,
-    "s1": np.finfo(np.float64).max,
-    "s2_temporal_subset": np.iinfo(np.uint16).max,
-    "s2_autumn": np.iinfo(np.uint16).max,
-    "s2_spring": np.iinfo(np.uint16).max,
-    "s2_summer": np.iinfo(np.uint16).max,
-    "s2_winter": np.iinfo(np.uint16).max,
+    "s1_part1": np.finfo(np.float64).max,
+    "s1_part2": np.finfo(np.float64).max,
+    "s2_temporal_subset_part1": np.iinfo(np.uint16).max,
+    "s2_temporal_subset_part2": np.iinfo(np.uint16).max,
+    "s2_autumn_part1": np.iinfo(np.uint16).max,
+    "s2_autumn_part2": np.iinfo(np.uint16).max,
+    "s2_spring_part1": np.iinfo(np.uint16).max,
+    "s2_spring_part2": np.iinfo(np.uint16).max,
+    "s2_summer_part1": np.iinfo(np.uint16).max,
+    "s2_summer_part2": np.iinfo(np.uint16).max,
+    "s2_winter_part1": np.iinfo(np.uint16).max,
+    "s2_winter_part2": np.iinfo(np.uint16).max,
 }
 
 folder_path = os.path.join(os.getcwd(), "tests", "data", "mapinwild")
 
+dict_all__ = {
+    "s2_sum": [
+        os.path.join(folder_path, "s2_summer_part1"),
+        os.path.join(folder_path, "s2_summer_part2"),
+    ],
+    "s2_spr": [
+        os.path.join(folder_path, "s2_spring_part1"),
+        os.path.join(folder_path, "s2_spring_part2"),
+    ],
+    "s2_win": [
+        os.path.join(folder_path, "s2_winter_part1"),
+        os.path.join(folder_path, "s2_winter_part2"),
+    ],
+    "s2_aut": [
+        os.path.join(folder_path, "s2_autumn_part1"),
+        os.path.join(folder_path, "s2_autumn_part2"),
+    ],
+    "s1": [
+        os.path.join(folder_path, "s1_part1"),
+        os.path.join(folder_path, "s1_part2"),
+    ],
+    "s2_temp": [
+        os.path.join(folder_path, "s2_temporal_subset_part1"),
+        os.path.join(folder_path, "s2_temporal_subset_part2"),
+    ],
+}
 
-for source in [
-    "ESA_WC",
-    "VIIRS",
-    "mask",
-    "s1",
-    "s2_temporal_subset",
-    "s2_autumn",
-    "s2_spring",
-    "s2_summer",
-    "s2_winter",
-]:
+modality_download_list = list(count.keys())
+
+for source in modality_download_list:
     directory = os.path.join(folder_path, source)
 
     # Remove old data
@@ -84,7 +119,7 @@ for source in [
     os.makedirs(directory, exist_ok=True)
 
     # Random images
-    for i in range(1, 3):
+    for i in range(1, 7):
         filename = f"{i}.tif"
         filepath = os.path.join(directory, filename)
 
@@ -101,13 +136,35 @@ for source in [
                     )
                 f.write(data, j)
 
+
+for key in dict_all__.keys():
+    path_list = dict_all__[key]
+    n_ims = len(os.listdir(path_list[0]))
+
+    p1_list = os.listdir(path_list[0])
+    p2_list = os.listdir(path_list[1])
+
+    fh_idx = np.arange(0, n_ims / 2, dtype=int)
+    sh_idx = np.arange(n_ims / 2, n_ims, dtype=int)
+
+    for idx in sh_idx:
+        sh_del = os.path.join(path_list[0], p1_list[idx])
+        os.remove(sh_del)
+
+    for idx in fh_idx:
+        fh_del = os.path.join(path_list[1], p2_list[idx])
+        os.remove(fh_del)
+
+for source in modality_download_list:
+    directory = os.path.join(folder_path, source)
+
     # Compress data
     shutil.make_archive(directory.replace(".zip", ""), "zip", ".", directory)
 
     # Compute checksums
-    with open(filepath, "rb") as f:
+    with open(directory + ".zip", "rb") as f:
         md5 = hashlib.md5(f.read()).hexdigest()
-        print(f"{filepath}: {md5}")
+        print(f"{directory}: {md5}")
 
 tvt_split = pd.DataFrame(
     [["1", "2", "3"], [np.nan, np.nan, np.nan], [np.nan, np.nan, np.nan]],
