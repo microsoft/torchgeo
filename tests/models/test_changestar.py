@@ -1,8 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import itertools
-
 import pytest
 import torch
 import torch.nn as nn
@@ -56,9 +54,10 @@ class TestChangeStar:
             ChangeStarFarSeg(classes=4, backbone="anynet", backbone_pretrained=False)
 
     @torch.no_grad()
-    @pytest.mark.parametrize(
-        "inc,innerc,nc,sf", list(itertools.product(IN_CHANNELS, INNNR_CHANNELS, NC, SF))
-    )
+    @pytest.mark.parametrize("inc", IN_CHANNELS)
+    @pytest.mark.parametrize("innerc", INNNR_CHANNELS)
+    @pytest.mark.parametrize("nc", NC)
+    @pytest.mark.parametrize("sf", SF)
     def test_changemixin_output_size(
         self, inc: int, innerc: int, nc: int, sf: int
     ) -> None:
