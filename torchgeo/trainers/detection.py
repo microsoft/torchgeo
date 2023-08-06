@@ -12,6 +12,7 @@ import torchvision.models.detection
 from lightning.pytorch import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models import resnet as R
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
@@ -46,7 +47,7 @@ BACKBONE_WEIGHT_MAP = {
 }
 
 
-class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
+class ObjectDetectionTask(LightningModule):
     """LightningModule for object detection of images.
 
     Currently, supports Faster R-CNN, FCOS, and RetinaNet models from
@@ -95,6 +96,11 @@ class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
             roi_pooler = MultiScaleRoIAlign(
                 featmap_names=["0", "1", "2", "3"], output_size=7, sampling_ratio=2
             )
+
+            if self.hyperparams.get("freeze_backbone", False):
+                for param in backbone.parameters():
+                    param.requires_grad = False
+
             self.model = torchvision.models.detection.FasterRCNN(
                 backbone,
                 num_classes,
@@ -112,6 +118,10 @@ class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
                 sizes=((8,), (16,), (32,), (64,), (128,), (256,)),
                 aspect_ratios=((1.0,), (1.0,), (1.0,), (1.0,), (1.0,), (1.0,)),
             )
+
+            if self.hyperparams.get("freeze_backbone", False):
+                for param in backbone.parameters():
+                    param.requires_grad = False
 
             self.model = torchvision.models.detection.FCOS(
                 backbone, num_classes, anchor_generator=anchor_generator
@@ -140,6 +150,10 @@ class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
                 norm_layer=partial(torch.nn.GroupNorm, 32),
             )
 
+            if self.hyperparams.get("freeze_backbone", False):
+                for param in backbone.parameters():
+                    param.requires_grad = False
+
             self.model = torchvision.models.detection.RetinaNet(
                 backbone, num_classes, anchor_generator=anchor_generator, head=head
             )
@@ -156,12 +170,16 @@ class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
             num_classes: Number of semantic classes to predict
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
+            freeze_backbone: Freeze the backbone network to fine-tune the detection head
 
         Raises:
             ValueError: if kwargs arguments are invalid
 
         .. versionchanged:: 0.4
            The *detection_model* parameter was renamed to *model*.
+
+        .. versionadded:: 0.5
+           The *freeze_backbone* parameter.
         """
         super().__init__()
         # Creates `self.hparams` from kwargs
@@ -170,8 +188,9 @@ class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
 
         self.config_task()
 
-        self.val_metrics = MeanAveragePrecision()
-        self.test_metrics = MeanAveragePrecision()
+        metrics = MetricCollection([MeanAveragePrecision()])
+        self.val_metrics = metrics.clone(prefix="val_")
+        self.test_metrics = metrics.clone(prefix="test_")
 
     def forward(self, *args: Any, **kwargs: Any) -> Any:
         """Forward pass of the model.
@@ -256,8 +275,11 @@ class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
     def on_validation_epoch_end(self) -> None:
         """Logs epoch level validation metrics."""
         metrics = self.val_metrics.compute()
-        renamed_metrics = {f"val_{i}": metrics[i] for i in metrics.keys()}
-        self.log_dict(renamed_metrics)
+
+        # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
+        metrics.pop("val_classes", None)
+
+        self.log_dict(metrics)
         self.val_metrics.reset()
 
     def test_step(self, *args: Any, **kwargs: Any) -> None:
@@ -280,8 +302,11 @@ class ObjectDetectionTask(LightningModule):  # type: ignore[misc]
     def on_test_epoch_end(self) -> None:
         """Logs epoch level test metrics."""
         metrics = self.test_metrics.compute()
-        renamed_metrics = {f"test_{i}": metrics[i] for i in metrics.keys()}
-        self.log_dict(renamed_metrics)
+
+        # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
+        metrics.pop("test_classes", None)
+
+        self.log_dict(metrics)
         self.test_metrics.reset()
 
     def predict_step(self, *args: Any, **kwargs: Any) -> list[dict[str, Tensor]]:

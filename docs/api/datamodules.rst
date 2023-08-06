@@ -128,6 +128,7 @@ SpaceNet
 SSL4EO
 ^^^^^^
 
+.. autoclass:: SSL4EOLDataModule
 .. autoclass:: SSL4EOS12DataModule
 
 SustainBench Crop Yield
@@ -162,6 +163,11 @@ xView2
 
 Base Classes
 ------------
+
+BaseDataModule
+^^^^^^^^^^^^^^
+
+.. autoclass:: BaseDataModule
 
 GeoDataModule
 ^^^^^^^^^^^^^

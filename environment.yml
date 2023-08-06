@@ -9,7 +9,7 @@ dependencies:
   - matplotlib>=3.3.3
   - numpy>=1.19.3
   - pip
-  - pycocotools>=2.0.4
+  - pycocotools>=2.0.5
   - pyproj>=3
   - python>=3.9
   - pytorch>=1.12
@@ -24,8 +24,9 @@ dependencies:
     - hydra-core>=1
     - ipywidgets>=7
     - isort[colors]>=5.8
-    - kornia>=0.6.5
+    - kornia>=0.6.9
     - laspy>=2
+    - lightly>=1.4.4
     - lightning>=1.8
     - mypy>=0.900
     - nbmake>=1.3.3
@@ -35,17 +36,16 @@ dependencies:
     - pandas>=1.1.3
     - pillow>=8
     - pydocstyle[toml]>=6.1
-    - pytest>=6.1.2
+    - pytest>=6.2
     - pytest-cov>=2.4
     - git+https://github.com/pytorch/pytorch_sphinx_theme
     - pyupgrade>=2.8
     - radiant-mlhub>=0.3
     - rtree>=1
     - scikit-image>=0.18
-    - scikit-learn>=0.24
     - scipy>=1.6.2
     - segmentation-models-pytorch>=0.2
-    - setuptools>=42
+    - setuptools>=61
     - sphinx>=4,<6
     - tensorboard>=2.9.1
     - timm>=0.4.12

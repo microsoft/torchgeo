@@ -9,9 +9,6 @@ updates:
     schedule:
       interval: "daily"
     ignore:
-      # scikit-image does not support latest scipy
-      # https://github.com/scikit-image/scikit-image/pull/6773
-      - dependency-name: "scipy"
       # setuptools releases new versions almost daily
       - dependency-name: "setuptools"
         update-types: ["version-update:semver-patch"]

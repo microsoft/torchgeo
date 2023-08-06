@@ -7,8 +7,36 @@ from typing import Any
 
 import torch
 
-from ..datasets import SSL4EOS12
+from ..datasets import SSL4EOL, SSL4EOS12
 from .geo import NonGeoDataModule
+
+
+class SSL4EOLDataModule(NonGeoDataModule):
+    """LightningDataModule implementation for the SSL4EO-L dataset.
+
+    .. versionadded:: 0.5
+    """
+
+    def __init__(
+        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+    ) -> None:
+        """Initialize a new SSL4EOLDataModule instance.
+
+        Args:
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.SSL4EOL`.
+        """
+        super().__init__(SSL4EOL, batch_size, num_workers, **kwargs)
+
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
+
+        Args:
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
+        """
+        self.dataset = SSL4EOL(**self.kwargs)
 
 
 class SSL4EOS12DataModule(NonGeoDataModule):

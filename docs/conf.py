@@ -62,6 +62,7 @@ nitpick_ignore = [
     ("py:class", "segmentation_models_pytorch.base.model.SegmentationModel"),
     ("py:class", "timm.models.resnet.ResNet"),
     ("py:class", "timm.models.vision_transformer.VisionTransformer"),
+    ("py:class", "torch.optim.lr_scheduler.LRScheduler"),
     ("py:class", "torchvision.models._api.WeightsEnum"),
     ("py:class", "torchvision.models.resnet.ResNet"),
 ]
@@ -114,6 +115,7 @@ intersphinx_mapping = {
     "rasterio": ("https://rasterio.readthedocs.io/en/stable/", None),
     "rtree": ("https://rtree.readthedocs.io/en/stable/", None),
     "segmentation_models_pytorch": ("https://smp.readthedocs.io/en/stable/", None),
+    "sklearn": ("https://scikit-learn.org/stable/", None),
     "timm": ("https://huggingface.co/docs/timm/main/en/", None),
     "torch": ("https://pytorch.org/docs/stable", None),
     "torchvision": ("https://pytorch.org/vision/stable", None),
