@@ -79,6 +79,7 @@ from .nasa_marine_debris import NASAMarineDebris
 from .nlcd import NLCD
 from .openbuildings import OpenBuildings
 from .oscd import OSCD
+from .pastis import PASTIS
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
 from .reforestree import ReforesTree
@@ -105,7 +106,8 @@ from .splits import (
     roi_split,
     time_series_split,
 )
-from .ssl4eo import SSL4EOS12
+from .ssl4eo import SSL4EO, SSL4EOL, SSL4EOS12
+from .ssl4eo_benchmark import SSL4EOLBenchmark
 from .sustainbench_crop_yield import SustainBenchCropYield
 from .ucmerced import UCMerced
 from .usavars import USAVars
@@ -195,6 +197,7 @@ __all__ = (
     "MillionAID",
     "NASAMarineDebris",
     "OSCD",
+    "PASTIS",
     "PatternNet",
     "Potsdam2D",
     "RESISC45",
@@ -211,6 +214,9 @@ __all__ = (
     "SpaceNet5",
     "SpaceNet6",
     "SpaceNet7",
+    "SSL4EO",
+    "SSL4EOLBenchmark",
+    "SSL4EOL",
     "SSL4EOS12",
     "SustainBenchCropYield",
     "TropicalCyclone",

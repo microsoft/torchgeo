@@ -16,7 +16,7 @@ from typing import Any
 import numpy as np
 import pytest
 import torch
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils

@@ -8,10 +8,10 @@ import pytest
 import torch
 import torch.nn as nn
 import torchvision.models.detection
-from _pytest.monkeypatch import MonkeyPatch
 from hydra.utils import instantiate
 from lightning.pytorch import Trainer
 from omegaconf import OmegaConf
+from pytest import MonkeyPatch
 from torch.nn.modules import Module
 
 from torchgeo.datamodules import MisconfigurationException, NASAMarineDebrisDataModule
@@ -146,3 +146,12 @@ class TestObjectDetectionTask:
             max_epochs=1,
         )
         trainer.predict(model=model, datamodule=datamodule)
+
+    @pytest.mark.parametrize("model_name", ["faster-rcnn", "fcos", "retinanet"])
+    def test_freeze_backbone(
+        self, model_name: str, model_kwargs: dict[Any, Any]
+    ) -> None:
+        model_kwargs["freeze_backbone"] = True
+        model_kwargs["model"] = model_name
+        model = ObjectDetectionTask(**model_kwargs)
+        assert not all([param.requires_grad for param in model.model.parameters()])

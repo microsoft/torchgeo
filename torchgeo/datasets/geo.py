@@ -23,7 +23,6 @@ import torch
 from rasterio.crs import CRS
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
-from rasterio.windows import from_bounds
 from rtree.index import Index, Property
 from torch import Tensor
 from torch.utils.data import Dataset
@@ -73,9 +72,8 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
        dataset = landsat7 | landsat8
     """
 
-    #: Resolution of the dataset in units of CRS.
-    res: float
-    _crs: CRS
+    _crs = CRS.from_epsg(4326)
+    _res = 0.0
 
     # NOTE: according to the Python docs:
     #
@@ -213,12 +211,10 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
 
     @property
     def crs(self) -> CRS:
-        """:term:`coordinate reference system (CRS)` for the dataset.
+        """:term:`coordinate reference system (CRS)` of the dataset.
 
         Returns:
-            the :term:`coordinate reference system (CRS)`
-
-        .. versionadded:: 0.2
+            The :term:`coordinate reference system (CRS)`.
         """
         return self._crs
 
@@ -229,17 +225,16 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         If ``new_crs == self.crs``, does nothing, otherwise updates the R-tree index.
 
         Args:
-            new_crs: new :term:`coordinate reference system (CRS)`
-
-        .. versionadded:: 0.2
+            new_crs: New :term:`coordinate reference system (CRS)`.
         """
-        if new_crs == self._crs:
+        if new_crs == self.crs:
             return
 
+        print(f"Converting {self.__class__.__name__} CRS from {self.crs} to {new_crs}")
         new_index = Index(interleaved=False, properties=Property(dimension=3))
 
         project = pyproj.Transformer.from_crs(
-            pyproj.CRS(str(self._crs)), pyproj.CRS(str(new_crs)), always_xy=True
+            pyproj.CRS(str(self.crs)), pyproj.CRS(str(new_crs)), always_xy=True
         ).transform
         for hit in self.index.intersection(self.index.bounds, objects=True):
             old_minx, old_maxx, old_miny, old_maxy, mint, maxt = hit.bounds
@@ -251,6 +246,28 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
 
         self._crs = new_crs
         self.index = new_index
+
+    @property
+    def res(self) -> float:
+        """Resolution of the dataset in units of CRS.
+
+        Returns:
+            The resolution of the dataset.
+        """
+        return self._res
+
+    @res.setter
+    def res(self, new_res: float) -> None:
+        """Change the resolution of a GeoDataset.
+
+        Args:
+            new_res: New resolution.
+        """
+        if new_res == self.res:
+            return
+
+        print(f"Converting {self.__class__.__name__} res from {self.res} to {new_res}")
+        self._res = new_res
 
 
 class RasterDataset(GeoDataset):
@@ -399,7 +416,7 @@ class RasterDataset(GeoDataset):
                     raise AssertionError(msg)
 
         self._crs = cast(CRS, crs)
-        self.res = cast(float, res)
+        self._res = cast(float, res)
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
@@ -477,21 +494,7 @@ class RasterDataset(GeoDataset):
             vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
-        if len(vrt_fhs) == 1:
-            src = vrt_fhs[0]
-            out_width = round((query.maxx - query.minx) / self.res)
-            out_height = round((query.maxy - query.miny) / self.res)
-            count = len(band_indexes) if band_indexes else src.count
-            out_shape = (count, out_height, out_width)
-            dest = src.read(
-                indexes=band_indexes,
-                out_shape=out_shape,
-                window=from_bounds(*bounds, src.transform),
-            )
-        else:
-            dest, _ = rasterio.merge.merge(
-                vrt_fhs, bounds, self.res, indexes=band_indexes
-            )
+        dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res, indexes=band_indexes)
 
         # fix numpy dtypes which are not supported by pytorch tensors
         if dest.dtype == np.uint16:
@@ -573,7 +576,6 @@ class VectorDataset(GeoDataset):
         super().__init__(transforms)
 
         self.root = root
-        self.res = res
         self.label_name = label_name
 
         # Populate the dataset index
@@ -604,6 +606,7 @@ class VectorDataset(GeoDataset):
             raise FileNotFoundError(msg)
 
         self._crs = crs
+        self._res = res
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
@@ -843,22 +846,8 @@ class IntersectionDataset(GeoDataset):
             if not isinstance(ds, GeoDataset):
                 raise ValueError("IntersectionDataset only supports GeoDatasets")
 
-        self._crs = dataset1.crs
+        self.crs = dataset1.crs
         self.res = dataset1.res
-
-        # Force dataset2 to have the same CRS/res as dataset1
-        if dataset1.crs != dataset2.crs:
-            print(
-                f"Converting {dataset2.__class__.__name__} CRS from "
-                f"{dataset2.crs} to {dataset1.crs}"
-            )
-            dataset2.crs = dataset1.crs
-        if dataset1.res != dataset2.res:
-            print(
-                f"Converting {dataset2.__class__.__name__} resolution from "
-                f"{dataset2.res} to {dataset1.res}"
-            )
-            dataset2.res = dataset1.res
 
         # Merge dataset indices into a single index
         self._merge_dataset_indices()
@@ -916,6 +905,46 @@ class IntersectionDataset(GeoDataset):
     bbox: {self.bounds}
     size: {len(self)}"""
 
+    @property
+    def crs(self) -> CRS:
+        """:term:`coordinate reference system (CRS)` of both datasets.
+
+        Returns:
+            The :term:`coordinate reference system (CRS)`.
+        """
+        return self._crs
+
+    @crs.setter
+    def crs(self, new_crs: CRS) -> None:
+        """Change the :term:`coordinate reference system (CRS)` of both datasets.
+
+        Args:
+            new_crs: New :term:`coordinate reference system (CRS)`.
+        """
+        self._crs = new_crs
+        self.datasets[0].crs = new_crs
+        self.datasets[1].crs = new_crs
+
+    @property
+    def res(self) -> float:
+        """Resolution of both datasets in units of CRS.
+
+        Returns:
+            Resolution of both datasets.
+        """
+        return self._res
+
+    @res.setter
+    def res(self, new_res: float) -> None:
+        """Change the resolution of both datasets.
+
+        Args:
+            new_res: New resolution.
+        """
+        self._res = new_res
+        self.datasets[0].res = new_res
+        self.datasets[1].res = new_res
+
 
 class UnionDataset(GeoDataset):
     """Dataset representing the union of two GeoDatasets.
@@ -969,22 +998,8 @@ class UnionDataset(GeoDataset):
             if not isinstance(ds, GeoDataset):
                 raise ValueError("UnionDataset only supports GeoDatasets")
 
-        self._crs = dataset1.crs
+        self.crs = dataset1.crs
         self.res = dataset1.res
-
-        # Force dataset2 to have the same CRS/res as dataset1
-        if dataset1.crs != dataset2.crs:
-            print(
-                f"Converting {dataset2.__class__.__name__} CRS from "
-                f"{dataset2.crs} to {dataset1.crs}"
-            )
-            dataset2.crs = dataset1.crs
-        if dataset1.res != dataset2.res:
-            print(
-                f"Converting {dataset2.__class__.__name__} resolution from "
-                f"{dataset2.res} to {dataset1.res}"
-            )
-            dataset2.res = dataset1.res
 
         # Merge dataset indices into a single index
         self._merge_dataset_indices()
@@ -1039,3 +1054,43 @@ class UnionDataset(GeoDataset):
     type: UnionDataset
     bbox: {self.bounds}
     size: {len(self)}"""
+
+    @property
+    def crs(self) -> CRS:
+        """:term:`coordinate reference system (CRS)` of both datasets.
+
+        Returns:
+            The :term:`coordinate reference system (CRS)`.
+        """
+        return self._crs
+
+    @crs.setter
+    def crs(self, new_crs: CRS) -> None:
+        """Change the :term:`coordinate reference system (CRS)` of both datasets.
+
+        Args:
+            new_crs: New :term:`coordinate reference system (CRS)`.
+        """
+        self._crs = new_crs
+        self.datasets[0].crs = new_crs
+        self.datasets[1].crs = new_crs
+
+    @property
+    def res(self) -> float:
+        """Resolution of both datasets in units of CRS.
+
+        Returns:
+            The resolution of both datasets.
+        """
+        return self._res
+
+    @res.setter
+    def res(self, new_res: float) -> None:
+        """Change the resolution of both datasets.
+
+        Args:
+            new_res: New resolution.
+        """
+        self._res = new_res
+        self.datasets[0].res = new_res
+        self.datasets[1].res = new_res

@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
@@ -52,6 +52,14 @@ class TestNLCD:
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
 
+    def test_classes(self) -> None:
+        root = os.path.join("tests", "data", "nlcd")
+        classes = list(NLCD.cmap.keys())[:5]
+        ds = NLCD(root, years=[2019], classes=classes)
+        sample = ds[ds.bounds]
+        mask = sample["mask"]
+        assert mask.max() < len(classes)
+
     def test_and(self, dataset: NLCD) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)
@@ -77,6 +85,13 @@ class TestNLCD:
             match="NLCD data product only exists for the following years:",
         ):
             NLCD(str(tmp_path), years=[1996])
+
+    def test_invalid_classes(self) -> None:
+        with pytest.raises(AssertionError):
+            NLCD(classes=[-1])
+
+        with pytest.raises(AssertionError):
+            NLCD(classes=[11])
 
     def test_plot(self, dataset: NLCD) -> None:
         query = dataset.bounds

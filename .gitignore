@@ -4,6 +4,7 @@
 /output/
 *.pdf
 /results/
+*.aux.xml
 
 # Spack
 .spack-env/
