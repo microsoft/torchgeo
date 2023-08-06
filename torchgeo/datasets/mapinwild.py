@@ -267,7 +267,7 @@ class MapInWild(NonGeoDataset):
             self.list_modals.append(s2_winter_index)
 
         if "esa_wc" in self.modality:
-            esa_wc = self._load_raster(id, "esa_wc")
+            esa_wc = self._load_raster(id, "ESA'_WC")
             self.list_modals.append(esa_wc)
 
         if "viirs" in self.modality:
