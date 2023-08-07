@@ -271,7 +271,7 @@ class MapInWild(NonGeoDataset):
             self.list_modals.append(esa_wc)
 
         if "viirs" in self.modality:
-            viirs = self._load_raster(id, "viirs")
+            viirs = self._load_raster(id, "VIIRS")
             self.list_modals.append(viirs)
 
         if "s1" in self.modality:
