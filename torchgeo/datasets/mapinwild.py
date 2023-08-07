@@ -10,7 +10,6 @@ from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import rasterio
 import torch
 from torch import Tensor
@@ -189,6 +188,13 @@ class MapInWild(NonGeoDataset):
             [self.BAND_SETS["s2"].index(b) for b in self.BAND_SETS["s2"]]
         ).long()
 
+        try:
+            import pandas as pd  # noqa: F401
+        except ImportError:
+            raise ImportError(
+                "pandas is not installed and is required to use this dataset"
+            )
+
         self.checksum = checksum
         self.root = root
         self.transforms = transforms
@@ -214,7 +220,8 @@ class MapInWild(NonGeoDataset):
                     if len(self.modality_urls[modal]) == 2:
                         self.merge_parts(root, modal)
 
-        self.modality.remove("mask")
+        if "mask" in self.modality:
+            self.modality.remove("mask")
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -336,10 +343,10 @@ class MapInWild(NonGeoDataset):
                 "either specify a different `root` directory or use `download=True` "
                 "to automatically download the dataset."
             )
-
-        # Download the dataset
-        self._download(url, md5)
-        self._extract(url)
+        else:
+            # Download the dataset
+            self._download(url, md5)
+            self._extract(url)
 
     def _verify_split(self) -> None:
         """Verify the integrity of the split file."""
@@ -377,7 +384,7 @@ class MapInWild(NonGeoDataset):
         return True
 
     def merge_parts(self, source_path: str, modality: str) -> None:
-        """Merge the modalities that are downloaded and extracted in parts."""
+        """Merge the modalities that are downloaded and extracted in two parts."""
         fname_p1 = modality + "_part1"
         fname_p2 = modality + "_part2"
         source_folder = os.path.join(source_path, fname_p1)
@@ -446,7 +453,7 @@ class MapInWild(NonGeoDataset):
         mask = sample["mask"].squeeze()
         color_mask = self.convert_to_color(mask, palette=self.mask_palette)
 
-        if np.all(np.isin(image, np.arange(0, 110, 10))):
+        if np.all(np.isin(image, np.arange(0, 110, 10))) and image.shape[-1] == 1:
             image = self.convert_to_color(image.squeeze(), palette=self.wc_palette)
         elif image.shape[-1] == 2:
             image = image[:, :, 0]

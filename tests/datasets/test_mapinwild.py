@@ -74,3 +74,39 @@ class TestMapInWild:
         sample["prediction"] = sample["mask"].clone()
         dataset.plot(sample, suptitle="prediction")
         plt.close()
+
+        images = [
+            torch.rand(1, 64, 64),
+            torch.rand(2, 64, 64),
+            torch.rand(3, 64, 64),
+            torch.rand(4, 64, 64),
+        ]
+        esa_wc_values = torch.arange(0, 110, 10)
+        esa_wc_image = torch.tile(esa_wc_values, (1, 22, 2))
+        mask = torch.rand(1, 64, 64)
+
+        sample_1 = {"image": images[0], "mask": mask}
+        sample_2 = {"image": images[1], "mask": mask}
+        sample_3 = {"image": images[2], "mask": mask}
+        sample_4 = {"image": images[3], "mask": mask}
+        sample_5 = {"image": esa_wc_image, "mask": mask}
+
+        dataset.plot(sample_1)
+        plt.close()
+        dataset.plot(sample_2)
+        plt.close()
+        dataset.plot(sample_3)
+        plt.close()
+        dataset.plot(sample_4)
+        plt.close()
+        dataset.plot(sample_5)
+        plt.close()
+
+    def test_download(self) -> None:
+        MapInWild.modality_urls["test_coverage"] = {
+            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/test_coverage.zip"  # noqa: E501
+        }
+        MapInWild.md5s["test_coverage.zip"] = "612bc89e728c71d3347e5406cf6cfb3f"
+        root = os.path.join("tests", "data", "mapinwild")
+        modality = ["test_coverage"]
+        MapInWild(root, modality=modality, download=True, checksum=True)  # noqa: E501

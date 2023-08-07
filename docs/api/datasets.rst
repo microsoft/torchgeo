@@ -258,7 +258,7 @@ LoveDA
 .. autoclass:: LoveDA
 
 MapInWild
-^^^^^^
+^^^^^^^^^
 
 .. autoclass:: MapInWild
 
