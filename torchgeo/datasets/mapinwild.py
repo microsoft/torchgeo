@@ -10,7 +10,6 @@ from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import rasterio
 import torch
 from torch import Tensor
@@ -46,6 +45,13 @@ class MapInWild(NonGeoDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://ieeexplore.ieee.org/document/10089830
+
+    .. note::
+       This dataset requires the following additional library to be installed:
+
+       * `pandas <https://pypi.org/project/pandas/>`_ to load CSV files
+
+    .. versionadded:: 0.3
     """
 
     BAND_SETS: dict[str, tuple[str, ...]] = {
@@ -182,6 +188,7 @@ class MapInWild(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
+            ImportError: if pandas is not installed
         """
         assert split in ["train", "validation", "test"]
 
@@ -195,6 +202,14 @@ class MapInWild(NonGeoDataset):
         self.modality = modality
         self.download = download
         self._verify_split()
+
+        try:
+            import pandas as pd  # noqa: F401
+        except ImportError:
+            raise ImportError(
+                "pandas is not installed and is required to use this dataset"
+            )
+
         split_dataframe = pd.read_csv(os.path.join(self.root, "split_IDs.csv"))
         self.ids = split_dataframe[split].dropna().values.tolist()
         self.ids = [int(i) for i in self.ids]
