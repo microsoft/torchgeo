@@ -1,8 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import builtins
 import os
 from pathlib import Path
+from typing import Any
 
 import matplotlib.pyplot as plt
 import pytest
@@ -93,6 +95,17 @@ class TestMapInWild:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             MapInWild(root=root, download=False, checksum=True)
+
+    @pytest.fixture
+    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
+        import_orig = builtins.__import__
+
+        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
+            if name == "pandas":
+                raise ImportError()
+            return import_orig(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", mocked_import)
 
     def test_plot(self, dataset: MapInWild) -> None:
         dataset.plot(dataset[0], suptitle="Test")
