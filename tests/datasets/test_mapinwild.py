@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
+from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
@@ -96,16 +97,29 @@ class TestMapInWild:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             MapInWild(root=root, download=False, checksum=True)
 
-    @pytest.fixture
-    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
+    @pytest.fixture(params=["pandas"])
+    def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:
         import_orig = builtins.__import__
+        package = str(request.param)
 
         def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name == "pandas":
+            if name == package:
                 raise ImportError()
             return import_orig(name, *args, **kwargs)
 
         monkeypatch.setattr(builtins, "__import__", mocked_import)
+        return package
+
+    def test_mock_missing_module(
+        self, dataset: MapInWild, mock_missing_module: str
+    ) -> None:
+        package = mock_missing_module
+        if package == "pandas":
+            with pytest.raises(
+                ImportError,
+                match=f"{package} is not installed and is required to use this dataset",
+            ):
+                MapInWild(dataset.root)
 
     def test_plot(self, dataset: MapInWild) -> None:
         dataset.plot(dataset[0], suptitle="Test")
