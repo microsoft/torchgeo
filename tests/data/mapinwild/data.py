@@ -107,6 +107,8 @@ dict_all__ = {
     ],
 }
 
+md5s = {}
+keys = count.keys()
 modality_download_list = list(count.keys())
 
 for source in modality_download_list:
@@ -136,7 +138,7 @@ for source in modality_download_list:
                     )
                 f.write(data, j)
 
-
+# Mimic the two-part structure of the dataset
 for key in dict_all__.keys():
     path_list = dict_all__[key]
     n_ims = len(os.listdir(path_list[0]))
@@ -155,7 +157,7 @@ for key in dict_all__.keys():
         fh_del = os.path.join(path_list[1], p2_list[idx])
         os.remove(fh_del)
 
-for source in modality_download_list:
+for i, source in zip(keys, modality_download_list):
     directory = os.path.join(folder_path, source)
 
     # Compress data
@@ -165,6 +167,8 @@ for source in modality_download_list:
     with open(directory + ".zip", "rb") as f:
         md5 = hashlib.md5(f.read()).hexdigest()
         print(f"{directory}: {md5}")
+        name = i + ".zip"
+        md5s[name] = md5
 
 tvt_split = pd.DataFrame(
     [["1", "2", "3"], [np.nan, np.nan, np.nan], [np.nan, np.nan, np.nan]],
@@ -173,3 +177,7 @@ tvt_split = pd.DataFrame(
 )
 tvt_split.dropna()
 tvt_split.to_csv(os.path.join(folder_path, "split_IDs.csv"))
+
+# import pprint
+# pp = pprint.PrettyPrinter(indent=4)
+# pp.pprint(md5s)

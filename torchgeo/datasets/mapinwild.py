@@ -10,6 +10,7 @@ from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import rasterio
 import torch
 from torch import Tensor
@@ -188,13 +189,6 @@ class MapInWild(NonGeoDataset):
             [self.BAND_SETS["s2"].index(b) for b in self.BAND_SETS["s2"]]
         ).long()
 
-        try:
-            import pandas as pd  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
-
         self.checksum = checksum
         self.root = root
         self.transforms = transforms
@@ -205,20 +199,17 @@ class MapInWild(NonGeoDataset):
         self.ids = split_dataframe[split].dropna().values.tolist()
         self.ids = [int(i) for i in self.ids]
 
-        if not set(modality).issubset(set(os.listdir(root))):
-            for modal in modality:
-                for modality_link in self.modality_urls[modal]:
-                    self._verify(
+        for modal in modality:
+            for modality_link in self.modality_urls[modal]:
+                self._verify(modality_link, self.md5s[os.path.split(modality_link)[1]])
+                if checksum:
+                    if not self._check_integrity(
                         modality_link, self.md5s[os.path.split(modality_link)[1]]
-                    )
-                    if checksum:
-                        if not self._check_integrity(
-                            modality_link, self.md5s[os.path.split(modality_link)[1]]
-                        ):
-                            raise RuntimeError("Dataset not found or corrupted.")
+                    ):
+                        raise RuntimeError("Dataset not found or corrupted.")
 
-                    if len(self.modality_urls[modal]) == 2:
-                        self.merge_parts(root, modal)
+            if modal not in os.listdir(root) and len(self.modality_urls[modal]) == 2:
+                self.merge_parts(root, modal)  # same modality two times
 
         if "mask" in self.modality:
             self.modality.remove("mask")
@@ -330,6 +321,10 @@ class MapInWild(NonGeoDataset):
 
     def _verify(self, url: str, md5: str) -> None:
         """Verify the integrity of the dataset."""
+        # Check if the files already exist
+        if os.path.exists(os.path.join(self.root, url.split("/")[-2])):
+            return
+
         # Check if the zip file has already been downloaded
         pathname = os.path.join(self.root, os.path.split(url)[1].split(".")[0])
         if os.path.exists(pathname):
@@ -397,9 +392,14 @@ class MapInWild(NonGeoDataset):
 
         shutil.rmtree(source_folder)
         dest_split = os.path.split(destination_folder)
-        if modality == "s2_temporal_subset":
+        if len(modality.split("_")) == 3:
             rename_dest = os.path.join(dest_split[0], "s2_temporal_subset")
-        else:
+        if len(modality.split("_")) == 2:
+            rename_dest = os.path.join(
+                dest_split[0],
+                dest_split[1].split("_")[0] + "_" + dest_split[1].split("_")[1],
+            )
+        if "_" not in modality:
             rename_dest = os.path.join(dest_split[0], dest_split[1].split("_")[0])
         os.rename(destination_folder, rename_dest)
 
