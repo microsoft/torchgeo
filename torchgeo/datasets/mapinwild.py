@@ -281,7 +281,7 @@ class MapInWild(NonGeoDataset):
             the raster image or target
         """
         with rasterio.open(
-            os.path.join(self.root, f"{source}", f"{filename}.tif")
+            os.path.join(self.root, source, f"{filename}.tif")
         ) as f:
             array = f.read()
             if array.dtype == np.uint16:
