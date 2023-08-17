@@ -368,7 +368,7 @@ class MapInWild(NonGeoDataset):
 
     def convert_to_color(
         self, arr_2d: Tensor, cmap: dict[int, tuple[int, int, int]]
-    ) -> np.typing.NDArray[np.uint8]:
+    ) -> "np.typing.NDArray[np.uint8]":
         """Numeric labels to RGB-color encoding."""
         arr_3d = np.zeros((arr_2d.shape[0], arr_2d.shape[1], 3), dtype=np.uint8)
 
@@ -379,10 +379,10 @@ class MapInWild(NonGeoDataset):
 
     def get_bands(
         self,
-        image: np.typing.NDArray[np.float32],
+        image: "np.typing.NDArray[np.float32]",
         all_bands: Sequence[str],
         select_bands: Sequence[str],
-    ) -> np.typing.NDArray[np.float32]:
+    ) -> "np.typing.NDArray[np.float32]":
         """Filters the bands for a given set of bands.
 
         Args:
