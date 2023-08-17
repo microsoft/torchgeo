@@ -335,6 +335,8 @@ class RasterDataset(GeoDataset):
         bands: Optional[Sequence[str]] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
+        filename_glob: Optional[str] = None,
+        filename_regex: Optional[str] = None,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -357,6 +359,8 @@ class RasterDataset(GeoDataset):
         self.root = root
         self.bands = bands or self.all_bands
         self.cache = cache
+        self.filename_glob = filename_glob or self.filename_glob
+        self.filename_regex = filename_regex or self.filename_regex
 
         # Populate the dataset index
         i = 0

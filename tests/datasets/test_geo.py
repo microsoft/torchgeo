@@ -53,6 +53,8 @@ class CustomSentinelDataset(Sentinel2):
     all_bands: list[str] = []
     separate_files = False
 
+class CustomRasterDataset(RasterDataset):
+    filename_glob = "*missing"
 
 class CustomNonGeoDataset(NonGeoDataset):
     def __getitem__(self, index: int) -> dict[str, int]:
@@ -224,6 +226,13 @@ class TestRasterDataset:
 
         with pytest.raises(AssertionError, match=msg):
             CustomSentinelDataset(root, bands=bands, transforms=transforms, cache=cache)
+
+    def test_filename_args(self) -> None:
+        root  = os.path.join("tests", "data", "raster", "res_2_epsg_4087")
+        msg = "No CustomRasterDataset data was found"
+        with pytest.raises(FileNotFoundError, match=msg):
+            CustomRasterDataset(root)
+        assert isinstance(CustomRasterDataset(root, filename_glob="*.tif"), RasterDataset)
 
 
 class TestVectorDataset:
