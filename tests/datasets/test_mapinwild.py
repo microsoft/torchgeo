@@ -23,23 +23,22 @@ class TestMapInWild:
     @pytest.fixture(params=["train", "validation", "test"])
     def dataset(self, monkeypatch: MonkeyPatch) -> MapInWild:
         md5s = {
-            "ESA_WC.zip": "3acbc2a2bc299e5a967f9349db484872",
-            "VIIRS.zip": "25081c93534c42c28d70ae67469c33ac",
-            "mask.zip": "e5042709de9ee97f83d14b3bb0a7bb78",
-            "s1_part1.zip": "c4732b3b9239983634dec2066fda11cf",
-            "s1_part2.zip": "50b72b5470ec6801e969cf292fec7d1d",
-            "s2_autumn_part1.zip": "2e4b7b09202504d1dc95c83a65685d8a",
-            "s2_autumn_part2.zip": "b8882dd9290124e1de4f0e0872774e6a",
-            "s2_spring_part1.zip": "c29184039ad7e7aee4a4bcae4e013bca",
-            "s2_spring_part2.zip": "9cb5a81804344c080591592828ba0a22",
-            "s2_summer_part1.zip": "8ce599ff71a9bfa2445cf460284fbec8",
-            "s2_summer_part2.zip": "7f5643b88c4b7395bb97f428d9573190",
-            "s2_temporal_subset_part1.zip": "89fcd50a65a7cfbbac61d91af3b44cb7",
-            "s2_temporal_subset_part2.zip": "5aa028759cefcb8b4fbe3da95e0f1ff1",
-            "s2_winter_part1.zip": "83a72480a8be070f8b256458e9a1a4f8",
-            "s2_winter_part2.zip": "fddd797d8bfd932e31a36a8423ff3704",
+            "ESA_WC.zip": "59f19a93127430779a1f52a995888fc1",
+            "VIIRS.zip": "56d197ebe2a254521b32e1ba7621b88a",
+            "mask.zip": "eb2a7fa28b216176064aab92a8e6c22e",
+            "s1_part1.zip": "737b595fd6a3d457d25f294fc6eb19b5",
+            "s1_part2.zip": "889a9dd0664b08e7351e507ea96e633e",
+            "s2_autumn_part1.zip": "5dddd1a4c16a08051b2dbd95096e1092",
+            "s2_autumn_part2.zip": "bb41dd5fb097d9a5f99e088367bb0625",
+            "s2_spring_part1.zip": "60736b95f243015f265b3757e21408b7",
+            "s2_spring_part2.zip": "9b953323ea15061b35152bb82a1a6e74",
+            "s2_summer_part1.zip": "e69ca5746d8f5aa682f1871ab0f82596",
+            "s2_summer_part2.zip": "4f98247b175ccbafb55ef07975f90614",
+            "s2_temporal_subset_part1.zip": "cf51a14951c14a2699386b223ba03ec0",
+            "s2_temporal_subset_part2.zip": "1a776938fe6f302fddb608a44385802b",
+            "s2_winter_part1.zip": "e2e9509825fb71fe7f38a4941cd73a42",
+            "s2_winter_part2.zip": "f6db6cdd941c316dd5f23b4898558b9e",
         }
-
         monkeypatch.setattr(MapInWild, "md5s", md5s)
         root = os.path.join("tests", "data", "mapinwild")
         transforms = nn.Identity()
@@ -53,10 +52,10 @@ class TestMapInWild:
             "s2_spring",
             "s2_autumn",
             "s2_temporal_subset",
-        ]  # noqa: E501
+        ]
         return MapInWild(
             root, modality=modality, transforms=transforms, download=True, checksum=True
-        )  # noqa: E501
+        )
 
     def test_getitem(self, dataset: MapInWild) -> None:
         x = dataset[0]
@@ -78,24 +77,32 @@ class TestMapInWild:
             MapInWild(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
-            MapInWild(root=str(tmp_path))
+        err = "Dataset not found in `root` directory and `download=False`, "
+        "either specify a different `root` directory or use `download=True` "
+        "to automatically download the dataset."
+        with pytest.raises(RuntimeError, match=err):
+            MapInWild(str(tmp_path), download=False, checksum=True)
 
     def test_download(self) -> None:
+        url = "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/"
         MapInWild.modality_urls["test_coverage"] = {
-            "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/test_coverage.zip"  # noqa: E501
+            os.path.join(url, "test_coverage.zip")
         }
+        MapInWild.modality_urls["split_file"] = {
+            os.path.join(url, "split_IDs/split_IDs.csv")
+        }
+
         MapInWild.md5s["test_coverage.zip"] = "612bc89e728c71d3347e5406cf6cfb3f"
         root = os.path.join("tests", "data", "mapinwild")
-        modality = ["test_coverage"]
-        MapInWild(root, modality=modality, download=True, checksum=True)  # noqa: E501
+        modality = ["test_coverage", "split_file"]
+        MapInWild(root, modality=modality, download=True, checksum=True)
 
-    def test_corrupted(self, tmp_path: Path) -> None:
+    def test_corrupted(self) -> None:
         root = os.path.join("tests", "data", "mapinwild")
         with open(os.path.join(root, "test_coverage.zip"), "w") as f:
             f.write("bad")
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
-            MapInWild(root=root, download=False, checksum=True)
+        with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
+            MapInWild(root=root, download=True, checksum=True)
 
     @pytest.fixture(params=["pandas"])
     def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:

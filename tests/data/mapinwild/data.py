@@ -177,7 +177,3 @@ tvt_split = pd.DataFrame(
 )
 tvt_split.dropna()
 tvt_split.to_csv(os.path.join(folder_path, "split_IDs.csv"))
-
-# import pprint
-# pp = pprint.PrettyPrinter(indent=4)
-# pp.pprint(md5s)
