@@ -231,8 +231,9 @@ class TestRasterDataset:
 
     def test_filename_args(self) -> None:
         root = os.path.join("tests", "data", "raster", "res_2_epsg_4087")
-        msg = "No CustomRasterDataset data was found"
-        with pytest.raises(FileNotFoundError, match=msg):
+        with pytest.raises(
+            FileNotFoundError, match="No CustomRasterDataset data was found"
+        ):
             CustomRasterDataset(root)
         assert isinstance(
             CustomRasterDataset(root, filename_glob="*.tif"), RasterDataset
