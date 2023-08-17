@@ -19,7 +19,7 @@ pytest.importorskip("rioxarray")
 class TestRioXarrayDataset:
     @pytest.fixture(scope="class")
     def dataset(self) -> RioXarrayDataset:
-        root = os.path.join("tests", "data", "rioxarray", "data")
+        root = os.path.join("tests", "data", "rioxr", "data")
         return RioXarrayDataset(root=root, data_variables=["zos", "tos"])
 
     def test_getitem(self, dataset: RioXarrayDataset) -> None:

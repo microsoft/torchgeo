@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""In-memory geographical xarray.DataArray."""
+"""In-memory geographical xarray.DataArray and xarray.Dataset."""
 
 import glob
 import os
@@ -41,8 +41,9 @@ class RioXarrayDataset(GeoDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            root: directory with nc files
-            data_variables: data variables that should be gathered from the xr_datasets
+            root: directory with files to be opened with xarray
+            data_variables: data variables that should be gathered from the collection
+                of xarray datasets
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of dataarray)
             res: resolution of the dataset in units of CRS
@@ -125,8 +126,13 @@ class RioXarrayDataset(GeoDataset):
         data_arrays: list["np.typing.NDArray[np.float32]"] = []
         for item in items:
             with xr.open_dataset(item, decode_cf=True) as ds:
+                import pdb
+
+                pdb.set_trace()
                 if not ds.rio.crs:
                     ds.rio.write_crs(self._crs, inplace=True)
+                elif ds.rio.crs != self._crs:
+                    ds = ds.rio.reproject(self._crs)
 
                 # clip box ignores time dimension
                 clipped = ds.rio.clip_box(

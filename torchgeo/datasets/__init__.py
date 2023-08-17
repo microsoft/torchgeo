@@ -82,7 +82,7 @@ from .patternnet import PatternNet
 from .potsdam import Potsdam2D
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
-from .rioxarray import RioXarrayDataset
+from .rioxr import RioXarrayDataset
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel1, Sentinel2
