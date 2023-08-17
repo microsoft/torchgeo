@@ -52,7 +52,7 @@ class MapInWild(NonGeoDataset):
 
        * `pandas <https://pypi.org/project/pandas/>`_ to load CSV files
 
-    .. versionadded:: 0.3
+    .. versionadded:: 0.5
     """
 
     BAND_SETS: dict[str, tuple[str, ...]] = {
