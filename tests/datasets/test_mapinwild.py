@@ -23,21 +23,21 @@ class TestMapInWild:
     @pytest.fixture(params=["train", "validation", "test"])
     def dataset(self, monkeypatch: MonkeyPatch) -> MapInWild:
         md5s = {
-            "ESA_WC.zip": "f6bba9d1d3dcd719c8ef907e5e2cd7af",
-            "VIIRS.zip": "0fd9668dbb9fe1dc07a71f3baf8da068",
-            "mask.zip": "a16b51f9f37c3a6bdd18c839ee66e99c",
-            "s1_part1.zip": "7b9f779dee5e1b31e647392341a71635",
-            "s1_part2.zip": "296b4d0d205c5c406413d19ce49ec647",
-            "s2_autumn_part1.zip": "5bb4d486be1e0eb0bfff84176d1e6395",
-            "s2_autumn_part2.zip": "8c199666cf7c7a6b9059754004aed250",
-            "s2_spring_part1.zip": "f828d933c4e826d96f033c48027304df",
-            "s2_spring_part2.zip": "1bf04458ace04ccbba976efaf4c529be",
-            "s2_summer_part1.zip": "78f41e4439da9f879e3f6bc2f44e0fc9",
-            "s2_summer_part2.zip": "40c955b85be67cc10560cf4909d2041d",
-            "s2_temporal_subset_part1.zip": "9caea5af97f14535307aaa0a50541d66",
-            "s2_temporal_subset_part2.zip": "e3b6dfe0e364f910c072b55dfcdda300",
-            "s2_winter_part1.zip": "762fb9af462615140dfa8a4759c5370a",
-            "s2_winter_part2.zip": "2d509885eb681384198bca4989f8aab9",
+            "ESA_WC.zip": "7654ef46c6523ad61d2c56fa97773512",
+            "VIIRS.zip": "d8ad5736203d9253a7ee08b552e33556",
+            "mask.zip": "ce5a7da8ec0753476b9e21bc04ded9bd",
+            "s1_part1.zip": "a9735c8a947bc9cdef61cf6a45f99a26",
+            "s1_part2.zip": "3f705e97dfea46a013b113add94f2c63",
+            "s2_autumn_part1.zip": "8dafc79b11daa2d17d7d7335348b39e7",
+            "s2_autumn_part2.zip": "d8be0cce59d146246f3e7c7826db725a",
+            "s2_spring_part1.zip": "551159d8781bf261d5a1b7c53920f35e",
+            "s2_spring_part2.zip": "71def6e55e321f17b4db5e2832e0842a",
+            "s2_summer_part1.zip": "71f5c9c0213a2227a1f7fb9bca7e3f35",
+            "s2_summer_part2.zip": "f205b7b99df1f1380901524c58b4e5f8",
+            "s2_temporal_subset_part1.zip": "be2b9cd5fbdcf399c9d34899314cdccb",
+            "s2_temporal_subset_part2.zip": "44ab31e20e4fbd89a35f73cab623a739",
+            "s2_winter_part1.zip": "f4b4524e6d9a45b5ed3801ba160cf00c",
+            "s2_winter_part2.zip": "b07dcefd0ca520c74424c71fb9f36774",
         }
         monkeypatch.setattr(MapInWild, "md5s", md5s)
         root = os.path.join("tests", "data", "mapinwild")
