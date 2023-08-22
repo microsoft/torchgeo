@@ -79,8 +79,8 @@ class MapInWild(NonGeoDataset):
     url = "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/"
 
     modality_urls = {
-        "esa_wc": {os.path.join(url, "ESA_WC/ESA_WC.zip")},
-        "viirs": {os.path.join(url, "VIIRS/VIIRS.zip")},
+        "esa_wc": {os.path.join(url, "esa_wc/ESA_WC.zip")},
+        "viirs": {os.path.join(url, "viirs/VIIRS.zip")},
         "mask": {os.path.join(url, "mask/mask.zip")},
         "s1": {
             os.path.join(url, "s1/s1_part1.zip"),
@@ -280,7 +280,9 @@ class MapInWild(NonGeoDataset):
         Returns:
             the raster image or target
         """
-        with rasterio.open(os.path.join(self.root, source, f"{filename}.tif")) as f:
+        with rasterio.open(
+            os.path.join(self.root, f"{source}", f"{filename}.tif")
+        ) as f:
             array = f.read()
             if array.dtype == np.uint16:
                 array = array.astype(np.int32)
