@@ -280,9 +280,7 @@ class MapInWild(NonGeoDataset):
         Returns:
             the raster image or target
         """
-        with rasterio.open(
-            os.path.join(self.root, source, f"{filename}.tif")
-        ) as f:
+        with rasterio.open(os.path.join(self.root, source, f"{filename}.tif")) as f:
             array = f.read()
             if array.dtype == np.uint16:
                 array = array.astype(np.int32)
@@ -377,7 +375,7 @@ class MapInWild(NonGeoDataset):
             arr_3d[m] = i
         return arr_3d
 
-    def get_bands(
+    def __get_bands(
         self,
         image: "np.typing.NDArray[np.float32]",
         all_bands: Sequence[str],
@@ -430,7 +428,7 @@ class MapInWild(NonGeoDataset):
             image = percentile_normalization(image)
         # Sentinel-2
         elif image.shape[-1] > 3:
-            rgb_s2 = self.get_bands(
+            rgb_s2 = self.__get_bands(
                 image=np.einsum("ijk->kij", image),
                 all_bands=self.BAND_SETS["s2"],
                 select_bands=["B4", "B3", "B2"],
