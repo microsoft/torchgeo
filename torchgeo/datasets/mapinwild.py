@@ -245,6 +245,7 @@ class MapInWild(NonGeoDataset):
         mask[mask != 0] = 1
 
         for mode in self.modality:
+            mode = mode.upper() if mode in ["esa_wc", "viirs"] else mode
             data = self._load_raster(id, mode)
             list_modals.append(data)
 
@@ -280,9 +281,7 @@ class MapInWild(NonGeoDataset):
         Returns:
             the raster image or target
         """
-        with rasterio.open(
-            os.path.join(self.root, f"{source}", f"{filename}.tif")
-        ) as f:
+        with rasterio.open(os.path.join(self.root, source, f"{filename}.tif")) as f:
             array = f.read()
             if array.dtype == np.uint16:
                 array = array.astype(np.int32)
