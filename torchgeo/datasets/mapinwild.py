@@ -79,8 +79,8 @@ class MapInWild(NonGeoDataset):
     url = "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/"
 
     modality_urls = {
-        "esa_wc": {os.path.join(url, "esa_wc/ESA_WC.zip")},
-        "viirs": {os.path.join(url, "viirs/VIIRS.zip")},
+        "esa_wc": {os.path.join(url, "ESA_WC/ESA_WC.zip")},
+        "viirs": {os.path.join(url, "VIIRS/VIIRS.zip")},
         "mask": {os.path.join(url, "mask/mask.zip")},
         "s1": {
             os.path.join(url, "s1/s1_part1.zip"),
@@ -375,7 +375,7 @@ class MapInWild(NonGeoDataset):
             arr_3d[m] = i
         return arr_3d
 
-    def __get_bands(
+    def get_bands(
         self,
         image: "np.typing.NDArray[np.float32]",
         all_bands: Sequence[str],
@@ -428,7 +428,7 @@ class MapInWild(NonGeoDataset):
             image = percentile_normalization(image)
         # Sentinel-2
         elif image.shape[-1] > 3:
-            rgb_s2 = self.__get_bands(
+            rgb_s2 = self.get_bands(
                 image=np.einsum("ijk->kij", image),
                 all_bands=self.BAND_SETS["s2"],
                 select_bands=["B4", "B3", "B2"],
