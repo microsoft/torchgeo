@@ -6,7 +6,6 @@
 from typing import Any
 
 import kornia.augmentation as K
-import torch
 
 from ..datasets import AgriFieldNet
 from ..samplers.utils import _to_tuple
@@ -53,7 +52,6 @@ class AgriFieldNetDataModule(NonGeoDataModule):
             K.RandomResizedCrop(_to_tuple(self.patch_size), scale=(0.6, 1.0)),
             data_keys=["image", "mask"],
         )
-
 
     def setup(self, stage: str) -> None:
         """Set up datasets.

@@ -16,6 +16,7 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import AgriFieldNet
+
 # from torchgeo.datamodules import AgriFieldNetDataModule
 # from torchgeo.trainers import SemanticSegmentationTask
 
