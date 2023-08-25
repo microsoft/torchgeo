@@ -16,7 +16,7 @@ datamodule:
   _target_: torchgeo.datamodules.AgriFieldNetDataModule
   root: "/projects/dali/data/agrifieldnet"
   batch_size: 32
-  patch_size: 256
+  patch_size: 224
   num_workers: 10
 
 trainer:

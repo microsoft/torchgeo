@@ -9,7 +9,6 @@ import subprocess
 from multiprocessing import Process, Queue
 
 from torchgeo.models import ResNet18_Weights
-# from torchgeo.models import ResNet50_Weights
 
 # list of GPU IDs that we want to use, one job will be started for every ID in the list
 GPUS = [0]
@@ -19,12 +18,11 @@ conf_file_name = "agrifieldnet.yaml"
 # Hyperparameter options
 model_options = ["unet"]
 backbone_options = ["resnet18"]
-lr_options = [0.001, 0.0003, 0.0001, 0.00003]
+lr_options = [1e-1, 1e-2, 1e-3, 3e-4, 1e-4]
 loss_options = ["ce"]
-# weight_options = [False, True]
 weight_options = [ResNet18_Weights.SENTINEL2_ALL_MOCO]
-seed_options = [0, 1]
-weight_decay_options = [0, 1e-3]
+seed_options = [0, 1, 2]
+weight_decay_options = [0]
 
 
 def do_work(work: "Queue[str]", gpu_idx: int) -> bool:

@@ -378,6 +378,11 @@ class AgriFieldNet(NonGeoDataset):
             for band in self.all_bands
         ]
         img_tile = np.stack(bands_src)
+
+        ###### Reshape for ViT #######
+        # print(img_tile.shape)
+        img_tile = img_tile[:, 16:240, 16:240]
+        ##############################
         tensor = torch.from_numpy(img_tile.astype(np.float32))
 
         return tensor
@@ -403,9 +408,15 @@ class AgriFieldNet(NonGeoDataset):
             )
             array = rasterio.open(os.path.join(directory, "raster_labels.tif")).read(1)
             array = np.vectorize(lambda x: self.label_mapper[x])(array)
+            ###### Reshape for ViT #######
+            array = array[16:240, 16:240]
+            ##############################
             labels = torch.tensor(array, dtype=torch.long)
 
             array = rasterio.open(os.path.join(directory, "field_ids.tif")).read(1)
+            ###### Reshape for ViT #######
+            array = array[16:240, 16:240]
+            ##############################
             field_ids = torch.tensor(array.astype(np.int32), dtype=torch.long)
 
             return (labels, field_ids)
@@ -418,6 +429,9 @@ class AgriFieldNet(NonGeoDataset):
                 "ref_agrifieldnet_competition_v1_labels_test_" + tile_name,
             )
             array = rasterio.open(os.path.join(directory, "field_ids.tif")).read(1)
+            ###### Reshape for ViT #######
+            array = array[16:240, 16:240]
+            ##############################
             field_ids = torch.tensor(array.astype(np.int32), dtype=torch.long)
 
             return field_ids

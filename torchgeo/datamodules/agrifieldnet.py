@@ -5,8 +5,12 @@
 
 from typing import Any
 
+import kornia.augmentation as K
+import torch
+
 from ..datasets import AgriFieldNet
 from ..samplers.utils import _to_tuple
+from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 from .utils import dataset_split
 
@@ -44,6 +48,12 @@ class AgriFieldNetDataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
+
+        self.train_aug = AugmentationSequential(
+            K.RandomResizedCrop(_to_tuple(self.patch_size), scale=(0.6, 1.0)),
+            data_keys=["image", "mask"],
+        )
+
 
     def setup(self, stage: str) -> None:
         """Set up datasets.

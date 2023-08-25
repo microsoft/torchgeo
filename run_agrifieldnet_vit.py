@@ -19,12 +19,12 @@ conf_file_name = "agrifieldnet.yaml"
 # Hyperparameter options
 model_options = ["unet"]
 backbone_options = ["tu-vit_small_patch16_224"]
-lr_options = [0.001, 0.0003, 0.0001, 0.00003]
+lr_options = [1e-2, 5e-2, 1e-3, 5e-3, 1e-4]
 loss_options = ["ce"]
-weight_options = [False] #, True]
+weight_options = [True] #, True]
 # weight_options = [ResNet18_Weights.SENTINEL2_ALL_MOCO]
 seed_options = [0, 1, 2]
-weight_decay_options = [0, 1e-3]
+weight_decay_options = [1e-3]
 
 
 def do_work(work: "Queue[str]", gpu_idx: int) -> bool:
@@ -74,6 +74,7 @@ if __name__ == "__main__":
             + f" module.learning_rate={lr}"
             + f" module.loss={loss}"
             + f" module.weights={weights}"
+            + f" datamodule.patch_size=224"
             + f" program.experiment_name={experiment_name}"
             + f" program.seed={seed}"
             + " trainer.devices=[GPU]"
