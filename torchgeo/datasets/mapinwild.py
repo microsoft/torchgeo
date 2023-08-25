@@ -27,7 +27,7 @@ from torchgeo.datasets.utils import (
 class MapInWild(NonGeoDataset):
     """MapInWild dataset.
 
-    The `MapInWild <https://arxiv.org/abs/2212.02265>`_ is curated for the task of
+    The `MapInWild <https://arxiv.org/abs/2212.02265>`_ dataset is curated for the task of
     wilderness mapping on a pixel-level. MapInWild is a multi-modal dataset and
     comprises various geodata acquired and formed from different RS sensors
     over 1018 locations: dual-pol Sentinel-1, four-season Sentinel-2 with 10 bands,
