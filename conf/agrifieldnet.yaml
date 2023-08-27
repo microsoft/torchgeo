@@ -14,10 +14,11 @@ module:
 
 datamodule:
   _target_: torchgeo.datamodules.AgriFieldNetDataModule
-  root: "/projects/dali/data/agrifieldnet"
+  root: "data/agrifieldnet"
   batch_size: 32
-  patch_size: 224
+  patch_size: 256
   num_workers: 10
+  download: True
 
 trainer:
   _target_: lightning.pytorch.Trainer
@@ -26,7 +27,7 @@ trainer:
 
 program:
   seed: 2
-  output_dir: "/home/yichia3/scratch/agrifieldnet/output"
-  log_dir: "/home/yichia3/scratch/agrifieldnet/logs"
+  output_dir: "outputs"
+  log_dir: "logs"
   overwrite: True
   experiment_name: agrifieldnet
