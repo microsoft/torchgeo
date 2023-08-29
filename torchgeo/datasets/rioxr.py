@@ -10,11 +10,11 @@ import sys
 from datetime import datetime
 from typing import Any, Callable, Optional, cast
 
-import netCDF4  # noqa: F401
 import numpy as np
 import torch
 import xarray as xr
 from rasterio.crs import CRS
+from rioxarray.merge import merge_arrays
 from rtree.index import Index, Property
 
 from .geo import GeoDataset
@@ -29,6 +29,22 @@ class RioXarrayDataset(GeoDataset):
 
     filename_glob = "*"
     filename_regex = ".*"
+
+    is_image = True
+
+    @property
+    def dtype(self) -> torch.dtype:
+        """The dtype of the dataset (overrides the dtype of the data file via a cast).
+
+        Returns:
+            the dtype of the dataset
+
+        .. versionadded:: 5.0
+        """
+        if self.is_image:
+            return torch.float32
+        else:
+            return torch.long
 
     def __init__(
         self,
@@ -71,8 +87,13 @@ class RioXarrayDataset(GeoDataset):
             match = re.match(filename_regex, os.path.basename(filepath))
             if match is not None:
                 with xr.open_dataset(filepath, decode_times=True) as ds:
+                    # rioxarray expects spatial dimensions to be named x and y
+                    if ds.rio._x_dim is None or ds.rio.y_dim is None:
+                        ds = ds.rename({"lon": "x", "lat": "y"})
+
                     if crs is None:
                         crs = ds.rio.crs
+
                     if res is None:
                         res = ds.rio.resolution()[0]
 
@@ -123,12 +144,13 @@ class RioXarrayDataset(GeoDataset):
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
-        data_arrays: list["np.typing.NDArray[np.float32]"] = []
+        data_arrays: list["np.typing.NDArray"] = []
         for item in items:
             with xr.open_dataset(item, decode_cf=True) as ds:
-                import pdb
-
-                pdb.set_trace()
+                # rioxarray expects spatial dimensions to be named x and y
+                if ds.rio._x_dim is None or ds.rio.y_dim is None:
+                    # ds.rio.set_spatial_dims(x_dim="lon", y_dim="lat", inplace=True)
+                    ds = ds.rename({"lon": "x", "lat": "y"})
                 if not ds.rio.crs:
                     ds.rio.write_crs(self._crs, inplace=True)
                 elif ds.rio.crs != self._crs:
@@ -150,11 +172,23 @@ class RioXarrayDataset(GeoDataset):
                             datetime.fromtimestamp(query.maxt),
                         )
                     )
+
                 for variable in self.data_variables:
                     if hasattr(clipped, variable):
-                        data_arrays.append(clipped[variable].data.squeeze())
+                        data_arrays.append(clipped[variable].squeeze())
 
-        sample = {"image": torch.from_numpy(np.stack(data_arrays)), "bbox": query}
+        merged_data = torch.from_numpy(
+            merge_arrays(
+                data_arrays, bounds=(query.minx, query.miny, query.maxx, query.maxy)
+            ).data
+        )
+        sample = {"crs": self.crs, "bbox": query}
+
+        merged_data = merged_data.to(self.dtype)
+        if self.is_image:
+            sample["image"] = merged_data
+        else:
+            sample["mask"] = merged_data
 
         if self.transforms is not None:
             sample = self.transforms(sample)
