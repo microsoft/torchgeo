@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.5.3
+      uses: actions/checkout@v3.6.0
     - name: Set up python
-      uses: actions/setup-python@v4.6.1
+      uses: actions/setup-python@v4.7.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
@@ -37,9 +37,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.5.3
+      uses: actions/checkout@v3.6.0
     - name: Set up python
-      uses: actions/setup-python@v4.6.1
+      uses: actions/setup-python@v4.7.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
@@ -60,9 +60,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.5.3
+      uses: actions/checkout@v3.6.0
     - name: Set up python
-      uses: actions/setup-python@v4.6.1
+      uses: actions/setup-python@v4.7.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
@@ -83,9 +83,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.5.3
+      uses: actions/checkout@v3.6.0
     - name: Set up python
-      uses: actions/setup-python@v4.6.1
+      uses: actions/setup-python@v4.7.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
@@ -106,9 +106,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.5.3
+      uses: actions/checkout@v3.6.0
     - name: Set up python
-      uses: actions/setup-python@v4.6.1
+      uses: actions/setup-python@v4.7.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
