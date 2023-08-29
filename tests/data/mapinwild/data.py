@@ -80,31 +80,13 @@ stop = {
 
 folder_path = os.path.join(os.getcwd(), "tests", "data", "mapinwild")
 
-dict_all__ = {
-    "s2_sum": [
-        os.path.join(folder_path, "s2_summer_part1"),
-        os.path.join(folder_path, "s2_summer_part2"),
-    ],
-    "s2_spr": [
-        os.path.join(folder_path, "s2_spring_part1"),
-        os.path.join(folder_path, "s2_spring_part2"),
-    ],
-    "s2_win": [
-        os.path.join(folder_path, "s2_winter_part1"),
-        os.path.join(folder_path, "s2_winter_part2"),
-    ],
-    "s2_aut": [
-        os.path.join(folder_path, "s2_autumn_part1"),
-        os.path.join(folder_path, "s2_autumn_part2"),
-    ],
-    "s1": [
-        os.path.join(folder_path, "s1_part1"),
-        os.path.join(folder_path, "s1_part2"),
-    ],
-    "s2_temp": [
-        os.path.join(folder_path, "s2_temporal_subset_part1"),
-        os.path.join(folder_path, "s2_temporal_subset_part2"),
-    ],
+dict_all = {
+    "s2_sum": ["s2_summer_part1", "s2_summer_part2"],
+    "s2_spr": ["s2_spring_part1", "s2_spring_part2"],
+    "s2_win": ["s2_winter_part1", "s2_winter_part2"],
+    "s2_aut": ["s2_autumn_part1", "s2_autumn_part2"],
+    "s1": ["s1_part1", "s1_part2"],
+    "s2_temp": ["s2_temporal_subset_part1", "s2_temporal_subset_part2"],
 }
 
 md5s = {}
@@ -139,22 +121,24 @@ for source in modality_download_list:
                 f.write(data, j)
 
 # Mimic the two-part structure of the dataset
-for key in dict_all__.keys():
-    path_list = dict_all__[key]
-    n_ims = len(os.listdir(path_list[0]))
+for key in dict_all.keys():
+    path_list = dict_all[key]
+    path_list_dir_p1 = os.path.join(folder_path, path_list[0])
+    path_list_dir_p2 = os.path.join(folder_path, path_list[1])
+    n_ims = len(os.listdir(path_list_dir_p1))
 
-    p1_list = os.listdir(path_list[0])
-    p2_list = os.listdir(path_list[1])
+    p1_list = os.listdir(path_list_dir_p1)
+    p2_list = os.listdir(path_list_dir_p2)
 
     fh_idx = np.arange(0, n_ims / 2, dtype=int)
     sh_idx = np.arange(n_ims / 2, n_ims, dtype=int)
 
     for idx in sh_idx:
-        sh_del = os.path.join(path_list[0], p1_list[idx])
+        sh_del = os.path.join(path_list_dir_p1, p1_list[idx])
         os.remove(sh_del)
 
     for idx in fh_idx:
-        fh_del = os.path.join(path_list[1], p2_list[idx])
+        fh_del = os.path.join(path_list_dir_p1, p2_list[idx])
         os.remove(fh_del)
 
 for i, source in zip(keys, modality_download_list):

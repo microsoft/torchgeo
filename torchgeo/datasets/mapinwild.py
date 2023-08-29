@@ -12,12 +12,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
-from einops.layers.torch import Rearrange
+from einops import rearrange
 from torch import Tensor
 
 from torchgeo.datasets.geo import NonGeoDataset
 from torchgeo.datasets.utils import (
-    check_integrity,
     download_url,
     extract_archive,
     percentile_normalization,
@@ -27,8 +26,8 @@ from torchgeo.datasets.utils import (
 class MapInWild(NonGeoDataset):
     """MapInWild dataset.
 
-    The `MapInWild <https://arxiv.org/abs/2212.02265>`_ dataset is curated for the task of
-    wilderness mapping on a pixel-level. MapInWild is a multi-modal dataset and
+    The `MapInWild <https://arxiv.org/abs/2212.02265>`_ dataset is curated for the task
+    of wilderness mapping on a pixel-level. MapInWild is a multi-modal dataset and
     comprises various geodata acquired and formed from different RS sensors
     over 1018 locations: dual-pol Sentinel-1, four-season Sentinel-2 with 10 bands,
     ESA WorldCover map, and Visible Infrared Imaging Radiometer Suite
@@ -55,7 +54,7 @@ class MapInWild(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    BAND_SETS: dict[str, tuple[str, ...]] = {
+    band_sets: dict[str, tuple[str, ...]] = {
         "all": (
             "VV",
             "VH",
@@ -79,34 +78,19 @@ class MapInWild(NonGeoDataset):
     url = "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/"
 
     modality_urls = {
-        "esa_wc": {os.path.join(url, "esa_wc/ESA_WC.zip")},
-        "viirs": {os.path.join(url, "viirs/VIIRS.zip")},
-        "mask": {os.path.join(url, "mask/mask.zip")},
-        "s1": {
-            os.path.join(url, "s1/s1_part1.zip"),
-            os.path.join(url, "s1/s1_part2.zip"),
-        },
+        "esa_wc": {"esa_wc/ESA_WC.zip"},
+        "viirs": {"viirs/VIIRS.zip"},
+        "mask": {"mask/mask.zip"},
+        "s1": {"s1/s1_part1.zip", "s1/s1_part2.zip"},
         "s2_temporal_subset": {
-            os.path.join(url, "s2_temporal_subset/s2_temporal_subset_part1.zip"),
-            os.path.join(url, "s2_temporal_subset/s2_temporal_subset_part2.zip"),
+            "s2_temporal_subset/s2_temporal_subset_part1.zip",
+            "s2_temporal_subset/s2_temporal_subset_part2.zip",
         },
-        "s2_autumn": {
-            os.path.join(url, "s2_autumn/s2_autumn_part1.zip"),
-            os.path.join(url, "s2_autumn/s2_autumn_part2.zip"),
-        },
-        "s2_spring": {
-            os.path.join(url, "s2_spring/s2_spring_part1.zip"),
-            os.path.join(url, "s2_spring/s2_spring_part2.zip"),
-        },
-        "s2_summer": {
-            os.path.join(url, "s2_summer/s2_summer_part1.zip"),
-            os.path.join(url, "s2_summer/s2_summer_part2.zip"),
-        },
-        "s2_winter": {
-            os.path.join(url, "s2_winter/s2_winter_part1.zip"),
-            os.path.join(url, "s2_winter/s2_winter_part2.zip"),
-        },
-        "split_ids": {os.path.join(url, "split_IDs/split_IDs.csv")},
+        "s2_autumn": {"s2_autumn/s2_autumn_part1.zip", "s2_autumn/s2_autumn_part2.zip"},
+        "s2_spring": {"s2_spring/s2_spring_part1.zip", "s2_spring/s2_spring_part2.zip"},
+        "s2_summer": {"s2_summer/s2_summer_part1.zip", "s2_summer/s2_summer_part2.zip"},
+        "s2_winter": {"s2_winter/s2_winter_part1.zip", "s2_winter/s2_winter_part2.zip"},
+        "split_ids": "split_IDs/split_IDs.csv",
     }
 
     filenames = [
@@ -204,13 +188,13 @@ class MapInWild(NonGeoDataset):
         modality.append("split_ids")
 
         for modal in modality:
-            for modality_link in self.modality_urls[modal]:
-                if modality_link.endswith("csv"):
-                    self._verify(url=modality_link, md5=None)
+            for modality_relativ_path in self.modality_urls[modal]:
+                if modality_relativ_path.endswith("csv"):
+                    self._verify(relativ_path=modality_relativ_path, md5=None)
                 else:
                     self._verify(
-                        url=modality_link,
-                        md5=self.md5s[os.path.split(modality_link)[1]],
+                        relativ_path=modality_relativ_path,
+                        md5=self.md5s[modality_relativ_path.split("/")[1]],
                     )
 
             #  Merge modalities downloaded and extracted in two parts.
@@ -221,13 +205,14 @@ class MapInWild(NonGeoDataset):
         if "mask" in self.modality:
             self.modality.remove("mask")
 
+        # Split IDs has been downloaded and not needed in the list
         if "split_ids" in self.modality:
             self.modality.remove("split_ids")
 
         if os.path.exists(os.path.join(self.root, "split_IDs.csv")):
             split_dataframe = pd.read_csv(os.path.join(self.root, "split_IDs.csv"))
             self.ids = split_dataframe[split].dropna().values.tolist()
-            self.ids = [int(i) for i in self.ids]
+            self.ids = list(map(int, self.ids))
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -256,8 +241,8 @@ class MapInWild(NonGeoDataset):
 
             transformed = self.transforms(sample_)
 
-            image = Rearrange("h w c -> c h w")(transformed["image"])
-            mask = Rearrange("h w c -> c h w")(transformed["mask"])
+            image = rearrange(transformed["image"], "h w c -> c h w")
+            mask = rearrange(transformed["mask"], "h w c -> c h w")
 
         sample: dict[str, Tensor] = {"image": image, "mask": mask}
 
@@ -288,7 +273,7 @@ class MapInWild(NonGeoDataset):
             tensor = torch.from_numpy(array)
             return tensor
 
-    def _verify(self, url: str, md5: Optional[str] = None) -> None:
+    def _verify(self, relativ_path: str, md5: Optional[str] = None) -> None:
         """Verify the integrity of the dataset.
 
         Args:
@@ -298,16 +283,18 @@ class MapInWild(NonGeoDataset):
         Raises:
             RuntimeError: if dataset is not found
         """
+        url = os.path.join(self.url, relativ_path)
+
+        # Check if the zip file has already been downloaded
         filepath = os.path.join(self.root, url.split("/")[-1])
-        if os.path.isfile(filepath) and filepath.endswith(".zip"):
-            if self.checksum and not check_integrity(filepath, md5):
-                raise RuntimeError("Dataset found, but corrupted.")
+        if os.path.exists(filepath):
             self._extract(url)
+            return
 
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
+                f"Dataset not found in `root={self.root}` directory and `download=False`,"  # noqa: E501
                 "either specify a different `root` directory or use `download=True` "
                 "to automatically download the dataset."
             )
@@ -365,10 +352,18 @@ class MapInWild(NonGeoDataset):
             rename_dest = os.path.join(dest_split[0], dest_split[1].split("_")[0])
         os.rename(destination_folder, rename_dest)
 
-    def convert_to_color(
+    def _convert_to_color(
         self, arr_2d: Tensor, cmap: dict[int, tuple[int, int, int]]
     ) -> "np.typing.NDArray[np.uint8]":
-        """Numeric labels to RGB-color encoding."""
+        """Numeric labels to RGB-color encoding.
+
+        Args:
+            arr_2d: 2D array to be colorized
+            cmap: colormap to use when mapping the labels
+
+        Returns:
+            3D colored image
+        """
         arr_3d = np.zeros((arr_2d.shape[0], arr_2d.shape[1], 3), dtype=np.uint8)
 
         for c, i in cmap.items():
@@ -416,13 +411,13 @@ class MapInWild(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = np.einsum("ijk->jki", sample["image"])
+        image = rearrange(sample["image"], "h w c -> w c h")
         mask = sample["mask"].squeeze()
-        color_mask = self.convert_to_color(mask, cmap=self.mask_cmap)
+        color_mask = self._convert_to_color(mask, cmap=self.mask_cmap)
 
         # Land cover
         if np.all(np.isin(image, np.arange(0, 110, 10))) and image.shape[-1] == 1:
-            image = self.convert_to_color(image.squeeze(), cmap=self.wc_cmap)
+            image = self._convert_to_color(image.squeeze(), cmap=self.wc_cmap)
         # Sentinel-1
         elif image.shape[-1] == 2:
             image = image[:, :, 0]
@@ -431,7 +426,7 @@ class MapInWild(NonGeoDataset):
         elif image.shape[-1] > 3:
             rgb_s2 = self._get_bands(
                 image=np.einsum("ijk->kij", image),
-                all_bands=self.BAND_SETS["s2"],
+                all_bands=self.band_sets["s2"],
                 select_bands=["B4", "B3", "B2"],
             )
             image = percentile_normalization(np.einsum("ijk->jki", rgb_s2))
@@ -445,7 +440,7 @@ class MapInWild(NonGeoDataset):
         if showing_predictions:
             predictions = sample["prediction"].numpy().squeeze()
             num_panels += 1
-            color_predictions = self.convert_to_color(predictions, cmap=self.mask_cmap)
+            color_predictions = self._convert_to_color(predictions, cmap=self.mask_cmap)
 
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
         axs[0].imshow(image)

@@ -23,21 +23,21 @@ class TestMapInWild:
     @pytest.fixture(params=["train", "validation", "test"])
     def dataset(self, monkeypatch: MonkeyPatch) -> MapInWild:
         md5s = {
-            "ESA_WC.zip": "65e1276f3357a3b1c8d4966e3cdc5f49",
-            "VIIRS.zip": "f85af612bde060b48f683d199291d690",
-            "mask.zip": "7388351116da4efa7c47fe99f390f040",
-            "s1_part1.zip": "dcd039f2d6befcd42bbb369c37dfc19b",
-            "s1_part2.zip": "e442796f1283516414c769bb9d1f02c7",
-            "s2_autumn_part1.zip": "b4ddb4d23112f59b3d37d6f98d05e8e0",
-            "s2_autumn_part2.zip": "b5bfb0b03757944b363e54e626a72c3b",
-            "s2_spring_part1.zip": "63e1ebc52e9bd039080f2e573e9ef080",
-            "s2_spring_part2.zip": "d52b1375de8eb128a83f38b8ae3e3046",
-            "s2_summer_part1.zip": "360f6c5bccbda67b5bd1cb0b2f3ef2fa",
-            "s2_summer_part2.zip": "8e746d0fb15ef0214752da2081052c42",
-            "s2_temporal_subset_part1.zip": "9de26bd9e8825af00675482759f89f21",
-            "s2_temporal_subset_part2.zip": "0fa26dceb5fac1bc1dd4484319bebbbd",
-            "s2_winter_part1.zip": "b19eeef2c7dec1cb0e2cf5e2fa684918",
-            "s2_winter_part2.zip": "2151695dd6f096ebb55e4ea0bb08c882",
+            "ESA_WC.zip": "561ec0294bc19a9de105d1b4d81dd7d7",
+            "VIIRS.zip": "96c631706677f1e2ccd53d9443148afd",
+            "mask.zip": "26aa75f768b25e632d507b083a575485",
+            "s1_part1.zip": "7ea9ed1fa6caa088ab1457f0aba31fc6",
+            "s1_part2.zip": "c6c115cd0f9546772f49b33a07205d43",
+            "s2_autumn_part1.zip": "5558f28502d52545cd77403dd0f81328",
+            "s2_autumn_part2.zip": "352fbb9e2dd298a3ab231f4177f387e0",
+            "s2_spring_part1.zip": "0ea18b7fdd701264f202f8575c23eea2",
+            "s2_spring_part2.zip": "4c2a90bb63d56aa5076410de636972a7",
+            "s2_summer_part1.zip": "9935c4d1c2c7c4bea9a83eed05bf292d",
+            "s2_summer_part2.zip": "f8b7a499d2897c803534b345ff1324ef",
+            "s2_temporal_subset_part1.zip": "595c84774a4408e4605053e01b9db8e9",
+            "s2_temporal_subset_part2.zip": "6795d76e4e1dac437fba4c552af8f9b1",
+            "s2_winter_part1.zip": "14f766820472e89af7c9de4fb91d2fa4",
+            "s2_winter_part2.zip": "8a7094192368b0bc0c355649f10857c3",
         }
 
         monkeypatch.setattr(MapInWild, "md5s", md5s)
@@ -78,7 +78,7 @@ class TestMapInWild:
             MapInWild(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = "Dataset not found in `root` directory and `download=False`, "
+        err = "Dataset not found in `root={self.root}` directory and `download=False`, "
         "either specify a different `root` directory or use `download=True` "
         "to automatically download the dataset."
         with pytest.raises(RuntimeError, match=err):
