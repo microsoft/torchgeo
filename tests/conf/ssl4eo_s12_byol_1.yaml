@@ -1,7 +1,7 @@
 module:
   _target_: torchgeo.trainers.BYOLTask
   in_channels: 2
-  backbone: "resnet18"
+  model: "resnet18"
   lr: 1e-3
   patience: 6
   weights: null

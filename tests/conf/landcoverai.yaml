@@ -6,7 +6,6 @@ module:
   weights: null
   lr: 1e-3
   patience: 6
-  verbose: false
   in_channels: 3
   num_classes: 6
   num_filters: 1
