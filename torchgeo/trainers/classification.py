@@ -113,7 +113,6 @@ class ClassificationTask(LightningModule):
 
     def _configure_metrics(self) -> None:
         """Initialize the performance metrics."""
-
         self.train_metrics = MetricCollection(
             {
                 "OverallAccuracy": MulticlassAccuracy(
@@ -264,7 +263,6 @@ class MultiLabelClassificationTask(ClassificationTask):
 
     def _configure_metrics(self) -> None:
         """Initialize the performance metrics."""
-
         self.train_metrics = MetricCollection(
             {
                 "OverallAccuracy": MultilabelAccuracy(
