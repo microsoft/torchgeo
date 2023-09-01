@@ -205,6 +205,9 @@ class SimCLRTask(LightningModule):
 
         Returns:
             The loss tensor.
+
+        Raises:
+            AssertionError: If channel dimensions are incorrect.
         """
         x = batch["image"]
 

@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Classification tasks."""
+"""Trainers for image classification."""
 
 import os
-from typing import Any, cast
+from typing import Any, Optional, Union, cast
 
 import matplotlib.pyplot as plt
 import timm
@@ -13,6 +13,7 @@ import torch.nn as nn
 from lightning.pytorch import LightningModule
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
+from torch.optim import AdamW, Optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MetricCollection
 from torchmetrics.classification import (
@@ -30,27 +31,53 @@ from . import utils
 
 
 class ClassificationTask(LightningModule):
-    """LightningModule for image classification.
+    """Image classification."""
 
-    Supports any available `Timm model
-    <https://huggingface.co/docs/timm/index>`_
-    as an architecture choice. To see a list of available
-    models, you can do:
+    def __init__(
+        self,
+        model: str = "resnet50",
+        weights: Optional[Union[WeightsEnum, str, bool]] = None,
+        in_channels: int = 3,
+        num_classes: int = 1000,
+        loss: str = "ce",
+        lr: float = 1e-3,
+        patience: int = 10,
+        freeze_backbone: bool = False,
+    ) -> None:
+        """Initialize a new ClassificationTask instance.
 
-    .. code-block:: python
+        Args:
+            model: Name of the timm model to use.
+            weights: Initial model weights. Either a weight enum, the string
+                representation of a weight enum, True for ImageNet weights, False
+                or None for random weights, or the path to a saved model state dict.
+            in_channels: Number of input channels to model.
+            num_classes: Number of prediction classes.
+            loss: One of 'ce', 'bce', 'jaccard', or 'focal'.
+            lr: Learning rate for optimizer.
+            patience: Patience for learning rate scheduler.
+            freeze_backbone: Freeze the backbone network to linear probe
+                the classifier head.
 
-        import timm
-        print(timm.list_models())
-    """
+        .. versionadded:: 0.5
+           The *freeze_backbone* parameter.
 
-    def config_model(self) -> None:
-        """Configures the model based on kwargs parameters passed to the constructor."""
+        .. versionchanged:: 0.5
+           *learning_rate* and *learning_rate_schedule_patience* were renamed to
+           *lr* and *patience*.
+
+        .. versionchanged:: 0.4
+           *classification_model* was renamed to *model*.
+        """
+        super().__init__()
+
+        self.save_hyperparameters()
+
         # Create model
-        weights = self.hyperparams["weights"]
         self.model = timm.create_model(
-            self.hyperparams["model"],
-            num_classes=self.hyperparams["num_classes"],
-            in_chans=self.hyperparams["in_channels"],
+            model,
+            num_classes=num_classes,
+            in_chans=in_channels,
             pretrained=weights is True,
         )
 
@@ -65,70 +92,41 @@ class ClassificationTask(LightningModule):
             self.model = utils.load_state_dict(self.model, state_dict)
 
         # Freeze backbone and unfreeze classifier head
-        if self.hyperparams.get("freeze_backbone", False):
+        if freeze_backbone:
             for param in self.model.parameters():
                 param.requires_grad = False
             for param in self.model.get_classifier().parameters():
                 param.requires_grad = True
 
-    def config_task(self) -> None:
-        """Configures the task based on kwargs parameters passed to the constructor."""
-        self.config_model()
-
-        if self.hyperparams["loss"] == "ce":
+        if loss == "ce":
             self.loss: nn.Module = nn.CrossEntropyLoss()
-        elif self.hyperparams["loss"] == "jaccard":
+        elif loss == "bce":
+            self.loss = nn.BCEWithLogitsLoss()
+        elif loss == "jaccard":
             self.loss = JaccardLoss(mode="multiclass")
-        elif self.hyperparams["loss"] == "focal":
+        elif loss == "focal":
             self.loss = FocalLoss(mode="multiclass", normalized=True)
         else:
-            raise ValueError(f"Loss type '{self.hyperparams['loss']}' is not valid.")
+            raise ValueError(f"Loss type '{loss}' is not valid.")
 
-    def __init__(self, **kwargs: Any) -> None:
-        """Initialize the LightningModule with a model and loss function.
+        self._configure_metrics()
 
-        Keyword Args:
-            model: Name of the classification model use
-            loss: Name of the loss function, accepts 'ce', 'jaccard', or 'focal'
-            weights: Either a weight enum, the string representation of a weight enum,
-                True for ImageNet weights, False or None for random weights,
-                or the path to a saved model state dict.
-            num_classes: Number of prediction classes
-            in_channels: Number of input channels to model
-            learning_rate: Learning rate for optimizer
-            learning_rate_schedule_patience: Patience for learning rate scheduler
-            freeze_backbone: Freeze the backbone network to linear probe
-                the classifier head
-
-        .. versionchanged:: 0.4
-           The *classification_model* parameter was renamed to *model*.
-
-        .. versionadded:: 0.5
-           The *freeze_backbone* parameter.
-        """
-        super().__init__()
-
-        # Creates `self.hparams` from kwargs
-        self.save_hyperparameters()
-        self.hyperparams = cast(dict[str, Any], self.hparams)
-
-        self.config_task()
+    def _configure_metrics(self) -> None:
+        """Initialize the performance metrics."""
 
         self.train_metrics = MetricCollection(
             {
                 "OverallAccuracy": MulticlassAccuracy(
-                    num_classes=self.hyperparams["num_classes"], average="micro"
+                    num_classes=self.hparams["num_classes"], average="micro"
                 ),
                 "AverageAccuracy": MulticlassAccuracy(
-                    num_classes=self.hyperparams["num_classes"], average="macro"
+                    num_classes=self.hparams["num_classes"], average="macro"
                 ),
                 "JaccardIndex": MulticlassJaccardIndex(
-                    num_classes=self.hyperparams["num_classes"]
+                    num_classes=self.hparams["num_classes"]
                 ),
                 "F1Score": MulticlassFBetaScore(
-                    num_classes=self.hyperparams["num_classes"],
-                    beta=1.0,
-                    average="micro",
+                    num_classes=self.hparams["num_classes"], beta=1.0, average="micro"
                 ),
             },
             prefix="train_",
@@ -136,27 +134,31 @@ class ClassificationTask(LightningModule):
         self.val_metrics = self.train_metrics.clone(prefix="val_")
         self.test_metrics = self.train_metrics.clone(prefix="test_")
 
-    def forward(self, *args: Any, **kwargs: Any) -> Any:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model.
 
         Args:
-            x: input image
+            x: Mini-batch of images.
 
         Returns:
-            prediction
+            Output from the model.
         """
-        return self.model(*args, **kwargs)
+        z = self.model(x)
+        return cast(Tensor, z)
 
-    def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
-        """Compute and return the training loss.
+    def training_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
+        """Compute the training loss and additional metrics.
 
         Args:
-            batch: the output of your DataLoader
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
 
         Returns:
-            training loss
+            The loss tensor.
         """
-        batch = args[0]
         x = batch["image"]
         y = batch["label"]
         y_hat = self(x)
@@ -164,27 +166,21 @@ class ClassificationTask(LightningModule):
 
         loss = self.loss(y_hat, y)
 
-        # by default, the train step logs every `log_every_n_steps` steps where
-        # `log_every_n_steps` is a parameter to the `Trainer` object
-        self.log("train_loss", loss, on_step=True, on_epoch=False)
+        self.log("train_loss", loss)
         self.train_metrics(y_hat_hard, y)
 
         return cast(Tensor, loss)
 
-    def on_train_epoch_end(self) -> None:
-        """Logs epoch-level training metrics."""
-        self.log_dict(self.train_metrics.compute())
-        self.train_metrics.reset()
-
-    def validation_step(self, *args: Any, **kwargs: Any) -> None:
-        """Compute validation loss and log example predictions.
+    def validation_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
+        """Compute the validation loss and additional metrics.
 
         Args:
-            batch: the output of your DataLoader
-            batch_idx: the index of this batch
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
         """
-        batch = args[0]
-        batch_idx = args[1]
         x = batch["image"]
         y = batch["label"]
         y_hat = self(x)
@@ -192,7 +188,7 @@ class ClassificationTask(LightningModule):
 
         loss = self.loss(y_hat, y)
 
-        self.log("val_loss", loss, on_step=False, on_epoch=True)
+        self.log("val_loss", loss)
         self.val_metrics(y_hat_hard, y)
 
         if (
@@ -217,18 +213,14 @@ class ClassificationTask(LightningModule):
             except ValueError:
                 pass
 
-    def on_validation_epoch_end(self) -> None:
-        """Logs epoch level validation metrics."""
-        self.log_dict(self.val_metrics.compute())
-        self.val_metrics.reset()
-
-    def test_step(self, *args: Any, **kwargs: Any) -> None:
-        """Compute test loss.
+    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+        """Compute the test loss and additional metrics.
 
         Args:
-            batch: the output of your DataLoader
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
         """
-        batch = args[0]
         x = batch["image"]
         y = batch["label"]
         y_hat = self(x)
@@ -236,96 +228,53 @@ class ClassificationTask(LightningModule):
 
         loss = self.loss(y_hat, y)
 
-        # by default, the test and validation steps only log per *epoch*
-        self.log("test_loss", loss, on_step=False, on_epoch=True)
+        self.log("test_loss", loss)
         self.test_metrics(y_hat_hard, y)
 
-    def on_test_epoch_end(self) -> None:
-        """Logs epoch level test metrics."""
-        self.log_dict(self.test_metrics.compute())
-        self.test_metrics.reset()
-
-    def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
-        """Compute and return the predictions.
+    def predict_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
+        """Compute the predicted class probabilities.
 
         Args:
-            batch: the output of your DataLoader
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
 
         Returns:
-            predicted softmax probabilities
+            Output predicted probabilities.
         """
-        batch = args[0]
         x = batch["image"]
         y_hat: Tensor = self(x).softmax(dim=-1)
         return y_hat
 
-    def configure_optimizers(self) -> dict[str, Any]:
+    def configure_optimizers(self) -> tuple[list[Optimizer], list[ReduceLROnPlateau]]:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
-            learning rate dictionary
+            Optimizer and learning rate scheduler.
         """
-        optimizer = torch.optim.AdamW(
-            self.model.parameters(), lr=self.hyperparams["learning_rate"]
-        )
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": ReduceLROnPlateau(
-                    optimizer,
-                    patience=self.hyperparams["learning_rate_schedule_patience"],
-                ),
-                "monitor": "val_loss",
-            },
-        }
+        optimizer = AdamW(self.parameters(), lr=self.hparams["lr"])
+        lr_scheduler = ReduceLROnPlateau(optimizer, patience=self.hparams["patience"])
+        return [optimizer], [lr_scheduler]
 
 
 class MultiLabelClassificationTask(ClassificationTask):
-    """LightningModule for multi-label image classification."""
+    """Multi-label image classification."""
 
-    def config_task(self) -> None:
-        """Configures the task based on kwargs parameters passed to the constructor."""
-        self.config_model()
-
-        if self.hyperparams["loss"] == "bce":
-            self.loss = nn.BCEWithLogitsLoss()
-        else:
-            raise ValueError(f"Loss type '{self.hyperparams['loss']}' is not valid.")
-
-    def __init__(self, **kwargs: Any) -> None:
-        """Initialize the LightningModule with a model and loss function.
-
-        Keyword Args:
-            model: Name of the classification model use
-            loss: Name of the loss function, currently only supports 'bce'
-            weights: Either "random" or 'imagenet'
-            num_classes: Number of prediction classes
-            in_channels: Number of input channels to model
-            learning_rate: Learning rate for optimizer
-            learning_rate_schedule_patience: Patience for learning rate scheduler
-            freeze_backbone: Freeze the backbone network to linear probe
-                the classifier head
-
-        .. versionchanged:: 0.4
-           The *classification_model* parameter was renamed to *model*.
-
-        .. versionadded:: 0.5
-           The *freeze_backbone* parameter.
-        """
-        super().__init__(**kwargs)
+    def _configure_metrics(self) -> None:
+        """Initialize the performance metrics."""
 
         self.train_metrics = MetricCollection(
             {
                 "OverallAccuracy": MultilabelAccuracy(
-                    num_labels=self.hyperparams["num_classes"], average="micro"
+                    num_labels=self.hparams["num_classes"], average="micro"
                 ),
                 "AverageAccuracy": MultilabelAccuracy(
-                    num_labels=self.hyperparams["num_classes"], average="macro"
+                    num_labels=self.hparams["num_classes"], average="macro"
                 ),
                 "F1Score": MultilabelFBetaScore(
-                    num_labels=self.hyperparams["num_classes"],
-                    beta=1.0,
-                    average="micro",
+                    num_labels=self.hparams["num_classes"], beta=1.0, average="micro"
                 ),
             },
             prefix="train_",
@@ -333,16 +282,19 @@ class MultiLabelClassificationTask(ClassificationTask):
         self.val_metrics = self.train_metrics.clone(prefix="val_")
         self.test_metrics = self.train_metrics.clone(prefix="test_")
 
-    def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
-        """Compute and return the training loss.
+    def training_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
+        """Compute the training loss and additional metrics.
 
         Args:
-            batch: the output of your DataLoader
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
 
         Returns:
-            training loss
+            The loss tensor.
         """
-        batch = args[0]
         x = batch["image"]
         y = batch["label"]
         y_hat = self(x)
@@ -350,22 +302,21 @@ class MultiLabelClassificationTask(ClassificationTask):
 
         loss = self.loss(y_hat, y.to(torch.float))
 
-        # by default, the train step logs every `log_every_n_steps` steps where
-        # `log_every_n_steps` is a parameter to the `Trainer` object
-        self.log("train_loss", loss, on_step=True, on_epoch=False)
+        self.log("train_loss", loss)
         self.train_metrics(y_hat_hard, y)
 
         return cast(Tensor, loss)
 
-    def validation_step(self, *args: Any, **kwargs: Any) -> None:
-        """Compute validation loss and log example predictions.
+    def validation_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
+        """Compute the validation loss and additional metrics.
 
         Args:
-            batch: the output of your DataLoader
-            batch_idx: the index of this batch
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
         """
-        batch = args[0]
-        batch_idx = args[1]
         x = batch["image"]
         y = batch["label"]
         y_hat = self(x)
@@ -397,13 +348,14 @@ class MultiLabelClassificationTask(ClassificationTask):
             except ValueError:
                 pass
 
-    def test_step(self, *args: Any, **kwargs: Any) -> None:
-        """Compute test loss.
+    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+        """Compute the test loss and additional metrics.
 
         Args:
-            batch: the output of your DataLoader
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
         """
-        batch = args[0]
         x = batch["image"]
         y = batch["label"]
         y_hat = self(x)
@@ -411,19 +363,22 @@ class MultiLabelClassificationTask(ClassificationTask):
 
         loss = self.loss(y_hat, y.to(torch.float))
 
-        # by default, the test and validation steps only log per *epoch*
-        self.log("test_loss", loss, on_step=False, on_epoch=True)
+        self.log("test_loss", loss)
         self.test_metrics(y_hat_hard, y)
 
-    def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
-        """Compute and return the predictions.
+    def predict_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
+        """Compute the predicted class probabilities.
 
         Args:
-            batch: the output of your DataLoader
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
+
         Returns:
-            predicted sigmoid probabilities
+            Output predicted probabilities.
         """
-        batch = args[0]
         x = batch["image"]
         y_hat = torch.sigmoid(self(x))
         return y_hat
