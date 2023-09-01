@@ -3,8 +3,8 @@ module:
   in_channels: 12
   backbone: "resnet18"
   weights: True
-  learning_rate: 1e-3
-  learning_rate_schedule_patience: 6
+  lr: 1e-3
+  patience: 6
   optimizer: "Adam"
 
 datamodule:
