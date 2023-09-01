@@ -16,19 +16,14 @@ from lightly.loss import NTXentLoss
 from lightly.models.modules import SimCLRProjectionHead
 from lightning import LightningModule
 from torch import Tensor
-from torch.optim import Adam, Optimizer
+from torch.optim import Adam
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torchvision.models._api import WeightsEnum
 
 import torchgeo.transforms as T
 
 from ..models import get_weight
-from . import utils
-
-try:
-    from torch.optim.lr_scheduler import LRScheduler
-except ImportError:
-    from torch.optim.lr_scheduler import _LRScheduler as LRScheduler
+from .utils import OptSched, extract_backbone, load_state_dict
 
 
 def simclr_augmentations(size: int, weights: Tensor) -> nn.Module:
@@ -154,10 +149,10 @@ class SimCLRTask(LightningModule):
             if isinstance(weights, WeightsEnum):
                 state_dict = weights.get_state_dict(progress=True)
             elif os.path.exists(weights):
-                _, state_dict = utils.extract_backbone(weights)
+                _, state_dict = extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
-            self.backbone = utils.load_state_dict(self.backbone, state_dict)
+            self.backbone = load_state_dict(self.backbone, state_dict)
 
         # Create projection head
         input_dim = self.backbone.num_features
@@ -256,7 +251,7 @@ class SimCLRTask(LightningModule):
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
 
-    def configure_optimizers(self) -> tuple[list[Optimizer], list[LRScheduler]]:
+    def configure_optimizers(self) -> OptSched:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
@@ -275,7 +270,7 @@ class SimCLRTask(LightningModule):
             warmup_epochs = 10
         else:
             warmup_epochs = int(max_epochs * 0.05)
-        lr_scheduler = SequentialLR(
+        scheduler = SequentialLR(
             optimizer,
             schedulers=[
                 LinearLR(optimizer, total_iters=warmup_epochs),
@@ -283,4 +278,7 @@ class SimCLRTask(LightningModule):
             ],
             milestones=[warmup_epochs],
         )
-        return [optimizer], [lr_scheduler]
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {"scheduler": scheduler, "monitor": "val_loss"},
+        }

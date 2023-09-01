@@ -11,7 +11,7 @@ import torch
 import torchvision.models.detection
 from lightning.pytorch import LightningModule
 from torch import Tensor
-from torch.optim import Adam, Optimizer
+from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
@@ -22,6 +22,7 @@ from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
 from ..datasets.utils import unbind_samples
+from .utils import OptSched
 
 BACKBONE_LAT_DIM_MAP = {
     "resnet18": 512,
@@ -321,14 +322,17 @@ class ObjectDetectionTask(LightningModule):
         y_hat: list[dict[str, Tensor]] = self(x)
         return y_hat
 
-    def configure_optimizers(self) -> tuple[list[Optimizer], list[ReduceLROnPlateau]]:
+    def configure_optimizers(self) -> OptSched:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
             Optimizer and learning rate scheduler.
         """
         optimizer = Adam(self.parameters(), lr=self.hparams["lr"])
-        lr_scheduler = ReduceLROnPlateau(
+        scheduler = ReduceLROnPlateau(
             optimizer, mode="max", patience=self.hparams["patience"]
         )
-        return [optimizer], [lr_scheduler]
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {"scheduler": scheduler, "monitor": "val_map"},
+        }

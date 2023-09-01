@@ -13,12 +13,12 @@ import torch.nn.functional as F
 from kornia import augmentation as K
 from lightning.pytorch import LightningModule
 from torch import Tensor
-from torch.optim import Adam, Optimizer
+from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchvision.models._api import WeightsEnum
 
 from ..models import get_weight
-from . import utils
+from .utils import OptSched, extract_backbone, load_state_dict
 
 
 def normalized_mse(x: Tensor, y: Tensor) -> Tensor:
@@ -334,10 +334,10 @@ class BYOLTask(LightningModule):
             if isinstance(weights, WeightsEnum):
                 state_dict = weights.get_state_dict(progress=True)
             elif os.path.exists(weights):
-                _, state_dict = utils.extract_backbone(weights)
+                _, state_dict = extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
-            backbone = utils.load_state_dict(backbone, state_dict)
+            backbone = load_state_dict(backbone, state_dict)
 
         self.model = BYOL(backbone, in_channels=in_channels, image_size=(224, 224))
 
@@ -409,7 +409,7 @@ class BYOLTask(LightningModule):
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
 
-    def configure_optimizers(self) -> tuple[list[Optimizer], list[ReduceLROnPlateau]]:
+    def configure_optimizers(self) -> OptSched:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
@@ -420,5 +420,8 @@ class BYOLTask(LightningModule):
             lr=self.hparams["lr"],
             weight_decay=self.hparams["weight_decay"],
         )
-        lr_scheduler = ReduceLROnPlateau(optimizer, patience=self.hparams["patience"])
-        return [optimizer], [lr_scheduler]
+        scheduler = ReduceLROnPlateau(optimizer, patience=self.hparams["patience"])
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {"scheduler": scheduler, "monitor": "train_loss"},
+        }

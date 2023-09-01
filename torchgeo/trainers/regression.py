@@ -12,14 +12,14 @@ import timm
 import torch.nn as nn
 from lightning.pytorch import LightningModule
 from torch import Tensor
-from torch.optim import AdamW, Optimizer
+from torch.optim import AdamW
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import unbind_samples
 from ..models import FCN, get_weight
-from . import utils
+from .utils import OptSched, extract_backbone, load_state_dict
 
 
 class RegressionTask(LightningModule):
@@ -118,10 +118,10 @@ class RegressionTask(LightningModule):
             if isinstance(weights, WeightsEnum):
                 state_dict = weights.get_state_dict(progress=True)
             elif os.path.exists(weights):
-                _, state_dict = utils.extract_backbone(weights)
+                _, state_dict = extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
-            self.model = utils.load_state_dict(self.model, state_dict)
+            self.model = load_state_dict(self.model, state_dict)
 
         # Freeze backbone and unfreeze classifier head
         if self.hparams["freeze_backbone"]:
@@ -250,15 +250,18 @@ class RegressionTask(LightningModule):
         y_hat: Tensor = self(x)
         return y_hat
 
-    def configure_optimizers(self) -> tuple[list[Optimizer], list[ReduceLROnPlateau]]:
+    def configure_optimizers(self) -> OptSched:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
             Optimizer and learning rate scheduler.
         """
         optimizer = AdamW(self.parameters(), lr=self.hparams["lr"])
-        lr_scheduler = ReduceLROnPlateau(optimizer, patience=self.hparams["patience"])
-        return [optimizer], [lr_scheduler]
+        scheduler = ReduceLROnPlateau(optimizer, patience=self.hparams["patience"])
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {"scheduler": scheduler, "monitor": "val_loss"},
+        }
 
 
 class PixelwiseRegressionTask(RegressionTask):
@@ -309,7 +312,7 @@ class PixelwiseRegressionTask(RegressionTask):
                 if isinstance(weights, WeightsEnum):
                     state_dict = weights.get_state_dict(progress=True)
                 elif os.path.exists(weights):
-                    _, state_dict = utils.extract_backbone(weights)
+                    _, state_dict = extract_backbone(weights)
                 else:
                     state_dict = get_weight(weights).get_state_dict(progress=True)
                 self.model.encoder.load_state_dict(state_dict)

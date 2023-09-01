@@ -288,8 +288,8 @@ class TestPixelwiseRegressionTask:
             "num_outputs": 1,
             "in_channels": 3,
             "loss": "mse",
-            "learning_rate": 1e-3,
-            "learning_rate_schedule_patience": 6,
+            "lr": 1e-3,
+            "patience": 6,
         }
 
     @pytest.fixture

@@ -31,7 +31,7 @@ from torchvision.models._api import WeightsEnum
 import torchgeo.transforms as T
 
 from ..models import get_weight
-from . import utils
+from .utils import OptSched, extract_backbone, load_state_dict
 
 try:
     from torch.optim.lr_scheduler import LRScheduler
@@ -237,10 +237,10 @@ class MoCoTask(LightningModule):
             if isinstance(weights, WeightsEnum):
                 state_dict = weights.get_state_dict(progress=True)
             elif os.path.exists(weights):
-                _, state_dict = utils.extract_backbone(weights)
+                _, state_dict = extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
-            self.backbone = utils.load_state_dict(self.backbone, state_dict)
+            self.backbone = load_state_dict(self.backbone, state_dict)
 
         # Create projection (and prediction) head
         batch_norm = version == 3
@@ -373,7 +373,7 @@ class MoCoTask(LightningModule):
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
 
-    def configure_optimizers(self) -> tuple[list[Optimizer], list[LRScheduler]]:
+    def configure_optimizers(self) -> OptSched:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
@@ -389,7 +389,7 @@ class MoCoTask(LightningModule):
             max_epochs = 200
             if self.trainer and self.trainer.max_epochs:
                 max_epochs = self.trainer.max_epochs
-            lr_scheduler: LRScheduler = SequentialLR(
+            scheduler: LRScheduler = SequentialLR(
                 optimizer,
                 schedulers=[
                     LinearLR(
@@ -408,7 +408,10 @@ class MoCoTask(LightningModule):
                 momentum=self.hparams["momentum"],
                 weight_decay=self.hparams["weight_decay"],
             )
-            lr_scheduler = MultiStepLR(
+            scheduler = MultiStepLR(
                 optimizer=optimizer, milestones=self.hparams["schedule"]
             )
-        return [optimizer], [lr_scheduler]
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {"scheduler": scheduler, "monitor": "train_loss"},
+        }
