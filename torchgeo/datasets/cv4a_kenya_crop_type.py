@@ -6,7 +6,7 @@
 import csv
 import os
 from functools import lru_cache
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +15,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_dataset, extract_archive
+from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
 
 
 # TODO: read geospatial information from stac.json files
@@ -23,7 +23,7 @@ class CV4AKenyaCropType(NonGeoDataset):
     """CV4A Kenya Crop Type dataset.
 
     Used in a competition in the Computer NonGeo for Agriculture (CV4A) workshop in
-    ICLR 2020. See `this website <https://registry.mlhub.earth/10.34911/rdnt.dw605x/>`__
+    ICLR 2020. See `this website <https://mlhub.earth/10.34911/rdnt.dw605x>`__
     for dataset details.
 
     Consists of 4 tiles of Sentinel 2 imagery from 13 different points in time.
@@ -56,7 +56,10 @@ class CV4AKenyaCropType(NonGeoDataset):
          imagery and labels from the Radiant Earth MLHub
     """
 
-    dataset_id = "ref_african_crops_kenya_02"
+    collection_ids = [
+        "ref_african_crops_kenya_02_labels",
+        "ref_african_crops_kenya_02_source",
+    ]
     image_meta = {
         "filename": "ref_african_crops_kenya_02_source.tar.gz",
         "md5": "9c2004782f6dc83abb1bf45ba4d0da46",
@@ -114,8 +117,8 @@ class CV4AKenyaCropType(NonGeoDataset):
         root: str = "data",
         chip_size: int = 256,
         stride: int = 128,
-        bands: Tuple[str, ...] = band_names,
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        bands: tuple[str, ...] = band_names,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
@@ -169,7 +172,7 @@ class CV4AKenyaCropType(NonGeoDataset):
                 ]:
                     self.chips_metadata.append((tile_index, y, x))
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -211,7 +214,7 @@ class CV4AKenyaCropType(NonGeoDataset):
         return len(self.chips_metadata)
 
     @lru_cache(maxsize=128)
-    def _load_label_tile(self, tile_name: str) -> Tuple[Tensor, Tensor]:
+    def _load_label_tile(self, tile_name: str) -> tuple[Tensor, Tensor]:
         """Load a single _tile_ of labels and field_ids.
 
         Args:
@@ -242,7 +245,7 @@ class CV4AKenyaCropType(NonGeoDataset):
 
         return (labels, field_ids)
 
-    def _validate_bands(self, bands: Tuple[str, ...]) -> None:
+    def _validate_bands(self, bands: tuple[str, ...]) -> None:
         """Validate list of bands.
 
         Args:
@@ -259,7 +262,7 @@ class CV4AKenyaCropType(NonGeoDataset):
 
     @lru_cache(maxsize=128)
     def _load_all_image_tiles(
-        self, tile_name: str, bands: Tuple[str, ...] = band_names
+        self, tile_name: str, bands: tuple[str, ...] = band_names
     ) -> Tensor:
         """Load all the imagery (across time) for a single _tile_.
 
@@ -296,7 +299,7 @@ class CV4AKenyaCropType(NonGeoDataset):
 
     @lru_cache(maxsize=128)
     def _load_single_image_tile(
-        self, tile_name: str, date: str, bands: Tuple[str, ...]
+        self, tile_name: str, date: str, bands: tuple[str, ...]
     ) -> Tensor:
         """Load the imagery for a single tile for a single date.
 
@@ -353,7 +356,7 @@ class CV4AKenyaCropType(NonGeoDataset):
 
         return images and targets
 
-    def get_splits(self) -> Tuple[List[int], List[int]]:
+    def get_splits(self) -> tuple[list[int], list[int]]:
         """Get the field_ids for the train/test splits from the dataset directory.
 
         Returns:
@@ -394,7 +397,8 @@ class CV4AKenyaCropType(NonGeoDataset):
             print("Files already downloaded and verified")
             return
 
-        download_radiant_mlhub_dataset(self.dataset_id, self.root, api_key)
+        for collection_id in self.collection_ids:
+            download_radiant_mlhub_collection(collection_id, self.root, api_key)
 
         image_archive_path = os.path.join(self.root, self.image_meta["filename"])
         target_archive_path = os.path.join(self.root, self.target_meta["filename"])
@@ -403,7 +407,7 @@ class CV4AKenyaCropType(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         time_step: int = 0,
         suptitle: Optional[str] = None,

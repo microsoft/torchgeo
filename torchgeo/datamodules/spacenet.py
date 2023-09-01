@@ -3,18 +3,18 @@
 
 """SpaceNet datamodules."""
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 import kornia.augmentation as K
-import matplotlib.pyplot as plt
-import pytorch_lightning as pl
-from torch.utils.data import DataLoader
+from torch import Tensor
 
 from ..datasets import SpaceNet1
+from ..transforms import AugmentationSequential
+from .geo import NonGeoDataModule
 from .utils import dataset_split
 
 
-class SpaceNet1DataModule(pl.LightningDataModule):
+class SpaceNet1DataModule(NonGeoDataModule):
     """LightningDataModule implementation for the SpaceNet1 dataset.
 
     Randomly splits into train/val/test.
@@ -30,150 +30,63 @@ class SpaceNet1DataModule(pl.LightningDataModule):
         test_split_pct: float = 0.2,
         **kwargs: Any,
     ) -> None:
-        """Initialize a LightningDataModule for SpaceNet1.
+        """Initialize a new SpaceNet1DataModule instance.
 
         Args:
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
-            val_split_pct: What percentage of the dataset to use as a validation set
-            test_split_pct: What percentage of the dataset to use as a test set
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
+            val_split_pct: Percentage of the dataset to use as a validation set.
+            test_split_pct: Percentage of the dataset to use as a test set.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.SpaceNet1`
+                :class:`~torchgeo.datasets.SpaceNet1`.
         """
-        super().__init__()
-        self.batch_size = batch_size
-        self.num_workers = num_workers
+        super().__init__(SpaceNet1, batch_size, num_workers, **kwargs)
+
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
-        self.kwargs = kwargs
 
-        self.padto = K.PadTo((448, 448))
+        self.train_aug = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            K.PadTo((448, 448)),
+            K.RandomRotation(p=0.5, degrees=90),
+            K.RandomHorizontalFlip(p=0.5),
+            K.RandomVerticalFlip(p=0.5),
+            K.RandomSharpness(p=0.5),
+            K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
+            data_keys=["image", "mask"],
+        )
+        self.aug = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            K.PadTo((448, 448)),
+            data_keys=["image", "mask"],
+        )
+
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
+
+        Args:
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
+        """
+        self.dataset = SpaceNet1(**self.kwargs)
+        self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
+            self.dataset, self.val_split_pct, self.test_split_pct
+        )
 
     def on_after_batch_transfer(
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> Dict[str, Any]:
-        """Apply batch augmentations after batch is transferred to the device.
+        self, batch: dict[str, Tensor], dataloader_idx: int
+    ) -> dict[str, Tensor]:
+        """Apply batch augmentations to the batch after it is transferred to the device.
 
         Args:
-            batch: mini-batch of data
-            batch_idx: batch index
+            batch: A batch of data that needs to be altered or augmented.
+            dataloader_idx: The index of the dataloader to which the batch belongs.
 
         Returns:
-            augmented mini-batch
+            A batch of data.
         """
-        if (
-            hasattr(self, "trainer")
-            and self.trainer is not None
-            and hasattr(self.trainer, "training")
-            and self.trainer.training
-        ):
-            # Kornia expects masks to be floats with a channel dimension
-            x = batch["image"]
-            y = batch["mask"].float().unsqueeze(1)
+        # We add 1 to the mask to map the current {background, building} labels to
+        # the values {1, 2}. This is necessary because we add 0 padding to the
+        # mask that we want to ignore in the loss function.
+        batch["mask"] += 1
 
-            train_augmentations = K.AugmentationSequential(
-                K.RandomRotation(p=0.5, degrees=90),
-                K.RandomHorizontalFlip(p=0.5),
-                K.RandomVerticalFlip(p=0.5),
-                K.RandomSharpness(p=0.5),
-                K.ColorJitter(
-                    p=0.5,
-                    brightness=0.1,
-                    contrast=0.1,
-                    saturation=0.1,
-                    hue=0.1,
-                    silence_instantiation_warning=True,
-                ),
-                data_keys=["input", "mask"],
-            )
-            x, y = train_augmentations(x, y)
-
-            # torchmetrics expects masks to be longs without a channel dimension
-            batch["image"] = x
-            batch["mask"] = y.squeeze(1).long()
-
-        return batch
-
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
-
-        Args:
-            sample: dictionary containing image and mask
-
-        Returns:
-            preprocessed sample
-        """
-        sample["image"] = sample["image"].float() / 255
-        sample["image"] = self.padto(sample["image"]).squeeze()
-
-        if "mask" in sample:
-            # We add 1 to the mask to map the current {background, building} labels to
-            # the values {1, 2}. This is necessary because we add 0 padding to the
-            # mask that we want to ignore in the loss function.
-            sample["mask"] = self.padto(sample["mask"].float() + 1).squeeze()
-            sample["mask"] = sample["mask"].long()
-        return sample
-
-    def prepare_data(self) -> None:
-        """Make sure that the dataset is downloaded.
-
-        This method is only called once per run.
-        """
-        if self.kwargs.get("download", False):
-            SpaceNet1(**self.kwargs)
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
-
-        This method is called once per GPU per run.
-
-        Args:
-            stage: stage to set up
-        """
-        self.dataset = SpaceNet1(transforms=self.preprocess, **self.kwargs)
-        self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-            self.dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
-        )
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training.
-
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.SpaceNet.plot`."""
-        return self.dataset.plot(*args, **kwargs)
+        return super().on_after_batch_transfer(batch, dataloader_idx)

@@ -5,11 +5,10 @@
 
 import math
 from collections import OrderedDict
-from typing import List, cast
+from typing import cast
 
 import torch.nn.functional as F
 import torchvision
-from packaging.version import parse
 from torch import Tensor
 from torch.nn.modules import (
     BatchNorm2d,
@@ -62,17 +61,14 @@ class FarSeg(Module):
         else:
             raise ValueError(f"unknown backbone: {backbone}.")
         kwargs = {}
-        if parse(torchvision.__version__) >= parse("0.13"):
-            if backbone_pretrained:
-                kwargs = {
-                    "weights": getattr(
-                        torchvision.models, f"ResNet{backbone[6:]}_Weights"
-                    ).DEFAULT
-                }
-            else:
-                kwargs = {"weights": None}
+        if backbone_pretrained:
+            kwargs = {
+                "weights": getattr(
+                    torchvision.models, f"ResNet{backbone[6:]}_Weights"
+                ).DEFAULT
+            }
         else:
-            kwargs = {"pretrained": backbone_pretrained}
+            kwargs = {"weights": None}
 
         self.backbone = getattr(resnet, backbone)(**kwargs)
 
@@ -122,7 +118,7 @@ class _FSRelation(Module):
     def __init__(
         self,
         scene_embedding_channels: int,
-        in_channels_list: List[int],
+        in_channels_list: list[int],
         out_channels: int,
     ) -> None:
         """Initialize the _FSRelation module.
@@ -161,7 +157,7 @@ class _FSRelation(Module):
 
         self.normalizer = Sigmoid()
 
-    def forward(self, scene_feature: Tensor, features: List[Tensor]) -> List[Tensor]:
+    def forward(self, scene_feature: Tensor, features: list[Tensor]) -> list[Tensor]:
         """Forward pass of the model."""
         # [N, C, H, W]
         content_feats = [
@@ -188,7 +184,7 @@ class _LightWeightDecoder(Module):
         in_channels: int,
         out_channels: int,
         num_classes: int,
-        in_feature_output_strides: List[int] = [4, 8, 16, 32],
+        in_feature_output_strides: list[int] = [4, 8, 16, 32],
         out_feature_output_stride: int = 4,
     ) -> None:
         """Initialize the _LightWeightDecoder module.
@@ -237,7 +233,7 @@ class _LightWeightDecoder(Module):
             UpsamplingBilinear2d(scale_factor=4),
         )
 
-    def forward(self, features: List[Tensor]) -> Tensor:
+    def forward(self, features: list[Tensor]) -> Tensor:
         """Forward pass of the model."""
         inner_feat_list = []
         for idx, block in enumerate(self.blocks):

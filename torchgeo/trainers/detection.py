@@ -3,45 +3,57 @@
 
 """Detection tasks."""
 
-from typing import Any, Dict, List, cast
+from functools import partial
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 import torch
-import torchvision
-from packaging.version import parse
+import torchvision.models.detection
+from lightning.pytorch import LightningModule
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
-from torchvision.models.detection import FasterRCNN
+from torchvision.models import resnet as R
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
+from torchvision.models.detection.retinanet import RetinaNetHead
 from torchvision.models.detection.rpn import AnchorGenerator
-from torchvision.ops import MultiScaleRoIAlign
-
-if parse(torchvision.__version__) >= parse("0.13"):
-    from torchvision.models import resnet as R
-
-    BACKBONE_WEIGHT_MAP = {
-        "resnet18": R.ResNet18_Weights.DEFAULT,
-        "resnet34": R.ResNet34_Weights.DEFAULT,
-        "resnet50": R.ResNet50_Weights.DEFAULT,
-        "resnet101": R.ResNet101_Weights.DEFAULT,
-        "resnet152": R.ResNet152_Weights.DEFAULT,
-        "resnext50_32x4d": R.ResNeXt50_32X4D_Weights.DEFAULT,
-        "resnext101_32x8d": R.ResNeXt101_32X8D_Weights.DEFAULT,
-        "wide_resnet50_2": R.Wide_ResNet50_2_Weights.DEFAULT,
-        "wide_resnet101_2": R.Wide_ResNet101_2_Weights.DEFAULT,
-    }
+from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
 from ..datasets.utils import unbind_samples
 
+BACKBONE_LAT_DIM_MAP = {
+    "resnet18": 512,
+    "resnet34": 512,
+    "resnet50": 2048,
+    "resnet101": 2048,
+    "resnet152": 2048,
+    "resnext50_32x4d": 2048,
+    "resnext101_32x8d": 2048,
+    "wide_resnet50_2": 2048,
+    "wide_resnet101_2": 2048,
+}
 
-class ObjectDetectionTask(pl.LightningModule):
+BACKBONE_WEIGHT_MAP = {
+    "resnet18": R.ResNet18_Weights.DEFAULT,
+    "resnet34": R.ResNet34_Weights.DEFAULT,
+    "resnet50": R.ResNet50_Weights.DEFAULT,
+    "resnet101": R.ResNet101_Weights.DEFAULT,
+    "resnet152": R.ResNet152_Weights.DEFAULT,
+    "resnext50_32x4d": R.ResNeXt50_32X4D_Weights.DEFAULT,
+    "resnext101_32x8d": R.ResNeXt101_32X8D_Weights.DEFAULT,
+    "wide_resnet50_2": R.Wide_ResNet50_2_Weights.DEFAULT,
+    "wide_resnet101_2": R.Wide_ResNet101_2_Weights.DEFAULT,
+}
+
+
+class ObjectDetectionTask(LightningModule):
     """LightningModule for object detection of images.
 
-    Currently, supports a Faster R-CNN model from
+    Currently, supports Faster R-CNN, FCOS, and RetinaNet models from
     `torchvision
-    <https://pytorch.org/vision/stable/models/faster_rcnn.html>`_ with
+    <https://pytorch.org/vision/stable/models.html
+    #object-detection-instance-segmentation-and-person-keypoint-detection>`_ with
     one of the following *backbone* arguments:
 
     .. code-block:: python
@@ -56,28 +68,27 @@ class ObjectDetectionTask(pl.LightningModule):
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
         backbone_pretrained = self.hyperparams.get("pretrained", True)
-        if self.hyperparams["model"] == "faster-rcnn":
-            if "resnet" in self.hyperparams["backbone"]:
-                kwargs = {
-                    "backbone_name": self.hyperparams["backbone"],
-                    "trainable_layers": self.hyperparams.get("trainable_layers", 3),
-                }
-                if parse(torchvision.__version__) >= parse("0.13"):
-                    if backbone_pretrained:
-                        kwargs["weights"] = BACKBONE_WEIGHT_MAP[
-                            self.hyperparams["backbone"]
-                        ]
-                    else:
-                        kwargs["weights"] = None
-                else:
-                    kwargs["pretrained"] = backbone_pretrained
 
-                backbone = resnet_fpn_backbone(**kwargs)
+        if self.hyperparams["backbone"] in BACKBONE_LAT_DIM_MAP:
+            kwargs = {
+                "backbone_name": self.hyperparams["backbone"],
+                "trainable_layers": self.hyperparams.get("trainable_layers", 3),
+            }
+            if backbone_pretrained:
+                kwargs["weights"] = BACKBONE_WEIGHT_MAP[self.hyperparams["backbone"]]
             else:
-                raise ValueError(
-                    f"Backbone type '{self.hyperparams['backbone']}' is not valid."
-                )
+                kwargs["weights"] = None
 
+            latent_dim = BACKBONE_LAT_DIM_MAP[self.hyperparams["backbone"]]
+        else:
+            raise ValueError(
+                f"Backbone type '{self.hyperparams['backbone']}' is not valid."
+            )
+
+        num_classes = self.hyperparams["num_classes"]
+
+        if self.hyperparams["model"] == "faster-rcnn":
+            backbone = resnet_fpn_backbone(**kwargs)
             anchor_generator = AnchorGenerator(
                 sizes=((32), (64), (128), (256), (512)), aspect_ratios=((0.5, 1.0, 2.0))
             )
@@ -85,14 +96,67 @@ class ObjectDetectionTask(pl.LightningModule):
             roi_pooler = MultiScaleRoIAlign(
                 featmap_names=["0", "1", "2", "3"], output_size=7, sampling_ratio=2
             )
-            num_classes = self.hyperparams["num_classes"]
-            self.model = FasterRCNN(
+
+            if self.hyperparams.get("freeze_backbone", False):
+                for param in backbone.parameters():
+                    param.requires_grad = False
+
+            self.model = torchvision.models.detection.FasterRCNN(
                 backbone,
                 num_classes,
                 rpn_anchor_generator=anchor_generator,
                 box_roi_pool=roi_pooler,
             )
+        elif self.hyperparams["model"] == "fcos":
+            kwargs["extra_blocks"] = feature_pyramid_network.LastLevelP6P7(256, 256)
+            kwargs["norm_layer"] = (
+                misc.FrozenBatchNorm2d if kwargs["weights"] else torch.nn.BatchNorm2d
+            )
 
+            backbone = resnet_fpn_backbone(**kwargs)
+            anchor_generator = AnchorGenerator(
+                sizes=((8,), (16,), (32,), (64,), (128,), (256,)),
+                aspect_ratios=((1.0,), (1.0,), (1.0,), (1.0,), (1.0,), (1.0,)),
+            )
+
+            if self.hyperparams.get("freeze_backbone", False):
+                for param in backbone.parameters():
+                    param.requires_grad = False
+
+            self.model = torchvision.models.detection.FCOS(
+                backbone, num_classes, anchor_generator=anchor_generator
+            )
+        elif self.hyperparams["model"] == "retinanet":
+            kwargs["extra_blocks"] = feature_pyramid_network.LastLevelP6P7(
+                latent_dim, 256
+            )
+            backbone = resnet_fpn_backbone(**kwargs)
+
+            anchor_sizes = (
+                (16, 20, 25),
+                (32, 40, 50),
+                (64, 80, 101),
+                (128, 161, 203),
+                (256, 322, 406),
+                (512, 645, 812),
+            )
+            aspect_ratios = ((0.5, 1.0, 2.0),) * len(anchor_sizes)
+            anchor_generator = AnchorGenerator(anchor_sizes, aspect_ratios)
+
+            head = RetinaNetHead(
+                backbone.out_channels,
+                anchor_generator.num_anchors_per_location()[0],
+                num_classes,
+                norm_layer=partial(torch.nn.GroupNorm, 32),
+            )
+
+            if self.hyperparams.get("freeze_backbone", False):
+                for param in backbone.parameters():
+                    param.requires_grad = False
+
+            self.model = torchvision.models.detection.RetinaNet(
+                backbone, num_classes, anchor_generator=anchor_generator, head=head
+            )
         else:
             raise ValueError(f"Model type '{self.hyperparams['model']}' is not valid.")
 
@@ -106,22 +170,27 @@ class ObjectDetectionTask(pl.LightningModule):
             num_classes: Number of semantic classes to predict
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
+            freeze_backbone: Freeze the backbone network to fine-tune the detection head
 
         Raises:
             ValueError: if kwargs arguments are invalid
 
         .. versionchanged:: 0.4
            The *detection_model* parameter was renamed to *model*.
+
+        .. versionadded:: 0.5
+           The *freeze_backbone* parameter.
         """
         super().__init__()
         # Creates `self.hparams` from kwargs
-        self.save_hyperparameters()  # type: ignore[operator]
-        self.hyperparams = cast(Dict[str, Any], self.hparams)
+        self.save_hyperparameters()
+        self.hyperparams = cast(dict[str, Any], self.hparams)
 
         self.config_task()
 
-        self.val_metrics = MeanAveragePrecision()
-        self.test_metrics = MeanAveragePrecision()
+        metrics = MetricCollection([MeanAveragePrecision()])
+        self.val_metrics = metrics.clone(prefix="val_")
+        self.test_metrics = metrics.clone(prefix="test_")
 
     def forward(self, *args: Any, **kwargs: Any) -> Any:
         """Forward pass of the model.
@@ -176,9 +245,15 @@ class ObjectDetectionTask(pl.LightningModule):
 
         self.val_metrics.update(y_hat, y)
 
-        if batch_idx < 10:
+        if (
+            batch_idx < 10
+            and hasattr(self.trainer, "datamodule")
+            and self.logger
+            and hasattr(self.logger, "experiment")
+            and hasattr(self.logger.experiment, "add_figure")
+        ):
             try:
-                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                datamodule = self.trainer.datamodule
                 batch["prediction_boxes"] = [b["boxes"].cpu() for b in y_hat]
                 batch["prediction_labels"] = [b["labels"].cpu() for b in y_hat]
                 batch["prediction_scores"] = [b["scores"].cpu() for b in y_hat]
@@ -189,23 +264,22 @@ class ObjectDetectionTask(pl.LightningModule):
                     sample["image"] *= 255
                     sample["image"] = sample["image"].to(torch.uint8)
                 fig = datamodule.plot(sample)
-                summary_writer = self.logger.experiment  # type: ignore[union-attr]
+                summary_writer = self.logger.experiment
                 summary_writer.add_figure(
                     f"image/{batch_idx}", fig, global_step=self.global_step
                 )
                 plt.close()
-            except AttributeError:
+            except ValueError:
                 pass
 
-    def validation_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level validation metrics.
-
-        Args:
-            outputs: list of items returned by validation_step
-        """
+    def on_validation_epoch_end(self) -> None:
+        """Logs epoch level validation metrics."""
         metrics = self.val_metrics.compute()
-        renamed_metrics = {f"val_{i}": metrics[i] for i in metrics.keys()}
-        self.log_dict(renamed_metrics)
+
+        # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
+        metrics.pop("val_classes", None)
+
+        self.log_dict(metrics)
         self.val_metrics.reset()
 
     def test_step(self, *args: Any, **kwargs: Any) -> None:
@@ -225,18 +299,17 @@ class ObjectDetectionTask(pl.LightningModule):
 
         self.test_metrics.update(y_hat, y)
 
-    def test_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level test metrics.
-
-        Args:
-            outputs: list of items returned by test_step
-        """
+    def on_test_epoch_end(self) -> None:
+        """Logs epoch level test metrics."""
         metrics = self.test_metrics.compute()
-        renamed_metrics = {f"test_{i}": metrics[i] for i in metrics.keys()}
-        self.log_dict(renamed_metrics)
+
+        # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
+        metrics.pop("test_classes", None)
+
+        self.log_dict(metrics)
         self.test_metrics.reset()
 
-    def predict_step(self, *args: Any, **kwargs: Any) -> List[Dict[str, Tensor]]:
+    def predict_step(self, *args: Any, **kwargs: Any) -> list[dict[str, Tensor]]:
         """Compute and return the predictions.
 
         Args:
@@ -247,15 +320,14 @@ class ObjectDetectionTask(pl.LightningModule):
         """
         batch = args[0]
         x = batch["image"]
-        y_hat: List[Dict[str, Tensor]] = self(x)
+        y_hat: list[dict[str, Tensor]] = self(x)
         return y_hat
 
-    def configure_optimizers(self) -> Dict[str, Any]:
+    def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+            learning rate dictionary
         """
         optimizer = torch.optim.Adam(
             self.model.parameters(), lr=self.hyperparams["learning_rate"]

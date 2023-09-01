@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
     BoundingBox,
@@ -16,7 +16,7 @@ from torchgeo.datasets import (
     UnionDataset,
 )
 
-pytest.importorskip("pandas", minversion="0.23.2")
+pytest.importorskip("pandas", minversion="1.1.3")
 
 
 class TestINaturalist:

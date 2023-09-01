@@ -4,20 +4,19 @@
 """BYOL tasks."""
 
 import os
-import random
-from typing import Any, Callable, Dict, Optional, Tuple, cast
+from typing import Any, Optional, cast
 
-import pytorch_lightning as pl
 import timm
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from kornia import augmentation as K
-from kornia import filters
-from kornia.geometry import transform as KorniaTransform
+from lightning.pytorch import LightningModule
 from torch import Tensor, optim
-from torch.nn.modules import BatchNorm1d, Linear, Module, ReLU, Sequential
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torchvision.models._api import WeightsEnum
 
+from ..models import get_weight
 from . import utils
 
 
@@ -37,38 +36,10 @@ def normalized_mse(x: Tensor, y: Tensor) -> Tensor:
     return mse
 
 
-# TODO: Move this to transforms
-class RandomApply(Module):
-    """Applies augmentation function (augm) with probability p."""
-
-    def __init__(self, augm: Callable[[Tensor], Tensor], p: float) -> None:
-        """Initialize RandomApply.
-
-        Args:
-            augm: augmentation function to apply
-            p: probability with which the augmentation function is applied
-        """
-        super().__init__()
-        self.augm = augm
-        self.p = p
-
-    def forward(self, x: Tensor) -> Tensor:
-        """Applies an augmentation to the input with some probability.
-
-        Args:
-            x: a batch of imagery
-
-        Returns
-            augmented version of ``x`` with probability ``self.p`` else an un-augmented
-                version
-        """
-        return x if random.random() > self.p else self.augm(x)
-
-
 # TODO: This isn't _really_ applying the augmentations from SimCLR as we have
 # multispectral imagery and thus can't naively apply color jittering or grayscale
 # conversions. We should think more about what makes sense here.
-class SimCLRAugmentation(Module):
+class SimCLRAugmentation(nn.Module):
     """A module for applying SimCLR augmentations.
 
     SimCLR was one of the first papers to show the effectiveness of random data
@@ -76,7 +47,7 @@ class SimCLRAugmentation(Module):
     https://arxiv.org/pdf/2002.05709.pdf for more details.
     """
 
-    def __init__(self, image_size: Tuple[int, int] = (256, 256)) -> None:
+    def __init__(self, image_size: tuple[int, int] = (256, 256)) -> None:
         """Initialize a module for applying SimCLR augmentations.
 
         Args:
@@ -85,13 +56,13 @@ class SimCLRAugmentation(Module):
         super().__init__()
         self.size = image_size
 
-        self.augmentation = Sequential(
-            KorniaTransform.Resize(size=image_size, align_corners=False),
+        self.augmentation = nn.Sequential(
+            K.Resize(size=image_size, align_corners=False),
             # Not suitable for multispectral adapt
-            # RandomApply(K.ColorJitter(0.8, 0.8, 0.8, 0.2), p=0.8),
+            # K.ColorJitter(0.8, 0.8, 0.8, 0.8, 0.2),
             # K.RandomGrayscale(p=0.2),
             K.RandomHorizontalFlip(),
-            RandomApply(filters.GaussianBlur2d((3, 3), (1.5, 1.5)), p=0.1),
+            K.RandomGaussianBlur((3, 3), (1.5, 1.5), p=0.1),
             K.RandomResizedCrop(size=image_size),
         )
 
@@ -107,7 +78,7 @@ class SimCLRAugmentation(Module):
         return cast(Tensor, self.augmentation(x))
 
 
-class MLP(Module):
+class MLP(nn.Module):
     """MLP used in the BYOL projection head."""
 
     def __init__(
@@ -121,11 +92,11 @@ class MLP(Module):
             hidden_size: size of the hidden layer
         """
         super().__init__()
-        self.mlp = Sequential(
-            Linear(dim, hidden_size),
-            BatchNorm1d(hidden_size),
-            ReLU(inplace=True),
-            Linear(hidden_size, projection_size),
+        self.mlp = nn.Sequential(
+            nn.Linear(dim, hidden_size),
+            nn.BatchNorm1d(hidden_size),
+            nn.ReLU(inplace=True),
+            nn.Linear(hidden_size, projection_size),
         )
 
     def forward(self, x: Tensor) -> Tensor:
@@ -140,7 +111,7 @@ class MLP(Module):
         return cast(Tensor, self.mlp(x))
 
 
-class BackboneWrapper(Module):
+class BackboneWrapper(nn.Module):
     """Backbone wrapper for joining a model and a projection head.
 
     When we call .forward() on this module the following steps happen:
@@ -156,7 +127,7 @@ class BackboneWrapper(Module):
 
     def __init__(
         self,
-        model: Module,
+        model: nn.Module,
         projection_size: int = 256,
         hidden_size: int = 4096,
         layer: int = -2,
@@ -176,13 +147,13 @@ class BackboneWrapper(Module):
         self.hidden_size = hidden_size
         self.layer = layer
 
-        self._projector: Optional[Module] = None
+        self._projector: Optional[nn.Module] = None
         self._projector_dim: Optional[int] = None
         self._encoded = torch.empty(0)
         self._register_hook()
 
     @property
-    def projector(self) -> Module:
+    def projector(self) -> nn.Module:
         """Wrapper module for the projector head."""
         assert self._projector_dim is not None
         if self._projector is None:
@@ -232,7 +203,7 @@ class BackboneWrapper(Module):
         return self._encoded
 
 
-class BYOL(Module):
+class BYOL(nn.Module):
     """BYOL implementation.
 
     BYOL contains two identical backbone networks. The first is trained as usual, and
@@ -245,13 +216,13 @@ class BYOL(Module):
 
     def __init__(
         self,
-        model: Module,
-        image_size: Tuple[int, int] = (256, 256),
+        model: nn.Module,
+        image_size: tuple[int, int] = (256, 256),
         hidden_layer: int = -2,
         in_channels: int = 4,
         projection_size: int = 256,
         hidden_size: int = 4096,
-        augment_fn: Optional[Module] = None,
+        augment_fn: Optional[nn.Module] = None,
         beta: float = 0.99,
         **kwargs: Any,
     ) -> None:
@@ -271,7 +242,7 @@ class BYOL(Module):
         """
         super().__init__()
 
-        self.augment: Module
+        self.augment: nn.Module
         if augment_fn is None:
             self.augment = SimCLRAugmentation(image_size)
         else:
@@ -307,11 +278,11 @@ class BYOL(Module):
             pt.data = self.beta * pt.data + (1 - self.beta) * p.data
 
 
-class BYOLTask(pl.LightningModule):
+class BYOLTask(LightningModule):
     """Class for pre-training any PyTorch model using BYOL.
 
     Supports any available `Timm model
-    <https://rwightman.github.io/pytorch-image-models/>`_
+    <https://huggingface.co/docs/timm/index>`_
     as an architecture choice. To see a list of available pretrained
     models, you can do:
 
@@ -323,44 +294,26 @@ class BYOLTask(pl.LightningModule):
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
+        # Create model
         in_channels = self.hyperparams["in_channels"]
-        backbone_name = self.hyperparams["backbone"]
+        weights = self.hyperparams["weights"]
+        backbone = timm.create_model(
+            self.hyperparams["backbone"],
+            in_chans=in_channels,
+            pretrained=weights is True,
+        )
 
-        imagenet_pretrained = False
-        custom_pretrained = False
-        if self.hyperparams["weights"] and not os.path.exists(
-            self.hyperparams["weights"]
-        ):
-            if self.hyperparams["weights"] not in ["imagenet", "random"]:
-                raise ValueError(
-                    f"Weight type '{self.hyperparams['weights']}' is not valid."
-                )
+        # Load weights
+        if weights and weights is not True:
+            if isinstance(weights, WeightsEnum):
+                state_dict = weights.get_state_dict(progress=True)
+            elif os.path.exists(weights):
+                _, state_dict = utils.extract_backbone(weights)
             else:
-                imagenet_pretrained = self.hyperparams["weights"] == "imagenet"
-            custom_pretrained = False
-        else:
-            custom_pretrained = True
-
-        # Create the model
-        valid_models = timm.list_models(pretrained=imagenet_pretrained)
-        if backbone_name in valid_models:
-            backbone = timm.create_model(
-                backbone_name, in_chans=in_channels, pretrained=imagenet_pretrained
-            )
-        else:
-            raise ValueError(f"Model type '{backbone_name}' is not a valid timm model.")
-
-        if custom_pretrained:
-            name, state_dict = utils.extract_backbone(self.hyperparams["weights"])
-
-            if self.hyperparams["backbone"] != name:
-                raise ValueError(
-                    f"Trying to load {name} weights into a "
-                    f"{self.hyperparams['backbone']}"
-                )
+                state_dict = get_weight(weights).get_state_dict(progress=True)
             backbone = utils.load_state_dict(backbone, state_dict)
 
-        self.model = BYOL(backbone, in_channels=in_channels, image_size=(256, 256))
+        self.model = BYOL(backbone, in_channels=in_channels, image_size=(224, 224))
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize a LightningModule for pre-training a model with BYOL.
@@ -368,7 +321,9 @@ class BYOLTask(pl.LightningModule):
         Keyword Args:
             in_channels: Number of input channels to model
             backbone: Name of the timm model to use
-            weights: Either "random" or "imagenet"
+            weights: Either a weight enum, the string representation of a weight enum,
+                True for ImageNet weights, False or None for random weights,
+                or the path to a saved model state dict.
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
 
@@ -382,8 +337,8 @@ class BYOLTask(pl.LightningModule):
         super().__init__()
 
         # Creates `self.hparams` from kwargs
-        self.save_hyperparameters()  # type: ignore[operator]
-        self.hyperparams = cast(Dict[str, Any], self.hparams)
+        self.save_hyperparameters()
+        self.hyperparams = cast(dict[str, Any], self.hparams)
 
         self.config_task()
 
@@ -398,12 +353,11 @@ class BYOLTask(pl.LightningModule):
         """
         return self.model(*args, **kwargs)
 
-    def configure_optimizers(self) -> Dict[str, Any]:
+    def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+            learning rate dictionary.
         """
         optimizer_class = getattr(optim, self.hyperparams.get("optimizer", "Adam"))
         lr = self.hyperparams.get("learning_rate", 1e-4)
@@ -417,7 +371,7 @@ class BYOLTask(pl.LightningModule):
                     optimizer,
                     patience=self.hyperparams["learning_rate_schedule_patience"],
                 ),
-                "monitor": "val_loss",
+                "monitor": "train_loss",
             },
         }
 
@@ -432,12 +386,27 @@ class BYOLTask(pl.LightningModule):
         """
         batch = args[0]
         x = batch["image"]
-        with torch.no_grad():
-            x1, x2 = self.model.augment(x), self.model.augment(x)
 
-        pred1, pred2 = self(x1), self(x2)
+        in_channels = self.hyperparams["in_channels"]
+        assert x.size(1) == in_channels or x.size(1) == 2 * in_channels
+
+        if x.size(1) == in_channels:
+            x1 = x
+            x2 = x
+        else:
+            x1 = x[:, :in_channels]
+            x2 = x[:, in_channels:]
+
         with torch.no_grad():
-            targ1, targ2 = self.model.target(x1), self.model.target(x2)
+            x1 = self.model.augment(x1)
+            x2 = self.model.augment(x2)
+
+        pred1 = self(x1)
+        pred2 = self(x2)
+        with torch.no_grad():
+            targ1 = self.model.target(x1)
+            targ2 = self.model.target(x2)
+
         loss = torch.mean(normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1))
 
         self.log("train_loss", loss, on_step=True, on_epoch=False)
@@ -446,33 +415,10 @@ class BYOLTask(pl.LightningModule):
         return loss
 
     def validation_step(self, *args: Any, **kwargs: Any) -> None:
-        """Compute validation loss.
-
-        Args:
-            batch: the output of your DataLoader
-        """
-        batch = args[0]
-        x = batch["image"]
-        x1, x2 = self.model.augment(x), self.model.augment(x)
-        pred1, pred2 = self(x1), self(x2)
-        targ1, targ2 = self.model.target(x1), self.model.target(x2)
-        loss = torch.mean(normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1))
-
-        self.log("val_loss", loss, on_step=False, on_epoch=True)
-
-    def test_step(self, *args: Any, **kwargs: Any) -> Any:
         """No-op, does nothing."""
 
-    def predict_step(self, *args: Any, **kwargs: Any) -> Tensor:
-        """Compute and return the output embeddings of the image backbone.
+    def test_step(self, *args: Any, **kwargs: Any) -> None:
+        """No-op, does nothing."""
 
-        Args:
-            batch: the output of your DataLoader
-
-        Returns:
-            image embeddings
-        """
-        batch = args[0]
-        x = batch["image"]
-        self(x)
-        return self.model.backbone._embedding
+    def predict_step(self, *args: Any, **kwargs: Any) -> None:
+        """No-op, does nothing."""

@@ -13,7 +13,7 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import (
@@ -23,13 +23,12 @@ from torchgeo.datasets import (
     UnionDataset,
 )
 
-pd = pytest.importorskip("pandas", minversion="0.23.2")
+pd = pytest.importorskip("pandas", minversion="1.1.3")
 
 
 class TestOpenBuildings:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> OpenBuildings:
-
         root = str(tmp_path)
         shutil.copy(
             os.path.join("tests", "data", "openbuildings", "tiles.geojson"), root

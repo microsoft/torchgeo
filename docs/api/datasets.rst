@@ -93,6 +93,22 @@ iNaturalist
 
 .. autoclass:: INaturalist
 
+L7 Irish
+^^^^^^^^
+
+.. autoclass:: L7Irish
+
+L8 Biome
+^^^^^^^^
+
+.. autoclass:: L8Biome
+
+LandCover.ai Geo
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: LandCoverAIBase
+.. autoclass:: LandCoverAIGeo
+
 Landsat
 ^^^^^^^
 
@@ -113,6 +129,11 @@ NAIP
 
 .. autoclass:: NAIP
 
+NLCD
+^^^^
+
+.. autoclass:: NLCD
+
 Open Buildings
 ^^^^^^^^^^^^^^
 
@@ -122,6 +143,7 @@ Sentinel
 ^^^^^^^^
 
 .. autoclass:: Sentinel
+.. autoclass:: Sentinel1
 .. autoclass:: Sentinel2
 
 .. _Non-geospatial Datasets:
@@ -188,11 +210,17 @@ EuroSAT
 ^^^^^^^
 
 .. autoclass:: EuroSAT
+.. autoclass:: EuroSAT100
 
 FAIR1M
 ^^^^^^
 
 .. autoclass:: FAIR1M
+
+FireRisk
+^^^^^^^^
+
+.. autoclass:: FireRisk
 
 Forest Damage
 ^^^^^^^^^^^^^
@@ -244,6 +272,11 @@ OSCD
 
 .. autoclass:: OSCD
 
+PASTIS
+^^^^^^
+
+.. autoclass:: PASTIS
+
 PatternNet
 ^^^^^^^^^^
 
@@ -274,6 +307,11 @@ SEN12MS
 
 .. autoclass:: SEN12MS
 
+SKIPP'D
+^^^^^^^
+
+.. autoclass:: SKIPPD
+
 So2Sat
 ^^^^^^
 
@@ -290,6 +328,18 @@ SpaceNet
 .. autoclass:: SpaceNet5
 .. autoclass:: SpaceNet6
 .. autoclass:: SpaceNet7
+
+SSL4EO
+^^^^^^
+
+.. autoclass:: SSL4EO
+.. autoclass:: SSL4EOL
+.. autoclass:: SSL4EOS12
+
+SustainBench Crop Yield
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SustainBenchCropYield
 
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
@@ -311,10 +361,15 @@ Vaihingen
 
 .. autoclass:: Vaihingen2D
 
-NWPU VHR-10
-^^^^^^^^^^^
+VHR-10
+^^^^^^
 
 .. autoclass:: VHR10
+
+Western USA Live Fuel Moisture
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: WesternUSALiveFuelMoisture
 
 xView2
 ^^^^^^
@@ -380,3 +435,12 @@ Collation Functions
 .. autofunction:: concat_samples
 .. autofunction:: merge_samples
 .. autofunction:: unbind_samples
+
+Splitting Functions
+^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: random_bbox_assignment
+.. autofunction:: random_bbox_splitting
+.. autofunction:: random_grid_cell_assignment
+.. autofunction:: roi_split
+.. autofunction:: time_series_split

@@ -11,20 +11,20 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import TropicalCyclone
 
 
-class Dataset:
+class Collection:
     def download(self, output_dir: str, **kwargs: str) -> None:
         for tarball in glob.iglob(os.path.join("tests", "data", "cyclone", "*.tar.gz")):
             shutil.copy(tarball, output_dir)
 
 
-def fetch(collection_id: str, **kwargs: str) -> Dataset:
-    return Dataset()
+def fetch(collection_id: str, **kwargs: str) -> Collection:
+    return Collection()
 
 
 class TestTropicalCyclone:
@@ -32,8 +32,8 @@ class TestTropicalCyclone:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> TropicalCyclone:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
-        monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch)
+        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
+        monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch)
         md5s = {
             "train": {
                 "source": "2b818e0a0873728dabf52c7054a0ce4c",
@@ -61,8 +61,8 @@ class TestTropicalCyclone:
         assert isinstance(x["storm_id"], str)
         assert isinstance(x["relative_time"], int)
         assert isinstance(x["ocean"], int)
-        assert isinstance(x["label"], int)
-        assert x["image"].shape == (dataset.size, dataset.size)
+        assert isinstance(x["label"], torch.Tensor)
+        assert x["image"].shape == (3, dataset.size, dataset.size)
 
     def test_len(self, dataset: TropicalCyclone) -> None:
         assert len(dataset) == 5
@@ -88,6 +88,6 @@ class TestTropicalCyclone:
         plt.close()
 
         sample = dataset[0]
-        sample["prediction"] = torch.tensor(sample["label"])
+        sample["prediction"] = sample["label"]
         dataset.plot(sample)
         plt.close()

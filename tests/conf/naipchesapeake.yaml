@@ -1,20 +1,21 @@
-experiment:
-  task: "naipchesapeake"
-  module:
-    loss: "ce"
-    model: "deeplabv3+"
-    backbone: "resnet34"
-    weights: null
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 2
-    in_channels: 4
-    num_classes: 14
-    num_filters: 1
-    ignore_index: null
-  datamodule:
-    naip_root: "tests/data/naip"
-    chesapeake_root: "tests/data/chesapeake/BAYWIDE"
-    chesapeake_download: true
-    batch_size: 2
-    num_workers: 0
-    patch_size: 32
+module:
+  _target_: torchgeo.trainers.SemanticSegmentationTask
+  loss: "ce"
+  model: "deeplabv3+"
+  backbone: "resnet34"
+  weights: null
+  learning_rate: 1e-3
+  learning_rate_schedule_patience: 2
+  in_channels: 4
+  num_classes: 14
+  num_filters: 1
+  ignore_index: null
+
+datamodule:
+  _target_: torchgeo.datamodules.NAIPChesapeakeDataModule
+  naip_root: "tests/data/naip"
+  chesapeake_root: "tests/data/chesapeake/BAYWIDE"
+  chesapeake_download: true
+  batch_size: 2
+  num_workers: 0
+  patch_size: 32

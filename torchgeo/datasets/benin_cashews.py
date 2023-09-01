@@ -6,7 +6,7 @@
 import json
 import os
 from functools import lru_cache
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,7 +17,7 @@ from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_dataset, extract_archive
+from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
 
 
 # TODO: read geospatial information from stac.json files
@@ -56,6 +56,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
     """
 
     dataset_id = "ts_cashew_benin"
+    collection_ids = ["ts_cashew_benin_source", "ts_cashew_benin_labels"]
     image_meta = {
         "filename": "ts_cashew_benin_source.tar.gz",
         "md5": "957272c86e518a925a4e0d90dab4f92d",
@@ -173,8 +174,8 @@ class BeninSmallHolderCashews(NonGeoDataset):
         root: str = "data",
         chip_size: int = 256,
         stride: int = 128,
-        bands: Tuple[str, ...] = all_bands,
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        bands: tuple[str, ...] = all_bands,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
@@ -227,7 +228,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
             ]:
                 self.chips_metadata.append((y, x))
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -266,7 +267,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
         """
         return len(self.chips_metadata)
 
-    def _validate_bands(self, bands: Tuple[str, ...]) -> None:
+    def _validate_bands(self, bands: tuple[str, ...]) -> None:
         """Validate list of bands.
 
         Args:
@@ -283,8 +284,8 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
     @lru_cache(maxsize=128)
     def _load_all_imagery(
-        self, bands: Tuple[str, ...] = all_bands
-    ) -> Tuple[Tensor, rasterio.Affine, CRS]:
+        self, bands: tuple[str, ...] = all_bands
+    ) -> tuple[Tensor, rasterio.Affine, CRS]:
         """Load all the imagery (across time) for the dataset.
 
         Optionally allows for subsetting of the bands that are loaded.
@@ -317,8 +318,8 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
     @lru_cache(maxsize=128)
     def _load_single_scene(
-        self, date: str, bands: Tuple[str, ...]
-    ) -> Tuple[Tensor, rasterio.Affine, CRS]:
+        self, date: str, bands: tuple[str, ...]
+    ) -> tuple[Tensor, rasterio.Affine, CRS]:
         """Load the imagery for a single date.
 
         Optionally allows for subsetting of the bands that are loaded.
@@ -358,7 +359,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
         return img, transform, crs
 
-    @lru_cache()
+    @lru_cache
     def _load_mask(self, transform: rasterio.Affine) -> Tensor:
         """Rasterizes the dataset's labels (in geojson format)."""
         # Create a mask layer out of the geojson
@@ -416,7 +417,8 @@ class BeninSmallHolderCashews(NonGeoDataset):
             print("Files already downloaded and verified")
             return
 
-        download_radiant_mlhub_dataset(self.dataset_id, self.root, api_key)
+        for collection_id in self.collection_ids:
+            download_radiant_mlhub_collection(collection_id, self.root, api_key)
 
         image_archive_path = os.path.join(self.root, self.image_meta["filename"])
         target_archive_path = os.path.join(self.root, self.target_meta["filename"])
@@ -425,7 +427,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         time_step: int = 0,
         suptitle: Optional[str] = None,

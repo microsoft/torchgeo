@@ -96,7 +96,6 @@ TEST_EXTENT = Extent(
 
 
 def create_raster(path: str, dtype: str, num_channels: int, collection: str) -> None:
-
     if not os.path.exists(os.path.split(path)[0]):
         Path(os.path.split(path)[0]).mkdir(parents=True)
 
@@ -164,7 +163,6 @@ def get_class_label_list(overview: LabelOverview) -> LabelClasses:
 
 
 def get_item_class_overview(label_type: LabelType, asset_path: str) -> LabelOverview:
-
     """Takes a path to an asset based on type and returns the class label
     overview object
 
@@ -224,7 +222,6 @@ def create_label_item() -> Item:
 
 
 if __name__ == "__main__":
-
     # create a geotiff for each s2 band
     for b in BANDS:
         tif_path = os.path.join(
