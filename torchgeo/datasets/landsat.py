@@ -4,7 +4,8 @@
 """Landsat datasets."""
 
 import abc
-from typing import Any, Callable, Dict, Optional, Sequence
+from collections.abc import Sequence
+from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 from rasterio.crs import CRS
@@ -49,13 +50,18 @@ class Landsat(RasterDataset, abc.ABC):
 
     separate_files = True
 
+    @property
+    @abc.abstractmethod
+    def default_bands(self) -> list[str]:
+        """Bands to load by default."""
+
     def __init__(
         self,
         root: str = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -74,14 +80,14 @@ class Landsat(RasterDataset, abc.ABC):
         Raises:
             FileNotFoundError: if no files are found in ``root``
         """
-        bands = bands or self.all_bands
+        bands = bands or self.default_bands
         self.filename_glob = self.filename_glob.format(bands[0])
 
         super().__init__(root, crs, res, bands, transforms, cache)
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:
@@ -133,8 +139,8 @@ class Landsat1(Landsat):
 
     filename_glob = "LM01_*_{}.*"
 
-    all_bands = ["SR_B4", "SR_B5", "SR_B6", "SR_B7"]
-    rgb_bands = ["SR_B6", "SR_B5", "SR_B4"]
+    default_bands = ["B4", "B5", "B6", "B7"]
+    rgb_bands = ["B6", "B5", "B4"]
 
 
 class Landsat2(Landsat1):
@@ -154,8 +160,8 @@ class Landsat4MSS(Landsat):
 
     filename_glob = "LM04_*_{}.*"
 
-    all_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4"]
-    rgb_bands = ["SR_B3", "SR_B2", "SR_B1"]
+    default_bands = ["B1", "B2", "B3", "B4"]
+    rgb_bands = ["B3", "B2", "B1"]
 
 
 class Landsat4TM(Landsat):
@@ -163,7 +169,7 @@ class Landsat4TM(Landsat):
 
     filename_glob = "LT04_*_{}.*"
 
-    all_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"]
+    default_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"]
     rgb_bands = ["SR_B3", "SR_B2", "SR_B1"]
 
 
@@ -184,7 +190,7 @@ class Landsat7(Landsat):
 
     filename_glob = "LE07_*_{}.*"
 
-    all_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7", "SR_B8"]
+    default_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"]
     rgb_bands = ["SR_B3", "SR_B2", "SR_B1"]
 
 
@@ -193,23 +199,11 @@ class Landsat8(Landsat):
 
     filename_glob = "LC08_*_{}.*"
 
-    all_bands = [
-        "SR_B1",
-        "SR_B2",
-        "SR_B3",
-        "SR_B4",
-        "SR_B5",
-        "SR_B6",
-        "SR_B7",
-        "SR_B8",
-        "SR_B9",
-        "SR_B10",
-        "SR_B11",
-    ]
+    default_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"]
     rgb_bands = ["SR_B4", "SR_B3", "SR_B2"]
 
 
 class Landsat9(Landsat8):
-    """Landsat 9 Operational Land Imager (OLI) and Thermal Infrared Sensor (TIRS)."""
+    """Landsat 9 Operational Land Imager (OLI-2) and Thermal Infrared Sensor (TIRS-2)."""  # noqa: E501
 
     filename_glob = "LC09_*_{}.*"

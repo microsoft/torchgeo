@@ -35,8 +35,9 @@ from .enviroatlas import EnviroAtlas
 from .esri2020 import Esri2020
 from .etci2021 import ETCI2021
 from .eudem import EUDEM
-from .eurosat import EuroSAT
+from .eurosat import EuroSAT, EuroSAT100
 from .fair1m import FAIR1M
+from .fire_risk import FireRisk
 from .forestdamage import ForestDamage
 from .gbif import GBIF
 from .geo import (
@@ -47,15 +48,15 @@ from .geo import (
     RasterDataset,
     UnionDataset,
     VectorDataset,
-    VisionClassificationDataset,
-    VisionDataset,
 )
 from .gid15 import GID15
 from .globbiomass import GlobBiomass
 from .idtrees import IDTReeS
 from .inaturalist import INaturalist
 from .inria import InriaAerialImageLabeling
-from .landcoverai import LandCoverAI
+from .l7irish import L7Irish
+from .l8biome import L8Biome
+from .landcoverai import LandCoverAI, LandCoverAIBase, LandCoverAIGeo
 from .landsat import (
     Landsat,
     Landsat1,
@@ -74,16 +75,18 @@ from .loveda import LoveDA
 from .millionaid import MillionAID
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
-from .nwpu import VHR10
+from .nlcd import NLCD
 from .openbuildings import OpenBuildings
 from .oscd import OSCD
+from .pastis import PASTIS
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
-from .sentinel import Sentinel, Sentinel2
+from .sentinel import Sentinel, Sentinel1, Sentinel2
+from .skippd import SKIPPD
 from .so2sat import So2Sat
 from .spacenet import (
     SpaceNet,
@@ -95,6 +98,16 @@ from .spacenet import (
     SpaceNet6,
     SpaceNet7,
 )
+from .splits import (
+    random_bbox_assignment,
+    random_bbox_splitting,
+    random_grid_cell_assignment,
+    roi_split,
+    time_series_split,
+)
+from .ssl4eo import SSL4EO, SSL4EOL, SSL4EOS12
+from .ssl4eo_benchmark import SSL4EOLBenchmark
+from .sustainbench_crop_yield import SustainBenchCropYield
 from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
@@ -105,6 +118,8 @@ from .utils import (
     unbind_samples,
 )
 from .vaihingen import Vaihingen2D
+from .vhr10 import VHR10
+from .western_usa_live_fuel_moisture import WesternUSALiveFuelMoisture
 from .xview import XView2
 from .zuericrop import ZueriCrop
 
@@ -132,6 +147,10 @@ __all__ = (
     "GBIF",
     "GlobBiomass",
     "INaturalist",
+    "L7Irish",
+    "L8Biome",
+    "LandCoverAIBase",
+    "LandCoverAIGeo",
     "Landsat",
     "Landsat1",
     "Landsat2",
@@ -144,8 +163,10 @@ __all__ = (
     "Landsat8",
     "Landsat9",
     "NAIP",
+    "NLCD",
     "OpenBuildings",
     "Sentinel",
+    "Sentinel1",
     "Sentinel2",
     # NonGeoDataset
     "ADVANCE",
@@ -161,7 +182,9 @@ __all__ = (
     "EnviroAtlas",
     "ETCI2021",
     "EuroSAT",
+    "EuroSAT100",
     "FAIR1M",
+    "FireRisk",
     "ForestDamage",
     "GID15",
     "IDTReeS",
@@ -172,12 +195,14 @@ __all__ = (
     "MillionAID",
     "NASAMarineDebris",
     "OSCD",
+    "PASTIS",
     "PatternNet",
     "Potsdam2D",
     "RESISC45",
     "ReforesTree",
     "SeasonalContrastS2",
     "SEN12MS",
+    "SKIPPD",
     "So2Sat",
     "SpaceNet",
     "SpaceNet1",
@@ -187,11 +212,17 @@ __all__ = (
     "SpaceNet5",
     "SpaceNet6",
     "SpaceNet7",
+    "SSL4EO",
+    "SSL4EOLBenchmark",
+    "SSL4EOL",
+    "SSL4EOS12",
+    "SustainBenchCropYield",
     "TropicalCyclone",
     "UCMerced",
     "USAVars",
     "Vaihingen2D",
     "VHR10",
+    "WesternUSALiveFuelMoisture",
     "XView2",
     "ZueriCrop",
     # Base classes
@@ -202,12 +233,16 @@ __all__ = (
     "RasterDataset",
     "UnionDataset",
     "VectorDataset",
-    "VisionClassificationDataset",
-    "VisionDataset",
     # Utilities
     "BoundingBox",
     "concat_samples",
     "merge_samples",
     "stack_samples",
     "unbind_samples",
+    # Splits
+    "random_bbox_assignment",
+    "random_bbox_splitting",
+    "random_grid_cell_assignment",
+    "roi_split",
+    "time_series_split",
 )

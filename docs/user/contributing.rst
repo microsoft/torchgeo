@@ -33,7 +33,7 @@ For changes to Python code, you'll need to ensure that your code is :ref:`well-t
 Licensing
 ---------
 
-TorchGeo is licensed under the MIT License. Most contributions require you to agree to a Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+TorchGeo is licensed under the MIT License. Most contributions require you to agree to a Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us the rights to use your contribution. For details, visit https://opensource.microsoft.com/cla/.
 
 When you submit a pull request, a CLA bot will automatically determine whether you need to provide a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions provided by the bot. You will only need to do this once across all repos using our CLA.
 
@@ -58,14 +58,14 @@ For example, if you add a new dataset in ``torchgeo/datasets/foo.py``, you'll ne
 
    $ pytest --cov=torchgeo/datasets --cov-report=term-missing tests/datasets/test_foo.py
    ========================= test session starts =========================
-   platform darwin -- Python 3.8.11, pytest-6.2.4, py-1.9.0, pluggy-0.13.0
+   platform darwin -- Python 3.10.11, pytest-6.2.4, py-1.9.0, pluggy-0.13.0
    rootdir: ~/torchgeo, configfile: pyproject.toml
    plugins: mock-1.11.1, anyio-3.2.1, cov-2.8.1, nbmake-0.5
    collected 7 items
 
    tests/datasets/test_foo.py .......                              [100%]
 
-   ---------- coverage: platform darwin, python 3.8.11-final-0 -----------
+   ---------- coverage: platform darwin, python 3.10.11-final-0 -----------
    Name                                      Stmts   Miss  Cover   Missing
    -----------------------------------------------------------------------
    torchgeo/datasets/__init__.py                26      0   100%
@@ -88,7 +88,7 @@ These tests require `pytest <https://docs.pytest.org/>`_ and `pytest-cov <https:
 Linters
 -------
 
-In order to remain `PEP-8 <https://www.python.org/dev/peps/pep-0008/>`_ compliant and maintain a high-quality codebase, we use several linting tools:
+In order to remain `PEP-8 <https://peps.python.org/pep-0008/>`_ compliant and maintain a high-quality codebase, we use several linting tools:
 
 * `black <https://black.readthedocs.io/>`_ for code formatting
 * `isort <https://pycqa.github.io/isort/>`_ for import ordering
@@ -103,7 +103,7 @@ All of these tools should be used from the root of the project to ensure that ou
 
    $ black .
    $ isort .
-   $ pyupgrade --py37-plus $(find . -name "*.py")
+   $ pyupgrade --py39-plus $(find . -name "*.py")
 
 
 Flake8, pydocstyle, and mypy won't format your code for you, but they will warn you about potential issues with your code or docstrings:

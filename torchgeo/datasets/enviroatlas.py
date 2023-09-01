@@ -5,7 +5,8 @@
 
 import os
 import sys
-from typing import Any, Callable, Dict, List, Optional, Sequence, cast
+from collections.abc import Sequence
+from typing import Any, Callable, Optional, cast
 
 import fiona
 import matplotlib.pyplot as plt
@@ -35,7 +36,7 @@ class EnviroAtlas(GeoDataset):
     This dataset was organized to accompany the 2022 paper, `"Resolving label
     uncertainty with implicit generative models"
     <https://openreview.net/forum?id=AEa_UepnMDX>`_. More details can be found at
-    https://github.com/estherrolf/qr_for_landcover.
+    https://github.com/estherrolf/implicit-posterior.
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -253,7 +254,7 @@ class EnviroAtlas(GeoDataset):
         root: str = "data",
         splits: Sequence[str] = ["pittsburgh_pa-2010_1m-train"],
         layers: Sequence[str] = ["naip", "prior"],
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         prior_as_input: bool = False,
         cache: bool = True,
         download: bool = False,
@@ -330,7 +331,7 @@ class EnviroAtlas(GeoDataset):
                         },
                     )
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -343,7 +344,7 @@ class EnviroAtlas(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(List[Dict[str, str]], [hit.object for hit in hits])
+        filepaths = cast(list[dict[str, str]], [hit.object for hit in hits])
 
         sample = {"image": [], "mask": [], "crs": self.crs, "bbox": query}
 
@@ -359,7 +360,6 @@ class EnviroAtlas(GeoDataset):
             query_box = shapely.geometry.box(minx, miny, maxx, maxy)
 
             for layer in self.layers:
-
                 fn = filenames[layer]
 
                 with rasterio.open(
@@ -416,10 +416,11 @@ class EnviroAtlas(GeoDataset):
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        # Check if the extracted files already exist
+
         def exists(filename: str) -> bool:
             return os.path.exists(os.path.join(self.root, "enviroatlas_lotp", filename))
 
+        # Check if the extracted files already exist
         if all(map(exists, self.files)):
             return
 
@@ -450,7 +451,7 @@ class EnviroAtlas(GeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> plt.Figure:

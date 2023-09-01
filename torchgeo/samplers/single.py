@@ -4,7 +4,8 @@
 """TorchGeo samplers."""
 
 import abc
-from typing import Callable, Iterable, Iterator, Optional, Tuple, Union
+from collections.abc import Iterable, Iterator
+from typing import Callable, Optional, Union
 
 import torch
 from rtree.index import Index, Property
@@ -68,7 +69,7 @@ class RandomGeoSampler(GeoSampler):
     def __init__(
         self,
         dataset: GeoDataset,
-        size: Union[Tuple[float, float], float],
+        size: Union[tuple[float, float], float],
         length: Optional[int],
         roi: Optional[BoundingBox] = None,
         units: Units = Units.PIXELS,
@@ -82,6 +83,12 @@ class RandomGeoSampler(GeoSampler):
         * a ``tuple`` of two floats - in which case, the first *float* is used for the
           height dimension, and the second *float* for the width dimension
 
+        .. versionchanged:: 0.3
+           Added ``units`` parameter, changed default to pixel units
+
+        .. versionchanged:: 0.4
+           ``length`` parameter is now optional, a reasonable default will be used
+
         Args:
             dataset: dataset to index from
             size: dimensions of each :term:`patch`
@@ -92,12 +99,6 @@ class RandomGeoSampler(GeoSampler):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units
-
-        .. versionchanged:: 0.3
-           Added ``units`` parameter, changed default to pixel units
-
-        .. versionchanged:: 0.4
-           ``length`` parameter is now optional, a reasonable default will be used
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
@@ -168,16 +169,13 @@ class GridGeoSampler(GeoSampler):
     The overlap between each chip (``chip_size - stride``) should be approximately equal
     to the `receptive field <https://distill.pub/2019/computing-receptive-fields/>`_ of
     the CNN.
-
-    Note that the stride of the final set of chips in each row/column may be adjusted so
-    that the entire :term:`tile` is sampled without exceeding the bounds of the dataset.
     """
 
     def __init__(
         self,
         dataset: GeoDataset,
-        size: Union[Tuple[float, float], float],
-        stride: Union[Tuple[float, float], float],
+        size: Union[tuple[float, float], float],
+        stride: Union[tuple[float, float], float],
         roi: Optional[BoundingBox] = None,
         units: Units = Units.PIXELS,
     ) -> None:
@@ -190,6 +188,9 @@ class GridGeoSampler(GeoSampler):
         * a ``tuple`` of two floats - in which case, the first *float* is used for the
           height dimension, and the second *float* for the width dimension
 
+        .. versionchanged:: 0.3
+           Added ``units`` parameter, changed default to pixel units
+
         Args:
             dataset: dataset to index from
             size: dimensions of each :term:`patch`
@@ -197,9 +198,6 @@ class GridGeoSampler(GeoSampler):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` and ``stride`` are in pixel or CRS units
-
-        .. versionchanged:: 0.3
-           Added ``units`` parameter, changed default to pixel units
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
@@ -241,17 +239,11 @@ class GridGeoSampler(GeoSampler):
             for i in range(rows):
                 miny = bounds.miny + i * self.stride[0]
                 maxy = miny + self.size[0]
-                if maxy > bounds.maxy:
-                    maxy = bounds.maxy
-                    miny = bounds.maxy - self.size[0]
 
                 # For each column...
                 for j in range(cols):
                     minx = bounds.minx + j * self.stride[1]
                     maxx = minx + self.size[1]
-                    if maxx > bounds.maxx:
-                        maxx = bounds.maxx
-                        minx = bounds.maxx - self.size[1]
 
                     yield BoundingBox(minx, maxx, miny, maxy, mint, maxt)
 
@@ -286,13 +278,13 @@ class PreChippedGeoSampler(GeoSampler):
     ) -> None:
         """Initialize a new Sampler instance.
 
+        .. versionadded:: 0.3
+
         Args:
             dataset: dataset to index from
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             shuffle: if True, reshuffle data at every epoch
-
-        .. versionadded:: 0.3
         """
         super().__init__(dataset, roi)
         self.shuffle = shuffle

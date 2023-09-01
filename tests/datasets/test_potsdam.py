@@ -10,7 +10,7 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from torchgeo.datasets import Potsdam2D
 

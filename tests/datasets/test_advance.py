@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import ADVANCE
@@ -49,7 +49,7 @@ class TestADVANCE:
         monkeypatch.setattr(builtins, "__import__", mocked_import)
 
     def test_getitem(self, dataset: ADVANCE) -> None:
-        pytest.importorskip("scipy", minversion="1.2")
+        pytest.importorskip("scipy", minversion="1.6.2")
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)

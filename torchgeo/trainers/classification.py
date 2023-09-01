@@ -4,13 +4,13 @@
 """Classification tasks."""
 
 import os
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 import timm
 import torch
 import torch.nn as nn
+from lightning.pytorch import LightningModule
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -22,16 +22,18 @@ from torchmetrics.classification import (
     MultilabelAccuracy,
     MultilabelFBetaScore,
 )
+from torchvision.models._api import WeightsEnum
 
-from ..datasets.utils import unbind_samples
+from ..datasets import unbind_samples
+from ..models import get_weight
 from . import utils
 
 
-class ClassificationTask(pl.LightningModule):
+class ClassificationTask(LightningModule):
     """LightningModule for image classification.
 
     Supports any available `Timm model
-    <https://rwightman.github.io/pytorch-image-models/>`_
+    <https://huggingface.co/docs/timm/index>`_
     as an architecture choice. To see a list of available
     models, you can do:
 
@@ -43,45 +45,31 @@ class ClassificationTask(pl.LightningModule):
 
     def config_model(self) -> None:
         """Configures the model based on kwargs parameters passed to the constructor."""
-        in_channels = self.hyperparams["in_channels"]
-        model = self.hyperparams["model"]
+        # Create model
+        weights = self.hyperparams["weights"]
+        self.model = timm.create_model(
+            self.hyperparams["model"],
+            num_classes=self.hyperparams["num_classes"],
+            in_chans=self.hyperparams["in_channels"],
+            pretrained=weights is True,
+        )
 
-        imagenet_pretrained = False
-        custom_pretrained = False
-        if self.hyperparams["weights"] and not os.path.exists(
-            self.hyperparams["weights"]
-        ):
-            if self.hyperparams["weights"] not in ["imagenet", "random"]:
-                raise ValueError(
-                    f"Weight type '{self.hyperparams['weights']}' is not valid."
-                )
+        # Load weights
+        if weights and weights is not True:
+            if isinstance(weights, WeightsEnum):
+                state_dict = weights.get_state_dict(progress=True)
+            elif os.path.exists(weights):
+                _, state_dict = utils.extract_backbone(weights)
             else:
-                imagenet_pretrained = self.hyperparams["weights"] == "imagenet"
-            custom_pretrained = False
-        else:
-            custom_pretrained = True
-
-        # Create the model
-        valid_models = timm.list_models(pretrained=imagenet_pretrained)
-        if model in valid_models:
-            self.model = timm.create_model(
-                model,
-                num_classes=self.hyperparams["num_classes"],
-                in_chans=in_channels,
-                pretrained=imagenet_pretrained,
-            )
-        else:
-            raise ValueError(f"Model type '{model}' is not a valid timm model.")
-
-        if custom_pretrained:
-            name, state_dict = utils.extract_backbone(self.hyperparams["weights"])
-
-            if self.hyperparams["model"] != name:
-                raise ValueError(
-                    f"Trying to load {name} weights into a "
-                    f"{self.hyperparams['model']}"
-                )
+                state_dict = get_weight(weights).get_state_dict(progress=True)
             self.model = utils.load_state_dict(self.model, state_dict)
+
+        # Freeze backbone and unfreeze classifier head
+        if self.hyperparams.get("freeze_backbone", False):
+            for param in self.model.parameters():
+                param.requires_grad = False
+            for param in self.model.get_classifier().parameters():
+                param.requires_grad = True
 
     def config_task(self) -> None:
         """Configures the task based on kwargs parameters passed to the constructor."""
@@ -102,20 +90,27 @@ class ClassificationTask(pl.LightningModule):
         Keyword Args:
             model: Name of the classification model use
             loss: Name of the loss function, accepts 'ce', 'jaccard', or 'focal'
-            weights: Either "random" or "imagenet"
+            weights: Either a weight enum, the string representation of a weight enum,
+                True for ImageNet weights, False or None for random weights,
+                or the path to a saved model state dict.
             num_classes: Number of prediction classes
             in_channels: Number of input channels to model
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
+            freeze_backbone: Freeze the backbone network to linear probe
+                the classifier head
 
         .. versionchanged:: 0.4
            The *classification_model* parameter was renamed to *model*.
+
+        .. versionadded:: 0.5
+           The *freeze_backbone* parameter.
         """
         super().__init__()
 
         # Creates `self.hparams` from kwargs
-        self.save_hyperparameters()  # type: ignore[operator]
-        self.hyperparams = cast(Dict[str, Any], self.hparams)
+        self.save_hyperparameters()
+        self.hyperparams = cast(dict[str, Any], self.hparams)
 
         self.config_task()
 
@@ -176,12 +171,8 @@ class ClassificationTask(pl.LightningModule):
 
         return cast(Tensor, loss)
 
-    def training_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch-level training metrics.
-
-        Args:
-            outputs: list of items returned by training_step
-        """
+    def on_train_epoch_end(self) -> None:
+        """Logs epoch-level training metrics."""
         self.log_dict(self.train_metrics.compute())
         self.train_metrics.reset()
 
@@ -204,28 +195,30 @@ class ClassificationTask(pl.LightningModule):
         self.log("val_loss", loss, on_step=False, on_epoch=True)
         self.val_metrics(y_hat_hard, y)
 
-        if batch_idx < 10:
+        if (
+            batch_idx < 10
+            and hasattr(self.trainer, "datamodule")
+            and self.logger
+            and hasattr(self.logger, "experiment")
+            and hasattr(self.logger.experiment, "add_figure")
+        ):
             try:
-                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                datamodule = self.trainer.datamodule
                 batch["prediction"] = y_hat_hard
                 for key in ["image", "label", "prediction"]:
                     batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
-                summary_writer = self.logger.experiment  # type: ignore[union-attr]
+                summary_writer = self.logger.experiment
                 summary_writer.add_figure(
                     f"image/{batch_idx}", fig, global_step=self.global_step
                 )
                 plt.close()
-            except AttributeError:
+            except ValueError:
                 pass
 
-    def validation_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level validation metrics.
-
-        Args:
-            outputs: list of items returned by validation_step
-        """
+    def on_validation_epoch_end(self) -> None:
+        """Logs epoch level validation metrics."""
         self.log_dict(self.val_metrics.compute())
         self.val_metrics.reset()
 
@@ -247,12 +240,8 @@ class ClassificationTask(pl.LightningModule):
         self.log("test_loss", loss, on_step=False, on_epoch=True)
         self.test_metrics(y_hat_hard, y)
 
-    def test_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level test metrics.
-
-        Args:
-            outputs: list of items returned by test_step
-        """
+    def on_test_epoch_end(self) -> None:
+        """Logs epoch level test metrics."""
         self.log_dict(self.test_metrics.compute())
         self.test_metrics.reset()
 
@@ -270,12 +259,11 @@ class ClassificationTask(pl.LightningModule):
         y_hat: Tensor = self(x).softmax(dim=-1)
         return y_hat
 
-    def configure_optimizers(self) -> Dict[str, Any]:
+    def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+            learning rate dictionary
         """
         optimizer = torch.optim.AdamW(
             self.model.parameters(), lr=self.hyperparams["learning_rate"]
@@ -315,17 +303,16 @@ class MultiLabelClassificationTask(ClassificationTask):
             in_channels: Number of input channels to model
             learning_rate: Learning rate for optimizer
             learning_rate_schedule_patience: Patience for learning rate scheduler
+            freeze_backbone: Freeze the backbone network to linear probe
+                the classifier head
 
         .. versionchanged:: 0.4
            The *classification_model* parameter was renamed to *model*.
+
+        .. versionadded:: 0.5
+           The *freeze_backbone* parameter.
         """
         super().__init__(**kwargs)
-
-        # Creates `self.hparams` from kwargs
-        self.save_hyperparameters()  # type: ignore[operator]
-        self.hyperparams = cast(Dict[str, Any], self.hparams)
-
-        self.config_task()
 
         self.train_metrics = MetricCollection(
             {
@@ -389,19 +376,25 @@ class MultiLabelClassificationTask(ClassificationTask):
         self.log("val_loss", loss, on_step=False, on_epoch=True)
         self.val_metrics(y_hat_hard, y)
 
-        if batch_idx < 10:
+        if (
+            batch_idx < 10
+            and hasattr(self.trainer, "datamodule")
+            and self.logger
+            and hasattr(self.logger, "experiment")
+            and hasattr(self.logger.experiment, "add_figure")
+        ):
             try:
-                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
+                datamodule = self.trainer.datamodule
                 batch["prediction"] = y_hat_hard
                 for key in ["image", "label", "prediction"]:
                     batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
-                summary_writer = self.logger.experiment  # type: ignore[union-attr]
+                summary_writer = self.logger.experiment
                 summary_writer.add_figure(
                     f"image/{batch_idx}", fig, global_step=self.global_step
                 )
-            except AttributeError:
+            except ValueError:
                 pass
 
     def test_step(self, *args: Any, **kwargs: Any) -> None:

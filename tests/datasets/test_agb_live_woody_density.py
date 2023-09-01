@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo
@@ -29,7 +29,6 @@ class TestAbovegroundLiveWoodyBiomassDensity:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> AbovegroundLiveWoodyBiomassDensity:
-
         transforms = nn.Identity()
         monkeypatch.setattr(
             torchgeo.datasets.agb_live_woody_density, "download_url", download_url

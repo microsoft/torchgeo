@@ -9,7 +9,7 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import SEN12MS

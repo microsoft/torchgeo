@@ -10,7 +10,7 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import BigEarthNet
@@ -75,7 +75,7 @@ class TestBigEarthNet:
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["label"], torch.Tensor)
         assert x["label"].shape == (dataset.num_classes,)
-        assert x["image"].dtype == torch.int32
+        assert x["image"].dtype == torch.float32
         assert x["label"].dtype == torch.int64
 
         if dataset.bands == "all":

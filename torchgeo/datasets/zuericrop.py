@@ -4,7 +4,8 @@
 """ZueriCrop dataset."""
 
 import os
-from typing import Callable, Dict, Optional, Sequence, Tuple
+from collections.abc import Sequence
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import torch
@@ -17,7 +18,7 @@ from .utils import download_url, percentile_normalization
 class ZueriCrop(NonGeoDataset):
     """ZueriCrop dataset.
 
-    The `ZueriCrop <https://github.com/0zgur0/ms-convSTAR>`__
+    The `ZueriCrop <https://github.com/0zgur0/multi-stage-convSTAR-network>`__
     dataset is a dataset for time-series instance segmentation of crops.
 
     Dataset features:
@@ -36,8 +37,8 @@ class ZueriCrop(NonGeoDataset):
 
     Dataset classes:
 
-    * 48 fine-grained hierarchical crop
-      `categories <https://github.com/0zgur0/ms-convSTAR/blob/master/labels.csv>`_
+    * 48 fine-grained hierarchical crop `categories
+      <https://github.com/0zgur0/multi-stage-convSTAR-network/blob/fa92b5b3cb77f5171c5c3be740cd6e6395cc29b6/labels.csv>`_
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -52,7 +53,7 @@ class ZueriCrop(NonGeoDataset):
 
     urls = [
         "https://polybox.ethz.ch/index.php/s/uXfdr2AcXE3QNB6/download",
-        "https://raw.githubusercontent.com/0zgur0/ms-convSTAR/master/labels.csv",
+        "https://raw.githubusercontent.com/0zgur0/multi-stage-convSTAR-network/fa92b5b3cb77f5171c5c3be740cd6e6395cc29b6/labels.csv",  # noqa: E501
     ]
     md5s = ["1635231df67f3d25f4f1e62c98e221a4", "5118398c7a5bbc246f5f6bb35d8d529b"]
     filenames = ["ZueriCrop.hdf5", "labels.csv"]
@@ -64,7 +65,7 @@ class ZueriCrop(NonGeoDataset):
         self,
         root: str = "data",
         bands: Sequence[str] = band_names,
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -103,7 +104,7 @@ class ZueriCrop(NonGeoDataset):
                 "h5py is not installed and is required to use this dataset"
             )
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -154,7 +155,7 @@ class ZueriCrop(NonGeoDataset):
         tensor = torch.index_select(tensor, dim=1, index=self.band_indices)
         return tensor
 
-    def _load_target(self, index: int) -> Tuple[Tensor, Tensor, Tensor]:
+    def _load_target(self, index: int) -> tuple[Tensor, Tensor, Tensor]:
         """Load the target mask for a single image.
 
         Args:
@@ -262,7 +263,7 @@ class ZueriCrop(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         time_step: int = 0,
         show_titles: bool = True,
         suptitle: Optional[str] = None,

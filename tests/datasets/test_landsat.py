@@ -8,17 +8,23 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
+from _pytest.fixtures import SubRequest
+from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import BoundingBox, IntersectionDataset, Landsat8, UnionDataset
 
 
 class TestLandsat8:
-    @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch) -> Landsat8:
+    @pytest.fixture(
+        params=[
+            ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"],
+            ["SR_B4", "SR_B3", "SR_B2", "SR_QA_AEROSOL"],
+        ]
+    )
+    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> Landsat8:
         root = os.path.join("tests", "data", "landsat8")
-        bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"]
+        bands = request.param
         transforms = nn.Identity()
         return Landsat8(root, bands=bands, transforms=transforms)
 
