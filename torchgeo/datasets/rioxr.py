@@ -49,7 +49,7 @@ class RioXarrayDataset(GeoDataset):
     def __init__(
         self,
         root: str,
-        data_variables: list[str],
+        data_variables: Optional[list[str]] = None,
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -73,7 +73,12 @@ class RioXarrayDataset(GeoDataset):
         super().__init__(transforms)
 
         self.root = root
-        self.data_variables = data_variables
+
+        if data_variables:
+            self.data_variables = data_variables
+        else:
+            data_variables_to_collect: list[str] = []
+
         self.transforms = transforms
 
         # Create an R-tree to index the dataset
@@ -88,8 +93,8 @@ class RioXarrayDataset(GeoDataset):
             if match is not None:
                 with xr.open_dataset(filepath, decode_times=True) as ds:
                     # rioxarray expects spatial dimensions to be named x and y
-                    if ds.rio._x_dim is None or ds.rio.y_dim is None:
-                        ds = ds.rename({"lon": "x", "lat": "y"})
+                    x_name, y_name = self._infer_spatial_coordinate_names(ds)
+                    ds = ds.rename({x_name: "x", y_name: "y"})
 
                     if crs is None:
                         crs = ds.rio.crs
@@ -114,15 +119,47 @@ class RioXarrayDataset(GeoDataset):
                 self.index.insert(i, coords, filepath)
                 i += 1
 
+                # collect all possible data variables if self.data_variables is None
+                if not data_variables:
+                    data_variables_to_collect.extend(list(ds.data_vars))
+
         if i == 0:
             msg = f"No {self.__class__.__name__} data was found in `root='{self.root}'`"
             raise FileNotFoundError(msg)
+
+        if not data_variables:
+            self.data_variables = list(set(data_variables_to_collect))
 
         if not crs:
             self._crs = "EPSG:4326"
         else:
             self._crs = cast(CRS, crs)
         self.res = cast(float, res)
+
+    def _infer_spatial_coordinate_names(self, ds):
+        """Infer the names of the spatial coordinates.
+
+        Args:
+            ds: Dataset or DataArray of which to infer the spatial coordinates
+
+        Returns:
+            x and y coordinate names
+        """
+        for dim_name, dim in ds.coords.items():
+            if hasattr(dim, "units"):
+                if any(
+                    [x in dim.units.lower() for x in ["degrees_north", "degree_north"]]
+                ):
+                    y_name = dim_name
+                elif any(
+                    [x in dim.units.lower() for x in ["degrees_east", "degree_east"]]
+                ):
+                    x_name = dim_name
+
+        if not x_name or not y_name:
+            raise ValueError("Spatial Coordinate Units not found in Dataset")
+
+        return x_name, y_name
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
@@ -148,9 +185,9 @@ class RioXarrayDataset(GeoDataset):
         for item in items:
             with xr.open_dataset(item, decode_cf=True) as ds:
                 # rioxarray expects spatial dimensions to be named x and y
-                if ds.rio._x_dim is None or ds.rio.y_dim is None:
-                    # ds.rio.set_spatial_dims(x_dim="lon", y_dim="lat", inplace=True)
-                    ds = ds.rename({"lon": "x", "lat": "y"})
+                x_name, y_name = self._infer_spatial_coordinate_names(ds)
+                ds = ds.rename({x_name: "x", y_name: "y"})
+
                 if not ds.rio.crs:
                     ds.rio.write_crs(self._crs, inplace=True)
                 elif ds.rio.crs != self._crs:
