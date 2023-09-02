@@ -20,7 +20,7 @@ from torchvision.models._api import WeightsEnum
 
 from ..datasets import unbind_samples
 from ..models import FCN, get_weight
-from .utils import extract_backbone, load_state_dict
+from . import utils
 
 
 class RegressionTask(LightningModule):
@@ -45,9 +45,13 @@ class RegressionTask(LightningModule):
         """Initialize a new RegressionTask instance.
 
         Args:
-            model: Name of the timm or segmentation_models_pytorch model to use.
-            backbone: Name of the timm model to use.
-                Only applicable to PixelwiseRegressionTask.
+            model: Name of the
+                `timm <https://huggingface.co/docs/timm/reference/models>`__ or
+                `smp <https://smp.readthedocs.io/en/latest/models.html>`__ model to use.
+            backbone: Name of the
+                `timm <https://smp.readthedocs.io/en/latest/encoders_timm.html>`__ or
+                `smp <https://smp.readthedocs.io/en/latest/encoders.html>`__ backbone
+                to use. Only applicable to PixelwiseRegressionTask.
             weights: Initial model weights. Either a weight enum, the string
                 representation of a weight enum, True for ImageNet weights, False
                 or None for random weights, or the path to a saved model state dict.
@@ -66,15 +70,15 @@ class RegressionTask(LightningModule):
         Raises:
             ValueError: If any arguments are invalid.
 
+        .. versionchanged:: 0.4
+           Change regression model support from torchvision.models to timm
+
         .. versionadded:: 0.5
            The *freeze_backbone* and *freeze_decoder* parameters.
 
         .. versionchanged:: 0.5
            *learning_rate* and *learning_rate_schedule_patience* were renamed to
            *lr* and *patience*.
-
-        .. versionchanged:: 0.4
-           Change regression model support from torchvision.models to timm
         """
         super().__init__()
 
@@ -119,10 +123,10 @@ class RegressionTask(LightningModule):
             if isinstance(weights, WeightsEnum):
                 state_dict = weights.get_state_dict(progress=True)
             elif os.path.exists(weights):
-                _, state_dict = extract_backbone(weights)
+                _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
-            self.model = load_state_dict(self.model, state_dict)
+            self.model = utils.load_state_dict(self.model, state_dict)
 
         # Freeze backbone and unfreeze classifier head
         if self.hparams["freeze_backbone"]:
@@ -271,11 +275,6 @@ class RegressionTask(LightningModule):
 class PixelwiseRegressionTask(RegressionTask):
     """LightningModule for pixelwise regression of images.
 
-    Supports `Segmentation Models Pytorch
-    <https://github.com/qubvel/segmentation_models.pytorch>`_
-    as an architecture choice in combination with any of these
-    `TIMM backbones <https://smp.readthedocs.io/en/latest/encoders_timm.html>`_.
-
     .. versionadded:: 0.5
     """
 
@@ -316,7 +315,7 @@ class PixelwiseRegressionTask(RegressionTask):
                 if isinstance(weights, WeightsEnum):
                     state_dict = weights.get_state_dict(progress=True)
                 elif os.path.exists(weights):
-                    _, state_dict = extract_backbone(weights)
+                    _, state_dict = utils.extract_backbone(weights)
                 else:
                     state_dict = get_weight(weights).get_state_dict(progress=True)
                 self.model.encoder.load_state_dict(state_dict)

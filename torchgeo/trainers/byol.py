@@ -18,7 +18,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchvision.models._api import WeightsEnum
 
 from ..models import get_weight
-from .utils import extract_backbone, load_state_dict
+from . import utils
 
 
 def normalized_mse(x: Tensor, y: Tensor) -> Tensor:
@@ -125,7 +125,7 @@ class BackboneWrapper(nn.Module):
     * The forward call returns the output of the projection head
 
     .. versionchanged 0.4: Name changed from *EncoderWrapper* to
-        *BackboneWrapper*.
+       *BackboneWrapper*.
     """
 
     def __init__(
@@ -306,7 +306,8 @@ class BYOLTask(LightningModule):
         """Initialize a new BYOLTask instance.
 
         Args:
-            model: Name of the timm model to use.
+            model: Name of the `timm
+                <https://huggingface.co/docs/timm/reference/models>`__ model to use.
             weights: Initial model weights. Either a weight enum, the string
                 representation of a weight enum, True for ImageNet weights, False
                 or None for random weights, or the path to a saved model state dict.
@@ -315,13 +316,13 @@ class BYOLTask(LightningModule):
             weight_decay: Weight decay (L2 penalty).
             patience: Patience for learning rate scheduler.
 
-        .. versionchanged:: 0.5
-           *backbone*, *learning_rate*, and *learning_rate_schedule_patience* were
-           renamed to *model*, *lr*, and *patience*.
-
         .. versionchanged:: 0.4
            *backbone_name* was renamed to *backbone*. Changed backbone support from
            torchvision.models to timm.
+
+        .. versionchanged:: 0.5
+           *backbone*, *learning_rate*, and *learning_rate_schedule_patience* were
+           renamed to *model*, *lr*, and *patience*.
         """
         super().__init__()
 
@@ -337,10 +338,10 @@ class BYOLTask(LightningModule):
             if isinstance(weights, WeightsEnum):
                 state_dict = weights.get_state_dict(progress=True)
             elif os.path.exists(weights):
-                _, state_dict = extract_backbone(weights)
+                _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
-            backbone = load_state_dict(backbone, state_dict)
+            backbone = utils.load_state_dict(backbone, state_dict)
 
         self.model = BYOL(backbone, in_channels=in_channels, image_size=(224, 224))
 

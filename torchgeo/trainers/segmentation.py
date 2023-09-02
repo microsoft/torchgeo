@@ -20,17 +20,11 @@ from torchvision.models._api import WeightsEnum
 
 from ..datasets.utils import unbind_samples
 from ..models import FCN, get_weight
-from .utils import extract_backbone
+from . import utils
 
 
 class SemanticSegmentationTask(LightningModule):
-    """Semantic Segmentation.
-
-    Supports `Segmentation Models Pytorch
-    <https://github.com/qubvel/segmentation_models.pytorch>`_
-    as an architecture choice in combination with any of these
-    `TIMM backbones <https://smp.readthedocs.io/en/latest/encoders_timm.html>`_.
-    """
+    """Semantic Segmentation."""
 
     def __init__(
         self,
@@ -51,8 +45,11 @@ class SemanticSegmentationTask(LightningModule):
         """Inititalize a new SemanticSegmentationTask instance.
 
         Args:
-            model: Name of the segmentation model type to use.
-            backbone: Name of the timm backbone to use.
+            model: Name of the
+                `smp <https://smp.readthedocs.io/en/latest/models.html>`__ model to use.
+            backbone: Name of the `timm
+                <https://smp.readthedocs.io/en/latest/encoders_timm.html>`__ or `smp
+                <https://smp.readthedocs.io/en/latest/encoders.html>`__ backbone to use.
             weights: Initial model weights. Either a weight enum, the string
                 representation of a weight enum, True for ImageNet weights, False or
                 None for random weights, or the path to a saved model state dict. FCN
@@ -81,16 +78,14 @@ class SemanticSegmentationTask(LightningModule):
             UserWarning: When loss='jaccard' and ignore_index is specified.
 
         .. versionchanged:: 0.3
-           The *ignore_zeros* parameter was renamed to *ignore_index*.
+           *ignore_zeros* was renamed to *ignore_index*.
 
         .. versionchanged:: 0.4
-           The *segmentation_model* parameter was renamed to *model*,
-           *encoder_name* renamed to *backbone*, and
-           *encoder_weights* to *weights*.
+           *segmentation_model*, *encoder_name*, and *encoder_weights*
+           were renamed to *model*, *backbone*, and *weights*.
 
         .. versionadded: 0.5
-            The *class_weights*, *freeze_backbone*,
-            and *freeze_decoder* parameters.
+            The *class_weights*, *freeze_backbone*, and *freeze_decoder* parameters.
 
         .. versionchanged:: 0.5
            The *weights* parameter now supports WeightEnums and checkpoint paths.
@@ -153,7 +148,7 @@ class SemanticSegmentationTask(LightningModule):
                 if isinstance(weights, WeightsEnum):
                     state_dict = weights.get_state_dict(progress=True)
                 elif os.path.exists(weights):
-                    _, state_dict = extract_backbone(weights)
+                    _, state_dict = utils.extract_backbone(weights)
                 else:
                     state_dict = get_weight(weights).get_state_dict(progress=True)
                 self.model.encoder.load_state_dict(state_dict)

@@ -27,7 +27,7 @@ from torchvision.models._api import WeightsEnum
 
 from ..datasets import unbind_samples
 from ..models import get_weight
-from .utils import extract_backbone, load_state_dict
+from . import utils
 
 
 class ClassificationTask(LightningModule):
@@ -47,7 +47,8 @@ class ClassificationTask(LightningModule):
         """Initialize a new ClassificationTask instance.
 
         Args:
-            model: Name of the timm model to use.
+            model: Name of the `timm
+                <https://huggingface.co/docs/timm/reference/models>`__ model to use.
             weights: Initial model weights. Either a weight enum, the string
                 representation of a weight enum, True for ImageNet weights, False
                 or None for random weights, or the path to a saved model state dict.
@@ -59,15 +60,15 @@ class ClassificationTask(LightningModule):
             freeze_backbone: Freeze the backbone network to linear probe
                 the classifier head.
 
+        .. versionchanged:: 0.4
+           *classification_model* was renamed to *model*.
+
         .. versionadded:: 0.5
            The *freeze_backbone* parameter.
 
         .. versionchanged:: 0.5
            *learning_rate* and *learning_rate_schedule_patience* were renamed to
            *lr* and *patience*.
-
-        .. versionchanged:: 0.4
-           *classification_model* was renamed to *model*.
         """
         super().__init__()
 
@@ -86,10 +87,10 @@ class ClassificationTask(LightningModule):
             if isinstance(weights, WeightsEnum):
                 state_dict = weights.get_state_dict(progress=True)
             elif os.path.exists(weights):
-                _, state_dict = extract_backbone(weights)
+                _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
-            self.model = load_state_dict(self.model, state_dict)
+            self.model = utils.load_state_dict(self.model, state_dict)
 
         # Freeze backbone and unfreeze classifier head
         if freeze_backbone:

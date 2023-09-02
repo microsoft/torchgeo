@@ -51,18 +51,6 @@ BACKBONE_WEIGHT_MAP = {
 class ObjectDetectionTask(LightningModule):
     """Object detection.
 
-    Currently, supports Faster R-CNN, FCOS, and RetinaNet models from
-    `torchvision
-    <https://pytorch.org/vision/stable/models.html
-    #object-detection-instance-segmentation-and-person-keypoint-detection>`_ with
-    one of the following *backbone* arguments:
-
-    .. code-block:: python
-
-       ['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152',
-       'resnext50_32x4d', 'resnext101_32x8d',
-       'wide_resnet50_2', 'wide_resnet101_2']
-
     .. versionadded:: 0.4
     """
 
@@ -81,8 +69,14 @@ class ObjectDetectionTask(LightningModule):
         """Initialize a new ObjectDetectionTask instance.
 
         Args:
-            model: Name of the torchvision model to use.
-            backbone: Name of the model backbone to use.
+            model: Name of the `torchvision
+                <https://pytorch.org/vision/stable/models.html#object-detection>`__
+                model to use. One of 'faster-rcnn', 'fcos', or 'retinanet'.
+            backbone: Name of the `torchvision
+                <https://pytorch.org/vision/stable/models.html#classification>`__
+                backbone to use. One of 'resnet18', 'resnet34', 'resnet50',
+                'resnet101', 'resnet152', 'resnext50_32x4d', 'resnext101_32x8d',
+                'wide_resnet50_2', or 'wide_resnet101_2'.
             weights: Initial model weights. True for ImageNet weights, False or None
                 for random weights.
             in_channels: Number of input channels to model.
@@ -96,15 +90,15 @@ class ObjectDetectionTask(LightningModule):
         Raises:
             ValueError: If any arguments are invalid.
 
-        .. versionchanged:: 0.5
-           *pretrained*, *learning_rate*, and *learning_rate_schedule_patience* were
-           renamed to *weights*, *lr*, and *patience*.
-
         .. versionchanged:: 0.4
            *detection_model* was renamed to *model*.
 
         .. versionadded:: 0.5
            The *freeze_backbone* parameter.
+
+        .. versionchanged:: 0.5
+           *pretrained*, *learning_rate*, and *learning_rate_schedule_patience* were
+           renamed to *weights*, *lr*, and *patience*.
         """
         super().__init__()
 

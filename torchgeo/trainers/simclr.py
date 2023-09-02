@@ -23,7 +23,7 @@ from torchvision.models._api import WeightsEnum
 import torchgeo.transforms as T
 
 from ..models import get_weight
-from .utils import extract_backbone, load_state_dict
+from . import utils
 
 
 def simclr_augmentations(size: int, weights: Tensor) -> nn.Module:
@@ -88,7 +88,8 @@ class SimCLRTask(LightningModule):
         """Initialize a new SimCLRTask instance.
 
         Args:
-            model: Name of the timm model to use.
+            model: Name of the `timm
+                <https://huggingface.co/docs/timm/reference/models>`__ model to use.
             weights: Initial model weights. Either a weight enum, the string
                 representation of a weight enum, True for ImageNet weights, False
                 or None for random weights, or the path to a saved model state dict.
@@ -149,10 +150,10 @@ class SimCLRTask(LightningModule):
             if isinstance(weights, WeightsEnum):
                 state_dict = weights.get_state_dict(progress=True)
             elif os.path.exists(weights):
-                _, state_dict = extract_backbone(weights)
+                _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
-            self.backbone = load_state_dict(self.backbone, state_dict)
+            self.backbone = utils.load_state_dict(self.backbone, state_dict)
 
         # Create projection head
         input_dim = self.backbone.num_features
