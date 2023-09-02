@@ -85,10 +85,6 @@ class TestBYOLTask:
         trainer.fit(model=model, datamodule=datamodule)
 
     @pytest.fixture
-    def model_kwargs(self) -> dict[str, Any]:
-        return {"model": "resnet18", "in_channels": 13}
-
-    @pytest.fixture
     def weights(self) -> WeightsEnum:
         return ResNet18_Weights.SENTINEL2_ALL_MOCO
 
@@ -108,41 +104,36 @@ class TestBYOLTask:
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
         return weights
 
-    def test_weight_file(self, model_kwargs: dict[str, Any], checkpoint: str) -> None:
-        model_kwargs["weights"] = checkpoint
+    def test_weight_file(self, checkpoint: str) -> None:
         with pytest.warns(UserWarning):
-            BYOLTask(**model_kwargs)
+            BYOLTask(model="resnet18", in_channels=13, weights=checkpoint)
 
-    def test_weight_enum(
-        self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
-    ) -> None:
-        model_kwargs["model"] = mocked_weights.meta["model"]
-        model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
-        model_kwargs["weights"] = mocked_weights
-        BYOLTask(**model_kwargs)
+    def test_weight_enum(self, mocked_weights: WeightsEnum) -> None:
+        BYOLTask(
+            model=mocked_weights.meta["model"],
+            weights=mocked_weights,
+            in_channels=mocked_weights.meta["in_chans"],
+        )
 
-    def test_weight_str(
-        self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
-    ) -> None:
-        model_kwargs["model"] = mocked_weights.meta["model"]
-        model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
-        model_kwargs["weights"] = str(mocked_weights)
-        BYOLTask(**model_kwargs)
+    def test_weight_str(self, mocked_weights: WeightsEnum) -> None:
+        BYOLTask(
+            model=mocked_weights.meta["model"],
+            weights=str(mocked_weights),
+            in_channels=mocked_weights.meta["in_chans"],
+        )
 
     @pytest.mark.slow
-    def test_weight_enum_download(
-        self, model_kwargs: dict[str, Any], weights: WeightsEnum
-    ) -> None:
-        model_kwargs["model"] = weights.meta["model"]
-        model_kwargs["in_channels"] = weights.meta["in_chans"]
-        model_kwargs["weights"] = weights
-        BYOLTask(**model_kwargs)
+    def test_weight_enum_download(self, weights: WeightsEnum) -> None:
+        BYOLTask(
+            model=weights.meta["model"],
+            weights=weights,
+            in_channels=weights.meta["in_chans"],
+        )
 
     @pytest.mark.slow
-    def test_weight_str_download(
-        self, model_kwargs: dict[str, Any], weights: WeightsEnum
-    ) -> None:
-        model_kwargs["model"] = weights.meta["model"]
-        model_kwargs["in_channels"] = weights.meta["in_chans"]
-        model_kwargs["weights"] = str(weights)
-        BYOLTask(**model_kwargs)
+    def test_weight_str_download(self, weights: WeightsEnum) -> None:
+        BYOLTask(
+            model=weights.meta["model"],
+            weights=str(weights),
+            in_channels=weights.meta["in_chans"],
+        )
