@@ -281,5 +281,5 @@ class SimCLRTask(LightningModule):
         )
         return {
             "optimizer": optimizer,
-            "lr_scheduler": {"scheduler": scheduler, "monitor": "val_loss"},
+            "lr_scheduler": {"scheduler": scheduler, "monitor": "train_loss"},
         }

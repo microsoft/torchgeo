@@ -244,7 +244,7 @@ class RegressionTask(LightningModule):
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
-        """Compute the predicted class probabilities.
+        """Compute the predicted regression values.
 
         Args:
             batch: The output of your DataLoader.

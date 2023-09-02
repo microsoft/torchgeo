@@ -213,7 +213,7 @@ class ObjectDetectionTask(LightningModule):
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
-        """Compute the training loss and additional metrics.
+        """Compute the training loss.
 
         Args:
             batch: The output of your DataLoader.
@@ -239,7 +239,7 @@ class ObjectDetectionTask(LightningModule):
     def validation_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
-        """Compute the validation loss and additional metrics.
+        """Compute the validation metrics.
 
         Args:
             batch: The output of your DataLoader.
@@ -283,7 +283,7 @@ class ObjectDetectionTask(LightningModule):
                 pass
 
     def on_validation_epoch_end(self) -> None:
-        """Logs epoch level validation metrics."""
+        """Log epoch level validation metrics."""
         # TODO: why is this method necessary?
         metrics = self.val_metrics.compute()
 
@@ -294,7 +294,7 @@ class ObjectDetectionTask(LightningModule):
         self.val_metrics.reset()
 
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
-        """Compute the test loss and additional metrics.
+        """Compute the test metrics.
 
         Args:
             batch: The output of your DataLoader.
@@ -314,7 +314,7 @@ class ObjectDetectionTask(LightningModule):
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> list[dict[str, Tensor]]:
-        """Compute the predicted class probabilities.
+        """Compute the predicted bounding boxes.
 
         Args:
             batch: The output of your DataLoader.
