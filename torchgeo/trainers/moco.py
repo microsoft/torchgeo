@@ -6,7 +6,7 @@
 import os
 import warnings
 from collections.abc import Sequence
-from typing import Any, Optional, Union, cast
+from typing import Any, Optional, Union
 
 import kornia.augmentation as K
 import timm
@@ -273,13 +273,13 @@ class MoCoTask(LightningModule):
         Returns:
             Output from the model and backbone
         """
-        h = self.backbone(x)
+        h: Tensor = self.backbone(x)
         q = h
         if self.hparams["version"] > 1:
             q = self.projection_head(q)
         if self.hparams["version"] == 3:
             q = self.prediction_head(q)
-        return cast(Tensor, q), cast(Tensor, h)
+        return q, h
 
     def forward_momentum(self, x: Tensor) -> Tensor:
         """Forward pass of the momentum model.
@@ -290,10 +290,10 @@ class MoCoTask(LightningModule):
         Returns:
             Output from the momentum model.
         """
-        k = self.backbone_momentum(x)
+        k: Tensor = self.backbone_momentum(x)
         if self.hparams["version"] > 1:
             k = self.projection_head_momentum(k)
-        return cast(Tensor, k)
+        return k
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -330,7 +330,7 @@ class MoCoTask(LightningModule):
             with torch.no_grad():
                 update_momentum(self.backbone, self.backbone_momentum, m)
                 k = self.forward_momentum(x2)
-            loss = self.criterion(q, k)
+            loss: Tensor = self.criterion(q, k)
         elif self.hparams["version"] == 2:
             q, h1 = self.forward(x1)
             with torch.no_grad():
@@ -360,7 +360,7 @@ class MoCoTask(LightningModule):
         self.log("train_ssl_std", self.avg_output_std)
         self.log("train_loss", loss)
 
-        return cast(Tensor, loss)
+        return loss
 
     def validation_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0

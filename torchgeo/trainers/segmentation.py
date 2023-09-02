@@ -5,7 +5,7 @@
 
 import os
 import warnings
-from typing import Any, Optional, Union, cast
+from typing import Any, Optional, Union
 
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
@@ -194,8 +194,8 @@ class SemanticSegmentationTask(LightningModule):
         Returns:
             Output from the model.
         """
-        z = self.model(x)
-        return cast(Tensor, z)
+        z: Tensor = self.model(x)
+        return z
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -215,12 +215,12 @@ class SemanticSegmentationTask(LightningModule):
         y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
 
-        loss = self.loss(y_hat, y)
+        loss: Tensor = self.loss(y_hat, y)
 
         self.log("train_loss", loss)
         self.train_metrics(y_hat_hard, y)
 
-        return cast(Tensor, loss)
+        return loss
 
     def validation_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0

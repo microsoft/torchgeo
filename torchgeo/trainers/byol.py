@@ -4,7 +4,7 @@
 """BYOL trainer for self-supervised learning (SSL)."""
 
 import os
-from typing import Any, Optional, Union, cast
+from typing import Any, Optional, Union
 
 import timm
 import torch
@@ -76,7 +76,8 @@ class SimCLRAugmentation(nn.Module):
         Returns:
             an augmented batch of imagery
         """
-        return cast(Tensor, self.augmentation(x))
+        z: Tensor = self.augmentation(x)
+        return z
 
 
 class MLP(nn.Module):
@@ -109,7 +110,8 @@ class MLP(nn.Module):
         Returns:
             embedded version of the input
         """
-        return cast(Tensor, self.mlp(x))
+        z: Tensor = self.mlp(x)
+        return z
 
 
 class BackboneWrapper(nn.Module):
@@ -271,7 +273,8 @@ class BYOL(nn.Module):
         Returns:
             output from the model
         """
-        return cast(Tensor, self.predictor(self.backbone(x)))
+        z: Tensor = self.predictor(self.backbone(x))
+        return z
 
     def update_target(self) -> None:
         """Method to update the "target" model weights."""
@@ -350,8 +353,8 @@ class BYOLTask(LightningModule):
         Returns:
             Output from the model.
         """
-        z = self.model(x)
-        return cast(Tensor, z)
+        z: Tensor = self.model(x)
+        return z
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0

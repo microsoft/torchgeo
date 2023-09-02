@@ -5,7 +5,7 @@
 
 import os
 import warnings
-from typing import Any, Optional, Union, cast
+from typing import Any, Optional, Union
 
 import kornia.augmentation as K
 import timm
@@ -184,9 +184,9 @@ class SimCLRTask(LightningModule):
         Returns:
             Output from the model and backbone.
         """
-        h = self.backbone(x)  # shape of batch_size x num_features
+        h: Tensor = self.backbone(x)  # shape of batch_size x num_features
         z = self.projection_head(h)
-        return cast(Tensor, z), cast(Tensor, h)
+        return z, h
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -223,7 +223,7 @@ class SimCLRTask(LightningModule):
         z1, h1 = self(x1)
         z2, h2 = self(x2)
 
-        loss = self.criterion(z1, z2)
+        loss: Tensor = self.criterion(z1, z2)
 
         # Calculate the mean normalized standard deviation over features dimensions.
         # If this is << 1 / sqrt(h1.shape[1]), then the model is not learning anything.
@@ -236,7 +236,7 @@ class SimCLRTask(LightningModule):
         self.log("train_ssl_std", self.avg_output_std)
         self.log("train_loss", loss)
 
-        return cast(Tensor, loss)
+        return loss
 
     def validation_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0

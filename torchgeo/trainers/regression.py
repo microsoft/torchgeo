@@ -4,7 +4,7 @@
 """Trainers for regression."""
 
 import os
-from typing import Any, Optional, Union, cast
+from typing import Any, Optional, Union
 
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
@@ -140,8 +140,8 @@ class RegressionTask(LightningModule):
         Returns:
             Output from the model.
         """
-        z = self.model(x)
-        return cast(Tensor, z)
+        z: Tensor = self.model(x)
+        return z
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0

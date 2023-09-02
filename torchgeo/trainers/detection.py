@@ -4,7 +4,7 @@
 """Trainers for object detection."""
 
 from functools import partial
-from typing import Any, Optional, cast
+from typing import Any, Optional
 
 import matplotlib.pyplot as plt
 import torch
@@ -236,11 +236,11 @@ class ObjectDetectionTask(LightningModule):
             for i in range(batch_size)
         ]
         loss_dict = self(x, y)
-        train_loss = sum(loss_dict.values())
+        train_loss: Tensor = sum(loss_dict.values())
 
         self.log_dict(loss_dict)
 
-        return cast(Tensor, train_loss)
+        return train_loss
 
     def validation_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
