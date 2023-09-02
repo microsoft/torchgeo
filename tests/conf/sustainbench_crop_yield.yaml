@@ -1,11 +1,8 @@
 module:
   _target_: torchgeo.trainers.RegressionTask
   model: "resnet18"
-  weights: null
   num_outputs: 1
   in_channels: 9
-  lr: 1e-3
-  patience: 2
   loss: "mse"
 
 datamodule:

@@ -3,9 +3,6 @@ module:
   loss: "ce"
   model: "unet"
   backbone: "resnet18"
-  weights: null
-  lr: 1e-3
-  patience: 6
   in_channels: 3
   num_classes: 8
   num_filters: 1

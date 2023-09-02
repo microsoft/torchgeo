@@ -2,9 +2,6 @@ module:
   _target_: torchgeo.trainers.MultiLabelClassificationTask
   loss: "bce"
   model: "resnet18"
-  lr: 1e-3
-  patience: 6
-  weights: null
   in_channels: 12
   num_classes: 19
 

@@ -2,9 +2,6 @@ module:
   _target_: torchgeo.trainers.ClassificationTask
   loss: "ce"
   model: "resnet18"
-  lr: 1e-3
-  patience: 6
-  weights: null
   in_channels: 18
   num_classes: 17
 

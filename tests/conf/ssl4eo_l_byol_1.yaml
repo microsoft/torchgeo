@@ -2,9 +2,6 @@ module:
   _target_: torchgeo.trainers.BYOLTask
   in_channels: 7
   model: "resnet18"
-  lr: 1e-3
-  patience: 6
-  weights: null
 
 datamodule:
   _target_: torchgeo.datamodules.SSL4EOLDataModule

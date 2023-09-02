@@ -4,9 +4,6 @@ module:
   model: "fcn"
   num_filters: 1
   backbone: "resnet18"
-  weights: null
-  lr: 1e-3
-  patience: 2
   in_channels: 2
   num_classes: 11
   ignore_index: null
