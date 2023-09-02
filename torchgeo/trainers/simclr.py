@@ -23,7 +23,7 @@ from torchvision.models._api import WeightsEnum
 import torchgeo.transforms as T
 
 from ..models import get_weight
-from .utils import OptSched, extract_backbone, load_state_dict
+from .utils import extract_backbone, load_state_dict
 
 
 def simclr_augmentations(size: int, weights: Tensor) -> nn.Module:
@@ -251,7 +251,7 @@ class SimCLRTask(LightningModule):
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
 
-    def configure_optimizers(self) -> OptSched:
+    def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:

@@ -5,28 +5,12 @@
 
 import warnings
 from collections import OrderedDict
-from typing import Optional, TypedDict, Union, cast
+from typing import Optional, Union, cast
 
 import torch
 import torch.nn as nn
 from torch import Tensor
 from torch.nn.modules import Conv2d, Module
-from torch.optim import Optimizer
-
-try:
-    from torch.optim.lr_scheduler import LRScheduler
-except ImportError:
-    from torch.optim.lr_scheduler import _LRScheduler as LRScheduler
-
-
-class Sched(TypedDict, total=False):
-    scheduler: LRScheduler
-    monitor: str
-
-
-class OptSched(TypedDict, total=False):
-    optimizer: Optimizer
-    lr_scheduler: Sched
 
 
 def extract_backbone(path: str) -> tuple[str, "OrderedDict[str, Tensor]"]:

@@ -20,7 +20,7 @@ from torchvision.models._api import WeightsEnum
 
 from ..datasets.utils import unbind_samples
 from ..models import FCN, get_weight
-from .utils import OptSched, extract_backbone
+from .utils import extract_backbone
 
 
 class SemanticSegmentationTask(LightningModule):
@@ -299,7 +299,7 @@ class SemanticSegmentationTask(LightningModule):
         y_hat: Tensor = self(x).softmax(dim=1)
         return y_hat
 
-    def configure_optimizers(self) -> OptSched:
+    def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:

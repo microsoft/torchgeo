@@ -19,7 +19,7 @@ from lightly.models.utils import deactivate_requires_grad, update_momentum
 from lightly.utils.scheduler import cosine_schedule
 from lightning import LightningModule
 from torch import Tensor
-from torch.optim import SGD, AdamW, Optimizer
+from torch.optim import SGD, AdamW
 from torch.optim.lr_scheduler import (
     CosineAnnealingLR,
     LinearLR,
@@ -31,12 +31,7 @@ from torchvision.models._api import WeightsEnum
 import torchgeo.transforms as T
 
 from ..models import get_weight
-from .utils import OptSched, extract_backbone, load_state_dict
-
-try:
-    from torch.optim.lr_scheduler import LRScheduler
-except ImportError:
-    from torch.optim.lr_scheduler import _LRScheduler as LRScheduler
+from .utils import extract_backbone, load_state_dict
 
 
 def moco_augmentations(
@@ -373,14 +368,14 @@ class MoCoTask(LightningModule):
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
 
-    def configure_optimizers(self) -> OptSched:
+    def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
             Optimizer and learning rate scheduler.
         """
         if self.hparams["version"] == 3:
-            optimizer: Optimizer = AdamW(
+            optimizer = AdamW(
                 params=self.parameters(),
                 lr=self.hparams["lr"],
                 weight_decay=self.hparams["weight_decay"],
@@ -389,7 +384,7 @@ class MoCoTask(LightningModule):
             max_epochs = 200
             if self.trainer and self.trainer.max_epochs:
                 max_epochs = self.trainer.max_epochs
-            scheduler: LRScheduler = SequentialLR(
+            scheduler = SequentialLR(
                 optimizer,
                 schedulers=[
                     LinearLR(

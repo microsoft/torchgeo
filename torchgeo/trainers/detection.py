@@ -22,7 +22,6 @@ from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
 from ..datasets.utils import unbind_samples
-from .utils import OptSched
 
 BACKBONE_LAT_DIM_MAP = {
     "resnet18": 512,
@@ -260,7 +259,6 @@ class ObjectDetectionTask(LightningModule):
             for i in range(batch_size)
         ]
         y_hat = self(x)
-
         self.val_metrics(y_hat, y)
 
         if (
@@ -289,6 +287,17 @@ class ObjectDetectionTask(LightningModule):
                 plt.close()
             except ValueError:
                 pass
+
+    def on_validation_epoch_end(self) -> None:
+        """Logs epoch level validation metrics."""
+        # TODO: why is this method necessary?
+        metrics = self.val_metrics.compute()
+
+        # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
+        metrics.pop("val_classes", None)
+
+        self.log_dict(metrics)
+        self.val_metrics.reset()
 
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.
@@ -325,7 +334,7 @@ class ObjectDetectionTask(LightningModule):
         y_hat: list[dict[str, Tensor]] = self(x)
         return y_hat
 
-    def configure_optimizers(self) -> OptSched:
+    def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:

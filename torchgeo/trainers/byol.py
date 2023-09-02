@@ -18,7 +18,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchvision.models._api import WeightsEnum
 
 from ..models import get_weight
-from .utils import OptSched, extract_backbone, load_state_dict
+from .utils import extract_backbone, load_state_dict
 
 
 def normalized_mse(x: Tensor, y: Tensor) -> Tensor:
@@ -409,7 +409,7 @@ class BYOLTask(LightningModule):
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
 
-    def configure_optimizers(self) -> OptSched:
+    def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:

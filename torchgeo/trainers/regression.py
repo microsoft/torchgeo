@@ -20,7 +20,7 @@ from torchvision.models._api import WeightsEnum
 
 from ..datasets import unbind_samples
 from ..models import FCN, get_weight
-from .utils import OptSched, extract_backbone, load_state_dict
+from .utils import extract_backbone, load_state_dict
 
 
 class RegressionTask(LightningModule):
@@ -254,7 +254,7 @@ class RegressionTask(LightningModule):
         y_hat: Tensor = self(x)
         return y_hat
 
-    def configure_optimizers(self) -> OptSched:
+    def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
