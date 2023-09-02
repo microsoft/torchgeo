@@ -19,7 +19,7 @@ from lightly.models.utils import deactivate_requires_grad, update_momentum
 from lightly.utils.scheduler import cosine_schedule
 from lightning import LightningModule
 from torch import Tensor
-from torch.optim import SGD, AdamW
+from torch.optim import SGD, AdamW, Optimizer
 from torch.optim.lr_scheduler import (
     CosineAnnealingLR,
     LinearLR,
@@ -32,6 +32,11 @@ import torchgeo.transforms as T
 
 from ..models import get_weight
 from .utils import extract_backbone, load_state_dict
+
+try:
+    from torch.optim.lr_scheduler import LRScheduler
+except ImportError:
+    from torch.optim.lr_scheduler import _LRScheduler as LRScheduler
 
 
 def moco_augmentations(
@@ -375,7 +380,7 @@ class MoCoTask(LightningModule):
             Optimizer and learning rate scheduler.
         """
         if self.hparams["version"] == 3:
-            optimizer = AdamW(
+            optimizer: Optimizer = AdamW(
                 params=self.parameters(),
                 lr=self.hparams["lr"],
                 weight_decay=self.hparams["weight_decay"],
@@ -384,7 +389,7 @@ class MoCoTask(LightningModule):
             max_epochs = 200
             if self.trainer and self.trainer.max_epochs:
                 max_epochs = self.trainer.max_epochs
-            scheduler = SequentialLR(
+            scheduler: LRScheduler = SequentialLR(
                 optimizer,
                 schedulers=[
                     LinearLR(
