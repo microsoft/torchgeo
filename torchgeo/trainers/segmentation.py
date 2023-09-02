@@ -9,7 +9,6 @@ from typing import Any, Optional, Union, cast
 
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
-import torch
 import torch.nn as nn
 from lightning.pytorch import LightningModule
 from torch import Tensor
@@ -134,12 +133,6 @@ class SemanticSegmentationTask(LightningModule):
 
         if loss == "ce":
             ignore_value = -1000 if ignore_index is None else ignore_index
-
-            if isinstance(class_weights, torch.Tensor):
-                class_weights = class_weights.to(dtype=torch.float32)
-            elif hasattr(class_weights, "__array__") or class_weights:
-                class_weights = torch.tensor(class_weights, dtype=torch.float32)
-
             self.loss = nn.CrossEntropyLoss(
                 ignore_index=ignore_value, weight=class_weights
             )

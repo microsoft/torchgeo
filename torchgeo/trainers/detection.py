@@ -202,17 +202,20 @@ class ObjectDetectionTask(LightningModule):
         self.val_metrics = metrics.clone(prefix="val_")
         self.test_metrics = metrics.clone(prefix="test_")
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(
+        self, x: list[Tensor], y: Optional[list[dict[str, Tensor]]] = None
+    ) -> tuple[dict[str, Tensor], list[dict[str, Tensor]]]:
         """Forward pass of the model.
 
         Args:
             x: Mini-batch of images.
+            y: Optional ground truth boxes present in the image.
 
         Returns:
             Output from the model.
         """
-        z = self.model(x)
-        return cast(Tensor, z)
+        out: tuple[dict[str, Tensor], list[dict[str, Tensor]]] = self.model(x, y)
+        return out
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0

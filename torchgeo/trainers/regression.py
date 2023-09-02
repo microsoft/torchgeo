@@ -9,6 +9,7 @@ from typing import Any, Optional, Union, cast
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
 import timm
+import torch
 import torch.nn as nn
 from lightning.pytorch import LightningModule
 from torch import Tensor
@@ -156,7 +157,8 @@ class RegressionTask(LightningModule):
             The loss tensor.
         """
         x = batch["image"]
-        y = batch[self.target_key]
+        # TODO: remove .to(...) once we have a real pixelwise regression dataset
+        y = batch[self.target_key].to(torch.float)
         y_hat = self(x)
 
         if y_hat.ndim != y.ndim:
@@ -179,7 +181,8 @@ class RegressionTask(LightningModule):
             dataloader_idx: Index of the current dataloader.
         """
         x = batch["image"]
-        y = batch[self.target_key]
+        # TODO: remove .to(...) once we have a real pixelwise regression dataset
+        y = batch[self.target_key].to(torch.float)
         y_hat = self(x)
 
         if y_hat.ndim != y.ndim:
@@ -223,7 +226,8 @@ class RegressionTask(LightningModule):
             dataloader_idx: Index of the current dataloader.
         """
         x = batch["image"]
-        y = batch[self.target_key]
+        # TODO: remove .to(...) once we have a real pixelwise regression dataset
+        y = batch[self.target_key].to(torch.float)
         y_hat = self(x)
 
         if y_hat.ndim != y.ndim:

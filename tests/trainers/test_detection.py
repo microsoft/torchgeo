@@ -115,7 +115,7 @@ class TestObjectDetectionTask:
             ObjectDetectionTask(**model_kwargs)
 
     def test_non_pretrained_backbone(self, model_kwargs: dict[Any, Any]) -> None:
-        model_kwargs["pretrained"] = False
+        model_kwargs["weights"] = False
         ObjectDetectionTask(**model_kwargs)
 
     def test_no_rgb(
