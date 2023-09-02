@@ -116,10 +116,8 @@ class TestSemanticSegmentationTask:
         return {
             "model": "unet",
             "backbone": "resnet18",
-            "weights": None,
             "in_channels": 3,
             "num_classes": 6,
-            "loss": "ce",
             "ignore_index": 0,
         }
 

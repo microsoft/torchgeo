@@ -115,13 +115,7 @@ class TestClassificationTask:
 
     @pytest.fixture
     def model_kwargs(self) -> dict[str, Any]:
-        return {
-            "model": "resnet18",
-            "in_channels": 13,
-            "loss": "ce",
-            "num_classes": 10,
-            "weights": None,
-        }
+        return {"model": "resnet18", "in_channels": 13, "loss": "ce", "num_classes": 10}
 
     @pytest.fixture
     def weights(self) -> WeightsEnum:
@@ -274,7 +268,6 @@ class TestMultiLabelClassificationTask:
             "in_channels": 14,
             "loss": "bce",
             "num_classes": 19,
-            "weights": None,
         }
 
     def test_invalid_loss(self, model_kwargs: dict[str, Any]) -> None:

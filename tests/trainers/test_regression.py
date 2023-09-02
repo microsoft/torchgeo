@@ -97,13 +97,7 @@ class TestRegressionTask:
 
     @pytest.fixture
     def model_kwargs(self) -> dict[str, Any]:
-        return {
-            "model": "resnet18",
-            "weights": None,
-            "num_outputs": 1,
-            "in_channels": 3,
-            "loss": "mse",
-        }
+        return {"model": "resnet18", "num_outputs": 1, "in_channels": 3}
 
     @pytest.fixture
     def weights(self) -> WeightsEnum:
@@ -284,12 +278,8 @@ class TestPixelwiseRegressionTask:
         return {
             "model": "unet",
             "backbone": "resnet18",
-            "weights": None,
             "num_outputs": 1,
             "in_channels": 3,
-            "loss": "mse",
-            "lr": 1e-3,
-            "patience": 6,
         }
 
     @pytest.fixture

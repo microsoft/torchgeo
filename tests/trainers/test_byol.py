@@ -86,7 +86,7 @@ class TestBYOLTask:
 
     @pytest.fixture
     def model_kwargs(self) -> dict[str, Any]:
-        return {"model": "resnet18", "in_channels": 13, "weights": None}
+        return {"model": "resnet18", "in_channels": 13}
 
     @pytest.fixture
     def weights(self) -> WeightsEnum:
