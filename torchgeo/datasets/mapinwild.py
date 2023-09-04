@@ -17,6 +17,7 @@ from torch import Tensor
 
 from torchgeo.datasets.geo import NonGeoDataset
 from torchgeo.datasets.utils import (
+    check_integrity,
     download_url,
     extract_archive,
     percentile_normalization,
@@ -90,7 +91,7 @@ class MapInWild(NonGeoDataset):
         "s2_spring": {"s2_spring/s2_spring_part1.zip", "s2_spring/s2_spring_part2.zip"},
         "s2_summer": {"s2_summer/s2_summer_part1.zip", "s2_summer/s2_summer_part2.zip"},
         "s2_winter": {"s2_winter/s2_winter_part1.zip", "s2_winter/s2_winter_part2.zip"},
-        "split_ids": "split_IDs/split_IDs.csv",
+        "split_ids": {"split_IDs/split_IDs.csv"},
     }
 
     filenames = [
@@ -188,18 +189,23 @@ class MapInWild(NonGeoDataset):
         modality.append("split_ids")
 
         for modal in modality:
-            for modality_relativ_path in self.modality_urls[modal]:
-                if modality_relativ_path.endswith("csv"):
-                    self._verify(relativ_path=modality_relativ_path, md5=None)
+            for modality_link in self.modality_urls[modal]:
+                os.path.join(self.url, modality_link)
+                if modality_link.endswith("csv"):
+                    self._verify(url=modality_link, md5=None)
                 else:
                     self._verify(
-                        relativ_path=modality_relativ_path,
-                        md5=self.md5s[modality_relativ_path.split("/")[1]],
+                        url=modality_link,
+                        md5=self.md5s[os.path.split(modality_link)[1]],
                     )
 
-            #  Merge modalities downloaded and extracted in two parts.
-            if modal not in os.listdir(root) and len(self.modality_urls[modal]) == 2:
-                self._merge_parts(root, modal)
+            #  Merge modalities downloaded in two parts.
+            if (
+                download
+                and modal not in os.listdir(self.root)
+                and len(self.modality_urls[modal]) == 2
+            ):
+                self._merge_parts(modal)
 
         # Masks will be loaded seperately in the :meth:`__getitem__`
         if "mask" in self.modality:
@@ -212,7 +218,7 @@ class MapInWild(NonGeoDataset):
         if os.path.exists(os.path.join(self.root, "split_IDs.csv")):
             split_dataframe = pd.read_csv(os.path.join(self.root, "split_IDs.csv"))
             self.ids = split_dataframe[split].dropna().values.tolist()
-            self.ids = list(map(int, self.ids))
+            self.ids = [int(i) for i in self.ids]
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -273,7 +279,7 @@ class MapInWild(NonGeoDataset):
             tensor = torch.from_numpy(array)
             return tensor
 
-    def _verify(self, relativ_path: str, md5: Optional[str] = None) -> None:
+    def _verify(self, url: str, md5: Optional[str] = None) -> None:
         """Verify the integrity of the dataset.
 
         Args:
@@ -283,22 +289,32 @@ class MapInWild(NonGeoDataset):
         Raises:
             RuntimeError: if dataset is not found
         """
-        url = os.path.join(self.url, relativ_path)
+        modality_folder_name = os.path.split(url)[-1]
+        mod_fold_no_ext = modality_folder_name.split(".")[0]
+        modality_path = os.path.join(self.root, mod_fold_no_ext)
+        split_path = os.path.join(self.root, modality_folder_name)
+        if mod_fold_no_ext == "split_IDs":
+            modality_path = split_path
 
-        # Check if the zip file has already been downloaded
+        # Check if the files already exist
+        if os.path.exists(modality_path):
+            return
+
+        # Check if the zip files have already been downloaded, if so, extract
         filepath = os.path.join(self.root, url.split("/")[-1])
-        if os.path.exists(filepath):
+        if os.path.isfile(filepath) and filepath.endswith(".zip"):
+            if self.checksum and not check_integrity(filepath, md5):
+                raise RuntimeError("Dataset found, but corrupted.")
             self._extract(url)
             return
 
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
-                f"Dataset not found in `root={self.root}` directory and `download=False`,"  # noqa: E501
+                "Dataset not found in `root` directory and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
                 "to automatically download the dataset."
             )
-
         elif self.download and url.endswith(".csv"):
             # Download the split file
             download_url(url, self.root, filename=os.path.split(url)[1], md5=None)
@@ -322,7 +338,7 @@ class MapInWild(NonGeoDataset):
         filepath = os.path.join(self.root, os.path.split(url)[1])
         extract_archive(filepath)
 
-    def _merge_parts(self, root: str, modality: str) -> None:
+    def _merge_parts(self, modality: str) -> None:
         """Merge the modalities that are downloaded and extracted in two parts.
 
         Args:
@@ -331,8 +347,8 @@ class MapInWild(NonGeoDataset):
         """
         fname_p1 = modality + "_part1"
         fname_p2 = modality + "_part2"
-        source_folder = os.path.join(root, fname_p1)
-        destination_folder = os.path.join(root, fname_p2)
+        source_folder = os.path.join(self.root, fname_p1)
+        destination_folder = os.path.join(self.root, fname_p2)
         for file_name in os.listdir(source_folder):
             source = os.path.join(source_folder, file_name)
             destination = os.path.join(destination_folder, file_name)

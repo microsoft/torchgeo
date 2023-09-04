@@ -2,7 +2,9 @@
 # Licensed under the MIT License.
 
 import builtins
+import glob
 import os
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -14,34 +16,77 @@ from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
+import torchgeo.datasets.utils
 from torchgeo.datasets import MapInWild
 
 pytest.importorskip("pandas", minversion="1.1.3")
 
 
+def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+    shutil.copy(url, root)
+
+
 class TestMapInWild:
     @pytest.fixture(params=["train", "validation", "test"])
-    def dataset(self, monkeypatch: MonkeyPatch) -> MapInWild:
+    def dataset(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> MapInWild:
+        monkeypatch.setattr(torchgeo.datasets.mapinwild, "download_url", download_url)
+
         md5s = {
-            "ESA_WC.zip": "561ec0294bc19a9de105d1b4d81dd7d7",
-            "VIIRS.zip": "96c631706677f1e2ccd53d9443148afd",
-            "mask.zip": "26aa75f768b25e632d507b083a575485",
-            "s1_part1.zip": "7ea9ed1fa6caa088ab1457f0aba31fc6",
-            "s1_part2.zip": "c6c115cd0f9546772f49b33a07205d43",
-            "s2_autumn_part1.zip": "5558f28502d52545cd77403dd0f81328",
-            "s2_autumn_part2.zip": "352fbb9e2dd298a3ab231f4177f387e0",
-            "s2_spring_part1.zip": "0ea18b7fdd701264f202f8575c23eea2",
-            "s2_spring_part2.zip": "4c2a90bb63d56aa5076410de636972a7",
-            "s2_summer_part1.zip": "9935c4d1c2c7c4bea9a83eed05bf292d",
-            "s2_summer_part2.zip": "f8b7a499d2897c803534b345ff1324ef",
-            "s2_temporal_subset_part1.zip": "595c84774a4408e4605053e01b9db8e9",
-            "s2_temporal_subset_part2.zip": "6795d76e4e1dac437fba4c552af8f9b1",
-            "s2_winter_part1.zip": "14f766820472e89af7c9de4fb91d2fa4",
-            "s2_winter_part2.zip": "8a7094192368b0bc0c355649f10857c3",
+            "ESA_WC.zip": "b14b6b54ef33ffd6e5802fb3096b0710",
+            "VIIRS.zip": "012734f798a39fdddf24fd9bdfc5f790",
+            "mask.zip": "d7fcb0ac6fc51a0189c60a8c44403194",
+            "s1_part1.zip": "17a9e23df5063d066098c84a4074cef1",
+            "s1_part2.zip": "c6748e547f18288300d670e70bff234a",
+            "s2_autumn_part1.zip": "89890200ef79bd80c6cbf1d4bbd314c6",
+            "s2_autumn_part2.zip": "22b7f6be3e59daaf264a179c94498e8e",
+            "s2_spring_part1.zip": "5f91cd21d3929b1e384b128b90f4efe3",
+            "s2_spring_part2.zip": "5ab77f7352d42cc5de76bf7293e20877",
+            "s2_summer_part1.zip": "d80b22a94c5fa0aca61fdc9d8cc7c361",
+            "s2_summer_part2.zip": "2ec2f215fcc8247df64f50288f664a8b",
+            "s2_temporal_subset_part1.zip": "0398bc292d9c3e8513444c96c5b0da96",
+            "s2_temporal_subset_part2.zip": "c063386289476dc2342872abb7c57f1c",
+            "s2_winter_part1.zip": "4f67835837f865f03cda9841b0da0717",
+            "s2_winter_part2.zip": "b6654fb29a315bddaca8b3e7a9f34930",
+        }
+        monkeypatch.setattr(MapInWild, "md5s", md5s)
+
+        urls = os.path.join("tests", "data", "mapinwild")
+
+        modality_urls = {
+            "esa_wc": {os.path.join(urls, "ESA_WC.zip")},
+            "viirs": {os.path.join(urls, "VIIRS.zip")},
+            "mask": {os.path.join(urls, "mask.zip")},
+            "s1": {
+                os.path.join(urls, "s1_part1.zip"),
+                os.path.join(urls, "s1_part2.zip"),
+            },
+            "s2_temporal_subset": {
+                os.path.join(urls, "s2_temporal_subset_part1.zip"),
+                os.path.join(urls, "s2_temporal_subset_part2.zip"),
+            },
+            "s2_autumn": {
+                os.path.join(urls, "s2_autumn_part1.zip"),
+                os.path.join(urls, "s2_autumn_part2.zip"),
+            },
+            "s2_spring": {
+                os.path.join(urls, "s2_spring_part1.zip"),
+                os.path.join(urls, "s2_spring_part2.zip"),
+            },
+            "s2_summer": {
+                os.path.join(urls, "s2_summer_part1.zip"),
+                os.path.join(urls, "s2_summer_part2.zip"),
+            },
+            "s2_winter": {
+                os.path.join(urls, "s2_winter_part1.zip"),
+                os.path.join(urls, "s2_winter_part2.zip"),
+            },
+            "split_ids": {os.path.join(urls, "split_IDs.csv")},
         }
 
-        monkeypatch.setattr(MapInWild, "md5s", md5s)
-        root = os.path.join("tests", "data", "mapinwild")
+        monkeypatch.setattr(MapInWild, "modality_urls", modality_urls)
+
+        root = str(tmp_path)
+
         transforms = nn.Identity()
         modality = [
             "mask",
@@ -78,32 +123,54 @@ class TestMapInWild:
             MapInWild(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = "Dataset not found in `root={self.root}` directory and `download=False`, "
-        "either specify a different `root` directory or use `download=True` "
-        "to automatically download the dataset."
-        with pytest.raises(RuntimeError, match=err):
-            MapInWild(str(tmp_path), download=False, checksum=True)
+        with pytest.raises(RuntimeError, match="Dataset not found"):
+            MapInWild(root=str(tmp_path))
 
-    def test_download(self) -> None:
-        url = "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/"
-        MapInWild.modality_urls["test_coverage"] = {
-            os.path.join(url, "test_coverage.zip")
-        }
-        MapInWild.modality_urls["split_file"] = {
-            os.path.join(url, "split_IDs/split_IDs.csv")
-        }
+    def test_not_extracted(self, tmp_path: Path) -> None:
+        pathname = os.path.join("tests", "data", "mapinwild", "*.zip")
+        root = str(tmp_path)
+        for zipfile in glob.iglob(pathname):
+            shutil.copy(zipfile, root)
+        splitfile = os.path.join("tests", "data", "mapinwild", "split_IDs.csv")
+        shutil.copy(splitfile, root)
+        modality = [
+            "mask",
+            "viirs",
+            "esa_wc",
+            "s2_winter",
+            "s1",
+            "s2_summer",
+            "s2_spring",
+            "s2_autumn",
+            "s2_temporal_subset",
+        ]
+        MapInWild(root, modality=modality)
 
-        MapInWild.md5s["test_coverage.zip"] = "612bc89e728c71d3347e5406cf6cfb3f"
-        root = os.path.join("tests", "data", "mapinwild")
-        modality = ["test_coverage", "split_file"]
-        MapInWild(root, modality=modality, download=True, checksum=True)
-
-    def test_corrupted(self) -> None:
-        root = os.path.join("tests", "data", "mapinwild")
-        with open(os.path.join(root, "test_coverage.zip"), "w") as f:
+    def test_corrupted(self, tmp_path: Path) -> None:
+        pathname = os.path.join("tests", "data", "mapinwild", "*.zip")
+        root = str(tmp_path)
+        for zipfile in glob.iglob(pathname):
+            shutil.copy(zipfile, root)
+        splitfile = os.path.join("tests", "data", "mapinwild", "split_IDs.csv")
+        shutil.copy(splitfile, root)
+        with open(os.path.join(tmp_path, "mask.zip"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
-            MapInWild(root=root, download=True, checksum=True)
+            MapInWild(root=str(tmp_path), checksum=True)
+
+    def test_already_downloaded(self, dataset: MapInWild, tmp_path: Path) -> None:
+        modality = [
+            "mask",
+            "viirs",
+            "esa_wc",
+            "s2_winter",
+            "s1",
+            "s2_summer",
+            "s2_spring",
+            "s2_autumn",
+            "s2_temporal_subset",
+        ]
+        MapInWild(root=str(tmp_path), modality=modality, download=True)
 
     @pytest.fixture(params=["pandas"])
     def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:

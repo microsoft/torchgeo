@@ -99,7 +99,6 @@ for source in modality_download_list:
     # Remove old data
     if os.path.exists(directory):
         shutil.rmtree(directory)
-
     os.makedirs(directory, exist_ok=True)
 
     # Random images
@@ -138,14 +137,15 @@ for key in dict_all.keys():
         os.remove(sh_del)
 
     for idx in fh_idx:
-        fh_del = os.path.join(path_list_dir_p1, p2_list[idx])
+        fh_del = os.path.join(path_list_dir_p2, p2_list[idx])
         os.remove(fh_del)
 
 for i, source in zip(keys, modality_download_list):
     directory = os.path.join(folder_path, source)
+    root = os.path.dirname(directory)
 
     # Compress data
-    shutil.make_archive(directory.replace(".zip", ""), "zip", ".", directory)
+    shutil.make_archive(directory, "zip", root_dir=root, base_dir=source)
 
     # Compute checksums
     with open(directory + ".zip", "rb") as f:
