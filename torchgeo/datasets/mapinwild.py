@@ -428,6 +428,7 @@ class MapInWild(NonGeoDataset):
             a matplotlib Figure with the rendered sample
         """
         image = rearrange(sample["image"], "h w c -> w c h")
+        image = np.asarray(image)
         mask = sample["mask"].squeeze()
         color_mask = self._convert_to_color(mask, cmap=self.mask_cmap)
 
@@ -445,6 +446,7 @@ class MapInWild(NonGeoDataset):
                 all_bands=self.band_sets["s2"],
                 select_bands=["B4", "B3", "B2"],
             )
+            rgb_s2 = np.asarray(rgb_s2)
             image = percentile_normalization(np.einsum("ijk->jki", rgb_s2))
         # Night-time light
         else:
