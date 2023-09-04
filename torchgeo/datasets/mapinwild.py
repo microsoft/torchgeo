@@ -199,7 +199,7 @@ class MapInWild(NonGeoDataset):
                         md5=self.md5s[os.path.split(modality_link)[1]],
                     )
 
-            #  Merge modalities downloaded in two parts.
+            #  Merge modalities downloaded in two parts
             if (
                 download
                 and modal not in os.listdir(self.root)
@@ -243,9 +243,9 @@ class MapInWild(NonGeoDataset):
         image = torch.cat(list_modals, dim=0)
 
         if self.transforms is not None:
-            sample_: dict[str, Tensor] = {"image": image, "mask": mask}
+            sample_trans: dict[str, Tensor] = {"image": image, "mask": mask}
 
-            transformed = self.transforms(sample_)
+            transformed = self.transforms(sample_trans)
 
             image = rearrange(transformed["image"], "h w c -> c h w")
             mask = rearrange(transformed["mask"], "h w c -> c h w")
@@ -428,7 +428,7 @@ class MapInWild(NonGeoDataset):
             a matplotlib Figure with the rendered sample
         """
         image = rearrange(sample["image"], "h w c -> w c h")
-        image = np.asarray(image)
+        image = image.numpy()
         mask = sample["mask"].squeeze()
         color_mask = self._convert_to_color(mask, cmap=self.mask_cmap)
 
@@ -446,7 +446,6 @@ class MapInWild(NonGeoDataset):
                 all_bands=self.band_sets["s2"],
                 select_bands=["B4", "B3", "B2"],
             )
-            rgb_s2 = np.asarray(rgb_s2)
             image = percentile_normalization(np.einsum("ijk->jki", rgb_s2))
         # Night-time light
         else:
