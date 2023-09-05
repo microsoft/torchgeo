@@ -217,12 +217,12 @@ class MoCoTask(BaseTask):
             if memory_bank_size > 0:
                 warnings.warn("MoCo v3 does not use a memory bank")
 
+        super().__init__()
+
         grayscale_weights = grayscale_weights or torch.ones(in_channels)
         aug1, aug2 = moco_augmentations(version, size, grayscale_weights)
         self.augmentation1 = augmentation1 or aug1
         self.augmentation2 = augmentation2 or aug2
-
-        super().__init__()
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""

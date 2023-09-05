@@ -133,12 +133,12 @@ class SimCLRTask(BaseTask):
             if memory_bank_size == 0:
                 warnings.warn("SimCLR v2 uses a memory bank")
 
+        super().__init__()
+
         grayscale_weights = grayscale_weights or torch.ones(in_channels)
         self.augmentations = augmentations or simclr_augmentations(
             size, grayscale_weights
         )
-
-        super().__init__()
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""
