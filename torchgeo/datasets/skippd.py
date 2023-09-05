@@ -83,7 +83,7 @@ class SKIPPD(NonGeoDataset):
             checksum: if True, check the MD5 after downloading files (may be slow)
 
         Raises:
-            AssertionError: if ``countries`` contains invalid countries
+            AssertionError: if ``task`` or ``split`` is invalid
             ImportError: if h5py is not installed
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
@@ -164,7 +164,6 @@ class SKIPPD(NonGeoDataset):
         if self.task == "forecast":
             arr = arr.transpose(1, 2, 3, 0).reshape(64, 64, 48)
 
-        # put channel first
         tensor = torch.from_numpy(arr).permute(2, 0, 1).to(torch.float32)
         return tensor
 
@@ -187,7 +186,6 @@ class SKIPPD(NonGeoDataset):
         path = os.path.join(self.root, f"times_{self.split}_{self.task}.npy")
         datestring = np.load(path, allow_pickle=True)[index].strftime(self.dateformat)
 
-        # put channel first
         features: dict[str, Union[str, Tensor]] = {
             "label": torch.tensor(label, dtype=torch.float32),
             "date": datestring,
