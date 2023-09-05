@@ -101,7 +101,7 @@ class SemanticSegmentationTask(BaseTask):
         Raises:
             ValueError: If *loss* is invalid.
         """
-        loss = self.hparams["loss"]
+        loss: str = self.hparams["loss"]
         ignore_index = self.hparams["ignore_index"]
         if loss == "ce":
             ignore_value = -1000 if ignore_index is None else ignore_index
@@ -124,8 +124,8 @@ class SemanticSegmentationTask(BaseTask):
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics."""
-        num_classes = self.hparams["num_classes"]
-        ignore_index = self.hparams["ignore_index"]
+        num_classes: int = self.hparams["num_classes"]
+        ignore_index: Optional[int] = self.hparams["ignore_index"]
         metrics = MetricCollection(
             [
                 MulticlassAccuracy(
@@ -149,12 +149,12 @@ class SemanticSegmentationTask(BaseTask):
         Raises:
             ValueError: If *model* is invalid.
         """
-        model = self.hparams["model"]
-        backbone = self.hparams["backbone"]
-        weights = self.hparams["weights"]
-        in_channels = self.hparams["in_channels"]
-        num_classes = self.hparams["num_classes"]
-        num_filters = self.hparams["num_filters"]
+        model: str = self.hparams["model"]
+        backbone: str = self.hparams["backbone"]
+        weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
+        in_channels: int = self.hparams["in_channels"]
+        num_classes: int = self.hparams["num_classes"]
+        num_filters: int = self.hparams["num_filters"]
 
         if model == "unet":
             self.model = smp.Unet(

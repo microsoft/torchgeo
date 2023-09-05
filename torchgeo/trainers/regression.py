@@ -83,7 +83,7 @@ class RegressionTask(BaseTask):
         Raises:
             ValueError: If *loss* is invalid.
         """
-        loss = self.hparams["loss"]
+        loss: str = self.hparams["loss"]
         if loss == "mse":
             self.criterion: nn.Module = nn.MSELoss()
         elif loss == "mae":
@@ -110,7 +110,7 @@ class RegressionTask(BaseTask):
     def configure_models(self) -> None:
         """Initialize the model."""
         # Create model
-        weights = self.hparams["weights"]
+        weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
         self.model = timm.create_model(
             self.hparams["model"],
             num_classes=self.hparams["num_outputs"],
@@ -251,7 +251,7 @@ class PixelwiseRegressionTask(RegressionTask):
 
     def configure_models(self) -> None:
         """Initialize the model."""
-        weights = self.hparams["weights"]
+        weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
 
         if self.hparams["model"] == "unet":
             self.model = smp.Unet(

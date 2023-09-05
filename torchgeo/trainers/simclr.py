@@ -150,9 +150,9 @@ class SimCLRTask(BaseTask):
 
     def configure_models(self) -> None:
         """Initialize the model."""
-        weights = self.hparams["weights"]
-        hidden_dim = self.hparams["hidden_dim"]
-        output_dim = self.hparams["output_dim"]
+        weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
+        hidden_dim: int = self.hparams["hidden_dim"]
+        output_dim: int = self.hparams["output_dim"]
 
         # Create backbone
         self.backbone = timm.create_model(
@@ -221,7 +221,7 @@ class SimCLRTask(BaseTask):
         """
         x = batch["image"]
 
-        in_channels = self.hparams["in_channels"]
+        in_channels: int = self.hparams["in_channels"]
         assert x.size(1) == in_channels or x.size(1) == 2 * in_channels
 
         if x.size(1) == in_channels:

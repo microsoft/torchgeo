@@ -234,13 +234,13 @@ class MoCoTask(BaseTask):
 
     def configure_models(self) -> None:
         """Initialize the model."""
-        model = self.hparams["model"]
-        weights = self.hparams["weights"]
-        in_channels = self.hparams["in_channels"]
-        version = self.hparams["version"]
-        layers = self.hparams["layers"]
-        hidden_dim = self.hparams["hidden_dim"]
-        output_dim = self.hparams["output_dim"]
+        model: str = self.hparams["model"]
+        weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
+        in_channels: int = self.hparams["in_channels"]
+        version: int = self.hparams["version"]
+        layers: int = self.hparams["layers"]
+        hidden_dim: int = self.hparams["hidden_dim"]
+        output_dim: int = self.hparams["output_dim"]
 
         # Create backbone
         self.backbone = timm.create_model(

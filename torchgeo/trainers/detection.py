@@ -105,11 +105,11 @@ class ObjectDetectionTask(BaseTask):
         Raises:
             ValueError: If *model* or *backbone* are invalid.
         """
-        backbone = self.hparams["backbone"]
-        model = self.hparams["model"]
-        weights = self.hparams["weights"]
-        num_classes = self.hparams["num_classes"]
-        freeze_backbone = self.hparams["freeze_backbone"]
+        backbone: str = self.hparams["backbone"]
+        model: str = self.hparams["model"]
+        weights: Optional[bool] = self.hparams["weights"]
+        num_classes: int = self.hparams["num_classes"]
+        freeze_backbone: bool = self.hparams["freeze_backbone"]
 
         if backbone in BACKBONE_LAT_DIM_MAP:
             kwargs = {
