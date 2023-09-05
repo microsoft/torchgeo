@@ -4,6 +4,7 @@
 import builtins
 import os
 import shutil
+from itertools import product
 from pathlib import Path
 from typing import Any
 
@@ -23,21 +24,32 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestSKIPPD:
-    @pytest.fixture(params=["trainval", "test"])
+    @pytest.fixture(params=product(["nowcast", "forecast"], ["trainval", "test"]))
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SKIPPD:
+        task, split = request.param
+
         monkeypatch.setattr(torchgeo.datasets.skippd, "download_url", download_url)
 
-        md5 = "1133b2de453a9674776abd7519af5051"
+        md5 = {
+            "nowcast": "6f5e54906927278b189f9281a2f54f39",
+            "forecast": "f3b5d7d5c28ba238144fa1e726c46969",
+        }
         monkeypatch.setattr(SKIPPD, "md5", md5)
-        url = os.path.join("tests", "data", "skippd", "dj417rh1007.zip")
+        url = os.path.join("tests", "data", "skippd", "{}")
         monkeypatch.setattr(SKIPPD, "url", url)
         monkeypatch.setattr(plt, "show", lambda *args: None)
         root = str(tmp_path)
-        split = request.param
         transforms = nn.Identity()
-        return SKIPPD(root, split, transforms, download=True, checksum=True)
+        return SKIPPD(
+            root=root,
+            task=task,
+            split=split,
+            transforms=transforms,
+            download=True,
+            checksum=True,
+        )
 
     @pytest.fixture
     def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
@@ -62,11 +74,14 @@ class TestSKIPPD:
     def test_already_extracted(self, dataset: SKIPPD) -> None:
         SKIPPD(root=dataset.root, download=True)
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join("tests", "data", "skippd", "dj417rh1007.zip")
+    @pytest.mark.parametrize("task", ["nowcast", "forecast"])
+    def test_already_downloaded(self, tmp_path: Path, task: str) -> None:
+        pathname = os.path.join(
+            "tests", "data", "skippd", f"2017_2019_images_pv_processed_{task}.zip"
+        )
         root = str(tmp_path)
         shutil.copy(pathname, root)
-        SKIPPD(root)
+        SKIPPD(root=root, task=task)
 
     @pytest.mark.parametrize("index", [0, 1, 2])
     def test_getitem(self, dataset: SKIPPD, index: int) -> None:
@@ -75,7 +90,10 @@ class TestSKIPPD:
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["label"], torch.Tensor)
         assert isinstance(x["date"], str)
-        assert x["image"].shape == (3, 64, 64)
+        if dataset.task == "nowcast":
+            assert x["image"].shape == (3, 64, 64)
+        else:
+            assert x["image"].shape == (48, 64, 64)
 
     def test_len(self, dataset: SKIPPD) -> None:
         assert len(dataset) == 3
@@ -93,6 +111,9 @@ class TestSKIPPD:
         plt.close()
 
         sample = dataset[0]
-        sample["prediction"] = sample["label"]
+        if dataset.task == "nowcast":
+            sample["prediction"] = sample["label"]
+        else:
+            sample["prediction"] = sample["label"][-1]
         dataset.plot(sample)
         plt.close()
