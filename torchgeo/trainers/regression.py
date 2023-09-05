@@ -11,22 +11,20 @@ import segmentation_models_pytorch as smp
 import timm
 import torch
 import torch.nn as nn
-from lightning.pytorch import LightningModule
 from torch import Tensor
-from torch.optim import AdamW
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import unbind_samples
 from ..models import FCN, get_weight
 from . import utils
+from .base import BaseTask
 
 
-class RegressionTask(LightningModule):
+class RegressionTask(BaseTask):
     """Regression."""
 
-    target_key: str = "label"
+    target_key = "label"
 
     def __init__(
         self,
@@ -82,7 +80,6 @@ class RegressionTask(LightningModule):
         """
         super().__init__()
 
-        self.save_hyperparameters()
         self._configure_models()
 
         self.loss: nn.Module
@@ -134,18 +131,6 @@ class RegressionTask(LightningModule):
                 param.requires_grad = False
             for param in self.model.get_classifier().parameters():
                 param.requires_grad = True
-
-    def forward(self, x: Tensor) -> Tensor:
-        """Forward pass of the model.
-
-        Args:
-            x: Mini-batch of images.
-
-        Returns:
-            Output from the model.
-        """
-        z: Tensor = self.model(x)
-        return z
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -258,19 +243,6 @@ class RegressionTask(LightningModule):
         y_hat: Tensor = self(x)
         return y_hat
 
-    def configure_optimizers(self) -> dict[str, Any]:
-        """Initialize the optimizer and learning rate scheduler.
-
-        Returns:
-            Optimizer and learning rate scheduler.
-        """
-        optimizer = AdamW(self.parameters(), lr=self.hparams["lr"])
-        scheduler = ReduceLROnPlateau(optimizer, patience=self.hparams["patience"])
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {"scheduler": scheduler, "monitor": "val_loss"},
-        }
-
 
 class PixelwiseRegressionTask(RegressionTask):
     """LightningModule for pixelwise regression of images.
@@ -278,7 +250,7 @@ class PixelwiseRegressionTask(RegressionTask):
     .. versionadded:: 0.5
     """
 
-    target_key: str = "mask"
+    target_key = "mask"
 
     def _configure_models(self) -> None:
         """Initialize the model."""

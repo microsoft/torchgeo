@@ -10,10 +10,7 @@ from typing import Any, Optional, Union
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
 import torch.nn as nn
-from lightning.pytorch import LightningModule
 from torch import Tensor
-from torch.optim import Adam
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MetricCollection
 from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
 from torchvision.models._api import WeightsEnum
@@ -21,9 +18,10 @@ from torchvision.models._api import WeightsEnum
 from ..datasets.utils import unbind_samples
 from ..models import FCN, get_weight
 from . import utils
+from .base import BaseTask
 
 
-class SemanticSegmentationTask(LightningModule):
+class SemanticSegmentationTask(BaseTask):
     """Semantic Segmentation."""
 
     def __init__(
@@ -93,8 +91,6 @@ class SemanticSegmentationTask(LightningModule):
            *lr* and *patience*.
         """
         super().__init__()
-
-        self.save_hyperparameters()
 
         if ignore_index is not None and loss == "jaccard":
             warnings.warn(
@@ -179,18 +175,6 @@ class SemanticSegmentationTask(LightningModule):
         )
         self.val_metrics = self.train_metrics.clone(prefix="val_")
         self.test_metrics = self.train_metrics.clone(prefix="test_")
-
-    def forward(self, x: Tensor) -> Tensor:
-        """Forward pass of the model.
-
-        Args:
-            x: Mini-batch of images.
-
-        Returns:
-            Output from the model.
-        """
-        z: Tensor = self.model(x)
-        return z
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -293,16 +277,3 @@ class SemanticSegmentationTask(LightningModule):
         x = batch["image"]
         y_hat: Tensor = self(x).softmax(dim=1)
         return y_hat
-
-    def configure_optimizers(self) -> dict[str, Any]:
-        """Initialize the optimizer and learning rate scheduler.
-
-        Returns:
-            Optimizer and learning rate scheduler.
-        """
-        optimizer = Adam(self.parameters(), lr=self.hparams["lr"])
-        scheduler = ReduceLROnPlateau(optimizer, patience=self.hparams["patience"])
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {"scheduler": scheduler, "monitor": "val_loss"},
-        }

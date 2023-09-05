@@ -14,7 +14,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from lightly.loss import NTXentLoss
 from lightly.models.modules import SimCLRProjectionHead
-from lightning import LightningModule
 from torch import Tensor
 from torch.optim import Adam
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
@@ -24,6 +23,7 @@ import torchgeo.transforms as T
 
 from ..models import get_weight
 from . import utils
+from .base import BaseTask
 
 
 def simclr_augmentations(size: int, weights: Tensor) -> nn.Module:
@@ -52,7 +52,7 @@ def simclr_augmentations(size: int, weights: Tensor) -> nn.Module:
     )
 
 
-class SimCLRTask(LightningModule):
+class SimCLRTask(BaseTask):
     """SimCLR: a simple framework for contrastive learning of visual representations.
 
     Reference implementation:
@@ -66,6 +66,8 @@ class SimCLRTask(LightningModule):
 
     .. versionadded:: 0.5
     """
+
+    monitor = "train_loss"
 
     def __init__(
         self,
@@ -133,8 +135,6 @@ class SimCLRTask(LightningModule):
             if memory_bank_size == 0:
                 warnings.warn("SimCLR v2 uses a memory bank")
 
-        self.save_hyperparameters(ignore=["augmentations"])
-
         grayscale_weights = grayscale_weights or torch.ones(in_channels)
         self.augmentations = augmentations or simclr_augmentations(
             size, grayscale_weights
@@ -183,7 +183,7 @@ class SimCLRTask(LightningModule):
             x: Mini-batch of images.
 
         Returns:
-            Output from the model and backbone.
+            Output of the model and backbone.
         """
         h: Tensor = self.backbone(x)  # shape of batch_size x num_features
         z = self.projection_head(h)
@@ -281,5 +281,5 @@ class SimCLRTask(LightningModule):
         )
         return {
             "optimizer": optimizer,
-            "lr_scheduler": {"scheduler": scheduler, "monitor": "train_loss"},
+            "lr_scheduler": {"scheduler": scheduler, "monitor": self.monitor},
         }

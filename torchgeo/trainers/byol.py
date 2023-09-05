@@ -11,14 +11,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from kornia import augmentation as K
-from lightning.pytorch import LightningModule
 from torch import Tensor
-from torch.optim import Adam
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchvision.models._api import WeightsEnum
 
 from ..models import get_weight
 from . import utils
+from .base import BaseTask
 
 
 def normalized_mse(x: Tensor, y: Tensor) -> Tensor:
@@ -282,7 +280,7 @@ class BYOL(nn.Module):
             pt.data = self.beta * pt.data + (1 - self.beta) * p.data
 
 
-class BYOLTask(LightningModule):
+class BYOLTask(BaseTask):
     """BYOL: Bootstrap Your Own Latent.
 
     Reference implementation:
@@ -294,13 +292,14 @@ class BYOLTask(LightningModule):
     * https://arxiv.org/abs/2006.07733
     """
 
+    monitor = "train_loss"
+
     def __init__(
         self,
         model: str = "resnet50",
         weights: Optional[Union[WeightsEnum, str, bool]] = None,
         in_channels: int = 3,
         lr: float = 1e-3,
-        weight_decay: float = 0,
         patience: int = 10,
     ) -> None:
         """Initialize a new BYOLTask instance.
@@ -313,7 +312,6 @@ class BYOLTask(LightningModule):
                 or None for random weights, or the path to a saved model state dict.
             in_channels: Number of input channels to model.
             lr: Learning rate for optimizer.
-            weight_decay: Weight decay (L2 penalty).
             patience: Patience for learning rate scheduler.
 
         .. versionchanged:: 0.4
@@ -325,8 +323,6 @@ class BYOLTask(LightningModule):
            renamed to *model*, *lr*, and *patience*.
         """
         super().__init__()
-
-        self.save_hyperparameters()
 
         # Create backbone
         backbone = timm.create_model(
@@ -344,18 +340,6 @@ class BYOLTask(LightningModule):
             backbone = utils.load_state_dict(backbone, state_dict)
 
         self.model = BYOL(backbone, in_channels=in_channels, image_size=(224, 224))
-
-    def forward(self, x: Tensor) -> Tensor:
-        """Forward pass of the model.
-
-        Args:
-            x: Mini-batch of images.
-
-        Returns:
-            Output from the model.
-        """
-        z: Tensor = self.model(x)
-        return z
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -412,20 +396,3 @@ class BYOLTask(LightningModule):
 
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
-
-    def configure_optimizers(self) -> dict[str, Any]:
-        """Initialize the optimizer and learning rate scheduler.
-
-        Returns:
-            Optimizer and learning rate scheduler.
-        """
-        optimizer = Adam(
-            self.parameters(),
-            lr=self.hparams["lr"],
-            weight_decay=self.hparams["weight_decay"],
-        )
-        scheduler = ReduceLROnPlateau(optimizer, patience=self.hparams["patience"])
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {"scheduler": scheduler, "monitor": "train_loss"},
-        }

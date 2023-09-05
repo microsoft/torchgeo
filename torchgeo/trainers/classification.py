@@ -10,11 +10,8 @@ import matplotlib.pyplot as plt
 import timm
 import torch
 import torch.nn as nn
-from lightning.pytorch import LightningModule
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
-from torch.optim import AdamW
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MetricCollection
 from torchmetrics.classification import (
     MulticlassAccuracy,
@@ -28,9 +25,10 @@ from torchvision.models._api import WeightsEnum
 from ..datasets import unbind_samples
 from ..models import get_weight
 from . import utils
+from .base import BaseTask
 
 
-class ClassificationTask(LightningModule):
+class ClassificationTask(BaseTask):
     """Image classification."""
 
     def __init__(
@@ -71,8 +69,6 @@ class ClassificationTask(LightningModule):
            *lr* and *patience*.
         """
         super().__init__()
-
-        self.save_hyperparameters()
 
         # Create model
         self.model = timm.create_model(
@@ -133,18 +129,6 @@ class ClassificationTask(LightningModule):
         )
         self.val_metrics = self.train_metrics.clone(prefix="val_")
         self.test_metrics = self.train_metrics.clone(prefix="test_")
-
-    def forward(self, x: Tensor) -> Tensor:
-        """Forward pass of the model.
-
-        Args:
-            x: Mini-batch of images.
-
-        Returns:
-            Output from the model.
-        """
-        z: Tensor = self.model(x)
-        return z
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -247,19 +231,6 @@ class ClassificationTask(LightningModule):
         x = batch["image"]
         y_hat: Tensor = self(x).softmax(dim=-1)
         return y_hat
-
-    def configure_optimizers(self) -> dict[str, Any]:
-        """Initialize the optimizer and learning rate scheduler.
-
-        Returns:
-            Optimizer and learning rate scheduler.
-        """
-        optimizer = AdamW(self.parameters(), lr=self.hparams["lr"])
-        scheduler = ReduceLROnPlateau(optimizer, patience=self.hparams["patience"])
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {"scheduler": scheduler, "monitor": "val_loss"},
-        }
 
 
 class MultiLabelClassificationTask(ClassificationTask):

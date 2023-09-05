@@ -9,10 +9,7 @@ from typing import Any, Optional
 import matplotlib.pyplot as plt
 import torch
 import torchvision.models.detection
-from lightning.pytorch import LightningModule
 from torch import Tensor
-from torch.optim import Adam
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models import resnet as R
@@ -22,6 +19,7 @@ from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
 from ..datasets.utils import unbind_samples
+from .base import BaseTask
 
 BACKBONE_LAT_DIM_MAP = {
     "resnet18": 512,
@@ -48,11 +46,13 @@ BACKBONE_WEIGHT_MAP = {
 }
 
 
-class ObjectDetectionTask(LightningModule):
+class ObjectDetectionTask(BaseTask):
     """Object detection.
 
     .. versionadded:: 0.4
     """
+
+    monitor = "val_map"
 
     def __init__(
         self,
@@ -101,8 +101,6 @@ class ObjectDetectionTask(LightningModule):
            renamed to *weights*, *lr*, and *patience*.
         """
         super().__init__()
-
-        self.save_hyperparameters()
 
         if backbone in BACKBONE_LAT_DIM_MAP:
             kwargs = {"backbone_name": backbone, "trainable_layers": trainable_layers}
@@ -194,21 +192,6 @@ class ObjectDetectionTask(LightningModule):
         metrics = MetricCollection([MeanAveragePrecision()])
         self.val_metrics = metrics.clone(prefix="val_")
         self.test_metrics = metrics.clone(prefix="test_")
-
-    def forward(
-        self, x: list[Tensor], y: Optional[list[dict[str, Tensor]]] = None
-    ) -> tuple[dict[str, Tensor], list[dict[str, Tensor]]]:
-        """Forward pass of the model.
-
-        Args:
-            x: Mini-batch of images.
-            y: Optional ground truth boxes present in the image.
-
-        Returns:
-            Output from the model.
-        """
-        out: tuple[dict[str, Tensor], list[dict[str, Tensor]]] = self.model(x, y)
-        return out
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -327,18 +310,3 @@ class ObjectDetectionTask(LightningModule):
         x = batch["image"]
         y_hat: list[dict[str, Tensor]] = self(x)
         return y_hat
-
-    def configure_optimizers(self) -> dict[str, Any]:
-        """Initialize the optimizer and learning rate scheduler.
-
-        Returns:
-            Optimizer and learning rate scheduler.
-        """
-        optimizer = Adam(self.parameters(), lr=self.hparams["lr"])
-        scheduler = ReduceLROnPlateau(
-            optimizer, mode="max", patience=self.hparams["patience"]
-        )
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {"scheduler": scheduler, "monitor": "val_map"},
-        }

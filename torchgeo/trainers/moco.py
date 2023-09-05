@@ -17,7 +17,6 @@ from lightly.loss import NTXentLoss
 from lightly.models.modules import MoCoProjectionHead
 from lightly.models.utils import deactivate_requires_grad, update_momentum
 from lightly.utils.scheduler import cosine_schedule
-from lightning import LightningModule
 from torch import Tensor
 from torch.optim import SGD, AdamW, Optimizer
 from torch.optim.lr_scheduler import (
@@ -32,6 +31,7 @@ import torchgeo.transforms as T
 
 from ..models import get_weight
 from . import utils
+from .base import BaseTask
 
 try:
     from torch.optim.lr_scheduler import LRScheduler
@@ -118,7 +118,7 @@ def moco_augmentations(
     return aug1, aug2
 
 
-class MoCoTask(LightningModule):
+class MoCoTask(BaseTask):
     """MoCo: Momentum Contrast.
 
     Reference implementations:
@@ -134,6 +134,8 @@ class MoCoTask(LightningModule):
 
     .. versionadded:: 0.5
     """
+
+    monitor = "train_loss"
 
     def __init__(
         self,
@@ -217,8 +219,6 @@ class MoCoTask(LightningModule):
             if memory_bank_size > 0:
                 warnings.warn("MoCo v3 does not use a memory bank")
 
-        self.save_hyperparameters(ignore=["augmentation1", "augmentation2"])
-
         grayscale_weights = grayscale_weights or torch.ones(in_channels)
         aug1, aug2 = moco_augmentations(version, size, grayscale_weights)
         self.augmentation1 = augmentation1 or aug1
@@ -272,7 +272,7 @@ class MoCoTask(LightningModule):
             x: Mini-batch of images.
 
         Returns:
-            Output from the model and backbone
+            Output of the model and backbone
         """
         h: Tensor = self.backbone(x)
         q = h
@@ -414,5 +414,5 @@ class MoCoTask(LightningModule):
             )
         return {
             "optimizer": optimizer,
-            "lr_scheduler": {"scheduler": scheduler, "monitor": "train_loss"},
+            "lr_scheduler": {"scheduler": scheduler, "monitor": self.monitor},
         }
