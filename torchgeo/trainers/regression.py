@@ -65,9 +65,6 @@ class RegressionTask(BaseTask):
                 the regression head. Does not support FCN models.
                 Only applicable to PixelwiseRegressionTask.
 
-        Raises:
-            ValueError: If any arguments are invalid.
-
         .. versionchanged:: 0.4
            Change regression model support from torchvision.models to timm
 
@@ -80,31 +77,37 @@ class RegressionTask(BaseTask):
         """
         super().__init__()
 
-        self._configure_models()
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion.
 
-        self.loss: nn.Module
+        Raises:
+            ValueError: If *loss* is invalid.
+        """
+        loss = self.hparams["loss"]
         if loss == "mse":
-            self.loss = nn.MSELoss()
+            self.criterion: nn.Module = nn.MSELoss()
         elif loss == "mae":
-            self.loss = nn.L1Loss()
+            self.criterion = nn.L1Loss()
         else:
             raise ValueError(
                 f"Loss type '{loss}' is not valid. "
                 "Currently, supports 'mse' or 'mae' loss."
             )
 
-        self.train_metrics = MetricCollection(
+    def configure_metrics(self) -> None:
+        """Initialize the performance metrics."""
+        metrics = MetricCollection(
             {
                 "RMSE": MeanSquaredError(squared=False),
                 "MSE": MeanSquaredError(squared=True),
                 "MAE": MeanAbsoluteError(),
-            },
-            prefix="train_",
+            }
         )
-        self.val_metrics = self.train_metrics.clone(prefix="val_")
-        self.test_metrics = self.train_metrics.clone(prefix="test_")
+        self.train_metrics = metrics.clone(prefix="train_")
+        self.val_metrics = metrics.clone(prefix="val_")
+        self.test_metrics = metrics.clone(prefix="test_")
 
-    def _configure_models(self) -> None:
+    def configure_models(self) -> None:
         """Initialize the model."""
         # Create model
         weights = self.hparams["weights"]
@@ -149,11 +152,9 @@ class RegressionTask(BaseTask):
         # TODO: remove .to(...) once we have a real pixelwise regression dataset
         y = batch[self.target_key].to(torch.float)
         y_hat = self(x)
-
         if y_hat.ndim != y.ndim:
             y = y.unsqueeze(dim=1)
-
-        loss: Tensor = self.loss(y_hat, y)
+        loss: Tensor = self.criterion(y_hat, y)
         self.log("train_loss", loss)
         self.train_metrics(y_hat, y)
 
@@ -173,11 +174,9 @@ class RegressionTask(BaseTask):
         # TODO: remove .to(...) once we have a real pixelwise regression dataset
         y = batch[self.target_key].to(torch.float)
         y_hat = self(x)
-
         if y_hat.ndim != y.ndim:
             y = y.unsqueeze(dim=1)
-
-        loss = self.loss(y_hat, y)
+        loss = self.criterion(y_hat, y)
         self.log("val_loss", loss)
         self.val_metrics(y_hat, y)
 
@@ -218,11 +217,9 @@ class RegressionTask(BaseTask):
         # TODO: remove .to(...) once we have a real pixelwise regression dataset
         y = batch[self.target_key].to(torch.float)
         y_hat = self(x)
-
         if y_hat.ndim != y.ndim:
             y = y.unsqueeze(dim=1)
-
-        loss = self.loss(y_hat, y)
+        loss = self.criterion(y_hat, y)
         self.log("test_loss", loss)
         self.test_metrics(y_hat, y)
 
@@ -252,7 +249,7 @@ class PixelwiseRegressionTask(RegressionTask):
 
     target_key = "mask"
 
-    def _configure_models(self) -> None:
+    def configure_models(self) -> None:
         """Initialize the model."""
         weights = self.hparams["weights"]
 

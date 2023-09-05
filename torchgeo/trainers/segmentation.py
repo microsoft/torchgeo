@@ -69,9 +69,6 @@ class SemanticSegmentationTask(BaseTask):
             freeze_decoder: Freeze the decoder network to linear probe
                 the segmentation head.
 
-        Raises:
-            ValueError: If any arguments are invalid.
-
         Warns:
             UserWarning: When loss='jaccard' and ignore_index is specified.
 
@@ -90,13 +87,74 @@ class SemanticSegmentationTask(BaseTask):
            *learning_rate* and *learning_rate_schedule_patience* were renamed to
            *lr* and *patience*.
         """
-        super().__init__()
-
         if ignore_index is not None and loss == "jaccard":
             warnings.warn(
                 "ignore_index has no effect on training when loss='jaccard'",
                 UserWarning,
             )
+
+        super().__init__()
+
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion.
+
+        Raises:
+            ValueError: If *loss* is invalid.
+        """
+        loss = self.hparams["loss"]
+        ignore_index = self.hparams["ignore_index"]
+        if loss == "ce":
+            ignore_value = -1000 if ignore_index is None else ignore_index
+            self.criterion = nn.CrossEntropyLoss(
+                ignore_index=ignore_value, weight=self.hparams["class_weights"]
+            )
+        elif loss == "jaccard":
+            self.criterion = smp.losses.JaccardLoss(
+                mode="multiclass", classes=self.hparams["num_classes"]
+            )
+        elif loss == "focal":
+            self.criterion = smp.losses.FocalLoss(
+                "multiclass", ignore_index=ignore_index, normalized=True
+            )
+        else:
+            raise ValueError(
+                f"Loss type '{loss}' is not valid. "
+                "Currently, supports 'ce', 'jaccard' or 'focal' loss."
+            )
+
+    def configure_metrics(self) -> None:
+        """Initialize the performance metrics."""
+        num_classes = self.hparams["num_classes"]
+        ignore_index = self.hparams["ignore_index"]
+        metrics = MetricCollection(
+            [
+                MulticlassAccuracy(
+                    num_classes=num_classes,
+                    ignore_index=ignore_index,
+                    multidim_average="global",
+                    average="micro",
+                ),
+                MulticlassJaccardIndex(
+                    num_classes=num_classes, ignore_index=ignore_index, average="micro"
+                ),
+            ]
+        )
+        self.train_metrics = metrics.clone(prefix="train_")
+        self.val_metrics = metrics.clone(prefix="val_")
+        self.test_metrics = metrics.clone(prefix="test_")
+
+    def configure_models(self) -> None:
+        """Initialize the model.
+
+        Raises:
+            ValueError: If *model* is invalid.
+        """
+        model = self.hparams["model"]
+        backbone = self.hparams["backbone"]
+        weights = self.hparams["weights"]
+        in_channels = self.hparams["in_channels"]
+        num_classes = self.hparams["num_classes"]
+        num_filters = self.hparams["num_filters"]
 
         if model == "unet":
             self.model = smp.Unet(
@@ -122,23 +180,6 @@ class SemanticSegmentationTask(BaseTask):
                 "Currently, only supports 'unet', 'deeplabv3+' and 'fcn'."
             )
 
-        if loss == "ce":
-            ignore_value = -1000 if ignore_index is None else ignore_index
-            self.loss = nn.CrossEntropyLoss(
-                ignore_index=ignore_value, weight=class_weights
-            )
-        elif loss == "jaccard":
-            self.loss = smp.losses.JaccardLoss(mode="multiclass", classes=num_classes)
-        elif loss == "focal":
-            self.loss = smp.losses.FocalLoss(
-                "multiclass", ignore_index=ignore_index, normalized=True
-            )
-        else:
-            raise ValueError(
-                f"Loss type '{loss}' is not valid. "
-                "Currently, supports 'ce', 'jaccard' or 'focal' loss."
-            )
-
         if model != "fcn":
             if weights and weights is not True:
                 if isinstance(weights, WeightsEnum):
@@ -150,31 +191,14 @@ class SemanticSegmentationTask(BaseTask):
                 self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
-        if freeze_backbone and model in ["unet", "deeplabv3+"]:
+        if self.hparams["freeze_backbone"] and model in ["unet", "deeplabv3+"]:
             for param in self.model.encoder.parameters():
                 param.requires_grad = False
 
         # Freeze decoder
-        if freeze_decoder and model in ["unet", "deeplabv3+"]:
+        if self.hparams["freeze_decoder"] and model in ["unet", "deeplabv3+"]:
             for param in self.model.decoder.parameters():
                 param.requires_grad = False
-
-        self.train_metrics = MetricCollection(
-            [
-                MulticlassAccuracy(
-                    num_classes=num_classes,
-                    ignore_index=ignore_index,
-                    multidim_average="global",
-                    average="micro",
-                ),
-                MulticlassJaccardIndex(
-                    num_classes=num_classes, ignore_index=ignore_index, average="micro"
-                ),
-            ],
-            prefix="train_",
-        )
-        self.val_metrics = self.train_metrics.clone(prefix="val_")
-        self.test_metrics = self.train_metrics.clone(prefix="test_")
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -193,12 +217,9 @@ class SemanticSegmentationTask(BaseTask):
         y = batch["mask"]
         y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
-
-        loss: Tensor = self.loss(y_hat, y)
-
+        loss: Tensor = self.criterion(y_hat, y)
         self.log("train_loss", loss)
         self.train_metrics(y_hat_hard, y)
-
         return loss
 
     def validation_step(
@@ -215,9 +236,7 @@ class SemanticSegmentationTask(BaseTask):
         y = batch["mask"]
         y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
-
-        loss = self.loss(y_hat, y)
-
+        loss = self.criterion(y_hat, y)
         self.log("val_loss", loss)
         self.val_metrics(y_hat_hard, y)
 
@@ -255,9 +274,7 @@ class SemanticSegmentationTask(BaseTask):
         y = batch["mask"]
         y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
-
-        loss = self.loss(y_hat, y)
-
+        loss = self.criterion(y_hat, y)
         self.log("test_loss", loss)
         self.test_metrics(y_hat_hard, y)
 

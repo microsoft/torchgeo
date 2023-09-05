@@ -201,8 +201,6 @@ class MoCoTask(BaseTask):
         Warns:
             UserWarning: If hyperparameters do not match MoCo version requested.
         """
-        super().__init__()
-
         # Validate hyperparameters
         assert version in range(1, 4)
         if version == 1:
@@ -223,6 +221,26 @@ class MoCoTask(BaseTask):
         aug1, aug2 = moco_augmentations(version, size, grayscale_weights)
         self.augmentation1 = augmentation1 or aug1
         self.augmentation2 = augmentation2 or aug2
+
+        super().__init__()
+
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion."""
+        self.criterion = NTXentLoss(
+            self.hparams["temperature"],
+            self.hparams["memory_bank_size"],
+            self.hparams["gather_distributed"],
+        )
+
+    def configure_models(self) -> None:
+        """Initialize the model."""
+        model = self.hparams["model"]
+        weights = self.hparams["weights"]
+        in_channels = self.hparams["in_channels"]
+        version = self.hparams["version"]
+        layers = self.hparams["layers"]
+        hidden_dim = self.hparams["hidden_dim"]
+        output_dim = self.hparams["output_dim"]
 
         # Create backbone
         self.backbone = timm.create_model(
@@ -259,11 +277,51 @@ class MoCoTask(BaseTask):
                 output_dim, hidden_dim, output_dim, num_layers=2, batch_norm=batch_norm
             )
 
-        # Define loss function
-        self.criterion = NTXentLoss(temperature, memory_bank_size, gather_distributed)
-
         # Initialize moving average of output
         self.avg_output_std = 0.0
+
+    def configure_optimizers(self) -> dict[str, Any]:
+        """Initialize the optimizer and learning rate scheduler.
+
+        Returns:
+            Optimizer and learning rate scheduler.
+        """
+        if self.hparams["version"] == 3:
+            optimizer: Optimizer = AdamW(
+                params=self.parameters(),
+                lr=self.hparams["lr"],
+                weight_decay=self.hparams["weight_decay"],
+            )
+            warmup_epochs = 40
+            max_epochs = 200
+            if self.trainer and self.trainer.max_epochs:
+                max_epochs = self.trainer.max_epochs
+            scheduler: LRScheduler = SequentialLR(
+                optimizer,
+                schedulers=[
+                    LinearLR(
+                        optimizer,
+                        start_factor=1 / warmup_epochs,
+                        total_iters=warmup_epochs,
+                    ),
+                    CosineAnnealingLR(optimizer, T_max=max_epochs),
+                ],
+                milestones=[warmup_epochs],
+            )
+        else:
+            optimizer = SGD(
+                params=self.parameters(),
+                lr=self.hparams["lr"],
+                momentum=self.hparams["momentum"],
+                weight_decay=self.hparams["weight_decay"],
+            )
+            scheduler = MultiStepLR(
+                optimizer=optimizer, milestones=self.hparams["schedule"]
+            )
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {"scheduler": scheduler, "monitor": self.monitor},
+        }
 
     def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
         """Forward pass of the model.
@@ -373,46 +431,3 @@ class MoCoTask(BaseTask):
 
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
-
-    def configure_optimizers(self) -> dict[str, Any]:
-        """Initialize the optimizer and learning rate scheduler.
-
-        Returns:
-            Optimizer and learning rate scheduler.
-        """
-        if self.hparams["version"] == 3:
-            optimizer: Optimizer = AdamW(
-                params=self.parameters(),
-                lr=self.hparams["lr"],
-                weight_decay=self.hparams["weight_decay"],
-            )
-            warmup_epochs = 40
-            max_epochs = 200
-            if self.trainer and self.trainer.max_epochs:
-                max_epochs = self.trainer.max_epochs
-            scheduler: LRScheduler = SequentialLR(
-                optimizer,
-                schedulers=[
-                    LinearLR(
-                        optimizer,
-                        start_factor=1 / warmup_epochs,
-                        total_iters=warmup_epochs,
-                    ),
-                    CosineAnnealingLR(optimizer, T_max=max_epochs),
-                ],
-                milestones=[warmup_epochs],
-            )
-        else:
-            optimizer = SGD(
-                params=self.parameters(),
-                lr=self.hparams["lr"],
-                momentum=self.hparams["momentum"],
-                weight_decay=self.hparams["weight_decay"],
-            )
-            scheduler = MultiStepLR(
-                optimizer=optimizer, milestones=self.hparams["schedule"]
-            )
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {"scheduler": scheduler, "monitor": self.monitor},
-        }

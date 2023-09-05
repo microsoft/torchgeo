@@ -120,8 +120,6 @@ class SimCLRTask(BaseTask):
         Warns:
             UserWarning: If hyperparameters do not match SimCLR version requested.
         """
-        super().__init__()
-
         # Validate hyperparameters
         assert version in range(1, 3)
         if version == 1:
@@ -140,9 +138,28 @@ class SimCLRTask(BaseTask):
             size, grayscale_weights
         )
 
+        super().__init__()
+
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion."""
+        self.criterion = NTXentLoss(
+            self.hparams["temperature"],
+            self.hparams["memory_bank_size"],
+            self.hparams["gather_distributed"],
+        )
+
+    def configure_models(self) -> None:
+        """Initialize the model."""
+        weights = self.hparams["weights"]
+        hidden_dim = self.hparams["hidden_dim"]
+        output_dim = self.hparams["output_dim"]
+
         # Create backbone
         self.backbone = timm.create_model(
-            model, in_chans=in_channels, num_classes=0, pretrained=weights is True
+            self.hparams["model"],
+            in_chans=self.hparams["in_channels"],
+            num_classes=0,
+            pretrained=weights is True,
         )
 
         # Load weights
@@ -163,11 +180,8 @@ class SimCLRTask(BaseTask):
             output_dim = input_dim
 
         self.projection_head = SimCLRProjectionHead(
-            input_dim, hidden_dim, output_dim, layers
+            input_dim, hidden_dim, output_dim, self.hparams["layers"]
         )
-
-        # Define loss function
-        self.criterion = NTXentLoss(temperature, memory_bank_size, gather_distributed)
 
         # Initialize moving average of output
         self.avg_output_std = 0.0

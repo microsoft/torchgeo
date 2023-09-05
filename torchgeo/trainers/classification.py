@@ -70,11 +70,55 @@ class ClassificationTask(BaseTask):
         """
         super().__init__()
 
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion.
+
+        Raises:
+            ValueError: If *loss* is invalid.
+        """
+        loss: str = self.hparams["loss"]
+        if loss == "ce":
+            self.criterion: nn.Module = nn.CrossEntropyLoss()
+        elif loss == "bce":
+            self.criterion = nn.BCEWithLogitsLoss()
+        elif loss == "jaccard":
+            self.criterion = JaccardLoss(mode="multiclass")
+        elif loss == "focal":
+            self.criterion = FocalLoss(mode="multiclass", normalized=True)
+        else:
+            raise ValueError(f"Loss type '{loss}' is not valid.")
+
+    def configure_metrics(self) -> None:
+        """Initialize the performance metrics."""
+        metrics = MetricCollection(
+            {
+                "OverallAccuracy": MulticlassAccuracy(
+                    num_classes=self.hparams["num_classes"], average="micro"
+                ),
+                "AverageAccuracy": MulticlassAccuracy(
+                    num_classes=self.hparams["num_classes"], average="macro"
+                ),
+                "JaccardIndex": MulticlassJaccardIndex(
+                    num_classes=self.hparams["num_classes"]
+                ),
+                "F1Score": MulticlassFBetaScore(
+                    num_classes=self.hparams["num_classes"], beta=1.0, average="micro"
+                ),
+            }
+        )
+        self.train_metrics = metrics.clone(prefix="train_")
+        self.val_metrics = metrics.clone(prefix="val_")
+        self.test_metrics = metrics.clone(prefix="test_")
+
+    def configure_models(self) -> None:
+        """Initialize the model."""
+        weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
+
         # Create model
         self.model = timm.create_model(
-            model,
-            num_classes=num_classes,
-            in_chans=in_channels,
+            self.hparams["model"],
+            num_classes=self.hparams["num_classes"],
+            in_chans=self.hparams["in_channels"],
             pretrained=weights is True,
         )
 
@@ -89,46 +133,11 @@ class ClassificationTask(BaseTask):
             self.model = utils.load_state_dict(self.model, state_dict)
 
         # Freeze backbone and unfreeze classifier head
-        if freeze_backbone:
+        if self.hparams["freeze_backbone"]:
             for param in self.model.parameters():
                 param.requires_grad = False
             for param in self.model.get_classifier().parameters():
                 param.requires_grad = True
-
-        if loss == "ce":
-            self.loss: nn.Module = nn.CrossEntropyLoss()
-        elif loss == "bce":
-            self.loss = nn.BCEWithLogitsLoss()
-        elif loss == "jaccard":
-            self.loss = JaccardLoss(mode="multiclass")
-        elif loss == "focal":
-            self.loss = FocalLoss(mode="multiclass", normalized=True)
-        else:
-            raise ValueError(f"Loss type '{loss}' is not valid.")
-
-        self._configure_metrics()
-
-    def _configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
-        self.train_metrics = MetricCollection(
-            {
-                "OverallAccuracy": MulticlassAccuracy(
-                    num_classes=self.hparams["num_classes"], average="micro"
-                ),
-                "AverageAccuracy": MulticlassAccuracy(
-                    num_classes=self.hparams["num_classes"], average="macro"
-                ),
-                "JaccardIndex": MulticlassJaccardIndex(
-                    num_classes=self.hparams["num_classes"]
-                ),
-                "F1Score": MulticlassFBetaScore(
-                    num_classes=self.hparams["num_classes"], beta=1.0, average="micro"
-                ),
-            },
-            prefix="train_",
-        )
-        self.val_metrics = self.train_metrics.clone(prefix="val_")
-        self.test_metrics = self.train_metrics.clone(prefix="test_")
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -147,9 +156,7 @@ class ClassificationTask(BaseTask):
         y = batch["label"]
         y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
-
-        loss: Tensor = self.loss(y_hat, y)
-
+        loss: Tensor = self.criterion(y_hat, y)
         self.log("train_loss", loss)
         self.train_metrics(y_hat_hard, y)
 
@@ -169,9 +176,7 @@ class ClassificationTask(BaseTask):
         y = batch["label"]
         y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
-
-        loss = self.loss(y_hat, y)
-
+        loss = self.criterion(y_hat, y)
         self.log("val_loss", loss)
         self.val_metrics(y_hat_hard, y)
 
@@ -209,9 +214,7 @@ class ClassificationTask(BaseTask):
         y = batch["label"]
         y_hat = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
-
-        loss = self.loss(y_hat, y)
-
+        loss = self.criterion(y_hat, y)
         self.log("test_loss", loss)
         self.test_metrics(y_hat_hard, y)
 
@@ -236,9 +239,9 @@ class ClassificationTask(BaseTask):
 class MultiLabelClassificationTask(ClassificationTask):
     """Multi-label image classification."""
 
-    def _configure_metrics(self) -> None:
+    def configure_metrics(self) -> None:
         """Initialize the performance metrics."""
-        self.train_metrics = MetricCollection(
+        metrics = MetricCollection(
             {
                 "OverallAccuracy": MultilabelAccuracy(
                     num_labels=self.hparams["num_classes"], average="micro"
@@ -249,11 +252,11 @@ class MultiLabelClassificationTask(ClassificationTask):
                 "F1Score": MultilabelFBetaScore(
                     num_labels=self.hparams["num_classes"], beta=1.0, average="micro"
                 ),
-            },
-            prefix="train_",
+            }
         )
-        self.val_metrics = self.train_metrics.clone(prefix="val_")
-        self.test_metrics = self.train_metrics.clone(prefix="test_")
+        self.train_metrics = metrics.clone(prefix="train_")
+        self.val_metrics = metrics.clone(prefix="val_")
+        self.test_metrics = metrics.clone(prefix="test_")
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -272,9 +275,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         y = batch["label"]
         y_hat = self(x)
         y_hat_hard = torch.sigmoid(y_hat)
-
-        loss: Tensor = self.loss(y_hat, y.to(torch.float))
-
+        loss: Tensor = self.criterion(y_hat, y.to(torch.float))
         self.log("train_loss", loss)
         self.train_metrics(y_hat_hard, y)
 
@@ -294,9 +295,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         y = batch["label"]
         y_hat = self(x)
         y_hat_hard = torch.sigmoid(y_hat)
-
-        loss = self.loss(y_hat, y.to(torch.float))
-
+        loss = self.criterion(y_hat, y.to(torch.float))
         self.log("val_loss", loss, on_step=False, on_epoch=True)
         self.val_metrics(y_hat_hard, y)
 
@@ -333,9 +332,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         y = batch["label"]
         y_hat = self(x)
         y_hat_hard = torch.sigmoid(y_hat)
-
-        loss = self.loss(y_hat, y.to(torch.float))
-
+        loss = self.criterion(y_hat, y.to(torch.float))
         self.log("test_loss", loss)
         self.test_metrics(y_hat_hard, y)
 

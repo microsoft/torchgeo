@@ -324,9 +324,14 @@ class BYOLTask(BaseTask):
         """
         super().__init__()
 
+    def configure_models(self) -> None:
+        """Initialize the model."""
+        weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
+        in_channels: int = self.hparams["in_channels"]
+
         # Create backbone
         backbone = timm.create_model(
-            model, in_chans=in_channels, pretrained=weights is True
+            self.hparams["model"], in_chans=in_channels, pretrained=weights is True
         )
 
         # Load weights

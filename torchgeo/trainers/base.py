@@ -1,8 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Base class for all :mod:`torchgeo` trainers."""
+"""Base classes for all :mod:`torchgeo` trainers."""
 
+from abc import ABC, abstractmethod
 from typing import Any
 
 from lightning.pytorch import LightningModule
@@ -10,8 +11,8 @@ from torch.optim import AdamW
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
-class BaseTask(LightningModule):
-    """Base class for all TorchGeo trainers.
+class BaseTask(LightningModule, ABC):
+    """Abstract base class for all TorchGeo trainers.
 
     .. versionadded:: 0.5
     """
@@ -26,18 +27,19 @@ class BaseTask(LightningModule):
         """Initialize a new BaseTask instance."""
         super().__init__()
         self.save_hyperparameters()
+        self.configure_losses()
+        self.configure_metrics()
+        self.configure_models()
 
-    def forward(self, *args: Any, **kwargs: Any) -> Any:
-        """Forward pass of the model.
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion."""
 
-        Args:
-            args: Arguments to pass to model.
-            kwargs: Keyword arguments to pass to model.
+    def configure_metrics(self) -> None:
+        """Initialize the performance metrics."""
 
-        Returns:
-            Output of the model.
-        """
-        return self.model(*args, **kwargs)
+    @abstractmethod
+    def configure_models(self) -> None:
+        """Initialize the model."""
 
     def configure_optimizers(self) -> dict[str, Any]:
         """Initialize the optimizer and learning rate scheduler.
@@ -51,3 +53,15 @@ class BaseTask(LightningModule):
             "optimizer": optimizer,
             "lr_scheduler": {"scheduler": scheduler, "monitor": self.monitor},
         }
+
+    def forward(self, *args: Any, **kwargs: Any) -> Any:
+        """Forward pass of the model.
+
+        Args:
+            args: Arguments to pass to model.
+            kwargs: Keyword arguments to pass to model.
+
+        Returns:
+            Output of the model.
+        """
+        return self.model(*args, **kwargs)

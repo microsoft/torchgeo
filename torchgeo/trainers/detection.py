@@ -87,9 +87,6 @@ class ObjectDetectionTask(BaseTask):
             freeze_backbone: Freeze the backbone network to fine-tune the detection
                 head.
 
-        Raises:
-            ValueError: If any arguments are invalid.
-
         .. versionchanged:: 0.4
            *detection_model* was renamed to *model*.
 
@@ -102,8 +99,23 @@ class ObjectDetectionTask(BaseTask):
         """
         super().__init__()
 
+    def configure_models(self) -> None:
+        """Initialize the model.
+
+        Raises:
+            ValueError: If *model* or *backbone* are invalid.
+        """
+        backbone = self.hparams["backbone"]
+        model = self.hparams["model"]
+        weights = self.hparams["weights"]
+        num_classes = self.hparams["num_classes"]
+        freeze_backbone = self.hparams["freeze_backbone"]
+
         if backbone in BACKBONE_LAT_DIM_MAP:
-            kwargs = {"backbone_name": backbone, "trainable_layers": trainable_layers}
+            kwargs = {
+                "backbone_name": backbone,
+                "trainable_layers": self.hparams["trainable_layers"],
+            }
             if weights:
                 kwargs["weights"] = BACKBONE_WEIGHT_MAP[backbone]
             else:
@@ -189,6 +201,8 @@ class ObjectDetectionTask(BaseTask):
         else:
             raise ValueError(f"Model type '{model}' is not valid.")
 
+    def configure_metrics(self) -> None:
+        """Initialize the performance metrics."""
         metrics = MetricCollection([MeanAveragePrecision()])
         self.val_metrics = metrics.clone(prefix="val_")
         self.test_metrics = metrics.clone(prefix="test_")
@@ -214,9 +228,7 @@ class ObjectDetectionTask(BaseTask):
         ]
         loss_dict = self(x, y)
         train_loss: Tensor = sum(loss_dict.values())
-
         self.log_dict(loss_dict)
-
         return train_loss
 
     def validation_step(
@@ -291,7 +303,6 @@ class ObjectDetectionTask(BaseTask):
             for i in range(batch_size)
         ]
         y_hat = self(x)
-
         self.test_metrics.update(y_hat, y)
 
     def predict_step(
