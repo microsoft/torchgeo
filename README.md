@@ -8,7 +8,7 @@ The goal of this library is to make it simple:
 2. for remote sensing experts to explore machine learning solutions.
 
 Community:
-[![slack](https://img.shields.io/badge/slack-join)](https://join.slack.com/t/torchgeo/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw)
+[![slack](https://img.shields.io/badge/slack-join-purple?logo=slack)](https://join.slack.com/t/torchgeo/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw)
 
 Packaging:
 [![pypi](https://badge.fury.io/py/torchgeo.svg)](https://pypi.org/project/torchgeo/)
