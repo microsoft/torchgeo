@@ -483,6 +483,7 @@ class RasterDataset(GeoDataset):
             data = self._merge_files(filepaths, query, self.band_indexes)
 
         key = "image" if self.is_image else "mask"
+        data = data.to(self.dtype)
         sample = {key: data, "crs": self.crs, "bbox": query}
 
         if self.as_time_series:
