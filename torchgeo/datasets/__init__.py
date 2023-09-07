@@ -41,9 +41,9 @@ from .fire_risk import FireRisk
 from .forestdamage import ForestDamage
 from .gbif import GBIF
 from .geo import (
-    ForecastDataset,
     GeoDataset,
     IntersectionDataset,
+    MultiQueryDataset,
     NonGeoClassificationDataset,
     NonGeoDataset,
     RasterDataset,
@@ -234,7 +234,7 @@ __all__ = (
     "VectorDataset",
     "VisionClassificationDataset",
     "VisionDataset",
-    "ForecastDataset",
+    "MultiQueryDataset",
     # Utilities
     "BoundingBox",
     "concat_samples",

@@ -10,13 +10,13 @@ from .single import (
     GridGeoSampler,
     PreChippedGeoSampler,
     RandomGeoSampler,
-    SequentialGeoSampler,
+    TimeWindowGeoSampler,
 )
 from .utils import get_random_bounding_box, tile_to_chips
 
 __all__ = (
     # Samplers
-    "SequentialGeoSampler",
+    "TimeWindowGeoSampler",
     "GridGeoSampler",
     "PreChippedGeoSampler",
     "RandomGeoSampler",

@@ -627,6 +627,18 @@ def unbind_samples(sample: dict[Any, Sequence[Any]]) -> list[dict[Any, Any]]:
     return _dict_list_to_list_dict(sample)
 
 
+def interpolate_samples(
+    sample: dict[Any, Sequence[Any]], query: BoundingBox
+) -> dict[Any, Any]:
+    """Useful to interpolate irregularly spaced time-series samples.
+
+    Args:
+        sample:
+        query:
+    """
+    pass
+
+
 def rasterio_loader(path: str) -> np.typing.NDArray[np.int_]:
     """Load an image file using rasterio.
 

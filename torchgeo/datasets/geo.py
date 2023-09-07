@@ -360,7 +360,7 @@ class RasterDataset(GeoDataset):
         Raises:
             FileNotFoundError: if no files are found in ``root``
 
-        .. versionchanged:: 0.4
+        .. versionchanged:: 0.5
             Add *as_time_series* parameter to support time series datasets
         """
         super().__init__(transforms)
@@ -370,6 +370,7 @@ class RasterDataset(GeoDataset):
         self.cache = cache
         self.as_time_series = as_time_series
 
+        dates: list(str) = []
         # Populate the dataset index
         i = 0
         pathname = os.path.join(root, "**", self.filename_glob)
@@ -401,11 +402,20 @@ class RasterDataset(GeoDataset):
                     maxt: float = sys.maxsize
                     if "date" in match.groupdict():
                         date = match.group("date")
+                        dates.append((os.path.basename(filepath), date))
                         mint, maxt = disambiguate_timestamp(date, self.date_format)
 
                     coords = (minx, maxx, miny, maxy, mint, maxt)
                     self.index.insert(i, coords, filepath)
                     i += 1
+
+        if self.as_time_series:
+            import pandas as pd
+
+            self.date_df = pd.DataFrame(dates)
+            self.date_df.columns = ["filename", "date"]
+            self.date_df["date"] = pd.to_datetime(self.date_df["date"], format="%Y%m%d")
+            self.date_df.sort_values(by="date", inplace=True)
 
         if i == 0:
             msg = f"No {self.__class__.__name__} data was found in `root='{self.root}'`"
@@ -477,11 +487,17 @@ class RasterDataset(GeoDataset):
         else:
             data = self._merge_files(filepaths, query, self.band_indexes)
 
-        dates = list({int(f.split("/")[-1].split("_")[0]) for f in filepaths})
-        dates = sorted(dates)
         key = "image" if self.is_image else "mask"
-        sample = {key: data, "crs": self.crs, "bbox": query, "dates": dates}
+        sample = {key: data, "crs": self.crs, "bbox": query}
 
+        if self.as_time_series:
+            filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+            dates = [
+                re.match(filename_regex, os.path.basename(filepath)).group("date")
+                for filepath in filepaths
+            ]
+            dates = sorted(dates)
+            sample["dates"] = dates
         if self.transforms is not None:
             sample = self.transforms(sample)
 
@@ -502,7 +518,7 @@ class RasterDataset(GeoDataset):
         Returns:
             data array from file handle
 
-        .. versionadded:: 0.4
+        .. versionadded:: 0.5
         """
         if len(vrts) == 1:
             dest = self._read_single_file(vrts[0], band_indexes, query, bounds)
@@ -526,7 +542,7 @@ class RasterDataset(GeoDataset):
         Returns:
             image/mask at that index
 
-        .. versionchanged:: 0.4
+        .. versionchanged:: 0.5
             Given the *as_time_series* parameter merge files to a single time instance
             as previously or return a time series for the geographical location
         """
@@ -613,7 +629,17 @@ class RasterDataset(GeoDataset):
         query: BoundingBox,
         bounds: tuple[float, float, float, float],
     ) -> np.ndarray:
-        """Read a single datasetreader from a query into array."""
+        """Read a single datasetreader from a query into array.
+
+        Args:
+            src:
+            band_indexes:
+            query:
+            bounds:
+
+        Returns:
+            queried array
+        """
         out_width = round((query.maxx - query.minx) / self.res)
         out_height = round((query.maxy - query.miny) / self.res)
         count = len(band_indexes) if band_indexes else src.count
@@ -1033,8 +1059,8 @@ class IntersectionDataset(GeoDataset):
         self.datasets[1].res = new_res
 
 
-class ForecastDataset(IntersectionDataset):
-    """Dataset used for Forecasting tasks.
+class MultiQueryDataset(IntersectionDataset):
+    """Dataset representing a collection of Datasets.
 
     This allows users to do things like:
 
@@ -1053,9 +1079,6 @@ class ForecastDataset(IntersectionDataset):
         self,
         input_dataset: GeoDataset,
         target_dataset: GeoDataset,
-        collate_fn: Callable[
-            [Sequence[dict[str, Any]]], dict[str, Any]
-        ] = concat_samples,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -1103,6 +1126,11 @@ class ForecastDataset(IntersectionDataset):
         # assuming 1-to-1 correspondence between query order and dataset order
         input_samples = self.input_dataset[query[0]]
         target_samples = self.target_dataset[query[1]]
+
+        if self.transforms is not None:
+            input_samples = self.transforms(input_samples)
+            target_samples = self.transforms(target_samples)
+
         samples = {
             "input": input_samples["image"],
             "input_bbox": input_samples["bbox"],
@@ -1124,7 +1152,7 @@ class ForecastDataset(IntersectionDataset):
         """
         return f"""\
 {self.__class__.__name__} Dataset
-    type: ForecastDataset
+    type: MultiQueryDataset
     bbox: {self.bounds}
     size: {len(self)}
     input_dataset: {self.input_dataset}
