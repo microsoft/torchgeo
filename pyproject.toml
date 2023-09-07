@@ -243,6 +243,8 @@ filterwarnings = [
     "ignore:ANTIALIAS is deprecated and will be removed in Pillow 10:DeprecationWarning:tensorboardX.summary",
     # https://github.com/Lightning-AI/lightning/issues/16756
     "ignore:Deprecated call to `pkg_resources.declare_namespace:DeprecationWarning",
+    # https://github.com/pydata/xarray/issues/7259
+    "ignore: numpy.ndarray size changed, may indicate binary incompatibility. Expected 16 from C header, got 96 from PyObject",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS

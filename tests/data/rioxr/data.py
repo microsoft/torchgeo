@@ -13,7 +13,7 @@ SIZE = 32
 
 LATS: list[tuple[float]] = [(40, 42), (60, 62), (80, 82)]
 
-LONS: list[tuple[float]] = [(-55, -50), (-60, -55), (-85, 80)]
+LONS: list[tuple[float]] = [(-55, -50), (-5, 5), (80, 85)]
 
 VAR_NAMES = ["zos", "tos"]
 
@@ -50,6 +50,10 @@ def create_rioxr_dataset(
         data_vars={var_name: (("time", "x", "y"), data)},
         coords={"x": lats, "y": lons, "time": times},
     )
+    ds["x"].attrs["units"] = "degrees_east"
+    ds["x"].attrs["crs"] = "EPSG:4326"
+    ds["y"].attrs["units"] = "degrees_north"
+    ds["y"].attrs["crs"] = "EPSG:4326"
     ds.to_netcdf(path=filename)
 
 
