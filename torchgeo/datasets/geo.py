@@ -12,18 +12,16 @@ import re
 import sys
 from collections import defaultdict
 from collections.abc import Sequence
-from typing import Any, Callable, DefaultDict, Optional, Union, cast
+from typing import Any, Callable, DefaultDict, Optional, cast
 
 import fiona
 import fiona.transform
-import matplotlib.pyplot as plt
 import numpy as np
 import pyproj
 import rasterio
 import rasterio.merge
 import shapely
 import torch
-from matplotlib.widgets import Slider
 from rasterio.crs import CRS
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
@@ -370,7 +368,7 @@ class RasterDataset(GeoDataset):
         self.cache = cache
         self.as_time_series = as_time_series
 
-        dates: list(str) = []
+        dates: list[tuple[str]] = []
         # Populate the dataset index
         i = 0
         pathname = os.path.join(root, "**", self.filename_glob)
@@ -401,7 +399,7 @@ class RasterDataset(GeoDataset):
                     mint: float = 0
                     maxt: float = sys.maxsize
                     if "date" in match.groupdict():
-                        date = match.group("date")
+                        date: str = match.group("date")
                         dates.append((os.path.basename(filepath), date))
                         mint, maxt = disambiguate_timestamp(date, self.date_format)
 
@@ -440,20 +438,17 @@ class RasterDataset(GeoDataset):
         self._crs = cast(CRS, crs)
         self._res = cast(float, res)
 
-    def __getitem__(
-        self, query: BoundingBox
-    ) -> Union[dict[str, Any], list[dict[str, Any]]]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
-            query: one or more (minx, maxx, miny, maxy, mint, maxt)
-                coordinates to index
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
-            sample of image/mask and metadata for each index in the query or
+            sample of image/mask and metadata at that index
 
         Raises:
-            IndexError: if queries is not found in the index
+            IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
         filepaths = cast(list[str], [hit.object for hit in hits])
@@ -1157,44 +1152,6 @@ class MultiQueryDataset(IntersectionDataset):
     size: {len(self)}
     input_dataset: {self.input_dataset}
     target_dataset: {self.target_dataset}"""
-
-    def plot(self, input_sequence, target_sequence):
-        """Plot sequential sample for input and target.
-
-        Args:
-            input_sequence: unbatched image sequence of shape
-                num_time_steps, num_channels, height, width
-            target_sequence: unbatched target sequence of shape
-                num_time_steps, num_channels, height, width
-        """
-
-        def select_image(image, idx):
-            return image[int(idx), 0, ...]
-
-        fig, axs = plt.subplots(ncols=2)
-
-        input_img = axs[0].imshow(select_image(input_sequence, 0))
-        axs[0].set_title("Input Sequence")
-        slider_ax = fig.add_axes([0.20, 0.1, 0.60, 0.03])
-        input_slider = Slider(
-            ax=slider_ax,
-            label="Input Time Dimension",
-            valmin=0,
-            valmax=input_sequence.shape[0],
-            valinit=0,
-            valstep=1.0,
-        )
-
-        target_img = axs[1].imshow(select_image(target_sequence, 0))
-        axs[1].set_title("Target Sequence")
-
-        def update(val):
-            input_img.array = select_image(input_sequence, 0)
-
-            fig.canvas.draw_idle()
-
-        input_slider.on_changed(update)
-        plt.show()
 
 
 class UnionDataset(GeoDataset):
