@@ -1126,15 +1126,18 @@ class MultiQueryDataset(IntersectionDataset):
             input_samples = self.transforms(input_samples)
             target_samples = self.transforms(target_samples)
 
+        input_key = "image" if self.input_dataset.is_image else "mask"
+        target_key = "image" if self.target_dataset.is_image else "mask"
+
         samples = {
-            "input": input_samples["image"],
+            "input": input_samples[input_key],
             "input_bbox": input_samples["bbox"],
             "input_crs": input_samples["crs"],
             "input_dates": input_samples["dates"],
-            "target": target_samples["image"],
+            "target": target_samples[target_key],
             "target_bbox": target_samples["bbox"],
             "target_crs": target_samples["crs"],
-            "target_dates": target_samples["dates"],
+            # "target_dates": target_samples["dates"],
         }
 
         return samples

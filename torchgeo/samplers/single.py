@@ -461,7 +461,7 @@ class TimeWindowGeoSampler(GeoSampler):
                     datetime.fromtimestamp(query.maxt)
                     - relativedelta(**{self.time_unit: self.prediction_length})
                     - timedelta(microseconds=1)
-                ),
+                ).timestamp(),
                 maxt=(
                     datetime.fromtimestamp(query.maxt) - timedelta(microseconds=1)
                 ).timestamp(),
