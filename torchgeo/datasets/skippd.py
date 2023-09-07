@@ -9,6 +9,7 @@ from typing import Any, Callable, Optional, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from einops import rearrange
 from torch import Tensor
 
 from .geo import NonGeoDataset
@@ -32,14 +33,18 @@ class SKIPPD(NonGeoDataset):
     * fish-eye RGB images (64x64px)
     * power output measurements from 30-kW rooftop PV array
     * 1-min interval across 3 years (2017-2019)
-    * nowcast task:
-        * 349,372 images under the split key *trainval*
-        * 14,003 images under the split key *test*
-    * forecast task:
-        * 130,412 images under the split key *trainval*
-        * 2,462 images under the split key *test*
-        * consists of a concatenated RGB time-series of 16
-          time-steps
+
+    Nowcast task:
+
+    * 349,372 images under the split key *trainval*
+    * 14,003 images under the split key *test*
+
+    Forecast task:
+
+    * 130,412 images under the split key *trainval*
+    * 2,462 images under the split key *test*
+    * consists of a concatenated RGB time-series of 16
+      time-steps
 
     If you use this dataset in your research, please cite:
 
@@ -77,6 +82,7 @@ class SKIPPD(NonGeoDataset):
         Args:
             root: root directory where dataset can be found
             split: one of "trainval", or "test"
+            task: one fo "nowcast", or "forecast"
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -162,9 +168,11 @@ class SKIPPD(NonGeoDataset):
         # forecast has dimension [16, 64, 64, 3] but reshape to [64, 64, 48]
         # https://github.com/yuhao-nie/Stanford-solar-forecasting-dataset/blob/main/models/SUNSET_forecast.ipynb
         if self.task == "forecast":
-            arr = arr.transpose(1, 2, 3, 0).reshape(64, 64, 48)
+            arr = rearrange(arr, "t h w c-> (t c) h w")
+        else:
+            arr = rearrange(arr, "h w c -> c h w")
 
-        tensor = torch.from_numpy(arr).permute(2, 0, 1).to(torch.float32)
+        tensor = torch.from_numpy(arr).to(torch.float32)
         return tensor
 
     def _load_features(self, index: int) -> dict[str, Union[str, Tensor]]:
@@ -248,7 +256,7 @@ class SKIPPD(NonGeoDataset):
     ) -> plt.Figure:
         """Plot a sample from the dataset.
 
-        In the `forecast` task the latest image is plotted.
+        In the ``forecast`` task the latest image is plotted.
 
         Args:
             sample: a sample return by :meth:`__getitem__`
