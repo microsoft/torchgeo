@@ -311,7 +311,7 @@ class MapInWild(NonGeoDataset):
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
+                f"Dataset not found in `root={self.root}` directory and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
                 "to automatically download the dataset."
             )
