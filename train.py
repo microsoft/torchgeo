@@ -19,6 +19,10 @@ from torchgeo.datamodules import MisconfigurationException
 from torchgeo.trainers import BYOLTask, MoCoTask, ObjectDetectionTask, SimCLRTask
 
 
+import torch
+torch.set_float32_matmul_precision("medium")
+
+
 def set_up_omegaconf() -> DictConfig:
     """Loads program arguments from either YAML config files or command line arguments.
 
@@ -103,12 +107,12 @@ def main(conf: DictConfig) -> None:
         mode = "min"
 
     checkpoint_callback = ModelCheckpoint(
-        monitor=monitor_metric,
-        filename=f"checkpoint-{{epoch:02d}}-{{{monitor_metric}:.2f}}",
+        #monitor=monitor_metric,
+        #filename=f"checkpoint-{{epoch:02d}}-{{{monitor_metric}:.2f}}",
         dirpath=experiment_dir,
-        save_top_k=1,
+        save_top_k=0,
         save_last=True,
-        mode=mode,
+        #mode=mode,
     )
     early_stopping_callback = EarlyStopping(
         monitor=monitor_metric, min_delta=0.00, patience=18, mode=mode
@@ -117,7 +121,7 @@ def main(conf: DictConfig) -> None:
     # Define trainer
     trainer: Trainer = instantiate(
         conf.trainer,
-        callbacks=[checkpoint_callback, early_stopping_callback],
+        callbacks=[checkpoint_callback], #early_stopping_callback],
         logger=[tb_logger, csv_logger],
         default_root_dir=experiment_dir,
     )

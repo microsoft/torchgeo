@@ -126,6 +126,7 @@ class BaseDataModule(LightningDataModule):
         Returns:
             A batch of data.
         """
+        batch["image"] = batch["image"].to(torch.float)
         if self.trainer:
             if self.trainer.training:
                 split = "train"
