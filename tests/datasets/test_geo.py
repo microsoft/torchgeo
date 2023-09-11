@@ -15,9 +15,9 @@ from torch.utils.data import ConcatDataset
 from torchgeo.datasets import (
     NAIP,
     BoundingBox,
-    ForecastDataset,
     GeoDataset,
     IntersectionDataset,
+    MultiQueryDataset,
     NonGeoClassificationDataset,
     NonGeoDataset,
     RasterDataset,
@@ -225,12 +225,6 @@ class TestRasterDataset:
 
         with pytest.raises(AssertionError, match=msg):
             CustomSentinelDataset(root, bands=bands, transforms=transforms, cache=cache)
-
-    def test_time_series(self, time_series_ds: RasterDataset) -> None:
-        sample = time_series_ds[time_series_ds.bounds]
-        assert isinstance(sample, dict)
-        assert isinstance(sample["image"], torch.Tensor)
-        assert sample["image"].dtype == torch.int64
 
 
 class TestVectorDataset:
@@ -600,9 +594,9 @@ class TestUnionDataset:
             dataset[query]
 
 
-class TestForecastDataset:
+class TestMultiQueryDataset:
     @pytest.fixture()
-    def forecast_ds(self) -> RasterDataset:
+    def forecast_ds(self) -> MultiQueryDataset:
         root = os.path.join("tests", "data", "time_series_raster")
 
         class TimeSeriesInputRaster(RasterDataset):
@@ -621,18 +615,18 @@ class TestForecastDataset:
             separate_files = True
             all_bands = ["target"]
 
-        return ForecastDataset(
+        return MultiQueryDataset(
             input_dataset=TimeSeriesInputRaster(root, as_time_series=True),
             target_dataset=TimeSeriesTargetRaster(root, as_time_series=True),
         )
 
-    def test_get_sample(self, forecast_ds: ForecastDataset) -> None:
+    def test_get_sample(self, forecast_ds: MultiQueryDataset) -> None:
         query = (forecast_ds.bounds, forecast_ds.bounds)
         sample = forecast_ds[query]
         assert isinstance(sample["input"], torch.Tensor)
         assert isinstance(sample["target"], torch.Tensor)
 
-    def test_invalid_input_query(self, forecast_ds: ForecastDataset) -> None:
+    def test_invalid_input_query(self, forecast_ds: MultiQueryDataset) -> None:
         bbox = BoundingBox(0, 0, 0, 0, 0, 0)
         query = (bbox, bbox)
         with pytest.raises(
@@ -641,7 +635,7 @@ class TestForecastDataset:
         ):
             forecast_ds[query]
 
-    def test_invalid_target_query(self, forecast_ds: ForecastDataset) -> None:
+    def test_invalid_target_query(self, forecast_ds: MultiQueryDataset) -> None:
         bbox = BoundingBox(0, 0, 0, 0, 0, 0)
         query = (forecast_ds.bounds, bbox)
         with pytest.raises(
@@ -650,10 +644,10 @@ class TestForecastDataset:
         ):
             forecast_ds[query]
 
-    def test_str(self, forecast_ds: ForecastDataset) -> None:
+    def test_str(self, forecast_ds: MultiQueryDataset) -> None:
         out = str(forecast_ds)
         print(out)
-        assert "type: ForecastDataset" in out
+        assert "type: MultiQueryDataset" in out
         assert "bbox: BoundingBox" in out
         assert "size: 5" in out
         assert "input_dataset: TimeSeriesInputRaster" in out

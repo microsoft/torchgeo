@@ -1066,7 +1066,7 @@ class MultiQueryDataset(IntersectionDataset):
     These combinations require that all queries are present in *both* datasets,
     and can be combined using an :class:`IntersectionDataset`:
 
-    This dataset should be used with :class:'SequentialGeoSampler' sampler.
+    This dataset should be used with :class:'TimeWindowGeoSampler' sampler.
 
     .. versionadded:: 0.5.0
     """
