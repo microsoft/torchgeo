@@ -13,8 +13,8 @@ from torch.utils.data import DataLoader
 
 from torchgeo.datasets import (
     BoundingBox,
-    ForecastDataset,
     GeoDataset,
+    MultiQueryDataset,
     RasterDataset,
     stack_samples,
 )
@@ -23,7 +23,7 @@ from torchgeo.samplers import (
     GridGeoSampler,
     PreChippedGeoSampler,
     RandomGeoSampler,
-    SequentialGeoSampler,
+    TimeWindowGeoSampler,
     Units,
     tile_to_chips,
 )
@@ -308,7 +308,7 @@ class TestPreChippedGeoSampler:
             continue
 
 
-class TestSequentialGeoSampler:
+class TestTimeWindowGeoSampler:
     @pytest.fixture()
     def forecast_ds(self) -> RasterDataset:
         root = os.path.join("tests", "data", "time_series_raster")
@@ -329,17 +329,17 @@ class TestSequentialGeoSampler:
             separate_files = True
             all_bands = ["target"]
 
-        return ForecastDataset(
+        return MultiQueryDataset(
             input_dataset=TimeSeriesInputRaster(root, as_time_series=True),
             target_dataset=TimeSeriesTargetRaster(root, as_time_series=True),
         )
 
     @pytest.fixture(scope="function", params=zip(["days"], [3], [2]))
     def sampler(
-        self, forecast_ds: ForecastDataset, request: SubRequest
-    ) -> SequentialGeoSampler:
+        self, forecast_ds: MultiQueryDataset, request: SubRequest
+    ) -> TimeWindowGeoSampler:
         time_unit, encoder_length, prediction_length = request.param
-        return SequentialGeoSampler(
+        return TimeWindowGeoSampler(
             forecast_ds,
             size=32,
             length=2,
@@ -348,6 +348,6 @@ class TestSequentialGeoSampler:
             time_unit=time_unit,
         )
 
-    def test_iter(self, sampler: SequentialGeoSampler) -> None:
+    def test_iter(self, sampler: TimeWindowGeoSampler) -> None:
         for _ in sampler:
             continue
