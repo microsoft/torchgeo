@@ -43,12 +43,12 @@ def create_rioxr_dataset(
         times = pd.date_range(start="2000-01-01", periods=NUM_TIME_STEPS, freq="D")
 
     # data with shape (time, x, y)
-    data = np.random.rand(len(times), len(lats), len(lons))
+    data = np.random.rand(len(times), len(lons), len(lats))
 
     # Create the xarray dataset
     ds = xr.Dataset(
         data_vars={var_name: (("time", "x", "y"), data)},
-        coords={"x": lats, "y": lons, "time": times},
+        coords={"x": lons, "y": lats, "time": times},
     )
     ds["x"].attrs["units"] = "degrees_east"
     ds["x"].attrs["crs"] = "EPSG:4326"
