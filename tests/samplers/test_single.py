@@ -334,11 +334,14 @@ class TestTimeWindowGeoSampler:
             target_dataset=TimeSeriesTargetRaster(root, as_time_series=True),
         )
 
-    @pytest.fixture(scope="function", params=zip(["days"], [3], [2]))
+    @pytest.fixture(
+        scope="function",
+        params=zip(["days", "days", "days"], [3, 2, 2], [2, 1, 1], [True, True, False]),
+    )
     def sampler(
         self, forecast_ds: MultiQueryDataset, request: SubRequest
     ) -> TimeWindowGeoSampler:
-        time_unit, encoder_length, prediction_length = request.param
+        time_unit, encoder_length, prediction_length, consecutive = request.param
         return TimeWindowGeoSampler(
             forecast_ds,
             size=32,
@@ -346,6 +349,7 @@ class TestTimeWindowGeoSampler:
             encoder_length=encoder_length,
             prediction_length=prediction_length,
             time_unit=time_unit,
+            consecutive=consecutive,
         )
 
     def test_iter(self, sampler: TimeWindowGeoSampler) -> None:
