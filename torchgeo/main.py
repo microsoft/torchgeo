@@ -8,8 +8,8 @@ import os
 from lightning.pytorch.cli import ArgsType, LightningCLI
 
 # Allows classes to be referenced using only the class name
-import torchgeo.datamodules  # noqa: E401
-import torchgeo.trainers  # noqa: E401
+import torchgeo.datamodules  # noqa: F401
+import torchgeo.trainers  # noqa: F401
 
 
 def main(args: ArgsType = None) -> None:
@@ -23,4 +23,4 @@ def main(args: ArgsType = None) -> None:
     }
     os.environ.update(rasterio_best_practices)
 
-    cli = LightningCLI(args=args)
+    LightningCLI(args=args)
