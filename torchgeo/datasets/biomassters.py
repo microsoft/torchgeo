@@ -13,7 +13,7 @@ import rasterio
 import torch
 from torch import Tensor
 
-from .geo import NonGeoDataset
+from .geo import NonGeoDataset, RasterDataset
 
 
 class BioMassters(NonGeoDataset):
@@ -100,7 +100,7 @@ class BioMassters(NonGeoDataset):
                 "pandas is not installed and is required to use this dataset"
             )
 
-        self._verify()
+        # self._verify()
 
         # open metadata csv files
         self.df = pd.read_csv(os.path.join(self.root, self.metadata_filename))
@@ -118,9 +118,6 @@ class BioMassters(NonGeoDataset):
         }
         self.df["num_month"] = self.df["month"].map(month_mapping)
 
-        import pdb
-
-        pdb.set_trace()
         # set dataframe index depending on the task for easier indexing
         if self.as_time_series:
             # each index
@@ -148,13 +145,15 @@ class BioMassters(NonGeoDataset):
             by=["satellite", "num_month"], inplace=True, ascending=True
         )
 
-        # rasterio merge or are they in the same spatial dimension?
-        for _, row in sample_df.iterrows():
-            filename = row["filename"]
-
-        target_path = row["corresponding_agbm"]
-
-        sample = {"image": 0, "target": self._load_target(target_path)}
+        if self.split == "train":
+            sample = {
+                "image": self._load_input(sample_df["filename"].tolist()),
+                "target": self._load_target(
+                    sample_df["corresponding_agbm"].unique()[0]
+                ),
+            }
+        else:
+            sample = {"image": self._load_input(sample_df["filename"].tolist())}
 
         return sample
 
@@ -166,9 +165,21 @@ class BioMassters(NonGeoDataset):
         """
         return len(self.df["num_index"].unique())
 
-    def _load_input(self):
-        """Load the input imagery at the index."""
-        pass
+    def _load_input(self, filenames: list[str]) -> Tensor:
+        """Load the input imagery at the index.
+
+        Args:
+            filenames: list of filenames corresponding to input
+        """
+        filepaths = [
+            os.path.join(self.root, f"{self.split}_features", f) for f in filenames
+        ]
+
+        vrt_fhs = [RasterDataset._load_warp_file(fp) for fp in filepaths]
+
+        dest, _ = rasterio.merge.merge(vrt_fhs)
+
+        return torch.Tensor(dest)
 
     def _load_target(self, filename: str) -> Tensor:
         """Load the target mask at the index.
