@@ -53,6 +53,7 @@ class ObjectDetectionTask(BaseTask):
     """
 
     monitor = "val_map"
+    mode = "max"
 
     def __init__(
         self,

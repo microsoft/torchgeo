@@ -13,6 +13,7 @@ import torchgeo.trainers  # noqa: F401
 
 
 def main(args: ArgsType = None) -> None:
+    """Command-line interface to TorchGeo."""
     # Taken from https://github.com/pangeo-data/cog-best-practices
     rasterio_best_practices = {
         "GDAL_DISABLE_READDIR_ON_OPEN": "EMPTY_DIR",
