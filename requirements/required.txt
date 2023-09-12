@@ -7,7 +7,7 @@ fiona==1.9.4.post1
 kornia==0.7.0
 lightly==1.4.18
 lightning==2.0.8
-matplotlib==3.7.2
+matplotlib==3.7.3
 numpy==1.25.2
 pillow==10.0.0
 pyproj==3.6.0
