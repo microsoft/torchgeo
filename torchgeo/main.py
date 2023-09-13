@@ -29,6 +29,7 @@ def main(args: ArgsType = None) -> None:
     LightningCLI(
         model_class=BaseTask,
         datamodule_class=BaseDataModule,
+        seed_everything_default=0,
         subclass_mode_model=True,
         subclass_mode_data=True,
         args=args,
