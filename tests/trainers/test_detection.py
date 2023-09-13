@@ -8,14 +8,13 @@ import pytest
 import torch
 import torch.nn as nn
 import torchvision.models.detection
-from hydra.utils import instantiate
 from lightning.pytorch import Trainer
-from omegaconf import OmegaConf
 from pytest import MonkeyPatch
 from torch.nn.modules import Module
 
 from torchgeo.datamodules import MisconfigurationException, NASAMarineDebrisDataModule
 from torchgeo.datasets import NASAMarineDebris
+from torchgeo.main import main
 from torchgeo.trainers import ObjectDetectionTask
 
 
@@ -63,12 +62,8 @@ class TestObjectDetectionTask:
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, model_name: str, fast_dev_run: bool
     ) -> None:
-        conf = OmegaConf.load(os.path.join("tests", "conf", f"{name}.yaml"))
+        config = os.path.join("tests", "conf", name + ".yaml")
 
-        # Instantiate datamodule
-        datamodule = instantiate(conf.datamodule)
-
-        # Instantiate model
         monkeypatch.setattr(
             torchvision.models.detection, "FasterRCNN", ObjectDetectionTestModel
         )
@@ -78,23 +73,27 @@ class TestObjectDetectionTask:
         monkeypatch.setattr(
             torchvision.models.detection, "RetinaNet", ObjectDetectionTestModel
         )
-        conf.module.model = model_name
-        model = instantiate(conf.module)
 
-        # Instantiate trainer
-        trainer = Trainer(
-            accelerator="cpu",
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.fit(model=model, datamodule=datamodule)
+        args = [
+            "--config",
+            config,
+            "--trainer.accelerator",
+            "cpu",
+            "--trainer.fast_dev_run",
+            str(fast_dev_run),
+            "--trainer.max_epochs",
+            "1",
+            "--trainer.log_every_n_steps",
+            "1",
+        ]
+
+        main(["fit"] + args)
         try:
-            trainer.test(model=model, datamodule=datamodule)
+            main(["test"] + args)
         except MisconfigurationException:
             pass
         try:
-            trainer.predict(model=model, datamodule=datamodule)
+            main(["predict"] + args)
         except MisconfigurationException:
             pass
 
