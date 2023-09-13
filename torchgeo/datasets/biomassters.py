@@ -4,7 +4,6 @@
 """BioMassters Dataset."""
 
 import os
-from datetime import datetime
 from typing import Any, Optional
 
 import matplotlib.pyplot as plt
@@ -13,7 +12,7 @@ import rasterio
 import torch
 from torch import Tensor
 
-from .geo import NonGeoDataset, RasterDataset
+from .geo import NonGeoDataset
 
 
 class BioMassters(NonGeoDataset):
@@ -36,14 +35,11 @@ class BioMassters(NonGeoDataset):
     * 12 months of data per target mask
     * Sentinel 1 and Sentinel 2 data for each location
     * Sentinel 1 (specify channels here)
-    * Sentinel 2 (specify channels here)
+    * Sentinel 2 (B02, B03, B04, B05, B06, B07, B08, B8A, B11, B12)
 
     If you use this dataset in your research, please cite the following paper:
 
     * TBD
-
-    # Add Warning about dataset size
-
 
     .. versionadded:: 0.5
     """
@@ -111,17 +107,18 @@ class BioMassters(NonGeoDataset):
         # filter split
         self.df = self.df[self.df["split"] == self.split]
 
-        # generate numerical month
-        month_mapping = {
-            month: datetime.strptime(month, "%B").month
-            for month in self.df["month"].unique()
-        }
-        self.df["num_month"] = self.df["month"].map(month_mapping)
+        # generate numerical month from filename since first month is September
+        # and has numerical index of 0
+        self.df["num_month"] = (
+            self.df["filename"]
+            .str.split("_", expand=True)[2]
+            .str.split(".", expand=True)[0]
+            .astype(int)
+        )
 
         # set dataframe index depending on the task for easier indexing
         if self.as_time_series:
-            # each index
-            self.df["num_index"] = self.df.groupby(["chip_id"])
+            self.df["num_index"] = self.df.groupby(["chip_id"]).ngroup()
         else:
             #
             self.df["num_index"] = self.df.groupby(["chip_id", "month"]).ngroup()
@@ -138,7 +135,7 @@ class BioMassters(NonGeoDataset):
         Raises:
             IndexError: if index is out of range of the dataset
         """
-        sample_df = self.df[self.df["num_index"] == index]
+        sample_df = self.df[self.df["num_index"] == index].copy()
 
         # sort by satellite and month to return correct order
         sample_df.sort_values(
@@ -175,11 +172,24 @@ class BioMassters(NonGeoDataset):
             os.path.join(self.root, f"{self.split}_features", f) for f in filenames
         ]
 
-        vrt_fhs = [RasterDataset._load_warp_file(fp) for fp in filepaths]
+        # read and concatenate
+        if not self.as_time_series:
+            arr = np.concatenate([rasterio.open(fp).read() for fp in filepaths], axis=0)
+        else:
+            # return time series
+            sensor_arrs = []
+            for sens in self.sensors:
+                sens_filepaths = [fp for fp in filepaths if sens in fp]
+                # stack for time dimension
+                sensor_arrs.append(
+                    np.stack(
+                        [rasterio.open(fp).read() for fp in sens_filepaths], axis=0
+                    )
+                )
+            # concatenate channels
+            arr = np.concatenate(sensor_arrs, axis=1)
 
-        dest, _ = rasterio.merge.merge(vrt_fhs)
-
-        return torch.Tensor(dest)
+        return torch.tensor(arr).float()
 
     def _load_target(self, filename: str) -> Tensor:
         """Load the target mask at the index.
