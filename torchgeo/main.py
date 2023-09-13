@@ -10,6 +10,8 @@ from lightning.pytorch.cli import ArgsType, LightningCLI
 # Allows classes to be referenced using only the class name
 import torchgeo.datamodules  # noqa: F401
 import torchgeo.trainers  # noqa: F401
+from torchgeo.datamodules import BaseDataModule
+from torchgeo.trainers import BaseTask
 
 
 def main(args: ArgsType = None) -> None:
@@ -24,4 +26,10 @@ def main(args: ArgsType = None) -> None:
     }
     os.environ.update(rasterio_best_practices)
 
-    LightningCLI(args=args)
+    LightningCLI(
+        model_class=BaseTask,
+        datamodule_class=BaseDataModule,
+        subclass_mode_model=True,
+        subclass_mode_data=True,
+        args=args,
+    )
