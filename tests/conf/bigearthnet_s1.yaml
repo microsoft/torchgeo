@@ -12,5 +12,5 @@ data:
   dict_kwargs:
     root: "tests/data/bigearthnet"
     bands: "s1"
-    num_classes: ${model.init_args.num_classes}
+    num_classes: 19
     download: true
