@@ -1,18 +1,20 @@
-module:
-  _target_: torchgeo.trainers.SemanticSegmentationTask
-  loss: "ce"
-  model: "unet"
-  backbone: "resnet18"
-  in_channels: 11
-  num_classes: 5
-  num_filters: 1
-  ignore_index: null
-
-datamodule:
-  _target_: torchgeo.datamodules.L8BiomeDataModule
-  root: "tests/data/l8biome"
-  download: true
-  batch_size: 1
-  patch_size: 32
-  length: 5
-  num_workers: 0
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    loss: "ce"
+    model: "unet"
+    backbone: "resnet18"
+    in_channels: 11
+    num_classes: 5
+    num_filters: 1
+    ignore_index: null
+data:
+  class_path: L8BiomeDataModule
+  init_args:
+    batch_size: 1
+    patch_size: 32
+    length: 5
+    num_workers: 0
+  dict_kwargs:
+    root: "tests/data/l8biome"
+    download: true

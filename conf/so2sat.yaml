@@ -1,23 +1,21 @@
-module:
-  _target_: torchgeo.trainers.ClassificationTask
-  loss: "ce"
-  model: "resnet18"
-  lr: 1e-3
-  patience: 6
-  weights: null
-  in_channels: 18
-  num_classes: 17
-
-datamodule:
-  _target_: torchgeo.datamodules.So2SatDataModule
-  root: "data/so2sat"
-  batch_size: 128
-  num_workers: 4
-  band_set: "all"
-
 trainer:
-  _target_: lightning.pytorch.Trainer
-  accelerator: gpu
-  devices: 1
   min_epochs: 15
   max_epochs: 40
+model:
+  class_path: ClassificationTask
+  init_args:
+    loss: "ce"
+    model: "resnet18"
+    lr: 1e-3
+    patience: 6
+    weights: null
+    in_channels: 18
+    num_classes: 17
+data:
+  class_path: So2SatDataModule
+  init_args:
+    batch_size: 128
+    num_workers: 4
+    band_set: "all"
+  dict_kwargs:
+    root: "data/so2sat"

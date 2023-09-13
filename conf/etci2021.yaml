@@ -1,24 +1,22 @@
-module:
-  _target_: torchgeo.trainers.SemanticSegmentationTask
-  loss: "ce"
-  model: "unet"
-  backbone: "resnet18"
-  weights: true
-  lr: 1e-3
-  patience: 6
-  in_channels: 6
-  num_classes: 2
-  ignore_index: 0
-
-datamodule:
-  _target_: torchgeo.datamodules.ETCI2021DataModule
-  root: "data/etci2021"
-  batch_size: 32
-  num_workers: 4
-
 trainer:
-  _target_: lightning.pytorch.Trainer
-  accelerator: gpu
-  devices: 1
   min_epochs: 15
   max_epochs: 40
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    loss: "ce"
+    model: "unet"
+    backbone: "resnet18"
+    weights: true
+    lr: 1e-3
+    patience: 6
+    in_channels: 6
+    num_classes: 2
+    ignore_index: 0
+data:
+  class_path: ETCI2021DataModule
+  init_args:
+    batch_size: 32
+    num_workers: 4
+  dict_kwargs:
+    root: "data/etci2021"
