@@ -57,7 +57,7 @@ def plot(*args: Any, **kwargs: Any) -> None:
 
 class TestRegressionTask:
     @classmethod
-    def create_model(**kwargs: Any) -> Module:
+    def create_model(*args: Any, **kwargs: Any) -> Module:
         return RegressionTestModel(**kwargs)
 
     @pytest.mark.parametrize(
@@ -194,7 +194,7 @@ class TestRegressionTask:
 
 class TestPixelwiseRegressionTask:
     @classmethod
-    def create_model(**kwargs: Any) -> Module:
+    def create_model(*args: Any, **kwargs: Any) -> Module:
         return PixelwiseRegressionTestModel(**kwargs)
 
     @pytest.mark.parametrize(
