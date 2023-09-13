@@ -3,6 +3,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import csv
+import os
+
 import numpy as np
 import rasterio
 
@@ -18,36 +21,90 @@ months = ["September", "October", "November"]
 
 satellite = ["S1", "S2"]
 
-
-def create_S1_data():
-    pass
+SIZE = 32
 
 
-def create_S2_data():
-    pass
+def create_tif_file(path: str, num_channels: int, dtype: str) -> None:
+    """Create S1 or S2 data with num channels.
+
+    Args:
+        path: path where to save tif
+        num_channels: number of channels (4 for S1, 11 for S2)
+        dtype: uint16 for image data and float 32 for target
+    """
+    profile = {}
+    profile["driver"] = "GTiff"
+    profile["dtype"] = dtype
+    profile["count"] = num_channels
+    profile["crs"] = "epsg:4326"
+    profile["transform"] = rasterio.transform.from_bounds(0, 0, 1, 1, 1, 1)
+    profile["height"] = SIZE
+    profile["width"] = SIZE
+    profile["compress"] = "lzw"
+    profile["predictor"] = 2
+
+    if "float" in profile["dtype"]:
+        Z = np.random.randn(SIZE, SIZE).astype(profile["dtype"])
+    else:
+        Z = np.random.randint(
+            np.iinfo(profile["dtype"]).max, size=(SIZE, SIZE), dtype=profile["dtype"]
+        )
+
+    with rasterio.open(path, "w", **profile) as src:
+        for i in range(1, profile["count"] + 1):
+            src.write(Z, i)
 
 
-def create_metadata():
-    pass
-
-
-def create_target():
-    pass
-
-
+# filename,chip_id,satellite,split,month,size,cksum,s3path_us,s3path_eu,s3path_as,corresponding_agbm
 if __name__ == "__main__":
+    csv_rows = []
     for split in splits:
+        os.makedirs(f"{split}_features", exist_ok=True)
+        if split == "train":
+            os.makedirs("train_agbm", exist_ok=True)
         for id in sample_ids:
             for sat in satellite:
                 path = id + "_" + str(sat)
                 for idx, month in enumerate(months):
                     file_path = path + "_" + f"{idx:02d}" + ".tif"
 
-                    if sat == "S1":
-                        create_S1_data(file_path)
-                    else:
-                        create_S2_data(file_path)
+                    csv_rows.append(
+                        [
+                            file_path,
+                            id,
+                            sat,
+                            split,
+                            month,
+                            "0",
+                            "0",
+                            "path",
+                            "path",
+                            "path",
+                            id + "_agbm.tif",
+                        ]
+                    )
 
-        # create target data
+                    # file path to save
+                    file_path = os.path.join(f"{split}_features", file_path)
+
+                    if sat == "S1":
+                        create_tif_file(file_path, num_channels=4, dtype="uint16")
+                    else:
+                        create_tif_file(file_path, num_channels=11, dtype="uint16")
+
+        # create target data one per id
         if split == "train":
-            create_target(id + "_agbm.tif")
+            create_tif_file(
+                os.path.join(f"{split}_agbm", id + "_agbm.tif"),
+                num_channels=1,
+                dtype="float32",
+            )
+
+    # write out metadata
+
+    with open("The_BioMassters_-_features_metadata.csv.csv", "w") as csv_file:
+        wr = csv.writer(csv_file)
+        for row in csv_rows:
+            wr.writerows(row)
+
+    # zip up feature and target folders
