@@ -13,7 +13,6 @@ data:
   class_path: SSL4EOLDataModule
   init_args:
     batch_size: 2
-    num_workers: 0
   dict_kwargs:
     root: "tests/data/ssl4eo/l"
     split: "tm_toa"

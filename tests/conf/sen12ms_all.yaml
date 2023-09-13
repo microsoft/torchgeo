@@ -11,7 +11,6 @@ data:
   class_path: SEN12MSDataModule
   init_args:
     batch_size: 1
-    num_workers: 0
     band_set: "all"
   dict_kwargs:
     root: "tests/data/sen12ms"

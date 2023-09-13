@@ -14,6 +14,5 @@ data:
     batch_size: 1
     patch_size: 2
     val_split_pct: 0.5
-    num_workers: 0
   dict_kwargs:
     root: "tests/data/potsdam"

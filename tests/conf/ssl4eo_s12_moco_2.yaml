@@ -15,7 +15,6 @@ data:
   class_path: SSL4EOS12DataModule
   init_args:
     batch_size: 2
-    num_workers: 0
   dict_kwargs:
     root: "tests/data/ssl4eo/s12"
     split: "s1"

@@ -12,7 +12,6 @@ data:
   class_path: SSL4EOLBenchmarkDataModule
   init_args:
     batch_size: 2
-    num_workers: 0
   dict_kwargs:
     root: "tests/data/ssl4eo_benchmark_landsat"
     sensor: "etm_sr"

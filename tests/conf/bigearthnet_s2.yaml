@@ -9,7 +9,6 @@ data:
   class_path: BigEarthNetDataModule
   init_args:
     batch_size: 1
-    num_workers: 0
   dict_kwargs:
     root: "tests/data/bigearthnet"
     bands: "s2"

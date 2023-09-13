@@ -12,7 +12,6 @@ data:
   class_path: EuroSAT100DataModule
   init_args:
     batch_size: 1
-    num_workers: 4
   dict_kwargs:
     root: "tests/data/eurosat"
     download: true

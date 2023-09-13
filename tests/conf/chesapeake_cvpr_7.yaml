@@ -19,7 +19,6 @@ data:
     - "de-test"
     batch_size: 2
     patch_size: 64
-    num_workers: 0
     class_set: ${model.init_args.num_classes}
     use_prior_labels: False
   dict_kwargs:

@@ -9,7 +9,6 @@ data:
   class_path: SustainBenchCropYieldDataModule
   init_args:
     batch_size: 1
-    num_workers: 0
   dict_kwargs:
     root: "tests/data/sustainbench_crop_yield"
     download: true

@@ -17,7 +17,6 @@ data:
     - "de-test"
     batch_size: 2
     patch_size: 64
-    num_workers: 0
     class_set: 5
     use_prior_labels: True
   dict_kwargs:

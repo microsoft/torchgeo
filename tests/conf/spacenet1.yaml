@@ -12,7 +12,6 @@ data:
   class_path: SpaceNet1DataModule
   init_args:
     batch_size: 1
-    num_workers: 0
     val_split_pct: 0.33
     test_split_pct: 0.33
   dict_kwargs:

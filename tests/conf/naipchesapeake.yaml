@@ -12,7 +12,6 @@ data:
   class_path: NAIPChesapeakeDataModule
   init_args:
     batch_size: 2
-    num_workers: 0
     patch_size: 32
   dict_kwargs:
     naip_root: "tests/data/naip"

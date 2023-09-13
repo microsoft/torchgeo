@@ -14,7 +14,6 @@ data:
     batch_size: 1
     patch_size: 32
     length: 5
-    num_workers: 0
   dict_kwargs:
     root: "tests/data/l7irish"
     download: true

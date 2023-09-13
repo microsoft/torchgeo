@@ -9,7 +9,6 @@ data:
   class_path: UCMercedDataModule
   init_args:
     batch_size: 2
-    num_workers: 0
   dict_kwargs:
     root: "tests/data/ucmerced"
     download: true
