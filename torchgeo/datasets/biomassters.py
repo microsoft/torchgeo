@@ -13,6 +13,7 @@ import torch
 from torch import Tensor
 
 from .geo import NonGeoDataset
+from .utils import percentile_normalization
 
 
 class BioMassters(NonGeoDataset):
@@ -34,8 +35,10 @@ class BioMassters(NonGeoDataset):
     * 13,000 target AGB masks of size (256x256px)
     * 12 months of data per target mask
     * Sentinel 1 and Sentinel 2 data for each location
-    * Sentinel 1 (specify channels here)
+    * Sentinel 1 (specify channels here) available for each month
     * Sentinel 2 (B02, B03, B04, B05, B06, B07, B08, B8A, B11, B12)
+      not available for each month due to ESA aquisition halt over the region
+      during particular periods
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -120,7 +123,15 @@ class BioMassters(NonGeoDataset):
         if self.as_time_series:
             self.df["num_index"] = self.df.groupby(["chip_id"]).ngroup()
         else:
-            #
+            filter_df = (
+                self.df.groupby(["chip_id", "month"])["satellite"].count().reset_index()
+            )
+            filter_df = filter_df[filter_df["satellite"] == len(self.sensors)].drop(
+                "satellite", axis=1
+            )
+            # guarantee that each sample has corresponding number of images available
+            self.df = self.df.merge(filter_df, on=["chip_id", "month"], how="inner")
+
             self.df["num_index"] = self.df.groupby(["chip_id", "month"]).ngroup()
 
     def __getitem__(self, index: int) -> dict[str, Any]:
@@ -142,15 +153,16 @@ class BioMassters(NonGeoDataset):
             by=["satellite", "num_month"], inplace=True, ascending=True
         )
 
+        filepaths = sample_df["filename"].tolist()
+        sample: dict[str, Tensor] = {}
+        for sens in self.sensors:
+            sens_filepaths = [fp for fp in filepaths if sens in fp]
+            sample[f"image_{sens}"] = self._load_input(sens_filepaths)
+
         if self.split == "train":
-            sample = {
-                "image": self._load_input(sample_df["filename"].tolist()),
-                "target": self._load_target(
-                    sample_df["corresponding_agbm"].unique()[0]
-                ),
-            }
-        else:
-            sample = {"image": self._load_input(sample_df["filename"].tolist())}
+            sample["target"] = self._load_target(
+                sample_df["corresponding_agbm"].unique()[0]
+            )
 
         return sample
 
@@ -171,25 +183,11 @@ class BioMassters(NonGeoDataset):
         filepaths = [
             os.path.join(self.root, f"{self.split}_features", f) for f in filenames
         ]
-
-        # read and concatenate
         if not self.as_time_series:
             arr = np.concatenate([rasterio.open(fp).read() for fp in filepaths], axis=0)
         else:
-            # return time series
-            sensor_arrs = []
-            for sens in self.sensors:
-                sens_filepaths = [fp for fp in filepaths if sens in fp]
-                # stack for time dimension
-                sensor_arrs.append(
-                    np.stack(
-                        [rasterio.open(fp).read() for fp in sens_filepaths], axis=0
-                    )
-                )
-            # concatenate channels
-            arr = np.concatenate(sensor_arrs, axis=1)
-
-        return torch.tensor(arr).float()
+            arr = np.stack([rasterio.open(fp).read() for fp in filepaths], axis=0)
+        return torch.tensor(arr.astype(np.int32))
 
     def _load_target(self, filename: str) -> Tensor:
         """Load the target mask at the index.
@@ -200,13 +198,13 @@ class BioMassters(NonGeoDataset):
         Returns:
             target mask
         """
-        with rasterio.open(os.path.join(self.root, self.dir, filename), "r") as src:
+        with rasterio.open(os.path.join(self.root, "train_agbm", filename), "r") as src:
             arr: "np.typing.NDArray[np.float_]" = src.read()
 
         target = torch.from_numpy(arr).float()
         return target
 
-    def _verify(self):
+    def _verify(self) -> None:
         """Verify the integrity of the dataset.
 
         Raises:
@@ -265,4 +263,57 @@ class BioMassters(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        pass
+        ncols = len(self.sensors) + 1
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            ncols += 1
+
+        fig, axs = plt.subplots(1, ncols=ncols, figsize=(5 * ncols, 10))
+        for idx, sens in enumerate(self.sensors):
+            img = sample[f"image_{sens}"].numpy()
+            if self.as_time_series:
+                # plot last time step
+                img = img[-1, ...]
+            if sens == "S2":
+                img = img[[2, 1, 0], ...]
+                img = percentile_normalization(img.transpose(1, 2, 0))
+            else:
+                co_polarization = img[0]  # transmit == receive
+                cross_polarization = img[1]  # transmit != receive
+                ratio = co_polarization / cross_polarization
+
+                # https://gis.stackexchange.com/a/400780/123758
+                co_polarization = np.clip(co_polarization / 0.3, a_min=0, a_max=1)
+                cross_polarization = np.clip(
+                    cross_polarization / 0.05, a_min=0, a_max=1
+                )
+                ratio = np.clip(ratio / 25, a_min=0, a_max=1)
+
+                img = np.stack((co_polarization, cross_polarization, ratio), axis=-1)
+
+            axs[idx].imshow(img)
+            axs[idx].axis("off")
+            if show_titles:
+                axs[idx].set_title(sens)
+
+        if showing_predictions:
+            pred = axs[ncols - 2].imshow(
+                sample["prediction"].permute(1, 2, 0), cmap="YlGn"
+            )
+            plt.colorbar(pred, ax=axs[ncols - 2], fraction=0.046, pad=0.04)
+            axs[ncols - 2].axis("off")
+            if show_titles:
+                axs[ncols - 2].set_title("Prediction")
+
+        # plot target
+        target = axs[-1].imshow(sample["target"].permute(1, 2, 0), cmap="YlGn")
+        plt.colorbar(target, ax=axs[-1], fraction=0.046, pad=0.04)
+        axs[-1].axis("Off")
+        if show_titles:
+            axs[-1].set_title("Target")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
