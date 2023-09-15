@@ -4,12 +4,28 @@
 # Licensed under the MIT License.
 
 import csv
+import hashlib
 import os
+import shutil
 
 import numpy as np
 import rasterio
 
 metadata_train = "The_BioMassters_-_features_metadata.csv.csv"
+
+csv_columns = [
+    "filename",
+    "chip_id",
+    "satellite",
+    "split",
+    "month",
+    "size",
+    "cksum",
+    "s3path_us",
+    "s3path_eu",
+    "s3path_as",
+    "corresponding_agbm",
+]
 
 targets = "train_agbm.zip"
 
@@ -66,6 +82,9 @@ if __name__ == "__main__":
             for sat in satellite:
                 path = id + "_" + str(sat)
                 for idx, month in enumerate(months):
+                    # S2 data is not present for every month
+                    if sat == "S2" and idx == 1:
+                        continue
                     file_path = path + "_" + f"{idx:02d}" + ".tif"
 
                     csv_rows.append(
@@ -104,7 +123,15 @@ if __name__ == "__main__":
 
     with open("The_BioMassters_-_features_metadata.csv.csv", "w") as csv_file:
         wr = csv.writer(csv_file)
+        wr.writerow(csv_columns)
         for row in csv_rows:
-            wr.writerows(row)
+            wr.writerow(row)
 
     # zip up feature and target folders
+    zip_dirs = ["train_features", "test_features", "train_agbm"]
+    for dir in zip_dirs:
+        shutil.make_archive(dir, "zip", dir)
+        # Compute checksums
+        with open(dir + ".zip", "rb") as f:
+            md5 = hashlib.md5(f.read()).hexdigest()
+            print(f"{dir}: {md5}")

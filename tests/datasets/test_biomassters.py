@@ -8,8 +8,6 @@ from itertools import product
 from pathlib import Path
 
 import pytest
-import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
@@ -23,17 +21,21 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 class TestBioMassters:
     @pytest.fixture(
-        params=product(["train", "test"], [["S1"], ["S2"], ["S1", "S2"], [True, False]])
+        params=product(["train", "test"], [["S1"], ["S2"], ["S1", "S2"]], [True, False])
     )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> BioMassters:
-        split, sensor, as_time_series = request.param
+        split, sensors, as_time_series = request.param
         monkeypatch.setattr(torchgeo.datasets.biomassters, "download_url", download_url)
 
-        md5s = {}
+        md5s = {
+            "train_features": "a1d9e9d620e1341448707b5a4baef68c",
+            "test_features": "e7cd859b1e031f94e645d01cd07c1966",
+            "train_agbm": "b6fbbb594c9ba683b25a77f5ff5ace97",
+        }
         monkeypatch.setattr(BioMassters, "md5s", md5s)
-        url = os.path.join("tests", "data", "biomassters")
+        url = os.path.join("tests", "data", "biomassters", "{}")
         monkeypatch.setattr(BioMassters, "url", url)
 
         root = str(tmp_path)
@@ -41,19 +43,19 @@ class TestBioMassters:
         return BioMassters(
             root,
             split=split,
-            sensor=sensor,
+            sensors=sensors,
             as_time_series=as_time_series,
             download=True,
             checksum=True,
         )
 
-    def test_invalid_split(self) -> None:
+    def test_invalid_split(self, dataset: BioMassters) -> None:
         with pytest.raises(AssertionError):
-            BioMassters(split="foo")
+            BioMassters(dataset.root, split="foo")
 
-    def test_invalid_bands(self) -> None:
-        with pytest.raises(ValueError):
-            BioMassters(sensor=["S3"])
+    def test_invalid_bands(self, dataset: BioMassters) -> None:
+        with pytest.raises(AssertionError):
+            BioMassters(dataset.root, sensors=["S3"])
 
     def test_already_downloaded(self, dataset: BioMassters, tmp_path: Path) -> None:
         BioMassters(root=str(tmp_path), download=True)
@@ -62,11 +64,11 @@ class TestBioMassters:
         self, dataset: BioMassters, tmp_path: Path
     ) -> None:
         shutil.rmtree(dataset.root)
-        download_url(dataset.url, root=str(tmp_path))
+        shutil.copytree(os.path.join("tests", "data", "biomassters"), str(tmp_path))
         BioMassters(root=str(tmp_path), download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = "Dataset not found in `root` directory and `download=False`, "
+        err = f"Dataset not found in `root={tmp_path}` and `download=False`, "
         "either specify a different `root` directory or use `download=True` "
         "to automatically download the dataset."
         with pytest.raises(RuntimeError, match=err):

@@ -13,7 +13,7 @@ import torch
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import percentile_normalization
+from .utils import download_url, extract_archive, percentile_normalization
 
 
 class BioMassters(NonGeoDataset):
@@ -49,6 +49,10 @@ class BioMassters(NonGeoDataset):
 
     valid_splits = ["train", "test"]
     valid_sensors = ["S1", "S2"]
+
+    url = "https://huggingface.co/datasets/nascetti-a/BioMassters/resolve/main/{}"
+
+    md5s = {"train_features": "123", "test_features": "456", "train_agbm": "789"}
 
     metadata_filename = "The_BioMassters_-_features_metadata.csv.csv"
 
@@ -99,7 +103,7 @@ class BioMassters(NonGeoDataset):
                 "pandas is not installed and is required to use this dataset"
             )
 
-        # self._verify()
+        self._verify()
 
         # open metadata csv files
         self.df = pd.read_csv(os.path.join(self.root, self.metadata_filename))
@@ -211,12 +215,17 @@ class BioMassters(NonGeoDataset):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         # Check if the extracted files already exist
-        pathname = os.path.join(self.root, self.data_dir)
-        if os.path.exists(pathname):
+        exists = []
+
+        filenames = [f"{self.split}_features", self.metadata_filename]
+        for filename in filenames:
+            pathname = os.path.join(self.root, filename)
+            exists.append(os.path.exists(pathname))
+        if all(exists):
             return
 
         # Check if the zip files have already been downloaded
-        pathname = os.path.join(self.root, self.data_dir) + ".zip"
+        pathname = os.path.join(self.root, f"{self.split}_features") + ".zip"
         if os.path.exists(pathname):
             self._extract()
             return
@@ -239,13 +248,28 @@ class BioMassters(NonGeoDataset):
         Raises:
             RuntimeError: if download doesn't work correctly or checksums don't match
         """
-        # TODO huggingface download maybe with HF api key verification?
-        self._extract()
-        pass
+        # download features
+        download_url(
+            self.url.format(f"{self.split}_features.zip"),
+            self.root,
+            md5=self.md5s[f"{self.split}_features"] if self.checksum else None,
+        )
+        # download targets
+        if self.split == "train":
+            download_url(
+                self.url.format("train_agbm.zip"),
+                self.root,
+                md5=self.md5s["train_agbm"] if self.checksum else None,
+            )
+        # download metadata
+        download_url(self.url.format(self.metadata_filename), self.root)
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        pass
+        # extract imagery
+        extract_archive(os.path.join(self.root, f"{self.split}_features.zip"))
+        if self.split == "train":
+            extract_archive(os.path.join(self.root, "train_agbm.zip"))
 
     def plot(
         self,
