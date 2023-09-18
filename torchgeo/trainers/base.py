@@ -6,6 +6,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+import lightning
 from lightning.pytorch import LightningModule
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -41,7 +42,9 @@ class BaseTask(LightningModule, ABC):
     def configure_models(self) -> None:
         """Initialize the model."""
 
-    def configure_optimizers(self) -> dict[str, Any]:
+    def configure_optimizers(
+        self,
+    ) -> "lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig":
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:

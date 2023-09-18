@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from typing import Any, Optional, Union
 
 import kornia.augmentation as K
+import lightning
 import timm
 import torch
 import torch.nn as nn
@@ -280,7 +281,9 @@ class MoCoTask(BaseTask):
         # Initialize moving average of output
         self.avg_output_std = 0.0
 
-    def configure_optimizers(self) -> dict[str, Any]:
+    def configure_optimizers(
+        self,
+    ) -> "lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig":
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
