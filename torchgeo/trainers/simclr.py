@@ -8,6 +8,7 @@ import warnings
 from typing import Any, Optional, Union
 
 import kornia.augmentation as K
+import lightning
 import timm
 import torch
 import torch.nn as nn
@@ -266,7 +267,9 @@ class SimCLRTask(BaseTask):
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
 
-    def configure_optimizers(self) -> dict[str, Any]:
+    def configure_optimizers(
+        self,
+    ) -> "lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig":
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
