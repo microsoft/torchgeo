@@ -10,6 +10,7 @@ from typing import Callable, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
@@ -264,9 +265,7 @@ class LoveDA(NonGeoDataset):
             md5=self.md5 if self.checksum else None,
         )
 
-    def plot(
-        self, sample: dict[str, Tensor], suptitle: Optional[str] = None
-    ) -> plt.Figure:
+    def plot(self, sample: dict[str, Tensor], suptitle: Optional[str] = None) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

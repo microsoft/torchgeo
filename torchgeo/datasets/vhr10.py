@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from matplotlib import patches
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
@@ -371,7 +372,7 @@ class VHR10(NonGeoDataset):
         show_feats: Optional[str] = "both",
         box_alpha: float = 0.7,
         mask_alpha: float = 0.7,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

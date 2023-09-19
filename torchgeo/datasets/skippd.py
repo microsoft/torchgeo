@@ -9,6 +9,7 @@ from typing import Any, Callable, Optional, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
@@ -226,7 +227,7 @@ class SKIPPD(NonGeoDataset):
         sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
