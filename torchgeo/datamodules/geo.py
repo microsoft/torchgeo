@@ -141,7 +141,7 @@ class BaseDataModule(LightningDataModule):
 
         return batch
 
-    def plot(self, *args: Any, **kwargs: Any) -> Figure:
+    def plot(self, *args: Any, **kwargs: Any) -> Optional[Figure]:
         """Run the plot method of the validation dataset if one exists.
 
         Should only be called during 'fit' or 'validate' stages as ``val_dataset``
