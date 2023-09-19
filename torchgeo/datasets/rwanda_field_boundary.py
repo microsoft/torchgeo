@@ -4,7 +4,8 @@
 """Rwanda Field Boundary Competition dataset."""
 
 import os
-from typing import Callable, List, Optional, Sequence
+from typing import Callable, List, Optional
+from collections.abc import Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -118,8 +119,8 @@ class RwandaFieldBoundary(NonGeoDataset):
         self.checksum = checksum
         self._verify()
 
-        self.image_filenames: List[List[List[str]]] = []
-        self.mask_filenames: List[str] = []
+        self.image_filenames: list[list[list[str]]] = []
+        self.mask_filenames: list[str] = []
         for i in range(self.number_of_patches_per_split[split]):
             dates = []
             for date in self.dates:
