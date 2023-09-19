@@ -287,6 +287,11 @@ Potsdam
 
 .. autoclass:: Potsdam2D
 
+RwandaFieldBoundary
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: RwandaFieldBoundary
+
 ReforesTree
 ^^^^^^^^^^^
 
