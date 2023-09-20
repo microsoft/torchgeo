@@ -438,9 +438,7 @@ class VHR10(NonGeoDataset):
             ncols += 1
 
         # Display image
-        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
-        if not isinstance(axs, np.ndarray):
-            axs = [axs]
+        fig, axs = plt.subplots(ncols=ncols, squeeze=False, figsize=(ncols * 10, 10))
         axs[0].imshow(image)
         axs[0].axis("off")
 
