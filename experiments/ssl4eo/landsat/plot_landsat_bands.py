@@ -161,4 +161,4 @@ ax2.plot(0, 0, transform=ax2.transAxes, **kwargs)
 
 plt.tight_layout()
 plt.subplots_adjust(wspace=0.05)
-plt.show()
+plt.show()  # type: ignore[no-untyped-call]

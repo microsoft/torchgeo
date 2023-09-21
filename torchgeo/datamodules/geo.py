@@ -154,11 +154,12 @@ class BaseDataModule(LightningDataModule):
         Returns:
             A matplotlib Figure with the image, ground truth, and predictions.
         """
+        fig: Optional[Figure] = None
         dataset = self.dataset or self.val_dataset
         if dataset is not None:
             if hasattr(dataset, "plot"):
                 fig: Figure = dataset.plot(*args, **kwargs)
-                return fig
+        return fig
 
 
 class GeoDataModule(BaseDataModule):
