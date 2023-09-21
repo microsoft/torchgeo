@@ -450,7 +450,7 @@ class VHR10(NonGeoDataset):
             # Add bounding boxes
             x1, y1, x2, y2 = boxes[i]
             if show_feats in {"boxes", "both"}:
-                p = patches.Rectangle(
+                r = patches.Rectangle(
                     (x1, y1),
                     x2 - x1,
                     y2 - y1,
@@ -460,7 +460,7 @@ class VHR10(NonGeoDataset):
                     edgecolor=color,
                     facecolor="none",
                 )
-                axs[0, 0].add_patch(p)
+                axs[0, 0].add_patch(r)
 
             # Add labels
             label = self.categories[class_num]

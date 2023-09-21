@@ -7,7 +7,7 @@ import argparse
 from datetime import date, timedelta
 
 import matplotlib.pyplot as plt
-from matplotlib import cm
+from matplotlib.cm import tab10
 
 # Match NeurIPS template
 plt.rcParams.update(
@@ -75,7 +75,7 @@ global_xmax = date.today()
 
 fig, ax = plt.subplots(figsize=(5.5, 3))
 
-cmap = iter(cm.tab10(range(9, 0, -1)))
+cmap = iter(tab10(range(9, 0, -1)))
 ymin = args.bar_start
 yticks = []
 for satellite in range(9, 0, -1):

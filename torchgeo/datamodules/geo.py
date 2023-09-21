@@ -158,7 +158,7 @@ class BaseDataModule(LightningDataModule):
         dataset = self.dataset or self.val_dataset
         if dataset is not None:
             if hasattr(dataset, "plot"):
-                fig: Figure = dataset.plot(*args, **kwargs)
+                fig = dataset.plot(*args, **kwargs)
         return fig
 
 
