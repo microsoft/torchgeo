@@ -8,6 +8,7 @@ from typing import Callable, Optional, cast
 import matplotlib.pyplot as plt
 import numpy as np
 import torchvision.transforms.functional as F
+from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
@@ -222,7 +223,7 @@ class UCMerced(NonGeoClassificationDataset):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

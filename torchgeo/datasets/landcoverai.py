@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from matplotlib.colors import ListedColormap
+from matplotlib.figure import Figure
 from PIL import Image
 from rasterio.crs import CRS
 from torch import Tensor
@@ -155,7 +156,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

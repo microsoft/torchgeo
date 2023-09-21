@@ -9,6 +9,7 @@ from typing import Any, Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import torch
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
@@ -230,7 +231,7 @@ class GlobBiomass(RasterDataset):
         sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
