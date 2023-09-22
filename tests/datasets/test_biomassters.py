@@ -68,7 +68,7 @@ class TestBioMassters:
         BioMassters(root=str(tmp_path), download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = f"Dataset not found in `root={tmp_path}` and `download=False`, "
+        err = f"Dataset not found in `root={str(tmp_path)}` and `download=False`, "
         "either specify a different `root` directory or use `download=True` "
         "to automatically download the dataset."
         with pytest.raises(RuntimeError, match=err):
