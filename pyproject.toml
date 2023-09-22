@@ -45,8 +45,8 @@ dependencies = [
     "kornia>=0.6.9",
     # lightly 1.4.4+ required for MoCo v3 support
     "lightly>=1.4.4",
-    # lightning 1.8+ is first release
-    "lightning[pytorch-extra]>=1.8",
+    # lightning 2+ required for LightningCLI args + sys.argv support
+    "lightning[pytorch-extra]>=2",
     # matplotlib 3.3.3+ required for Python 3.9 wheels
     "matplotlib>=3.3.3",
     # numpy 1.19.3+ required by Python 3.9 wheels
