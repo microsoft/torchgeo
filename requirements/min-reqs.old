@@ -54,3 +54,4 @@ pytest-cov==2.4.0
 # Required dependency of lightning, wasn't properly listed until 1.9
 # https://github.com/Lightning-AI/lightning/pull/16302
 websockets
+jsonargparse[signatures]==4.18.0
