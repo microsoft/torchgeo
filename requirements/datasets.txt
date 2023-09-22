@@ -11,5 +11,6 @@ scikit-image==0.21.0
 xarray==2023.7.0
 rioxarray==0.14.1
 xarray
+netCDF4
 scipy==1.11.2
 zipfile-deflate64==0.2.0
