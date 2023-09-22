@@ -34,6 +34,11 @@ class RioXarrayDataset(GeoDataset):
 
     is_image = True
 
+    spatial_x_name = "x"
+    spatial_y_name = "y"
+
+    transform = None
+
     @property
     def dtype(self) -> torch.dtype:
         """The dtype of the dataset (overrides the dtype of the data file via a cast).
@@ -51,7 +56,6 @@ class RioXarrayDataset(GeoDataset):
         root: str,
         data_variables: Optional[list[str]] = None,
         crs: Optional[CRS] = None,
-        res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -62,8 +66,6 @@ class RioXarrayDataset(GeoDataset):
                 of xarray datasets
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of dataarray)
-            res: resolution of the dataset in units of CRS
-                (defaults to the resolution of the dataarray)
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
 
@@ -93,17 +95,18 @@ class RioXarrayDataset(GeoDataset):
             if match is not None:
                 with xr.open_dataset(filepath, decode_times=True) as ds:
                     # rioxarray expects spatial dimensions to be named x and y
-                    x_name, y_name = self._infer_spatial_coordinate_names(ds)
-                    if x_name != "x" and y_name != "y":
-                        ds = ds.rename({x_name: "x", y_name: "y"})
+                    ds.rio.set_spatial_dims(
+                        self.spatial_x_name, self.spatial_y_name, inplace=True
+                    )
 
                     if crs is None:
                         crs = ds.rio.crs
 
-                    if res is None:
-                        res = ds.rio.resolution()[0]
-
-                    (minx, miny, maxx, maxy) = ds.rio.bounds()
+                    try:
+                        (minx, miny, maxx, maxy) = ds.rio.bounds()
+                    except AttributeError:
+                        # or take the shape of the data variable?
+                        continue
 
                 if hasattr(ds, "time"):
                     try:
@@ -125,6 +128,9 @@ class RioXarrayDataset(GeoDataset):
                     data_variables_to_collect.extend(list(ds.data_vars))
 
         if i == 0:
+            import pdb
+
+            pdb.set_trace()
             msg = f"No {self.__class__.__name__} data was found in `root='{self.root}'`"
             raise FileNotFoundError(msg)
 
@@ -135,7 +141,7 @@ class RioXarrayDataset(GeoDataset):
             self._crs = "EPSG:4326"
         else:
             self._crs = cast(CRS, crs)
-        self.res = cast(float, res)
+        self.res = 1.0
 
     def _infer_spatial_coordinate_names(self, ds) -> tuple[str]:
         """Infer the names of the spatial coordinates.
@@ -148,16 +154,19 @@ class RioXarrayDataset(GeoDataset):
         """
         x_name = None
         y_name = None
-        for dim_name, dim in ds.coords.items():
-            if hasattr(dim, "units"):
+        for coord_name, coord in ds.coords.items():
+            if hasattr(coord, "units"):
                 if any(
-                    [x in dim.units.lower() for x in ["degrees_north", "degree_north"]]
+                    [
+                        x in coord.units.lower()
+                        for x in ["degrees_north", "degree_north"]
+                    ]
                 ):
-                    y_name = dim_name
+                    y_name = coord_name
                 elif any(
-                    [x in dim.units.lower() for x in ["degrees_east", "degree_east"]]
+                    [x in coord.units.lower() for x in ["degrees_east", "degree_east"]]
                 ):
-                    x_name = dim_name
+                    x_name = coord_name
 
         if not x_name or not y_name:
             raise ValueError("Spatial Coordinate Units not found in Dataset.")
@@ -188,9 +197,9 @@ class RioXarrayDataset(GeoDataset):
         for item in items:
             with xr.open_dataset(item, decode_cf=True) as ds:
                 # rioxarray expects spatial dimensions to be named x and y
-                x_name, y_name = self._infer_spatial_coordinate_names(ds)
-                if x_name != "x" and y_name != "y":
-                    ds = ds.rename({x_name: "x", y_name: "y"})
+                ds.rio.set_spatial_dims(
+                    self.spatial_x_name, self.spatial_y_name, inplace=True
+                )
 
                 if not ds.rio.crs:
                     ds.rio.write_crs(self._crs, inplace=True)
@@ -216,8 +225,13 @@ class RioXarrayDataset(GeoDataset):
 
                 for variable in self.data_variables:
                     if hasattr(clipped, variable):
-                        # rasterio merge expects this order
-                        clipped = clipped.transpose("time", "y", "x")
+                        # rioxarray expects this order
+                        clipped = clipped.transpose(
+                            "time", self.spatial_y_name, self.spatial_x_name, ...
+                        )
+
+                        # set proper transform # TODO not working
+                        # clipped = clipped.rio.write_transform(self.transform)
                         data_arrays.append(clipped[variable].squeeze())
 
         merged_data = torch.from_numpy(
