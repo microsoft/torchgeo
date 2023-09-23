@@ -197,22 +197,9 @@ class TestPixelwiseRegressionTask:
     def create_model(*args: Any, **kwargs: Any) -> Module:
         return PixelwiseRegressionTestModel(**kwargs)
 
-    @pytest.mark.parametrize(
-        "name,batch_size,loss,model_type",
-        [
-            ("inria", 1, "mse", "unet"),
-            ("inria", 2, "mae", "deeplabv3+"),
-            ("inria", 1, "mse", "fcn"),
-        ],
-    )
+    @pytest.mark.parametrize("name", ["inria_unet", "inria_deeplab", "inria_fcn"])
     def test_trainer(
-        self,
-        monkeypatch: MonkeyPatch,
-        name: str,
-        batch_size: int,
-        loss: str,
-        model_type: str,
-        fast_dev_run: bool,
+        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         config = os.path.join("tests", "conf", name + ".yaml")
 
