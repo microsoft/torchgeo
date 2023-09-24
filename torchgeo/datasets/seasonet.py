@@ -372,7 +372,6 @@ class SeasoNet(NonGeoDataset):
 
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-            ImportError: if ``download=True`` but requests is not installed
         """
         # Check if all files already exist
         if all(
@@ -433,6 +432,9 @@ class SeasoNet(NonGeoDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        Raises:
+            ValueError: If *bands* does not contain all RGB bands.
         """
         if "10m_RGB" not in self.bands:
             raise ValueError("Dataset does not contain RGB bands")
