@@ -269,11 +269,12 @@ class ObjectDetectionTask(BaseTask):
                     sample["image"] *= 255
                     sample["image"] = sample["image"].to(torch.uint8)
                 fig = datamodule.plot(sample)
-                summary_writer = self.logger.experiment
-                summary_writer.add_figure(
-                    f"image/{batch_idx}", fig, global_step=self.global_step
-                )
-                plt.close()
+                if fig:
+                    summary_writer = self.logger.experiment
+                    summary_writer.add_figure(
+                        f"image/{batch_idx}", fig, global_step=self.global_step
+                    )
+                    plt.close()
             except ValueError:
                 pass
 
