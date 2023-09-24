@@ -14,13 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.6.0
+      uses: actions/checkout@v4.0.0
     - name: Set up python
       uses: actions/setup-python@v4.7.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.1
+      uses: actions/cache@v3.3.2
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -43,13 +43,13 @@ jobs:
         python-version: ['3.9', '3.10', '3.11']
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.6.0
+      uses: actions/checkout@v4.0.0
     - name: Set up python
       uses: actions/setup-python@v4.7.0
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache dependencies
-      uses: actions/cache@v3.3.1
+      uses: actions/cache@v3.3.2
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -86,13 +86,13 @@ jobs:
       MPLBACKEND: Agg
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.6.0
+      uses: actions/checkout@v4.0.0
     - name: Set up python
       uses: actions/setup-python@v4.7.0
       with:
         python-version: '3.9'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.1
+      uses: actions/cache@v3.3.2
       id: cache
       with:
         path: ${{ env.pythonLocation }}

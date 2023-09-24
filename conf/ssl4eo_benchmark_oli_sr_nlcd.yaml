@@ -7,8 +7,8 @@ module:
   num_classes: 14
   loss: "ce"
   ignore_index: 0
-  learning_rate: 1e-3
-  learning_rate_schedule_patience: 6
+  lr: 1e-3
+  patience: 6
 
 datamodule:
   _target_: torchgeo.datamodules.SSL4EOLBenchmarkDataModule

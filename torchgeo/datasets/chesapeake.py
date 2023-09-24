@@ -19,6 +19,7 @@ import shapely.geometry
 import shapely.ops
 import torch
 from matplotlib.colors import ListedColormap
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
 
@@ -173,7 +174,7 @@ class Chesapeake(RasterDataset, abc.ABC):
         sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -743,7 +744,7 @@ class ChesapeakeCVPR(GeoDataset):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

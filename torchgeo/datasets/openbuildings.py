@@ -16,6 +16,7 @@ import rasterio
 import shapely
 import shapely.wkt as wkt
 import torch
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from rtree.index import Index, Property
 
@@ -434,7 +435,7 @@ class OpenBuildings(VectorDataset):
         sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

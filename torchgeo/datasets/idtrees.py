@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
+from matplotlib.figure import Figure
 from rasterio.enums import Resampling
 from torch import Tensor
 from torchvision.ops import clip_boxes_to_image, remove_small_boxes
@@ -496,7 +497,7 @@ class IDTReeS(NonGeoDataset):
         show_titles: bool = True,
         suptitle: Optional[str] = None,
         hsi_indices: tuple[int, int, int] = (0, 1, 2),
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
