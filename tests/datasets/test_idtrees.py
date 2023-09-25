@@ -19,7 +19,7 @@ import torchgeo.datasets.utils
 from torchgeo.datasets import IDTReeS
 
 pytest.importorskip("pandas", minversion="1.1.3")
-pytest.importorskip("laspy", minversion="2.0.0")
+pytest.importorskip("laspy", minversion="2")
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -140,7 +140,7 @@ class TestIDTReeS:
             plt.close()
 
     def test_plot_las(self, dataset: IDTReeS) -> None:
-        pyvista = pytest.importorskip("pyvista", minversion="0.29")
+        pyvista = pytest.importorskip("pyvista", minversion="0.29.0")
 
         # Test point cloud without colors
         point_cloud = dataset.plot_las(index=0)
