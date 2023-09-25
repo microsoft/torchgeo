@@ -19,7 +19,7 @@ import torchgeo.datasets.utils
 from torchgeo.datasets import IDTReeS
 
 pytest.importorskip("pandas", minversion="1.1.3")
-pytest.importorskip("laspy", minversion="2")
+pytest.importorskip("laspy", minversion="2.0.0")
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
