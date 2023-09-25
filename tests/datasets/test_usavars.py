@@ -1,11 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import builtins
 import os
 import shutil
 from pathlib import Path
-from typing import Any
 
 import pytest
 import torch

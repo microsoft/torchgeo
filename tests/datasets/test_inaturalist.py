@@ -1,13 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import builtins
 import os
 from pathlib import Path
-from typing import Any
 
 import pytest
-from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
     BoundingBox,
