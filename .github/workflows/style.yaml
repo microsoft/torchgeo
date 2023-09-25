@@ -14,22 +14,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.6.0
+      uses: actions/checkout@v4.0.0
     - name: Set up python
       uses: actions/setup-python@v4.7.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.1
+      uses: actions/cache@v3.3.2
       id: cache
       with:
         path: ${{ env.pythonLocation }}
         key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/style.txt
-        pip list
+      run: pip install -r requirements/style.txt
+    - name: List pip dependencies
+      run: pip list
     - name: Run black checks
       run: black . --check --diff
   flake8:
@@ -37,22 +37,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.6.0
+      uses: actions/checkout@v4.0.0
     - name: Set up python
       uses: actions/setup-python@v4.7.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.1
+      uses: actions/cache@v3.3.2
       id: cache
       with:
         path: ${{ env.pythonLocation }}
         key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/style.txt
-        pip list
+      run: pip install -r requirements/style.txt
+    - name: List pip dependencies
+      run: pip list
     - name: Run flake8 checks
       run: flake8
   isort:
@@ -60,22 +60,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.6.0
+      uses: actions/checkout@v4.0.0
     - name: Set up python
       uses: actions/setup-python@v4.7.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.1
+      uses: actions/cache@v3.3.2
       id: cache
       with:
         path: ${{ env.pythonLocation }}
         key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/style.txt
-        pip list
+      run: pip install -r requirements/style.txt
+    - name: List pip dependencies
+      run: pip list
     - name: Run isort checks
       run: isort . --check --diff
   pydocstyle:
@@ -83,22 +83,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.6.0
+      uses: actions/checkout@v4.0.0
     - name: Set up python
       uses: actions/setup-python@v4.7.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.1
+      uses: actions/cache@v3.3.2
       id: cache
       with:
         path: ${{ env.pythonLocation }}
         key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/style.txt
-        pip list
+      run: pip install -r requirements/style.txt
+    - name: List pip dependencies
+      run: pip list
     - name: Run pydocstyle checks
       run: pydocstyle
   pyupgrade:
@@ -106,22 +106,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.6.0
+      uses: actions/checkout@v4.0.0
     - name: Set up python
       uses: actions/setup-python@v4.7.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.1
+      uses: actions/cache@v3.3.2
       id: cache
       with:
         path: ${{ env.pythonLocation }}
         key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/style.txt
-        pip list
+      run: pip install -r requirements/style.txt
+    - name: List pip dependencies
+      run: pip list
     - name: Run pyupgrade checks
       run: pyupgrade --py39-plus $(find . -path ./docs/src -prune -o -name "*.py" -print)
 concurrency:

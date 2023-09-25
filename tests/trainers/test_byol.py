@@ -22,8 +22,6 @@ from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import BYOLTask
 from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
 
-from .test_segmentation import SegmentationTestModel
-
 
 def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
     state_dict: dict[str, Any] = torch.load(url)
@@ -32,8 +30,8 @@ def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
 
 class TestBYOL:
     def test_custom_augment_fn(self) -> None:
-        backbone = resnet18()
-        layer = backbone.conv1
+        model = resnet18()
+        layer = model.conv1
         new_layer = nn.Conv2d(
             in_channels=4,
             out_channels=layer.out_channels,
@@ -42,9 +40,9 @@ class TestBYOL:
             padding=layer.padding,
             bias=layer.bias,
         ).requires_grad_()
-        backbone.conv1 = new_layer
+        model.conv1 = new_layer
         augment_fn = SimCLRAugmentation((2, 2))
-        BYOL(backbone, augment_fn=augment_fn)
+        BYOL(model, augment_fn=augment_fn)
 
 
 class TestBYOLTask:
@@ -76,7 +74,6 @@ class TestBYOLTask:
 
         # Instantiate model
         model = instantiate(conf.module)
-        model.backbone = SegmentationTestModel(**conf.module)
 
         # Instantiate trainer
         trainer = Trainer(
@@ -86,16 +83,6 @@ class TestBYOLTask:
             max_epochs=1,
         )
         trainer.fit(model=model, datamodule=datamodule)
-
-    @pytest.fixture
-    def model_kwargs(self) -> dict[str, Any]:
-        return {
-            "backbone": "resnet18",
-            "in_channels": 13,
-            "loss": "ce",
-            "num_classes": 10,
-            "weights": None,
-        }
 
     @pytest.fixture
     def weights(self) -> WeightsEnum:
@@ -117,41 +104,36 @@ class TestBYOLTask:
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
         return weights
 
-    def test_weight_file(self, model_kwargs: dict[str, Any], checkpoint: str) -> None:
-        model_kwargs["weights"] = checkpoint
+    def test_weight_file(self, checkpoint: str) -> None:
         with pytest.warns(UserWarning):
-            BYOLTask(**model_kwargs)
+            BYOLTask(model="resnet18", in_channels=13, weights=checkpoint)
 
-    def test_weight_enum(
-        self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
-    ) -> None:
-        model_kwargs["backbone"] = mocked_weights.meta["model"]
-        model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
-        model_kwargs["weights"] = mocked_weights
-        BYOLTask(**model_kwargs)
+    def test_weight_enum(self, mocked_weights: WeightsEnum) -> None:
+        BYOLTask(
+            model=mocked_weights.meta["model"],
+            weights=mocked_weights,
+            in_channels=mocked_weights.meta["in_chans"],
+        )
 
-    def test_weight_str(
-        self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
-    ) -> None:
-        model_kwargs["backbone"] = mocked_weights.meta["model"]
-        model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
-        model_kwargs["weights"] = str(mocked_weights)
-        BYOLTask(**model_kwargs)
+    def test_weight_str(self, mocked_weights: WeightsEnum) -> None:
+        BYOLTask(
+            model=mocked_weights.meta["model"],
+            weights=str(mocked_weights),
+            in_channels=mocked_weights.meta["in_chans"],
+        )
 
     @pytest.mark.slow
-    def test_weight_enum_download(
-        self, model_kwargs: dict[str, Any], weights: WeightsEnum
-    ) -> None:
-        model_kwargs["backbone"] = weights.meta["model"]
-        model_kwargs["in_channels"] = weights.meta["in_chans"]
-        model_kwargs["weights"] = weights
-        BYOLTask(**model_kwargs)
+    def test_weight_enum_download(self, weights: WeightsEnum) -> None:
+        BYOLTask(
+            model=weights.meta["model"],
+            weights=weights,
+            in_channels=weights.meta["in_chans"],
+        )
 
     @pytest.mark.slow
-    def test_weight_str_download(
-        self, model_kwargs: dict[str, Any], weights: WeightsEnum
-    ) -> None:
-        model_kwargs["backbone"] = weights.meta["model"]
-        model_kwargs["in_channels"] = weights.meta["in_chans"]
-        model_kwargs["weights"] = str(weights)
-        BYOLTask(**model_kwargs)
+    def test_weight_str_download(self, weights: WeightsEnum) -> None:
+        BYOLTask(
+            model=weights.meta["model"],
+            weights=str(weights),
+            in_channels=weights.meta["in_chans"],
+        )

@@ -307,6 +307,11 @@ Seasonal Contrast
 
 .. autoclass:: SeasonalContrastS2
 
+SeasoNet
+^^^^^^^^
+
+.. autoclass:: SeasoNet
+
 SEN12MS
 ^^^^^^^
 

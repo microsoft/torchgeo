@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import numpy as np
+import pandas as pd
 from rasterio.crs import CRS
 
 from .geo import GeoDataset
@@ -72,11 +73,6 @@ class GBIF(GeoDataset):
 
     * https://www.gbif.org/citation-guidelines
 
-    .. note::
-       This dataset requires the following additional library to be installed:
-
-       * `pandas <https://pypi.org/project/pandas/>`_ to load CSV files
-
     .. versionadded:: 0.3
     """
 
@@ -91,7 +87,6 @@ class GBIF(GeoDataset):
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
-            ImportError: if pandas is not installed
         """
         super().__init__()
 
@@ -100,13 +95,6 @@ class GBIF(GeoDataset):
         files = glob.glob(os.path.join(root, "**.csv"))
         if not files:
             raise FileNotFoundError(f"Dataset not found in `root={self.root}`")
-
-        try:
-            import pandas as pd  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
 
         # Read tab-delimited CSV file
         data = pd.read_table(

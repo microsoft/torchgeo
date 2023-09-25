@@ -10,6 +10,7 @@ from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import rasterio
 import torch
 from matplotlib.figure import Figure
@@ -105,7 +106,6 @@ class USAVars(NonGeoDataset):
 
         Raises:
             AssertionError: if invalid labels are provided
-            ImportError: if pandas is not installed
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
@@ -123,13 +123,6 @@ class USAVars(NonGeoDataset):
         self.checksum = checksum
 
         self._verify()
-
-        try:
-            import pandas as pd  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
 
         self.files = self._load_files()
 

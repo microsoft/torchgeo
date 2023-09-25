@@ -11,6 +11,7 @@ from typing import Callable, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
@@ -411,7 +412,7 @@ class CV4AKenyaCropType(NonGeoDataset):
         show_titles: bool = True,
         time_step: int = 0,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

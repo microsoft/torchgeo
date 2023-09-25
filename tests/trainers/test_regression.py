@@ -96,16 +96,6 @@ class TestRegressionTask:
             pass
 
     @pytest.fixture
-    def model_kwargs(self) -> dict[str, Any]:
-        return {
-            "model": "resnet18",
-            "weights": None,
-            "num_outputs": 1,
-            "in_channels": 3,
-            "loss": "mse",
-        }
-
-    @pytest.fixture
     def weights(self) -> WeightsEnum:
         return ResNet18_Weights.SENTINEL2_ALL_MOCO
 
@@ -125,55 +115,48 @@ class TestRegressionTask:
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
         return weights
 
-    def test_weight_file(self, model_kwargs: dict[str, Any], checkpoint: str) -> None:
-        model_kwargs["weights"] = checkpoint
+    def test_weight_file(self, checkpoint: str) -> None:
         with pytest.warns(UserWarning):
-            RegressionTask(**model_kwargs)
+            RegressionTask(model="resnet18", weights=checkpoint)
 
-    def test_weight_enum(
-        self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
-    ) -> None:
-        model_kwargs["model"] = mocked_weights.meta["model"]
-        model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
-        model_kwargs["weights"] = mocked_weights
+    def test_weight_enum(self, mocked_weights: WeightsEnum) -> None:
         with pytest.warns(UserWarning):
-            RegressionTask(**model_kwargs)
+            RegressionTask(
+                model=mocked_weights.meta["model"],
+                weights=mocked_weights,
+                in_channels=mocked_weights.meta["in_chans"],
+            )
 
-    def test_weight_str(
-        self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
-    ) -> None:
-        model_kwargs["model"] = mocked_weights.meta["model"]
-        model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
-        model_kwargs["weights"] = str(mocked_weights)
+    def test_weight_str(self, mocked_weights: WeightsEnum) -> None:
         with pytest.warns(UserWarning):
-            RegressionTask(**model_kwargs)
+            RegressionTask(
+                model=mocked_weights.meta["model"],
+                weights=str(mocked_weights),
+                in_channels=mocked_weights.meta["in_chans"],
+            )
 
     @pytest.mark.slow
-    def test_weight_enum_download(
-        self, model_kwargs: dict[str, Any], weights: WeightsEnum
-    ) -> None:
-        model_kwargs["model"] = weights.meta["model"]
-        model_kwargs["in_channels"] = weights.meta["in_chans"]
-        model_kwargs["weights"] = weights
-        RegressionTask(**model_kwargs)
+    def test_weight_enum_download(self, weights: WeightsEnum) -> None:
+        RegressionTask(
+            model=weights.meta["model"],
+            weights=weights,
+            in_channels=weights.meta["in_chans"],
+        )
 
     @pytest.mark.slow
-    def test_weight_str_download(
-        self, model_kwargs: dict[str, Any], weights: WeightsEnum
-    ) -> None:
-        model_kwargs["model"] = weights.meta["model"]
-        model_kwargs["in_channels"] = weights.meta["in_chans"]
-        model_kwargs["weights"] = str(weights)
-        RegressionTask(**model_kwargs)
+    def test_weight_str_download(self, weights: WeightsEnum) -> None:
+        RegressionTask(
+            model=weights.meta["model"],
+            weights=str(weights),
+            in_channels=weights.meta["in_chans"],
+        )
 
-    def test_no_rgb(
-        self, monkeypatch: MonkeyPatch, model_kwargs: dict[Any, Any], fast_dev_run: bool
-    ) -> None:
+    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(TropicalCycloneDataModule, "plot", plot)
         datamodule = TropicalCycloneDataModule(
             root="tests/data/cyclone", batch_size=1, num_workers=0
         )
-        model = RegressionTask(**model_kwargs)
+        model = RegressionTask(model="resnet18")
         trainer = Trainer(
             accelerator="cpu",
             fast_dev_run=fast_dev_run,
@@ -182,11 +165,11 @@ class TestRegressionTask:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_predict(self, model_kwargs: dict[Any, Any], fast_dev_run: bool) -> None:
+    def test_predict(self, fast_dev_run: bool) -> None:
         datamodule = PredictRegressionDataModule(
             root="tests/data/cyclone", batch_size=1, num_workers=0
         )
-        model = RegressionTask(**model_kwargs)
+        model = RegressionTask(model="resnet18")
         trainer = Trainer(
             accelerator="cpu",
             fast_dev_run=fast_dev_run,
@@ -195,21 +178,16 @@ class TestRegressionTask:
         )
         trainer.predict(model=model, datamodule=datamodule)
 
-    def test_invalid_loss(self, model_kwargs: dict[str, Any]) -> None:
-        model_kwargs["loss"] = "invalid_loss"
+    def test_invalid_loss(self) -> None:
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
-            RegressionTask(**model_kwargs)
+            RegressionTask(model="resnet18", loss="invalid_loss")
 
     @pytest.mark.parametrize(
         "model_name", ["resnet18", "efficientnetv2_s", "vit_base_patch16_384"]
     )
-    def test_freeze_backbone(
-        self, model_name: str, model_kwargs: dict[Any, Any]
-    ) -> None:
-        model_kwargs["freeze_backbone"] = True
-        model_kwargs["model"] = model_name
-        model = RegressionTask(**model_kwargs)
+    def test_freeze_backbone(self, model_name: str) -> None:
+        model = RegressionTask(model=model_name, freeze_backbone=True)
         assert not all([param.requires_grad for param in model.model.parameters()])
         assert all(
             [param.requires_grad for param in model.model.get_classifier().parameters()]
@@ -233,7 +211,6 @@ class TestPixelwiseRegressionTask:
         loss: str,
         model_type: str,
         fast_dev_run: bool,
-        model_kwargs: dict[str, Any],
     ) -> None:
         conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
 
@@ -244,16 +221,11 @@ class TestPixelwiseRegressionTask:
         # Instantiate model
         monkeypatch.setattr(smp, "Unet", create_model)
         monkeypatch.setattr(smp, "DeepLabV3Plus", create_model)
-        model_kwargs["model"] = model_type
-        model_kwargs["loss"] = loss
 
-        if model_type == "fcn":
-            model_kwargs["num_filters"] = 2
-
-        model = PixelwiseRegressionTask(**model_kwargs)
-        model.model = PixelwiseRegressionTestModel(
-            in_channels=model_kwargs["in_channels"]
+        model = PixelwiseRegressionTask(
+            model=model_type, backbone="resnet18", loss=loss
         )
+        model.model = PixelwiseRegressionTestModel()
 
         # Instantiate trainer
         trainer = Trainer(
@@ -273,24 +245,10 @@ class TestPixelwiseRegressionTask:
         except MisconfigurationException:
             pass
 
-    def test_invalid_model(self, model_kwargs: dict[str, Any]) -> None:
-        model_kwargs["model"] = "invalid_model"
+    def test_invalid_model(self) -> None:
         match = "Model type 'invalid_model' is not valid."
         with pytest.raises(ValueError, match=match):
-            PixelwiseRegressionTask(**model_kwargs)
-
-    @pytest.fixture
-    def model_kwargs(self) -> dict[str, Any]:
-        return {
-            "model": "unet",
-            "backbone": "resnet18",
-            "weights": None,
-            "num_outputs": 1,
-            "in_channels": 3,
-            "loss": "mse",
-            "learning_rate": 1e-3,
-            "learning_rate_schedule_patience": 6,
-        }
+            PixelwiseRegressionTask(model="invalid_model")
 
     @pytest.fixture
     def weights(self) -> WeightsEnum:
@@ -312,55 +270,51 @@ class TestPixelwiseRegressionTask:
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
         return weights
 
-    def test_weight_file(self, model_kwargs: dict[str, Any], checkpoint: str) -> None:
-        model_kwargs["weights"] = checkpoint
-        PixelwiseRegressionTask(**model_kwargs)
+    def test_weight_file(self, checkpoint: str) -> None:
+        PixelwiseRegressionTask(model="unet", backbone="resnet18", weights=checkpoint)
 
-    def test_weight_enum(
-        self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
-    ) -> None:
-        model_kwargs["backbone"] = mocked_weights.meta["model"]
-        model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
-        model_kwargs["weights"] = mocked_weights
-        PixelwiseRegressionTask(**model_kwargs)
+    def test_weight_enum(self, mocked_weights: WeightsEnum) -> None:
+        PixelwiseRegressionTask(
+            model="unet",
+            backbone=mocked_weights.meta["model"],
+            weights=mocked_weights,
+            in_channels=mocked_weights.meta["in_chans"],
+        )
 
-    def test_weight_str(
-        self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
-    ) -> None:
-        model_kwargs["backbone"] = mocked_weights.meta["model"]
-        model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
-        model_kwargs["weights"] = str(mocked_weights)
-        PixelwiseRegressionTask(**model_kwargs)
-
-    @pytest.mark.slow
-    def test_weight_enum_download(
-        self, model_kwargs: dict[str, Any], weights: WeightsEnum
-    ) -> None:
-        model_kwargs["backbone"] = weights.meta["model"]
-        model_kwargs["in_channels"] = weights.meta["in_chans"]
-        model_kwargs["weights"] = weights
-        PixelwiseRegressionTask(**model_kwargs)
+    def test_weight_str(self, mocked_weights: WeightsEnum) -> None:
+        PixelwiseRegressionTask(
+            model="unet",
+            backbone=mocked_weights.meta["model"],
+            weights=str(mocked_weights),
+            in_channels=mocked_weights.meta["in_chans"],
+        )
 
     @pytest.mark.slow
-    def test_weight_str_download(
-        self, model_kwargs: dict[str, Any], weights: WeightsEnum
-    ) -> None:
-        model_kwargs["backbone"] = weights.meta["model"]
-        model_kwargs["in_channels"] = weights.meta["in_chans"]
-        model_kwargs["weights"] = str(weights)
-        PixelwiseRegressionTask(**model_kwargs)
+    def test_weight_enum_download(self, weights: WeightsEnum) -> None:
+        PixelwiseRegressionTask(
+            model="unet",
+            backbone=weights.meta["model"],
+            weights=weights,
+            in_channels=weights.meta["in_chans"],
+        )
 
+    @pytest.mark.slow
+    def test_weight_str_download(self, weights: WeightsEnum) -> None:
+        PixelwiseRegressionTask(
+            model="unet",
+            backbone=weights.meta["model"],
+            weights=str(weights),
+            in_channels=weights.meta["in_chans"],
+        )
+
+    @pytest.mark.parametrize("model_name", ["unet", "deeplabv3+"])
     @pytest.mark.parametrize(
         "backbone", ["resnet18", "mobilenet_v2", "efficientnet-b0"]
     )
-    @pytest.mark.parametrize("model_name", ["unet", "deeplabv3+"])
-    def test_freeze_backbone(
-        self, backbone: str, model_name: str, model_kwargs: dict[Any, Any]
-    ) -> None:
-        model_kwargs["freeze_backbone"] = True
-        model_kwargs["model"] = model_name
-        model_kwargs["backbone"] = backbone
-        model = PixelwiseRegressionTask(**model_kwargs)
+    def test_freeze_backbone(self, model_name: str, backbone: str) -> None:
+        model = PixelwiseRegressionTask(
+            model=model_name, backbone=backbone, freeze_backbone=True
+        )
         assert all(
             [param.requires_grad is False for param in model.model.encoder.parameters()]
         )
@@ -373,12 +327,10 @@ class TestPixelwiseRegressionTask:
         )
 
     @pytest.mark.parametrize("model_name", ["unet", "deeplabv3+"])
-    def test_freeze_decoder(
-        self, model_name: str, model_kwargs: dict[Any, Any]
-    ) -> None:
-        model_kwargs["freeze_decoder"] = True
-        model_kwargs["model"] = model_name
-        model = PixelwiseRegressionTask(**model_kwargs)
+    def test_freeze_decoder(self, model_name: str) -> None:
+        model = PixelwiseRegressionTask(
+            model=model_name, backbone="resnet18", freeze_decoder=True
+        )
         assert all(
             [param.requires_grad is False for param in model.model.decoder.parameters()]
         )

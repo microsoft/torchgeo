@@ -3,8 +3,8 @@ module:
   loss: "ce"
   model: "resnet18"
   weights: null
-  learning_rate: 1e-3
-  learning_rate_schedule_patience: 6
+  lr: 1e-3
+  patience: 6
   in_channels: 3
   num_classes: 21
 
