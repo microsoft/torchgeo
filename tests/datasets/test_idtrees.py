@@ -18,7 +18,6 @@ from pytest import MonkeyPatch
 import torchgeo.datasets.utils
 from torchgeo.datasets import IDTReeS
 
-pytest.importorskip("pandas", minversion="1.1.3")
 pytest.importorskip("laspy", minversion="2")
 
 
@@ -51,7 +50,7 @@ class TestIDTReeS:
         transforms = nn.Identity()
         return IDTReeS(root, split, task, transforms, download=True, checksum=True)
 
-    @pytest.fixture(params=["pandas", "laspy", "pyvista"])
+    @pytest.fixture(params=["laspy", "pyvista"])
     def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:
         import_orig = builtins.__import__
         package = str(request.param)
@@ -110,13 +109,13 @@ class TestIDTReeS:
     ) -> None:
         package = mock_missing_module
 
-        if package in ["pandas", "laspy"]:
+        if package == "laspy":
             with pytest.raises(
                 ImportError,
                 match=f"{package} is not installed and is required to use this dataset",
             ):
                 IDTReeS(dataset.root, dataset.split, dataset.task)
-        elif package in ["pyvista"]:
+        elif package == "pyvista":
             with pytest.raises(
                 ImportError,
                 match=f"{package} is not installed and is required to plot point cloud",
@@ -140,7 +139,7 @@ class TestIDTReeS:
             plt.close()
 
     def test_plot_las(self, dataset: IDTReeS) -> None:
-        pyvista = pytest.importorskip("pyvista", minversion="0.29")
+        pyvista = pytest.importorskip("pyvista", minversion="0.34.2")
 
         # Test point cloud without colors
         point_cloud = dataset.plot_las(index=0)

@@ -27,9 +27,9 @@ jobs:
         key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/style.txt
-        pip list
+      run: pip install -r requirements/style.txt
+    - name: List pip dependencies
+      run: pip list
     - name: Run black checks
       run: black . --check --diff
   flake8:
@@ -50,9 +50,9 @@ jobs:
         key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/style.txt
-        pip list
+      run: pip install -r requirements/style.txt
+    - name: List pip dependencies
+      run: pip list
     - name: Run flake8 checks
       run: flake8
   isort:
@@ -73,9 +73,9 @@ jobs:
         key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/style.txt
-        pip list
+      run: pip install -r requirements/style.txt
+    - name: List pip dependencies
+      run: pip list
     - name: Run isort checks
       run: isort . --check --diff
   pydocstyle:
@@ -96,9 +96,9 @@ jobs:
         key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/style.txt
-        pip list
+      run: pip install -r requirements/style.txt
+    - name: List pip dependencies
+      run: pip list
     - name: Run pydocstyle checks
       run: pydocstyle
   pyupgrade:
@@ -119,9 +119,9 @@ jobs:
         key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/style.txt
-        pip list
+      run: pip install -r requirements/style.txt
+    - name: List pip dependencies
+      run: pip list
     - name: Run pyupgrade checks
       run: pyupgrade --py39-plus $(find . -path ./docs/src -prune -o -name "*.py" -print)
 concurrency:

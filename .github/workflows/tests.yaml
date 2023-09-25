@@ -27,9 +27,9 @@ jobs:
         key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/datasets.txt') }}-${{ hashFiles('requirements/tests.txt') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
-        pip list
+      run: pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
+    - name: List pip dependencies
+      run: pip list
     - name: Run mypy checks
       run: mypy .
   pytest:
@@ -70,9 +70,9 @@ jobs:
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
-        pip list
+      run: pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
+    - name: List pip dependencies
+      run: pip list
     - name: Run pytest checks
       run: |
         pytest --cov=torchgeo --cov-report=xml --durations=10
@@ -107,9 +107,9 @@ jobs:
         sudo apt-get install unrar
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/min-reqs.old -c requirements/min-cons.old
-        pip list
+      run: pip install -r requirements/min-reqs.old -c requirements/min-cons.old
+    - name: List pip dependencies
+      run: pip list
     - name: Run pytest checks
       run: |
         pytest --cov=torchgeo --cov-report=xml --durations=10
