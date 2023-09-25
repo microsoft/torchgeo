@@ -68,6 +68,6 @@ class TestBioMassters:
         BioMassters(root=str(tmp_path), download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = f"Dataset not found"
-        with pytest.raises(RuntimeError, match=err):
+        match = "Dataset not found"
+        with pytest.raises(RuntimeError, match=match):
             BioMassters(str(tmp_path))
