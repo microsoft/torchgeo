@@ -11,6 +11,7 @@ from typing import Optional
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import rasterio
 import torch
 from matplotlib.colors import ListedColormap
@@ -80,11 +81,6 @@ class SeasoNet(NonGeoDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1109/IGARSS46834.2022.9884079
-
-    .. note::
-       This dataset requires the following additional library to be installed:
-
-       * `pandas <https://pypi.org/project/pandas/>`_ to load CSV files
 
     .. versionadded:: 0.5
     """
@@ -237,9 +233,6 @@ class SeasoNet(NonGeoDataset):
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
-
-        Raises:
-            ImportError: if pandas is not installed
         """
         assert split in self.splits
         assert set(seasons) <= self.all_seasons
@@ -259,13 +252,6 @@ class SeasoNet(NonGeoDataset):
         self.channels = 0
         for b in bands:
             self.channels += self.band_nums[b]
-
-        try:
-            import pandas as pd  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
 
         csv = pd.read_csv(os.path.join(self.root, "meta.csv"), index_col="Index")
 

@@ -10,6 +10,7 @@ from typing import Callable, Optional
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import torch
 from matplotlib.figure import Figure
 from PIL import Image
@@ -86,13 +87,6 @@ class ReforesTree(NonGeoDataset):
         self.download = download
 
         self._verify()
-
-        try:
-            import pandas as pd  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
 
         self.files = self._load_files(self.root)
 

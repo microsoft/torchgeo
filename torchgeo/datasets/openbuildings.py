@@ -12,6 +12,7 @@ from typing import Any, Callable, Optional, cast
 import fiona
 import fiona.transform
 import matplotlib.pyplot as plt
+import pandas as pd
 import rasterio
 import shapely
 import shapely.wkt as wkt
@@ -233,13 +234,6 @@ class OpenBuildings(VectorDataset):
 
         self._verify()
 
-        try:
-            import pandas as pd  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
-
         # Create an R-tree to index the dataset using the polygon centroid as bounds
         self.index = Index(interleaved=False, properties=Property(dimension=3))
 
@@ -350,8 +344,6 @@ class OpenBuildings(VectorDataset):
             List with all polygons from all hit filepaths
 
         """
-        import pandas as pd
-
         # We need to know the bounding box of the query in the source CRS
         (minx, maxx), (miny, maxy) = fiona.transform.transform(
             self._crs.to_dict(),
