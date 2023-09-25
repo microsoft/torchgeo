@@ -86,8 +86,8 @@ datasets = [
     "pandas>=1.1.3",
     # pycocotools 2.0.5+ required for cython 3+ support
     "pycocotools>=2.0.5",
-    # pyvista 0.29+ required for to avoid segfault during testing
-    "pyvista>=0.29",
+    # pyvista 0.34.2+ required to avoid ImportError in CI
+    "pyvista>=0.34.2",
     # radiant-mlhub 0.3+ required for newer tqdm support required by lightning
     "radiant-mlhub>=0.3",
     # rarfile 4+ required for wheels
