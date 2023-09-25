@@ -11,8 +11,6 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import BoundingBox, EDDMapS, IntersectionDataset, UnionDataset
 
-pytest.importorskip("pandas", minversion="1.1.3")
-
 
 class TestEDDMapS:
     @pytest.fixture(scope="class")
@@ -38,26 +36,6 @@ class TestEDDMapS:
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="Dataset not found"):
             EDDMapS(str(tmp_path))
-
-    @pytest.fixture
-    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
-        import_orig = builtins.__import__
-
-        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name == "pandas":
-                raise ImportError()
-            return import_orig(name, *args, **kwargs)
-
-        monkeypatch.setattr(builtins, "__import__", mocked_import)
-
-    def test_mock_missing_module(
-        self, dataset: EDDMapS, mock_missing_module: None
-    ) -> None:
-        with pytest.raises(
-            ImportError,
-            match="pandas is not installed and is required to use this dataset",
-        ):
-            EDDMapS(dataset.root)
 
     def test_invalid_query(self, dataset: EDDMapS) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

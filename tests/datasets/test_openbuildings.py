@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
@@ -22,8 +23,6 @@ from torchgeo.datasets import (
     OpenBuildings,
     UnionDataset,
 )
-
-pd = pytest.importorskip("pandas", minversion="1.1.3")
 
 
 class TestOpenBuildings:
@@ -42,30 +41,6 @@ class TestOpenBuildings:
         monkeypatch.setattr(OpenBuildings, "md5s", md5s)
         transforms = nn.Identity()
         return OpenBuildings(root=root, transforms=transforms)
-
-    @pytest.fixture(params=["pandas"])
-    def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:
-        import_orig = builtins.__import__
-        package = str(request.param)
-
-        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name == package:
-                raise ImportError()
-            return import_orig(name, *args, **kwargs)
-
-        monkeypatch.setattr(builtins, "__import__", mocked_import)
-        return package
-
-    def test_mock_missing_module(
-        self, dataset: OpenBuildings, mock_missing_module: str
-    ) -> None:
-        package = mock_missing_module
-
-        with pytest.raises(
-            ImportError,
-            match=f"{package} is not installed and is required to use this dataset",
-        ):
-            OpenBuildings(root=dataset.root)
 
     def test_no_shapes_to_rasterize(
         self, dataset: OpenBuildings, tmp_path: Path

@@ -8,6 +8,7 @@ import os
 import sys
 from typing import Any
 
+import pandas as pd
 from rasterio.crs import CRS
 
 from .geo import GeoDataset
@@ -26,11 +27,6 @@ class INaturalist(GeoDataset):
 
     * https://www.inaturalist.org/pages/help#cite
 
-    .. note::
-       This dataset requires the following additional library to be installed:
-
-       * `pandas <https://pypi.org/project/pandas/>`_ to load CSV files
-
     .. versionadded:: 0.3
     """
 
@@ -45,7 +41,6 @@ class INaturalist(GeoDataset):
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
-            ImportError: if pandas is not installed
         """
         super().__init__()
 
@@ -54,13 +49,6 @@ class INaturalist(GeoDataset):
         files = glob.glob(os.path.join(root, "**.csv"))
         if not files:
             raise FileNotFoundError(f"Dataset not found in `root={self.root}`")
-
-        try:
-            import pandas as pd  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
 
         # Read CSV file
         data = pd.read_csv(

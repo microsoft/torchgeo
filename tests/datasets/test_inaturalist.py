@@ -16,8 +16,6 @@ from torchgeo.datasets import (
     UnionDataset,
 )
 
-pytest.importorskip("pandas", minversion="1.1.3")
-
 
 class TestINaturalist:
     @pytest.fixture(scope="class")
@@ -43,26 +41,6 @@ class TestINaturalist:
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="Dataset not found"):
             INaturalist(str(tmp_path))
-
-    @pytest.fixture
-    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
-        import_orig = builtins.__import__
-
-        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name == "pandas":
-                raise ImportError()
-            return import_orig(name, *args, **kwargs)
-
-        monkeypatch.setattr(builtins, "__import__", mocked_import)
-
-    def test_mock_missing_module(
-        self, dataset: INaturalist, mock_missing_module: None
-    ) -> None:
-        with pytest.raises(
-            ImportError,
-            match="pandas is not installed and is required to use this dataset",
-        ):
-            INaturalist(dataset.root)
 
     def test_invalid_query(self, dataset: INaturalist) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

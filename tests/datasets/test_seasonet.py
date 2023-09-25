@@ -19,8 +19,6 @@ from torch.utils.data import ConcatDataset
 import torchgeo.datasets.utils
 from torchgeo.datasets import SeasoNet
 
-pytest.importorskip("pandas", minversion="1.1.3")
-
 
 def download_url(url: str, root: str, md5: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
@@ -153,25 +151,6 @@ class TestSeasoNet:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="not found in"):
             SeasoNet(str(tmp_path), download=False)
-
-    @pytest.fixture
-    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
-        import_orig = builtins.__import__
-
-        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name == "pandas":
-                raise ImportError()
-            return import_orig(name, *args, **kwargs)
-
-        monkeypatch.setattr(builtins, "__import__", mocked_import)
-
-    def test_mock_missing_module(
-        self, dataset: SeasoNet, mock_missing_module: None
-    ) -> None:
-        with pytest.raises(
-            ImportError, match="pandas is not installed and is required"
-        ):
-            SeasoNet(dataset.root)
 
     def test_out_of_bounds(self, dataset: SeasoNet) -> None:
         with pytest.raises(IndexError):

@@ -74,27 +74,3 @@ class TestWesternUSALiveFuelMoisture:
     def test_invalid_features(self, dataset: WesternUSALiveFuelMoisture) -> None:
         with pytest.raises(AssertionError, match="Invalid input variable name."):
             WesternUSALiveFuelMoisture(dataset.root, input_features=["foo"])
-
-    @pytest.fixture(params=["pandas"])
-    def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:
-        import_orig = builtins.__import__
-        package = str(request.param)
-
-        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name == package:
-                raise ImportError()
-            return import_orig(name, *args, **kwargs)
-
-        monkeypatch.setattr(builtins, "__import__", mocked_import)
-        return package
-
-    def test_mock_missing_module(
-        self, dataset: WesternUSALiveFuelMoisture, mock_missing_module: str
-    ) -> None:
-        package = mock_missing_module
-        if package == "pandas":
-            with pytest.raises(
-                ImportError,
-                match=f"{package} is not installed and is required to use this dataset",
-            ):
-                WesternUSALiveFuelMoisture(dataset.root)
