@@ -102,7 +102,7 @@ for source in modality_download_list:
     os.makedirs(directory, exist_ok=True)
 
     # Random images
-    for i in range(1, 7):
+    for i in range(1, 3):
         filename = f"{i}.tif"
         filepath = os.path.join(directory, filename)
 
@@ -161,3 +161,6 @@ tvt_split = pd.DataFrame(
 )
 tvt_split.dropna()
 tvt_split.to_csv(os.path.join(folder_path, "split_IDs.csv"))
+
+with open(os.path.join(folder_path, "split_IDs.csv"), "rb") as f:
+    csv_md5 = hashlib.md5(f.read()).hexdigest()

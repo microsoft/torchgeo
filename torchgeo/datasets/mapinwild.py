@@ -5,14 +5,12 @@
 
 import os
 import shutil
-from collections.abc import Sequence
 from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
-from einops import rearrange
 from torch import Tensor
 
 from torchgeo.datasets.geo import NonGeoDataset
@@ -27,16 +25,17 @@ from torchgeo.datasets.utils import (
 class MapInWild(NonGeoDataset):
     """MapInWild dataset.
 
-    The `MapInWild <https://arxiv.org/abs/2212.02265>`_ dataset is curated for the task
-    of wilderness mapping on a pixel-level. MapInWild is a multi-modal dataset and
-    comprises various geodata acquired and formed from different RS sensors
-    over 1018 locations: dual-pol Sentinel-1, four-season Sentinel-2 with 10 bands,
-    ESA WorldCover map, and Visible Infrared Imaging Radiometer Suite
-    NightTime Day/Night band. The dataset consists of 8144 images with the shape
-    of 1920 × 1920 pixels. The images are weakly annotated from the
-    World Database of Protected Areas (WDPA).
+    The `MapInWild <https://ieeexplore.ieee.org/document/10089830>`__ dataset is
+    curated for the task of wilderness mapping on a pixel-level. MapInWild is a
+    multi-modal dataset and comprises various geodata acquired and formed from
+    different RS sensors over 1018 locations: dual-pol Sentinel-1, four-season
+    Sentinel-2 with 10 bands, ESA WorldCover map, and Visible Infrared Imaging
+    Radiometer Suite NightTime Day/Night band. The dataset consists of 8144
+    images with the shape of 1920 × 1920 pixels. The images are weakly annotated
+    from the World Database of Protected Areas (WDPA).
 
     Dataset features:
+
     * 1018 areas globally sampled from the WDPA
     * 10-Band Sentinel-2
     * Dual-pol Sentinel-1
@@ -55,27 +54,6 @@ class MapInWild(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    band_sets: dict[str, tuple[str, ...]] = {
-        "all": (
-            "VV",
-            "VH",
-            "B2",
-            "B3",
-            "B4",
-            "B5",
-            "B6",
-            "B7",
-            "B8",
-            "B8A",
-            "B11",
-            "B12",
-            "2020_Map",
-            "avg_rad",
-        ),
-        "s1": ("VV", "VH"),
-        "s2": ("B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12"),
-    }
-
     url = "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/"
 
     modality_urls = {
@@ -91,26 +69,8 @@ class MapInWild(NonGeoDataset):
         "s2_spring": {"s2_spring/s2_spring_part1.zip", "s2_spring/s2_spring_part2.zip"},
         "s2_summer": {"s2_summer/s2_summer_part1.zip", "s2_summer/s2_summer_part2.zip"},
         "s2_winter": {"s2_winter/s2_winter_part1.zip", "s2_winter/s2_winter_part2.zip"},
-        "split_ids": {"split_IDs/split_IDs.csv"},
+        "split_IDs": {"split_IDs/split_IDs.csv"},
     }
-
-    filenames = [
-        "ESA_WC.zip",
-        "VIIRS.zip",
-        "mask.zip",
-        "s1_part1.zip",
-        "s1_part2.zip",
-        "s2_autumn_part1.zip",
-        "s2_autumn_part2.zip",
-        "s2_spring_part1.zip",
-        "s2_spring_part2.zip",
-        "s2_summer_part1.zip",
-        "s2_summer_part2.zip",
-        "s2_temporal_subset_part1.zip",
-        "s2_temporal_subset_part2.zip",
-        "s2_winter_part1.zip",
-        "s2_winter_part2.zip",
-    ]
 
     md5s = {
         "ESA_WC.zip": "72b2ee578fe10f0df85bdb7f19311c92",
@@ -128,6 +88,7 @@ class MapInWild(NonGeoDataset):
         "s2_summer_part2.zip": "5b5816bbd32987619bf72cde5cacd032",
         "s2_winter_part1.zip": "ca958f7cd98e37cb59d6f3877573ee6d",
         "s2_winter_part2.zip": "e7aacb0806d6d619b6abc408e6b09fdc",
+        "split_IDs.csv": "cb5c6c073702acee23544e1e6fe5856f",
     }
 
     mask_cmap = {1: (0, 153, 0), 0: (255, 255, 255)}
@@ -186,39 +147,34 @@ class MapInWild(NonGeoDataset):
                 "pandas is not installed and is required to use this dataset"
             )
 
-        modality.append("split_ids")
+        modality.append("split_IDs")
+        for mode in modality:
+            for modality_link in self.modality_urls[mode]:
+                modality_url = os.path.join(self.url, modality_link)
+                self._verify(
+                    url=modality_url, md5=self.md5s[os.path.split(modality_link)[-1]]
+                )
 
-        for modal in modality:
-            for modality_link in self.modality_urls[modal]:
-                os.path.join(self.url, modality_link)
-                if modality_link.endswith("csv"):
-                    self._verify(url=modality_link, md5=None)
-                else:
-                    self._verify(
-                        url=modality_link,
-                        md5=self.md5s[os.path.split(modality_link)[1]],
-                    )
-
-            #  Merge modalities downloaded in two parts
+            # Merge modalities downloaded in two parts
             if (
                 download
-                and modal not in os.listdir(self.root)
-                and len(self.modality_urls[modal]) == 2
+                and mode not in os.listdir(self.root)
+                and len(self.modality_urls[mode]) == 2
             ):
-                self._merge_parts(modal)
+                self._merge_parts(mode)
 
         # Masks will be loaded seperately in the :meth:`__getitem__`
         if "mask" in self.modality:
             self.modality.remove("mask")
 
-        # Split IDs has been downloaded and not needed in the list
-        if "split_ids" in self.modality:
-            self.modality.remove("split_ids")
+        # Split IDs has been downloaded and is not needed in the list
+        if "split_IDs" in self.modality:
+            self.modality.remove("split_IDs")
 
         if os.path.exists(os.path.join(self.root, "split_IDs.csv")):
             split_dataframe = pd.read_csv(os.path.join(self.root, "split_IDs.csv"))
             self.ids = split_dataframe[split].dropna().values.tolist()
-            self.ids = [int(i) for i in self.ids]
+            self.ids = list(map(int, self.ids))
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -229,7 +185,7 @@ class MapInWild(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        list_modals = []
+        list_modalities = []
         id = self.ids[index]
 
         mask = self._load_raster(id, "mask")
@@ -238,19 +194,14 @@ class MapInWild(NonGeoDataset):
         for mode in self.modality:
             mode = mode.upper() if mode in ["esa_wc", "viirs"] else mode
             data = self._load_raster(id, mode)
-            list_modals.append(data)
+            list_modalities.append(data)
 
-        image = torch.cat(list_modals, dim=0)
-
-        if self.transforms is not None:
-            sample_trans: dict[str, Tensor] = {"image": image, "mask": mask}
-
-            transformed = self.transforms(sample_trans)
-
-            image = rearrange(transformed["image"], "h w c -> c h w")
-            mask = rearrange(transformed["mask"], "h w c -> c h w")
+        image = torch.cat(list_modalities, dim=0)
 
         sample: dict[str, Tensor] = {"image": image, "mask": mask}
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
 
         return sample
 
@@ -273,10 +224,11 @@ class MapInWild(NonGeoDataset):
             the raster image or target
         """
         with rasterio.open(os.path.join(self.root, source, f"{filename}.tif")) as f:
-            array = f.read()
+            raw_array = f.read()
+            array: "np.typing.NDArray[np.int_]" = np.stack(raw_array, axis=0)
             if array.dtype == np.uint16:
                 array = array.astype(np.int32)
-            tensor = torch.from_numpy(array)
+            tensor = torch.from_numpy(array).float()
             return tensor
 
     def _verify(self, url: str, md5: Optional[str] = None) -> None:
@@ -289,7 +241,7 @@ class MapInWild(NonGeoDataset):
         Raises:
             RuntimeError: if dataset is not found
         """
-        modality_folder_name = os.path.split(url)[-1]
+        modality_folder_name = url.split("/")[-1]
         mod_fold_no_ext = modality_folder_name.split(".")[0]
         modality_path = os.path.join(self.root, mod_fold_no_ext)
         split_path = os.path.join(self.root, modality_folder_name)
@@ -311,21 +263,26 @@ class MapInWild(NonGeoDataset):
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
-                f"Dataset not found in `root={self.root}` directory and `download=False`, "
+                f"Dataset not found in `root={self.root}` directory and `download=False`, "  # noqa: E501
                 "either specify a different `root` directory or use `download=True` "
                 "to automatically download the dataset."
             )
-        elif self.download and url.endswith(".csv"):
+        elif url.endswith(".csv"):
             # Download the split file
             download_url(url, self.root, filename=os.path.split(url)[1], md5=None)
 
-        elif self.download and not url.endswith(".csv"):
+        else:
             # Download the dataset
             self._download(url, md5)
             self._extract(url)
 
     def _download(self, url: str, md5: Optional[str]) -> None:
-        """Download the dataset."""
+        """Downloads a modality.
+
+        Args:
+            url: download url of a modality
+            md5: md5 of a modality
+        """
         download_url(
             url,
             self.root,
@@ -333,9 +290,13 @@ class MapInWild(NonGeoDataset):
             md5=md5 if self.checksum else None,
         )
 
-    def _extract(self, url: str) -> None:
-        """Extract the dataset."""
-        filepath = os.path.join(self.root, os.path.split(url)[1])
+    def _extract(self, path: str) -> None:
+        """Extracts a modality.
+
+        Args:
+            path: path to the modality folder
+        """
+        filepath = os.path.join(self.root, os.path.split(path)[1])
         extract_archive(filepath)
 
     def _merge_parts(self, modality: str) -> None:
@@ -387,30 +348,6 @@ class MapInWild(NonGeoDataset):
             arr_3d[m] = i
         return arr_3d
 
-    def _get_bands(
-        self,
-        image: "np.typing.NDArray[np.float32]",
-        all_bands: Sequence[str],
-        select_bands: Sequence[str],
-    ) -> "np.typing.NDArray[np.float32]":
-        """Filters the bands for a given set of bands.
-
-        Args:
-            image: the image whose bands to be filtered
-            all_bands: all Sentinel-2 bands
-            select_bands: bands to filter
-
-        Returns:
-            the raster image with filtered bands
-        """
-        bands = [
-            all_bands.index(select_bands)
-            if isinstance(select_bands, str)
-            else select_bands
-            for select_bands in select_bands
-        ]
-        return image[bands]
-
     def plot(
         self,
         sample: dict[str, Tensor],
@@ -427,53 +364,65 @@ class MapInWild(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = rearrange(sample["image"], "h w c -> w c h")
-        image = image.numpy()
+        modality_channels = {"viirs": 1, "esa_wc": 1, "s1": 2}
+
+        # Assign a number of channels to all 's2' modalities
+        for modality in self.modality:
+            if modality.startswith("s2"):
+                modality_channels[modality] = 10
+
+        start_idx = 0
+        split_images = {}
+
+        for modality in self.modality:
+            end_idx = start_idx + modality_channels[modality]  # Start + n of channels
+            split_images[modality] = sample["image"][start_idx:end_idx, :, :]  # Slicing
+            start_idx = end_idx  # Update the iterator
+
+        # Prepare the mask
         mask = sample["mask"].squeeze()
         color_mask = self._convert_to_color(mask, cmap=self.mask_cmap)
 
-        # Land cover
-        if np.all(np.isin(image, np.arange(0, 110, 10))) and image.shape[-1] == 1:
-            image = self._convert_to_color(image.squeeze(), cmap=self.wc_cmap)
-        # Sentinel-1
-        elif image.shape[-1] == 2:
-            image = image[:, :, 0]
-            image = percentile_normalization(image)
-        # Sentinel-2
-        elif image.shape[-1] > 3:
-            rgb_s2 = self._get_bands(
-                image=np.einsum("ijk->kij", image),
-                all_bands=self.band_sets["s2"],
-                select_bands=["B4", "B3", "B2"],
-            )
-            image = percentile_normalization(np.einsum("ijk->jki", rgb_s2))
-        # Night-time light
-        else:
-            image = percentile_normalization(image)
-
-        num_panels = 2
+        num_subplots = len(split_images) + 1  # +1 for color_mask
         showing_predictions = "prediction" in sample
-
         if showing_predictions:
-            predictions = sample["prediction"].numpy().squeeze()
-            num_panels += 1
-            color_predictions = self._convert_to_color(predictions, cmap=self.mask_cmap)
+            num_subplots += 1
 
-        fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
-        axs[0].imshow(image)
-        axs[0].axis("off")
-        axs[1].imshow(color_mask, interpolation="none")
-        axs[1].axis("off")
-        if show_titles:
-            axs[0].set_title("Image")
-            axs[1].set_title("Mask")
+        fig, axs = plt.subplots(1, num_subplots, figsize=(num_subplots * 4, 5))
 
-        if showing_predictions:
-            axs[2].imshow(color_predictions, vmin=0, vmax=1, interpolation="none")
-            axs[2].axis("off")
+        # Plot each modality in its respective axis
+        for i, (modality, image) in enumerate(split_images.items()):
+            ax = axs[i]
+            img = np.transpose(image, (1, 2, 0)).squeeze()
+            # Apply transformations based on modality type
+            if modality.startswith("s2"):
+                img = img[:, :, [4, 3, 2]]
+            if modality == "esa_wc":
+                img = self._convert_to_color(torch.as_tensor(img), cmap=self.wc_cmap)
+            if modality == "s1":
+                img = img[:, :, 0]
+            if not "esa_wc":
+                img = percentile_normalization(img)
+
+            ax.imshow(img)
             if show_titles:
-                axs[2].set_title("Predictions")
+                ax.set_title(modality)
+            ax.axis("off")
 
-        if suptitle is not None:
-            plt.suptitle(suptitle)
+        # Plot color_mask in its own axis
+        axs[len(split_images)].imshow(color_mask)
+        if show_titles:
+            axs[len(split_images)].set_title("Annotation")
+        axs[len(split_images)].axis("off")
+
+        # If available, plot predictions in a new axis
+        if showing_predictions:
+            prediction = sample["prediction"].squeeze()
+            color_predictions = self._convert_to_color(prediction, cmap=self.mask_cmap)
+            axs[-1].imshow(color_predictions, vmin=0, vmax=1, interpolation="none")
+            if show_titles:
+                axs[-1].set_title("Prediction")
+            axs[-1].axis("off")
+
+        plt.tight_layout()
         return fig
