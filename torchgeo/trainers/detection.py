@@ -250,6 +250,7 @@ class ObjectDetectionTask(BaseTask):
         ]
         y_hat = self(x)
         self.val_metrics(y_hat, y)
+        self.log_dict(self.val_metrics)
 
         if (
             batch_idx < 10
@@ -305,7 +306,8 @@ class ObjectDetectionTask(BaseTask):
             for i in range(batch_size)
         ]
         y_hat = self(x)
-        self.test_metrics.update(y_hat, y)
+        self.test_metrics(y_hat, y)
+        self.log_dict(self.test_metrics)
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
