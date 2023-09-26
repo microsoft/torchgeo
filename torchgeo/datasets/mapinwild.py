@@ -5,17 +5,19 @@
 
 import os
 import shutil
+from collections import defaultdict
 from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import rasterio
 import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
-from torchgeo.datasets.geo import NonGeoDataset
-from torchgeo.datasets.utils import (
+from .geo import NonGeoDataset
+from .utils import (
     check_integrity,
     download_url,
     extract_archive,
@@ -46,11 +48,6 @@ class MapInWild(NonGeoDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://ieeexplore.ieee.org/document/10089830
-
-    .. note::
-       This dataset requires the following additional library to be installed:
-
-       * `pandas <https://pypi.org/project/pandas/>`_ to load CSV files
 
     .. versionadded:: 0.5
     """
@@ -131,7 +128,6 @@ class MapInWild(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            ImportError: if pandas is not installed
         """
         assert split in ["train", "validation", "test"]
 
@@ -140,13 +136,6 @@ class MapInWild(NonGeoDataset):
         self.transforms = transforms
         self.modality = modality
         self.download = download
-
-        try:
-            import pandas as pd  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
 
         modality.append("split_IDs")
         for mode in modality:
@@ -219,7 +208,7 @@ class MapInWild(NonGeoDataset):
 
         Args:
             filename: name of the file to load
-            source: the filename of the modality
+            source: the directory of the modality
 
         Returns:
             the raster image or target
@@ -268,13 +257,10 @@ class MapInWild(NonGeoDataset):
                 "either specify a different `root` directory or use `download=True` "
                 "to automatically download the dataset."
             )
-        elif url.endswith(".csv"):
-            # Download the split file
-            download_url(url, self.root, filename=os.path.split(url)[1], md5=None)
 
-        else:
-            # Download the dataset
-            self._download(url, md5)
+        # Download the dataset
+        self._download(url, md5)
+        if not url.endswith(".csv"):
             self._extract(url)
 
     def _download(self, url: str, md5: Optional[str]) -> None:
@@ -309,9 +295,8 @@ class MapInWild(NonGeoDataset):
         """
         # Create a new folder named after the 'modality' variable
         modality_folder = os.path.join(self.root, modality)
-        os.makedirs(
-            modality_folder, exist_ok=True
-        )  # Will not raise an error if the folder already exists
+        # Will not raise an error if the folder already exists
+        os.makedirs(modality_folder, exist_ok=True)
 
         # List of source folders
         source_folders = [
@@ -362,12 +347,7 @@ class MapInWild(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        modality_channels = {"viirs": 1, "esa_wc": 1, "s1": 2}
-
-        # Assign a number of channels to all 's2' modalities
-        for modality in self.modality:
-            if modality.startswith("s2"):
-                modality_channels[modality] = 10
+        modality_channels = defaultdict(lambda: 10, {"viirs": 1, "esa_wc": 1, "s1": 2})
 
         start_idx = 0
         split_images = {}

@@ -1,25 +1,20 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import builtins
 import glob
 import os
 import shutil
 from pathlib import Path
-from typing import Any
 
 import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import MapInWild
-
-pytest.importorskip("pandas", minversion="1.1.3")
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -120,42 +115,7 @@ class TestMapInWild:
             MapInWild(root=str(tmp_path), download=True, checksum=True)
 
     def test_already_downloaded(self, dataset: MapInWild, tmp_path: Path) -> None:
-        modality = [
-            "mask",
-            "viirs",
-            "esa_wc",
-            "s2_winter",
-            "s1",
-            "s2_summer",
-            "s2_spring",
-            "s2_autumn",
-            "s2_temporal_subset",
-        ]
-        MapInWild(root=str(tmp_path), modality=modality, download=True)
-
-    @pytest.fixture(params=["pandas"])
-    def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:
-        import_orig = builtins.__import__
-        package = str(request.param)
-
-        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name == package:
-                raise ImportError()
-            return import_orig(name, *args, **kwargs)
-
-        monkeypatch.setattr(builtins, "__import__", mocked_import)
-        return package
-
-    def test_mock_missing_module(
-        self, dataset: MapInWild, mock_missing_module: str
-    ) -> None:
-        package = mock_missing_module
-        if package == "pandas":
-            with pytest.raises(
-                ImportError,
-                match=f"{package} is not installed and is required to use this dataset",
-            ):
-                MapInWild(dataset.root)
+        MapInWild(root=str(tmp_path), modality=dataset.modality, download=True)
 
     def test_plot(self, dataset: MapInWild) -> None:
         x = dataset[0].copy()
