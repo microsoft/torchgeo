@@ -249,8 +249,12 @@ class ObjectDetectionTask(BaseTask):
             for i in range(batch_size)
         ]
         y_hat = self(x)
-        self.val_metrics(y_hat, y)
-        self.log_dict(self.val_metrics)
+        metrics = self.val_metrics(y_hat, y)
+
+        # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
+        metrics.pop("val_classes", None)
+
+        self.log_dict(metrics)
 
         if (
             batch_idx < 10
@@ -280,17 +284,6 @@ class ObjectDetectionTask(BaseTask):
             except ValueError:
                 pass
 
-    def on_validation_epoch_end(self) -> None:
-        """Log epoch level validation metrics."""
-        # TODO: why is this method necessary?
-        metrics = self.val_metrics.compute()
-
-        # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
-        metrics.pop("val_classes", None)
-
-        self.log_dict(metrics)
-        self.val_metrics.reset()
-
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test metrics.
 
@@ -306,8 +299,12 @@ class ObjectDetectionTask(BaseTask):
             for i in range(batch_size)
         ]
         y_hat = self(x)
-        self.test_metrics(y_hat, y)
-        self.log_dict(self.test_metrics)
+        metrics = self.test_metrics(y_hat, y)
+
+        # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
+        metrics.pop("test_classes", None)
+
+        self.log_dict(metrics)
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
