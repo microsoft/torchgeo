@@ -307,28 +307,25 @@ class MapInWild(NonGeoDataset):
             root: root directory where dataset can be found
             modality: the filename of the modality
         """
-        fname_p1 = modality + "_part1"
-        fname_p2 = modality + "_part2"
-        source_folder = os.path.join(self.root, fname_p1)
-        destination_folder = os.path.join(self.root, fname_p2)
-        for file_name in os.listdir(source_folder):
-            source = os.path.join(source_folder, file_name)
-            destination = os.path.join(destination_folder, file_name)
-            if os.path.isfile(source):
-                shutil.move(source, destination)
+        # Create a new folder named after the 'modality' variable
+        modality_folder = os.path.join(self.root, modality)
+        os.makedirs(
+            modality_folder, exist_ok=True
+        )  # Will not raise an error if the folder already exists
 
-        shutil.rmtree(source_folder)
-        dest_split = os.path.split(destination_folder)
-        if len(modality.split("_")) == 3:
-            rename_dest = os.path.join(dest_split[0], "s2_temporal_subset")
-        if len(modality.split("_")) == 2:
-            rename_dest = os.path.join(
-                dest_split[0],
-                dest_split[1].split("_")[0] + "_" + dest_split[1].split("_")[1],
-            )
-        if "_" not in modality:
-            rename_dest = os.path.join(dest_split[0], dest_split[1].split("_")[0])
-        os.rename(destination_folder, rename_dest)
+        # List of source folders
+        source_folders = [
+            os.path.join(self.root, modality + "_part1"),
+            os.path.join(self.root, modality + "_part2"),
+        ]
+
+        # Move files from each source folder to the new 'modality' folder
+        for source_folder in source_folders:
+            for file_name in os.listdir(source_folder):
+                source = os.path.join(source_folder, file_name)
+                destination = os.path.join(modality_folder, file_name)
+                if os.path.isfile(source):
+                    shutil.copy(source, destination)  # Move files to 'modality' folder
 
     def _convert_to_color(
         self, arr_2d: Tensor, cmap: dict[int, tuple[int, int, int]]
@@ -402,6 +399,7 @@ class MapInWild(NonGeoDataset):
                 img = self._convert_to_color(torch.as_tensor(img), cmap=self.wc_cmap)
             if modality == "s1":
                 img = img[:, :, 0]
+
             if not "esa_wc":
                 img = percentile_normalization(img)
 
