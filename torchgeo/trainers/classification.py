@@ -297,7 +297,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         y_hat = self(x)
         y_hat_hard = torch.sigmoid(y_hat)
         loss = self.criterion(y_hat, y.to(torch.float))
-        self.log("val_loss", loss, on_step=False, on_epoch=True)
+        self.log("val_loss", loss)
         self.val_metrics(y_hat_hard, y)
 
         if (
