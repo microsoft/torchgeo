@@ -32,7 +32,7 @@ for i, (label, df) in enumerate(other):
 
 ax.set_xscale("log")
 ax.set_xticks([16, 32, 64, 128, 256])
-ax.set_xticklabels([16, 32, 64, 128, 256], fontsize=12)
+ax.set_xticklabels(["16", "32", "64", "128", "256"], fontsize=12)
 ax.set_xlabel("batch size", fontsize=12)
 ax.set_ylabel("sampling rate (patches/sec)", fontsize=12)
 ax.legend(loc="center right", fontsize="large")
@@ -40,4 +40,4 @@ ax.legend(loc="center right", fontsize="large")
 plt.gca().spines.right.set_visible(False)
 plt.gca().spines.top.set_visible(False)
 plt.tight_layout()
-plt.show()
+plt.show()  # type: ignore[no-untyped-call]

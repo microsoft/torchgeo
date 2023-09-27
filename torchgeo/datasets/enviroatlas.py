@@ -18,6 +18,7 @@ import shapely.geometry
 import shapely.ops
 import torch
 from matplotlib.colors import ListedColormap
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import GeoDataset
@@ -454,7 +455,7 @@ class EnviroAtlas(GeoDataset):
         sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Note: only plots the "naip" and "lc" layers.

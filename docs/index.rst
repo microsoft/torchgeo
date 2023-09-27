@@ -32,7 +32,6 @@ torchgeo
    tutorials/transforms
    tutorials/indices
    tutorials/trainers
-   tutorials/benchmarking
    tutorials/pretrained_weights
 
 .. toctree::

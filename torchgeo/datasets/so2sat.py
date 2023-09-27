@@ -10,6 +10,7 @@ from typing import Callable, Optional, cast
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
@@ -335,7 +336,7 @@ class So2Sat(NonGeoDataset):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

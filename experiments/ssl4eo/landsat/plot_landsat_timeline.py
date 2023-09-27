@@ -74,7 +74,7 @@ global_xmax = date.today()
 
 fig, ax = plt.subplots(figsize=(5.5, 3))
 
-cmap = iter(plt.cm.tab10(range(9, 0, -1)))
+cmap = iter(plt.cm.tab10(range(9, 0, -1)))  # type: ignore[attr-defined]
 ymin = args.bar_start
 yticks = []
 for satellite in range(9, 0, -1):
@@ -141,4 +141,4 @@ ax.tick_params(axis="both", which="both", top=False, right=False)
 ax.spines[["top", "right"]].set_visible(False)
 
 plt.tight_layout()
-plt.show()
+plt.show()  # type: ignore[no-untyped-call]

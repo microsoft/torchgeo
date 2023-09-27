@@ -105,49 +105,44 @@ class TestMoCoTask:
         return weights
 
     def test_weight_file(self, checkpoint: str) -> None:
-        model_kwargs: dict[str, Any] = {"model": "resnet18", "weights": checkpoint}
         match = "num classes .* != num classes in pretrained model"
         with pytest.warns(UserWarning, match=match):
-            MoCoTask(**model_kwargs)
+            MoCoTask(model="resnet18", weights=checkpoint)
 
     def test_weight_enum(self, mocked_weights: WeightsEnum) -> None:
-        model_kwargs: dict[str, Any] = {
-            "model": mocked_weights.meta["model"],
-            "weights": mocked_weights,
-            "in_channels": mocked_weights.meta["in_chans"],
-        }
         match = "num classes .* != num classes in pretrained model"
         with pytest.warns(UserWarning, match=match):
-            MoCoTask(**model_kwargs)
+            MoCoTask(
+                model=mocked_weights.meta["model"],
+                weights=mocked_weights,
+                in_channels=mocked_weights.meta["in_chans"],
+            )
 
     def test_weight_str(self, mocked_weights: WeightsEnum) -> None:
-        model_kwargs: dict[str, Any] = {
-            "model": mocked_weights.meta["model"],
-            "weights": str(mocked_weights),
-            "in_channels": mocked_weights.meta["in_chans"],
-        }
         match = "num classes .* != num classes in pretrained model"
         with pytest.warns(UserWarning, match=match):
-            MoCoTask(**model_kwargs)
+            MoCoTask(
+                model=mocked_weights.meta["model"],
+                weights=str(mocked_weights),
+                in_channels=mocked_weights.meta["in_chans"],
+            )
 
     @pytest.mark.slow
     def test_weight_enum_download(self, weights: WeightsEnum) -> None:
-        model_kwargs: dict[str, Any] = {
-            "model": weights.meta["model"],
-            "weights": weights,
-            "in_channels": weights.meta["in_chans"],
-        }
         match = "num classes .* != num classes in pretrained model"
         with pytest.warns(UserWarning, match=match):
-            MoCoTask(**model_kwargs)
+            MoCoTask(
+                model=weights.meta["model"],
+                weights=weights,
+                in_channels=weights.meta["in_chans"],
+            )
 
     @pytest.mark.slow
     def test_weight_str_download(self, weights: WeightsEnum) -> None:
-        model_kwargs: dict[str, Any] = {
-            "model": weights.meta["model"],
-            "weights": str(weights),
-            "in_channels": weights.meta["in_chans"],
-        }
         match = "num classes .* != num classes in pretrained model"
         with pytest.warns(UserWarning, match=match):
-            MoCoTask(**model_kwargs)
+            MoCoTask(
+                model=weights.meta["model"],
+                weights=str(weights),
+                in_channels=weights.meta["in_chans"],
+            )

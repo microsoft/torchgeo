@@ -9,6 +9,7 @@ from typing import Any, Callable, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
@@ -238,7 +239,7 @@ class SustainBenchCropYield(NonGeoDataset):
         band_idx: int = 0,
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
