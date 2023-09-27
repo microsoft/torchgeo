@@ -1,25 +1,23 @@
-module:
-  _target_: torchgeo.trainers.SemanticSegmentationTask
-  loss: "ce"
-  model: "unet"
-  backbone: "resnet18"
-  weights: true
-  lr: 1e-3
-  patience: 6
-  in_channels: 3
-  num_classes: 5
-  num_filters: 256
-  ignore_index: null
-
-datamodule:
-  _target_: torchgeo.datamodules.LandCoverAIDataModule
-  root: "data/landcoverai"
-  batch_size: 32
-  num_workers: 4
-
 trainer:
-  _target_: lightning.pytorch.Trainer
-  accelerator: gpu
-  devices: 1
   min_epochs: 15
   max_epochs: 40
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    loss: "ce"
+    model: "unet"
+    backbone: "resnet18"
+    weights: true
+    lr: 1e-3
+    patience: 6
+    in_channels: 3
+    num_classes: 5
+    num_filters: 256
+    ignore_index: null
+data:
+  class_path: LandCoverAIDataModule
+  init_args:
+    batch_size: 32
+    num_workers: 4
+  dict_kwargs:
+    root: "data/landcoverai"

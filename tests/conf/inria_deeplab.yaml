@@ -1,12 +1,10 @@
 model:
-  class_path: SemanticSegmentationTask
+  class_path: PixelwiseRegressionTask
   init_args:
-    loss: "ce"
-    model: "unet"
+    model: "deeplabv3+"
     backbone: "resnet18"
     in_channels: 3
-    num_classes: 2
-    ignore_index: null
+    loss: "mae"
 data:
   class_path: InriaAerialImageLabelingDataModule
   init_args:

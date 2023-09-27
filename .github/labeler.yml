@@ -22,7 +22,8 @@ dependencies:
 documentation:
 - "docs/**"
 scripts:
-- "*.py"
+- "torchgeo/__main__.py"
+- "torchgeo/main.py"
 - "experiments/**"
 testing:
 - "tests/**"
