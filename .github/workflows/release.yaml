@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v4.0.0
+      uses: actions/checkout@v4.1.0
     - name: Set up python
       uses: actions/setup-python@v4.7.0
       with:
@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v4.0.0
+      uses: actions/checkout@v4.1.0
     - name: Set up python
       uses: actions/setup-python@v4.7.0
       with:
@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v4.0.0
+      uses: actions/checkout@v4.1.0
     - name: Set up python
       uses: actions/setup-python@v4.7.0
       with:
