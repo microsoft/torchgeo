@@ -426,7 +426,6 @@ class RasterDataset(GeoDataset):
         Args:
             filename_glob: Defaults to self.filename_glob
         """
-        # self.paths can be single string (or pathlike) representing root directory.
         # Make iterable
         if isinstance(self.paths, str) or not isinstance(self.paths, Iterable):
             paths = [self.paths]
