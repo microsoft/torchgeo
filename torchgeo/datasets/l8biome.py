@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from typing import Any, Callable, Optional, cast
 
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
 
@@ -90,7 +91,7 @@ class L8Biome(RasterDataset):
     def __init__(
         self,
         root: str = "data",
-        crs: Optional[CRS] = None,
+        crs: Optional[CRS] = CRS.from_epsg(3857),
         res: Optional[float] = None,
         bands: Sequence[str] = all_bands,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -103,7 +104,7 @@ class L8Biome(RasterDataset):
         Args:
             root: root directory where dataset can be found
             crs: :term:`coordinate reference system (CRS)` to warp to
-                (defaults to the CRS of the first file found)
+                (defaults to EPSG:3857)
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
             bands: bands to return (defaults to all bands)
@@ -219,7 +220,7 @@ class L8Biome(RasterDataset):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

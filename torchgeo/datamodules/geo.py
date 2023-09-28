@@ -6,9 +6,9 @@
 from typing import Any, Callable, Optional, Union, cast
 
 import kornia.augmentation as K
-import matplotlib.pyplot as plt
 import torch
 from lightning.pytorch import LightningDataModule
+from matplotlib.figure import Figure
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset, default_collate
 
@@ -141,7 +141,7 @@ class BaseDataModule(LightningDataModule):
 
         return batch
 
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+    def plot(self, *args: Any, **kwargs: Any) -> Optional[Figure]:
         """Run the plot method of the validation dataset if one exists.
 
         Should only be called during 'fit' or 'validate' stages as ``val_dataset``
@@ -154,10 +154,12 @@ class BaseDataModule(LightningDataModule):
         Returns:
             A matplotlib Figure with the image, ground truth, and predictions.
         """
+        fig: Optional[Figure] = None
         dataset = self.dataset or self.val_dataset
         if dataset is not None:
             if hasattr(dataset, "plot"):
-                return dataset.plot(*args, **kwargs)
+                fig = dataset.plot(*args, **kwargs)
+        return fig
 
 
 class GeoDataModule(BaseDataModule):

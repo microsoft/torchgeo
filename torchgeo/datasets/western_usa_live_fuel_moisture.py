@@ -8,6 +8,7 @@ import json
 import os
 from typing import Any, Callable, Optional
 
+import pandas as pd
 import torch
 from torch import Tensor
 
@@ -217,7 +218,6 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         Raises:
             AssertionError: if ``input_features`` contains invalid variable names
-            ImportError: if pandas is not installed
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         super().__init__()
@@ -229,13 +229,6 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         self.api_key = api_key
 
         self._verify()
-
-        try:
-            import pandas as pd  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
 
         assert all(
             input in self.all_variable_names for input in input_features
@@ -276,7 +269,9 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         data = self.dataframe.iloc[index, :]
 
         sample: dict[str, Tensor] = {
-            "input": torch.tensor(data.drop([self.label_name]), dtype=torch.float32),
+            "input": torch.tensor(
+                data.drop([self.label_name]).values, dtype=torch.float32
+            ),
             "label": torch.tensor(data[self.label_name], dtype=torch.float32),
         }
 
@@ -285,14 +280,12 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         return sample
 
-    def _load_data(self) -> "pd.DataFrame":  # type: ignore[name-defined] # noqa: F821
+    def _load_data(self) -> pd.DataFrame:
         """Load data from individual files into pandas dataframe.
 
         Returns:
             the features and label
         """
-        import pandas as pd
-
         data_rows = []
         for path in self.collection:
             with open(path) as f:

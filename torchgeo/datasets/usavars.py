@@ -10,6 +10,7 @@ from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import rasterio
 import torch
 from matplotlib.figure import Figure
@@ -48,45 +49,34 @@ class USAVars(NonGeoDataset):
     .. versionadded:: 0.3
     """
 
-    url_prefix = (
-        "https://files.codeocean.com/files/verified/"
-        + "fa908bbc-11f9-4421-8bd3-72a4bf00427f_v2.0/data/int/applications"
-    )
-    pop_csv_suffix = "CONTUS_16_640_POP_100000_0.csv?download"
-    uar_csv_suffix = "CONTUS_16_640_UAR_100000_0.csv?download"
-
-    data_url = "https://mosaiks.blob.core.windows.net/datasets/uar.zip"
+    data_url = "https://huggingface.co/datasets/torchgeo/usavars/resolve/main/{}"
     dirname = "uar"
 
     md5 = "677e89fd20e5dd0fe4d29b61827c2456"
 
     label_urls = {
-        "housing": f"{url_prefix}/housing/outcomes_sampled_housing_{pop_csv_suffix}",
-        "income": f"{url_prefix}/income/outcomes_sampled_income_{pop_csv_suffix}",
-        "roads": f"{url_prefix}/roads/outcomes_sampled_roads_{pop_csv_suffix}",
-        "nightlights": f"{url_prefix}/nightlights/"
-        + f"outcomes_sampled_nightlights_{pop_csv_suffix}",
-        "population": f"{url_prefix}/population/"
-        + f"outcomes_sampled_population_{uar_csv_suffix}",
-        "elevation": f"{url_prefix}/elevation/"
-        + f"outcomes_sampled_elevation_{uar_csv_suffix}",
-        "treecover": f"{url_prefix}/treecover/"
-        + f"outcomes_sampled_treecover_{uar_csv_suffix}",
+        "housing": data_url.format("housing.csv"),
+        "income": data_url.format("income.csv"),
+        "roads": data_url.format("roads.csv"),
+        "nightlights": data_url.format("nightlights.csv"),
+        "population": data_url.format("population.csv"),
+        "elevation": data_url.format("elevation.csv"),
+        "treecover": data_url.format("treecover.csv"),
     }
 
     split_metadata = {
         "train": {
-            "url": "https://mosaiks.blob.core.windows.net/datasets/train_split.txt",
+            "url": data_url.format("train_split.txt"),
             "filename": "train_split.txt",
             "md5": "3f58fffbf5fe177611112550297200e7",
         },
         "val": {
-            "url": "https://mosaiks.blob.core.windows.net/datasets/val_split.txt",
+            "url": data_url.format("val_split.txt"),
             "filename": "val_split.txt",
             "md5": "bca7183b132b919dec0fc24fb11662a0",
         },
         "test": {
-            "url": "https://mosaiks.blob.core.windows.net/datasets/test_split.txt",
+            "url": data_url.format("test_split.txt"),
             "filename": "test_split.txt",
             "md5": "97bb36bc003ae0bf556a8d6e8f77141a",
         },
@@ -116,7 +106,6 @@ class USAVars(NonGeoDataset):
 
         Raises:
             AssertionError: if invalid labels are provided
-            ImportError: if pandas is not installed
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
@@ -134,13 +123,6 @@ class USAVars(NonGeoDataset):
         self.checksum = checksum
 
         self._verify()
-
-        try:
-            import pandas as pd  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
 
         self.files = self._load_files()
 

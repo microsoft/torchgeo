@@ -1,15 +1,13 @@
-module:
-  _target_: torchgeo.trainers.BYOLTask
-  in_channels: 7
-  backbone: "resnet18"
-  learning_rate: 1e-3
-  learning_rate_schedule_patience: 6
-  weights: null
-
-datamodule:
-  _target_: torchgeo.datamodules.SSL4EOLDataModule
-  root: "tests/data/ssl4eo/l"
-  split: "tm_toa"
-  seasons: 1
-  batch_size: 2
-  num_workers: 0
+model:
+  class_path: BYOLTask
+  init_args:
+    in_channels: 7
+    model: "resnet18"
+data:
+  class_path: SSL4EOLDataModule
+  init_args:
+    batch_size: 2
+  dict_kwargs:
+    root: "tests/data/ssl4eo/l"
+    split: "tm_toa"
+    seasons: 1

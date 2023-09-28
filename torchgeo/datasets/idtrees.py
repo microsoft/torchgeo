@@ -10,8 +10,10 @@ from typing import Any, Callable, Optional, cast, overload
 import fiona
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import rasterio
 import torch
+from matplotlib.figure import Figure
 from rasterio.enums import Resampling
 from torch import Tensor
 from torchvision.ops import clip_boxes_to_image, remove_small_boxes
@@ -163,7 +165,7 @@ class IDTReeS(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            ImportError: if laspy or pandas are are not installed
+            ImportError: if laspy is not installed
         """
         assert split in ["train", "test"]
         assert task in ["task1", "task2"]
@@ -178,12 +180,6 @@ class IDTReeS(NonGeoDataset):
         self.num_classes = len(self.classes)
         self._verify()
 
-        try:
-            import pandas as pd  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
         try:
             import laspy  # noqa: F401
         except ImportError:
@@ -345,8 +341,6 @@ class IDTReeS(NonGeoDataset):
         Returns:
             the image path, geometries, and labels
         """
-        import pandas as pd
-
         if self.split == "train":
             directory = os.path.join(root, self.directories[self.split][0])
             labels: pd.DataFrame = self._load_labels(directory)
@@ -373,8 +367,6 @@ class IDTReeS(NonGeoDataset):
         Returns:
             a pandas DataFrame containing the labels for each image
         """
-        import pandas as pd
-
         path_mapping = os.path.join(directory, "Field", "itc_rsFile.csv")
         path_labels = os.path.join(directory, "Field", "train_data.csv")
         df_mapping = pd.read_csv(path_mapping)
@@ -496,7 +488,7 @@ class IDTReeS(NonGeoDataset):
         show_titles: bool = True,
         suptitle: Optional[str] = None,
         hsi_indices: tuple[int, int, int] = (0, 1, 2),
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -597,7 +589,7 @@ class IDTReeS(NonGeoDataset):
         points: "np.typing.NDArray[np.int_]" = np.stack(
             [las.x, las.y, las.z], axis=0
         ).transpose((1, 0))
-        point_cloud = pyvista.PolyData(points)  # type: ignore[attr-defined]
+        point_cloud = pyvista.PolyData(points)
 
         # Some point cloud files have no color->points mapping
         if hasattr(las, "red"):

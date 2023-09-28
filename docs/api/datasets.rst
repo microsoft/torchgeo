@@ -272,6 +272,11 @@ OSCD
 
 .. autoclass:: OSCD
 
+PASTIS
+^^^^^^
+
+.. autoclass:: PASTIS
+
 PatternNet
 ^^^^^^^^^^
 
@@ -296,6 +301,11 @@ Seasonal Contrast
 ^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SeasonalContrastS2
+
+SeasoNet
+^^^^^^^^
+
+.. autoclass:: SeasoNet
 
 SEN12MS
 ^^^^^^^
