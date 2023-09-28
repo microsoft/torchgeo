@@ -350,7 +350,7 @@ class RasterDataset(GeoDataset):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            FileNotFoundError: if no files are found in ``paths``
         """
         super().__init__(transforms)
 
@@ -396,7 +396,8 @@ class RasterDataset(GeoDataset):
 
         if i == 0:
             msg = (
-                f"No {self.__class__.__name__} data was found in `root='{self.paths}'`"
+                f"No {self.__class__.__name__} data was found "
+                f"in `paths={self.paths!r}'`"
             )
             if self.bands:
                 msg += f" with `bands={self.bands}`"
