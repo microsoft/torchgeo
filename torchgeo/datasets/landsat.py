@@ -81,6 +81,8 @@ class Landsat(RasterDataset, abc.ABC):
 
         Raises:
             FileNotFoundError: if no files are found in ``paths``
+        .. versionchanged:: 0.5
+            *root* was renamed to *paths*
         """
         bands = bands or self.default_bands
         self.filename_glob = self.filename_glob.format(bands[0])

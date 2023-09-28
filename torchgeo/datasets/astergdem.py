@@ -68,6 +68,8 @@ class AsterGDEM(RasterDataset):
         Raises:
             FileNotFoundError: if no files are found in ``paths``
             RuntimeError: if dataset is missing
+        .. versionchanged:: 0.5
+            *root* was renamed to *paths*
         """
         self.paths = paths
 

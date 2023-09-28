@@ -239,6 +239,8 @@ class CDL(RasterDataset):
 
         .. versionadded:: 0.5
            The *years* and *classes* parameters.
+        .. versionchanged:: 0.5
+            *root* was renamed to *paths*
         """
         assert set(years) <= self.md5s.keys(), (
             "CDL data product only exists for the following years: "
