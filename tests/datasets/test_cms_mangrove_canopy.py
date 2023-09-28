@@ -46,7 +46,7 @@ class TestCMSGlobalMangroveCanopy:
 
     def test_no_dataset(self) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found in."):
-            CMSGlobalMangroveCanopy(paths="/test")
+            CMSGlobalMangroveCanopy("/test")
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join(

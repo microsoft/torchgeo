@@ -54,7 +54,7 @@ class TestAbovegroundLiveWoodyBiomassDensity:
 
     def test_no_dataset(self) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found in."):
-            AbovegroundLiveWoodyBiomassDensity(paths="/test")
+            AbovegroundLiveWoodyBiomassDensity("/test")
 
     def test_already_downloaded(
         self, dataset: AbovegroundLiveWoodyBiomassDensity

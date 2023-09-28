@@ -43,13 +43,13 @@ class TestEUDEM:
         shutil.rmtree(tmp_path)
         os.makedirs(tmp_path)
         with pytest.raises(RuntimeError, match="Dataset not found in"):
-            EUDEM(paths=str(tmp_path))
+            EUDEM(str(tmp_path))
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, "eu_dem_v11_E30N10.zip"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
-            EUDEM(paths=str(tmp_path), checksum=True)
+            EUDEM(str(tmp_path), checksum=True)
 
     def test_and(self, dataset: EUDEM) -> None:
         ds = dataset & dataset
