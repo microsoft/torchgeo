@@ -8,6 +8,7 @@ from .agb_live_woody_density import AbovegroundLiveWoodyBiomassDensity
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
+from .c2seg import C2Seg
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
 from .chesapeake import (
@@ -128,6 +129,7 @@ __all__ = (
     # GeoDataset
     "AbovegroundLiveWoodyBiomassDensity",
     "AsterGDEM",
+    "C2Seg",
     "CanadianBuildingFootprints",
     "CDL",
     "Chesapeake",
