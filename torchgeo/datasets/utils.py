@@ -9,6 +9,8 @@ from __future__ import annotations
 import bz2
 import collections
 import contextlib
+import fnmatch
+import glob
 import gzip
 import lzma
 import os
@@ -19,9 +21,11 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, cast, overload
 
+import fiona
 import numpy as np
 import rasterio
 import torch
+from fiona.errors import FionaValueError
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
@@ -43,6 +47,7 @@ __all__ = (
     "draw_semantic_segmentation_masks",
     "rgb_to_mask",
     "percentile_normalization",
+    "list_directory_recursive",
 )
 
 
@@ -737,3 +742,48 @@ def percentile_normalization(
         (img - lower_percentile) / (upper_percentile - lower_percentile + 1e-5), 0, 1
     )
     return img_normalized
+
+
+def _path_is_vsi(path: str) -> bool:
+    from rasterio._path import SCHEMES
+
+    prefix = path.split("://")[0]
+    schemes = prefix.split("+")
+    is_apache_vfs_scheme = set(schemes).issubset(set(SCHEMES))
+    is_gdal_vsi = path.startswith("/vsi")
+    return is_gdal_vsi or is_apache_vfs_scheme
+
+
+def _listdir_vsi_recursive(root: str) -> list[str]:
+    dirs = [root]
+    files = []
+    while dirs:
+        dir = dirs.pop()
+        try:
+            subdirs = fiona.listdir(dir)
+            dirs.extend([os.path.join(dir, subdir) for subdir in subdirs])
+        except FionaValueError as e:
+            if "is not a directory" in str(e):
+                files.append(dir)
+            else:
+                raise e
+    return files
+
+
+def list_directory_recursive(root: str, filename_glob: str) -> list[str]:
+    """Lists files in directory recursively.
+
+    Also supports gdal virtual file systems (vsi).
+
+    Args:
+        root: directory to list. For vsi these can start with
+            e.g. /vsiaz or az:// for azure blob storage
+        filename_glob: filename pattern to filter filenames
+    """
+    if not _path_is_vsi(root):
+        filepaths = _listdir_vsi_recursive(root)
+        filepaths = fnmatch.filter(filepaths, filename_glob)
+    else:
+        pathname = os.path.join(root, "**", filename_glob)
+        filepaths = list(glob.iglob(pathname, recursive=True))
+    return filepaths

@@ -10,7 +10,7 @@ import os
 import re
 import sys
 from collections.abc import Sequence
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, Optional, Union, cast
 
 import fiona
 import fiona.transform
@@ -29,7 +29,13 @@ from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
 
-from .utils import BoundingBox, concat_samples, disambiguate_timestamp, merge_samples
+from .utils import (
+    BoundingBox,
+    concat_samples,
+    disambiguate_timestamp,
+    list_directory_recursive,
+    merge_samples,
+)
 
 
 class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
@@ -329,7 +335,7 @@ class RasterDataset(GeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[str, list[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
@@ -339,7 +345,8 @@ class RasterDataset(GeoDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            root: root directory or list of absolute filepaths where
+                dataset can be found
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -358,11 +365,22 @@ class RasterDataset(GeoDataset):
         self.bands = bands or self.all_bands
         self.cache = cache
 
+        if isinstance(root, str):
+            root = [root]
+
+        filespaths: list[str] = []
+        for dir_or_file in root:
+            if os.path.exists(dir_or_file) and os.path.isfile(dir_or_file):
+                filespaths.append(dir_or_file)
+            else:
+                filespaths.extend(
+                    list_directory_recursive(dir_or_file, self.filename_glob)
+                )
+
         # Populate the dataset index
         i = 0
-        pathname = os.path.join(root, "**", self.filename_glob)
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-        for filepath in glob.iglob(pathname, recursive=True):
+        for filepath in filespaths:
             match = re.match(filename_regex, os.path.basename(filepath))
             if match is not None:
                 try:
