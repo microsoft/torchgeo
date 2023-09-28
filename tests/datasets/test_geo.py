@@ -17,6 +17,7 @@ from torchgeo.datasets import (
     BoundingBox,
     GeoDataset,
     IntersectionDataset,
+    MultiQueryDataset,
     NonGeoClassificationDataset,
     NonGeoDataset,
     RasterDataset,
@@ -591,3 +592,63 @@ class TestUnionDataset:
             IndexError, match="query: .* not found in index with bounds:"
         ):
             dataset[query]
+
+
+class TestMultiQueryDataset:
+    @pytest.fixture()
+    def forecast_ds(self) -> MultiQueryDataset:
+        root = os.path.join("tests", "data", "time_series_raster")
+
+        class TimeSeriesInputRaster(RasterDataset):
+            filename_glob = "test_*.tif"
+            filename_regex = r"test_(?P<date>\d{8})_(?P<band>B0[234])"
+            date_format = "%Y%m%d"
+            is_image = True
+            separate_files = True
+            all_bands = ["B02", "B03", "B04"]
+
+        class TimeSeriesTargetRaster(RasterDataset):
+            filename_glob = "test_*.tif"
+            filename_regex = r"test_(?P<date>\d{8})_(?P<band>target)"
+            date_format = "%Y%m%d"
+            is_image = True
+            separate_files = True
+            all_bands = ["target"]
+
+        return MultiQueryDataset(
+            input_dataset=TimeSeriesInputRaster(root, as_time_series=True),
+            target_dataset=TimeSeriesTargetRaster(root, as_time_series=True),
+        )
+
+    def test_get_sample(self, forecast_ds: MultiQueryDataset) -> None:
+        query = (forecast_ds.bounds, forecast_ds.bounds)
+        sample = forecast_ds[query]
+        assert isinstance(sample["input"], torch.Tensor)
+        assert isinstance(sample["target"], torch.Tensor)
+
+    def test_invalid_input_query(self, forecast_ds: MultiQueryDataset) -> None:
+        bbox = BoundingBox(0, 0, 0, 0, 0, 0)
+        query = (bbox, bbox)
+        with pytest.raises(
+            IndexError,
+            match="query: .* not found in input dataset index with bounds: .*",
+        ):
+            forecast_ds[query]
+
+    def test_invalid_target_query(self, forecast_ds: MultiQueryDataset) -> None:
+        bbox = BoundingBox(0, 0, 0, 0, 0, 0)
+        query = (forecast_ds.bounds, bbox)
+        with pytest.raises(
+            IndexError,
+            match="query: .* not found in target dataset index with bounds: .*",
+        ):
+            forecast_ds[query]
+
+    def test_str(self, forecast_ds: MultiQueryDataset) -> None:
+        out = str(forecast_ds)
+        print(out)
+        assert "type: MultiQueryDataset" in out
+        assert "bbox: BoundingBox" in out
+        assert "size: 5" in out
+        assert "input_dataset: TimeSeriesInputRaster" in out
+        assert "target_dataset: TimeSeriesTargetRaster" in out

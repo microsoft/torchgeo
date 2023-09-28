@@ -448,7 +448,6 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
     # TODO: This doesn't correctly handle literal `%%` characters in format
     # TODO: May have issues with time zones, UTC vs. local time, and DST
     # TODO: This is really tedious, is there a better way to do this?
-
     if not any([f"%{c}" in format for c in "yYcxG"]):
         # No temporal info
         return 0, sys.maxsize
@@ -626,6 +625,18 @@ def unbind_samples(sample: dict[Any, Sequence[Any]]) -> list[dict[Any, Any]]:
         if isinstance(values, Tensor):
             sample[key] = torch.unbind(values)
     return _dict_list_to_list_dict(sample)
+
+
+def interpolate_samples(
+    sample: dict[Any, Sequence[Any]], query: BoundingBox
+) -> dict[Any, Any]:
+    """Useful to interpolate irregularly spaced time-series samples.
+
+    Args:
+        sample:
+        query:
+    """
+    pass
 
 
 def rasterio_loader(path: str) -> np.typing.NDArray[np.int_]:

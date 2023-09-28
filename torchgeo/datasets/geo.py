@@ -4,13 +4,15 @@
 """Base classes for all :mod:`torchgeo` datasets."""
 
 import abc
+import datetime
 import functools
 import glob
 import os
 import re
 import sys
+from collections import defaultdict
 from collections.abc import Sequence
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, DefaultDict, Optional, cast
 
 import fiona
 import fiona.transform
@@ -23,6 +25,7 @@ import torch
 from rasterio.crs import CRS
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
+from rasterio.windows import from_bounds
 from rtree.index import Index, Property
 from torch import Tensor
 from torch.utils.data import Dataset
@@ -335,6 +338,7 @@ class RasterDataset(GeoDataset):
         bands: Optional[Sequence[str]] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
+        as_time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -348,16 +352,23 @@ class RasterDataset(GeoDataset):
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
+            as_time_series: whether or not to return sampled query as a time
+                series or as a merged single time instance
 
         Raises:
             FileNotFoundError: if no files are found in ``root``
+
+        .. versionchanged:: 0.5
+            Add *as_time_series* parameter to support time series datasets
         """
         super().__init__(transforms)
 
         self.root = root
         self.bands = bands or self.all_bands
         self.cache = cache
+        self.as_time_series = as_time_series
 
+        dates: list[tuple[str]] = []
         # Populate the dataset index
         i = 0
         pathname = os.path.join(root, "**", self.filename_glob)
@@ -388,12 +399,21 @@ class RasterDataset(GeoDataset):
                     mint: float = 0
                     maxt: float = sys.maxsize
                     if "date" in match.groupdict():
-                        date = match.group("date")
+                        date: str = match.group("date")
+                        dates.append((os.path.basename(filepath), date))
                         mint, maxt = disambiguate_timestamp(date, self.date_format)
 
                     coords = (minx, maxx, miny, maxy, mint, maxt)
                     self.index.insert(i, coords, filepath)
                     i += 1
+
+        if self.as_time_series:
+            import pandas as pd
+
+            self.date_df = pd.DataFrame(dates)
+            self.date_df.columns = ["filename", "date"]
+            self.date_df["date"] = pd.to_datetime(self.date_df["date"], format="%Y%m%d")
+            self.date_df.sort_values(by="date", inplace=True)
 
         if i == 0:
             msg = f"No {self.__class__.__name__} data was found in `root='{self.root}'`"
@@ -455,22 +475,52 @@ class RasterDataset(GeoDataset):
                     filepath = os.path.join(directory, filename)
                     band_filepaths.append(filepath)
                 data_list.append(self._merge_files(band_filepaths, query))
-            data = torch.cat(data_list)
+            if self.as_time_series:  # for timeseries seq_len x ch x height x width
+                data = torch.cat(data_list, dim=1)
+            else:  # ch x height x width
+                data = torch.cat(data_list, dim=0)
         else:
             data = self._merge_files(filepaths, query, self.band_indexes)
 
-        sample = {"crs": self.crs, "bbox": query}
-
+        key = "image" if self.is_image else "mask"
         data = data.to(self.dtype)
-        if self.is_image:
-            sample["image"] = data
-        else:
-            sample["mask"] = data
+        sample = {key: data, "crs": self.crs, "bbox": query}
 
+        if self.as_time_series:
+            filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+            dates = [
+                re.match(filename_regex, os.path.basename(filepath)).group("date")
+                for filepath in filepaths
+            ]
+            dates = sorted(dates)
+            sample["dates"] = dates
         if self.transforms is not None:
             sample = self.transforms(sample)
 
         return sample
+
+    def _dataset_reader_to_array(
+        self,
+        vrts: list[rasterio.io.DatasetReader],
+        query: BoundingBox,
+        bounds: tuple[float],
+        band_indexes: Optional[Sequence[int]] = None,
+    ) -> np.ndarray:
+        """Read dataset readers into numpy arrays.
+
+        Args:
+            vrts: List of opened rasterio filehandles
+
+        Returns:
+            data array from file handle
+
+        .. versionadded:: 0.5
+        """
+        if len(vrts) == 1:
+            dest = self._read_single_file(vrts[0], band_indexes, query, bounds)
+        else:
+            dest, _ = rasterio.merge.merge(vrts, bounds, self.res, indexes=band_indexes)
+        return dest
 
     def _merge_files(
         self,
@@ -487,6 +537,10 @@ class RasterDataset(GeoDataset):
 
         Returns:
             image/mask at that index
+
+        .. versionchanged:: 0.5
+            Given the *as_time_series* parameter merge files to a single time instance
+            as previously or return a time series for the geographical location
         """
         if self.cache:
             vrt_fhs = [self._cached_load_warp_file(fp) for fp in filepaths]
@@ -494,7 +548,35 @@ class RasterDataset(GeoDataset):
             vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
-        dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res, indexes=band_indexes)
+        if self.as_time_series:
+            # group images with the same time-stamp for the same geographic area
+            # and use rasterio merge to extract one common area
+            filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+            date_tile_dict: DefaultDict[
+                str, list[rasterio.io.DatasetReader]
+            ] = defaultdict(list)
+            for vrt in vrt_fhs:
+                match = re.match(filename_regex, os.path.basename(vrt.name))
+                if match:
+                    date_tile_dict[match.group("date")].append(vrt)
+
+            date_array_dict: dict[str, np.ndarray] = {}
+
+            for date, vrts in date_tile_dict.items():
+                date_array_dict[date] = self._dataset_reader_to_array(
+                    vrts, query, bounds, band_indexes
+                )
+
+            # order the time-stamps correctly to build a sequential time series
+            sorted_dates = sorted(
+                list(date_array_dict.keys()),
+                key=lambda x: datetime.datetime.strptime(x, self.date_format),
+            )
+            # subsequently stack these extracted patches along the timedimension
+            # specify bounds and according to these bounds read out
+            dest = np.stack([date_array_dict[date] for date in sorted_dates])
+        else:
+            dest = self._dataset_reader_to_array(vrt_fhs, query, bounds, band_indexes)
 
         # fix numpy dtypes which are not supported by pytorch tensors
         if dest.dtype == np.uint16:
@@ -502,7 +584,7 @@ class RasterDataset(GeoDataset):
         elif dest.dtype == np.uint32:
             dest = dest.astype(np.int64)
 
-        tensor = torch.tensor(dest)
+        tensor = torch.tensor(dest)  # dimension seq_len x 1 x height x width
         return tensor
 
     @functools.lru_cache(maxsize=128)
@@ -535,6 +617,35 @@ class RasterDataset(GeoDataset):
             return vrt
         else:
             return src
+
+    def _read_single_file(
+        self,
+        src: rasterio.io.DatasetReader,
+        band_indexes: Optional[Sequence[int]],
+        query: BoundingBox,
+        bounds: tuple[float, float, float, float],
+    ) -> np.ndarray:
+        """Read a single datasetreader from a query into array.
+
+        Args:
+            src:
+            band_indexes:
+            query:
+            bounds:
+
+        Returns:
+            queried array
+        """
+        out_width = round((query.maxx - query.minx) / self.res)
+        out_height = round((query.maxy - query.miny) / self.res)
+        count = len(band_indexes) if band_indexes else src.count
+        out_shape = (count, out_height, out_width)
+        dest = src.read(
+            indexes=band_indexes,
+            out_shape=out_shape,
+            window=from_bounds(*bounds, src.transform),
+        )
+        return dest
 
 
 class VectorDataset(GeoDataset):
@@ -807,7 +918,6 @@ class IntersectionDataset(GeoDataset):
     and can be combined using an :class:`IntersectionDataset`:
 
     .. code-block:: python
-
        dataset = landsat & cdl
 
     .. versionadded:: 0.2
@@ -890,7 +1000,6 @@ class IntersectionDataset(GeoDataset):
 
         if self.transforms is not None:
             sample = self.transforms(sample)
-
         return sample
 
     def __str__(self) -> str:
@@ -944,6 +1053,99 @@ class IntersectionDataset(GeoDataset):
         self._res = new_res
         self.datasets[0].res = new_res
         self.datasets[1].res = new_res
+
+
+class MultiQueryDataset(IntersectionDataset):
+    """Dataset representing a collection of Datasets.
+
+    This allows users to do things like:
+
+    * Spatio-temporal predictions where input sequences come from one dataset
+      and target sequences from another (e.g. Landsat and CDL)
+
+    These combinations require that all queries are present in *both* datasets,
+    and can be combined using an :class:`IntersectionDataset`:
+
+    This dataset should be used with :class:'TimeWindowGeoSampler' sampler.
+
+    .. versionadded:: 0.5.0
+    """
+
+    def __init__(
+        self,
+        input_dataset: GeoDataset,
+        target_dataset: GeoDataset,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+    ) -> None:
+        """Initialize a new Dataset instance.
+
+        Args:
+            input_dataset: the input sequence dataset
+            target_dataset: the target sequence dataset
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+
+        Raises:
+            ValueError: if either dataset is not a :class:`GeoDataset`
+        """
+        super().__init__(input_dataset, target_dataset, None, transforms)
+
+        self.input_dataset = input_dataset
+        self.target_dataset = target_dataset
+
+    def __getitem__(self, query: tuple[BoundingBox, BoundingBox]) -> dict[str, Any]:
+        """Retrieve image and metadata indexed by query.
+
+        Args:
+            query: two (minx, maxx, miny, maxy, mint, maxt) coordinates
+                to index datasets, where first indexes the input dataset
+                and second indexes the target dataset
+
+        Returns:
+            sample of data/targets and metadata at that index
+
+        Raises:
+            IndexError: if query is not within bounds of the index
+        """
+        if not query[0].intersects(self.bounds):
+            raise IndexError(
+                f"Input query: {query[0]} not found in input dataset "
+                "index with bounds: {self.bounds}"
+            )
+
+        if not query[1].intersects(self.bounds):
+            raise IndexError(
+                f"Target query: {query[1]} not found in target dataset "
+                "index with bounds: {self.bounds}"
+            )
+        # time-series where each query is for a different dataset
+        # assuming 1-to-1 correspondence between query order and dataset order
+        input_samples = self.input_dataset[query[0]]
+        target_samples = self.target_dataset[query[1]]
+
+        if self.transforms is not None:
+            input_samples = self.transforms(input_samples)
+            target_samples = self.transforms(target_samples)
+
+        # create sample dict from input and targets
+        samples = {f"input_{key}": val for key, val in input_samples.items()}
+        samples.update({f"target_{key}": val for key, val in target_samples.items()})
+
+        return samples
+
+    def __str__(self) -> str:
+        """Return the informal string representation of the object.
+
+        Returns:
+            informal string representation
+        """
+        return f"""\
+{self.__class__.__name__} Dataset
+    type: MultiQueryDataset
+    bbox: {self.bounds}
+    size: {len(self)}
+    input_dataset: {self.input_dataset}
+    target_dataset: {self.target_dataset}"""
 
 
 class UnionDataset(GeoDataset):

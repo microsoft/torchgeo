@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import math
+import os
 from collections.abc import Iterator
 from itertools import product
 
@@ -10,12 +11,19 @@ from _pytest.fixtures import SubRequest
 from rasterio.crs import CRS
 from torch.utils.data import DataLoader
 
-from torchgeo.datasets import BoundingBox, GeoDataset, stack_samples
+from torchgeo.datasets import (
+    BoundingBox,
+    GeoDataset,
+    MultiQueryDataset,
+    RasterDataset,
+    stack_samples,
+)
 from torchgeo.samplers import (
     GeoSampler,
     GridGeoSampler,
     PreChippedGeoSampler,
     RandomGeoSampler,
+    TimeWindowGeoSampler,
     Units,
     tile_to_chips,
 )
@@ -297,4 +305,53 @@ class TestPreChippedGeoSampler:
             dataset, sampler=sampler, num_workers=num_workers, collate_fn=stack_samples
         )
         for _ in dl:
+            continue
+
+
+class TestTimeWindowGeoSampler:
+    @pytest.fixture()
+    def forecast_ds(self) -> RasterDataset:
+        root = os.path.join("tests", "data", "time_series_raster")
+
+        class TimeSeriesInputRaster(RasterDataset):
+            filename_glob = "test_*.tif"
+            filename_regex = r"test_(?P<date>\d{8})_(?P<band>B0[234])"
+            date_format = "%Y%m%d"
+            is_image = True
+            separate_files = True
+            all_bands = ["B02", "B03", "B04"]
+
+        class TimeSeriesTargetRaster(RasterDataset):
+            filename_glob = "test_*.tif"
+            filename_regex = r"test_(?P<date>\d{8})_(?P<band>target)"
+            date_format = "%Y%m%d"
+            is_image = True
+            separate_files = True
+            all_bands = ["target"]
+
+        return MultiQueryDataset(
+            input_dataset=TimeSeriesInputRaster(root, as_time_series=True),
+            target_dataset=TimeSeriesTargetRaster(root, as_time_series=True),
+        )
+
+    @pytest.fixture(
+        scope="function",
+        params=zip(["days", "days", "days"], [3, 2, 2], [2, 1, 1], [True, True, False]),
+    )
+    def sampler(
+        self, forecast_ds: MultiQueryDataset, request: SubRequest
+    ) -> TimeWindowGeoSampler:
+        time_unit, encoder_length, prediction_length, consecutive = request.param
+        return TimeWindowGeoSampler(
+            forecast_ds,
+            size=32,
+            length=2,
+            encoder_length=encoder_length,
+            prediction_length=prediction_length,
+            time_unit=time_unit,
+            consecutive=consecutive,
+        )
+
+    def test_iter(self, sampler: TimeWindowGeoSampler) -> None:
+        for _ in sampler:
             continue

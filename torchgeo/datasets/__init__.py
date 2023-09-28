@@ -43,6 +43,7 @@ from .gbif import GBIF
 from .geo import (
     GeoDataset,
     IntersectionDataset,
+    MultiQueryDataset,
     NonGeoClassificationDataset,
     NonGeoDataset,
     RasterDataset,
@@ -235,6 +236,9 @@ __all__ = (
     "RasterDataset",
     "UnionDataset",
     "VectorDataset",
+    "VisionClassificationDataset",
+    "VisionDataset",
+    "MultiQueryDataset",
     # Utilities
     "BoundingBox",
     "concat_samples",
