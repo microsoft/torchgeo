@@ -10,7 +10,7 @@ import os
 import re
 import sys
 from collections.abc import Sequence
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, Optional, cast, Union, Pattern
 
 import fiona
 import fiona.transform
@@ -335,6 +335,8 @@ class RasterDataset(GeoDataset):
         bands: Optional[Sequence[str]] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
+        filename_glob: Optional[Union[str, Pattern[str]]] = None,
+        filename_regex: Optional[Union[str, Pattern[str]]] = None,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -357,6 +359,8 @@ class RasterDataset(GeoDataset):
         self.root = root
         self.bands = bands or self.all_bands
         self.cache = cache
+        self.filename_glob = filename_glob or self.filename_glob
+        self.filename_regex = filename_regex or self.filename_regex
 
         # Populate the dataset index
         i = 0
