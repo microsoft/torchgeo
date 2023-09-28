@@ -427,10 +427,10 @@ class RasterDataset(GeoDataset):
             filename_glob: Defaults to self.filename_glob
         """
         # Make iterable
-        if isinstance(self.paths, str) or not isinstance(self.paths, Iterable):
-            paths = [self.paths]
+        if isinstance(self.paths, str):
+            paths: Iterable[str] = [self.paths]
         else:
-            paths = cast(list[str], self.paths)
+            paths = self.paths
 
         filename_glob = filename_glob or self.filename_glob
 
