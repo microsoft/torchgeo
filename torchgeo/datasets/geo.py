@@ -425,6 +425,8 @@ class RasterDataset(GeoDataset):
 
         Args:
             filename_glob: Defaults to self.filename_glob
+
+        .. versionadded:: 0.5
         """
         # Make iterable
         if isinstance(self.paths, str):
