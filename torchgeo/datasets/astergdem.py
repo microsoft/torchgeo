@@ -66,7 +66,7 @@ class AsterGDEM(RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            FileNotFoundError: if no files are found in ``paths``
             RuntimeError: if dataset is missing
         """
         self.paths = paths

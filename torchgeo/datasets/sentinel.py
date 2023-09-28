@@ -163,7 +163,7 @@ class Sentinel1(Sentinel):
 
         Raises:
             AssertionError: if ``bands`` is invalid
-            FileNotFoundError: if no files are found in ``root``
+            FileNotFoundError: if no files are found in ``paths``
         """
         assert len(bands) > 0, "'bands' cannot be an empty list"
         assert len(bands) == len(set(bands)), "'bands' contains duplicate bands"
@@ -316,7 +316,7 @@ class Sentinel2(Sentinel):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            FileNotFoundError: if no files are found in ``paths``
         """
         bands = bands or self.all_bands
         self.filename_glob = self.filename_glob.format(bands[0])

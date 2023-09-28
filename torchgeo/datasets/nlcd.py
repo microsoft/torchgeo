@@ -135,7 +135,7 @@ class NLCD(RasterDataset):
 
         Raises:
             AssertionError: if ``years`` or ``classes`` are invalid
-            FileNotFoundError: if no files are found in ``root``
+            FileNotFoundError: if no files are found in ``paths``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         assert set(years) <= self.md5s.keys(), (

@@ -80,7 +80,7 @@ class Landsat(RasterDataset, abc.ABC):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            FileNotFoundError: if no files are found in ``paths``
         """
         bands = bands or self.default_bands
         self.filename_glob = self.filename_glob.format(bands[0])

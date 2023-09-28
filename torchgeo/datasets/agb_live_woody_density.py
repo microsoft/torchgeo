@@ -80,7 +80,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            FileNotFoundError: if no files are found in ``paths``
         """
         self.paths = paths
         self.download = download

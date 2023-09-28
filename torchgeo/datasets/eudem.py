@@ -104,7 +104,7 @@ class EUDEM(RasterDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            FileNotFoundError: if no files are found in ``paths``
         """
         self.paths = paths
         self.checksum = checksum

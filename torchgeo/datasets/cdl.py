@@ -234,7 +234,7 @@ class CDL(RasterDataset):
 
         Raises:
             AssertionError: if ``years`` or ``classes`` are invalid
-            FileNotFoundError: if no files are found in ``root``
+            FileNotFoundError: if no files are found in ``paths``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
 
         .. versionadded:: 0.5
