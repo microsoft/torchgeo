@@ -100,8 +100,7 @@ class L8Biome(RasterDataset):
         """Initialize a new L8Biome instance.
 
         Args:
-            paths: root directory or list of absolute filepaths where
-                dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to EPSG:3857)
             res: resolution of the dataset in units of CRS

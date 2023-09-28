@@ -54,9 +54,8 @@ class AsterGDEM(RasterDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            paths: root directory or list of absolute filepaths where
-                dataset can be found, here the collection of
-                individual zip files for each tile should be found
+            paths: one or more root directories to search or files to load, here
+                the collection of individual zip files for each tile should be found
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS

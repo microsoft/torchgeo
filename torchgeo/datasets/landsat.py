@@ -68,8 +68,7 @@ class Landsat(RasterDataset, abc.ABC):
         """Initialize a new Dataset instance.
 
         Args:
-            paths: root directory or list of absolute filepaths where
-                dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
