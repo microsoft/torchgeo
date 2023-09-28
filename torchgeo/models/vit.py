@@ -86,6 +86,19 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+    LANDSAT_ETM_SR_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_etm-sr_simclr-ce849752.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 6,
+            "model": "vit_small_patch16_224",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
+        },
+    )
+
     LANDSAT_ETM_TOA_MOCO = Weights(
         url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_etm_toa_moco-26d19bcf.pth",  # noqa: E501
         transforms=_ssl4eo_l_transforms,
@@ -96,6 +109,19 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             "publication": "https://arxiv.org/abs/2306.09424",
             "repo": "https://github.com/microsoft/torchgeo",
             "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_ETM_TOA_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_etm-toa_simclr-67e15a65.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 9,
+            "model": "vit_small_patch16_224",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
         },
     )
 
@@ -112,6 +138,19 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+    LANDSAT_OLI_SR_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_oli-sr_simclr-6797459e.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 7,
+            "model": "vit_small_patch16_224",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
+        },
+    )
+
     LANDSAT_OLI_TIRS_TOA_MOCO = Weights(
         url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_oli_tirs_toa_moco-c7c2cceb.pth",  # noqa: E501
         transforms=_ssl4eo_l_transforms,
@@ -125,6 +164,19 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+    LANDSAT_OLI_TIRS_TOA_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_oli-tirs-toa_simclr-f4e29b0e.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 11,
+            "model": "vit_small_patch16_224",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
+        },
+    )
+
     LANDSAT_TM_TOA_MOCO = Weights(
         url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_tm_toa_moco-a1c967d8.pth",  # noqa: E501
         transforms=_ssl4eo_l_transforms,
@@ -135,6 +187,19 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             "publication": "https://arxiv.org/abs/2306.09424",
             "repo": "https://github.com/microsoft/torchgeo",
             "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_TM_TOA_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_tm-toa_simclr-eaa9539b.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 7,
+            "model": "vit_small_patch16_224",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
         },
     )
 
