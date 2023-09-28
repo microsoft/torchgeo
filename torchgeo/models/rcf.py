@@ -17,7 +17,7 @@ from ..datasets import NonGeoDataset
 class RCF(Module):
     """This model extracts random convolutional features (RCFs) from its input.
 
-    RCFs are used in Multi-task Observation using Satellite Imagery & Kitchen Sinks
+    RCFs are used in the Multi-task Observation using Satellite Imagery & Kitchen Sinks
     (MOSAIKS) method proposed in "A generalizable and accessible approach to machine
     learning with global satellite imagery".
 
