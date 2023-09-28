@@ -7,22 +7,22 @@ import pytest
 import torch
 
 from torchgeo.datasets import EuroSAT
-from torchgeo.models import MOSAIKS, RCF
+from torchgeo.models import RCF
 
 
 class TestRCF:
     def test_in_channels(self) -> None:
-        model = RCF(in_channels=5, features=4, kernel_size=3)
+        model = RCF(in_channels=5, features=4, kernel_size=3, mode="gaussian")
         x = torch.randn(2, 5, 64, 64)
         model(x)
 
-        model = RCF(in_channels=3, features=4, kernel_size=3)
+        model = RCF(in_channels=3, features=4, kernel_size=3, mode="gaussian")
         match = "to have 3 channels, but got 5 channels instead"
         with pytest.raises(RuntimeError, match=match):
             model(x)
 
     def test_num_features(self) -> None:
-        model = RCF(in_channels=5, features=4, kernel_size=3)
+        model = RCF(in_channels=5, features=4, kernel_size=3, mode="gaussian")
         x = torch.randn(2, 5, 64, 64)
         y = model(x)
         assert y.shape[1] == 4
@@ -32,22 +32,20 @@ class TestRCF:
         assert y.shape[0] == 4
 
     def test_untrainable(self) -> None:
-        model = RCF(in_channels=5, features=4, kernel_size=3)
+        model = RCF(in_channels=5, features=4, kernel_size=3, mode="gaussian")
         assert len(list(model.parameters())) == 0
 
     def test_biases(self) -> None:
-        model = RCF(features=24, bias=10)
+        model = RCF(features=24, bias=10, mode="gaussian")
         assert torch.all(model.biases == 10)
 
     def test_seed(self) -> None:
-        weights1 = RCF(seed=1).weights
-        weights2 = RCF(seed=1).weights
+        weights1 = RCF(seed=1, mode="gaussian").weights
+        weights2 = RCF(seed=1, mode="gaussian").weights
         assert torch.allclose(weights1, weights2)
 
-
-class TestMOSAIKS:
-    def test_init(self) -> None:
+    def test_empirical(self) -> None:
         root = os.path.join("tests", "data", "eurosat")
         ds = EuroSAT(root=root, bands=EuroSAT.rgb_bands, split="train")
-        model = MOSAIKS(ds, in_channels=3, features=4, kernel_size=3)
+        model = RCF(in_channels=3, features=4, kernel_size=3, mode="empirical", dataset=ds)
         model(torch.randn(2, 3, 8, 8))

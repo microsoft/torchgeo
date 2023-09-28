@@ -18,11 +18,16 @@ class RCF(Module):
     """This model extracts random convolutional features (RCFs) from its input.
 
     RCFs are used in Multi-task Observation using Satellite Imagery & Kitchen Sinks
-    (MOSAIKS) method proposed in https://www.nature.com/articles/s41467-021-24638-z.
+    (MOSAIKS) method proposed in "A generalizable and accessible approach to machine
+    learning with global satellite imagery".
 
     This class can operate in two modes, "gaussian" and "empirical". In "gaussian" mode,
     the filters will be sampled from a Gaussian distribution, while in "empirical" mode,
     the filters will be sampled from a dataset.
+
+    If you use this model in your research, please cite the following paper:
+
+    * https://www.nature.com/articles/s41467-021-24638-z
 
     .. note::
 
@@ -50,7 +55,7 @@ class RCF(Module):
         .. versionadded:: 0.2
            The *seed* parameter.
 
-        .. versionadded:: 0.5.0
+        .. versionadded:: 0.5
             The *mode* and *dataset* parameters.
 
         Args:
