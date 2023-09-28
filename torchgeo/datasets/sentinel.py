@@ -3,7 +3,7 @@
 
 """Sentinel datasets."""
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
@@ -296,7 +296,7 @@ class Sentinel2(Sentinel):
 
     def __init__(
         self,
-        paths: Union[str, list[str]] = "data",
+        paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: float = 10,
         bands: Optional[Sequence[str]] = None,

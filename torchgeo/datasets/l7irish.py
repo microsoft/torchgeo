@@ -4,7 +4,7 @@
 """L7 Irish dataset."""
 
 import os
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from typing import Any, Callable, Optional, Union, cast
 
 import matplotlib.pyplot as plt
@@ -90,7 +90,7 @@ class L7Irish(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, list[str]] = "data",
+        paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = CRS.from_epsg(3857),
         res: Optional[float] = None,
         bands: Sequence[str] = all_bands,

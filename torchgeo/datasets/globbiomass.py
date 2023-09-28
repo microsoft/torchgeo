@@ -4,6 +4,7 @@
 """GlobBiomass dataset."""
 
 import os
+from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union, cast
 
 import matplotlib.pyplot as plt
@@ -117,7 +118,7 @@ class GlobBiomass(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, list[str]] = "data",
+        paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         measurement: str = "agb",
