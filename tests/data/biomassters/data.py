@@ -111,17 +111,17 @@ if __name__ == "__main__":
                     else:
                         create_tif_file(file_path, num_channels=11, dtype="uint16")
 
-        # create target data one per id
-        if split == "train":
-            create_tif_file(
-                os.path.join(f"{split}_agbm", id + "_agbm.tif"),
-                num_channels=1,
-                dtype="float32",
-            )
+            # create target data one per id
+            if split == "train":
+                create_tif_file(
+                    os.path.join(f"{split}_agbm", id + "_agbm.tif"),
+                    num_channels=1,
+                    dtype="float32",
+                )
 
     # write out metadata
 
-    with open("The_BioMassters_-_features_metadata.csv.csv", "w") as csv_file:
+    with open(metadata_train, "w") as csv_file:
         wr = csv.writer(csv_file)
         wr.writerow(csv_columns)
         for row in csv_rows:
