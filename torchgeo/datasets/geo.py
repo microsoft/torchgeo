@@ -329,7 +329,7 @@ class RasterDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: Union[str, list[str]] = "data",
+        paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
