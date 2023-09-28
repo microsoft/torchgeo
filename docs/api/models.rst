@@ -30,7 +30,6 @@ RCF Extractor
 ^^^^^^^^^^^^^
 
 .. autoclass:: RCF
-.. autoclass:: MOSAIKS
 
 ResNet
 ^^^^^^

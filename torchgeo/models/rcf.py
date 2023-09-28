@@ -20,6 +20,10 @@ class RCF(Module):
     RCFs are used in Multi-task Observation using Satellite Imagery & Kitchen Sinks
     (MOSAIKS) method proposed in https://www.nature.com/articles/s41467-021-24638-z.
 
+    This class can operate in two modes, "gaussian" and "empirical". In "gaussian" mode,
+    the filters will be sampled from a Gaussian distribution, while in "empirical" mode,
+    the filters will be sampled from a dataset.
+
     .. note::
 
         This Module is *not* trainable. It is only used as a feature extractor.
@@ -35,6 +39,8 @@ class RCF(Module):
         kernel_size: int = 3,
         bias: float = -1.0,
         seed: Optional[int] = None,
+        mode: str = "gaussian",
+        dataset: Optional[NonGeoDataset] = None,
     ) -> None:
         """Initializes the RCF model.
 
@@ -44,19 +50,27 @@ class RCF(Module):
         .. versionadded:: 0.2
            The *seed* parameter.
 
+        .. versionadded:: 0.5.0
+            The *mode* and *dataset* parameters.
+
         Args:
             in_channels: number of input channels
             features: number of features to compute, must be divisible by 2
             kernel_size: size of the kernel used to compute the RCFs
             bias: bias of the convolutional layer
             seed: random seed used to initialize the convolutional layer
+            mode: "empirical" or "gaussian"
+            dataset: a NonGeoDataset to sample from when mode is "empirical"
         """
         super().__init__()
-
+        assert mode in ["empirical", "gaussian"]
+        if mode == "empirical" and dataset is None:
+            raise ValueError("dataset must be provided when mode is 'empirical'")
         assert features % 2 == 0
+        num_patches = features // 2
 
         if seed is None:
-            generator = None
+            generator = torch.Generator()
         else:
             generator = torch.Generator().manual_seed(seed)
 
@@ -67,7 +81,7 @@ class RCF(Module):
         self.register_buffer(
             "weights",
             torch.randn(
-                features // 2,
+                num_patches,
                 in_channels,
                 kernel_size,
                 kernel_size,
@@ -76,51 +90,34 @@ class RCF(Module):
             ),
         )
         self.register_buffer(
-            "biases", torch.zeros(features // 2, requires_grad=False) + bias
+            "biases", torch.zeros(num_patches, requires_grad=False) + bias
         )
 
-    def forward(self, x: Tensor) -> Tensor:
-        """Forward pass of the RCF model.
+        if mode == "empirical":
+            assert dataset is not None
+            num_channels, height, width = dataset[0]["image"].shape
+            assert num_channels == in_channels
+            patches = np.zeros(
+                (num_patches, num_channels, kernel_size, kernel_size), dtype=np.float32
+            )
+            idxs = torch.randint(
+                0, len(dataset), (num_patches,), generator=generator
+            ).numpy()
+            ys = torch.randint(
+                0, height - kernel_size, (num_patches,), generator=generator
+            ).numpy()
+            xs = torch.randint(
+                0, width - kernel_size, (num_patches,), generator=generator
+            ).numpy()
 
-        Args:
-            x: a tensor with shape (B, C, H, W)
+            for i in range(num_patches):
+                img = dataset[idxs[i]]["image"]
+                patches[i] = img[
+                    :, ys[i] : ys[i] + kernel_size, xs[i] : xs[i] + kernel_size
+                ]
 
-        Returns:
-            a tensor of size (B, ``self.num_features``)
-        """
-        x1a = F.relu(
-            F.conv2d(x, self.weights, bias=self.biases, stride=1, padding=0),
-            inplace=True,
-        )
-        x1b = F.relu(
-            -F.conv2d(x, self.weights, bias=self.biases, stride=1, padding=0),
-            inplace=False,
-        )
-
-        x1a = F.adaptive_avg_pool2d(x1a, (1, 1)).squeeze()
-        x1b = F.adaptive_avg_pool2d(x1b, (1, 1)).squeeze()
-
-        if len(x1a.shape) == 1:  # case where we passed a single input
-            output = torch.cat((x1a, x1b), dim=0)
-            return output
-        else:  # case where we passed a batch of > 1 inputs
-            assert len(x1a.shape) == 2
-            output = torch.cat((x1a, x1b), dim=1)
-            return output
-
-
-class MOSAIKS(RCF):
-    """This model extracts MOSAIKS features from its input.
-
-    MOSAIKS features are described in Multi-task Observation using Satellite Imagery &
-    Kitchen Sinks https://www.nature.com/articles/s41467-021-24638-z. Briefly, this
-    model is instantiated with a dataset, samples patches from the dataset, ZCA whitens
-    the patches, then uses those as convolutional filters to extract features with.
-
-    .. note::
-
-        This Module is *not* trainable. It is only used as a feature extractor.
-    """
+            patches = self._normalize(patches)
+            self.weights = torch.tensor(patches)
 
     def _normalize(
         self,
@@ -139,6 +136,8 @@ class MOSAIKS(RCF):
 
         Returns
             a numpy array of size (N, C, H, W) containing the normalized patches
+
+        .. versionadded:: 0.5.0
         """  # noqa: E501
         n_patches = patches.shape[0]
         orig_shape = patches.shape
@@ -170,48 +169,31 @@ class MOSAIKS(RCF):
 
         return patches_normalized.reshape(orig_shape).astype("float32")
 
-    def __init__(
-        self,
-        dataset: NonGeoDataset,
-        in_channels: int = 4,
-        features: int = 16,
-        kernel_size: int = 3,
-        bias: float = -1.0,
-        seed: Optional[int] = None,
-    ):
-        """Initializes the MOSAIKS model.
-
-        This is the main model used in Multi-task Observation using Satellite Imagery
-        & Kitchen Sinks (MOSAIKS) method proposed in
-        https://www.nature.com/articles/s41467-021-24638-z.
+    def forward(self, x: Tensor) -> Tensor:
+        """Forward pass of the RCF model.
 
         Args:
-            dataset: a torch dataset that returns dictionaries with an "image" key
-            in_channels: number of input channels
-            features: number of features to compute, must be divisible by 2
-            kernel_size: size of the kernel used to compute the RCFs
-            bias: bias of the convolutional layer
-            seed: random seed used to initialize the convolutional layer
+            x: a tensor with shape (B, C, H, W)
 
-        .. versionadded:: 0.5.0
+        Returns:
+            a tensor of size (B, ``self.num_features``)
         """
-        super().__init__(in_channels, features, kernel_size, bias, seed)
-
-        # sample dataset patches
-        generator = np.random.default_rng(seed=seed)
-        num_patches = features // 2
-        num_channels, height, width = dataset[0]["image"].shape
-        assert num_channels == in_channels
-
-        patches = np.zeros(
-            (num_patches, num_channels, kernel_size, kernel_size), dtype=np.float32
+        x1a = F.relu(
+            F.conv2d(x, self.weights, bias=self.biases, stride=1, padding=0),
+            inplace=True,
         )
-        for i in range(num_patches):
-            idx = generator.integers(0, len(dataset))
-            img = dataset[idx]["image"]
-            y = generator.integers(0, height - kernel_size)
-            x = generator.integers(0, width - kernel_size)
-            patches[i] = img[:, y : y + kernel_size, x : x + kernel_size]
+        x1b = F.relu(
+            -F.conv2d(x, self.weights, bias=self.biases, stride=1, padding=0),
+            inplace=False,
+        )
 
-        patches = self._normalize(patches)
-        self.weights = torch.tensor(patches)
+        x1a = F.adaptive_avg_pool2d(x1a, (1, 1)).squeeze()
+        x1b = F.adaptive_avg_pool2d(x1b, (1, 1)).squeeze()
+
+        if len(x1a.shape) == 1:  # case where we passed a single input
+            output = torch.cat((x1a, x1b), dim=0)
+            return output
+        else:  # case where we passed a batch of > 1 inputs
+            assert len(x1a.shape) == 2
+            output = torch.cat((x1a, x1b), dim=1)
+            return output
