@@ -51,3 +51,8 @@ class TestRCF:
             in_channels=3, features=4, kernel_size=3, mode="empirical", dataset=ds
         )
         model(torch.randn(2, 3, 8, 8))
+
+    def test_empirical_no_dataset(self) -> None:
+        match = "dataset must be provided when mode is 'empirical'"
+        with pytest.raises(ValueError, match=match):
+            RCF(mode="empirical", dataset=None)
