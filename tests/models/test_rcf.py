@@ -47,5 +47,7 @@ class TestRCF:
     def test_empirical(self) -> None:
         root = os.path.join("tests", "data", "eurosat")
         ds = EuroSAT(root=root, bands=EuroSAT.rgb_bands, split="train")
-        model = RCF(in_channels=3, features=4, kernel_size=3, mode="empirical", dataset=ds)
+        model = RCF(
+            in_channels=3, features=4, kernel_size=3, mode="empirical", dataset=ds
+        )
         model(torch.randn(2, 3, 8, 8))
