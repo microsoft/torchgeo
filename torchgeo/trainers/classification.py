@@ -81,7 +81,9 @@ class ClassificationTask(BaseTask):
         """
         loss: str = self.hparams["loss"]
         if loss == "ce":
-            self.criterion: nn.Module = nn.CrossEntropyLoss(weight=self.hparams["class_weights"])
+            self.criterion: nn.Module = nn.CrossEntropyLoss(
+                weight=self.hparams["class_weights"]
+            )
         elif loss == "bce":
             self.criterion = nn.BCEWithLogitsLoss()
         elif loss == "jaccard":
