@@ -307,13 +307,6 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
 class RasterDataset(GeoDataset):
     """Abstract base class for :class:`GeoDataset` stored as raster files."""
 
-    #: Glob expression used to search for files.
-    #:
-    #: This expression should be specific enough that it will not pick up files from
-    #: other datasets. It should not include a file extension, as the dataset may be in
-    #: a different file format than what it was originally downloaded as.
-    filename_glob = "*"
-
     #: Regular expression used to extract date from filename.
     #:
     #: The expression should use named groups. The expression may contain any number of
@@ -578,13 +571,6 @@ class RasterDataset(GeoDataset):
 
 class VectorDataset(GeoDataset):
     """Abstract base class for :class:`GeoDataset` stored as vector files."""
-
-    #: Glob expression used to search for files.
-    #:
-    #: This expression should be specific enough that it will not pick up files from
-    #: other datasets. It should not include a file extension, as the dataset may be in
-    #: a different file format than what it was originally downloaded as.
-    filename_glob = "*"
 
     def __init__(
         self,
