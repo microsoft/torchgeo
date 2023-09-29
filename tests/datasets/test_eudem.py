@@ -33,10 +33,8 @@ class TestEUDEM:
         assert isinstance(x["mask"], torch.Tensor)
 
     def test_extracted_already(self, dataset: EUDEM) -> None:
-        zipfile = dataset.list_files(filename_glob="eu_dem_v11_E30N10.zip")[0]
-        outdir = os.path.abspath(os.path.join(zipfile, os.pardir))
-        # TODO: This changes the behaviour from unpacking in root to same dir as archive
-        shutil.unpack_archive(zipfile, outdir, "zip")
+        zipfile = os.path.join(dataset.paths, "eu_dem_v11_E30N10.zip")
+        shutil.unpack_archive(zipfile, dataset.paths, "zip")
         EUDEM(dataset.paths)
 
     def test_no_dataset(self, tmp_path: Path) -> None:
