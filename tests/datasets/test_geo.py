@@ -2,8 +2,8 @@
 # Licensed under the MIT License.
 import os
 import pickle
-from pathlib import Path
 from collections.abc import Iterable
+from pathlib import Path
 from typing import Union
 
 import pytest
