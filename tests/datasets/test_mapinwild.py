@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
+from _pytest.fixtures import SubRequest
 from _pytest.monkeypatch import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
@@ -23,7 +24,9 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 class TestMapInWild:
     @pytest.fixture(params=["train", "validation", "test"])
-    def dataset(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> MapInWild:
+    def dataset(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, request: SubRequest
+    ) -> MapInWild:
         monkeypatch.setattr(torchgeo.datasets.mapinwild, "download_url", download_url)
 
         md5s = {
@@ -51,6 +54,7 @@ class TestMapInWild:
         monkeypatch.setattr(MapInWild, "url", urls)
 
         root = str(tmp_path)
+        split = request.param
 
         transforms = nn.Identity()
         modality = [
@@ -65,7 +69,12 @@ class TestMapInWild:
             "s2_temporal_subset",
         ]
         return MapInWild(
-            root, modality=modality, transforms=transforms, download=True, checksum=True
+            root,
+            modality=modality,
+            split=split,
+            transforms=transforms,
+            download=True,
+            checksum=True,
         )
 
     def test_getitem(self, dataset: MapInWild) -> None:
