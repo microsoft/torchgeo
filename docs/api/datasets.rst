@@ -257,6 +257,11 @@ LoveDA
 
 .. autoclass:: LoveDA
 
+MapInWild
+^^^^^^^^^
+
+.. autoclass:: MapInWild
+
 Million-AID
 ^^^^^^^^^^^
 
