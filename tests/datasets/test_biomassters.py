@@ -18,15 +18,9 @@ class TestBioMassters:
     @pytest.fixture(
         params=product(["train", "test"], [["S1"], ["S2"], ["S1", "S2"]], [True, False])
     )
-    def dataset(self, tmp_path: Path, request: SubRequest) -> BioMassters:
+    def dataset(self, request: SubRequest) -> BioMassters:
+        root = os.path.join("tests", "data", "biomassters")
         split, sensors, as_time_series = request.param
-
-        # copy data for now
-        shutil.rmtree(tmp_path)
-        shutil.copytree(os.path.join("tests", "data", "biomassters"), str(tmp_path))
-
-        root = str(tmp_path)
-
         return BioMassters(
             root, split=split, sensors=sensors, as_time_series=as_time_series
         )

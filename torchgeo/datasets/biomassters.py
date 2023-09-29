@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Sequence
-from typing import Any, Optional
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -38,10 +38,10 @@ class BioMassters(NonGeoDataset):
     * 13,000 target AGB masks of size (256x256px)
     * 12 months of data per target mask
     * Sentinel 1 and Sentinel 2 data for each location
-    * Sentinel 1 available for each month
-    * Sentinel 2 available for almost each month
-      not available for each month due to ESA aquisition halt over the region
-      during particular periods
+    * Sentinel 1 available for every month
+    * Sentinel 2 available for almost every month
+      (not available for every month due to ESA aquisition halt over the region
+      during particular periods)
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -53,8 +53,6 @@ class BioMassters(NonGeoDataset):
     valid_splits = ["train", "test"]
     valid_sensors = ("S1", "S2")
 
-    url = "https://huggingface.co/datasets/nascetti-a/BioMassters/resolve/main/{}"
-
     metadata_filename = "The_BioMassters_-_features_metadata.csv.csv"
 
     def __init__(
@@ -65,6 +63,9 @@ class BioMassters(NonGeoDataset):
         as_time_series: bool = False,
     ) -> None:
         """Initialize a new instance of BioMassters dataset.
+
+        If ``as_time_series=False`` (the default), each time step becomes its own
+        sample with the target being shared across multiple samples.
 
         Args:
             root: root directory where dataset can be found
@@ -81,12 +82,12 @@ class BioMassters(NonGeoDataset):
 
         assert (
             split in self.valid_splits
-        ), f"Please choose one of the valid splits {self.valid_splits}."
+        ), f"Please choose one of the valid splits: {self.valid_splits}."
         self.split = split
 
         assert set(sensors).issubset(
             set(self.valid_sensors)
-        ), f"Please choose a subset of valid sensors {self.valid_sensors}."
+        ), f"Please choose a subset of valid sensors: {self.valid_sensors}."
         self.sensors = sensors
         self.as_time_series = as_time_series
 
@@ -177,10 +178,11 @@ class BioMassters(NonGeoDataset):
         filepaths = [
             os.path.join(self.root, f"{self.split}_features", f) for f in filenames
         ]
-        if not self.as_time_series:
-            arr = np.concatenate([rasterio.open(fp).read() for fp in filepaths], axis=0)
+        arr_list = [rasterio.open(fp).read() for fp in filepaths]
+        if self.as_time_series:
+            arr = np.stack(arr_list, axis=0)
         else:
-            arr = np.stack([rasterio.open(fp).read() for fp in filepaths], axis=0)
+            arr = np.concatenate(arr_list, axis=0)
         return torch.tensor(arr.astype(np.int32))
 
     def _load_target(self, filename: str) -> Tensor:
@@ -214,7 +216,7 @@ class BioMassters(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Any],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> Figure:
