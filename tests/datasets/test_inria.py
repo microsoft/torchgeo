@@ -15,7 +15,7 @@ from torchgeo.datasets import InriaAerialImageLabeling
 
 
 class TestInriaAerialImageLabeling:
-    @pytest.fixture(params=["train", "test"])
+    @pytest.fixture(params=["train", "val", "test"])
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch
     ) -> InriaAerialImageLabeling:
@@ -38,7 +38,12 @@ class TestInriaAerialImageLabeling:
         assert x["image"].ndim == 3
 
     def test_len(self, dataset: InriaAerialImageLabeling) -> None:
-        assert len(dataset) == 5
+        if dataset.split == "train":
+            assert len(dataset) == 2
+        elif dataset.split == "val":
+            assert len(dataset) == 5
+        elif dataset.split == "test":
+            assert len(dataset) == 7
 
     def test_already_downloaded(self, dataset: InriaAerialImageLabeling) -> None:
         InriaAerialImageLabeling(root=dataset.root)

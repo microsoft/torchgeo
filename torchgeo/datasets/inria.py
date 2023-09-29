@@ -94,27 +94,25 @@ class InriaAerialImageLabeling(NonGeoDataset):
             list of dicts containing paths for each pair of image and label
         """
         files = []
-
-        root_dir = os.path.join(
-            root, self.directory, "train" if self.split in ["train", "val"] else "test"
-        )
-
-        if self.split == "train":
-            pattern = re.compile(r"([a-zA-Z]+)([6-9]|[1-2][0-9]|3[0-9])\.tif")
-        elif self.split == "val":
-            pattern = re.compile(r"[a-zA-Z]+[0-5]\.tif")
+        split = "train" if self.split in ["train", "val"] else "test"
+        root_dir = os.path.join(root, self.directory, split)
+        pattern = re.compile(r"([A-Za-z]+)(\d+)")
 
         images = glob.glob(os.path.join(root_dir, "images", "*.tif"))
         images = sorted(images)
 
-        if self.split in ["train", "val"]:
+        if split == "train":
             labels = glob.glob(os.path.join(root_dir, "gt", "*.tif"))
             labels = sorted(labels)
 
             for img, lbl in zip(images, labels):
-                if pattern.search(img):
-                    files.append({"image": img, "label": lbl})
-
+                if match := pattern.search(img):
+                    idx = int(match.group(2))
+                    # For validation, use the first 5 images of every location
+                    if self.split == "train" and idx > 5:
+                        files.append({"image": img, "label": lbl})
+                    elif self.split == "val" and idx < 6:
+                        files.append({"image": img, "label": lbl})
         else:
             for img in images:
                 files.append({"image": img})
