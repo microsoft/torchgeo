@@ -59,18 +59,17 @@ class RwandaFieldBoundary(NonGeoDataset):
     ]
     number_of_patches_per_split = {"train": 57, "test": 13}
 
-    image_meta = {
-        "filename": "nasa_rwanda_field_boundary_competition_source_train.tar.gz",
-        "md5": "1f9ec08038218e67e11f82a86849b333",
+    filenames = {
+        "train_images": "nasa_rwanda_field_boundary_competition_source_train.tar.gz",
+        "test_images": "nasa_rwanda_field_boundary_competition_source_test.tar.gz",
+        "train_labels": "nasa_rwanda_field_boundary_competition_labels_train.tar.gz",
     }
-    target_meta = {
-        "filename": "nasa_rwanda_field_boundary_competition_labels_train.tar.gz",
-        "md5": "10e4eb761523c57b6d3bdf9394004f5f",
+    md5s = {
+        "train_images": "1f9ec08038218e67e11f82a86849b333",
+        "test_images": "17bb0e56eedde2e7a43c57aa908dc125",
+        "train_labels": "10e4eb761523c57b6d3bdf9394004f5f",
     }
-    image_test_meta = {
-        "filename": "nasa_rwanda_field_boundary_competition_source_test.tar.gz",
-        "md5": "17bb0e56eedde2e7a43c57aa908dc125",
-    }
+
     dates = ("2021_03", "2021_04", "2021_08", "2021_10", "2021_11", "2021_12")
 
     all_bands = ("B01", "B02", "B03", "B04")
@@ -223,10 +222,10 @@ class RwandaFieldBoundary(NonGeoDataset):
 
         # Check if tar file already exists (if so then extract)
         have_all_files = True
-        for group in [self.image_meta, self.target_meta, self.image_test_meta]:
-            filepath = os.path.join(self.root, group["filename"])
+        for group in ["train_images", "train_labels", "test_images"]:
+            filepath = os.path.join(self.root, self.filenames[group])
             if os.path.exists(filepath):
-                if self.checksum and not check_integrity(filepath, group["md5"]):
+                if self.checksum and not check_integrity(filepath, self.md5s[group]):
                     raise RuntimeError("Dataset found, but corrupted.")
                 extract_archive(filepath)
             else:
@@ -245,29 +244,6 @@ class RwandaFieldBoundary(NonGeoDataset):
         # Download and extract the dataset
         self._download()
 
-    def _check_integrity(self) -> bool:
-        """Check integrity of dataset.
-
-        Returns:
-            True if dataset files are found and/or MD5s match, else False
-        """
-        images: bool = check_integrity(
-            os.path.join(self.root, self.image_meta["filename"]),
-            self.image_meta["md5"] if self.checksum else None,
-        )
-
-        targets: bool = check_integrity(
-            os.path.join(self.root, self.target_meta["filename"]),
-            self.target_meta["md5"] if self.checksum else None,
-        )
-
-        test_images: bool = check_integrity(
-            os.path.join(self.root, self.image_test_meta["filename"]),
-            self.image_test_meta["md5"] if self.checksum else None,
-        )
-
-        return images and targets and test_images
-
     def _download(self) -> None:
         """Download the dataset and extract it.
 
@@ -277,9 +253,9 @@ class RwandaFieldBoundary(NonGeoDataset):
         for collection_id in self.collection_ids:
             download_radiant_mlhub_collection(collection_id, self.root, self.api_key)
 
-        for group in [self.image_meta, self.target_meta, self.image_test_meta]:
-            filepath = os.path.join(self.root, group["filename"])
-            if self.checksum and not check_integrity(filepath, group["md5"]):
+        for group in ["train_images", "train_labels", "test_images"]:
+            filepath = os.path.join(self.root, self.filenames[group])
+            if self.checksum and not check_integrity(filepath, self.md5s[group]):
                 raise RuntimeError("Dataset not found or corrupted.")
             extract_archive(filepath, self.root)
 
