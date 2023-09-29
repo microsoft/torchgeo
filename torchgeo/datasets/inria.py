@@ -5,8 +5,9 @@
 
 import glob
 import os
-from typing import Any, Callable, Optional
 import re
+from typing import Any, Callable, Optional
+
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio as rio
@@ -46,8 +47,8 @@ class InriaAerialImageLabeling(NonGeoDataset):
 
     .. versionadded:: 0.3
 
-    .. versionchanged:: 0.5                                                          
-       Added support for a *val* split.   
+    .. versionchanged:: 0.5
+       Added support for a *val* split.
     """
 
     directory = "AerialImageDataset"
@@ -75,7 +76,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
             RuntimeError: if dataset is missing
         """
         self.root = root
-        assert split in {"train","val", "test"}
+        assert split in {"train", "val", "test"}
         self.split = split
         self.transforms = transforms
         self.checksum = checksum
@@ -94,30 +95,30 @@ class InriaAerialImageLabeling(NonGeoDataset):
         """
         files = []
 
-        root_dir = os.path.join(root, self.directory, "train" if self.split in ["train", "val"] else "test")
-        
-        if self.split == "train":
-            pattern = re.compile(r'([a-zA-Z]+)([6-9]|[1-2][0-9]|3[0-9])\.tif')
-        elif self.split == "val":
-            pattern = re.compile(r'[a-zA-Z]+[0-5]\.tif')
+        root_dir = os.path.join(
+            root, self.directory, "train" if self.split in ["train", "val"] else "test"
+        )
 
+        if self.split == "train":
+            pattern = re.compile(r"([a-zA-Z]+)([6-9]|[1-2][0-9]|3[0-9])\.tif")
+        elif self.split == "val":
+            pattern = re.compile(r"[a-zA-Z]+[0-5]\.tif")
 
         images = glob.glob(os.path.join(root_dir, "images", "*.tif"))
         images = sorted(images)
-    
-        if self.split in ["train","val"]:
+
+        if self.split in ["train", "val"]:
             labels = glob.glob(os.path.join(root_dir, "gt", "*.tif"))
             labels = sorted(labels)
 
             for img, lbl in zip(images, labels):
                 if pattern.search(img):
                     files.append({"image": img, "label": lbl})
-                
+
         else:
             for img in images:
                 files.append({"image": img})
 
-    
         return files
 
     def _load_image(self, path: str) -> Tensor:
