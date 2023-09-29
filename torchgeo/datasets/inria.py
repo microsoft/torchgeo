@@ -6,7 +6,7 @@
 import glob
 import os
 from typing import Any, Callable, Optional
-
+import re
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio as rio
@@ -45,6 +45,9 @@ class InriaAerialImageLabeling(NonGeoDataset):
     * https://doi.org/10.1109/IGARSS.2017.8127684
 
     .. versionadded:: 0.3
+
+    .. versionchanged:: 0.5                                                          
+       Added support for a *val* split.   
     """
 
     directory = "AerialImageDataset"
@@ -89,28 +92,33 @@ class InriaAerialImageLabeling(NonGeoDataset):
         Returns:
             list of dicts containing paths for each pair of image and label
         """
-        train_files = []
-        val_files = []
-        test_files = []
+        files = []
 
         root_dir = os.path.join(root, self.directory, "train" if self.split in ["train", "val"] else "test")
+        
+        if self.split == "train":
+            pattern = re.compile(r'([a-zA-Z]+)([6-9]|[1-2][0-9]|3[0-9])\.tif')
+        elif self.split == "val":
+            pattern = re.compile(r'[a-zA-Z]+[0-5]\.tif')
+
+
         images = glob.glob(os.path.join(root_dir, "images", "*.tif"))
         images = sorted(images)
-        if self.split in ["train", "val"]:
+    
+        if self.split in ["train","val"]:
             labels = glob.glob(os.path.join(root_dir, "gt", "*.tif"))
             labels = sorted(labels)
-            pattern = r'.[a-zA-Z]+[1-5].tif'
 
             for img, lbl in zip(images, labels):
-                if (re.search(pattern,img)):
-                    val_files.append({"image": img, "label": lbl})
-                else:
-                    train_files.append({"image": img, "label": lbl})
+                if pattern.search(img):
+                    files.append({"image": img, "label": lbl})
+                
         else:
             for img in images:
-                test_files.append({"image": img})
+                files.append({"image": img})
 
-        return val_files if self.split == "val" else train_files if self.split == "train" else test_files
+    
+        return files
 
     def _load_image(self, path: str) -> Tensor:
         """Load a single image.
