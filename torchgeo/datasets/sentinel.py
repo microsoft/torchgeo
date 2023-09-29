@@ -163,6 +163,7 @@ class Sentinel1(Sentinel):
         Raises:
             AssertionError: if ``bands`` is invalid
             FileNotFoundError: if no files are found in ``paths``
+
         .. versionchanged:: 0.5
             *root* was renamed to *paths*
         """
@@ -317,6 +318,7 @@ class Sentinel2(Sentinel):
 
         Raises:
             FileNotFoundError: if no files are found in ``paths``
+
         .. versionchanged:: 0.5
             *root* was renamed to *paths*
         """

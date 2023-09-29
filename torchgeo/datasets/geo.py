@@ -351,6 +351,7 @@ class RasterDataset(GeoDataset):
 
         Raises:
             FileNotFoundError: if no files are found in ``paths``
+
         .. versionchanged:: 0.5
             *root* was renamed to *paths*
         """

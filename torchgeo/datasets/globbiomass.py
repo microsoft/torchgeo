@@ -144,6 +144,7 @@ class GlobBiomass(RasterDataset):
             FileNotFoundError: if no files are found in ``paths``
             RuntimeError: if dataset is missing or checksum fails
             AssertionError: if measurement argument is invalid, or not a str
+
         .. versionchanged:: 0.5
             *root* was renamed to *paths*
         """

@@ -137,6 +137,7 @@ class NLCD(RasterDataset):
             AssertionError: if ``years`` or ``classes`` are invalid
             FileNotFoundError: if no files are found in ``paths``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+
         .. versionchanged:: 0.5
             *root* was renamed to *paths*
         """
