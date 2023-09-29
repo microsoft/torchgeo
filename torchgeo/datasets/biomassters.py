@@ -4,6 +4,7 @@
 """BioMassters Dataset."""
 
 import os
+from collections.abc import Sequence
 from typing import Any, Optional
 
 import matplotlib.pyplot as plt
@@ -37,8 +38,8 @@ class BioMassters(NonGeoDataset):
     * 13,000 target AGB masks of size (256x256px)
     * 12 months of data per target mask
     * Sentinel 1 and Sentinel 2 data for each location
-    * Sentinel 1 (specify channels here) available for each month
-    * Sentinel 2 (B02, B03, B04, B05, B06, B07, B08, B8A, B11, B12)
+    * Sentinel 1 available for each month
+    * Sentinel 2 available for almost each month
       not available for each month due to ESA aquisition halt over the region
       during particular periods
 
@@ -50,7 +51,7 @@ class BioMassters(NonGeoDataset):
     """
 
     valid_splits = ["train", "test"]
-    valid_sensors = ["S1", "S2"]
+    valid_sensors = ("S1", "S2")
 
     url = "https://huggingface.co/datasets/nascetti-a/BioMassters/resolve/main/{}"
 
@@ -60,7 +61,7 @@ class BioMassters(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        sensors: list[str] = ["S1", "S2"],
+        sensors: Sequence[str] = ["S1", "S2"],
         as_time_series: bool = False,
     ) -> None:
         """Initialize a new instance of BioMassters dataset.
@@ -68,13 +69,13 @@ class BioMassters(NonGeoDataset):
         Args:
             root: root directory where dataset can be found
             split: train or test split
-            sensors: which sensors to consider for the sample
+            sensors: which sensors to consider for the sample, Sentinel 1 and/or
+                Sentinel 2 ('S1', 'S2')
             as_time_series: whether or not to return all available
                 time-steps or just a single one for a given target location
 
         RuntimeError:
             AssertionError: if ``split`` or ``sensors`` is invalid
-            ImportError: if pandas is not installed
         """
         self.root = root
 
@@ -162,7 +163,6 @@ class BioMassters(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        print(self.df)
         return len(self.df["num_index"].unique())
 
     def _load_input(self, filenames: list[str]) -> Tensor:
@@ -170,6 +170,9 @@ class BioMassters(NonGeoDataset):
 
         Args:
             filenames: list of filenames corresponding to input
+
+        Returns:
+            input image
         """
         filepaths = [
             os.path.join(self.root, f"{self.split}_features", f) for f in filenames
@@ -196,11 +199,7 @@ class BioMassters(NonGeoDataset):
         return target
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         exists = []
 
@@ -211,7 +210,6 @@ class BioMassters(NonGeoDataset):
         if all(exists):
             return
 
-        # Check if the user requested to download the dataset
         raise RuntimeError(f"Dataset not found in `root={self.root}`.")
 
     def plot(

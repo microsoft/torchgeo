@@ -10,7 +10,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 from _pytest.fixtures import SubRequest
-from pytest import MonkeyPatch
 
 from torchgeo.datasets import BioMassters
 
@@ -19,13 +18,8 @@ class TestBioMassters:
     @pytest.fixture(
         params=product(["train", "test"], [["S1"], ["S2"], ["S1", "S2"]], [True, False])
     )
-    def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
-    ) -> BioMassters:
+    def dataset(self, tmp_path: Path, request: SubRequest) -> BioMassters:
         split, sensors, as_time_series = request.param
-
-        url = os.path.join("tests", "data", "biomassters", "{}")
-        monkeypatch.setattr(BioMassters, "url", url)
 
         # copy data for now
         shutil.rmtree(tmp_path)
