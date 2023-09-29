@@ -61,7 +61,7 @@ Landsat
 -------
 
 .. csv-table::
-   :widths: 55 15 10 10 10 10 10
+   :widths: 65 10 10 10 10 10 10 10 10
    :header-rows: 1
    :align: center
    :file: landsat_pretrained_weights.csv
@@ -85,6 +85,16 @@ Sentinel-2
    :header-rows: 1
    :align: center
    :file: sentinel2_pretrained_weights.csv
+
+Other Data Sources
+------------------
+
+.. csv-table::
+   :widths: 45 10 10 10
+   :header-rows: 1
+   :align: center
+   :file: misc_pretrained_weights.csv
+
 
 
 
