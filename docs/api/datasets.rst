@@ -297,8 +297,8 @@ RESISC45
 
 .. autoclass:: RESISC45
 
-RwandaFieldBoundary
-^^^^^^^^^^^^^^^^^^^
+Rwanda Field Boundary
+^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: RwandaFieldBoundary
 
