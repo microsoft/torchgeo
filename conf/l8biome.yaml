@@ -20,4 +20,4 @@ data:
     patch_size: 224
     num_workers: 16
   dict_kwargs:
-    root: "data/l8biome"
+    paths: "data/l8biome"

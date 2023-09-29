@@ -9,8 +9,8 @@ import glob
 import os
 import re
 import sys
-from collections.abc import Sequence
-from typing import Any, Callable, Optional, cast
+from collections.abc import Iterable, Sequence
+from typing import Any, Callable, Optional, Union, cast
 
 import fiona
 import fiona.transform
@@ -329,7 +329,7 @@ class RasterDataset(GeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
@@ -339,7 +339,7 @@ class RasterDataset(GeoDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -350,19 +350,21 @@ class RasterDataset(GeoDataset):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            FileNotFoundError: if no files are found in ``paths``
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
         super().__init__(transforms)
 
-        self.root = root
+        self.paths = paths
         self.bands = bands or self.all_bands
         self.cache = cache
 
         # Populate the dataset index
         i = 0
-        pathname = os.path.join(root, "**", self.filename_glob)
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-        for filepath in glob.iglob(pathname, recursive=True):
+        for filepath in self.files:
             match = re.match(filename_regex, os.path.basename(filepath))
             if match is not None:
                 try:
@@ -396,7 +398,10 @@ class RasterDataset(GeoDataset):
                     i += 1
 
         if i == 0:
-            msg = f"No {self.__class__.__name__} data was found in `root='{self.root}'`"
+            msg = (
+                f"No {self.__class__.__name__} data was found "
+                f"in `paths={self.paths!r}'`"
+            )
             if self.bands:
                 msg += f" with `bands={self.bands}`"
             raise FileNotFoundError(msg)
@@ -417,6 +422,32 @@ class RasterDataset(GeoDataset):
 
         self._crs = cast(CRS, crs)
         self._res = cast(float, res)
+
+    @property
+    def files(self) -> set[str]:
+        """A list of all files in the dataset.
+
+        Returns:
+            All files in the dataset.
+
+        .. versionadded:: 0.5
+        """
+        # Make iterable
+        if isinstance(self.paths, str):
+            paths: Iterable[str] = [self.paths]
+        else:
+            paths = self.paths
+
+        # Using set to remove any duplicates if directories are overlapping
+        files: set[str] = set()
+        for path in paths:
+            if os.path.isdir(path):
+                pathname = os.path.join(path, "**", self.filename_glob)
+                files |= set(glob.iglob(pathname, recursive=True))
+            else:
+                files.add(path)
+
+        return files
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.

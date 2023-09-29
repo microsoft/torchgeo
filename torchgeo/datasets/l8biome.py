@@ -5,8 +5,8 @@
 
 import glob
 import os
-from collections.abc import Sequence
-from typing import Any, Callable, Optional, cast
+from collections.abc import Iterable, Sequence
+from typing import Any, Callable, Optional, Union, cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -90,7 +90,7 @@ class L8Biome(RasterDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, Iterable[str]],
         crs: Optional[CRS] = CRS.from_epsg(3857),
         res: Optional[float] = None,
         bands: Sequence[str] = all_bands,
@@ -102,7 +102,7 @@ class L8Biome(RasterDataset):
         """Initialize a new L8Biome instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to EPSG:3857)
             res: resolution of the dataset in units of CRS
@@ -117,15 +117,18 @@ class L8Biome(RasterDataset):
         Raises:
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
-        self.root = root
+        self.paths = paths
         self.download = download
         self.checksum = checksum
 
         self._verify()
 
         super().__init__(
-            root, crs=crs, res=res, bands=bands, transforms=transforms, cache=cache
+            paths, crs=crs, res=res, bands=bands, transforms=transforms, cache=cache
         )
 
     def _verify(self) -> None:
@@ -135,12 +138,12 @@ class L8Biome(RasterDataset):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         # Check if the extracted files already exist
-        pathname = os.path.join(self.root, "**", self.filename_glob)
-        for fname in glob.iglob(pathname, recursive=True):
+        if self.files:
             return
 
         # Check if the tar.gz files have already been downloaded
-        pathname = os.path.join(self.root, "*.tar.gz")
+        assert isinstance(self.paths, str)
+        pathname = os.path.join(self.paths, "*.tar.gz")
         if glob.glob(pathname):
             self._extract()
             return
@@ -148,7 +151,7 @@ class L8Biome(RasterDataset):
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
+                f"Dataset not found in `root={self.paths}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
                 "to automatically download the dataset."
             )
@@ -161,12 +164,13 @@ class L8Biome(RasterDataset):
         """Download the dataset."""
         for biome, md5 in self.md5s.items():
             download_url(
-                self.url.format(biome), self.root, md5=md5 if self.checksum else None
+                self.url.format(biome), self.paths, md5=md5 if self.checksum else None
             )
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        pathname = os.path.join(self.root, "*.tar.gz")
+        assert isinstance(self.paths, str)
+        pathname = os.path.join(self.paths, "*.tar.gz")
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)
 
