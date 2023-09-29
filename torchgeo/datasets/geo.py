@@ -597,6 +597,9 @@ class VectorDataset(GeoDataset):
 
         .. versionadded:: 0.4
             The *label_name* parameter.
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
         super().__init__(transforms)
 
