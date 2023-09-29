@@ -47,7 +47,7 @@ class TestEnviroAtlas:
         )
         monkeypatch.setattr(
             EnviroAtlas,
-            "files",
+            "_files",
             ["pittsburgh_pa-2010_1m-train_tiles-debuffered", "spatial_index.geojson"],
         )
         root = str(tmp_path)
