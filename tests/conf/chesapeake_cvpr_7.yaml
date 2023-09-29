@@ -22,5 +22,5 @@ data:
     class_set: 7
     use_prior_labels: False
   dict_kwargs:
-    paths: "tests/data/chesapeake/cvpr"
+    root: "tests/data/chesapeake/cvpr"
     download: true
