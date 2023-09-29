@@ -434,7 +434,7 @@ class RasterDataset(GeoDataset):
         """
         # Make iterable
         if isinstance(self.paths, str):
-            paths = [self.paths]
+            paths: Iterable[str] = [self.paths]
         else:
             paths = self.paths
 
