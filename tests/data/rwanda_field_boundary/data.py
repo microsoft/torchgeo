@@ -65,7 +65,7 @@ if __name__ == "__main__":
             for date in dates:
                 directory = os.path.join(
                     f"nasa_rwanda_field_boundary_competition_source_{split}",
-                    f"nasa_rwanda_field_boundary_competition_source_{split}_{i:02d}_{date}",
+                    f"nasa_rwanda_field_boundary_competition_source_{split}_{i:02d}_{date}",  # noqa: E501
                 )
                 os.makedirs(directory, exist_ok=True)
                 for band in all_bands:
