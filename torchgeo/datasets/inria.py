@@ -5,6 +5,7 @@
 
 import glob
 import os
+import re
 from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
@@ -45,6 +46,9 @@ class InriaAerialImageLabeling(NonGeoDataset):
     * https://doi.org/10.1109/IGARSS.2017.8127684
 
     .. versionadded:: 0.3
+
+    .. versionchanged:: 0.5
+       Added support for a *val* split.
     """
 
     directory = "AerialImageDataset"
@@ -62,7 +66,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            split: train/test split
+            split: train/val/test split
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version.
             checksum: if True, check the MD5 of the downloaded files (may be slow)
@@ -72,7 +76,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
             RuntimeError: if dataset is missing
         """
         self.root = root
-        assert split in {"train", "test"}
+        assert split in {"train", "val", "test"}
         self.split = split
         self.transforms = transforms
         self.checksum = checksum
@@ -90,15 +94,25 @@ class InriaAerialImageLabeling(NonGeoDataset):
             list of dicts containing paths for each pair of image and label
         """
         files = []
-        root_dir = os.path.join(root, self.directory, self.split)
+        split = "train" if self.split in ["train", "val"] else "test"
+        root_dir = os.path.join(root, self.directory, split)
+        pattern = re.compile(r"([A-Za-z]+)(\d+)")
+
         images = glob.glob(os.path.join(root_dir, "images", "*.tif"))
         images = sorted(images)
-        if self.split == "train":
+
+        if split == "train":
             labels = glob.glob(os.path.join(root_dir, "gt", "*.tif"))
             labels = sorted(labels)
 
             for img, lbl in zip(images, labels):
-                files.append({"image": img, "label": lbl})
+                if match := pattern.search(img):
+                    idx = int(match.group(2))
+                    # For validation, use the first 5 images of every location
+                    if self.split == "train" and idx > 5:
+                        files.append({"image": img, "label": lbl})
+                    elif self.split == "val" and idx < 6:
+                        files.append({"image": img, "label": lbl})
         else:
             for img in images:
                 files.append({"image": img})
