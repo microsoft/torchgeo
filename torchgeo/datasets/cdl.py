@@ -292,7 +292,7 @@ class CDL(RasterDataset):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         # Check if the extracted files already exist
-        if self.list_files():
+        if self.files:
             return
 
         # Check if the zip files have already been downloaded

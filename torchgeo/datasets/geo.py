@@ -353,7 +353,7 @@ class RasterDataset(GeoDataset):
             FileNotFoundError: if no files are found in ``paths``
 
         .. versionchanged:: 0.5
-            *root* was renamed to *paths*
+           *root* was renamed to *paths*.
         """
         super().__init__(transforms)
 
@@ -364,7 +364,7 @@ class RasterDataset(GeoDataset):
         # Populate the dataset index
         i = 0
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-        for filepath in self.list_files():
+        for filepath in self.files:
             match = re.match(filename_regex, os.path.basename(filepath))
             if match is not None:
                 try:
@@ -423,32 +423,31 @@ class RasterDataset(GeoDataset):
         self._crs = cast(CRS, crs)
         self._res = cast(float, res)
 
-    def list_files(self, filename_glob: Optional[str] = None) -> list[str]:
-        """Get list of files matching filename_glob.
+    @property
+    def files(self) -> set[str]:
+        """A list of all files in the dataset.
 
-        Args:
-            filename_glob: Defaults to self.filename_glob
+        Returns:
+            All files in the dataset.
 
         .. versionadded:: 0.5
         """
         # Make iterable
         if isinstance(self.paths, str):
-            paths: Iterable[str] = [self.paths]
+            paths = [self.paths]
         else:
             paths = self.paths
 
-        filename_glob = filename_glob or self.filename_glob
-
-        # using set to remove any duplicates if directories are overlapping
-        filepaths: set[str] = set()
-        for dir_or_file in paths:
-            if os.path.isfile(dir_or_file):
-                filepaths.add(dir_or_file)
+        # Using set to remove any duplicates if directories are overlapping
+        files: set[str] = set()
+        for path in paths:
+            if os.path.isdir(path):
+                pathname = os.path.join(path, "**", self.filename_glob)
+                files |= set(glob.iglob(pathname, recursive=True))
             else:
-                pathname = os.path.join(dir_or_file, "**", filename_glob)
-                filepaths |= set(glob.iglob(pathname, recursive=True))
+                files.add(path)
 
-        return list(filepaths)
+        return files
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.

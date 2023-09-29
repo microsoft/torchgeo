@@ -99,7 +99,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
             RuntimeError: if dataset is missing
         """
         # Check if the extracted files already exist
-        if self.list_files():
+        if self.files:
             return
 
         # Check if the user requested to download the dataset

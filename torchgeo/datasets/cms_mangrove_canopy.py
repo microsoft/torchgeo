@@ -231,7 +231,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
             RuntimeError: if dataset is missing or checksum fails
         """
         # Check if the extracted files already exist
-        if self.list_files():
+        if self.files:
             return
 
         # Check if the zip file has already been downloaded

@@ -84,7 +84,7 @@ class AsterGDEM(RasterDataset):
             RuntimeError: if dataset is missing
         """
         # Check if the extracted files already exists
-        if self.list_files():
+        if self.files:
             return
 
         raise RuntimeError(

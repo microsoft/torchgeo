@@ -196,7 +196,7 @@ class TestRasterDataset:
         s2 = Sentinel2(
             paths, bands=["B04", "B03", "B02"], transforms=transforms, cache=False
         )
-        assert s2.list_files(), "No files were found"
+        assert s2.files, "No files were found"
 
     def test_getitem_single_file(self, naip: NAIP) -> None:
         x = naip[naip.bounds]
