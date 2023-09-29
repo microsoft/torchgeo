@@ -141,7 +141,7 @@ class TestChesapeakeCVPR:
         )
         monkeypatch.setattr(
             ChesapeakeCVPR,
-            "files",
+            "_files",
             ["de_1m_2013_extended-debuffered-test_tiles", "spatial_index.geojson"],
         )
         root = str(tmp_path)

@@ -37,7 +37,7 @@ class TestOpenBuildings:
 
         monkeypatch.setattr(OpenBuildings, "md5s", md5s)
         transforms = nn.Identity()
-        return OpenBuildings(root=root, transforms=transforms)
+        return OpenBuildings(root, transforms=transforms)
 
     def test_no_shapes_to_rasterize(
         self, dataset: OpenBuildings, tmp_path: Path
@@ -61,19 +61,19 @@ class TestOpenBuildings:
         with pytest.raises(
             RuntimeError, match="have manually downloaded the dataset as suggested "
         ):
-            OpenBuildings(root=false_root)
+            OpenBuildings(false_root)
 
     def test_corrupted(self, dataset: OpenBuildings, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, "000_buildings.csv.gz"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
-            OpenBuildings(dataset.root, checksum=True)
+            OpenBuildings(dataset.paths, checksum=True)
 
     def test_no_meta_data_found(self, tmp_path: Path) -> None:
         false_root = os.path.join(tmp_path, "empty")
         os.makedirs(false_root)
         with pytest.raises(FileNotFoundError, match="Meta data file"):
-            OpenBuildings(root=false_root)
+            OpenBuildings(false_root)
 
     def test_nothing_in_index(self, dataset: OpenBuildings, tmp_path: Path) -> None:
         # change meta data to another 'title_url' so that there is no match found
@@ -85,7 +85,7 @@ class TestOpenBuildings:
             json.dump(content, f)
 
         with pytest.raises(FileNotFoundError, match="data was found in"):
-            OpenBuildings(dataset.root)
+            OpenBuildings(dataset.paths)
 
     def test_getitem(self, dataset: OpenBuildings) -> None:
         x = dataset[dataset.bounds]
