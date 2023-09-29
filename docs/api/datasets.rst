@@ -297,6 +297,11 @@ RESISC45
 
 .. autoclass:: RESISC45
 
+Rwanda Field Boundary
+^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: RwandaFieldBoundary
+
 Seasonal Contrast
 ^^^^^^^^^^^^^^^^^
 
