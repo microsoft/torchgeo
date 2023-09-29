@@ -495,7 +495,7 @@ class ChesapeakeCVPR(GeoDataset):
     )
 
     # these are used to check the integrity of the dataset
-    files = [
+    _files = [
         "de_1m_2013_extended-debuffered-test_tiles",
         "de_1m_2013_extended-debuffered-train_tiles",
         "de_1m_2013_extended-debuffered-val_tiles",
@@ -704,7 +704,7 @@ class ChesapeakeCVPR(GeoDataset):
             return os.path.exists(os.path.join(self.root, filename))
 
         # Check if the extracted files already exist
-        if all(map(exists, self.files)):
+        if all(map(exists, self._files)):
             return
 
         # Check if the zip files have already been downloaded

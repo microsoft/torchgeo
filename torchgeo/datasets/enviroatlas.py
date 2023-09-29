@@ -80,7 +80,7 @@ class EnviroAtlas(GeoDataset):
     )
 
     # these are used to check the integrity of the dataset
-    files = [
+    _files = [
         "austin_tx-2012_1m-test_tiles-debuffered",
         "austin_tx-2012_1m-val5_tiles-debuffered",
         "durham_nc-2012_1m-test_tiles-debuffered",
@@ -422,7 +422,7 @@ class EnviroAtlas(GeoDataset):
             return os.path.exists(os.path.join(self.root, "enviroatlas_lotp", filename))
 
         # Check if the extracted files already exist
-        if all(map(exists, self.files)):
+        if all(map(exists, self._files)):
             return
 
         # Check if the zip files have already been downloaded

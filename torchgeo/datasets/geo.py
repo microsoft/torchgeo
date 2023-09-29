@@ -305,6 +305,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
 
         return files
 
+
 class RasterDataset(GeoDataset):
     """Abstract base class for :class:`GeoDataset` stored as raster files."""
 
@@ -589,7 +590,7 @@ class VectorDataset(GeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: float = 0.0001,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -598,7 +599,7 @@ class VectorDataset(GeoDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -615,13 +616,12 @@ class VectorDataset(GeoDataset):
         """
         super().__init__(transforms)
 
-        self.root = root
+        self.paths = paths
         self.label_name = label_name
 
         # Populate the dataset index
         i = 0
-        pathname = os.path.join(root, "**", self.filename_glob)
-        for filepath in glob.iglob(pathname, recursive=True):
+        for filepath in self.files:
             try:
                 with fiona.open(filepath) as src:
                     if crs is None:
@@ -642,7 +642,7 @@ class VectorDataset(GeoDataset):
                 i += 1
 
         if i == 0:
-            msg = f"No {self.__class__.__name__} data was found in `root='{root}'`"
+            msg = f"No {self.__class__.__name__} data was found in `root='{paths}'`"
             raise FileNotFoundError(msg)
 
         self._crs = crs
