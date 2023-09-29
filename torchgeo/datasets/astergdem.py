@@ -69,7 +69,7 @@ class AsterGDEM(RasterDataset):
             RuntimeError: if dataset is missing
 
         .. versionchanged:: 0.5
-            *root* was renamed to *paths*
+           *root* was renamed to *paths*.
         """
         self.paths = paths
 

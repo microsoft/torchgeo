@@ -3,6 +3,7 @@
 
 """L7 Irish dataset."""
 
+import glob
 import os
 from collections.abc import Iterable, Sequence
 from typing import Any, Callable, Optional, Union, cast
@@ -117,6 +118,9 @@ class L7Irish(RasterDataset):
         Raises:
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
         self.paths = paths
         self.download = download
@@ -139,7 +143,9 @@ class L7Irish(RasterDataset):
             return
 
         # Check if the tar.gz files have already been downloaded
-        if self.list_files(filename_glob="*.tar.gz"):
+        assert isinstance(self.paths, str)
+        pathname = os.path.join(self.paths, "*.tar.gz")
+        if glob.glob(pathname):
             self._extract()
             return
 
@@ -164,7 +170,9 @@ class L7Irish(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        for tarfile in self.list_files(filename_glob="*.tar.gz"):
+        assert isinstance(self.paths, str)
+        pathname = os.path.join(self.paths, "*.tar.gz")
+        for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:

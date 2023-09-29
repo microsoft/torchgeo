@@ -83,7 +83,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
             FileNotFoundError: if no files are found in ``paths``
 
         .. versionchanged:: 0.5
-            *root* was renamed to *paths*
+           *root* was renamed to *paths*.
         """
         self.paths = paths
         self.download = download
@@ -115,19 +115,16 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
+        assert isinstance(self.paths, str)
         download_url(self.url, self.paths, self.base_filename)
 
-        base_file = self.list_files(filename_glob=self.base_filename)[0]
-        with open(base_file) as f:
+        with open(os.path.join(self.paths, self.base_filename)) as f:
             content = json.load(f)
 
-        # TODO: This changes the behaviour from
-        #  unpacking in root to same dir as archive
-        outdir = os.path.abspath(os.path.join(base_file, os.pardir))
         for item in content["features"]:
             download_url(
                 item["properties"]["download"],
-                outdir,
+                self.paths,
                 item["properties"]["tile_id"] + ".tif",
             )
 

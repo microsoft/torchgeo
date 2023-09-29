@@ -3,6 +3,7 @@
 
 """GlobBiomass dataset."""
 
+import glob
 import os
 from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union, cast
@@ -146,7 +147,7 @@ class GlobBiomass(RasterDataset):
             AssertionError: if measurement argument is invalid, or not a str
 
         .. versionchanged:: 0.5
-            *root* was renamed to *paths*
+           *root* was renamed to *paths*.
         """
         self.paths = paths
         self.checksum = checksum
@@ -213,14 +214,14 @@ class GlobBiomass(RasterDataset):
             return
 
         # Check if the zip files have already been downloaded
-        extracted = False
-        for zipfile in self.list_files(filename_glob=self.zipfile_glob):
-            filename = os.path.basename(zipfile)
-            if self.checksum and not check_integrity(zipfile, self.md5s[filename]):
-                raise RuntimeError("Dataset found, but corrupted.")
-            extract_archive(zipfile)
-            extracted = True
-        if extracted:
+        assert isinstance(self.paths, str)
+        pathname = os.path.join(self.paths, self.zipfile_glob)
+        if glob.glob(pathname):
+            for zipfile in glob.iglob(pathname):
+                filename = os.path.basename(zipfile)
+                if self.checksum and not check_integrity(zipfile, self.md5s[filename]):
+                    raise RuntimeError("Dataset found, but corrupted.")
+                extract_archive(zipfile)
             return
 
         raise RuntimeError(

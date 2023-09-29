@@ -3,6 +3,7 @@
 
 """CMS Global Mangrove Canopy dataset."""
 
+import os
 from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
@@ -196,7 +197,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
             AssertionError: if country or measurement arg are not str or invalid
 
         .. versionchanged:: 0.5
-            *root* was renamed to *paths*
+           *root* was renamed to *paths*.
         """
         self.paths = paths
         self.checksum = checksum
@@ -234,13 +235,12 @@ class CMSGlobalMangroveCanopy(RasterDataset):
             return
 
         # Check if the zip file has already been downloaded
-        extracted = False
-        for zipfile in self.list_files(filename_glob=self.zipfile):
-            if self.checksum and not check_integrity(zipfile, self.md5):
+        assert isinstance(self.paths, str)
+        pathname = os.path.join(self.paths, self.zipfile)
+        if os.path.exists(pathname):
+            if self.checksum and not check_integrity(pathname, self.md5):
                 raise RuntimeError("Dataset found, but corrupted.")
             self._extract()
-            extracted = True
-        if extracted:
             return
 
         raise RuntimeError(
@@ -251,8 +251,9 @@ class CMSGlobalMangroveCanopy(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        for zipfile in self.list_files(filename_glob=self.zipfile):
-            extract_archive(zipfile)
+        assert isinstance(self.paths, str)
+        pathname = os.path.join(self.paths, self.zipfile)
+        extract_archive(pathname)
 
     def plot(
         self,

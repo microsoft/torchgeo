@@ -3,6 +3,8 @@
 
 """Esri 2020 Land Cover Dataset."""
 
+import glob
+import os
 from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union
 
@@ -93,7 +95,7 @@ class Esri2020(RasterDataset):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
 
         .. versionchanged:: 0.5
-            *root* was renamed to *paths*
+           *root* was renamed to *paths*.
         """
         self.paths = paths
         self.download = download
@@ -114,7 +116,9 @@ class Esri2020(RasterDataset):
             return
 
         # Check if the zip files have already been downloaded
-        if self.list_files(filename_glob=self.zipfile):
+        assert isinstance(self.paths, str)
+        pathname = os.path.join(self.paths, self.zipfile)
+        if glob.glob(pathname):
             self._extract()
             return
 
@@ -136,8 +140,8 @@ class Esri2020(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        for zipfile in self.list_files(filename_glob=self.zipfile):
-            extract_archive(zipfile)
+        assert isinstance(self.paths, str)
+        extract_archive(os.path.join(self.paths, self.zipfile))
 
     def plot(
         self,

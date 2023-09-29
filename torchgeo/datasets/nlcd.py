@@ -3,6 +3,7 @@
 
 """NLCD dataset."""
 
+import glob
 import os
 from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union
@@ -139,7 +140,7 @@ class NLCD(RasterDataset):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
 
         .. versionchanged:: 0.5
-            *root* was renamed to *paths*
+           *root* was renamed to *paths*.
         """
         assert set(years) <= self.md5s.keys(), (
             "NLCD data product only exists for the following years: "
@@ -190,22 +191,16 @@ class NLCD(RasterDataset):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         # Check if the extracted files already exist
-        exists = []
-        for year in self.years:
-            filename_year = self.filename_glob.replace("*", str(year), 1)
-            if self.list_files(filename_glob=filename_year):
-                exists.append(True)
-            else:
-                exists.append(False)
-
-        if all(exists):
+        if self.list_files():
             return
 
         # Check if the zip files have already been downloaded
         exists = []
         for year in self.years:
             zipfile_year = self.zipfile_glob.replace("*", str(year), 1)
-            if self.list_files(filename_glob=zipfile_year):
+            assert isinstance(self.paths, str)
+            pathname = os.path.join(self.paths, "**", zipfile_year)
+            if glob.glob(pathname, recursive=True):
                 exists.append(True)
                 self._extract()
             else:
@@ -239,11 +234,9 @@ class NLCD(RasterDataset):
         """Extract the dataset."""
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace("*", str(year), 1)
-            zipfile_path = self.list_files(filename_glob=zipfile_name)[0]
-            # TODO: This changes the behaviour from
-            #  unpacking in root to same dir as archive
-            outdir = os.path.abspath(os.path.join(zipfile_path, os.pardir))
-            extract_archive(zipfile_path, outdir)
+            assert isinstance(self.paths, str)
+            pathname = os.path.join(self.paths, "**", zipfile_name)
+            extract_archive(glob.glob(pathname, recursive=True)[0], self.paths)
 
     def plot(
         self,

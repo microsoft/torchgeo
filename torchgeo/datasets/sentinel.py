@@ -165,7 +165,7 @@ class Sentinel1(Sentinel):
             FileNotFoundError: if no files are found in ``paths``
 
         .. versionchanged:: 0.5
-            *root* was renamed to *paths*
+           *root* was renamed to *paths*.
         """
         assert len(bands) > 0, "'bands' cannot be an empty list"
         assert len(bands) == len(set(bands)), "'bands' contains duplicate bands"

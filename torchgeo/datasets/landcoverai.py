@@ -243,6 +243,9 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         Raises:
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
         LandCoverAIBase.__init__(self, paths, download, checksum)
         RasterDataset.__init__(

@@ -239,8 +239,9 @@ class CDL(RasterDataset):
 
         .. versionadded:: 0.5
            The *years* and *classes* parameters.
+
         .. versionchanged:: 0.5
-            *root* was renamed to *paths*
+           *root* was renamed to *paths*.
         """
         assert set(years) <= self.md5s.keys(), (
             "CDL data product only exists for the following years: "
@@ -291,21 +292,17 @@ class CDL(RasterDataset):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         # Check if the extracted files already exist
-        exists = []
-        for year in self.years:
-            filename_year = self.filename_glob.replace("*", str(year))
-            for fname in self.list_files(filename_glob=filename_year):
-                if not fname.endswith(".zip"):
-                    exists.append(True)
-
-        if len(exists) == len(self.years):
+        if self.list_files():
             return
 
         # Check if the zip files have already been downloaded
         exists = []
+        assert isinstance(self.paths, str)
         for year in self.years:
-            zipfile_year = self.zipfile_glob.replace("*", str(year))
-            if self.list_files(filename_glob=zipfile_year):
+            pathname = os.path.join(
+                self.paths, self.zipfile_glob.replace("*", str(year))
+            )
+            if os.path.exists(pathname):
                 exists.append(True)
                 self._extract()
             else:
@@ -337,13 +334,11 @@ class CDL(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
+        assert isinstance(self.paths, str)
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace("*", str(year))
-            zipfile_path = self.list_files(filename_glob=zipfile_name)[0]
-            # TODO: This changes the behaviour from
-            #  unpacking in root to same dir as archive
-            outdir = os.path.abspath(os.path.join(zipfile_path, os.pardir))
-            extract_archive(zipfile_path, outdir)
+            pathname = os.path.join(self.paths, zipfile_name)
+            extract_archive(pathname, self.paths)
 
     def plot(
         self,

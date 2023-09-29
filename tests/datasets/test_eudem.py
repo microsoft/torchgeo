@@ -33,6 +33,7 @@ class TestEUDEM:
         assert isinstance(x["mask"], torch.Tensor)
 
     def test_extracted_already(self, dataset: EUDEM) -> None:
+        assert isinstance(dataset.paths, str)
         zipfile = os.path.join(dataset.paths, "eu_dem_v11_E30N10.zip")
         shutil.unpack_archive(zipfile, dataset.paths, "zip")
         EUDEM(dataset.paths)
