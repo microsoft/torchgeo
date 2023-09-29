@@ -10,14 +10,12 @@ import timm
 import torch
 import torch.nn as nn
 import torchvision
-from hydra.utils import instantiate
-from lightning.pytorch import Trainer
-from omegaconf import OmegaConf
 from pytest import MonkeyPatch
 from torchvision.models import resnet18
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datasets import SSL4EOS12, SeasonalContrastS2
+from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import BYOLTask
 from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
@@ -61,7 +59,7 @@ class TestBYOLTask:
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
-        conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
+        config = os.path.join("tests", "conf", name + ".yaml")
 
         if name.startswith("seco"):
             monkeypatch.setattr(SeasonalContrastS2, "__len__", lambda self: 2)
@@ -69,20 +67,20 @@ class TestBYOLTask:
         if name.startswith("ssl4eo_s12"):
             monkeypatch.setattr(SSL4EOS12, "__len__", lambda self: 2)
 
-        # Instantiate datamodule
-        datamodule = instantiate(conf.datamodule)
+        args = [
+            "--config",
+            config,
+            "--trainer.accelerator",
+            "cpu",
+            "--trainer.fast_dev_run",
+            str(fast_dev_run),
+            "--trainer.max_epochs",
+            "1",
+            "--trainer.log_every_n_steps",
+            "1",
+        ]
 
-        # Instantiate model
-        model = instantiate(conf.module)
-
-        # Instantiate trainer
-        trainer = Trainer(
-            accelerator="cpu",
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.fit(model=model, datamodule=datamodule)
+        main(["fit"] + args)
 
     @pytest.fixture
     def weights(self) -> WeightsEnum:

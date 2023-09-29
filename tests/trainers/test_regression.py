@@ -11,15 +11,14 @@ import timm
 import torch
 import torch.nn as nn
 import torchvision
-from hydra.utils import instantiate
 from lightning.pytorch import Trainer
-from omegaconf import OmegaConf
 from pytest import MonkeyPatch
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import MisconfigurationException, TropicalCycloneDataModule
 from torchgeo.datasets import TropicalCyclone
+from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import PixelwiseRegressionTask, RegressionTask
 
@@ -56,42 +55,41 @@ def plot(*args: Any, **kwargs: Any) -> None:
     raise ValueError
 
 
-def create_model(**kwargs: Any) -> Module:
-    return PixelwiseRegressionTestModel(**kwargs)
-
-
 class TestRegressionTask:
+    @classmethod
+    def create_model(*args: Any, **kwargs: Any) -> Module:
+        return RegressionTestModel(**kwargs)
+
     @pytest.mark.parametrize(
         "name", ["cowc_counting", "cyclone", "sustainbench_crop_yield", "skippd"]
     )
-    def test_trainer(self, name: str, fast_dev_run: bool) -> None:
-        conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
+    def test_trainer(
+        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
+    ) -> None:
+        config = os.path.join("tests", "conf", name + ".yaml")
 
-        # Instantiate datamodule
-        datamodule = instantiate(conf.datamodule)
+        monkeypatch.setattr(timm, "create_model", self.create_model)
 
-        # Instantiate model
-        model = instantiate(conf.module)
+        args = [
+            "--config",
+            config,
+            "--trainer.accelerator",
+            "cpu",
+            "--trainer.fast_dev_run",
+            str(fast_dev_run),
+            "--trainer.max_epochs",
+            "1",
+            "--trainer.log_every_n_steps",
+            "1",
+        ]
 
-        model.model = RegressionTestModel(
-            in_chans=conf.module.in_channels, num_classes=conf.module.num_outputs
-        )
-
-        # Instantiate trainer
-        trainer = Trainer(
-            accelerator="cpu",
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-
-        trainer.fit(model=model, datamodule=datamodule)
+        main(["fit"] + args)
         try:
-            trainer.test(model=model, datamodule=datamodule)
+            main(["test"] + args)
         except MisconfigurationException:
             pass
         try:
-            trainer.predict(model=model, datamodule=datamodule)
+            main(["predict"] + args)
         except MisconfigurationException:
             pass
 
@@ -195,53 +193,39 @@ class TestRegressionTask:
 
 
 class TestPixelwiseRegressionTask:
-    @pytest.mark.parametrize(
-        "name,batch_size,loss,model_type",
-        [
-            ("inria", 1, "mse", "unet"),
-            ("inria", 2, "mae", "deeplabv3+"),
-            ("inria", 1, "mse", "fcn"),
-        ],
-    )
+    @classmethod
+    def create_model(*args: Any, **kwargs: Any) -> Module:
+        return PixelwiseRegressionTestModel(**kwargs)
+
+    @pytest.mark.parametrize("name", ["inria_unet", "inria_deeplab", "inria_fcn"])
     def test_trainer(
-        self,
-        monkeypatch: MonkeyPatch,
-        name: str,
-        batch_size: int,
-        loss: str,
-        model_type: str,
-        fast_dev_run: bool,
+        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
-        conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
+        config = os.path.join("tests", "conf", name + ".yaml")
 
-        # Instantiate datamodule
-        conf.datamodule.batch_size = batch_size
-        datamodule = instantiate(conf.datamodule)
+        monkeypatch.setattr(smp, "Unet", self.create_model)
+        monkeypatch.setattr(smp, "DeepLabV3Plus", self.create_model)
 
-        # Instantiate model
-        monkeypatch.setattr(smp, "Unet", create_model)
-        monkeypatch.setattr(smp, "DeepLabV3Plus", create_model)
+        args = [
+            "--config",
+            config,
+            "--trainer.accelerator",
+            "cpu",
+            "--trainer.fast_dev_run",
+            str(fast_dev_run),
+            "--trainer.max_epochs",
+            "1",
+            "--trainer.log_every_n_steps",
+            "1",
+        ]
 
-        model = PixelwiseRegressionTask(
-            model=model_type, backbone="resnet18", loss=loss
-        )
-        model.model = PixelwiseRegressionTestModel()
-
-        # Instantiate trainer
-        trainer = Trainer(
-            accelerator="cpu",
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-
-        trainer.fit(model=model, datamodule=datamodule)
+        main(["fit"] + args)
         try:
-            trainer.test(model=model, datamodule=datamodule)
+            main(["test"] + args)
         except MisconfigurationException:
             pass
         try:
-            trainer.predict(model=model, datamodule=datamodule)
+            main(["predict"] + args)
         except MisconfigurationException:
             pass
 

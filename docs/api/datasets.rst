@@ -257,6 +257,11 @@ LoveDA
 
 .. autoclass:: LoveDA
 
+MapInWild
+^^^^^^^^^
+
+.. autoclass:: MapInWild
+
 Million-AID
 ^^^^^^^^^^^
 
@@ -296,6 +301,11 @@ RESISC45
 ^^^^^^^^
 
 .. autoclass:: RESISC45
+
+Rwanda Field Boundary
+^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: RwandaFieldBoundary
 
 Seasonal Contrast
 ^^^^^^^^^^^^^^^^^

@@ -38,6 +38,7 @@ class ClassificationTask(BaseTask):
         in_channels: int = 3,
         num_classes: int = 1000,
         loss: str = "ce",
+        class_weights: Optional[Tensor] = None,
         lr: float = 1e-3,
         patience: int = 10,
         freeze_backbone: bool = False,
@@ -53,6 +54,8 @@ class ClassificationTask(BaseTask):
             in_channels: Number of input channels to model.
             num_classes: Number of prediction classes.
             loss: One of 'ce', 'bce', 'jaccard', or 'focal'.
+            class_weights: Optional rescaling weight given to each
+                class and used with 'ce' loss.
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
             freeze_backbone: Freeze the backbone network to linear probe
@@ -62,7 +65,7 @@ class ClassificationTask(BaseTask):
            *classification_model* was renamed to *model*.
 
         .. versionadded:: 0.5
-           The *freeze_backbone* parameter.
+           The *class_weights* and *freeze_backbone* parameters.
 
         .. versionchanged:: 0.5
            *learning_rate* and *learning_rate_schedule_patience* were renamed to
@@ -78,7 +81,9 @@ class ClassificationTask(BaseTask):
         """
         loss: str = self.hparams["loss"]
         if loss == "ce":
-            self.criterion: nn.Module = nn.CrossEntropyLoss()
+            self.criterion: nn.Module = nn.CrossEntropyLoss(
+                weight=self.hparams["class_weights"]
+            )
         elif loss == "bce":
             self.criterion = nn.BCEWithLogitsLoss()
         elif loss == "jaccard":
@@ -159,6 +164,7 @@ class ClassificationTask(BaseTask):
         loss: Tensor = self.criterion(y_hat, y)
         self.log("train_loss", loss)
         self.train_metrics(y_hat_hard, y)
+        self.log_dict(self.train_metrics)  # type: ignore[arg-type]
 
         return loss
 
@@ -179,6 +185,7 @@ class ClassificationTask(BaseTask):
         loss = self.criterion(y_hat, y)
         self.log("val_loss", loss)
         self.val_metrics(y_hat_hard, y)
+        self.log_dict(self.val_metrics)  # type: ignore[arg-type]
 
         if (
             batch_idx < 10
@@ -218,6 +225,7 @@ class ClassificationTask(BaseTask):
         loss = self.criterion(y_hat, y)
         self.log("test_loss", loss)
         self.test_metrics(y_hat_hard, y)
+        self.log_dict(self.test_metrics)  # type: ignore[arg-type]
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -279,6 +287,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         loss: Tensor = self.criterion(y_hat, y.to(torch.float))
         self.log("train_loss", loss)
         self.train_metrics(y_hat_hard, y)
+        self.log_dict(self.train_metrics)  # type: ignore[arg-type]
 
         return loss
 
@@ -297,8 +306,9 @@ class MultiLabelClassificationTask(ClassificationTask):
         y_hat = self(x)
         y_hat_hard = torch.sigmoid(y_hat)
         loss = self.criterion(y_hat, y.to(torch.float))
-        self.log("val_loss", loss, on_step=False, on_epoch=True)
+        self.log("val_loss", loss)
         self.val_metrics(y_hat_hard, y)
+        self.log_dict(self.val_metrics)  # type: ignore[arg-type]
 
         if (
             batch_idx < 10
@@ -337,6 +347,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         loss = self.criterion(y_hat, y.to(torch.float))
         self.log("test_loss", loss)
         self.test_metrics(y_hat_hard, y)
+        self.log_dict(self.test_metrics)  # type: ignore[arg-type]
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0

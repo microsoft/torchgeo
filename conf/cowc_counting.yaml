@@ -1,21 +1,19 @@
-module:
-  _target_: torchgeo.trainers.RegressionTask
-  model: resnet18
-  weights: null
-  num_outputs: 1
-  in_channels: 3
-  lr: 1e-3
-  patience: 2
-
-datamodule:
-  _target_: torchgeo.datamodules.COWCCountingDataModule
-  root: "data/cowc_counting"
-  batch_size: 64
-  num_workers: 4
-
 trainer:
-  _target_: lightning.pytorch.Trainer
-  accelerator: gpu
-  devices: 1
   min_epochs: 15
   max_epochs: 40
+model:
+  class_path: RegressionTask
+  init_args:
+    model: resnet18
+    weights: null
+    num_outputs: 1
+    in_channels: 3
+    lr: 1e-3
+    patience: 2
+data:
+  class_path: COWCCountingDataModule
+  init_args:
+    batch_size: 64
+    num_workers: 4
+  dict_kwargs:
+    root: "data/cowc_counting"
