@@ -7,7 +7,7 @@ import glob
 import hashlib
 import os
 from functools import lru_cache
-from typing import Any, Callable, Optional, Union, cast
+from typing import Any, Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -71,10 +71,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
     }
 
     def __init__(
-        self,
-        root: Union[str, list[str]] = "data",
-        download: bool = False,
-        checksum: bool = False,
+        self, root: str = "data", download: bool = False, checksum: bool = False
     ) -> None:
         """Initialize a new LandCover.ai dataset instance.
 
@@ -90,10 +87,6 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
-        if isinstance(root, list):
-            # TODO: Workaround until list are fully implemented
-            root = root[0]
-
         self.root = root
         self.download = download
         self.checksum = checksum
@@ -218,7 +211,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, list[str]] = "data",
+        root: str = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -229,7 +222,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         """Initialize a new LandCover.ai NonGeo dataset instance.
 
         Args:
-            paths: one or more root directories to search or files to load
+            root: root directory where dataset can be found
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -243,14 +236,9 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         Raises:
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
-
-        .. versionchanged:: 0.5
-           *root* was renamed to *paths*.
         """
-        LandCoverAIBase.__init__(self, paths, download, checksum)
-        RasterDataset.__init__(
-            self, paths, crs, res, transforms=transforms, cache=cache
-        )
+        LandCoverAIBase.__init__(self, root, download, checksum)
+        RasterDataset.__init__(self, root, crs, res, transforms=transforms, cache=cache)
 
     def _verify_data(self) -> bool:
         """Verify if the images and masks are present."""

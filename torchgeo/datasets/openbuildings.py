@@ -249,7 +249,6 @@ class OpenBuildings(VectorDataset):
             feature["properties"]["tile_url"].split("/")[-1] for feature in features
         ]  # get csv filename
 
-        assert isinstance(self.paths, str)
         polygon_files = glob.glob(os.path.join(self.paths, self.zipfile_glob))
         polygon_filenames = [f.split(os.sep)[-1] for f in polygon_files]
 
@@ -278,7 +277,6 @@ class OpenBuildings(VectorDataset):
             maxt = sys.maxsize
             coords = (minx, maxx, miny, maxy, mint, maxt)
 
-            assert isinstance(self.paths, str)
             filepath = os.path.join(
                 self.paths, feature["properties"]["tile_url"].split("/")[-1]
             )
@@ -417,7 +415,6 @@ class OpenBuildings(VectorDataset):
             return
 
         # check if the metadata file has been downloaded
-        assert isinstance(self.paths, str)
         if not os.path.exists(os.path.join(self.paths, self.meta_data_filename)):
             raise FileNotFoundError(
                 f"Meta data file {self.meta_data_filename} "
