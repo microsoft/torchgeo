@@ -72,6 +72,7 @@ from .landsat import (
 )
 from .levircd import LEVIRCDPlus
 from .loveda import LoveDA
+from .mapinwild import MapInWild
 from .millionaid import MillionAID
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
@@ -83,6 +84,7 @@ from .patternnet import PatternNet
 from .potsdam import Potsdam2D
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
+from .rwanda_field_boundary import RwandaFieldBoundary
 from .seasonet import SeasoNet
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
@@ -193,6 +195,7 @@ __all__ = (
     "LandCoverAI",
     "LEVIRCDPlus",
     "LoveDA",
+    "MapInWild",
     "MillionAID",
     "NASAMarineDebris",
     "OSCD",
@@ -201,6 +204,7 @@ __all__ = (
     "Potsdam2D",
     "RESISC45",
     "ReforesTree",
+    "RwandaFieldBoundary",
     "SeasonalContrastS2",
     "SeasoNet",
     "SEN12MS",

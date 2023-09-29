@@ -459,6 +459,32 @@ class RasterDataset(GeoDataset):
         self._crs = cast(CRS, crs)
         self._res = cast(float, res)
 
+    @property
+    def files(self) -> set[str]:
+        """A list of all files in the dataset.
+
+        Returns:
+            All files in the dataset.
+
+        .. versionadded:: 0.5
+        """
+        # Make iterable
+        if isinstance(self.paths, str):
+            paths: Iterable[str] = [self.paths]
+        else:
+            paths = self.paths
+
+        # Using set to remove any duplicates if directories are overlapping
+        files: set[str] = set()
+        for path in paths:
+            if os.path.isdir(path):
+                pathname = os.path.join(path, "**", self.filename_glob)
+                files |= set(glob.iglob(pathname, recursive=True))
+            else:
+                files.add(path)
+
+        return files
+
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 

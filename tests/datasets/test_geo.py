@@ -1,9 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import glob
 import os
 import pickle
+from collections.abc import Iterable
 from pathlib import Path
+from typing import Union
 
 import pytest
 import torch
@@ -178,25 +179,38 @@ class TestRasterDataset:
         cache = request.param[1]
         return Sentinel2(root, bands=bands, transforms=transforms, cache=cache)
 
-    def test_init_with_list_of_files(self) -> None:
-        root = os.path.join("tests", "data", "sentinel2")
-
-        paths = []
-        # Add full path to a specific file
-        pathname = os.path.join(root, "**", "*B04.*")
-        specific_file = next(glob.iglob(pathname, recursive=True))
-        paths.append(specific_file)
-
-        # Also add multiple directories to search
-        paths.extend(
-            [os.path.join(root, p) for p in os.listdir(root) if p.endswith("SAFE")]
-        )
-
-        transforms = nn.Identity()
-        s2 = Sentinel2(
-            paths, bands=["B04", "B03", "B02"], transforms=transforms, cache=False
-        )
-        assert s2.files, "No files were found"
+    @pytest.mark.parametrize(
+        "paths",
+        [
+            # Single directory
+            os.path.join("tests", "data", "naip"),
+            # Multiple directories
+            [
+                os.path.join("tests", "data", "naip"),
+                os.path.join("tests", "data", "naip"),
+            ],
+            # Single file
+            os.path.join("tests", "data", "naip", "m_3807511_ne_18_060_20181104.tif"),
+            # Multiple files
+            (
+                os.path.join(
+                    "tests", "data", "naip", "m_3807511_ne_18_060_20181104.tif"
+                ),
+                os.path.join(
+                    "tests", "data", "naip", "m_3807511_ne_18_060_20190605.tif"
+                ),
+            ),
+            # Combination
+            {
+                os.path.join("tests", "data", "naip"),
+                os.path.join(
+                    "tests", "data", "naip", "m_3807511_ne_18_060_20181104.tif"
+                ),
+            },
+        ],
+    )
+    def test_files(self, paths: Union[str, Iterable[str]]) -> None:
+        assert 1 <= len(NAIP(paths).files) <= 2
 
     def test_getitem_single_file(self, naip: NAIP) -> None:
         x = naip[naip.bounds]
