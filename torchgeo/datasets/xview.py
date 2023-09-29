@@ -10,6 +10,7 @@ from typing import Callable, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
@@ -225,7 +226,7 @@ class XView2(NonGeoDataset):
         show_titles: bool = True,
         suptitle: Optional[str] = None,
         alpha: float = 0.5,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

@@ -8,6 +8,7 @@ import pytest
 import torch
 from _pytest.fixtures import SubRequest
 from lightning.pytorch import Trainer
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
 
@@ -33,7 +34,7 @@ class CustomGeoDataset(GeoDataset):
         image = torch.arange(3 * 2 * 2).view(3, 2, 2)
         return {"image": image, "crs": CRS.from_epsg(4326), "bbox": query}
 
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+    def plot(self, *args: Any, **kwargs: Any) -> Figure:
         return plt.figure()
 
 
@@ -72,7 +73,7 @@ class CustomNonGeoDataset(NonGeoDataset):
     def __len__(self) -> int:
         return self.length
 
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+    def plot(self, *args: Any, **kwargs: Any) -> Figure:
         return plt.figure()
 
 

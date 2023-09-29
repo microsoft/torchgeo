@@ -14,22 +14,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v4.0.0
+      uses: actions/checkout@v4.1.0
     - name: Set up python
       uses: actions/setup-python@v4.7.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.1
+      uses: actions/cache@v3.3.2
       id: cache
       with:
         path: ${{ env.pythonLocation }}
         key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/datasets.txt') }}-${{ hashFiles('requirements/tests.txt') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
-        pip list
+      run: pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
+    - name: List pip dependencies
+      run: pip list
     - name: Run mypy checks
       run: mypy .
   pytest:
@@ -43,13 +43,13 @@ jobs:
         python-version: ['3.9', '3.10', '3.11']
     steps:
     - name: Clone repo
-      uses: actions/checkout@v4.0.0
+      uses: actions/checkout@v4.1.0
     - name: Set up python
       uses: actions/setup-python@v4.7.0
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache dependencies
-      uses: actions/cache@v3.3.1
+      uses: actions/cache@v3.3.2
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -70,11 +70,13 @@ jobs:
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
-        pip list
+      run: pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
+    - name: List pip dependencies
+      run: pip list
     - name: Run pytest checks
-      run: pytest --cov=torchgeo --cov-report=xml --durations=10
+      run: |
+        pytest --cov=torchgeo --cov-report=xml --durations=10
+        python3 -m torchgeo --help
     - name: Report coverage
       uses: codecov/codecov-action@v3.1.4
       with:
@@ -86,13 +88,13 @@ jobs:
       MPLBACKEND: Agg
     steps:
     - name: Clone repo
-      uses: actions/checkout@v4.0.0
+      uses: actions/checkout@v4.1.0
     - name: Set up python
       uses: actions/setup-python@v4.7.0
       with:
         python-version: '3.9'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.1
+      uses: actions/cache@v3.3.2
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -105,11 +107,13 @@ jobs:
         sudo apt-get install unrar
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/min-reqs.old -c requirements/min-cons.old
-        pip list
+      run: pip install -r requirements/min-reqs.old -c requirements/min-cons.old
+    - name: List pip dependencies
+      run: pip list
     - name: Run pytest checks
-      run: pytest --cov=torchgeo --cov-report=xml --durations=10
+      run: |
+        pytest --cov=torchgeo --cov-report=xml --durations=10
+        python3 -m torchgeo --help
     - name: Report coverage
       uses: codecov/codecov-action@v3.1.4
       with:
