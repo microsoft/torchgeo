@@ -5,7 +5,8 @@
 
 import glob
 import os
-from typing import Any, Callable, Optional, cast
+from collections.abc import Iterable
+from typing import Any, Callable, Optional, Union, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -118,7 +119,7 @@ class GlobBiomass(RasterDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         measurement: str = "agb",
@@ -129,7 +130,7 @@ class GlobBiomass(RasterDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -141,11 +142,14 @@ class GlobBiomass(RasterDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            FileNotFoundError: if no files are found in ``paths``
             RuntimeError: if dataset is missing or checksum fails
             AssertionError: if measurement argument is invalid, or not a str
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
-        self.root = root
+        self.paths = paths
         self.checksum = checksum
 
         assert isinstance(measurement, str), "Measurement argument must be a str."
@@ -161,7 +165,7 @@ class GlobBiomass(RasterDataset):
 
         self._verify()
 
-        super().__init__(root, crs, res, transforms=transforms, cache=cache)
+        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
@@ -206,12 +210,12 @@ class GlobBiomass(RasterDataset):
             RuntimeError: if dataset is missing or checksum fails
         """
         # Check if the extracted file already exists
-        pathname = os.path.join(self.root, self.filename_glob)
-        if glob.glob(pathname):
+        if self.files:
             return
 
         # Check if the zip files have already been downloaded
-        pathname = os.path.join(self.root, self.zipfile_glob)
+        assert isinstance(self.paths, str)
+        pathname = os.path.join(self.paths, self.zipfile_glob)
         if glob.glob(pathname):
             for zipfile in glob.iglob(pathname):
                 filename = os.path.basename(zipfile)
@@ -221,7 +225,7 @@ class GlobBiomass(RasterDataset):
             return
 
         raise RuntimeError(
-            f"Dataset not found in `root={self.root}` "
+            f"Dataset not found in `root={self.paths}` "
             "either specify a different `root` directory or make sure you "
             "have manually downloaded the dataset as suggested in the documentation."
         )

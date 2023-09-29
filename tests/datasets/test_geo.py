@@ -1,9 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
 import os
 import pickle
+from collections.abc import Iterable
 from pathlib import Path
+from typing import Union
 
 import pytest
 import torch
@@ -177,6 +178,39 @@ class TestRasterDataset:
         transforms = nn.Identity()
         cache = request.param[1]
         return Sentinel2(root, bands=bands, transforms=transforms, cache=cache)
+
+    @pytest.mark.parametrize(
+        "paths",
+        [
+            # Single directory
+            os.path.join("tests", "data", "naip"),
+            # Multiple directories
+            [
+                os.path.join("tests", "data", "naip"),
+                os.path.join("tests", "data", "naip"),
+            ],
+            # Single file
+            os.path.join("tests", "data", "naip", "m_3807511_ne_18_060_20181104.tif"),
+            # Multiple files
+            (
+                os.path.join(
+                    "tests", "data", "naip", "m_3807511_ne_18_060_20181104.tif"
+                ),
+                os.path.join(
+                    "tests", "data", "naip", "m_3807511_ne_18_060_20190605.tif"
+                ),
+            ),
+            # Combination
+            {
+                os.path.join("tests", "data", "naip"),
+                os.path.join(
+                    "tests", "data", "naip", "m_3807511_ne_18_060_20181104.tif"
+                ),
+            },
+        ],
+    )
+    def test_files(self, paths: Union[str, Iterable[str]]) -> None:
+        assert 1 <= len(NAIP(paths).files) <= 2
 
     def test_getitem_single_file(self, naip: NAIP) -> None:
         x = naip[naip.bounds]

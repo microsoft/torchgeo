@@ -222,20 +222,20 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         """Initialize a new LandCover.ai NonGeo dataset instance.
 
         Args:
-           root: root directory where dataset can be found
-           crs: :term:`coordinate reference system (CRS)` to warp to
-               (defaults to the CRS of the first file found)
-           res: resolution of the dataset in units of CRS
-               (defaults to the resolution of the first file found)
-           transforms: a function/transform that takes input sample and its target as
-               entry and returns a transformed version
-           cache: if True, cache file handle to speed up repeated sampling
-           download: if True, download dataset and store it in the root directory
-           checksum: if True, check the MD5 of the downloaded files (may be slow)
+            root: root directory where dataset can be found
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
+            res: resolution of the dataset in units of CRS
+                (defaults to the resolution of the first file found)
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            cache: if True, cache file handle to speed up repeated sampling
+            download: if True, download dataset and store it in the root directory
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-           RuntimeError: if ``download=False`` and data is not found, or checksums
-               don't match
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
         """
         LandCoverAIBase.__init__(self, root, download, checksum)
         RasterDataset.__init__(self, root, crs, res, transforms=transforms, cache=cache)

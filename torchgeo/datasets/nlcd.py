@@ -5,7 +5,8 @@
 
 import glob
 import os
-from typing import Any, Callable, Optional
+from collections.abc import Iterable
+from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import torch
@@ -106,7 +107,7 @@ class NLCD(RasterDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         years: list[int] = [2019],
@@ -119,7 +120,7 @@ class NLCD(RasterDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -135,8 +136,11 @@ class NLCD(RasterDataset):
 
         Raises:
             AssertionError: if ``years`` or ``classes`` are invalid
-            FileNotFoundError: if no files are found in ``root``
+            FileNotFoundError: if no files are found in ``paths``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
         assert set(years) <= self.md5s.keys(), (
             "NLCD data product only exists for the following years: "
@@ -147,7 +151,7 @@ class NLCD(RasterDataset):
         ), f"Only the following classes are valid: {list(self.cmap.keys())}."
         assert 0 in classes, "Classes must include the background class: 0"
 
-        self.root = root
+        self.paths = paths
         self.years = years
         self.classes = classes
         self.download = download
@@ -157,7 +161,7 @@ class NLCD(RasterDataset):
 
         self._verify()
 
-        super().__init__(root, crs, res, transforms=transforms, cache=cache)
+        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
         for v, k in enumerate(self.classes):
@@ -187,23 +191,15 @@ class NLCD(RasterDataset):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         # Check if the extracted files already exist
-        exists = []
-        for year in self.years:
-            filename_year = self.filename_glob.replace("*", str(year), 1)
-            pathname = os.path.join(self.root, "**", filename_year)
-            if glob.glob(pathname, recursive=True):
-                exists.append(True)
-            else:
-                exists.append(False)
-
-        if all(exists):
+        if self.files:
             return
 
         # Check if the zip files have already been downloaded
         exists = []
         for year in self.years:
             zipfile_year = self.zipfile_glob.replace("*", str(year), 1)
-            pathname = os.path.join(self.root, "**", zipfile_year)
+            assert isinstance(self.paths, str)
+            pathname = os.path.join(self.paths, "**", zipfile_year)
             if glob.glob(pathname, recursive=True):
                 exists.append(True)
                 self._extract()
@@ -216,7 +212,7 @@ class NLCD(RasterDataset):
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
+                f"Dataset not found in `root={self.paths}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
                 "to automatically download the dataset."
             )
@@ -230,7 +226,7 @@ class NLCD(RasterDataset):
         for year in self.years:
             download_url(
                 self.url.format(year),
-                self.root,
+                self.paths,
                 md5=self.md5s[year] if self.checksum else None,
             )
 
@@ -238,8 +234,9 @@ class NLCD(RasterDataset):
         """Extract the dataset."""
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace("*", str(year), 1)
-            pathname = os.path.join(self.root, "**", zipfile_name)
-            extract_archive(glob.glob(pathname, recursive=True)[0], self.root)
+            assert isinstance(self.paths, str)
+            pathname = os.path.join(self.paths, "**", zipfile_name)
+            extract_archive(glob.glob(pathname, recursive=True)[0], self.paths)
 
     def plot(
         self,

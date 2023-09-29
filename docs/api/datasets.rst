@@ -174,6 +174,11 @@ BigEarthNet
 
 .. autoclass:: BigEarthNet
 
+BioMassters
+^^^^^^^^^^^
+
+.. autoclass:: BioMassters
+   
 Cloud Cover Detection
 ^^^^^^^^^^^^^^^^^^^^^
 
