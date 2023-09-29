@@ -44,9 +44,9 @@ class TestCMSGlobalMangroveCanopy:
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
 
-    def test_no_dataset(self) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in."):
-            CMSGlobalMangroveCanopy("/test")
+    def test_no_dataset(self, tmp_path: Path) -> None:
+        with pytest.raises(RuntimeError, match="Dataset not found"):
+            CMSGlobalMangroveCanopy(str(tmp_path))
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join(

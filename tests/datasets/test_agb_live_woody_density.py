@@ -52,9 +52,9 @@ class TestAbovegroundLiveWoodyBiomassDensity:
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
 
-    def test_no_dataset(self) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in."):
-            AbovegroundLiveWoodyBiomassDensity("/test")
+    def test_no_dataset(self, tmp_path: Path) -> None:
+        with pytest.raises(RuntimeError, match="Dataset not found"):
+            AbovegroundLiveWoodyBiomassDensity(str(tmp_path))
 
     def test_already_downloaded(
         self, dataset: AbovegroundLiveWoodyBiomassDensity
