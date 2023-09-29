@@ -71,10 +71,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
     }
 
     def __init__(
-        self,
-        root: str = "data",
-        download: bool = False,
-        checksum: bool = False,
+        self, root: str = "data", download: bool = False, checksum: bool = False
     ) -> None:
         """Initialize a new LandCover.ai dataset instance.
 
@@ -241,9 +238,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
                 don't match
         """
         LandCoverAIBase.__init__(self, root, download, checksum)
-        RasterDataset.__init__(
-            self, root, crs, res, transforms=transforms, cache=cache
-        )
+        RasterDataset.__init__(self, root, crs, res, transforms=transforms, cache=cache)
 
     def _verify_data(self) -> bool:
         """Verify if the images and masks are present."""
