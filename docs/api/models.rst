@@ -39,23 +39,11 @@ ResNet
 .. autoclass:: ResNet18_Weights
 .. autoclass:: ResNet50_Weights
 
-.. csv-table::
-   :widths: 45 10 10 10 15 10 10 10
-   :header-rows: 1
-   :align: center
-   :file: resnet_pretrained_weights.csv
-
 Vision Transformer
 ^^^^^^^^^^^^^^^^^^
 
 .. autofunction:: vit_small_patch16_224
 .. autoclass:: ViTSmall16_Weights
-
-.. csv-table::
-   :widths: 45 10 10 10 15 10 10 10
-   :header-rows: 1
-   :align: center
-   :file: vit_pretrained_weights.csv
 
 Utility Functions
 ^^^^^^^^^^^^^^^^^
@@ -64,3 +52,41 @@ Utility Functions
 .. autofunction:: get_model_weights
 .. autofunction:: get_weight
 .. autofunction:: list_models
+
+
+Pretrained Weights
+^^^^^^^^^^^^^^^^^^
+
+Landsat
+-------
+
+.. csv-table::
+   :widths: 45 20 10 10 15 10 10
+   :header-rows: 1
+   :align: center
+   :file: landsat_pretrained_weights.csv
+
+
+Sentinel-1
+----------
+
+.. csv-table::
+   :widths: 45 10 10 10 15 10 10 10
+   :header-rows: 1
+   :align: center
+   :file: sentinel1_pretrained_weights.csv
+
+
+Sentinel-2
+----------
+
+.. csv-table::
+   :widths: 45 10 10 10 15 10 10 10
+   :header-rows: 1
+   :align: center
+   :file: sentinel2_pretrained_weights.csv
+
+
+
+
+
