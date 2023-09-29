@@ -12,7 +12,5 @@ data:
   init_args:
     batch_size: 1
     patch_size: 2
-    val_split_pct: 0.2
-    test_split_pct: 0.2
   dict_kwargs:
     root: "tests/data/inria"
