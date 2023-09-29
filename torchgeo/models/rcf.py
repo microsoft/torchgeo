@@ -31,7 +31,7 @@ class RCF(Module):
 
     .. note::
 
-        This Module is *not* trainable. It is only used as a feature extractor.
+       This Module is *not* trainable. It is only used as a feature extractor.
     """
 
     weights: Tensor
@@ -56,7 +56,7 @@ class RCF(Module):
            The *seed* parameter.
 
         .. versionadded:: 0.5
-            The *mode* and *dataset* parameters.
+           The *mode* and *dataset* parameters.
 
         Args:
             in_channels: number of input channels
@@ -74,10 +74,9 @@ class RCF(Module):
         assert features % 2 == 0
         num_patches = features // 2
 
-        if seed is None:
-            generator = torch.Generator()
-        else:
-            generator = torch.Generator().manual_seed(seed)
+        generator = torch.Generator()
+        if seed:
+            generator = generator.manual_seed(seed)
 
         # We register the weight and bias tensors as "buffers". This does two things:
         # makes them behave correctly when we call .to(...) on the module, and makes
@@ -142,7 +141,7 @@ class RCF(Module):
         Returns
             a numpy array of size (N, C, H, W) containing the normalized patches
 
-        .. versionadded:: 0.5.0
+        .. versionadded:: 0.5
         """  # noqa: E501
         n_patches = patches.shape[0]
         orig_shape = patches.shape
