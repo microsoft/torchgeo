@@ -287,11 +287,6 @@ Potsdam
 
 .. autoclass:: Potsdam2D
 
-RwandaFieldBoundary
-^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: RwandaFieldBoundary
-
 ReforesTree
 ^^^^^^^^^^^
 
@@ -301,6 +296,11 @@ RESISC45
 ^^^^^^^^
 
 .. autoclass:: RESISC45
+
+RwandaFieldBoundary
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: RwandaFieldBoundary
 
 Seasonal Contrast
 ^^^^^^^^^^^^^^^^^

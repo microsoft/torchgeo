@@ -90,7 +90,7 @@ class RwandaFieldBoundary(NonGeoDataset):
         api_key: Optional[str] = None,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new Benin Smallholder Cashew Plantations Dataset instance.
+        """Initialize a new RwandaFieldBoundary instance.
 
         Args:
             root: root directory where dataset can be found
