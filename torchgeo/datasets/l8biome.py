@@ -117,9 +117,6 @@ class L8Biome(RasterDataset):
         Raises:
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
-
-        .. versionchanged:: 0.5
-           *root* was renamed to *paths*.
         """
         self.paths = paths
         self.download = download
