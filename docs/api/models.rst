@@ -94,9 +94,3 @@ Other Data Sources
    :header-rows: 1
    :align: center
    :file: misc_pretrained_weights.csv
-
-
-
-
-
-
