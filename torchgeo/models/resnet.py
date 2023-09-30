@@ -94,7 +94,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_RGB_SECO = Weights(
-        url="https://huggingface.co/torchgeo/resnet18_sentinel2_rgb_seco/resolve/main/resnet18_sentinel2_rgb_seco-9976a9cb.pth",  # noqa: E501
+        url="https://huggingface.co/torchgeo/resnet18_sentinel2_rgb_seco/resolve/main/resnet18_sentinel2_rgb_seco-cefca942.pth",  # noqa: E501
         transforms=_seco_transforms,
         meta={
             "dataset": "SeCo Dataset",
@@ -182,7 +182,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_RGB_SECO = Weights(
-        url="https://huggingface.co/torchgeo/resnet50_sentinel2_rgb_seco/resolve/main/resnet50_sentinel2_rgb_seco-584035db.pth",  # noqa: E501
+        url="https://huggingface.co/torchgeo/resnet50_sentinel2_rgb_seco/resolve/main/resnet50_sentinel2_rgb_seco-018bf397.pth",  # noqa: E501
         transforms=_seco_transforms,
         meta={
             "dataset": "SeCo Dataset",
@@ -220,7 +220,11 @@ def resnet18(
     model: ResNet = timm.create_model("resnet18", *args, **kwargs)
 
     if weights:
-        model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
+        missing_keys, unexpected_keys = model.load_state_dict(
+            weights.get_state_dict(progress=True), strict=False
+        )
+        assert set(missing_keys) <= {"fc.weight", "fc.bias"}
+        assert not unexpected_keys
 
     return model
 
@@ -251,6 +255,10 @@ def resnet50(
     model: ResNet = timm.create_model("resnet50", *args, **kwargs)
 
     if weights:
-        model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
+        missing_keys, unexpected_keys = model.load_state_dict(
+            weights.get_state_dict(progress=True), strict=False
+        )
+        assert set(missing_keys) <= {"fc.weight", "fc.bias"}
+        assert not unexpected_keys
 
     return model
