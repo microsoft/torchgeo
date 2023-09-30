@@ -18,7 +18,6 @@ from pytest import MonkeyPatch
 import torchgeo.datasets.utils
 from torchgeo.datasets import SKIPPD
 
-
 pytest.importorskip("h5py", minversion="3")
 
 
