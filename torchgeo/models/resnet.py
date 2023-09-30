@@ -218,7 +218,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_OLI_SR_MOCO = Weights(
-        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet18_landsat_oli_sr_moco-0b7b8a21.pth",  # noqa: E501
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet18_landsat_oli_sr_moco-660e82ed.pth",  # noqa: E501
         transforms=_ssl4eo_l_transforms,
         meta={
             "dataset": "SSL4EO-L",
