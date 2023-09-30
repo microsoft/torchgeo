@@ -87,7 +87,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_TM_TOA_SIMCLR = Weights(
-        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_tm_toa_simclr-eaa9539b.pth",  # noqa: E501
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_tm_toa_simclr-7c2d9799.pth",  # noqa: E501
         transforms=_ssl4eo_l_transforms,
         meta={
             "dataset": "SSL4EO-L",
@@ -113,7 +113,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_ETM_TOA_SIMCLR = Weights(
-        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_etm_toa_simclr-67e15a65.pth",  # noqa: E501
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_etm_toa_simclr-34fb12cb.pth",  # noqa: E501
         transforms=_ssl4eo_l_transforms,
         meta={
             "dataset": "SSL4EO-L",
@@ -139,7 +139,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_ETM_SR_SIMCLR = Weights(
-        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_etm_sr_simclr-ce849752.pth",  # noqa: E501
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_etm_sr_simclr-a14c466a.pth",  # noqa: E501
         transforms=_ssl4eo_l_transforms,
         meta={
             "dataset": "SSL4EO-L",
@@ -165,7 +165,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_OLI_TIRS_TOA_SIMCLR = Weights(
-        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_oli_tirs_toa_simclr-f4e29b0e.pth",  # noqa: E501
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_oli_tirs_toa_simclr-ad43e9a4.pth",  # noqa: E501
         transforms=_ssl4eo_l_transforms,
         meta={
             "dataset": "SSL4EO-L",
@@ -191,7 +191,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_OLI_SR_SIMCLR = Weights(
-        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_oli_sr_simclr-6797459e.pth",  # noqa: E501
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_oli_sr_simclr-4e8f6102.pth",  # noqa: E501
         transforms=_ssl4eo_l_transforms,
         meta={
             "dataset": "SSL4EO-L",
