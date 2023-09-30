@@ -66,6 +66,9 @@ class TestRegressionTask:
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
+        if name == "skippd":
+            pytest.importorskip("h5py", minversion="3")
+
         config = os.path.join("tests", "conf", name + ".yaml")
 
         monkeypatch.setattr(timm, "create_model", self.create_model)

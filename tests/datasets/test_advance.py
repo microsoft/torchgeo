@@ -81,6 +81,7 @@ class TestADVANCE:
             dataset[0]
 
     def test_plot(self, dataset: ADVANCE) -> None:
+        pytest.importorskip("scipy", minversion="1.6.2")
         x = dataset[0].copy()
         dataset.plot(x, suptitle="Test")
         plt.close()

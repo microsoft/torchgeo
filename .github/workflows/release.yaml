@@ -22,7 +22,7 @@ jobs:
       id: cache
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('setup.cfg') }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: pip install .[tests]
@@ -48,7 +48,7 @@ jobs:
       id: cache
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('setup.cfg') }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: pip install .[datasets,tests]
@@ -74,7 +74,7 @@ jobs:
       id: cache
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('setup.cfg') }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: pip install .[docs,tests] planetary_computer pystac

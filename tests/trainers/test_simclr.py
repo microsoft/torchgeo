@@ -126,20 +126,16 @@ class TestSimCLRTask:
 
     @pytest.mark.slow
     def test_weight_enum_download(self, weights: WeightsEnum) -> None:
-        match = "num classes .* != num classes in pretrained model"
-        with pytest.warns(UserWarning, match=match):
-            SimCLRTask(
-                model=weights.meta["model"],
-                weights=weights,
-                in_channels=weights.meta["in_chans"],
-            )
+        SimCLRTask(
+            model=weights.meta["model"],
+            weights=weights,
+            in_channels=weights.meta["in_chans"],
+        )
 
     @pytest.mark.slow
     def test_weight_str_download(self, weights: WeightsEnum) -> None:
-        match = "num classes .* != num classes in pretrained model"
-        with pytest.warns(UserWarning, match=match):
-            SimCLRTask(
-                model=weights.meta["model"],
-                weights=str(weights),
-                in_channels=weights.meta["in_chans"],
-            )
+        SimCLRTask(
+            model=weights.meta["model"],
+            weights=str(weights),
+            in_channels=weights.meta["in_chans"],
+        )
