@@ -19,6 +19,9 @@ import torchgeo.datasets.utils
 from torchgeo.datasets import SKIPPD
 
 
+pytest.importorskip("h5py", minversion="3")
+
+
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
