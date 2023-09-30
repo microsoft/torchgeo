@@ -196,7 +196,9 @@ def resnet18(
     model: ResNet = timm.create_model("resnet18", *args, **kwargs)
 
     if weights:
-        model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
+        missing_keys, unexpected_keys = model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
+        assert missing_keys == ['fc.weight', 'fc.bias']
+        assert not unexpected_keys
 
     return model
 
@@ -227,6 +229,8 @@ def resnet50(
     model: ResNet = timm.create_model("resnet50", *args, **kwargs)
 
     if weights:
-        model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
+        missing_keys, unexpected_keys = model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
+        assert missing_keys == ['fc.weight', 'fc.bias']
+        assert not unexpected_keys
 
     return model

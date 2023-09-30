@@ -94,6 +94,8 @@ def vit_small_patch16_224(
     )
 
     if weights:
-        model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
+        missing_keys, unexpected_keys = model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
+        assert missing_keys == ["head.weight", "head.bias"]
+        assert not unexpected_keys
 
     return model
