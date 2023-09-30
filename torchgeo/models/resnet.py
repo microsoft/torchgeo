@@ -199,7 +199,7 @@ def resnet18(
         missing_keys, unexpected_keys = model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
-        assert missing_keys == ["fc.weight", "fc.bias"]
+        assert set(missing_keys) <= {"fc.weight", "fc.bias"}
         assert not unexpected_keys
 
     return model
@@ -234,7 +234,7 @@ def resnet50(
         missing_keys, unexpected_keys = model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
-        assert missing_keys == ["fc.weight", "fc.bias"]
+        assert set(missing_keys) <= {"fc.weight", "fc.bias"}
         assert not unexpected_keys
 
     return model
