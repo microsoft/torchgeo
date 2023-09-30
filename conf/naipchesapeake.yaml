@@ -21,5 +21,5 @@ data:
     num_workers: 4
     patch_size: 32
   dict_kwargs:
-    naip_root: "data/naip"
-    chesapeake_root: "data/chesapeake/BAYWIDE"
+    naip_paths: "data/naip"
+    chesapeake_paths: "data/chesapeake/BAYWIDE"

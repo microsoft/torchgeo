@@ -38,6 +38,7 @@ class ClassificationTask(BaseTask):
         in_channels: int = 3,
         num_classes: int = 1000,
         loss: str = "ce",
+        class_weights: Optional[Tensor] = None,
         lr: float = 1e-3,
         patience: int = 10,
         freeze_backbone: bool = False,
@@ -53,6 +54,8 @@ class ClassificationTask(BaseTask):
             in_channels: Number of input channels to model.
             num_classes: Number of prediction classes.
             loss: One of 'ce', 'bce', 'jaccard', or 'focal'.
+            class_weights: Optional rescaling weight given to each
+                class and used with 'ce' loss.
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
             freeze_backbone: Freeze the backbone network to linear probe
@@ -62,7 +65,7 @@ class ClassificationTask(BaseTask):
            *classification_model* was renamed to *model*.
 
         .. versionadded:: 0.5
-           The *freeze_backbone* parameter.
+           The *class_weights* and *freeze_backbone* parameters.
 
         .. versionchanged:: 0.5
            *learning_rate* and *learning_rate_schedule_patience* were renamed to
@@ -78,7 +81,9 @@ class ClassificationTask(BaseTask):
         """
         loss: str = self.hparams["loss"]
         if loss == "ce":
-            self.criterion: nn.Module = nn.CrossEntropyLoss()
+            self.criterion: nn.Module = nn.CrossEntropyLoss(
+                weight=self.hparams["class_weights"]
+            )
         elif loss == "bce":
             self.criterion = nn.BCEWithLogitsLoss()
         elif loss == "jaccard":

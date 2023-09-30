@@ -15,5 +15,5 @@ data:
     patch_size: 32
     length: 5
   dict_kwargs:
-    root: "tests/data/l7irish"
+    paths: "tests/data/l7irish"
     download: true
