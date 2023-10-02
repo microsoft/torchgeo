@@ -136,8 +136,8 @@ task = SemanticSegmentationTask(
     num_classes=2,
     loss="ce",
     ignore_index=None,
-    learning_rate=0.1,
-    learning_rate_schedule_patience=6,
+    lr=0.1,
+    patience=6,
 )
 trainer = Trainer(default_root_dir="...")
 
