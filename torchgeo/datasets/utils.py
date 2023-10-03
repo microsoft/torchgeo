@@ -746,8 +746,9 @@ def path_is_vsi(path: str) -> bool:
 
     vsi can for instance be Cloud Storage Blobs or zip-archives.
     They will start with a prefix indicating this.
-    For examples of these, see reference:
+    For examples of these, see references for the two accepted syntaxes.
     https://gdal.org/user/virtual_file_systems.html
+    https://rasterio.readthedocs.io/en/latest/topics/datasets.html
 
     Args:
         path: string representing a directory or file
