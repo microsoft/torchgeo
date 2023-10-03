@@ -304,7 +304,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
             if os.path.isdir(path):
                 pathname = os.path.join(path, "**", self.filename_glob)
                 files |= set(glob.iglob(pathname, recursive=True))
-            elif path_is_vsi(path):
+            elif os.path.isfile(path) or path_is_vsi(path):
                 files.add(path)
             else:
                 continue
