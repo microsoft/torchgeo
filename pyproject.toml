@@ -239,6 +239,7 @@ filterwarnings = [
     # https://github.com/lanpa/tensorboardX/pull/677
     "ignore:ANTIALIAS is deprecated and will be removed in Pillow 10:DeprecationWarning:tensorboardX.summary",
     # https://github.com/Lightning-AI/lightning/issues/16756
+    "ignore:Deprecated call to `pkg_resources.declare_namespace:DeprecationWarning",
     "ignore:pkg_resources is deprecated as an API.:DeprecationWarning:lightning_utilities.core.imports",
     "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:jsonargparse",
 
