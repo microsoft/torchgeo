@@ -146,7 +146,7 @@ trainer.fit(model=task, datamodule=datamodule)
 
 <img src="https://raw.githubusercontent.com/microsoft/torchgeo/main/images/inria.png" alt="Building segmentations produced by a U-Net model trained on the Inria Aerial Image Labeling dataset"/>
 
-TorchGeo also supports command-line interface training using the [LightningCLI](https://lightning.ai/docs/pytorch/stable/cli/lightning_cli.html). It can be invoked in two ways:
+TorchGeo also supports command-line interface training using [LightningCLI](https://lightning.ai/docs/pytorch/stable/cli/lightning_cli.html). It can be invoked in two ways:
 
 ```console
 # If torchgeo has been installed
@@ -186,7 +186,7 @@ data:
     download: true
 ```
 
-We can see the script in action:
+we can see the script in action:
 ```console
 # Train and validate a model
 torchgeo fit --config config.yaml
