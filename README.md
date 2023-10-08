@@ -215,7 +215,7 @@ If you use this software in your work, please cite our [paper](https://dl.acm.or
     author = {Stewart, Adam J. and Robinson, Caleb and Corley, Isaac A. and Ortiz, Anthony and Lavista Ferres, Juan M. and Banerjee, Arindam},
     booktitle = {Proceedings of the 30th International Conference on Advances in Geographic Information Systems},
     doi = {10.1145/3557915.3560953},
-    month = {11},
+    month = nov,
     pages = {1--12},
     publisher = {Association for Computing Machinery},
     series = {SIGSPATIAL '22},
