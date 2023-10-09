@@ -775,13 +775,14 @@ def path_is_vsi(path: str) -> bool:
         True if path is on a virtual file system, else False
     """
 
-    def _is_apache_vfs_scheme(path: str) -> bool:
-        scheme = urlparse(path).scheme
-        return bool(scheme) and scheme.split("+")[-1] in SCHEMES
+    def _is_apache_vfs_scheme(_path: str) -> bool:
+        scheme = urlparse(_path).scheme
+        schemes = scheme.split("+")
+        return set(schemes).issubset(set(SCHEMES))
 
-    def _is_gdal_vsi_scheme(path: str) -> bool:
-        return path.startswith("/vsi") and any(
-            path.startswith("/vsi" + scheme) for scheme in set(SCHEMES.values())
+    def _is_gdal_vsi_scheme(_path: str) -> bool:
+        return _path.startswith("/vsi") and any(
+            _path.startswith("/vsi" + scheme) for scheme in set(SCHEMES.values())
         )
 
     return _is_apache_vfs_scheme(path) or _is_gdal_vsi_scheme(path)
