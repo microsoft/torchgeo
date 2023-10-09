@@ -18,6 +18,7 @@ from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, cast, overload
+from urllib.parse import urlparse
 
 import numpy as np
 import rasterio
@@ -739,6 +740,23 @@ def percentile_normalization(
     return img_normalized
 
 
+# Supported URI schemes and their mapping to GDAL's VSI suffix.
+# TODO: extend for other cloud plaforms.
+SCHEMES = {
+    "ftp": "curl",
+    "gzip": "gzip",
+    "http": "curl",
+    "https": "curl",
+    "s3": "s3",
+    "tar": "tar",
+    "zip": "zip",
+    "file": "file",
+    "oss": "oss",
+    "gs": "gs",
+    "az": "az",
+}
+
+
 def path_is_vsi(path: str) -> bool:
     """Checks if the given path is pointing to a Virtual File System.
 
@@ -758,13 +776,12 @@ def path_is_vsi(path: str) -> bool:
     """
 
     def _is_apache_vfs_scheme(path: str) -> bool:
-        from rasterio._path import SCHEMES
+        scheme = urlparse(path).scheme
+        return bool(scheme) and scheme.split("+")[-1] in SCHEMES
 
-        prefix = path.split("://")[0]
-        schemes = prefix.split("+")
-        return set(schemes).issubset(set(SCHEMES))
+    def _is_gdal_vsi_scheme(path: str) -> bool:
+        return path.startswith("/vsi") and any(
+            path.startswith("/vsi" + scheme) for scheme in set(SCHEMES.values())
+        )
 
-    def _is_gdal_vsi(path: str) -> bool:
-        return path.startswith("/vsi")
-
-    return _is_apache_vfs_scheme(path) or _is_gdal_vsi(path)
+    return _is_apache_vfs_scheme(path) or _is_gdal_vsi_scheme(path)
