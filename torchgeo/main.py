@@ -32,5 +32,6 @@ def main(args: ArgsType = None) -> None:
         seed_everything_default=0,
         subclass_mode_model=True,
         subclass_mode_data=True,
+        save_config_kwargs={"overwrite": True},
         args=args,
     )
