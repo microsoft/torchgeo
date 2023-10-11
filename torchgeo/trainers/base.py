@@ -36,17 +36,6 @@ class BaseTask(LightningModule, ABC):
         self.configure_metrics()
         self.configure_models()
 
-    def configure_callbacks(self) -> list[Callback]:
-        """Initialize model-specific callbacks.
-
-        Returns:
-            List of callbacks to apply.
-        """
-        return [
-            ModelCheckpoint(monitor=self.monitor, mode=self.mode),
-            EarlyStopping(monitor=self.monitor, mode=self.mode),
-        ]
-
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""
 
