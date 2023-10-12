@@ -74,16 +74,16 @@ class EuroSAT(NonGeoClassificationDataset):
         "test": "7ae5ab94471417b6e315763121e67c5f",
     }
     classes = [
-        "Industrial Buildings",
-        "Residential Buildings",
-        "Annual Crop",
-        "Permanent Crop",
-        "River",
-        "Sea and Lake",
-        "Herbaceous Vegetation",
-        "Highway",
-        "Pasture",
+        "AnnualCrop",
         "Forest",
+        "HerbaceousVegetation",
+        "Highway",
+        "Industrial",
+        "Pasture",
+        "PermanentCrop",
+        "Residential",
+        "River",
+        "SeaLake"
     ]
 
     all_band_names = (
