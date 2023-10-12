@@ -83,7 +83,7 @@ class EuroSAT(NonGeoClassificationDataset):
         "PermanentCrop",
         "Residential",
         "River",
-        "SeaLake"
+        "SeaLake",
     ]
 
     all_band_names = (
