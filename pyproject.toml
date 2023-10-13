@@ -257,6 +257,8 @@ filterwarnings = [
     "ignore:`ColorJitter` is now following Torchvision implementation.:DeprecationWarning:kornia.augmentation._2d.intensity.color_jitter",
     # https://github.com/kornia/kornia/pull/1663
     "ignore:`RandomGaussianBlur` has changed its behavior and now randomly sample sigma for both axes.:DeprecationWarning:kornia.augmentation._2d.intensity.gaussian_blur",
+    # We are explicitly requesting pytest not to save temporary directories
+    "ignore:Implicitly cleaning up <TemporaryDirectory:ResourceWarning:tempfile",
 
     # Unexpected warnings, worth investigating
     # Lightning is having trouble inferring the batch size for ChesapeakeCVPRDataModule and CycloneDataModule for some reason
