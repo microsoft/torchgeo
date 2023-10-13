@@ -276,6 +276,7 @@ testpaths = [
     "tests",
     "docs/tutorials",
 ]
+tmp_path_retention_policy = "failed"
 
 # https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
 [tool.setuptools.dynamic]

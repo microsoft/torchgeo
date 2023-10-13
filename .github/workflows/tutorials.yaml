@@ -29,7 +29,9 @@ jobs:
         key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: pip install .[docs,tests] planetary_computer pystac
+      run: |
+        pip install .[docs,tests] planetary_computer pystac
+        pip cache purge
     - name: List pip dependencies
       run: pip list
     - name: Run notebook checks
