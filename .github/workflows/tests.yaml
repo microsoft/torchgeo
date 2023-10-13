@@ -37,5 +37,4 @@ jobs:
     - name: Run pytest checks
       run: pytest
     - name: Inspect system
-      if: {{ always() }}
       run: df -H
