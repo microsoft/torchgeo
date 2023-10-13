@@ -39,7 +39,7 @@ jobs:
       MPLBACKEND: Agg
     strategy:
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ['3.9', '3.10', '3.11']
     steps:
     - name: Clone repo
