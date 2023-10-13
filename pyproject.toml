@@ -241,6 +241,8 @@ filterwarnings = [
     # https://github.com/Lightning-AI/lightning/issues/16756
     "ignore:Deprecated call to `pkg_resources.declare_namespace:DeprecationWarning",
     "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:jsonargparse",
+    # https://github.com/pytorch/pytorch/issues/110549
+    "ignore:allow_ops_in_compiled_graph failed to import torch:ImportWarning:einops",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
