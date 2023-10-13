@@ -14,17 +14,28 @@ jobs:
       run: df -H
     - name: Clone repo
       uses: actions/checkout@v4.1.0
+    - name: Inspect system
+      run: df -H
     - name: Set up python
       uses: actions/setup-python@v4.7.1
       with:
         python-version: '3.11'
+    - name: Inspect system
+      run: df -H
     - name: Setup headless display for pyvista
       uses: pyvista/setup-headless-display-action@v2
+    - name: Inspect system
+      run: df -H
     - name: Install apt dependencies (Linux)
       run: sudo apt-get install unrar
+    - name: Inspect system
+      run: df -H
     - name: Install pip dependencies
       run: pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
     - name: Inspect system
       run: df -H
     - name: Run pytest checks
       run: pytest
+    - name: Inspect system
+      if: {{ always() }}
+      run: df -H
