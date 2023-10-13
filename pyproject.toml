@@ -246,7 +246,8 @@ filterwarnings = [
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
-    "ignore:The dataloader, .*, does not have many workers which may be a bottleneck:UserWarning",
+    "ignore:The .*dataloader.* does not have many workers which may be a bottleneck:UserWarning:lightning",
+    "ignore:The .*dataloader.* does not have many workers which may be a bottleneck:lightning.fabric.utilities.warnings.PossibleUserWarning:lightning",
     # Lightning warns us about using the CPU when GPU/MPS is available
     "ignore:GPU available but not used.:UserWarning",
     "ignore:MPS available but not used.:UserWarning",

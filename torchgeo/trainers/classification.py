@@ -164,7 +164,7 @@ class ClassificationTask(BaseTask):
         loss: Tensor = self.criterion(y_hat, y)
         self.log("train_loss", loss)
         self.train_metrics(y_hat_hard, y)
-        self.log_dict(self.train_metrics)  # type: ignore[arg-type]
+        self.log_dict(self.train_metrics)
 
         return loss
 
@@ -185,7 +185,7 @@ class ClassificationTask(BaseTask):
         loss = self.criterion(y_hat, y)
         self.log("val_loss", loss)
         self.val_metrics(y_hat_hard, y)
-        self.log_dict(self.val_metrics)  # type: ignore[arg-type]
+        self.log_dict(self.val_metrics)
 
         if (
             batch_idx < 10
@@ -226,7 +226,7 @@ class ClassificationTask(BaseTask):
         loss = self.criterion(y_hat, y)
         self.log("test_loss", loss)
         self.test_metrics(y_hat_hard, y)
-        self.log_dict(self.test_metrics)  # type: ignore[arg-type]
+        self.log_dict(self.test_metrics)
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -288,7 +288,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         loss: Tensor = self.criterion(y_hat, y.to(torch.float))
         self.log("train_loss", loss)
         self.train_metrics(y_hat_hard, y)
-        self.log_dict(self.train_metrics)  # type: ignore[arg-type]
+        self.log_dict(self.train_metrics)
 
         return loss
 
@@ -309,7 +309,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         loss = self.criterion(y_hat, y.to(torch.float))
         self.log("val_loss", loss)
         self.val_metrics(y_hat_hard, y)
-        self.log_dict(self.val_metrics)  # type: ignore[arg-type]
+        self.log_dict(self.val_metrics)
 
         if (
             batch_idx < 10
@@ -349,7 +349,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         loss = self.criterion(y_hat, y.to(torch.float))
         self.log("test_loss", loss)
         self.test_metrics(y_hat_hard, y)
-        self.log_dict(self.test_metrics)  # type: ignore[arg-type]
+        self.log_dict(self.test_metrics)
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
