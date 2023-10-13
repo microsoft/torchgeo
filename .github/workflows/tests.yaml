@@ -9,22 +9,17 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MPLBACKEND: Agg
-    strategy:
-      matrix:
-        python-version: ['3.9', '3.10', '3.11']
     steps:
     - name: Clone repo
       uses: actions/checkout@v4.1.0
     - name: Set up python
       uses: actions/setup-python@v4.7.1
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.11'
     - name: Setup headless display for pyvista
       uses: pyvista/setup-headless-display-action@v2
     - name: Install apt dependencies (Linux)
-      run: |
-        sudo apt-get update
-        sudo apt-get install unrar
+      run: sudo apt-get install unrar
     - name: Install pip dependencies
       run: pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
     - name: Run pytest checks
