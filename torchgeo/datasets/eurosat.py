@@ -95,7 +95,7 @@ class EuroSAT(NonGeoClassificationDataset):
         "B06",
         "B07",
         "B08",
-        "B08A",
+        "B8A",
         "B09",
         "B10",
         "B11",
