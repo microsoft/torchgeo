@@ -16,8 +16,7 @@ transforms:
 
 # Other
 dependencies:
-- "environment.yml"
-- "setup.cfg"
+- "pyproject.toml"
 - "requirements/**"
 documentation:
 - "docs/**"

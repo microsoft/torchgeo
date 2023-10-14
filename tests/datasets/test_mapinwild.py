@@ -101,12 +101,12 @@ class TestMapInWild:
             MapInWild(root=str(tmp_path))
 
     def test_downloaded_not_extracted(self, tmp_path: Path) -> None:
-        pathname = os.path.join("tests", "data", "mapinwild", "**", "*.zip")
-        pathname_glob = glob.glob(pathname, recursive=True)
+        pathname = os.path.join("tests", "data", "mapinwild", "*", "*")
+        pathname_glob = glob.glob(pathname)
         root = str(tmp_path)
         for zipfile in pathname_glob:
             shutil.copy(zipfile, root)
-        MapInWild(root, download=True)
+        MapInWild(root, download=False)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         pathname = os.path.join("tests", "data", "mapinwild", "**", "*.zip")
