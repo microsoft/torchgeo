@@ -18,7 +18,6 @@ from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, cast, overload
-from urllib.parse import urlparse
 
 import numpy as np
 import rasterio
@@ -740,33 +739,16 @@ def percentile_normalization(
     return img_normalized
 
 
-# Supported URI schemes and their mapping to GDAL's VSI suffix.
-# TODO: extend for other cloud plaforms.
-SCHEMES = {
-    "ftp": "curl",
-    "gzip": "gzip",
-    "http": "curl",
-    "https": "curl",
-    "s3": "s3",
-    "tar": "tar",
-    "zip": "zip",
-    "file": "file",
-    "oss": "oss",
-    "gs": "gs",
-    "az": "az",
-}
-
-
 def path_is_vsi(path: str) -> bool:
     """Checks if the given path is pointing to a Virtual File System.
 
     NB! Does not check if the path exists, or if it is a dir or file.
 
-    vsi can for instance be Cloud Storage Blobs or zip-archives.
+    VSI can for instance be Cloud Storage Blobs or zip-archives.
     They will start with a prefix indicating this.
     For examples of these, see references for the two accepted syntaxes.
-    https://gdal.org/user/virtual_file_systems.html
-    https://rasterio.readthedocs.io/en/latest/topics/datasets.html
+    - https://gdal.org/user/virtual_file_systems.html
+    - https://rasterio.readthedocs.io/en/latest/topics/datasets.html
 
     Args:
         path: string representing a directory or file
@@ -774,15 +756,4 @@ def path_is_vsi(path: str) -> bool:
     Returns:
         True if path is on a virtual file system, else False
     """
-
-    def _is_apache_vfs_scheme(_path: str) -> bool:
-        scheme = urlparse(_path).scheme
-        schemes = scheme.split("+")
-        return set(schemes).issubset(set(SCHEMES))
-
-    def _is_gdal_vsi_scheme(_path: str) -> bool:
-        return _path.startswith("/vsi") and any(
-            _path.startswith("/vsi" + scheme) for scheme in set(SCHEMES.values())
-        )
-
-    return _is_apache_vfs_scheme(path) or _is_gdal_vsi_scheme(path)
+    return "://" in path or path.startswith("/vsi")
