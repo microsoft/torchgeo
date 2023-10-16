@@ -227,10 +227,11 @@ class TestRasterDataset:
     def test_files_property_for_virtual_files(self) -> None:
         # Tests only a subset of schemes and combinations.
         paths = [
-            "file://directory/file.tif" "az://azure_bucket/prefix/file.tif",
-            "zip+az://azure_bucket/prefix/archive.zip!folder_in_archive/file.tif",
+            "file://directory/file.tif",
             "zip://archive.zip!folder/file.tif",
+            "az://azure_bucket/prefix/file.tif",
             "/vsiaz/azure_bucket/prefix/file.tif",
+            "zip+az://azure_bucket/prefix/archive.zip!folder_in_archive/file.tif",
             "/vsizip//vsiaz/azure_bucket/prefix/archive.zip/folder_in_archive/file.tif",
         ]
         assert len(MockRasterDataset(paths).files) == len(paths)
