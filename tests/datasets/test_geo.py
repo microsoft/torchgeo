@@ -63,6 +63,14 @@ class CustomNonGeoDataset(NonGeoDataset):
         return 2
 
 
+class MockRasterDataset(RasterDataset):
+    def __init__(self, paths: Union[str, Iterable[str]]):
+        """Override super init because it raises FileNotFoundError.
+        Is used to test behaviour of property `files` for non-local paths.
+        """
+        self.paths = paths
+
+
 class TestGeoDataset:
     @pytest.fixture(scope="class")
     def dataset(self) -> GeoDataset:
@@ -211,6 +219,21 @@ class TestRasterDataset:
     )
     def test_files(self, paths: Union[str, Iterable[str]]) -> None:
         assert 1 <= len(NAIP(paths).files) <= 2
+
+    def test_ignore_non_existing_file_or_dir(self) -> None:
+        paths = ["/non/existing/file.tif", "/non/existing/dir"]
+        assert len(MockRasterDataset(paths).files) == 0
+
+    def test_files_property_for_vsi(self) -> None:
+        # Tests only a subset of schemes and combinations.
+        paths = [
+            "file://directory/file.tif" "az://azure_bucket/prefix/file.tif",
+            "zip+az://azure_bucket/prefix/archive.zip!folder_in_archive/file.tif",
+            "zip://archive.zip!folder/file.tif",
+            "/vsiaz/azure_bucket/prefix/file.tif",
+            "/vsizip//vsiaz/azure_bucket/prefix/archive.zip/folder_in_archive/file.tif",
+        ]
+        assert len(MockRasterDataset(paths).files) == len(paths)
 
     def test_getitem_single_file(self, naip: NAIP) -> None:
         x = naip[naip.bounds]
