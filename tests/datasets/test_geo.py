@@ -220,11 +220,11 @@ class TestRasterDataset:
     def test_files(self, paths: Union[str, Iterable[str]]) -> None:
         assert 1 <= len(NAIP(paths).files) <= 2
 
-    def test_ignore_non_existing_file_or_dir(self) -> None:
+    def test_files_property_for_non_existing_file_or_dir(self) -> None:
         paths = ["/non/existing/file.tif", "/non/existing/dir"]
         assert len(MockRasterDataset(paths).files) == 0
 
-    def test_files_property_for_vsi(self) -> None:
+    def test_files_property_for_virtual_files(self) -> None:
         # Tests only a subset of schemes and combinations.
         paths = [
             "file://directory/file.tif" "az://azure_bucket/prefix/file.tif",
