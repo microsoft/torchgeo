@@ -68,29 +68,6 @@ class UCMerced(NonGeoClassificationDataset):
     md5 = "5b7ec56793786b6dc8a908e8854ac0e4"
 
     base_dir = os.path.join("UCMerced_LandUse", "Images")
-    classes = [
-        "agricultural",
-        "airplane",
-        "baseballdiamond",
-        "beach",
-        "buildings",
-        "chaparral",
-        "denseresidential",
-        "forest",
-        "freeway",
-        "golfcourse",
-        "harbor",
-        "intersection",
-        "mediumresidential",
-        "mobilehomepark",
-        "overpass",
-        "parkinglot",
-        "river",
-        "runway",
-        "sparseresidential",
-        "storagetanks",
-        "tenniscourt",
-    ]
 
     splits = ["train", "val", "test"]
     split_urls = {

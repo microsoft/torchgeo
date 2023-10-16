@@ -31,16 +31,16 @@ class EuroSAT(NonGeoClassificationDataset):
 
     Dataset classes:
 
-    * Industrial Buildings
-    * Residential Buildings
     * Annual Crop
-    * Permanent Crop
-    * River
-    * Sea and Lake
+    * Forest
     * Herbaceous Vegetation
     * Highway
+    * Industrial Buildings
     * Pasture
-    * Forest
+    * Permanent Crop
+    * Residential Buildings
+    * River
+    * SeaLake
 
     This dataset uses the train/val/test splits defined in the "In-domain representation
     learning for remote sensing" paper:
@@ -73,18 +73,6 @@ class EuroSAT(NonGeoClassificationDataset):
         "val": "95de90f2aa998f70a3b2416bfe0687b4",
         "test": "7ae5ab94471417b6e315763121e67c5f",
     }
-    classes = [
-        "Industrial Buildings",
-        "Residential Buildings",
-        "Annual Crop",
-        "Permanent Crop",
-        "River",
-        "Sea and Lake",
-        "Herbaceous Vegetation",
-        "Highway",
-        "Pasture",
-        "Forest",
-    ]
 
     all_band_names = (
         "B01",
