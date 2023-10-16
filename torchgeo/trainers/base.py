@@ -31,7 +31,7 @@ class BaseTask(LightningModule, ABC):
     def __init__(self) -> None:
         """Initialize a new BaseTask instance."""
         super().__init__()
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore=['augmentation1','augmentation2'])
         self.configure_losses()
         self.configure_metrics()
         self.configure_models()
