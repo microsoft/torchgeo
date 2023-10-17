@@ -47,7 +47,7 @@ class NCCM(RasterDataset):
     is_image = False
 
     #need to add url
-    url = ""
+    url = "https://figshare.com/ndownloader/articles/13090442/versions/1"
     
     md5s = {
         2017: "a85341fa6248fd7e0badab6c",
@@ -175,12 +175,8 @@ class NCCM(RasterDataset):
     
     def _download(self) -> None:
         """Download the dataset."""
-        for year in self.years:
-            download_url(
-                self.url.format(year),
-                self.paths,
-                md5=self.md5s[year] if self.checksum else None,
-            )
+        
+        download_url(self.url)
 
     def _extract(self) -> None:
         """Extract the dataset."""
