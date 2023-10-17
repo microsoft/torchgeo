@@ -56,7 +56,7 @@ class SKIPPD(NonGeoDataset):
 
     url = "https://huggingface.co/datasets/torchgeo/skippd/resolve/main/{}"
     md5 = {
-        "forecast": "f4f3509ddcc83a55c433be9db2e51077",
+        "forecast": "72ff4e0db55a4888694f8745fcbbb61c",
         "nowcast": "722517a957807c4854f2b871b6476c40",
     }
 
