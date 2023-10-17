@@ -220,6 +220,7 @@ class SKIPPD(NonGeoDataset):
         # Check if the zip files have already been downloaded
         pathname = os.path.join(self.root, self.zipfile_name.format(self.task))
         if os.path.exists(pathname):
+            self._extract()
             return
 
         # Check if the user requested to download the dataset

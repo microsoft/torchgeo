@@ -23,7 +23,6 @@ np.random.seed(0)
 tasks = ["nowcast", "forecast"]
 data_file = "2017_2019_images_pv_processed_{}.hdf5"
 splits = ["trainval", "test"]
-aux_file = "{}_aux_data.zip"
 
 
 # Create dataset file
