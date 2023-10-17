@@ -16,6 +16,7 @@ Dataset,Type,Source,Size (px),Resolution (m)
 `L8 Biome`_,"Imagery, Masks",Landsat,"8,900x8,900","15, 30"
 `LandCover.ai Geo`_,"Imagery, Masks",Aerial,"4,200--9,500",0.25--0.5
 `Landsat`_,Imagery,Landsat,"8,900x8,900",30
+`Modis`_,Imagery,"Terra or Aqua",-,250
 `NAIP`_,Imagery,Aerial,"6,100x7,600",1
 `NLCD`_,Masks,Landsat,-,30
 `Open Buildings`_,Geometries,"Maxar, CNES/Airbus",-,-

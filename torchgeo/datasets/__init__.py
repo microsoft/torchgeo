@@ -75,6 +75,7 @@ from .levircd import LEVIRCDPlus
 from .loveda import LoveDA
 from .mapinwild import MapInWild
 from .millionaid import MillionAID
+from .modis import Modis
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nlcd import NLCD
@@ -166,6 +167,7 @@ __all__ = (
     "Landsat7",
     "Landsat8",
     "Landsat9",
+    "Modis",
     "NAIP",
     "NLCD",
     "OpenBuildings",
