@@ -35,8 +35,8 @@ class TestSKIPPD:
         monkeypatch.setattr(torchgeo.datasets.skippd, "download_url", download_url)
 
         md5 = {
-            "nowcast": "6f5e54906927278b189f9281a2f54f39",
-            "forecast": "f3b5d7d5c28ba238144fa1e726c46969",
+            "nowcast": "f3d30a18efd4c5692c08e28d1de795c8",
+            "forecast": "849b29519338c9026dfbb8b6d295c4c4",
         }
         monkeypatch.setattr(SKIPPD, "md5", md5)
         url = os.path.join("tests", "data", "skippd", "{}")
