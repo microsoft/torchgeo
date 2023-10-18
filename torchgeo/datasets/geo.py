@@ -10,7 +10,7 @@ import os
 import re
 import sys
 from collections.abc import Iterable, Sequence
-from typing import Any, Callable, Optional, Union, cast
+from typing import Any, Callable, Optional, cast
 
 import fiona
 import fiona.transform
@@ -294,7 +294,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         """
         # Make iterable
         if isinstance(self.paths, tuple(Path)):
-            paths: Iterable[Union[Path[0], Path[1], Path[2]]] = [self.paths]
+            paths: Iterable[Path] = [self.paths]
         else:
             paths = self.paths
 
@@ -754,7 +754,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
 
     def __init__(
         self,
-        root: Union[Path[0], Path[1], Path[2], Path[3]] = "data",
+        root: Path = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         loader: Optional[Callable[[str], Any]] = pil_loader,
         is_valid_file: Optional[Callable[[str], bool]] = None,
