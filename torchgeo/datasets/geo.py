@@ -284,7 +284,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         self._res = new_res
 
     @property
-    def files(self) -> set[Union[str, os.PathLike]]:
+    def files(self) -> set[Path[0:4]]:
         """A list of all files in the dataset.
 
         Returns:
@@ -293,13 +293,13 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         .. versionadded:: 0.5
         """
         # Make iterable
-        if isinstance(self.paths, (str, os.PathLike)):
-            paths: Iterable[Union[str, os.PathLike]] = [self.paths]
+        if isinstance(self.paths, tuple(Path[0:4])):
+            paths: Iterable[Union[Path[0], Path[1], Path[2]]] = [self.paths]
         else:
             paths = self.paths
 
         # Using set to remove any duplicates if directories are overlapping
-        files: set[Union[str, os.PathLike]] = set()
+        files: set[str] = set()
         for path in paths:
             if os.path.isdir(path):
                 pathname = os.path.join(path, "**", self.filename_glob)
@@ -754,7 +754,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
 
     def __init__(
         self,
-        root: Union[str, os.PathLike] = "data",
+        root: Union[Path[0], Path[1], Path[2], Path[3]] = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         loader: Optional[Callable[[str], Any]] = pil_loader,
         is_valid_file: Optional[Callable[[str], bool]] = None,

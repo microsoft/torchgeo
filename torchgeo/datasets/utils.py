@@ -17,8 +17,8 @@ import tarfile
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, cast, overload, TypeAlias, Union
-
+from typing import Any, cast, overload, Union
+from typing_extensions import TypeAlias
 import numpy as np
 import rasterio
 import torch
