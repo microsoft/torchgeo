@@ -17,7 +17,7 @@ import tarfile
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, cast, overload, Union
+from typing import Any, Union, cast, overload
 import numpy as np
 import rasterio
 import torch
@@ -745,6 +745,8 @@ def check_instance_type(objects: Union[Path, Iterable[Path]]) -> bool:
         objects = [objects]
     checks = []
     for object in objects:
-        checks.append(isinstance(object, os.PathLike) and (
-            isinstance(str(object), str) or hasattr(object, 'decode')))
+        checks.append(
+            isinstance(object, os.PathLike)
+            and (isinstance(str(object), str) or hasattr(object, "decode"))
+        )
     return all(checks)

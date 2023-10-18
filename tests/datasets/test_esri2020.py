@@ -47,7 +47,7 @@ class TestEsri2020:
         assert isinstance(x["mask"], torch.Tensor)
 
     def test_already_extracted(self, dataset: Esri2020) -> None:
-        Esri2020(dataset.paths, download=True)
+        Esri2020(dataset.paths, download=True)  # type: ignore
 
     def test_not_extracted(self, tmp_path: Path) -> None:
         url = os.path.join(

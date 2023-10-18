@@ -61,7 +61,7 @@ class TestCanadianBuildingFootprints:
         assert isinstance(ds, UnionDataset)
 
     def test_already_downloaded(self, dataset: CanadianBuildingFootprints) -> None:
-        CanadianBuildingFootprints(dataset.paths, download=True)
+        CanadianBuildingFootprints(dataset.paths, download=True)    # type: ignore
 
     def test_plot(self, dataset: CanadianBuildingFootprints) -> None:
         query = dataset.bounds

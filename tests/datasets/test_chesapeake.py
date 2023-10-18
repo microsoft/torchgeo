@@ -59,7 +59,7 @@ class TestChesapeake13:
         assert isinstance(ds, UnionDataset)
 
     def test_already_extracted(self, dataset: Chesapeake13) -> None:
-        Chesapeake13(dataset.paths, download=True)
+        Chesapeake13(dataset.paths, download=True)  # type: ignore
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         url = os.path.join(

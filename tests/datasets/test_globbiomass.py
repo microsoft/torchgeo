@@ -47,7 +47,7 @@ class TestGlobBiomass:
         assert isinstance(x["mask"], torch.Tensor)
 
     def test_already_extracted(self, dataset: GlobBiomass) -> None:
-        GlobBiomass(dataset.paths)
+        GlobBiomass(dataset.paths)  # type: ignore
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):

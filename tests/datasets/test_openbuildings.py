@@ -67,7 +67,7 @@ class TestOpenBuildings:
         with open(os.path.join(tmp_path, "000_buildings.csv.gz"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
-            OpenBuildings(dataset.paths, checksum=True)
+            OpenBuildings(dataset.paths, checksum=True)  # type: ignore
 
     def test_no_meta_data_found(self, tmp_path: Path) -> None:
         false_root = os.path.join(tmp_path, "empty")
@@ -85,7 +85,7 @@ class TestOpenBuildings:
             json.dump(content, f)
 
         with pytest.raises(FileNotFoundError, match="data was found in"):
-            OpenBuildings(dataset.paths)
+            OpenBuildings(dataset.paths)  # type: ignore
 
     def test_getitem(self, dataset: OpenBuildings) -> None:
         x = dataset[dataset.bounds]
