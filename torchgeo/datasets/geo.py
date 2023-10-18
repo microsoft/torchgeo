@@ -72,7 +72,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
        dataset = landsat7 | landsat8
     """
 
-    paths: Union[str, Iterable[str]]
+    paths: Union[str, Iterable[str],os.PathLike]
     _crs = CRS.from_epsg(4326)
     _res = 0.0
 
@@ -289,6 +289,8 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         # Make iterable
         if isinstance(self.paths, str):
             paths: Iterable[str] = [self.paths]
+        elif isinstance(self.paths, os.PathLike):
+            paths: Iterable[os.PathLike] = [self.paths]
         else:
             paths = self.paths
 
@@ -356,7 +358,7 @@ class RasterDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[str, Iterable[str],os.PathLike] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
@@ -574,7 +576,7 @@ class VectorDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[str, Iterable[str],os.PathLike] = "data",
         crs: Optional[CRS] = None,
         res: float = 0.0001,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
