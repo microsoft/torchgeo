@@ -738,3 +738,13 @@ def percentile_normalization(
         (img - lower_percentile) / (upper_percentile - lower_percentile + 1e-5), 0, 1
     )
     return img_normalized
+
+
+def check_instance_type(objects: Union[Path, Iterable[Path]]) -> bool:
+    if not isinstance(objects, Iterable):
+        objects = [objects]
+    checks = []
+    for object in objects:
+        checks.append(isinstance(object, os.PathLike) and (
+            isinstance(str(object), str) or hasattr(object, 'decode')))
+    return all(checks)

@@ -32,6 +32,7 @@ from torchvision.datasets.folder import default_loader as pil_loader
 from .utils import (
     BoundingBox,
     Path,
+    check_instance_type,
     concat_samples,
     disambiguate_timestamp,
     merge_samples,
@@ -78,7 +79,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
        dataset = landsat7 | landsat8
     """
 
-    paths: Path
+    paths: Union[Path, Iterable[Path]]
     _crs = CRS.from_epsg(4326)
     _res = 0.0
 
@@ -293,10 +294,11 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         .. versionadded:: 0.5
         """
         # Make iterable
-        if isinstance(self.paths, Path):
-            paths: Iterable[Path] = [self.paths]
+        paths: Iterable[Path]
+        if isinstance(self.paths, (str, bytes)) or check_instance_type(self.paths):
+            paths = [self.paths]  # type: ignore
         else:
-            paths: Path = self.paths
+            paths = self.paths  # type: ignore
 
         # Using set to remove any duplicates if directories are overlapping
         files: set[Path] = set()
@@ -398,7 +400,7 @@ class RasterDataset(GeoDataset):
         i = 0
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         for filepath in self.files:
-            match = re.match(filename_regex, os.path.basename(filepath))
+            match = re.match(filename_regex, os.path.basename(filepath))  # type: ignore
             if match is not None:
                 try:
                     with rasterio.open(filepath) as src:
@@ -438,7 +440,6 @@ class RasterDataset(GeoDataset):
             if self.bands:
                 msg += f" with `bands={self.bands}`"
             raise FileNotFoundError(msg)
-        print(paths, filepath)
         if not self.separate_files:
             self.band_indexes = None
             if self.bands:
@@ -635,7 +636,8 @@ class VectorDataset(GeoDataset):
                 i += 1
 
         if i == 0:
-            msg = f"No {self.__class__.__name__} data was found in `root='{paths}'`"
+            str_path = str(paths)
+            msg = f"No {self.__class__.__name__} data was found in `root='{str_path}'`"
             raise FileNotFoundError(msg)
 
         self._crs = crs

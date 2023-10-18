@@ -100,7 +100,7 @@ class CanadianBuildingFootprints(VectorDataset):
                 + "You can use download=True to download it"
             )
 
-        super().__init__(paths, crs, res, transforms)
+        super().__init__(paths, crs, res, transforms)  # type: ignore
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
