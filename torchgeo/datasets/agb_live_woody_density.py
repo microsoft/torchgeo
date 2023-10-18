@@ -5,15 +5,14 @@
 
 import json
 import os
-from collections.abc import Iterable
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import download_url
+from .utils import Path, download_url
 
 
 class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
@@ -59,7 +58,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str], os.PathLike, Iterable[os.PathLike]] = "data",
+        paths: Path = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,

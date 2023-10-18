@@ -29,7 +29,13 @@ from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
 
-from .utils import BoundingBox, concat_samples, disambiguate_timestamp, merge_samples
+from .utils import (
+    BoundingBox,
+    concat_samples,
+    disambiguate_timestamp,
+    merge_samples,
+    Path,
+)
 
 
 class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
@@ -72,7 +78,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
        dataset = landsat7 | landsat8
     """
 
-    paths: Union[str, Iterable[str], os.PathLike, Iterable[os.PathLike]]
+    paths: Path
     _crs = CRS.from_epsg(4326)
     _res = 0.0
 
@@ -356,7 +362,7 @@ class RasterDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str], os.PathLike, Iterable[os.PathLike]] = "data",
+        paths: Path = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
@@ -574,7 +580,7 @@ class VectorDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str], os.PathLike, Iterable[os.PathLike]] = "data",
+        paths: Path = "data",
         crs: Optional[CRS] = None,
         res: float = 0.0001,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,

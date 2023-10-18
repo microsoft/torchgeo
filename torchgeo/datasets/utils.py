@@ -17,7 +17,7 @@ import tarfile
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, cast, overload
+from typing import Any, cast, overload, TypeAlias, Union
 
 import numpy as np
 import rasterio
@@ -26,6 +26,14 @@ from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
 
+Path: TypeAlias = Union[
+    str,
+    bytes,
+    os.PathLike[str],
+    os.PathLike[bytes],
+    Iterable[os.PathLike[str]],
+    Iterable[os.PathLike[bytes]],
+]
 __all__ = (
     "check_integrity",
     "download_url",
