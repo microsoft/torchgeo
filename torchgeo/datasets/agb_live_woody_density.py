@@ -115,7 +115,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        if (isinstance(self.paths, os.PathLike)):
+        if isinstance(self.paths, os.PathLike):
             self.paths = str(self.paths)
 
         print(self.url, self.paths, self.base_filename)
