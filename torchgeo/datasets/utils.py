@@ -26,14 +26,7 @@ from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
 
-Path: TypeAlias = Union[
-    str,
-    bytes,
-    os.PathLike[str],
-    os.PathLike[bytes],
-    Iterable[os.PathLike[str]],
-    Iterable[os.PathLike[bytes]],
-]
+Path: TypeAlias = Union[str, bytes, os.PathLike[str], os.PathLike[bytes]]
 __all__ = (
     "check_integrity",
     "download_url",

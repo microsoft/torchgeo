@@ -284,7 +284,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         self._res = new_res
 
     @property
-    def files(self) -> set[Path[0:4]]:
+    def files(self) -> set[Path]:
         """A list of all files in the dataset.
 
         Returns:
@@ -293,7 +293,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         .. versionadded:: 0.5
         """
         # Make iterable
-        if isinstance(self.paths, tuple(Path[0:4])):
+        if isinstance(self.paths, tuple(Path)):
             paths: Iterable[Union[Path[0], Path[1], Path[2]]] = [self.paths]
         else:
             paths = self.paths
