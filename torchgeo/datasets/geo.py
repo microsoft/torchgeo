@@ -72,7 +72,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
        dataset = landsat7 | landsat8
     """
 
-    paths: Union[str, Iterable[str],os.PathLike]
+    paths: Union[str, Iterable[str], os.PathLike, Iterable[os.PathLike]]
     _crs = CRS.from_epsg(4326)
     _res = 0.0
 
@@ -278,7 +278,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         self._res = new_res
 
     @property
-    def files(self) -> set[str]:
+    def files(self) -> set[Union[str, os.PathLike]]:
         """A list of all files in the dataset.
 
         Returns:
@@ -287,15 +287,13 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         .. versionadded:: 0.5
         """
         # Make iterable
-        if isinstance(self.paths, str):
-            paths: Iterable[str] = [self.paths]
-        elif isinstance(self.paths, os.PathLike):
-            paths: Iterable[os.PathLike] = [self.paths]
+        if isinstance(self.paths, (str, os.PathLike)):
+            paths: Iterable[Union[str, os.PathLike]] = [self.paths]
         else:
             paths = self.paths
 
         # Using set to remove any duplicates if directories are overlapping
-        files: set[str] = set()
+        files: set[Union[str, os.PathLike]] = set()
         for path in paths:
             if os.path.isdir(path):
                 pathname = os.path.join(path, "**", self.filename_glob)
@@ -358,7 +356,7 @@ class RasterDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str],os.PathLike] = "data",
+        paths: Union[str, Iterable[str], os.PathLike, Iterable[os.PathLike]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
@@ -434,7 +432,7 @@ class RasterDataset(GeoDataset):
             if self.bands:
                 msg += f" with `bands={self.bands}`"
             raise FileNotFoundError(msg)
-
+        print(paths, filepath)
         if not self.separate_files:
             self.band_indexes = None
             if self.bands:
@@ -576,7 +574,7 @@ class VectorDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str],os.PathLike] = "data",
+        paths: Union[str, Iterable[str], os.PathLike, Iterable[os.PathLike]] = "data",
         crs: Optional[CRS] = None,
         res: float = 0.0001,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -750,7 +748,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[str, os.PathLike] = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         loader: Optional[Callable[[str], Any]] = pil_loader,
         is_valid_file: Optional[Callable[[str], bool]] = None,
@@ -769,7 +767,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         # When transform & target_transform are None, ImageFolder.__getitem__(index)
         # returns a PIL.Image and int for image and label, respectively
         super().__init__(
-            root=root,
+            root=str(root),
             transform=None,
             target_transform=None,
             loader=loader,
