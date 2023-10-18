@@ -5,7 +5,7 @@
 
 import json
 import os
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Iterable, Optional, Union
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -58,7 +58,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
     def __init__(
         self,
-        paths: Path = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,

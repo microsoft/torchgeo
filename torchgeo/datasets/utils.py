@@ -18,13 +18,13 @@ from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, cast, overload, Union
-from typing_extensions import TypeAlias
 import numpy as np
 import rasterio
 import torch
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
+from typing_extensions import TypeAlias
 
 Path: TypeAlias = Union[str, bytes, os.PathLike[str], os.PathLike[bytes]]
 __all__ = (

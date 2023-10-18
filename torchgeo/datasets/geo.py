@@ -10,7 +10,7 @@ import os
 import re
 import sys
 from collections.abc import Iterable, Sequence
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, Optional, Union, cast
 
 import fiona
 import fiona.transform
@@ -31,10 +31,10 @@ from torchvision.datasets.folder import default_loader as pil_loader
 
 from .utils import (
     BoundingBox,
+    Path,
     concat_samples,
     disambiguate_timestamp,
     merge_samples,
-    Path,
 )
 
 
@@ -293,16 +293,16 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         .. versionadded:: 0.5
         """
         # Make iterable
-        if isinstance(self.paths, tuple(Path)):
+        if isinstance(self.paths, Path):
             paths: Iterable[Path] = [self.paths]
         else:
-            paths = self.paths
+            paths: Path = self.paths
 
         # Using set to remove any duplicates if directories are overlapping
-        files: set[str] = set()
+        files: set[Path] = set()
         for path in paths:
             if os.path.isdir(path):
-                pathname = os.path.join(path, "**", self.filename_glob)
+                pathname = os.path.join(str(path), "**", self.filename_glob)
                 files |= set(glob.iglob(pathname, recursive=True))
             else:
                 files.add(path)
@@ -362,7 +362,7 @@ class RasterDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: Path = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
@@ -433,7 +433,7 @@ class RasterDataset(GeoDataset):
         if i == 0:
             msg = (
                 f"No {self.__class__.__name__} data was found "
-                f"in `paths={self.paths!r}'`"
+                f"in `paths={str(self.paths)!r}'`"
             )
             if self.bands:
                 msg += f" with `bands={self.bands}`"
@@ -754,7 +754,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
 
     def __init__(
         self,
-        root: Path = "data",
+        root: Union[Path, Iterable[Path]] = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         loader: Optional[Callable[[str], Any]] = pil_loader,
         is_valid_file: Optional[Callable[[str], bool]] = None,
