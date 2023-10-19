@@ -3,48 +3,60 @@
 
 """EuroSAT datamodule."""
 
-from typing import Any
+from typing import Any, List
 
 import torch
 
 from ..datasets import EuroSAT, EuroSAT100
 from .geo import NonGeoDataModule
 
-MEAN = torch.tensor(
-    [
-        1354.40546513,
-        1118.24399958,
-        1042.92983953,
-        947.62620298,
-        1199.47283961,
-        1999.79090914,
-        2369.22292565,
-        2296.82608323,
-        732.08340178,
-        12.11327804,
-        1819.01027855,
-        1118.92391149,
-        2594.14080798,
-    ]
-)
+ALL_BANDS = [
+    "B01",
+    "B02",
+    "B03",
+    "B04",
+    "B05",
+    "B06",
+    "B07",
+    "B08",
+    "B8A",
+    "B09",
+    "B10",
+    "B11",
+    "B12",
+]
 
-STD = torch.tensor(
-    [
-        245.71762908,
-        333.00778264,
-        395.09249139,
-        593.75055589,
-        566.4170017,
-        861.18399006,
-        1086.63139075,
-        1117.98170791,
-        404.91978886,
-        4.77584468,
-        1002.58768311,
-        761.30323499,
-        1231.58581042,
-    ]
-)
+MEAN = {
+    "B01": 1354.40546513,
+    "B02": 1118.24399958,
+    "B03": 1042.92983953,
+    "B04": 947.62620298,
+    "B05": 1199.47283961,
+    "B06": 1999.79090914,
+    "B07": 2369.22292565,
+    "B08": 2296.82608323,
+    "B8A": 732.08340178,
+    "B09": 12.11327804,
+    "B10": 1819.01027855,
+    "B11": 1118.92391149,
+    "B12": 2594.14080798,
+}
+
+STD = {
+    "B01": 245.71762908,
+    "B02": 333.00778264,
+    "B03": 395.09249139,
+    "B04": 593.75055589,
+    "B05": 566.4170017,
+    "B06": 861.18399006,
+    "B07": 1086.63139075,
+    "B08": 1117.98170791,
+    "B8A": 404.91978886,
+    "B09": 4.77584468,
+    "B10": 1002.58768311,
+    "B11": 761.30323499,
+    "B12": 1231.58581042,
+}
 
 
 class EuroSATDataModule(NonGeoDataModule):
@@ -55,11 +67,8 @@ class EuroSATDataModule(NonGeoDataModule):
     .. versionadded:: 0.2
     """
 
-    mean = MEAN
-    std = STD
-
     def __init__(
-        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+        self, batch_size: int = 64, num_workers: int = 0, bands: List[str] = ALL_BANDS, **kwargs: Any
     ) -> None:
         """Initialize a new EuroSATDataModule instance.
 
@@ -69,7 +78,9 @@ class EuroSATDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.EuroSAT`.
         """
-        super().__init__(EuroSAT, batch_size, num_workers, **kwargs)
+        self.mean = torch.tensor([MEAN[b] for b in bands])
+        self.std = torch.tensor([STD[b] for b in bands])
+        super().__init__(EuroSAT, batch_size, num_workers, bands, **kwargs)
 
 
 class EuroSAT100DataModule(NonGeoDataModule):
@@ -80,11 +91,8 @@ class EuroSAT100DataModule(NonGeoDataModule):
     .. versionadded:: 0.5
     """
 
-    mean = MEAN
-    std = STD
-
     def __init__(
-        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+        self, batch_size: int = 64, num_workers: int = 0, bands: List[str] = ALL_BANDS, **kwargs: Any
     ) -> None:
         """Initialize a new EuroSAT100DataModule instance.
 
@@ -94,4 +102,6 @@ class EuroSAT100DataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.EuroSAT100`.
         """
-        super().__init__(EuroSAT100, batch_size, num_workers, **kwargs)
+        self.mean = torch.tensor([MEAN[b] for b in bands])
+        self.std = torch.tensor([STD[b] for b in bands])
+        super().__init__(EuroSAT100, batch_size, num_workers, bands, **kwargs)
