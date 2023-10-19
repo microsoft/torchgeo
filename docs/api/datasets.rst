@@ -129,6 +129,9 @@ NAIP
 
 .. autoclass:: NAIP
 
+NCCM
+.. autoclass::NCCM
+
 NLCD
 ^^^^
 
