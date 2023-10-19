@@ -742,7 +742,7 @@ def percentile_normalization(
     return img_normalized
 
 
-def check_instance_type(objects: Union[Path, Iterable[Path]]) -> bool:
+def check_instance_type(objects: Path | Iterable[Path]) -> bool:
     if not isinstance(objects, Iterable):
         objects = [objects]
     checks = []
