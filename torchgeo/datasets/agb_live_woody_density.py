@@ -5,7 +5,8 @@
 
 import json
 import os
-from typing import Any, Callable, Iterable, Optional, Union
+from collections.abc import Iterable
+from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure

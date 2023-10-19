@@ -27,7 +27,6 @@ from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
 from typing_extensions import TypeAlias
 
-Path: TypeAlias = Union[str, bytes, os.PathLike[str], os.PathLike[bytes]]
 __all__ = (
     "check_integrity",
     "download_url",
@@ -46,6 +45,8 @@ __all__ = (
     "rgb_to_mask",
     "percentile_normalization",
 )
+
+Path: TypeAlias = Union[str, bytes, os.PathLike[str], os.PathLike[bytes]]
 
 
 class _rarfile:
