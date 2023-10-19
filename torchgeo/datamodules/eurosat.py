@@ -79,8 +79,8 @@ class EuroSATDataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.EuroSAT`.
         """
         super().__init__(EuroSAT, batch_size, num_workers, **kwargs)
-        
-        bands = kwargs.get('bands', None)
+
+        bands = kwargs.get("bands", None)
         if bands:
             self.mean = torch.tensor([MEAN[b] for b in bands])
             self.std = torch.tensor([STD[b] for b in bands])
@@ -110,7 +110,7 @@ class EuroSAT100DataModule(NonGeoDataModule):
         """
         super().__init__(EuroSAT100, batch_size, num_workers, **kwargs)
 
-        bands = kwargs.get('bands', None)
+        bands = kwargs.get("bands", None)
         if bands:
             self.mean = torch.tensor([MEAN[b] for b in bands])
             self.std = torch.tensor([STD[b] for b in bands])
