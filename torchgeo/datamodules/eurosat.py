@@ -3,7 +3,7 @@
 
 """EuroSAT datamodule."""
 
-from typing import Any, List
+from typing import Any
 
 import torch
 
