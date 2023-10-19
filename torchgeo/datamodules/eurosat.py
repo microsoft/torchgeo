@@ -68,7 +68,7 @@ class EuroSATDataModule(NonGeoDataModule):
     """
 
     def __init__(
-        self, batch_size: int = 64, num_workers: int = 0, bands: List[str] = ALL_BANDS, **kwargs: Any
+        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
         """Initialize a new EuroSATDataModule instance.
 
@@ -78,9 +78,15 @@ class EuroSATDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.EuroSAT`.
         """
-        self.mean = torch.tensor([MEAN[b] for b in bands])
-        self.std = torch.tensor([STD[b] for b in bands])
-        super().__init__(EuroSAT, batch_size, num_workers, bands, **kwargs)
+        super().__init__(EuroSAT, batch_size, num_workers, **kwargs)
+        
+        bands = kwargs.get('bands', None)
+        if bands:
+            self.mean = torch.tensor([MEAN[b] for b in bands])
+            self.std = torch.tensor([STD[b] for b in bands])
+        else:
+            self.mean = torch.tensor([MEAN[b] for b in ALL_BANDS])
+            self.std = torch.tensor([STD[b] for b in ALL_BANDS])
 
 
 class EuroSAT100DataModule(NonGeoDataModule):
@@ -92,7 +98,7 @@ class EuroSAT100DataModule(NonGeoDataModule):
     """
 
     def __init__(
-        self, batch_size: int = 64, num_workers: int = 0, bands: List[str] = ALL_BANDS, **kwargs: Any
+        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
         """Initialize a new EuroSAT100DataModule instance.
 
@@ -102,6 +108,12 @@ class EuroSAT100DataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.EuroSAT100`.
         """
-        self.mean = torch.tensor([MEAN[b] for b in bands])
-        self.std = torch.tensor([STD[b] for b in bands])
-        super().__init__(EuroSAT100, batch_size, num_workers, bands, **kwargs)
+        super().__init__(EuroSAT100, batch_size, num_workers, **kwargs)
+
+        bands = kwargs.get('bands', None)
+        if bands:
+            self.mean = torch.tensor([MEAN[b] for b in bands])
+            self.std = torch.tensor([STD[b] for b in bands])
+        else:
+            self.mean = torch.tensor([MEAN[b] for b in ALL_BANDS])
+            self.std = torch.tensor([STD[b] for b in ALL_BANDS])
