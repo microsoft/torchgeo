@@ -23,7 +23,9 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestOSCD:
-    @pytest.fixture(params=zip([OSCD.all_band_names, OSCD.rgb_bands], ["train", "test"]))
+    @pytest.fixture(
+        params=zip([OSCD.all_band_names, OSCD.rgb_bands], ["train", "test"])
+    )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> OSCD:
