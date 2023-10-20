@@ -742,7 +742,7 @@ def percentile_normalization(
     return img_normalized
 
 
-def check_instance_type(paths: Union[Path, Iterable[Path]]) -> bool:
+def check_instance_type(paths: Path | Iterable[Path]) -> bool:
     """Checks if the paths are of valid type and are collections of Path object or not.
 
     Args:
