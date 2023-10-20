@@ -10,22 +10,6 @@ import torch
 from ..datasets import EuroSAT, EuroSAT100
 from .geo import NonGeoDataModule
 
-ALL_BANDS = [
-    "B01",
-    "B02",
-    "B03",
-    "B04",
-    "B05",
-    "B06",
-    "B07",
-    "B08",
-    "B8A",
-    "B09",
-    "B10",
-    "B11",
-    "B12",
-]
-
 MEAN = {
     "B01": 1354.40546513,
     "B02": 1118.24399958,
@@ -80,7 +64,7 @@ class EuroSATDataModule(NonGeoDataModule):
         """
         super().__init__(EuroSAT, batch_size, num_workers, **kwargs)
 
-        bands = kwargs.get("bands", ALL_BANDS)
+        bands = kwargs.get("bands", EuroSAT.all_band_names)
         self.mean = torch.tensor([MEAN[b] for b in bands])
         self.std = torch.tensor([STD[b] for b in bands])
 
@@ -106,6 +90,6 @@ class EuroSAT100DataModule(NonGeoDataModule):
         """
         super().__init__(EuroSAT100, batch_size, num_workers, **kwargs)
 
-        bands = kwargs.get("bands", ALL_BANDS)
+        bands = kwargs.get("bands", EuroSAT.all_band_names)
         self.mean = torch.tensor([MEAN[b] for b in bands])
         self.std = torch.tensor([STD[b] for b in bands])
