@@ -126,11 +126,12 @@ class OSCD(NonGeoDataset):
         self._validate_bands(bands)
         self.bands = bands
         self.all_band_indices = [self.all_band_names.index(b) for b in bands]
+        self.rgb_indices = []
 
         try:
             self.rgb_indices = [bands.index(band) for band in self.rgb_bands]
         except ValueError:
-            self.rgb_indices = []
+            pass
 
         self.root = root
         self.split = split
