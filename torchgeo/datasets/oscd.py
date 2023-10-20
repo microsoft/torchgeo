@@ -78,11 +78,31 @@ class OSCD(NonGeoDataset):
 
     colormap = ["blue"]
 
+    all_band_names = (
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B07",
+        "B08",
+        "B8A",
+        "B09",
+        "B10",
+        "B11",
+        "B12",
+    )
+
+    rgb_bands = ("B04", "B03", "B02")
+
+    BAND_SETS = {"all": all_band_names, "rgb": rgb_bands}
+
     def __init__(
         self,
         root: str = "data",
         split: str = "train",
-        bands: str = "all",
+        bands: Sequence[str] = BAND_SETS["all"],
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -103,7 +123,9 @@ class OSCD(NonGeoDataset):
                 don't match
         """
         assert split in self.splits
-        assert bands in ["rgb", "all"]
+        self._validate_bands(bands)
+        self.bands = bands
+        self.band_indices = [self.all_band_names.index(b) for b in bands if b in self.all_band_names]
 
         self.root = root
         self.split = split
@@ -170,8 +192,8 @@ class OSCD(NonGeoDataset):
                 )
 
             images1, images2 = get_image_paths(1), get_image_paths(2)
-            if self.bands == "rgb":
-                images1, images2 = images1[1:4][::-1], images2[1:4][::-1]
+            images1 = [images1[i] for i in self.band_indices][::-1]
+            images2 = [images2[i] for i in self.band_indices][::-1]
 
             with open(os.path.join(images_root, region, "dates.txt")) as f:
                 dates = tuple(
@@ -269,6 +291,23 @@ class OSCD(NonGeoDataset):
         pathname = os.path.join(self.root, self.zipfile_glob)
         for zipfile in glob.iglob(pathname):
             extract_archive(zipfile)
+
+    def _validate_bands(self, bands: Sequence[str]) -> None:
+        """Validate list of bands.
+
+        Args:
+            bands: user-provided sequence of bands to load
+
+        Raises:
+            AssertionError: if ``bands`` is not a sequence
+            ValueError: if an invalid band name is provided
+
+        .. versionadded:: 0.3
+        """
+        assert isinstance(bands, Sequence), "'bands' must be a sequence"
+        for band in bands:
+            if band not in self.all_band_names:
+                raise ValueError(f"'{band}' is an invalid band name.")
 
     def plot(
         self,
