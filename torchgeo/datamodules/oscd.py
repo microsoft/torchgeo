@@ -89,7 +89,7 @@ class OSCDDataModule(NonGeoDataModule):
         self.aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=["image", "mask"],
+            data_keys=["image1", "image2", "mask"],
         )
 
     def setup(self, stage: str) -> None:
