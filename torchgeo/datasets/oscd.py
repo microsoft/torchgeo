@@ -125,8 +125,12 @@ class OSCD(NonGeoDataset):
         assert split in self.splits
         self._validate_bands(bands)
         self.bands = bands
-        self.band_indices = [self.all_band_names.index(b) for b in bands]
-        self.rgb_band_indices = [self.rgb_bands.index(b) for b in bands]
+        self.all_band_indices = [self.all_band_names.index(b) for b in bands if b in self.all_band_names]
+
+        try:
+            self.rgb_indices = [bands.index(band) for band in self.rgb_bands]
+        except ValueError:
+            self.rgb_indices = None
 
         self.root = root
         self.split = split
@@ -196,8 +200,8 @@ class OSCD(NonGeoDataset):
                 )
 
             images1, images2 = get_image_paths(1), get_image_paths(2)
-            images1 = [images1[i] for i in self.band_indices][::-1]
-            images2 = [images2[i] for i in self.band_indices][::-1]
+            images1 = [images1[i] for i in self.all_band_indices]
+            images2 = [images2[i] for i in self.all_band_indices]
 
             with open(os.path.join(images_root, region, "dates.txt")) as f:
                 dates = tuple(
@@ -333,13 +337,13 @@ class OSCD(NonGeoDataset):
         """
         ncols = 2
 
-        if not len(self.rgb_band_indices) == 3:
+        if not self.rgb_indices:
             raise ValueError(
                 "RGB bands must be present to use `plot` with Sentinel-2 imagery."
             )
 
         def get_masked(img: Tensor) -> "np.typing.NDArray[np.uint8]":
-            rgb_img = img[self.rgb_band_indices].float().numpy()
+            rgb_img = img[self.rgb_indices].float().numpy()
             per02 = np.percentile(rgb_img, 2)
             per98 = np.percentile(rgb_img, 98)
             rgb_img = (np.clip((rgb_img - per02) / (per98 - per02), 0, 1) * 255).astype(
