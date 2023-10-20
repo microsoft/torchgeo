@@ -130,7 +130,7 @@ class OSCD(NonGeoDataset):
         try:
             self.rgb_indices = [bands.index(band) for band in self.rgb_bands]
         except ValueError:
-            self.rgb_indices = None
+            self.rgb_indices = []
 
         self.root = root
         self.split = split
