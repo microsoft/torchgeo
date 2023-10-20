@@ -67,4 +67,4 @@ class TestOSCDDataModule:
         if datamodule.bands == OSCD.all_band_names:
             assert batch["image1"].shape[1] == 13
         else:
-            assert batch["imagea"].shape[1] == 3
+            assert batch["image1"].shape[1] == 3
