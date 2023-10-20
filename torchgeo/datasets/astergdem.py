@@ -10,6 +10,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
+from .utils import Path
 
 
 class AsterGDEM(RasterDataset):
@@ -45,7 +46,7 @@ class AsterGDEM(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, list[str]] = "data",
+        paths: Union[Path, list[Path]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,

@@ -105,7 +105,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
-                f"Dataset not found in `root={str(self.paths)}` and `download=False`, "
+                f"Dataset not found in `root={self.paths!r}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
                 "to automatically download the dataset."
             )
@@ -115,7 +115,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        if isinstance(self.paths, (str, bytes)) or check_instance_type(self.paths):
+        if check_instance_type(self.paths):
             self.paths = str(self.paths)
 
         assert isinstance(self.paths, str)

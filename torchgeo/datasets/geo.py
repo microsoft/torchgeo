@@ -295,10 +295,10 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         """
         # Make iterable
         paths: Iterable[Path]
-        if isinstance(self.paths, (str, bytes)) or check_instance_type(self.paths):
-            paths = [self.paths]  # type: ignore
+        if check_instance_type(self.paths):
+            paths = [self.paths]  # type: ignore[list-item]
         else:
-            paths = self.paths  # type: ignore
+            paths = self.paths  # type: ignore[assignment]
 
         # Using set to remove any duplicates if directories are overlapping
         files: set[Path] = set()
@@ -400,7 +400,7 @@ class RasterDataset(GeoDataset):
         i = 0
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         for filepath in self.files:
-            match = re.match(filename_regex, os.path.basename(filepath))  # type: ignore
+            match = re.match(filename_regex, os.path.basename(str(filepath)))
             if match is not None:
                 try:
                     with rasterio.open(filepath) as src:
@@ -435,7 +435,7 @@ class RasterDataset(GeoDataset):
         if i == 0:
             msg = (
                 f"No {self.__class__.__name__} data was found "
-                f"in `paths={str(self.paths)!r}'`"
+                f"in `paths={self.paths!r}'`"
             )
             if self.bands:
                 msg += f" with `bands={self.bands}`"
@@ -581,7 +581,7 @@ class VectorDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: Path = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: float = 0.0001,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,

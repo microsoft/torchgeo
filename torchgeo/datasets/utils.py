@@ -46,7 +46,7 @@ __all__ = (
     "percentile_normalization",
 )
 
-Path: TypeAlias = Union[str, bytes, os.PathLike[str], os.PathLike[bytes]]
+Path: TypeAlias = Union[str, bytes, os.PathLike[bytes], os.PathLike[str]]
 
 
 class _rarfile:
@@ -742,13 +742,20 @@ def percentile_normalization(
     return img_normalized
 
 
-def check_instance_type(objects: Path | Iterable[Path]) -> bool:
-    if not isinstance(objects, Iterable):
-        objects = [objects]
-    checks = []
-    for object in objects:
-        checks.append(
-            isinstance(object, os.PathLike)
-            and (isinstance(str(object), str) or hasattr(object, "decode"))
-        )
-    return all(checks)
+def check_instance_type(paths: Union[Path, Iterable[Path]]) -> bool:
+    """Checks if the paths are of valid type and are collections of Path object or not.
+
+    Args:
+        paths: The path object to check for.
+
+    Returns:
+        Result of the check for given path object.
+
+    .. versionadded:: 0.6
+    """
+    path_types = (str, bytes, os.PathLike)
+    is_not_iterable = False
+    if not isinstance(paths, Iterable) and not isinstance(paths, str):
+        paths = [paths]
+        is_not_iterable = True
+    return all([isinstance(path, path_types) for path in paths]) and is_not_iterable
