@@ -12,7 +12,7 @@ from torchgeo.datasets import OSCD
 
 
 class TestOSCDDataModule:
-    @pytest.fixture(params=[OSCD.all_band_names, OSCD.rgb_band_names])
+    @pytest.fixture(params=[OSCD.all_band_names, OSCD.rgb_bands])
     def datamodule(self, request: SubRequest) -> OSCDDataModule:
         bands = request.param
         root = os.path.join("tests", "data", "oscd")
