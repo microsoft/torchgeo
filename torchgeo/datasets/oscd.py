@@ -125,7 +125,7 @@ class OSCD(NonGeoDataset):
         assert split in self.splits
         self._validate_bands(bands)
         self.bands = bands
-        self.all_band_indices = [self.all_band_names.index(b) for b in bands if b in self.all_band_names]
+        self.all_band_indices = [self.all_band_names.index(b) for b in bands]
 
         try:
             self.rgb_indices = [bands.index(band) for band in self.rgb_bands]
