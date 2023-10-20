@@ -125,7 +125,8 @@ class OSCD(NonGeoDataset):
         assert split in self.splits
         self._validate_bands(bands)
         self.bands = bands
-        self.band_indices = [self.all_band_names.index(b) for b in bands if b in self.all_band_names]
+        self.band_indices = [self.all_band_names.index(b) for b in bands]
+        self.rgb_band_indices = [self.rgb_bands.index(b) for b in bands]
 
         self.root = root
         self.split = split
@@ -152,12 +153,15 @@ class OSCD(NonGeoDataset):
         image2 = self._load_image(files["images2"])
         mask = self._load_target(str(files["mask"]))
 
-        image = torch.cat([image1, image2])
-        sample = {"image": image, "mask": mask}
-
         if self.transforms is not None:
+            image = torch.cat([image1, image2])
+            sample = {"image": image, "mask": mask}
             sample = self.transforms(sample)
+            idx = sample["image"].shape[0] // 2
+            image1 = sample["image"][:idx]
+            image2 = sample["image"][idx:]
 
+        sample = {"image1": image1, "image2": image2, "mask": mask}
         return sample
 
     def __len__(self) -> int:
@@ -329,10 +333,13 @@ class OSCD(NonGeoDataset):
         """
         ncols = 2
 
-        rgb_inds = [3, 2, 1] if self.bands == "all" else [0, 1, 2]
+        if not len(self.rgb_band_indices) == 3:
+            raise ValueError(
+                "RGB bands must be present to use `plot` with Sentinel-2 imagery."
+            )
 
         def get_masked(img: Tensor) -> "np.typing.NDArray[np.uint8]":
-            rgb_img = img[rgb_inds].float().numpy()
+            rgb_img = img[self.rgb_band_indices].float().numpy()
             per02 = np.percentile(rgb_img, 2)
             per98 = np.percentile(rgb_img, 98)
             rgb_img = (np.clip((rgb_img - per02) / (per98 - per02), 0, 1) * 255).astype(
@@ -346,9 +353,8 @@ class OSCD(NonGeoDataset):
             )
             return array
 
-        idx = sample["image"].shape[0] // 2
-        image1 = get_masked(sample["image"][:idx])
-        image2 = get_masked(sample["image"][idx:])
+        image1 = get_masked(sample["image1"])
+        image2 = get_masked(sample["image2"])
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
         axs[0].imshow(image1)
         axs[0].axis("off")
