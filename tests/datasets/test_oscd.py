@@ -23,7 +23,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestOSCD:
-    @pytest.fixture(params=zip(["all", "rgb"], ["train", "test"]))
+    @pytest.fixture(params=zip([OSCD.all_band_names, OSCD.rgb_bands], ["train", "test"]))
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> OSCD:
@@ -72,12 +72,12 @@ class TestOSCD:
     def test_getitem(self, dataset: OSCD) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x["image"], torch.Tensor)
-        assert x["image"].ndim == 3
+        assert isinstance(x["image1"], torch.Tensor)
+        assert x["image1"].ndim == 3
         assert isinstance(x["mask"], torch.Tensor)
         assert x["mask"].ndim == 2
 
-        if dataset.bands == "rgb":
+        if dataset.bands == OSCD.rgb_bands:
             assert x["image"].shape[0] == 6
         else:
             assert x["image"].shape[0] == 26
