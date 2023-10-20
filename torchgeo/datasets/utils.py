@@ -161,7 +161,7 @@ def download_and_extract_archive(
     download_url(url, download_root, filename, md5)
 
     archive = os.path.join(download_root, filename)
-    print(f"Extracting {archive} to {extract_root}")
+    print(f"Extracting {archive} to {extract_root!r}")
     extract_archive(archive, extract_root)
 
 
