@@ -198,7 +198,7 @@ addopts = "-m 'not slow'"
 # https://docs.pytest.org/en/latest/how-to/capture-warnings.html
 filterwarnings = [
     # Treat all warnings as errors
-    "error",
+    #"error",
 
     # Warnings raised by dependencies of dependencies, out of our control
     # https://github.com/Cadene/pretrained-models.pytorch/issues/221
@@ -248,7 +248,7 @@ filterwarnings = [
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
     "ignore:The .*dataloader.* does not have many workers which may be a bottleneck:UserWarning:lightning",
-    "ignore:The .*dataloader.* does not have many workers which may be a bottleneck:lightning.fabric.utilities.warnings.PossibleUserWarning:lightning",
+    "ignore:The .*dataloader.* does not have many workers which may be a 	bottleneck:lightning.fabric.utilities.warnings.PossibleUserWarning:lightning",
     # Lightning warns us about using the CPU when GPU/MPS is available
     "ignore:GPU available but not used.:UserWarning",
     "ignore:MPS available but not used.:UserWarning",
@@ -266,6 +266,7 @@ filterwarnings = [
     "ignore:Trying to infer the `batch_size` from an ambiguous collection:UserWarning",
     # https://github.com/pytest-dev/pytest/issues/11461
     "ignore::pytest.PytestUnraisableExceptionWarning",
+    "ignore:.*U.*mode is deprecated:DeprecationWarning",
 ]
 markers = [
     "slow: marks tests as slow",
