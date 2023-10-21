@@ -161,6 +161,9 @@ class NCCM(RasterDataset):
             exists = True
             self._extract()
 
+        if exists = True:
+            return
+
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
@@ -176,7 +179,7 @@ class NCCM(RasterDataset):
     def _download(self) -> None:
         """Download the dataset."""
         
-        download_url(self.url)
+        download_url(self.url,self.paths)
 
     def _extract(self) -> None:
         """Extract the dataset."""

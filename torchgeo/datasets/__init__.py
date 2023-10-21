@@ -78,7 +78,7 @@ from .millionaid import MillionAID
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nlcd import NLCD
-from .northeastern_china_cropmap import NCCM
+from .nccm import NCCM
 from .openbuildings import OpenBuildings
 from .oscd import OSCD
 from .pastis import PASTIS
