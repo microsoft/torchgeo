@@ -52,7 +52,7 @@ class TestRESISC45:
                 "test": "7760b1960c9a3ff46fb985810815e14d",
             },
         )
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return RESISC45(root, split, transforms, download=True, checksum=True)
@@ -68,21 +68,21 @@ class TestRESISC45:
         assert len(dataset) == 9
 
     def test_already_downloaded(self, dataset: RESISC45, tmp_path: Path) -> None:
-        RESISC45(root=str(tmp_path), download=True)
+        RESISC45(root=tmp_path, download=True)
 
     def test_already_downloaded_not_extracted(
         self, dataset: RESISC45, tmp_path: Path
     ) -> None:
         shutil.rmtree(dataset.root)
         download_url(dataset.url, root=str(tmp_path))
-        RESISC45(root=str(tmp_path), download=False)
+        RESISC45(root=tmp_path, download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         err = "Dataset not found in `root` directory and `download=False`, "
         "either specify a different `root` directory or use `download=True` "
         "to automatically download the dataset."
         with pytest.raises(RuntimeError, match=err):
-            RESISC45(str(tmp_path))
+            RESISC45(tmp_path)
 
     def test_plot(self, dataset: RESISC45) -> None:
         x = dataset[0].copy()

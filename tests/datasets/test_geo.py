@@ -244,7 +244,7 @@ class TestRasterDataset:
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="No RasterDataset data was found"):
-            RasterDataset(str(tmp_path))
+            RasterDataset(tmp_path)
 
     def test_no_all_bands(self) -> None:
         root = os.path.join("tests", "data", "sentinel2")
@@ -309,7 +309,7 @@ class TestVectorDataset:
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="No VectorDataset data was found"):
-            VectorDataset(str(tmp_path))
+            VectorDataset(tmp_path)
 
 
 class TestNonGeoDataset:

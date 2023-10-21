@@ -95,7 +95,7 @@ class TestSeasoNet:
             "url",
             os.path.join("tests", "data", "seasonet", "meta.csv"),
         )
-        root = str(tmp_path)
+        root = tmp_path
         split, seasons, bands, grids, concat_seasons = request.param
         transforms = nn.Identity()
         return SeasoNet(
@@ -141,14 +141,14 @@ class TestSeasoNet:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         paths = os.path.join("tests", "data", "seasonet", "*.*")
-        root = str(tmp_path)
+        root = tmp_path
         for path in glob.iglob(paths):
             shutil.copy(path, root)
         SeasoNet(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="not found in"):
-            SeasoNet(str(tmp_path), download=False)
+            SeasoNet(tmp_path, download=False)
 
     def test_out_of_bounds(self, dataset: SeasoNet) -> None:
         with pytest.raises(IndexError):

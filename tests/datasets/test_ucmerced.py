@@ -51,7 +51,7 @@ class TestUCMerced:
                 "test": "a01fa9f13333bb176fc1bfe26ff4c711",
             },
         )
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return UCMerced(root, split, transforms, download=True, checksum=True)
@@ -71,21 +71,21 @@ class TestUCMerced:
         assert len(ds) == 8
 
     def test_already_downloaded(self, dataset: UCMerced, tmp_path: Path) -> None:
-        UCMerced(root=str(tmp_path), download=True)
+        UCMerced(root=tmp_path, download=True)
 
     def test_already_downloaded_not_extracted(
         self, dataset: UCMerced, tmp_path: Path
     ) -> None:
         shutil.rmtree(dataset.root)
         download_url(dataset.url, root=str(tmp_path))
-        UCMerced(root=str(tmp_path), download=False)
+        UCMerced(root=tmp_path, download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         err = "Dataset not found in `root` directory and `download=False`, "
         "either specify a different `root` directory or use `download=True` "
         "to automatically download the dataset."
         with pytest.raises(RuntimeError, match=err):
-            UCMerced(str(tmp_path))
+            UCMerced(tmp_path)
 
     def test_plot(self, dataset: UCMerced) -> None:
         x = dataset[0].copy()

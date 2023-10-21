@@ -33,7 +33,7 @@ class TestADVANCE:
         md5s = ["43acacecebecd17a82bc2c1e719fd7e4", "039b7baa47879a8a4e32b9dd8287f6ad"]
         monkeypatch.setattr(ADVANCE, "urls", urls)
         monkeypatch.setattr(ADVANCE, "md5s", md5s)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return ADVANCE(root, transforms, download=True, checksum=True)
 
@@ -69,7 +69,7 @@ class TestADVANCE:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
-            ADVANCE(str(tmp_path))
+            ADVANCE(tmp_path)
 
     def test_mock_missing_module(
         self, dataset: ADVANCE, mock_missing_module: None

@@ -41,7 +41,7 @@ class TestVHR10:
         monkeypatch.setitem(VHR10.target_meta, "url", url)
         md5 = "833899cce369168e0d4ee420dac326dc"
         monkeypatch.setitem(VHR10.target_meta, "md5", md5)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return VHR10(root, split, transforms, download=True, checksum=True)
@@ -91,7 +91,7 @@ class TestVHR10:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
-            VHR10(str(tmp_path))
+            VHR10(tmp_path)
 
     def test_mock_missing_module(
         self, dataset: VHR10, mock_missing_modules: None

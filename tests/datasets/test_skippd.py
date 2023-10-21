@@ -42,7 +42,7 @@ class TestSKIPPD:
         url = os.path.join("tests", "data", "skippd", "{}")
         monkeypatch.setattr(SKIPPD, "url", url)
         monkeypatch.setattr(plt, "show", lambda *args: None)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return SKIPPD(
             root=root,
@@ -81,7 +81,7 @@ class TestSKIPPD:
         pathname = os.path.join(
             "tests", "data", "skippd", f"2017_2019_images_pv_processed_{task}.zip"
         )
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(pathname, root)
         SKIPPD(root=root, task=task)
 
@@ -106,7 +106,7 @@ class TestSKIPPD:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found in"):
-            SKIPPD(str(tmp_path))
+            SKIPPD(tmp_path)
 
     def test_plot(self, dataset: SKIPPD) -> None:
         dataset.plot(dataset[0], suptitle="Test")

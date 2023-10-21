@@ -34,7 +34,7 @@ class TestSustainBenchCropYield:
         url = os.path.join("tests", "data", "sustainbench_crop_yield", "soybeans.zip")
         monkeypatch.setattr(SustainBenchCropYield, "url", url)
         monkeypatch.setattr(plt, "show", lambda *args: None)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         countries = ["argentina", "brazil", "usa"]
         transforms = nn.Identity()
@@ -49,7 +49,7 @@ class TestSustainBenchCropYield:
         pathname = os.path.join(
             "tests", "data", "sustainbench_crop_yield", "soybeans.zip"
         )
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(pathname, root)
         SustainBenchCropYield(root)
 
@@ -72,7 +72,7 @@ class TestSustainBenchCropYield:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found in"):
-            SustainBenchCropYield(str(tmp_path))
+            SustainBenchCropYield(tmp_path)
 
     def test_plot(self, dataset: SustainBenchCropYield) -> None:
         dataset.plot(dataset[0], suptitle="Test")

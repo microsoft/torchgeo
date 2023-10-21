@@ -46,7 +46,7 @@ class TestTropicalCyclone:
         }
         monkeypatch.setattr(TropicalCyclone, "md5s", md5s)
         monkeypatch.setattr(TropicalCyclone, "size", 1)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return TropicalCyclone(
@@ -81,7 +81,7 @@ class TestTropicalCyclone:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
-            TropicalCyclone(str(tmp_path))
+            TropicalCyclone(tmp_path)
 
     def test_plot(self, dataset: TropicalCyclone) -> None:
         dataset.plot(dataset[0], suptitle="Test")

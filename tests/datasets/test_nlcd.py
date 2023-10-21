@@ -36,7 +36,7 @@ class TestNLCD:
         )
         monkeypatch.setattr(NLCD, "url", url)
         monkeypatch.setattr(plt, "show", lambda *args: None)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return NLCD(
             root,
@@ -75,7 +75,7 @@ class TestNLCD:
         pathname = os.path.join(
             "tests", "data", "nlcd", "nlcd_2019_land_cover_l48_20210604.zip"
         )
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(pathname, root)
         NLCD(root, years=[2019])
 
@@ -84,7 +84,7 @@ class TestNLCD:
             AssertionError,
             match="NLCD data product only exists for the following years:",
         ):
-            NLCD(str(tmp_path), years=[1996])
+            NLCD(tmp_path, years=[1996])
 
     def test_invalid_classes(self) -> None:
         with pytest.raises(AssertionError):
@@ -108,7 +108,7 @@ class TestNLCD:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):
-            NLCD(str(tmp_path))
+            NLCD(tmp_path)
 
     def test_invalid_query(self, dataset: NLCD) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

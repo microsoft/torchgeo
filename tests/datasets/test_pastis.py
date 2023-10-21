@@ -38,7 +38,7 @@ class TestPASTIS:
         monkeypatch.setattr(PASTIS, "md5", md5)
         url = os.path.join("tests", "data", "pastis", "PASTIS-R.zip")
         monkeypatch.setattr(PASTIS, "url", url)
-        root = str(tmp_path)
+        root = tmp_path
         folds = request.param["folds"]
         bands = request.param["bands"]
         mode = request.param["mode"]
@@ -75,19 +75,19 @@ class TestPASTIS:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         url = os.path.join("tests", "data", "pastis", "PASTIS-R.zip")
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(url, root)
         PASTIS(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):
-            PASTIS(str(tmp_path))
+            PASTIS(tmp_path)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, "PASTIS-R.zip"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
-            PASTIS(root=str(tmp_path), checksum=True)
+            PASTIS(root=tmp_path, checksum=True)
 
     def test_invalid_fold(self) -> None:
         with pytest.raises(AssertionError):

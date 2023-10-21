@@ -27,7 +27,7 @@ class TestPatternNet:
         monkeypatch.setattr(PatternNet, "md5", md5)
         url = os.path.join("tests", "data", "patternnet", "PatternNet.zip")
         monkeypatch.setattr(PatternNet, "url", url)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return PatternNet(root, transforms, download=True, checksum=True)
 
@@ -42,21 +42,21 @@ class TestPatternNet:
         assert len(dataset) == 2
 
     def test_already_downloaded(self, dataset: PatternNet, tmp_path: Path) -> None:
-        PatternNet(root=str(tmp_path), download=True)
+        PatternNet(root=tmp_path, download=True)
 
     def test_already_downloaded_not_extracted(
         self, dataset: PatternNet, tmp_path: Path
     ) -> None:
         shutil.rmtree(dataset.root)
         download_url(dataset.url, root=str(tmp_path))
-        PatternNet(root=str(tmp_path), download=False)
+        PatternNet(root=tmp_path, download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         err = "Dataset not found in `root` directory and `download=False`, "
         "either specify a different `root` directory or use `download=True` "
         "to automatically download the dataset."
         with pytest.raises(RuntimeError, match=err):
-            PatternNet(str(tmp_path))
+            PatternNet(tmp_path)
 
     def test_plot(self, dataset: PatternNet) -> None:
         dataset.plot(dataset[0], suptitle="Test")

@@ -29,7 +29,7 @@ class TestLandCoverAIGeo:
         monkeypatch.setattr(LandCoverAIGeo, "md5", md5)
         url = os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip")
         monkeypatch.setattr(LandCoverAIGeo, "url", url)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return LandCoverAIGeo(root, transforms=transforms, download=True, checksum=True)
 
@@ -44,13 +44,13 @@ class TestLandCoverAIGeo:
 
     def test_already_downloaded(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
         url = os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip")
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(url, root)
-        LandCoverAIGeo(root)
+        LandCoverAIGeo(str(root))
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):
-            LandCoverAIGeo(str(tmp_path))
+            LandCoverAIGeo(tmp_path)
 
     def test_out_of_bounds_query(self, dataset: LandCoverAIGeo) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
@@ -83,7 +83,7 @@ class TestLandCoverAI:
         monkeypatch.setattr(LandCoverAI, "url", url)
         sha256 = "ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b"
         monkeypatch.setattr(LandCoverAI, "sha256", sha256)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return LandCoverAI(root, split, transforms, download=True, checksum=True)
@@ -110,13 +110,13 @@ class TestLandCoverAI:
         sha256 = "ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b"
         monkeypatch.setattr(LandCoverAI, "sha256", sha256)
         url = os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip")
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(url, root)
         LandCoverAI(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):
-            LandCoverAI(str(tmp_path))
+            LandCoverAI(tmp_path)
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):

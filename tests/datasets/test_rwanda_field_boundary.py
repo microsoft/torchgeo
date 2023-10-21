@@ -48,7 +48,7 @@ class TestRwandaFieldBoundary:
             },
         )
 
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return RwandaFieldBoundary(
@@ -73,7 +73,7 @@ class TestRwandaFieldBoundary:
         assert len(ds) == 10
 
     def test_needs_extraction(self, tmp_path: Path) -> None:
-        root = str(tmp_path)
+        root = tmp_path
         for fn in [
             "nasa_rwanda_field_boundary_competition_source_train.tar.gz",
             "nasa_rwanda_field_boundary_competition_source_test.tar.gz",
@@ -88,7 +88,7 @@ class TestRwandaFieldBoundary:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found in"):
-            RwandaFieldBoundary(str(tmp_path))
+            RwandaFieldBoundary(tmp_path)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         for fn in [
@@ -99,7 +99,7 @@ class TestRwandaFieldBoundary:
             with open(os.path.join(tmp_path, fn), "w") as f:
                 f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
-            RwandaFieldBoundary(root=str(tmp_path), checksum=True)
+            RwandaFieldBoundary(root=tmp_path, checksum=True)
 
     def test_failed_download(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
@@ -109,13 +109,13 @@ class TestRwandaFieldBoundary:
             "md5s",
             {"train_images": "bad", "test_images": "bad", "train_labels": "bad"},
         )
-        root = str(tmp_path)
+        root = tmp_path
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
             RwandaFieldBoundary(root, "train", api_key="", download=True, checksum=True)
 
     def test_no_api_key(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Must provide an API key to download"):
-            RwandaFieldBoundary(str(tmp_path), api_key=None, download=True)
+            RwandaFieldBoundary(tmp_path, api_key=None, download=True)
 
     def test_invalid_bands(self) -> None:
         with pytest.raises(ValueError, match="is an invalid band name."):

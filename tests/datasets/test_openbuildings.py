@@ -25,7 +25,7 @@ from torchgeo.datasets import (
 class TestOpenBuildings:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> OpenBuildings:
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(
             os.path.join("tests", "data", "openbuildings", "tiles.geojson"), root
         )

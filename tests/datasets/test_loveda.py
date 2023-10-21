@@ -48,7 +48,7 @@ class TestLoveDA:
 
         monkeypatch.setattr(LoveDA, "info_dict", info_dict)
 
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return LoveDA(
@@ -86,7 +86,7 @@ class TestLoveDA:
         with pytest.raises(
             RuntimeError, match="Dataset not found at root directory or corrupted."
         ):
-            LoveDA(str(tmp_path))
+            LoveDA(tmp_path)
 
     def test_plot(self, dataset: LoveDA) -> None:
         dataset.plot(dataset[0], suptitle="Test")

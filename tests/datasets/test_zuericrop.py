@@ -35,7 +35,7 @@ class TestZueriCrop:
         md5s = ["1635231df67f3d25f4f1e62c98e221a4", "5118398c7a5bbc246f5f6bb35d8d529b"]
         monkeypatch.setattr(ZueriCrop, "urls", urls)
         monkeypatch.setattr(ZueriCrop, "md5s", md5s)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return ZueriCrop(root=root, transforms=transforms, download=True, checksum=True)
 
@@ -83,7 +83,7 @@ class TestZueriCrop:
         "either specify a different `root` directory or use `download=True` "
         "to automatically download the dataset."
         with pytest.raises(RuntimeError, match=err):
-            ZueriCrop(str(tmp_path))
+            ZueriCrop(tmp_path)
 
     def test_mock_missing_module(
         self, dataset: ZueriCrop, tmp_path: Path, mock_missing_module: None

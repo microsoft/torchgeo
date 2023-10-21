@@ -48,7 +48,7 @@ class TestETCI2021:
             },
         }
         monkeypatch.setattr(ETCI2021, "metadata", metadata)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return ETCI2021(root, split, transforms, download=True, checksum=True)
@@ -78,7 +78,7 @@ class TestETCI2021:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
-            ETCI2021(str(tmp_path))
+            ETCI2021(tmp_path)
 
     def test_plot(self, dataset: ETCI2021) -> None:
         x = dataset[0].copy()

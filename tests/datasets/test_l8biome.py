@@ -33,7 +33,7 @@ class TestL8Biome:
         url = os.path.join("tests", "data", "l8biome", "{}.tar.gz")
         monkeypatch.setattr(L8Biome, "url", url)
         monkeypatch.setattr(L8Biome, "md5s", md5s)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return L8Biome(root, transforms=transforms, download=True, checksum=True)
 
@@ -62,14 +62,14 @@ class TestL8Biome:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join("tests", "data", "l8biome", "*.tar.gz")
-        root = str(tmp_path)
+        root = tmp_path
         for tarfile in glob.iglob(pathname):
             shutil.copy(tarfile, root)
         L8Biome(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):
-            L8Biome(str(tmp_path))
+            L8Biome(tmp_path)
 
     def test_plot_prediction(self, dataset: L8Biome) -> None:
         x = dataset[dataset.bounds]

@@ -46,7 +46,7 @@ class TestIDTReeS:
         }
         split, task = request.param
         monkeypatch.setattr(IDTReeS, "metadata", metadata)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return IDTReeS(root, split, task, transforms, download=True, checksum=True)
 
@@ -95,11 +95,11 @@ class TestIDTReeS:
         "either specify a different `root` directory or use `download=True` "
         "to automatically download the dataset."
         with pytest.raises(RuntimeError, match=err):
-            IDTReeS(str(tmp_path))
+            IDTReeS(tmp_path)
 
     def test_not_extracted(self, tmp_path: Path) -> None:
         pathname = os.path.join("tests", "data", "idtrees", "*.zip")
-        root = str(tmp_path)
+        root = tmp_path
         for zipfile in glob.iglob(pathname):
             shutil.copy(zipfile, root)
         IDTReeS(root)

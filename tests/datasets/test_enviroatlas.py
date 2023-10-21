@@ -50,7 +50,7 @@ class TestEnviroAtlas:
             "_files",
             ["pittsburgh_pa-2010_1m-train_tiles-debuffered", "spatial_index.geojson"],
         )
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return EnviroAtlas(
             root,
@@ -81,7 +81,7 @@ class TestEnviroAtlas:
         EnviroAtlas(root=dataset.root, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(
             os.path.join("tests", "data", "enviroatlas", "enviroatlas_lotp.zip"), root
         )
@@ -89,7 +89,7 @@ class TestEnviroAtlas:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):
-            EnviroAtlas(str(tmp_path), checksum=True)
+            EnviroAtlas(tmp_path, checksum=True)
 
     def test_out_of_bounds_query(self, dataset: EnviroAtlas) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

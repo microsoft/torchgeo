@@ -30,7 +30,7 @@ class TestLEVIRCDPlus:
         monkeypatch.setattr(LEVIRCDPlus, "md5", md5)
         url = os.path.join("tests", "data", "levircd", "LEVIR-CD+.zip")
         monkeypatch.setattr(LEVIRCDPlus, "url", url)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return LEVIRCDPlus(root, split, transforms, download=True, checksum=True)
@@ -54,7 +54,7 @@ class TestLEVIRCDPlus:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
-            LEVIRCDPlus(str(tmp_path))
+            LEVIRCDPlus(tmp_path)
 
     def test_plot(self, dataset: LEVIRCDPlus) -> None:
         dataset.plot(dataset[0], suptitle="Test")

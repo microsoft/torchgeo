@@ -537,7 +537,7 @@ class ChesapeakeCVPR(GeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         splits: Sequence[str] = ["de-train"],
         layers: Sequence[str] = ["naip-new", "lc"],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -569,7 +569,7 @@ class ChesapeakeCVPR(GeoDataset):
         for split in splits:
             assert split in self.splits
         assert all([layer in self.valid_layers for layer in layers])
-        self.root = root
+        self.root = str(root)
         self.layers = layers
         self.cache = cache
         self.download = download
@@ -592,7 +592,7 @@ class ChesapeakeCVPR(GeoDataset):
         # Add all tiles into the index in epsg:3857 based on the included geojson
         mint: float = 0
         maxt: float = sys.maxsize
-        with fiona.open(os.path.join(root, "spatial_index.geojson"), "r") as f:
+        with fiona.open(os.path.join(self.root, "spatial_index.geojson"), "r") as f:
             for i, row in enumerate(f):
                 if row["properties"]["split"] in splits:
                     box = shapely.geometry.shape(row["geometry"])

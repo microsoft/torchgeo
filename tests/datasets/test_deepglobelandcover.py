@@ -40,15 +40,15 @@ class TestDeepGlobeLandCover:
         root = os.path.join("tests", "data", "deepglobelandcover")
         filename = "data.zip"
         shutil.copyfile(
-            os.path.join(root, filename), os.path.join(str(tmp_path), filename)
+            os.path.join(root, filename), os.path.join(tmp_path, filename)
         )
-        DeepGlobeLandCover(root=str(tmp_path))
+        DeepGlobeLandCover(root=tmp_path)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, "data.zip"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
-            DeepGlobeLandCover(root=str(tmp_path), checksum=True)
+            DeepGlobeLandCover(root=tmp_path, checksum=True)
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
@@ -61,7 +61,7 @@ class TestDeepGlobeLandCover:
             + " specify a different `root` directory or manually download"
             + " the dataset to this directory.",
         ):
-            DeepGlobeLandCover(str(tmp_path))
+            DeepGlobeLandCover(tmp_path)
 
     def test_plot(self, dataset: DeepGlobeLandCover) -> None:
         x = dataset[0].copy()

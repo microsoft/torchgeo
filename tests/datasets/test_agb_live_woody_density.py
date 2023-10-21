@@ -41,7 +41,7 @@ class TestAbovegroundLiveWoodyBiomassDensity:
         )
         monkeypatch.setattr(AbovegroundLiveWoodyBiomassDensity, "url", url)
 
-        root = str(tmp_path)
+        root = tmp_path
         return AbovegroundLiveWoodyBiomassDensity(
             root, transforms=transforms, download=True
         )
@@ -54,7 +54,7 @@ class TestAbovegroundLiveWoodyBiomassDensity:
 
     def test_no_dataset(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):
-            AbovegroundLiveWoodyBiomassDensity(str(tmp_path))
+            AbovegroundLiveWoodyBiomassDensity(tmp_path)
 
     def test_already_downloaded(
         self, dataset: AbovegroundLiveWoodyBiomassDensity

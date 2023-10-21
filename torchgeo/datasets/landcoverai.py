@@ -211,7 +211,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -301,7 +301,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,

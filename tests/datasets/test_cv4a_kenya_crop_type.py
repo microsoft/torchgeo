@@ -42,7 +42,7 @@ class TestCV4AKenyaCropType:
             CV4AKenyaCropType, "tile_names", ["ref_african_crops_kenya_02_tile_00"]
         )
         monkeypatch.setattr(CV4AKenyaCropType, "dates", ["20190606"])
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return CV4AKenyaCropType(
             root,
@@ -85,7 +85,7 @@ class TestCV4AKenyaCropType:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
-            CV4AKenyaCropType(str(tmp_path))
+            CV4AKenyaCropType(tmp_path)
 
     def test_invalid_tile(self, dataset: CV4AKenyaCropType) -> None:
         with pytest.raises(AssertionError):

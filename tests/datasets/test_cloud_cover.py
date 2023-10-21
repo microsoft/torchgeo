@@ -46,7 +46,7 @@ class TestCloudCoverDetection:
         }
         monkeypatch.setitem(CloudCoverDetection.target_meta, "test", test_target_meta)
 
-        root = str(tmp_path)
+        root = tmp_path
         split = "test"
         transforms = nn.Identity()
 
@@ -84,7 +84,7 @@ class TestCloudCoverDetection:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
-            CloudCoverDetection(str(tmp_path))
+            CloudCoverDetection(tmp_path)
 
     def test_plot(self, dataset: CloudCoverDetection) -> None:
         dataset.plot(dataset[0], suptitle="Test")

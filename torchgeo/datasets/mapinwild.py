@@ -18,6 +18,7 @@ from torch import Tensor
 
 from .geo import NonGeoDataset
 from .utils import (
+    Path,
     check_integrity,
     download_url,
     extract_archive,
@@ -107,7 +108,7 @@ class MapInWild(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         modality: list[str] = ["mask", "esa_wc", "viirs", "s2_summer"],
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -132,7 +133,7 @@ class MapInWild(NonGeoDataset):
         assert split in ["train", "validation", "test"]
 
         self.checksum = checksum
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.modality = modality
         self.download = download

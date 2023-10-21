@@ -39,7 +39,7 @@ class TestBeninSmallHolderCashews:
         monkeypatch.setitem(BeninSmallHolderCashews.image_meta, "md5", source_md5)
         monkeypatch.setitem(BeninSmallHolderCashews.target_meta, "md5", labels_md5)
         monkeypatch.setattr(BeninSmallHolderCashews, "dates", ("2019_11_05",))
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         bands = BeninSmallHolderCashews.all_bands
 
@@ -74,7 +74,7 @@ class TestBeninSmallHolderCashews:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
-            BeninSmallHolderCashews(str(tmp_path))
+            BeninSmallHolderCashews(tmp_path)
 
     def test_invalid_bands(self) -> None:
         with pytest.raises(AssertionError):
