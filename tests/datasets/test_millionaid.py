@@ -3,7 +3,7 @@
 
 import os
 import shutil
-from torchgeo.datasets.utils import Path
+
 import matplotlib.pyplot as plt
 import pytest
 import torch
@@ -11,6 +11,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 
 from torchgeo.datasets import MillionAID
+from torchgeo.datasets.utils import Path
 
 
 class TestMillionAID:

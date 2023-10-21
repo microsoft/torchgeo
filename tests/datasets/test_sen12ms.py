@@ -3,7 +3,6 @@
 
 import os
 
-from torchgeo.datasets.utils import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
@@ -13,6 +12,7 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import SEN12MS
+from torchgeo.datasets.utils import Path
 
 
 class TestSEN12MS:

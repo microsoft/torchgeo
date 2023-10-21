@@ -16,7 +16,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import percentile_normalization, Path
+from .utils import Path, percentile_normalization
 
 
 class BioMassters(NonGeoDataset):

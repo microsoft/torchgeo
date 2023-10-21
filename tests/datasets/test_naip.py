@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-from torchgeo.datasets.utils import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -11,6 +10,7 @@ import torch.nn as nn
 from rasterio.crs import CRS
 
 from torchgeo.datasets import NAIP, BoundingBox, IntersectionDataset, UnionDataset
+from torchgeo.datasets.utils import Path
 
 
 class TestNAIP:

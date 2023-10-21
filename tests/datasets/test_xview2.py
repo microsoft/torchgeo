@@ -3,7 +3,7 @@
 
 import os
 import shutil
-from torchgeo.datasets.utils import Path
+
 import matplotlib.pyplot as plt
 import pytest
 import torch
@@ -12,6 +12,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import XView2
+from torchgeo.datasets.utils import Path
 
 
 class TestXView2:
