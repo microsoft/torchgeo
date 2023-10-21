@@ -760,5 +760,5 @@ def check_instance_type(paths: Path | Iterable[Path]) -> bool:
         itr_paths = [paths]  # type: ignore[list-item]
         is_not_iterable = True
     else:
-        itr_paths = paths    # type: ignore[assignment]
+        itr_paths = paths  # type: ignore[assignment]
     return all([isinstance(path, path_types) for path in itr_paths]) and is_not_iterable
