@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class SustainBenchCropYield(NonGeoDataset):
@@ -57,7 +57,7 @@ class SustainBenchCropYield(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         countries: list[str] = ["usa"],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -90,7 +90,7 @@ class SustainBenchCropYield(NonGeoDataset):
         ), f"Pleas choose one of these valid data splits {self.valid_splits}."
         self.split = split
 
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.download = download
         self.checksum = checksum

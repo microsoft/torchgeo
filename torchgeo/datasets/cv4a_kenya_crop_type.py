@@ -16,7 +16,12 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    Path,
+    check_integrity,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 # TODO: read geospatial information from stac.json files
@@ -115,7 +120,7 @@ class CV4AKenyaCropType(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         chip_size: int = 256,
         stride: int = 128,
         bands: tuple[str, ...] = band_names,
@@ -145,7 +150,7 @@ class CV4AKenyaCropType(NonGeoDataset):
         """
         self._validate_bands(bands)
 
-        self.root = root
+        self.root = str(root)
         self.chip_size = chip_size
         self.stride = stride
         self.bands = bands

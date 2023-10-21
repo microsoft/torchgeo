@@ -14,7 +14,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
-from .utils import check_integrity, download_url, extract_archive, rasterio_loader
+from .utils import Path, check_integrity, download_url, extract_archive, rasterio_loader
 
 
 class EuroSAT(NonGeoClassificationDataset):
@@ -96,7 +96,7 @@ class EuroSAT(NonGeoClassificationDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         bands: Sequence[str] = BAND_SETS["all"],
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -122,7 +122,7 @@ class EuroSAT(NonGeoClassificationDataset):
         .. versionadded:: 0.3
            The *bands* parameter.
         """
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
@@ -144,7 +144,7 @@ class EuroSAT(NonGeoClassificationDataset):
         is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns
 
         super().__init__(
-            root=os.path.join(root, self.base_dir),
+            root=os.path.join(self.root, self.base_dir),
             transforms=transforms,
             loader=rasterio_loader,
             is_valid_file=is_in_split,

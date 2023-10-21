@@ -15,7 +15,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive
+from .utils import Path, download_and_extract_archive
 
 
 class GID15(NonGeoDataset):
@@ -87,7 +87,7 @@ class GID15(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
@@ -110,7 +110,7 @@ class GID15(NonGeoDataset):
         """
         assert split in self.splits
 
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.transforms = transforms
         self.checksum = checksum

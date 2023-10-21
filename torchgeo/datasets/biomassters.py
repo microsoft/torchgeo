@@ -16,7 +16,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import percentile_normalization
+from .utils import percentile_normalization, Path
 
 
 class BioMassters(NonGeoDataset):
@@ -57,7 +57,7 @@ class BioMassters(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         sensors: Sequence[str] = ["S1", "S2"],
         as_time_series: bool = False,
@@ -78,7 +78,7 @@ class BioMassters(NonGeoDataset):
         RuntimeError:
             AssertionError: if ``split`` or ``sensors`` is invalid
         """
-        self.root = root
+        self.root = str(root)
 
         assert (
             split in self.valid_splits

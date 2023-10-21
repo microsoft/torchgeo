@@ -12,6 +12,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
+from .utils import Path
 
 
 class Landsat(RasterDataset, abc.ABC):
@@ -58,7 +59,7 @@ class Landsat(RasterDataset, abc.ABC):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,

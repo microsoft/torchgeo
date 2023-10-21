@@ -16,7 +16,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_url, extract_archive
+from .utils import Path, check_integrity, download_url, extract_archive
 
 
 class PASTIS(NonGeoDataset):
@@ -128,7 +128,7 @@ class PASTIS(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         folds: Sequence[int] = (0, 1, 2, 3, 4),
         bands: str = "s2",
         mode: str = "semantic",
@@ -153,7 +153,7 @@ class PASTIS(NonGeoDataset):
         assert set(folds) <= set(range(6))
         assert bands in ["s1a", "s1d", "s2"]
         assert mode in ["semantic", "instance"]
-        self.root = root
+        self.root = str(root)
         self.folds = folds
         self.bands = bands
         self.mode = mode

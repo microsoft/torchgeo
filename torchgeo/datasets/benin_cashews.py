@@ -18,7 +18,12 @@ from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    Path,
+    check_integrity,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 # TODO: read geospatial information from stac.json files
@@ -172,7 +177,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         chip_size: int = 256,
         stride: int = 128,
         bands: tuple[str, ...] = all_bands,
@@ -202,7 +207,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
         """
         self._validate_bands(bands)
 
-        self.root = os.path.expanduser(root)
+        self.root = str(os.path.expanduser(root))
         self.chip_size = chip_size
         self.stride = stride
         self.bands = bands

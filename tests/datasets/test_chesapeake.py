@@ -3,7 +3,6 @@
 
 import os
 import shutil
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -21,10 +20,11 @@ from torchgeo.datasets import (
     IntersectionDataset,
     UnionDataset,
 )
+from torchgeo.datasets.utils import Path
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
+def download_url(url: str, root: Path, *args: str, **kwargs: str) -> None:
+    shutil.copy(url, str(root))
 
 
 class TestChesapeake13:
@@ -59,7 +59,7 @@ class TestChesapeake13:
         assert isinstance(ds, UnionDataset)
 
     def test_already_extracted(self, dataset: Chesapeake13) -> None:
-        Chesapeake13(dataset.paths, download=True)  # type: ignore
+        Chesapeake13(dataset.paths, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         url = os.path.join(

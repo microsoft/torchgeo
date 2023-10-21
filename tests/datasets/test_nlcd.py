@@ -3,7 +3,6 @@
 
 import os
 import shutil
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -14,6 +13,7 @@ from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import NLCD, BoundingBox, IntersectionDataset, UnionDataset
+from torchgeo.datasets.utils import Path
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -69,7 +69,7 @@ class TestNLCD:
         assert isinstance(ds, UnionDataset)
 
     def test_already_extracted(self, dataset: NLCD) -> None:
-        NLCD(dataset.paths, download=True, years=[2019])  # type: ignore
+        NLCD(dataset.paths, download=True, years=[2019])
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join(

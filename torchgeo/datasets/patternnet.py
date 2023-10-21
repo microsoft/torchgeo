@@ -11,7 +11,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class PatternNet(NonGeoClassificationDataset):
@@ -83,7 +83,7 @@ class PatternNet(NonGeoClassificationDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -97,11 +97,13 @@ class PatternNet(NonGeoClassificationDataset):
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
-        self.root = root
+        self.root = str(root)
         self.download = download
         self.checksum = checksum
         self._verify()
-        super().__init__(root=os.path.join(root, self.directory), transforms=transforms)
+        super().__init__(
+            root=os.path.join(self.root, self.directory), transforms=transforms
+        )
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.

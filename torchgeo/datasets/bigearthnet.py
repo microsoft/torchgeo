@@ -17,7 +17,7 @@ from rasterio.enums import Resampling
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, sort_sentinel2_bands
+from .utils import Path, download_url, extract_archive, sort_sentinel2_bands
 
 
 class BigEarthNet(NonGeoDataset):
@@ -266,7 +266,7 @@ class BigEarthNet(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         bands: str = "all",
         num_classes: int = 19,
@@ -289,7 +289,7 @@ class BigEarthNet(NonGeoDataset):
         assert split in self.splits_metadata
         assert bands in ["s1", "s2", "all"]
         assert num_classes in [43, 19]
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.bands = bands
         self.num_classes = num_classes

@@ -3,7 +3,6 @@
 
 import os
 import shutil
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -13,6 +12,7 @@ from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import ReforesTree
+from torchgeo.datasets.utils import Path
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -56,11 +56,11 @@ class TestReforesTree:
 
     def test_not_extracted(self, tmp_path: Path) -> None:
         url = os.path.join("tests", "data", "reforestree", "reforesTree.zip")
-        shutil.copy(url, tmp_path)
+        shutil.copy(url, str(tmp_path))
         ReforesTree(root=str(tmp_path))
 
     def test_corrupted(self, tmp_path: Path) -> None:
-        with open(os.path.join(tmp_path, "reforesTree.zip"), "w") as f:
+        with open(os.path.join(str(tmp_path), "reforesTree.zip"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
             ReforesTree(root=str(tmp_path), checksum=True)

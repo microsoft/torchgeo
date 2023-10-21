@@ -17,7 +17,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class USAVars(NonGeoDataset):
@@ -86,7 +86,7 @@ class USAVars(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         labels: Sequence[str] = ALL_LABELS,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -109,7 +109,7 @@ class USAVars(NonGeoDataset):
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
-        self.root = root
+        self.root = str(root)
 
         assert split in self.split_metadata
         self.split = split

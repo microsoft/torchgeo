@@ -3,7 +3,6 @@
 
 import builtins
 import os
-from pathlib import Path
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -14,6 +13,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import So2Sat
+from torchgeo.datasets.utils import Path
 
 pytest.importorskip("h5py", minversion="3")
 

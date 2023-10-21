@@ -5,7 +5,6 @@ import glob
 import os
 import shutil
 from datetime import datetime
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -16,6 +15,7 @@ from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import CDL, BoundingBox, IntersectionDataset, UnionDataset
+from torchgeo.datasets.utils import Path
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -74,7 +74,7 @@ class TestCDL:
         next(dataset.index.intersection(tuple(query)))
 
     def test_already_extracted(self, dataset: CDL) -> None:
-        CDL(dataset.paths, years=[2020, 2021])  # type: ignore
+        CDL(dataset.paths, years=[2020, 2021])
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join("tests", "data", "cdl", "*_30m_cdls.zip")

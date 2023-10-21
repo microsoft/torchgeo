@@ -16,6 +16,7 @@ from torch import Tensor
 
 from .geo import NonGeoDataset
 from .utils import (
+    Path,
     check_integrity,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -120,7 +121,7 @@ class Potsdam2D(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         checksum: bool = False,
@@ -135,7 +136,7 @@ class Potsdam2D(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
         assert split in self.splits
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.transforms = transforms
         self.checksum = checksum
@@ -144,8 +145,8 @@ class Potsdam2D(NonGeoDataset):
 
         self.files = []
         for name in self.splits[split]:
-            image = os.path.join(root, self.image_root, name) + "_RGBIR.tif"
-            mask = os.path.join(root, name) + "_label.tif"
+            image = os.path.join(self.root, self.image_root, name) + "_RGBIR.tif"
+            mask = os.path.join(self.root, name) + "_label.tif"
             if os.path.exists(image) and os.path.exists(mask):
                 self.files.append(dict(image=image, mask=mask))
 

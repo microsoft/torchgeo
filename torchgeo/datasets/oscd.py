@@ -17,6 +17,7 @@ from torch import Tensor
 
 from .geo import NonGeoDataset
 from .utils import (
+    Path,
     download_url,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -80,7 +81,7 @@ class OSCD(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         bands: str = "all",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -105,7 +106,7 @@ class OSCD(NonGeoDataset):
         assert split in self.splits
         assert bands in ["rgb", "all"]
 
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.bands = bands
         self.transforms = transforms

@@ -16,7 +16,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, percentile_normalization
+from .utils import Path, download_url, extract_archive, percentile_normalization
 
 
 class SeasonalContrastS2(NonGeoDataset):
@@ -69,7 +69,7 @@ class SeasonalContrastS2(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         version: str = "100k",
         seasons: int = 1,
         bands: list[str] = rgb_bands,
@@ -102,7 +102,7 @@ class SeasonalContrastS2(NonGeoDataset):
         for band in bands:
             assert band in self.all_bands
 
-        self.root = root
+        self.root = str(root)
         self.version = version
         self.seasons = seasons
         self.bands = bands

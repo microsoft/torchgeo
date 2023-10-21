@@ -3,6 +3,7 @@
 
 """Aster Global Digital Elevation Model dataset."""
 
+from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
@@ -46,7 +47,7 @@ class AsterGDEM(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[Path, list[Path]] = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,

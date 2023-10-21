@@ -3,7 +3,6 @@
 
 import os
 import shutil
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -13,6 +12,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import Vaihingen2D
+from torchgeo.datasets.utils import Path
 
 
 class TestVaihingen2D:
@@ -59,7 +59,7 @@ class TestVaihingen2D:
             "ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip",
         ]
         for filename in filenames:
-            with open(os.path.join(tmp_path, filename), "w") as f:
+            with open(os.path.join(str(tmp_path), filename), "w") as f:
                 f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
             Vaihingen2D(root=str(tmp_path), checksum=True)

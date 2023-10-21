@@ -13,7 +13,7 @@ import torch
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_radiant_mlhub_collection, extract_archive
+from .utils import Path, download_radiant_mlhub_collection, extract_archive
 
 
 class WesternUSALiveFuelMoisture(NonGeoDataset):
@@ -198,7 +198,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         input_features: list[str] = all_variable_names,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
@@ -222,7 +222,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         """
         super().__init__()
 
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.checksum = checksum
         self.download = download

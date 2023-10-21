@@ -17,7 +17,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_and_extract_archive, extract_archive
+from .utils import Path, check_integrity, download_and_extract_archive, extract_archive
 
 
 def parse_pascal_voc(path: str) -> dict[str, Any]:
@@ -104,7 +104,7 @@ class ForestDamage(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -122,7 +122,7 @@ class ForestDamage(NonGeoDataset):
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.checksum = checksum
         self.download = download

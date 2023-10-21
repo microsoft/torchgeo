@@ -22,7 +22,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import GeoDataset
-from .utils import BoundingBox, download_url, extract_archive
+from .utils import BoundingBox, Path, download_url, extract_archive
 
 
 class EnviroAtlas(GeoDataset):
@@ -252,7 +252,7 @@ class EnviroAtlas(GeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         splits: Sequence[str] = ["pittsburgh_pa-2010_1m-train"],
         layers: Sequence[str] = ["naip", "prior"],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -285,7 +285,7 @@ class EnviroAtlas(GeoDataset):
         for split in splits:
             assert split in self.splits
         assert all([layer in self.valid_layers for layer in layers])
-        self.root = root
+        self.root = str(root)
         self.layers = layers
         self.cache = cache
         self.download = download
@@ -300,7 +300,7 @@ class EnviroAtlas(GeoDataset):
         mint: float = 0
         maxt: float = sys.maxsize
         with fiona.open(
-            os.path.join(root, "enviroatlas_lotp", "spatial_index.geojson"), "r"
+            os.path.join(self.root, "enviroatlas_lotp", "spatial_index.geojson"), "r"
         ) as f:
             for i, row in enumerate(f):
                 if row["properties"]["split"] in splits:

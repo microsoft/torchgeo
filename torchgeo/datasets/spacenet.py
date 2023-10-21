@@ -26,6 +26,7 @@ from torch import Tensor
 
 from .geo import NonGeoDataset
 from .utils import (
+    Path,
     check_integrity,
     download_radiant_mlhub_collection,
     download_radiant_mlhub_dataset,
@@ -77,7 +78,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
     def __init__(
         self,
-        root: str,
+        root: Path,
         image: str,
         collections: list[str] = [],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -100,7 +101,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing
         """
-        self.root = root
+        self.root = str(root)
         self.image = image  # For testing
 
         if collections:
@@ -124,7 +125,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
             else:
                 self._download(to_be_downloaded, api_key)
 
-        self.files = self._load_files(root)
+        self.files = self._load_files(self.root)
 
     def _load_files(self, root: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
@@ -402,7 +403,7 @@ class SpaceNet1(SpaceNet):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         image: str = "rgb",
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
@@ -517,7 +518,7 @@ class SpaceNet2(SpaceNet):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         image: str = "PS-RGB",
         collections: list[str] = [],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -637,7 +638,7 @@ class SpaceNet3(SpaceNet):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         image: str = "PS-RGB",
         speed_mask: Optional[bool] = False,
         collections: list[str] = [],
@@ -673,7 +674,7 @@ class SpaceNet3(SpaceNet):
         )
 
     def _load_mask(
-        self, path: str, tfm: Affine, raster_crs: CRS, shape: tuple[int, int]
+        self, path: Path, tfm: Affine, raster_crs: CRS, shape: tuple[int, int]
     ) -> Tensor:
         """Rasterizes the dataset's labels (in geojson format).
 
@@ -887,7 +888,7 @@ class SpaceNet4(SpaceNet):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         image: str = "PS-RGBNIR",
         angles: list[str] = [],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -921,7 +922,7 @@ class SpaceNet4(SpaceNet):
             root, image, collections, transforms, download, api_key, checksum
         )
 
-    def _load_files(self, root: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -934,7 +935,9 @@ class SpaceNet4(SpaceNet):
         nadir = []
         offnadir = []
         veryoffnadir = []
-        images = glob.glob(os.path.join(root, self.collections[0], "*", self.filename))
+        images = glob.glob(
+            os.path.join(str(root), self.collections[0], "*", self.filename)
+        )
         images = sorted(images)
 
         catalog_id_pattern = re.compile(r"(_[A-Z0-9])\w+$")
@@ -1055,7 +1058,7 @@ class SpaceNet5(SpaceNet3):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         image: str = "PS-RGB",
         speed_mask: Optional[bool] = False,
         collections: list[str] = [],
@@ -1187,7 +1190,7 @@ class SpaceNet6(SpaceNet):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         image: str = "PS-RGB",
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
@@ -1207,7 +1210,7 @@ class SpaceNet6(SpaceNet):
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing
         """
-        self.root = root
+        self.root = str(root)
         self.image = image  # For testing
 
         self.filename = self.imagery[image]
@@ -1216,7 +1219,7 @@ class SpaceNet6(SpaceNet):
         if download:
             self.__download(api_key)
 
-        self.files = self._load_files(os.path.join(root, self.dataset_id))
+        self.files = self._load_files(os.path.join(self.root, self.dataset_id))
 
     def __download(self, api_key: Optional[str] = None) -> None:
         """Download the dataset and extract it.
@@ -1288,7 +1291,7 @@ class SpaceNet7(SpaceNet):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
@@ -1309,7 +1312,7 @@ class SpaceNet7(SpaceNet):
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing
         """
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.filename = self.imagery["img"]
         self.transforms = transforms
@@ -1334,7 +1337,7 @@ class SpaceNet7(SpaceNet):
             else:
                 self._download(to_be_downloaded, api_key)
 
-        self.files = self._load_files(root)
+        self.files = self._load_files(self.root)
 
     def _load_files(self, root: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
@@ -1348,16 +1351,22 @@ class SpaceNet7(SpaceNet):
         files = []
         if self.split == "train":
             imgs = sorted(
-                glob.glob(os.path.join(root, "sn7_train_source", "*", self.filename))
+                glob.glob(
+                    os.path.join(self.root, "sn7_train_source", "*", self.filename)
+                )
             )
             lbls = sorted(
-                glob.glob(os.path.join(root, "sn7_train_labels", "*", self.label_glob))
+                glob.glob(
+                    os.path.join(self.root, "sn7_train_labels", "*", self.label_glob)
+                )
             )
             for img, lbl in zip(imgs, lbls):
                 files.append({"image_path": img, "label_path": lbl})
         else:
             imgs = sorted(
-                glob.glob(os.path.join(root, "sn7_test_source", "*", self.filename))
+                glob.glob(
+                    os.path.join(self.root, "sn7_test_source", "*", self.filename)
+                )
             )
             for img in imgs:
                 files.append({"image_path": img})

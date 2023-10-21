@@ -15,7 +15,7 @@ from torch import Tensor
 
 from torchgeo.datasets import NonGeoDataset
 
-from .utils import check_integrity, extract_archive
+from .utils import Path, check_integrity, extract_archive
 
 
 class MillionAID(NonGeoDataset):
@@ -188,7 +188,7 @@ class MillionAID(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         task: str = "multi-class",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -207,7 +207,7 @@ class MillionAID(NonGeoDataset):
         Raises:
             RuntimeError: if dataset is not found
         """
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.checksum = checksum
         assert task in self.tasks

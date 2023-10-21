@@ -3,7 +3,6 @@
 
 import os
 import shutil
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -12,13 +11,14 @@ import torch.nn as nn
 from rasterio.crs import CRS
 
 from torchgeo.datasets import AsterGDEM, BoundingBox, IntersectionDataset, UnionDataset
+from torchgeo.datasets.utils import Path
 
 
 class TestAsterGDEM:
     @pytest.fixture
     def dataset(self, tmp_path: Path) -> AsterGDEM:
         zipfile = os.path.join("tests", "data", "astergdem", "astergdem.zip")
-        shutil.unpack_archive(zipfile, tmp_path, "zip")
+        shutil.unpack_archive(zipfile, str(tmp_path), "zip")
         root = str(tmp_path)
         transforms = nn.Identity()
         return AsterGDEM(root, transforms=transforms)

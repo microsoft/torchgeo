@@ -14,7 +14,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, percentile_normalization
+from .utils import Path, check_integrity, percentile_normalization
 
 
 class So2Sat(NonGeoDataset):
@@ -187,7 +187,7 @@ class So2Sat(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         version: str = "2",
         split: str = "train",
         bands: Sequence[str] = BAND_SETS["all"],
@@ -248,7 +248,7 @@ class So2Sat(NonGeoDataset):
 
         self.bands = bands
 
-        self.root = root
+        self.root = str(root)
         self.version = version
         self.split = split
         self.transforms = transforms

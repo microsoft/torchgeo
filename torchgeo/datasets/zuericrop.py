@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_url, percentile_normalization
+from .utils import Path, download_url, percentile_normalization
 
 
 class ZueriCrop(NonGeoDataset):
@@ -64,7 +64,7 @@ class ZueriCrop(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         bands: Sequence[str] = band_names,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
@@ -89,12 +89,12 @@ class ZueriCrop(NonGeoDataset):
             [self.band_names.index(b) for b in bands]
         ).long()
 
-        self.root = root
+        self.root = str(root)
         self.bands = bands
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
-        self.filepath = os.path.join(root, "ZueriCrop.hdf5")
+        self.filepath = os.path.join(self.root, "ZueriCrop.hdf5")
 
         self._verify()
 

@@ -15,7 +15,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive
+from .utils import Path, download_and_extract_archive
 
 
 class ADVANCE(NonGeoDataset):
@@ -86,7 +86,7 @@ class ADVANCE(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -104,7 +104,7 @@ class ADVANCE(NonGeoDataset):
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.checksum = checksum
 
@@ -168,7 +168,7 @@ class ADVANCE(NonGeoDataset):
         ]
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:

@@ -15,7 +15,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_and_extract_archive, download_url
+from .utils import Path, check_integrity, download_and_extract_archive, download_url
 
 
 def convert_coco_poly_to_mask(
@@ -181,7 +181,7 @@ class VHR10(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "positive",
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
@@ -205,7 +205,7 @@ class VHR10(NonGeoDataset):
         """
         assert split in ["positive", "negative"]
 
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.transforms = transforms
         self.checksum = checksum

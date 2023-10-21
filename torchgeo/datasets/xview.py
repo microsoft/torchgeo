@@ -15,7 +15,12 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, draw_semantic_segmentation_masks, extract_archive
+from .utils import (
+    Path,
+    check_integrity,
+    draw_semantic_segmentation_masks,
+    extract_archive,
+)
 
 
 class XView2(NonGeoDataset):
@@ -65,7 +70,7 @@ class XView2(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         checksum: bool = False,
@@ -80,7 +85,7 @@ class XView2(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
         assert split in self.metadata
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.transforms = transforms
         self.checksum = checksum
@@ -88,7 +93,7 @@ class XView2(NonGeoDataset):
         self._verify()
 
         self.class2idx = {c: i for i, c in enumerate(self.classes)}
-        self.files = self._load_files(root, split)
+        self.files = self._load_files(self.root, split)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.

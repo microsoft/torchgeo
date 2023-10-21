@@ -4,7 +4,6 @@
 import glob
 import os
 import shutil
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -13,6 +12,7 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import NASAMarineDebris
+from torchgeo.datasets.utils import Path
 
 
 class Collection:
@@ -76,7 +76,7 @@ class TestNASAMarineDebris:
     def test_corrupted_previously_downloaded(self, tmp_path: Path) -> None:
         filenames = NASAMarineDebris.filenames
         for filename in filenames:
-            with open(os.path.join(tmp_path, filename), "w") as f:
+            with open(os.path.join(str(tmp_path), filename), "w") as f:
                 f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset checksum mismatch."):
             NASAMarineDebris(root=str(tmp_path), download=False, checksum=True)

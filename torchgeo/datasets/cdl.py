@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import BoundingBox, download_url, extract_archive
+from .utils import BoundingBox, Path, check_instance_type, download_url, extract_archive
 
 
 class CDL(RasterDataset):
@@ -205,7 +205,7 @@ class CDL(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         years: list[int] = [2022],
@@ -297,10 +297,10 @@ class CDL(RasterDataset):
 
         # Check if the zip files have already been downloaded
         exists = []
-        assert isinstance(self.paths, str)
+        assert check_instance_type(self.paths)
         for year in self.years:
             pathname = os.path.join(
-                self.paths, self.zipfile_glob.replace("*", str(year))
+                str(self.paths), self.zipfile_glob.replace("*", str(year))
             )
             if os.path.exists(pathname):
                 exists.append(True)
@@ -314,7 +314,7 @@ class CDL(RasterDataset):
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
-                f"Dataset not found in `root={self.paths}` and `download=False`, "
+                f"Dataset not found in `root={self.paths!r}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
                 "to automatically download the dataset."
             )
@@ -328,7 +328,7 @@ class CDL(RasterDataset):
         for year in self.years:
             download_url(
                 self.url.format(year),
-                self.paths,
+                str(self.paths),
                 md5=self.md5s[year] if self.checksum else None,
             )
 
@@ -337,7 +337,7 @@ class CDL(RasterDataset):
         assert isinstance(self.paths, str)
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace("*", str(year))
-            pathname = os.path.join(self.paths, zipfile_name)
+            pathname = os.path.join(str(self.paths), zipfile_name)
             extract_archive(pathname, self.paths)
 
     def plot(

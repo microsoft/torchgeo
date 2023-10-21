@@ -17,7 +17,7 @@ from torch import Tensor
 from .cdl import CDL
 from .geo import NonGeoDataset
 from .nlcd import NLCD
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class SSL4EOLBenchmark(NonGeoDataset):
@@ -106,7 +106,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         sensor: str = "oli_sr",
         product: str = "cdl",
         split: str = "train",
@@ -155,7 +155,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         ), f"Only the following classes are valid: {list(self.cmap.keys())}."
         assert 0 in classes, "Classes must include the background class: 0"
 
-        self.root = root
+        self.root = str(root)
         self.classes = classes
         self.transforms = transforms
         self.download = download

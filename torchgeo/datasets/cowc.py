@@ -16,7 +16,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_and_extract_archive
+from .utils import Path, check_integrity, download_and_extract_archive
 
 
 class COWC(NonGeoDataset, abc.ABC):
@@ -63,7 +63,7 @@ class COWC(NonGeoDataset, abc.ABC):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
@@ -86,7 +86,7 @@ class COWC(NonGeoDataset, abc.ABC):
         """
         assert split in ["train", "test"]
 
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.transforms = transforms
         self.checksum = checksum

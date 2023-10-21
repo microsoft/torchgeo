@@ -15,7 +15,12 @@ from torch import Tensor
 from torchvision.utils import draw_bounding_boxes
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    Path,
+    check_integrity,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 class NASAMarineDebris(NonGeoDataset):
@@ -60,7 +65,7 @@ class NASAMarineDebris(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
@@ -78,7 +83,7 @@ class NASAMarineDebris(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
             verbose: if True, print messages when new tiles are loaded
         """
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.download = download
         self.api_key = api_key

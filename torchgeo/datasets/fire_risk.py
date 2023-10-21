@@ -11,7 +11,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class FireRisk(NonGeoClassificationDataset):
@@ -66,7 +66,7 @@ class FireRisk(NonGeoClassificationDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
@@ -87,14 +87,15 @@ class FireRisk(NonGeoClassificationDataset):
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         assert split in self.splits
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.download = download
         self.checksum = checksum
         self._verify()
 
         super().__init__(
-            root=os.path.join(root, self.directory, self.split), transforms=transforms
+            root=os.path.join(self.root, self.directory, self.split),
+            transforms=transforms,
         )
 
     def _verify(self) -> None:

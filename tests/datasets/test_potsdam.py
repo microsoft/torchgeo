@@ -3,7 +3,6 @@
 
 import os
 import shutil
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -13,6 +12,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import Potsdam2D
+from torchgeo.datasets.utils import Path
 
 
 class TestPotsdam2D:
@@ -48,9 +48,9 @@ class TestPotsdam2D:
         Potsdam2D(root=str(tmp_path))
 
     def test_corrupted(self, tmp_path: Path) -> None:
-        with open(os.path.join(tmp_path, "4_Ortho_RGBIR.zip"), "w") as f:
+        with open(os.path.join(str(tmp_path), "4_Ortho_RGBIR.zip"), "w") as f:
             f.write("bad")
-        with open(os.path.join(tmp_path, "5_Labels_all.zip"), "w") as f:
+        with open(os.path.join(str(tmp_path), "5_Labels_all.zip"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
             Potsdam2D(root=str(tmp_path), checksum=True)

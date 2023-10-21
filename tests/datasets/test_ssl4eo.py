@@ -3,8 +3,8 @@
 
 import glob
 import os
+import pathlib
 import shutil
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -16,6 +16,7 @@ from torch.utils.data import ConcatDataset
 
 import torchgeo
 from torchgeo.datasets import SSL4EOL, SSL4EOS12
+from torchgeo.datasets.utils import Path
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -146,7 +147,7 @@ class TestSSL4EOS12:
             filename = SSL4EOS12.metadata[split]["filename"]
             shutil.copyfile(
                 os.path.join("tests", "data", "ssl4eo", "s12", filename),
-                tmp_path / filename,
+                pathlib.Path(str(tmp_path)) / filename,
             )
         SSL4EOS12(str(tmp_path))
 

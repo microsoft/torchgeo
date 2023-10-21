@@ -20,7 +20,7 @@ from torchvision.ops import clip_boxes_to_image, remove_small_boxes
 from torchvision.utils import draw_bounding_boxes
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class IDTReeS(NonGeoDataset):
@@ -145,7 +145,7 @@ class IDTReeS(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         task: str = "task1",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -169,7 +169,7 @@ class IDTReeS(NonGeoDataset):
         """
         assert split in ["train", "test"]
         assert task in ["task1", "task2"]
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.task = task
         self.transforms = transforms
@@ -187,7 +187,7 @@ class IDTReeS(NonGeoDataset):
                 "laspy is not installed and is required to use this dataset"
             )
 
-        self.images, self.geometries, self.labels = self._load(root)
+        self.images, self.geometries, self.labels = self._load(self.root)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.

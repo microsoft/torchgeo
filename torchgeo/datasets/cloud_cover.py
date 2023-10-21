@@ -16,7 +16,12 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    Path,
+    check_integrity,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 # TODO: read geospatial information from stac.json files
@@ -102,7 +107,7 @@ class CloudCoverDetection(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         bands: Sequence[str] = band_names,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -125,7 +130,7 @@ class CloudCoverDetection(NonGeoDataset):
         Raises:
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.transforms = transforms
         self.checksum = checksum

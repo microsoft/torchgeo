@@ -2,11 +2,11 @@
 # Licensed under the MIT License.
 
 import os
-from pathlib import Path
 
 import pytest
 
 from torchgeo.datasets import GBIF, BoundingBox, IntersectionDataset, UnionDataset
+from torchgeo.datasets.utils import Path
 
 
 class TestGBIF:

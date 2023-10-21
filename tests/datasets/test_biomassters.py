@@ -4,13 +4,13 @@
 
 import os
 from itertools import product
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
 from _pytest.fixtures import SubRequest
 
 from torchgeo.datasets import BioMassters
+from torchgeo.datasets.utils import Path
 
 
 class TestBioMassters:

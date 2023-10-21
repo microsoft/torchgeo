@@ -3,7 +3,6 @@
 
 import os
 import shutil
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -14,6 +13,7 @@ from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import BoundingBox, Esri2020, IntersectionDataset, UnionDataset
+from torchgeo.datasets.utils import Path
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -47,7 +47,7 @@ class TestEsri2020:
         assert isinstance(x["mask"], torch.Tensor)
 
     def test_already_extracted(self, dataset: Esri2020) -> None:
-        Esri2020(dataset.paths, download=True)  # type: ignore
+        Esri2020(dataset.paths, download=True)
 
     def test_not_extracted(self, tmp_path: Path) -> None:
         url = os.path.join(
@@ -56,7 +56,7 @@ class TestEsri2020:
             "esri2020",
             "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip",
         )
-        shutil.copy(url, tmp_path)
+        shutil.copy(url, str(tmp_path))
         Esri2020(str(tmp_path))
 
     def test_not_downloaded(self, tmp_path: Path) -> None:

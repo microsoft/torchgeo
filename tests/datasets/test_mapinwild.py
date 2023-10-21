@@ -4,7 +4,6 @@
 import glob
 import os
 import shutil
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -16,6 +15,7 @@ from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import MapInWild
+from torchgeo.datasets.utils import Path
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -118,7 +118,7 @@ class TestMapInWild:
             "tests", "data", "mapinwild", "split_IDs", "split_IDs.csv"
         )
         shutil.copy(splitfile, root)
-        with open(os.path.join(tmp_path, "mask.zip"), "w") as f:
+        with open(os.path.join(str(tmp_path), "mask.zip"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
             MapInWild(root=str(tmp_path), download=True, checksum=True)

@@ -12,6 +12,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import InriaAerialImageLabeling
+from torchgeo.datasets.utils import Path
 
 
 class TestInriaAerialImageLabeling:
@@ -48,7 +49,7 @@ class TestInriaAerialImageLabeling:
     def test_already_downloaded(self, dataset: InriaAerialImageLabeling) -> None:
         InriaAerialImageLabeling(root=dataset.root)
 
-    def test_not_downloaded(self, tmp_path: str) -> None:
+    def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):
             InriaAerialImageLabeling(str(tmp_path))
 

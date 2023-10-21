@@ -3,7 +3,6 @@
 
 import os
 import shutil
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -13,6 +12,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import DFC2022
+from torchgeo.datasets.utils import Path
 
 
 class TestDFC2022:
@@ -51,20 +51,20 @@ class TestDFC2022:
     def test_extract(self, tmp_path: Path) -> None:
         shutil.copyfile(
             os.path.join("tests", "data", "dfc2022", "labeled_train.zip"),
-            os.path.join(tmp_path, "labeled_train.zip"),
+            os.path.join(str(tmp_path), "labeled_train.zip"),
         )
         shutil.copyfile(
             os.path.join("tests", "data", "dfc2022", "unlabeled_train.zip"),
-            os.path.join(tmp_path, "unlabeled_train.zip"),
+            os.path.join(str(tmp_path), "unlabeled_train.zip"),
         )
         shutil.copyfile(
             os.path.join("tests", "data", "dfc2022", "val.zip"),
-            os.path.join(tmp_path, "val.zip"),
+            os.path.join(str(tmp_path), "val.zip"),
         )
         DFC2022(root=str(tmp_path))
 
     def test_corrupted(self, tmp_path: Path) -> None:
-        with open(os.path.join(tmp_path, "labeled_train.zip"), "w") as f:
+        with open(os.path.join(str(tmp_path), "labeled_train.zip"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
             DFC2022(root=str(tmp_path), checksum=True)

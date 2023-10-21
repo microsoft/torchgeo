@@ -15,7 +15,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive
+from .utils import Path, download_and_extract_archive
 
 
 class ETCI2021(NonGeoDataset):
@@ -80,7 +80,7 @@ class ETCI2021(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
@@ -103,7 +103,7 @@ class ETCI2021(NonGeoDataset):
         """
         assert split in self.metadata.keys()
 
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.transforms = transforms
         self.checksum = checksum

@@ -20,7 +20,7 @@ from torch import Tensor
 from torch.utils.data import Dataset
 
 from .geo import NonGeoDataset, RasterDataset
-from .utils import BoundingBox, download_url, extract_archive, working_dir
+from .utils import BoundingBox, Path, download_url, extract_archive, working_dir
 
 
 class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
@@ -71,7 +71,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
     }
 
     def __init__(
-        self, root: str = "data", download: bool = False, checksum: bool = False
+        self, root: Path = "data", download: bool = False, checksum: bool = False
     ) -> None:
         """Initialize a new LandCover.ai dataset instance.
 
@@ -87,7 +87,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
-        self.root = root
+        self.root = str(root)
         self.download = download
         self.checksum = checksum
 

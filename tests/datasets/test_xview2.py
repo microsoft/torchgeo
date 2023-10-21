@@ -3,8 +3,7 @@
 
 import os
 import shutil
-from pathlib import Path
-
+from torchgeo.datasets.utils import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
@@ -53,23 +52,23 @@ class TestXView2:
             os.path.join(
                 "tests", "data", "xview2", "train_images_labels_targets.tar.gz"
             ),
-            os.path.join(tmp_path, "train_images_labels_targets.tar.gz"),
+            os.path.join(str(tmp_path), "train_images_labels_targets.tar.gz"),
         )
         shutil.copyfile(
             os.path.join(
                 "tests", "data", "xview2", "test_images_labels_targets.tar.gz"
             ),
-            os.path.join(tmp_path, "test_images_labels_targets.tar.gz"),
+            os.path.join(str(tmp_path), "test_images_labels_targets.tar.gz"),
         )
         XView2(root=str(tmp_path))
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(
-            os.path.join(tmp_path, "train_images_labels_targets.tar.gz"), "w"
+            os.path.join(str(tmp_path), "train_images_labels_targets.tar.gz"), "w"
         ) as f:
             f.write("bad")
         with open(
-            os.path.join(tmp_path, "test_images_labels_targets.tar.gz"), "w"
+            os.path.join(str(tmp_path), "test_images_labels_targets.tar.gz"), "w"
         ) as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):

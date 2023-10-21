@@ -4,7 +4,6 @@
 import builtins
 import os
 import shutil
-from pathlib import Path
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -15,6 +14,7 @@ from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import ADVANCE
+from torchgeo.datasets.utils import Path
 
 
 def download_url(url: str, root: str, *args: str) -> None:

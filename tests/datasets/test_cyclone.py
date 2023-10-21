@@ -4,7 +4,7 @@
 import glob
 import os
 import shutil
-from pathlib import Path
+from torchgeo.datasets.utils import Path
 
 import matplotlib.pyplot as plt
 import pytest

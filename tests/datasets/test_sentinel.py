@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -18,6 +17,7 @@ from torchgeo.datasets import (
     Sentinel2,
     UnionDataset,
 )
+from torchgeo.datasets.utils import Path
 
 
 class TestSentinel1:

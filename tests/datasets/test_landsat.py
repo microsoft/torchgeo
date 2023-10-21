@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -13,6 +12,7 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import BoundingBox, IntersectionDataset, Landsat8, UnionDataset
+from torchgeo.datasets.utils import Path
 
 
 class TestLandsat8:
@@ -52,7 +52,7 @@ class TestLandsat8:
 
     def test_plot_wrong_bands(self, dataset: Landsat8) -> None:
         bands = ("SR_B1",)
-        ds = Landsat8(dataset.paths, bands=bands)  # type: ignore
+        ds = Landsat8(dataset.paths, bands=bands)
         x = dataset[dataset.bounds]
         with pytest.raises(
             ValueError, match="Dataset doesn't contain some of the RGB bands"

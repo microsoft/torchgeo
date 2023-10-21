@@ -12,6 +12,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
+from .utils import Path
 
 
 class Sentinel(RasterDataset):
@@ -140,7 +141,7 @@ class Sentinel1(Sentinel):
 
     def __init__(
         self,
-        paths: Union[str, list[str]] = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: float = 10,
         bands: Sequence[str] = ["VV", "VH"],

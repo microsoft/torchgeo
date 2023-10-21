@@ -4,6 +4,7 @@
 """CMS Global Mangrove Canopy dataset."""
 
 import os
+from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
@@ -11,7 +12,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import check_integrity, extract_archive
+from .utils import Path, check_instance_type, check_integrity, extract_archive
 
 
 class CMSGlobalMangroveCanopy(RasterDataset):
@@ -167,7 +168,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, list[str]] = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         measurement: str = "agb",
@@ -235,8 +236,8 @@ class CMSGlobalMangroveCanopy(RasterDataset):
             return
 
         # Check if the zip file has already been downloaded
-        assert isinstance(self.paths, str)
-        pathname = os.path.join(self.paths, self.zipfile)
+        assert check_instance_type(self.paths)
+        pathname = os.path.join(str(self.paths), self.zipfile)
         if os.path.exists(pathname):
             if self.checksum and not check_integrity(pathname, self.md5):
                 raise RuntimeError("Dataset found, but corrupted.")
@@ -244,15 +245,15 @@ class CMSGlobalMangroveCanopy(RasterDataset):
             return
 
         raise RuntimeError(
-            f"Dataset not found in `root={self.paths}` "
+            f"Dataset not found in `root={self.paths!r}` "
             "either specify a different `root` directory or make sure you "
             "have manually downloaded the dataset as instructed in the documentation."
         )
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
-        pathname = os.path.join(self.paths, self.zipfile)
+        assert check_instance_type(self.paths)
+        pathname = os.path.join(str(self.paths), self.zipfile)
         extract_archive(pathname)
 
     def plot(

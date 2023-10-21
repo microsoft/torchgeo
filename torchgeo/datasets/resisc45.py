@@ -12,7 +12,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class RESISC45(NonGeoClassificationDataset):
@@ -111,7 +111,7 @@ class RESISC45(NonGeoClassificationDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
@@ -128,7 +128,7 @@ class RESISC45(NonGeoClassificationDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
         assert split in self.splits
-        self.root = root
+        self.root = str(root)
         self.download = download
         self.checksum = checksum
         self._verify()
@@ -140,7 +140,7 @@ class RESISC45(NonGeoClassificationDataset):
         is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns
 
         super().__init__(
-            root=os.path.join(root, self.directory),
+            root=os.path.join(self.root, self.directory),
             transforms=transforms,
             is_valid_file=is_in_split,
         )

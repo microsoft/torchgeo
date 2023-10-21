@@ -17,7 +17,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_url, extract_archive
+from .utils import Path, check_integrity, download_url, extract_archive
 
 
 def parse_pascal_voc(path: str) -> dict[str, Any]:
@@ -228,7 +228,7 @@ class FAIR1M(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
@@ -251,7 +251,7 @@ class FAIR1M(NonGeoDataset):
            Added *split* and *download* parameters.
         """
         assert split in self.directories
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.transforms = transforms
         self.download = download

@@ -5,7 +5,6 @@ import builtins
 import glob
 import os
 import shutil
-from pathlib import Path
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -17,6 +16,7 @@ from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import IDTReeS
+from torchgeo.datasets.utils import Path
 
 pytest.importorskip("laspy", minversion="2")
 

@@ -16,7 +16,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_url, extract_archive
+from .utils import Path, check_integrity, download_url, extract_archive
 
 
 class SSL4EO(NonGeoDataset):
@@ -160,7 +160,7 @@ class SSL4EOL(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "oli_sr",
         seasons: int = 1,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -185,8 +185,8 @@ class SSL4EOL(NonGeoDataset):
         assert split in self.metadata
         assert seasons in range(1, 5)
 
-        self.root = root
-        self.subdir = os.path.join(root, f"ssl4eo_l_{split}")
+        self.root = str(root)
+        self.subdir = os.path.join(self.root, f"ssl4eo_l_{split}")
         self.split = split
         self.seasons = seasons
         self.transforms = transforms
@@ -410,7 +410,7 @@ class SSL4EOS12(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "s2c",
         seasons: int = 1,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -435,7 +435,7 @@ class SSL4EOS12(NonGeoDataset):
         assert split in self.metadata
         assert seasons in range(1, 5)
 
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.seasons = seasons
         self.transforms = transforms

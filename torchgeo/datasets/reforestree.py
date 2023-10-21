@@ -17,7 +17,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_and_extract_archive, extract_archive
+from .utils import Path, check_integrity, download_and_extract_archive, extract_archive
 
 
 class ReforesTree(NonGeoDataset):
@@ -63,7 +63,7 @@ class ReforesTree(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -81,7 +81,7 @@ class ReforesTree(NonGeoDataset):
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.checksum = checksum
         self.download = download
@@ -90,7 +90,9 @@ class ReforesTree(NonGeoDataset):
 
         self.files = self._load_files(self.root)
 
-        self.annot_df = pd.read_csv(os.path.join(root, "mapping", "final_dataset.csv"))
+        self.annot_df = pd.read_csv(
+            os.path.join(self.root, "mapping", "final_dataset.csv")
+        )
 
         self.class2idx: dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 

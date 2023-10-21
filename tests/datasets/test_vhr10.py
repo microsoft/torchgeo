@@ -4,7 +4,6 @@
 import builtins
 import os
 import shutil
-from pathlib import Path
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -17,6 +16,7 @@ from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import VHR10
+from torchgeo.datasets.utils import Path
 
 pytest.importorskip("pycocotools")
 

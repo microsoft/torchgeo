@@ -2,8 +2,8 @@
 # Licensed under the MIT License.
 
 import os
-from pathlib import Path
 
+from torchgeo.datasets.utils import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch

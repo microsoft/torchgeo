@@ -18,7 +18,7 @@ from rasterio.enums import Resampling
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, extract_archive, percentile_normalization
+from .utils import Path, check_integrity, extract_archive, percentile_normalization
 
 
 class DFC2022(NonGeoDataset):
@@ -137,7 +137,7 @@ class DFC2022(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         checksum: bool = False,
@@ -155,7 +155,7 @@ class DFC2022(NonGeoDataset):
             AssertionError: if ``split`` is invalid
         """
         assert split in self.metadata
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.transforms = transforms
         self.checksum = checksum

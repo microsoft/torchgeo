@@ -4,7 +4,6 @@
 import glob
 import os
 import shutil
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -22,6 +21,7 @@ from torchgeo.datasets import (
     SpaceNet6,
     SpaceNet7,
 )
+from torchgeo.datasets.utils import Path
 
 TEST_DATA_DIR = "tests/data/spacenet"
 radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")

@@ -12,7 +12,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
-from .utils import check_integrity, download_url, extract_archive
+from .utils import Path, check_integrity, download_url, extract_archive
 
 
 class UCMerced(NonGeoClassificationDataset):
@@ -83,7 +83,7 @@ class UCMerced(NonGeoClassificationDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
@@ -104,7 +104,7 @@ class UCMerced(NonGeoClassificationDataset):
                 don't match
         """
         assert split in self.splits
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
@@ -117,7 +117,7 @@ class UCMerced(NonGeoClassificationDataset):
         is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns
 
         super().__init__(
-            root=os.path.join(root, self.base_dir),
+            root=os.path.join(self.root, self.base_dir),
             transforms=transforms,
             is_valid_file=is_in_split,
         )

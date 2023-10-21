@@ -4,7 +4,6 @@
 import os
 import shutil
 from itertools import product
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -16,6 +15,7 @@ from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import EuroSAT, EuroSAT100
+from torchgeo.datasets.utils import Path
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:

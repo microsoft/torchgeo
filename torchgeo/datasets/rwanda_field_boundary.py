@@ -16,7 +16,12 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    Path,
+    check_integrity,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 class RwandaFieldBoundary(NonGeoDataset):
@@ -82,7 +87,7 @@ class RwandaFieldBoundary(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         bands: Sequence[str] = all_bands,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -110,7 +115,7 @@ class RwandaFieldBoundary(NonGeoDataset):
         assert split in self.splits
         if download and api_key is None:
             raise RuntimeError("Must provide an API key to download the dataset")
-        self.root = os.path.expanduser(root)
+        self.root = str(os.path.expanduser(root))
         self.bands = bands
         self.transforms = transforms
         self.split = split

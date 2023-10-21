@@ -12,7 +12,7 @@ import pandas as pd
 from rasterio.crs import CRS
 
 from .geo import GeoDataset
-from .utils import BoundingBox, disambiguate_timestamp
+from .utils import BoundingBox, Path, disambiguate_timestamp
 
 
 class EDDMapS(GeoDataset):
@@ -41,7 +41,7 @@ class EDDMapS(GeoDataset):
     res = 0
     _crs = CRS.from_epsg(4326)  # Lat/Lon
 
-    def __init__(self, root: str = "data") -> None:
+    def __init__(self, root: Path = "data") -> None:
         """Initialize a new Dataset instance.
 
         Args:
@@ -52,9 +52,9 @@ class EDDMapS(GeoDataset):
         """
         super().__init__()
 
-        self.root = root
+        self.root = str(root)
 
-        filepath = os.path.join(root, "mappings.csv")
+        filepath = os.path.join(self.root, "mappings.csv")
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"Dataset not found in `root={self.root}`")
 

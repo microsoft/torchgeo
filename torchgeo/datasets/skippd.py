@@ -14,7 +14,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class SKIPPD(NonGeoDataset):
@@ -71,7 +71,7 @@ class SKIPPD(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "trainval",
         task: str = "nowcast",
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -104,7 +104,7 @@ class SKIPPD(NonGeoDataset):
         ), f"Please choose one of these valid tasks {self.valid_tasks}."
         self.task = task
 
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.download = download
         self.checksum = checksum

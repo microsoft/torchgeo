@@ -3,7 +3,6 @@
 
 import os
 import shutil
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -13,6 +12,7 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import CMSGlobalMangroveCanopy, IntersectionDataset, UnionDataset
+from torchgeo.datasets.utils import Path
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -61,7 +61,7 @@ class TestCMSGlobalMangroveCanopy:
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(
-            os.path.join(tmp_path, "CMS_Global_Map_Mangrove_Canopy_1665.zip"), "w"
+            os.path.join(str(tmp_path), "CMS_Global_Map_Mangrove_Canopy_1665.zip"), "w"
         ) as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):

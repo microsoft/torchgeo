@@ -15,7 +15,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive
+from .utils import Path, download_and_extract_archive
 
 
 class LoveDA(NonGeoDataset):
@@ -90,7 +90,7 @@ class LoveDA(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         scene: list[str] = ["urban", "rural"],
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -120,7 +120,7 @@ class LoveDA(NonGeoDataset):
         ), "The possible scenes are 'rural' and/or 'urban'"
         assert len(scene) <= 2, "There are no other scenes than 'rural' or 'urban'"
 
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.scene = scene
         self.transforms = transforms

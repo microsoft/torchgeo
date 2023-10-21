@@ -20,7 +20,7 @@ from rasterio.enums import Resampling
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, percentile_normalization
+from .utils import Path, download_url, extract_archive, percentile_normalization
 
 
 class SeasoNet(NonGeoDataset):
@@ -207,7 +207,7 @@ class SeasoNet(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         seasons: Collection[str] = all_seasons,
         bands: Iterable[str] = all_bands,
@@ -240,7 +240,7 @@ class SeasoNet(NonGeoDataset):
         assert set(grids) <= {1, 2}
         assert concat_seasons in range(1, len(seasons) + 1)
 
-        self.root = root
+        self.root = str(root)
         self.bands = bands
         self.concat_seasons = concat_seasons
         self.transforms = transforms

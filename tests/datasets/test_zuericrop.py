@@ -4,7 +4,6 @@
 import builtins
 import os
 import shutil
-from pathlib import Path
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -15,6 +14,7 @@ from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import ZueriCrop
+from torchgeo.datasets.utils import Path
 
 pytest.importorskip("h5py", minversion="3")
 

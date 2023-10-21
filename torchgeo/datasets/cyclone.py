@@ -16,7 +16,12 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    Path,
+    check_integrity,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 class TropicalCyclone(NonGeoDataset):
@@ -66,7 +71,7 @@ class TropicalCyclone(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
@@ -90,7 +95,7 @@ class TropicalCyclone(NonGeoDataset):
         """
         assert split in self.md5s
 
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.transforms = transforms
         self.checksum = checksum
@@ -105,7 +110,7 @@ class TropicalCyclone(NonGeoDataset):
             )
 
         output_dir = "_".join([self.collection_id, split, "source"])
-        filename = os.path.join(root, output_dir, "collection.json")
+        filename = os.path.join(self.root, output_dir, "collection.json")
         with open(filename) as f:
             self.collection = json.load(f)["links"]
 

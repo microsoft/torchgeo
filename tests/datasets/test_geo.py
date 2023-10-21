@@ -3,7 +3,6 @@
 import os
 import pickle
 from collections.abc import Iterable
-from pathlib import Path
 from typing import Union
 
 import pytest
@@ -25,6 +24,7 @@ from torchgeo.datasets import (
     UnionDataset,
     VectorDataset,
 )
+from torchgeo.datasets.utils import Path
 
 
 class CustomGeoDataset(GeoDataset):
