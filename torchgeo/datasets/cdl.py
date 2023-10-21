@@ -334,7 +334,7 @@ class CDL(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
+        assert check_instance_type(self.paths)
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace("*", str(year))
             pathname = os.path.join(str(self.paths), zipfile_name)
