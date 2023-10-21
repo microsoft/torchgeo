@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -14,7 +15,6 @@ from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import BoundingBox, IntersectionDataset, L8Biome, UnionDataset
-from torchgeo.datasets.utils import Path
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:

@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from pathlib import Path
 
 import pytest
 import torch
@@ -14,7 +15,6 @@ from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import USAVars
-from torchgeo.datasets.utils import Path
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:

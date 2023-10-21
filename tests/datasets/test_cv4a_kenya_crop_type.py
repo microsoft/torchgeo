@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -13,7 +14,6 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import CV4AKenyaCropType
-from torchgeo.datasets.utils import Path
 
 
 class Collection:

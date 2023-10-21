@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -12,7 +13,6 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import CloudCoverDetection
-from torchgeo.datasets.utils import Path
 
 
 class Collection:

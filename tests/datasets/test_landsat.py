@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -12,7 +13,6 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import BoundingBox, IntersectionDataset, Landsat8, UnionDataset
-from torchgeo.datasets.utils import Path
 
 
 class TestLandsat8:

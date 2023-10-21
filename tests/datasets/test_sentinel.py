@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -17,7 +18,6 @@ from torchgeo.datasets import (
     Sentinel2,
     UnionDataset,
 )
-from torchgeo.datasets.utils import Path
 
 
 class TestSentinel1:
@@ -133,7 +133,7 @@ class TestSentinel2:
 
     def test_plot_wrong_bands(self, dataset: Sentinel2) -> None:
         bands = ["B02"]
-        ds = Sentinel2(dataset.paths, res=dataset.res, bands=bands)  # type: ignore
+        ds = Sentinel2(dataset.paths, res=dataset.res, bands=bands)
         x = dataset[dataset.bounds]
         with pytest.raises(
             ValueError, match="Dataset doesn't contain some of the RGB bands"

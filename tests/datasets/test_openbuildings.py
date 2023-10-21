@@ -4,6 +4,7 @@
 import json
 import os
 import shutil
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -19,7 +20,6 @@ from torchgeo.datasets import (
     OpenBuildings,
     UnionDataset,
 )
-from torchgeo.datasets.utils import Path
 
 
 class TestOpenBuildings:
@@ -43,7 +43,7 @@ class TestOpenBuildings:
         self, dataset: OpenBuildings, tmp_path: Path
     ) -> None:
         # empty csv buildings file
-        path = os.path.join(str(tmp_path), "000_buildings.csv.gz")
+        path = os.path.join(tmp_path, "000_buildings.csv.gz")
         df = pd.read_csv(path)
         df = pd.DataFrame(columns=df.columns)
         df.to_csv(path, compression="gzip")
@@ -53,7 +53,7 @@ class TestOpenBuildings:
         assert isinstance(x["mask"], torch.Tensor)
 
     def test_no_building_data_found(self, tmp_path: Path) -> None:
-        false_root = os.path.join(str(tmp_path), "empty")
+        false_root = os.path.join(tmp_path, "empty")
         os.makedirs(false_root)
         shutil.copy(
             os.path.join("tests", "data", "openbuildings", "tiles.geojson"), false_root
@@ -64,24 +64,24 @@ class TestOpenBuildings:
             OpenBuildings(false_root)
 
     def test_corrupted(self, dataset: OpenBuildings, tmp_path: Path) -> None:
-        with open(os.path.join(str(tmp_path), "000_buildings.csv.gz"), "w") as f:
+        with open(os.path.join(tmp_path, "000_buildings.csv.gz"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
             OpenBuildings(dataset.paths, checksum=True)
 
     def test_no_meta_data_found(self, tmp_path: Path) -> None:
-        false_root = os.path.join(str(tmp_path), "empty")
+        false_root = os.path.join(tmp_path, "empty")
         os.makedirs(false_root)
         with pytest.raises(FileNotFoundError, match="Meta data file"):
             OpenBuildings(false_root)
 
     def test_nothing_in_index(self, dataset: OpenBuildings, tmp_path: Path) -> None:
         # change meta data to another 'title_url' so that there is no match found
-        with open(os.path.join(str(tmp_path), "tiles.geojson")) as f:
+        with open(os.path.join(tmp_path, "tiles.geojson")) as f:
             content = json.load(f)
             content["features"][0]["properties"]["tile_url"] = "mismatch.csv.gz"
 
-        with open(os.path.join(str(tmp_path), "tiles.geojson"), "w") as f:
+        with open(os.path.join(tmp_path, "tiles.geojson"), "w") as f:
             json.dump(content, f)
 
         with pytest.raises(FileNotFoundError, match="data was found in"):

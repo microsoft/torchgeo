@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -12,7 +13,6 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import EUDEM, BoundingBox, IntersectionDataset, UnionDataset
-from torchgeo.datasets.utils import Path
 
 
 class TestEUDEM:
@@ -21,7 +21,7 @@ class TestEUDEM:
         md5s = {"eu_dem_v11_E30N10.zip": "ef148466c02197a08be169eaad186591"}
         monkeypatch.setattr(EUDEM, "md5s", md5s)
         zipfile = os.path.join("tests", "data", "eudem", "eu_dem_v11_E30N10.zip")
-        shutil.copy(zipfile, str(tmp_path))
+        shutil.copy(zipfile, tmp_path)
         root = str(tmp_path)
         transforms = nn.Identity()
         return EUDEM(root, transforms=transforms)
@@ -45,7 +45,7 @@ class TestEUDEM:
             EUDEM(str(tmp_path))
 
     def test_corrupted(self, tmp_path: Path) -> None:
-        with open(os.path.join(str(tmp_path), "eu_dem_v11_E30N10.zip"), "w") as f:
+        with open(os.path.join(tmp_path, "eu_dem_v11_E30N10.zip"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
             EUDEM(str(tmp_path), checksum=True)

@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -11,7 +12,6 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 
 from torchgeo.datasets import MillionAID
-from torchgeo.datasets.utils import Path
 
 
 class TestMillionAID:
@@ -43,11 +43,11 @@ class TestMillionAID:
 
     def test_not_extracted(self, tmp_path: Path) -> None:
         url = os.path.join("tests", "data", "millionaid", "train.zip")
-        shutil.copy(url, str(tmp_path))
+        shutil.copy(url, tmp_path)
         MillionAID(str(tmp_path))
 
     def test_corrupted(self, tmp_path: Path) -> None:
-        with open(os.path.join(str(tmp_path), "train.zip"), "w") as f:
+        with open(os.path.join(tmp_path, "train.zip"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
             MillionAID(str(tmp_path), checksum=True)

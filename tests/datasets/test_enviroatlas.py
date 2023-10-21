@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -19,7 +20,6 @@ from torchgeo.datasets import (
     IntersectionDataset,
     UnionDataset,
 )
-from torchgeo.datasets.utils import Path
 from torchgeo.samplers import RandomGeoSampler
 
 

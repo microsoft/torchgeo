@@ -5,12 +5,12 @@ import builtins
 import glob
 import math
 import os
-import pathlib
 import pickle
 import re
 import shutil
 import sys
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -22,7 +22,6 @@ from rasterio.crs import CRS
 import torchgeo.datasets.utils
 from torchgeo.datasets.utils import (
     BoundingBox,
-    Path,
     concat_samples,
     disambiguate_timestamp,
     download_and_extract_archive,
@@ -586,7 +585,7 @@ class TestCollateFunctionsDifferingKeys:
 
 
 def test_existing_directory(tmp_path: Path) -> None:
-    subdir = pathlib.Path(str(tmp_path)) / "foo" / "bar"
+    subdir = tmp_path / "foo" / "bar"
     subdir.mkdir(parents=True)
 
     assert subdir.exists()
@@ -596,7 +595,7 @@ def test_existing_directory(tmp_path: Path) -> None:
 
 
 def test_nonexisting_directory(tmp_path: Path) -> None:
-    subdir = pathlib.Path(str(tmp_path)) / "foo" / "bar"
+    subdir = tmp_path / "foo" / "bar"
 
     assert not subdir.exists()
 

@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -12,7 +13,6 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import SEN12MS
-from torchgeo.datasets.utils import Path
 
 
 class TestSEN12MS:

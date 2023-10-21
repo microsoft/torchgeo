@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from pathlib import Path
 
 import pytest
 import torch
@@ -10,7 +11,6 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import WesternUSALiveFuelMoisture
-from torchgeo.datasets.utils import Path
 
 
 class Collection:

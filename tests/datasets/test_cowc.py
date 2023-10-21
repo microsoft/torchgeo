@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -15,7 +16,6 @@ from torch.utils.data import ConcatDataset
 import torchgeo.datasets.utils
 from torchgeo.datasets import COWCCounting, COWCDetection
 from torchgeo.datasets.cowc import COWC
-from torchgeo.datasets.utils import Path
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:

@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -18,11 +19,10 @@ from torchgeo.datasets import (
     IntersectionDataset,
     UnionDataset,
 )
-from torchgeo.datasets.utils import Path
 
 
-def download_url(url: str, root: Path, *args: str) -> None:
-    shutil.copy(url, str(root))
+def download_url(url: str, root: str, *args: str) -> None:
+    shutil.copy(url, root)
 
 
 class TestCanadianBuildingFootprints:
@@ -40,7 +40,7 @@ class TestCanadianBuildingFootprints:
         url = os.path.join("tests", "data", "cbf") + os.sep
         monkeypatch.setattr(CanadianBuildingFootprints, "url", url)
         monkeypatch.setattr(plt, "show", lambda *args: None)
-        root = tmp_path
+        root = str(tmp_path)
         transforms = nn.Identity()
         return CanadianBuildingFootprints(
             root, res=0.1, transforms=transforms, download=True, checksum=True
@@ -76,7 +76,7 @@ class TestCanadianBuildingFootprints:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
-            CanadianBuildingFootprints(tmp_path)
+            CanadianBuildingFootprints(str(tmp_path))
 
     def test_invalid_query(self, dataset: CanadianBuildingFootprints) -> None:
         query = BoundingBox(2, 2, 2, 2, 2, 2)

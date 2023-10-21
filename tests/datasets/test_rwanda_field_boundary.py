@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -14,7 +15,6 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import RwandaFieldBoundary
-from torchgeo.datasets.utils import Path
 
 
 class Collection:
@@ -96,7 +96,7 @@ class TestRwandaFieldBoundary:
             "nasa_rwanda_field_boundary_competition_source_test.tar.gz",
             "nasa_rwanda_field_boundary_competition_labels_train.tar.gz",
         ]:
-            with open(os.path.join(str(tmp_path), fn), "w") as f:
+            with open(os.path.join(tmp_path, fn), "w") as f:
                 f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
             RwandaFieldBoundary(root=str(tmp_path), checksum=True)

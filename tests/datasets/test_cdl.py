@@ -5,6 +5,7 @@ import glob
 import os
 import shutil
 from datetime import datetime
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -15,7 +16,6 @@ from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import CDL, BoundingBox, IntersectionDataset, UnionDataset
-from torchgeo.datasets.utils import Path
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:

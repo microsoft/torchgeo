@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -15,7 +16,6 @@ from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import SeasoNet
-from torchgeo.datasets.utils import Path
 
 
 def download_url(url: str, root: str, md5: str, *args: str, **kwargs: str) -> None:

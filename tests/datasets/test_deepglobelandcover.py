@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -12,7 +13,6 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import DeepGlobeLandCover
-from torchgeo.datasets.utils import Path
 
 
 class TestDeepGlobeLandCover:
@@ -45,7 +45,7 @@ class TestDeepGlobeLandCover:
         DeepGlobeLandCover(root=str(tmp_path))
 
     def test_corrupted(self, tmp_path: Path) -> None:
-        with open(os.path.join(str(tmp_path), "data.zip"), "w") as f:
+        with open(os.path.join(tmp_path, "data.zip"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
             DeepGlobeLandCover(root=str(tmp_path), checksum=True)
