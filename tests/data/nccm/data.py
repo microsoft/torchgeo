@@ -16,9 +16,10 @@ SIZE = 32
 
 np.random.seed(0)
 
-dir = "CDL{}_clip"
+# dir = "CDL{}_clip"
 
-years = [2017,2018,2019]
+# years = [2017,2018,2019]
+files = ["CDL2017_clip.tif", "CDL2018_clip1.tif", "CDL2019_clip.tif"]
 
 def create_file(path: str, dtype: str):
     """Create the testing file."""
@@ -43,22 +44,16 @@ def create_file(path: str, dtype: str):
 
 
 if __name__ == "__main__":
-    for year in years:
-        year_dir = dir.format(year)
-        # Remove old data
-        if os.path.isdir(year_dir):
-            shutil.rmtree(year_dir)
+    dir = os.path.join(os.getcwd(), "nccm", "13090442")
+    os.makedirs(dir, exist_ok=True)
 
-        os.makedirs(os.path.join(os.getcwd(), year_dir))
+    for file in files:
+        create_file(os.path.join(dir, file), dtype="int8")
 
-        zip_filename = year_dir + ".zip"
-        filename = year_dir + ".tif"
-        create_file(os.path.join(year_dir, filename), dtype="int8")
+    # Compress data
+    shutil.make_archive("13090442", "zip", ".", "nccm")
 
-        # Compress data
-        shutil.make_archive(year_dir, "zip", ".", year_dir)
-
-        # Compute checksums
-        with open(zip_filename, "rb") as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-            print(f"{zip_filename}: {md5}")
+    # Compute checksums
+    with open("13090442.zip", "rb") as f:
+        md5 = hashlib.md5(f.read()).hexdigest()
+        print(f"13090442.zip: {md5}")

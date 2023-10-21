@@ -36,9 +36,7 @@ class NCCM(RasterDataset):
     If you use this dataset in your research, please use the corresponding citation:
     * You, N., Dong, J., Huang, J. et al. The 10-m crop type maps in Northeast China during 2017-2019. Sci Data 8, 41 (2021). https://doi.org/10.1038/s41597-021-00827-9
     """
-
-    filename_glob = "*_clip.tif"
-    filename_regex = (r"CDL(?P<year>\d{4})_clip\.tif")
+    filename_regex = (r"CDL(?P<year>\d{4})_clip")
     
     #there is only a single zipfolder, none for the files
     zipfile_glob = "13090442.zip"
@@ -49,11 +47,17 @@ class NCCM(RasterDataset):
     #need to add url
     url = "https://figshare.com/ndownloader/articles/13090442/versions/1"
     
+    # md5s = {
+    #     2017: "a85341fa6248fd7e0badab6c",
+    #     2018: "478d10786aa798fb11693ec1",
+    #     2019: "42e483fdc8239d22dba7020f"
+    # }
+
     md5s = {
-        2017: "a85341fa6248fd7e0badab6c",
-        2018: "478d10786aa798fb11693ec1",
-        2019: "42e483fdc8239d22dba7020f"
+        "main": "eae952f1b346d7e649d027e8139a76f5"
     }
+
+    years = [2017,2018,2019]
 
     cmap = {
         0: (0,0,0,0),
@@ -100,14 +104,12 @@ class NCCM(RasterDataset):
 
         """
 
-        assert set(years) <= self.md5s.keys(), (
-            "Data product only exists for the following years: "
-            f"{list(self.md5s.keys())}."
-        )
+        assert all(year not in years for year in self.years), f"Only following years are valid: {self.years}"
 
         assert (
             set(classes) <= self.cmap.keys()
         ), f"Only the following classes are valid: {list(self.cmap.keys())}."
+
         assert 0 in classes, "Classes must include the background class: 0"
 
         self.paths = paths
@@ -161,7 +163,7 @@ class NCCM(RasterDataset):
             exists = True
             self._extract()
 
-        if exists = True:
+        if exists == True:
             return
 
         # Check if the user requested to download the dataset
@@ -179,7 +181,7 @@ class NCCM(RasterDataset):
     def _download(self) -> None:
         """Download the dataset."""
         
-        download_url(self.url,self.paths)
+        download_url(self.url,self.paths,md5 = self.md5s["main"] if self.checksum else None)
 
     def _extract(self) -> None:
         """Extract the dataset."""
