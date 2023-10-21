@@ -13,6 +13,7 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import EUDEM, BoundingBox, IntersectionDataset, UnionDataset
+from torchgeo.datasets.utils import check_instance_type
 
 
 class TestEUDEM:
@@ -33,9 +34,9 @@ class TestEUDEM:
         assert isinstance(x["mask"], torch.Tensor)
 
     def test_extracted_already(self, dataset: EUDEM) -> None:
-        assert isinstance(dataset.paths, str)
-        zipfile = os.path.join(dataset.paths, "eu_dem_v11_E30N10.zip")
-        shutil.unpack_archive(zipfile, dataset.paths, "zip")
+        assert check_instance_type(dataset.paths)
+        zipfile = os.path.join(str(dataset.paths), "eu_dem_v11_E30N10.zip")
+        shutil.unpack_archive(zipfile, str(dataset.paths), "zip")
         EUDEM(dataset.paths)
 
     def test_no_dataset(self, tmp_path: Path) -> None:

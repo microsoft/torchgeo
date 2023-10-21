@@ -171,7 +171,7 @@ class Chesapeake(RasterDataset, abc.ABC):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
+        assert check_instance_type(self.paths)
         extract_archive(os.path.join(str(self.paths), self.zipfile))
 
     def plot(
