@@ -753,9 +753,12 @@ def check_instance_type(paths: Path | Iterable[Path]) -> bool:
 
     .. versionadded:: 0.6
     """
+    itr_paths: Iterable[Path]
     path_types = (str, bytes, os.PathLike)
     is_not_iterable = False
-    if not isinstance(paths, Iterable) and not isinstance(paths, str):
-        paths = [paths]
+    if hasattr(paths, "encode") or hasattr(paths, "decode") or hasattr(paths, "exists"):
+        itr_paths = [paths]  # type: ignore[list-item]
         is_not_iterable = True
-    return all([isinstance(path, path_types) for path in paths]) and is_not_iterable
+    else:
+        itr_paths = paths    # type: ignore[assignment]
+    return all([isinstance(path, path_types) for path in itr_paths]) and is_not_iterable
