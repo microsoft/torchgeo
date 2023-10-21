@@ -39,9 +39,7 @@ class TestDeepGlobeLandCover:
     def test_extract(self, tmp_path: Path) -> None:
         root = os.path.join("tests", "data", "deepglobelandcover")
         filename = "data.zip"
-        shutil.copyfile(
-            os.path.join(root, filename), os.path.join(tmp_path, filename)
-        )
+        shutil.copyfile(os.path.join(root, filename), os.path.join(tmp_path, filename))
         DeepGlobeLandCover(root=tmp_path)
 
     def test_corrupted(self, tmp_path: Path) -> None:
