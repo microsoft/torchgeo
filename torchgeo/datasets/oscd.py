@@ -149,16 +149,11 @@ class OSCD(NonGeoDataset):
         image1 = self._load_image(files["images1"])
         image2 = self._load_image(files["images2"])
         mask = self._load_target(str(files["mask"]))
+        sample = {"image1": image1, "image2": image2, "mask": mask}
 
         if self.transforms is not None:
-            image = torch.cat([image1, image2])
-            sample = {"image": image, "mask": mask}
             sample = self.transforms(sample)
-            idx = sample["image"].shape[0] // 2
-            image1 = sample["image"][:idx]
-            image2 = sample["image"][idx:]
-
-        sample = {"image1": image1, "image2": image2, "mask": mask}
+        
         return sample
 
     def __len__(self) -> int:
