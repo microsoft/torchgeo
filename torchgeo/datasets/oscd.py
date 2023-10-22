@@ -78,7 +78,7 @@ class OSCD(NonGeoDataset):
 
     colormap = ["blue"]
 
-    all_band_names = (
+    all_bands = (
         "B01",
         "B02",
         "B03",
@@ -96,13 +96,11 @@ class OSCD(NonGeoDataset):
 
     rgb_bands = ("B04", "B03", "B02")
 
-    BAND_SETS = {"all": all_band_names, "rgb": rgb_bands}
-
     def __init__(
         self,
         root: str = "data",
         split: str = "train",
-        bands: Sequence[str] = BAND_SETS["all"],
+        bands: Sequence[str] = all_bands,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -123,15 +121,9 @@ class OSCD(NonGeoDataset):
                 don't match
         """
         assert split in self.splits
-        self._validate_bands(bands)
+        assert set(bands) <= set(self.all_bands)
         self.bands = bands
-        self.all_band_indices = [self.all_band_names.index(b) for b in bands]
-        self.rgb_indices = []
-
-        try:
-            self.rgb_indices = [bands.index(band) for band in self.rgb_bands]
-        except ValueError:
-            pass
+        self.all_band_indices = [self.all_bands.index(b) for b in bands]
 
         self.root = root
         self.split = split
@@ -301,23 +293,6 @@ class OSCD(NonGeoDataset):
         for zipfile in glob.iglob(pathname):
             extract_archive(zipfile)
 
-    def _validate_bands(self, bands: Sequence[str]) -> None:
-        """Validate list of bands.
-
-        Args:
-            bands: user-provided sequence of bands to load
-
-        Raises:
-            AssertionError: if ``bands`` is not a sequence
-            ValueError: if an invalid band name is provided
-
-        .. versionadded:: 0.3
-        """
-        assert isinstance(bands, Sequence), "'bands' must be a sequence"
-        for band in bands:
-            if band not in self.all_band_names:
-                raise ValueError(f"'{band}' is an invalid band name.")
-
     def plot(
         self,
         sample: dict[str, Tensor],
@@ -338,13 +313,15 @@ class OSCD(NonGeoDataset):
         """
         ncols = 2
 
-        if not self.rgb_indices:
+        try:
+            rgb_indices = [bands.index(band) for band in self.rgb_bands]
+        except:
             raise ValueError(
                 "RGB bands must be present to use `plot` with Sentinel-2 imagery."
             )
 
         def get_masked(img: Tensor) -> "np.typing.NDArray[np.uint8]":
-            rgb_img = img[self.rgb_indices].float().numpy()
+            rgb_img = img[rgb_indices].float().numpy()
             per02 = np.percentile(rgb_img, 2)
             per98 = np.percentile(rgb_img, 98)
             rgb_img = (np.clip((rgb_img - per02) / (per98 - per02), 0, 1) * 255).astype(
