@@ -12,7 +12,7 @@ from torchgeo.datasets import OSCD
 
 
 class TestOSCDDataModule:
-    @pytest.fixture(params=[OSCD.all_band_names, OSCD.rgb_bands])
+    @pytest.fixture(params=[OSCD.all_bands, OSCD.rgb_bands])
     def datamodule(self, request: SubRequest) -> OSCDDataModule:
         bands = request.param
         root = os.path.join("tests", "data", "oscd")
@@ -37,10 +37,14 @@ class TestOSCDDataModule:
         batch = datamodule.on_after_batch_transfer(batch, 0)
         assert batch["image1"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
         assert batch["image1"].shape[0] == batch["mask"].shape[0] == 1
-        if datamodule.bands == OSCD.all_band_names:
+        assert batch["image2"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
+        assert batch["image2"].shape[0] == batch["mask"].shape[0] == 1
+        if datamodule.bands == OSCD.all_bands:
             assert batch["image1"].shape[1] == 13
+            assert batch["image2"].shape[1] == 13
         else:
             assert batch["image1"].shape[1] == 3
+            assert batch["image2"].shape[1] == 3
 
     def test_val_dataloader(self, datamodule: OSCDDataModule) -> None:
         datamodule.setup("validate")
@@ -51,10 +55,14 @@ class TestOSCDDataModule:
         if datamodule.val_split_pct > 0.0:
             assert batch["image1"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
             assert batch["image1"].shape[0] == batch["mask"].shape[0] == 1
-            if datamodule.bands == OSCD.all_band_names:
+            assert batch["image2"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
+            assert batch["image2"].shape[0] == batch["mask"].shape[0] == 1
+            if datamodule.bands == OSCD.all_bands:
                 assert batch["image1"].shape[1] == 13
+                assert batch["image2"].shape[1] == 13
             else:
                 assert batch["image1"].shape[1] == 3
+                assert batch["image2"].shape[1] == 3
 
     def test_test_dataloader(self, datamodule: OSCDDataModule) -> None:
         datamodule.setup("test")
@@ -64,7 +72,11 @@ class TestOSCDDataModule:
         batch = datamodule.on_after_batch_transfer(batch, 0)
         assert batch["image1"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
         assert batch["image1"].shape[0] == batch["mask"].shape[0] == 1
-        if datamodule.bands == OSCD.all_band_names:
+        assert batch["image2"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
+        assert batch["image2"].shape[0] == batch["mask"].shape[0] == 1
+        if datamodule.bands == OSCD.all_bands:
             assert batch["image1"].shape[1] == 13
+            assert batch["image2"].shape[1] == 13
         else:
             assert batch["image1"].shape[1] == 3
+            assert batch["image2"].shape[1] == 3
