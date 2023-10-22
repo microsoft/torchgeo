@@ -80,11 +80,11 @@ class TestOSCD:
         assert x["mask"].ndim == 2
 
         if dataset.bands == OSCD.rgb_bands:
-            assert x["image1"].shape[0] == 6
-            assert x["image2"].shape[0] == 6
+            assert x["image1"].shape[0] == 3
+            assert x["image2"].shape[0] == 3
         else:
-            assert x["image1"].shape[0] == 26
-            assert x["image2"].shape[0] == 26
+            assert x["image1"].shape[0] == 13
+            assert x["image2"].shape[0] == 13
 
     def test_len(self, dataset: OSCD) -> None:
         if dataset.split == "train":
