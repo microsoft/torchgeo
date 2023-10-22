@@ -121,8 +121,8 @@ class OSCD(NonGeoDataset):
                 don't match
         """
         assert split in self.splits
-        assert set(bands) <= set(self.all_bands)
         self.bands = bands
+        assert set(bands) <= set(self.all_bands)
         self.all_band_indices = [self.all_bands.index(b) for b in bands]
 
         self.root = root
@@ -310,10 +310,10 @@ class OSCD(NonGeoDataset):
 
         try:
             rgb_indices = [bands.index(band) for band in self.rgb_bands]
-        except:
+        except ValueError as e:
             raise ValueError(
                 "RGB bands must be present to use `plot` with Sentinel-2 imagery."
-            )
+            ) from e
 
         def get_masked(img: Tensor) -> "np.typing.NDArray[np.uint8]":
             rgb_img = img[rgb_indices].float().numpy()
