@@ -81,7 +81,7 @@ class OSCDDataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
 
-        self.bands = kwargs.get("bands", OSCD.all_band_names)
+        self.bands = kwargs.get("bands", OSCD.all_bands)
         self.mean = torch.tensor([MEAN[b] for b in self.bands])
         self.std = torch.tensor([STD[b] for b in self.bands])
 
