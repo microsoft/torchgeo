@@ -121,13 +121,12 @@ class OSCD(NonGeoDataset):
                 don't match
         """
         assert split in self.splits
-        self.bands = bands
         assert set(bands) <= set(self.all_bands)
-        self.all_band_indices = [self.all_bands.index(b) for b in bands]
+        self.bands = bands
+        self.all_band_indices = [self.all_bands.index(b) for b in self.bands]
 
         self.root = root
         self.split = split
-        self.bands = bands
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
@@ -309,7 +308,7 @@ class OSCD(NonGeoDataset):
         ncols = 2
 
         try:
-            rgb_indices = [bands.index(band) for band in self.rgb_bands]
+            rgb_indices = [self.bands.index(band) for band in self.rgb_bands]
         except ValueError as e:
             raise ValueError(
                 "RGB bands must be present to use `plot` with Sentinel-2 imagery."
