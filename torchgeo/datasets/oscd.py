@@ -153,7 +153,7 @@ class OSCD(NonGeoDataset):
 
         if self.transforms is not None:
             sample = self.transforms(sample)
-        
+
         return sample
 
     def __len__(self) -> int:
