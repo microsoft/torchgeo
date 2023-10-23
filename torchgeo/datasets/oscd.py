@@ -306,7 +306,7 @@ class OSCD(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: If RGB bands specified are not present in the Sentinel-2 imagery.
+            ValueError: If RGB bands specified are not present in the S2 imagery.
         """
         ncols = 2
 
@@ -314,7 +314,7 @@ class OSCD(NonGeoDataset):
             rgb_indices = [self.bands.index(band) for band in self.rgb_bands]
         except ValueError as e:
             raise ValueError(
-                "RGB bands must be present to use `plot` with Sentinel-2 imagery."
+                "RGB bands must be present to use `plot` with S2 imagery."
             ) from e
 
         def get_masked(img: Tensor) -> "np.typing.NDArray[np.uint8]":
