@@ -113,3 +113,9 @@ class TestOSCD:
     def test_plot(self, dataset: OSCD) -> None:
         dataset.plot(dataset[0], suptitle="Test")
         plt.close()
+
+    def test_failed_plot(self, dataset: OSCD) -> None:
+        single_band_dataset = OSCD(root=dataset.root, bands=("B01",))
+        with pytest.raises(ValueError, match="RGB bands must be present"):
+            x = single_band_dataset[0].copy()
+            single_band_dataset.plot(x, suptitle="Test")

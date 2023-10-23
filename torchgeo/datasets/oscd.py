@@ -304,6 +304,9 @@ class OSCD(NonGeoDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        Raises:
+            ValueError: If RGB bands specified are not present in the Sentinel-2 imagery.
         """
         ncols = 2
 
