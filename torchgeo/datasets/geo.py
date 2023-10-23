@@ -9,6 +9,7 @@ import glob
 import os
 import re
 import sys
+import warnings
 from collections.abc import Iterable, Sequence
 from typing import Any, Callable, Optional, Union, cast
 
@@ -307,7 +308,11 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
             elif os.path.isfile(path) or path_is_vsi(path):
                 files.add(path)
             else:
-                continue
+                warnings.warn(
+                    f"Could not find any relevant files for provided path '{path}'. "
+                    f"Path was ignored.",
+                    UserWarning,
+                )
 
         return files
 
