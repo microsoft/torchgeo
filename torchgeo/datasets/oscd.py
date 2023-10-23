@@ -306,7 +306,7 @@ class OSCD(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: If RGB bands specified are not present in the S2 imagery.
+            ValueError: If *bands* does not include all RGB bands.
         """
         ncols = 2
 
