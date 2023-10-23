@@ -15,8 +15,8 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import AgriFieldNet
+
 # from torchgeo.datamodules import AgriFieldNetDataModule
 # from torchgeo.trainers import SemanticSegmentationTask
 
@@ -39,10 +39,9 @@ class TestAgriFieldNet:
     ) -> AgriFieldNet:
         radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
         monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch)
-        source_md5 = "42fea66d90af2d854939b60e4d7fa69f"
-        image_md5 = ""
-        target_md5 = ""
+        md5 = "42fea66d90af2d854939b60e4d7fa69f"
         monkeypatch.setitem(AgriFieldNet.image_meta, "md5", md5)
+        # data_dir = os.path.join("tests", "data", "agrifieldnet")
         root = str(tmp_path)
         split = request.param
         transforms = nn.Identity()

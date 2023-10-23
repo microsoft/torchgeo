@@ -57,7 +57,7 @@ def generate_test_data(root: str) -> str:
     }
 
     dir = os.path.join(
-        root, "tests", "data", "agrifieldnet", "ref_agrifieldnet_competition_v1"
+        root, "tests", "data", "agrifieldnet"
     )
 
     train_img_dir = os.path.join(dir, "ref_agrifieldnet_competition_v1_source")
@@ -114,16 +114,28 @@ def generate_test_data(root: str) -> str:
             src.write(test_field_arr, 1)
 
     # Create archive
-    os.chdir(os.path.dirname(dir))
+    os.chdir(dir)
     shutil.make_archive(
-        "ref_agrifieldnet_competition_v1",
+        "ref_agrifieldnet_competition_v1_source",
         "gztar",
-        root_dir=os.path.dirname(dir),
-        base_dir="ref_agrifieldnet_competition_v1",
+        root_dir=dir,
+        base_dir="ref_agrifieldnet_competition_v1_source",
     )
-    return calculate_md5(
-        os.path.join(os.path.dirname(dir), "ref_agrifieldnet_competition_v1.tar.gz")
+    shutil.make_archive(
+        "ref_agrifieldnet_competition_v1_labels_train",
+        "gztar",
+        root_dir=dir,
+        base_dir="ref_agrifieldnet_competition_v1_labels_train",
     )
+    shutil.make_archive(
+        "ref_agrifieldnet_competition_v1_labels_test",
+        "gztar",
+        root_dir=dir,
+        base_dir="ref_agrifieldnet_competition_v1_labels_test",
+    )
+    return None
+    # return calculate_md5(
+    #     os.path.join(os.path.dirname(dir), "ref_agrifieldnet_competition_v1.tar.gz"))
 
 
 if __name__ == "__main__":

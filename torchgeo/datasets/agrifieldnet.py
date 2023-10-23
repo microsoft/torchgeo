@@ -75,23 +75,23 @@ class AgriFieldNet(NonGeoDataset):
     splits = ["train", "predict"]
 
     collections = [
-        "ref_agrifieldnet_competition_v1_source",
-        "ref_agrifieldnet_competition_v1_labels_train",
-        "ref_agrifieldnet_competition_v1_labels_test",
+        "source",
+        "train_labels",
+        "test_labels",
     ]
 
-    source_meta = {
-        "filename": "ref_agrifieldnet_competition_v1_source.tar.gz",
-        "md5": "62ec758cc5c4d58f73c47be07f3d9d73",
-    }
-    image_meta = {
-        "filename": "ref_agrifieldnet_competition_v1_labels_train.tar.gz",
-        "md5": "d5c8d7fa8e1e28ecec211c3b3633fb17",
-    }
-    target_meta = {
-        "filename": "ref_agrifieldnet_competition_v1_labels_test.tar.gz",
-        "md5": "8aa638cdbd7cd38da37c3e9fd77c3d4c",
-    }
+    # source_meta = {
+    #     "filename": "ref_agrifieldnet_competition_v1_source.tar.gz",
+    #     "md5": "62ec758cc5c4d58f73c47be07f3d9d73",
+    # }
+    # image_meta = {
+    #     "filename": "ref_agrifieldnet_competition_v1_labels_train.tar.gz",
+    #     "md5": "d5c8d7fa8e1e28ecec211c3b3633fb17",
+    # }
+    # target_meta = {
+    #     "filename": "ref_agrifieldnet_competition_v1_labels_test.tar.gz",
+    #     "md5": "8aa638cdbd7cd38da37c3e9fd77c3d4c",
+    # }
 
     rgb_bands = ["B04", "B03", "B02"]
     all_bands = (
@@ -148,7 +148,7 @@ class AgriFieldNet(NonGeoDataset):
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
             checksum: if True, check the MD5 of the downloaded files (may be slow)
         """
-        assert split in self.splits
+        # assert split in self.splits
         self._validate_bands(bands)
 
         self.root = root
@@ -175,7 +175,7 @@ class AgriFieldNet(NonGeoDataset):
         self.train_label_fns = [
             os.path.join(
                 root,
-                "ref_agrifieldnet_competition_v1_labels_train",
+                "train_labels",
                 "ref_agrifieldnet_competition_v1_labels_train_" + tile,
             )
             for tile in self.train_tiles
@@ -183,16 +183,14 @@ class AgriFieldNet(NonGeoDataset):
         self.test_image_fns = [
             os.path.join(
                 root,
-                "ref_agrifieldnet_competition_v1_labels_test",
+                "test_labels",
                 "ref_agrifieldnet_competition_v1_labels_test_" + tile,
             )
             for tile in self.test_tiles
         ]
 
-        print("================== current split: ", self.split)
-
-        if self.split == "predict":
-            print("getting splits...")
+        if self.split == "test":
+            print("getting test splits...")
             self.test_field_ids = self.get_splits()
 
         # self.train_field_ids, self.test_field_ids = self.get_splits()
@@ -212,7 +210,7 @@ class AgriFieldNet(NonGeoDataset):
             labels, field_ids = self._load_label_tile(tile_name)
             sample = {"image": image, "mask": labels, "field_ids": field_ids}
 
-        if self.split == "predict":
+        if self.split == "test":
             tile_name = self.test_tiles[index]
             image = self._load_image_tile(tile_name)
             field_ids = self._load_label_tile(tile_name)
@@ -229,22 +227,13 @@ class AgriFieldNet(NonGeoDataset):
         Returns:
             list of source, training, and testing tile names
         """
-        train_label = "ref_agrifieldnet_competition_v1_labels_train"
-        test_label = "ref_agrifieldnet_competition_v1_labels_test"
 
-        with open(os.path.join(self.root, train_label, "collection.json")) as f:
-            train_json = json.load(f)
-        train_tiles = [
-            i["href"].split("_")[-1].split(".")[0][:-5]
-            for i in train_json["links"][2:-1]
-        ]
+        train_tiles = os.listdir("train_labels")
+        train_tiles = [x for x in train_tiles if "_field_ids.tif" not in x]
+        train_tiles = [x.split("_")[-1].split(".")[0] for x in train_tiles]
 
-        with open(os.path.join(self.root, test_label, "collection.json")) as f:
-            test_json = json.load(f)
-        test_tiles = [
-            i["href"].split("_")[-1].split(".")[0][:-5]
-            for i in test_json["links"][2:-1]
-        ]
+        test_tiles = os.listdir("test_labels")
+        test_tiles = [x.split("_")[-3].split("_")[0] for x in test_tiles]
 
         return (train_tiles, test_tiles)
 
@@ -294,39 +283,41 @@ class AgriFieldNet(NonGeoDataset):
         Raises:
             RuntimeError: if download doesn't work correctly or checksums don't match
         """
-        if self._check_integrity():
-            print("Files already downloaded and verified")
-            return
+        # url: azcopy sync https://radiantearth.blob.core.windows.net/mlhub/ref_agrifieldnet_competition_v1 ./data --recursive=true
+
+        # if self._check_integrity():
+        #     print("Files already downloaded and verified")
+        #     return
 
         for collection in self.collections:
             download_radiant_mlhub_collection(collection, self.root, api_key)
 
-        pathname = os.path.join(self.root, "*.tar.gz")
-        for tarfile in glob.iglob(pathname):
-            extract_archive(tarfile)
+        # pathname = os.path.join(self.root, "*.tar.gz")
+        # for tarfile in glob.iglob(pathname):
+        #     extract_archive(tarfile)
 
-    def _check_integrity(self) -> bool:
-        """Check integrity of dataset.
+    # def _check_integrity(self) -> bool:
+    #     """Check integrity of dataset.
 
-        Returns:
-            True if dataset files are found and/or MD5s match, else False
-        """
-        sources: bool = check_integrity(
-            os.path.join(self.root, self.source_meta["filename"]),
-            self.source_meta["md5"] if self.checksum else None,
-        )
+    #     Returns:
+    #         True if dataset files are found and/or MD5s match, else False
+    #     """
+    #     sources: bool = check_integrity(
+    #         os.path.join(self.root, self.source_meta["filename"]),
+    #         self.source_meta["md5"] if self.checksum else None,
+    #     )
 
-        images: bool = check_integrity(
-            os.path.join(self.root, self.image_meta["filename"]),
-            self.image_meta["md5"] if self.checksum else None,
-        )
+    #     images: bool = check_integrity(
+    #         os.path.join(self.root, self.image_meta["filename"]),
+    #         self.image_meta["md5"] if self.checksum else None,
+    #     )
 
-        targets: bool = check_integrity(
-            os.path.join(self.root, self.target_meta["filename"]),
-            self.target_meta["md5"] if self.checksum else None,
-        )
+    #     targets: bool = check_integrity(
+    #         os.path.join(self.root, self.target_meta["filename"]),
+    #         self.target_meta["md5"] if self.checksum else None,
+    #     )
 
-        return sources and images and targets
+    #     return sources and images and targets
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.
@@ -336,7 +327,7 @@ class AgriFieldNet(NonGeoDataset):
         """
         if self.split == "train":
             return len(self.train_label_fns)
-        if self.split == "predict":
+        if self.split == "test":
             return len(self.test_image_fns)
 
     def _validate_bands(self, bands: tuple[str, ...]) -> None:
@@ -369,12 +360,12 @@ class AgriFieldNet(NonGeoDataset):
 
         path = os.path.join(
             self.root,
-            "ref_agrifieldnet_competition_v1_source",
+            "source",
             "ref_agrifieldnet_competition_v1_source_" + tile_name,
         )
 
         bands_src = [
-            rasterio.open(os.path.join(path, f"{band}.tif")).read(1)
+            rasterio.open(os.path.join(path, f"ref_agrifieldnet_competition_v1_source_{tile_name}_{band}_10m.tif")).read(1)
             for band in self.all_bands
         ]
         img_tile = np.stack(bands_src)
@@ -396,28 +387,22 @@ class AgriFieldNet(NonGeoDataset):
         """
         if self.split == "train":
             assert tile_name in self.train_tiles
-            directory = os.path.join(
-                self.root,
-                "ref_agrifieldnet_competition_v1_labels_train",
-                "ref_agrifieldnet_competition_v1_labels_train_" + tile_name,
-            )
-            array = rasterio.open(os.path.join(directory, "raster_labels.tif")).read(1)
+
+            train_tile_name = os.path.join(self.root, "train_labels", f"ref_agrifieldnet_competition_v1_labels_train_{tile_name}")
+            array = rasterio.open(train_tile_name + ".tif").read(1)
             array = np.vectorize(lambda x: self.label_mapper[x])(array)
             labels = torch.tensor(array, dtype=torch.long)
 
-            array = rasterio.open(os.path.join(directory, "field_ids.tif")).read(1)
+            array = rasterio.open(train_tile_name + "_field_ids.tif").read(1)
             field_ids = torch.tensor(array.astype(np.int32), dtype=torch.long)
 
             return (labels, field_ids)
 
-        if self.split == "predict":
+        if self.split == "test":
             assert tile_name in self.test_tiles
-            directory = os.path.join(
-                self.root,
-                "ref_agrifieldnet_competition_v1_labels_test",
-                "ref_agrifieldnet_competition_v1_labels_test_" + tile_name,
-            )
-            array = rasterio.open(os.path.join(directory, "field_ids.tif")).read(1)
+
+            test_tile_name = os.path.join(self.root, "test_labels", f"ref_agrifieldnet_competition_v1_labels_test_{tile_name}")
+            array = rasterio.open(test_tile_name + "field_ids.tif").read(1)
             field_ids = torch.tensor(array.astype(np.int32), dtype=torch.long)
 
             return field_ids
