@@ -220,8 +220,8 @@ class TestRasterDataset:
     def test_files(self, paths: Union[str, Iterable[str]]) -> None:
         assert 1 <= len(NAIP(paths).files) <= 2
 
-    def test_files_property_for_non_existing_file_or_dir(self) -> None:
-        paths = ["/non/existing/file.tif", "/non/existing/dir"]
+    def test_files_property_for_non_existing_file_or_dir(self, tmp_path: Path) -> None:
+        paths = [tmp_path.as_posix(), (tmp_path / "non_existing_file.tif").as_posix()]
         assert len(MockRasterDataset(paths).files) == 0
 
     def test_files_property_for_virtual_files(self) -> None:
