@@ -65,8 +65,9 @@ class CustomNonGeoDataset(NonGeoDataset):
 
 class MockRasterDataset(RasterDataset):
     def __init__(self, paths: Union[str, Iterable[str]]):
-        """Override super init because it raises FileNotFoundError.
-        Is used to test behaviour of property `files` for non-local paths.
+        """Used to test behaviour of property `files` for non-local paths.
+        This is needed because super init may raise FileNotFoundError because
+        it opens the files. When testing instance properties, we need init to succeed.
         """
         self.paths = paths
 
