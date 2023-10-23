@@ -742,7 +742,8 @@ def percentile_normalization(
 def path_is_vsi(path: str) -> bool:
     """Checks if the given path is pointing to a Virtual File System.
 
-    NB! Does not check if the path exists, or if it is a dir or file.
+    .. note::
+       Does not check if the path exists, or if it is a dir or file.
 
     VSI can for instance be Cloud Storage Blobs or zip-archives.
     They will start with a prefix indicating this.
