@@ -41,8 +41,8 @@ class TestLEVIRCDPlus:
         assert isinstance(x["image1"], torch.Tensor)
         assert isinstance(x["image2"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
-        assert x["image1"].shape[0] == 2
-        assert x["image2"].shape[0] == 2
+        assert x["image1"].shape[0] == 3
+        assert x["image2"].shape[0] == 3
 
     def test_len(self, dataset: LEVIRCDPlus) -> None:
         assert len(dataset) == 2
