@@ -231,7 +231,6 @@ class TestRasterDataset:
         paths = [tmp_path.as_posix(), (tmp_path / "non_existing_file.tif").as_posix()]
         assert len(MockRasterDataset(paths).files) == 0
 
-    @pytest.mark.filterwarnings("ignore:.*Path was ignored.*")
     def test_files_property_for_virtual_files(self) -> None:
         # Tests only a subset of schemes and combinations.
         paths = [
