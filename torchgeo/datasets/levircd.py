@@ -106,9 +106,7 @@ class LEVIRCDPlus(NonGeoDataset):
         image1 = self._load_image(files["image1"])
         image2 = self._load_image(files["image2"])
         mask = self._load_target(files["mask"])
-
-        image = torch.stack(tensors=[image1, image2], dim=0)
-        sample = {"image": image, "mask": mask}
+        sample = {"image1": image1, "image2": image2, "mask": mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -227,7 +225,7 @@ class LEVIRCDPlus(NonGeoDataset):
 
         .. versionadded:: 0.2
         """
-        image1, image2, mask = (sample["image"][0], sample["image"][1], sample["mask"])
+        image1, image2, mask = (sample["image1"], sample["image2"], sample["mask"])
         ncols = 3
 
         if "prediction" in sample:
