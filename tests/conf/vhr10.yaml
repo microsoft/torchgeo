@@ -15,5 +15,6 @@ data:
     patch_size: 4
   dict_kwargs:
     root: "tests/data/vhr10"
+    download: true
 
 
