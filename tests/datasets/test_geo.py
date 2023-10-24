@@ -63,6 +63,10 @@ class CustomNonGeoDataset(NonGeoDataset):
         return 2
 
 
+class CustomRasterDataset(RasterDataset):
+    _cache_size = 32
+
+
 class TestGeoDataset:
     @pytest.fixture(scope="class")
     def dataset(self) -> GeoDataset:
@@ -258,6 +262,13 @@ class TestRasterDataset:
 
         with pytest.raises(AssertionError, match=msg):
             CustomSentinelDataset(root, bands=bands, transforms=transforms, cache=cache)
+
+    def test_cache_size_default(self) -> None:
+        root = os.path.join("tests", "data", "raster", "res_2_epsg_4326")
+        default_cache_load = RasterDataset(root)._cached_load_warp_file
+        custom_cache_load = CustomRasterDataset(root)._cached_load_warp_file
+        assert default_cache_load.cache_info().maxsize == 128
+        assert custom_cache_load.cache_info().maxsize == 32
 
 
 class TestVectorDataset:

@@ -340,6 +340,9 @@ class RasterDataset(GeoDataset):
     #: Color map for the dataset, used for plotting
     cmap: dict[int, tuple[int, int, int, int]] = {}
 
+    #: Default maxsize for LRU cache.
+    _cache_size = 128
+
     @property
     def dtype(self) -> torch.dtype:
         """The dtype of the dataset (overrides the dtype of the data file via a cast).
@@ -387,6 +390,9 @@ class RasterDataset(GeoDataset):
         self.paths = paths
         self.bands = bands or self.all_bands
         self.cache = cache
+        self._cached_load_warp_file = functools.lru_cache(maxsize=self._cache_size)(
+            self._load_warp_file
+        )
 
         # Populate the dataset index
         i = 0
@@ -536,18 +542,6 @@ class RasterDataset(GeoDataset):
 
         tensor = torch.tensor(dest)
         return tensor
-
-    @functools.lru_cache(maxsize=128)
-    def _cached_load_warp_file(self, filepath: str) -> DatasetReader:
-        """Cached version of :meth:`_load_warp_file`.
-
-        Args:
-            filepath: file to load and warp
-
-        Returns:
-            file handle of warped VRT
-        """
-        return self._load_warp_file(filepath)
 
     def _load_warp_file(self, filepath: str) -> DatasetReader:
         """Load and warp a file to the correct CRS and resolution.
