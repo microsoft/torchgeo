@@ -10,6 +10,7 @@ model:
   init_args:
     model: "faster-rcnn"
     backbone: "resnet50"
+    weights: True
     num_classes: 11
     lr: 3.0e-5
     patience: 20
