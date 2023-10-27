@@ -170,7 +170,7 @@ class TestChesapeakeCVPR:
         assert isinstance(ds, UnionDataset)
 
     def test_already_extracted(self, dataset: ChesapeakeCVPR) -> None:
-        ChesapeakeCVPR(root=dataset.root, download=True)
+        ChesapeakeCVPR(paths=dataset.paths, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         root = str(tmp_path)
@@ -205,7 +205,7 @@ class TestChesapeakeCVPR:
 
     def test_multiple_hits_query(self, dataset: ChesapeakeCVPR) -> None:
         ds = ChesapeakeCVPR(
-            root=dataset.root, splits=["de-train", "de-test"], layers=dataset.layers
+            paths=dataset.paths, splits=["de-train", "de-test"], layers=dataset.layers
         )
         with pytest.raises(
             IndexError, match="query: .* spans multiple tiles which is not valid"

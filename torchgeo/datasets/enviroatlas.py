@@ -281,7 +281,7 @@ class EnviroAtlas(GeoDataset):
             FileNotFoundError: if no files are found in ``paths``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
             AssertionError: if ``splits`` or ``layers`` are not valid
-        
+
         .. versionchanged:: 0.6
            *root* was renamed to *paths*.
         """
@@ -422,7 +422,9 @@ class EnviroAtlas(GeoDataset):
         """
 
         def exists(filename: str) -> bool:
-            return os.path.exists(os.path.join(self.paths, "enviroatlas_lotp", filename))
+            return os.path.exists(
+                os.path.join(self.paths, "enviroatlas_lotp", filename)
+            )
 
         # Check if the extracted files already exist
         if all(map(exists, self._files)):

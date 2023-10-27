@@ -78,7 +78,7 @@ class TestEnviroAtlas:
         assert isinstance(ds, UnionDataset)
 
     def test_already_extracted(self, dataset: EnviroAtlas) -> None:
-        EnviroAtlas(root=dataset.root, download=True)
+        EnviroAtlas(paths=dataset.paths, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         root = str(tmp_path)
@@ -100,7 +100,7 @@ class TestEnviroAtlas:
 
     def test_multiple_hits_query(self, dataset: EnviroAtlas) -> None:
         ds = EnviroAtlas(
-            root=dataset.root,
+            paths=dataset.paths,
             splits=["pittsburgh_pa-2010_1m-train", "austin_tx-2012_1m-test"],
             layers=dataset.layers,
         )

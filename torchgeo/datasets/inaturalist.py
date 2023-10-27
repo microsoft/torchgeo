@@ -41,7 +41,7 @@ class INaturalist(GeoDataset):
 
         Raises:
             FileNotFoundError: if no files are found in ``paths``
-        
+
         .. versionchanged:: 0.6
             *root* was renamed to *paths*.
         """

@@ -565,7 +565,7 @@ class ChesapeakeCVPR(GeoDataset):
             FileNotFoundError: if no files are found in ``root``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
             AssertionError: if ``splits`` or ``layers`` are not valid
-        
+
         .. versionchanged:: 0.6
            *root* was renamed to *paths*.
         """
