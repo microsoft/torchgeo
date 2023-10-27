@@ -4,7 +4,7 @@ import os
 import pickle
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import pytest
 import torch
@@ -33,11 +33,13 @@ class CustomGeoDataset(GeoDataset):
         bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5),
         crs: CRS = CRS.from_epsg(4087),
         res: float = 1,
+        paths: Optional[Union[str, Iterable[str]]] = None,
     ) -> None:
         super().__init__()
         self.index.insert(0, tuple(bounds))
         self._crs = crs
         self.res = res
+        self.paths = paths or []
 
     def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
         hits = self.index.intersection(tuple(query), objects=True)
@@ -61,15 +63,6 @@ class CustomNonGeoDataset(NonGeoDataset):
 
     def __len__(self) -> int:
         return 2
-
-
-class MockRasterDataset(RasterDataset):
-    def __init__(self, paths: Union[str, Iterable[str]]):
-        """Used to test behaviour of property `files` for non-local paths.
-        This is needed because super init may raise FileNotFoundError because
-        it opens the files. When testing instance properties, we need init to succeed.
-        """
-        self.paths = paths
 
 
 class TestGeoDataset:
@@ -161,6 +154,28 @@ class TestGeoDataset:
         ):
             dataset & ds2  # type: ignore[operator]
 
+    def test_files_property_warns_non_existing_file(self, tmp_path: Path) -> None:
+        path = (tmp_path / "non_existing_file.tif").as_posix()
+        with pytest.warns(UserWarning, match="Path was ignored."):
+            CustomGeoDataset(paths=path).files
+
+    @pytest.mark.filterwarnings("ignore:.*Path was ignored.*")
+    def test_files_property_for_non_existing_file_or_dir(self, tmp_path: Path) -> None:
+        paths = [tmp_path.as_posix(), (tmp_path / "non_existing_file.tif").as_posix()]
+        assert len(CustomGeoDataset(paths=paths).files) == 0
+
+    def test_files_property_for_virtual_files(self) -> None:
+        # Tests only a subset of schemes and combinations.
+        paths = [
+            "file://directory/file.tif",
+            "zip://archive.zip!folder/file.tif",
+            "az://azure_bucket/prefix/file.tif",
+            "/vsiaz/azure_bucket/prefix/file.tif",
+            "zip+az://azure_bucket/prefix/archive.zip!folder_in_archive/file.tif",
+            "/vsizip//vsiaz/azure_bucket/prefix/archive.zip/folder_in_archive/file.tif",
+        ]
+        assert len(CustomGeoDataset(paths=paths).files) == len(paths)
+
 
 class TestRasterDataset:
     @pytest.fixture(params=zip([["R", "G", "B"], None], [True, False]))
@@ -220,28 +235,6 @@ class TestRasterDataset:
     )
     def test_files(self, paths: Union[str, Iterable[str]]) -> None:
         assert 1 <= len(NAIP(paths).files) <= 2
-
-    def test_files_property_warns_non_existing_file(self, tmp_path: Path) -> None:
-        path = (tmp_path / "non_existing_file.tif").as_posix()
-        with pytest.warns(UserWarning, match="Path was ignored."):
-            MockRasterDataset(path).files
-
-    @pytest.mark.filterwarnings("ignore:.*Path was ignored.*")
-    def test_files_property_for_non_existing_file_or_dir(self, tmp_path: Path) -> None:
-        paths = [tmp_path.as_posix(), (tmp_path / "non_existing_file.tif").as_posix()]
-        assert len(MockRasterDataset(paths).files) == 0
-
-    def test_files_property_for_virtual_files(self) -> None:
-        # Tests only a subset of schemes and combinations.
-        paths = [
-            "file://directory/file.tif",
-            "zip://archive.zip!folder/file.tif",
-            "az://azure_bucket/prefix/file.tif",
-            "/vsiaz/azure_bucket/prefix/file.tif",
-            "zip+az://azure_bucket/prefix/archive.zip!folder_in_archive/file.tif",
-            "/vsizip//vsiaz/azure_bucket/prefix/archive.zip/folder_in_archive/file.tif",
-        ]
-        assert len(MockRasterDataset(paths).files) == len(paths)
 
     def test_getitem_single_file(self, naip: NAIP) -> None:
         x = naip[naip.bounds]

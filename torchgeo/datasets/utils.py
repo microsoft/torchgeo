@@ -757,5 +757,7 @@ def path_is_vsi(path: str) -> bool:
 
     Returns:
         True if path is on a virtual file system, else False
+
+    .. versionadded:: 0.6
     """
     return "://" in path or path.startswith("/vsi")
