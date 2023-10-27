@@ -252,7 +252,7 @@ class EnviroAtlas(GeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: str = "data",
         splits: Sequence[str] = ["pittsburgh_pa-2010_1m-train"],
         layers: Sequence[str] = ["naip", "prior"],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -264,7 +264,7 @@ class EnviroAtlas(GeoDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: root directory where dataset can be found
             splits: a list of strings in the format "{state}-{train,val,test}"
                 indicating the subset of data to use, for example "ny-train"
             layers: a list containing a subset of ``valid_layers`` indicating which
@@ -278,14 +278,17 @@ class EnviroAtlas(GeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            FileNotFoundError: if no files are found in ``paths``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
             AssertionError: if ``splits`` or ``layers`` are not valid
+        
+        .. versionchanged:: 0.6
+           *root* was renamed to *paths*.
         """
         for split in splits:
             assert split in self.splits
         assert all([layer in self.valid_layers for layer in layers])
-        self.root = root
+        self.paths = paths
         self.layers = layers
         self.cache = cache
         self.download = download
@@ -300,7 +303,7 @@ class EnviroAtlas(GeoDataset):
         mint: float = 0
         maxt: float = sys.maxsize
         with fiona.open(
-            os.path.join(root, "enviroatlas_lotp", "spatial_index.geojson"), "r"
+            os.path.join(paths, "enviroatlas_lotp", "spatial_index.geojson"), "r"
         ) as f:
             for i, row in enumerate(f):
                 if row["properties"]["split"] in splits:
@@ -364,7 +367,7 @@ class EnviroAtlas(GeoDataset):
                 fn = filenames[layer]
 
                 with rasterio.open(
-                    os.path.join(self.root, "enviroatlas_lotp", fn)
+                    os.path.join(self.paths, "enviroatlas_lotp", fn)
                 ) as f:
                     dst_crs = f.crs.to_string().lower()
 
@@ -419,21 +422,21 @@ class EnviroAtlas(GeoDataset):
         """
 
         def exists(filename: str) -> bool:
-            return os.path.exists(os.path.join(self.root, "enviroatlas_lotp", filename))
+            return os.path.exists(os.path.join(self.paths, "enviroatlas_lotp", filename))
 
         # Check if the extracted files already exist
         if all(map(exists, self._files)):
             return
 
         # Check if the zip files have already been downloaded
-        if os.path.exists(os.path.join(self.root, self.filename)):
+        if os.path.exists(os.path.join(self.paths, self.filename)):
             self._extract()
             return
 
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
+                f"Dataset not found in `paths={self.paths!r}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
                 "to automatically download the dataset."
             )
@@ -444,11 +447,11 @@ class EnviroAtlas(GeoDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        download_url(self.url, self.root, filename=self.filename, md5=self.md5)
+        download_url(self.url, self.paths, filename=self.filename, md5=self.md5)
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        extract_archive(os.path.join(self.root, self.filename))
+        extract_archive(os.path.join(self.paths, self.filename))
 
     def plot(
         self,

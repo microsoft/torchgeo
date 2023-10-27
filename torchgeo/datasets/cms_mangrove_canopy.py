@@ -244,7 +244,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
             return
 
         raise RuntimeError(
-            f"Dataset not found in `root={self.paths}` "
+            f"Dataset not found in `paths={self.paths}` "
             "either specify a different `root` directory or make sure you "
             "have manually downloaded the dataset as instructed in the documentation."
         )

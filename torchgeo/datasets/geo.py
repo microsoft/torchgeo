@@ -629,7 +629,7 @@ class VectorDataset(GeoDataset):
                 i += 1
 
         if i == 0:
-            msg = f"No {self.__class__.__name__} data was found in `root='{paths}'`"
+            msg = f"No {self.__class__.__name__} data was found in `paths='{paths!r}'`"
             raise FileNotFoundError(msg)
 
         self._crs = crs

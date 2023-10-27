@@ -33,22 +33,25 @@ class INaturalist(GeoDataset):
     res = 0
     _crs = CRS.from_epsg(4326)  # Lat/Lon
 
-    def __init__(self, root: str = "data") -> None:
+    def __init__(self, paths: str = "data") -> None:
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: root directory where dataset can be found
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            FileNotFoundError: if no files are found in ``paths``
+        
+        .. versionchanged:: 0.6
+            *root* was renamed to *paths*.
         """
         super().__init__()
 
-        self.root = root
+        self.paths = paths
 
-        files = glob.glob(os.path.join(root, "**.csv"))
+        files = glob.glob(os.path.join(paths, "**.csv"))
         if not files:
-            raise FileNotFoundError(f"Dataset not found in `root={self.root}`")
+            raise FileNotFoundError(f"Dataset not found in `paths={self.paths!r}`")
 
         # Read CSV file
         data = pd.read_csv(

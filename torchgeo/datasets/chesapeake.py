@@ -156,7 +156,7 @@ class Chesapeake(RasterDataset, abc.ABC):
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
-                f"Dataset not found in `root={self.paths}` and `download=False`, "
+                f"Dataset not found in `paths={self.paths!r}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
                 "to automatically download the dataset."
             )
@@ -537,7 +537,7 @@ class ChesapeakeCVPR(GeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: str = "data",
         splits: Sequence[str] = ["de-train"],
         layers: Sequence[str] = ["naip-new", "lc"],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -548,7 +548,7 @@ class ChesapeakeCVPR(GeoDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: root directory where dataset can be found
             splits: a list of strings in the format "{state}-{train,val,test}"
                 indicating the subset of data to use, for example "ny-train"
             layers: a list containing a subset of "naip-new", "naip-old", "lc", "nlcd",
@@ -565,11 +565,14 @@ class ChesapeakeCVPR(GeoDataset):
             FileNotFoundError: if no files are found in ``root``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
             AssertionError: if ``splits`` or ``layers`` are not valid
+        
+        .. versionchanged:: 0.6
+           *root* was renamed to *paths*.
         """
         for split in splits:
             assert split in self.splits
         assert all([layer in self.valid_layers for layer in layers])
-        self.root = root
+        self.paths = paths
         self.layers = layers
         self.cache = cache
         self.download = download
@@ -592,7 +595,7 @@ class ChesapeakeCVPR(GeoDataset):
         # Add all tiles into the index in epsg:3857 based on the included geojson
         mint: float = 0
         maxt: float = sys.maxsize
-        with fiona.open(os.path.join(root, "spatial_index.geojson"), "r") as f:
+        with fiona.open(os.path.join(paths, "spatial_index.geojson"), "r") as f:
             for i, row in enumerate(f):
                 if row["properties"]["split"] in splits:
                     box = shapely.geometry.shape(row["geometry"])
@@ -650,7 +653,7 @@ class ChesapeakeCVPR(GeoDataset):
             for layer in self.layers:
                 fn = filenames[layer]
 
-                with rasterio.open(os.path.join(self.root, fn)) as f:
+                with rasterio.open(os.path.join(self.paths, fn)) as f:
                     dst_crs = f.crs.to_string().lower()
 
                     if query_geom_transformed is None:
@@ -701,7 +704,7 @@ class ChesapeakeCVPR(GeoDataset):
         """
 
         def exists(filename: str) -> bool:
-            return os.path.exists(os.path.join(self.root, filename))
+            return os.path.exists(os.path.join(self.paths, filename))
 
         # Check if the extracted files already exist
         if all(map(exists, self._files)):
@@ -710,7 +713,7 @@ class ChesapeakeCVPR(GeoDataset):
         # Check if the zip files have already been downloaded
         if all(
             [
-                os.path.exists(os.path.join(self.root, self.filenames[subdataset]))
+                os.path.exists(os.path.join(self.paths, self.filenames[subdataset]))
                 for subdataset in self.subdatasets
             ]
         ):
@@ -720,7 +723,7 @@ class ChesapeakeCVPR(GeoDataset):
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
+                f"Dataset not found in `paths={self.paths!r}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
                 "to automatically download the dataset."
             )
@@ -734,7 +737,7 @@ class ChesapeakeCVPR(GeoDataset):
         for subdataset in self.subdatasets:
             download_url(
                 self.urls[subdataset],
-                self.root,
+                self.paths,
                 filename=self.filenames[subdataset],
                 md5=self.md5s[subdataset],
             )
@@ -742,7 +745,7 @@ class ChesapeakeCVPR(GeoDataset):
     def _extract(self) -> None:
         """Extract the dataset."""
         for subdataset in self.subdatasets:
-            extract_archive(os.path.join(self.root, self.filenames[subdataset]))
+            extract_archive(os.path.join(self.paths, self.filenames[subdataset]))
 
     def plot(
         self,
