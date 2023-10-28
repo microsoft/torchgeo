@@ -88,7 +88,7 @@ class AsterGDEM(RasterDataset):
             return
 
         raise RuntimeError(
-            f"Dataset not found in `root={self.paths}` "
+            f"Dataset not found in `paths={self.paths!r}` "
             "either specify a different `root` directory or make sure you "
             "have manually downloaded dataset tiles as suggested in the documentation."
         )
