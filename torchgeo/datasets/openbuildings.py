@@ -418,11 +418,11 @@ class OpenBuildings(VectorDataset):
         if not os.path.exists(os.path.join(self.paths, self.meta_data_filename)):
             raise FileNotFoundError(
                 f"Meta data file {self.meta_data_filename} "
-                f"not found in in `root={self.paths}`."
+                f"not found in in `paths={self.paths!r}`."
             )
 
         raise RuntimeError(
-            f"Dataset not found in `root={self.paths}` "
+            f"Dataset not found in `paths={self.paths!r}` "
             "either specify a different `root` directory or make sure you "
             "have manually downloaded the dataset as suggested in the documentation."
         )
