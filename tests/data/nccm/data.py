@@ -44,14 +44,18 @@ def create_file(path: str, dtype: str):
 
 
 if __name__ == "__main__":
-    dir = os.path.join(os.getcwd(), "nccm", "13090442")
+    dir = os.path.join(os.getcwd(),"13090442")
+
+    if os.path.exists(dir) and os.path.isdir(dir):
+        shutil.rmtree(dir)
+
     os.makedirs(dir, exist_ok=True)
 
     for file in files:
         create_file(os.path.join(dir, file), dtype="int8")
 
     # Compress data
-    shutil.make_archive("13090442", "zip", ".", "nccm")
+    shutil.make_archive("13090442", "zip", ".", dir)
 
     # Compute checksums
     with open("13090442.zip", "rb") as f:
