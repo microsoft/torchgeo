@@ -104,7 +104,9 @@ class NCCM(RasterDataset):
 
         """
 
-        assert all(year not in years for year in self.years), f"Only following years are valid: {self.years}"
+
+        #include year check later
+        assert all(year in years for year in self.years), f"Only following years are valid: {self.years}"
 
         assert (
             set(classes) <= self.cmap.keys()
