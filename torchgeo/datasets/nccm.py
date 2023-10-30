@@ -3,7 +3,7 @@
 import glob
 import os
 from collections.abc import Iterable
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Optional, Union, List, Dict
 
 import matplotlib.pyplot as plt
 import torch
@@ -29,6 +29,7 @@ class NCCM(RasterDataset):
     2: soybean
     3: others
 
+
     Dataset format: 
     1) Three .TIF files containing the labels
     2) JavaScript code to download images from the dataset.
@@ -36,15 +37,15 @@ class NCCM(RasterDataset):
     If you use this dataset in your research, please use the corresponding citation:
     * You, N., Dong, J., Huang, J. et al. The 10-m crop type maps in Northeast China during 2017-2019. Sci Data 8, 41 (2021). https://doi.org/10.1038/s41597-021-00827-9
     """
-    filename_regex = (r"CDL(?P<year>\d{4})_clip")
+    filename_regex = r"CDL(?P<year>\d{4})_clip"
     
-    #there is only a single zipfolder, none for the files
+    # there is only a single zipfolder, none for the files
     zipfile_glob = "13090442.zip"
 
     date_format = "%Y"
     is_image = False
 
-    #need to add url
+    # need to add url
     url = "https://figshare.com/ndownloader/articles/13090442/versions/1"
     
     # md5s = {
@@ -53,18 +54,16 @@ class NCCM(RasterDataset):
     #     2019: "42e483fdc8239d22dba7020f"
     # }
 
-    md5s = {
-        "main": "eae952f1b346d7e649d027e8139a76f5"
-    }
+    md5s = {"main": "eae952f1b346d7e649d027e8139a76f5"}
 
-    years = [2017,2018,2019]
+    years = [2017, 2018, 2019]
 
     cmap = {
-        0: (0,0,0,0),
-        1: (0,255,0,255),
-        2: (255,0,0,255),
-        3: (255,255,0,255),
-        4: (255,0,255,255)
+        0: (0, 0, 0, 0),
+        1: (0, 255, 0, 255),
+        2: (255, 0, 0, 255),
+        3: (255, 255, 0, 255),
+        4: (255, 0, 255, 255)
     }
 
     def __init__(
@@ -72,9 +71,9 @@ class NCCM(RasterDataset):
         paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        years: list[int] = [2019],
-        classes: list[int] = list(cmap.keys()),
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        years: List[int] = [2019],
+        classes: List[int] = list(cmap.keys()),
+        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -106,7 +105,9 @@ class NCCM(RasterDataset):
 
 
         #include year check later
-        assert all(year in years for year in self.years), f"Only following years are valid: {self.years}"
+        assert all(
+            year in self.years for year in years
+        ), f"NCCM data product only exists for the following years: {self.years}"
 
         assert (
             set(classes) <= self.cmap.keys()
@@ -130,7 +131,7 @@ class NCCM(RasterDataset):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
         """Retrieve mask and metadata indexed by query.
 
         Args:
@@ -183,7 +184,9 @@ class NCCM(RasterDataset):
     def _download(self) -> None:
         """Download the dataset."""
         
-        download_url(self.url,self.paths,md5 = self.md5s["main"] if self.checksum else None)
+        download_url(
+            self.url,self.paths,md5 = self.md5s["main"] if self.checksum else None
+        )
 
     def _extract(self) -> None:
         """Extract the dataset."""
@@ -194,7 +197,7 @@ class NCCM(RasterDataset):
 
     def plot(
         self,
-        sample: dict[str, Any],
+        sample: Dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> Figure:

@@ -28,14 +28,21 @@ def create_file(path: str, dtype: str):
         "dtype": dtype,
         "count": 1,
         "crs": CRS.from_epsg(4326),
-        "transform": Affine(8.983152841195208e-05, 0.0, 115.483402043364,0.0, -8.983152841195208e-05, 53.531397320113605),
+        "transform": Affine(
+            8.983152841195208e-05, 
+            0.0, 
+            115.483402043364,
+            0.0, 
+            -8.983152841195208e-05, 
+            53.531397320113605
+        ),
         "height": SIZE,
         "width": SIZE,
         "compress": "lzw",
         "predictor": 2,
     }
 
-    allowed_values = [0,1,2,3]
+    allowed_values = [0, 1, 2, 3]
 
     Z = np.random.choice(allowed_values, size=(SIZE, SIZE))
 
@@ -44,7 +51,7 @@ def create_file(path: str, dtype: str):
 
 
 if __name__ == "__main__":
-    dir = os.path.join(os.getcwd(),"13090442")
+    dir = os.path.join(os.getcwd(), "13090442")
 
     if os.path.exists(dir) and os.path.isdir(dir):
         shutil.rmtree(dir)

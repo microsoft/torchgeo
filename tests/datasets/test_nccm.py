@@ -25,15 +25,11 @@ class TestNCCM:
         
         monkeypatch.setattr(torchgeo.datasets.nccm, "download_url", download_url)
     
-        md5s = {
-            "main": "eae952f1b346d7e649d027e8139a76f5"
-        }
+        md5s = {"main": "eae952f1b346d7e649d027e8139a76f5"}
 
         monkeypatch.setattr(NCCM, "md5s", md5s)
         
-        url = os.path.join(
-            "tests", "data", "nccm", "13090442.zip" 
-        )
+        url = os.path.join("tests", "data", "nccm", "13090442.zip")
 
         monkeypatch.setattr(NCCM, "url", url)
         monkeypatch.setattr(plt, "show", lambda *args: None)
@@ -45,7 +41,7 @@ class TestNCCM:
             transforms=transforms,
             download=True,
             checksum=True,
-            years=[2017,2018,2019],
+            years=[2017, 2018, 2019],
         )
 
     def test_getitem(self, dataset: NCCM) -> None:
@@ -54,70 +50,71 @@ class TestNCCM:
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
 
-    # def test_classes(self) -> None:
-    #     root = os.path.join("tests", "data", "nccm")
-    #     classes = list(NCCM.cmap.keys())[:5]
-    #     ds = NCCM(root, years=[2019], classes=classes)
-    #     sample = ds[ds.bounds]
-    #     mask = sample["mask"]
-    #     assert mask.max() < len(classes)
+    def test_classes(self) -> None:
+        root = os.path.join("tests", "data", "nccm")
+        classes = list(NCCM.cmap.keys())[0:2]
+        ds = NCCM(root, years=[2019], classes=classes)
+        sample = ds[ds.bounds]
+        mask = sample["mask"]
+        assert mask.max() < len(classes)
     
-    # def test_and(self, dataset: NCCM) -> None:
-    #     ds = dataset & dataset
-    #     assert isinstance(ds, IntersectionDataset)
+    def test_and(self, dataset: NCCM) -> None:
+        ds = dataset & dataset
+        assert isinstance(ds, IntersectionDataset)
 
-    # def test_or(self, dataset: NCCM) -> None:
-    #     ds = dataset | dataset
-    #     assert isinstance(ds, UnionDataset)
+    def test_or(self, dataset: NCCM) -> None:
+        ds = dataset | dataset
+        assert isinstance(ds, UnionDataset)
 
-    # def test_already_extracted(self, dataset: NCCM) -> None:
-    #     NCCM(dataset.paths, download=True, years=[2019])
+    def test_already_extracted(self, dataset: NCCM) -> None:
+        NCCM(dataset.paths, download=True, years=[2019])
     
-    # def test_already_downloaded(self, tmp_path: Path) -> None:
-    #     pathname = os.path.join(
-    #         "tests", "data", "nccm", "CDL2017_clip.zip"
-    #     )
-    #     root = str(tmp_path)
-    #     shutil.copy(pathname, root)
-    #     NCCM(root, years=[2019])
+    def test_already_downloaded(self, tmp_path: Path) -> None:
+        pathname = os.path.join(
+            "tests", "data", "nccm", "13090442.zip"
+        )
+        root = str(tmp_path)
+    
+        shutil.copy(pathname, root)
+        NCCM(root, years=[2019])
 
-    # def test_invalid_year(self, tmp_path: Path) -> None:
-    #     with pytest.raises(
-    #         AssertionError,
-    #         match="NCCM data product only exists for the following years:",
-    #     ):
-    #         NCCM(str(tmp_path), years=[1996])
+    def test_invalid_year(self, tmp_path: Path) -> None:
+        with pytest.raises(
+            AssertionError,
+            match="NCCM data product only exists for the following years:",
+        ):
+            NCCM(str(tmp_path), years=[1996])
 
-    # def test_invalid_classes(self) -> None:
-    #     with pytest.raises(AssertionError):
-    #         NCCM(classes=[-1])
+    def test_invalid_classes(self) -> None:
+        with pytest.raises(AssertionError):
+            NCCM(classes=[-1])
 
-    #     with pytest.raises(AssertionError):
-    #         NCCM(classes=[11])
+        with pytest.raises(AssertionError):
+            NCCM(classes=[11])
 
-    # def test_plot(self, dataset: NCCM) -> None:
-    #     query = dataset.bounds
-    #     x = dataset[query]
-    #     dataset.plot(x, suptitle="Test")
-    #     plt.close()
+    def test_plot(self, dataset: NCCM) -> None:
+        query = dataset.bounds
+        x = dataset[query]
+        dataset.plot(x, suptitle="Test")
+        plt.close()
 
-    # def test_plot_prediction(self, dataset: NCCM) -> None:
-    #     query = dataset.bounds
-    #     x = dataset[query]
-    #     x["prediction"] = x["mask"].clone()
-    #     dataset.plot(x, suptitle="Prediction")
-    #     plt.close()
+    def test_plot_prediction(self, dataset: NCCM) -> None:
+        query = dataset.bounds
+        x = dataset[query]
+        x["prediction"] = x["mask"].clone()
+        dataset.plot(x, suptitle="Prediction")
+        plt.close()
 
-    # def test_not_downloaded(self, tmp_path: Path) -> None:
-    #     with pytest.raises(RuntimeError, match="Dataset not found"):
-    #         NCCM(str(tmp_path))
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(RuntimeError, match="Dataset not found"):
+            NCCM(str(tmp_path))
 
-    # def test_invalid_query(self, dataset: NCCM) -> None:
-    #     query = BoundingBox(0, 0, 0, 0, 0, 0)
-    #     with pytest.raises(
-    #         IndexError, match="query: .* not found in index with bounds:"
-    #     ):
-    #         dataset[query]
+    def test_invalid_query(self, dataset: NCCM) -> None:
+        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        with pytest.raises(
+            IndexError, match="query: .* not found in index with bounds:"
+        ):
+            dataset[query]
     
 
 
