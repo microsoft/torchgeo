@@ -38,7 +38,7 @@ class NCCM(RasterDataset):
     * You, N., Dong, J., Huang, J. et al. The 10-m crop type maps in Northeast China during 2017-2019. Sci Data 8, 41 (2021). https://doi.org/10.1038/s41597-021-00827-9
     """
     filename_regex = r"CDL(?P<year>\d{4})_clip"
-    
+    filename_glob = "CDL*.tif"
     # there is only a single zipfolder, none for the files
     zipfile_glob = "13090442.zip"
 
