@@ -110,7 +110,7 @@ class RwandaFieldBoundary(NonGeoDataset):
         assert split in self.splits
         if download and api_key is None:
             raise RuntimeError("Must provide an API key to download the dataset")
-        self.root = os.path.expanduser(root)
+        self.root = root
         self.bands = bands
         self.transforms = transforms
         self.split = split
