@@ -4,22 +4,24 @@
 """LEVIR-CD+ datamodule."""
 
 from typing import Union
-from ..datasets import LEVIRCDPlus
-from ..transforms import AugmentationSequential
-from ..transforms.transforms import _RandomNCrop
-from torchgeo.samplers.utils import _to_tuple
-from torchgeo.datamodules.utils import dataset_split
+
 import kornia.augmentation as K
 import torch
 
+from torchgeo.datamodules.utils import dataset_split
+from torchgeo.samplers.utils import _to_tuple
+
+from ..datasets import LEVIRCDPlus
+from ..transforms import AugmentationSequential
+from ..transforms.transforms import _RandomNCrop
 from .geo import NonGeoDataModule
 
 
 class LEVIRCDPlusDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the LEVIR-CD+ dataset.
 
-    Uses the train/test splits from the dataset, with val split
-    generated from the train split
+    Uses the train/test splits from the dataset and further splits
+    the train split into train/val splits.
 
     """
 
@@ -42,10 +44,11 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.LEVIRCDPlus`.
         """
-        super().__init__(LEVIRCDPlusDataModule, batch_size, num_workers, **kwargs)
+        super().__init__(LEVIRCDPlusDataModule, 1, num_workers, **kwargs)
 
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
+
         self.mean = torch.tensor([0.485, 0.456, 0.406])
         self.std = torch.tensor([0.229, 0.224, 0.225])
 
@@ -62,10 +65,9 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in ["fit", "validate"]:
-            self.train_dataset = LEVIRCDPlus(split="train", **self.kwargs)
-            if self.val_split_pct > 0.0:
-                self.train_dataset, self.val_dataset, _ = dataset_split(
-                    self.train_dataset, val_pct=self.val_split_pct, test_pct=0.0
-                )
+            self.dataset = LEVIRCDPlus(split="train", **self.kwargs)
+            self.train_dataset, self.val_dataset, _ = dataset_split(
+                self.dataset, val_pct=self.val_split_pct
+            )
         if stage in ["test"]:
             self.test_dataset = LEVIRCDPlus(split="test", **self.kwargs)
