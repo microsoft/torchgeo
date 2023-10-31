@@ -1,30 +1,36 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Levircd datamodule."""
+"""LEVIR-CD+ datamodule."""
 
-from ..datasets import LEVIRCDPlus
-from torchgeo.samplers.utils import _to_tuple
-from torchgeo.datamodules.utils import dataset_split
+from typing import Union
+
 import kornia.augmentation as K
 import torch
 
+from torchgeo.datamodules.utils import dataset_split
+from torchgeo.samplers.utils import _to_tuple
+
+from ..datasets import LEVIRCDPlus
+from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
+
 
 class LEVIRCDPlusDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the LEVIR-CD+ dataset.
 
-    Uses the train/test splits from the dataset, with val split 
+    Uses the train/test splits from the dataset, with val split
     generated from the train split
 
     """
+
     def __init__(
-            self, 
-            batch_size: int = 8, 
-            patch_size: Union[tuple[int, int], int] = 256,
-            val_split_pct: float = 0.2,
-            num_workers: int = 0,
-            **kwargs
+        self,
+        batch_size: int = 8,
+        patch_size: Union[tuple[int, int], int] = 256,
+        val_split_pct: float = 0.2,
+        num_workers: int = 0,
+        **kwargs,
     ) -> None:
         """Initialize a new LEVIRCDPlusDataModule instance.
 
@@ -49,7 +55,7 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
             _RandomNCrop(self.patch_size, batch_size),
             data_keys=["image1", "image2", "mask"],
         )
-    
+
     def setup(self, stage: str) -> None:
         """Set up datasets.
 
@@ -63,6 +69,4 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
                     self.train_dataset, val_pct=self.val_split_pct, test_pct=0.0
                 )
         if stage in ["test"]:
-            self.test_dataset = LEVIRCDPlus(
-                split="test", **self.kwargs
-            )
+            self.test_dataset = LEVIRCDPlus(split="test", **self.kwargs)
