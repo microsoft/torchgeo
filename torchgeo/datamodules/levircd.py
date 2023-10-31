@@ -49,9 +49,6 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
 
-        self.mean = torch.tensor([0.485, 0.456, 0.406])
-        self.std = torch.tensor([0.229, 0.224, 0.225])
-
         self.aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
