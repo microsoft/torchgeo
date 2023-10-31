@@ -57,6 +57,7 @@ __all__ = (
     "GID15DataModule",
     "InriaAerialImageLabelingDataModule",
     "LandCoverAIDataModule",
+    "LEVIRCDPlusDataModule",
     "LoveDADataModule",
     "NASAMarineDebrisDataModule",
     "OSCDDataModule",

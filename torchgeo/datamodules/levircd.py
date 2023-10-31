@@ -6,7 +6,6 @@
 from typing import Union
 
 import kornia.augmentation as K
-import torch
 
 from torchgeo.datamodules.utils import dataset_split
 from torchgeo.samplers.utils import _to_tuple
