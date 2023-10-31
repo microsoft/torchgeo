@@ -155,7 +155,7 @@ class TestGeoDataset:
             dataset & ds2  # type: ignore[operator]
 
     def test_files_property_for_non_existing_file_or_dir(self, tmp_path: Path) -> None:
-        paths = [tmp_path.as_posix(), (tmp_path / "non_existing_file.tif").as_posix()]
+        paths = [str(tmp_path), str(tmp_path / "non_existing_file.tif")]
         with pytest.warns(UserWarning, match="Path was ignored."):
             assert len(CustomGeoDataset(paths=paths).files) == 0
 
