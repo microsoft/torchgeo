@@ -3,7 +3,7 @@
 
 """LEVIR-CD+ datamodule."""
 
-from typing import Union
+from typing import Union, Any
 
 import kornia.augmentation as K
 
