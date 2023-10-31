@@ -3,7 +3,7 @@
 import glob
 import os
 from collections.abc import Iterable
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import torch
@@ -87,7 +87,7 @@ class NCCM(RasterDataset):
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
-    ) -> None: 
+    ) -> None:
         """Initialize a new dataset.
 
         Args:
