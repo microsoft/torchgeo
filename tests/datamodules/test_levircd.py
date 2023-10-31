@@ -3,6 +3,7 @@
 
 import os
 
+import pytest
 from _pytest.fixtures import SubRequest
 from lightning.pytorch import Trainer
 
