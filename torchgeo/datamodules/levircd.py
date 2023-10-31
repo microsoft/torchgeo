@@ -31,7 +31,7 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
         patch_size: Union[tuple[int, int], int] = 256,
         val_split_pct: float = 0.2,
         num_workers: int = 0,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Initialize a new LEVIRCDPlusDataModule instance.
 
