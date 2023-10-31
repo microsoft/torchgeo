@@ -3,17 +3,14 @@
 
 import os
 
-import pytest
 from _pytest.fixtures import SubRequest
 from lightning.pytorch import Trainer
 
 from torchgeo.datamodules import LEVIRCDPlusDataModule
-from torchgeo.datasets import LEVIRCDPlus
 
 
 class TestLEVIRCDPlusDataModule:
-    def datamodule(self, request: SubRequest) -> OSCDDataModule:
-        bands = request.param
+    def datamodule(self, request: SubRequest) -> LEVIRCDPlusDataModule:
         root = os.path.join("tests", "data", "LEVIR-CD+")
         dm = LEVIRCDPlusDataModule(root=root, download=True, num_workers=0)
         dm.prepare_data()
