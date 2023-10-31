@@ -1,9 +1,9 @@
-"""Northeastern China Crop Map Dataset"""
+"""Northeastern China Crop Map Dataset."""
 
 import glob
 import os
 from collections.abc import Iterable
-from typing import Any, Callable, Optional, Union, List, Dict
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import matplotlib.pyplot as plt
 import torch
@@ -13,15 +13,22 @@ from rasterio.crs import CRS
 from .geo import RasterDataset
 from .utils import BoundingBox, download_url, extract_archive
 
+
 class NCCM(RasterDataset):
-    """The Northeastern China Crop Map Dataset
-    
+    """The Northeastern China Crop Map Dataset.
+
     Link: https://www.nature.com/articles/s41597-021-00827-9
 
-    This dataset produced annual 10-m crop maps of the major crops (maize, soybean, and rice) in Northeast China from 2017 to 2019,
-    using hierarchial mapping strategies, random forest classifiers, interpolated and smoothed 10-day Sentinel-2 time series data and
-    optimized features from spectral, temporal and textural characteristics of the land surface. The resultant maps have high overall accuracies (OA) 
-    based on ground truth data. The dataset contains information specific to the three years: 2017,2018,2019.
+    This dataset produced annual 10-m crop maps of the
+    major crops (maize, soybean, and rice)
+    in Northeast China from 2017 to 2019, using hierarchial mapping strategies,
+    random forest classifiers, interpolated and
+    smoothed 10-day Sentinel-2 time series data and
+    optimized features from spectral, temporal and
+    textural characteristics of the land surface.
+    The resultant maps have high overall accuracies (OA)
+    based on ground truth data. The dataset contains information
+    specific to the three years: 2017,2018,2019.
 
     The dataset contains 4 classes:
     0: paddy rice
@@ -30,13 +37,16 @@ class NCCM(RasterDataset):
     3: others
 
 
-    Dataset format: 
+    Dataset format:
     1) Three .TIF files containing the labels
     2) JavaScript code to download images from the dataset.
 
     If you use this dataset in your research, please use the corresponding citation:
-    * You, N., Dong, J., Huang, J. et al. The 10-m crop type maps in Northeast China during 2017-2019. Sci Data 8, 41 (2021). https://doi.org/10.1038/s41597-021-00827-9
+    * You, N., Dong, J., Huang, J. et al. The 10-m crop type maps in
+    Northeast China during 2017-2019.
+    Sci Data 8, 41 (2021). https://doi.org/10.1038/s41597-021-00827-9
     """
+
     filename_regex = r"CDL(?P<year>\d{4})_clip"
     filename_glob = "CDL*.tif"
     # there is only a single zipfolder, none for the files
@@ -47,7 +57,7 @@ class NCCM(RasterDataset):
 
     # need to add url
     url = "https://figshare.com/ndownloader/articles/13090442/versions/1"
-    
+
     # md5s = {
     #     2017: "a85341fa6248fd7e0badab6c",
     #     2018: "478d10786aa798fb11693ec1",
@@ -63,7 +73,7 @@ class NCCM(RasterDataset):
         1: (0, 255, 0, 255),
         2: (255, 0, 0, 255),
         3: (255, 255, 0, 255),
-        4: (255, 0, 255, 255)
+        4: (255, 0, 255, 255),
     }
 
     def __init__(
@@ -78,8 +88,7 @@ class NCCM(RasterDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-
-        """Initialize a new dataset
+        """Initialize a new dataset.
 
         Args:
             paths: one or more root directories to search or files to load
@@ -96,15 +105,13 @@ class NCCM(RasterDataset):
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 after downloading files (may be slow)
 
-            Raises:
+        Raises:
             AssertionError: if ``years`` or ``classes`` are invalid
             FileNotFoundError: if no files are found in ``paths``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-
         """
 
-
-        #include year check later
+        # include year check later
         assert all(
             year in self.years for year in years
         ), f"NCCM data product only exists for the following years: {self.years}"
@@ -166,7 +173,7 @@ class NCCM(RasterDataset):
             exists = True
             self._extract()
 
-        if exists == True:
+        if exists is True:
             return
 
         # Check if the user requested to download the dataset
@@ -180,12 +187,12 @@ class NCCM(RasterDataset):
         # Download the dataset
         self._download()
         self._extract()
-    
+
     def _download(self) -> None:
         """Download the dataset."""
-        
+
         download_url(
-            self.url,self.paths,md5 = self.md5s["main"] if self.checksum else None
+            self.url, self.paths, md5=self.md5s["main"] if self.checksum else None
         )
 
     def _extract(self) -> None:
@@ -193,7 +200,6 @@ class NCCM(RasterDataset):
         assert isinstance(self.paths, str)
         pathname = os.path.join(self.paths, "**", self.zipfile_glob)
         extract_archive(glob.glob(pathname, recursive=True)[0], self.paths)
-
 
     def plot(
         self,
@@ -239,11 +245,3 @@ class NCCM(RasterDataset):
             plt.suptitle(suptitle)
 
         return fig
-
-
-
-
-
-
-
-

@@ -21,6 +21,7 @@ np.random.seed(0)
 # years = [2017,2018,2019]
 files = ["CDL2017_clip.tif", "CDL2018_clip1.tif", "CDL2019_clip.tif"]
 
+
 def create_file(path: str, dtype: str):
     """Create the testing file."""
     profile = {
@@ -29,12 +30,12 @@ def create_file(path: str, dtype: str):
         "count": 1,
         "crs": CRS.from_epsg(4326),
         "transform": Affine(
-            8.983152841195208e-05, 
-            0.0, 
+            8.983152841195208e-05,
+            0.0,
             115.483402043364,
-            0.0, 
-            -8.983152841195208e-05, 
-            53.531397320113605
+            0.0,
+            -8.983152841195208e-05,
+            53.531397320113605,
         ),
         "height": SIZE,
         "width": SIZE,

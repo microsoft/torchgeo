@@ -19,16 +19,16 @@ from torchgeo.datasets import NCCM, BoundingBox, IntersectionDataset, UnionDatas
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
+
 class TestNCCM:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> NCCM:
-        
         monkeypatch.setattr(torchgeo.datasets.nccm, "download_url", download_url)
-    
+
         md5s = {"main": "eae952f1b346d7e649d027e8139a76f5"}
 
         monkeypatch.setattr(NCCM, "md5s", md5s)
-        
+
         url = os.path.join("tests", "data", "nccm", "13090442.zip")
 
         monkeypatch.setattr(NCCM, "url", url)
@@ -57,7 +57,7 @@ class TestNCCM:
         sample = ds[ds.bounds]
         mask = sample["mask"]
         assert mask.max() < len(classes)
-    
+
     def test_and(self, dataset: NCCM) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)
@@ -68,13 +68,11 @@ class TestNCCM:
 
     def test_already_extracted(self, dataset: NCCM) -> None:
         NCCM(dataset.paths, download=True, years=[2019])
-    
+
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join(
-            "tests", "data", "nccm", "13090442.zip"
-        )
+        pathname = os.path.join("tests", "data", "nccm", "13090442.zip")
         root = str(tmp_path)
-    
+
         shutil.copy(pathname, root)
         NCCM(root, years=[2019])
 
@@ -115,9 +113,3 @@ class TestNCCM:
             IndexError, match="query: .* not found in index with bounds:"
         ):
             dataset[query]
-    
-
-
-    
-
-    
