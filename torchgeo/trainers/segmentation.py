@@ -220,7 +220,7 @@ class SemanticSegmentationTask(BaseTask):
         loss: Tensor = self.criterion(y_hat, y)
         self.log("train_loss", loss)
         self.train_metrics(y_hat_hard, y)
-        self.log_dict(self.train_metrics)  # type: ignore[arg-type]
+        self.log_dict(self.train_metrics)
         return loss
 
     def validation_step(
@@ -240,11 +240,12 @@ class SemanticSegmentationTask(BaseTask):
         loss = self.criterion(y_hat, y)
         self.log("val_loss", loss)
         self.val_metrics(y_hat_hard, y)
-        self.log_dict(self.val_metrics)  # type: ignore[arg-type]
+        self.log_dict(self.val_metrics)
 
         if (
             batch_idx < 10
             and hasattr(self.trainer, "datamodule")
+            and hasattr(self.trainer.datamodule, "plot")
             and self.logger
             and hasattr(self.logger, "experiment")
             and hasattr(self.logger.experiment, "add_figure")
@@ -280,7 +281,7 @@ class SemanticSegmentationTask(BaseTask):
         loss = self.criterion(y_hat, y)
         self.log("test_loss", loss)
         self.test_metrics(y_hat_hard, y)
-        self.log_dict(self.test_metrics)  # type: ignore[arg-type]
+        self.log_dict(self.test_metrics)
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
