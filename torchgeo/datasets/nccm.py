@@ -81,13 +81,13 @@ class NCCM(RasterDataset):
         paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        years: List[int] = [2019],
-        classes: List[int] = list(cmap.keys()),
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        years: list[int] = [2019],
+        classes: list[int] = list(cmap.keys()),
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
-    ) -> None:
+    ) -> None: 
         """Initialize a new dataset.
 
         Args:
@@ -110,8 +110,6 @@ class NCCM(RasterDataset):
             FileNotFoundError: if no files are found in ``paths``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-
-        # include year check later
         assert all(
             year in self.years for year in years
         ), f"NCCM data product only exists for the following years: {self.years}"
@@ -138,7 +136,7 @@ class NCCM(RasterDataset):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve mask and metadata indexed by query.
 
         Args:
@@ -190,7 +188,6 @@ class NCCM(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-
         download_url(
             self.url, self.paths, md5=self.md5s["main"] if self.checksum else None
         )
@@ -203,7 +200,7 @@ class NCCM(RasterDataset):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> Figure:
