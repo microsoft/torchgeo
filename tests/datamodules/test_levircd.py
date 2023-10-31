@@ -10,6 +10,7 @@ from torchgeo.datamodules import LEVIRCDPlusDataModule
 
 
 class TestLEVIRCDPlusDataModule:
+    @pytest.fixture
     def datamodule(self, request: SubRequest) -> LEVIRCDPlusDataModule:
         root = os.path.join("tests", "data", "LEVIR-CD+")
         dm = LEVIRCDPlusDataModule(root=root, download=True, num_workers=0)
