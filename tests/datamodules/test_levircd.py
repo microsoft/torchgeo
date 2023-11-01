@@ -2,25 +2,35 @@
 # Licensed under the MIT License.
 
 import os
-from unittest.mock import Mock
+import shutil
+from pathlib import Path
 
 import pytest
-from _pytest.fixtures import SubRequest
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 
 from torchgeo.datamodules import LEVIRCDPlusDataModule
+from torchgeo.datasets import LEVIRCDPlus
+
+
+def download_url(url: str, root: str, *args: str) -> None:
+    shutil.copy(url, root)
 
 
 class TestLEVIRCDPlusDataModule:
-    @pytest.fixture
+    @pytest.fixture(params=["train", "validate", "test"])
     def datamodule(
-        self, monkeypatch: MonkeyPatch, request: SubRequest
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> LEVIRCDPlusDataModule:
-        monkeypatch.setattr(LEVIRCDPlusDataModule, "download", Mock(return_value=True))
+        monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
+        monkeypatch.setattr(LEVIRCDPlus, "md5", md5)
+        url = os.path.join("tests", "data", "levircd", "LEVIR-CD+.zip")
+        monkeypatch.setattr(LEVIRCDPlus, "url", url)
 
-        root = os.path.join("tests", "data", "LEVIR-CD+")
-        dm = LEVIRCDPlusDataModule(root=root, download=True, num_workers=0)
+        root = str(tmp_path)
+        dm = LEVIRCDPlusDataModule(
+            root=root, download=True, num_workers=0, checksum=True
+        )
         dm.prepare_data()
         dm.trainer = Trainer(accelerator="cpu", max_epochs=1)
         return dm
