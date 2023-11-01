@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Callable, Optional
+from typing import Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -228,16 +228,15 @@ class LEVIRCDPlus(NonGeoDataset):
         ncols = 3
 
         def get_rgb(img: Tensor) -> "np.typing.NDArray[np.uint8]":
-            img = img.permute(1, 2, 0)
-            rgb_img = img.float().numpy()
-            per02 = np.percentile(rgb_img, 2)
-            per98 = np.percentile(rgb_img, 98)
+            img = img.permute(1, 2, 0).float().numpy()
+            per02 = np.percentile(img, 2)
+            per98 = np.percentile(img, 98)
             delta = per98 - per02
             epsilon = 1e-7
             rgb_img: "np.typing.NDArray[np.uint8]" = (
-                np.clip((rgb_img - per02) / (delta + epsilon), 0, 1) * 255
+                np.clip((img - per02) / (delta + epsilon), 0, 1) * 255
             ).astype(np.uint8)
-            return rgb_img
+            return cast("np.typing.NDArray[np.uint8]", rgb_img)
 
         image1 = get_rgb(sample["image1"])
         image2 = get_rgb(sample["image2"])
