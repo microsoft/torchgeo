@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from unittest.mock import Mock
 
 import pytest
 from _pytest.fixtures import SubRequest
