@@ -9,6 +9,7 @@ import pytest
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 
+import torchgeo.datasets.utils
 from torchgeo.datamodules import LEVIRCDPlusDataModule
 from torchgeo.datasets import LEVIRCDPlus
 
@@ -23,6 +24,7 @@ class TestLEVIRCDPlusDataModule:
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> LEVIRCDPlusDataModule:
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
+        md5 = "1adf156f628aa32fb2e8fe6cada16c04"
         monkeypatch.setattr(LEVIRCDPlus, "md5", md5)
         url = os.path.join("tests", "data", "levircd", "LEVIR-CD+.zip")
         monkeypatch.setattr(LEVIRCDPlus, "url", url)
