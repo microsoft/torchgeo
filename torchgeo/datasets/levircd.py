@@ -15,7 +15,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive
+from .utils import download_and_extract_archive, draw_semantic_segmentation_masks
 
 
 class LEVIRCDPlus(NonGeoDataset):
@@ -225,8 +225,21 @@ class LEVIRCDPlus(NonGeoDataset):
 
         .. versionadded:: 0.2
         """
-        image1, image2, mask = (sample["image1"], sample["image2"], sample["mask"])
         ncols = 3
+
+        def get_rgb(img: Tensor) -> "np.typing.NDArray[np.uint8]":
+            img = img.permute(1, 2, 0)
+            rgb_img = img.float().numpy()
+            per02 = np.percentile(rgb_img, 2)
+            per98 = np.percentile(rgb_img, 98)
+            rgb_img = (np.clip((rgb_img - per02) / (per98 - per02), 0, 1) * 255).astype(
+                np.uint8
+            )
+            return rgb_img
+
+        image1 = get_rgb(sample["image1"])
+        image2 = get_rgb(sample["image2"])
+        mask = sample["mask"].numpy()
 
         if "prediction" in sample:
             prediction = sample["prediction"]
@@ -234,11 +247,11 @@ class LEVIRCDPlus(NonGeoDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
 
-        axs[0].imshow(image1.permute(1, 2, 0))
+        axs[0].imshow(image1)
         axs[0].axis("off")
-        axs[1].imshow(image2.permute(1, 2, 0))
+        axs[1].imshow(image2)
         axs[1].axis("off")
-        axs[2].imshow(mask)
+        axs[2].imshow(mask, cmap="gray")
         axs[2].axis("off")
 
         if "prediction" in sample:
