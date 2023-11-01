@@ -234,10 +234,10 @@ class LEVIRCDPlus(NonGeoDataset):
             per98 = np.percentile(rgb_img, 98)
             delta = per98 - per02
             epsilon = 1e-7
-            rgb_img = (
+            rgb_img: "np.typing.NDArray[np.uint8]" = (
                 np.clip((rgb_img - per02) / (delta + epsilon), 0, 1) * 255
             ).astype(np.uint8)
-            return cast("np.typing.NDArray[np.uint8]", rgb_img)
+            return rgb_img
 
         image1 = get_rgb(sample["image1"])
         image2 = get_rgb(sample["image2"])
