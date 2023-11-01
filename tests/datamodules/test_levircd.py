@@ -19,7 +19,7 @@ def download_url(url: str, root: str, *args: str) -> None:
 
 
 class TestLEVIRCDPlusDataModule:
-    @pytest.fixture(params=["train", "validate", "test"])
+    @pytest.fixture
     def datamodule(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> LEVIRCDPlusDataModule:
