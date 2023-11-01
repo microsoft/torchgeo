@@ -31,7 +31,7 @@ class TestLEVIRCDPlusDataModule:
 
         root = str(tmp_path)
         dm = LEVIRCDPlusDataModule(
-            root=root, download=True, num_workers=0, checksum=True
+            root=root, download=True, num_workers=0, checksum=True, val_split_pct=0.5
         )
         dm.prepare_data()
         dm.trainer = Trainer(accelerator="cpu", max_epochs=1)
