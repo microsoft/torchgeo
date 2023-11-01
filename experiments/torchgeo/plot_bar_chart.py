@@ -74,4 +74,4 @@ ax.legend(fontsize="large")
 plt.gca().spines.right.set_visible(False)
 plt.gca().spines.top.set_visible(False)
 plt.tight_layout()
-plt.show()  # type: ignore[no-untyped-call]
+plt.show()
