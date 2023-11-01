@@ -15,7 +15,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive, draw_semantic_segmentation_masks
+from .utils import download_and_extract_archive
 
 
 class LEVIRCDPlus(NonGeoDataset):
