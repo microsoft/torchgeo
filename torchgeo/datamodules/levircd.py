@@ -63,8 +63,8 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
         """
         if stage in ["fit", "validate"]:
             self.dataset = LEVIRCDPlus(split="train", **self.kwargs)
-            self.train_dataset, self.val_dataset, _ = dataset_split(
-                self.dataset, val_pct=self.val_split_pct, test_pct=0
+            self.train_dataset, self.val_dataset = dataset_split(
+                self.dataset, val_pct=self.val_split_pct
             )
         if stage in ["test"]:
             self.test_dataset = LEVIRCDPlus(split="test", **self.kwargs)
