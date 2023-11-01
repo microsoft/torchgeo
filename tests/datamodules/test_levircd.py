@@ -6,13 +6,18 @@ import os
 import pytest
 from _pytest.fixtures import SubRequest
 from lightning.pytorch import Trainer
+from pytest import MonkeyPatch
 
 from torchgeo.datamodules import LEVIRCDPlusDataModule
 
 
 class TestLEVIRCDPlusDataModule:
     @pytest.fixture
-    def datamodule(self, request: SubRequest) -> LEVIRCDPlusDataModule:
+    def datamodule(
+        self, monkeypatch: MonkeyPatch, request: SubRequest
+    ) -> LEVIRCDPlusDataModule:
+        monkeypatch.setattr(LEVIRCDPlusDataModule, "download", Mock(return_value=True))
+
         root = os.path.join("tests", "data", "LEVIR-CD+")
         dm = LEVIRCDPlusDataModule(root=root, download=True, num_workers=0)
         dm.prepare_data()
