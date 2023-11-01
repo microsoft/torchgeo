@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Callable, Optional
+from typing import Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -235,7 +235,7 @@ class LEVIRCDPlus(NonGeoDataset):
             rgb_img = (np.clip((rgb_img - per02) / (per98 - per02), 0, 1) * 255).astype(
                 np.uint8
             )
-            return rgb_img
+            return cast("np.typing.NDArray[np.uint8]", rgb_img)
 
         image1 = get_rgb(sample["image1"])
         image2 = get_rgb(sample["image2"])
