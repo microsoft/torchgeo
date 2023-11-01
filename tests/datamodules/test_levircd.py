@@ -43,10 +43,10 @@ class TestLEVIRCDPlusDataModule:
             datamodule.trainer.training = True
         batch = next(iter(datamodule.train_dataloader()))
         batch = datamodule.on_after_batch_transfer(batch, 0)
-        assert batch["image1"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
-        assert batch["image1"].shape[0] == batch["mask"].shape[0] == 1
-        assert batch["image2"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
-        assert batch["image2"].shape[0] == batch["mask"].shape[0] == 1
+        assert batch["image1"].shape[-2:] == batch["mask"].shape[-2:] == (256, 256)
+        assert batch["image1"].shape[0] == batch["mask"].shape[0] == 4
+        assert batch["image2"].shape[-2:] == batch["mask"].shape[-2:] == (256, 256)
+        assert batch["image2"].shape[0] == batch["mask"].shape[0] == 4
         assert batch["image1"].shape[1] == 3
         assert batch["image2"].shape[1] == 3
 
@@ -57,10 +57,10 @@ class TestLEVIRCDPlusDataModule:
         batch = next(iter(datamodule.val_dataloader()))
         batch = datamodule.on_after_batch_transfer(batch, 0)
         if datamodule.val_split_pct > 0.0:
-            assert batch["image1"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
-            assert batch["image1"].shape[0] == batch["mask"].shape[0] == 1
-            assert batch["image2"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
-            assert batch["image2"].shape[0] == batch["mask"].shape[0] == 1
+            assert batch["image1"].shape[-2:] == batch["mask"].shape[-2:] == (256, 256)
+            assert batch["image1"].shape[0] == batch["mask"].shape[0] == 4
+            assert batch["image2"].shape[-2:] == batch["mask"].shape[-2:] == (256, 256)
+            assert batch["image2"].shape[0] == batch["mask"].shape[0] == 4
             assert batch["image1"].shape[1] == 3
             assert batch["image2"].shape[1] == 3
 
@@ -70,9 +70,9 @@ class TestLEVIRCDPlusDataModule:
             datamodule.trainer.testing = True
         batch = next(iter(datamodule.test_dataloader()))
         batch = datamodule.on_after_batch_transfer(batch, 0)
-        assert batch["image1"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
+        assert batch["image1"].shape[-2:] == batch["mask"].shape[-2:] == (256, 256)
         assert batch["image1"].shape[0] == batch["mask"].shape[0] == 1
-        assert batch["image2"].shape[-2:] == batch["mask"].shape[-2:] == (2, 2)
+        assert batch["image2"].shape[-2:] == batch["mask"].shape[-2:] == (256, 256)
         assert batch["image2"].shape[0] == batch["mask"].shape[0] == 1
         assert batch["image1"].shape[1] == 3
         assert batch["image2"].shape[1] == 3
