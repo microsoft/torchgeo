@@ -9,6 +9,7 @@ import glob
 import os
 import re
 import sys
+import warnings
 from collections.abc import Iterable, Sequence
 from typing import Any, Callable, Optional, Union, cast
 
@@ -29,7 +30,13 @@ from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
 
-from .utils import BoundingBox, concat_samples, disambiguate_timestamp, merge_samples
+from .utils import (
+    BoundingBox,
+    concat_samples,
+    disambiguate_timestamp,
+    merge_samples,
+    path_is_vsi,
+)
 
 
 class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
@@ -298,8 +305,14 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
             if os.path.isdir(path):
                 pathname = os.path.join(path, "**", self.filename_glob)
                 files |= set(glob.iglob(pathname, recursive=True))
-            else:
+            elif os.path.isfile(path) or path_is_vsi(path):
                 files.add(path)
+            else:
+                warnings.warn(
+                    f"Could not find any relevant files for provided path '{path}'. "
+                    f"Path was ignored.",
+                    UserWarning,
+                )
 
         return files
 

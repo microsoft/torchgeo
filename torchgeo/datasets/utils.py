@@ -737,3 +737,27 @@ def percentile_normalization(
         (img - lower_percentile) / (upper_percentile - lower_percentile + 1e-5), 0, 1
     )
     return img_normalized
+
+
+def path_is_vsi(path: str) -> bool:
+    """Checks if the given path is pointing to a Virtual File System.
+
+    .. note::
+       Does not check if the path exists, or if it is a dir or file.
+
+    VSI can for instance be Cloud Storage Blobs or zip-archives.
+    They will start with a prefix indicating this.
+    For examples of these, see references for the two accepted syntaxes.
+
+    * https://gdal.org/user/virtual_file_systems.html
+    * https://rasterio.readthedocs.io/en/latest/topics/datasets.html
+
+    Args:
+        path: string representing a directory or file
+
+    Returns:
+        True if path is on a virtual file system, else False
+
+    .. versionadded:: 0.6
+    """
+    return "://" in path or path.startswith("/vsi")
