@@ -146,6 +146,7 @@ __all__ = (
     "ChesapeakeWV",
     "ChesapeakeCVPR",
     "CMSGlobalMangroveCanopy",
+    "CropHarvest",
     "EDDMapS",
     "Esri2020",
     "EUDEM",
