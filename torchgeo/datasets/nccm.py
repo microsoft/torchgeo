@@ -31,11 +31,11 @@ class NCCM(RasterDataset):
     specific to three years: 2017, 2018, 2019.
 
     The dataset contains 4 classes:
-    0: paddy rice
-    1: maize
-    2: soybean
-    3: others
 
+    0. paddy rice
+    1. maize
+    2. soybean
+    3. others
 
     Dataset format:
     1) Three .TIF files containing the labels
