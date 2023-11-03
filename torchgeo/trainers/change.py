@@ -37,7 +37,7 @@ class ChangeDetectionTask(BaseTask):
         weights: Optional[Union[WeightsEnum, str, bool]] = None,
         in_channels: int = 3,
         num_classes: int = 1,
-        loss: str = "bce",
+        loss: str = "ce",
         class_weights: Optional[Tensor] = None,
         ignore_index: Optional[int] = None,
         lr: float = 1e-3,
@@ -92,17 +92,18 @@ class ChangeDetectionTask(BaseTask):
             ValueError: If *loss* is invalid.
         """
         loss: str = self.hparams["loss"]
+        num_classes: int = self.hparams["num_classes"]
         ignore_index = self.hparams["ignore_index"]
-        if loss == "bce":
-            ignore_value = -1000 if ignore_index is None else ignore_index
-            self.criterion = nn.BCEWithLogitsLoss(
-                weight=self.hparams["class_weights"]
-            )  # ignore_index=ignore_value, not supported in BCELoss
-        elif loss == "ce":
-            ignore_value = -1000 if ignore_index is None else ignore_index
-            self.criterion = nn.CrossEntropyLoss(
-                ignore_index=ignore_value, weight=self.hparams["class_weights"]
-            )
+        if loss == "ce":
+            if num_classes == 1:
+                self.criterion = nn.BCEWithLogitsLoss(
+                    weight=self.hparams["class_weights"]
+                )
+            else:
+                ignore_value = -1000 if ignore_index is None else ignore_index
+                self.criterion = nn.CrossEntropyLoss(
+                    ignore_index=ignore_value, weight=self.hparams["class_weights"]
+                )
         elif loss == "jaccard":
             self.criterion = smp.losses.JaccardLoss(
                 mode="multiclass", classes=self.hparams["num_classes"]
@@ -122,16 +123,18 @@ class ChangeDetectionTask(BaseTask):
         ignore_index: Optional[int] = self.hparams["ignore_index"]
         metrics = MetricCollection(
             [
-                BinaryAccuracy() if num_classes == 1 else MulticlassAccuracy(
-                    num_classes=num_classes, 
-                    ignore_index=ignore_index, 
-                    multidim_average="global", 
+                BinaryAccuracy()
+                if num_classes == 1
+                else MulticlassAccuracy(
+                    num_classes=num_classes,
+                    ignore_index=ignore_index,
+                    multidim_average="global",
                     average="micro",
                 ),
-                BinaryJaccardIndex() if num_classes == 1 else MulticlassJaccardIndex(
-                    num_classes=num_classes, 
-                    ignore_index=ignore_index, 
-                    average="micro"
+                BinaryJaccardIndex()
+                if num_classes == 1
+                else MulticlassJaccardIndex(
+                    num_classes=num_classes, ignore_index=ignore_index, average="micro"
                 ),
             ]
         )
