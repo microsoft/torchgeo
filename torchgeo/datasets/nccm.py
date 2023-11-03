@@ -42,10 +42,9 @@ class NCCM(RasterDataset):
     1. Three .TIF files containing the labels
     2. JavaScript code to download images from the dataset.
 
-    If you use this dataset in your research, please use the corresponding citation:
-    * You, N., Dong, J., Huang, J. et al. The 10-m crop type maps in
-    Northeast China during 2017-2019.
-    Sci Data 8, 41 (2021). https://doi.org/10.1038/s41597-021-00827-9
+    If you use this dataset in your research, please cite the following paper:
+    
+    * https://doi.org/10.1038/s41597-021-00827-9
     """
 
     filename_regex = r"CDL(?P<year>\d{4})_clip"
