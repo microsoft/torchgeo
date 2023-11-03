@@ -229,7 +229,7 @@ class BinaryChangeDetectionTask(BaseTask):
         ):
             try:
                 datamodule = self.trainer.datamodule
-                batch["prediction"] = y_hat.sigmoid()
+                batch["prediction"] = y_hat.sigmoid().squeeze(1)
                 for key in ["image1", "image2", "mask", "prediction"]:
                     batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]
