@@ -12,17 +12,22 @@ import segmentation_models_pytorch as smp
 import torch.nn as nn
 from torch import Tensor
 from torchmetrics import MetricCollection
-from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
+from torchmetrics.classification import (
+    BinaryAccuracy,
+    BinaryJaccardIndex,
+    MulticlassAccuracy,
+    MulticlassJaccardIndex,
+)
 from torchvision.models._api import WeightsEnum
 
 from ..datasets.utils import unbind_samples
-from ..models import get_weight, ChangeMixin, ChangeStar, ChangeStarFarSeg
+from ..models import ChangeMixin, ChangeStar, ChangeStarFarSeg, get_weight
 from . import utils
 from .base import BaseTask
 
 
-class ChangeDetectionTask(BaseTask):
-    """Change Detection."""
+class BinaryChangeDetectionTask(BaseTask):
+    """Binary Change Detection."""
 
     def __init__(
         self,
@@ -30,8 +35,7 @@ class ChangeDetectionTask(BaseTask):
         backbone: str = "resnet50",
         weights: Optional[Union[WeightsEnum, str, bool]] = None,
         in_channels: int = 3,
-        num_classes: int = 1,
-        loss: str = "ce",
+        loss: str = "bce",
         class_weights: Optional[Tensor] = None,
         ignore_index: Optional[int] = None,
         lr: float = 1e-3,
@@ -39,7 +43,7 @@ class ChangeDetectionTask(BaseTask):
         freeze_backbone: bool = False,
         freeze_decoder: bool = False,
     ) -> None:
-        """Inititalize a new ChangeDetectionTask instance.
+        """Inititalize a new BinaryChangeDetectionTask instance.
 
         Args:
             model: Name of the model to use.
@@ -87,18 +91,10 @@ class ChangeDetectionTask(BaseTask):
         """
         loss: str = self.hparams["loss"]
         ignore_index = self.hparams["ignore_index"]
-        if loss == "ce":
+        if loss == "bce":
             ignore_value = -1000 if ignore_index is None else ignore_index
-            self.criterion = nn.CrossEntropyLoss(
+            self.criterion = nn.BCELoss(
                 ignore_index=ignore_value, weight=self.hparams["class_weights"]
-            )
-        elif loss == "jaccard":
-            self.criterion = smp.losses.JaccardLoss(
-                mode="multiclass", classes=self.hparams["num_classes"]
-            )
-        elif loss == "focal":
-            self.criterion = smp.losses.FocalLoss(
-                "multiclass", ignore_index=ignore_index, normalized=True
             )
         else:
             raise ValueError(
@@ -108,19 +104,11 @@ class ChangeDetectionTask(BaseTask):
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics."""
-        num_classes: int = self.hparams["num_classes"]
         ignore_index: Optional[int] = self.hparams["ignore_index"]
         metrics = MetricCollection(
             [
-                MulticlassAccuracy(
-                    num_classes=num_classes,
-                    ignore_index=ignore_index,
-                    multidim_average="global",
-                    average="micro",
-                ),
-                MulticlassJaccardIndex(
-                    num_classes=num_classes, ignore_index=ignore_index, average="micro"
-                ),
+                BinaryAccuracy(ignore_index=ignore_index),
+                BinaryJaccardIndex(ignore_index=ignore_index),
             ]
         )
         self.train_metrics = metrics.clone(prefix="train_")
@@ -137,19 +125,17 @@ class ChangeDetectionTask(BaseTask):
         backbone: str = self.hparams["backbone"]
         weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
         in_channels: int = self.hparams["in_channels"]
-        num_classes: int = self.hparams["num_classes"]
 
         if model == "unet":
             self.model = smp.Unet(
                 encoder_name=backbone,
                 encoder_weights="imagenet" if weights is True else None,
-                in_channels=in_channels,
-                classes=num_classes,
+                in_channels=in_channels * 2,  # images are concatenated
+                classes=1,
             )
         else:
             raise ValueError(
-                f"Model type '{model}' is not valid. "
-                "Currently, only supports 'unet'"
+                f"Model type '{model}' is not valid. " "Currently, only supports 'unet'"
             )
 
         if weights and weights is not True:
@@ -192,8 +178,7 @@ class ChangeDetectionTask(BaseTask):
             y_hat = self(x)
         else:
             raise ValueError(
-                f"Model type '{model}' is not valid. "
-                "Currently, only supports 'unet'"
+                f"Model type '{model}' is not valid. " "Currently, only supports 'unet'"
             )
         y_hat_hard = y_hat.argmax(dim=1)
         loss: Tensor = self.criterion(y_hat, y)
@@ -220,8 +205,7 @@ class ChangeDetectionTask(BaseTask):
             y_hat = self(x)
         else:
             raise ValueError(
-                f"Model type '{model}' is not valid. "
-                "Currently, only supports 'unet'"
+                f"Model type '{model}' is not valid. " "Currently, only supports 'unet'"
             )
         y_hat_hard = y_hat.argmax(dim=1)
         loss = self.criterion(y_hat, y)
@@ -240,7 +224,7 @@ class ChangeDetectionTask(BaseTask):
             try:
                 datamodule = self.trainer.datamodule
                 batch["prediction"] = y_hat_hard
-                for key in ["image", "mask", "prediction"]:
+                for key in ["image1", "image2", "mask", "prediction"]:
                     batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
@@ -269,8 +253,7 @@ class ChangeDetectionTask(BaseTask):
             y_hat = self(x)
         else:
             raise ValueError(
-                f"Model type '{model}' is not valid. "
-                "Currently, only supports 'unet'"
+                f"Model type '{model}' is not valid. " "Currently, only supports 'unet'"
             )
         y_hat_hard = y_hat.argmax(dim=1)
         loss = self.criterion(y_hat, y)
@@ -299,6 +282,5 @@ class ChangeDetectionTask(BaseTask):
             return y_hat
         else:
             raise ValueError(
-                f"Model type '{model}' is not valid. "
-                "Currently, only supports 'unet'"
+                f"Model type '{model}' is not valid. " "Currently, only supports 'unet'"
             )
