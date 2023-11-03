@@ -54,16 +54,7 @@ class NCCM(RasterDataset):
 
     date_format = "%Y"
     is_image = False
-
-    # need to add url
     url = "https://figshare.com/ndownloader/articles/13090442/versions/1"
-
-    # md5s = {
-    #     2017: "a85341fa6248fd7e0badab6c",
-    #     2018: "478d10786aa798fb11693ec1",
-    #     2019: "42e483fdc8239d22dba7020f"
-    # }
-
     md5s = {"main": "eae952f1b346d7e649d027e8139a76f5"}
 
     years = [2017, 2018, 2019]
@@ -81,7 +72,7 @@ class NCCM(RasterDataset):
         paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        years: list[int] = [2019],
+        years: list[int] = [2017,2018,2019],
         classes: list[int] = list(cmap.keys()),
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
