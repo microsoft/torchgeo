@@ -17,7 +17,7 @@ import h5py
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive
+from .utils import download_and_extract_archive, download_url
 
 
 class CropHarvest(NonGeoDataset):
@@ -58,12 +58,14 @@ class CropHarvest(NonGeoDataset):
         "features": {
             "url": "https://zenodo.org/records/7257688/files/features.tar.gz?download=1",
             "filename": "features.tar.gz",
-            "extracted_filename":os.path.join("features", "arrays")
+            "extracted_filename":os.path.join("features", "arrays"),
+            "md5": "cad4df655c75caac805a80435e46ee3e"
         },
         "labels": {
             "url": "https://zenodo.org/records/7257688/files/labels.geojson?download=1",
             "filename": "labels.geojson",
-            "extracted_filename":"labels.geojson"
+            "extracted_filename":"labels.geojson",
+            "md5": "bf7bae6812fc7213481aff6a2e34517d"
         },
     }
 
@@ -203,8 +205,8 @@ class CropHarvest(NonGeoDataset):
         row = self.labels[(self.labels["properties.index"] == index) & (self.labels["properties.dataset"] == dataset)].to_dict(orient='records')[0]
 
         label = "None"      
-        if row["properties.classification_label"]:
-            label = row["properties.classification_label"]
+        if row["properties.label"]:
+            label = row["properties.label"]
         elif row["properties.is_crop"] == 1:
             label = "Some"
 
@@ -231,13 +233,20 @@ class CropHarvest(NonGeoDataset):
         if self._check_integrity():
             print("Files already downloaded and verified")
             return
-        for fileinfo in self.file_dict.values():
-            download_and_extract_archive(
-                fileinfo["url"],
-                self.root,
-                filename=os.path.join(self.directory,fileinfo["filename"]),
-                md5=self.md5 if self.checksum else None,
-            )
+       
+        download_and_extract_archive(
+            self.file_dict["features"]["url"],
+            self.root,
+            filename=os.path.join(self.directory,self.file_dict["features"]["filename"]),
+            md5=self.file_dict["features"]["md5"] if self.checksum else None,
+        )
+
+        download_url(
+            self.file_dict["labels"]["url"],
+            self.root,
+            filename=os.path.join(self.directory,self.file_dict["labels"]["filename"]),
+            md5=self.file_dict["labels"]["md5"] if self.checksum else None,
+        )
 
     def plot(
         self,
@@ -261,6 +270,6 @@ class CropHarvest(NonGeoDataset):
         axs.set_title(f'Croptype: {sample["label"]}')
 
         if subtitle is not None:
-            plt.subtitle(subtitle)
+            plt.suptitle(subtitle)
 
         return fig
