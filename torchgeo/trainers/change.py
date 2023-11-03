@@ -9,6 +9,7 @@ from typing import Any, Optional, Union
 
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
+import torch
 import torch.nn as nn
 from torch import Tensor
 from torchmetrics import MetricCollection
@@ -93,9 +94,9 @@ class BinaryChangeDetectionTask(BaseTask):
         ignore_index = self.hparams["ignore_index"]
         if loss == "bce":
             ignore_value = -1000 if ignore_index is None else ignore_index
-            self.criterion = nn.BCELoss(
-                ignore_index=ignore_value, weight=self.hparams["class_weights"]
-            )
+            self.criterion = nn.BCEWithLogitsLoss(
+                weight=self.hparams["class_weights"]
+            )  # ignore_index=ignore_value, not supported in BCELoss
         else:
             raise ValueError(
                 f"Loss type '{loss}' is not valid. "
@@ -107,8 +108,8 @@ class BinaryChangeDetectionTask(BaseTask):
         ignore_index: Optional[int] = self.hparams["ignore_index"]
         metrics = MetricCollection(
             [
-                BinaryAccuracy(ignore_index=ignore_index),
-                BinaryJaccardIndex(ignore_index=ignore_index),
+                BinaryAccuracy(),  # ignore_index=ignore_index
+                BinaryJaccardIndex(),  # ignore_index=ignore_index
             ]
         )
         self.train_metrics = metrics.clone(prefix="train_")
@@ -170,9 +171,10 @@ class BinaryChangeDetectionTask(BaseTask):
         Returns:
             The loss tensor.
         """
+        model: str = self.hparams["model"]
         image1 = batch["image1"]
         image2 = batch["image2"]
-        y = batch["mask"]
+        y = batch["mask"].float()
         if model == "unet":
             x = torch.cat([image1, image2], dim=1)
             y_hat = self(x)
@@ -180,10 +182,12 @@ class BinaryChangeDetectionTask(BaseTask):
             raise ValueError(
                 f"Model type '{model}' is not valid. " "Currently, only supports 'unet'"
             )
-        y_hat_hard = y_hat.argmax(dim=1)
+        if y_hat.ndim != y.ndim:
+            y = y.unsqueeze(dim=1)
+        loss: Tensor = self.criterion(y_hat, y)
         loss: Tensor = self.criterion(y_hat, y)
         self.log("train_loss", loss)
-        self.train_metrics(y_hat_hard, y)
+        self.train_metrics(y_hat, y)
         self.log_dict(self.train_metrics)
         return loss
 
@@ -197,9 +201,10 @@ class BinaryChangeDetectionTask(BaseTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
+        model: str = self.hparams["model"]
         image1 = batch["image1"]
         image2 = batch["image2"]
-        y = batch["mask"]
+        y = batch["mask"].float()
         if model == "unet":
             x = torch.cat([image1, image2], dim=1)
             y_hat = self(x)
@@ -207,35 +212,36 @@ class BinaryChangeDetectionTask(BaseTask):
             raise ValueError(
                 f"Model type '{model}' is not valid. " "Currently, only supports 'unet'"
             )
-        y_hat_hard = y_hat.argmax(dim=1)
+        if y_hat.ndim != y.ndim:
+            y = y.unsqueeze(dim=1)
         loss = self.criterion(y_hat, y)
         self.log("val_loss", loss)
-        self.val_metrics(y_hat_hard, y)
+        self.val_metrics(y_hat, y)
         self.log_dict(self.val_metrics)
 
-        if (
-            batch_idx < 10
-            and hasattr(self.trainer, "datamodule")
-            and hasattr(self.trainer.datamodule, "plot")
-            and self.logger
-            and hasattr(self.logger, "experiment")
-            and hasattr(self.logger.experiment, "add_figure")
-        ):
-            try:
-                datamodule = self.trainer.datamodule
-                batch["prediction"] = y_hat_hard
-                for key in ["image1", "image2", "mask", "prediction"]:
-                    batch[key] = batch[key].cpu()
-                sample = unbind_samples(batch)[0]
-                fig = datamodule.plot(sample)
-                if fig:
-                    summary_writer = self.logger.experiment
-                    summary_writer.add_figure(
-                        f"image/{batch_idx}", fig, global_step=self.global_step
-                    )
-                    plt.close()
-            except ValueError:
-                pass
+        # if (
+        #     batch_idx < 10
+        #     and hasattr(self.trainer, "datamodule")
+        #     and hasattr(self.trainer.datamodule, "plot")
+        #     and self.logger
+        #     and hasattr(self.logger, "experiment")
+        #     and hasattr(self.logger.experiment, "add_figure")
+        # ):
+        #     try:
+        #         datamodule = self.trainer.datamodule
+        #         batch["prediction"] = y_hat.sigmoid()
+        #         for key in ["image1", "image2", "mask", "prediction"]:
+        #             batch[key] = batch[key].cpu()
+        #         sample = unbind_samples(batch)[0]
+        #         fig = datamodule.plot(sample)
+        #         if fig:
+        #             summary_writer = self.logger.experiment
+        #             summary_writer.add_figure(
+        #                 f"image/{batch_idx}", fig, global_step=self.global_step
+        #             )
+        #             plt.close()
+        #     except ValueError:
+        #         pass
 
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.
@@ -245,9 +251,10 @@ class BinaryChangeDetectionTask(BaseTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
+        model: str = self.hparams["model"]
         image1 = batch["image1"]
         image2 = batch["image2"]
-        y = batch["mask"]
+        y = batch["mask"].float()
         if model == "unet":
             x = torch.cat([image1, image2], dim=1)
             y_hat = self(x)
@@ -255,10 +262,11 @@ class BinaryChangeDetectionTask(BaseTask):
             raise ValueError(
                 f"Model type '{model}' is not valid. " "Currently, only supports 'unet'"
             )
-        y_hat_hard = y_hat.argmax(dim=1)
+        if y_hat.ndim != y.ndim:
+            y = y.unsqueeze(dim=1)
         loss = self.criterion(y_hat, y)
         self.log("test_loss", loss)
-        self.test_metrics(y_hat_hard, y)
+        self.test_metrics(y_hat, y)
         self.log_dict(self.test_metrics)
 
     def predict_step(
@@ -274,6 +282,7 @@ class BinaryChangeDetectionTask(BaseTask):
         Returns:
             Output predicted probabilities.
         """
+        model: str = self.hparams["model"]
         image1 = batch["image1"]
         image2 = batch["image2"]
         if model == "unet":
