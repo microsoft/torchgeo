@@ -28,7 +28,7 @@ class NCCM(RasterDataset):
     textural characteristics of the land surface.
     The resultant maps have high overall accuracies (OA)
     based on ground truth data. The dataset contains information
-    specific to the three years: 2017,2018,2019.
+    specific to three years: 2017, 2018, 2019.
 
     The dataset contains 4 classes:
     0: paddy rice
