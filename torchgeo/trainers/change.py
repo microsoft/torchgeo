@@ -119,6 +119,7 @@ class ChangeDetectionTask(BaseTask):
             self.criterion = smp.losses.FocalLoss(
                 "multiclass", ignore_index=ignore_index, normalized=True
             )
+        else:
             raise ValueError(
                 f"Loss type '{loss}' is not valid. "
                 "Currently, supports 'ce', 'jaccard' or 'focal' loss."
@@ -205,119 +206,38 @@ class ChangeDetectionTask(BaseTask):
             for param in self.model.decoder.parameters():
                 param.requires_grad = False
 
-    def training_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
-    ) -> Tensor:
-        """Compute the training loss and additional metrics.
-
-        Args:
-            batch: The output of your DataLoader.
-            batch_idx: Integer displaying index of this batch.
-            dataloader_idx: Index of the current dataloader.
-
-        Returns:
-            The loss tensor.
-        """
+    def _shared_step(self, batch: Any, batch_idx: int, stage: str) -> Tensor:
         model: str = self.hparams["model"]
-        image1 = batch["image1"]
-        image2 = batch["image2"]
-        y = batch["mask"].float()
-        if model == "unet":
-            x = torch.cat([image1, image2], dim=1)
-            y_hat = self(x)
-        elif model in ["fcsiamdiff", "fcsiamconc"]:
-            x = torch.stack((image1, image2), dim=1)
-            y_hat = self(x)
-        else:
-            raise ValueError(f"Model type '{model}' is not valid. ")
+        image1, image2, y = batch["image1"], batch["image2"], batch["mask"].float()
+        x = (
+            torch.cat([image1, image2], dim=1)
+            if model == "unet"
+            else torch.stack((image1, image2), dim=1)
+        )
+        y_hat = self(x)
+
         if y_hat.ndim != y.ndim:
             y = y.unsqueeze(dim=1)
         loss: Tensor = self.criterion(y_hat, y)
-        loss: Tensor = self.criterion(y_hat, y)
-        self.log("train_loss", loss)
-        self.train_metrics(y_hat, y)
-        self.log_dict(self.train_metrics)
+        self.log(f"{stage}_loss", loss)
+
+        # Retrieve the correct metrics based on the stage
+        metrics = getattr(self, f"{stage}_metrics", None)
+        if metrics:
+            metrics(y_hat, y)
+            self.log_dict({f"{stage}_{k}": v for k, v in metrics.compute().items()})
+
         return loss
 
-    def validation_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
-    ) -> None:
-        """Compute the validation loss and additional metrics.
+    def training_step(self, batch: Any, batch_idx: int) -> Tensor:
+        loss = self._shared_step(batch, batch_idx, "train")
+        return loss
 
-        Args:
-            batch: The output of your DataLoader.
-            batch_idx: Integer displaying index of this batch.
-            dataloader_idx: Index of the current dataloader.
-        """
-        model: str = self.hparams["model"]
-        image1 = batch["image1"]
-        image2 = batch["image2"]
-        y = batch["mask"].float()
-        if model == "unet":
-            x = torch.cat([image1, image2], dim=1)
-            y_hat = self(x)
-        elif model in ["fcsiamdiff", "fcsiamconc"]:
-            x = torch.stack((image1, image2), dim=1)
-            y_hat = self(x)
-        else:
-            raise ValueError(f"Model type '{model}' is not valid.")
-        if y_hat.ndim != y.ndim:
-            y = y.unsqueeze(dim=1)
-        loss = self.criterion(y_hat, y)
-        self.log("val_loss", loss)
-        self.val_metrics(y_hat, y)
-        self.log_dict(self.val_metrics)
+    def validation_step(self, batch: Any, batch_idx: int) -> None:
+        self._shared_step(batch, batch_idx, "val")
 
-        if (
-            batch_idx < 10
-            and hasattr(self.trainer, "datamodule")
-            and hasattr(self.trainer.datamodule, "plot")
-            and self.logger
-            and hasattr(self.logger, "experiment")
-            and hasattr(self.logger.experiment, "add_figure")
-        ):
-            try:
-                datamodule = self.trainer.datamodule
-                batch["prediction"] = y_hat.sigmoid().squeeze(1)
-                for key in ["image1", "image2", "mask", "prediction"]:
-                    batch[key] = batch[key].cpu()
-                sample = unbind_samples(batch)[0]
-                fig = datamodule.plot(sample)
-                if fig:
-                    summary_writer = self.logger.experiment
-                    summary_writer.add_figure(
-                        f"image/{batch_idx}", fig, global_step=self.global_step
-                    )
-                    plt.close()
-            except ValueError:
-                pass
-
-    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
-        """Compute the test loss and additional metrics.
-
-        Args:
-            batch: The output of your DataLoader.
-            batch_idx: Integer displaying index of this batch.
-            dataloader_idx: Index of the current dataloader.
-        """
-        model: str = self.hparams["model"]
-        image1 = batch["image1"]
-        image2 = batch["image2"]
-        y = batch["mask"].float()
-        if model == "unet":
-            x = torch.cat([image1, image2], dim=1)
-            y_hat = self(x)
-        elif model in ["fcsiamdiff", "fcsiamconc"]:
-            x = torch.stack((image1, image2), dim=1)
-            y_hat = self(x)
-        else:
-            raise ValueError(f"Model type '{model}' is not valid.")
-        if y_hat.ndim != y.ndim:
-            y = y.unsqueeze(dim=1)
-        loss = self.criterion(y_hat, y)
-        self.log("test_loss", loss)
-        self.test_metrics(y_hat, y)
-        self.log_dict(self.test_metrics)
+    def test_step(self, batch: Any, batch_idx: int) -> None:
+        self._shared_step(batch, batch_idx, "test")
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -337,7 +257,9 @@ class ChangeDetectionTask(BaseTask):
         image2 = batch["image2"]
         if model == "unet":
             x = torch.cat([image1, image2], dim=1)
-            y_hat: Tensor = self(x).softmax(dim=1)
+            y_hat: Tensor = self(x).softmax(
+                dim=1
+            )  # TODO: only apply if model output isn't already probabilities
             return y_hat
         elif model in ["fcsiamdiff", "fcsiamconc"]:
             x = torch.stack((image1, image2), dim=1)
