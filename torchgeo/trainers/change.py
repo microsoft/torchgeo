@@ -22,7 +22,14 @@ from torchmetrics.classification import (
 from torchvision.models._api import WeightsEnum
 
 from ..datasets.utils import unbind_samples
-from ..models import ChangeMixin, ChangeStar, ChangeStarFarSeg, FCSiamDiff, get_weight
+from ..models import (
+    ChangeMixin,
+    ChangeStar,
+    ChangeStarFarSeg,
+    FCSiamConc,
+    FCSiamDiff,
+    get_weight,
+)
 from . import utils
 from .base import BaseTask
 
@@ -167,6 +174,12 @@ class ChangeDetectionTask(BaseTask):
                 classes=num_classes,
                 encoder_weights="imagenet" if weights is True else None,
             )
+        elif model == "fcsiamconc":
+            self.model = FCSiamConc(
+                in_channels=in_channels,
+                classes=num_classes,
+                encoder_weights="imagenet" if weights is True else None,
+            )
         else:
             raise ValueError(
                 f"Model type '{model}' is not valid. "
@@ -212,7 +225,7 @@ class ChangeDetectionTask(BaseTask):
         if model == "unet":
             x = torch.cat([image1, image2], dim=1)
             y_hat = self(x)
-        elif model == "fcsiamdiff":
+        elif model in ["fcsiamdiff", "fcsiamconc"]:
             x = torch.stack((image1, image2), dim=1)
             y_hat = self(x)
         else:
@@ -243,7 +256,7 @@ class ChangeDetectionTask(BaseTask):
         if model == "unet":
             x = torch.cat([image1, image2], dim=1)
             y_hat = self(x)
-        elif model == "fcsiamdiff":
+        elif model in ["fcsiamdiff", "fcsiamconc"]:
             x = torch.stack((image1, image2), dim=1)
             y_hat = self(x)
         else:
@@ -294,7 +307,7 @@ class ChangeDetectionTask(BaseTask):
         if model == "unet":
             x = torch.cat([image1, image2], dim=1)
             y_hat = self(x)
-        elif model == "fcsiamdiff":
+        elif model in ["fcsiamdiff", "fcsiamconc"]:
             x = torch.stack((image1, image2), dim=1)
             y_hat = self(x)
         else:
