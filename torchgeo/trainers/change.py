@@ -122,17 +122,17 @@ class ChangeDetectionTask(BaseTask):
         ignore_index: Optional[int] = self.hparams["ignore_index"]
         metrics = MetricCollection(
             [
-                BinaryAccuracy(),  # ignore_index=ignore_index
-                BinaryJaccardIndex(),  # ignore_index=ignore_index
-                # MulticlassAccuracy(
-                #     num_classes=num_classes,
-                #     ignore_index=ignore_index,
-                #     multidim_average="global",
-                #     average="micro",
-                # ),
-                # MulticlassJaccardIndex(
-                #     num_classes=num_classes, ignore_index=ignore_index, average="micro"
-                # ),
+                BinaryAccuracy() if num_classes == 1 else MulticlassAccuracy(
+                    num_classes=num_classes, 
+                    ignore_index=ignore_index, 
+                    multidim_average="global", 
+                    average="micro",
+                ),
+                BinaryJaccardIndex() if num_classes == 1 else MulticlassJaccardIndex(
+                    num_classes=num_classes, 
+                    ignore_index=ignore_index, 
+                    average="micro"
+                ),
             ]
         )
         self.train_metrics = metrics.clone(prefix="train_")
