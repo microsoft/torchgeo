@@ -183,7 +183,7 @@ class ChangeDetectionTask(BaseTask):
         else:
             raise ValueError(
                 f"Model type '{model}' is not valid. "
-                "Currently, only supports 'unet'...."
+                "Currently, only supports 'unet', 'fcsiamdiff, and 'fcsiamconc'."
             )
 
         if weights and weights is not True:
@@ -311,9 +311,7 @@ class ChangeDetectionTask(BaseTask):
             x = torch.stack((image1, image2), dim=1)
             y_hat = self(x)
         else:
-            raise ValueError(
-                f"Model type '{model}' is not valid. " "Currently, only supports 'unet'"
-            )
+            raise ValueError(f"Model type '{model}' is not valid.")
         if y_hat.ndim != y.ndim:
             y = y.unsqueeze(dim=1)
         loss = self.criterion(y_hat, y)
@@ -341,7 +339,9 @@ class ChangeDetectionTask(BaseTask):
             x = torch.cat([image1, image2], dim=1)
             y_hat: Tensor = self(x).softmax(dim=1)
             return y_hat
+        elif model in ["fcsiamdiff", "fcsiamconc"]:
+            x = torch.stack((image1, image2), dim=1)
+            y_hat: Tensor = self(x)
+            return y_hat
         else:
-            raise ValueError(
-                f"Model type '{model}' is not valid. " "Currently, only supports 'unet'"
-            )
+            raise ValueError(f"Model type '{model}' is not valid.")
