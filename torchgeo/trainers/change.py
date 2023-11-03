@@ -27,8 +27,8 @@ from . import utils
 from .base import BaseTask
 
 
-class BinaryChangeDetectionTask(BaseTask):
-    """Binary Change Detection."""
+class ChangeDetectionTask(BaseTask):
+    """Change Detection."""
 
     def __init__(
         self,
@@ -36,6 +36,7 @@ class BinaryChangeDetectionTask(BaseTask):
         backbone: str = "resnet50",
         weights: Optional[Union[WeightsEnum, str, bool]] = None,
         in_channels: int = 3,
+        num_classes: int = 1,
         loss: str = "bce",
         class_weights: Optional[Tensor] = None,
         ignore_index: Optional[int] = None,
@@ -44,7 +45,7 @@ class BinaryChangeDetectionTask(BaseTask):
         freeze_backbone: bool = False,
         freeze_decoder: bool = False,
     ) -> None:
-        """Inititalize a new BinaryChangeDetectionTask instance.
+        """Inititalize a new ChangeDetectionTask instance.
 
         Args:
             model: Name of the model to use.
@@ -97,7 +98,19 @@ class BinaryChangeDetectionTask(BaseTask):
             self.criterion = nn.BCEWithLogitsLoss(
                 weight=self.hparams["class_weights"]
             )  # ignore_index=ignore_value, not supported in BCELoss
-        else:
+        elif loss == "ce":
+            ignore_value = -1000 if ignore_index is None else ignore_index
+            self.criterion = nn.CrossEntropyLoss(
+                ignore_index=ignore_value, weight=self.hparams["class_weights"]
+            )
+        elif loss == "jaccard":
+            self.criterion = smp.losses.JaccardLoss(
+                mode="multiclass", classes=self.hparams["num_classes"]
+            )
+        elif loss == "focal":
+            self.criterion = smp.losses.FocalLoss(
+                "multiclass", ignore_index=ignore_index, normalized=True
+            )
             raise ValueError(
                 f"Loss type '{loss}' is not valid. "
                 "Currently, supports 'ce', 'jaccard' or 'focal' loss."
@@ -105,11 +118,21 @@ class BinaryChangeDetectionTask(BaseTask):
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics."""
+        num_classes: int = self.hparams["num_classes"]
         ignore_index: Optional[int] = self.hparams["ignore_index"]
         metrics = MetricCollection(
             [
                 BinaryAccuracy(),  # ignore_index=ignore_index
                 BinaryJaccardIndex(),  # ignore_index=ignore_index
+                # MulticlassAccuracy(
+                #     num_classes=num_classes,
+                #     ignore_index=ignore_index,
+                #     multidim_average="global",
+                #     average="micro",
+                # ),
+                # MulticlassJaccardIndex(
+                #     num_classes=num_classes, ignore_index=ignore_index, average="micro"
+                # ),
             ]
         )
         self.train_metrics = metrics.clone(prefix="train_")
