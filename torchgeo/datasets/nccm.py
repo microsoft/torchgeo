@@ -170,8 +170,6 @@ class NCCM(RasterDataset):
         if glob.glob(pathname, recursive=True):
             exists = True
             self._extract()
-
-        if exists is True:
             return
 
         # Check if the user requested to download the dataset
