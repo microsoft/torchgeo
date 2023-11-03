@@ -153,7 +153,7 @@ class NCCM(RasterDataset):
         if self.files:
             return
 
-        # Check if the zip files have already been downloaded
+        # Check if the zip file has already been downloaded
         exists = False
 
         assert isinstance(self.paths, str)
