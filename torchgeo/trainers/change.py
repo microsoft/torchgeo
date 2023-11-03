@@ -22,7 +22,7 @@ from torchmetrics.classification import (
 from torchvision.models._api import WeightsEnum
 
 from ..datasets.utils import unbind_samples
-from ..models import ChangeMixin, ChangeStar, ChangeStarFarSeg, get_weight
+from ..models import ChangeMixin, ChangeStar, ChangeStarFarSeg, FCSiamDiff, get_weight
 from . import utils
 from .base import BaseTask
 
@@ -149,17 +149,25 @@ class ChangeDetectionTask(BaseTask):
         backbone: str = self.hparams["backbone"]
         weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
         in_channels: int = self.hparams["in_channels"]
+        num_classes: int = self.hparams["num_classes"]
 
         if model == "unet":
             self.model = smp.Unet(
                 encoder_name=backbone,
                 encoder_weights="imagenet" if weights is True else None,
                 in_channels=in_channels * 2,  # images are concatenated
-                classes=1,
+                classes=num_classes,
+            )
+        elif model == "fcsiamdiff":
+            self.model = FCSiamDiff(
+                in_channels=in_channels,
+                classes=num_classes,
+                encoder_weights="imagenet" if weights is True else None,
             )
         else:
             raise ValueError(
-                f"Model type '{model}' is not valid. " "Currently, only supports 'unet'"
+                f"Model type '{model}' is not valid. "
+                "Currently, only supports 'unet'...."
             )
 
         if weights and weights is not True:
@@ -201,10 +209,11 @@ class ChangeDetectionTask(BaseTask):
         if model == "unet":
             x = torch.cat([image1, image2], dim=1)
             y_hat = self(x)
+        elif model == "fcsiamdiff":
+            x = torch.stack((image1, image2), dim=1)
+            y_hat = self(x)
         else:
-            raise ValueError(
-                f"Model type '{model}' is not valid. " "Currently, only supports 'unet'"
-            )
+            raise ValueError(f"Model type '{model}' is not valid. ")
         if y_hat.ndim != y.ndim:
             y = y.unsqueeze(dim=1)
         loss: Tensor = self.criterion(y_hat, y)
@@ -231,10 +240,11 @@ class ChangeDetectionTask(BaseTask):
         if model == "unet":
             x = torch.cat([image1, image2], dim=1)
             y_hat = self(x)
+        elif model == "fcsiamdiff":
+            x = torch.stack((image1, image2), dim=1)
+            y_hat = self(x)
         else:
-            raise ValueError(
-                f"Model type '{model}' is not valid. " "Currently, only supports 'unet'"
-            )
+            raise ValueError(f"Model type '{model}' is not valid.")
         if y_hat.ndim != y.ndim:
             y = y.unsqueeze(dim=1)
         loss = self.criterion(y_hat, y)
@@ -280,6 +290,9 @@ class ChangeDetectionTask(BaseTask):
         y = batch["mask"].float()
         if model == "unet":
             x = torch.cat([image1, image2], dim=1)
+            y_hat = self(x)
+        elif model == "fcsiamdiff":
+            x = torch.stack((image1, image2), dim=1)
             y_hat = self(x)
         else:
             raise ValueError(
