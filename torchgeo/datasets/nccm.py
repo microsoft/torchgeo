@@ -43,7 +43,7 @@ class NCCM(RasterDataset):
     2. JavaScript code to download images from the dataset.
 
     If you use this dataset in your research, please cite the following paper:
-    
+
     * https://doi.org/10.1038/s41597-021-00827-9
     """
 
@@ -72,7 +72,7 @@ class NCCM(RasterDataset):
         paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        years: list[int] = [2017,2018,2019],
+        years: list[int] = [2017, 2018, 2019],
         classes: list[int] = list(cmap.keys()),
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
@@ -154,12 +154,9 @@ class NCCM(RasterDataset):
             return
 
         # Check if the zip file has already been downloaded
-        exists = False
-
         assert isinstance(self.paths, str)
         pathname = os.path.join(self.paths, "**", self.zipfile_glob)
         if glob.glob(pathname, recursive=True):
-            exists = True
             self._extract()
             return
 
