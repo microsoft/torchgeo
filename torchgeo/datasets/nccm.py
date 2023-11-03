@@ -38,8 +38,9 @@ class NCCM(RasterDataset):
     3. others
 
     Dataset format:
-    1) Three .TIF files containing the labels
-    2) JavaScript code to download images from the dataset.
+
+    1. Three .TIF files containing the labels
+    2. JavaScript code to download images from the dataset.
 
     If you use this dataset in your research, please use the corresponding citation:
     * You, N., Dong, J., Huang, J. et al. The 10-m crop type maps in
