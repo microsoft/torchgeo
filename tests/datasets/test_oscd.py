@@ -23,7 +23,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestOSCD:
-    @pytest.fixture(params=zip(["all", "rgb"], ["train", "test"]))
+    @pytest.fixture(params=zip([OSCD.all_bands, OSCD.rgb_bands], ["train", "test"]))
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> OSCD:
@@ -72,15 +72,19 @@ class TestOSCD:
     def test_getitem(self, dataset: OSCD) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x["image"], torch.Tensor)
-        assert x["image"].ndim == 3
+        assert isinstance(x["image1"], torch.Tensor)
+        assert x["image1"].ndim == 3
+        assert isinstance(x["image2"], torch.Tensor)
+        assert x["image2"].ndim == 3
         assert isinstance(x["mask"], torch.Tensor)
         assert x["mask"].ndim == 2
 
-        if dataset.bands == "rgb":
-            assert x["image"].shape[0] == 6
+        if dataset.bands == OSCD.rgb_bands:
+            assert x["image1"].shape[0] == 3
+            assert x["image2"].shape[0] == 3
         else:
-            assert x["image"].shape[0] == 26
+            assert x["image1"].shape[0] == 13
+            assert x["image2"].shape[0] == 13
 
     def test_len(self, dataset: OSCD) -> None:
         if dataset.split == "train":
@@ -109,3 +113,9 @@ class TestOSCD:
     def test_plot(self, dataset: OSCD) -> None:
         dataset.plot(dataset[0], suptitle="Test")
         plt.close()
+
+    def test_failed_plot(self, dataset: OSCD) -> None:
+        single_band_dataset = OSCD(root=dataset.root, bands=("B01",))
+        with pytest.raises(ValueError, match="RGB bands must be present"):
+            x = single_band_dataset[0].copy()
+            single_band_dataset.plot(x, suptitle="Test")
