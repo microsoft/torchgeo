@@ -24,20 +24,11 @@ class TestNCCM:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> NCCM:
         monkeypatch.setattr(torchgeo.datasets.nccm, "download_url", download_url)
-
-        md5s = {"main": "eae952f1b346d7e649d027e8139a76f5"}
-
-        monkeypatch.setattr(NCCM, "md5s", md5s)
-
         url = os.path.join("tests", "data", "nccm", "13090442.zip")
-
-        monkeypatch.setattr(NCCM, "url", url)
-        monkeypatch.setattr(plt, "show", lambda *args: None)
-        root = str(tmp_path)
         transforms = nn.Identity()
+        monkeypatch.setattr(NCCM, "url", url)
 
         return NCCM(
-            root,
             transforms=transforms,
             download=True,
             checksum=True,

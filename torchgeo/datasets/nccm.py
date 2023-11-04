@@ -2,6 +2,7 @@
 
 import glob
 import os
+import shutil
 from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union
 
@@ -35,7 +36,8 @@ class NCCM(RasterDataset):
     0. paddy rice
     1. maize
     2. soybean
-    3. others
+    3. other crops
+    15. other lands
 
     Dataset format:
 
@@ -60,11 +62,11 @@ class NCCM(RasterDataset):
     years = [2017, 2018, 2019]
     # add for other class 15
     cmap = {
-        0: (0, 255, 0, 255),
-        1: (255, 0, 0, 255),
-        2: (255, 255, 0, 255),
-        3: (255, 0, 255, 255),
-        15: (128, 128, 128, 255),
+        0: (0, 255, 0, 1),
+        1: (255, 0, 0, 1),
+        2: (255, 255, 0, 1),
+        3: (255, 192, 203, 1),
+        15: (128, 128, 128, 1),
     }
 
     def __init__(
@@ -119,8 +121,20 @@ class NCCM(RasterDataset):
         self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
         self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
 
-        self._verify()
+        curr_path = os.getcwd()
+        curr_path += "/data"
+        if not os.path.exists(curr_path):
+            os.mkdir(curr_path)
+        else:
+            contents = os.listdir(curr_path)
+            for item in contents:
+                item_path = os.path.join(curr_path, item)
+                if os.path.isfile(item_path):
+                    os.remove(item_path)
+                elif os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
 
+        self._verify()
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
         for v, k in enumerate(self.classes):
