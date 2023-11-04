@@ -58,13 +58,13 @@ class NCCM(RasterDataset):
     md5s = {"main": "eae952f1b346d7e649d027e8139a76f5"}
 
     years = [2017, 2018, 2019]
-
+    # add for other class 15
     cmap = {
-        0: (0, 0, 0, 0),
-        1: (0, 255, 0, 255),
-        2: (255, 0, 0, 255),
-        3: (255, 255, 0, 255),
-        4: (255, 0, 255, 255),
+        0: (0, 255, 0, 255),
+        1: (255, 0, 0, 255),
+        2: (255, 255, 0, 255),
+        3: (255, 0, 255, 255),
+        15: (128, 128, 128, 255),
     }
 
     def __init__(
@@ -174,8 +174,13 @@ class NCCM(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
+        download_root = "data"
+        filename = "13090442.zip"
         download_url(
-            self.url, self.paths, md5=self.md5s["main"] if self.checksum else None
+            self.url,
+            download_root,
+            filename,
+            md5=self.md5s["main"] if self.checksum else None,
         )
 
     def _extract(self) -> None:
