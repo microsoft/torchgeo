@@ -214,6 +214,11 @@ class UCMerced(NonGeoClassificationDataset):
         .. versionadded:: 0.2
         """
         image = np.rollaxis(sample["image"].numpy(), 0, 3)
+
+        # Normalize the image if the max value is greater than 1
+        if image.max() > 1:
+            image = image.astype(np.float32) / 255.0 # Scale to [0, 1] 
+
         label = cast(int, sample["label"].item())
         label_class = self.classes[label]
 
